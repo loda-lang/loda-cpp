@@ -2,16 +2,18 @@
 
 #include "assignment.hpp"
 
-class Program;
+#include <tuple>
+#include <vector>
 
-class Operation
-{
-  std::vector<Assignment> assigments;
-  std::vector<uint8_t> loop_variables;
-  std::unique_ptr<Program> loop_program;
-};
+using var_t = std::size_t;
 
+template<size_t NUM_VARS>
 class Program
 {
+  using Assignments = Assignment::Array<NUM_VARS>;
+  using LoopVariables = std::vector<var_t>;
+  using ProgramPtr = std::unique_ptr<Program<NUM_VARS> >;
+  using Operation = std::tuple<Assignments, LoopVariables, ProgramPtr >;
+
   std::vector<Operation> operations;
 };
