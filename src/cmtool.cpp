@@ -9,10 +9,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
 #include "assignment.hpp"
 
-int main(void) {
-	puts("Hello World!!!");
-	return EXIT_SUCCESS;
+int main( void )
+{
+
+  Assignment a( 62, true );
+
+  puts( "Hello World!!!" );
+  return EXIT_SUCCESS;
 }

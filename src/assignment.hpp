@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdexcept>
+
 class Assignment
 {
 public:
@@ -8,8 +10,12 @@ public:
   static constexpr uint8_t SIGN_BITMASK = 0b01000000;
   static constexpr uint8_t VALUE_BITMASK = 0b00111111;
 
-  inline Assignment( bool is_diff, int8_t value )
+  inline Assignment( int64_t value, bool is_diff )
   {
+    if ( value > VALUE_BITMASK || value < -VALUE_BITMASK )
+    {
+      throw std::invalid_argument( "value out of range" );
+    }
     data = value & VALUE_BITMASK;
     if ( data < 0 )
     {
