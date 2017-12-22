@@ -5,19 +5,27 @@
 #include <tuple>
 #include <vector>
 
-using var_t = std::size_t;
-
 template<size_t NUM_VARS>
 class Program
 {
 public:
 
-  using Assignments = Assignment::Array<NUM_VARS>;
-  using LoopVariables = std::vector<var_t>;
-  using ProgramPtr = std::unique_ptr<Program<NUM_VARS> >;
-  using Operation = std::tuple<Assignments, LoopVariables, ProgramPtr >;
+  class Loop
+  {
+  public:
+    std::vector<size_t> vars;
+    std::unique_ptr<Program<NUM_VARS> > body;
+  };
 
-  bool isValid() const;
+  class Operation
+  {
+  public:
+
+    std::array<Assignment, NUM_VARS> assignments;
+    Loop loop;
+
+  };
 
   std::vector<Operation> operations;
+
 };

@@ -7,23 +7,28 @@ class Assignment
 {
 public:
 
-  // array type
-  template<std::size_t N>
-  using Array = std::array<Assignment,N>;
-
   // bitmasks
   static constexpr uint8_t RESET_BITMASK = 0b10000000;
   static constexpr uint8_t SIGN_BITMASK = 0b01000000;
   static constexpr uint8_t VALUE_BITMASK = 0b00111111;
+
+  // limits
+  static constexpr int64_t MIN_VALUE = -VALUE_BITMASK;
+  static constexpr int64_t MAX_VALUE = VALUE_BITMASK;
 
   Assignment()
       : data( 0 ) // diff 0
   {
   }
 
+  Assignment( int8_t data )
+      : data( data )
+  {
+  }
+
   Assignment( int64_t value, bool is_reset )
   {
-    if ( value > VALUE_BITMASK || value < -VALUE_BITMASK )
+    if ( value < MIN_VALUE || value > MAX_VALUE )
     {
       throw std::invalid_argument( "value out of range" );
     }
@@ -36,6 +41,11 @@ public:
     {
       data = data | RESET_BITMASK;
     }
+  }
+
+  inline int8_t getData() const
+  {
+    return data;
   }
 
   inline bool isReset() const

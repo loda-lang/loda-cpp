@@ -14,11 +14,9 @@
 int main( void )
 {
 
-  Assignment::Array<2> a;
-  a[1] = Assignment( 62, true );
-
   Program<3> p;
 
   puts( "Hello World!!!" );
   return EXIT_SUCCESS;
 }
+
