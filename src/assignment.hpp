@@ -1,16 +1,27 @@
 #pragma once
 
+#include <array>
 #include <stdexcept>
 
 class Assignment
 {
 public:
 
-  static constexpr uint8_t DIFF_BITMASK = 0b10000000;
+  // array type
+  template<std::size_t N>
+  using Array = std::array<Assignment,N>;
+
+  // bitmasks
+  static constexpr uint8_t RESET_BITMASK = 0b10000000;
   static constexpr uint8_t SIGN_BITMASK = 0b01000000;
   static constexpr uint8_t VALUE_BITMASK = 0b00111111;
 
-  inline Assignment( int64_t value, bool is_diff )
+  Assignment()
+      : data( 0 ) // diff 0
+  {
+  }
+
+  Assignment( int64_t value, bool is_reset )
   {
     if ( value > VALUE_BITMASK || value < -VALUE_BITMASK )
     {
@@ -21,15 +32,15 @@ public:
     {
       data = data | SIGN_BITMASK;
     }
-    if ( is_diff )
+    if ( is_reset )
     {
-      data = data | DIFF_BITMASK;
+      data = data | RESET_BITMASK;
     }
   }
 
-  inline bool isDiff() const
+  inline bool isReset() const
   {
-    return data & DIFF_BITMASK;
+    return data & RESET_BITMASK;
   }
 
   inline int8_t getValue() const

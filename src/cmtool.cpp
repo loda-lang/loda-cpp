@@ -14,7 +14,8 @@
 int main( void )
 {
 
-  Assignment a( 62, true );
+  Assignment::Array<2> a;
+  a[1] = Assignment( 62, true );
 
   puts( "Hello World!!!" );
   return EXIT_SUCCESS;
