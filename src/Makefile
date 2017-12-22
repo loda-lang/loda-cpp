@@ -1,6 +1,6 @@
 CXXFLAGS=-O2 -g -Wall -fmessage-length=0 -std=c++14
 
-OBJS=cmtool.o program.o
+OBJS=cmtool.o
 
 LIBS=
 

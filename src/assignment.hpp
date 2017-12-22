@@ -16,10 +16,6 @@ public:
   static constexpr int64_t MIN_VALUE = -VALUE_BITMASK;
   static constexpr int64_t MAX_VALUE = VALUE_BITMASK;
 
-  // array type
-  template<size_t NUM_VARS>
-  using Array = std::array<Assignment, NUM_VARS>;
-
   Assignment()
       : data( 0 ) // diff 0
   {

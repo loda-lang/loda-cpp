@@ -1,23 +1,47 @@
 #pragma once
 
-#include "program.hpp"
+#include "operation.hpp"
+#include <stack>
 
 template<size_t NUM_VARS>
 class Interpreter
 {
+public:
+
   using State = std::array<uint64_t,NUM_VARS>;
+  using Stack = std::stack<const Operation<NUM_VARS>*>;
 
-  void Apply( const Assignment::Array<NUM_VARS>& a, State& s )
+  bool run( const Operation<NUM_VARS>& op, State& s )
   {
-    for ( size_t i = 0; i < NUM_VARS; i++ )
+    Stack t;
+    t.push( *op );
+    while ( !t.empty() )
     {
-      s[i] = a[i].isReset() ? a[i].getValue() : s[i] + a[i].getValue();
+      auto o = t.pop();
+
+      // apply assignments
+      for ( size_t i = 0; i < NUM_VARS; i++ )
+      {
+        int64_t x =
+            o.assignments[i].isReset() ?
+                o.assignments[i].getValue() : static_cast<int64_t>( s[i] ) + o.assignments[i].getValue();
+        s[i] = (x >= 0) ? x : 0;
+      }
+
+      // execute loop
+      if ( o.loop_body )
+      {
+        run( *l.body, s );
+      }
+
+      // execute next
+      if ( o.loop_body )
+      {
+
+      }
+
+
     }
-  }
-
-  bool Run( const Program<NUM_VARS>& p, State& s )
-  {
-
     return true;
   }
 
