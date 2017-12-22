@@ -10,18 +10,20 @@ class Program
 {
 public:
 
+  using Ptr = std::unique_ptr<Program<NUM_VARS> >;
+
   class Loop
   {
   public:
     std::vector<size_t> vars;
-    std::unique_ptr<Program<NUM_VARS> > body;
+    Ptr body;
   };
 
   class Operation
   {
   public:
 
-    std::array<Assignment, NUM_VARS> assignments;
+    Assignment::Array<NUM_VARS> assignments;
     Loop loop;
 
   };
