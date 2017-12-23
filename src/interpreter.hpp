@@ -1,14 +1,14 @@
 #pragma once
 
 #include <stack>
-#include "old_operation.hpp"
 
-template<size_t NUM_VARS>
+#include "program.hpp"
+
 class Interpreter
 {
 public:
 
-  using State = std::array<uint64_t,NUM_VARS>;
+  using State = std::array<value_t,256>;
   using Stack = std::stack<const Operation<NUM_VARS>*>;
 
   bool run( const Operation<NUM_VARS>& op, State& s )
@@ -39,7 +39,6 @@ public:
       {
 
       }
-
 
     }
     return true;

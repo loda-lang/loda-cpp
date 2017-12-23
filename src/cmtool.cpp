@@ -1,12 +1,12 @@
 #include <iostream>
 #include <stdlib.h>
 
-#include "operation.hpp"
+#include "program.hpp"
 
 int main( void )
 {
 
-  Operation::UPtr o( new Add() );
+  Program p;
 
   /*
    Program<3> p;

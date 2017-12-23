@@ -1,17 +1,14 @@
 #pragma once
 
+#include "types.hpp"
+
 #include <vector>
 #include <memory>
-
-using var_t = uint16_t;
-using const_t = uint16_t;
 
 class Operation
 {
 public:
-
   using UPtr = std::unique_ptr<Operation>;
-
   enum class Type
   {
     SET,
@@ -21,11 +18,9 @@ public:
     LPS,
     LPE
   };
-
   virtual ~Operation()
   {
   }
-
   virtual Type getType() const = 0;
 };
 
@@ -96,4 +91,11 @@ public:
   {
     return Type::LPE;
   }
+};
+
+class Program
+{
+public:
+  using UPtr = std::unique_ptr<Program>;
+  std::vector<Operation::UPtr> ops;
 };
