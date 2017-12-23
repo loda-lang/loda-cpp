@@ -1,7 +1,7 @@
 #include <iostream>
 #include <stdlib.h>
 
-#include "program.hpp"
+#include "interpreter.hpp"
 
 int main( void )
 {

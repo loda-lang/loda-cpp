@@ -45,14 +45,22 @@ public:
   {
     return Type::SET;
   }
+  static Set* Cast( UPtr& p )
+  {
+    return dynamic_cast<Set*>( p.get() );
+  }
 };
 
-class Cpy: public BinaryOperation
+class Copy: public BinaryOperation
 {
 public:
   virtual Type getType() const override
   {
     return Type::CPY;
+  }
+  static Copy* Cast( UPtr& p )
+  {
+    return dynamic_cast<Copy*>( p.get() );
   }
 };
 
@@ -63,6 +71,11 @@ public:
   {
     return Type::ADD;
   }
+  static Add* Cast( UPtr& p )
+  {
+    return dynamic_cast<Add*>( p.get() );
+  }
+
 };
 
 class Sub: public BinaryOperation
@@ -71,6 +84,10 @@ public:
   virtual Type getType() const override
   {
     return Type::SUB;
+  }
+  static Sub* Cast( UPtr& p )
+  {
+    return dynamic_cast<Sub*>( p.get() );
   }
 };
 
@@ -81,6 +98,10 @@ public:
   {
     return Type::LPS;
   }
+  static LoopStart* Cast( UPtr& p )
+  {
+    return dynamic_cast<LoopStart*>( p.get() );
+  }
   std::vector<var_t> loop_vars;
 };
 
@@ -90,6 +111,10 @@ public:
   virtual Type getType() const override
   {
     return Type::LPE;
+  }
+  static LoopEnd* Cast( UPtr& p )
+  {
+    return dynamic_cast<LoopEnd*>( p.get() );
   }
 };
 
