@@ -27,6 +27,11 @@ public:
 class UnaryOperation: public Operation
 {
 public:
+  UnaryOperation( const_t v, var_t t )
+      : value( v ),
+        target_var( t )
+  {
+  }
   const_t value;
   var_t target_var;
 };
@@ -34,6 +39,11 @@ public:
 class BinaryOperation: public Operation
 {
 public:
+  BinaryOperation( var_t s, var_t t )
+      : source_var( s ),
+        target_var( t )
+  {
+  }
   var_t source_var;
   var_t target_var;
 };
@@ -41,6 +51,10 @@ public:
 class Set: public UnaryOperation
 {
 public:
+  Set( const_t v, var_t t )
+      : UnaryOperation( v, t )
+  {
+  }
   virtual Type GetType() const override
   {
     return Type::SET;
@@ -54,6 +68,10 @@ public:
 class Copy: public BinaryOperation
 {
 public:
+  Copy( var_t s, var_t t )
+      : BinaryOperation( s, t )
+  {
+  }
   virtual Type GetType() const override
   {
     return Type::CPY;
@@ -67,6 +85,10 @@ public:
 class Add: public BinaryOperation
 {
 public:
+  Add( var_t s, var_t t )
+      : BinaryOperation( s, t )
+  {
+  }
   virtual Type GetType() const override
   {
     return Type::ADD;
@@ -81,6 +103,10 @@ public:
 class Sub: public BinaryOperation
 {
 public:
+  Sub( var_t s, var_t t )
+      : BinaryOperation( s, t )
+  {
+  }
   virtual Type GetType() const override
   {
     return Type::SUB;
@@ -94,6 +120,10 @@ public:
 class LoopStart: public Operation
 {
 public:
+  LoopStart( const std::vector<var_t>& l )
+      : loop_vars( l )
+  {
+  }
   virtual Type GetType() const override
   {
     return Type::LPS;

@@ -6,18 +6,15 @@
 int main( void )
 {
   Program p;
+  p.ops.resize( 1 );
+  p.ops[0].reset( new Set( 42, 0 ) );
 
-  /*
-   Program<3> p;
-   p.operations.resize( 1 );
-   p.operations[0].assignments[0] = Assignment( 42, true );
+  Memory m;
+  Interpreter i;
+  i.Run( p, m );
 
-   Interpreter<3>::State s;
-   Interpreter<3> i;
-   i.run( p, s );
+  std::cout << "out: " << m.regs[0];
 
-   std::cout << "out: " << s[0];
-   */
   return EXIT_SUCCESS;
 }
 

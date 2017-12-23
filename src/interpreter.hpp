@@ -4,16 +4,16 @@
 #include <stack>
 
 #include "program.hpp"
+#include "memory.hpp"
 
 class Interpreter
 {
 public:
 
-  using State = std::array<value_t,256>;
-  using StateStack = std::stack<State>;
+  using MemStack = std::stack<Memory>;
   using PCStack = std::stack<size_t>;
 
-  bool Run( Program& p, State& s )
+  bool Run( Program& p, Memory& s )
   {
     if ( p.ops.empty() )
     {
@@ -22,7 +22,7 @@ public:
     PCStack pcs;
     pcs.push( 0 );
     PCStack ls;
-    StateStack ss;
+    MemStack ss;
     while ( !pcs.empty() )
     {
       size_t pc = pcs.top();
@@ -34,28 +34,30 @@ public:
       case Operation::Type::SET:
       {
         auto set = Set::Cast( op );
-        s[set->target_var] = set->value;
+        s.regs[set->target_var] = set->value;
         next = pc + 1;
         break;
       }
       case Operation::Type::CPY:
       {
         auto copy = Copy::Cast( op );
-        s[copy->target_var] = s[copy->source_var];
+        s.regs[copy->target_var] = s.regs[copy->source_var];
         next = pc + 1;
         break;
       }
       case Operation::Type::ADD:
       {
         auto add = Add::Cast( op );
-        s[add->target_var] += s[add->source_var];
+        s.regs[add->target_var] += s.regs[add->source_var];
         next = pc + 1;
         break;
       }
       case Operation::Type::SUB:
       {
         auto sub = Sub::Cast( op );
-        s[sub->target_var] = (s[sub->target_var] > s[sub->source_var]) ? (s[sub->target_var] - s[sub->source_var]) : 0;
+        s.regs[sub->target_var] =
+            (s.regs[sub->target_var] > s.regs[sub->source_var]) ?
+                (s.regs[sub->target_var] - s.regs[sub->source_var]) : 0;
         next = pc + 1;
         break;
       }
@@ -68,13 +70,12 @@ public:
       }
       case Operation::Type::LPE:
       {
-        auto loop_end = LoopEnd::Cast( op );
         auto beg = ls.top();
         ls.pop();
         auto loop_start = LoopStart::Cast( p.ops[beg] );
         auto prev = ss.top();
         ss.pop();
-        if ( true )
+        if ( s.IsLessThan( prev, loop_start->loop_vars ) )
         {
           next = beg;
         }
