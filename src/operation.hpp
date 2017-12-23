@@ -1,18 +1,78 @@
 #pragma once
 
-#include "assignment.hpp"
-
-#include <tuple>
 #include <vector>
+#include <memory>
 
-template<size_t NUM_VARS>
+using var_t = uint16_t;
+using const_t = uint16_t;
+
 class Operation
 {
 public:
 
-  std::array<Assignment, NUM_VARS> assignments;
-  std::vector<size_t> loop_vars;
-  std::unique_ptr<Operation<NUM_VARS> > loop_op;
-  std::unique_ptr<Operation<NUM_VARS> > next_op;
+  using UPtr = std::unique_ptr<Operation>;
 
+  enum class Type
+  {
+    SET,
+    CPY,
+    ADD,
+    SUB
+  };
+
+  virtual ~Operation()
+  {
+  }
+
+  virtual Type getType() const = 0;
+};
+
+class UnaryOperation: public Operation
+{
+public:
+  const_t value;
+  var_t target_var;
+};
+
+class BinaryOperation: public Operation
+{
+public:
+  var_t source_var;
+  var_t target_var;
+};
+
+class Set: public UnaryOperation
+{
+public:
+  virtual Type getType() const override
+  {
+    return Type::SET;
+  }
+};
+
+class Cpy: public BinaryOperation
+{
+public:
+  virtual Type getType() const override
+  {
+    return Type::CPY;
+  }
+};
+
+class Add: public BinaryOperation
+{
+public:
+  virtual Type getType() const override
+  {
+    return Type::ADD;
+  }
+};
+
+class Sub: public BinaryOperation
+{
+public:
+  virtual Type getType() const override
+  {
+    return Type::SUB;
+  }
 };

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "operation.hpp"
 #include <stack>
+#include "old_operation.hpp"
 
 template<size_t NUM_VARS>
 class Interpreter
