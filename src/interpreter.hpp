@@ -25,6 +25,7 @@ public:
     MemStack ss;
     while ( !pcs.empty() )
     {
+      std::cout << s << std::endl;
       size_t pc = pcs.top();
       pcs.pop();
       auto& op = p.ops.at( pc );
@@ -81,6 +82,7 @@ public:
         }
         else
         {
+          s = prev;
           next = pc + 1;
         }
         break;

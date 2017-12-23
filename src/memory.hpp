@@ -35,7 +35,12 @@ public:
 
 std::ostream& operator<<( std::ostream& os, const Memory& m )
 {
-  for ( size_t i = 0; i < m.regs.size(); i++ )
+  size_t last = m.regs.size() - 1;
+  while ( last > 1 && m.regs[last] == 0 )
+  {
+    last--;
+  }
+  for ( size_t i = 0; i <= last; i++ )
   {
     if ( i > 0 ) os << ",";
     os << m.regs[i];
