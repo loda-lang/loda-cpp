@@ -21,7 +21,7 @@ public:
   virtual ~Operation()
   {
   }
-  virtual Type getType() const = 0;
+  virtual Type GetType() const = 0;
 };
 
 class UnaryOperation: public Operation
@@ -41,7 +41,7 @@ public:
 class Set: public UnaryOperation
 {
 public:
-  virtual Type getType() const override
+  virtual Type GetType() const override
   {
     return Type::SET;
   }
@@ -54,7 +54,7 @@ public:
 class Copy: public BinaryOperation
 {
 public:
-  virtual Type getType() const override
+  virtual Type GetType() const override
   {
     return Type::CPY;
   }
@@ -67,7 +67,7 @@ public:
 class Add: public BinaryOperation
 {
 public:
-  virtual Type getType() const override
+  virtual Type GetType() const override
   {
     return Type::ADD;
   }
@@ -81,7 +81,7 @@ public:
 class Sub: public BinaryOperation
 {
 public:
-  virtual Type getType() const override
+  virtual Type GetType() const override
   {
     return Type::SUB;
   }
@@ -94,7 +94,7 @@ public:
 class LoopStart: public Operation
 {
 public:
-  virtual Type getType() const override
+  virtual Type GetType() const override
   {
     return Type::LPS;
   }
@@ -108,7 +108,7 @@ public:
 class LoopEnd: public Operation
 {
 public:
-  virtual Type getType() const override
+  virtual Type GetType() const override
   {
     return Type::LPE;
   }
