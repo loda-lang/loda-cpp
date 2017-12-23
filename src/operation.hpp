@@ -17,7 +17,9 @@ public:
     SET,
     CPY,
     ADD,
-    SUB
+    SUB,
+    LPS,
+    LPE
   };
 
   virtual ~Operation()
@@ -74,5 +76,24 @@ public:
   virtual Type getType() const override
   {
     return Type::SUB;
+  }
+};
+
+class LoopStart: public Operation
+{
+public:
+  virtual Type getType() const override
+  {
+    return Type::LPS;
+  }
+  std::vector<var_t> loop_vars;
+};
+
+class LoopEnd: public Operation
+{
+public:
+  virtual Type getType() const override
+  {
+    return Type::LPE;
   }
 };
