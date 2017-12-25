@@ -36,7 +36,7 @@ public:
       size_t pc = pc_stack.top();
       pc_stack.pop();
       auto& op = p.ops.at( pc );
-      size_t ps_next = pc + 1;
+      size_t pc_next = pc + 1;
       switch ( op->GetType() )
       {
       case Operation::Type::CMT:
@@ -45,24 +45,28 @@ public:
       }
       case Operation::Type::SET:
       {
+        std::cout << "set" << std::endl;
         auto set = Set::Cast( op );
         mem.regs[set->target_var] = set->value;
         break;
       }
       case Operation::Type::CPY:
       {
+        std::cout << "cpy" << std::endl;
         auto copy = Copy::Cast( op );
         mem.regs[copy->target_var] = mem.regs[copy->source_var];
         break;
       }
       case Operation::Type::ADD:
       {
+        std::cout << "add" << std::endl;
         auto add = Add::Cast( op );
         mem.regs[add->target_var] += mem.regs[add->source_var];
         break;
       }
       case Operation::Type::SUB:
       {
+        std::cout << "sub" << std::endl;
         auto sub = Sub::Cast( op );
         mem.regs[sub->target_var] =
             (mem.regs[sub->target_var] > mem.regs[sub->source_var]) ?
@@ -71,12 +75,14 @@ public:
       }
       case Operation::Type::LPB:
       {
+        std::cout << "lpb" << std::endl;
         loop_stack.push( pc );
         mem_stack.push( mem );
         break;
       }
       case Operation::Type::LPE:
       {
+        std::cout << "lpe" << std::endl;
         auto ps_begin = loop_stack.top();
         loop_stack.pop();
         auto loop_begin = LoopBegin::Cast( p.ops[ps_begin] );
@@ -84,7 +90,7 @@ public:
         mem_stack.pop();
         if ( mem.IsLessThan( prev, loop_begin->loop_vars ) )
         {
-          ps_next = ps_begin;
+          pc_next = ps_begin + 1;
         }
         else
         {
@@ -93,9 +99,9 @@ public:
         break;
       }
       }
-      if ( ps_next < p.ops.size() )
+      if ( pc_next < p.ops.size() )
       {
-        pc_stack.push( ps_next );
+        pc_stack.push( pc_next );
       }
     }
     return true;

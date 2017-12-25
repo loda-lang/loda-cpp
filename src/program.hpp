@@ -28,25 +28,25 @@ public:
 class UnaryOperation: public Operation
 {
 public:
-  UnaryOperation( const_t v, var_t t )
-      : value( v ),
-        target_var( t )
+  UnaryOperation( var_t t, const_t v )
+      : target_var( t ),
+        value( v )
   {
   }
-  const_t value;
   var_t target_var;
+  const_t value;
 };
 
 class BinaryOperation: public Operation
 {
 public:
-  BinaryOperation( var_t s, var_t t )
-      : source_var( s ),
-        target_var( t )
+  BinaryOperation( var_t t, var_t s )
+      : target_var( t ),
+        source_var( s )
   {
   }
-  var_t source_var;
   var_t target_var;
+  var_t source_var;
 };
 
 class Comment: public Operation
@@ -70,8 +70,8 @@ public:
 class Set: public UnaryOperation
 {
 public:
-  Set( const_t v, var_t t )
-      : UnaryOperation( v, t )
+  Set( var_t t, const_t v )
+      : UnaryOperation( t, v )
   {
   }
   virtual Type GetType() const override
@@ -87,8 +87,8 @@ public:
 class Copy: public BinaryOperation
 {
 public:
-  Copy( var_t s, var_t t )
-      : BinaryOperation( s, t )
+  Copy( var_t t, var_t s )
+      : BinaryOperation( t, s )
   {
   }
   virtual Type GetType() const override
@@ -104,8 +104,8 @@ public:
 class Add: public BinaryOperation
 {
 public:
-  Add( var_t s, var_t t )
-      : BinaryOperation( s, t )
+  Add( var_t t, var_t s )
+      : BinaryOperation( t, s )
   {
   }
   virtual Type GetType() const override
@@ -122,8 +122,8 @@ public:
 class Sub: public BinaryOperation
 {
 public:
-  Sub( var_t s, var_t t )
-      : BinaryOperation( s, t )
+  Sub( var_t t, var_t s )
+      : BinaryOperation( t, s )
   {
   }
   virtual Type GetType() const override

@@ -6,24 +6,51 @@
 int main( void )
 {
   Program p;
-  p.ops.resize( 8 );
-  p.ops[0].reset( new Set( 42, 0 ) );
-  p.ops[1].reset( new Set( 3, 1 ) );
-  p.ops[2].reset( new Set( 1, 2 ) );
+
+  // n:0, one:1, u:2, v:3, w:4
+
+  // set one,1
+  // cpy u,n
+  // cpy v,n
+  // sub u,one
+  // sub v,u
+  // set w,1
+  // lpb v
+  //   sub v,one
+  //   add w,one
+  // lpe
+
+  p.ops.resize( 10 );
+  p.ops[0].reset( new Set( 1, 1 ) );
+  p.ops[1].reset( new Copy( 2, 0 ) );
+  p.ops[2].reset( new Copy( 3, 0 ) );
+  p.ops[3].reset( new Sub( 2, 1 ) );
+  p.ops[4].reset( new Sub( 3, 2 ) );
+  p.ops[5].reset( new Set( 4, 1 ) );
+  p.ops[6].reset( new LoopBegin( { 3 } ) );
+  p.ops[7].reset( new Sub( 3, 1 ) );
+  p.ops[8].reset( new Sub( 4, 1 ) );
+  p.ops[9].reset( new LoopEnd() );
 
 
-  p.ops[3].reset( new LoopBegin( { 1 } ) );
-  p.ops[4].reset( new Add( 0, 3 ) );
-  p.ops[5].reset( new Sub( 2, 1 ) );
-  p.ops[6].reset( new LoopEnd() );
-  p.ops[7].reset( new Add( 2, 3 ) );
+  /*  p.ops[0].reset( new Set( 42, 0 ) );
+   p.ops[1].reset( new Set( 3, 1 ) );
+   p.ops[2].reset( new Set( 1, 2 ) );
+   p.ops[3].reset( new LoopBegin( { 1 } ) );
+   p.ops[4].reset( new Add( 0, 3 ) );
+   p.ops[5].reset( new Sub( 2, 1 ) );
+   p.ops[6].reset( new LoopEnd() );
+   p.ops[7].reset( new Add( 2, 3 ) );
+   */
 
   Memory m;
+  m.regs[0] = 8;
+
+
   Interpreter i;
   i.Run( p, m );
 
   std::cout << "out: " << m << std::endl;
-
 
   return EXIT_SUCCESS;
 }
