@@ -5,6 +5,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <unordered_map>
 
 class Operation
 {
@@ -173,4 +174,5 @@ class Program
 public:
   using UPtr = std::unique_ptr<Program>;
   std::vector<Operation::UPtr> ops;
+  std::unordered_map<var_t, std::string> var_names;
 };

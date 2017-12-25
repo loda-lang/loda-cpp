@@ -25,7 +25,7 @@ bool Memory::IsLessThan( const Memory& other, const std::vector<var_t> cmp_vars 
 
 std::array<value_t, 256> regs;
 
-std::ostream& operator<<( std::ostream& os, const Memory& m )
+std::ostream& operator<<( std::ostream& out, const Memory& m )
 {
   size_t last = m.regs.size() - 1;
   while ( last > 1 && m.regs[last] == 0 )
@@ -34,8 +34,8 @@ std::ostream& operator<<( std::ostream& os, const Memory& m )
   }
   for ( size_t i = 0; i <= last; i++ )
   {
-    if ( i > 0 ) os << ",";
-    os << m.regs[i];
+    if ( i > 0 ) out << ",";
+    out << m.regs[i];
   }
-  return os;
+  return out;
 }

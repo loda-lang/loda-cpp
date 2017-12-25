@@ -1,7 +1,5 @@
-#include <iostream>
-#include <stdlib.h>
-
 #include "interpreter.hpp"
+#include "printer.hpp"
 
 int main( void )
 {
@@ -20,6 +18,12 @@ int main( void )
   //   add w,one
   // lpe
 
+  p.var_names[0] = "n";
+  p.var_names[1] = "one";
+  p.var_names[2] = "u";
+  p.var_names[3] = "v";
+  p.var_names[4] = "w";
+
   p.ops.resize( 10 );
   p.ops[0].reset( new Set( 1, 1 ) );
   p.ops[1].reset( new Copy( 2, 0 ) );
@@ -32,7 +36,6 @@ int main( void )
   p.ops[8].reset( new Sub( 4, 1 ) );
   p.ops[9].reset( new LoopEnd() );
 
-
   /*  p.ops[0].reset( new Set( 42, 0 ) );
    p.ops[1].reset( new Set( 3, 1 ) );
    p.ops[2].reset( new Set( 1, 2 ) );
@@ -43,9 +46,12 @@ int main( void )
    p.ops[7].reset( new Add( 2, 3 ) );
    */
 
+  Printer r;
+  r.Print( p, std::cout );
+  std::cout << std::endl;
+
   Memory m;
   m.regs[0] = 8;
-
 
   Interpreter i;
   i.Run( p, m );
