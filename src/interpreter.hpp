@@ -13,84 +13,89 @@ public:
   using MemStack = std::stack<Memory>;
   using PCStack = std::stack<size_t>;
 
-  bool Run( Program& p, Memory& s )
+  bool Run( Program& p, Memory& mem )
   {
+    // check for empty program
     if ( p.ops.empty() )
     {
       return true;
     }
-    PCStack pcs;
-    pcs.push( 0 );
-    PCStack ls;
-    MemStack ss;
-    while ( !pcs.empty() )
+
+    // define stacks
+    PCStack pc_stack;
+    PCStack loop_stack;
+    MemStack mem_stack;
+
+    // push first operation to stack
+    pc_stack.push( 0 );
+
+    // loop until stack is empty
+    while ( !pc_stack.empty() )
     {
-      std::cout << s << std::endl;
-      size_t pc = pcs.top();
-      pcs.pop();
+      std::cout << mem << std::endl;
+      size_t pc = pc_stack.top();
+      pc_stack.pop();
       auto& op = p.ops.at( pc );
-      size_t next;
+      size_t ps_next = pc + 1;
       switch ( op->GetType() )
       {
+      case Operation::Type::CMT:
+      {
+        break;
+      }
       case Operation::Type::SET:
       {
         auto set = Set::Cast( op );
-        s.regs[set->target_var] = set->value;
-        next = pc + 1;
+        mem.regs[set->target_var] = set->value;
         break;
       }
       case Operation::Type::CPY:
       {
         auto copy = Copy::Cast( op );
-        s.regs[copy->target_var] = s.regs[copy->source_var];
-        next = pc + 1;
+        mem.regs[copy->target_var] = mem.regs[copy->source_var];
         break;
       }
       case Operation::Type::ADD:
       {
         auto add = Add::Cast( op );
-        s.regs[add->target_var] += s.regs[add->source_var];
-        next = pc + 1;
+        mem.regs[add->target_var] += mem.regs[add->source_var];
         break;
       }
       case Operation::Type::SUB:
       {
         auto sub = Sub::Cast( op );
-        s.regs[sub->target_var] =
-            (s.regs[sub->target_var] > s.regs[sub->source_var]) ?
-                (s.regs[sub->target_var] - s.regs[sub->source_var]) : 0;
-        next = pc + 1;
+        mem.regs[sub->target_var] =
+            (mem.regs[sub->target_var] > mem.regs[sub->source_var]) ?
+                (mem.regs[sub->target_var] - mem.regs[sub->source_var]) : 0;
         break;
       }
-      case Operation::Type::LPS:
+      case Operation::Type::LPB:
       {
-        ls.push( pc );
-        ss.push( s );
-        next = pc + 1;
+        loop_stack.push( pc );
+        mem_stack.push( mem );
         break;
       }
       case Operation::Type::LPE:
       {
-        auto beg = ls.top();
-        ls.pop();
-        auto loop_start = LoopStart::Cast( p.ops[beg] );
-        auto prev = ss.top();
-        ss.pop();
-        if ( s.IsLessThan( prev, loop_start->loop_vars ) )
+        auto ps_begin = loop_stack.top();
+        loop_stack.pop();
+        auto loop_begin = LoopBegin::Cast( p.ops[ps_begin] );
+        auto prev = mem_stack.top();
+        mem_stack.pop();
+        if ( mem.IsLessThan( prev, loop_begin->loop_vars ) )
         {
-          next = beg;
+          ps_next = ps_begin;
         }
         else
         {
-          s = prev;
-          next = pc + 1;
+          mem = prev;
         }
         break;
       }
       }
-      if ( next < p.ops.size() )
+      if ( ps_next < p.ops.size() )
       {
-        pcs.push( next );
+        pc_stack.push( ps_next );
       }
     }
     return true;

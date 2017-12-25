@@ -11,11 +11,12 @@ public:
   using UPtr = std::unique_ptr<Operation>;
   enum class Type
   {
+    CMT = 0,
     SET,
     CPY,
     ADD,
     SUB,
-    LPS,
+    LPB,
     LPE
   };
   virtual ~Operation()
@@ -46,6 +47,24 @@ public:
   }
   var_t source_var;
   var_t target_var;
+};
+
+class Comment: public Operation
+{
+public:
+  Comment( const std::string& v )
+      : value( v )
+  {
+  }
+  virtual Type GetType() const override
+  {
+    return Type::CMT;
+  }
+  static Comment* Cast( UPtr& p )
+  {
+    return dynamic_cast<Comment*>( p.get() );
+  }
+  std::string value;
 };
 
 class Set: public UnaryOperation
@@ -117,20 +136,20 @@ public:
   }
 };
 
-class LoopStart: public Operation
+class LoopBegin: public Operation
 {
 public:
-  LoopStart( const std::vector<var_t>& l )
+  LoopBegin( const std::vector<var_t>& l )
       : loop_vars( l )
   {
   }
   virtual Type GetType() const override
   {
-    return Type::LPS;
+    return Type::LPB;
   }
-  static LoopStart* Cast( UPtr& p )
+  static LoopBegin* Cast( UPtr& p )
   {
-    return dynamic_cast<LoopStart*>( p.get() );
+    return dynamic_cast<LoopBegin*>( p.get() );
   }
   std::vector<var_t> loop_vars;
 };

@@ -12,7 +12,7 @@ int main( void )
   p.ops[2].reset( new Set( 1, 2 ) );
 
 
-  p.ops[3].reset( new LoopStart( { 1 } ) );
+  p.ops[3].reset( new LoopBegin( { 1 } ) );
   p.ops[4].reset( new Add( 0, 3 ) );
   p.ops[5].reset( new Sub( 2, 1 ) );
   p.ops[6].reset( new LoopEnd() );
