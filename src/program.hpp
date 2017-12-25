@@ -2,8 +2,9 @@
 
 #include "types.hpp"
 
-#include <vector>
+#include <string>
 #include <memory>
+#include <vector>
 
 class Operation
 {

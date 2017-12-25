@@ -1,3 +1,5 @@
 /cmtool.o
 /cmtool
 /program.o
+/interpreter.o
+/memory.o
