@@ -18,7 +18,7 @@ Program::UPtr Parser::Parse( const std::string& file )
 Program::UPtr Parser::Parse( std::istream& in_ )
 {
   in = &in_;
-  p.reset( new Program() );
+  Program::UPtr p( new Program() );
   Operation::UPtr o;
   int c;
   std::string l;
@@ -108,7 +108,7 @@ std::string Parser::ReadIdentifier()
   }
 }
 
-std::string Parser::ReadVariable( Program& p )
+var_t Parser::ReadVariable( Program& p )
 {
   auto var = ReadIdentifier();
   auto it = vars.find( var );
@@ -118,6 +118,7 @@ std::string Parser::ReadVariable( Program& p )
     vars[var] = v;
     p.var_names[v] = var;
   }
+  return vars[var];
 }
 
 Operation::Type Parser::ReadOperationType()

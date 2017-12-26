@@ -25,7 +25,7 @@ private:
 
   std::string ReadIdentifier();
 
-  std::string ReadVariable( Program& p );
+  var_t ReadVariable( Program& p );
 
   Operation::Type ReadOperationType();
 
