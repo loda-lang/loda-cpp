@@ -6,7 +6,12 @@ class Parser
 {
 public:
 
-  Program::UPtr Parse( const std::string& filename );
+  Parser()
+      : in( nullptr )
+  {
+  }
+
+  Program::UPtr Parse( const std::string& file );
 
   Program::UPtr Parse( std::istream& in );
 
@@ -14,6 +19,19 @@ public:
 
 private:
 
+  void ReadSeparator( char separator );
+
+  value_t ReadInteger();
+
+  std::string ReadIdentifier();
+
+  std::string ReadVariable();
+
+  Operation::Type ReadOperationType();
+
   std::string working_dir;
+  std::istream* in;
+  std::unique_ptr<std::ifstream> file_in;
+  Program::UPtr p;
 
 };
