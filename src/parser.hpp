@@ -25,13 +25,13 @@ private:
 
   std::string ReadIdentifier();
 
-  std::string ReadVariable();
+  std::string ReadVariable( Program& p );
 
   Operation::Type ReadOperationType();
 
   std::string working_dir;
   std::istream* in;
   std::unique_ptr<std::ifstream> file_in;
-  Program::UPtr p;
+  std::unordered_map<std::string, var_t> vars;
 
 };

@@ -65,23 +65,64 @@ Program::UPtr Parser::Parse( std::istream& in_ )
 
 void Parser::ReadSeparator( char separator )
 {
-
+  *in >> std::ws;
+  if ( in->get() != separator )
+  {
+    throw std::runtime_error( "expected separator" );
+  }
 }
 
 value_t Parser::ReadInteger()
 {
-
+  value_t v;
+  int c;
+  *in >> std::ws;
+  c = in->peek();
+  if ( !std::isdigit( c ) )
+  {
+    throw std::runtime_error( "invalid integer" );
+  }
+  *in >> v;
+  return v;
 }
 
 std::string Parser::ReadIdentifier()
 {
+  std::string s;
+  int c;
+  *in >> std::ws;
+  c = in->get();
+  if ( c == '_' || std::isalpha( c ) )
+  {
+    do
+    {
+      s += (char) c;
+      c = in->get();
+    } while ( c == '_' || !std::isalnum( c ) );
+    std::transform( s.begin(), s.end(), s.begin(), ::tolower );
+    return s;
+  }
+  else
+  {
+    throw std::runtime_error( "invalid identifier" );
+  }
+}
 
+std::string Parser::ReadVariable( Program& p )
+{
+  auto var = ReadIdentifier();
+  auto it = vars.find( var );
+  if ( it == vars.end() )
+  {
+    var_t v = vars.size();
+    vars[var] = v;
+    p.var_names[v] = var;
+  }
 }
 
 Operation::Type Parser::ReadOperationType()
 {
   auto t = ReadIdentifier();
-  std::transform( t.begin(), t.end(), t.begin(), ::tolower );
   if ( t == "set" )
   {
     return Operation::Type::SET;
