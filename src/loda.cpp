@@ -5,7 +5,7 @@
 int main( void )
 {
   Parser pa;
-  auto p = pa.Parse( "test/test1.loda" );
+  auto p = pa.Parse( "test/ackermann.loda" );
 
   Printer r;
 
@@ -16,12 +16,12 @@ int main( void )
     std::cout << std::endl;
 
     Memory m;
-    m.regs[p->FindVar("n")] = 8;
+//    m.regs[p->FindVar("n")] = 8;
 
     Interpreter i;
     i.Run( *p, m );
 
-    std::cout << "out: " << m.regs[p->FindVar("w")] << std::endl;
+    std::cout << std::endl << "out: " << m.regs[p->FindVar("a")] << std::endl;
   }
   catch ( const std::exception& e )
   {
