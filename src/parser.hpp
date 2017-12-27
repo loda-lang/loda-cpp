@@ -27,11 +27,13 @@ private:
 
   var_t ReadVariable( Program& p );
 
+  Argument ReadArgument( Program& p );
+
   Operation::Type ReadOperationType();
 
   std::string working_dir;
   std::istream* in;
-  std::unique_ptr<std::ifstream> file_in;
+  std::shared_ptr<std::ifstream> file_in;
   std::unordered_map<std::string, var_t> vars;
 
 };

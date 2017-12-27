@@ -1,7 +1,10 @@
 #include "parser.hpp"
 
+#include "program.hpp"
+
 #include <algorithm>
 #include <fstream>
+#include <iostream>
 
 Program::UPtr Parser::Parse( const std::string& file )
 {
@@ -15,13 +18,11 @@ Program::UPtr Parser::Parse( const std::string& file )
   return p;
 }
 
-
 Program::UPtr Parser::Parse( std::istream& in_ )
 {
   in = &in_;
   Program::UPtr p( new Program() );
   Operation::UPtr o;
-  int c;
   std::string l;
   while ( true )
   {
@@ -32,13 +33,14 @@ Program::UPtr Parser::Parse( std::istream& in_ )
       break;
     }
     o = nullptr;
-    if ( c == '#' )
+    if ( c == ';' )
     {
       // read comment
       in->get();
       *in >> std::ws;
       std::getline( *in, l );
-//      o.reset( new Comment( l ) );
+      o.reset( new Nop() );
+      o->comment = l;
     }
     else
     {
@@ -47,10 +49,77 @@ Program::UPtr Parser::Parse( std::istream& in_ )
       *in >> std::ws;
       switch ( op_type )
       {
+
+      case Operation::Type::NOP:
+      {
+        o.reset( new Nop() );
+        std::cout << "READ NOP" << std::endl;
+        break;
+      }
+
       case Operation::Type::MOV:
       {
-
+        auto t = ReadVariable( *p );
+        ReadSeparator( ',' );
+        auto s = ReadArgument( *p );
+        o.reset( new Mov( t, s ) );
+        std::cout << "READ MOV" << std::endl;
+        break;
       }
+
+      case Operation::Type::ADD:
+      {
+        auto t = ReadVariable( *p );
+        ReadSeparator( ',' );
+        auto s = ReadArgument( *p );
+        o.reset( new Add( t, s ) );
+        std::cout << "READ ADD" << std::endl;
+        break;
+      }
+
+      case Operation::Type::SUB:
+      {
+        auto t = ReadVariable( *p );
+        ReadSeparator( ',' );
+        auto s = ReadArgument( *p );
+        o.reset( new Sub( t, s ) );
+        std::cout << "READ SUB" << std::endl;
+        break;
+      }
+
+      case Operation::Type::LPB:
+      {
+        std::vector<var_t> loop_vars;
+        loop_vars.push_back( ReadVariable( *p ) );
+        while ( true )
+        {
+          int c = in->peek();
+          if ( c == ' ' || c == '\t' )
+          {
+            in->get();
+          }
+          else if ( c == ',' )
+          {
+            in->get();
+            loop_vars.push_back( ReadVariable( *p ) );
+          }
+          else
+          {
+            break;
+          }
+        }
+        o.reset( new LoopBegin( loop_vars ) );
+        std::cout << "READ LPB" << std::endl;
+        break;
+      }
+
+      case Operation::Type::LPE:
+      {
+        o.reset( new LoopEnd() );
+        std::cout << "READ LPE" << std::endl;
+        break;
+      }
+
       }
 
     }
@@ -95,11 +164,20 @@ std::string Parser::ReadIdentifier()
   c = in->get();
   if ( c == '_' || std::isalpha( c ) )
   {
-    do
+    s += (char) c;
+    while ( true )
     {
-      s += (char) c;
-      c = in->get();
-    } while ( c == '_' || !std::isalnum( c ) );
+      c = in->peek();
+      if ( c == '_' || std::isalnum( c ) )
+      {
+        s += (char) c;
+        in->get();
+      }
+      else
+      {
+        break;
+      }
+    }
     std::transform( s.begin(), s.end(), s.begin(), ::tolower );
     return s;
   }
@@ -120,6 +198,20 @@ var_t Parser::ReadVariable( Program& p )
     p.var_names[v] = var;
   }
   return vars[var];
+}
+
+Argument Parser::ReadArgument( Program& p )
+{
+  *in >> std::ws;
+  int c = in->peek();
+  if ( c >= '0' && c <= '9' )
+  {
+    return Argument::Constant( ReadInteger() );
+  }
+  else
+  {
+    return Argument::Variable( ReadVariable( p ) );
+  }
 }
 
 Operation::Type Parser::ReadOperationType()
@@ -145,7 +237,7 @@ Operation::Type Parser::ReadOperationType()
   {
     return Operation::Type::LPE;
   }
-  throw std::runtime_error( "invalid operation" );
+  throw std::runtime_error( "invalid operation: " + t );
 }
 
 void Parser::SetWorkingDir( const std::string& dir )

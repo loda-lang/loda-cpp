@@ -1,4 +1,5 @@
 #include "interpreter.hpp"
+#include "parser.hpp"
 #include "printer.hpp"
 
 int main( void )
@@ -33,10 +34,11 @@ int main( void )
   p.ops[7].reset( new Sub( 4, Argument::Constant( 1 ) ) );
   p.ops[8].reset( new LoopEnd() );
 
+  Printer r;
+
   try
   {
 
-    Printer r;
     r.Print( p, std::cout );
     std::cout << std::endl;
 
@@ -53,6 +55,12 @@ int main( void )
     std::cerr << "error: " << std::string( e.what() ) << std::endl;
     return 1;
   }
+
+  Parser pa;
+  auto q = pa.Parse( "test/test1.loda" );
+
+  std::cout << "PARSED: " << std::endl;
+  r.Print( *q, std::cout );
 
   return EXIT_SUCCESS;
 }
