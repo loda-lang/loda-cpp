@@ -4,7 +4,7 @@ OBJS=loda.o interpreter.o memory.o parser.o printer.o
 
 LIBS=
 
-TARGET=loda
+TARGET=../loda
 
 $(TARGET): $(OBJS)
 	$(CXX) -o $(TARGET) $(OBJS) $(LIBS)
