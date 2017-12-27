@@ -178,6 +178,19 @@ class Program
 {
 public:
   using UPtr = std::unique_ptr<Program>;
+
+  var_t FindVar( const std::string& var_name ) const
+  {
+    for ( auto& it : var_names )
+    {
+      if ( it.second == var_name )
+      {
+        return it.first;
+      }
+    }
+    throw std::runtime_error( "varible not found: " + var_name );
+  }
+
   std::vector<Operation::UPtr> ops;
   std::unordered_map<var_t, std::string> var_names;
 };
