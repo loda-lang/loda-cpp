@@ -33,38 +33,30 @@ bool Interpreter::Run( Program& p, Memory& mem )
     size_t pc_next = pc + 1;
     switch ( op->GetType() )
     {
-    case Operation::Type::CMT:
+    case Operation::Type::NOP:
     {
       break;
     }
-    case Operation::Type::SET:
+    case Operation::Type::MOV:
     {
-      std::cout << "set" << std::endl;
-      auto set = Set::Cast( op );
-      mem.regs[set->target_var] = set->value;
-      break;
-    }
-    case Operation::Type::CPY:
-    {
-      std::cout << "cpy" << std::endl;
-      auto copy = Copy::Cast( op );
-      mem.regs[copy->target_var] = mem.regs[copy->source_var];
+      std::cout << "mov" << std::endl;
+      auto mov = Mov::Cast( op );
+      mem.regs[mov->target] = Eval( mov->source, mem );
       break;
     }
     case Operation::Type::ADD:
     {
       std::cout << "add" << std::endl;
       auto add = Add::Cast( op );
-      mem.regs[add->target_var] += mem.regs[add->source_var];
+      mem.regs[add->target] += Eval( add->source, mem );
       break;
     }
     case Operation::Type::SUB:
     {
       std::cout << "sub" << std::endl;
       auto sub = Sub::Cast( op );
-      mem.regs[sub->target_var] =
-          (mem.regs[sub->target_var] > mem.regs[sub->source_var]) ?
-              (mem.regs[sub->target_var] - mem.regs[sub->source_var]) : 0;
+      auto val = Eval( sub->source, mem );
+      mem.regs[sub->target] = (mem.regs[sub->target] > val) ? (mem.regs[sub->target] - val) : 0;
       break;
     }
     case Operation::Type::LPB:
@@ -99,4 +91,15 @@ bool Interpreter::Run( Program& p, Memory& mem )
     }
   }
   return true;
+}
+
+value_t Interpreter::Eval( Argument a, Memory& mem )
+{
+  switch ( a.type )
+  {
+  case Argument::Type::CONSTANT:
+    return a.value.constant;
+  case Argument::Type::VARIABLE:
+    return mem.regs[a.value.variable];
+  }
 }

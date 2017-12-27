@@ -15,6 +15,7 @@ Program::UPtr Parser::Parse( const std::string& file )
   return p;
 }
 
+
 Program::UPtr Parser::Parse( std::istream& in_ )
 {
   in = &in_;
@@ -37,7 +38,7 @@ Program::UPtr Parser::Parse( std::istream& in_ )
       in->get();
       *in >> std::ws;
       std::getline( *in, l );
-      o.reset( new Comment( l ) );
+//      o.reset( new Comment( l ) );
     }
     else
     {
@@ -46,7 +47,7 @@ Program::UPtr Parser::Parse( std::istream& in_ )
       *in >> std::ws;
       switch ( op_type )
       {
-      case Operation::Type::SET:
+      case Operation::Type::MOV:
       {
 
       }
@@ -124,13 +125,9 @@ var_t Parser::ReadVariable( Program& p )
 Operation::Type Parser::ReadOperationType()
 {
   auto t = ReadIdentifier();
-  if ( t == "set" )
+  if ( t == "mov" )
   {
-    return Operation::Type::SET;
-  }
-  else if ( t == "cpy" )
-  {
-    return Operation::Type::CPY;
+    return Operation::Type::MOV;
   }
   else if ( t == "add" )
   {

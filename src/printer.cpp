@@ -11,6 +11,18 @@ std::string GetIndent( int indent )
   return s;
 }
 
+std::string GetArgument( Argument a, Program& p )
+{
+  switch ( a.type )
+  {
+  case Argument::Type::CONSTANT:
+    return std::to_string( a.value.constant );
+  case Argument::Type::VARIABLE:
+    return p.var_names.at( a.value.variable );
+  }
+  return "";
+}
+
 void Printer::Print( Program& p, std::ostream& out )
 {
   int indent = 0;
@@ -18,40 +30,34 @@ void Printer::Print( Program& p, std::ostream& out )
   {
     switch ( op->GetType() )
     {
-    case Operation::Type::CMT:
+    case Operation::Type::NOP:
     {
-      auto cmt = Comment::Cast( op );
-      if ( !cmt->value.empty() )
-      {
-        out << GetIndent( indent ) << "# " << cmt->value << std::endl;
-      }
+//      auto cmt = Comment::Cast( op );
+//      if ( !cmt->value.empty() )
+//      {
+//        out << GetIndent( indent ) << "# " << cmt->value << std::endl;
+//      }
       break;
     }
-    case Operation::Type::SET:
+    case Operation::Type::MOV:
     {
-      auto set = Set::Cast( op );
-      out << GetIndent( indent ) << "set " << p.var_names.at( set->target_var ) << "," << (int) set->value << std::endl;
-      break;
-    }
-    case Operation::Type::CPY:
-    {
-      auto copy = Copy::Cast( op );
-      out << GetIndent( indent ) << "cpy " << p.var_names.at( copy->target_var ) << ","
-          << p.var_names.at( copy->source_var ) << std::endl;
+      auto mov = Mov::Cast( op );
+      out << GetIndent( indent ) << "mov " << p.var_names.at( mov->target ) << "," << GetArgument( mov->source, p )
+          << std::endl;
       break;
     }
     case Operation::Type::ADD:
     {
       auto add = Add::Cast( op );
-      out << GetIndent( indent ) << "add " << p.var_names.at( add->target_var ) << ","
-          << p.var_names.at( add->source_var ) << std::endl;
+      out << GetIndent( indent ) << "add " << p.var_names.at( add->target ) << "," << GetArgument( add->source, p )
+          << std::endl;
       break;
     }
     case Operation::Type::SUB:
     {
       auto sub = Sub::Cast( op );
-      out << GetIndent( indent ) << "sub " << p.var_names.at( sub->target_var ) << ","
-          << p.var_names.at( sub->source_var ) << std::endl;
+      out << GetIndent( indent ) << "sub " << p.var_names.at( sub->target ) << "," << GetArgument( sub->source, p )
+          << std::endl;
       break;
     }
     case Operation::Type::LPB:

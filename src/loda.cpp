@@ -25,15 +25,15 @@ int main( void )
   p.var_names[4] = "w";
 
   p.ops.resize( 10 );
-  p.ops[0].reset( new Set( 1, 1 ) );
-  p.ops[1].reset( new Copy( 2, 0 ) );
-  p.ops[2].reset( new Copy( 3, 0 ) );
-  p.ops[3].reset( new Sub( 2, 1 ) );
-  p.ops[4].reset( new Sub( 3, 2 ) );
-  p.ops[5].reset( new Set( 4, 1 ) );
+  p.ops[0].reset( new Mov( 1, Argument::Constant( 1 ) ) );
+  p.ops[1].reset( new Mov( 2, Argument::Variable( 0 ) ) );
+  p.ops[2].reset( new Mov( 3, Argument::Variable( 0 ) ) );
+  p.ops[3].reset( new Sub( 2, Argument::Variable( 1 ) ) );
+  p.ops[4].reset( new Sub( 3, Argument::Variable( 2 ) ) );
+  p.ops[5].reset( new Mov( 4, Argument::Constant( 1 ) ) );
   p.ops[6].reset( new LoopBegin( { 3 } ) );
-  p.ops[7].reset( new Sub( 3, 1 ) );
-  p.ops[8].reset( new Sub( 4, 1 ) );
+  p.ops[7].reset( new Sub( 3, Argument::Variable( 1 ) ) );
+  p.ops[8].reset( new Sub( 4, Argument::Variable( 1 ) ) );
   p.ops[9].reset( new LoopEnd() );
 
   /*  p.ops[0].reset( new Set( 42, 0 ) );

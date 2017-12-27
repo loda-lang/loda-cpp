@@ -7,15 +7,50 @@
 #include <vector>
 #include <unordered_map>
 
+class Argument
+{
+public:
+  enum class Type
+  {
+    CONSTANT = 0,
+    VARIABLE
+  };
+
+  union Value
+  {
+    var_t variable;
+    value_t constant;
+  };
+
+  static Argument Constant( value_t value )
+  {
+    Argument arg;
+    arg.type = Type::CONSTANT;
+    arg.value.constant = value;
+    return arg;
+  }
+
+  static Argument Variable( var_t variable )
+  {
+    Argument arg;
+    arg.type = Type::VARIABLE;
+    arg.value.variable = variable;
+    return arg;
+  }
+
+  Type type;
+  Value value;
+
+};
+
 class Operation
 {
 public:
   using UPtr = std::unique_ptr<Operation>;
   enum class Type
   {
-    CMT = 0,
-    SET,
-    CPY,
+    NOP = 0,
+    MOV,
     ADD,
     SUB,
     LPB,
@@ -25,88 +60,58 @@ public:
   {
   }
   virtual Type GetType() const = 0;
-};
-
-class UnaryOperation: public Operation
-{
-public:
-  UnaryOperation( var_t t, const_t v )
-      : target_var( t ),
-        value( v )
-  {
-  }
-  var_t target_var;
-  const_t value;
+  std::string comment;
 };
 
 class BinaryOperation: public Operation
 {
 public:
-  BinaryOperation( var_t t, var_t s )
-      : target_var( t ),
-        source_var( s )
+  BinaryOperation( var_t t, Argument s )
+      : target( t ),
+        source( s )
   {
   }
-  var_t target_var;
-  var_t source_var;
+  var_t target;
+  Argument source;
 };
 
-class Comment: public Operation
+class Nop: public Operation
 {
 public:
-  Comment( const std::string& v )
-      : value( v )
+  Nop()
   {
   }
   virtual Type GetType() const override
   {
-    return Type::CMT;
+    return Type::NOP;
   }
-  static Comment* Cast( UPtr& p )
+  static Nop* Cast( UPtr& p )
   {
-    return dynamic_cast<Comment*>( p.get() );
-  }
-  std::string value;
-};
-
-class Set: public UnaryOperation
-{
-public:
-  Set( var_t t, const_t v )
-      : UnaryOperation( t, v )
-  {
-  }
-  virtual Type GetType() const override
-  {
-    return Type::SET;
-  }
-  static Set* Cast( UPtr& p )
-  {
-    return dynamic_cast<Set*>( p.get() );
+    return dynamic_cast<Nop*>( p.get() );
   }
 };
 
-class Copy: public BinaryOperation
+class Mov: public BinaryOperation
 {
 public:
-  Copy( var_t t, var_t s )
+  Mov( var_t t, Argument s )
       : BinaryOperation( t, s )
   {
   }
   virtual Type GetType() const override
   {
-    return Type::CPY;
+    return Type::MOV;
   }
-  static Copy* Cast( UPtr& p )
+  static Mov* Cast( UPtr& p )
   {
-    return dynamic_cast<Copy*>( p.get() );
+    return dynamic_cast<Mov*>( p.get() );
   }
 };
 
 class Add: public BinaryOperation
 {
 public:
-  Add( var_t t, var_t s )
+  Add( var_t t, Argument s )
       : BinaryOperation( t, s )
   {
   }
@@ -124,7 +129,7 @@ public:
 class Sub: public BinaryOperation
 {
 public:
-  Sub( var_t t, var_t s )
+  Sub( var_t t, Argument s )
       : BinaryOperation( t, s )
   {
   }
