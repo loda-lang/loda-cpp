@@ -46,17 +46,26 @@ int main( void )
    p.ops[7].reset( new Add( 2, 3 ) );
    */
 
-  Printer r;
-  r.Print( p, std::cout );
-  std::cout << std::endl;
+  try
+  {
 
-  Memory m;
-  m.regs[0] = 8;
+    Printer r;
+    r.Print( p, std::cout );
+    std::cout << std::endl;
 
-  Interpreter i;
-  i.Run( p, m );
+    Memory m;
+    m.regs[0] = 8;
 
-  std::cout << "out: " << m << std::endl;
+    Interpreter i;
+    i.Run( p, m );
+
+    std::cout << "out: " << m << std::endl;
+  }
+  catch ( const std::exception& e )
+  {
+    std::cerr << "error: " << std::string( e.what() ) << std::endl;
+    return 1;
+  }
 
   return EXIT_SUCCESS;
 }

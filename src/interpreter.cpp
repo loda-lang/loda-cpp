@@ -70,17 +70,18 @@ bool Interpreter::Run( Program& p, Memory& mem )
     {
       std::cout << "lpe" << std::endl;
       auto ps_begin = loop_stack.top();
-      loop_stack.pop();
       auto loop_begin = LoopBegin::Cast( p.ops[ps_begin] );
       auto prev = mem_stack.top();
       mem_stack.pop();
       if ( mem.IsLessThan( prev, loop_begin->loop_vars ) )
       {
         pc_next = ps_begin + 1;
+        mem_stack.push( mem );
       }
       else
       {
         mem = prev;
+        loop_stack.pop();
       }
       break;
     }
