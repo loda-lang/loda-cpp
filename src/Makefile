@@ -1,10 +1,10 @@
 CXXFLAGS=-O2 -g -Wall -fmessage-length=0 -std=c++14
 
-OBJS=cmtool.o interpreter.o memory.o parser.o printer.o
+OBJS=loda.o interpreter.o memory.o parser.o printer.o
 
 LIBS=
 
-TARGET=cmtool
+TARGET=loda
 
 $(TARGET): $(OBJS)
 	$(CXX) -o $(TARGET) $(OBJS) $(LIBS)
