@@ -5,7 +5,7 @@
 int main( void )
 {
   Parser pa;
-  auto p = pa.Parse( "test/ackermann.loda" );
+  auto p = pa.Parse( "test/fibonacci.loda" );
 
   Printer r;
 
@@ -21,7 +21,7 @@ int main( void )
     Interpreter i;
     i.Run( *p, m );
 
-    std::cout << std::endl << "out: " << m.regs[p->FindVar("a")] << std::endl;
+    std::cout << std::endl << "out: " << m.regs[p->FindVar("f")] << std::endl;
   }
   catch ( const std::exception& e )
   {
