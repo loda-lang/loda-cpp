@@ -41,22 +41,26 @@ bool Interpreter::Run( Program& p, Memory& mem )
     {
       std::cout << "mov" << std::endl;
       auto mov = Mov::Cast( op );
-      mem.regs[mov->target] = Eval( mov->source, mem );
+      auto s = Get( mov->source, mem );
+      Set( mov->target, s, mem );
       break;
     }
     case Operation::Type::ADD:
     {
       std::cout << "add" << std::endl;
       auto add = Add::Cast( op );
-      mem.regs[add->target] += Eval( add->source, mem );
+      auto s = Get( add->source, mem );
+      auto t = Get( add->target, mem );
+      Set( add->target, t + s, mem );
       break;
     }
     case Operation::Type::SUB:
     {
       std::cout << "sub" << std::endl;
       auto sub = Sub::Cast( op );
-      auto val = Eval( sub->source, mem );
-      mem.regs[sub->target] = (mem.regs[sub->target] > val) ? (mem.regs[sub->target] - val) : 0;
+      auto s = Get( sub->source, mem );
+      auto t = Get( sub->target, mem );
+      Set( sub->target, (t > s) ? (t - s) : 0, mem );
       break;
     }
     case Operation::Type::LPB:
@@ -73,7 +77,7 @@ bool Interpreter::Run( Program& p, Memory& mem )
       auto loop_begin = LoopBegin::Cast( p.ops[ps_begin] );
       auto prev = mem_stack.top();
       mem_stack.pop();
-      if ( mem.IsLessThan( prev, loop_begin->loop_vars ) )
+      if ( IsLessThan( mem, prev, loop_begin->loop_vars ) )
       {
         pc_next = ps_begin + 1;
         mem_stack.push( mem );
@@ -94,13 +98,48 @@ bool Interpreter::Run( Program& p, Memory& mem )
   return true;
 }
 
-value_t Interpreter::Eval( Argument a, Memory& mem )
+Value Interpreter::Get( Operand a, const Memory& mem )
 {
   switch ( a.type )
   {
-  case Argument::Type::CONSTANT:
-    return a.value.constant;
-  case Argument::Type::VARIABLE:
-    return mem.regs[a.value.variable];
+  case Operand::Type::CONSTANT:
+    return a.value;
+  case Operand::Type::MEM_ACCESS_DIRECT:
+    return mem.regs[a.value];
+  case Operand::Type::MEM_ACCESS_INDIRECT:
+    return mem.regs[mem.regs[a.value]];
   }
+  return
+  {};
+}
+
+void Interpreter::Set( Operand a, Value v, Memory& mem )
+{
+  switch ( a.type )
+  {
+  case Operand::Type::CONSTANT:
+    throw std::runtime_error( "cannot set value to constant" );
+  case Operand::Type::MEM_ACCESS_DIRECT:
+    mem.regs[a.value] = v;
+    break;
+  case Operand::Type::MEM_ACCESS_INDIRECT:
+    mem.regs[mem.regs[a.value]] = v;
+    break;
+  }
+}
+
+bool Interpreter::IsLessThan( const Memory& m1, const Memory& m2, const std::vector<Operand>& cmp_vars )
+{
+  for ( Operand v : cmp_vars )
+  {
+    if ( Get( v, m1 ) < Get( v, m2 ) )
+    {
+      return true; // less
+    }
+    else if ( Get( v, m1 ) > Get( v, m2 ) )
+    {
+      return false; // greater
+    }
+  }
+  return false; // equal
 }

@@ -1,15 +1,15 @@
 #include "memory.hpp"
 
-#include "types.hpp"
+#include "value.hpp"
 
 Memory::Memory()
 {
   regs.fill( 0 );
 }
 
-bool Memory::IsLessThan( const Memory& other, const std::vector<var_t> cmp_vars )
+bool Memory::IsLessThan( const Memory& other, const std::vector<Value> cmp_vars )
 {
-  for ( var_t v : cmp_vars )
+  for ( Value v : cmp_vars )
   {
     if ( regs[v] < other.regs[v] )
     {
@@ -23,7 +23,7 @@ bool Memory::IsLessThan( const Memory& other, const std::vector<var_t> cmp_vars 
   return false; // equal
 }
 
-std::array<value_t, 256> regs;
+std::array<Value, 256> regs;
 
 std::ostream& operator<<( std::ostream& out, const Memory& m )
 {

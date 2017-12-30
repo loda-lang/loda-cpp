@@ -1,6 +1,6 @@
 #pragma once
 
-#include "types.hpp"
+#include "value.hpp"
 
 #include <array>
 #include <iostream>
@@ -12,9 +12,9 @@ public:
 
   Memory();
 
-  bool IsLessThan( const Memory& other, const std::vector<var_t> cmp_vars );
+  bool IsLessThan( const Memory& other, const std::vector<Value> cmp_vars );
 
-  std::array<value_t, 256> regs;
+  std::array<Value, 256> regs;
 
 };
 

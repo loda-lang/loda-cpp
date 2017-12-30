@@ -59,9 +59,9 @@ Program::UPtr Parser::Parse( std::istream& in_ )
 
       case Operation::Type::MOV:
       {
-        auto t = ReadVariable( *p );
+        auto t = ReadOperand( *p );
         ReadSeparator( ',' );
-        auto s = ReadArgument( *p );
+        auto s = ReadOperand( *p );
         o.reset( new Mov( t, s ) );
         std::cout << "READ MOV" << std::endl;
         break;
@@ -69,9 +69,9 @@ Program::UPtr Parser::Parse( std::istream& in_ )
 
       case Operation::Type::ADD:
       {
-        auto t = ReadVariable( *p );
+        auto t = ReadOperand( *p );
         ReadSeparator( ',' );
-        auto s = ReadArgument( *p );
+        auto s = ReadOperand( *p );
         o.reset( new Add( t, s ) );
         std::cout << "READ ADD" << std::endl;
         break;
@@ -79,9 +79,9 @@ Program::UPtr Parser::Parse( std::istream& in_ )
 
       case Operation::Type::SUB:
       {
-        auto t = ReadVariable( *p );
+        auto t = ReadOperand( *p );
         ReadSeparator( ',' );
-        auto s = ReadArgument( *p );
+        auto s = ReadOperand( *p );
         o.reset( new Sub( t, s ) );
         std::cout << "READ SUB" << std::endl;
         break;
@@ -89,8 +89,8 @@ Program::UPtr Parser::Parse( std::istream& in_ )
 
       case Operation::Type::LPB:
       {
-        std::vector<var_t> loop_vars;
-        loop_vars.push_back( ReadVariable( *p ) );
+        std::vector<Operand> loop_vars;
+        loop_vars.push_back( ReadOperand( *p ) );
         while ( true )
         {
           int c = in->peek();
@@ -101,7 +101,7 @@ Program::UPtr Parser::Parse( std::istream& in_ )
           else if ( c == ',' )
           {
             in->get();
-            loop_vars.push_back( ReadVariable( *p ) );
+            loop_vars.push_back( ReadOperand( *p ) );
           }
           else
           {
@@ -142,15 +142,15 @@ void Parser::ReadSeparator( char separator )
   }
 }
 
-value_t Parser::ReadInteger()
+Value Parser::ReadValue()
 {
-  value_t v;
+  Value v;
   int c;
   *in >> std::ws;
   c = in->peek();
   if ( !std::isdigit( c ) )
   {
-    throw std::runtime_error( "invalid integer" );
+    throw std::runtime_error( "invalid value" );
   }
   *in >> v;
   return v;
@@ -187,30 +187,28 @@ std::string Parser::ReadIdentifier()
   }
 }
 
-var_t Parser::ReadVariable( Program& p )
-{
-  auto var = ReadIdentifier();
-  auto it = vars.find( var );
-  if ( it == vars.end() )
-  {
-    var_t v = vars.size();
-    vars[var] = v;
-    p.var_names[v] = var;
-  }
-  return vars[var];
-}
-
-Argument Parser::ReadArgument( Program& p )
+Operand Parser::ReadOperand( Program& p )
 {
   *in >> std::ws;
   int c = in->peek();
-  if ( c >= '0' && c <= '9' )
+  if ( c == '$' )
   {
-    return Argument::Constant( ReadInteger() );
+    in->get();
+    c = in->peek();
+    if ( c == '$' )
+    {
+      in->get();
+      return Operand( Operand::Type::MEM_ACCESS_INDIRECT, ReadValue() );
+    }
+    else
+    {
+      return Operand( Operand::Type::MEM_ACCESS_DIRECT, ReadValue() );
+    }
+
   }
   else
   {
-    return Argument::Variable( ReadVariable( p ) );
+    return Operand( Operand::Type::CONSTANT, ReadValue() );
   }
 }
 

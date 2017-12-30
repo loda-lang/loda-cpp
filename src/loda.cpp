@@ -2,32 +2,91 @@
 #include "parser.hpp"
 #include "printer.hpp"
 
+int ack( int i, int n )
+{
+  std::vector<int> next;
+  std::vector<int> goal;
+  next.resize( i + 1 );
+  goal.resize( i + 1 );
+  for ( int d = 0; d <= i; d++ )
+  {
+    next[d] = 0;
+    goal[d] = 1;
+  }
+  goal[i] = n;
+  int value;
+  do
+  {
+    value = next[0] + 1;
+    bool transfer = true;
+    int j = 0;
+    while ( transfer )
+    {
+      if ( next[j] == goal[j] )
+      {
+        goal[j] = value;
+      }
+      else
+      {
+        transfer = false;
+      }
+      next[j]++;
+      j++;
+    }
+
+    // -----------------------------------
+    std::cout << "next:";
+    for ( int d = 0; d <= i; d++ )
+    {
+      std::cout << " " << next[d];
+    }
+    std::cout << "   goal:";
+    for ( int d = 0; d <= i; d++ )
+    {
+      std::cout << " " << goal[d];
+    }
+    std::cout << "\t diff:";
+    for ( int d = 0; d <= i; d++ )
+    {
+      std::cout << " " << (goal[d]-next[d]);
+    }
+    std::cout << std::endl;
+    // -----------------------------------
+
+  } while ( next[i] != n + 1 );
+  return value;
+}
+
 int main( void )
 {
-  Parser pa;
-  auto p = pa.Parse( "test/fibonacci.loda" );
 
-  Printer r;
+//  ack( 3, 3 );
 
-  try
-  {
 
-    r.Print( *p, std::cout );
-    std::cout << std::endl;
+   Parser pa;
+   auto p = pa.Parse( "test/fibonacci.loda" );
 
-    Memory m;
-//    m.regs[p->FindVar("n")] = 8;
+   Printer r;
 
-    Interpreter i;
-    i.Run( *p, m );
+   try
+   {
 
-    std::cout << std::endl << "out: " << m.regs[p->FindVar("f")] << std::endl;
-  }
-  catch ( const std::exception& e )
-  {
-    std::cerr << "error: " << std::string( e.what() ) << std::endl;
-    return 1;
-  }
+   r.Print( *p, std::cout );
+   std::cout << std::endl;
+
+   Memory m;
+   //    m.regs[p->FindVar("n")] = 8;
+
+   Interpreter i;
+   i.Run( *p, m );
+
+   std::cout << std::endl << "out: " << m << std::endl;
+   }
+   catch ( const std::exception& e )
+   {
+   std::cerr << "error: " << std::string( e.what() ) << std::endl;
+   return 1;
+   }
 
   return EXIT_SUCCESS;
 }

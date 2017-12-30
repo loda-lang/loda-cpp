@@ -1,41 +1,25 @@
 #pragma once
 
-#include "types.hpp"
-
-#include <string>
 #include <memory>
+#include <string>
 #include <vector>
-#include <unordered_map>
 
-class Argument
+#include "value.hpp"
+
+class Operand
 {
 public:
   enum class Type
   {
     CONSTANT = 0,
-    VARIABLE
+    MEM_ACCESS_DIRECT,
+    MEM_ACCESS_INDIRECT
   };
 
-  union Value
+  Operand( Type t, Value v )
+      : type( t ),
+        value( v )
   {
-    var_t variable;
-    value_t constant;
-  };
-
-  static Argument Constant( value_t value )
-  {
-    Argument arg;
-    arg.type = Type::CONSTANT;
-    arg.value.constant = value;
-    return arg;
-  }
-
-  static Argument Variable( var_t variable )
-  {
-    Argument arg;
-    arg.type = Type::VARIABLE;
-    arg.value.variable = variable;
-    return arg;
   }
 
   Type type;
@@ -66,13 +50,17 @@ public:
 class BinaryOperation: public Operation
 {
 public:
-  BinaryOperation( var_t t, Argument s )
+  BinaryOperation( Operand t, Operand s )
       : target( t ),
         source( s )
   {
   }
-  var_t target;
-  Argument source;
+  static BinaryOperation* Cast( UPtr& p )
+  {
+    return dynamic_cast<BinaryOperation*>( p.get() );
+  }
+  Operand target;
+  Operand source;
 };
 
 class Nop: public Operation
@@ -94,7 +82,7 @@ public:
 class Mov: public BinaryOperation
 {
 public:
-  Mov( var_t t, Argument s )
+  Mov( Operand t, Operand s )
       : BinaryOperation( t, s )
   {
   }
@@ -111,7 +99,7 @@ public:
 class Add: public BinaryOperation
 {
 public:
-  Add( var_t t, Argument s )
+  Add( Operand t, Operand s )
       : BinaryOperation( t, s )
   {
   }
@@ -129,7 +117,7 @@ public:
 class Sub: public BinaryOperation
 {
 public:
-  Sub( var_t t, Argument s )
+  Sub( Operand t, Operand s )
       : BinaryOperation( t, s )
   {
   }
@@ -146,7 +134,7 @@ public:
 class LoopBegin: public Operation
 {
 public:
-  LoopBegin( const std::vector<var_t>& l )
+  LoopBegin( const std::vector<Operand>& l )
       : loop_vars( l )
   {
   }
@@ -158,7 +146,7 @@ public:
   {
     return dynamic_cast<LoopBegin*>( p.get() );
   }
-  std::vector<var_t> loop_vars;
+  std::vector<Operand> loop_vars;
 };
 
 class LoopEnd: public Operation
@@ -179,18 +167,5 @@ class Program
 public:
   using UPtr = std::unique_ptr<Program>;
 
-  var_t FindVar( const std::string& var_name ) const
-  {
-    for ( auto& it : var_names )
-    {
-      if ( it.second == var_name )
-      {
-        return it.first;
-      }
-    }
-    throw std::runtime_error( "varible not found: " + var_name );
-  }
-
   std::vector<Operation::UPtr> ops;
-  std::unordered_map<var_t, std::string> var_names;
 };
