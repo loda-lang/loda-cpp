@@ -8,21 +8,23 @@ int ack( int i, int n )
   std::vector<int> diff;
   next.resize( i + 1 );
   diff.resize( i + 1 );
-  for ( int d = 0; d <= i; d++ )
+
+  int j;
+  for ( j = 0; j <= i; j++ )
   {
-    next[d] = 0;
-    diff[d] = 1;
+    next[j] = 0;
+    diff[j] = 1;
   }
   diff[0] = n + 1;
+
   int value;
   do
   {
-
     value = next[i] + 1;
 
     bool transfer = true;
 
-    int j = i;
+    j = i;
     while ( transfer )
     {
       if ( diff[j] == 0 )
