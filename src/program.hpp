@@ -131,11 +131,11 @@ public:
   }
 };
 
-class LoopBegin: public Operation
+class LoopBegin: public BinaryOperation
 {
 public:
-  LoopBegin( const std::vector<Operand>& l )
-      : loop_vars( l )
+  LoopBegin( Operand t, Operand s )
+      : BinaryOperation( t, s )
   {
   }
   virtual Type GetType() const override
@@ -146,7 +146,6 @@ public:
   {
     return dynamic_cast<LoopBegin*>( p.get() );
   }
-  std::vector<Operand> loop_vars;
 };
 
 class LoopEnd: public Operation

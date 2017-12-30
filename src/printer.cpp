@@ -59,13 +59,7 @@ void Printer::Print( Program& p, std::ostream& out )
     }
     case Operation::Type::LPB:
     {
-      auto loop_begin = LoopBegin::Cast( op );
-      out << GetIndent( indent ) << "lpb ";
-      for ( size_t i = 0; i < loop_begin->loop_vars.size(); i++ )
-      {
-        if ( i > 0 ) out << ",";
-        out << GetOperand( loop_begin->loop_vars.at( i ), p );
-      }
+      out << GetBinaryOperation( indent, "lpb", *BinaryOperation::Cast( op ), p );
       indent += 2;
       break;
     }

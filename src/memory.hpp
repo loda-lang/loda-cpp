@@ -2,7 +2,6 @@
 
 #include "value.hpp"
 
-#include <array>
 #include <iostream>
 #include <vector>
 
@@ -12,10 +11,21 @@ public:
 
   Memory();
 
-  bool IsLessThan( const Memory& other, const std::vector<Value> cmp_vars );
+  Value Get( Value i ) const;
 
-  std::array<Value, 256> regs;
+  void Set( Value i, Value v );
+
+  Value Length() const;
+
+  Memory Fragment( Value start, Value length ) const;
+
+  bool operator<( const Memory& other ) const;
+
+  friend std::ostream& operator<<( std::ostream& out, const Memory& m );
+
+private:
+
+  std::vector<Value> data;
 
 };
 
-std::ostream& operator<<( std::ostream& out, const Memory& m );

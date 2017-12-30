@@ -4,18 +4,41 @@
 
 Memory::Memory()
 {
-  regs.fill( 0 );
 }
 
-bool Memory::IsLessThan( const Memory& other, const std::vector<Value> cmp_vars )
+Value Memory::Get( Value i ) const
 {
-  for ( Value v : cmp_vars )
+  if ( i >= data.size() )
   {
-    if ( regs[v] < other.regs[v] )
+    return 0;
+  }
+  return data[i];
+}
+
+void Memory::Set( Value i, Value v )
+{
+  if ( i >= data.size() )
+  {
+    data.resize( i + 1, 0 );
+  }
+  data[i] = v;
+}
+
+Value Memory::Length() const
+{
+  return data.size();
+}
+
+bool Memory::operator<( const Memory& other ) const
+{
+  Value length = Length() > other.Length() ? Length() : other.Length();
+  for ( Value i = 0; i < length; i++ )
+  {
+    if ( Get( i ) < other.Get( i ) )
     {
       return true; // less
     }
-    else if ( regs[v] > other.regs[v] )
+    else if ( Get( i ) > other.Get( i ) )
     {
       return false; // greater
     }
@@ -23,19 +46,22 @@ bool Memory::IsLessThan( const Memory& other, const std::vector<Value> cmp_vars 
   return false; // equal
 }
 
-std::array<Value, 256> regs;
+Memory Memory::Fragment( Value start, Value length ) const
+{
+  Memory f;
+  for ( Value i = 0; i < length; i++ )
+  {
+    f.Set( i, Get( start + i ) );
+  }
+  return f;
+}
 
 std::ostream& operator<<( std::ostream& out, const Memory& m )
 {
-  size_t last = m.regs.size() - 1;
-  while ( last > 1 && m.regs[last] == 0 )
-  {
-    last--;
-  }
-  for ( size_t i = 0; i <= last; i++ )
+  for ( size_t i = 0; i < m.data.size(); i++ )
   {
     if ( i > 0 ) out << ",";
-    out << m.regs[i];
+    out << m.data[i];
   }
   return out;
 }

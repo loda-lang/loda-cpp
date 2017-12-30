@@ -81,26 +81,10 @@ Program::UPtr Parser::Parse( std::istream& in_ )
 
       case Operation::Type::LPB:
       {
-        std::vector<Operand> loop_vars;
-        loop_vars.push_back( ReadOperand( *p ) );
-        while ( true )
-        {
-          int c = in->peek();
-          if ( c == ' ' || c == '\t' )
-          {
-            in->get();
-          }
-          else if ( c == ',' )
-          {
-            in->get();
-            loop_vars.push_back( ReadOperand( *p ) );
-          }
-          else
-          {
-            break;
-          }
-        }
-        o.reset( new LoopBegin( loop_vars ) );
+        auto t = ReadOperand( *p );
+        ReadSeparator( ',' );
+        auto s = ReadOperand( *p );
+        o.reset( new LoopBegin( t, s ) );
         break;
       }
 
