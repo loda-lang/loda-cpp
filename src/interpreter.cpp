@@ -26,7 +26,6 @@ bool Interpreter::Run( Program& p, Memory& mem )
   // loop until stack is empty
   while ( !pc_stack.empty() )
   {
-    std::cout << mem << std::endl;
     size_t pc = pc_stack.top();
     pc_stack.pop();
     auto& op = p.ops.at( pc );
@@ -39,7 +38,6 @@ bool Interpreter::Run( Program& p, Memory& mem )
     }
     case Operation::Type::MOV:
     {
-      std::cout << "mov" << std::endl;
       auto mov = Mov::Cast( op );
       auto s = Get( mov->source, mem );
       Set( mov->target, s, mem );
@@ -47,7 +45,6 @@ bool Interpreter::Run( Program& p, Memory& mem )
     }
     case Operation::Type::ADD:
     {
-      std::cout << "add" << std::endl;
       auto add = Add::Cast( op );
       auto s = Get( add->source, mem );
       auto t = Get( add->target, mem );
@@ -56,7 +53,6 @@ bool Interpreter::Run( Program& p, Memory& mem )
     }
     case Operation::Type::SUB:
     {
-      std::cout << "sub" << std::endl;
       auto sub = Sub::Cast( op );
       auto s = Get( sub->source, mem );
       auto t = Get( sub->target, mem );
@@ -65,14 +61,12 @@ bool Interpreter::Run( Program& p, Memory& mem )
     }
     case Operation::Type::LPB:
     {
-      std::cout << "lpb" << std::endl;
       loop_stack.push( pc );
       mem_stack.push( mem );
       break;
     }
     case Operation::Type::LPE:
     {
-      std::cout << "lpe" << std::endl;
       auto ps_begin = loop_stack.top();
       auto loop_begin = LoopBegin::Cast( p.ops[ps_begin] );
       auto prev = mem_stack.top();

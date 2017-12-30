@@ -39,25 +39,22 @@ void Printer::Print( Program& p, std::ostream& out )
     {
     case Operation::Type::NOP:
     {
-      if ( !op->comment.empty() )
-      {
-        out << GetIndent( indent ) << "; " << op->comment << std::endl;
-      }
+      out << GetIndent( indent );
       break;
     }
     case Operation::Type::MOV:
     {
-      out << GetBinaryOperation( indent, "mov", *BinaryOperation::Cast( op ), p ) << std::endl;
+      out << GetBinaryOperation( indent, "mov", *BinaryOperation::Cast( op ), p );
       break;
     }
     case Operation::Type::ADD:
     {
-      out << GetBinaryOperation( indent, "add", *BinaryOperation::Cast( op ), p ) << std::endl;
+      out << GetBinaryOperation( indent, "add", *BinaryOperation::Cast( op ), p );
       break;
     }
     case Operation::Type::SUB:
     {
-      out << GetBinaryOperation( indent, "sub", *BinaryOperation::Cast( op ), p ) << std::endl;
+      out << GetBinaryOperation( indent, "sub", *BinaryOperation::Cast( op ), p );
       break;
     }
     case Operation::Type::LPB:
@@ -69,17 +66,21 @@ void Printer::Print( Program& p, std::ostream& out )
         if ( i > 0 ) out << ",";
         out << GetOperand( loop_begin->loop_vars.at( i ), p );
       }
-      out << std::endl;
       indent += 2;
       break;
     }
     case Operation::Type::LPE:
     {
       indent -= 2;
-      out << GetIndent( indent ) << "lpe " << std::endl;
+      out << GetIndent( indent ) << "lpe";
       break;
     }
     }
+    if ( !op->comment.empty() )
+    {
+      out << " ; " << op->comment;
+    }
+    out << std::endl;
   }
 
 }

@@ -1,6 +1,7 @@
 #include "parser.hpp"
 
 #include "program.hpp"
+#include "value.hpp"
 
 #include <algorithm>
 #include <fstream>
@@ -35,12 +36,7 @@ Program::UPtr Parser::Parse( std::istream& in_ )
     o = nullptr;
     if ( c == ';' )
     {
-      // read comment
-      in->get();
-      *in >> std::ws;
-      std::getline( *in, l );
       o.reset( new Nop() );
-      o->comment = l;
     }
     else
     {
@@ -53,7 +49,6 @@ Program::UPtr Parser::Parse( std::istream& in_ )
       case Operation::Type::NOP:
       {
         o.reset( new Nop() );
-        std::cout << "READ NOP" << std::endl;
         break;
       }
 
@@ -63,7 +58,6 @@ Program::UPtr Parser::Parse( std::istream& in_ )
         ReadSeparator( ',' );
         auto s = ReadOperand( *p );
         o.reset( new Mov( t, s ) );
-        std::cout << "READ MOV" << std::endl;
         break;
       }
 
@@ -73,7 +67,6 @@ Program::UPtr Parser::Parse( std::istream& in_ )
         ReadSeparator( ',' );
         auto s = ReadOperand( *p );
         o.reset( new Add( t, s ) );
-        std::cout << "READ ADD" << std::endl;
         break;
       }
 
@@ -83,7 +76,6 @@ Program::UPtr Parser::Parse( std::istream& in_ )
         ReadSeparator( ',' );
         auto s = ReadOperand( *p );
         o.reset( new Sub( t, s ) );
-        std::cout << "READ SUB" << std::endl;
         break;
       }
 
@@ -109,19 +101,32 @@ Program::UPtr Parser::Parse( std::istream& in_ )
           }
         }
         o.reset( new LoopBegin( loop_vars ) );
-        std::cout << "READ LPB" << std::endl;
         break;
       }
 
       case Operation::Type::LPE:
       {
         o.reset( new LoopEnd() );
-        std::cout << "READ LPE" << std::endl;
         break;
       }
 
       }
 
+    }
+
+    // read comment
+    c = in->peek();
+    while ( c == ' ' || c == '\t' )
+    {
+      in->get();
+      c = in->peek();
+    }
+    if ( c == ';' )
+    {
+      in->get();
+      *in >> std::ws;
+      std::getline( *in, l );
+      o->comment = l;
     }
 
     // add operation to program
