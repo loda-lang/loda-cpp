@@ -13,7 +13,7 @@ int ack( int i, int n )
     next[d] = 0;
     goal[d] = 1;
   }
-  goal[0] = n;
+  goal[0] = n + 1;
   int value;
   do
   {
