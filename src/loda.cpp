@@ -13,13 +13,13 @@ int ack( int i, int n )
     next[d] = 0;
     goal[d] = 1;
   }
-  goal[i] = n;
+  goal[0] = n;
   int value;
   do
   {
-    value = next[0] + 1;
+    value = next[i] + 1;
     bool transfer = true;
-    int j = 0;
+    int j = i;
     while ( transfer )
     {
       if ( next[j] == goal[j] )
@@ -31,7 +31,7 @@ int ack( int i, int n )
         transfer = false;
       }
       next[j]++;
-      j++;
+      j--;
     }
 
     // -----------------------------------
@@ -48,45 +48,44 @@ int ack( int i, int n )
     std::cout << "\t diff:";
     for ( int d = 0; d <= i; d++ )
     {
-      std::cout << " " << (goal[d]-next[d]);
+      std::cout << " " << (goal[d] - next[d]);
     }
     std::cout << std::endl;
     // -----------------------------------
 
-  } while ( next[i] != n + 1 );
+  } while ( next[0] != n + 1 );
   return value;
 }
 
 int main( void )
 {
 
-//  ack( 3, 3 );
+  ack( 3, 3 );
 
+  Parser pa;
+  auto p = pa.Parse( "test/fibonacci.loda" );
 
-   Parser pa;
-   auto p = pa.Parse( "test/fibonacci.loda" );
+  Printer r;
 
-   Printer r;
+  try
+  {
 
-   try
-   {
+    r.Print( *p, std::cout );
+    std::cout << std::endl;
 
-   r.Print( *p, std::cout );
-   std::cout << std::endl;
+    Memory m;
+    //    m.regs[p->FindVar("n")] = 8;
 
-   Memory m;
-   //    m.regs[p->FindVar("n")] = 8;
+    Interpreter i;
+    i.Run( *p, m );
 
-   Interpreter i;
-   i.Run( *p, m );
-
-   std::cout << std::endl << "out: " << m << std::endl;
-   }
-   catch ( const std::exception& e )
-   {
-   std::cerr << "error: " << std::string( e.what() ) << std::endl;
-   return 1;
-   }
+    std::cout << std::endl << "out: " << m << std::endl;
+  }
+  catch ( const std::exception& e )
+  {
+    std::cerr << "error: " << std::string( e.what() ) << std::endl;
+    return 1;
+  }
 
   return EXIT_SUCCESS;
 }
