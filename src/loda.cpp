@@ -5,32 +5,36 @@
 int ack( int i, int n )
 {
   std::vector<int> next;
-  std::vector<int> goal;
+  std::vector<int> diff;
   next.resize( i + 1 );
-  goal.resize( i + 1 );
+  diff.resize( i + 1 );
   for ( int d = 0; d <= i; d++ )
   {
     next[d] = 0;
-    goal[d] = 1;
+    diff[d] = 1;
   }
-  goal[0] = n + 1;
+  diff[0] = n + 1;
   int value;
   do
   {
+
     value = next[i] + 1;
+
     bool transfer = true;
+
     int j = i;
     while ( transfer )
     {
-      if ( next[j] == goal[j] )
+      if ( diff[j] == 0 )
       {
-        goal[j] = value;
+        diff[j] = value - next[j];
       }
       else
       {
         transfer = false;
       }
       next[j]++;
+      diff[j]--;
       j--;
     }
 
@@ -40,15 +44,10 @@ int ack( int i, int n )
     {
       std::cout << " " << next[d];
     }
-    std::cout << "   goal:";
+    std::cout << "   diff:";
     for ( int d = 0; d <= i; d++ )
     {
-      std::cout << " " << goal[d];
-    }
-    std::cout << "\t diff:";
-    for ( int d = 0; d <= i; d++ )
-    {
-      std::cout << " " << (goal[d] - next[d]);
+      std::cout << " " << diff[d];
     }
     std::cout << std::endl;
     // -----------------------------------
