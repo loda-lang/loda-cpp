@@ -27,7 +27,7 @@ bool Interpreter::Run( Program& p, Memory& mem )
   // loop until stack is empty
   while ( !pc_stack.empty() )
   {
-//    std::cout << mem << std::endl;
+    std::cout << mem << std::endl;
 
     size_t pc = pc_stack.top();
     pc_stack.pop();

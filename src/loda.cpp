@@ -61,10 +61,10 @@ int ack( int i, int n )
 int main( void )
 {
 
-  ack( 3, 3 );
+//  ack( 3, 3 );
 
   Parser pa;
-  auto p = pa.Parse( "test/fibonacci.loda" );
+  auto p = pa.Parse( "test/ackermann.loda" );
 
   Printer r;
 
@@ -75,7 +75,6 @@ int main( void )
     std::cout << std::endl;
 
     Memory m;
-    //    m.regs[p->FindVar("n")] = 8;
 
     Interpreter i;
     i.Run( *p, m );
