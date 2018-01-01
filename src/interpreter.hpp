@@ -10,7 +10,7 @@ public:
 
   bool Run( Program& p, Memory& mem );
 
-  Value Get( Operand a, const Memory& mem );
+  Value Get( Operand a, const Memory& mem, bool get_address = false );
 
   void Set( Operand a, Value v, Memory& mem );
 

@@ -70,7 +70,7 @@ bool Interpreter::Run( Program& p, Memory& mem )
       std::cout << "LPB" << std::endl;
       auto lpb = LoopBegin::Cast( op );
       auto l = Get( lpb->source, mem );
-      auto s = Get( lpb->target, mem );
+      auto s = Get( lpb->target, mem, true );
       loop_stack.push( pc );
       mem_stack.push( mem );
       frag_stack.push( mem.Fragment( s, l ) );
@@ -89,7 +89,7 @@ bool Interpreter::Run( Program& p, Memory& mem )
       frag_stack.pop();
 
       auto l = Get( lpb->source, mem );
-      auto s = Get( lpb->target, mem );
+      auto s = Get( lpb->target, mem, true );
       auto frag = mem.Fragment( s, l );
 
       if ( frag < frag_prev )
@@ -114,16 +114,26 @@ bool Interpreter::Run( Program& p, Memory& mem )
   return true;
 }
 
-Value Interpreter::Get( Operand a, const Memory& mem )
+Value Interpreter::Get( Operand a, const Memory& mem, bool get_address )
 {
   switch ( a.type )
   {
   case Operand::Type::CONSTANT:
+  {
+    if ( get_address )
+    {
+      throw std::runtime_error( "cannot get address of constant" );
+    }
     return a.value;
+  }
   case Operand::Type::MEM_ACCESS_DIRECT:
-    return mem.Get( a.value );
+  {
+    return get_address ? a.value : mem.Get( a.value );
+  }
   case Operand::Type::MEM_ACCESS_INDIRECT:
-    return mem.Get( mem.Get( a.value ) );
+  {
+    return get_address ? mem.Get( a.value ) : mem.Get( mem.Get( a.value ) );
+  }
   }
   return
   {};
