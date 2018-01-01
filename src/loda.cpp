@@ -20,6 +20,21 @@ int ack( int i, int n )
   int value;
   do
   {
+    // -----------------------------------
+    std::cout << "diff:";
+    for ( int d = 0; d <= i; d++ )
+    {
+      std::cout << " " << diff[d];
+    }
+    std::cout << "  next:";
+    for ( int d = 0; d <= i; d++ )
+    {
+      std::cout << " " << next[d];
+    }
+    std::cout << std::endl;
+    // -----------------------------------
+
+
     value = next[i] + 1;
 
     bool transfer = true;
@@ -40,19 +55,6 @@ int ack( int i, int n )
       j--;
     }
 
-    // -----------------------------------
-    std::cout << "next:";
-    for ( int d = 0; d <= i; d++ )
-    {
-      std::cout << " " << next[d];
-    }
-    std::cout << "   diff:";
-    for ( int d = 0; d <= i; d++ )
-    {
-      std::cout << " " << diff[d];
-    }
-    std::cout << std::endl;
-    // -----------------------------------
 
   } while ( next[0] != n + 1 );
   return value;
@@ -61,7 +63,7 @@ int ack( int i, int n )
 int main( void )
 {
 
-//  ack( 3, 3 );
+  ack( 3, 3 );
 
   Parser pa;
   auto p = pa.Parse( "test/ackermann.loda" );

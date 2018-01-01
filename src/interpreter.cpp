@@ -41,6 +41,7 @@ bool Interpreter::Run( Program& p, Memory& mem )
     }
     case Operation::Type::MOV:
     {
+//      std::cout << "MOV" << std::endl;
       auto mov = Mov::Cast( op );
       auto s = Get( mov->source, mem );
       Set( mov->target, s, mem );
@@ -48,6 +49,7 @@ bool Interpreter::Run( Program& p, Memory& mem )
     }
     case Operation::Type::ADD:
     {
+//      std::cout << "ADD" << std::endl;
       auto add = Add::Cast( op );
       auto s = Get( add->source, mem );
       auto t = Get( add->target, mem );
@@ -56,6 +58,7 @@ bool Interpreter::Run( Program& p, Memory& mem )
     }
     case Operation::Type::SUB:
     {
+//      std::cout << "SUB" << std::endl;
       auto sub = Sub::Cast( op );
       auto s = Get( sub->source, mem );
       auto t = Get( sub->target, mem );
@@ -64,6 +67,7 @@ bool Interpreter::Run( Program& p, Memory& mem )
     }
     case Operation::Type::LPB:
     {
+      std::cout << "LPB" << std::endl;
       auto lpb = LoopBegin::Cast( op );
       auto l = Get( lpb->source, mem );
       auto s = Get( lpb->target, mem );
@@ -74,6 +78,8 @@ bool Interpreter::Run( Program& p, Memory& mem )
     }
     case Operation::Type::LPE:
     {
+      std::cout << "LPE" << std::endl;
+
       auto ps_begin = loop_stack.top();
       auto lpb = LoopBegin::Cast( p.ops[ps_begin] );
       auto prev = mem_stack.top();

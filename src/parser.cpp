@@ -108,7 +108,12 @@ Program::UPtr Parser::Parse( std::istream& in_ )
     if ( c == ';' )
     {
       in->get();
-      *in >> std::ws;
+      c = in->peek();
+      while ( c == ' ' || c == '\t' )
+      {
+        in->get();
+        c = in->peek();
+      }
       std::getline( *in, l );
       o->comment = l;
     }
