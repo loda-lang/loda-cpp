@@ -11,23 +11,65 @@ std::string GetIndent( int indent )
   return s;
 }
 
-std::string GetOperand( Operand a, Program& p )
+std::string GetOperand( Operand op )
 {
-  switch ( a.type )
+  switch ( op.type )
   {
   case Operand::Type::CONSTANT:
-    return std::to_string( a.value );
+    return std::to_string( op.value );
   case Operand::Type::MEM_ACCESS_DIRECT:
-    return "$" + std::to_string( a.value );
+    return "$" + std::to_string( op.value );
   case Operand::Type::MEM_ACCESS_INDIRECT:
-    return "$$" + std::to_string( a.value );
+    return "$$" + std::to_string( op.value );
   }
   return "";
 }
 
-std::string GetBinaryOperation( int indent, const std::string& name, BinaryOperation& op, Program& p )
+std::string GetBinaryOperation( int indent, const std::string& name, BinaryOperation& op )
 {
-  return GetIndent( indent ) + name + " " + GetOperand( op.target, p ) + "," + GetOperand( op.source, p );
+  return GetIndent( indent ) + name + " " + GetOperand( op.target ) + "," + GetOperand( op.source );
+}
+
+void Printer::Print( Operation::UPtr& op, std::ostream& out, int indent )
+{
+  switch ( op->GetType() )
+  {
+  case Operation::Type::NOP:
+  {
+    out << GetIndent( indent );
+    break;
+  }
+  case Operation::Type::MOV:
+  {
+    out << GetBinaryOperation( indent, "mov", *BinaryOperation::Cast( op ) );
+    break;
+  }
+  case Operation::Type::ADD:
+  {
+    out << GetBinaryOperation( indent, "add", *BinaryOperation::Cast( op ) );
+    break;
+  }
+  case Operation::Type::SUB:
+  {
+    out << GetBinaryOperation( indent, "sub", *BinaryOperation::Cast( op ) );
+    break;
+  }
+  case Operation::Type::LPB:
+  {
+    out << GetBinaryOperation( indent, "lpb", *BinaryOperation::Cast( op ) );
+    break;
+  }
+  case Operation::Type::LPE:
+  {
+    out << GetIndent( indent ) << "lpe";
+    break;
+  }
+  }
+  if ( !op->comment.empty() )
+  {
+    out << " ; " << op->comment;
+  }
+  out << std::endl;
 }
 
 void Printer::Print( Program& p, std::ostream& out )
@@ -35,46 +77,15 @@ void Printer::Print( Program& p, std::ostream& out )
   int indent = 0;
   for ( auto& op : p.ops )
   {
-    switch ( op->GetType() )
-    {
-    case Operation::Type::NOP:
-    {
-      out << GetIndent( indent );
-      break;
-    }
-    case Operation::Type::MOV:
-    {
-      out << GetBinaryOperation( indent, "mov", *BinaryOperation::Cast( op ), p );
-      break;
-    }
-    case Operation::Type::ADD:
-    {
-      out << GetBinaryOperation( indent, "add", *BinaryOperation::Cast( op ), p );
-      break;
-    }
-    case Operation::Type::SUB:
-    {
-      out << GetBinaryOperation( indent, "sub", *BinaryOperation::Cast( op ), p );
-      break;
-    }
-    case Operation::Type::LPB:
-    {
-      out << GetBinaryOperation( indent, "lpb", *BinaryOperation::Cast( op ), p );
-      indent += 2;
-      break;
-    }
-    case Operation::Type::LPE:
+    if ( op->GetType() == Operation::Type::LPE )
     {
       indent -= 2;
-      out << GetIndent( indent ) << "lpe";
-      break;
     }
-    }
-    if ( !op->comment.empty() )
+    Print( op, out, indent );
+    if ( op->GetType() == Operation::Type::LPB )
     {
-      out << " ; " << op->comment;
+      indent += 2;
     }
-    out << std::endl;
   }
 
 }
