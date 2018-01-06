@@ -34,10 +34,6 @@ bool Interpreter::Run( Program& p, Memory& mem )
     size_t pc = pc_stack.top();
     pc_stack.pop();
     auto& op = p.ops.at( pc );
-
-    printer.Print( op, std::cout );
-    std::cout << mem << std::endl << std::endl;
-
     size_t pc_next = pc + 1;
     switch ( op->GetType() )
     {
@@ -110,6 +106,10 @@ bool Interpreter::Run( Program& p, Memory& mem )
     {
       pc_stack.push( pc_next );
     }
+
+    printer.Print( op, std::cout );
+    std::cout << mem << std::endl << std::endl;
+
   }
   return true;
 }
