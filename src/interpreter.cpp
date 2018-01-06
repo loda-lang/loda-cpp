@@ -31,6 +31,8 @@ bool Interpreter::Run( Program& p, Memory& mem )
   // loop until stack is empty
   while ( !pc_stack.empty() )
   {
+    Memory old = mem;
+
     size_t pc = pc_stack.top();
     pc_stack.pop();
     auto& op = p.ops.at( pc );
@@ -108,7 +110,12 @@ bool Interpreter::Run( Program& p, Memory& mem )
     }
 
     printer.Print( op, std::cout );
-    std::cout << mem << std::endl << std::endl;
+    if ( mem != old )
+    {
+      std::cout << old << " =>" << std::endl;
+      std::cout << mem << std::endl;
+    }
+    std::cout << std::endl;
 
   }
   return true;

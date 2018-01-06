@@ -21,6 +21,10 @@ public:
 
   bool operator<( const Memory& other ) const;
 
+  bool operator==( const Memory& other ) const;
+
+  bool operator!=( const Memory& other ) const;
+
   friend std::ostream& operator<<( std::ostream& out, const Memory& m );
 
 private:

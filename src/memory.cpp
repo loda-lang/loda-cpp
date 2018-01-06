@@ -46,6 +46,25 @@ bool Memory::operator<( const Memory& other ) const
   return false; // equal
 }
 
+bool Memory::operator==( const Memory& other ) const
+{
+  Value length = Length() > other.Length() ? Length() : other.Length();
+  for ( Value i = 0; i < length; i++ )
+  {
+    if ( Get( i ) != other.Get( i ) )
+    {
+      return false;
+    }
+  }
+  return true; // equal
+}
+
+bool Memory::operator!=( const Memory& other ) const
+{
+  return !(*this == other);
+
+}
+
 Memory Memory::Fragment( Value start, Value length ) const
 {
   Memory f;
