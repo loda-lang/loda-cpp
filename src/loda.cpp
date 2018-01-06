@@ -34,9 +34,7 @@ int ack( int i, int n )
     std::cout << std::endl;
     // -----------------------------------
 
-
     value = next[i] + 1;
-
     bool transfer = true;
 
     j = i;
