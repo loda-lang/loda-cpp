@@ -42,19 +42,16 @@ int ack( int i, int n )
     j = i;
     while ( transfer )
     {
+      transfer = false;
       if ( diff[j] == 0 )
       {
         diff[j] = value - next[j];
-      }
-      else
-      {
-        transfer = false;
+        transfer = true;
       }
       next[j]++;
       diff[j]--;
       j--;
     }
-
 
   } while ( next[0] != n + 1 );
   return value;
