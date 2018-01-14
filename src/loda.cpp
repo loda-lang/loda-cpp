@@ -1,3 +1,4 @@
+#include "evaluator.hpp"
 #include "interpreter.hpp"
 #include "parser.hpp"
 #include "printer.hpp"
@@ -77,6 +78,12 @@ int main( void )
     i.Run( *p, m );
 
     std::cout << std::endl << "out: " << m << std::endl;
+
+    std::cout << std::endl << "RUNNING FIBONACCI: " << std::endl;
+    p = pa.Parse( "test/fibonacci.loda" );
+    Evaluator e;
+    std::cout << e.Eval( *p, 30 ) << std::endl;
+
   }
   catch ( const std::exception& e )
   {

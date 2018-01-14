@@ -1,6 +1,6 @@
 CXXFLAGS=-O2 -g -Wall -fmessage-length=0 -std=c++14
 
-OBJS=loda.o interpreter.o memory.o parser.o printer.o
+OBJS=evaluator.o loda.o interpreter.o memory.o parser.o printer.o
 
 LIBS=
 
