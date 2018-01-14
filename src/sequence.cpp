@@ -1,35 +1,34 @@
-#include "memory.hpp"
-
+#include "sequence.hpp"
 #include "value.hpp"
 
-Memory::Memory()
+Sequence::Sequence()
 {
 }
 
-Value Memory::Get( Value i ) const
+Value Sequence::Get( Value index ) const
 {
-  if ( i >= data.size() )
+  if ( index >= data.size() )
   {
     return 0;
   }
-  return data[i];
+  return data[index];
 }
 
-void Memory::Set( Value i, Value v )
+void Sequence::Set( Value index, Value value )
 {
-  if ( i >= data.size() )
+  if ( index >= data.size() )
   {
-    data.resize( i + 1, 0 );
+    data.resize( index + 1, 0 );
   }
-  data[i] = v;
+  data[index] = value;
 }
 
-Value Memory::Length() const
+Value Sequence::Length() const
 {
   return data.size();
 }
 
-bool Memory::operator<( const Memory& other ) const
+bool Sequence::operator<( const Sequence& other ) const
 {
   Value length = Length() > other.Length() ? Length() : other.Length();
   for ( Value i = 0; i < length; i++ )
@@ -46,7 +45,7 @@ bool Memory::operator<( const Memory& other ) const
   return false; // equal
 }
 
-bool Memory::operator==( const Memory& other ) const
+bool Sequence::operator==( const Sequence& other ) const
 {
   Value length = Length() > other.Length() ? Length() : other.Length();
   for ( Value i = 0; i < length; i++ )
@@ -59,15 +58,14 @@ bool Memory::operator==( const Memory& other ) const
   return true; // equal
 }
 
-bool Memory::operator!=( const Memory& other ) const
+bool Sequence::operator!=( const Sequence& other ) const
 {
   return !(*this == other);
-
 }
 
-Memory Memory::Fragment( Value start, Value length ) const
+Sequence Sequence::Fragment( Value start, Value length ) const
 {
-  Memory f;
+  Sequence f;
   for ( Value i = 0; i < length; i++ )
   {
     f.Set( i, Get( start + i ) );
@@ -75,12 +73,12 @@ Memory Memory::Fragment( Value start, Value length ) const
   return f;
 }
 
-std::ostream& operator<<( std::ostream& out, const Memory& m )
+std::ostream& operator<<( std::ostream& out, const Sequence& seq )
 {
-  for ( size_t i = 0; i < m.data.size(); i++ )
+  for ( size_t i = 0; i < seq.data.size(); i++ )
   {
     if ( i > 0 ) out << ",";
-    out << m.data[i];
+    out << seq.data[i];
   }
   return out;
 }

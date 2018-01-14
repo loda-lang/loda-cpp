@@ -72,7 +72,7 @@ int main( void )
     r.Print( *p, std::cout );
     std::cout << std::endl;
 
-    Memory m;
+    Sequence m;
 
     Interpreter i;
     i.Run( *p, m );

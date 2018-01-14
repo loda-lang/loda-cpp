@@ -6,10 +6,10 @@
 #include <array>
 #include <stack>
 
-using MemStack = std::stack<Memory>;
+using MemStack = std::stack<Sequence>;
 using PCStack = std::stack<size_t>;
 
-bool Interpreter::Run( Program& p, Memory& mem )
+bool Interpreter::Run( Program& p, Sequence& mem )
 {
   // check for empty program
   if ( p.ops.empty() )
@@ -31,7 +31,7 @@ bool Interpreter::Run( Program& p, Memory& mem )
   // loop until stack is empty
   while ( !pc_stack.empty() )
   {
-    Memory old = mem;
+    Sequence old = mem;
 
     size_t pc = pc_stack.top();
     pc_stack.pop();
@@ -121,7 +121,7 @@ bool Interpreter::Run( Program& p, Memory& mem )
   return true;
 }
 
-Value Interpreter::Get( Operand a, const Memory& mem, bool get_address )
+Value Interpreter::Get( Operand a, const Sequence& mem, bool get_address )
 {
   switch ( a.type )
   {
@@ -146,7 +146,7 @@ Value Interpreter::Get( Operand a, const Memory& mem, bool get_address )
   {};
 }
 
-void Interpreter::Set( Operand a, Value v, Memory& mem )
+void Interpreter::Set( Operand a, Value v, Sequence& mem )
 {
   switch ( a.type )
   {
@@ -161,7 +161,7 @@ void Interpreter::Set( Operand a, Value v, Memory& mem )
   }
 }
 
-bool Interpreter::IsLessThan( const Memory& m1, const Memory& m2, const std::vector<Operand>& cmp_vars )
+bool Interpreter::IsLessThan( const Sequence& m1, const Sequence& m2, const std::vector<Operand>& cmp_vars )
 {
   for ( Operand v : cmp_vars )
   {

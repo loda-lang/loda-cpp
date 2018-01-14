@@ -1,19 +1,19 @@
 #pragma once
 
 #include "program.hpp"
-#include "memory.hpp"
+#include "sequence.hpp"
 #include "value.hpp"
 
 class Interpreter
 {
 public:
 
-  bool Run( Program& p, Memory& mem );
+  bool Run( Program& p, Sequence& mem );
 
-  Value Get( Operand a, const Memory& mem, bool get_address = false );
+  Value Get( Operand a, const Sequence& mem, bool get_address = false );
 
-  void Set( Operand a, Value v, Memory& mem );
+  void Set( Operand a, Value v, Sequence& mem );
 
-  bool IsLessThan( const Memory& m1, const Memory& m2, const std::vector<Operand>& cmp_vars );
+  bool IsLessThan( const Sequence& m1, const Sequence& m2, const std::vector<Operand>& cmp_vars );
 
 };
