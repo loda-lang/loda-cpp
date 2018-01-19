@@ -22,6 +22,21 @@ int ack( int i, int n )
   do
   {
 
+    // -----------------------------------
+    std::cout << "diff:";
+    for ( int d = 0; d <= i; d++ )
+    {
+      std::cout << " " << diff[d];
+    }
+    std::cout << "  next:";
+    for ( int d = 0; d <= i; d++ )
+    {
+      std::cout << " " << next[d];
+    }
+    std::cout << std::endl;
+    // -----------------------------------
+
+
     value = next[i] + 1;
     bool transfer = true;
 
@@ -38,19 +53,6 @@ int ack( int i, int n )
       diff[j]--;
       j--;
 
-      // -----------------------------------
-      std::cout << "diff:";
-      for ( int d = 0; d <= i; d++ )
-      {
-        std::cout << " " << diff[d];
-      }
-      std::cout << "  next:";
-      for ( int d = 0; d <= i; d++ )
-      {
-        std::cout << " " << next[d];
-      }
-      std::cout << std::endl;
-      // -----------------------------------
 
     }
 
