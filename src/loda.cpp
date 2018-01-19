@@ -21,19 +21,6 @@ int ack( int i, int n )
   int value;
   do
   {
-    // -----------------------------------
-    std::cout << "diff:";
-    for ( int d = 0; d <= i; d++ )
-    {
-      std::cout << " " << diff[d];
-    }
-    std::cout << "  next:";
-    for ( int d = 0; d <= i; d++ )
-    {
-      std::cout << " " << next[d];
-    }
-    std::cout << std::endl;
-    // -----------------------------------
 
     value = next[i] + 1;
     bool transfer = true;
@@ -50,6 +37,21 @@ int ack( int i, int n )
       next[j]++;
       diff[j]--;
       j--;
+
+      // -----------------------------------
+      std::cout << "diff:";
+      for ( int d = 0; d <= i; d++ )
+      {
+        std::cout << " " << diff[d];
+      }
+      std::cout << "  next:";
+      for ( int d = 0; d <= i; d++ )
+      {
+        std::cout << " " << next[d];
+      }
+      std::cout << std::endl;
+      // -----------------------------------
+
     }
 
   } while ( next[0] != n + 1 );
@@ -69,7 +71,7 @@ int main( void )
   try
   {
 
-    r.Print( *p, std::cout );
+//    r.Print( *p, std::cout );
     std::cout << std::endl;
 
     Sequence m;
@@ -79,11 +81,11 @@ int main( void )
 
     std::cout << std::endl << "out: " << m << std::endl;
 
-    std::cout << std::endl << "RUNNING FIBONACCI: " << std::endl;
+/*    std::cout << std::endl << "RUNNING FIBONACCI: " << std::endl;
     p = pa.Parse( "test/fibonacci.loda" );
     Evaluator e;
     std::cout << e.Eval( *p, 30 ) << std::endl;
-
+*/
   }
   catch ( const std::exception& e )
   {

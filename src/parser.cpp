@@ -52,6 +52,12 @@ Program::UPtr Parser::Parse( std::istream& in_ )
         break;
       }
 
+      case Operation::Type::DBG:
+      {
+        o.reset( new Dbg() );
+        break;
+      }
+
       case Operation::Type::MOV:
       {
         auto t = ReadOperand( *p );
@@ -209,7 +215,15 @@ Operand Parser::ReadOperand( Program& p )
 Operation::Type Parser::ReadOperationType()
 {
   auto t = ReadIdentifier();
-  if ( t == "mov" )
+  if ( t == "nop" )
+  {
+    return Operation::Type::NOP;
+  }
+  else if ( t == "dbg" )
+  {
+    return Operation::Type::DBG;
+  }
+  else if ( t == "mov" )
   {
     return Operation::Type::MOV;
   }

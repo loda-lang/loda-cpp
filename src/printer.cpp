@@ -39,6 +39,11 @@ void Printer::Print( Operation::UPtr& op, std::ostream& out, int indent )
     out << GetIndent( indent );
     break;
   }
+  case Operation::Type::DBG:
+  {
+    out << GetIndent( indent ) << "dbg";
+    break;
+  }
   case Operation::Type::MOV:
   {
     out << GetBinaryOperation( indent, "mov", *BinaryOperation::Cast( op ) );

@@ -43,6 +43,11 @@ bool Interpreter::Run( Program& p, Sequence& mem )
     {
       break;
     }
+    case Operation::Type::DBG:
+    {
+      std::cout << mem << std::endl;
+      break;
+    }
     case Operation::Type::MOV:
     {
       auto mov = Mov::Cast( op );
@@ -109,14 +114,14 @@ bool Interpreter::Run( Program& p, Sequence& mem )
       pc_stack.push( pc_next );
     }
 
-    printer.Print( op, std::cout );
+/*    printer.Print( op, std::cout );
     if ( mem != old )
     {
       std::cout << old << " =>" << std::endl;
       std::cout << mem << std::endl;
     }
     std::cout << std::endl;
-
+*/
   }
   return true;
 }

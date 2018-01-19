@@ -34,6 +34,7 @@ public:
   enum class Type
   {
     NOP = 0,
+    DBG,
     MOV,
     ADD,
     SUB,
@@ -76,6 +77,22 @@ public:
   static Nop* Cast( UPtr& p )
   {
     return dynamic_cast<Nop*>( p.get() );
+  }
+};
+
+class Dbg: public Operation
+{
+public:
+  Dbg()
+  {
+  }
+  virtual Type GetType() const override
+  {
+    return Type::DBG;
+  }
+  static Dbg* Cast( UPtr& p )
+  {
+    return dynamic_cast<Dbg*>( p.get() );
   }
 };
 
