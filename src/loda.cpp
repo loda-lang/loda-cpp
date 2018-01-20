@@ -56,14 +56,14 @@ int ack( int i, int n )
 
     }
 
-  } while ( next[0] != n + 1 );
+  } while ( diff[0] != 0 );
   return value;
 }
 
 int main( void )
 {
 
-  ack( 3, 3 );
+  std::cout << ack( 3, 3 ) << std::endl;
 
   Parser pa;
   auto p = pa.Parse( "test/ackermann.loda" );
