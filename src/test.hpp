@@ -6,6 +6,8 @@ public:
 
   void Fibonacci();
 
+  void Exponentiation();
+
   void Ackermann();
 
   void All();

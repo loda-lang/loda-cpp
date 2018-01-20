@@ -16,7 +16,7 @@ void Test::Fibonacci()
   Parser parser;
   Evaluator evaluator;
 
-  auto fib = parser.Parse( "test/fibonacci.loda" );
+  auto fib = parser.Parse( "examples/fibonacci.loda" );
   auto result = evaluator.Eval( *fib, expected.data.size() );
   std::cout << "fib=" << result << "..." << std::endl;
   if ( result != expected )
@@ -24,6 +24,13 @@ void Test::Fibonacci()
     throw std::runtime_error( "unexpected result" );
   }
   std::cout << std::endl;
+
+}
+
+
+void Test::Exponentiation()
+{
+  std::cout << "Running Exponentiation test..." << std::endl;
 
 }
 
@@ -44,7 +51,7 @@ void Test::Ackermann()
   Parser parser;
   Interpreter interpreter;
 
-  auto ack = parser.Parse( "test/ackermann.loda" );
+  auto ack = parser.Parse( "examples/ackermann.loda" );
 
   for ( uint64_t i = 0; i < values.size(); i++ )
   {
@@ -69,5 +76,6 @@ void Test::Ackermann()
 void Test::All()
 {
   Fibonacci();
+  Exponentiation();
   Ackermann();
 }
