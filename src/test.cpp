@@ -27,7 +27,6 @@ void Test::Fibonacci()
 
 }
 
-
 void Test::Exponentiation()
 {
   std::cout << "Running Exponentiation test..." << std::endl;
@@ -36,41 +35,9 @@ void Test::Exponentiation()
 
 void Test::Ackermann()
 {
-  std::cout << "Running Ackermann test..." << std::endl;
-
-  std::vector<std::vector<Value> > values;
-  values =
-  {
-    { 1,2,3,4,5},
-    { 2,3,4,5,6},
-    { 3,5,7,9,11},
-    { 5,13,29,61,125},
-    { 13,65533}
-  };
-
-  Parser parser;
-  Interpreter interpreter;
-
-  auto ack = parser.Parse( "examples/ackermann.loda" );
-
-  for ( uint64_t i = 0; i < values.size(); i++ )
-  {
-    for ( uint64_t n = 0; n < values[i].size(); n++ )
-    {
-      std::cout << "ack(" << i << "," << n << ")=";
-      Sequence mem;
-      mem.Set( 0, i );
-      mem.Set( 1, n );
-      interpreter.Run( *ack, mem );
-      std::cout << mem.Get( 2 ) << std::endl;
-      if ( mem.Get( 2 ) != values[i][n] )
-      {
-        throw std::runtime_error( "unexpected result: " + std::to_string( mem.Get( 2 ) ) );
-      }
-    }
-  }
-  std::cout << std::endl;
-
+  std::vector<std::vector<Value> > values = { { 1, 2, 3, 4, 5 }, { 2, 3, 4, 5, 6 }, { 3, 5, 7, 9, 11 }, { 5, 13, 29, 61,
+      125 }, { 13, 65533 } };
+  TestBinary( "ack", "examples/ackermann.loda", values );
 }
 
 void Test::All()
@@ -78,4 +45,30 @@ void Test::All()
   Fibonacci();
   Exponentiation();
   Ackermann();
+}
+
+void Test::TestBinary( const std::string& func, const std::string& file,
+    const std::vector<std::vector<Value> >& values )
+{
+  std::cout << "Running tests for " << file << "..." << std::endl;
+  Parser parser;
+  Interpreter interpreter;
+  auto program = parser.Parse( file );
+  for ( size_t i = 0; i < values.size(); i++ )
+  {
+    for ( size_t j = 0; j < values[i].size(); j++ )
+    {
+      std::cout << func << "(" << i << "," << j << ")=";
+      Sequence mem;
+      mem.Set( 0, i );
+      mem.Set( 1, j );
+      interpreter.Run( *program, mem );
+      std::cout << mem.Get( 2 ) << std::endl;
+      if ( mem.Get( 2 ) != values[i][j] )
+      {
+        throw std::runtime_error( "unexpected result: " + std::to_string( mem.Get( 2 ) ) );
+      }
+    }
+  }
+  std::cout << std::endl;
 }
