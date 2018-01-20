@@ -6,7 +6,7 @@
 
 void Test::Fibonacci()
 {
-  std::cout << "Running Fibonacci test..." << std::endl;
+  std::cout << "Running tests for examples/fibonacci.loda..." << std::endl;
 
   Sequence expected;
   expected.data =
@@ -29,7 +29,8 @@ void Test::Fibonacci()
 
 void Test::Exponentiation()
 {
-  std::cout << "Running Exponentiation test..." << std::endl;
+//  std::vector<std::vector<Value> > values = { { 0, 0, 0 }, { 1, 1, 1 }, { 1, 2, 4 }, { 1, 3, 9 } };
+//  TestBinary( "exp", "examples/exponentiation.loda", values );
 
 }
 
