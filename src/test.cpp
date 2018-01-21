@@ -6,7 +6,7 @@
 
 void Test::Fibonacci()
 {
-  std::cout << "Running tests for examples/fibonacci.loda..." << std::endl;
+  std::cout << "Running tests for examples/fibonacci.asm..." << std::endl;
 
   Sequence expected;
   expected.data =
@@ -16,7 +16,7 @@ void Test::Fibonacci()
   Parser parser;
   Evaluator evaluator;
 
-  auto fib = parser.Parse( "examples/fibonacci.loda" );
+  auto fib = parser.Parse( "examples/fibonacci.asm" );
   auto result = evaluator.Eval( *fib, expected.data.size() );
   std::cout << "fib=" << result << "..." << std::endl;
   if ( result != expected )
@@ -38,7 +38,7 @@ void Test::Ackermann()
 {
   std::vector<std::vector<Value> > values = { { 1, 2, 3, 4, 5 }, { 2, 3, 4, 5, 6 }, { 3, 5, 7, 9, 11 }, { 5, 13, 29, 61,
       125 }, { 13, 65533 } };
-  TestBinary( "ack", "examples/ackermann.loda", values );
+  TestBinary( "ack", "examples/ackermann.asm", values );
 }
 
 void Test::All()
