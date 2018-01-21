@@ -29,9 +29,8 @@ void Test::Fibonacci()
 
 void Test::Exponentiation()
 {
-//  std::vector<std::vector<Value> > values = { { 0, 0, 0 }, { 1, 1, 1 }, { 1, 2, 4 }, { 1, 3, 9 } };
-//  TestBinary( "exp", "examples/exponentiation.loda", values );
-
+  std::vector<std::vector<Value> > values = { { 0, 0, 0 }, { 1, 1, 1 }, { 1, 2, 4 }, { 1, 3, 9 } };
+  TestBinary( "exp", "examples/exponentiation.asm", values );
 }
 
 void Test::Ackermann()
