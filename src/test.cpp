@@ -29,26 +29,9 @@ void Test::Fibonacci()
 
 void Test::Exponentiation()
 {
-  std::vector<std::vector<Value> > values = { { 1, 0, 0 }, { 1, 1, 1 }, { 1, 2, 4 }, { 1, 3, 9 } };
+  std::vector<std::vector<Value> > values = { { 1, 0, 0, 0 }, { 1, 1, 1, 1 }, { 1, 2, 4, 8 }, { 1, 3, 9, 27 }, { 1, 4,
+      16, 64 } };
   TestBinary( "exp", "examples/exponentiation.asm", values );
-
-  int m = 3;
-  int n = 2;
-
-  int e = 1;
-  int f = 0;
-  for ( int i = n; i>0; i--)
-  {
-    for ( int j = m; j>0; j--)
-    {
-      f = f + e;
-    }
-    e = f;
-    f = 0;
-  }
-  std::cout << e << std::endl;
-
-
 }
 
 void Test::Ackermann()
@@ -60,9 +43,9 @@ void Test::Ackermann()
 
 void Test::All()
 {
-//  Fibonacci();
+  Fibonacci();
   Exponentiation();
-//  Ackermann();
+  Ackermann();
 }
 
 void Test::TestBinary( const std::string& func, const std::string& file,
