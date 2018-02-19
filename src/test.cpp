@@ -2,7 +2,9 @@
 
 #include "evaluator.hpp"
 #include "interpreter.hpp"
+#include "machine.hpp"
 #include "parser.hpp"
+#include "printer.hpp"
 
 void Test::Fibonacci()
 {
@@ -41,8 +43,17 @@ void Test::Ackermann()
   TestBinary( "ack", "examples/ackermann.asm", values );
 }
 
+void Test::Generate()
+{
+  Machine m(5,9);
+  auto p = m.generateProgram(0);
+  Printer r;
+  r.Print( *p, std::cout );
+}
+
 void Test::All()
 {
+//  Generate();
   Fibonacci();
   Exponentiation();
   Ackermann();
