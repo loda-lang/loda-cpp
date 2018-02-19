@@ -1,11 +1,23 @@
 #include "test.hpp"
 
 #include "evaluator.hpp"
+#include "generator.hpp"
 #include "interpreter.hpp"
 #include "parser.hpp"
+#include "printer.hpp"
 
 void Test::All()
 {
+
+	Machine m(5,5);
+	Generator g;
+	auto p = g.Generate(m);
+
+	Printer r;
+	r.Print( *p, std::cout );
+
+  std::cout << std::endl;
+
   Fibonacci();
   Exponentiation();
   Ackermann();

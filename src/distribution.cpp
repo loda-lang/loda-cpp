@@ -13,6 +13,28 @@ OperandDistribution OperandDistribution::operator+(
 	return r;
 }
 
+Operand OperandDistribution::operator()( std::default_random_engine& engine )
+{
+  std::uniform_int_distribution<int> dist(0,3);
+  int value = dist( engine );
+  Operand::Type type;
+  switch( value )
+  {
+  case 0:
+	  type = Operand::Type::CONSTANT;
+	  break;
+  case 1:
+	  type = Operand::Type::MEM_ACCESS_DIRECT;
+	  break;
+  case 2:
+	  type = Operand::Type::MEM_ACCESS_INDIRECT;
+	  break;
+  default:
+	  throw std::runtime_error( "unexpected random value" );
+  }
+  return Operand( type, 4 );
+}
+
 OperationDistribution OperationDistribution::operator+(
 		const OperationDistribution& o) {
 	OperationDistribution r;

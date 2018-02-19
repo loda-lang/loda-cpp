@@ -3,6 +3,8 @@
 #include "program.hpp"
 #include "sequence.hpp"
 
+#include <random>
+
 #define DEFAULT_RATE 1000
 
 class OperandDistribution
@@ -17,6 +19,8 @@ public:
   }
 
   OperandDistribution operator+( const OperandDistribution& o );
+
+  Operand operator()( std::default_random_engine& engine );
 
   Value constantRate;
   Value memAccessDirectRate;
