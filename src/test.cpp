@@ -4,6 +4,13 @@
 #include "interpreter.hpp"
 #include "parser.hpp"
 
+void Test::All()
+{
+  Fibonacci();
+  Exponentiation();
+  Ackermann();
+}
+
 void Test::Fibonacci()
 {
   std::cout << "Running tests for examples/fibonacci.asm..." << std::endl;
@@ -39,13 +46,6 @@ void Test::Ackermann()
   std::vector<std::vector<Value> > values = { { 1, 2, 3, 4, 5 }, { 2, 3, 4, 5, 6 }, { 3, 5, 7, 9, 11 }, { 5, 13, 29, 61,
       125 }, { 13, 65533 } };
   TestBinary( "ack", "examples/ackermann.asm", values );
-}
-
-void Test::All()
-{
-  Fibonacci();
-  Exponentiation();
-  Ackermann();
 }
 
 void Test::TestBinary( const std::string& func, const std::string& file,

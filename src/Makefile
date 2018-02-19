@@ -13,3 +13,6 @@ all: $(TARGET)
 
 clean:
 	rm -f $(OBJS) $(TARGET)
+
+test: $(TARGET)
+	cd .. && ./loda
