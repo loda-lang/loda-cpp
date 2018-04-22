@@ -1,27 +1,10 @@
 #include "test.hpp"
 
 #include "evaluator.hpp"
-#include "generator.hpp"
 #include "interpreter.hpp"
+#include "machine.hpp"
 #include "parser.hpp"
 #include "printer.hpp"
-
-void Test::All()
-{
-
-	Machine m(5,5);
-	Generator g;
-	auto p = g.Generate(m);
-
-	Printer r;
-	r.Print( *p, std::cout );
-
-  std::cout << std::endl;
-
-  Fibonacci();
-  Exponentiation();
-  Ackermann();
-}
 
 void Test::Fibonacci()
 {
@@ -58,6 +41,22 @@ void Test::Ackermann()
   std::vector<std::vector<Value> > values = { { 1, 2, 3, 4, 5 }, { 2, 3, 4, 5, 6 }, { 3, 5, 7, 9, 11 }, { 5, 13, 29, 61,
       125 }, { 13, 65533 } };
   TestBinary( "ack", "examples/ackermann.asm", values );
+}
+
+void Test::Generate()
+{
+  Machine m(5,9);
+  auto p = m.generateProgram(0);
+  Printer r;
+  r.Print( *p, std::cout );
+}
+
+void Test::All()
+{
+//  Generate();
+  Fibonacci();
+  Exponentiation();
+  Ackermann();
 }
 
 void Test::TestBinary( const std::string& func, const std::string& file,

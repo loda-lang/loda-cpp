@@ -9,13 +9,15 @@ class Test
 {
 public:
 
-  void All();
-
   void Fibonacci();
 
   void Exponentiation();
 
   void Ackermann();
+
+  void Generate();
+
+  void All();
 
 private:
 
