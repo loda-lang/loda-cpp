@@ -140,12 +140,24 @@ void Machine::generateOperations( Seed& seed )
   switch ( s.operationDist( gen ) )
   {
   case 0:
+    if ( targetType == Operand::Type::CONSTANT )
+    {
+      targetType = Operand::Type::MEM_ACCESS_DIRECT;
+    }
     seed.ops.emplace_back( Operation::UPtr( new Mov( { targetType, targetValue }, { sourceType, sourceValue } ) ) );
     break;
   case 1:
+    if ( targetType == Operand::Type::CONSTANT )
+    {
+      targetType = Operand::Type::MEM_ACCESS_DIRECT;
+    }
     seed.ops.emplace_back( Operation::UPtr( new Add( { targetType, targetValue }, { sourceType, sourceValue } ) ) );
     break;
   case 2:
+    if ( targetType == Operand::Type::CONSTANT )
+    {
+      targetType = Operand::Type::MEM_ACCESS_DIRECT;
+    }
     seed.ops.emplace_back( Operation::UPtr( new Sub( { targetType, targetValue }, { sourceType, sourceValue } ) ) );
     break;
   case 3:
@@ -163,7 +175,7 @@ Program::UPtr Machine::generateProgram( size_t initialState )
   Program::UPtr p( new Program() );
   Seed seed;
   seed.state = initialState;
-  for ( size_t i = 0; i < 20; i++ )
+  for ( size_t i = 0; i < 40; i++ )
   {
     generateOperations( seed );
     size_t position = (seed.position * (p->ops.size()));
