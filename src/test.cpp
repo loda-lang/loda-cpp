@@ -59,6 +59,20 @@ void Test::Generate()
   p = m.generateProgram( 0 );
   r.Print( *p, std::cout );
 
+  std::cout << "-----------------" << std::endl;
+
+  m.mutate(0.5);
+  m.setSeed( 951 );
+  p = m.generateProgram( 0 );
+  r.Print( *p, std::cout );
+
+  std::cout << "-----------------" << std::endl;
+
+  m.mutate(0.5);
+  m.setSeed( 951 );
+  p = m.generateProgram( 0 );
+  r.Print( *p, std::cout );
+
 }
 
 void Test::All()

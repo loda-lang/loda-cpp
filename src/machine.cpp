@@ -28,7 +28,7 @@ std::discrete_distribution<> AddDist( const std::discrete_distribution<>& d1, co
   std::vector<double> p( p1.size() );
   for ( size_t i = 0; i < p.size(); i++ )
   {
-    p[i] = p1[i] + p2[i];
+    p[i] = (p1[i] + p2[i]) / 2;
   }
   return std::discrete_distribution<>( p.begin(), p.end() );
 }
@@ -36,19 +36,15 @@ std::discrete_distribution<> AddDist( const std::discrete_distribution<>& d1, co
 void MutateDist( std::discrete_distribution<>& d, std::mt19937& gen )
 {
   std::vector<double> x;
-  x.resize( 10, 1 );
+  x.resize( 100, 1 );
   std::discrete_distribution<> v( x.begin(), x.end() );
 
   auto p1 = d.probabilities();
   std::vector<double> p2( p1.size() );
   for ( size_t i = 0; i < p1.size(); i++ )
   {
-    int64_t y = static_cast<int64_t>( v( gen ) ) - x.size();
-    if ( y + p1[i] < 0 )
-    {
-      y = p1[i];
-    }
-    p2[i] = p1[i] + y;
+    p2[i] = p1[i] + (static_cast<double>( v( gen ) ) / x.size());
+//    std::cout << p2[i] << std::endl;
   }
   d = std::discrete_distribution<>( p2.begin(), p2.end() );
 }
