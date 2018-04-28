@@ -133,7 +133,7 @@ Program::UPtr Machine::generateProgram( size_t initialState )
   Program::UPtr p( new Program() );
   Seed seed;
   seed.state = initialState;
-  for ( size_t i = 0; i < 1000; i++ )
+  for ( size_t i = 0; i < 20; i++ )
   {
     generateOperations( seed );
     size_t position = (seed.position * (p->ops.size()));

@@ -45,8 +45,8 @@ void Test::Ackermann()
 
 void Test::Generate()
 {
-  Machine m(5,9);
-  auto p = m.generateProgram(0);
+  Machine m( 5, 951 );
+  auto p = m.generateProgram( 0 );
   Printer r;
   r.Print( *p, std::cout );
 }
