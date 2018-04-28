@@ -33,6 +33,26 @@ std::discrete_distribution<> AddDist( const std::discrete_distribution<>& d1, co
   return std::discrete_distribution<>( p.begin(), p.end() );
 }
 
+void MutateDist( std::discrete_distribution<>& d, std::mt19937& gen )
+{
+  std::vector<double> x;
+  x.resize( 10, 1 );
+  std::discrete_distribution<> v( x.begin(), x.end() );
+
+  auto p1 = d.probabilities();
+  std::vector<double> p2( p1.size() );
+  for ( size_t i = 0; i < p1.size(); i++ )
+  {
+    int64_t y = static_cast<int64_t>( v( gen ) ) - x.size();
+    if ( y + p1[i] < 0 )
+    {
+      y = p1[i];
+    }
+    p2[i] = p1[i] + y;
+  }
+  d = std::discrete_distribution<>( p2.begin(), p2.end() );
+}
+
 State::State( size_t numStates )
     : operationDist( EqualDist( 4 ) ),
       targetTypeDist( EqualDist( 3 ) ),
@@ -55,14 +75,14 @@ State State::operator+( const State& other )
   return r;
 }
 
-Machine::Machine( size_t numStates, int64_t randomSeed )
-    : gen( randomSeed )
+Machine::Machine( size_t numStates, int64_t seed )
 {
   states.resize( numStates );
   for ( Value state = 0; state < numStates; state++ )
   {
     states[state] = State( numStates );
   }
+  setSeed( seed );
 }
 
 Machine Machine::operator+( const Machine& other )
@@ -73,6 +93,20 @@ Machine Machine::operator+( const Machine& other )
     r.states[s] = states[s] + other.states[s];
   }
   return r;
+}
+
+void Machine::mutate( double delta )
+{
+  for ( auto& s : states )
+  {
+    MutateDist( s.operationDist, gen );
+    MutateDist( s.targetTypeDist, gen );
+    MutateDist( s.targetValueDist, gen );
+    MutateDist( s.sourceTypeDist, gen );
+    MutateDist( s.sourceValueDist, gen );
+    MutateDist( s.transitionDist, gen );
+    MutateDist( s.positionDist, gen );
+  }
 }
 
 void Machine::generateOperations( Seed& seed )
@@ -145,4 +179,9 @@ Program::UPtr Machine::generateProgram( size_t initialState )
   Optimizer o;
   o.Optimize( *p );
   return p;
+}
+
+void Machine::setSeed( int64_t seed )
+{
+  gen.seed( seed );
 }

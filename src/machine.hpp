@@ -37,13 +37,17 @@ class Machine
 {
 public:
 
-  Machine( size_t numStates, int64_t randomSeed );
+  Machine( size_t numStates, int64_t seed );
 
   Machine operator+( const Machine& other );
+
+  void mutate( double delta );
 
   Program::UPtr generateProgram( size_t initialState );
 
   void generateOperations( Seed& seed );
+
+  void setSeed( int64_t seed );
 
   std::vector<State> states;
 

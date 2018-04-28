@@ -45,10 +45,20 @@ void Test::Ackermann()
 
 void Test::Generate()
 {
-  Machine m( 5, 951 );
-  auto p = m.generateProgram( 0 );
   Printer r;
+  Program::UPtr p;
+
+  Machine m( 5, 951 );
+  p = m.generateProgram( 0 );
   r.Print( *p, std::cout );
+
+  std::cout << "-----------------" << std::endl;
+
+  m.mutate(0.5);
+  m.setSeed( 951 );
+  p = m.generateProgram( 0 );
+  r.Print( *p, std::cout );
+
 }
 
 void Test::All()
