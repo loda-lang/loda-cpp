@@ -25,6 +25,14 @@ public:
 
 };
 
+class Seed
+{
+public:
+  size_t state;
+  double position;
+  std::vector<Operation::UPtr> ops;
+};
+
 class Machine
 {
 public:
@@ -35,7 +43,7 @@ public:
 
   Program::UPtr generateProgram( size_t initialState );
 
-  std::pair<std::vector<Operation::UPtr>, size_t> generateOperations( size_t state );
+  void generateOperations( Seed& seed );
 
   std::vector<State> states;
 

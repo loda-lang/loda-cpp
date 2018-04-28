@@ -1,6 +1,7 @@
 #include "machine.hpp"
 
 #define VALUE_RANGE 10
+#define POSITION_RANGE 100
 
 State::State()
     : State( 0 )
@@ -37,7 +38,7 @@ State::State( size_t numStates )
       sourceTypeDist( EqualDist( 3 ) ),
       sourceValueDist( EqualDist( VALUE_RANGE ) ),
       transitionDist( EqualDist( numStates ) ),
-      positionDist( EqualDist( 100 ) )
+      positionDist( EqualDist( POSITION_RANGE ) )
 {
 }
 
@@ -72,10 +73,9 @@ Machine Machine::operator+( const Machine& other )
   return r;
 }
 
-std::pair<std::vector<Operation::UPtr>, size_t> Machine::generateOperations( size_t state )
+void Machine::generateOperations( Seed& seed )
 {
-  auto& s = states.at( state );
-  std::vector<Operation::UPtr> ops;
+  auto& s = states.at( seed.state );
   Operand::Type targetType, sourceType;
   switch ( s.targetTypeDist( gen ) )
   {
@@ -104,39 +104,40 @@ std::pair<std::vector<Operation::UPtr>, size_t> Machine::generateOperations( siz
   Value targetValue = s.targetValueDist( gen );
   Value sourceValue = s.sourceValueDist( gen );
 
+  seed.ops.clear();
   switch ( s.operationDist( gen ) )
   {
   case 0:
-    ops.emplace_back( Operation::UPtr( new Mov( { targetType, targetValue }, { sourceType, sourceValue } ) ) );
+    seed.ops.emplace_back( Operation::UPtr( new Mov( { targetType, targetValue }, { sourceType, sourceValue } ) ) );
     break;
   case 1:
-    ops.emplace_back( Operation::UPtr( new Add( { targetType, targetValue }, { sourceType, sourceValue } ) ) );
+    seed.ops.emplace_back( Operation::UPtr( new Add( { targetType, targetValue }, { sourceType, sourceValue } ) ) );
     break;
   case 2:
-    ops.emplace_back( Operation::UPtr( new Sub( { targetType, targetValue }, { sourceType, sourceValue } ) ) );
+    seed.ops.emplace_back( Operation::UPtr( new Sub( { targetType, targetValue }, { sourceType, sourceValue } ) ) );
     break;
   case 3:
-    ops.emplace_back( Operation::UPtr( new LoopBegin( { targetType, targetValue }, { sourceType, sourceValue } ) ) );
-    ops.emplace_back( Operation::UPtr( new LoopEnd() ) );
+    seed.ops.emplace_back(
+        Operation::UPtr( new LoopBegin( { targetType, targetValue }, { sourceType, sourceValue } ) ) );
+    seed.ops.emplace_back( Operation::UPtr( new LoopEnd() ) );
     break;
   }
-
-  size_t nextState = s.transitionDist( gen );
-
-  return std::make_pair<std::vector<Operation::UPtr>, size_t>( std::move( ops ), std::move( nextState ) );
+  seed.position = static_cast<double>( s.positionDist( gen ) ) / POSITION_RANGE;
+  seed.state = s.transitionDist( gen );
 }
 
 Program::UPtr Machine::generateProgram( size_t initialState )
 {
   Program::UPtr p( new Program() );
-  std::pair<std::vector<Operation::UPtr>, size_t> next;
-  next.second = initialState;
+  Seed seed;
+  seed.state = initialState;
   for ( size_t i = 0; i < 100; i++ )
   {
-    next = generateOperations( next.second );
-    for ( auto& op : next.first )
+    generateOperations( seed );
+    size_t position = (seed.position * (p->ops.size()));
+    for ( size_t j = 0; j < seed.ops.size(); j++ )
     {
-      p->ops.emplace_back( std::move( op ) );
+      p->ops.emplace( p->ops.begin() + position + j, std::move( seed.ops[j] ) );
     }
   }
   return p;
