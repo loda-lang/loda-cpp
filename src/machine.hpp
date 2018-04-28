@@ -14,8 +14,10 @@ public:
   State( size_t numStates );
 
   std::discrete_distribution<> operationDist;
-  std::discrete_distribution<> targetDist;
-  std::discrete_distribution<> sourceDist;
+  std::discrete_distribution<> targetTypeDist;
+  std::discrete_distribution<> targetValueDist;
+  std::discrete_distribution<> sourceTypeDist;
+  std::discrete_distribution<> sourceValueDist;
   std::discrete_distribution<> transitionDist;
   std::discrete_distribution<> positionDist;
 
@@ -33,7 +35,7 @@ public:
 
   Program::UPtr generateProgram( size_t initialState );
 
-  std::pair<Operation::UPtr, size_t> generateOperation( size_t state );
+  std::pair<std::vector<Operation::UPtr>, size_t> generateOperations( size_t state );
 
   std::vector<State> states;
 

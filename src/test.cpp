@@ -53,10 +53,10 @@ void Test::Generate()
 
 void Test::All()
 {
-//  Generate();
-  Fibonacci();
-  Exponentiation();
-  Ackermann();
+  Generate();
+//  Fibonacci();
+//  Exponentiation();
+//  Ackermann();
 }
 
 void Test::TestBinary( const std::string& func, const std::string& file,

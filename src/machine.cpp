@@ -1,5 +1,7 @@
 #include "machine.hpp"
 
+#define VALUE_RANGE 10
+
 State::State()
     : State( 0 )
 {
@@ -30,8 +32,10 @@ std::discrete_distribution<> AddDist( const std::discrete_distribution<>& d1, co
 
 State::State( size_t numStates )
     : operationDist( EqualDist( 4 ) ),
-      targetDist( EqualDist( 3 ) ),
-      sourceDist( EqualDist( 3 ) ),
+      targetTypeDist( EqualDist( 3 ) ),
+      targetValueDist( EqualDist( VALUE_RANGE ) ),
+      sourceTypeDist( EqualDist( 3 ) ),
+      sourceValueDist( EqualDist( VALUE_RANGE ) ),
       transitionDist( EqualDist( numStates ) ),
       positionDist( EqualDist( 100 ) )
 {
@@ -41,8 +45,8 @@ State State::operator+( const State& other )
 {
   State r;
   r.operationDist = AddDist( operationDist, other.operationDist );
-  r.targetDist = AddDist( targetDist, other.targetDist );
-  r.sourceDist = AddDist( sourceDist, other.sourceDist );
+  r.targetTypeDist = AddDist( targetTypeDist, other.targetTypeDist );
+  r.sourceTypeDist = AddDist( sourceTypeDist, other.sourceTypeDist );
   r.transitionDist = AddDist( transitionDist, other.transitionDist );
   r.positionDist = AddDist( positionDist, other.positionDist );
   return r;
@@ -68,12 +72,12 @@ Machine Machine::operator+( const Machine& other )
   return r;
 }
 
-std::pair<Operation::UPtr, size_t> Machine::generateOperation( size_t state )
+std::pair<std::vector<Operation::UPtr>, size_t> Machine::generateOperations( size_t state )
 {
   auto& s = states.at( state );
-  Operation::UPtr op;
+  std::vector<Operation::UPtr> ops;
   Operand::Type targetType, sourceType;
-  switch ( s.targetDist( gen ) )
+  switch ( s.targetTypeDist( gen ) )
   {
   case 0:
     targetType = Operand::Type::CONSTANT;
@@ -85,7 +89,7 @@ std::pair<Operation::UPtr, size_t> Machine::generateOperation( size_t state )
     targetType = Operand::Type::MEM_ACCESS_INDIRECT;
     break;
   }
-  switch ( s.sourceDist( gen ) )
+  switch ( s.sourceTypeDist( gen ) )
   {
   case 0:
     sourceType = Operand::Type::CONSTANT;
@@ -97,36 +101,43 @@ std::pair<Operation::UPtr, size_t> Machine::generateOperation( size_t state )
     sourceType = Operand::Type::MEM_ACCESS_INDIRECT;
     break;
   }
-  Value sourceValue = 1;
-  Value targetValue = 1;
+  Value targetValue = s.targetValueDist( gen );
+  Value sourceValue = s.sourceValueDist( gen );
 
   switch ( s.operationDist( gen ) )
   {
   case 0:
-    op.reset( new Mov( { targetType, targetValue }, { sourceType, sourceValue } ) );
+    ops.emplace_back( Operation::UPtr( new Mov( { targetType, targetValue }, { sourceType, sourceValue } ) ) );
     break;
   case 1:
-    op.reset( new Add( { targetType, targetValue }, { sourceType, sourceValue } ) );
+    ops.emplace_back( Operation::UPtr( new Add( { targetType, targetValue }, { sourceType, sourceValue } ) ) );
     break;
   case 2:
-    op.reset( new Sub( { targetType, targetValue }, { sourceType, sourceValue } ) );
+    ops.emplace_back( Operation::UPtr( new Sub( { targetType, targetValue }, { sourceType, sourceValue } ) ) );
+    break;
+  case 3:
+    ops.emplace_back( Operation::UPtr( new LoopBegin( { targetType, targetValue }, { sourceType, sourceValue } ) ) );
+    ops.emplace_back( Operation::UPtr( new LoopEnd() ) );
     break;
   }
 
   size_t nextState = s.transitionDist( gen );
 
-  return std::make_pair<Operation::UPtr, size_t>( std::move( op ), std::move( nextState ) );
+  return std::make_pair<std::vector<Operation::UPtr>, size_t>( std::move( ops ), std::move( nextState ) );
 }
 
 Program::UPtr Machine::generateProgram( size_t initialState )
 {
   Program::UPtr p( new Program() );
-  std::pair<Operation::UPtr, size_t> next;
+  std::pair<std::vector<Operation::UPtr>, size_t> next;
   next.second = initialState;
-  for ( size_t i = 0; i < 10; i++ )
+  for ( size_t i = 0; i < 100; i++ )
   {
-    next = generateOperation( next.second );
-    p->ops.emplace_back( std::move( next.first ) );
+    next = generateOperations( next.second );
+    for ( auto& op : next.first )
+    {
+      p->ops.emplace_back( std::move( op ) );
+    }
   }
   return p;
 }
