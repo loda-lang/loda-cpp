@@ -1,5 +1,7 @@
 #include "machine.hpp"
 
+#include "optimizer.hpp"
+
 #define VALUE_RANGE 10
 #define POSITION_RANGE 100
 
@@ -131,7 +133,7 @@ Program::UPtr Machine::generateProgram( size_t initialState )
   Program::UPtr p( new Program() );
   Seed seed;
   seed.state = initialState;
-  for ( size_t i = 0; i < 100; i++ )
+  for ( size_t i = 0; i < 1000; i++ )
   {
     generateOperations( seed );
     size_t position = (seed.position * (p->ops.size()));
@@ -140,5 +142,7 @@ Program::UPtr Machine::generateProgram( size_t initialState )
       p->ops.emplace( p->ops.begin() + position + j, std::move( seed.ops[j] ) );
     }
   }
+  Optimizer o;
+  o.Optimize( *p );
   return p;
 }
