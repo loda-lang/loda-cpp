@@ -1,4 +1,4 @@
-#include "machine.hpp"
+#include "generator.hpp"
 
 #include "optimizer.hpp"
 
@@ -71,7 +71,7 @@ State State::operator+( const State& other )
   return r;
 }
 
-Machine::Machine( size_t numStates, int64_t seed )
+Generator::Generator( size_t numStates, int64_t seed )
 {
   states.resize( numStates );
   for ( Value state = 0; state < numStates; state++ )
@@ -81,9 +81,9 @@ Machine::Machine( size_t numStates, int64_t seed )
   setSeed( seed );
 }
 
-Machine Machine::operator+( const Machine& other )
+Generator Generator::operator+( const Generator& other )
 {
-  Machine r( states.size(), gen() );
+  Generator r( states.size(), gen() );
   for ( Value s = 0; s < states.size(); s++ )
   {
     r.states[s] = states[s] + other.states[s];
@@ -91,7 +91,7 @@ Machine Machine::operator+( const Machine& other )
   return r;
 }
 
-void Machine::mutate( double delta )
+void Generator::mutate( double delta )
 {
   for ( auto& s : states )
   {
@@ -105,7 +105,7 @@ void Machine::mutate( double delta )
   }
 }
 
-void Machine::generateOperations( Seed& seed )
+void Generator::generateOperations( Seed& seed )
 {
   auto& s = states.at( seed.state );
   Operand::Type targetType, sourceType;
@@ -170,7 +170,7 @@ void Machine::generateOperations( Seed& seed )
   seed.state = s.transitionDist( gen );
 }
 
-Program::UPtr Machine::generateProgram( size_t initialState )
+Program::UPtr Generator::generateProgram( size_t initialState )
 {
   Program::UPtr p( new Program() );
   Seed seed;
@@ -189,7 +189,7 @@ Program::UPtr Machine::generateProgram( size_t initialState )
   return p;
 }
 
-void Machine::setSeed( int64_t seed )
+void Generator::setSeed( int64_t seed )
 {
   gen.seed( seed );
 }

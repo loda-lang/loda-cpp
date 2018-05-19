@@ -33,13 +33,13 @@ public:
   std::vector<Operation::UPtr> ops;
 };
 
-class Machine
+class Generator
 {
 public:
 
-  Machine( size_t numStates, int64_t seed );
+  Generator( size_t numStates, int64_t seed );
 
-  Machine operator+( const Machine& other );
+  Generator operator+( const Generator& other );
 
   void mutate( double delta );
 

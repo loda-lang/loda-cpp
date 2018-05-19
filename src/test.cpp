@@ -1,8 +1,8 @@
 #include "test.hpp"
 
 #include "evaluator.hpp"
+#include "generator.hpp"
 #include "interpreter.hpp"
-#include "machine.hpp"
 #include "parser.hpp"
 #include "printer.hpp"
 
@@ -48,7 +48,7 @@ void Test::Generate()
   Printer r;
   Program::UPtr p;
 
-  Machine m( 5, 951 );
+  Generator m( 5, 951 );
 
   for ( size_t i = 0; i < 10; i++ )
   {
