@@ -1,6 +1,6 @@
 CXXFLAGS=-O2 -g -Wall -fmessage-length=0 -std=c++14
 
-OBJS=evaluator.o generator.o loda.o interpreter.o optimizer.o parser.o printer.o sequence.o test.o
+OBJS=evaluator.o finder.o generator.o loda.o interpreter.o optimizer.o parser.o printer.o scorer.o sequence.o test.o
 
 LIBS=
 

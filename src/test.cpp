@@ -1,7 +1,7 @@
 #include "test.hpp"
 
 #include "evaluator.hpp"
-#include "generator.hpp"
+#include "finder.hpp"
 #include "interpreter.hpp"
 #include "parser.hpp"
 #include "printer.hpp"
@@ -43,32 +43,21 @@ void Test::Ackermann()
   TestBinary( "ack", "examples/ackermann.asm", values );
 }
 
-void Test::Generate()
+void Test::Find()
 {
-//  Printer r;
-  Program::UPtr p;
+  Sequence expected;
+  expected.data =
+  { 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765, 10946,
+    17711, 28657, 46368, 75025};
 
-  Generator m( 10, 951 );
-
-  Evaluator evaluator;
-
-  for ( size_t i = 0; i < 100; i++ )
-  {
-    p = m.generateProgram( 0 );
-//    r.Print( *p, std::cout );
-
-    auto result = evaluator.Eval( *p, 20 );
-    std::cout << "out=" << result << "..." << std::endl;
-
-    m.mutate( 0.5 );
-//    std::cout << "-----------------" << std::endl;
-  }
+  Finder finder;
+  finder.Find( expected );
 
 }
 
 void Test::All()
 {
-  Generate();
+  Finder();
 //  Fibonacci();
 //  Exponentiation();
 //  Ackermann();

@@ -15,7 +15,7 @@ public:
 
   void Ackermann();
 
-  void Generate();
+  void Find();
 
   void All();
 
