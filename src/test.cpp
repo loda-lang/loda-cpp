@@ -45,17 +45,23 @@ void Test::Ackermann()
 
 void Test::Generate()
 {
-  Printer r;
+//  Printer r;
   Program::UPtr p;
 
-  Generator m( 5, 951 );
+  Generator m( 10, 951 );
 
-  for ( size_t i = 0; i < 10; i++ )
+  Evaluator evaluator;
+
+  for ( size_t i = 0; i < 100; i++ )
   {
     p = m.generateProgram( 0 );
-    r.Print( *p, std::cout );
+//    r.Print( *p, std::cout );
+
+    auto result = evaluator.Eval( *p, 20 );
+    std::cout << "out=" << result << "..." << std::endl;
+
     m.mutate( 0.5 );
-    std::cout << "-----------------" << std::endl;
+//    std::cout << "-----------------" << std::endl;
   }
 
 }

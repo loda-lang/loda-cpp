@@ -51,7 +51,7 @@ void MutateDist( std::discrete_distribution<>& d, std::mt19937& gen )
 
 State::State( size_t numStates )
     : operationDist( EqualDist( 4 ) ),
-      targetTypeDist( EqualDist( 3 ) ),
+      targetTypeDist( EqualDist( 2 ) ),
       targetValueDist( EqualDist( VALUE_RANGE ) ),
       sourceTypeDist( EqualDist( 3 ) ),
       sourceValueDist( EqualDist( VALUE_RANGE ) ),
@@ -112,12 +112,9 @@ void Generator::generateOperations( Seed& seed )
   switch ( s.targetTypeDist( gen ) )
   {
   case 0:
-    targetType = Operand::Type::CONSTANT;
-    break;
-  case 1:
     targetType = Operand::Type::MEM_ACCESS_DIRECT;
     break;
-  case 2:
+  case 1:
     targetType = Operand::Type::MEM_ACCESS_INDIRECT;
     break;
   }
@@ -140,24 +137,12 @@ void Generator::generateOperations( Seed& seed )
   switch ( s.operationDist( gen ) )
   {
   case 0:
-    if ( targetType == Operand::Type::CONSTANT )
-    {
-      targetType = Operand::Type::MEM_ACCESS_DIRECT;
-    }
     seed.ops.emplace_back( Operation::UPtr( new Mov( { targetType, targetValue }, { sourceType, sourceValue } ) ) );
     break;
   case 1:
-    if ( targetType == Operand::Type::CONSTANT )
-    {
-      targetType = Operand::Type::MEM_ACCESS_DIRECT;
-    }
     seed.ops.emplace_back( Operation::UPtr( new Add( { targetType, targetValue }, { sourceType, sourceValue } ) ) );
     break;
   case 2:
-    if ( targetType == Operand::Type::CONSTANT )
-    {
-      targetType = Operand::Type::MEM_ACCESS_DIRECT;
-    }
     seed.ops.emplace_back( Operation::UPtr( new Sub( { targetType, targetValue }, { sourceType, sourceValue } ) ) );
     break;
   case 3:
