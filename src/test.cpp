@@ -57,7 +57,7 @@ void Test::Find()
 
 void Test::All()
 {
-  Finder();
+  Find();
 //  Fibonacci();
 //  Exponentiation();
 //  Ackermann();

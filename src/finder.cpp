@@ -14,18 +14,27 @@ Program::UPtr Finder::Find( const Sequence& target )
   FixedSequenceScorer scorer( target );
   Printer printer;
 
+  Sequence s;
   while ( true )
   {
     p = m.generateProgram( 0 );
-    auto result = evaluator.Eval( *p, target.Length() );
-    auto score = scorer.Score( result );
+    try
+    {
+      s = evaluator.Eval( *p, target.Length() );
+    }
+    catch ( const std::exception& e )
+    {
+      std::cerr << std::string( e.what() ) << std::endl;
+      continue;
+    }
+    auto score = scorer.Score( s );
     if ( score == 0 )
     {
       std::cout << "Found!" << std::endl;
       printer.Print( *p, std::cout );
       return p;
     }
-    std::cout << score << ":: " << result << std::endl;
+    std::cout << score << ":: " << s << std::endl;
     m.mutate( 0.5 );
   }
 
