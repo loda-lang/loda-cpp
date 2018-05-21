@@ -53,4 +53,6 @@ public:
 
   std::mt19937 gen;
 
+  Value score;
+
 };
