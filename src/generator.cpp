@@ -17,6 +17,54 @@ std::discrete_distribution<> EqualDist( size_t size )
   return std::discrete_distribution<>( p.begin(), p.end() );
 }
 
+void printDist( const std::discrete_distribution<>& d )
+{
+  auto probs = d.probabilities();
+  std::cout << "[";
+  for ( size_t i = 0; i < probs.size(); i++ )
+  {
+    if ( i > 0 )
+    {
+      std::cout << ",";
+    }
+    std::cout << probs[i];
+  }
+  std::cout << "]";
+}
+
+void State::print()
+{
+  std::cout << "[";
+  printDist( operationDist );
+  std::cout << ",";
+  printDist( targetTypeDist );
+  std::cout << ",";
+  printDist( targetValueDist );
+  std::cout << ",";
+  printDist( sourceTypeDist );
+  std::cout << ",";
+  printDist( sourceValueDist );
+  std::cout << ",";
+  printDist( transitionDist );
+  std::cout << ",";
+  printDist( positionDist );
+  std::cout << "]";
+}
+
+void Generator::print()
+{
+  std::cout << "[" << score << ",";
+  for ( size_t i = 0; i < states.size(); i++ )
+  {
+    if ( i > 0 )
+    {
+      std::cout << ",";
+    }
+    states[i].print();
+  }
+  std::cout << "]";
+}
+
 std::discrete_distribution<> AddDist( const std::discrete_distribution<>& d1, const std::discrete_distribution<>& d2 )
 {
   auto p1 = d1.probabilities();
@@ -43,7 +91,7 @@ void MutateDist( std::discrete_distribution<>& d, std::mt19937& gen )
   std::vector<double> p2( p1.size() );
   for ( size_t i = 0; i < p1.size(); i++ )
   {
-    p2[i] = p1[i] + (static_cast<double>( v( gen ) ) / x.size());
+    p2[i] = p1[i] + ((static_cast<double>( v( gen ) ) / x.size()) / 50);
 //    std::cout << p2[i] << std::endl;
   }
   d = std::discrete_distribution<>( p2.begin(), p2.end() );

@@ -23,6 +23,8 @@ public:
 
   State operator+( const State& other );
 
+  void print();
+
 };
 
 class Seed
@@ -37,7 +39,11 @@ class Generator
 {
 public:
 
+  using UPtr = std::unique_ptr<Generator>;
+
   Generator( size_t numStates, int64_t seed );
+
+  Generator( const Generator& other ) = default;
 
   Generator operator+( const Generator& other );
 
@@ -49,6 +55,8 @@ public:
 
   void setSeed( int64_t seed );
 
+  void print();
+
   std::vector<State> states;
 
   std::mt19937 gen;
@@ -56,3 +64,8 @@ public:
   Value score;
 
 };
+
+inline bool less_than_score( const Generator::UPtr& g1, const Generator::UPtr& g2 )
+{
+  return (g1->score < g2->score);
+}

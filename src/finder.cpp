@@ -9,7 +9,23 @@ Program::UPtr Finder::Find( const Sequence& target )
 {
   Program::UPtr p;
 
-  Generator m( 10, 951 );
+  Value seed = 23;
+  size_t states = 10;
+  size_t gen_count = 100;
+  size_t tries = 100;
+
+  Value max_value = 0;
+  for ( auto& v : target.data )
+  {
+    if ( v > max_value ) max_value = v;
+  }
+
+  std::vector<Generator::UPtr> generators;
+  for ( size_t i = 0; i < gen_count; i++ )
+  {
+    generators.emplace_back( Generator::UPtr( new Generator( states, seed + i ) ) );
+  }
+
   Evaluator evaluator;
   FixedSequenceScorer scorer( target );
   Printer printer;
@@ -17,25 +33,71 @@ Program::UPtr Finder::Find( const Sequence& target )
   Sequence s;
   while ( true )
   {
-    p = m.generateProgram( 0 );
-    try
+    for ( size_t i = 0; i < gen_count; i++ )
     {
-      s = evaluator.Eval( *p, target.Length() );
+      generators[i]->setSeed( seed + i );
     }
-    catch ( const std::exception& e )
+
+
+    // evaluate generator and score them
+    double avg_score = 0.0;
+    for ( auto& gen : generators )
     {
-      std::cerr << std::string( e.what() ) << std::endl;
-      continue;
+      gen->score = 0;
+      for ( size_t i = 0; i < tries; i++ )
+      {
+        p = gen->generateProgram( 0 );
+        try
+        {
+          s = evaluator.Eval( *p, target.Length() );
+        }
+        catch ( const std::exception& e )
+        {
+          std::cerr << std::string( e.what() ) << std::endl;
+//          gen->score += 2 * max_value;
+          continue;
+        }
+        auto score = scorer.Score( s );
+        if ( score == 0 )
+        {
+          std::cout << "Found!" << std::endl;
+          printer.Print( *p, std::cout );
+          return p;
+        }
+        if ( gen->score == 0 || score << gen->score )
+        {
+          gen->score = score;
+        }
+      }
+//      std::cout << "Score: " << gen->score << std::endl;
+      avg_score += gen->score;
     }
-    auto score = scorer.Score( s );
-    if ( score == 0 )
+    avg_score = (avg_score / generators.size()) / tries;
+//    std::cout << "Average: " << avg_score << "\n" << std::endl;
+
+    // sort generators by their scores
+    std::stable_sort( generators.begin(), generators.end(), less_than_score );
+
+    // print top ten
+    for ( size_t i = 0; i < (gen_count / 10); i++ )
     {
-      std::cout << "Found!" << std::endl;
-      printer.Print( *p, std::cout );
-      return p;
+      generators[i]->print();
+      std::cout << std::endl;
     }
-    std::cout << score << ":: " << s << std::endl;
-    m.mutate( 0.5 );
+    std::cout << std::endl;
+
+    // create new generators
+    std::vector<Generator::UPtr> new_generators;
+    for ( size_t i = 0; i < (gen_count / 10); i++ )
+    {
+      for ( size_t j = 0; j < (gen_count / 10); j++ )
+      {
+        Generator::UPtr g( new Generator( *generators[i] + *generators[j] ) );
+        g->mutate( 0.5 );
+        new_generators.emplace_back( std::move( g ) );
+      }
+    }
+    generators = std::move( new_generators );
   }
 
 }
