@@ -7,6 +7,6 @@ class Finder
 {
 public:
 
-  Program::UPtr Find( const Sequence& target );
+  Program Find( const Sequence& target );
 
 };

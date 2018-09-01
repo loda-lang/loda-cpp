@@ -5,9 +5,9 @@
 #include "scorer.hpp"
 #include "printer.hpp"
 
-Program::UPtr Finder::Find( const Sequence& target )
+Program Finder::Find( const Sequence& target )
 {
-  Program::UPtr p;
+  Program p;
 
   Value seed = 23;
   size_t states = 10;
@@ -38,7 +38,6 @@ Program::UPtr Finder::Find( const Sequence& target )
       generators[i]->setSeed( seed + i );
     }
 
-
     // evaluate generator and score them
     double avg_score = 0.0;
     for ( auto& gen : generators )
@@ -49,7 +48,7 @@ Program::UPtr Finder::Find( const Sequence& target )
         p = gen->generateProgram( 0 );
         try
         {
-          s = evaluator.Eval( *p, target.Length() );
+          s = evaluator.Eval( p, target.Length() );
         }
         catch ( const std::exception& e )
         {
@@ -61,7 +60,7 @@ Program::UPtr Finder::Find( const Sequence& target )
         if ( score == 0 )
         {
           std::cout << "Found!" << std::endl;
-          printer.Print( *p, std::cout );
+          printer.Print( p, std::cout );
           return p;
         }
         if ( gen->score == 0 || score << gen->score )
@@ -75,7 +74,7 @@ Program::UPtr Finder::Find( const Sequence& target )
     avg_score = (avg_score / generators.size()) / tries;
 //    std::cout << "Average: " << avg_score << "\n" << std::endl;
 
-    // sort generators by their scores
+// sort generators by their scores
     std::stable_sort( generators.begin(), generators.end(), less_than_score );
 
     // print top ten

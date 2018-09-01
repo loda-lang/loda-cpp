@@ -180,45 +180,46 @@ void Generator::generateOperations( Seed& seed )
   }
   Value targetValue = s.targetValueDist( gen );
   Value sourceValue = s.sourceValueDist( gen );
+  Operand to( targetType, targetValue );
+  Operand so( sourceType, sourceValue );
 
   seed.ops.clear();
   switch ( s.operationDist( gen ) )
   {
   case 0:
-    seed.ops.push_back( Operation( Operation::Type::MOV, { targetType, targetValue }, { sourceType, sourceValue } ) );
+    seed.ops.push_back( Operation( Operation::Type::MOV, to, so ) );
     break;
   case 1:
-    seed.ops.push_back( Operation( Operation::Type::ADD, { targetType, targetValue }, { sourceType, sourceValue } ) );
+    seed.ops.push_back( Operation( Operation::Type::ADD, to, so ) );
     break;
   case 2:
-    seed.ops.push_back( Operation( Operation::Type::SUB, { targetType, targetValue }, { sourceType, sourceValue } ) );
+    seed.ops.push_back( Operation( Operation::Type::SUB, to, so ) );
     break;
   case 3:
-    seed.ops.push_back( Operation( Operation::Type::LPB, { targetType, targetValue }, { sourceType, sourceValue } ) );
-    seed.ops.push_back(
-        Operation( Operation::Type::LPB, { Operand::Type::CONSTANT, 0 }, { Operand::Type::CONSTANT, 0 } ) );
+    seed.ops.push_back( Operation( Operation::Type::LPB, to, so ) );
+    seed.ops.push_back( Operation( Operation::Type::LPE ) );
     break;
   }
   seed.position = static_cast<double>( s.positionDist( gen ) ) / POSITION_RANGE;
   seed.state = s.transitionDist( gen );
 }
 
-Program::UPtr Generator::generateProgram( size_t initialState )
+Program Generator::generateProgram( size_t initialState )
 {
-  Program::UPtr p( new Program() );
+  Program p;
   Seed seed;
   seed.state = initialState;
   for ( size_t i = 0; i < 40; i++ )
   {
     generateOperations( seed );
-    size_t position = (seed.position * (p->ops.size()));
+    size_t position = (seed.position * (p.ops.size()));
     for ( size_t j = 0; j < seed.ops.size(); j++ )
     {
-      p->ops.emplace( p->ops.begin() + position + j, std::move( seed.ops[j] ) );
+      p.ops.emplace( p.ops.begin() + position + j, std::move( seed.ops[j] ) );
     }
   }
   Optimizer o;
-  o.Optimize( *p );
+  o.Optimize( p );
   return p;
 }
 

@@ -11,9 +11,9 @@ public:
   {
   }
 
-  Program::UPtr Parse( const std::string& file );
+  Program Parse( const std::string& file );
 
-  Program::UPtr Parse( std::istream& in );
+  Program Parse( std::istream& in );
 
   void SetWorkingDir( const std::string& dir );
 

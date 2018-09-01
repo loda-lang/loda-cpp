@@ -49,7 +49,7 @@ public:
 
   void mutate( double delta );
 
-  Program::UPtr generateProgram( size_t initialState );
+  Program generateProgram( size_t initialState );
 
   void generateOperations( Seed& seed );
 

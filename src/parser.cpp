@@ -7,7 +7,7 @@
 #include <fstream>
 #include <iostream>
 
-Program::UPtr Parser::Parse( const std::string& file )
+Program Parser::Parse( const std::string& file )
 {
   file_in.reset( new std::ifstream( file ) );
   if ( !file_in )
@@ -19,10 +19,10 @@ Program::UPtr Parser::Parse( const std::string& file )
   return p;
 }
 
-Program::UPtr Parser::Parse( std::istream& in_ )
+Program Parser::Parse( std::istream& in_ )
 {
   in = &in_;
-  Program::UPtr p( new Program() );
+  Program p;
   Operation o;
   std::string l;
   while ( true )
@@ -56,36 +56,36 @@ Program::UPtr Parser::Parse( std::istream& in_ )
 
       case Operation::Type::MOV:
       {
-        auto t = ReadOperand( *p );
+        auto t = ReadOperand( p );
         ReadSeparator( ',' );
-        auto s = ReadOperand( *p );
+        auto s = ReadOperand( p );
         o = Operation( Operation::Type::MOV, t, s );
         break;
       }
 
       case Operation::Type::ADD:
       {
-        auto t = ReadOperand( *p );
+        auto t = ReadOperand( p );
         ReadSeparator( ',' );
-        auto s = ReadOperand( *p );
+        auto s = ReadOperand( p );
         o = Operation( Operation::Type::ADD, t, s );
         break;
       }
 
       case Operation::Type::SUB:
       {
-        auto t = ReadOperand( *p );
+        auto t = ReadOperand( p );
         ReadSeparator( ',' );
-        auto s = ReadOperand( *p );
+        auto s = ReadOperand( p );
         o = Operation( Operation::Type::SUB, t, s );
         break;
       }
 
       case Operation::Type::LPB:
       {
-        auto t = ReadOperand( *p );
+        auto t = ReadOperand( p );
         ReadSeparator( ',' );
-        auto s = ReadOperand( *p );
+        auto s = ReadOperand( p );
         o = Operation( Operation::Type::LPB, t, s );
         break;
       }
@@ -123,7 +123,7 @@ Program::UPtr Parser::Parse( std::istream& in_ )
     // add operation to program
     if ( o.type != Operation::Type::NOP || !o.comment.empty() )
     {
-      p->ops.push_back( o );
+      p.ops.push_back( o );
     }
   }
   return p;

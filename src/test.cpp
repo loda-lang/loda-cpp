@@ -19,7 +19,7 @@ void Test::Fibonacci()
   Evaluator evaluator;
 
   auto fib = parser.Parse( "examples/fibonacci.asm" );
-  auto result = evaluator.Eval( *fib, expected.data.size() );
+  auto result = evaluator.Eval( fib, expected.data.size() );
   std::cout << "fib=" << result << "..." << std::endl;
   if ( result != expected )
   {
@@ -78,7 +78,7 @@ void Test::TestBinary( const std::string& func, const std::string& file,
       Sequence mem;
       mem.Set( 0, i );
       mem.Set( 1, j );
-      interpreter.Run( *program, mem );
+      interpreter.Run( program, mem );
       std::cout << mem.Get( 2 ) << std::endl;
       if ( mem.Get( 2 ) != values[i][j] )
       {

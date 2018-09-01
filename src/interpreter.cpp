@@ -26,7 +26,7 @@ bool Interpreter::Run( Program& p, Sequence& mem )
   // push first operation to stack
   pc_stack.push( 0 );
 
-  Printer printer;
+  // Printer printer;
 
   // loop until stack is empty
   while ( !pc_stack.empty() )

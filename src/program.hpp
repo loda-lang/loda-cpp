@@ -16,6 +16,11 @@ public:
     MEM_ACCESS_INDIRECT
   };
 
+  Operand()
+      : Operand( Type::CONSTANT, 0 )
+  {
+  }
+
   Operand( Type t, Value v )
       : type( t ),
         value( v )
@@ -47,7 +52,7 @@ public:
   }
 
   Operation( Type y )
-      : Operation( y, { Operand::Type::CONSTANT, 0 }, { Operand::Type::CONSTANT, 0 } )
+      : Operation( y, { }, { } )
   {
   }
 
@@ -67,7 +72,6 @@ public:
 class Program
 {
 public:
-  using UPtr = std::unique_ptr<Program>;
 
   std::vector<Operation> ops;
 };
