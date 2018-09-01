@@ -185,18 +185,18 @@ void Generator::generateOperations( Seed& seed )
   switch ( s.operationDist( gen ) )
   {
   case 0:
-    seed.ops.emplace_back( Operation::UPtr( new Mov( { targetType, targetValue }, { sourceType, sourceValue } ) ) );
+    seed.ops.push_back( Operation( Operation::Type::MOV, { targetType, targetValue }, { sourceType, sourceValue } ) );
     break;
   case 1:
-    seed.ops.emplace_back( Operation::UPtr( new Add( { targetType, targetValue }, { sourceType, sourceValue } ) ) );
+    seed.ops.push_back( Operation( Operation::Type::ADD, { targetType, targetValue }, { sourceType, sourceValue } ) );
     break;
   case 2:
-    seed.ops.emplace_back( Operation::UPtr( new Sub( { targetType, targetValue }, { sourceType, sourceValue } ) ) );
+    seed.ops.push_back( Operation( Operation::Type::SUB, { targetType, targetValue }, { sourceType, sourceValue } ) );
     break;
   case 3:
-    seed.ops.emplace_back(
-        Operation::UPtr( new LoopBegin( { targetType, targetValue }, { sourceType, sourceValue } ) ) );
-    seed.ops.emplace_back( Operation::UPtr( new LoopEnd() ) );
+    seed.ops.push_back( Operation( Operation::Type::LPB, { targetType, targetValue }, { sourceType, sourceValue } ) );
+    seed.ops.push_back(
+        Operation( Operation::Type::LPB, { Operand::Type::CONSTANT, 0 }, { Operand::Type::CONSTANT, 0 } ) );
     break;
   }
   seed.position = static_cast<double>( s.positionDist( gen ) ) / POSITION_RANGE;

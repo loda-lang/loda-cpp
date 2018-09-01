@@ -57,10 +57,10 @@ void Test::Find()
 
 void Test::All()
 {
-  Find();
-//  Fibonacci();
-//  Exponentiation();
-//  Ackermann();
+//  Find();
+  Fibonacci();
+  Exponentiation();
+  Ackermann();
 }
 
 void Test::TestBinary( const std::string& func, const std::string& file,

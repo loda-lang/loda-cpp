@@ -16,11 +16,11 @@ Value Sequence::Get( Value index ) const
 
 void Sequence::Set( Value index, Value value )
 {
-  if ( index > 10000 )
+/*  if ( index > 10000 )
   {
     throw std::runtime_error( "sequence too long: " + std::to_string( index ) );
   }
-  if ( index >= data.size() )
+*/  if ( index >= data.size() )
   {
     data.resize( index + 1, 0 );
   }

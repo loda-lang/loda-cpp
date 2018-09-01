@@ -30,7 +30,6 @@ public:
 class Operation
 {
 public:
-  using UPtr = std::unique_ptr<Operation>;
   enum class Type
   {
     NOP = 0,
@@ -41,141 +40,28 @@ public:
     LPB,
     LPE
   };
-  virtual ~Operation()
-  {
-  }
-  virtual Type GetType() const = 0;
-  std::string comment;
-};
 
-class BinaryOperation: public Operation
-{
-public:
-  BinaryOperation( Operand t, Operand s )
-      : target( t ),
-        source( s )
+  Operation()
+      : Operation( Type::NOP )
   {
   }
-  static BinaryOperation* Cast( UPtr& p )
+
+  Operation( Type y )
+      : Operation( y, { Operand::Type::CONSTANT, 0 }, { Operand::Type::CONSTANT, 0 } )
   {
-    return dynamic_cast<BinaryOperation*>( p.get() );
   }
+
+  Operation( Type y, Operand t, Operand s, const std::string& c = "" )
+      : type( y ),
+        target( t ),
+        source( s ),
+        comment( c )
+  {
+  }
+  Type type;
   Operand target;
   Operand source;
-};
-
-class Nop: public Operation
-{
-public:
-  Nop()
-  {
-  }
-  virtual Type GetType() const override
-  {
-    return Type::NOP;
-  }
-  static Nop* Cast( UPtr& p )
-  {
-    return dynamic_cast<Nop*>( p.get() );
-  }
-};
-
-class Dbg: public Operation
-{
-public:
-  Dbg()
-  {
-  }
-  virtual Type GetType() const override
-  {
-    return Type::DBG;
-  }
-  static Dbg* Cast( UPtr& p )
-  {
-    return dynamic_cast<Dbg*>( p.get() );
-  }
-};
-
-class Mov: public BinaryOperation
-{
-public:
-  Mov( Operand t, Operand s )
-      : BinaryOperation( t, s )
-  {
-  }
-  virtual Type GetType() const override
-  {
-    return Type::MOV;
-  }
-  static Mov* Cast( UPtr& p )
-  {
-    return dynamic_cast<Mov*>( p.get() );
-  }
-};
-
-class Add: public BinaryOperation
-{
-public:
-  Add( Operand t, Operand s )
-      : BinaryOperation( t, s )
-  {
-  }
-  virtual Type GetType() const override
-  {
-    return Type::ADD;
-  }
-  static Add* Cast( UPtr& p )
-  {
-    return dynamic_cast<Add*>( p.get() );
-  }
-
-};
-
-class Sub: public BinaryOperation
-{
-public:
-  Sub( Operand t, Operand s )
-      : BinaryOperation( t, s )
-  {
-  }
-  virtual Type GetType() const override
-  {
-    return Type::SUB;
-  }
-  static Sub* Cast( UPtr& p )
-  {
-    return dynamic_cast<Sub*>( p.get() );
-  }
-};
-
-class LoopBegin: public BinaryOperation
-{
-public:
-  LoopBegin( Operand t, Operand s )
-      : BinaryOperation( t, s )
-  {
-  }
-  virtual Type GetType() const override
-  {
-    return Type::LPB;
-  }
-  static LoopBegin* Cast( UPtr& p )
-  {
-    return dynamic_cast<LoopBegin*>( p.get() );
-  }
-};
-
-class LoopEnd: public Operation
-{
-public:
-  virtual Type GetType() const override
-  {
-    return Type::LPE;
-  }
-  static LoopEnd* Cast( UPtr& p )
-  {
-    return dynamic_cast<LoopEnd*>( p.get() );
-  }
+  std::string comment;
 };
 
 class Program
@@ -183,5 +69,5 @@ class Program
 public:
   using UPtr = std::unique_ptr<Program>;
 
-  std::vector<Operation::UPtr> ops;
+  std::vector<Operation> ops;
 };

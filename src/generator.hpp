@@ -32,7 +32,7 @@ class Seed
 public:
   size_t state;
   double position;
-  std::vector<Operation::UPtr> ops;
+  std::vector<Operation> ops;
 };
 
 class Generator

@@ -37,7 +37,7 @@ bool Interpreter::Run( Program& p, Sequence& mem )
     pc_stack.pop();
     auto& op = p.ops.at( pc );
     size_t pc_next = pc + 1;
-    switch ( op->GetType() )
+    switch ( op.type )
     {
     case Operation::Type::NOP:
     {
@@ -50,32 +50,28 @@ bool Interpreter::Run( Program& p, Sequence& mem )
     }
     case Operation::Type::MOV:
     {
-      auto mov = Mov::Cast( op );
-      auto s = Get( mov->source, mem );
-      Set( mov->target, s, mem );
+      auto s = Get( op.source, mem );
+      Set( op.target, s, mem );
       break;
     }
     case Operation::Type::ADD:
     {
-      auto add = Add::Cast( op );
-      auto s = Get( add->source, mem );
-      auto t = Get( add->target, mem );
-      Set( add->target, t + s, mem );
+      auto s = Get( op.source, mem );
+      auto t = Get( op.target, mem );
+      Set( op.target, t + s, mem );
       break;
     }
     case Operation::Type::SUB:
     {
-      auto sub = Sub::Cast( op );
-      auto s = Get( sub->source, mem );
-      auto t = Get( sub->target, mem );
-      Set( sub->target, (t > s) ? (t - s) : 0, mem );
+      auto s = Get( op.source, mem );
+      auto t = Get( op.target, mem );
+      Set( op.target, (t > s) ? (t - s) : 0, mem );
       break;
     }
     case Operation::Type::LPB:
     {
-      auto lpb = LoopBegin::Cast( op );
-      auto l = Get( lpb->source, mem );
-      auto s = Get( lpb->target, mem, true );
+      auto l = Get( op.source, mem );
+      auto s = Get( op.target, mem, true );
       loop_stack.push( pc );
       mem_stack.push( mem );
       frag_stack.push( mem.Fragment( s, l ) );
@@ -84,15 +80,15 @@ bool Interpreter::Run( Program& p, Sequence& mem )
     case Operation::Type::LPE:
     {
       auto ps_begin = loop_stack.top();
-      auto lpb = LoopBegin::Cast( p.ops[ps_begin] );
+      auto lpb = p.ops[ps_begin];
       auto prev = mem_stack.top();
       mem_stack.pop();
 
       auto frag_prev = frag_stack.top();
       frag_stack.pop();
 
-      auto l = Get( lpb->source, mem );
-      auto s = Get( lpb->target, mem, true );
+      auto l = Get( lpb.source, mem );
+      auto s = Get( lpb.target, mem, true );
       auto frag = mem.Fragment( s, l );
 
       if ( frag < frag_prev )

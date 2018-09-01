@@ -23,7 +23,7 @@ Program::UPtr Parser::Parse( std::istream& in_ )
 {
   in = &in_;
   Program::UPtr p( new Program() );
-  Operation::UPtr o;
+  Operation o;
   std::string l;
   while ( true )
   {
@@ -33,12 +33,8 @@ Program::UPtr Parser::Parse( std::istream& in_ )
     {
       break;
     }
-    o = nullptr;
-    if ( c == ';' )
-    {
-      o.reset( new Nop() );
-    }
-    else
+    o = Operation();
+    if ( c != ';' )
     {
       // read normal operation
       auto op_type = ReadOperationType();
@@ -48,13 +44,13 @@ Program::UPtr Parser::Parse( std::istream& in_ )
 
       case Operation::Type::NOP:
       {
-        o.reset( new Nop() );
+        o = Operation( Operation::Type::NOP );
         break;
       }
 
       case Operation::Type::DBG:
       {
-        o.reset( new Dbg() );
+        o = Operation( Operation::Type::DBG );
         break;
       }
 
@@ -63,7 +59,7 @@ Program::UPtr Parser::Parse( std::istream& in_ )
         auto t = ReadOperand( *p );
         ReadSeparator( ',' );
         auto s = ReadOperand( *p );
-        o.reset( new Mov( t, s ) );
+        o = Operation( Operation::Type::MOV, t, s );
         break;
       }
 
@@ -72,7 +68,7 @@ Program::UPtr Parser::Parse( std::istream& in_ )
         auto t = ReadOperand( *p );
         ReadSeparator( ',' );
         auto s = ReadOperand( *p );
-        o.reset( new Add( t, s ) );
+        o = Operation( Operation::Type::ADD, t, s );
         break;
       }
 
@@ -81,7 +77,7 @@ Program::UPtr Parser::Parse( std::istream& in_ )
         auto t = ReadOperand( *p );
         ReadSeparator( ',' );
         auto s = ReadOperand( *p );
-        o.reset( new Sub( t, s ) );
+        o = Operation( Operation::Type::SUB, t, s );
         break;
       }
 
@@ -90,13 +86,13 @@ Program::UPtr Parser::Parse( std::istream& in_ )
         auto t = ReadOperand( *p );
         ReadSeparator( ',' );
         auto s = ReadOperand( *p );
-        o.reset( new LoopBegin( t, s ) );
+        o = Operation( Operation::Type::LPB, t, s );
         break;
       }
 
       case Operation::Type::LPE:
       {
-        o.reset( new LoopEnd() );
+        o = Operation( Operation::Type::LPE );
         break;
       }
 
@@ -121,13 +117,13 @@ Program::UPtr Parser::Parse( std::istream& in_ )
         c = in->peek();
       }
       std::getline( *in, l );
-      o->comment = l;
+      o.comment = l;
     }
 
     // add operation to program
-    if ( o )
+    if ( o.type != Operation::Type::NOP || !o.comment.empty() )
     {
-      p->ops.emplace_back( std::move( o ) );
+      p->ops.push_back( o );
     }
   }
   return p;
