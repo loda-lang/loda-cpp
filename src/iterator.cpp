@@ -1,10 +1,56 @@
 #include "iterator.hpp"
 
-inline bool inc( Operation& op )
+inline Operand smallest_source()
 {
+  return Operand( Operand::Type::CONSTANT, 1 );
+}
+
+inline Operand smallest_target()
+{
+  return Operand( Operand::Type::MEM_ACCESS_DIRECT, 0 );
+}
+
+inline bool inc( Operand& o, int size )
+{
+  if ( o.value < size )
+  {
+    o.value++;
+    return true;
+  }
+  switch ( o.type )
+  {
+  case Operand::Type::CONSTANT:
+    o = Operand( Operand::Type::MEM_ACCESS_DIRECT, 0 );
+    return true;
+  case Operand::Type::MEM_ACCESS_DIRECT:
+    o = Operand( Operand::Type::MEM_ACCESS_INDIRECT, 0 );
+    return true;
+  case Operand::Type::MEM_ACCESS_INDIRECT:
+    return false;
+  }
+  return false;
+}
+
+inline bool inc( Operation& op, int size )
+{
+  if ( op.type == Operation::Type::LPE )
+  {
+    return false;
+  }
+
   // try to increase source operand
+  if ( inc( op.source, size ) )
+  {
+    return true;
+  }
+  op.source = smallest_source();
 
   // try to increase target operand
+  if ( inc( op.target, size ) )
+  {
+    return true;
+  }
+  op.target = smallest_target();
 
   // try to increase type
   switch ( op.type )
@@ -12,32 +58,33 @@ inline bool inc( Operation& op )
   case Operation::Type::NOP:
   case Operation::Type::DBG:
   case Operation::Type::MOV:
-    op = Operation( Operation::Type::ADD );
+    op.type = Operation::Type::ADD;
     return true;
 
   case Operation::Type::ADD:
-    op = Operation( Operation::Type::SUB );
+    op.type = Operation::Type::SUB;
     return true;
 
   case Operation::Type::SUB:
-    op = Operation( Operation::Type::LPB, { Operand::Type::MEM_ACCESS_DIRECT, 0 }, { } );
+    op.type = Operation::Type::LPB;
     return true;
 
   case Operation::Type::LPB:
-    op = Operation( Operation::Type::LPB );
+    op = Operation( Operation::Type::LPE );
     return true;
 
   case Operation::Type::LPE:
     return false;
   }
+  return false;
 }
 
 Program Iterator::next()
 {
-  Operation zero( Operation::Type::ADD );
+  Operation zero( Operation::Type::ADD, smallest_target(), smallest_source() );
   for ( auto& op : p_.ops )
   {
-    if ( inc( op ) )
+    if ( inc( op, p_.ops.size() ) )
     {
       return p_;
     }

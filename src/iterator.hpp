@@ -2,6 +2,8 @@
 
 class Iterator
 {
+public:
+
   Iterator()
   {
   }

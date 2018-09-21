@@ -3,6 +3,7 @@
 #include "evaluator.hpp"
 #include "finder.hpp"
 #include "interpreter.hpp"
+#include "iterator.hpp"
 #include "parser.hpp"
 #include "printer.hpp"
 
@@ -46,7 +47,8 @@ void Test::Ackermann()
 void Test::Find()
 {
   Sequence expected;
-  expected.data = { 0, 1, 1, 2, 3, 5, 8, 13 };
+  expected.data =
+  { 0, 1, 1, 2, 3, 5, 8, 13};
 //  { 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765, 10946,
 //    17711, 28657, 46368, 75025};
 
@@ -55,12 +57,24 @@ void Test::Find()
 
 }
 
+void Test::Iterate()
+{
+  Iterator it;
+  Printer printer;
+  for ( int i = 0; i < 1000; i++ )
+  {
+    printer.Print( it.next(), std::cout );
+    std::cin.ignore();
+  }
+}
+
 void Test::All()
 {
+  Iterate();
 //  Find();
-  Fibonacci();
-  Exponentiation();
-  Ackermann();
+//  Fibonacci();
+//  Exponentiation();
+//  Ackermann();
 }
 
 void Test::TestBinary( const std::string& func, const std::string& file,

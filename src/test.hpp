@@ -17,6 +17,8 @@ public:
 
   void Find();
 
+  void Iterate();
+
   void All();
 
 private:
