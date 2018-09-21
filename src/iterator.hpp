@@ -6,7 +6,7 @@ class Iterator
   {
   }
 
-  Iterator( Program& p )
+  Iterator( const Program& p )
       : p_( p )
   {
   }

@@ -9,7 +9,7 @@
 using MemStack = std::stack<Sequence>;
 using PCStack = std::stack<size_t>;
 
-bool Interpreter::Run( Program& p, Sequence& mem )
+bool Interpreter::Run( const Program& p, Sequence& mem )
 {
   // check for empty program
   if ( p.ops.empty() )

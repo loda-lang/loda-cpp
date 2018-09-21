@@ -8,7 +8,7 @@ class Interpreter
 {
 public:
 
-  bool Run( Program& p, Sequence& mem );
+  bool Run( const Program& p, Sequence& mem );
 
   Value Get( Operand a, const Sequence& mem, bool get_address = false );
 
