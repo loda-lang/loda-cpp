@@ -10,9 +10,9 @@ inline Operand smallest_target()
   return Operand( Operand::Type::MEM_ACCESS_DIRECT, 0 );
 }
 
-inline bool inc( Operand& o, int size )
+bool Iterator::inc( Operand& o )
 {
-  if ( o.value < size )
+  if ( o.value * 4 < size_ )
   {
     o.value++;
     return true;
@@ -31,7 +31,7 @@ inline bool inc( Operand& o, int size )
   return false;
 }
 
-inline bool inc( Operation& op, int size )
+bool Iterator::inc( Operation& op )
 {
   if ( op.type == Operation::Type::LPE )
   {
@@ -39,14 +39,14 @@ inline bool inc( Operation& op, int size )
   }
 
   // try to increase source operand
-  if ( inc( op.source, size ) )
+  if ( inc( op.source ) )
   {
     return true;
   }
   op.source = smallest_source();
 
   // try to increase target operand
-  if ( inc( op.target, size ) )
+  if ( inc( op.target ) )
   {
     return true;
   }
@@ -82,17 +82,32 @@ inline bool inc( Operation& op, int size )
 Program Iterator::next()
 {
   Operation zero( Operation::Type::ADD, smallest_target(), smallest_source() );
-  for ( auto& op : p_.ops )
+  for ( auto op = p_.ops.rbegin(); op != p_.ops.rend(); ++op )
   {
-    if ( inc( op, p_.ops.size() ) )
+    if ( inc( *op ) )
     {
       return p_;
     }
     else
     {
-      op = zero;
+      *op = zero;
     }
   }
-  p_.ops.push_back( zero );
+  p_.ops.insert( p_.ops.begin(), zero );
+  size_ = p_.ops.size();
+
+/*  int open_loops = 0;
+  for ( const auto& op : p_.ops )
+  {
+    if ( op.type == Operation::Type::LPB )
+    {
+      open_loops++;
+    }
+    else if ( op.type == Operation::Type::LPE )
+    {
+      open_loops--;
+    }
+  }
+  */
   return p_;
 }

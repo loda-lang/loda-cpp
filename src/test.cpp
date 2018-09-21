@@ -61,10 +61,11 @@ void Test::Iterate()
 {
   Iterator it;
   Printer printer;
-  for ( int i = 0; i < 1000; i++ )
+  while ( true )
   {
+    std::cout << "\x1B[2J\x1B[H";
     printer.Print( it.next(), std::cout );
-    std::cin.ignore();
+//    std::cin.ignore();
   }
 }
 
