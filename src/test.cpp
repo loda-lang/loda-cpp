@@ -1,6 +1,5 @@
 #include "test.hpp"
 
-#include "evaluator.hpp"
 #include "finder.hpp"
 #include "interpreter.hpp"
 #include "iterator.hpp"
@@ -17,10 +16,10 @@ void Test::Fibonacci()
     17711, 28657, 46368, 75025};
 
   Parser parser;
-  Evaluator evaluator;
+  Interpreter interpreter;
 
   auto fib = parser.Parse( "examples/fibonacci.asm" );
-  auto result = evaluator.Eval( fib, expected.data.size() );
+  auto result = interpreter.Eval( fib, expected.data.size() );
   std::cout << "fib=" << result << "..." << std::endl;
   if ( result != expected )
   {

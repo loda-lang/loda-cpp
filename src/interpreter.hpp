@@ -2,13 +2,16 @@
 
 #include "program.hpp"
 #include "sequence.hpp"
-#include "value.hpp"
 
 class Interpreter
 {
 public:
 
   bool Run( const Program& p, Sequence& mem );
+
+  Sequence Eval( const Program& p, Value length );
+
+private:
 
   Value Get( Operand a, const Sequence& mem, bool get_address = false );
 

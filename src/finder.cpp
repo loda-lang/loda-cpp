@@ -1,7 +1,7 @@
 #include "finder.hpp"
 
 #include "generator.hpp"
-#include "evaluator.hpp"
+#include "interpreter.hpp"
 #include "scorer.hpp"
 #include "printer.hpp"
 
@@ -26,7 +26,7 @@ Program Finder::Find( const Sequence& target )
     generators.emplace_back( Generator::UPtr( new Generator( states, seed + i ) ) );
   }
 
-  Evaluator evaluator;
+  Interpreter interpreter;
   FixedSequenceScorer scorer( target );
   Printer printer;
 
@@ -48,7 +48,7 @@ Program Finder::Find( const Sequence& target )
         p = gen->generateProgram( 0 );
         try
         {
-          s = evaluator.Eval( p, target.Length() );
+          s = interpreter.Eval( p, target.Length() );
         }
         catch ( const std::exception& e )
         {

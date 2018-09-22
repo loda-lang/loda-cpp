@@ -110,14 +110,14 @@ bool Interpreter::Run( const Program& p, Sequence& mem )
       pc_stack.push( pc_next );
     }
 
-/*    printer.Print( op, std::cout );
-    if ( mem != old )
-    {
-      std::cout << old << " =>" << std::endl;
-      std::cout << mem << std::endl;
-    }
-    std::cout << std::endl;
-*/
+    /*    printer.Print( op, std::cout );
+     if ( mem != old )
+     {
+     std::cout << old << " =>" << std::endl;
+     std::cout << mem << std::endl;
+     }
+     std::cout << std::endl;
+     */
   }
   return true;
 }
@@ -176,4 +176,17 @@ bool Interpreter::IsLessThan( const Sequence& m1, const Sequence& m2, const std:
     }
   }
   return false; // equal
+}
+
+Sequence Interpreter::Eval( const Program& p, Value length )
+{
+  Sequence seq;
+  for ( Value index = 0; index < length; index++ )
+  {
+    Sequence mem;
+    mem.Set( 0, index );
+    Run( p, mem );
+    seq.Set( index, mem.Get( 1 ) );
+  }
+  return seq;
 }
