@@ -37,73 +37,15 @@ Program Parser::Parse( std::istream& in_ )
     if ( c != ';' )
     {
       // read normal operation
-      auto op_type = ReadOperationType();
+      o.type = ReadOperationType();
       *in >> std::ws;
-      switch ( op_type )
+      if ( o.type == Operation::Type::MOV || o.type == Operation::Type::ADD || o.type == Operation::Type::SUB
+          || o.type == Operation::Type::LPB )
       {
-
-      case Operation::Type::NOP:
-      {
-        o = Operation( Operation::Type::NOP );
-        break;
-      }
-
-      case Operation::Type::MOV:
-      {
-        auto t = ReadOperand( p );
+        o.target = ReadOperand( p );
         ReadSeparator( ',' );
-        auto s = ReadOperand( p );
-        o = Operation( Operation::Type::MOV, t, s );
-        break;
+        o.source = ReadOperand( p );
       }
-
-      case Operation::Type::ADD:
-      {
-        auto t = ReadOperand( p );
-        ReadSeparator( ',' );
-        auto s = ReadOperand( p );
-        o = Operation( Operation::Type::ADD, t, s );
-        break;
-      }
-
-      case Operation::Type::SUB:
-      {
-        auto t = ReadOperand( p );
-        ReadSeparator( ',' );
-        auto s = ReadOperand( p );
-        o = Operation( Operation::Type::SUB, t, s );
-        break;
-      }
-
-      case Operation::Type::LPB:
-      {
-        auto t = ReadOperand( p );
-        ReadSeparator( ',' );
-        auto s = ReadOperand( p );
-        o = Operation( Operation::Type::LPB, t, s );
-        break;
-      }
-
-      case Operation::Type::LPE:
-      {
-        o = Operation( Operation::Type::LPE );
-        break;
-      }
-
-      case Operation::Type::DBG:
-      {
-        o = Operation( Operation::Type::DBG );
-        break;
-      }
-
-      case Operation::Type::END:
-      {
-        o = Operation( Operation::Type::END );
-        break;
-      }
-
-      }
-
     }
 
     // read comment
