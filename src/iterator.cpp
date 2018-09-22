@@ -56,8 +56,9 @@ bool Iterator::inc( Operation& op )
   switch ( op.type )
   {
   case Operation::Type::NOP:
-  case Operation::Type::DBG:
   case Operation::Type::MOV:
+  case Operation::Type::DBG:
+  case Operation::Type::END:
     op.type = Operation::Type::ADD;
     return true;
 

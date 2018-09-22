@@ -11,7 +11,7 @@ class Operand
 public:
   enum class Type
   {
-    CONSTANT = 0,
+    CONSTANT,
     MEM_ACCESS_DIRECT,
     MEM_ACCESS_INDIRECT
   };
@@ -37,13 +37,14 @@ class Operation
 public:
   enum class Type
   {
-    NOP = 0,
-    DBG,
+    NOP,
     MOV,
     ADD,
     SUB,
     LPB,
-    LPE
+    LPE,
+    DBG,
+    END
   };
 
   Operation()

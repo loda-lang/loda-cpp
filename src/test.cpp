@@ -70,11 +70,11 @@ void Test::Iterate()
 
 void Test::All()
 {
-  Iterate();
+//  Iterate();
 //  Find();
-//  Fibonacci();
-//  Exponentiation();
-//  Ackermann();
+  Fibonacci();
+  Exponentiation();
+  Ackermann();
 }
 
 void Test::TestBinary( const std::string& func, const std::string& file,

@@ -1,6 +1,7 @@
 #include "interpreter.hpp"
 
 #include "printer.hpp"
+#include "value.hpp"
 
 #include <iostream>
 #include <array>
@@ -41,11 +42,6 @@ bool Interpreter::Run( const Program& p, Sequence& mem )
     {
     case Operation::Type::NOP:
     {
-      break;
-    }
-    case Operation::Type::DBG:
-    {
-      std::cout << mem << std::endl;
       break;
     }
     case Operation::Type::MOV:
@@ -102,6 +98,15 @@ bool Interpreter::Run( const Program& p, Sequence& mem )
         mem = prev;
         loop_stack.pop();
       }
+      break;
+    }
+    case Operation::Type::DBG:
+    {
+      std::cout << mem << std::endl;
+      break;
+    }
+    case Operation::Type::END:
+    {
       break;
     }
     }

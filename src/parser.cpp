@@ -48,12 +48,6 @@ Program Parser::Parse( std::istream& in_ )
         break;
       }
 
-      case Operation::Type::DBG:
-      {
-        o = Operation( Operation::Type::DBG );
-        break;
-      }
-
       case Operation::Type::MOV:
       {
         auto t = ReadOperand( p );
@@ -93,6 +87,18 @@ Program Parser::Parse( std::istream& in_ )
       case Operation::Type::LPE:
       {
         o = Operation( Operation::Type::LPE );
+        break;
+      }
+
+      case Operation::Type::DBG:
+      {
+        o = Operation( Operation::Type::DBG );
+        break;
+      }
+
+      case Operation::Type::END:
+      {
+        o = Operation( Operation::Type::END );
         break;
       }
 
@@ -215,10 +221,6 @@ Operation::Type Parser::ReadOperationType()
   {
     return Operation::Type::NOP;
   }
-  else if ( t == "dbg" )
-  {
-    return Operation::Type::DBG;
-  }
   else if ( t == "mov" )
   {
     return Operation::Type::MOV;
@@ -238,6 +240,14 @@ Operation::Type Parser::ReadOperationType()
   else if ( t == "lpe" )
   {
     return Operation::Type::LPE;
+  }
+  else if ( t == "dbg" )
+  {
+    return Operation::Type::DBG;
+  }
+  else if ( t == "end" )
+  {
+    return Operation::Type::END;
   }
   throw std::runtime_error( "invalid operation: " + t );
 }
