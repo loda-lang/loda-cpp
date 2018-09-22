@@ -5,6 +5,7 @@
 #include "iterator.hpp"
 #include "parser.hpp"
 #include "printer.hpp"
+#include "serializer.hpp"
 
 void Test::Fibonacci()
 {
@@ -66,6 +67,15 @@ void Test::Iterate()
     printer.Print( it.next(), std::cout );
 //    std::cin.ignore();
   }
+}
+
+void Test::Serialize()
+{
+  Parser parser;
+  Printer printer;
+  Serializer serializer;
+  auto fib = parser.Parse( "examples/fibonacci.asm" );
+  printer.Print( fib, std::cout );
 }
 
 void Test::All()
