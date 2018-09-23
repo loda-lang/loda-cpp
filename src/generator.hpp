@@ -1,9 +1,8 @@
 #pragma once
 
 #include "program.hpp"
-#include "sequence.hpp"
-
 #include <random>
+#include "common.hpp"
 
 class State
 {
@@ -61,7 +60,7 @@ public:
 
   std::mt19937 gen;
 
-  Value score;
+  number_t score;
 
 };
 

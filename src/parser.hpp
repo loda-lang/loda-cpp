@@ -21,7 +21,7 @@ private:
 
   void ReadSeparator( char separator );
 
-  Value ReadValue();
+  number_t ReadValue();
 
   std::string ReadIdentifier();
 

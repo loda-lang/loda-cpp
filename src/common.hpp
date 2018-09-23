@@ -1,9 +1,12 @@
 #pragma once
 
-#include "value.hpp"
-
+#include <stdlib.h>
 #include <iostream>
+#include <memory>
+#include <string>
 #include <vector>
+
+using number_t = uint64_t;
 
 class Sequence
 {
@@ -11,13 +14,13 @@ public:
 
   Sequence();
 
-  Value Get( Value i ) const;
+  number_t Get( number_t i ) const;
 
-  void Set( Value i, Value v );
+  void Set( number_t i, number_t v );
 
-  Value Length() const;
+  number_t Length() const;
 
-  Sequence Fragment( Value start, Value length ) const;
+  Sequence Fragment( number_t start, number_t length ) const;
 
   bool operator<( const Sequence& other ) const;
 
@@ -29,7 +32,7 @@ public:
 
 //private:
 
-  std::vector<Value> data;
+  std::vector<number_t> data;
 
 };
 

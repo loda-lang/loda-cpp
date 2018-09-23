@@ -32,14 +32,14 @@ void Test::Fibonacci()
 
 void Test::Exponentiation()
 {
-  std::vector<std::vector<Value> > values = { { 1, 0, 0, 0 }, { 1, 1, 1, 1 }, { 1, 2, 4, 8 }, { 1, 3, 9, 27 }, { 1, 4,
+  std::vector<std::vector<number_t> > values = { { 1, 0, 0, 0 }, { 1, 1, 1, 1 }, { 1, 2, 4, 8 }, { 1, 3, 9, 27 }, { 1, 4,
       16, 64 } };
   TestBinary( "exp", "examples/exponentiation.asm", values );
 }
 
 void Test::Ackermann()
 {
-  std::vector<std::vector<Value> > values = { { 1, 2, 3, 4, 5 }, { 2, 3, 4, 5, 6 }, { 3, 5, 7, 9, 11 }, { 5, 13, 29, 61,
+  std::vector<std::vector<number_t> > values = { { 1, 2, 3, 4, 5 }, { 2, 3, 4, 5, 6 }, { 3, 5, 7, 9, 11 }, { 5, 13, 29, 61,
       125 }, { 13, 65533 } };
   TestBinary( "ack", "examples/ackermann.asm", values );
 }
@@ -88,7 +88,7 @@ void Test::All()
 }
 
 void Test::TestBinary( const std::string& func, const std::string& file,
-    const std::vector<std::vector<Value> >& values )
+    const std::vector<std::vector<number_t> >& values )
 {
   std::cout << "Running tests for " << file << "..." << std::endl;
   Parser parser;

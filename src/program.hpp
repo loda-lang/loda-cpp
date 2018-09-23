@@ -1,10 +1,6 @@
 #pragma once
 
-#include <memory>
-#include <string>
-#include <vector>
-
-#include "value.hpp"
+#include "common.hpp"
 
 class Operand
 {
@@ -21,14 +17,14 @@ public:
   {
   }
 
-  Operand( Type t, Value v )
+  Operand( Type t, number_t v )
       : type( t ),
         value( v )
   {
   }
 
   Type type;
-  Value value;
+  number_t value;
 
 };
 

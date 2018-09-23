@@ -1,7 +1,7 @@
 #include "interpreter.hpp"
 
+#include "common.hpp"
 #include "printer.hpp"
-#include "value.hpp"
 
 #include <iostream>
 #include <array>
@@ -127,7 +127,7 @@ bool Interpreter::Run( const Program& p, Sequence& mem )
   return true;
 }
 
-Value Interpreter::Get( Operand a, const Sequence& mem, bool get_address )
+number_t Interpreter::Get( Operand a, const Sequence& mem, bool get_address )
 {
   switch ( a.type )
   {
@@ -152,7 +152,7 @@ Value Interpreter::Get( Operand a, const Sequence& mem, bool get_address )
   {};
 }
 
-void Interpreter::Set( Operand a, Value v, Sequence& mem )
+void Interpreter::Set( Operand a, number_t v, Sequence& mem )
 {
   switch ( a.type )
   {
@@ -183,10 +183,10 @@ bool Interpreter::IsLessThan( const Sequence& m1, const Sequence& m2, const std:
   return false; // equal
 }
 
-Sequence Interpreter::Eval( const Program& p, Value length )
+Sequence Interpreter::Eval( const Program& p, number_t length )
 {
   Sequence seq;
-  for ( Value index = 0; index < length; index++ )
+  for ( number_t index = 0; index < length; index++ )
   {
     Sequence mem;
     mem.Set( 0, index );

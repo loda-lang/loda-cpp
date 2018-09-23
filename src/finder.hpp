@@ -1,7 +1,7 @@
 #pragma once
 
+#include "common.hpp"
 #include "program.hpp"
-#include "sequence.hpp"
 
 class Finder
 {

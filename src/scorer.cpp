@@ -14,11 +14,11 @@ FixedSequenceScorer::~FixedSequenceScorer()
 {
 }
 
-Value FixedSequenceScorer::Score( const Sequence& s )
+number_t FixedSequenceScorer::Score( const Sequence& s )
 {
-  Value score = 0;
+  number_t score = 0;
   auto length = target_.Length();
-  for ( Value i = 0; i < length; i++ )
+  for ( number_t i = 0; i < length; i++ )
   {
     auto v1 = s.Get( i );
     auto v2 = target_.Get( i );

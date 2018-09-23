@@ -1,7 +1,7 @@
 #include "parser.hpp"
 
+#include "common.hpp"
 #include "program.hpp"
-#include "value.hpp"
 
 #include <algorithm>
 #include <fstream>
@@ -86,9 +86,9 @@ void Parser::ReadSeparator( char separator )
   }
 }
 
-Value Parser::ReadValue()
+number_t Parser::ReadValue()
 {
-  Value v;
+  number_t v;
   int c;
   *in >> std::ws;
   c = in->peek();

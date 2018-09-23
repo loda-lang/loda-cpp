@@ -9,12 +9,12 @@ Program Finder::Find( const Sequence& target )
 {
   Program p;
 
-  Value seed = 23;
+  number_t seed = 23;
   size_t states = 10;
   size_t gen_count = 100;
   size_t tries = 100;
 
-  Value max_value = 0;
+  number_t max_value = 0;
   for ( auto& v : target.data )
   {
     if ( v > max_value ) max_value = v;

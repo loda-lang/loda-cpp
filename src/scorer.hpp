@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sequence.hpp"
+#include "common.hpp"
 
 class Scorer
 {
@@ -8,7 +8,7 @@ public:
 
   virtual ~Scorer();
 
-  virtual Value Score( const Sequence& s ) = 0;
+  virtual number_t Score( const Sequence& s ) = 0;
 
 };
 
@@ -20,7 +20,7 @@ public:
 
   virtual ~FixedSequenceScorer();
 
-  virtual Value Score( const Sequence& s ) override;
+  virtual number_t Score( const Sequence& s ) override;
 
 private:
   Sequence target_;

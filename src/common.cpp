@@ -1,11 +1,10 @@
-#include "sequence.hpp"
-#include "value.hpp"
+#include "common.hpp"
 
 Sequence::Sequence()
 {
 }
 
-Value Sequence::Get( Value index ) const
+number_t Sequence::Get( number_t index ) const
 {
   if ( index >= data.size() )
   {
@@ -14,7 +13,7 @@ Value Sequence::Get( Value index ) const
   return data[index];
 }
 
-void Sequence::Set( Value index, Value value )
+void Sequence::Set( number_t index, number_t value )
 {
 /*  if ( index > 10000 )
   {
@@ -27,15 +26,15 @@ void Sequence::Set( Value index, Value value )
   data[index] = value;
 }
 
-Value Sequence::Length() const
+number_t Sequence::Length() const
 {
   return data.size();
 }
 
 bool Sequence::operator<( const Sequence& other ) const
 {
-  Value length = Length() > other.Length() ? Length() : other.Length();
-  for ( Value i = 0; i < length; i++ )
+  number_t length = Length() > other.Length() ? Length() : other.Length();
+  for ( number_t i = 0; i < length; i++ )
   {
     if ( Get( i ) < other.Get( i ) )
     {
@@ -51,8 +50,8 @@ bool Sequence::operator<( const Sequence& other ) const
 
 bool Sequence::operator==( const Sequence& other ) const
 {
-  Value length = Length() > other.Length() ? Length() : other.Length();
-  for ( Value i = 0; i < length; i++ )
+  number_t length = Length() > other.Length() ? Length() : other.Length();
+  for ( number_t i = 0; i < length; i++ )
   {
     if ( Get( i ) != other.Get( i ) )
     {
@@ -67,10 +66,10 @@ bool Sequence::operator!=( const Sequence& other ) const
   return !(*this == other);
 }
 
-Sequence Sequence::Fragment( Value start, Value length ) const
+Sequence Sequence::Fragment( number_t start, number_t length ) const
 {
   Sequence f;
-  for ( Value i = 0; i < length; i++ )
+  for ( number_t i = 0; i < length; i++ )
   {
     f.Set( i, Get( start + i ) );
   }

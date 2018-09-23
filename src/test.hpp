@@ -1,9 +1,6 @@
 #pragma once
 
-#include <string>
-#include <vector>
-
-#include "value.hpp"
+#include "common.hpp"
 
 class Test
 {
@@ -25,6 +22,6 @@ public:
 
 private:
 
-  void TestBinary( const std::string& func, const std::string& file, const std::vector<std::vector<Value> >& values );
+  void TestBinary( const std::string& func, const std::string& file, const std::vector<std::vector<number_t> >& values );
 
 };

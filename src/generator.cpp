@@ -122,7 +122,7 @@ State State::operator+( const State& other )
 Generator::Generator( size_t numStates, int64_t seed )
 {
   states.resize( numStates );
-  for ( Value state = 0; state < numStates; state++ )
+  for ( number_t state = 0; state < numStates; state++ )
   {
     states[state] = State( numStates );
   }
@@ -132,7 +132,7 @@ Generator::Generator( size_t numStates, int64_t seed )
 Generator Generator::operator+( const Generator& other )
 {
   Generator r( states.size(), gen() );
-  for ( Value s = 0; s < states.size(); s++ )
+  for ( number_t s = 0; s < states.size(); s++ )
   {
     r.states[s] = states[s] + other.states[s];
   }
@@ -178,8 +178,8 @@ void Generator::generateOperations( Seed& seed )
     sourceType = Operand::Type::MEM_ACCESS_INDIRECT;
     break;
   }
-  Value targetValue = s.targetValueDist( gen );
-  Value sourceValue = s.sourceValueDist( gen );
+  number_t targetValue = s.targetValueDist( gen );
+  number_t sourceValue = s.sourceValueDist( gen );
   Operand to( targetType, targetValue );
   Operand so( sourceType, sourceValue );
 
