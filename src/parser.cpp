@@ -183,13 +183,13 @@ Operation::Type Parser::readOperationType()
   {
     return Operation::Type::LPE;
   }
+  else if ( t == "clr" )
+  {
+    return Operation::Type::CLR;
+  }
   else if ( t == "dbg" )
   {
     return Operation::Type::DBG;
-  }
-  else if ( t == "end" )
-  {
-    return Operation::Type::END;
   }
   throw std::runtime_error( "invalid operation: " + t );
 }

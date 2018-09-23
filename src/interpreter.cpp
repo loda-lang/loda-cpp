@@ -100,13 +100,14 @@ bool Interpreter::run( const Program& p, Memory& mem )
       }
       break;
     }
+    case Operation::Type::CLR:
+    {
+      mem.clear();
+      break;
+    }
     case Operation::Type::DBG:
     {
       std::cout << mem << std::endl;
-      break;
-    }
-    case Operation::Type::END:
-    {
       break;
     }
     }

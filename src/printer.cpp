@@ -64,13 +64,16 @@ void Printer::print( const Operation& op, std::ostream& out, int indent )
     out << GetIndent( indent ) << "lpe";
     break;
   }
+  case Operation::Type::CLR:
+  {
+    out << GetIndent( indent ) << "clr";
+    break;
+  }
   case Operation::Type::DBG:
   {
     out << GetIndent( indent ) << "dbg";
     break;
   }
-  case Operation::Type::END:
-    break;
   }
   if ( !op.comment.empty() )
   {

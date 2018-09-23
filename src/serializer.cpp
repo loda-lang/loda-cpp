@@ -1,5 +1,7 @@
 #include "serializer.hpp"
 
+#include "common.hpp"
+
 inline uint16_t OperationTypeToInt( Operation::Type t )
 {
   switch ( t )
@@ -16,9 +18,9 @@ inline uint16_t OperationTypeToInt( Operation::Type t )
     return 4;
   case Operation::Type::LPE:
     return 5;
-  case Operation::Type::DBG:
+  case Operation::Type::CLR:
     return 6;
-  case Operation::Type::END:
+  case Operation::Type::DBG:
     return 7;
   }
   return 0; // unreachable
@@ -41,9 +43,9 @@ inline Operation::Type IntToOperationType( uint16_t w )
   case 5:
     return Operation::Type::LPE;
   case 6:
-    return Operation::Type::DBG;
+    return Operation::Type::CLR;
   case 7:
-    return Operation::Type::END;
+    return Operation::Type::DBG;
   default:
     break;
   }
@@ -125,4 +127,24 @@ Operation Serializer::readOperation( uint16_t w )
   op.target = Operand( optypes.first, (w >> 5) & 31 );
   op.source = Operand( optypes.second, w & 31 );
   return op;
+}
+
+void Serializer::writeProgram( const Program& p, std::ostream& out )
+{
+  std::vector<uint16_t> data;
+  data.reserve( p.ops.size() );
+  if ( p.ops.empty() || p.ops.front().type != Operation::Type::CLR )
+  {
+    data.push_back( writeOperation( Operation( Operation::Type::CLR ) ) );
+  }
+  for ( auto& op : p.ops )
+  {
+    data.push_back( writeOperation( op ) );
+  }
+  out.write( reinterpret_cast<const char*>( data.data() ), sizeof(uint16_t) * data.size() );
+}
+
+void readProgram( Program& p, std::istream& in )
+{
+
 }

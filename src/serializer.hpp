@@ -9,4 +9,8 @@ class Serializer
 
   Operation readOperation( uint16_t w );
 
+  void writeProgram( const Program& p, std::ostream& out );
+
+  void readProgram( Program& p, std::istream& in );
+
 };

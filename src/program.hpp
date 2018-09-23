@@ -39,8 +39,8 @@ public:
     SUB,
     LPB,
     LPE,
+    CLR,
     DBG,
-    END
   };
 
   Operation()
