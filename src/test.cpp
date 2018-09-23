@@ -11,16 +11,14 @@ void Test::fibonacci()
 {
   std::cout << "Running tests for examples/fibonacci.asm..." << std::endl;
 
-  Sequence expected;
-  expected.data =
-  { 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765, 10946,
-    17711, 28657, 46368, 75025};
+  Sequence expected( { 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765, 10946,
+      17711, 28657, 46368, 75025 } );
 
   Parser parser;
   Interpreter interpreter;
 
   auto fib = parser.parse( "examples/fibonacci.asm" );
-  auto result = interpreter.eval( fib, expected.data.size() );
+  auto result = interpreter.eval( fib, expected.size() );
   std::cout << "fib=" << result << "..." << std::endl;
   if ( result != expected )
   {
@@ -32,23 +30,21 @@ void Test::fibonacci()
 
 void Test::exponentiation()
 {
-  std::vector<std::vector<number_t> > values = { { 1, 0, 0, 0 }, { 1, 1, 1, 1 }, { 1, 2, 4, 8 }, { 1, 3, 9, 27 }, { 1, 4,
-      16, 64 } };
+  std::vector<std::vector<number_t> > values = { { 1, 0, 0, 0 }, { 1, 1, 1, 1 }, { 1, 2, 4, 8 }, { 1, 3, 9, 27 }, { 1,
+      4, 16, 64 } };
   testBinary( "exp", "examples/exponentiation.asm", values );
 }
 
 void Test::ackermann()
 {
-  std::vector<std::vector<number_t> > values = { { 1, 2, 3, 4, 5 }, { 2, 3, 4, 5, 6 }, { 3, 5, 7, 9, 11 }, { 5, 13, 29, 61,
-      125 }, { 13, 65533 } };
+  std::vector<std::vector<number_t> > values = { { 1, 2, 3, 4, 5 }, { 2, 3, 4, 5, 6 }, { 3, 5, 7, 9, 11 }, { 5, 13, 29,
+      61, 125 }, { 13, 65533 } };
   testBinary( "ack", "examples/ackermann.asm", values );
 }
 
 void Test::find()
 {
-  Sequence expected;
-  expected.data =
-  { 0, 1, 1, 2, 3, 5, 8, 13};
+  Sequence expected( { 0, 1, 1, 2, 3, 5, 8, 13 } );
 //  { 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765, 10946,
 //    17711, 28657, 46368, 75025};
 
@@ -99,7 +95,7 @@ void Test::testBinary( const std::string& func, const std::string& file,
     for ( size_t j = 0; j < values[i].size(); j++ )
     {
       std::cout << func << "(" << i << "," << j << ")=";
-      Sequence mem;
+      Memory mem;
       mem.set( 0, i );
       mem.set( 1, j );
       interpreter.run( program, mem );

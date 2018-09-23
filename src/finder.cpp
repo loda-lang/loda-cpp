@@ -15,7 +15,7 @@ Program Finder::find( const Sequence& target )
   size_t tries = 100;
 
   number_t max_value = 0;
-  for ( auto& v : target.data )
+  for ( auto& v : target )
   {
     if ( v > max_value ) max_value = v;
   }

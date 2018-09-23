@@ -1,37 +1,82 @@
 #include "common.hpp"
 
-Sequence::Sequence()
+// === Sequence ===============================================================
+
+bool Sequence::operator<( const Sequence& other ) const
 {
+  number_t length = size() < other.size() ? size() : other.size();
+  for ( number_t i = 0; i < length; i++ )
+  {
+    if ( (*this)[i] < other[i] )
+    {
+      return true; // less
+    }
+    else if ( (*this)[i] > other[i] )
+    {
+      return false; // greater
+    }
+  }
+  return false; // undecidable
 }
 
-number_t Sequence::get( number_t index ) const
+bool Sequence::operator!=( const Sequence& other ) const
 {
-  if ( index >= data.size() )
+  number_t length = size() < other.size() ? size() : other.size();
+  for ( number_t i = 0; i < length; i++ )
+  {
+    if ( (*this)[i] != other[i] )
+    {
+      return true; // not equal
+    }
+  }
+  return false; // undecidable
+}
+
+std::ostream& operator<<( std::ostream& out, const Sequence& seq )
+{
+  for ( number_t i = 0; i < seq.size(); i++ )
+  {
+    if ( i > 0 ) out << " ";
+    out << seq[i];
+  }
+  return out;
+}
+
+// === Memory =================================================================
+
+number_t Memory::get( number_t index ) const
+{
+  if ( index >= size() )
   {
     return 0;
   }
-  return data[index];
+  return (*this)[index];
 }
 
-void Sequence::set( number_t index, number_t value )
+void Memory::set( number_t index, number_t value )
 {
-/*  if ( index > 10000 )
+  if ( index > 10000 )
   {
-    throw std::runtime_error( "sequence too long: " + std::to_string( index ) );
+    throw std::runtime_error( "index out of loda memory range: " + std::to_string( index ) );
   }
-*/  if ( index >= data.size() )
+  if ( index >= size() )
   {
-    data.resize( index + 1, 0 );
+    resize( index + 1, 0 );
   }
-  data[index] = value;
+  (*this)[index] = value;
 }
 
-number_t Sequence::size() const
+Memory Memory::fragment( number_t start, number_t length ) const
 {
-  return data.size();
+  Memory f;
+  for ( number_t i = 0; i < length; i++ )
+  {
+    f.set( i, get( start + i ) );
+  }
+  return f;
 }
 
-bool Sequence::operator<( const Sequence& other ) const
+bool Memory::operator<( const Memory& other ) const
 {
   number_t length = size() > other.size() ? size() : other.size();
   for ( number_t i = 0; i < length; i++ )
@@ -48,7 +93,7 @@ bool Sequence::operator<( const Sequence& other ) const
   return false; // equal
 }
 
-bool Sequence::operator==( const Sequence& other ) const
+bool Memory::operator==( const Memory& other ) const
 {
   number_t length = size() > other.size() ? size() : other.size();
   for ( number_t i = 0; i < length; i++ )
@@ -61,27 +106,19 @@ bool Sequence::operator==( const Sequence& other ) const
   return true; // equal
 }
 
-bool Sequence::operator!=( const Sequence& other ) const
+bool Memory::operator!=( const Memory& other ) const
 {
   return !(*this == other);
 }
 
-Sequence Sequence::fragment( number_t start, number_t length ) const
+std::ostream& operator<<( std::ostream& out, const Memory& m )
 {
-  Sequence f;
-  for ( number_t i = 0; i < length; i++ )
-  {
-    f.set( i, get( start + i ) );
-  }
-  return f;
-}
-
-std::ostream& operator<<( std::ostream& out, const Sequence& seq )
-{
-  for ( size_t i = 0; i < seq.data.size(); i++ )
+  out << "[";
+  for ( number_t i = 0; i < m.size(); i++ )
   {
     if ( i > 0 ) out << ",";
-    out << seq.data[i];
+    out << m[i];
   }
+  out << "]";
   return out;
 }
