@@ -186,6 +186,7 @@ bool Interpreter::isLessThan( const Memory& m1, const Memory& m2, const std::vec
 Sequence Interpreter::eval( const Program& p, number_t length )
 {
   Sequence seq;
+  seq.resize( length );
   for ( number_t index = 0; index < length; index++ )
   {
     Memory mem;

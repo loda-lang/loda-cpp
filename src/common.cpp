@@ -2,16 +2,16 @@
 
 // === Sequence ===============================================================
 
-bool Sequence::operator<( const Sequence& other ) const
+bool Sequence::operator<( const Sequence& m ) const
 {
-  number_t length = size() < other.size() ? size() : other.size();
+  number_t length = size() < m.size() ? size() : m.size();
   for ( number_t i = 0; i < length; i++ )
   {
-    if ( (*this)[i] < other[i] )
+    if ( (*this)[i] < m[i] )
     {
       return true; // less
     }
-    else if ( (*this)[i] > other[i] )
+    else if ( (*this)[i] > m[i] )
     {
       return false; // greater
     }
@@ -19,12 +19,12 @@ bool Sequence::operator<( const Sequence& other ) const
   return false; // undecidable
 }
 
-bool Sequence::operator!=( const Sequence& other ) const
+bool Sequence::operator!=( const Sequence& m ) const
 {
-  number_t length = size() < other.size() ? size() : other.size();
+  number_t length = size() < m.size() ? size() : m.size();
   for ( number_t i = 0; i < length; i++ )
   {
-    if ( (*this)[i] != other[i] )
+    if ( (*this)[i] != m[i] )
     {
       return true; // not equal
     }
@@ -55,7 +55,7 @@ number_t Memory::get( number_t index ) const
 
 void Memory::set( number_t index, number_t value )
 {
-  if ( index > 10000 )
+  if ( index > 100000 )
   {
     throw std::runtime_error( "index out of loda memory range: " + std::to_string( index ) );
   }
@@ -76,16 +76,16 @@ Memory Memory::fragment( number_t start, number_t length ) const
   return f;
 }
 
-bool Memory::operator<( const Memory& other ) const
+bool Memory::operator<( const Memory& m ) const
 {
-  number_t length = size() > other.size() ? size() : other.size();
+  number_t length = size() > m.size() ? size() : m.size();
   for ( number_t i = 0; i < length; i++ )
   {
-    if ( get( i ) < other.get( i ) )
+    if ( get( i ) < m.get( i ) )
     {
       return true; // less
     }
-    else if ( get( i ) > other.get( i ) )
+    else if ( get( i ) > m.get( i ) )
     {
       return false; // greater
     }
@@ -93,12 +93,12 @@ bool Memory::operator<( const Memory& other ) const
   return false; // equal
 }
 
-bool Memory::operator==( const Memory& other ) const
+bool Memory::operator==( const Memory& m ) const
 {
-  number_t length = size() > other.size() ? size() : other.size();
+  number_t length = size() > m.size() ? size() : m.size();
   for ( number_t i = 0; i < length; i++ )
   {
-    if ( get( i ) != other.get( i ) )
+    if ( get( i ) != m.get( i ) )
     {
       return false;
     }
@@ -106,9 +106,9 @@ bool Memory::operator==( const Memory& other ) const
   return true; // equal
 }
 
-bool Memory::operator!=( const Memory& other ) const
+bool Memory::operator!=( const Memory& m ) const
 {
-  return !(*this == other);
+  return !(*this == m);
 }
 
 std::ostream& operator<<( std::ostream& out, const Memory& m )

@@ -69,7 +69,7 @@ void Test::serialize()
 {
   Parser parser;
   Printer printer;
-  Serializer serializer;
+//  Serializer serializer;
   auto fib = parser.parse( "examples/fibonacci.asm" );
   printer.print( fib, std::cout );
 }
