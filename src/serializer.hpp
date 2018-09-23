@@ -2,12 +2,10 @@
 
 #include "program.hpp"
 
+#include <iostream>
+
 class Serializer
 {
-
-  uint16_t writeOperation( const Operation& op );
-
-  Operation readOperation( uint16_t w );
 
   void writeProgram( const Program& p, std::ostream& out );
 

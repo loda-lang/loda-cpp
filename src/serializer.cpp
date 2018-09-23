@@ -2,7 +2,7 @@
 
 #include "common.hpp"
 
-inline uint16_t OperationTypeToInt( Operation::Type t )
+inline uint16_t operationTypeToInt( Operation::Type t )
 {
   switch ( t )
   {
@@ -26,7 +26,7 @@ inline uint16_t OperationTypeToInt( Operation::Type t )
   return 0; // unreachable
 }
 
-inline Operation::Type IntToOperationType( uint16_t w )
+inline Operation::Type intToOperationType( uint16_t w )
 {
   switch ( w )
   {
@@ -52,7 +52,7 @@ inline Operation::Type IntToOperationType( uint16_t w )
   return Operation::Type::NOP; // unreachable
 }
 
-inline uint16_t OperandTypesToInt( Operand::Type t, Operand::Type s )
+inline uint16_t operandTypesToInt( Operand::Type t, Operand::Type s )
 {
   switch ( t )
   {
@@ -86,7 +86,7 @@ inline uint16_t OperandTypesToInt( Operand::Type t, Operand::Type s )
 
 #define make_optype_pair(t,s) std::make_pair<Operand::Type, Operand::Type>( Operand::Type::t, Operand::Type::s )
 
-inline std::pair<Operand::Type, Operand::Type> IntToOperandTypes( uint16_t w )
+inline std::pair<Operand::Type, Operand::Type> intToOperandTypes( uint16_t w )
 {
   switch ( w )
   {
@@ -107,10 +107,10 @@ inline std::pair<Operand::Type, Operand::Type> IntToOperandTypes( uint16_t w )
   {}; // unreachable
 }
 
-uint16_t Serializer::writeOperation( const Operation& op )
+uint16_t writeOperation( const Operation& op )
 {
-  uint16_t w = OperationTypeToInt( op.type ) << 13;
-  w |= OperandTypesToInt( op.target.type, op.source.type ) << 10;
+  uint16_t w = operationTypeToInt( op.type ) << 13;
+  w |= operandTypesToInt( op.target.type, op.source.type ) << 10;
   if ( op.target.value > 31 || op.source.value > 31 )
   {
     throw std::runtime_error( "operand value exceeds limit of 31" );
@@ -120,10 +120,10 @@ uint16_t Serializer::writeOperation( const Operation& op )
   return w;
 }
 
-Operation Serializer::readOperation( uint16_t w )
+Operation readOperation( uint16_t w )
 {
-  Operation op( IntToOperationType( w >> 13 ) );
-  auto optypes = IntToOperandTypes( (w >> 10) & 7 );
+  Operation op( intToOperationType( w >> 13 ) );
+  auto optypes = intToOperandTypes( (w >> 10) & 7 );
   op.target = Operand( optypes.first, (w >> 5) & 31 );
   op.source = Operand( optypes.second, w & 31 );
   return op;
@@ -144,7 +144,60 @@ void Serializer::writeProgram( const Program& p, std::ostream& out )
   out.write( reinterpret_cast<const char*>( data.data() ), sizeof(uint16_t) * data.size() );
 }
 
-void readProgram( Program& p, std::istream& in )
+inline void findStart( std::istream& in )
 {
+  static uint16_t start = writeOperation( Operation( Operation::Type::CLR ) );
+  uint16_t w;
+  int offset;
+  while ( true )
+  {
+    in.read( reinterpret_cast<char*>( &w ), sizeof(uint16_t) );
+    if ( in.fail() )
+    {
+      throw std::runtime_error( "read error" );
+    }
+    if ( in.eof() )
+    {
+      offset = 2;
+    }
+    else if ( w != start )
+    {
+      offset = 4;
+    }
+    else
+    {
+      return;
+    }
+    int new_pos = static_cast<int>( in.tellg() ) - offset;
+    if ( new_pos < 0 )
+    {
+      throw std::runtime_error( "no program found" );
+    }
+    in.seekg( new_pos );
+  }
+}
 
+void Serializer::readProgram( Program& p, std::istream& in )
+{
+  findStart( in );
+  p.ops.clear();
+  uint16_t w;
+  while ( true )
+  {
+    in.read( reinterpret_cast<char*>( &w ), sizeof(uint16_t) );
+    if ( in.fail() )
+    {
+      throw std::runtime_error( "read error" );
+    }
+    if ( in.eof() )
+    {
+      return;
+    }
+    Operation op = readOperation( w );
+    if ( op.type == Operation::Type::CLR )
+    {
+      return;
+    }
+    p.ops.push_back( op );
+  }
 }
