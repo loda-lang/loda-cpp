@@ -6,6 +6,7 @@
 
 class Serializer
 {
+public:
 
   void writeProgram( const Program& p, std::ostream& out );
 

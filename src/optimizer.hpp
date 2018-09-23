@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common.hpp"
 #include "program.hpp"
 
 class Optimizer
@@ -8,6 +9,8 @@ public:
 
   void optimize( Program& p );
 
-  number_t removeEmptyLoops( Program& p );
+  bool removeNops( Program& p );
+
+  bool removeEmptyLoops( Program& p );
 
 };

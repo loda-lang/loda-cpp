@@ -7,9 +7,13 @@ class Database
 {
 public:
 
-  void insert( const Program& p );
+  bool insert( Program&& p );
 
   void save();
+
+  void printPrograms();
+
+  void printSequences();
 
 private:
 

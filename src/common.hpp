@@ -21,6 +21,10 @@ public:
   {
   }
 
+  Sequence subsequence( size_t start );
+
+  bool linear() const;
+
   bool operator<( const Sequence& s ) const;
 
   bool operator!=( const Sequence& s ) const;

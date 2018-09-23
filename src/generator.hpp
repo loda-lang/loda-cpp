@@ -48,7 +48,7 @@ public:
 
   void mutate( double delta );
 
-  Program generateProgram( size_t initialState );
+  Program generateProgram( size_t initialState = 0 );
 
   void generateOperations( Seed& seed );
 

@@ -1,3 +1,5 @@
+#include "database.hpp"
+#include "generator.hpp"
 #include "interpreter.hpp"
 #include "parser.hpp"
 #include "printer.hpp"
@@ -13,6 +15,8 @@ void help()
   std::cout << "  insert     Insert a program into the database" << std::endl;
   std::cout << "  generate   Generate random programs and store them in the database" << std::endl;
   std::cout << "  search     Search a program in the database" << std::endl;
+  std::cout << "  programs   Print all program in the database" << std::endl;
+  std::cout << "  sequences  Print all sequences in the database" << std::endl;
 }
 
 int main( int argc, char *argv[] )
@@ -28,6 +32,35 @@ int main( int argc, char *argv[] )
     {
       Test test;
       test.all();
+    }
+    else if ( cmd == "insert" )
+    {
+      Parser a;
+      Program p = a.parse( std::string( argv[2] ) );
+      Database db;
+      db.insert( std::move( p ) );
+      db.save();
+    }
+    else if ( cmd == "programs" )
+    {
+      Database db;
+      db.printPrograms();
+    }
+    else if ( cmd == "sequences" )
+    {
+      Database db;
+      db.printSequences();
+    }
+    else if ( cmd == "generate" )
+    {
+      Database db;
+      Generator g( 5, std::random_device()() );
+      for ( size_t i = 0; i < 1000; i++ )
+      {
+        auto p = g.generateProgram();
+        db.insert( std::move( p ) );
+      }
+      db.save();
     }
     else
     {

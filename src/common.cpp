@@ -2,6 +2,28 @@
 
 // === Sequence ===============================================================
 
+Sequence Sequence::subsequence( size_t start )
+{
+  return Sequence( std::vector<number_t>( begin() + start, end() ) );
+}
+
+bool Sequence::linear() const
+{
+  if ( size() < 3 )
+  {
+    return true;
+  }
+  int d = (*this)[1] - (*this)[0];
+  for ( size_t i = 2; i < size(); ++i )
+  {
+    if ( (*this)[i - 1] + d != (*this)[i] )
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
 bool Sequence::operator<( const Sequence& m ) const
 {
   number_t length = size() < m.size() ? size() : m.size();

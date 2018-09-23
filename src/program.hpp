@@ -23,6 +23,11 @@ public:
   {
   }
 
+  bool operator==( const Operand& o ) const
+  {
+    return (type == o.type) && (value == o.value);
+  }
+
   Type type;
   number_t value;
 
@@ -49,7 +54,7 @@ public:
   }
 
   Operation( Type y )
-      : Operation( y, { }, { } )
+      : Operation( y, { Operand::Type::MEM_ACCESS_DIRECT, 0 }, { Operand::Type::CONSTANT, 0 } )
   {
   }
 
@@ -60,6 +65,12 @@ public:
         comment( c )
   {
   }
+
+  bool operator==( const Operation& op ) const
+  {
+    return (type == op.type) && (source == op.source) && (target == op.target);
+  }
+
   Type type;
   Operand target;
   Operand source;
@@ -69,6 +80,22 @@ public:
 class Program
 {
 public:
+
+  bool operator==( const Program& p ) const
+  {
+    if ( p.ops.size() != ops.size() )
+    {
+      return false;
+    }
+    for ( size_t i = 0; i < ops.size(); ++i )
+    {
+      if ( !(ops[i] == p.ops[i]) )
+      {
+        return false;
+      }
+    }
+    return true;
+  }
 
   std::vector<Operation> ops;
 };
