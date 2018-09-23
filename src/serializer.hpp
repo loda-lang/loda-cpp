@@ -5,8 +5,8 @@
 class Serializer
 {
 
-  uint16_t WriteOperation( const Operation& op );
+  uint16_t writeOperation( const Operation& op );
 
-  Operation ReadOperation( uint16_t w );
+  Operation readOperation( uint16_t w );
 
 };

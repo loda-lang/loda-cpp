@@ -7,6 +7,6 @@ class Finder
 {
 public:
 
-  Program Find( const Sequence& target );
+  Program find( const Sequence& target );
 
 };

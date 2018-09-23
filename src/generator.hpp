@@ -1,8 +1,8 @@
 #pragma once
 
 #include "program.hpp"
+
 #include <random>
-#include "common.hpp"
 
 class State
 {

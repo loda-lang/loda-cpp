@@ -7,19 +7,19 @@
 #include <fstream>
 #include <iostream>
 
-Program Parser::Parse( const std::string& file )
+Program Parser::parse( const std::string& file )
 {
   file_in.reset( new std::ifstream( file ) );
   if ( !file_in )
   {
     throw std::runtime_error( "error opening file" );
   }
-  auto p = Parse( *file_in );
+  auto p = parse( *file_in );
   file_in->close();
   return p;
 }
 
-Program Parser::Parse( std::istream& in_ )
+Program Parser::parse( std::istream& in_ )
 {
   in = &in_;
   Program p;
@@ -37,14 +37,14 @@ Program Parser::Parse( std::istream& in_ )
     if ( c != ';' )
     {
       // read normal operation
-      o.type = ReadOperationType();
+      o.type = readOperationType();
       *in >> std::ws;
       if ( o.type == Operation::Type::MOV || o.type == Operation::Type::ADD || o.type == Operation::Type::SUB
           || o.type == Operation::Type::LPB )
       {
-        o.target = ReadOperand( p );
-        ReadSeparator( ',' );
-        o.source = ReadOperand( p );
+        o.target = readOperand( p );
+        readSeparator( ',' );
+        o.source = readOperand( p );
       }
     }
 
@@ -77,7 +77,7 @@ Program Parser::Parse( std::istream& in_ )
   return p;
 }
 
-void Parser::ReadSeparator( char separator )
+void Parser::readSeparator( char separator )
 {
   *in >> std::ws;
   if ( in->get() != separator )
@@ -86,7 +86,7 @@ void Parser::ReadSeparator( char separator )
   }
 }
 
-number_t Parser::ReadValue()
+number_t Parser::readValue()
 {
   number_t v;
   int c;
@@ -100,7 +100,7 @@ number_t Parser::ReadValue()
   return v;
 }
 
-std::string Parser::ReadIdentifier()
+std::string Parser::readIdentifier()
 {
   std::string s;
   int c;
@@ -131,7 +131,7 @@ std::string Parser::ReadIdentifier()
   }
 }
 
-Operand Parser::ReadOperand( Program& p )
+Operand Parser::readOperand( Program& p )
 {
   *in >> std::ws;
   int c = in->peek();
@@ -142,23 +142,23 @@ Operand Parser::ReadOperand( Program& p )
     if ( c == '$' )
     {
       in->get();
-      return Operand( Operand::Type::MEM_ACCESS_INDIRECT, ReadValue() );
+      return Operand( Operand::Type::MEM_ACCESS_INDIRECT, readValue() );
     }
     else
     {
-      return Operand( Operand::Type::MEM_ACCESS_DIRECT, ReadValue() );
+      return Operand( Operand::Type::MEM_ACCESS_DIRECT, readValue() );
     }
 
   }
   else
   {
-    return Operand( Operand::Type::CONSTANT, ReadValue() );
+    return Operand( Operand::Type::CONSTANT, readValue() );
   }
 }
 
-Operation::Type Parser::ReadOperationType()
+Operation::Type Parser::readOperationType()
 {
-  auto t = ReadIdentifier();
+  auto t = readIdentifier();
   if ( t == "nop" )
   {
     return Operation::Type::NOP;
@@ -194,7 +194,7 @@ Operation::Type Parser::ReadOperationType()
   throw std::runtime_error( "invalid operation: " + t );
 }
 
-void Parser::SetWorkingDir( const std::string& dir )
+void Parser::setWorkingDir( const std::string& dir )
 {
   working_dir = dir;
 }

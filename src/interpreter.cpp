@@ -10,7 +10,7 @@
 using MemStack = std::stack<Sequence>;
 using PCStack = std::stack<size_t>;
 
-bool Interpreter::Run( const Program& p, Sequence& mem )
+bool Interpreter::run( const Program& p, Sequence& mem )
 {
   // check for empty program
   if ( p.ops.empty() )
@@ -46,31 +46,31 @@ bool Interpreter::Run( const Program& p, Sequence& mem )
     }
     case Operation::Type::MOV:
     {
-      auto s = Get( op.source, mem );
-      Set( op.target, s, mem );
+      auto s = get( op.source, mem );
+      set( op.target, s, mem );
       break;
     }
     case Operation::Type::ADD:
     {
-      auto s = Get( op.source, mem );
-      auto t = Get( op.target, mem );
-      Set( op.target, t + s, mem );
+      auto s = get( op.source, mem );
+      auto t = get( op.target, mem );
+      set( op.target, t + s, mem );
       break;
     }
     case Operation::Type::SUB:
     {
-      auto s = Get( op.source, mem );
-      auto t = Get( op.target, mem );
-      Set( op.target, (t > s) ? (t - s) : 0, mem );
+      auto s = get( op.source, mem );
+      auto t = get( op.target, mem );
+      set( op.target, (t > s) ? (t - s) : 0, mem );
       break;
     }
     case Operation::Type::LPB:
     {
-      auto l = Get( op.source, mem );
-      auto s = Get( op.target, mem, true );
+      auto l = get( op.source, mem );
+      auto s = get( op.target, mem, true );
       loop_stack.push( pc );
       mem_stack.push( mem );
-      frag_stack.push( mem.Fragment( s, l ) );
+      frag_stack.push( mem.fragment( s, l ) );
       break;
     }
     case Operation::Type::LPE:
@@ -83,9 +83,9 @@ bool Interpreter::Run( const Program& p, Sequence& mem )
       auto frag_prev = frag_stack.top();
       frag_stack.pop();
 
-      auto l = Get( lpb.source, mem );
-      auto s = Get( lpb.target, mem, true );
-      auto frag = mem.Fragment( s, l );
+      auto l = get( lpb.source, mem );
+      auto s = get( lpb.target, mem, true );
+      auto frag = mem.fragment( s, l );
 
       if ( frag < frag_prev )
       {
@@ -127,7 +127,7 @@ bool Interpreter::Run( const Program& p, Sequence& mem )
   return true;
 }
 
-number_t Interpreter::Get( Operand a, const Sequence& mem, bool get_address )
+number_t Interpreter::get( Operand a, const Sequence& mem, bool get_address )
 {
   switch ( a.type )
   {
@@ -141,41 +141,41 @@ number_t Interpreter::Get( Operand a, const Sequence& mem, bool get_address )
   }
   case Operand::Type::MEM_ACCESS_DIRECT:
   {
-    return get_address ? a.value : mem.Get( a.value );
+    return get_address ? a.value : mem.get( a.value );
   }
   case Operand::Type::MEM_ACCESS_INDIRECT:
   {
-    return get_address ? mem.Get( a.value ) : mem.Get( mem.Get( a.value ) );
+    return get_address ? mem.get( a.value ) : mem.get( mem.get( a.value ) );
   }
   }
   return
   {};
 }
 
-void Interpreter::Set( Operand a, number_t v, Sequence& mem )
+void Interpreter::set( Operand a, number_t v, Sequence& mem )
 {
   switch ( a.type )
   {
   case Operand::Type::CONSTANT:
     throw std::runtime_error( "cannot set value to constant" );
   case Operand::Type::MEM_ACCESS_DIRECT:
-    mem.Set( a.value, v );
+    mem.set( a.value, v );
     break;
   case Operand::Type::MEM_ACCESS_INDIRECT:
-    mem.Set( mem.Get( a.value ), v );
+    mem.set( mem.get( a.value ), v );
     break;
   }
 }
 
-bool Interpreter::IsLessThan( const Sequence& m1, const Sequence& m2, const std::vector<Operand>& cmp_vars )
+bool Interpreter::isLessThan( const Sequence& m1, const Sequence& m2, const std::vector<Operand>& cmp_vars )
 {
   for ( Operand v : cmp_vars )
   {
-    if ( Get( v, m1 ) < Get( v, m2 ) )
+    if ( get( v, m1 ) < get( v, m2 ) )
     {
       return true; // less
     }
-    else if ( Get( v, m1 ) > Get( v, m2 ) )
+    else if ( get( v, m1 ) > get( v, m2 ) )
     {
       return false; // greater
     }
@@ -183,15 +183,15 @@ bool Interpreter::IsLessThan( const Sequence& m1, const Sequence& m2, const std:
   return false; // equal
 }
 
-Sequence Interpreter::Eval( const Program& p, number_t length )
+Sequence Interpreter::eval( const Program& p, number_t length )
 {
   Sequence seq;
   for ( number_t index = 0; index < length; index++ )
   {
     Sequence mem;
-    mem.Set( 0, index );
-    Run( p, mem );
-    seq.Set( index, mem.Get( 1 ) );
+    mem.set( 0, index );
+    run( p, mem );
+    seq.set( index, mem.get( 1 ) );
   }
   return seq;
 }

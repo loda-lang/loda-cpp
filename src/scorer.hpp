@@ -8,7 +8,7 @@ public:
 
   virtual ~Scorer();
 
-  virtual number_t Score( const Sequence& s ) = 0;
+  virtual number_t score( const Sequence& s ) = 0;
 
 };
 
@@ -20,7 +20,7 @@ public:
 
   virtual ~FixedSequenceScorer();
 
-  virtual number_t Score( const Sequence& s ) override;
+  virtual number_t score( const Sequence& s ) override;
 
 private:
   Sequence target_;

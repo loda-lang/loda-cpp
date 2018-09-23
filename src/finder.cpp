@@ -5,7 +5,7 @@
 #include "scorer.hpp"
 #include "printer.hpp"
 
-Program Finder::Find( const Sequence& target )
+Program Finder::find( const Sequence& target )
 {
   Program p;
 
@@ -48,7 +48,7 @@ Program Finder::Find( const Sequence& target )
         p = gen->generateProgram( 0 );
         try
         {
-          s = interpreter.Eval( p, target.Length() );
+          s = interpreter.eval( p, target.size() );
         }
         catch ( const std::exception& e )
         {
@@ -56,11 +56,11 @@ Program Finder::Find( const Sequence& target )
 //          gen->score += 2 * max_value;
           continue;
         }
-        auto score = scorer.Score( s );
+        auto score = scorer.score( s );
         if ( score == 0 )
         {
           std::cout << "Found!" << std::endl;
-          printer.Print( p, std::cout );
+          printer.print( p, std::cout );
           return p;
         }
         if ( gen->score == 0 || score << gen->score )

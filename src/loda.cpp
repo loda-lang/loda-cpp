@@ -7,7 +7,7 @@ int main( void )
 {
 
   Test test;
-  test.All();
+  test.all();
 
   return EXIT_SUCCESS;
 }

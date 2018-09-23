@@ -219,7 +219,7 @@ Program Generator::generateProgram( size_t initialState )
     }
   }
   Optimizer o;
-  o.Optimize( p );
+  o.optimize( p );
   return p;
 }
 

@@ -7,7 +7,7 @@
 #include "printer.hpp"
 #include "serializer.hpp"
 
-void Test::Fibonacci()
+void Test::fibonacci()
 {
   std::cout << "Running tests for examples/fibonacci.asm..." << std::endl;
 
@@ -19,8 +19,8 @@ void Test::Fibonacci()
   Parser parser;
   Interpreter interpreter;
 
-  auto fib = parser.Parse( "examples/fibonacci.asm" );
-  auto result = interpreter.Eval( fib, expected.data.size() );
+  auto fib = parser.parse( "examples/fibonacci.asm" );
+  auto result = interpreter.eval( fib, expected.data.size() );
   std::cout << "fib=" << result << "..." << std::endl;
   if ( result != expected )
   {
@@ -30,21 +30,21 @@ void Test::Fibonacci()
 
 }
 
-void Test::Exponentiation()
+void Test::exponentiation()
 {
   std::vector<std::vector<number_t> > values = { { 1, 0, 0, 0 }, { 1, 1, 1, 1 }, { 1, 2, 4, 8 }, { 1, 3, 9, 27 }, { 1, 4,
       16, 64 } };
-  TestBinary( "exp", "examples/exponentiation.asm", values );
+  testBinary( "exp", "examples/exponentiation.asm", values );
 }
 
-void Test::Ackermann()
+void Test::ackermann()
 {
   std::vector<std::vector<number_t> > values = { { 1, 2, 3, 4, 5 }, { 2, 3, 4, 5, 6 }, { 3, 5, 7, 9, 11 }, { 5, 13, 29, 61,
       125 }, { 13, 65533 } };
-  TestBinary( "ack", "examples/ackermann.asm", values );
+  testBinary( "ack", "examples/ackermann.asm", values );
 }
 
-void Test::Find()
+void Test::find()
 {
   Sequence expected;
   expected.data =
@@ -53,60 +53,60 @@ void Test::Find()
 //    17711, 28657, 46368, 75025};
 
   Finder finder;
-  finder.Find( expected );
+  finder.find( expected );
 
 }
 
-void Test::Iterate()
+void Test::iterate()
 {
   Iterator it;
   Printer printer;
   while ( true )
   {
     std::cout << "\x1B[2J\x1B[H";
-    printer.Print( it.next(), std::cout );
+    printer.print( it.next(), std::cout );
 //    std::cin.ignore();
   }
 }
 
-void Test::Serialize()
+void Test::serialize()
 {
   Parser parser;
   Printer printer;
   Serializer serializer;
-  auto fib = parser.Parse( "examples/fibonacci.asm" );
-  printer.Print( fib, std::cout );
+  auto fib = parser.parse( "examples/fibonacci.asm" );
+  printer.print( fib, std::cout );
 }
 
-void Test::All()
+void Test::all()
 {
 //  Iterate();
 //  Find();
-  Fibonacci();
-  Exponentiation();
-  Ackermann();
+  fibonacci();
+  exponentiation();
+  ackermann();
 }
 
-void Test::TestBinary( const std::string& func, const std::string& file,
+void Test::testBinary( const std::string& func, const std::string& file,
     const std::vector<std::vector<number_t> >& values )
 {
   std::cout << "Running tests for " << file << "..." << std::endl;
   Parser parser;
   Interpreter interpreter;
-  auto program = parser.Parse( file );
+  auto program = parser.parse( file );
   for ( size_t i = 0; i < values.size(); i++ )
   {
     for ( size_t j = 0; j < values[i].size(); j++ )
     {
       std::cout << func << "(" << i << "," << j << ")=";
       Sequence mem;
-      mem.Set( 0, i );
-      mem.Set( 1, j );
-      interpreter.Run( program, mem );
-      std::cout << mem.Get( 2 ) << std::endl;
-      if ( mem.Get( 2 ) != values[i][j] )
+      mem.set( 0, i );
+      mem.set( 1, j );
+      interpreter.run( program, mem );
+      std::cout << mem.get( 2 ) << std::endl;
+      if ( mem.get( 2 ) != values[i][j] )
       {
-        throw std::runtime_error( "unexpected result: " + std::to_string( mem.Get( 2 ) ) );
+        throw std::runtime_error( "unexpected result: " + std::to_string( mem.get( 2 ) ) );
       }
     }
   }

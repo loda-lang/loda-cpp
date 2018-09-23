@@ -6,22 +6,22 @@ class Test
 {
 public:
 
-  void Fibonacci();
+  void fibonacci();
 
-  void Exponentiation();
+  void exponentiation();
 
-  void Ackermann();
+  void ackermann();
 
-  void Find();
+  void find();
 
-  void Iterate();
+  void iterate();
 
-  void Serialize();
+  void serialize();
 
-  void All();
+  void all();
 
 private:
 
-  void TestBinary( const std::string& func, const std::string& file, const std::vector<std::vector<number_t> >& values );
+  void testBinary( const std::string& func, const std::string& file, const std::vector<std::vector<number_t> >& values );
 
 };

@@ -6,8 +6,8 @@ class Optimizer
 {
 public:
 
-  void Optimize( Program& p );
+  void optimize( Program& p );
 
-  size_t RemoveEmptyLoops( Program& p );
+  number_t removeEmptyLoops( Program& p );
 
 };

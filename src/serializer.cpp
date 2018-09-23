@@ -105,7 +105,7 @@ inline std::pair<Operand::Type, Operand::Type> IntToOperandTypes( uint16_t w )
   {}; // unreachable
 }
 
-uint16_t Serializer::WriteOperation( const Operation& op )
+uint16_t Serializer::writeOperation( const Operation& op )
 {
   uint16_t w = OperationTypeToInt( op.type ) << 13;
   w |= OperandTypesToInt( op.target.type, op.source.type ) << 10;
@@ -118,7 +118,7 @@ uint16_t Serializer::WriteOperation( const Operation& op )
   return w;
 }
 
-Operation Serializer::ReadOperation( uint16_t w )
+Operation Serializer::readOperation( uint16_t w )
 {
   Operation op( IntToOperationType( w >> 13 ) );
   auto optypes = IntToOperandTypes( (w >> 10) & 7 );

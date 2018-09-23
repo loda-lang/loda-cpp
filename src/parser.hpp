@@ -11,23 +11,23 @@ public:
   {
   }
 
-  Program Parse( const std::string& file );
+  Program parse( const std::string& file );
 
-  Program Parse( std::istream& in );
+  Program parse( std::istream& in );
 
-  void SetWorkingDir( const std::string& dir );
+  void setWorkingDir( const std::string& dir );
 
 private:
 
-  void ReadSeparator( char separator );
+  void readSeparator( char separator );
 
-  number_t ReadValue();
+  number_t readValue();
 
-  std::string ReadIdentifier();
+  std::string readIdentifier();
 
-  Operand ReadOperand( Program& p );
+  Operand readOperand( Program& p );
 
-  Operation::Type ReadOperationType();
+  Operation::Type readOperationType();
 
   std::string working_dir;
   std::istream* in;

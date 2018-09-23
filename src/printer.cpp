@@ -30,7 +30,7 @@ std::string GetBinaryOperation( int indent, const std::string& name, const Opera
   return GetIndent( indent ) + name + " " + GetOperand( op.target ) + "," + GetOperand( op.source );
 }
 
-void Printer::Print( const Operation& op, std::ostream& out, int indent )
+void Printer::print( const Operation& op, std::ostream& out, int indent )
 {
   switch ( op.type )
   {
@@ -79,7 +79,7 @@ void Printer::Print( const Operation& op, std::ostream& out, int indent )
   out << std::endl;
 }
 
-void Printer::Print( const Program& p, std::ostream& out )
+void Printer::print( const Program& p, std::ostream& out )
 {
   int indent = 0;
   for ( auto& op : p.ops )
@@ -88,7 +88,7 @@ void Printer::Print( const Program& p, std::ostream& out )
     {
       indent -= 2;
     }
-    Print( op, out, indent );
+    print( op, out, indent );
     if ( op.type == Operation::Type::LPB )
     {
       indent += 2;

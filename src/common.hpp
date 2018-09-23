@@ -14,13 +14,13 @@ public:
 
   Sequence();
 
-  number_t Get( number_t i ) const;
+  number_t get( number_t i ) const;
 
-  void Set( number_t i, number_t v );
+  void set( number_t i, number_t v );
 
-  number_t Length() const;
+  number_t size() const;
 
-  Sequence Fragment( number_t start, number_t length ) const;
+  Sequence fragment( number_t start, number_t length ) const;
 
   bool operator<( const Sequence& other ) const;
 

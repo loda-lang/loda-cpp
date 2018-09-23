@@ -1,6 +1,6 @@
 #include "optimizer.hpp"
 
-size_t Optimizer::RemoveEmptyLoops( Program& p )
+number_t Optimizer::removeEmptyLoops( Program& p )
 {
   size_t removed_loops = 0;
   for ( size_t i = 0; i < p.ops.size(); i++ )
@@ -15,8 +15,8 @@ size_t Optimizer::RemoveEmptyLoops( Program& p )
   return removed_loops;
 }
 
-void Optimizer::Optimize( Program& p )
+void Optimizer::optimize( Program& p )
 {
-  while ( RemoveEmptyLoops( p ) )
+  while ( removeEmptyLoops( p ) )
     ;
 }
