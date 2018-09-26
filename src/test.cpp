@@ -1,6 +1,6 @@
 #include "test.hpp"
 
-#include "finder.hpp"
+#include "generator.hpp"
 #include "interpreter.hpp"
 #include "iterator.hpp"
 #include "parser.hpp"
