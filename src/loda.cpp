@@ -1,6 +1,7 @@
 #include "database.hpp"
 #include "generator.hpp"
 #include "interpreter.hpp"
+#include "oeis.hpp"
 #include "parser.hpp"
 #include "printer.hpp"
 #include "test.hpp"
@@ -53,14 +54,19 @@ int main( int argc, char *argv[] )
     }
     else if ( cmd == "generate" )
     {
+      size_t length = 32;
+      Oeis oeis( length );
+      oeis.load();
       Database db;
-      Generator g( 5, std::random_device()() );
-      for ( size_t i = 0; i < 1000; i++ )
+      Finder f;
+      for ( int i = 0; i < 10000; i++ )
       {
-        auto p = g.generateProgram();
-        db.insert( std::move( p ) );
+        auto p = f.find( oeis, length, std::random_device()() );
+        if ( db.insert( std::move( p ) ) )
+        {
+          db.save();
+        }
       }
-      db.save();
     }
     else
     {

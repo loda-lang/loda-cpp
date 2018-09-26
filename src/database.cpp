@@ -67,55 +67,61 @@ void Database::save()
   auto p = programs_.begin();
   Program q;
   bool db_has_next = r.next( q );
-  Program last;
+  Program last_program;
+  Sequence last_sequence;
   while ( db_has_next || p != programs_.end() )
   {
-    Program next;
-    Sequence seq;
+    Program next_program;
+    Sequence next_sequence;
     if ( db_has_next && p != programs_.end() )
     {
       auto e = i.eval( q, 32 );
       if ( e < p->second )
       {
-        seq = e;
-        next = q;
+        next_sequence = e;
+        next_program = q;
         db_has_next = r.next( q );
       }
       else
       {
-        seq = p->second;
-        next = p->first;
+        next_sequence = p->second;
+        next_program = p->first;
         ++p;
       }
     }
     else if ( db_has_next )
     {
       auto e = i.eval( q, 32 );
-      seq = e;
-      next = q;
+      next_sequence = e;
+      next_program = q;
       db_has_next = r.next( q );
     }
     else
     {
-      seq = p->second;
-      next = p->first;
+      next_sequence = p->second;
+      next_program = p->first;
       ++p;
     }
 
-    o.optimize( next );
+    o.optimize( next_program );
 
-    if ( seq.subsequence( 8 ).linear() )
+    if ( next_sequence.subsequence( 8 ).linear() )
     {
-      std::cout << "removing linear program" << std::endl;
+//      std::cout << "removing linear program" << std::endl;
     }
-    else if ( next == last )
+    else if ( next_sequence == last_sequence )
     {
-      std::cout << "removing duplicate program" << std::endl;
+//      std::cout << "removing duplicate program" << std::endl;
+    }
+    else if ( next_program == last_program )
+    {
+//      std::cout << "removing duplicate program" << std::endl;
     }
     else
     {
-      s.writeProgram( next, new_db );
-      last = next;
+//      std::cout << "add program for " << next_sequence << std::endl;
+      s.writeProgram( next_program, new_db );
+      last_program = next_program;
     }
   }
   new_db.flush();

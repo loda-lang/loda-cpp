@@ -49,7 +49,8 @@ void Test::find()
 //    17711, 28657, 46368, 75025};
 
   Finder finder;
-  finder.find( expected );
+  FixedSequenceScorer scorer(expected);
+  finder.find( scorer, expected.size(), 23 );
 
 }
 

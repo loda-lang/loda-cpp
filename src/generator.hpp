@@ -70,14 +70,6 @@ inline bool less_than_score( const Generator::UPtr& g1, const Generator::UPtr& g
   return (g1->score < g2->score);
 }
 
-class Finder
-{
-public:
-
-  Program find( const Sequence& target );
-
-};
-
 class Scorer
 {
 public:
@@ -100,5 +92,13 @@ public:
 
 private:
   Sequence target_;
+
+};
+
+class Finder
+{
+public:
+
+  Program find( Scorer& scorer, size_t size, size_t seed );
 
 };

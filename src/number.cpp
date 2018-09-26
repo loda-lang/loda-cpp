@@ -1,5 +1,7 @@
 #include "number.hpp"
 
+#include <unordered_set>
+
 // === Sequence ===============================================================
 
 Sequence Sequence::subsequence( size_t start )
@@ -22,6 +24,13 @@ bool Sequence::linear() const
     }
   }
   return true;
+}
+
+size_t Sequence::distinct_values() const
+{
+  std::unordered_set<number_t> values;
+  values.insert( begin(), end() );
+  return values.size();
 }
 
 bool Sequence::operator<( const Sequence& m ) const

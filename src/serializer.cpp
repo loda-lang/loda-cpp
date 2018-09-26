@@ -144,24 +144,24 @@ void Serializer::writeProgram( const Program& p, std::ostream& out )
   out.write( reinterpret_cast<const char*>( data.data() ), sizeof(uint16_t) * data.size() );
 }
 
-inline void findStart( std::istream& in )
+inline bool findStart( std::istream& in )
 {
   static uint16_t start = writeOperation( Operation( Operation::Type::CLR ) );
   uint16_t w;
   while ( true )
   {
     in.read( reinterpret_cast<char*>( &w ), sizeof(uint16_t) );
+    if ( in.eof() )
+    {
+      return false;
+    }
     if ( in.fail() )
     {
       throw std::runtime_error( "read error" );
     }
-    if ( in.eof() )
-    {
-      throw std::runtime_error( "end of file" );
-    }
     else if ( w == start )
     {
-      return;
+      return true;
     }
     int new_pos = static_cast<int>( in.tellg() ) - 4;
     if ( new_pos < 0 )

@@ -25,6 +25,8 @@ public:
 
   bool linear() const;
 
+  size_t distinct_values() const;
+
   bool operator<( const Sequence& s ) const;
 
   bool operator!=( const Sequence& s ) const;

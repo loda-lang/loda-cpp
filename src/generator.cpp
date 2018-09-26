@@ -230,20 +230,19 @@ void Generator::setSeed( int64_t seed )
   gen.seed( seed );
 }
 
-Program Finder::find( const Sequence& target )
+Program Finder::find( Scorer& scorer, size_t size, size_t seed )
 {
   Program p;
 
-  number_t seed = 23;
   size_t states = 10;
   size_t gen_count = 100;
   size_t tries = 100;
 
-  number_t max_value = 0;
-  for ( auto& v : target )
-  {
-    if ( v > max_value ) max_value = v;
-  }
+//  number_t max_value = 0;
+//  for ( auto& v : target )
+//  {
+//    if ( v > max_value ) max_value = v;
+//  }
 
   std::vector<Generator::UPtr> generators;
   for ( size_t i = 0; i < gen_count; i++ )
@@ -252,7 +251,7 @@ Program Finder::find( const Sequence& target )
   }
 
   Interpreter interpreter;
-  FixedSequenceScorer scorer( target );
+//  FixedSequenceScorer scorer( target );
   Printer printer;
 
   Sequence s;
@@ -273,7 +272,7 @@ Program Finder::find( const Sequence& target )
         p = gen->generateProgram( 0 );
         try
         {
-          s = interpreter.eval( p, target.size() );
+          s = interpreter.eval( p, size );
         }
         catch ( const std::exception& e )
         {
@@ -284,8 +283,8 @@ Program Finder::find( const Sequence& target )
         auto score = scorer.score( s );
         if ( score == 0 )
         {
-          std::cout << "Found!" << std::endl;
-          printer.print( p, std::cout );
+//          std::cout << "Found!" << std::endl;
+//          printer.print( p, std::cout );
           return p;
         }
         if ( gen->score == 0 || score << gen->score )
@@ -303,13 +302,13 @@ Program Finder::find( const Sequence& target )
     std::stable_sort( generators.begin(), generators.end(), less_than_score );
 
     // print top ten
-    for ( size_t i = 0; i < (gen_count / 10); i++ )
+ /*   for ( size_t i = 0; i < (gen_count / 10); i++ )
     {
       generators[i]->print();
       std::cout << std::endl;
     }
     std::cout << std::endl;
-
+*/
     // create new generators
     std::vector<Generator::UPtr> new_generators;
     for ( size_t i = 0; i < (gen_count / 10); i++ )
