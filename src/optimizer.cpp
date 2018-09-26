@@ -1,6 +1,6 @@
 #include "optimizer.hpp"
 
-#include "common.hpp"
+#include "number.hpp"
 
 void Optimizer::optimize( Program& p )
 {

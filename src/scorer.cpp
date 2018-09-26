@@ -1,6 +1,6 @@
 #include "scorer.hpp"
 
-#include "common.hpp"
+#include "number.hpp"
 
 Scorer::~Scorer()
 {

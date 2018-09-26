@@ -1,11 +1,11 @@
 #include "interpreter.hpp"
 
-#include "common.hpp"
 #include "printer.hpp"
 
 #include <iostream>
 #include <array>
 #include <stack>
+#include "number.hpp"
 
 using MemStack = std::stack<Memory>;
 using PCStack = std::stack<size_t>;

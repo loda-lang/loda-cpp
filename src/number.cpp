@@ -1,4 +1,4 @@
-#include "common.hpp"
+#include "number.hpp"
 
 // === Sequence ===============================================================
 

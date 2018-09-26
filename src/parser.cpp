@@ -1,11 +1,11 @@
 #include "parser.hpp"
 
-#include "common.hpp"
 #include "program.hpp"
 
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+#include "number.hpp"
 
 Program Parser::parse( const std::string& file )
 {

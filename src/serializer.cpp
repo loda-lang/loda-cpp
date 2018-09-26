@@ -1,6 +1,6 @@
 #include "serializer.hpp"
 
-#include "common.hpp"
+#include "number.hpp"
 
 inline uint16_t operationTypeToInt( Operation::Type t )
 {
