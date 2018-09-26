@@ -61,7 +61,7 @@ int main( int argc, char *argv[] )
       Finder f;
       for ( int i = 0; i < 10000; i++ )
       {
-        auto p = f.find( oeis, length, std::random_device()() );
+        auto p = f.find( oeis, length, std::random_device()(), 20 );
         if ( db.insert( std::move( p ) ) )
         {
           db.save();

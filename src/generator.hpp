@@ -99,6 +99,6 @@ class Finder
 {
 public:
 
-  Program find( Scorer& scorer, size_t size, size_t seed );
+  Program find( Scorer& scorer, size_t size, size_t seed, size_t max_iterations );
 
 };

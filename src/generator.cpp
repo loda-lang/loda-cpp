@@ -230,7 +230,7 @@ void Generator::setSeed( int64_t seed )
   gen.seed( seed );
 }
 
-Program Finder::find( Scorer& scorer, size_t size, size_t seed )
+Program Finder::find( Scorer& scorer, size_t size, size_t seed, size_t max_iterations )
 {
   Program p;
 
@@ -255,7 +255,7 @@ Program Finder::find( Scorer& scorer, size_t size, size_t seed )
   Printer printer;
 
   Sequence s;
-  while ( true )
+  for ( size_t iteration = 0; iteration < max_iterations; iteration++ )
   {
     for ( size_t i = 0; i < gen_count; i++ )
     {

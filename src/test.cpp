@@ -50,7 +50,7 @@ void Test::find()
 
   Finder finder;
   FixedSequenceScorer scorer(expected);
-  finder.find( scorer, expected.size(), 23 );
+  finder.find( scorer, expected.size(), 23, 10 );
 
 }
 

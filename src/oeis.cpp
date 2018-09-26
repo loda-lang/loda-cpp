@@ -73,7 +73,7 @@ void Oeis::load()
       }
       ++pos;
     }
-    if ( s.size() != length || s.subsequence(8).linear() || s.distinct_values() <= 4 )
+    if ( s.size() != length || s.subsequence(4).linear() || s.distinct_values() <= 2 )
     {
       continue;
     }
