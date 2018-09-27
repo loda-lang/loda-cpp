@@ -8,6 +8,7 @@
 #include "util.hpp"
 
 #include <csignal>
+#include <fstream>
 
 void help()
 {
@@ -82,17 +83,26 @@ int main( int argc, char *argv[] )
           auto s = t.eval( p, length );
           if ( oeis.score( s ) == 0 )
           {
-            Printer r;
-            r.print( p, std::cout );
             db.insert( std::move( p ) );
+            auto id = oeis.ids[s];
+            std::ofstream out( "examples/oeis/" + oeis.sequences[id].id_str() + ".asm" );
+            out << "; " << oeis.sequences[id] << std::endl;
+            out << "; " << s << std::endl << std::endl;
+            Printer r;
+            r.print( p, out );
           }
         }
         catch ( const std::exception& )
         {
         }
-        if ( ++count % 100000 == 0 )
+        if ( ++count % 1000 == 0 )
+        {
+          g.mutate( 0.5 );
+        }
+        if ( ++count % 10000 == 0 )
         {
           Log::get().info( "Generated " + std::to_string( count ) + " programs" );
+          g.setSeed( std::random_device()() );
         }
       }
       db.save();

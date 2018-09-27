@@ -88,9 +88,9 @@ number_t Memory::get( number_t index ) const
 
 void Memory::set( number_t index, number_t value )
 {
-  if ( index > 100000 )
+  if ( index > 1000000 )
   {
-    Log::get().error( "Index out of allowed LODA memory range: " + std::to_string( index ), true );
+    Log::get().error( "Index out of memory range: " + std::to_string( index ), true );
   }
   if ( index >= size() )
   {

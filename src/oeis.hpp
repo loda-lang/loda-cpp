@@ -20,15 +20,13 @@ public:
         name( name )
   {
   }
+
+  std::string id_str() const;
+
   number_t id;
   std::string name;
 
-  friend std::ostream& operator<<( std::ostream& out, const OeisSequence& s )
-  {
-    Sequence t = s;
-    out << t;
-    return out;
-  }
+  friend std::ostream& operator<<( std::ostream& out, const OeisSequence& s );
 
 };
 
