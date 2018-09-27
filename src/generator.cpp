@@ -4,7 +4,7 @@
 #include "optimizer.hpp"
 #include "printer.hpp"
 
-#define VALUE_RANGE 10
+#define VALUE_RANGE 8
 #define POSITION_RANGE 100
 
 State::State()

@@ -47,10 +47,10 @@ void Log::log( Level level, const std::string& msg )
     lev = "DEBUG";
     break;
   case Log::Level::INFO:
-    lev = "INFO";
+    lev = "INFO ";
     break;
   case Log::Level::WARN:
-    lev = "WARN";
+    lev = "WARN ";
     break;
   case Log::Level::ERROR:
     lev = "ERROR";

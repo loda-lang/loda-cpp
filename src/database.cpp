@@ -50,9 +50,9 @@ bool Database::insert( Program&& p )
     return false;
   }
 
-  std::stringstream buf;
-  buf << "Inserting sequence " << s;
-  Log::get().info( buf.str() );
+  //std::stringstream buf;
+  //buf << "Inserting sequence " << s;
+  //Log::get().info( buf.str() );
   programs_.push_back( std::make_pair<Program, Sequence>( Program( p ), std::move( s ) ) );
   if ( programs_.size() >= 100 )
   {

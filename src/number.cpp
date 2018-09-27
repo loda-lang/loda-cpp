@@ -1,5 +1,7 @@
 #include "number.hpp"
 
+#include "util.hpp"
+
 #include <unordered_set>
 
 // === Sequence ===============================================================
@@ -67,7 +69,7 @@ std::ostream& operator<<( std::ostream& out, const Sequence& seq )
 {
   for ( number_t i = 0; i < seq.size(); i++ )
   {
-    if ( i > 0 ) out << " ";
+    if ( i > 0 ) out << ",";
     out << seq[i];
   }
   return out;
@@ -88,7 +90,7 @@ void Memory::set( number_t index, number_t value )
 {
   if ( index > 100000 )
   {
-    throw std::runtime_error( "index out of loda memory range: " + std::to_string( index ) );
+    Log::get().error( "Index out of allowed LODA memory range: " + std::to_string( index ), true );
   }
   if ( index >= size() )
   {

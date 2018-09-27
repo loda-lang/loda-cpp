@@ -5,6 +5,9 @@
 #include "parser.hpp"
 #include "printer.hpp"
 #include "test.hpp"
+#include "util.hpp"
+
+#include <csignal>
 
 void help()
 {
@@ -20,8 +23,16 @@ void help()
   std::cout << "  sequences  Print all sequences in the database" << std::endl;
 }
 
+volatile sig_atomic_t EXIT_FLAG = 0;
+
+void handleSignal( int s )
+{
+  EXIT_FLAG = 1;
+}
+
 int main( int argc, char *argv[] )
 {
+  std::signal( SIGINT, handleSignal );
   if ( argc > 1 )
   {
     std::string cmd( argv[1] );
@@ -58,13 +69,31 @@ int main( int argc, char *argv[] )
       Oeis oeis( length );
       oeis.load();
       Database db;
-      Finder f;
+      //Finder f;
       Generator g( 5, std::random_device()() );
-      for ( int i = 0; i < 10000; i++ )
+      Interpreter t;
+      size_t count = 0;
+      while ( !EXIT_FLAG )
       {
         //auto p = f.find( oeis, length, std::random_device()(), 20 );
         auto p = g.generateProgram();
-        db.insert( std::move( p ) );
+        try
+        {
+          auto s = t.eval( p, length );
+          if ( oeis.score( s ) == 0 )
+          {
+            Printer r;
+            r.print( p, std::cout );
+            db.insert( std::move( p ) );
+          }
+        }
+        catch ( const std::exception& )
+        {
+        }
+        if ( ++count % 100000 == 0 )
+        {
+          Log::get().info( "Generated " + std::to_string( count ) + " programs" );
+        }
       }
       db.save();
     }
