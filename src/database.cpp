@@ -4,8 +4,10 @@
 #include "optimizer.hpp"
 #include "printer.hpp"
 #include "serializer.hpp"
+#include "util.hpp"
 
 #include <fstream>
+#include <sstream>
 
 class Reader
 {
@@ -43,7 +45,19 @@ bool Database::insert( Program&& p )
   {
     return false;
   }
+  if ( !programs_.empty() && programs_.back().second == s )
+  {
+    return false;
+  }
+
+  std::stringstream buf;
+  buf << "Inserting sequence " << s;
+  Log::get().info( buf.str() );
   programs_.push_back( std::make_pair<Program, Sequence>( Program( p ), std::move( s ) ) );
+  if ( programs_.size() >= 100 )
+  {
+    save();
+  }
   return true;
 }
 
@@ -69,6 +83,7 @@ void Database::save()
   bool db_has_next = r.next( q );
   Program last_program;
   Sequence last_sequence;
+  size_t program_count = 0;
   while ( db_has_next || p != programs_.end() )
   {
     Program next_program;
@@ -122,11 +137,14 @@ void Database::save()
 //      std::cout << "add program for " << next_sequence << std::endl;
       s.writeProgram( next_program, new_db );
       last_program = next_program;
+      ++program_count;
     }
   }
   new_db.flush();
   new_db.close();
   rename( "loda_new.db", "loda.db" );
+  programs_.clear();
+  Log::get().info( "Saved database with " + std::to_string( program_count ) + " programs" );
 }
 
 void Database::printPrograms()

@@ -2,6 +2,7 @@
 
 #include "number.hpp"
 #include "generator.hpp"
+
 #include <unordered_map>
 
 class OeisSequence: public Sequence

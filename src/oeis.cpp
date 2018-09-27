@@ -1,12 +1,14 @@
 #include "oeis.hpp"
 
 #include "number.hpp"
+#include "util.hpp"
+
 #include <fstream>
 #include <sstream>
 
 void throwParseError( const std::string& line )
 {
-  throw std::runtime_error( "error parsing oeis line: " + line );
+  Log::get().error( "error parsing oeis line: " + line, true );
 }
 
 void Oeis::load()
@@ -16,6 +18,8 @@ void Oeis::load()
   int pos;
   number_t id, num;
   Sequence s;
+  size_t total_count = 0;
+  size_t loaded_count = 0;
   while ( std::getline( in, line ) )
   {
     if ( line.empty() || line[0] == '#' )
@@ -26,6 +30,7 @@ void Oeis::load()
     {
       throwParseError( line );
     }
+    ++total_count;
     pos = 1;
     id = 0;
     for ( pos = 1; pos < line.length() && line[pos] >= '0' && line[pos] <= '9'; ++pos )
@@ -73,7 +78,7 @@ void Oeis::load()
       }
       ++pos;
     }
-    if ( s.size() != length || s.subsequence(4).linear() || s.distinct_values() <= 2 )
+    if ( s.size() != length || s.subsequence( 4 ).linear() || s.distinct_values() <= 2 )
     {
       continue;
     }
@@ -87,7 +92,10 @@ void Oeis::load()
     }
     sequences[id] = OeisSequence( id, "", s );
     ids[s] = id;
+    ++loaded_count;
   }
+  Log::get().info(
+      "Loaded " + std::to_string( loaded_count ) + "/" + std::to_string( total_count ) + " OEIS sequences" );
 }
 
 number_t Oeis::score( const Sequence& s )
@@ -96,7 +104,9 @@ number_t Oeis::score( const Sequence& s )
   if ( it != ids.end() )
   {
     number_t id = it->second;
-    std::cout << "Found sequence " << id << ": " << sequences[id] << std::endl;
+    std::stringstream buf;
+    buf << "Found program for OEIS sequence " << id << ": " << sequences[id];
+    Log::get().info( buf.str() );
     return 0;
   }
   return 1;
