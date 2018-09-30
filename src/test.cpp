@@ -3,9 +3,13 @@
 #include "generator.hpp"
 #include "interpreter.hpp"
 #include "iterator.hpp"
+#include "number.hpp"
+#include "oeis.hpp"
 #include "parser.hpp"
 #include "printer.hpp"
 #include "serializer.hpp"
+
+#include <fstream>
 
 void Test::fibonacci()
 {
@@ -79,11 +83,38 @@ void Test::serialize()
   printer.print( fib, std::cout );
 }
 
+void Test::oeis()
+{
+  Settings settings;
+  Oeis o( settings );
+  o.load();
+  for ( auto& s : o.sequences )
+  {
+    std::ifstream file( "programs/oeis/" + s.id_str() + ".asm" );
+    if ( file.good() )
+    {
+      std::cout << "Generating first " << s.full.size() << " terms of sequence " << s.id_str() << "..." << std::endl;
+      Parser parser;
+      Program program = parser.parse( file );
+      Settings settings;
+      settings.num_terms = s.full.size();
+      Interpreter interpreter( settings );
+      Sequence result = interpreter.eval( program );
+      if ( result.size() != s.full.size() || result != s.full )
+      {
+        Log::get().error( "Program did not evaluate to expected sequence!", true );
+      }
+    }
+  }
+  std::cout << std::endl;
+}
+
 void Test::all()
 {
 //  Iterate();
 //  Find();
   fibonacci();
+  oeis();
   exponentiation();
   ackermann();
 }

@@ -18,6 +18,8 @@ public:
 
   void serialize();
 
+  void oeis();
+
   void all();
 
 private:

@@ -33,11 +33,13 @@ Oeis::Oeis( const Settings& settings )
 void Oeis::load()
 {
   // load sequence data
+  Log::get().debug( "Loading sequence data from the OEIS" );
   std::ifstream stripped( "stripped" );
   std::string line;
   int pos;
   number_t id, num;
-  Sequence s;
+  Sequence full_sequence;
+  Sequence norm_sequence;
   size_t total_count = 0;
   size_t loaded_count = 0;
   while ( std::getline( stripped, line ) )
@@ -68,16 +70,12 @@ void Oeis::load()
     }
     ++pos;
     num = 0;
-    s.clear();
+    full_sequence.clear();
     while ( pos < line.length() )
     {
       if ( line[pos] == ',' )
       {
-        s.push_back( num );
-        if ( s.size() == settings.num_terms )
-        {
-          break;
-        }
+        full_sequence.push_back( num );
         num = 0;
       }
       else if ( line[pos] >= '0' && line[pos] <= '9' )
@@ -98,24 +96,24 @@ void Oeis::load()
       }
       ++pos;
     }
-    if ( s.size() != settings.num_terms || s.subsequence( 4 ).linear() || s.distinct_values() <= 4 )
+    if ( full_sequence.size() < settings.num_terms || full_sequence.subsequence( 4 ).linear()
+        || full_sequence.distinct_values() <= 4 )
     {
       continue;
     }
-
-//    std::cout << line << std::endl;
-//    std::cout << id << ": " << s << std::endl << std::endl;
+    norm_sequence = Sequence( std::vector<number_t>( full_sequence.begin(), full_sequence.begin() + settings.num_terms ) );
 
     if ( id >= sequences.size() )
     {
       sequences.resize( 2 * id );
     }
-    sequences[id] = OeisSequence( id, "", s );
-    ids[s] = id;
+    sequences[id] = OeisSequence( id, "", norm_sequence, full_sequence );
+    ids[full_sequence] = id;
     ++loaded_count;
   }
 
   // load sequence names
+  Log::get().debug( "Loading sequence names from the OEIS" );
   std::ifstream names( "names" );
   while ( std::getline( names, line ) )
   {
@@ -138,7 +136,16 @@ void Oeis::load()
       throwParseError( line );
     }
     ++pos;
-    sequences[id].name = line.substr( pos );
+    if ( id < sequences.size() )
+    {
+      sequences[id].name = line.substr( pos );
+      if ( Log::get().level == Log::Level::DEBUG )
+      {
+        std::stringstream buf;
+        buf << "Loaded sequence " << sequences[id];
+        Log::get().debug( buf.str() );
+      }
+    }
   }
 
   Log::get().info(
