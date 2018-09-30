@@ -9,7 +9,7 @@
 
 void Test::fibonacci()
 {
-  std::cout << "Running tests for examples/fibonacci.asm..." << std::endl;
+  std::cout << "Running tests for programs/fibonacci.asm..." << std::endl;
 
   Sequence expected( { 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765, 10946,
       17711, 28657, 46368, 75025 } );
@@ -19,7 +19,7 @@ void Test::fibonacci()
   settings.num_terms = expected.size();
   Interpreter interpreter( settings );
 
-  auto fib = parser.parse( "examples/fibonacci.asm" );
+  auto fib = parser.parse( "programs/fibonacci.asm" );
   auto result = interpreter.eval( fib );
   std::cout << "fib=" << result << "..." << std::endl;
   if ( result != expected )
@@ -34,14 +34,14 @@ void Test::exponentiation()
 {
   std::vector<std::vector<number_t> > values = { { 1, 0, 0, 0 }, { 1, 1, 1, 1 }, { 1, 2, 4, 8 }, { 1, 3, 9, 27 }, { 1,
       4, 16, 64 } };
-  testBinary( "exp", "examples/exponentiation.asm", values );
+  testBinary( "exp", "programs/exponentiation.asm", values );
 }
 
 void Test::ackermann()
 {
   std::vector<std::vector<number_t> > values = { { 1, 2, 3, 4, 5 }, { 2, 3, 4, 5, 6 }, { 3, 5, 7, 9, 11 }, { 5, 13, 29,
       61, 125 }, { 13, 65533 } };
-  testBinary( "ack", "examples/ackermann.asm", values );
+  testBinary( "ack", "programs/ackermann.asm", values );
 }
 
 void Test::find()
@@ -75,7 +75,7 @@ void Test::serialize()
   Parser parser;
   Printer printer;
 //  Serializer serializer;
-  auto fib = parser.parse( "examples/fibonacci.asm" );
+  auto fib = parser.parse( "programs/fibonacci.asm" );
   printer.print( fib, std::cout );
 }
 

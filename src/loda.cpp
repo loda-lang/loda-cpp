@@ -103,7 +103,7 @@ int main( int argc, char *argv[] )
           {
             db.insert( std::move( p ) );
             auto id = oeis.ids[s];
-            std::ofstream out( "examples/oeis/" + oeis.sequences[id].id_str() + ".asm" );
+            std::ofstream out( "programs/oeis/" + oeis.sequences[id].id_str() + ".asm" );
             out << "; " << oeis.sequences[id] << std::endl;
             out << "; " << s << std::endl << std::endl;
             Printer r;
