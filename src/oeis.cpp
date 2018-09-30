@@ -96,8 +96,7 @@ void Oeis::load()
       }
       ++pos;
     }
-    if ( full_sequence.size() < settings.num_terms || full_sequence.subsequence( 4 ).linear()
-        || full_sequence.distinct_values() <= 4 )
+    if ( full_sequence.size() < settings.num_terms || full_sequence.distinct_values() < 4 )
     {
       continue;
     }
@@ -108,7 +107,7 @@ void Oeis::load()
       sequences.resize( 2 * id );
     }
     sequences[id] = OeisSequence( id, "", norm_sequence, full_sequence );
-    ids[full_sequence] = id;
+    ids[norm_sequence] = id;
     ++loaded_count;
   }
 

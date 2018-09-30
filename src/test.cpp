@@ -93,7 +93,7 @@ void Test::oeis()
     std::ifstream file( "programs/oeis/" + s.id_str() + ".asm" );
     if ( file.good() )
     {
-      std::cout << "Generating first " << s.full.size() << " terms of sequence " << s.id_str() << "..." << std::endl;
+      std::cout << "Generating first " << s.full.size() << " terms of sequence " << s << std::endl;
       Parser parser;
       Program program = parser.parse( file );
       Settings settings;
