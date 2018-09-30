@@ -2,6 +2,7 @@
 
 #include "number.hpp"
 #include "program.hpp"
+#include "util.hpp"
 
 #include <random>
 
@@ -41,7 +42,7 @@ public:
 
   using UPtr = std::unique_ptr<Generator>;
 
-  Generator( size_t numStates, int64_t seed );
+  Generator( const Settings& settings, size_t numStates, int64_t seed );
 
   Generator( const Generator& other ) = default;
 
@@ -57,11 +58,15 @@ public:
 
   void print();
 
+  number_t score;
+
+private:
+
+  const Settings& settings;
+
   std::vector<State> states;
 
   std::mt19937 gen;
-
-  number_t score;
 
 };
 
@@ -99,6 +104,11 @@ class Finder
 {
 public:
 
-  Program find( Scorer& scorer, size_t size, size_t seed, size_t max_iterations );
+  Finder( const Settings& settings );
+
+  Program find( Scorer& scorer, size_t seed, size_t max_iterations );
+
+private:
+  const Settings& settings;
 
 };

@@ -79,7 +79,6 @@ void Printer::print( const Operation& op, std::ostream& out, int indent )
   {
     out << " ; " << op.comment;
   }
-  out << std::endl;
 }
 
 void Printer::print( const Program& p, std::ostream& out )
@@ -92,6 +91,7 @@ void Printer::print( const Program& p, std::ostream& out )
       indent -= 2;
     }
     print( op, out, indent );
+    out << std::endl;
     if ( op.type == Operation::Type::LPB )
     {
       indent += 2;

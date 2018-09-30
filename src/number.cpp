@@ -88,10 +88,6 @@ number_t Memory::get( number_t index ) const
 
 void Memory::set( number_t index, number_t value )
 {
-  if ( index > 1000000 )
-  {
-    Log::get().error( "Index out of memory range: " + std::to_string( index ), true );
-  }
   if ( index >= size() )
   {
     resize( index + 1, 0 );

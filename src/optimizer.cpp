@@ -1,6 +1,7 @@
 #include "optimizer.hpp"
 
 #include "number.hpp"
+#include "util.hpp"
 
 void Optimizer::optimize( Program& p )
 {
@@ -38,6 +39,10 @@ bool Optimizer::removeEmptyLoops( Program& p )
   {
     if ( i + 1 < p.ops.size() && p.ops[i].type == Operation::Type::LPB && p.ops[i + 1].type == Operation::Type::LPE )
     {
+      if ( Log::get().level == Log::Level::DEBUG )
+      {
+        Log::get().debug( "Removing empty loop" );
+      }
       p.ops.erase( p.ops.begin() + i, p.ops.begin() + i + 2 );
       i = i - 2;
       removed = true;

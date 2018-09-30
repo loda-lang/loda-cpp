@@ -2,6 +2,7 @@
 
 #include "number.hpp"
 #include "generator.hpp"
+#include "util.hpp"
 
 #include <unordered_map>
 
@@ -34,10 +35,7 @@ class Oeis: public Scorer
 {
 public:
 
-  Oeis( size_t length )
-      : length( length )
-  {
-  }
+  Oeis( const Settings& settings );
 
   virtual ~Oeis()
   {
@@ -60,7 +58,7 @@ public:
     }
   };
 
-  size_t length;
+  const Settings& settings;
   std::vector<OeisSequence> sequences;
   std::unordered_map<Sequence, number_t, Hasher> ids;
 

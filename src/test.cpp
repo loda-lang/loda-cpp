@@ -15,10 +15,12 @@ void Test::fibonacci()
       17711, 28657, 46368, 75025 } );
 
   Parser parser;
-  Interpreter interpreter;
+  Settings settings;
+  settings.num_terms = expected.size();
+  Interpreter interpreter( settings );
 
   auto fib = parser.parse( "examples/fibonacci.asm" );
-  auto result = interpreter.eval( fib, expected.size() );
+  auto result = interpreter.eval( fib );
   std::cout << "fib=" << result << "..." << std::endl;
   if ( result != expected )
   {
@@ -48,9 +50,11 @@ void Test::find()
 //  { 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765, 10946,
 //    17711, 28657, 46368, 75025};
 
-  Finder finder;
-  FixedSequenceScorer scorer(expected);
-  finder.find( scorer, expected.size(), 23, 10 );
+  Settings settings;
+  settings.num_terms = expected.size();
+  Finder finder( settings );
+  FixedSequenceScorer scorer( expected );
+  finder.find( scorer, 23, 10 );
 
 }
 
@@ -89,7 +93,8 @@ void Test::testBinary( const std::string& func, const std::string& file,
 {
   std::cout << "Running tests for " << file << "..." << std::endl;
   Parser parser;
-  Interpreter interpreter;
+  Settings settings;
+  Interpreter interpreter( settings );
   auto program = parser.parse( file );
   for ( size_t i = 0; i < values.size(); i++ )
   {

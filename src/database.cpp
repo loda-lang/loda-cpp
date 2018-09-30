@@ -34,18 +34,24 @@ private:
 
 };
 
+Database::Database( const Settings& settings )
+    : settings( settings ),
+      dirty( true )
+{
+}
+
 bool Database::insert( Program&& p )
 {
   Optimizer o;
   o.optimize( p );
 
-  Interpreter i;
-  Sequence s = i.eval( p, 32 );
+  Interpreter i( settings );
+  Sequence s = i.eval( p );
   if ( s.linear() )
   {
     return false;
   }
-  if ( !programs_.empty() && programs_.back().second == s )
+  if ( !programs.empty() && programs.back().second == s )
   {
     return false;
   }
@@ -53,8 +59,9 @@ bool Database::insert( Program&& p )
   //std::stringstream buf;
   //buf << "Inserting sequence " << s;
   //Log::get().info( buf.str() );
-  programs_.push_back( std::make_pair<Program, Sequence>( Program( p ), std::move( s ) ) );
-  if ( programs_.size() >= 100 )
+  programs.push_back( std::make_pair<Program, Sequence>( Program( p ), std::move( s ) ) );
+  dirty = true;
+  if ( programs.size() >= 1 )
   {
     save();
   }
@@ -63,62 +70,70 @@ bool Database::insert( Program&& p )
 
 void Database::save()
 {
-  std::sort( programs_.begin(), programs_.end(),
+  // nothing to do ?
+  if ( !dirty && programs.empty() )
+  {
+    return;
+  }
+
+  // sort programs by lexigographical order of sequences
+  std::sort( programs.begin(), programs.end(),
       [](const std::pair<Program,Sequence>& a, const std::pair<Program,Sequence>& b) -> bool
       { return a.second < b.second;} );
 
+  // open temporary file
   std::ofstream new_db;
   new_db.open( "loda_new.db", std::ios::out | std::ios::binary );
   if ( !new_db.good() )
   {
-    throw std::runtime_error( "write error" );
+    Log::get().error( "Error write to file: loda_new.db", true );
   }
 
-  Optimizer o;
-  Interpreter i;
-  Reader r;
-  Serializer s;
-  auto p = programs_.begin();
-  Program q;
-  bool db_has_next = r.next( q );
+  Optimizer optimizer;
+  Interpreter interpreter( settings );
+  Reader reader;
+  Serializer serializer;
+  auto program1 = programs.begin();
+  Program program2;
+  bool db_has_next = reader.next( program2 );
   Program last_program;
   Sequence last_sequence;
+  Sequence tmp_sequence;
   size_t program_count = 0;
-  while ( db_has_next || p != programs_.end() )
+  while ( db_has_next || program1 != programs.end() )
   {
     Program next_program;
     Sequence next_sequence;
-    if ( db_has_next && p != programs_.end() )
+    if ( db_has_next && program1 != programs.end() )
     {
-      auto e = i.eval( q, 32 );
-      if ( e < p->second )
+      tmp_sequence = interpreter.eval( program2 );
+      if ( tmp_sequence < program1->second )
       {
-        next_sequence = e;
-        next_program = q;
-        db_has_next = r.next( q );
+        next_sequence = tmp_sequence;
+        next_program = program2;
+        db_has_next = reader.next( program2 );
       }
       else
       {
-        next_sequence = p->second;
-        next_program = p->first;
-        ++p;
+        next_sequence = program1->second;
+        next_program = program1->first;
+        ++program1;
       }
     }
     else if ( db_has_next )
     {
-      auto e = i.eval( q, 32 );
-      next_sequence = e;
-      next_program = q;
-      db_has_next = r.next( q );
+      next_sequence = interpreter.eval( program2 );
+      next_program = program2;
+      db_has_next = reader.next( program2 );
     }
     else
     {
-      next_sequence = p->second;
-      next_program = p->first;
-      ++p;
+      next_sequence = program1->second;
+      next_program = program1->first;
+      ++program1;
     }
 
-    o.optimize( next_program );
+    optimizer.optimize( next_program );
 
     if ( next_sequence.subsequence( 8 ).linear() )
     {
@@ -135,7 +150,7 @@ void Database::save()
     else
     {
 //      std::cout << "add program for " << next_sequence << std::endl;
-      s.writeProgram( next_program, new_db );
+      serializer.writeProgram( next_program, new_db );
       last_program = next_program;
       ++program_count;
     }
@@ -143,8 +158,9 @@ void Database::save()
   new_db.flush();
   new_db.close();
   rename( "loda_new.db", "loda.db" );
-  programs_.clear();
+  programs.clear();
   Log::get().info( "Saved database with " + std::to_string( program_count ) + " programs" );
+  dirty = false;
 }
 
 void Database::printPrograms()
@@ -168,9 +184,9 @@ void Database::printSequences()
 {
   Reader r;
   Program p;
-  Interpreter i;
+  Interpreter i( settings );
   while ( r.next( p ) )
   {
-    std::cout << i.eval( p, 32 ) << std::endl;
+    std::cout << i.eval( p ) << std::endl;
   }
 }

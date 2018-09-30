@@ -121,7 +121,8 @@ State State::operator+( const State& other )
   return r;
 }
 
-Generator::Generator( size_t numStates, int64_t seed )
+Generator::Generator( const Settings& settings, size_t numStates, int64_t seed )
+    : settings( settings )
 {
   states.resize( numStates );
   for ( number_t state = 0; state < numStates; state++ )
@@ -133,7 +134,7 @@ Generator::Generator( size_t numStates, int64_t seed )
 
 Generator Generator::operator+( const Generator& other )
 {
-  Generator r( states.size(), gen() );
+  Generator r( settings, states.size(), gen() );
   for ( number_t s = 0; s < states.size(); s++ )
   {
     r.states[s] = states[s] + other.states[s];
@@ -211,7 +212,7 @@ Program Generator::generateProgram( size_t initialState )
   Program p;
   Seed seed;
   seed.state = initialState;
-  for ( size_t i = 0; i < 40; i++ )
+  for ( size_t i = 0; i < settings.num_operations; i++ )
   {
     generateOperations( seed );
     size_t position = (seed.position * (p.ops.size()));
@@ -230,7 +231,12 @@ void Generator::setSeed( int64_t seed )
   gen.seed( seed );
 }
 
-Program Finder::find( Scorer& scorer, size_t size, size_t seed, size_t max_iterations )
+Finder::Finder( const Settings& settings )
+    : settings( settings )
+{
+}
+
+Program Finder::find( Scorer& scorer, size_t seed, size_t max_iterations )
 {
   Program p;
 
@@ -247,10 +253,10 @@ Program Finder::find( Scorer& scorer, size_t size, size_t seed, size_t max_itera
   std::vector<Generator::UPtr> generators;
   for ( size_t i = 0; i < gen_count; i++ )
   {
-    generators.emplace_back( Generator::UPtr( new Generator( states, seed + i ) ) );
+    generators.emplace_back( Generator::UPtr( new Generator( settings, states, seed + i ) ) );
   }
 
-  Interpreter interpreter;
+  Interpreter interpreter( settings );
 //  FixedSequenceScorer scorer( target );
   Printer printer;
 
@@ -272,7 +278,7 @@ Program Finder::find( Scorer& scorer, size_t size, size_t seed, size_t max_itera
         p = gen->generateProgram( 0 );
         try
         {
-          s = interpreter.eval( p, size );
+          s = interpreter.eval( p );
         }
         catch ( const std::exception& e )
         {
@@ -302,13 +308,13 @@ Program Finder::find( Scorer& scorer, size_t size, size_t seed, size_t max_itera
     std::stable_sort( generators.begin(), generators.end(), less_than_score );
 
     // print top ten
- /*   for ( size_t i = 0; i < (gen_count / 10); i++ )
-    {
-      generators[i]->print();
-      std::cout << std::endl;
-    }
-    std::cout << std::endl;
-*/
+    /*   for ( size_t i = 0; i < (gen_count / 10); i++ )
+     {
+     generators[i]->print();
+     std::cout << std::endl;
+     }
+     std::cout << std::endl;
+     */
     // create new generators
     std::vector<Generator::UPtr> new_generators;
     for ( size_t i = 0; i < (gen_count / 10); i++ )

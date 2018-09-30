@@ -2,13 +2,19 @@
 
 #include "printer.hpp"
 
-#include <iostream>
 #include <array>
+#include <iostream>
+#include <sstream>
 #include <stack>
 #include "number.hpp"
 
 using MemStack = std::stack<Memory>;
 using PCStack = std::stack<size_t>;
+
+Interpreter::Interpreter( const Settings& settings )
+    : settings( settings )
+{
+}
 
 bool Interpreter::run( const Program& p, Memory& mem )
 {
@@ -27,17 +33,18 @@ bool Interpreter::run( const Program& p, Memory& mem )
   // push first operation to stack
   pc_stack.push( 0 );
 
-  // Printer printer;
+  Printer printer;
 
   // loop until stack is empty
+  number_t cycles = 0;
   while ( !pc_stack.empty() )
   {
     Memory old = mem;
-
     size_t pc = pc_stack.top();
     pc_stack.pop();
     auto& op = p.ops.at( pc );
     size_t pc_next = pc + 1;
+
     switch ( op.type )
     {
     case Operation::Type::NOP:
@@ -116,37 +123,42 @@ bool Interpreter::run( const Program& p, Memory& mem )
       pc_stack.push( pc_next );
     }
 
-    /*    printer.Print( op, std::cout );
-     if ( mem != old )
-     {
-     std::cout << old << " =>" << std::endl;
-     std::cout << mem << std::endl;
-     }
-     std::cout << std::endl;
-     */
+    if ( Log::get().level == Log::Level::DEBUG )
+    {
+      std::stringstream buf;
+      buf << "Executing ";
+      printer.print( op, buf );
+      buf << " " << old << " => " << mem;
+      Log::get().debug( buf.str() );
+    }
+
+    if ( ++cycles >= settings.max_cycles )
+    {
+      Log::get().error( "Program not terminated after " + std::to_string( cycles ) + " cycles", true );
+    }
   }
   return true;
 }
 
-number_t Interpreter::get( Operand a, const Memory& mem, bool get_address )
+number_t Interpreter::get( Operand a, const Memory& mem, bool getAddress )
 {
   switch ( a.type )
   {
   case Operand::Type::CONSTANT:
   {
-    if ( get_address )
+    if ( getAddress )
     {
-      throw std::runtime_error( "cannot get address of constant" );
+      Log::get().error( "Cannot get address of a constant", true );
     }
     return a.value;
   }
   case Operand::Type::MEM_ACCESS_DIRECT:
   {
-    return get_address ? a.value : mem.get( a.value );
+    return getAddress ? a.value : mem.get( a.value );
   }
   case Operand::Type::MEM_ACCESS_INDIRECT:
   {
-    return get_address ? mem.get( a.value ) : mem.get( mem.get( a.value ) );
+    return getAddress ? mem.get( a.value ) : mem.get( mem.get( a.value ) );
   }
   }
   return
@@ -155,22 +167,30 @@ number_t Interpreter::get( Operand a, const Memory& mem, bool get_address )
 
 void Interpreter::set( Operand a, number_t v, Memory& mem )
 {
+  number_t index;
   switch ( a.type )
   {
   case Operand::Type::CONSTANT:
-    throw std::runtime_error( "cannot set value to constant" );
+    Log::get().error( "Cannot set value of a constant", true );
+    index = 0; // we don't get here
+    break;
   case Operand::Type::MEM_ACCESS_DIRECT:
-    mem.set( a.value, v );
+    index = a.value;
     break;
   case Operand::Type::MEM_ACCESS_INDIRECT:
-    mem.set( mem.get( a.value ), v );
+    index = mem.get( a.value );
     break;
   }
+  if ( index > settings.max_memory )
+  {
+    Log::get().error( "Memory index " + std::to_string( index ) + " is out of range", true );
+  }
+  mem.set( index, v );
 }
 
-bool Interpreter::isLessThan( const Memory& m1, const Memory& m2, const std::vector<Operand>& cmp_vars )
+bool Interpreter::isLessThan( const Memory& m1, const Memory& m2, const std::vector<Operand>& cmpVars )
 {
-  for ( Operand v : cmp_vars )
+  for ( Operand v : cmpVars )
   {
     if ( get( v, m1 ) < get( v, m2 ) )
     {
@@ -184,16 +204,22 @@ bool Interpreter::isLessThan( const Memory& m1, const Memory& m2, const std::vec
   return false; // equal
 }
 
-Sequence Interpreter::eval( const Program& p, number_t length )
+Sequence Interpreter::eval( const Program& p )
 {
   Sequence seq;
-  seq.resize( length );
-  for ( number_t index = 0; index < length; index++ )
+  seq.resize( settings.num_terms );
+  for ( number_t i = 0; i < seq.size(); i++ )
   {
     Memory mem;
-    mem.set( 0, index );
+    mem.set( 0, i );
     run( p, mem );
-    seq[index] = mem.get( 1 );
+    seq[i] = mem.get( 1 );
+  }
+  if ( Log::get().level == Log::Level::DEBUG )
+  {
+    std::stringstream buf;
+    buf << "Evaluated program to sequence " << seq;
+    Log::get().debug( buf.str() );
   }
   return seq;
 }

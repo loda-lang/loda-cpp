@@ -1,6 +1,7 @@
 #include "parser.hpp"
 
 #include "program.hpp"
+#include "util.hpp"
 
 #include <algorithm>
 #include <fstream>
@@ -10,9 +11,9 @@
 Program Parser::parse( const std::string& file )
 {
   file_in.reset( new std::ifstream( file ) );
-  if ( !file_in )
+  if ( !file_in->good() )
   {
-    throw std::runtime_error( "error opening file" );
+    Log::get().error( "Error opening file: " + file, true );
   }
   auto p = parse( *file_in );
   file_in->close();
