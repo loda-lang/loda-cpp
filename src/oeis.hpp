@@ -43,9 +43,11 @@ public:
   {
   }
 
+  void load();
+
   virtual number_t score( const Sequence& s ) override;
 
-  void load();
+  number_t findSequence( const Program& p );
 
   struct Hasher
   {

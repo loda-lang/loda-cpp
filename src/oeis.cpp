@@ -1,5 +1,6 @@
 #include "oeis.hpp"
 
+#include "interpreter.hpp"
 #include "number.hpp"
 #include "util.hpp"
 
@@ -100,7 +101,8 @@ void Oeis::load()
     {
       continue;
     }
-    norm_sequence = Sequence( std::vector<number_t>( full_sequence.begin(), full_sequence.begin() + settings.num_terms ) );
+    norm_sequence = Sequence(
+        std::vector<number_t>( full_sequence.begin(), full_sequence.begin() + settings.num_terms ) );
 
     if ( id >= sequences.size() )
     {
@@ -167,4 +169,31 @@ number_t Oeis::score( const Sequence& s )
     return 0;
   }
   return 1;
+}
+
+number_t Oeis::findSequence( const Program& p )
+{
+  Interpreter interpreter( settings );
+  try
+  {
+    auto norm_seq = interpreter.eval( p );
+    auto it = ids.find( norm_seq );
+    if ( it != ids.end() )
+    {
+      auto expected_full_seq = sequences.at( it->second ).full;
+      auto settings_full = settings;
+      settings_full.num_terms = expected_full_seq.size();
+      Interpreter interpreter_full( settings_full );
+      auto full_seq = interpreter_full.eval( p );
+      if ( full_seq.size() == expected_full_seq.size() && !(full_seq != expected_full_seq) )
+      {
+        return it->second;
+      }
+    }
+  }
+  catch ( const std::exception& )
+  {
+    // will return 0 (not found)
+  }
+  return 0; // not found
 }

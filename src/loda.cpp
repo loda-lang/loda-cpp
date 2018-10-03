@@ -92,44 +92,28 @@ int main( int argc, char *argv[] )
       oeis.load();
       Database db( settings );
       Generator generator( settings, 5, std::random_device()() );
-      Interpreter t( settings );
       size_t count = 0;
       std::unordered_set<number_t> seq_ids;
       while ( !EXIT_FLAG )
       {
-        //auto p = f.find( oeis, length, std::random_device()(), 20 );
-        auto p = generator.generateProgram();
-        try
+        auto program = generator.generateProgram();
+        auto id = oeis.findSequence( program );
+        if ( id && seq_ids.find( id ) == seq_ids.end() )
         {
-          auto s = t.eval( p );
-          auto it = oeis.ids.find( s );
-          if ( it != oeis.ids.end() )
-          {
-            number_t id = it->second;
-            if ( seq_ids.find( id ) == seq_ids.end() )
-            {
-              seq_ids.insert( id );
-              std::stringstream buf;
-              buf << "Found program for " << oeis.sequences[id];
-              Log::get().info( buf.str() );
-              buf.str( "" );
-              buf << "First " << oeis.sequences[id].size() << " terms of " << oeis.sequences[id].id_str() << ": "
-                  << static_cast<Sequence>( oeis.sequences[id] );
-              Log::get().debug( buf.str() );
-
-              db.insert( std::move( p ) );
-              auto id = oeis.ids[s];
-              std::ofstream out( "programs/oeis/" + oeis.sequences[id].id_str() + ".asm" );
-              out << "; " << oeis.sequences[id] << std::endl;
-              out << "; " << s << std::endl << std::endl;
-              Printer r;
-              r.print( p, out );
-
-            }
-          }
-        }
-        catch ( const std::exception& )
-        {
+          seq_ids.insert( id );
+          std::stringstream buf;
+          buf << "Found program for " << oeis.sequences[id];
+          Log::get().info( buf.str() );
+          buf.str( "" );
+          buf << "First " << oeis.sequences[id].size() << " terms of " << oeis.sequences[id].id_str()
+              << ": " << static_cast<Sequence>( oeis.sequences[id] );
+          Log::get().debug( buf.str() );
+          db.insert( std::move( program ) );
+          std::ofstream out( "programs/oeis/" + oeis.sequences[id].id_str() + ".asm" );
+          out << "; " << oeis.sequences[id] << std::endl;
+          out << "; " << oeis.sequences[id].full << std::endl << std::endl;
+          Printer r;
+          r.print( program, out );
         }
         if ( ++count % 1000 == 0 )
         {
