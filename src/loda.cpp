@@ -2,6 +2,7 @@
 #include "generator.hpp"
 #include "interpreter.hpp"
 #include "oeis.hpp"
+#include "optimizer.hpp"
 #include "parser.hpp"
 #include "printer.hpp"
 #include "test.hpp"
@@ -100,20 +101,39 @@ int main( int argc, char *argv[] )
         auto id = oeis.findSequence( program );
         if ( id && seq_ids.find( id ) == seq_ids.end() )
         {
+          Optimizer optimizer;
+          optimizer.minimize( program, oeis.sequences[id].full.size() );
           seq_ids.insert( id );
           std::stringstream buf;
           buf << "Found program for " << oeis.sequences[id];
           Log::get().info( buf.str() );
           buf.str( "" );
-          buf << "First " << oeis.sequences[id].size() << " terms of " << oeis.sequences[id].id_str()
-              << ": " << static_cast<Sequence>( oeis.sequences[id] );
+          buf << "First " << oeis.sequences[id].size() << " terms of " << oeis.sequences[id].id_str() << ": "
+              << static_cast<Sequence>( oeis.sequences[id] );
           Log::get().debug( buf.str() );
           db.insert( std::move( program ) );
-          std::ofstream out( "programs/oeis/" + oeis.sequences[id].id_str() + ".asm" );
-          out << "; " << oeis.sequences[id] << std::endl;
-          out << "; " << oeis.sequences[id].full << std::endl << std::endl;
-          Printer r;
-          r.print( program, out );
+          std::string file_name = "programs/oeis/" + oeis.sequences[id].id_str() + ".asm";
+          bool write_file = true;
+          {
+            std::ifstream in( file_name );
+            if ( in.good() )
+            {
+              Parser parser;
+              auto existing_program = parser.parse( in );
+              if ( existing_program.ops.size() > 0 && existing_program.ops.size() < program.ops.size() )
+              {
+                write_file = false;
+              }
+            }
+          }
+          if ( write_file )
+          {
+            std::ofstream out( file_name );
+            out << "; " << oeis.sequences[id] << std::endl;
+            out << "; " << oeis.sequences[id].full << std::endl << std::endl;
+            Printer r;
+            r.print( program, out );
+          }
         }
         if ( ++count % 1000 == 0 )
         {

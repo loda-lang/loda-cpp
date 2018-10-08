@@ -1,5 +1,6 @@
 #include "optimizer.hpp"
 
+#include "interpreter.hpp"
 #include "number.hpp"
 #include "util.hpp"
 
@@ -51,3 +52,29 @@ bool Optimizer::removeEmptyLoops( Program& p )
   return removed;
 }
 
+void Optimizer::minimize( Program& p, size_t num_terms )
+{
+  Settings settings;
+  settings.num_terms = num_terms;
+  Interpreter interpreter( settings );
+  auto target_sequence = interpreter.eval( p );
+  for ( int i = 0; i < (int) p.ops.size(); ++i )
+  {
+    auto op = p.ops.at( i );
+    if ( op.type != Operation::Type::LPB || op.type != Operation::Type::LPE )
+    {
+      continue;
+    }
+    p.ops.erase( p.ops.begin() + i, p.ops.begin() + i + 1 );
+    auto new_sequence = interpreter.eval( p );
+    if ( new_sequence.size() != target_sequence.size() || new_sequence != target_sequence )
+    {
+      p.ops.insert( p.ops.begin() + i, op );
+    }
+    else
+    {
+      --i;
+    }
+  }
+  optimize( p );
+}

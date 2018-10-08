@@ -13,4 +13,6 @@ public:
 
   bool removeEmptyLoops( Program& p );
 
+  void minimize( Program& p, size_t num_terms );
+
 };
