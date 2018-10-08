@@ -58,10 +58,11 @@ void Optimizer::minimize( Program& p, size_t num_terms )
   settings.num_terms = num_terms;
   Interpreter interpreter( settings );
   auto target_sequence = interpreter.eval( p );
+  int removed_ops = 0;
   for ( int i = 0; i < (int) p.ops.size(); ++i )
   {
     auto op = p.ops.at( i );
-    if ( op.type != Operation::Type::LPB || op.type != Operation::Type::LPE )
+    if ( op.type == Operation::Type::LPB || op.type == Operation::Type::LPE )
     {
       continue;
     }
@@ -74,7 +75,12 @@ void Optimizer::minimize( Program& p, size_t num_terms )
     else
     {
       --i;
+      ++removed_ops;
     }
+  }
+  if ( removed_ops > 0 )
+  {
+    Log::get().debug( "Removed " + std::to_string( removed_ops ) + " operations during minimization" );
   }
   optimize( p );
 }

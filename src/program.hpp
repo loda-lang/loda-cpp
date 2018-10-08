@@ -81,6 +81,26 @@ class Program
 {
 public:
 
+  size_t num_ops( bool withNops ) const
+  {
+    if ( withNops )
+    {
+      return ops.size();
+    }
+    else
+    {
+      size_t num_ops = 0;
+      for ( auto& op : ops )
+      {
+        if ( op.type != Operation::Type::NOP )
+        {
+          num_ops++;
+        }
+      }
+      return num_ops;
+    }
+  }
+
   bool operator==( const Program& p ) const
   {
     if ( p.ops.size() != ops.size() )

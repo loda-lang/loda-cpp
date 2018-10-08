@@ -94,24 +94,16 @@ int main( int argc, char *argv[] )
       Database db( settings );
       Generator generator( settings, 5, std::random_device()() );
       size_t count = 0;
-      std::unordered_set<number_t> seq_ids;
+//      std::unordered_set<number_t> seq_ids;
       while ( !EXIT_FLAG )
       {
         auto program = generator.generateProgram();
         auto id = oeis.findSequence( program );
-        if ( id && seq_ids.find( id ) == seq_ids.end() )
+        if ( id /* && seq_ids.find( id ) == seq_ids.end() */)
         {
           Optimizer optimizer;
           optimizer.minimize( program, oeis.sequences[id].full.size() );
-          seq_ids.insert( id );
-          std::stringstream buf;
-          buf << "Found program for " << oeis.sequences[id];
-          Log::get().info( buf.str() );
-          buf.str( "" );
-          buf << "First " << oeis.sequences[id].size() << " terms of " << oeis.sequences[id].id_str() << ": "
-              << static_cast<Sequence>( oeis.sequences[id] );
-          Log::get().debug( buf.str() );
-          db.insert( std::move( program ) );
+          // seq_ids.insert( id );
           std::string file_name = "programs/oeis/" + oeis.sequences[id].id_str() + ".asm";
           bool write_file = true;
           {
@@ -120,7 +112,7 @@ int main( int argc, char *argv[] )
             {
               Parser parser;
               auto existing_program = parser.parse( in );
-              if ( existing_program.ops.size() > 0 && existing_program.ops.size() < program.ops.size() )
+              if ( existing_program.num_ops( false ) > 0 && existing_program.num_ops( false ) <= program.num_ops( false ) )
               {
                 write_file = false;
               }
@@ -128,6 +120,15 @@ int main( int argc, char *argv[] )
           }
           if ( write_file )
           {
+            std::stringstream buf;
+            buf << "Found new program for " << oeis.sequences[id];
+            Log::get().info( buf.str() );
+            buf.str( "" );
+            buf << "First " << oeis.sequences[id].size() << " terms of " << oeis.sequences[id].id_str() << ": "
+                << static_cast<Sequence>( oeis.sequences[id] );
+            Log::get().debug( buf.str() );
+            db.insert( std::move( program ) );
+
             std::ofstream out( file_name );
             out << "; " << oeis.sequences[id] << std::endl;
             out << "; " << oeis.sequences[id].full << std::endl << std::endl;
