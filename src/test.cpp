@@ -125,6 +125,7 @@ void Test::testBinary( const std::string& func, const std::string& file,
   std::cout << "Running tests for " << file << "..." << std::endl;
   Parser parser;
   Settings settings;
+  settings.max_cycles = 10000000; // needed to run ackermann test
   Interpreter interpreter( settings );
   auto program = parser.parse( file );
   for ( size_t i = 0; i < values.size(); i++ )
