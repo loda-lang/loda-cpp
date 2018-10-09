@@ -57,7 +57,15 @@ void Optimizer::minimize( Program& p, size_t num_terms )
   Settings settings;
   settings.num_terms = num_terms;
   Interpreter interpreter( settings );
-  auto target_sequence = interpreter.eval( p );
+  Sequence target_sequence;
+  try
+  {
+    target_sequence = interpreter.eval( p );
+  }
+  catch ( const std::exception& )
+  {
+    return;
+  }
   int removed_ops = 0;
   for ( int i = 0; i < (int) p.ops.size(); ++i )
   {
@@ -67,8 +75,20 @@ void Optimizer::minimize( Program& p, size_t num_terms )
       continue;
     }
     p.ops.erase( p.ops.begin() + i, p.ops.begin() + i + 1 );
-    auto new_sequence = interpreter.eval( p );
-    if ( new_sequence.size() != target_sequence.size() || new_sequence != target_sequence )
+    bool can_remove = true;
+    try
+    {
+      auto new_sequence = interpreter.eval( p );
+      if ( new_sequence.size() != target_sequence.size() || new_sequence != target_sequence )
+      {
+        can_remove = false;
+      }
+    }
+    catch ( const std::exception& )
+    {
+      can_remove = false;
+    }
+    if ( !can_remove )
     {
       p.ops.insert( p.ops.begin() + i, op );
     }

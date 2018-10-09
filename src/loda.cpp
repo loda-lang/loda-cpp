@@ -8,6 +8,7 @@
 #include "test.hpp"
 #include "util.hpp"
 
+#include <chrono>
 #include <csignal>
 #include <fstream>
 #include <sstream>
@@ -95,6 +96,7 @@ int main( int argc, char *argv[] )
       Generator generator( settings, 5, std::random_device()() );
       size_t count = 0;
 //      std::unordered_set<number_t> seq_ids;
+      auto time = std::chrono::steady_clock::now();
       while ( !EXIT_FLAG )
       {
         auto program = generator.generateProgram();
@@ -112,7 +114,8 @@ int main( int argc, char *argv[] )
             {
               Parser parser;
               auto existing_program = parser.parse( in );
-              if ( existing_program.num_ops( false ) > 0 && existing_program.num_ops( false ) <= program.num_ops( false ) )
+              if ( existing_program.num_ops( false ) > 0
+                  && existing_program.num_ops( false ) <= program.num_ops( false ) )
               {
                 write_file = false;
               }
@@ -127,22 +130,30 @@ int main( int argc, char *argv[] )
             buf << "First " << oeis.sequences[id].size() << " terms of " << oeis.sequences[id].id_str() << ": "
                 << static_cast<Sequence>( oeis.sequences[id] );
             Log::get().debug( buf.str() );
-            db.insert( std::move( program ) );
 
             std::ofstream out( file_name );
             out << "; " << oeis.sequences[id] << std::endl;
             out << "; " << oeis.sequences[id].full << std::endl << std::endl;
             Printer r;
             r.print( program, out );
+            try
+            {
+              db.insert( std::move( program ) );
+            }
+            catch ( const std::exception& )
+            {
+              Log::get().error( "Error inserting program into database" );
+            }
           }
         }
-        if ( ++count % 1000 == 0 )
+        ++count;
+        auto time2 = std::chrono::steady_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::seconds>( time2 - time );
+        if ( duration.count() >= 10 )
         {
+          time = time2;
+          Log::get().info( "Generated and tested " + std::to_string( count ) + " programs" );
           generator.mutate( 0.5 );
-        }
-        if ( ++count % 10000 == 0 )
-        {
-          Log::get().info( "Generated " + std::to_string( count ) + " programs" );
           generator.setSeed( std::random_device()() );
         }
       }
