@@ -12,11 +12,12 @@ using MemStack = std::stack<Memory>;
 using PCStack = std::stack<size_t>;
 
 Interpreter::Interpreter( const Settings& settings )
-    : settings( settings )
+    : settings( settings ),
+      is_debug( Log::get().level == Log::Level::DEBUG )
 {
 }
 
-bool Interpreter::run( const Program& p, Memory& mem )
+bool Interpreter::run( const Program& p, Memory& mem ) const
 {
   // check for empty program
   if ( p.ops.empty() )
@@ -35,15 +36,24 @@ bool Interpreter::run( const Program& p, Memory& mem )
 
   Printer printer;
 
-  // loop until stack is empty
   number_t cycles = 0;
+  Memory old_mem, frag, frag_prev, prev;
+  size_t pc, pc_next, ps_begin;
+  number_t s, t, l;
+  Operation lpb;
+
+  // loop until stack is empty
   while ( !pc_stack.empty() )
   {
-    Memory old = mem;
-    size_t pc = pc_stack.top();
+    if ( is_debug )
+    {
+      old_mem = mem;
+    }
+
+    pc = pc_stack.top();
     pc_stack.pop();
     auto& op = p.ops.at( pc );
-    size_t pc_next = pc + 1;
+    pc_next = pc + 1;
 
     switch ( op.type )
     {
@@ -53,28 +63,28 @@ bool Interpreter::run( const Program& p, Memory& mem )
     }
     case Operation::Type::MOV:
     {
-      auto s = get( op.source, mem );
+      s = get( op.source, mem );
       set( op.target, s, mem );
       break;
     }
     case Operation::Type::ADD:
     {
-      auto s = get( op.source, mem );
-      auto t = get( op.target, mem );
+      s = get( op.source, mem );
+      t = get( op.target, mem );
       set( op.target, t + s, mem );
       break;
     }
     case Operation::Type::SUB:
     {
-      auto s = get( op.source, mem );
-      auto t = get( op.target, mem );
+      s = get( op.source, mem );
+      t = get( op.target, mem );
       set( op.target, (t > s) ? (t - s) : 0, mem );
       break;
     }
     case Operation::Type::LPB:
     {
-      auto l = get( op.source, mem );
-      auto s = get( op.target, mem, true );
+      l = get( op.source, mem );
+      s = get( op.target, mem, true );
       loop_stack.push( pc );
       mem_stack.push( mem );
       frag_stack.push( mem.fragment( s, l ) );
@@ -82,17 +92,17 @@ bool Interpreter::run( const Program& p, Memory& mem )
     }
     case Operation::Type::LPE:
     {
-      auto ps_begin = loop_stack.top();
-      auto lpb = p.ops[ps_begin];
-      auto prev = mem_stack.top();
+      ps_begin = loop_stack.top();
+      lpb = p.ops[ps_begin];
+      prev = mem_stack.top();
       mem_stack.pop();
 
-      auto frag_prev = frag_stack.top();
+      frag_prev = frag_stack.top();
       frag_stack.pop();
 
-      auto l = get( lpb.source, mem );
-      auto s = get( lpb.target, mem, true );
-      auto frag = mem.fragment( s, l );
+      l = get( lpb.source, mem );
+      s = get( lpb.target, mem, true );
+      frag = mem.fragment( s, l );
 
       if ( frag < frag_prev )
       {
@@ -123,12 +133,12 @@ bool Interpreter::run( const Program& p, Memory& mem )
       pc_stack.push( pc_next );
     }
 
-    if ( Log::get().level == Log::Level::DEBUG )
+    if ( is_debug )
     {
       std::stringstream buf;
       buf << "Executing ";
       printer.print( op, buf );
-      buf << " " << old << " => " << mem;
+      buf << " " << old_mem << " => " << mem;
       Log::get().debug( buf.str() );
     }
 
@@ -140,7 +150,7 @@ bool Interpreter::run( const Program& p, Memory& mem )
   return true;
 }
 
-number_t Interpreter::get( Operand a, const Memory& mem, bool getAddress )
+number_t Interpreter::get( Operand a, const Memory& mem, bool getAddress ) const
 {
   switch ( a.type )
   {
@@ -165,7 +175,7 @@ number_t Interpreter::get( Operand a, const Memory& mem, bool getAddress )
   {};
 }
 
-void Interpreter::set( Operand a, number_t v, Memory& mem )
+void Interpreter::set( Operand a, number_t v, Memory& mem ) const
 {
   number_t index;
   switch ( a.type )
@@ -188,7 +198,7 @@ void Interpreter::set( Operand a, number_t v, Memory& mem )
   mem.set( index, v );
 }
 
-bool Interpreter::isLessThan( const Memory& m1, const Memory& m2, const std::vector<Operand>& cmpVars )
+bool Interpreter::isLessThan( const Memory& m1, const Memory& m2, const std::vector<Operand>& cmpVars ) const
 {
   for ( Operand v : cmpVars )
   {
@@ -204,18 +214,23 @@ bool Interpreter::isLessThan( const Memory& m1, const Memory& m2, const std::vec
   return false; // equal
 }
 
-Sequence Interpreter::eval( const Program& p )
+Sequence Interpreter::eval( const Program& p, int num_terms ) const
 {
-  Sequence seq;
-  seq.resize( settings.num_terms );
-  for ( number_t i = 0; i < seq.size(); i++ )
+  if ( num_terms < 0 )
   {
-    Memory mem;
+    num_terms = settings.num_terms;
+  }
+  Sequence seq;
+  seq.resize( num_terms );
+  Memory mem;
+  for ( number_t i = 0; i < num_terms; i++ )
+  {
+    mem.clear();
     mem.set( 0, i );
     run( p, mem );
     seq[i] = mem.get( 1 );
   }
-  if ( Log::get().level == Log::Level::DEBUG )
+  if ( is_debug )
   {
     std::stringstream buf;
     buf << "Evaluated program to sequence " << seq;

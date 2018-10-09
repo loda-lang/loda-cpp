@@ -152,7 +152,7 @@ int main( int argc, char *argv[] )
         if ( duration.count() >= 10 )
         {
           time = time2;
-          Log::get().info( "Generated and tested " + std::to_string( count ) + " programs" );
+          Log::get().info( "Generated " + std::to_string( count ) + " programs" );
           generator.mutate( 0.5 );
           generator.setSeed( std::random_device()() );
         }

@@ -171,7 +171,7 @@ number_t Oeis::score( const Sequence& s )
   return 1;
 }
 
-number_t Oeis::findSequence( const Program& p )
+number_t Oeis::findSequence( const Program& p ) const
 {
   Interpreter interpreter( settings );
   try
@@ -181,10 +181,7 @@ number_t Oeis::findSequence( const Program& p )
     if ( it != ids.end() )
     {
       auto expected_full_seq = sequences.at( it->second ).full;
-      auto settings_full = settings;
-      settings_full.num_terms = expected_full_seq.size();
-      Interpreter interpreter_full( settings_full );
-      auto full_seq = interpreter_full.eval( p );
+      auto full_seq = interpreter.eval( p, expected_full_seq.size() );
       if ( full_seq.size() == expected_full_seq.size() && !(full_seq != expected_full_seq) )
       {
         return it->second;
