@@ -68,7 +68,7 @@ Settings::Settings()
     : num_terms( 40 ),
       num_operations( 40 ),
       max_memory( 100000 ),
-      max_cycles( 10000000 )
+      max_cycles( 10000 )
 {
 }
 
