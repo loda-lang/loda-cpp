@@ -43,14 +43,10 @@ Database::Database( const Settings& settings )
 bool Database::insert( Program&& p )
 {
   Optimizer o;
-  o.optimize( p );
+  o.optimize( p, 1 );
 
   Interpreter i( settings );
   Sequence s = i.eval( p );
-  if ( s.linear() )
-  {
-    return false;
-  }
   if ( !programs.empty() && programs.back().second == s )
   {
     return false;
@@ -133,23 +129,18 @@ void Database::save()
       ++program1;
     }
 
-    optimizer.optimize( next_program );
+    optimizer.optimize( next_program, 1 );
 
-    if ( next_sequence.subsequence( 8 ).linear() )
+    if ( next_sequence == last_sequence )
     {
-//      std::cout << "removing linear program" << std::endl;
-    }
-    else if ( next_sequence == last_sequence )
-    {
-//      std::cout << "removing duplicate program" << std::endl;
+      Log::get().warn( "Removing program for duplicate sequence" );
     }
     else if ( next_program == last_program )
     {
-//      std::cout << "removing duplicate program" << std::endl;
+      Log::get().warn( "Removing duplicate program" );
     }
     else
     {
-//      std::cout << "add program for " << next_sequence << std::endl;
       serializer.writeProgram( next_program, new_db );
       last_program = next_program;
       ++program_count;

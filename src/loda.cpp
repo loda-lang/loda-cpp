@@ -20,6 +20,7 @@ void help()
   std::cout << "Usage:       loda <command> <options>" << std::endl;
   std::cout << "Commands:" << std::endl;
   std::cout << "  eval       Evaluate a program to a sequence" << std::endl;
+  std::cout << "  optimize   Optimize a program and print it" << std::endl;
   std::cout << "  insert     Insert a program into the database" << std::endl;
   std::cout << "  generate   Generate random programs and store them in the database" << std::endl;
   std::cout << "  search     Search a program in the database" << std::endl;
@@ -69,7 +70,15 @@ int main( int argc, char *argv[] )
       auto sequence = interpreter.eval( program );
       std::cout << sequence << std::endl;
     }
-
+    else if ( cmd == "optimize" )
+    {
+      Parser parser;
+      Printer printer;
+      Program program = parser.parse( std::string( args.at( 1 ) ) );
+      Optimizer optimizer;
+      optimizer.optimize( program, 1 );
+      printer.print( program, std::cout );
+    }
     else if ( cmd == "insert" )
     {
       Parser a;
@@ -93,6 +102,7 @@ int main( int argc, char *argv[] )
       Oeis oeis( settings );
       oeis.load();
       Database db( settings );
+      Optimizer optimizer;
       Generator generator( settings, 5, std::random_device()() );
       size_t count = 0;
 //      std::unordered_set<number_t> seq_ids;
@@ -100,11 +110,12 @@ int main( int argc, char *argv[] )
       while ( !EXIT_FLAG )
       {
         auto program = generator.generateProgram();
+        optimizer.optimize( program, 1 );
         auto id = oeis.findSequence( program );
         if ( id /* && seq_ids.find( id ) == seq_ids.end() */)
         {
-          Optimizer optimizer;
           optimizer.minimize( program, oeis.sequences[id].full.size() );
+          optimizer.optimize( program, 1 );
           // seq_ids.insert( id );
           std::string file_name = "programs/oeis/" + oeis.sequences[id].id_str() + ".asm";
           bool write_file = true;

@@ -4,11 +4,15 @@
 #include "number.hpp"
 #include "util.hpp"
 
-void Optimizer::optimize( Program& p )
+#include <unordered_set>
+
+void Optimizer::optimize( Program& p, size_t num_initialized_cells )
 {
   removeNops( p );
   while ( removeEmptyLoops( p ) )
     ;
+  simplifyOperands( p, num_initialized_cells );
+  mergeOps( p );
 }
 
 bool Optimizer::removeNops( Program& p )
@@ -50,6 +54,101 @@ bool Optimizer::removeEmptyLoops( Program& p )
     }
   }
   return removed;
+}
+
+bool Optimizer::mergeOps( Program& p )
+{
+  bool merged = false;
+  for ( size_t i = 0; i < p.ops.size(); i++ )
+  {
+    bool do_merge = false;
+    if ( i + 1 < p.ops.size() && p.ops[i].type == p.ops[i + 1].type && p.ops[i].target == p.ops[i + 1].target
+        && p.ops[i].source.type == Operand::Type::CONSTANT && p.ops[i + 1].source.type == Operand::Type::CONSTANT )
+    {
+      if ( p.ops[i].type == Operation::Type::ADD )
+      {
+        p.ops[i].source.value += p.ops[i + 1].source.value;
+        do_merge = true;
+      }
+    }
+    if ( do_merge )
+    {
+      if ( Log::get().level == Log::Level::DEBUG )
+      {
+        Log::get().debug( "Merging similar consecutive operation" );
+      }
+      p.ops.erase( p.ops.begin() + i + 1, p.ops.begin() + i + 2 );
+      --i;
+      merged = true;
+    }
+  }
+
+  return merged;
+}
+
+inline void simplifyOperand( Operand& op, std::unordered_set<number_t>& initialized_cells, bool is_source )
+{
+  switch ( op.type )
+  {
+  case Operand::Type::CONSTANT:
+    break;
+  case Operand::Type::MEM_ACCESS_DIRECT:
+    if ( initialized_cells.find( op.value ) == initialized_cells.end() && is_source )
+    {
+      op.type = Operand::Type::CONSTANT;
+      op.value = 0;
+    }
+    break;
+  case Operand::Type::MEM_ACCESS_INDIRECT:
+    if ( initialized_cells.find( op.value ) == initialized_cells.end() )
+    {
+      op.type = Operand::Type::MEM_ACCESS_DIRECT;
+      op.value = 0;
+    }
+    break;
+  }
+}
+
+void Optimizer::simplifyOperands( Program& p, size_t num_initialized_cells )
+{
+  std::unordered_set<number_t> initialized_cells;
+  for ( number_t i = 0; i < num_initialized_cells; ++i )
+  {
+    initialized_cells.insert( i );
+  }
+  for ( auto& op : p.ops )
+  {
+    switch ( op.type )
+    {
+    case Operation::Type::ADD:
+    case Operation::Type::SUB:
+    case Operation::Type::MOV:
+    {
+      simplifyOperand( op.source, initialized_cells, true );
+      simplifyOperand( op.target, initialized_cells, false );
+      switch ( op.target.type )
+      {
+      case Operand::Type::MEM_ACCESS_DIRECT:
+        initialized_cells.insert( op.target.value );
+        break;
+      case Operand::Type::MEM_ACCESS_INDIRECT:
+        return; // don't know at this point which cell is written to
+      case Operand::Type::CONSTANT:
+        Log::get().error( "invalid program" );
+        break;
+      }
+      break;
+    }
+
+    case Operation::Type::NOP:
+    case Operation::Type::DBG:
+      break;
+
+    default:
+      return; // not know what happens in other cases
+
+    }
+  }
 }
 
 void Optimizer::minimize( Program& p, size_t num_terms )
@@ -102,5 +201,5 @@ void Optimizer::minimize( Program& p, size_t num_terms )
   {
     Log::get().debug( "Removed " + std::to_string( removed_ops ) + " operations during minimization" );
   }
-  optimize( p );
+  optimize( p, 1 );
 }

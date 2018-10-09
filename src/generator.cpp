@@ -1,5 +1,6 @@
 #include "generator.hpp"
 
+#include "number.hpp"
 #include "interpreter.hpp"
 #include "optimizer.hpp"
 #include "printer.hpp"
@@ -221,8 +222,6 @@ Program Generator::generateProgram( size_t initialState )
       p.ops.emplace( p.ops.begin() + position + j, std::move( seed.ops[j] ) );
     }
   }
-  Optimizer o;
-  o.optimize( p );
   return p;
 }
 
@@ -258,7 +257,7 @@ Program Finder::find( Scorer& scorer, size_t seed, size_t max_iterations )
 
   Interpreter interpreter( settings );
 //  FixedSequenceScorer scorer( target );
-  Printer printer;
+//  Printer printer;
 
   Sequence s;
   for ( size_t iteration = 0; iteration < max_iterations; iteration++ )

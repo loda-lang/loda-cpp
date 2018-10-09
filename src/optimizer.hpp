@@ -7,12 +7,18 @@ class Optimizer
 {
 public:
 
-  void optimize( Program& p );
+  void optimize( Program& p, size_t num_initialized_cells );
+
+  void minimize( Program& p, size_t num_terms );
+
+private:
 
   bool removeNops( Program& p );
 
   bool removeEmptyLoops( Program& p );
 
-  void minimize( Program& p, size_t num_terms );
+  bool mergeOps( Program& p );
+
+  void simplifyOperands( Program& p, size_t num_initialized_cells );
 
 };
