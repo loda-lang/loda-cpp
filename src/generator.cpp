@@ -20,6 +20,18 @@ std::discrete_distribution<> EqualDist( size_t size )
   return std::discrete_distribution<>( p.begin(), p.end() );
 }
 
+std::discrete_distribution<> ExpDist( size_t size )
+{
+  std::vector<double> p( size );
+  double v = 1.0;
+  for ( int i = size - 1; i >= 0; --i )
+  {
+    p[i] = v;
+    v *= 2.0;
+  }
+  return std::discrete_distribution<>( p.begin(), p.end() );
+}
+
 void printDist( const std::discrete_distribution<>& d )
 {
   auto probs = d.probabilities();
@@ -103,9 +115,9 @@ void MutateDist( std::discrete_distribution<>& d, std::mt19937& gen )
 State::State( size_t numStates )
     : operationDist( EqualDist( 4 ) ),
       targetTypeDist( EqualDist( 2 ) ),
-      targetValueDist( EqualDist( VALUE_RANGE ) ),
+      targetValueDist( ExpDist( VALUE_RANGE ) ),
       sourceTypeDist( EqualDist( 3 ) ),
-      sourceValueDist( EqualDist( VALUE_RANGE ) ),
+      sourceValueDist( ExpDist( VALUE_RANGE ) ),
       transitionDist( EqualDist( numStates ) ),
       positionDist( EqualDist( POSITION_RANGE ) )
 {
