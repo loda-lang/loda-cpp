@@ -39,7 +39,7 @@ bool Interpreter::run( const Program& p, Memory& mem ) const
   number_t cycles = 0;
   Memory old_mem, frag, frag_prev, prev;
   size_t pc, pc_next, ps_begin;
-  number_t s, t, l;
+  number_t s, t;
   Operation lpb;
 
   // loop until stack is empty
@@ -83,11 +83,9 @@ bool Interpreter::run( const Program& p, Memory& mem ) const
     }
     case Operation::Type::LPB:
     {
-      l = get( op.source, mem );
-      s = get( op.target, mem, true );
       loop_stack.push( pc );
       mem_stack.push( mem );
-      frag_stack.push( mem.fragment( s, l ) );
+      frag_stack.push( getLoopFragment( mem, op ) );
       break;
     }
     case Operation::Type::LPE:
@@ -100,9 +98,15 @@ bool Interpreter::run( const Program& p, Memory& mem ) const
       frag_prev = frag_stack.top();
       frag_stack.pop();
 
-      l = get( lpb.source, mem );
-      s = get( lpb.target, mem, true );
-      frag = mem.fragment( s, l );
+      frag = getLoopFragment( mem, lpb );
+      if ( frag.size() > frag_prev.size() )
+      {
+        frag = frag.fragment( 0, frag_prev.size() );
+      }
+      else if ( frag.size() < frag_prev.size() )
+      {
+        frag_prev = frag_prev.fragment( 0, frag.size() );
+      }
 
       if ( frag < frag_prev )
       {
@@ -144,7 +148,7 @@ bool Interpreter::run( const Program& p, Memory& mem ) const
 
     if ( ++cycles >= settings.max_cycles )
     {
-      Log::get().error( "Program not terminated after " + std::to_string( cycles ) + " cycles", true );
+      Log::get().error( "Program did not terminated after " + std::to_string( cycles ) + " cycles", true );
     }
   }
   return true;
@@ -193,7 +197,7 @@ void Interpreter::set( Operand a, number_t v, Memory& mem ) const
   }
   if ( index > settings.max_memory )
   {
-    Log::get().error( "Memory index " + std::to_string( index ) + " is out of range", true );
+    Log::get().error( "Memory index out of range: " + std::to_string( index ), true );
   }
   mem.set( index, v );
 }
@@ -212,6 +216,17 @@ bool Interpreter::isLessThan( const Memory& m1, const Memory& m2, const std::vec
     }
   }
   return false; // equal
+}
+
+Memory Interpreter::getLoopFragment( const Memory& mem, const Operation& op ) const
+{
+  auto length = get( op.source, mem );
+  auto start = get( op.target, mem, true );
+  if ( length > settings.max_memory )
+  {
+    Log::get().error( "Maximum memory fragment length exceeded: " + std::to_string( length ), true );
+  }
+  return mem.fragment( start, length );
 }
 
 Sequence Interpreter::eval( const Program& p, int num_terms ) const
