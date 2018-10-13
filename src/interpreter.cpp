@@ -9,7 +9,7 @@
 #include "number.hpp"
 
 using MemStack = std::stack<Memory>;
-using PCStack = std::stack<size_t>;
+using SizeStack = std::stack<size_t>;
 
 Interpreter::Interpreter( const Settings& settings )
     : settings( settings ),
@@ -26,8 +26,9 @@ bool Interpreter::run( const Program& p, Memory& mem ) const
   }
 
   // define stacks
-  PCStack pc_stack;
-  PCStack loop_stack;
+  SizeStack pc_stack;
+  SizeStack loop_stack;
+  SizeStack frag_length_stack;
   MemStack mem_stack;
   MemStack frag_stack;
 
@@ -39,7 +40,7 @@ bool Interpreter::run( const Program& p, Memory& mem ) const
   number_t cycles = 0;
   Memory old_mem, frag, frag_prev, prev;
   size_t pc, pc_next, ps_begin;
-  number_t s, t;
+  number_t source, target, start, length, length2;
   Operation lpb;
 
   // loop until stack is empty
@@ -63,29 +64,37 @@ bool Interpreter::run( const Program& p, Memory& mem ) const
     }
     case Operation::Type::MOV:
     {
-      s = get( op.source, mem );
-      set( op.target, s, mem );
+      source = get( op.source, mem );
+      set( op.target, source, mem );
       break;
     }
     case Operation::Type::ADD:
     {
-      s = get( op.source, mem );
-      t = get( op.target, mem );
-      set( op.target, t + s, mem );
+      source = get( op.source, mem );
+      target = get( op.target, mem );
+      set( op.target, target + source, mem );
       break;
     }
     case Operation::Type::SUB:
     {
-      s = get( op.source, mem );
-      t = get( op.target, mem );
-      set( op.target, (t > s) ? (t - s) : 0, mem );
+      source = get( op.source, mem );
+      target = get( op.target, mem );
+      set( op.target, (target > source) ? (target - source) : 0, mem );
       break;
     }
     case Operation::Type::LPB:
     {
+      length = get( op.source, mem );
+      start = get( op.target, mem, true );
+      if ( length > settings.max_memory )
+      {
+        Log::get().error( "Maximum memory fragment length exceeded: " + std::to_string( length ), true );
+      }
+      frag = mem.fragment( start, length );
       loop_stack.push( pc );
       mem_stack.push( mem );
-      frag_stack.push( getLoopFragment( mem, op ) );
+      frag_stack.push( frag );
+      frag_length_stack.push( length );
       break;
     }
     case Operation::Type::LPE:
@@ -98,21 +107,24 @@ bool Interpreter::run( const Program& p, Memory& mem ) const
       frag_prev = frag_stack.top();
       frag_stack.pop();
 
-      frag = getLoopFragment( mem, lpb );
-      if ( frag.size() > frag_prev.size() )
+      length = frag_length_stack.top();
+      frag_length_stack.pop();
+
+      start = get( lpb.target, mem, true );
+      length2 = get( lpb.source, mem );
+      if ( length > length2 )
       {
-        frag = frag.fragment( 0, frag_prev.size() );
+        length = length2;
       }
-      else if ( frag.size() < frag_prev.size() )
-      {
-        frag_prev = frag_prev.fragment( 0, frag.size() );
-      }
+
+      frag = mem.fragment( start, length );
 
       if ( frag < frag_prev )
       {
         pc_next = ps_begin + 1;
         mem_stack.push( mem );
         frag_stack.push( frag );
+        frag_length_stack.push( length );
       }
       else
       {
@@ -216,17 +228,6 @@ bool Interpreter::isLessThan( const Memory& m1, const Memory& m2, const std::vec
     }
   }
   return false; // equal
-}
-
-Memory Interpreter::getLoopFragment( const Memory& mem, const Operation& op ) const
-{
-  auto length = get( op.source, mem );
-  auto start = get( op.target, mem, true );
-  if ( length > settings.max_memory )
-  {
-    Log::get().error( "Maximum memory fragment length exceeded: " + std::to_string( length ), true );
-  }
-  return mem.fragment( start, length );
 }
 
 Sequence Interpreter::eval( const Program& p, int num_terms ) const

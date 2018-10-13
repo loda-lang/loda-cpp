@@ -38,7 +38,7 @@ size_t Sequence::distinct_values() const
 bool Sequence::operator<( const Sequence& m ) const
 {
   number_t length = size() < m.size() ? size() : m.size();
-  for ( number_t i = 0; i < length; i++ )
+  for ( number_t i = 0; i < length; ++i )
   {
     if ( (*this)[i] < m[i] )
     {
@@ -55,7 +55,7 @@ bool Sequence::operator<( const Sequence& m ) const
 bool Sequence::operator!=( const Sequence& m ) const
 {
   number_t length = size() < m.size() ? size() : m.size();
-  for ( number_t i = 0; i < length; i++ )
+  for ( number_t i = 0; i < length; ++i )
   {
     if ( (*this)[i] != m[i] )
     {
@@ -67,7 +67,7 @@ bool Sequence::operator!=( const Sequence& m ) const
 
 std::ostream& operator<<( std::ostream& out, const Sequence& seq )
 {
-  for ( number_t i = 0; i < seq.size(); i++ )
+  for ( number_t i = 0; i < seq.size(); ++i )
   {
     if ( i > 0 ) out << ",";
     out << seq[i];
@@ -98,9 +98,13 @@ void Memory::set( number_t index, number_t value )
 Memory Memory::fragment( number_t start, number_t length ) const
 {
   Memory f;
-  for ( number_t i = 0; i < length; i++ )
+  for ( number_t i = 0; i < length; ++i )
   {
-    f.set( i, get( start + i ) );
+    if ( start + i >= size() )
+    {
+      break;
+    }
+    f.set( i, (*this)[start + i] );
   }
   return f;
 }
@@ -108,7 +112,7 @@ Memory Memory::fragment( number_t start, number_t length ) const
 bool Memory::operator<( const Memory& m ) const
 {
   number_t length = size() > m.size() ? size() : m.size();
-  for ( number_t i = 0; i < length; i++ )
+  for ( number_t i = 0; i < length; ++i )
   {
     if ( get( i ) < m.get( i ) )
     {
@@ -125,7 +129,7 @@ bool Memory::operator<( const Memory& m ) const
 bool Memory::operator==( const Memory& m ) const
 {
   number_t length = size() > m.size() ? size() : m.size();
-  for ( number_t i = 0; i < length; i++ )
+  for ( number_t i = 0; i < length; ++i )
   {
     if ( get( i ) != m.get( i ) )
     {
@@ -143,7 +147,7 @@ bool Memory::operator!=( const Memory& m ) const
 std::ostream& operator<<( std::ostream& out, const Memory& m )
 {
   out << "[";
-  for ( number_t i = 0; i < m.size(); i++ )
+  for ( number_t i = 0; i < m.size(); ++i )
   {
     if ( i > 0 ) out << ",";
     out << m[i];
