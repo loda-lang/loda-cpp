@@ -6,6 +6,7 @@
 #include "serializer.hpp"
 #include "util.hpp"
 
+#include <algorithm>
 #include <fstream>
 #include <sstream>
 

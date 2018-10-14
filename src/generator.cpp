@@ -5,6 +5,8 @@
 #include "optimizer.hpp"
 #include "printer.hpp"
 
+#include <algorithm>
+
 #define VALUE_RANGE 8
 #define POSITION_RANGE 100
 
