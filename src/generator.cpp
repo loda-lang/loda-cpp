@@ -116,9 +116,9 @@ void MutateDist( std::discrete_distribution<>& d, std::mt19937& gen )
 
 State::State( size_t numStates )
     : operationDist( EqualDist( 4 ) ),
-      targetTypeDist( EqualDist( 2 ) ),
+      targetTypeDist( ExpDist( 2 ) ),
       targetValueDist( ExpDist( VALUE_RANGE ) ),
-      sourceTypeDist( EqualDist( 3 ) ),
+      sourceTypeDist( ExpDist( 3 ) ),
       sourceValueDist( ExpDist( VALUE_RANGE ) ),
       transitionDist( EqualDist( numStates ) ),
       positionDist( EqualDist( POSITION_RANGE ) )
@@ -174,7 +174,8 @@ void Generator::mutate( double delta )
 void Generator::generateOperations( Seed& seed )
 {
   auto& s = states.at( seed.state );
-  Operand::Type targetType, sourceType;
+  auto targetType = Operand::Type::MEM_ACCESS_DIRECT;
+  auto sourceType = Operand::Type::MEM_ACCESS_DIRECT;
   switch ( s.targetTypeDist( gen ) )
   {
   case 0:
@@ -187,10 +188,10 @@ void Generator::generateOperations( Seed& seed )
   switch ( s.sourceTypeDist( gen ) )
   {
   case 0:
-    sourceType = Operand::Type::CONSTANT;
+    sourceType = Operand::Type::MEM_ACCESS_DIRECT;
     break;
   case 1:
-    sourceType = Operand::Type::MEM_ACCESS_DIRECT;
+    sourceType = Operand::Type::CONSTANT;
     break;
   case 2:
     sourceType = Operand::Type::MEM_ACCESS_INDIRECT;
@@ -342,6 +343,7 @@ Program Finder::find( Scorer& scorer, size_t seed, size_t max_iterations )
     generators = std::move( new_generators );
   }
 
+  return {};
 }
 
 Scorer::~Scorer()
