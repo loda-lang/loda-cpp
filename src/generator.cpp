@@ -7,11 +7,10 @@
 
 #include <algorithm>
 
-#define VALUE_RANGE 8
 #define POSITION_RANGE 100
 
 State::State()
-    : State( 0 )
+    : State( 0, 4 )
 {
 }
 
@@ -114,12 +113,12 @@ void MutateDist( std::discrete_distribution<>& d, std::mt19937& gen )
   d = std::discrete_distribution<>( p2.begin(), p2.end() );
 }
 
-State::State( size_t numStates )
+State::State( size_t numStates, size_t maxConstant )
     : operationDist( EqualDist( 4 ) ),
       targetTypeDist( ExpDist( 2 ) ),
-      targetValueDist( ExpDist( VALUE_RANGE ) ),
+      targetValueDist( EqualDist( maxConstant + 1 ) ),
       sourceTypeDist( ExpDist( 3 ) ),
-      sourceValueDist( ExpDist( VALUE_RANGE ) ),
+      sourceValueDist( EqualDist( maxConstant + 1 ) ),
       transitionDist( EqualDist( numStates ) ),
       positionDist( EqualDist( POSITION_RANGE ) )
 {
@@ -142,7 +141,7 @@ Generator::Generator( const Settings& settings, size_t numStates, int64_t seed )
   states.resize( numStates );
   for ( number_t state = 0; state < numStates; state++ )
   {
-    states[state] = State( numStates );
+    states[state] = State( numStates, settings.max_constant );
   }
   setSeed( seed );
 }

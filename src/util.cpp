@@ -68,7 +68,8 @@ Settings::Settings()
     : num_terms( 40 ),
       num_operations( 40 ),
       max_memory( 100000 ),
-      max_cycles( 10000 )
+      max_cycles( 10000 ),
+      max_constant( 4 )
 {
 }
 
@@ -79,6 +80,7 @@ enum class Option
   NUM_OPERATIONS,
   MAX_MEMORY,
   MAX_CYCLES,
+  MAX_CONSTANT,
   LOG_LEVEL
 };
 
@@ -90,7 +92,7 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
   {
     std::string arg( argv[i] );
     if ( option == Option::NUM_TERMS || option == Option::NUM_OPERATIONS || option == Option::MAX_MEMORY
-        || option == Option::MAX_CYCLES )
+        || option == Option::MAX_CYCLES || option == Option::MAX_CONSTANT )
     {
       std::stringstream s( arg );
       int val;
@@ -112,6 +114,9 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
         break;
       case Option::MAX_CYCLES:
         max_cycles = val;
+        break;
+      case Option::MAX_CONSTANT:
+        max_constant = val;
         break;
       case Option::LOG_LEVEL:
       case Option::NONE:
@@ -160,6 +165,10 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
       else if ( opt == "c" )
       {
         option = Option::MAX_CYCLES;
+      }
+      else if ( opt == "n" )
+      {
+        option = Option::MAX_CONSTANT;
       }
       else if ( opt == "l" )
       {

@@ -35,6 +35,7 @@ void help()
   std::cout << "  -m         Maximum number of memory cells (default: " << settings.max_memory << ")" << std::endl;
   std::cout << "  -c         Maximum number of interpreter cycles (default: " << settings.max_cycles << ")"
       << std::endl;
+  std::cout << "  -n         Maximum constant (default: " << settings.max_constant << ")" << std::endl;
   std::cout << "  -l         Log level (values: debug, info, warn, error)" << std::endl;
 }
 
@@ -169,6 +170,15 @@ int main( int argc, char *argv[] )
         }
       }
       db.save();
+    }
+    else if ( cmd == "genone" )
+    {
+      Optimizer optimizer;
+      Generator generator( settings, 5, std::random_device()() );
+      auto program = generator.generateProgram();
+      optimizer.optimize( program, 1 );
+      Printer r;
+      r.print( program, std::cout );
     }
     else
     {

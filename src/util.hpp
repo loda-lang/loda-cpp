@@ -36,6 +36,7 @@ public:
   size_t num_operations;
   size_t max_memory;
   size_t max_cycles;
+  size_t max_constant;
 
   Settings();
 

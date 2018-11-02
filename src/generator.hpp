@@ -12,7 +12,7 @@ public:
 
   State();
 
-  State( size_t numStates );
+  State( size_t numStates, size_t maxConstant );
 
   std::discrete_distribution<> operationDist;
   std::discrete_distribution<> targetTypeDist;
