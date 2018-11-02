@@ -97,6 +97,7 @@ void Test::oeis()
       Parser parser;
       Program program = parser.parse( file );
       Settings settings;
+      settings.max_memory = 1000000;
       settings.num_terms = s.full.size();
       Interpreter interpreter( settings );
       Sequence result = interpreter.eval( program );
