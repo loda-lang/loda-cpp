@@ -106,10 +106,10 @@ void Test::all()
 {
 //  Iterate();
 //  Find();
+  oeis();
   fibonacci();
   num_divisors();
   exponentiation();
-  oeis();
   ackermann();
 }
 
