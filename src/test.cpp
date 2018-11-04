@@ -102,15 +102,61 @@ void Test::oeis()
   std::cout << std::endl;
 }
 
+void Test::primes()
+{
+  int n = 1000, i = 3, count, c;
+  std::vector<size_t> primes;
+  primes.push_back( 2 );
+  for ( count = 2; count <= n; )
+  {
+    for ( c = 2; c <= i - 1; c++ )
+    {
+      if ( i % c == 0 ) break;
+    }
+    if ( c == i )
+    {
+      primes.push_back( i );
+      count++;
+    }
+    i++;
+  }
+
+  size_t index = 0;
+  for ( auto p : primes )
+  {
+/*    std::cout << "P= " << p << std::endl;
+    std::cout << "R= ";
+    for ( auto r : primes )
+    {
+      std::cout << (p % r) << " ";
+      if ( r == p ) break;
+    }
+    std::cout << std::endl;
+*/    if ( p == primes.back() ) continue;
+    size_t diff = primes.at( index + 1 ) - p;
+    std::cout << "D(" << p << ")= ";
+    for ( auto d : primes )
+    {
+      if ((diff / d) == 0) break;
+      std::cout << (diff / d) << " ";
+      if ( d == p ) break;
+    }
+//    std::cout << std::endl;
+    std::cout << std::endl;
+    index++;
+  }
+}
+
 void Test::all()
 {
 //  Iterate();
 //  Find();
-  oeis();
-  fibonacci();
-  num_divisors();
-  exponentiation();
-  ackermann();
+//  primes();
+   oeis();
+   fibonacci();
+   num_divisors();
+   exponentiation();
+   ackermann();
 }
 
 void Test::testBinary( const std::string& func, const std::string& file,
