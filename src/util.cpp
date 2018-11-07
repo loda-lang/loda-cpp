@@ -69,7 +69,8 @@ Settings::Settings()
       num_operations( 40 ),
       max_memory( 100000 ),
       max_cycles( 10000 ),
-      max_constant( 4 )
+      max_constant( 4 ),
+      operation_types( "asml" )
 {
 }
 
@@ -81,6 +82,7 @@ enum class Option
   MAX_MEMORY,
   MAX_CYCLES,
   MAX_CONSTANT,
+  OPERATION_TYPES,
   LOG_LEVEL
 };
 
@@ -119,9 +121,15 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
         max_constant = val;
         break;
       case Option::LOG_LEVEL:
+      case Option::OPERATION_TYPES:
       case Option::NONE:
         break;
       }
+      option = Option::NONE;
+    }
+    else if ( option == Option::OPERATION_TYPES )
+    {
+      operation_types = arg;
       option = Option::NONE;
     }
     else if ( option == Option::LOG_LEVEL )
@@ -146,6 +154,7 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
       {
         Log::get().error( "Unknown log level: " + arg );
       }
+      option = Option::NONE;
     }
     else if ( arg.at( 0 ) == '-' )
     {
@@ -169,6 +178,10 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
       else if ( opt == "n" )
       {
         option = Option::MAX_CONSTANT;
+      }
+      else if ( opt == "o" )
+      {
+        option = Option::OPERATION_TYPES;
       }
       else if ( opt == "l" )
       {

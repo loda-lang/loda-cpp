@@ -28,15 +28,17 @@ void help()
   std::cout << "  sequences  Print all sequences in the database" << std::endl;
   std::cout << "  test       Run test suite" << std::endl;
   std::cout << "  help       Print this help text" << std::endl;
-  std::cout << "Options:" << std::endl;
+  std::cout << "General options:" << std::endl;
+  std::cout << "  -l         Log level (values: debug, info, warn, error)" << std::endl;
   std::cout << "  -t         Number of sequence terms (default: " << settings.num_terms << ")" << std::endl;
-  std::cout << "  -p         Number of operations per generated program (default: " << settings.num_operations << ")"
-      << std::endl;
-  std::cout << "  -m         Maximum number of memory cells (default: " << settings.max_memory << ")" << std::endl;
+  std::cout << "Generator options:" << std::endl;
   std::cout << "  -c         Maximum number of interpreter cycles (default: " << settings.max_cycles << ")"
       << std::endl;
+  std::cout << "  -m         Maximum number of memory cells (default: " << settings.max_memory << ")" << std::endl;
   std::cout << "  -n         Maximum constant (default: " << settings.max_constant << ")" << std::endl;
-  std::cout << "  -l         Log level (values: debug, info, warn, error)" << std::endl;
+  std::cout << "  -o         Operation types (default: " << settings.operation_types << ")" << std::endl;
+  std::cout << "  -p         Number of operations per program (default: " << settings.num_operations << ")"
+      << std::endl;
 }
 
 volatile sig_atomic_t EXIT_FLAG = 0;

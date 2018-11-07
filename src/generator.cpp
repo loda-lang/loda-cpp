@@ -10,7 +10,7 @@
 #define POSITION_RANGE 100
 
 State::State()
-    : State( 0, 4 )
+    : State( 0, 4, 4 )
 {
 }
 
@@ -113,8 +113,8 @@ void MutateDist( std::discrete_distribution<>& d, std::mt19937& gen )
   d = std::discrete_distribution<>( p2.begin(), p2.end() );
 }
 
-State::State( size_t numStates, size_t maxConstant )
-    : operationDist( EqualDist( 4 ) ),
+State::State( size_t numStates, size_t maxConstant, size_t num_operation_types )
+    : operationDist( EqualDist( num_operation_types ) ),
       targetTypeDist( ExpDist( 2 ) ),
       targetValueDist( EqualDist( maxConstant + 1 ) ),
       sourceTypeDist( ExpDist( 3 ) ),
@@ -138,10 +138,38 @@ State State::operator+( const State& other )
 Generator::Generator( const Settings& settings, size_t numStates, int64_t seed )
     : settings( settings )
 {
+  for ( char c : settings.operation_types )
+  {
+    switch ( c )
+    {
+    case 'a':
+    case 'A':
+      operation_types.push_back( Operation::Type::ADD );
+      break;
+    case 's':
+    case 'S':
+      operation_types.push_back( Operation::Type::SUB );
+      break;
+    case 'm':
+    case 'M':
+      operation_types.push_back( Operation::Type::MOV );
+      break;
+    case 'l':
+    case 'L':
+      operation_types.push_back( Operation::Type::LPB );
+      break;
+    default:
+      Log::get().error( "Unknown operation type: " + std::to_string( c ), true );
+    }
+  }
+  if ( operation_types.empty() )
+  {
+    Log::get().error( "No operation types", true );
+  }
   states.resize( numStates );
   for ( number_t state = 0; state < numStates; state++ )
   {
-    states[state] = State( numStates, settings.max_constant );
+    states[state] = State( numStates, settings.max_constant, operation_types.size() );
   }
   setSeed( seed );
 }
@@ -202,22 +230,13 @@ void Generator::generateOperations( Seed& seed )
   Operand so( sourceType, sourceValue );
 
   seed.ops.clear();
-  switch ( s.operationDist( gen ) )
+  auto op_type = operation_types.at( s.operationDist( gen ) );
+  seed.ops.push_back( Operation( op_type, to, so ) );
+  if ( op_type == Operation::Type::LPB )
   {
-  case 0:
-    seed.ops.push_back( Operation( Operation::Type::MOV, to, so ) );
-    break;
-  case 1:
-    seed.ops.push_back( Operation( Operation::Type::ADD, to, so ) );
-    break;
-  case 2:
-    seed.ops.push_back( Operation( Operation::Type::SUB, to, so ) );
-    break;
-  case 3:
-    seed.ops.push_back( Operation( Operation::Type::LPB, to, so ) );
     seed.ops.push_back( Operation( Operation::Type::LPE ) );
-    break;
   }
+
   seed.position = static_cast<double>( s.positionDist( gen ) ) / POSITION_RANGE;
   seed.state = s.transitionDist( gen );
 }
@@ -342,7 +361,8 @@ Program Finder::find( Scorer& scorer, size_t seed, size_t max_iterations )
     generators = std::move( new_generators );
   }
 
-  return {};
+  return
+  {};
 }
 
 Scorer::~Scorer()

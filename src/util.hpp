@@ -37,6 +37,7 @@ public:
   size_t max_memory;
   size_t max_cycles;
   size_t max_constant;
+  std::string operation_types;
 
   Settings();
 
