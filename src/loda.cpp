@@ -37,6 +37,7 @@ void help()
   std::cout << "  -m         Maximum number of memory cells (default: " << settings.max_memory << ")" << std::endl;
   std::cout << "  -n         Maximum constant (default: " << settings.max_constant << ")" << std::endl;
   std::cout << "  -o         Operation types (default: " << settings.operation_types << ")" << std::endl;
+  std::cout << "  -a         Operand types (default: " << settings.operand_types << ")" << std::endl;
   std::cout << "  -p         Number of operations per program (default: " << settings.num_operations << ")"
       << std::endl;
 }

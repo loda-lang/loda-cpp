@@ -38,6 +38,7 @@ public:
   size_t max_cycles;
   size_t max_constant;
   std::string operation_types;
+  std::string operand_types;
 
   Settings();
 

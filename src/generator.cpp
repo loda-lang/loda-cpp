@@ -10,7 +10,7 @@
 #define POSITION_RANGE 100
 
 State::State()
-    : State( 0, 4, 4 )
+    : State( 0, 4, 4, 2, 3 )
 {
 }
 
@@ -113,11 +113,12 @@ void MutateDist( std::discrete_distribution<>& d, std::mt19937& gen )
   d = std::discrete_distribution<>( p2.begin(), p2.end() );
 }
 
-State::State( size_t numStates, size_t maxConstant, size_t num_operation_types )
+State::State( size_t numStates, size_t maxConstant, size_t num_operation_types, size_t num_target_types,
+    size_t num_source_types )
     : operationDist( EqualDist( num_operation_types ) ),
-      targetTypeDist( ExpDist( 2 ) ),
+      targetTypeDist( ExpDist( num_target_types ) ),
       targetValueDist( EqualDist( maxConstant + 1 ) ),
-      sourceTypeDist( ExpDist( 3 ) ),
+      sourceTypeDist( ExpDist( num_source_types ) ),
       sourceValueDist( EqualDist( maxConstant + 1 ) ),
       transitionDist( EqualDist( numStates ) ),
       positionDist( EqualDist( POSITION_RANGE ) )
@@ -166,10 +167,43 @@ Generator::Generator( const Settings& settings, size_t numStates, int64_t seed )
   {
     Log::get().error( "No operation types", true );
   }
+
+  for ( char c : settings.operand_types )
+  {
+    switch ( c )
+    {
+    case 'c':
+    case 'C':
+      source_operand_types.push_back( Operand::Type::CONSTANT );
+      break;
+    case 'd':
+    case 'D':
+      source_operand_types.push_back( Operand::Type::MEM_ACCESS_DIRECT );
+      target_operand_types.push_back( Operand::Type::MEM_ACCESS_DIRECT );
+      break;
+    case 'i':
+    case 'I':
+      source_operand_types.push_back( Operand::Type::MEM_ACCESS_INDIRECT );
+      target_operand_types.push_back( Operand::Type::MEM_ACCESS_INDIRECT );
+      break;
+    default:
+      Log::get().error( "Unknown operand type: " + std::to_string( c ), true );
+    }
+  }
+  if ( source_operand_types.empty() )
+  {
+    Log::get().error( "No source operation types", true );
+  }
+  if ( target_operand_types.empty() )
+  {
+    Log::get().error( "No source operation types", true );
+  }
+
   states.resize( numStates );
   for ( number_t state = 0; state < numStates; state++ )
   {
-    states[state] = State( numStates, settings.max_constant, operation_types.size() );
+    states[state] = State( numStates, settings.max_constant, operation_types.size(), target_operand_types.size(),
+        source_operand_types.size() );
   }
   setSeed( seed );
 }
@@ -201,29 +235,8 @@ void Generator::mutate( double delta )
 void Generator::generateOperations( Seed& seed )
 {
   auto& s = states.at( seed.state );
-  auto targetType = Operand::Type::MEM_ACCESS_DIRECT;
-  auto sourceType = Operand::Type::MEM_ACCESS_DIRECT;
-  switch ( s.targetTypeDist( gen ) )
-  {
-  case 0:
-    targetType = Operand::Type::MEM_ACCESS_DIRECT;
-    break;
-  case 1:
-    targetType = Operand::Type::MEM_ACCESS_INDIRECT;
-    break;
-  }
-  switch ( s.sourceTypeDist( gen ) )
-  {
-  case 0:
-    sourceType = Operand::Type::MEM_ACCESS_DIRECT;
-    break;
-  case 1:
-    sourceType = Operand::Type::CONSTANT;
-    break;
-  case 2:
-    sourceType = Operand::Type::MEM_ACCESS_INDIRECT;
-    break;
-  }
+  auto targetType = target_operand_types.at( s.targetTypeDist( gen ) );
+  auto sourceType = source_operand_types.at( s.sourceTypeDist( gen ) );
   number_t targetValue = s.targetValueDist( gen );
   number_t sourceValue = s.sourceValueDist( gen );
   Operand to( targetType, targetValue );

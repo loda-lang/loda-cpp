@@ -70,7 +70,8 @@ Settings::Settings()
       max_memory( 100000 ),
       max_cycles( 10000 ),
       max_constant( 4 ),
-      operation_types( "asml" )
+      operation_types( "asml" ),
+      operand_types( "cdi" )
 {
 }
 
@@ -83,6 +84,7 @@ enum class Option
   MAX_CYCLES,
   MAX_CONSTANT,
   OPERATION_TYPES,
+  OPERAND_TYPES,
   LOG_LEVEL
 };
 
@@ -122,6 +124,7 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
         break;
       case Option::LOG_LEVEL:
       case Option::OPERATION_TYPES:
+      case Option::OPERAND_TYPES:
       case Option::NONE:
         break;
       }
@@ -130,6 +133,11 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
     else if ( option == Option::OPERATION_TYPES )
     {
       operation_types = arg;
+      option = Option::NONE;
+    }
+    else if ( option == Option::OPERAND_TYPES )
+    {
+      operand_types = arg;
       option = Option::NONE;
     }
     else if ( option == Option::LOG_LEVEL )
@@ -182,6 +190,10 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
       else if ( opt == "o" )
       {
         option = Option::OPERATION_TYPES;
+      }
+      else if ( opt == "a" )
+      {
+        option = Option::OPERAND_TYPES;
       }
       else if ( opt == "l" )
       {

@@ -12,7 +12,8 @@ public:
 
   State();
 
-  State( size_t numStates, size_t maxConstant, size_t num_operation_types );
+  State( size_t numStates, size_t maxConstant, size_t num_operation_types, size_t num_target_types,
+      size_t num_source_types );
 
   std::discrete_distribution<> operationDist;
   std::discrete_distribution<> targetTypeDist;
@@ -67,6 +68,8 @@ private:
   std::vector<State> states;
 
   std::vector<Operation::Type> operation_types;
+  std::vector<Operand::Type> source_operand_types;
+  std::vector<Operand::Type> target_operand_types;
 
   std::mt19937 gen;
 
