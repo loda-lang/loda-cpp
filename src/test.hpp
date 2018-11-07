@@ -22,6 +22,8 @@ public:
 
   void oeis();
 
+  void primes();
+
   void all();
 
 private:
