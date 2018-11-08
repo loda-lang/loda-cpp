@@ -85,6 +85,7 @@ enum class Option
   MAX_CONSTANT,
   OPERATION_TYPES,
   OPERAND_TYPES,
+  PROGRAM_TEMPLATE,
   LOG_LEVEL
 };
 
@@ -125,6 +126,7 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
       case Option::LOG_LEVEL:
       case Option::OPERATION_TYPES:
       case Option::OPERAND_TYPES:
+      case Option::PROGRAM_TEMPLATE:
       case Option::NONE:
         break;
       }
@@ -138,6 +140,11 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
     else if ( option == Option::OPERAND_TYPES )
     {
       operand_types = arg;
+      option = Option::NONE;
+    }
+    else if ( option == Option::PROGRAM_TEMPLATE )
+    {
+      program_template = arg;
       option = Option::NONE;
     }
     else if ( option == Option::LOG_LEVEL )
@@ -194,6 +201,10 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
       else if ( opt == "a" )
       {
         option = Option::OPERAND_TYPES;
+      }
+      else if ( opt == "e" )
+      {
+        option = Option::PROGRAM_TEMPLATE;
       }
       else if ( opt == "l" )
       {

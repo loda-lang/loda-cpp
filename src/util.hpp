@@ -39,6 +39,7 @@ public:
   size_t max_constant;
   std::string operation_types;
   std::string operand_types;
+  std::string program_template;
 
   Settings();
 

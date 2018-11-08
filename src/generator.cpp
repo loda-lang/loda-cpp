@@ -3,6 +3,7 @@
 #include "number.hpp"
 #include "interpreter.hpp"
 #include "optimizer.hpp"
+#include "parser.hpp"
 #include "printer.hpp"
 
 #include <algorithm>
@@ -199,6 +200,12 @@ Generator::Generator( const Settings& settings, size_t numStates, int64_t seed )
     Log::get().error( "No source operation types", true );
   }
 
+  if ( !settings.program_template.empty() )
+  {
+    Parser parser;
+    program_template = parser.parse( settings.program_template );
+  }
+
   states.resize( numStates );
   for ( number_t state = 0; state < numStates; state++ )
   {
@@ -256,13 +263,13 @@ void Generator::generateOperations( Seed& seed )
 
 Program Generator::generateProgram( size_t initialState )
 {
-  Program p;
+  Program p = program_template;
   Seed seed;
   seed.state = initialState;
-  for ( size_t i = 0; i < settings.num_operations; i++ )
+  while ( p.ops.size() < settings.num_operations )
   {
     generateOperations( seed );
-    size_t position = (seed.position * (p.ops.size()));
+    size_t position = (seed.position * (p.ops.size() + 1));
     for ( size_t j = 0; j < seed.ops.size(); j++ )
     {
       p.ops.emplace( p.ops.begin() + position + j, std::move( seed.ops[j] ) );

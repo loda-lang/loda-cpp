@@ -70,6 +70,7 @@ private:
   std::vector<Operation::Type> operation_types;
   std::vector<Operand::Type> source_operand_types;
   std::vector<Operand::Type> target_operand_types;
+  Program program_template;
 
   std::mt19937 gen;
 
