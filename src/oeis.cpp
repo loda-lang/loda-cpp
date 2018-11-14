@@ -2,6 +2,7 @@
 
 #include "interpreter.hpp"
 #include "number.hpp"
+#include "printer.hpp"
 #include "util.hpp"
 
 #include <iomanip>
@@ -193,4 +194,14 @@ number_t Oeis::findSequence( const Program& p ) const
     // will return 0 (not found)
   }
   return 0; // not found
+}
+
+void Oeis::dumpProgram(number_t id, Program p, const std::string file) {
+  p.removeOps( Operation::Type::NOP );
+  std::ofstream out(file);
+  auto& seq = sequences.at(id);
+  out << "; " << seq << std::endl;
+  out << "; " << seq.full << std::endl << std::endl;
+  Printer r;
+  r.print(p, out);
 }

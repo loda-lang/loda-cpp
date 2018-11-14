@@ -49,6 +49,8 @@ public:
 
   number_t findSequence( const Program& p ) const;
 
+  void dumpProgram( number_t id, Program p, const std::string file );
+
   struct Hasher
   {
     std::size_t operator()( const Sequence& s ) const

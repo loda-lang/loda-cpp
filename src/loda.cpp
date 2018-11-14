@@ -147,11 +147,7 @@ int main( int argc, char *argv[] )
                 << static_cast<Sequence>( oeis.sequences[id] );
             Log::get().debug( buf.str() );
 
-            std::ofstream out( file_name );
-            out << "; " << oeis.sequences[id] << std::endl;
-            out << "; " << oeis.sequences[id].full << std::endl << std::endl;
-            Printer r;
-            r.print( program, out );
+            oeis.dumpProgram( id, program, file_name );
             try
             {
               db.insert( std::move( program ) );

@@ -84,7 +84,8 @@ void Test::oeis()
   o.load();
   for ( auto& s : o.sequences )
   {
-    std::ifstream file( "programs/oeis/" + s.id_str() + ".asm" );
+	std::string file_name = "programs/oeis/" + s.id_str() + ".asm";
+    std::ifstream file( file_name );
     if ( file.good() )
     {
       std::cout << "Checking first " << s.full.size() << " terms of " << s << std::endl;
@@ -109,14 +110,8 @@ void Test::oeis()
       optimizer.optimize( optimized, 1 );
       if ( program.num_ops( false ) > optimized.num_ops( false ) )
       {
-    	    Printer printer;
-  	    std::stringstream buf;
-  	    buf << "Program not optimal!" << std::endl;
-  	    buf << "; Original program:" << std::endl;
-  	    printer.print( program, buf );
-  	    buf << "; Optimized version:" << std::endl;
-  	    printer.print( optimized, buf );
-        Log::get().error( buf.str(), true );
+        o.dumpProgram( s.id, optimized, file_name );
+        Log::get().warn( "Program not optimal! Writing new version..." );
       }
     }
   }

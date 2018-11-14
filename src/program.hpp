@@ -81,6 +81,22 @@ class Program
 {
 public:
 
+  void removeOps( Operation::Type type )
+  {
+	auto it = ops.begin();
+	while ( it != ops.end() )
+	{
+	  if (it->type == type)
+	  {
+		it = ops.erase( it );
+	  }
+	  else
+	  {
+		it++;
+	  }
+	}
+  }
+
   size_t num_ops( bool withNops ) const
   {
     if ( withNops )
