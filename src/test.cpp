@@ -104,11 +104,12 @@ void Test::oeis()
     	    buf << "Expected: " << s.full << std::endl;
         Log::get().error( buf.str(), true );
       }
+      program.removeOps( Operation::Type::NOP );
       Program optimized = program;
       Optimizer optimizer;
       optimizer.minimize( optimized, s.full.size() );
       optimizer.optimize( optimized, 1 );
-      if ( program.num_ops( false ) > optimized.num_ops( false ) )
+      if ( ! ( program == optimized ) )
       {
         o.dumpProgram( s.id, optimized, file_name );
         Log::get().warn( "Program not optimal! Writing new version..." );
