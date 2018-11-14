@@ -5,6 +5,7 @@
 #include "iterator.hpp"
 #include "number.hpp"
 #include "oeis.hpp"
+#include "optimizer.hpp"
 #include "parser.hpp"
 #include "printer.hpp"
 #include "serializer.hpp"
@@ -97,9 +98,24 @@ void Test::oeis()
       if ( result.size() != s.full.size() || result != s.full )
       {
     	    std::stringstream buf;
-    	    buf << "Program did not evaluate to expected sequence! " << std::endl;
+    	    buf << "Program did not evaluate to expected sequence!" << std::endl;
     	    buf << "Result:   " << result << std::endl;
     	    buf << "Expected: " << s.full << std::endl;
+        Log::get().error( buf.str(), true );
+      }
+      Program optimized = program;
+      Optimizer optimizer;
+      optimizer.minimize( optimized, s.full.size() );
+      optimizer.optimize( optimized, 1 );
+      if ( program.num_ops( false ) > optimized.num_ops( false ) )
+      {
+    	    Printer printer;
+  	    std::stringstream buf;
+  	    buf << "Program not optimal!" << std::endl;
+  	    buf << "; Original program:" << std::endl;
+  	    printer.print( program, buf );
+  	    buf << "; Optimized version:" << std::endl;
+  	    printer.print( optimized, buf );
         Log::get().error( buf.str(), true );
       }
     }
