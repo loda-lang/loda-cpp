@@ -10,6 +10,7 @@
 #include "serializer.hpp"
 
 #include <fstream>
+#include <sstream>
 
 void Test::fibonacci()
 {
@@ -85,7 +86,7 @@ void Test::oeis()
     std::ifstream file( "programs/oeis/" + s.id_str() + ".asm" );
     if ( file.good() )
     {
-      std::cout << "Generating first " << s.full.size() << " terms of sequence " << s << std::endl;
+      std::cout << "Checking first " << s.full.size() << " terms of " << s << std::endl;
       Parser parser;
       Program program = parser.parse( file );
       Settings settings;
@@ -95,7 +96,11 @@ void Test::oeis()
       Sequence result = interpreter.eval( program );
       if ( result.size() != s.full.size() || result != s.full )
       {
-        Log::get().error( "Program did not evaluate to expected sequence!", true );
+    	    std::stringstream buf;
+    	    buf << "Program did not evaluate to expected sequence! " << std::endl;
+    	    buf << "Result:   " << result << std::endl;
+    	    buf << "Expected: " << s.full << std::endl;
+        Log::get().error( buf.str(), true );
       }
     }
   }
