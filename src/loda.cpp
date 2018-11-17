@@ -17,30 +17,31 @@
 void help()
 {
   Settings settings;
-  std::cout << "Usage:       loda <command> <options>" << std::endl;
+  std::cout << "Usage:             loda <command> <options>" << std::endl;
   std::cout << "Commands:" << std::endl;
-  std::cout << "  eval       Evaluate a program to a sequence" << std::endl;
-  std::cout << "  optimize   Optimize a program and print it" << std::endl;
-  std::cout << "  insert     Insert a program into the database" << std::endl;
-  std::cout << "  generate   Generate random programs and store them in the database" << std::endl;
-  std::cout << "  search     Search a program in the database" << std::endl;
-  std::cout << "  programs   Print all program in the database" << std::endl;
-  std::cout << "  sequences  Print all sequences in the database" << std::endl;
-  std::cout << "  test       Run test suite" << std::endl;
-  std::cout << "  help       Print this help text" << std::endl;
+  std::cout << "  evaluate <file>  Evaluate a program to a sequence" << std::endl;
+  std::cout << "  optimize <file>  Optimize a program and print it" << std::endl;
+  std::cout << "  generate         Generate a random program and print it" << std::endl;
+  std::cout << "  mine             Mine programs for OEIS sequences" << std::endl;
+//  std::cout << "  insert           Insert a program into the database" << std::endl;
+//  std::cout << "  search           Search a program in the database" << std::endl;
+//  std::cout << "  programs         Print all program in the database" << std::endl;
+//  std::cout << "  sequences        Print all sequences in the database" << std::endl;
+  std::cout << "  test             Run test suite" << std::endl;
+  std::cout << "  help             Print this help text" << std::endl;
   std::cout << "General options:" << std::endl;
-  std::cout << "  -l         Log level (values: debug, info, warn, error)" << std::endl;
-  std::cout << "  -t         Number of sequence terms (default: " << settings.num_terms << ")" << std::endl;
+  std::cout << "  -l <string>      Log level (values:debug,info,warn,error)" << std::endl;
+  std::cout << "  -t <number>      Number of sequence terms (default:" << settings.num_terms << ")" << std::endl;
+  std::cout << "Interpeter options:" << std::endl;
+  std::cout << "  -c <number>      Maximum number of interpreter cycles (default:" << settings.max_cycles << ")"
+      << std::endl;
+  std::cout << "  -m <number>      Maximum number of used memory cells (default:" << settings.max_memory << ")" << std::endl;
   std::cout << "Generator options:" << std::endl;
-  std::cout << "  -c         Maximum number of interpreter cycles (default: " << settings.max_cycles << ")"
-      << std::endl;
-  std::cout << "  -m         Maximum number of memory cells (default: " << settings.max_memory << ")" << std::endl;
-  std::cout << "  -n         Maximum constant (default: " << settings.max_constant << ")" << std::endl;
-  std::cout << "  -o         Operation types (default: " << settings.operation_types << ")" << std::endl;
-  std::cout << "  -a         Operand types (default: " << settings.operand_types << ")" << std::endl;
-  std::cout << "  -e         Program template" << std::endl;
-  std::cout << "  -p         Number of operations per program (default: " << settings.num_operations << ")"
-      << std::endl;
+  std::cout << "  -p <number>      Maximum number of operations (default:" << settings.num_operations << ")" << std::endl;
+  std::cout << "  -n <number>      Maximum constant (default:" << settings.max_constant << ")" << std::endl;
+  std::cout << "  -o <string>      Operation types (default:" << settings.operation_types << ";a:add,s:sub,m:mov,l:lpb/lpe)" << std::endl;
+  std::cout << "  -a <string>      Operand types (default:" << settings.operand_types << ";c:constant,d:direct mem,i:indirect mem)" << std::endl;
+  std::cout << "  -e <file>        Program template" << std::endl;
 }
 
 volatile sig_atomic_t EXIT_FLAG = 0;
@@ -67,7 +68,7 @@ int main( int argc, char *argv[] )
       Test test;
       test.all();
     }
-    else if ( cmd == "eval" )
+    else if ( cmd == "evaluate" || cmd == "eval" )
     {
       Parser parser;
       Program program = parser.parse( std::string( args.at( 1 ) ) );
@@ -75,7 +76,7 @@ int main( int argc, char *argv[] )
       auto sequence = interpreter.eval( program );
       std::cout << sequence << std::endl;
     }
-    else if ( cmd == "optimize" )
+    else if ( cmd == "optimize" || cmd == "opt" )
     {
       Parser parser;
       Printer printer;
@@ -104,24 +105,30 @@ int main( int argc, char *argv[] )
     }
     else if ( cmd == "generate" )
     {
+      Optimizer optimizer;
+      Generator generator( settings, 5, std::random_device()() );
+      auto program = generator.generateProgram();
+      optimizer.optimize( program, 1 );
+      Printer r;
+      r.print( program, std::cout );
+    }
+    else if ( cmd == "mine" )
+    {
       Oeis oeis( settings );
       oeis.load();
-      Database db( settings );
       Optimizer optimizer;
       Generator generator( settings, 5, std::random_device()() );
       size_t count = 0;
-//      std::unordered_set<number_t> seq_ids;
       auto time = std::chrono::steady_clock::now();
       while ( !EXIT_FLAG )
       {
         auto program = generator.generateProgram();
         optimizer.optimize( program, 1 );
         auto id = oeis.findSequence( program );
-        if ( id /* && seq_ids.find( id ) == seq_ids.end() */)
+        if ( id )
         {
           optimizer.minimize( program, oeis.sequences[id].full.size() );
           optimizer.optimize( program, 1 );
-          // seq_ids.insert( id );
           std::string file_name = "programs/oeis/" + oeis.sequences[id].id_str() + ".asm";
           bool write_file = true;
           {
@@ -148,14 +155,6 @@ int main( int argc, char *argv[] )
             Log::get().debug( buf.str() );
 
             oeis.dumpProgram( id, program, file_name );
-            try
-            {
-              db.insert( std::move( program ) );
-            }
-            catch ( const std::exception& )
-            {
-              Log::get().error( "Error inserting program into database" );
-            }
           }
         }
         ++count;
@@ -169,16 +168,6 @@ int main( int argc, char *argv[] )
           generator.setSeed( std::random_device()() );
         }
       }
-      db.save();
-    }
-    else if ( cmd == "genone" )
-    {
-      Optimizer optimizer;
-      Generator generator( settings, 5, std::random_device()() );
-      auto program = generator.generateProgram();
-      optimizer.optimize( program, 1 );
-      Printer r;
-      r.print( program, std::cout );
     }
     else
     {
