@@ -65,7 +65,7 @@ bool Optimizer::mergeOps( Program& p )
     if ( i + 1 < p.ops.size() && p.ops[i].type == p.ops[i + 1].type && p.ops[i].target == p.ops[i + 1].target
         && p.ops[i].source.type == Operand::Type::CONSTANT && p.ops[i + 1].source.type == Operand::Type::CONSTANT )
     {
-      if ( p.ops[i].type == Operation::Type::ADD )
+      if ( p.ops[i].type == Operation::Type::ADD || p.ops[i].type == Operation::Type::SUB )
       {
         p.ops[i].source.value += p.ops[i + 1].source.value;
         do_merge = true;
