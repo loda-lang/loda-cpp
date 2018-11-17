@@ -69,18 +69,30 @@ bool Optimizer::mergeOps( Program& p )
     // operation targets the same?
     if ( o1.target == o2.target )
     {
-      // operation types the same?
-      if ( o1.type == o2.type )
+      // both sources constants?
+      if ( o1.source.type == Operand::Type::CONSTANT && o2.source.type == Operand::Type::CONSTANT )
       {
-        // both sources constants?
-        if ( o1.source.type == Operand::Type::CONSTANT && o2.source.type == Operand::Type::CONSTANT )
+        // both add or sub operation?
+        if ( o1.type == o2.type && (o1.type == Operation::Type::ADD || o1.type == Operation::Type::SUB) )
         {
-          // both add or sub operation?
-          if ( o1.type == Operation::Type::ADD || o1.type == Operation::Type::SUB )
+          o1.source.value += o2.source.value;
+          do_merge = true;
+        }
+
+        // first add, second sub?
+        if ( o1.type == Operation::Type::ADD && o2.type == Operation::Type::SUB )
+        {
+          if ( o1.source.value > o2.source.value )
           {
-            o1.source.value += o2.source.value;
-            do_merge = true;
+            o1.source.value = o1.source.value - o2.source.value;
+            o1.type = Operation::Type::ADD;
           }
+          else
+          {
+            o1.source.value = o2.source.value - o1.source.value;
+            o1.type = Operation::Type::SUB;
+          }
+          do_merge = true;
         }
       }
 
