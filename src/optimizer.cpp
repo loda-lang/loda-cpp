@@ -59,18 +59,45 @@ bool Optimizer::removeEmptyLoops( Program& p )
 bool Optimizer::mergeOps( Program& p )
 {
   bool merged = false;
-  for ( size_t i = 0; i < p.ops.size(); i++ )
+  for ( size_t i = 0; i + 1 < p.ops.size(); i++ )
   {
     bool do_merge = false;
-    if ( i + 1 < p.ops.size() && p.ops[i].type == p.ops[i + 1].type && p.ops[i].target == p.ops[i + 1].target
-        && p.ops[i].source.type == Operand::Type::CONSTANT && p.ops[i + 1].source.type == Operand::Type::CONSTANT )
+
+    auto& o1 = p.ops[i];
+    auto& o2 = p.ops[i + 1];
+
+    // operation targets the same?
+    if ( o1.target == o2.target )
     {
-      if ( p.ops[i].type == Operation::Type::ADD || p.ops[i].type == Operation::Type::SUB )
+      // operation types the same?
+      if ( o1.type == o2.type )
       {
-        p.ops[i].source.value += p.ops[i + 1].source.value;
-        do_merge = true;
+        // both sources constants?
+        if ( o1.source.type == Operand::Type::CONSTANT && o2.source.type == Operand::Type::CONSTANT )
+        {
+          // both add or sub operation?
+          if ( o1.type == Operation::Type::ADD || o1.type == Operation::Type::SUB )
+          {
+            o1.source.value += o2.source.value;
+            do_merge = true;
+          }
+        }
+      }
+
+      // second operation mov?
+      if ( o2.type == Operation::Type::MOV )
+      {
+        // first operation add, sub, mov?
+        if ( o1.type == Operation::Type::ADD || o1.type == Operation::Type::SUB || o1.type == Operation::Type::MOV )
+        {
+          // second mov overwrites first operation
+          o1 = o2;
+          do_merge = true;
+        }
       }
     }
+
+    // merge (erase second operation)
     if ( do_merge )
     {
       if ( Log::get().level == Log::Level::DEBUG )
