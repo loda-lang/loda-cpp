@@ -80,6 +80,8 @@ void Test::serialize()
 void Test::oeis()
 {
   Settings settings;
+  settings.max_memory = 1000000;
+  settings.max_cycles = 1000000;
   Oeis o( settings );
   o.load();
   for ( auto& s : o.sequences )
@@ -91,10 +93,9 @@ void Test::oeis()
       std::cout << "Checking first " << s.full.size() << " terms of " << s << std::endl;
       Parser parser;
       Program program = parser.parse( file );
-      Settings settings;
-      settings.max_memory = 1000000;
-      settings.num_terms = s.full.size();
-      Interpreter interpreter( settings );
+      Settings settings2 = settings;
+      settings2.num_terms = s.full.size();
+      Interpreter interpreter( settings2 );
       Sequence result = interpreter.eval( program );
       if ( result.size() != s.full.size() || result != s.full )
       {
