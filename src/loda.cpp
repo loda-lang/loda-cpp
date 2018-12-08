@@ -81,7 +81,7 @@ int main( int argc, char *argv[] )
       Parser parser;
       Printer printer;
       Program program = parser.parse( std::string( args.at( 1 ) ) );
-      Optimizer optimizer;
+      Optimizer optimizer( settings );
       optimizer.optimize( program, 1 );
       printer.print( program, std::cout );
     }
@@ -105,7 +105,7 @@ int main( int argc, char *argv[] )
     }
     else if ( cmd == "generate" )
     {
-      Optimizer optimizer;
+      Optimizer optimizer( settings );
       Generator generator( settings, 5, std::random_device()() );
       auto program = generator.generateProgram();
       optimizer.optimize( program, 1 );
@@ -116,7 +116,7 @@ int main( int argc, char *argv[] )
     {
       Oeis oeis( settings );
       oeis.load();
-      Optimizer optimizer;
+      Optimizer optimizer( settings );
       Generator generator( settings, 5, std::random_device()() );
       size_t count = 0;
       auto time = std::chrono::steady_clock::now();

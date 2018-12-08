@@ -192,7 +192,6 @@ void Optimizer::simplifyOperands( Program& p, size_t num_initialized_cells )
 
 void Optimizer::minimize( Program& p, size_t num_terms )
 {
-  Settings settings;
   settings.num_terms = num_terms;
   Interpreter interpreter( settings );
   Sequence target_sequence;

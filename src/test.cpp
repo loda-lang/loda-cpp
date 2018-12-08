@@ -107,7 +107,7 @@ void Test::oeis()
       }
       program.removeOps( Operation::Type::NOP );
       Program optimized = program;
-      Optimizer optimizer;
+      Optimizer optimizer( settings2 );
       optimizer.minimize( optimized, s.full.size() );
       optimizer.optimize( optimized, 1 );
       if ( ! ( program == optimized ) )

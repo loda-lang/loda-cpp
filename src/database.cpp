@@ -43,7 +43,7 @@ Database::Database( const Settings& settings )
 
 bool Database::insert( Program&& p )
 {
-  Optimizer o;
+  Optimizer o( settings );
   o.optimize( p, 1 );
 
   Interpreter i( settings );
@@ -86,7 +86,7 @@ void Database::save()
     Log::get().error( "Error write to file: loda_new.db", true );
   }
 
-  Optimizer optimizer;
+  Optimizer optimizer( settings );
   Interpreter interpreter( settings );
   Reader reader;
   Serializer serializer;

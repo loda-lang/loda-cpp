@@ -2,10 +2,16 @@
 
 #include "number.hpp"
 #include "program.hpp"
+#include "util.hpp"
 
 class Optimizer
 {
 public:
+
+  Optimizer( const Settings& settings )
+      : settings( settings )
+  {
+  }
 
   void optimize( Program& p, size_t num_initialized_cells );
 
@@ -20,5 +26,7 @@ private:
   bool mergeOps( Program& p );
 
   void simplifyOperands( Program& p, size_t num_initialized_cells );
+
+  Settings settings;
 
 };
