@@ -7,6 +7,7 @@
 #include "printer.hpp"
 
 #include <algorithm>
+#include <set>
 
 #define POSITION_RANGE 100
 
@@ -270,9 +271,71 @@ Program Generator::generateProgram( size_t initialState )
   {
     generateOperations( seed );
     size_t position = (seed.position * (p.ops.size() + 1));
+
+    // determine written cells so far
+    std::set<number_t> written_cells;
+    written_cells.insert( 0 );
+    size_t open_loops = 0;
+    size_t i = 0;
+    while ( i < position || open_loops > 0 )
+    {
+      switch ( p.ops[i].type )
+      {
+      case Operation::Type::ADD:
+      case Operation::Type::SUB:
+      case Operation::Type::MOV:
+      {
+        if ( p.ops[i].target.type == Operand::Type::MEM_ACCESS_DIRECT )
+        {
+          written_cells.insert( p.ops[i].target.value );
+        }
+        break;
+      }
+      case Operation::Type::LPB:
+        ++open_loops;
+        break;
+      case Operation::Type::LPE:
+        --open_loops;
+        break;
+      default:
+        break;
+      }
+      ++i;
+    }
+
     for ( size_t j = 0; j < seed.ops.size(); j++ )
     {
-      p.ops.emplace( p.ops.begin() + position + j, std::move( seed.ops[j] ) );
+      // fix source operands in new operation
+      auto new_op = seed.ops[j];
+      if ( new_op.source.type == Operand::Type::MEM_ACCESS_DIRECT
+          || new_op.source.type == Operand::Type::MEM_ACCESS_INDIRECT )
+      {
+        int x = new_op.source.value % written_cells.size();
+        for ( number_t cell : written_cells )
+        {
+          if ( x-- == 0 )
+          {
+            new_op.source.value = cell;
+            break;
+          }
+        }
+      }
+
+      if ( new_op.type == Operation::Type::LPB )
+      {
+        int x = new_op.target.value % written_cells.size();
+        for ( number_t cell : written_cells )
+        {
+          if ( x-- == 0 )
+          {
+            new_op.target.value = cell;
+            break;
+          }
+        }
+      }
+
+      // add operation
+      p.ops.emplace( p.ops.begin() + position + j, std::move( new_op ) );
     }
   }
   return p;
