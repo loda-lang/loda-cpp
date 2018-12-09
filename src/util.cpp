@@ -70,6 +70,7 @@ Settings::Settings()
       max_memory( 100000 ),
       max_cycles( 10000 ),
       max_constant( 4 ),
+      max_index( 4 ),
       operation_types( "asml" ),
       operand_types( "cdi" )
 {
@@ -83,6 +84,7 @@ enum class Option
   MAX_MEMORY,
   MAX_CYCLES,
   MAX_CONSTANT,
+  MAX_INDEX,
   OPERATION_TYPES,
   OPERAND_TYPES,
   PROGRAM_TEMPLATE,
@@ -97,7 +99,7 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
   {
     std::string arg( argv[i] );
     if ( option == Option::NUM_TERMS || option == Option::NUM_OPERATIONS || option == Option::MAX_MEMORY
-        || option == Option::MAX_CYCLES || option == Option::MAX_CONSTANT )
+        || option == Option::MAX_CYCLES || option == Option::MAX_CONSTANT || option == Option::MAX_INDEX )
     {
       std::stringstream s( arg );
       int val;
@@ -122,6 +124,9 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
         break;
       case Option::MAX_CONSTANT:
         max_constant = val;
+        break;
+      case Option::MAX_INDEX:
+        max_index = val;
         break;
       case Option::LOG_LEVEL:
       case Option::OPERATION_TYPES:
@@ -193,6 +198,10 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
       else if ( opt == "n" )
       {
         option = Option::MAX_CONSTANT;
+      }
+      else if ( opt == "i" )
+      {
+        option = Option::MAX_INDEX;
       }
       else if ( opt == "o" )
       {
