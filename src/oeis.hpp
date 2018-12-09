@@ -1,7 +1,7 @@
 #pragma once
 
 #include "number.hpp"
-#include "generator.hpp"
+#include "finder.hpp"
 #include "util.hpp"
 
 #include <unordered_map>

@@ -53,19 +53,19 @@ void printDist( const std::discrete_distribution<>& d )
 void State::print()
 {
   std::cout << "[";
-  printDist( operationDist );
+  printDist( operation_dist );
   std::cout << ",";
-  printDist( targetTypeDist );
+  printDist( target_type_dist );
   std::cout << ",";
-  printDist( targetValueDist );
+  printDist( target_value_dist );
   std::cout << ",";
-  printDist( sourceTypeDist );
+  printDist( source_type_dist );
   std::cout << ",";
-  printDist( sourceValueDist );
+  printDist( source_value_dist );
   std::cout << ",";
-  printDist( transitionDist );
+  printDist( transition_dist );
   std::cout << ",";
-  printDist( positionDist );
+  printDist( position_dist );
   std::cout << "]";
 }
 
@@ -117,24 +117,24 @@ void MutateDist( std::discrete_distribution<>& d, std::mt19937& gen )
 
 State::State( size_t numStates, size_t maxConstant, size_t num_operation_types, size_t num_target_types,
     size_t num_source_types )
-    : operationDist( EqualDist( num_operation_types ) ),
-      targetTypeDist( ExpDist( num_target_types ) ),
-      targetValueDist( EqualDist( maxConstant + 1 ) ),
-      sourceTypeDist( ExpDist( num_source_types ) ),
-      sourceValueDist( EqualDist( maxConstant + 1 ) ),
-      transitionDist( EqualDist( numStates ) ),
-      positionDist( EqualDist( POSITION_RANGE ) )
+    : operation_dist( EqualDist( num_operation_types ) ),
+      target_type_dist( ExpDist( num_target_types ) ),
+      target_value_dist( EqualDist( maxConstant + 1 ) ),
+      source_type_dist( ExpDist( num_source_types ) ),
+      source_value_dist( EqualDist( maxConstant + 1 ) ),
+      transition_dist( EqualDist( numStates ) ),
+      position_dist( EqualDist( POSITION_RANGE ) )
 {
 }
 
 State State::operator+( const State& other )
 {
   State r;
-  r.operationDist = AddDist( operationDist, other.operationDist );
-  r.targetTypeDist = AddDist( targetTypeDist, other.targetTypeDist );
-  r.sourceTypeDist = AddDist( sourceTypeDist, other.sourceTypeDist );
-  r.transitionDist = AddDist( transitionDist, other.transitionDist );
-  r.positionDist = AddDist( positionDist, other.positionDist );
+  r.operation_dist = AddDist( operation_dist, other.operation_dist );
+  r.target_type_dist = AddDist( target_type_dist, other.target_type_dist );
+  r.source_type_dist = AddDist( source_type_dist, other.source_type_dist );
+  r.transition_dist = AddDist( transition_dist, other.transition_dist );
+  r.position_dist = AddDist( position_dist, other.position_dist );
   return r;
 }
 
@@ -230,36 +230,36 @@ void Generator::mutate( double delta )
 {
   for ( auto& s : states )
   {
-    MutateDist( s.operationDist, gen );
-    MutateDist( s.targetTypeDist, gen );
-    MutateDist( s.targetValueDist, gen );
-    MutateDist( s.sourceTypeDist, gen );
-    MutateDist( s.sourceValueDist, gen );
-    MutateDist( s.transitionDist, gen );
-    MutateDist( s.positionDist, gen );
+    MutateDist( s.operation_dist, gen );
+    MutateDist( s.target_type_dist, gen );
+    MutateDist( s.target_value_dist, gen );
+    MutateDist( s.source_type_dist, gen );
+    MutateDist( s.source_value_dist, gen );
+    MutateDist( s.transition_dist, gen );
+    MutateDist( s.position_dist, gen );
   }
 }
 
 void Generator::generateOperations( Seed& seed )
 {
   auto& s = states.at( seed.state );
-  auto targetType = target_operand_types.at( s.targetTypeDist( gen ) );
-  auto sourceType = source_operand_types.at( s.sourceTypeDist( gen ) );
-  number_t targetValue = s.targetValueDist( gen );
-  number_t sourceValue = s.sourceValueDist( gen );
+  auto targetType = target_operand_types.at( s.target_type_dist( gen ) );
+  auto sourceType = source_operand_types.at( s.source_type_dist( gen ) );
+  number_t targetValue = s.target_value_dist( gen );
+  number_t sourceValue = s.source_value_dist( gen );
   Operand to( targetType, targetValue );
   Operand so( sourceType, sourceValue );
 
   seed.ops.clear();
-  auto op_type = operation_types.at( s.operationDist( gen ) );
+  auto op_type = operation_types.at( s.operation_dist( gen ) );
   seed.ops.push_back( Operation( op_type, to, so ) );
   if ( op_type == Operation::Type::LPB )
   {
     seed.ops.push_back( Operation( Operation::Type::LPE ) );
   }
 
-  seed.position = static_cast<double>( s.positionDist( gen ) ) / POSITION_RANGE;
-  seed.state = s.transitionDist( gen );
+  seed.position = static_cast<double>( s.position_dist( gen ) ) / POSITION_RANGE;
+  seed.state = s.transition_dist( gen );
 }
 
 Program Generator::generateProgram( size_t initialState )
@@ -344,132 +344,4 @@ Program Generator::generateProgram( size_t initialState )
 void Generator::setSeed( int64_t seed )
 {
   gen.seed( seed );
-}
-
-Finder::Finder( const Settings& settings )
-    : settings( settings )
-{
-}
-
-Program Finder::find( Scorer& scorer, size_t seed, size_t max_iterations )
-{
-  Program p;
-
-  size_t states = 10;
-  size_t gen_count = 100;
-  size_t tries = 100;
-
-//  number_t max_value = 0;
-//  for ( auto& v : target )
-//  {
-//    if ( v > max_value ) max_value = v;
-//  }
-
-  std::vector<Generator::UPtr> generators;
-  for ( size_t i = 0; i < gen_count; i++ )
-  {
-    generators.emplace_back( Generator::UPtr( new Generator( settings, states, seed + i ) ) );
-  }
-
-  Interpreter interpreter( settings );
-//  FixedSequenceScorer scorer( target );
-//  Printer printer;
-
-  Sequence s;
-  for ( size_t iteration = 0; iteration < max_iterations; iteration++ )
-  {
-    for ( size_t i = 0; i < gen_count; i++ )
-    {
-      generators[i]->setSeed( seed + i );
-    }
-
-    // evaluate generator and score them
-    double avg_score = 0.0;
-    for ( auto& gen : generators )
-    {
-      gen->score = 0;
-      for ( size_t i = 0; i < tries; i++ )
-      {
-        p = gen->generateProgram( 0 );
-        try
-        {
-          s = interpreter.eval( p );
-        }
-        catch ( const std::exception& e )
-        {
-          std::cerr << std::string( e.what() ) << std::endl;
-//          gen->score += 2 * max_value;
-          continue;
-        }
-        auto score = scorer.score( s );
-        if ( score == 0 )
-        {
-//          std::cout << "Found!" << std::endl;
-//          printer.print( p, std::cout );
-          return p;
-        }
-        if ( gen->score == 0 || score << gen->score )
-        {
-          gen->score = score;
-        }
-      }
-//      std::cout << "Score: " << gen->score << std::endl;
-      avg_score += gen->score;
-    }
-    avg_score = (avg_score / generators.size()) / tries;
-//    std::cout << "Average: " << avg_score << "\n" << std::endl;
-
-// sort generators by their scores
-    std::stable_sort( generators.begin(), generators.end(), less_than_score );
-
-    // print top ten
-    /*   for ( size_t i = 0; i < (gen_count / 10); i++ )
-     {
-     generators[i]->print();
-     std::cout << std::endl;
-     }
-     std::cout << std::endl;
-     */
-    // create new generators
-    std::vector<Generator::UPtr> new_generators;
-    for ( size_t i = 0; i < (gen_count / 10); i++ )
-    {
-      for ( size_t j = 0; j < (gen_count / 10); j++ )
-      {
-        Generator::UPtr g( new Generator( *generators[i] + *generators[j] ) );
-        g->mutate( 0.5 );
-        new_generators.emplace_back( std::move( g ) );
-      }
-    }
-    generators = std::move( new_generators );
-  }
-
-  return
-  {};
-}
-
-Scorer::~Scorer()
-{
-}
-
-FixedSequenceScorer::FixedSequenceScorer( const Sequence& target )
-    : target_( target )
-{
-}
-
-FixedSequenceScorer::~FixedSequenceScorer()
-{
-}
-
-number_t FixedSequenceScorer::score( const Sequence& s )
-{
-  number_t score = 0;
-  auto size = target_.size();
-  for ( number_t i = 0; i < size; i++ )
-  {
-    auto v1 = s.at( i );
-    auto v2 = target_.at( i );
-    score += (v1 > v2) ? (v1 - v2) : (v2 - v1);
-  }
-  return score;
 }

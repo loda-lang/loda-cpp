@@ -12,16 +12,16 @@ public:
 
   State();
 
-  State( size_t numStates, size_t maxConstant, size_t num_operation_types, size_t num_target_types,
+  State( size_t num_states, size_t max_constant, size_t num_operation_types, size_t num_target_types,
       size_t num_source_types );
 
-  std::discrete_distribution<> operationDist;
-  std::discrete_distribution<> targetTypeDist;
-  std::discrete_distribution<> targetValueDist;
-  std::discrete_distribution<> sourceTypeDist;
-  std::discrete_distribution<> sourceValueDist;
-  std::discrete_distribution<> transitionDist;
-  std::discrete_distribution<> positionDist;
+  std::discrete_distribution<> operation_dist;
+  std::discrete_distribution<> target_type_dist;
+  std::discrete_distribution<> target_value_dist;
+  std::discrete_distribution<> source_type_dist;
+  std::discrete_distribution<> source_value_dist;
+  std::discrete_distribution<> transition_dist;
+  std::discrete_distribution<> position_dist;
 
   State operator+( const State& other );
 
@@ -73,48 +73,5 @@ private:
   Program program_template;
 
   std::mt19937 gen;
-
-};
-
-inline bool less_than_score( const Generator::UPtr& g1, const Generator::UPtr& g2 )
-{
-  return (g1->score < g2->score);
-}
-
-class Scorer
-{
-public:
-
-  virtual ~Scorer();
-
-  virtual number_t score( const Sequence& s ) = 0;
-
-};
-
-class FixedSequenceScorer: public Scorer
-{
-public:
-
-  FixedSequenceScorer( const Sequence& target );
-
-  virtual ~FixedSequenceScorer();
-
-  virtual number_t score( const Sequence& s ) override;
-
-private:
-  Sequence target_;
-
-};
-
-class Finder
-{
-public:
-
-  Finder( const Settings& settings );
-
-  Program find( Scorer& scorer, size_t seed, size_t max_iterations );
-
-private:
-  const Settings& settings;
 
 };
