@@ -1,10 +1,9 @@
 #pragma once
 
+#include "distribution.hpp"
 #include "number.hpp"
 #include "program.hpp"
 #include "util.hpp"
-
-#include <random>
 
 class State
 {
