@@ -84,6 +84,7 @@ void Test::oeis()
   settings.max_cycles = 1000000;
   Oeis o( settings );
   o.load();
+  // std::ofstream file( "programs/oeis/README.md" );
   for ( auto& s : o.sequences )
   {
 	std::string file_name = "programs/oeis/" + s.id_str() + ".asm";
@@ -184,6 +185,7 @@ void Test::testBinary( const std::string& func, const std::string& file,
   Parser parser;
   Settings settings;
   settings.max_cycles = 10000000; // needed to run ackermann test
+  settings.max_memory = 100000;
   Interpreter interpreter( settings );
   auto program = parser.parse( file );
   for ( size_t i = 0; i < values.size(); i++ )
