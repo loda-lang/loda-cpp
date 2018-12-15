@@ -12,7 +12,8 @@ public:
     DEBUG,
     INFO,
     WARN,
-    ERROR
+    ERROR,
+    ALERT
   };
 
   static Log& get();
@@ -21,6 +22,7 @@ public:
   void info( const std::string& msg );
   void warn( const std::string& msg );
   void error( const std::string& msg, bool throw_ = false );
+  void alert( const std::string& msg );
 
   Level level = Level::INFO;
 

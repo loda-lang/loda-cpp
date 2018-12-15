@@ -149,7 +149,7 @@ int main( int argc, char *argv[] )
           {
             std::stringstream buf;
             buf << "Found new program for " << oeis.sequences[id];
-            Log::get().info( buf.str() );
+            Log::get().alert( buf.str() );
             buf.str( "" );
             buf << "First " << oeis.sequences[id].size() << " terms of " << oeis.sequences[id].id_str() << ": "
                 << static_cast<Sequence>( oeis.sequences[id] );

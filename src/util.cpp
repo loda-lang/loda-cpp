@@ -3,6 +3,7 @@
 #include <ctime>
 #include <iostream>
 #include <sstream>
+#include <stdlib.h>
 
 Log& Log::get()
 {
@@ -34,6 +35,17 @@ void Log::error( const std::string& msg, bool throw_ )
   }
 }
 
+void Log::alert( const std::string& msg )
+{
+  log( Log::Level::ALERT, msg );
+  std::string cmd = "twidge update \"" + msg + "\"";
+  auto exit_code = system( cmd .c_str() );
+  if ( exit_code != 0 )
+  {
+    error( "Error sending alert using twidge: exit code " + std::to_string( exit_code ), false );
+  }
+}
+
 void Log::log( Level level, const std::string& msg )
 {
   if ( level < this->level )
@@ -59,6 +71,9 @@ void Log::log( Level level, const std::string& msg )
     break;
   case Log::Level::ERROR:
     lev = "ERROR";
+    break;
+  case Log::Level::ALERT:
+    lev = "ALERT";
     break;
   }
   std::cerr << std::string( buffer ) << "|" << lev << "|" << msg << std::endl;
