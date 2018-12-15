@@ -48,7 +48,10 @@ void Log::alert( const std::string& msg )
       copy = copy.substr( 0, copy.length() - 1 );
       if ( ch == ' ' || ch == '.' || ch == ',' ) break;
     }
-    copy = copy + "...";
+    if ( !copy.empty() )
+    {
+      copy = copy + "...";
+    }
   }
   if ( !copy.empty() )
   {
@@ -58,6 +61,10 @@ void Log::alert( const std::string& msg )
     {
       error( "Error sending alert using twidge: exit code " + std::to_string( exit_code ), false );
     }
+  }
+  else
+  {
+    error( "Error sending alert: empty message", false );
   }
 }
 

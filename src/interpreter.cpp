@@ -160,7 +160,7 @@ bool Interpreter::run( const Program& p, Memory& mem ) const
 
     if ( ++cycles >= settings.max_cycles )
     {
-      Log::get().error( "Program did not terminated after " + std::to_string( cycles ) + " cycles", true );
+      Log::get().error( "Program did not terminate after " + std::to_string( cycles ) + " cycles", true );
     }
   }
   return true;
