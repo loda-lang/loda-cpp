@@ -81,7 +81,7 @@ void Test::oeis()
 {
   Settings settings;
   settings.max_memory = 1000000;
-  settings.max_cycles = 1000000;
+  settings.max_cycles = 10000000;
   Oeis o( settings );
   o.load();
   // std::ofstream file( "programs/oeis/README.md" );
