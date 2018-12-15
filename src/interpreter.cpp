@@ -193,7 +193,7 @@ number_t Interpreter::get( Operand a, const Memory& mem, bool getAddress ) const
 
 void Interpreter::set( Operand a, number_t v, Memory& mem ) const
 {
-  number_t index;
+  number_t index = 0;
   switch ( a.type )
   {
   case Operand::Type::CONSTANT:
@@ -239,7 +239,7 @@ Sequence Interpreter::eval( const Program& p, int num_terms ) const
   Sequence seq;
   seq.resize( num_terms );
   Memory mem;
-  for ( number_t i = 0; i < num_terms; i++ )
+  for ( int i = 0; i < num_terms; i++ )
   {
     mem.clear();
     mem.set( 0, i );

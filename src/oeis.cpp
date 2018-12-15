@@ -38,7 +38,7 @@ void Oeis::load()
   Log::get().debug( "Loading sequence data from the OEIS" );
   std::ifstream stripped( "stripped" );
   std::string line;
-  int pos;
+  size_t pos;
   number_t id, num;
   Sequence full_sequence;
   Sequence norm_sequence;

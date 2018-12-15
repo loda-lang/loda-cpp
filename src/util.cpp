@@ -95,7 +95,7 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
 {
   Option option( Option::NONE );
   std::vector<std::string> unparsed;
-  for ( size_t i = 1; i < argc; ++i )
+  for ( int i = 1; i < argc; ++i )
   {
     std::string arg( argv[i] );
     if ( option == Option::NUM_TERMS || option == Option::NUM_OPERATIONS || option == Option::MAX_MEMORY
