@@ -157,7 +157,7 @@ int main( int argc, char *argv[] )
         ++count;
         auto time2 = std::chrono::steady_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::seconds>( time2 - time );
-        if ( duration.count() >= 10 )
+        if ( duration.count() >= 60 )
         {
           time = time2;
           Log::get().info( "Generated " + std::to_string( count ) + " programs" );

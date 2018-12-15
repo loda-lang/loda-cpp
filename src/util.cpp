@@ -41,13 +41,23 @@ void Log::alert( const std::string& msg )
   std::string copy = msg;
   if ( copy.length() > 140 )
   {
-    copy = copy.substr( 0, 137 ) + "...";
+    copy = copy.substr( 0, 137 );
+    while ( !copy.empty() )
+    {
+      char ch = copy.at( copy.size() - 1 );
+      copy = copy.substr( 0, copy.length() - 1 );
+      if ( ch == ' ' || ch == '.' || ch == ',' ) break;
+    }
+    copy = copy + "...";
   }
-  std::string cmd = "twidge update \"" + msg + "\"";
-  auto exit_code = system( cmd.c_str() );
-  if ( exit_code != 0 )
+  if ( !copy.empty() )
   {
-    error( "Error sending alert using twidge: exit code " + std::to_string( exit_code ), false );
+    std::string cmd = "twidge update \"" + copy + "\"";
+    auto exit_code = system( cmd.c_str() );
+    if ( exit_code != 0 )
+    {
+      error( "Error sending alert using twidge: exit code " + std::to_string( exit_code ), false );
+    }
   }
 }
 
