@@ -38,8 +38,13 @@ void Log::error( const std::string& msg, bool throw_ )
 void Log::alert( const std::string& msg )
 {
   log( Log::Level::ALERT, msg );
+  std::string copy = msg;
+  if ( copy.length() > 140 )
+  {
+    copy = copy.substr( 0, 137 ) + "...";
+  }
   std::string cmd = "twidge update \"" + msg + "\"";
-  auto exit_code = system( cmd .c_str() );
+  auto exit_code = system( cmd.c_str() );
   if ( exit_code != 0 )
   {
     error( "Error sending alert using twidge: exit code " + std::to_string( exit_code ), false );
