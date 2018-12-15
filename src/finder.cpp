@@ -1,6 +1,8 @@
 #include "finder.hpp"
 #include "interpreter.hpp"
 
+#include <algorithm>
+
 Finder::Finder( const Settings& settings )
     : settings( settings )
 {
