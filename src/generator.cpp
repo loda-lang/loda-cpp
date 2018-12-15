@@ -177,16 +177,19 @@ void Generator::mutate( double delta )
 void Generator::generateOperations( Seed& seed )
 {
   auto& s = states.at( seed.state );
-  auto targetType = target_operand_types.at( s.target_type_dist( gen ) );
-  auto sourceType = source_operand_types.at( s.source_type_dist( gen ) );
-  number_t targetValue = s.target_value_dist( gen );
-  number_t sourceValue = s.source_value_dist( gen );
-  Operand to( targetType, targetValue );
-  Operand so( sourceType, sourceValue );
+  auto target_type = target_operand_types.at( s.target_type_dist( gen ) );
+  auto source_type = source_operand_types.at( s.source_type_dist( gen ) );
+  number_t target_value = s.target_value_dist( gen );
+  number_t source_value = s.source_value_dist( gen );
+  auto op_type = operation_types.at( s.operation_dist( gen ) );
+  if ( source_type == Operand::Type::CONSTANT && source_value == 0
+      && (op_type == Operation::Type::ADD || op_type == Operation::Type::SUB || op_type == Operation::Type::LPB) )
+  {
+    source_value = 1;
+  }
 
   seed.ops.clear();
-  auto op_type = operation_types.at( s.operation_dist( gen ) );
-  seed.ops.push_back( Operation( op_type, to, so ) );
+  seed.ops.push_back( Operation( op_type, Operand( target_type, target_value ), Operand( source_type, source_value ) ) );
   if ( op_type == Operation::Type::LPB )
   {
     seed.ops.push_back( Operation( Operation::Type::LPE ) );
