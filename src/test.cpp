@@ -84,7 +84,19 @@ void Test::oeis()
   settings.max_cycles = 10000000;
   Oeis o( settings );
   o.load();
-  // std::ofstream file( "programs/oeis/README.md" );
+  std::ifstream readme_in( "programs/README.md" );
+  std::stringstream buffer;
+  std::string str;
+  while (std::getline(readme_in, str)) {
+     buffer << str << std::endl;
+     if (str == "## Available Programs")
+     {
+    	   break;
+     }
+  }
+  readme_in.close();
+  std::ofstream readme_out( "programs/README.md" );
+  readme_out << buffer.str() << std::endl;
   for ( auto& s : o.sequences )
   {
 	std::string file_name = "programs/oeis/" + s.id_str() + ".asm";
@@ -116,8 +128,10 @@ void Test::oeis()
         o.dumpProgram( s.id, optimized, file_name );
         Log::get().warn( "Program not optimal! Writing new version..." );
       }
+      readme_out << "* [" << s.id_str() << "](oeis/" << s.id_str() << ".asm): " << s.name << "\n";
     }
   }
+  readme_out.close();
   std::cout << std::endl;
 }
 
