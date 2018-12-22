@@ -30,7 +30,7 @@ void help()
   std::cout << "  test             Run test suite" << std::endl;
   std::cout << "  help             Print this help text" << std::endl;
   std::cout << "General options:" << std::endl;
-  std::cout << "  -l <string>      Log level (values:debug,info,warn,error)" << std::endl;
+  std::cout << "  -l <string>      Log level (values:debug,info,warn,error,alert)" << std::endl;
   std::cout << "  -t <number>      Number of sequence terms (default:" << settings.num_terms << ")" << std::endl;
   std::cout << "Interpeter options:" << std::endl;
   std::cout << "  -c <number>      Maximum number of interpreter cycles (default:" << settings.max_cycles << ")"

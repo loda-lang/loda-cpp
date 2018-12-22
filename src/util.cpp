@@ -207,6 +207,10 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
       {
         Log::get().level = Log::Level::ERROR;
       }
+      else if ( arg == "alert" )
+      {
+        Log::get().level = Log::Level::ALERT;
+      }
       else
       {
         Log::get().error( "Unknown log level: " + arg );
