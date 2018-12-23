@@ -17,8 +17,6 @@ public:
 
   void minimize( Program& p, size_t num_terms );
 
-  void optiminimize( Program& p, size_t num_initialized_cells, size_t num_terms );
-
 private:
 
   bool removeNops( Program& p );

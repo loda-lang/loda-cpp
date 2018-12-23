@@ -6,18 +6,6 @@
 
 #include <unordered_set>
 
-void Optimizer::optiminimize( Program& p, size_t num_initialized_cells, size_t num_terms )
-{
-  bool changed = true;
-  while ( changed )
-  {
-    size_t num_ops = p.num_ops( true );
-    minimize( p, num_terms );
-    optimize( p, num_initialized_cells );
-    changed = ( p.num_ops( true ) < num_ops );
-  }
-}
-
 void Optimizer::optimize( Program& p, size_t num_initialized_cells )
 {
   removeNops( p );
