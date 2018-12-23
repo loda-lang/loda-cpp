@@ -128,8 +128,7 @@ int main( int argc, char *argv[] )
         auto id = oeis.findSequence( program );
         if ( id )
         {
-          optimizer.minimize( program, oeis.sequences[id].full.size() );
-          optimizer.optimize( program, 1 );
+          optimizer.optiminimize( program, 1, oeis.sequences[id].full.size() );
           std::string file_name = "programs/oeis/" + oeis.sequences[id].id_str() + ".asm";
           bool write_file = true;
           {

@@ -121,8 +121,7 @@ void Test::oeis()
       program.removeOps( Operation::Type::NOP );
       Program optimized = program;
       Optimizer optimizer( settings2 );
-      optimizer.minimize( optimized, s.full.size() );
-      optimizer.optimize( optimized, 1 );
+      optimizer.optiminimize( optimized, 1, s.full.size() );
       if ( ! ( program == optimized ) )
       {
         o.dumpProgram( s.id, optimized, file_name );
