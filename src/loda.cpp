@@ -35,13 +35,17 @@ void help()
   std::cout << "Interpeter options:" << std::endl;
   std::cout << "  -c <number>      Maximum number of interpreter cycles (default:" << settings.max_cycles << ")"
       << std::endl;
-  std::cout << "  -m <number>      Maximum number of used memory cells (default:" << settings.max_memory << ")" << std::endl;
+  std::cout << "  -m <number>      Maximum number of used memory cells (default:" << settings.max_memory << ")"
+      << std::endl;
   std::cout << "Generator options:" << std::endl;
-  std::cout << "  -p <number>      Maximum number of operations (default:" << settings.num_operations << ")" << std::endl;
+  std::cout << "  -p <number>      Maximum number of operations (default:" << settings.num_operations << ")"
+      << std::endl;
   std::cout << "  -n <number>      Maximum constant (default:" << settings.max_constant << ")" << std::endl;
   std::cout << "  -i <number>      Maximum index (default:" << settings.max_index << ")" << std::endl;
-  std::cout << "  -o <string>      Operation types (default:" << settings.operation_types << ";a:add,s:sub,m:mov,l:lpb/lpe)" << std::endl;
-  std::cout << "  -a <string>      Operand types (default:" << settings.operand_types << ";c:constant,d:direct mem,i:indirect mem)" << std::endl;
+  std::cout << "  -o <string>      Operation types (default:" << settings.operation_types
+      << ";a:add,s:sub,m:mov,l:lpb/lpe)" << std::endl;
+  std::cout << "  -a <string>      Operand types (default:" << settings.operand_types
+      << ";c:constant,d:direct mem,i:indirect mem)" << std::endl;
   std::cout << "  -e <file>        Program template" << std::endl;
 }
 
@@ -124,18 +128,29 @@ int main( int argc, char *argv[] )
       while ( !EXIT_FLAG )
       {
         auto program = generator.generateProgram();
-        optimizer.optimize( program, 1 );
         auto id = oeis.findSequence( program );
         if ( id )
         {
+          Program backup = program;
           optimizer.minimize( program, oeis.sequences[id].full.size() );
           optimizer.optimize( program, 1 );
+          if ( oeis.findSequence( program ) != id )
+          {
+            std::cout << "before:" << std::endl;
+            Printer d;
+            d.print( backup, std::cout );
+            std::cout << "after:" << std::endl;
+            d.print( program, std::cout );
+            Log::get().error( "Program generates wrong result after minimization and optimization", true );
+          }
           std::string file_name = "programs/oeis/" + oeis.sequences[id].id_str() + ".asm";
           bool write_file = true;
+          bool is_new = true;
           {
             std::ifstream in( file_name );
             if ( in.good() )
             {
+              is_new = false;
               Parser parser;
               auto existing_program = parser.parse( in );
               if ( existing_program.num_ops( false ) > 0
@@ -148,7 +163,9 @@ int main( int argc, char *argv[] )
           if ( write_file )
           {
             std::stringstream buf;
-            buf << "Found new program for " << oeis.sequences[id] << " First terms: "
+            buf << "Found ";
+            if ( !is_new ) buf << "shorter ";
+            buf << "program for " << oeis.sequences[id] << " First terms: "
                 << static_cast<Sequence>( oeis.sequences[id] );
             Log::get().alert( buf.str() );
             oeis.dumpProgram( id, program, file_name );
@@ -156,7 +173,7 @@ int main( int argc, char *argv[] )
         }
         ++count;
         auto time2 = std::chrono::steady_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::seconds>( time2 - time );
+        auto duration = std::chrono::duration_cast < std::chrono::seconds > (time2 - time);
         if ( duration.count() >= 60 )
         {
           time = time2;

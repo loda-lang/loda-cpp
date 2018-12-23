@@ -66,8 +66,8 @@ bool Optimizer::mergeOps( Program& p )
     auto& o1 = p.ops[i];
     auto& o2 = p.ops[i + 1];
 
-    // operation targets the same?
-    if ( o1.target == o2.target )
+    // operation targets the direct same?
+    if ( o1.target == o2.target && o1.target.type == Operand::Type::MEM_ACCESS_DIRECT )
     {
       // both sources constants?
       if ( o1.source.type == Operand::Type::CONSTANT && o2.source.type == Operand::Type::CONSTANT )
@@ -96,8 +96,8 @@ bool Optimizer::mergeOps( Program& p )
         }
       }
 
-      // second operation mov?
-      if ( o2.type == Operation::Type::MOV )
+      // second operation mov with constant?
+      if ( o2.type == Operation::Type::MOV && o2.source.type == Operand::Type::CONSTANT )
       {
         // first operation add, sub, mov?
         if ( o1.type == Operation::Type::ADD || o1.type == Operation::Type::SUB || o1.type == Operation::Type::MOV )
@@ -239,5 +239,4 @@ void Optimizer::minimize( Program& p, size_t num_terms )
   {
     Log::get().debug( "Removed " + std::to_string( removed_ops ) + " operations during minimization" );
   }
-  optimize( p, 1 );
 }
