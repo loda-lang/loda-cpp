@@ -164,8 +164,9 @@ int main( int argc, char *argv[] )
           {
             std::stringstream buf;
             buf << "Found ";
-            if ( !is_new ) buf << "shorter ";
-            buf << "program for " << oeis.sequences[id] << " First terms: "
+            if ( is_new ) buf << "first";
+            else buf << "shorter";
+            buf << " program for " << oeis.sequences[id] << " First terms: "
                 << static_cast<Sequence>( oeis.sequences[id] );
             Log::get().alert( buf.str() );
             oeis.dumpProgram( id, program, file_name );
