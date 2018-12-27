@@ -8,11 +8,16 @@
 
 void Optimizer::optimize( Program& p, size_t num_initialized_cells )
 {
-  removeNops( p );
-  while ( removeEmptyLoops( p ) )
-    ;
-  simplifyOperands( p, num_initialized_cells );
-  mergeOps( p );
+  while ( true )
+  {
+    size_t length = p.num_ops( true );
+    simplifyOperands( p, num_initialized_cells );
+    mergeOps( p );
+    removeNops( p );
+    removeEmptyLoops( p );
+    size_t new_length = p.num_ops( true );
+    if ( new_length == length ) break;
+  };
 }
 
 bool Optimizer::removeNops( Program& p )
@@ -94,6 +99,18 @@ bool Optimizer::mergeOps( Program& p )
           }
           do_merge = true;
         }
+
+        // both sources same memory cell?
+        if ( o1.source.type == Operand::Type::MEM_ACCESS_DIRECT && o1.source == o2.source )
+        {
+          // add with inverse sub?
+          if ( o1.type == Operation::Type::ADD && o2.type == Operation::Type::SUB )
+          {
+            o1.source = Operand( Operand::Type::CONSTANT, 0 );
+            do_merge = true;
+          }
+        }
+
       }
 
       // second operation mov with constant?
@@ -107,6 +124,7 @@ bool Optimizer::mergeOps( Program& p )
           do_merge = true;
         }
       }
+
     }
 
     // merge (erase second operation)
