@@ -5,6 +5,7 @@
 #include "printer.hpp"
 #include "util.hpp"
 
+#include <cstdlib>
 #include <iomanip>
 #include <fstream>
 #include <sstream>
@@ -36,7 +37,12 @@ void Oeis::load()
 {
   // load sequence data
   Log::get().debug( "Loading sequence data from the OEIS" );
-  std::ifstream stripped( "stripped" );
+  std::string home = std::string( std::getenv( "HOME" ) ) + "/.loda/oeis/";
+  std::ifstream stripped( home + "stripped" );
+  if ( !stripped.good() )
+  {
+    Log::get().error( "OEIS data not found: run get_oeis.sh to download it", true );
+  }
   std::string line;
   size_t pos;
   number_t id, num;
@@ -116,7 +122,11 @@ void Oeis::load()
 
   // load sequence names
   Log::get().debug( "Loading sequence names from the OEIS" );
-  std::ifstream names( "names" );
+  std::ifstream names( home + "names" );
+  if ( !names.good() )
+  {
+    Log::get().error( "OEIS data not found: run get_oeis.sh to download it", true );
+  }
   while ( std::getline( names, line ) )
   {
     if ( line.empty() || line[0] == '#' )
@@ -196,12 +206,13 @@ number_t Oeis::findSequence( const Program& p ) const
   return 0; // not found
 }
 
-void Oeis::dumpProgram(number_t id, Program p, const std::string file) {
+void Oeis::dumpProgram( number_t id, Program p, const std::string file )
+{
   p.removeOps( Operation::Type::NOP );
-  std::ofstream out(file);
-  auto& seq = sequences.at(id);
+  std::ofstream out( file );
+  auto& seq = sequences.at( id );
   out << "; " << seq << std::endl;
   out << "; " << seq.full << std::endl << std::endl;
   Printer r;
-  r.print(p, out);
+  r.print( p, out );
 }
