@@ -128,7 +128,8 @@ void Test::oeis()
         o.dumpProgram( s.id, optimized, file_name );
         Log::get().warn( "Program not optimal! Writing new version..." );
       }
-      readme_out << "* [" << s.id_str() << "](oeis/" << s.id_str() << ".asm): " << s.name << "\n";
+      readme_out << "* [" << s.id_str() << "](http://oeis.org/" << s.id_str() << ") ([program](oeis/" << s.id_str()
+          << ".asm)): " << s.name << "\n";
     }
   }
   readme_out.close();
