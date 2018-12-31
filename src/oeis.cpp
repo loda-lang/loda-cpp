@@ -5,8 +5,10 @@
 #include "printer.hpp"
 #include "util.hpp"
 
+#include <algorithm>
 #include <cstdlib>
 #include <iomanip>
+#include <limits>
 #include <fstream>
 #include <sstream>
 
@@ -48,6 +50,7 @@ void Oeis::load()
   number_t id, num;
   Sequence full_sequence;
   Sequence norm_sequence;
+  Sequence big_sequence;
   size_t total_count = 0;
   size_t loaded_count = 0;
   while ( std::getline( stripped, line ) )
@@ -96,6 +99,7 @@ void Oeis::load()
       }
       else if ( line[pos] == '-' )
       {
+        full_sequence.clear();
         break;
       }
       else
@@ -108,14 +112,87 @@ void Oeis::load()
     {
       continue;
     }
+
+    // normalized sequence
     norm_sequence = Sequence(
         std::vector<number_t>( full_sequence.begin(), full_sequence.begin() + settings.num_terms ) );
 
+    // big sequence
+    big_sequence.clear();
+    std::stringstream big_path;
+    big_path << home << "b/b" << std::setw( 6 ) << std::setfill( '0' ) << id << ".txt";
+    std::ifstream big_file( big_path.str() );
+    if ( big_file.good() )
+    {
+      std::string l;
+      int64_t expected_index = -1, index = 0, value = 0;
+      while ( std::getline( big_file, l ) )
+      {
+        l.erase( l.begin(), std::find_if( l.begin(), l.end(), [](int ch)
+        {
+          return !std::isspace(ch);
+        } ) );
+        if ( l.empty() || l[0] == '#' )
+        {
+          continue;
+        }
+        std::stringstream ss( l );
+        ss >> index >> value;
+        if ( expected_index == -1 )
+        {
+          expected_index = index;
+        }
+        if ( index != expected_index )
+        {
+          Log::get().warn( "Unexpected index " + std::to_string( index ) + " in b-file " + big_path.str() );
+          big_sequence.clear();
+          break;
+        }
+        if ( value < 0 )
+        {
+          big_sequence.clear();
+          break;
+        }
+        if ( value == std::numeric_limits<int64_t>::max() )
+        {
+          break;
+        }
+        big_sequence.push_back( value );
+        ++expected_index;
+      }
+      if ( big_sequence.size() < full_sequence.size() )
+      {
+        Log::get().warn( "Too few terms in b-file " + big_path.str() );
+        big_sequence.clear();
+      }
+      else
+      {
+        Sequence test_sequence(
+            std::vector<number_t>( big_sequence.begin(), big_sequence.begin() + full_sequence.size() ) );
+        if ( test_sequence != full_sequence )
+        {
+          Log::get().warn( "Unexpected terms in b-file " + big_path.str() );
+          big_sequence.clear();
+        }
+      }
+      if ( !big_sequence.empty() )
+      {
+        Log::get().debug(
+            "Loaded b-file for sequence " + std::to_string( id ) + " with " + std::to_string( big_sequence.size() )
+                + " terms" );
+      }
+    }
+    else
+    {
+      Log::get().debug( "b-file not found: " + big_path.str() );
+    }
+
+    // add sequence to index
     if ( id >= sequences.size() )
     {
       sequences.resize( 2 * id );
     }
-    sequences[id] = OeisSequence( id, "", norm_sequence, full_sequence );
+    sequences[id] = OeisSequence( id, "", norm_sequence, full_sequence, big_sequence );
     ids[norm_sequence] = id;
     ++loaded_count;
   }

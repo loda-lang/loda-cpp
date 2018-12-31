@@ -15,11 +15,12 @@ public:
   {
   }
 
-  OeisSequence( number_t id, const std::string& name, const Sequence& s, const Sequence& full )
+  OeisSequence( number_t id, const std::string& name, const Sequence& s, const Sequence& full, const Sequence& big )
       : Sequence( s ),
         id( id ),
         name( name ),
-        full( full )
+        full( full ),
+        big( big )
   {
   }
 
@@ -28,6 +29,7 @@ public:
   number_t id;
   std::string name;
   Sequence full;
+  Sequence big;
 
   friend std::ostream& operator<<( std::ostream& out, const OeisSequence& s );
 
