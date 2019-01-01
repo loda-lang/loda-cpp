@@ -2,6 +2,7 @@
 
 #include "util.hpp"
 
+#include <sstream>
 #include <unordered_set>
 
 // === Sequence ===============================================================
@@ -73,6 +74,13 @@ std::ostream& operator<<( std::ostream& out, const Sequence& seq )
     out << seq[i];
   }
   return out;
+}
+
+std::string Sequence::to_string() const
+{
+  std::stringstream ss;
+  ss << (*this);
+  return ss.str();
 }
 
 // === Memory =================================================================

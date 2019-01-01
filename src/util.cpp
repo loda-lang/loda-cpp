@@ -104,8 +104,8 @@ void Log::log( Level level, const std::string& msg )
 Settings::Settings()
     : num_terms( 30 ),
       num_operations( 40 ),
-      max_memory( 10000 ),
-      max_cycles( 10000 ),
+      max_memory( 100000 ),
+      max_cycles( 10000000 ),
       max_constant( 4 ),
       max_index( 4 ),
       operation_types( "asml" ),

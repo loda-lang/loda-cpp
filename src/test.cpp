@@ -80,30 +80,29 @@ void Test::serialize()
 void Test::oeis()
 {
   Settings settings;
-  settings.max_memory = 1000000;
-  settings.max_cycles = 10000000;
   Oeis o( settings );
   o.load();
   std::ifstream readme_in( "programs/README.md" );
   std::stringstream buffer;
   std::string str;
-  while (std::getline(readme_in, str)) {
-     buffer << str << std::endl;
-     if (str == "## Available Programs")
-     {
-    	   break;
-     }
+  while ( std::getline( readme_in, str ) )
+  {
+    buffer << str << std::endl;
+    if ( str == "## Available Programs" )
+    {
+      break;
+    }
   }
   readme_in.close();
   std::ofstream readme_out( "programs/README.md" );
   readme_out << buffer.str() << std::endl;
   for ( auto& s : o.sequences )
   {
-	std::string file_name = "programs/oeis/" + s.id_str() + ".asm";
+    std::string file_name = "programs/oeis/" + s.id_str() + ".asm";
     std::ifstream file( file_name );
     if ( file.good() )
     {
-      std::cout << "Checking first " << s.full.size() << " terms of " << s << std::endl;
+      Log::get().info( "Checking first " + std::to_string( s.full.size() ) + " terms of " + s.to_string() );
       Parser parser;
       Program program = parser.parse( file );
       Settings settings2 = settings;
@@ -112,21 +111,27 @@ void Test::oeis()
       Sequence result = interpreter.eval( program );
       if ( result.size() != s.full.size() || result != s.full )
       {
-    	    std::stringstream buf;
-    	    buf << "Program did not evaluate to expected sequence!" << std::endl;
-    	    buf << "Result:   " << result << std::endl;
-    	    buf << "Expected: " << s.full << std::endl;
-        Log::get().error( buf.str(), true );
+        std::stringstream buf;
+        buf << "Program did not evaluate to expected sequence!" << std::endl;
+        buf << "Result:   " << result << std::endl;
+        buf << "Expected: " << s.full << std::endl;
+        Log::get().error( buf.str(), false );
+        remove( file_name.c_str() );
       }
+      Log::get().info( "Optimizing and minimizing " + file_name );
       program.removeOps( Operation::Type::NOP );
       Program optimized = program;
       Optimizer optimizer( settings2 );
       optimizer.minimize( optimized, s.full.size() );
       optimizer.optimize( optimized, 1 );
-      if ( ! ( program == optimized ) )
+      if ( !(program == optimized) )
       {
         o.dumpProgram( s.id, optimized, file_name );
         Log::get().warn( "Program not optimal! Writing new version..." );
+      }
+      else
+      {
+        o.dumpProgram( s.id, program, file_name );
       }
       readme_out << "* [" << s.id_str() << "](http://oeis.org/" << s.id_str() << ") ([program](oeis/" << s.id_str()
           << ".asm)): " << s.name << "\n";
@@ -158,20 +163,20 @@ void Test::primes()
   size_t index = 0;
   for ( auto p : primes )
   {
-/*    std::cout << "P= " << p << std::endl;
-    std::cout << "R= ";
-    for ( auto r : primes )
-    {
-      std::cout << (p % r) << " ";
-      if ( r == p ) break;
-    }
-    std::cout << std::endl;
-*/    if ( p == primes.back() ) continue;
+    /*    std::cout << "P= " << p << std::endl;
+     std::cout << "R= ";
+     for ( auto r : primes )
+     {
+     std::cout << (p % r) << " ";
+     if ( r == p ) break;
+     }
+     std::cout << std::endl;
+     */if ( p == primes.back() ) continue;
     size_t diff = primes.at( index + 1 ) - p;
     std::cout << "D(" << p << ")= ";
     for ( auto d : primes )
     {
-      if ((diff / d) == 0) break;
+      if ( (diff / d) == 0 ) break;
       std::cout << (diff / d) << " ";
       if ( d == p ) break;
     }
@@ -186,11 +191,11 @@ void Test::all()
 //  Iterate();
 //  Find();
 //  primes();
-   oeis();
-   fibonacci();
-   num_divisors();
-   exponentiation();
-   ackermann();
+  oeis();
+  fibonacci();
+  num_divisors();
+  exponentiation();
+  ackermann();
 }
 
 void Test::testBinary( const std::string& func, const std::string& file,
@@ -199,8 +204,6 @@ void Test::testBinary( const std::string& func, const std::string& file,
   std::cout << "Running tests for " << file << "..." << std::endl;
   Parser parser;
   Settings settings;
-  settings.max_cycles = 10000000; // needed to run ackermann test
-  settings.max_memory = 100000;
   Interpreter interpreter( settings );
   auto program = parser.parse( file );
   for ( size_t i = 0; i < values.size(); i++ )

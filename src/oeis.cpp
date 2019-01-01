@@ -12,10 +12,19 @@
 #include <fstream>
 #include <sstream>
 
+#define MAX_TERMS 200
+
 std::ostream& operator<<( std::ostream& out, const OeisSequence& s )
 {
   out << s.id_str() << ": " << s.name;
   return out;
+}
+
+std::string OeisSequence::to_string() const
+{
+  std::stringstream ss;
+  ss << (*this);
+  return ss.str();
 }
 
 std::string OeisSequence::id_str() const
@@ -160,12 +169,7 @@ void Oeis::load()
         big_sequence.push_back( value );
         ++expected_index;
       }
-      if ( big_sequence.size() < full_sequence.size() )
-      {
-        Log::get().warn( "Too few terms in b-file " + big_path.str() );
-        big_sequence.clear();
-      }
-      else
+      if ( big_sequence.size() >= full_sequence.size() )
       {
         Sequence test_sequence(
             std::vector<number_t>( big_sequence.begin(), big_sequence.begin() + full_sequence.size() ) );
@@ -175,8 +179,17 @@ void Oeis::load()
           big_sequence.clear();
         }
       }
+      if ( big_sequence.size() > MAX_TERMS )
+      {
+        big_sequence = Sequence( std::vector<number_t>( big_sequence.begin(), big_sequence.begin() + MAX_TERMS ) );
+      }
+      if ( big_sequence.size() == 64 )
+      {
+        big_sequence = Sequence( std::vector<number_t>( big_sequence.begin(), big_sequence.begin() + 63 ) );
+      }
       if ( !big_sequence.empty() )
       {
+        full_sequence = big_sequence;
         Log::get().debug(
             "Loaded b-file for sequence " + std::to_string( id ) + " with " + std::to_string( big_sequence.size() )
                 + " terms" );
@@ -192,7 +205,7 @@ void Oeis::load()
     {
       sequences.resize( 2 * id );
     }
-    sequences[id] = OeisSequence( id, "", norm_sequence, full_sequence, big_sequence );
+    sequences[id] = OeisSequence( id, "", norm_sequence, full_sequence );
     ids[norm_sequence] = id;
     ++loaded_count;
   }
@@ -283,7 +296,7 @@ number_t Oeis::findSequence( const Program& p ) const
   return 0; // not found
 }
 
-void Oeis::dumpProgram( number_t id, Program p, const std::string file )
+void Oeis::dumpProgram( number_t id, Program p, const std::string& file ) const
 {
   p.removeOps( Operation::Type::NOP );
   std::ofstream out( file );

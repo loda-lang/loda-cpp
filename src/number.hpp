@@ -33,6 +33,8 @@ public:
 
   friend std::ostream& operator<<( std::ostream& out, const Sequence& s );
 
+  std::string to_string() const;
+
 };
 
 class Memory: public std::vector<number_t>

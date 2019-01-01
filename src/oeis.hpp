@@ -15,12 +15,11 @@ public:
   {
   }
 
-  OeisSequence( number_t id, const std::string& name, const Sequence& s, const Sequence& full, const Sequence& big )
+  OeisSequence( number_t id, const std::string& name, const Sequence& s, const Sequence& full )
       : Sequence( s ),
         id( id ),
         name( name ),
-        full( full ),
-        big( big )
+        full( full )
   {
   }
 
@@ -29,9 +28,10 @@ public:
   number_t id;
   std::string name;
   Sequence full;
-  Sequence big;
 
   friend std::ostream& operator<<( std::ostream& out, const OeisSequence& s );
+
+  std::string to_string() const;
 
 };
 
@@ -51,7 +51,7 @@ public:
 
   number_t findSequence( const Program& p ) const;
 
-  void dumpProgram( number_t id, Program p, const std::string file );
+  void dumpProgram( number_t id, Program p, const std::string& file ) const;
 
   struct Hasher
   {
