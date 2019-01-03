@@ -115,26 +115,26 @@ void Test::oeis()
         buf << "Program did not evaluate to expected sequence!" << std::endl;
         buf << "Result:   " << result << std::endl;
         buf << "Expected: " << s.full << std::endl;
-        Log::get().error( buf.str(), false );
+        file.close();
         remove( file_name.c_str() );
-      }
-      Log::get().info( "Optimizing and minimizing " + file_name );
-      program.removeOps( Operation::Type::NOP );
-      Program optimized = program;
-      Optimizer optimizer( settings2 );
-      optimizer.minimize( optimized, s.full.size() );
-      optimizer.optimize( optimized, 1 );
-      if ( !(program == optimized) )
-      {
-        o.dumpProgram( s.id, optimized, file_name );
-        Log::get().warn( "Program not optimal! Writing new version..." );
+        Log::get().error( buf.str(), false );
       }
       else
       {
-        o.dumpProgram( s.id, program, file_name );
+        Log::get().info( "Optimizing and minimizing " + file_name );
+        program.removeOps( Operation::Type::NOP );
+        Program optimized = program;
+        Optimizer optimizer( settings2 );
+        optimizer.minimize( optimized, s.full.size() );
+        optimizer.optimize( optimized, 1 );
+        if ( !(program == optimized) )
+        {
+          Log::get().warn( "Program not optimal! Updating ..." );
+        }
+        o.dumpProgram( s.id, optimized, file_name );
+        readme_out << "* [" << s.id_str() << "](http://oeis.org/" << s.id_str() << ") ([program](oeis/" << s.id_str()
+            << ".asm)): " << s.name << "\n";
       }
-      readme_out << "* [" << s.id_str() << "](http://oeis.org/" << s.id_str() << ") ([program](oeis/" << s.id_str()
-          << ".asm)): " << s.name << "\n";
     }
   }
   readme_out.close();

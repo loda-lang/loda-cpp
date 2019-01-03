@@ -23,7 +23,7 @@ public:
   {
   }
 
-  std::string id_str() const;
+  std::string id_str( const std::string& prefix = "A" ) const;
 
   number_t id;
   std::string name;

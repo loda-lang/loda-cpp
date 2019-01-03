@@ -27,10 +27,10 @@ std::string OeisSequence::to_string() const
   return ss.str();
 }
 
-std::string OeisSequence::id_str() const
+std::string OeisSequence::id_str( const std::string& prefix ) const
 {
   std::stringstream s;
-  s << "A" << std::setw( 6 ) << std::setfill( '0' ) << id;
+  s << prefix << std::setw( 6 ) << std::setfill( '0' ) << id;
   return s.str();
 }
 
@@ -186,6 +186,10 @@ void Oeis::load()
       if ( big_sequence.size() == 64 )
       {
         big_sequence = Sequence( std::vector<number_t>( big_sequence.begin(), big_sequence.begin() + 63 ) );
+      }
+      if ( id == 94966 )
+      {
+        big_sequence = Sequence( std::vector<number_t>( big_sequence.begin(), big_sequence.begin() + big_sequence.size() - 2 ) );
       }
       if ( !big_sequence.empty() )
       {
