@@ -82,7 +82,7 @@ void Test::oeis()
   Settings settings;
   Oeis o( settings );
   o.load();
-  std::ifstream readme_in( "programs/README.md" );
+  std::ifstream readme_in( "README.md" );
   std::stringstream buffer;
   std::string str;
   while ( std::getline( readme_in, str ) )
