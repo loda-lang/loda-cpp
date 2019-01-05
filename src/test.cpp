@@ -94,7 +94,7 @@ void Test::oeis()
     }
   }
   readme_in.close();
-  std::ofstream readme_out( "programs/README.md" );
+  std::ofstream readme_out( "README.md" );
   readme_out << buffer.str() << std::endl;
   for ( auto& s : o.sequences )
   {
@@ -132,7 +132,7 @@ void Test::oeis()
           Log::get().warn( "Program not optimal! Updating ..." );
         }
         o.dumpProgram( s.id, optimized, file_name );
-        readme_out << "* [" << s.id_str() << "](http://oeis.org/" << s.id_str() << ") ([program](oeis/" << s.id_str()
+        readme_out << "* [" << s.id_str() << "](http://oeis.org/" << s.id_str() << ") ([program](programs/oeis/" << s.id_str()
             << ".asm)): " << s.name << "\n";
       }
     }

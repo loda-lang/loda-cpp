@@ -27,6 +27,8 @@ private:
 
   void simplifyOperands( Program& p, size_t num_initialized_cells );
 
+  bool reduceMemoryCells( Program& p );
+
   Settings settings;
 
 };

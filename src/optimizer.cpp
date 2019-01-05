@@ -258,3 +258,34 @@ void Optimizer::minimize( Program& p, size_t num_terms )
     Log::get().debug( "Removed " + std::to_string( removed_ops ) + " operations during minimization" );
   }
 }
+
+bool Optimizer::reduceMemoryCells( Program& p )
+{
+  std::unordered_set<number_t> used_cells;
+  for ( auto& op : p.ops )
+  {
+    if ( op.source.type == Operand::Type::MEM_ACCESS_INDIRECT || op.target.type == Operand::Type::MEM_ACCESS_INDIRECT )
+    {
+      return false;
+    }
+    if ( op.source.type == Operand::Type::MEM_ACCESS_DIRECT )
+    {
+      used_cells.insert( op.source.value );
+    }
+    if ( op.target.type == Operand::Type::MEM_ACCESS_DIRECT )
+    {
+      used_cells.insert( op.target.value );
+    }
+  }
+  if ( used_cells.empty() )
+  {
+    return false;
+  }
+  number_t largest_used = *used_cells.begin();
+  for (number_t used : used_cells)
+  {
+    largest_used = std::max( largest_used, used );
+  }
+  return false;
+
+}
