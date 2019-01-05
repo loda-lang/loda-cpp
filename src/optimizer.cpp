@@ -18,6 +18,9 @@ void Optimizer::optimize( Program& p, size_t num_initialized_cells )
     size_t new_length = p.num_ops( true );
     if ( new_length == length ) break;
   };
+  while ( reduceMemoryCells( p ) )
+  {
+  }
 }
 
 bool Optimizer::removeNops( Program& p )
@@ -268,6 +271,10 @@ bool Optimizer::reduceMemoryCells( Program& p )
     {
       return false;
     }
+    if ( op.type == Operation::Type::LPB && (op.source.type != Operand::Type::CONSTANT || op.source.value != 1) )
+    {
+      return false;
+    }
     if ( op.source.type == Operand::Type::MEM_ACCESS_DIRECT )
     {
       used_cells.insert( op.source.value );
@@ -282,10 +289,36 @@ bool Optimizer::reduceMemoryCells( Program& p )
     return false;
   }
   number_t largest_used = *used_cells.begin();
-  for (number_t used : used_cells)
+  for ( number_t used : used_cells )
   {
     largest_used = std::max( largest_used, used );
   }
+  for ( number_t candidate = 0; candidate < largest_used; ++candidate )
+  {
+    bool free = true;
+    for ( number_t used : used_cells )
+    {
+      if ( used == candidate )
+      {
+        free = false;
+        break;
+      }
+    }
+    if ( free )
+    {
+      for ( auto& op : p.ops )
+      {
+        if ( op.source.type == Operand::Type::MEM_ACCESS_DIRECT && op.source.value == largest_used )
+        {
+          op.source.value = candidate;
+        }
+        if ( op.target.type == Operand::Type::MEM_ACCESS_DIRECT && op.target.value == largest_used )
+        {
+          op.target.value = candidate;
+        }
+      }
+      return true;
+    }
+  }
   return false;
-
 }
