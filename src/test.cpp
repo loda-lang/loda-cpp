@@ -189,21 +189,54 @@ void Test::primes()
 
 void Test::primes2()
 {
-  int prime = 2;
-  int gap = 1;
-  std::deque<int> next_gaps = { 2 };
+  int prime = 1; // will store current prime number
+  int gap = 1; // stores the gap to the next prime number
+  std::deque<int> next_gaps = { 1 }; // list of next gap
 
-  for ( int i = 0; i < 10; i++ )
+  for ( int i = 0; i < 3; i++ )
   {
-    prime += gap;
-    gap = next_gaps.front();
-    next_gaps.pop_front();
+    prime += gap; // next prime is current prime plus gap
+    gap = next_gaps.front(); // use next gap from list
+
+    next_gaps.pop_front(); // move next gap from front...
+    next_gaps.push_back( gap ); // ...to end
+
+    std::deque<int> updated_gaps;
+
+    // make prime number copies of the list
+    for ( int j = 0; j < prime; j++ )
+    {
+      std::copy( next_gaps.begin(), next_gaps.end(), std::back_inserter( updated_gaps ) );
+    }
+
+    // remove illegal gaps from the list
+    int sum = prime + gap;
+    for ( int j = 0; j < updated_gaps.size(); j++ )
+    {
+      sum = (sum + updated_gaps[j]) % prime;
+      std::cout << "sum=" << sum << std::endl;
+      if ( sum == 0 )
+      {
+        std::cout << "merge" << std::endl;
+        updated_gaps[j] += updated_gaps[j + 1];
+        updated_gaps.erase( updated_gaps.begin() + j + 1, updated_gaps.begin() + j + 2 );
+      }
+    }
+    next_gaps = updated_gaps;
+
+    std::cout << "p=" << prime << "; g=" << gap << "; x=";
+    for ( int j = 0; j < updated_gaps.size(); j++ )
+    {
+      std::cout << updated_gaps[i] << " ";
+    }
+    std::cout << std::endl;
 
   }
 }
 
 void Test::all()
 {
+//  primes2();
 //  Iterate();
 //  Find();
 //  primes();
