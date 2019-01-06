@@ -24,6 +24,8 @@ public:
 
   void primes();
 
+  void primes2();
+
   void all();
 
 private:

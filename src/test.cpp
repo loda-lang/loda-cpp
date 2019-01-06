@@ -10,6 +10,7 @@
 #include "printer.hpp"
 #include "serializer.hpp"
 
+#include <deque>
 #include <fstream>
 #include <sstream>
 
@@ -132,8 +133,8 @@ void Test::oeis()
           Log::get().warn( "Program not optimal! Updating ..." );
         }
         o.dumpProgram( s.id, optimized, file_name );
-        readme_out << "* [" << s.id_str() << "](http://oeis.org/" << s.id_str() << ") ([program](programs/oeis/" << s.id_str()
-            << ".asm)): " << s.name << "\n";
+        readme_out << "* [" << s.id_str() << "](http://oeis.org/" << s.id_str() << ") ([program](programs/oeis/"
+            << s.id_str() << ".asm)): " << s.name << "\n";
       }
     }
   }
@@ -183,6 +184,21 @@ void Test::primes()
 //    std::cout << std::endl;
     std::cout << std::endl;
     index++;
+  }
+}
+
+void Test::primes2()
+{
+  int prime = 2;
+  int gap = 1;
+  std::deque<int> next_gaps = { 2 };
+
+  for ( int i = 0; i < 10; i++ )
+  {
+    prime += gap;
+    gap = next_gaps.front();
+    next_gaps.pop_front();
+
   }
 }
 
