@@ -2,6 +2,8 @@
 
 #include "number.hpp"
 
+#include <stdexcept>
+
 inline uint16_t operationTypeToInt( Operation::Type t )
 {
   switch ( t )

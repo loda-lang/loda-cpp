@@ -13,6 +13,7 @@
 #include <deque>
 #include <fstream>
 #include <sstream>
+#include <stdexcept>
 
 void Test::fibonacci()
 {

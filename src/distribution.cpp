@@ -1,6 +1,7 @@
 #include "distribution.hpp"
 
 #include <iostream>
+#include <stdexcept>
 
 std::discrete_distribution<> EqualDist( size_t size )
 {

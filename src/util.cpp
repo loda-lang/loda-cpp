@@ -5,6 +5,8 @@
 #include <sstream>
 #include <stdlib.h>
 
+#include <stdexcept>
+
 Log& Log::get()
 {
   static Log log;
