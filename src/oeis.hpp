@@ -69,5 +69,6 @@ public:
   const Settings& settings;
   std::vector<OeisSequence> sequences;
   std::unordered_map<Sequence, number_t, Hasher> ids;
+  size_t total_count_;
 
 };

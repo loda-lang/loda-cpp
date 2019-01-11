@@ -40,7 +40,8 @@ void throwParseError( const std::string& line )
 }
 
 Oeis::Oeis( const Settings& settings )
-    : settings( settings )
+    : settings( settings ),
+      total_count_( 0 )
 {
 }
 
@@ -60,7 +61,6 @@ void Oeis::load()
   Sequence full_sequence;
   Sequence norm_sequence;
   Sequence big_sequence;
-  size_t total_count = 0;
   size_t loaded_count = 0;
   while ( std::getline( stripped, line ) )
   {
@@ -72,7 +72,7 @@ void Oeis::load()
     {
       throwParseError( line );
     }
-    ++total_count;
+    ++total_count_;
     pos = 1;
     id = 0;
     for ( pos = 1; pos < line.length() && line[pos] >= '0' && line[pos] <= '9'; ++pos )
@@ -255,7 +255,7 @@ void Oeis::load()
   }
 
   Log::get().info(
-      "Loaded " + std::to_string( loaded_count ) + "/" + std::to_string( total_count ) + " sequences from the OEIS" );
+      "Loaded " + std::to_string( loaded_count ) + "/" + std::to_string( total_count_ ) + " sequences from the OEIS" );
 }
 
 number_t Oeis::score( const Sequence& s )

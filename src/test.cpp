@@ -97,12 +97,14 @@ void Test::oeis()
   readme_in.close();
   std::ofstream readme_out( "README.md" );
   readme_out << buffer.str() << std::endl;
+  size_t num_programs = 0;
   for ( auto& s : o.sequences )
   {
     std::string file_name = "programs/oeis/" + s.id_str() + ".asm";
     std::ifstream file( file_name );
     if ( file.good() )
     {
+      num_programs++;
       Log::get().info( "Checking first " + std::to_string( s.full.size() ) + " terms of " + s.to_string() );
       Parser parser;
       Program program = parser.parse( file );
@@ -138,6 +140,9 @@ void Test::oeis()
       }
     }
   }
+
+  readme_out << "\n" << "Total number of programs for OEIS sequences: ";
+  readme_out << num_programs << "/" << o.total_count_ << " (" << (int) (100 * num_programs / o.total_count_) << "%)\n";
   readme_out.close();
   std::cout << std::endl;
 }
