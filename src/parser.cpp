@@ -8,6 +8,8 @@
 #include <iostream>
 #include "number.hpp"
 
+#include <stdexcept>
+
 Program Parser::parse( const std::string& file )
 {
   file_in.reset( new std::ifstream( file ) );
