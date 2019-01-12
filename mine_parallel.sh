@@ -7,6 +7,7 @@ trap abort INT
 function abort() {
   echo "Exiting..."
   killall loda
+  exit 1
 }
 
 for n in 4 6 8; do
