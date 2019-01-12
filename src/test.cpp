@@ -243,11 +243,11 @@ void Test::all()
 //  Iterate();
 //  Find();
 //  primes();
-   oeis();
    fibonacci();
    num_divisors();
    exponentiation();
    ackermann();
+   oeis();
 }
 
 void Test::testBinary( const std::string& func, const std::string& file,
