@@ -108,14 +108,14 @@ Generator::Generator( const Settings& settings, size_t numStates, int64_t seed )
   {
     switch ( c )
     {
-    case 'c':
-    case 'C':
-      source_operand_types.push_back( Operand::Type::CONSTANT );
-      break;
     case 'd':
     case 'D':
       source_operand_types.push_back( Operand::Type::MEM_ACCESS_DIRECT );
       target_operand_types.push_back( Operand::Type::MEM_ACCESS_DIRECT );
+      break;
+    case 'c':
+    case 'C':
+      source_operand_types.push_back( Operand::Type::CONSTANT );
       break;
     case 'i':
     case 'I':
@@ -275,6 +275,24 @@ Program Generator::generateProgram( size_t initialState )
       p.ops.emplace( p.ops.begin() + position + j, std::move( new_op ) );
     }
   }
+
+  // make sure that the initial value does not get overridden immediately
+  for ( auto it = p.ops.begin(); it < p.ops.end(); it++ )
+  {
+    if ( it->target.value == 0 )
+    {
+      if ( it->type == Operation::Type::MOV
+          || (it->type == Operation::Type::SUB && (it->source.type != Operand::Type::CONSTANT && it->source.value == 0)) )
+      {
+        it = p.ops.erase( it );
+      }
+    }
+    else if ( it->source.type != Operand::Type::CONSTANT && it->source.value == 0 )
+    {
+      break;
+    }
+  }
+
   return p;
 }
 
