@@ -98,6 +98,8 @@ void Test::oeis()
   readme_in.close();
   std::ofstream readme_out( "README.md" );
   readme_out << buffer.str() << std::endl;
+  std::ofstream list_file;
+  int list_index = -1;
   size_t num_programs = 0;
   for ( auto& s : o.sequences )
   {
@@ -136,12 +138,23 @@ void Test::oeis()
           Log::get().warn( "Program not optimal! Updating ..." );
         }
         o.dumpProgram( s.id, optimized, file_name );
-        readme_out << "* [" << s.id_str() << "](http://oeis.org/" << s.id_str() << ") ([program](programs/oeis/"
+        if ( list_index < 0 || s.id / 100000 != list_index )
+        {
+          list_index++;
+          std::string list_path = "programs/oeis/list" + std::to_string(list_index) + ".md";
+          OeisSequence start( (list_index * 100000) + 1 );
+          OeisSequence end( (list_index + 1) * 100000 );
+          readme_out << "* [" << start.id_str() << "-" << end.id_str() << "](" << list_path << ")\n";
+          list_file.close();
+          list_file.open( list_path );
+          list_file << "# Programs for " << start.id_str() << "-" << end.id_str() << "\n\n";
+        }
+        list_file << "* [" << s.id_str() << "](http://oeis.org/" << s.id_str() << ") ([program](programs/oeis/"
             << s.id_str() << ".asm)): " << s.name << "\n";
       }
     }
   }
-
+  list_file.close();
   readme_out << "\n" << "Total number of programs for OEIS sequences: ";
   readme_out << num_programs << "/" << o.total_count_ << " (" << (int) (100 * num_programs / o.total_count_) << "%)\n";
   readme_out.close();
@@ -243,11 +256,11 @@ void Test::all()
 //  Iterate();
 //  Find();
 //  primes();
-   oeis();
-   fibonacci();
-   num_divisors();
-   exponentiation();
-   ackermann();
+  fibonacci();
+  num_divisors();
+  exponentiation();
+  ackermann();
+  oeis();
 }
 
 void Test::testBinary( const std::string& func, const std::string& file,
