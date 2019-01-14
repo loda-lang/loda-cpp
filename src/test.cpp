@@ -141,10 +141,13 @@ void Test::oeis()
         if ( list_index < 0 || s.id / 100000 != list_index )
         {
           list_index++;
-          readme_out << "* [" << ((list_index * 100000) + 1) << "-" << ((list_index + 1) * 100000)
-              << "](programs/oeis/list" << list_index << ".md)\n";
+          std::string list_path = "programs/oeis/list" + std::to_string(list_index) + ".md";
+          OeisSequence start( (list_index * 100000) + 1 );
+          OeisSequence end( (list_index + 1) * 100000 );
+          readme_out << "* [" << start.id_str() << "-" << end.id_str() << "](" << list_path << ")\n";
           list_file.close();
-          list_file.open( "programs/oeis/list" + std::to_string( list_index ) + ".md" );
+          list_file.open( list_path );
+          list_file << "# Programs for " << start.id_str() << "-" << end.id_str() << "\n\n";
         }
         list_file << "* [" << s.id_str() << "](http://oeis.org/" << s.id_str() << ") ([program](programs/oeis/"
             << s.id_str() << ".asm)): " << s.name << "\n";
