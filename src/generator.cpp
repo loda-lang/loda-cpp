@@ -104,27 +104,20 @@ Generator::Generator( const Settings& settings, size_t numStates, int64_t seed )
     Log::get().error( "No operation types", true );
   }
 
-  for ( char c : settings.operand_types )
+  // order of operand types is important as it defines its probability
+  if ( settings.operand_types.find( 'd' ) != std::string::npos )
   {
-    switch ( c )
-    {
-    case 'c':
-    case 'C':
-      source_operand_types.push_back( Operand::Type::CONSTANT );
-      break;
-    case 'd':
-    case 'D':
-      source_operand_types.push_back( Operand::Type::MEM_ACCESS_DIRECT );
-      target_operand_types.push_back( Operand::Type::MEM_ACCESS_DIRECT );
-      break;
-    case 'i':
-    case 'I':
-      source_operand_types.push_back( Operand::Type::MEM_ACCESS_INDIRECT );
-      target_operand_types.push_back( Operand::Type::MEM_ACCESS_INDIRECT );
-      break;
-    default:
-      Log::get().error( "Unknown operand type: " + std::to_string( c ), true );
-    }
+    source_operand_types.push_back( Operand::Type::MEM_ACCESS_DIRECT );
+    target_operand_types.push_back( Operand::Type::MEM_ACCESS_DIRECT );
+  }
+  if ( settings.operand_types.find( 'c' ) != std::string::npos )
+  {
+    source_operand_types.push_back( Operand::Type::CONSTANT );
+  }
+  if ( settings.operand_types.find( 'i' ) != std::string::npos )
+  {
+    source_operand_types.push_back( Operand::Type::MEM_ACCESS_INDIRECT );
+    target_operand_types.push_back( Operand::Type::MEM_ACCESS_INDIRECT );
   }
   if ( source_operand_types.empty() )
   {
@@ -182,6 +175,14 @@ void Generator::generateOperations( Seed& seed )
   number_t target_value = s.target_value_dist( gen );
   number_t source_value = s.source_value_dist( gen );
   auto op_type = operation_types.at( s.operation_dist( gen ) );
+
+  // bias for constant loop fragment length
+  if ( op_type == Operation::Type::LPB && source_type != Operand::Type::CONSTANT && s.position_dist( gen ) % 10 > 0 )
+  {
+    source_type = Operand::Type::CONSTANT;
+  }
+
+  // avoid meaningless zeros
   if ( source_type == Operand::Type::CONSTANT && source_value == 0
       && (op_type == Operation::Type::ADD || op_type == Operation::Type::SUB || op_type == Operation::Type::LPB) )
   {
@@ -201,14 +202,25 @@ void Generator::generateOperations( Seed& seed )
 
 Program Generator::generateProgram( size_t initialState )
 {
+  // use template for base program
   Program p = program_template;
+
+  // fill program with random operations
   Seed seed;
   seed.state = initialState;
   while ( p.ops.size() < settings.num_operations )
   {
     generateOperations( seed );
     size_t position = (seed.position * (p.ops.size() + 1));
+    for ( size_t j = 0; j < seed.ops.size(); j++ )
+    {
+      p.ops.emplace( p.ops.begin() + position + j, std::move( seed.ops[j] ) );
+    }
+  }
 
+  // fix causality of read operations
+  for ( size_t position = 0; position < p.ops.size(); position++ )
+  {
     // determine written cells so far
     std::set<number_t> written_cells;
     written_cells.insert( 0 );
@@ -240,41 +252,55 @@ Program Generator::generateProgram( size_t initialState )
       ++i;
     }
 
-    for ( size_t j = 0; j < seed.ops.size(); j++ )
+    // fix source operands in new operation
+    auto& op = p.ops[position];
+    if ( op.source.type == Operand::Type::MEM_ACCESS_DIRECT || op.source.type == Operand::Type::MEM_ACCESS_INDIRECT )
     {
-      // fix source operands in new operation
-      auto new_op = seed.ops[j];
-      if ( new_op.source.type == Operand::Type::MEM_ACCESS_DIRECT
-          || new_op.source.type == Operand::Type::MEM_ACCESS_INDIRECT )
+      int x = op.source.value % written_cells.size();
+      for ( number_t cell : written_cells )
       {
-        int x = new_op.source.value % written_cells.size();
-        for ( number_t cell : written_cells )
+        if ( x-- == 0 )
         {
-          if ( x-- == 0 )
-          {
-            new_op.source.value = cell;
-            break;
-          }
+          op.source.value = cell;
+          break;
         }
       }
-
-      if ( new_op.type == Operation::Type::LPB )
+    }
+    if ( op.type == Operation::Type::LPB )
+    {
+      int x = op.target.value % written_cells.size();
+      for ( number_t cell : written_cells )
       {
-        int x = new_op.target.value % written_cells.size();
-        for ( number_t cell : written_cells )
+        if ( x-- == 0 )
         {
-          if ( x-- == 0 )
-          {
-            new_op.target.value = cell;
-            break;
-          }
+          op.target.value = cell;
+          break;
         }
       }
-
-      // add operation
-      p.ops.emplace( p.ops.begin() + position + j, std::move( new_op ) );
+    }
+    if ( op.type == Operation::Type::SUB && written_cells.find( op.target.value ) == written_cells.end() )
+    {
+      op.type = Operation::Type::ADD;
     }
   }
+
+  // make sure that the initial value does not get overridden immediately
+  for ( auto it = p.ops.begin(); it < p.ops.end(); it++ )
+  {
+    if ( it->target.value == 0 )
+    {
+      if ( it->type == Operation::Type::MOV
+          || (it->type == Operation::Type::SUB && (it->source.type != Operand::Type::CONSTANT && it->source.value == 0)) )
+      {
+        it = p.ops.erase( it );
+      }
+    }
+    else if ( it->source.type != Operand::Type::CONSTANT && it->source.value == 0 )
+    {
+      break;
+    }
+  }
+
   return p;
 }
 
