@@ -44,7 +44,7 @@ Database::Database( const Settings& settings )
 bool Database::insert( Program&& p )
 {
   Optimizer o( settings );
-  o.optimize( p, 1 );
+  o.optimize( p, 2, 1 );
 
   Interpreter i( settings );
   Sequence s = i.eval( p );
@@ -130,7 +130,7 @@ void Database::save()
       ++program1;
     }
 
-    optimizer.optimize( next_program, 1 );
+    optimizer.optimize( next_program, 2, 1 );
 
     if ( next_sequence == last_sequence )
     {

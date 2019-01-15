@@ -132,7 +132,7 @@ void Test::oeis()
         Program optimized = program;
         Optimizer optimizer( settings2 );
         optimizer.minimize( optimized, s.full.size() );
-        optimizer.optimize( optimized, 1 );
+        optimizer.optimize( optimized, 2, 1 );
         if ( !(program == optimized) )
         {
           Log::get().warn( "Program not optimal! Updating ..." );
@@ -149,13 +149,13 @@ void Test::oeis()
           list_file.open( list_path );
           list_file << "# Programs for " << start.id_str() << "-" << end.id_str() << "\n\n";
         }
-        list_file << "* [" << s.id_str() << "](http://oeis.org/" << s.id_str() << ") ([program](programs/oeis/"
-            << s.id_str() << ".asm)): " << s.name << "\n";
+        list_file << "* [" << s.id_str() << "](http://oeis.org/" << s.id_str() << ") ([program](" << s.id_str()
+            << ".asm)): " << s.name << "\n";
       }
     }
   }
   list_file.close();
-  readme_out << "\n" << "Total number of programs for OEIS sequences: ";
+  readme_out << "\n" << "Total number of programs: ";
   readme_out << num_programs << "/" << o.total_count_ << " (" << (int) (100 * num_programs / o.total_count_) << "%)\n";
   readme_out.close();
   std::cout << std::endl;

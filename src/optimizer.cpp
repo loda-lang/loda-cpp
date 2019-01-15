@@ -6,7 +6,7 @@
 
 #include <unordered_set>
 
-void Optimizer::optimize( Program& p, size_t num_initialized_cells )
+void Optimizer::optimize( Program& p, size_t num_reserved_cells, size_t num_initialized_cells )
 {
   while ( true )
   {
@@ -18,7 +18,7 @@ void Optimizer::optimize( Program& p, size_t num_initialized_cells )
     size_t new_length = p.num_ops( true );
     if ( new_length == length ) break;
   };
-  while ( reduceMemoryCells( p ) )
+  while ( reduceMemoryCells( p, num_reserved_cells ) )
   {
   }
 }
@@ -289,7 +289,7 @@ void Optimizer::minimize( Program& p, size_t num_terms )
   }
 }
 
-bool Optimizer::reduceMemoryCells( Program& p )
+bool Optimizer::reduceMemoryCells( Program& p, size_t num_reserved_cells )
 {
   std::unordered_set<number_t> used_cells;
   for ( auto& op : p.ops )
@@ -323,6 +323,10 @@ bool Optimizer::reduceMemoryCells( Program& p )
   for ( number_t candidate = 0; candidate < largest_used; ++candidate )
   {
     bool free = true;
+    if ( candidate < num_reserved_cells )
+    {
+      free = false;
+    }
     for ( number_t used : used_cells )
     {
       if ( used == candidate )
