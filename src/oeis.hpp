@@ -10,8 +10,8 @@ class OeisSequence: public Sequence
 {
 public:
 
-  OeisSequence()
-      : id( 0 )
+  OeisSequence( number_t id = 0 )
+      : id( id )
   {
   }
 
