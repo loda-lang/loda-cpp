@@ -79,7 +79,7 @@ void Oeis::load()
     {
       id = (10 * id) + (line[pos] - '0');
     }
-    if ( pos >= line.length() || line[pos] != ' ' )
+    if ( pos >= line.length() || line[pos] != ' ' || id == 0 )
     {
       throwParseError( line );
     }
@@ -117,7 +117,7 @@ void Oeis::load()
       }
       ++pos;
     }
-    if ( full_sequence.size() < settings.num_terms || full_sequence.distinct_values() < 4 )
+    if ( full_sequence.size() < settings.num_terms )
     {
       continue;
     }
@@ -210,7 +210,10 @@ void Oeis::load()
       sequences.resize( 2 * id );
     }
     sequences[id] = OeisSequence( id, "", norm_sequence, full_sequence );
-    ids[norm_sequence] = id;
+    if ( ids.find( norm_sequence ) == ids.end() )
+    {
+      ids[norm_sequence] = id;
+    }
     ++loaded_count;
   }
 
@@ -237,12 +240,12 @@ void Oeis::load()
     {
       id = (10 * id) + (line[pos] - '0');
     }
-    if ( pos >= line.length() || line[pos] != ' ' )
+    if ( pos >= line.length() || line[pos] != ' ' || id == 0 )
     {
       throwParseError( line );
     }
     ++pos;
-    if ( id < sequences.size() )
+    if ( id < sequences.size() && sequences[id].id == id )
     {
       sequences[id].name = line.substr( pos );
       if ( Log::get().level == Log::Level::DEBUG )

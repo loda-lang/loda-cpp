@@ -28,7 +28,7 @@ void Miner::Mine( volatile sig_atomic_t& exit_flag )
     {
       Program backup = program;
       optimizer.minimize( program, oeis.sequences[id].full.size() );
-      optimizer.optimize( program, 1 );
+      optimizer.optimize( program, 2, 1 );
       if ( oeis.findSequence( program ) != id )
       {
         std::cout << "before:" << std::endl;
@@ -48,7 +48,7 @@ void Miner::Mine( volatile sig_atomic_t& exit_flag )
           is_new = false;
           Parser parser;
           auto existing_program = parser.parse( in );
-          if ( existing_program.num_ops( false ) > 0 && existing_program.num_ops( false ) <= program.num_ops( false ) )
+          if ( existing_program.num_ops( false ) <= program.num_ops( false ) )
           {
             write_file = false;
           }
@@ -189,7 +189,7 @@ void Miner::UpdateBoundProgram( number_t id, bool upper, Program p, double bound
 {
   Optimizer optimizer( settings );
   optimizer.minimize( p, oeis.sequences[id].full.size() );
-  optimizer.optimize( p, 1 );
+  optimizer.optimize( p, 2, 1 );
 
   std::stringstream buf;
   buf << "Found new ";

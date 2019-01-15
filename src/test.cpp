@@ -130,7 +130,7 @@ void Test::oeis()
         Program optimized = program;
         Optimizer optimizer( settings2 );
         optimizer.minimize( optimized, s.full.size() );
-        optimizer.optimize( optimized, 1 );
+        optimizer.optimize( optimized, 2, 1 );
         if ( !(program == optimized) )
         {
           Log::get().warn( "Program not optimal! Updating ..." );

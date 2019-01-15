@@ -84,7 +84,7 @@ int main( int argc, char *argv[] )
       Printer printer;
       Program program = parser.parse( std::string( args.at( 1 ) ) );
       Optimizer optimizer( settings );
-      optimizer.optimize( program, 1 );
+      optimizer.optimize( program, 2, 1 );
       printer.print( program, std::cout );
     }
     else if ( cmd == "insert" )
@@ -110,7 +110,7 @@ int main( int argc, char *argv[] )
       Optimizer optimizer( settings );
       Generator generator( settings, 5, std::random_device()() );
       auto program = generator.generateProgram();
-      optimizer.optimize( program, 1 );
+      optimizer.optimize( program, 2, 1 );
       Printer r;
       r.print( program, std::cout );
     }
