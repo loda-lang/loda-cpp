@@ -61,7 +61,14 @@ void Miner::Mine( volatile sig_atomic_t& exit_flag )
         if ( is_new ) buf << "first";
         else buf << "shorter";
         buf << " program for " << oeis.sequences[id] << " First terms: " << static_cast<Sequence>( oeis.sequences[id] );
-        Log::get().alert( buf.str() );
+        if ( is_new )
+        {
+          Log::get().alert( buf.str() );
+        }
+        else
+        {
+          Log::get().info( buf.str() );
+        }
         oeis.dumpProgram( id, program, file_name );
         ++found;
       }
