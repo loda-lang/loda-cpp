@@ -138,7 +138,7 @@ void Test::oeis()
           Log::get().warn( "Program not optimal! Updating ..." );
         }
         o.dumpProgram( s.id, optimized, file_name );
-        if ( list_index < 0 || s.id / 100000 != list_index )
+        if ( list_index < 0 || (int) s.id / 100000 != list_index )
         {
           list_index++;
           std::string list_path = "programs/oeis/list" + std::to_string(list_index) + ".md";
