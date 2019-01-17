@@ -149,7 +149,25 @@ void Oeis::load()
         ss >> index >> value;
         if ( expected_index == -1 )
         {
+          if ( index < 0 )
+          {
+            continue;
+          }
           expected_index = index;
+          if ( value != (int) full_sequence.front() )
+          {
+            for ( size_t i = 0; i < 5; i++)
+            {
+              if ( value != (int) full_sequence[i] )
+              {
+                big_sequence.push_back( full_sequence[i] );
+              }
+              else
+              {
+                break;
+              }
+            }
+          }
         }
         if ( index != expected_index )
         {
@@ -210,10 +228,7 @@ void Oeis::load()
       sequences.resize( 2 * id );
     }
     sequences[id] = OeisSequence( id, "", norm_sequence, full_sequence );
-    if ( ids.find( norm_sequence ) == ids.end() )
-    {
-      ids[norm_sequence] = id;
-    }
+    ids[norm_sequence].push_back( id );
     ++loaded_count;
   }
 
@@ -263,6 +278,7 @@ void Oeis::load()
 
 number_t Oeis::score( const Sequence& s )
 {
+  /*
   auto it = ids.find( s );
   if ( it != ids.end() )
   {
@@ -275,7 +291,7 @@ number_t Oeis::score( const Sequence& s )
         << static_cast<Sequence>( sequences[id] );
     Log::get().debug( buf.str() );
     return 0;
-  }
+  }*/
   return 1;
 }
 
@@ -288,11 +304,14 @@ number_t Oeis::findSequence( const Program& p ) const
     auto it = ids.find( norm_seq );
     if ( it != ids.end() )
     {
-      auto expected_full_seq = sequences.at( it->second ).full;
-      auto full_seq = interpreter.eval( p, expected_full_seq.size() );
-      if ( full_seq.size() == expected_full_seq.size() && !(full_seq != expected_full_seq) )
+      for ( auto& id : it->second )
       {
-        return it->second;
+        auto expected_full_seq = sequences.at( id ).full;
+        auto full_seq = interpreter.eval( p, expected_full_seq.size() );
+        if ( full_seq.size() == expected_full_seq.size() && !(full_seq != expected_full_seq) )
+        {
+          return id;
+        }
       }
     }
   }

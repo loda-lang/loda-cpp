@@ -55,7 +55,7 @@ void Log::alert( const std::string& msg )
       copy = copy + "...";
     }
   }
-  if ( !copy.empty() )
+  if ( tweet_alerts && !copy.empty() )
   {
     std::string cmd = "twidge update \"" + copy + "\"";
     auto exit_code = system( cmd.c_str() );
@@ -63,10 +63,6 @@ void Log::alert( const std::string& msg )
     {
       error( "Error sending alert using twidge: exit code " + std::to_string( exit_code ), false );
     }
-  }
-  else
-  {
-    error( "Error sending alert: empty message", false );
   }
 }
 
