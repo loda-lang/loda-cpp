@@ -149,7 +149,25 @@ void Oeis::load()
         ss >> index >> value;
         if ( expected_index == -1 )
         {
+          if ( index < 0 )
+          {
+            continue;
+          }
           expected_index = index;
+          if ( value != (int) full_sequence.front() )
+          {
+            for ( size_t i = 0; i < 5; i++)
+            {
+              if ( value != (int) full_sequence[i] )
+              {
+                big_sequence.push_back( full_sequence[i] );
+              }
+              else
+              {
+                break;
+              }
+            }
+          }
         }
         if ( index != expected_index )
         {
