@@ -12,7 +12,7 @@
 #include <fstream>
 #include <sstream>
 
-#define MAX_TERMS 200
+#define MAX_TERMS 250
 
 std::ostream& operator<<( std::ostream& out, const OeisSequence& s )
 {
