@@ -190,7 +190,8 @@ void Generator::generateOperations( Seed& seed )
   }
 
   seed.ops.clear();
-  seed.ops.push_back( Operation( op_type, Operand( target_type, target_value ), Operand( source_type, source_value ) ) );
+  seed.ops.push_back(
+      Operation( op_type, Operand( target_type, target_value ), Operand( source_type, source_value ) ) );
   if ( op_type == Operation::Type::LPB )
   {
     seed.ops.push_back( Operation( Operation::Type::LPE ) );
@@ -224,21 +225,6 @@ Program Generator::generateProgram( size_t initialState )
   for ( size_t position = 0; position < p.ops.size(); position++ )
   {
     auto& op = p.ops[position];
-    switch ( op.type )
-    {
-    case Operation::Type::ADD:
-    case Operation::Type::SUB:
-    case Operation::Type::MOV:
-    {
-      if ( op.target.type == Operand::Type::MEM_ACCESS_DIRECT )
-      {
-        written_cells.insert( op.target.value );
-      }
-      break;
-    }
-    default:
-      break;
-    }
 
     // fix source operands in new operation
     if ( op.source.type == Operand::Type::MEM_ACCESS_DIRECT || op.source.type == Operand::Type::MEM_ACCESS_INDIRECT )
@@ -269,6 +255,24 @@ Program Generator::generateProgram( size_t initialState )
     {
       op.type = Operation::Type::ADD;
     }
+
+    // update written cells
+    switch ( op.type )
+    {
+    case Operation::Type::ADD:
+    case Operation::Type::SUB:
+    case Operation::Type::MOV:
+    {
+      if ( op.target.type == Operand::Type::MEM_ACCESS_DIRECT )
+      {
+        written_cells.insert( op.target.value );
+      }
+      break;
+    }
+    default:
+      break;
+    }
+
   }
 
   // make sure that the initial value does not get overridden immediately
@@ -284,6 +288,95 @@ Program Generator::generateProgram( size_t initialState )
     }
     else if ( it->source.type != Operand::Type::CONSTANT && it->source.value == 0 )
     {
+      break;
+    }
+  }
+
+  // make sure that the target value gets written
+  bool written = false;
+  for ( auto& op : p.ops )
+  {
+    switch ( op.type )
+    {
+    case Operation::Type::ADD:
+    case Operation::Type::SUB:
+    case Operation::Type::MOV:
+    {
+      if ( op.target.type == Operand::Type::MEM_ACCESS_DIRECT )
+      {
+        if ( op.target.value == 1 )
+        {
+          if ( !written && op.type == Operation::Type::SUB )
+          {
+            op.type = Operation::Type::ADD;
+          }
+          written = true;
+        }
+      }
+      break;
+    }
+    default:
+      break;
+    }
+    if ( written ) break;
+  }
+  if ( !written )
+  {
+    number_t source = 0;
+    for ( number_t cell : written_cells )
+    {
+      source = cell;
+    }
+    p.ops.push_back(
+        Operation( Operation::Type::MOV, Operand( Operand::Type::MEM_ACCESS_DIRECT, 1 ),
+            Operand( Operand::Type::MEM_ACCESS_DIRECT, source ) ) );
+  }
+
+  // make sure loops do something
+  number_t mem = 0;
+  number_t num_ops = 0;
+  bool can_descent = false;
+  for ( size_t i = 0; i < p.ops.size(); i++ )
+  {
+    switch ( p.ops[i].type )
+    {
+    case Operation::Type::LPB:
+    {
+      mem = p.ops[i].target.value;
+      can_descent = false;
+      num_ops = 0;
+      break;
+    }
+    case Operation::Type::ADD:
+      num_ops++;
+      break;
+    case Operation::Type::SUB:
+      can_descent = true;
+      break;
+    case Operation::Type::MOV:
+      num_ops++;
+      can_descent = true;
+      break;
+    case Operation::Type::LPE:
+    {
+      if ( !can_descent )
+      {
+        Operation sub( Operation::Type::SUB, Operand( Operand::Type::MEM_ACCESS_DIRECT, mem ),
+            Operand( Operand::Type::CONSTANT, 1 ) );
+        p.ops.insert( p.ops.begin() + i, sub );
+        i++;
+      }
+      if ( num_ops == 0 )
+      {
+        size_t val = (seed.position * 5) + 1;
+        Operation add( Operation::Type::ADD, Operand( Operand::Type::MEM_ACCESS_DIRECT, mem + 1 ),
+            Operand( Operand::Type::CONSTANT, val ) );
+        p.ops.insert( p.ops.begin() + i, add );
+        i++;
+      }
+      break;
+    }
+    default:
       break;
     }
   }
