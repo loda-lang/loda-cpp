@@ -18,6 +18,7 @@ void help()
   std::cout << "Commands:" << std::endl;
   std::cout << "  evaluate <file>  Evaluate a program to a sequence" << std::endl;
   std::cout << "  optimize <file>  Optimize a program and print it" << std::endl;
+  std::cout << "  minimize <file>  Minimize a program and print it (use -t to set the number of terms)" << std::endl;
   std::cout << "  generate         Generate a random program and print it" << std::endl;
   std::cout << "  mine             Mine programs for OEIS sequences" << std::endl;
 //  std::cout << "  insert           Insert a program into the database" << std::endl;
@@ -85,6 +86,15 @@ int main( int argc, char *argv[] )
       Program program = parser.parse( std::string( args.at( 1 ) ) );
       Optimizer optimizer( settings );
       optimizer.optimize( program, 2, 1 );
+      printer.print( program, std::cout );
+    }
+    else if ( cmd == "minimize" || cmd == "min" )
+    {
+      Parser parser;
+      Printer printer;
+      Program program = parser.parse( std::string( args.at( 1 ) ) );
+      Optimizer optimizer( settings );
+      optimizer.minimize( program, settings.num_terms );
       printer.print( program, std::cout );
     }
     else if ( cmd == "insert" )
