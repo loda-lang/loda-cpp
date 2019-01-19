@@ -298,26 +298,37 @@ number_t Oeis::score( const Sequence& s )
 number_t Oeis::findSequence( const Program& p ) const
 {
   Interpreter interpreter( settings );
+  Sequence norm_seq, full_seq;
   try
   {
-    auto norm_seq = interpreter.eval( p );
-    auto it = ids.find( norm_seq );
-    if ( it != ids.end() )
+    norm_seq = interpreter.eval( p );
+  }
+  catch ( const std::exception& )
+  {
+    return 0;
+  }
+  auto it = ids.find( norm_seq );
+  if ( it != ids.end() )
+  {
+    for ( auto id : it->second )
     {
-      for ( auto& id : it->second )
+      auto& expected_full_seq = sequences.at( id ).full;
+      try
       {
-        auto expected_full_seq = sequences.at( id ).full;
-        auto full_seq = interpreter.eval( p, expected_full_seq.size() );
+        if ( full_seq.size() != expected_full_seq.size() )
+        {
+          full_seq = interpreter.eval( p, expected_full_seq.size() );
+        }
         if ( full_seq.size() == expected_full_seq.size() && !(full_seq != expected_full_seq) )
         {
           return id;
         }
       }
+      catch ( const std::exception& )
+      {
+        // program not okay
+      }
     }
-  }
-  catch ( const std::exception& )
-  {
-    // will return 0 (not found)
   }
   return 0; // not found
 }

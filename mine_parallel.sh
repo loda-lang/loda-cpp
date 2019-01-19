@@ -1,6 +1,6 @@
 #!/bin/bash
 
-log_level=info
+log_level=alert
 
 trap abort INT
 
