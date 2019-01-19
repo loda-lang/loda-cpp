@@ -20,7 +20,7 @@ void NotifyUnexpectedResult( const Program& before, const Program& after, const 
   d.print( before, std::cout );
   std::cout << "after:" << std::endl;
   d.print( after, std::cout );
-  Log::get().error( "Program generates wrong result after " + process, true );
+  Log::get().error( "Program generates wrong result after " + process, false );
 }
 
 void Miner::Mine( volatile sig_atomic_t& exit_flag )
@@ -41,12 +41,14 @@ void Miner::Mine( volatile sig_atomic_t& exit_flag )
       if ( oeis.findSequence( program ) != id )
       {
         NotifyUnexpectedResult( backup, program, "minimization" );
+        continue;
       }
       backup = program;
       optimizer.optimize( program, 2, 1 );
       if ( oeis.findSequence( program ) != id )
       {
         NotifyUnexpectedResult( backup, program, "optimization" );
+        continue;
       }
       std::string file_name = "programs/oeis/" + oeis.sequences[id].id_str() + ".asm";
       bool write_file = true;
