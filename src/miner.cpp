@@ -13,6 +13,16 @@
 #include <sstream>
 #include <unordered_set>
 
+void NotifyUnexpectedResult( const Program& before, const Program& after, const std::string& process)
+{
+  std::cout << "before:" << std::endl;
+  Printer d;
+  d.print( before, std::cout );
+  std::cout << "after:" << std::endl;
+  d.print( after, std::cout );
+  Log::get().error( "Program generates wrong result after " + process, true );
+}
+
 void Miner::Mine( volatile sig_atomic_t& exit_flag )
 {
   Optimizer optimizer( settings );
@@ -28,15 +38,15 @@ void Miner::Mine( volatile sig_atomic_t& exit_flag )
     {
       Program backup = program;
       optimizer.minimize( program, oeis.sequences[id].full.size() );
+      if ( oeis.findSequence( program ) != id )
+      {
+        NotifyUnexpectedResult( backup, program, "minimization" );
+      }
+      backup = program;
       optimizer.optimize( program, 2, 1 );
       if ( oeis.findSequence( program ) != id )
       {
-        std::cout << "before:" << std::endl;
-        Printer d;
-        d.print( backup, std::cout );
-        std::cout << "after:" << std::endl;
-        d.print( program, std::cout );
-        Log::get().error( "Program generates wrong result after minimization and optimization", true );
+        NotifyUnexpectedResult( backup, program, "optimization" );
       }
       std::string file_name = "programs/oeis/" + oeis.sequences[id].id_str() + ".asm";
       bool write_file = true;
