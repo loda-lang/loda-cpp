@@ -308,26 +308,27 @@ number_t Oeis::findSequence( const Program& p ) const
     return 0;
   }
   auto it = ids.find( norm_seq );
-  if ( it != ids.end() )
+  if ( it == ids.end() )
   {
-    for ( auto id : it->second )
+    return 0;
+  }
+  for ( auto id : it->second )
+  {
+    auto& expected_full_seq = sequences.at( id ).full;
+    try
     {
-      auto& expected_full_seq = sequences.at( id ).full;
-      try
+      if ( full_seq.size() != expected_full_seq.size() )
       {
-        if ( full_seq.size() != expected_full_seq.size() )
-        {
-          full_seq = interpreter.eval( p, expected_full_seq.size() );
-        }
-        if ( full_seq.size() == expected_full_seq.size() && !(full_seq != expected_full_seq) )
-        {
-          return id;
-        }
+        full_seq = interpreter.eval( p, expected_full_seq.size() );
       }
-      catch ( const std::exception& )
+      if ( full_seq.size() == expected_full_seq.size() && !(full_seq != expected_full_seq) )
       {
-        // program not okay
+        return id;
       }
+    }
+    catch ( const std::exception& )
+    {
+      // program not okay
     }
   }
   return 0; // not found
