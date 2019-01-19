@@ -213,12 +213,11 @@ void Optimizer::simplifyOperands( Program& p, size_t num_initialized_cells )
 
 void Optimizer::minimize( Program& p, size_t num_terms )
 {
-  settings.num_terms = num_terms;
   Interpreter interpreter( settings );
   Sequence target_sequence;
   try
   {
-    target_sequence = interpreter.eval( p );
+    target_sequence = interpreter.eval( p, num_terms );
   }
   catch ( const std::exception& )
   {
@@ -240,7 +239,7 @@ void Optimizer::minimize( Program& p, size_t num_terms )
         bool can_reset = true;
         try
         {
-          auto new_sequence = interpreter.eval( p );
+          auto new_sequence = interpreter.eval( p, num_terms );
           if ( new_sequence.size() != target_sequence.size() || new_sequence != target_sequence )
           {
             can_reset = false;
@@ -262,7 +261,7 @@ void Optimizer::minimize( Program& p, size_t num_terms )
       bool can_remove = true;
       try
       {
-        auto new_sequence = interpreter.eval( p );
+        auto new_sequence = interpreter.eval( p, num_terms );
         if ( new_sequence.size() != target_sequence.size() || new_sequence != target_sequence )
         {
           can_remove = false;

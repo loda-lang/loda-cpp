@@ -20,7 +20,7 @@ void NotifyUnexpectedResult( const Program& before, const Program& after, const 
   d.print( before, std::cout );
   std::cout << "after:" << std::endl;
   d.print( after, std::cout );
-  Log::get().error( "Program generates wrong result after " + process, false );
+  Log::get().error( "Program generates wrong result after " + process, true );
 }
 
 void Miner::Mine( volatile sig_atomic_t& exit_flag )
@@ -37,10 +37,11 @@ void Miner::Mine( volatile sig_atomic_t& exit_flag )
     if ( id )
     {
       Program backup = program;
-      optimizer.minimize( program, oeis.sequences[id].full.size() );
+      auto num_terms = oeis.sequences[id].full.size();
+      optimizer.minimize( program, num_terms );
       if ( oeis.findSequence( program ) != id )
       {
-        NotifyUnexpectedResult( backup, program, "minimization" );
+        NotifyUnexpectedResult( backup, program, "minimization up to " + std::to_string( num_terms ) );
         continue;
       }
       backup = program;

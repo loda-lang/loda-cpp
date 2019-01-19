@@ -219,41 +219,28 @@ Program Generator::generateProgram( size_t initialState )
   }
 
   // fix causality of read operations
+  std::set<number_t> written_cells;
+  written_cells.insert( 0 );
   for ( size_t position = 0; position < p.ops.size(); position++ )
   {
-    // determine written cells so far
-    std::set<number_t> written_cells;
-    written_cells.insert( 0 );
-    size_t open_loops = 0;
-    size_t i = 0;
-    while ( i < position || open_loops > 0 )
+    auto& op = p.ops[position];
+    switch ( op.type )
     {
-      switch ( p.ops[i].type )
+    case Operation::Type::ADD:
+    case Operation::Type::SUB:
+    case Operation::Type::MOV:
+    {
+      if ( op.target.type == Operand::Type::MEM_ACCESS_DIRECT )
       {
-      case Operation::Type::ADD:
-      case Operation::Type::SUB:
-      case Operation::Type::MOV:
-      {
-        if ( p.ops[i].target.type == Operand::Type::MEM_ACCESS_DIRECT )
-        {
-          written_cells.insert( p.ops[i].target.value );
-        }
-        break;
+        written_cells.insert( op.target.value );
       }
-      case Operation::Type::LPB:
-        ++open_loops;
-        break;
-      case Operation::Type::LPE:
-        --open_loops;
-        break;
-      default:
-        break;
-      }
-      ++i;
+      break;
+    }
+    default:
+      break;
     }
 
     // fix source operands in new operation
-    auto& op = p.ops[position];
     if ( op.source.type == Operand::Type::MEM_ACCESS_DIRECT || op.source.type == Operand::Type::MEM_ACCESS_INDIRECT )
     {
       int x = op.source.value % written_cells.size();
