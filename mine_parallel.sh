@@ -10,20 +10,13 @@ function abort() {
   exit 1
 }
 
-for n in 4 6 8; do
-  ./loda mine -n ${n} -p ${n}0 -a cd -l ${log_level} &
-done
-
-for p in 20 40; do
-  ./loda mine -p ${p} -a cd -o asm -e programs/templates/T01.asm -l ${log_level} &
-done
-
-for p in 20 40 60; do
-  ./loda mine -p ${p} -a cd -o asm -e programs/templates/T02.asm -l ${log_level} &
-done
-
-for p in 40 60; do
-  ./loda mine -p ${p} -l ${log_level} &
+for n in 4 8; do
+  p="${n}0"
+  l="-l ${log_level}"
+  ./loda mine -p $p -a cd -o asm -e programs/templates/T01.asm $l &
+  ./loda mine -p $p -a cd -o asm -e programs/templates/T02.asm $l &
+  ./loda mine -p $p -a cd -n $n $l &
+  ./loda mine -p $p -n $n $l &
 done
 
 input=

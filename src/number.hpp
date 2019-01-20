@@ -23,7 +23,7 @@ public:
 
   Sequence subsequence( size_t start );
 
-  bool linear() const;
+  bool is_linear() const;
 
   size_t distinct_values() const;
 

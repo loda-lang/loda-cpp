@@ -12,7 +12,7 @@
 #include <fstream>
 #include <sstream>
 
-#define MAX_TERMS 250
+size_t Oeis::MAX_NUM_TERMS = 250;
 
 std::ostream& operator<<( std::ostream& out, const OeisSequence& s )
 {
@@ -41,7 +41,8 @@ void throwParseError( const std::string& line )
 
 Oeis::Oeis( const Settings& settings )
     : settings( settings ),
-      total_count_( 0 )
+      total_count_( 0 ),
+      search_linear_( false )
 {
 }
 
@@ -117,7 +118,15 @@ void Oeis::load()
       }
       ++pos;
     }
+
+    // check minimum number of terms
     if ( full_sequence.size() < settings.num_terms )
+    {
+      continue;
+    }
+
+    // more filter criteria
+    if ( !search_linear_ && full_sequence.is_linear() )
     {
       continue;
     }
@@ -197,9 +206,9 @@ void Oeis::load()
           big_sequence.clear();
         }
       }
-      if ( big_sequence.size() > MAX_TERMS )
+      if ( big_sequence.size() > MAX_NUM_TERMS )
       {
-        big_sequence = Sequence( std::vector<number_t>( big_sequence.begin(), big_sequence.begin() + MAX_TERMS ) );
+        big_sequence = Sequence( std::vector<number_t>( big_sequence.begin(), big_sequence.begin() + MAX_NUM_TERMS ) );
       }
       if ( big_sequence.size() == 64 )
       {
@@ -307,6 +316,11 @@ number_t Oeis::findSequence( const Program& p ) const
   {
     return 0;
   }
+  if ( !search_linear_ && norm_seq.is_linear() )
+  {
+    return 0;
+  }
+
   auto it = ids.find( norm_seq );
   if ( it == ids.end() )
   {

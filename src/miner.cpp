@@ -37,18 +37,11 @@ void Miner::Mine( volatile sig_atomic_t& exit_flag )
     if ( id )
     {
       Program backup = program;
-      auto num_terms = oeis.sequences[id].full.size();
-      optimizer.minimize( program, num_terms );
-      if ( oeis.findSequence( program ) != id )
-      {
-        NotifyUnexpectedResult( backup, program, "minimization up to " + std::to_string( num_terms ) );
-        continue;
-      }
-      backup = program;
+      optimizer.minimize( program, Oeis::MAX_NUM_TERMS );
       optimizer.optimize( program, 2, 1 );
       if ( oeis.findSequence( program ) != id )
       {
-        NotifyUnexpectedResult( backup, program, "optimization" );
+        NotifyUnexpectedResult( backup, program, "minimization and optimization" );
         continue;
       }
       std::string file_name = "programs/oeis/" + oeis.sequences[id].id_str() + ".asm";
