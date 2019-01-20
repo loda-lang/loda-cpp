@@ -25,6 +25,7 @@ void NotifyUnexpectedResult( const Program& before, const Program& after, const 
 
 void Miner::Mine( volatile sig_atomic_t& exit_flag )
 {
+  Interpreter interpreter( settings );
   Optimizer optimizer( settings );
   Generator generator( settings, 5, std::random_device()() );
   size_t count = 0;
@@ -33,13 +34,27 @@ void Miner::Mine( volatile sig_atomic_t& exit_flag )
   while ( !exit_flag )
   {
     auto program = generator.generateProgram();
-    auto id = oeis.findSequence( program );
-    if ( id )
+    auto ids = oeis.findSequence( program );
+    for ( auto id : ids )
     {
+      auto& seq = oeis.sequences[id];
       Program backup = program;
-      optimizer.minimize( program, Oeis::MAX_NUM_TERMS );
+      optimizer.minimize( program, seq.full.size() );
       optimizer.optimize( program, 2, 1 );
-      if ( oeis.findSequence( program ) != id )
+      bool correct = true;
+      try
+      {
+        auto new_seq = interpreter.eval( program, seq.full.size() );
+        if ( seq.full.size() != new_seq.size() || seq.full != new_seq )
+        {
+          correct = false;
+        }
+      }
+      catch ( const std::exception& e )
+      {
+        correct = false;
+      }
+      if ( !correct )
       {
         NotifyUnexpectedResult( backup, program, "minimization and optimization" );
         continue;
