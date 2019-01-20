@@ -42,7 +42,7 @@ void throwParseError( const std::string& line )
 Oeis::Oeis( const Settings& settings )
     : settings( settings ),
       total_count_( 0 ),
-      search_linear_( false )
+      search_linear_( true )
 {
 }
 
@@ -121,12 +121,6 @@ void Oeis::load()
 
     // check minimum number of terms
     if ( full_sequence.size() < settings.num_terms )
-    {
-      continue;
-    }
-
-    // more filter criteria
-    if ( !search_linear_ && full_sequence.is_linear() )
     {
       continue;
     }
@@ -304,8 +298,9 @@ number_t Oeis::score( const Sequence& s )
   return 1;
 }
 
-number_t Oeis::findSequence( const Program& p ) const
+std::vector<number_t> Oeis::findSequence( const Program& p ) const
 {
+  std::vector<number_t> result;
   Interpreter interpreter( settings );
   Sequence norm_seq, full_seq;
   try
@@ -314,17 +309,17 @@ number_t Oeis::findSequence( const Program& p ) const
   }
   catch ( const std::exception& )
   {
-    return 0;
+    return result;
   }
   if ( !search_linear_ && norm_seq.is_linear() )
   {
-    return 0;
+    return result;
   }
 
   auto it = ids.find( norm_seq );
   if ( it == ids.end() )
   {
-    return 0;
+    return result;
   }
   for ( auto id : it->second )
   {
@@ -337,7 +332,7 @@ number_t Oeis::findSequence( const Program& p ) const
       }
       if ( full_seq.size() == expected_full_seq.size() && !(full_seq != expected_full_seq) )
       {
-        return id;
+        result.push_back( id );
       }
     }
     catch ( const std::exception& )
@@ -345,7 +340,7 @@ number_t Oeis::findSequence( const Program& p ) const
       // program not okay
     }
   }
-  return 0; // not found
+  return result;
 }
 
 void Oeis::dumpProgram( number_t id, Program p, const std::string& file ) const
