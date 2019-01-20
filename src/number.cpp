@@ -12,7 +12,7 @@ Sequence Sequence::subsequence( size_t start )
   return Sequence( std::vector<number_t>( begin() + start, end() ) );
 }
 
-bool Sequence::linear() const
+bool Sequence::is_linear() const
 {
   if ( size() < 3 )
   {

@@ -39,6 +39,8 @@ class Oeis: public Scorer
 {
 public:
 
+  static size_t MAX_NUM_TERMS;
+
   Oeis( const Settings& settings );
 
   virtual ~Oeis()
@@ -70,5 +72,6 @@ public:
   std::vector<OeisSequence> sequences;
   std::unordered_map<Sequence, std::vector<number_t>, Hasher> ids;
   size_t total_count_;
+  bool search_linear_;
 
 };
