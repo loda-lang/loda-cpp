@@ -1,6 +1,6 @@
 #!/bin/bash
 
-log_level=alert
+log_level=info
 
 trap abort INT
 
@@ -10,7 +10,7 @@ function abort() {
   exit 1
 }
 
-for n in 4 8; do
+for n in 2 4 6; do
   p="${n}0"
   l="-l ${log_level}"
   ./loda mine -p $p -a cd -o asm -e programs/templates/T01.asm $l &

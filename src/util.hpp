@@ -25,7 +25,7 @@ public:
   void alert( const std::string& msg );
 
   Level level = Level::INFO;
-  bool tweet_alerts = false;
+  bool tweet_alerts = true;
 
 private:
   void log( Level level, const std::string& msg );

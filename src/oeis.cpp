@@ -42,7 +42,7 @@ void throwParseError( const std::string& line )
 Oeis::Oeis( const Settings& settings )
     : settings( settings ),
       total_count_( 0 ),
-      search_linear_( true )
+      search_linear_( false )
 {
 }
 
