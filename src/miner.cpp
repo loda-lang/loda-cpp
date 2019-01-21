@@ -38,13 +38,13 @@ void Miner::Mine( volatile sig_atomic_t& exit_flag )
     for ( auto id : ids )
     {
       auto& seq = oeis.sequences[id];
-      Program backup = program;
-      optimizer.minimize( program, seq.full.size() );
-      optimizer.optimize( program, 2, 1 );
+      Program optimized = program;
+      optimizer.minimize( optimized, seq.full.size() );
+      optimizer.optimize( optimized, 2, 1 );
       bool correct = true;
       try
       {
-        auto new_seq = interpreter.eval( program, seq.full.size() );
+        auto new_seq = interpreter.eval( optimized, seq.full.size() );
         if ( seq.full.size() != new_seq.size() || seq.full != new_seq )
         {
           correct = false;
@@ -56,7 +56,7 @@ void Miner::Mine( volatile sig_atomic_t& exit_flag )
       }
       if ( !correct )
       {
-        NotifyUnexpectedResult( backup, program, "minimization and optimization" );
+        NotifyUnexpectedResult( program, optimized, "minimization and optimization" );
         continue;
       }
       std::string file_name = "programs/oeis/" + oeis.sequences[id].id_str() + ".asm";
@@ -69,7 +69,7 @@ void Miner::Mine( volatile sig_atomic_t& exit_flag )
           is_new = false;
           Parser parser;
           auto existing_program = parser.parse( in );
-          if ( existing_program.num_ops( false ) <= program.num_ops( false ) )
+          if ( existing_program.num_ops( false ) <= optimized.num_ops( false ) )
           {
             write_file = false;
           }
@@ -83,7 +83,7 @@ void Miner::Mine( volatile sig_atomic_t& exit_flag )
         else buf << "shorter";
         buf << " program for " << oeis.sequences[id] << " First terms: " << static_cast<Sequence>( oeis.sequences[id] );
         Log::get().alert( buf.str() );
-        oeis.dumpProgram( id, program, file_name );
+        oeis.dumpProgram( id, optimized, file_name );
         ++found;
       }
     }
