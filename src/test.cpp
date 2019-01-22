@@ -11,6 +11,7 @@
 #include "serializer.hpp"
 
 #include <deque>
+#include <iomanip>
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
@@ -150,8 +151,9 @@ void Test::oeis()
           list_file << "# Programs for " << start.id_str() << "-" << end.id_str() << "\n\n";
           list_file << "List of integer sequences with links to LODA programs. An _Ln_ program is a LODA program of length _n_." << "\n\n";
         }
-        list_file << "* [" << s.id_str() << "](http://oeis.org/" << s.id_str() << ") ([L" << optimized.num_ops( false )
-            << " program](" << s.id_str() << ".asm)): " << s.name << "\n";
+        list_file << "* [" << s.id_str() << "](http://oeis.org/" << s.id_str() << ") ([L" << std::setw( 2 )
+            << std::setfill( '0' ) << optimized.num_ops( false ) << " program](" << s.id_str() << ".asm)): " << s.name
+            << "\n";
       }
     }
   }

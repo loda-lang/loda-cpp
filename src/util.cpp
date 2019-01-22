@@ -103,7 +103,7 @@ Settings::Settings()
     : num_terms( 20 ),
       num_operations( 40 ),
       max_memory( 100000 ),
-      max_cycles( 20000000 ),
+      max_cycles( 10000000 ),
       max_constant( 6 ),
       max_index( 6 ),
       operation_types( "asml" ),
