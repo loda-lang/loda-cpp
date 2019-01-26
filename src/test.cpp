@@ -159,7 +159,8 @@ void Test::oeis()
   }
   list_file.close();
   readme_out << "\n" << "Total number of programs: ";
-  readme_out << num_programs << "/" << o.total_count_ << " (" << (int) (100 * num_programs / o.total_count_) << "%)\n";
+  readme_out << num_programs << "/" << o.total_count_ << " (" << (int) (100 * num_programs / o.total_count_) << "%)\n\n";
+  readme_out << "![LODA Program Length Distribution](https://raw.githubusercontent.com/ckrause/loda/master/lengths.png)\n";
   readme_out.close();
   std::cout << std::endl;
 }
