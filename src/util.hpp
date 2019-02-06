@@ -41,6 +41,7 @@ public:
   size_t max_cycles;
   size_t max_constant;
   size_t max_index;
+  bool optimize_existing_programs;
   std::string operation_types;
   std::string operand_types;
   std::string program_template;

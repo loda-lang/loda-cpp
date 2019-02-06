@@ -106,6 +106,7 @@ Settings::Settings()
       max_cycles( 10000000 ),
       max_constant( 6 ),
       max_index( 6 ),
+      optimize_existing_programs( false ),
       operation_types( "asml" ),
       operand_types( "cdi" )
 {
@@ -241,6 +242,10 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
       else if ( opt == "i" )
       {
         option = Option::MAX_INDEX;
+      }
+      else if ( opt == "x" )
+      {
+        optimize_existing_programs = true;
       }
       else if ( opt == "o" )
       {

@@ -13,14 +13,34 @@
 #include <sstream>
 #include <unordered_set>
 
-void NotifyUnexpectedResult( const Program& before, const Program& after, const std::string& process)
+Program OptimizeAndCheck( const Program& p, Optimizer& optimizer, Interpreter& interpreter, const OeisSequence& seq )
 {
-  std::cout << "before:" << std::endl;
-  Printer d;
-  d.print( before, std::cout );
-  std::cout << "after:" << std::endl;
-  d.print( after, std::cout );
-  Log::get().error( "Program generates wrong result after " + process, false );
+  Program optimized = p;
+  optimizer.minimize( optimized, seq.full.size() );
+  optimizer.optimize( optimized, 2, 1 );
+  bool correct = true;
+  try
+  {
+    auto new_seq = interpreter.eval( optimized, seq.full.size() );
+    if ( seq.full.size() != new_seq.size() || seq.full != new_seq )
+    {
+      correct = false;
+    }
+  }
+  catch ( const std::exception& e )
+  {
+    correct = false;
+  }
+  if ( !correct )
+  {
+    std::cout << "before:" << std::endl;
+    Printer d;
+    d.print( p, std::cout );
+    std::cout << "after:" << std::endl;
+    d.print( optimized, std::cout );
+    Log::get().error( "Program generates wrong result after minimization and optimization", true );
+  }
+  return optimized;
 }
 
 void Miner::Mine( volatile sig_atomic_t& exit_flag )
@@ -38,38 +58,26 @@ void Miner::Mine( volatile sig_atomic_t& exit_flag )
     for ( auto id : ids )
     {
       auto& seq = oeis.sequences[id];
-      Program optimized = program;
-      optimizer.minimize( optimized, seq.full.size() );
-      optimizer.optimize( optimized, 2, 1 );
-      bool correct = true;
-      try
-      {
-        auto new_seq = interpreter.eval( optimized, seq.full.size() );
-        if ( seq.full.size() != new_seq.size() || seq.full != new_seq )
-        {
-          correct = false;
-        }
-      }
-      catch ( const std::exception& e )
-      {
-        correct = false;
-      }
-      if ( !correct )
-      {
-        NotifyUnexpectedResult( program, optimized, "minimization and optimization" );
-        continue;
-      }
       std::string file_name = "programs/oeis/" + oeis.sequences[id].id_str() + ".asm";
       bool write_file = true;
       bool is_new = true;
+      Program optimized;
       {
         std::ifstream in( file_name );
         if ( in.good() )
         {
-          is_new = false;
-          Parser parser;
-          auto existing_program = parser.parse( in );
-          if ( existing_program.num_ops( false ) <= optimized.num_ops( false ) )
+          if ( settings.optimize_existing_programs )
+          {
+            optimized = OptimizeAndCheck( program, optimizer, interpreter, seq );
+            is_new = false;
+            Parser parser;
+            auto existing_program = parser.parse( in );
+            if ( existing_program.num_ops( false ) <= optimized.num_ops( false ) )
+            {
+              write_file = false;
+            }
+          }
+          else
           {
             write_file = false;
           }
@@ -77,6 +85,10 @@ void Miner::Mine( volatile sig_atomic_t& exit_flag )
       }
       if ( write_file )
       {
+        if ( optimized.ops.empty() )
+        {
+          optimized = OptimizeAndCheck( program, optimizer, interpreter, seq );
+        }
         std::stringstream buf;
         buf << "Found ";
         if ( is_new ) buf << "first";
