@@ -115,16 +115,29 @@ void Test::oeis()
       Settings settings2 = settings;
       settings2.num_terms = s.full.size();
       Interpreter interpreter( settings2 );
-      Sequence result = interpreter.eval( program );
-      if ( result.size() != s.full.size() || result != s.full )
+      bool okay;
+      try
       {
-        std::stringstream buf;
-        buf << "Program did not evaluate to expected sequence!" << std::endl;
-        buf << "Result:   " << result << std::endl;
-        buf << "Expected: " << s.full << std::endl;
+        Sequence result = interpreter.eval( program );
+        if ( result.size() != s.full.size() || result != s.full )
+        {
+          Log::get().error( "Program did not evaluate to expected sequence" );
+          okay = false;
+        }
+        else
+        {
+          okay = true;
+        }
+      }
+      catch ( const std::exception& exc )
+      {
+        okay = false;
+      }
+      if ( !okay )
+      {
+        Log::get().warn( "Deleting " + file_name );
         file.close();
         remove( file_name.c_str() );
-        Log::get().error( buf.str(), false );
       }
       else
       {
