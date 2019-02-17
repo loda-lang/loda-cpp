@@ -1,7 +1,7 @@
 #!/bin/bash
 
 log_level=alert
-restart_interval=3600
+restart_interval=86400
 min_changes=20
 
 function stop_miners() {
@@ -56,5 +56,5 @@ while [ true ]; do
   	start_miners
     SECONDS=0
   fi
-  sleep 10
+  sleep 60
 done
