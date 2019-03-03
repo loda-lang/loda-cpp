@@ -1,5 +1,6 @@
 #pragma once
 
+#include "interpreter.hpp"
 #include "number.hpp"
 #include "program.hpp"
 #include "util.hpp"
@@ -62,6 +63,8 @@ public:
 
 private:
 
+  void findDirect( const Program& p, const Sequence& norm_seq, std::vector<number_t>& result ) const;
+
   struct Hasher
   {
     std::size_t operator()( const Sequence& s ) const
@@ -76,6 +79,7 @@ private:
   };
 
   const Settings& settings;
+  Interpreter interpreter;
   std::vector<OeisSequence> sequences;
   std::unordered_map<Sequence, std::vector<number_t>, Hasher> ids;
   std::unordered_map<Sequence, std::vector<number_t>, Hasher> ids_zero_offset;

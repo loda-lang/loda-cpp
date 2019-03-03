@@ -41,6 +41,7 @@ void throwParseError( const std::string& line )
 
 Oeis::Oeis( const Settings& settings )
     : settings( settings ),
+      interpreter( settings ),
       total_count_( 0 ),
       search_linear_( false )
 {
@@ -234,9 +235,13 @@ void Oeis::load()
     sequences[id] = OeisSequence( id, "", norm_sequence, full_sequence );
     ids[norm_sequence].push_back( id );
 
-    auto zero_offset_sequence = norm_sequence;
-    zero_offset_sequence.sub( zero_offset_sequence.min() );
-    ids_zero_offset[zero_offset_sequence].push_back( id );
+    number_t offset = norm_sequence.min();
+    if ( offset > 0 )
+    {
+      auto zero_offset_sequence = norm_sequence;
+      zero_offset_sequence.sub( offset );
+      ids_zero_offset[zero_offset_sequence].push_back( id );
+    }
 
     ++loaded_count;
   }
@@ -293,8 +298,7 @@ const std::vector<OeisSequence>& Oeis::getSequences() const
 std::vector<number_t> Oeis::findSequence( const Program& p ) const
 {
   std::vector<number_t> result;
-  Interpreter interpreter( settings );
-  Sequence norm_seq, full_seq;
+  Sequence norm_seq;
   try
   {
     norm_seq = interpreter.eval( p );
@@ -307,11 +311,18 @@ std::vector<number_t> Oeis::findSequence( const Program& p ) const
   {
     return result;
   }
+  findDirect( p, norm_seq, result );
+  return result;
+}
+
+void Oeis::findDirect( const Program& p, const Sequence& norm_seq, std::vector<number_t>& result ) const
+{
   auto it = ids.find( norm_seq );
   if ( it == ids.end() )
   {
-    return result;
+    return;
   }
+  Sequence full_seq;
   for ( auto id : it->second )
   {
     auto& expected_full_seq = sequences.at( id ).full;
@@ -331,7 +342,6 @@ std::vector<number_t> Oeis::findSequence( const Program& p ) const
       // program not okay
     }
   }
-  return result;
 }
 
 void Oeis::dumpProgram( number_t id, Program p, const std::string& file ) const
