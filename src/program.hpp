@@ -23,7 +23,7 @@ public:
   {
   }
 
-  bool operator==( const Operand& o ) const
+  inline bool operator==( const Operand& o ) const
   {
     return (type == o.type) && (value == o.value);
   }
@@ -66,7 +66,7 @@ public:
   {
   }
 
-  bool operator==( const Operation& op ) const
+  inline bool operator==( const Operation& op ) const
   {
     return (type == op.type) && (source == op.source) && (target == op.target);
   }
@@ -81,57 +81,11 @@ class Program
 {
 public:
 
-  void removeOps( Operation::Type type )
-  {
-	auto it = ops.begin();
-	while ( it != ops.end() )
-	{
-	  if (it->type == type)
-	  {
-		it = ops.erase( it );
-	  }
-	  else
-	  {
-		it++;
-	  }
-	}
-  }
+  void removeOps( Operation::Type type );
 
-  size_t num_ops( bool withNops ) const
-  {
-    if ( withNops )
-    {
-      return ops.size();
-    }
-    else
-    {
-      size_t num_ops = 0;
-      for ( auto& op : ops )
-      {
-        if ( op.type != Operation::Type::NOP )
-        {
-          num_ops++;
-        }
-      }
-      return num_ops;
-    }
-  }
+  size_t num_ops( bool withNops ) const;
 
-  bool operator==( const Program& p ) const
-  {
-    if ( p.ops.size() != ops.size() )
-    {
-      return false;
-    }
-    for ( size_t i = 0; i < ops.size(); ++i )
-    {
-      if ( !(ops[i] == p.ops[i]) )
-      {
-        return false;
-      }
-    }
-    return true;
-  }
+  bool operator==( const Program& p ) const;
 
   std::vector<Operation> ops;
 };
