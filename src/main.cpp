@@ -105,7 +105,7 @@ int main( int argc, char *argv[] )
     else if ( cmd == "mine" )
     {
       Miner miner( settings );
-      miner.Mine( EXIT_FLAG );
+      miner.mine( EXIT_FLAG );
     }
     else
     {
