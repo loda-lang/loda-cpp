@@ -22,10 +22,10 @@ function start_miners() {
   for n in 2 4 6; do
     p="${n}0"
     l="-l ${log_level}"
-    ./loda mine -p $p -a cd -o asm -e programs/templates/T01.asm $l &
-    ./loda mine -p $p -a cd -o asm -e programs/templates/T02.asm $l &
-    ./loda mine -p $p -a cd -n $n $l &
-    ./loda mine -p $p -n $n $l &
+    ./loda mine -p $p -a cd -o asm -e programs/templates/T01.asm $l $@ &
+    ./loda mine -p $p -a cd -o asm -e programs/templates/T02.asm $l $@ &
+    ./loda mine -p $p -a cd -n $n $l $@ &
+    ./loda mine -p $p -n $n $l $@ &
   done
   ./loda test &
 }
@@ -47,13 +47,13 @@ function push_updates {
 
 trap abort_miners INT
 
-start_miners
+start_miners $@
 SECONDS=0
 while [ true ]; do
   if (( SECONDS >= restart_interval )); then
   	stop_miners
   	push_updates
-  	start_miners
+  	start_miners $@
     SECONDS=0
   fi
   sleep 60
