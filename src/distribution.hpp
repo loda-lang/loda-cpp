@@ -2,13 +2,20 @@
 
 #include <random>
 
-std::discrete_distribution<> EqualDist(size_t size);
+class Distribution: public std::discrete_distribution<>
+{
+public:
 
-std::discrete_distribution<> ExpDist(size_t size);
+  Distribution( const std::vector<double>& probabilities );
 
-void printDist(const std::discrete_distribution<>& d);
+  static Distribution Uniform( size_t size );
 
-std::discrete_distribution<> AddDist(const std::discrete_distribution<>& d1,
-		const std::discrete_distribution<>& d2);
+  static Distribution Exponential( size_t size );
 
-void MutateDist(std::discrete_distribution<>& d, std::mt19937& gen);
+  static Distribution Add( const Distribution& d1, const Distribution& d2 );
+
+  static Distribution Mutate( const Distribution& d, std::mt19937& gen );
+
+  void Print() const;
+
+};

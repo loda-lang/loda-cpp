@@ -14,13 +14,13 @@ public:
   State( size_t num_states, size_t max_constant, size_t num_operation_types, size_t num_target_types,
       size_t num_source_types );
 
-  std::discrete_distribution<> operation_dist;
-  std::discrete_distribution<> target_type_dist;
-  std::discrete_distribution<> target_value_dist;
-  std::discrete_distribution<> source_type_dist;
-  std::discrete_distribution<> source_value_dist;
-  std::discrete_distribution<> transition_dist;
-  std::discrete_distribution<> position_dist;
+  Distribution operation_dist;
+  Distribution target_type_dist;
+  Distribution target_value_dist;
+  Distribution source_type_dist;
+  Distribution source_value_dist;
+  Distribution transition_dist;
+  Distribution position_dist;
 
   State operator+( const State& other );
 
