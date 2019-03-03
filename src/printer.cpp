@@ -1,7 +1,7 @@
 #include "printer.hpp"
 #include "program.hpp"
 
-std::string GetIndent( int indent )
+std::string getIndent( int indent )
 {
   std::string s;
   for ( int i = 0; i < indent; i++ )
@@ -11,7 +11,7 @@ std::string GetIndent( int indent )
   return s;
 }
 
-std::string GetOperand( Operand op )
+std::string getOperand( Operand op )
 {
   switch ( op.type )
   {
@@ -25,9 +25,9 @@ std::string GetOperand( Operand op )
   return "";
 }
 
-std::string GetBinaryOperation( int indent, const std::string& name, const Operation& op )
+std::string getBinaryOperation( int indent, const std::string& name, const Operation& op )
 {
-  return GetIndent( indent ) + name + " " + GetOperand( op.target ) + "," + GetOperand( op.source );
+  return getIndent( indent ) + name + " " + getOperand( op.target ) + "," + getOperand( op.source );
 }
 
 void Printer::print( const Operation& op, std::ostream& out, int indent )
@@ -36,42 +36,42 @@ void Printer::print( const Operation& op, std::ostream& out, int indent )
   {
   case Operation::Type::NOP:
   {
-    out << GetIndent( indent );
+    out << getIndent( indent );
     break;
   }
   case Operation::Type::MOV:
   {
-    out << GetBinaryOperation( indent, "mov", op );
+    out << getBinaryOperation( indent, "mov", op );
     break;
   }
   case Operation::Type::ADD:
   {
-    out << GetBinaryOperation( indent, "add", op );
+    out << getBinaryOperation( indent, "add", op );
     break;
   }
   case Operation::Type::SUB:
   {
-    out << GetBinaryOperation( indent, "sub", op );
+    out << getBinaryOperation( indent, "sub", op );
     break;
   }
   case Operation::Type::LPB:
   {
-    out << GetBinaryOperation( indent, "lpb", op );
+    out << getBinaryOperation( indent, "lpb", op );
     break;
   }
   case Operation::Type::LPE:
   {
-    out << GetIndent( indent ) << "lpe";
+    out << getIndent( indent ) << "lpe";
     break;
   }
   case Operation::Type::CLR:
   {
-    out << GetIndent( indent ) << "clr";
+    out << getIndent( indent ) << "clr";
     break;
   }
   case Operation::Type::DBG:
   {
-    out << GetIndent( indent ) << "dbg";
+    out << getIndent( indent ) << "dbg";
     break;
   }
   }
