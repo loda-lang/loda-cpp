@@ -4,8 +4,6 @@
 #include "number.hpp"
 #include "util.hpp"
 
-#include <unordered_set>
-
 void Optimizer::optimize( Program& p, size_t num_reserved_cells, size_t num_initialized_cells ) const
 {
   while ( true )
@@ -288,9 +286,9 @@ void Optimizer::minimize( Program& p, size_t num_terms ) const
   }
 }
 
-bool Optimizer::reduceMemoryCells( Program& p, size_t num_reserved_cells ) const
+bool Optimizer::getUsedMemoryCells( const Program& p, std::unordered_set<number_t>& used_cells,
+    number_t& largest_used ) const
 {
-  std::unordered_set<number_t> used_cells;
   for ( auto& op : p.ops )
   {
     if ( op.source.type == Operand::Type::MEM_ACCESS_INDIRECT || op.target.type == Operand::Type::MEM_ACCESS_INDIRECT )
@@ -314,10 +312,21 @@ bool Optimizer::reduceMemoryCells( Program& p, size_t num_reserved_cells ) const
   {
     return false;
   }
-  number_t largest_used = *used_cells.begin();
+  largest_used = *used_cells.begin();
   for ( number_t used : used_cells )
   {
     largest_used = std::max( largest_used, used );
+  }
+  return true;
+}
+
+bool Optimizer::reduceMemoryCells( Program& p, size_t num_reserved_cells ) const
+{
+  std::unordered_set<number_t> used_cells;
+  number_t largest_used = 0;
+  if ( !getUsedMemoryCells( p, used_cells, largest_used ) )
+  {
+    return false;
   }
   for ( number_t candidate = 0; candidate < largest_used; ++candidate )
   {
@@ -351,4 +360,41 @@ bool Optimizer::reduceMemoryCells( Program& p, size_t num_reserved_cells ) const
     }
   }
   return false;
+}
+
+bool Optimizer::addPostLinear( Program& p, number_t slope, number_t offset )
+{
+  if ( slope > 0 )
+  {
+    std::unordered_set<number_t> used_cells;
+    number_t largest_used = 0;
+    if ( !getUsedMemoryCells( p, used_cells, largest_used ) )
+    {
+      return false;
+    }
+    number_t saved_arg = largest_used + 1;
+    p.ops.insert( p.ops.begin(),
+        Operation( Operation::Type::MOV, Operand( Operand::Type::MEM_ACCESS_DIRECT, saved_arg ),
+            Operand( Operand::Type::MEM_ACCESS_DIRECT, 0 ) ) );
+    p.ops.insert( p.ops.end(),
+        Operation( Operation::Type::LPB, Operand( Operand::Type::MEM_ACCESS_DIRECT, saved_arg ),
+            Operand( Operand::Type::CONSTANT, 1 ) ) );
+    p.ops.insert( p.ops.end(),
+        Operation( Operation::Type::ADD, Operand( Operand::Type::MEM_ACCESS_DIRECT, 1 ),
+            Operand( Operand::Type::CONSTANT, slope ) ) );
+    p.ops.insert( p.ops.end(),
+        Operation( Operation::Type::SUB, Operand( Operand::Type::MEM_ACCESS_DIRECT, saved_arg ),
+            Operand( Operand::Type::CONSTANT, 1 ) ) );
+    p.ops.insert( p.ops.end(),
+        Operation( Operation::Type::LPE, Operand( Operand::Type::CONSTANT, 0 ),
+            Operand( Operand::Type::CONSTANT, 1 ) ) );
+
+  }
+  if ( offset > 0 )
+  {
+    p.ops.insert( p.ops.end(),
+        Operation( Operation::Type::ADD, Operand( Operand::Type::MEM_ACCESS_DIRECT, 1 ),
+            Operand( Operand::Type::CONSTANT, offset ) ) );
+  }
+  return true;
 }
