@@ -166,13 +166,13 @@ bool Interpreter::run( const Program& p, Memory& mem ) const
   return true;
 }
 
-number_t Interpreter::get( Operand a, const Memory& mem, bool getAddress ) const
+number_t Interpreter::get( Operand a, const Memory& mem, bool get_address ) const
 {
   switch ( a.type )
   {
   case Operand::Type::CONSTANT:
   {
-    if ( getAddress )
+    if ( get_address )
     {
       Log::get().error( "Cannot get address of a constant", true );
     }
@@ -180,11 +180,11 @@ number_t Interpreter::get( Operand a, const Memory& mem, bool getAddress ) const
   }
   case Operand::Type::MEM_ACCESS_DIRECT:
   {
-    return getAddress ? a.value : mem.get( a.value );
+    return get_address ? a.value : mem.get( a.value );
   }
   case Operand::Type::MEM_ACCESS_INDIRECT:
   {
-    return getAddress ? mem.get( a.value ) : mem.get( mem.get( a.value ) );
+    return get_address ? mem.get( a.value ) : mem.get( mem.get( a.value ) );
   }
   }
   return
@@ -214,9 +214,9 @@ void Interpreter::set( Operand a, number_t v, Memory& mem ) const
   mem.set( index, v );
 }
 
-bool Interpreter::isLessThan( const Memory& m1, const Memory& m2, const std::vector<Operand>& cmpVars ) const
+bool Interpreter::isLessThan( const Memory& m1, const Memory& m2, const std::vector<Operand>& cmp_vars ) const
 {
-  for ( Operand v : cmpVars )
+  for ( Operand v : cmp_vars )
   {
     if ( get( v, m1 ) < get( v, m2 ) )
     {

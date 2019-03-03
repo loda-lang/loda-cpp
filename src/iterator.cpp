@@ -96,19 +96,17 @@ Program Iterator::next()
   }
   p_.ops.insert( p_.ops.begin(), zero );
   size_ = p_.ops.size();
-
-/*  int open_loops = 0;
-  for ( const auto& op : p_.ops )
-  {
-    if ( op.type == Operation::Type::LPB )
-    {
-      open_loops++;
-    }
-    else if ( op.type == Operation::Type::LPE )
-    {
-      open_loops--;
-    }
-  }
-  */
+//  int open_loops = 0;
+//  for ( const auto& op : p_.ops )
+//  {
+//    if ( op.type == Operation::Type::LPB )
+//    {
+//      open_loops++;
+//    }
+//    else if ( op.type == Operation::Type::LPE )
+//    {
+//      open_loops--;
+//    }
+//  }
   return p_;
 }

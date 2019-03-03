@@ -16,11 +16,11 @@ public:
 
 private:
 
-  number_t get( Operand a, const Memory& mem, bool getAddress = false ) const;
+  number_t get( Operand a, const Memory& mem, bool get_address = false ) const;
 
   void set( Operand a, number_t v, Memory& mem ) const;
 
-  bool isLessThan( const Memory& m1, const Memory& m2, const std::vector<Operand>& cmpVars ) const;
+  bool isLessThan( const Memory& m1, const Memory& m2, const std::vector<Operand>& cmp_vars ) const;
 
   const Settings& settings;
 
