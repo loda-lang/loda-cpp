@@ -8,12 +8,12 @@ Distribution::Distribution( const std::vector<double>& probabilities )
 {
 }
 
-Distribution Distribution::Uniform( size_t size )
+Distribution Distribution::uniform( size_t size )
 {
   return Distribution( std::vector<double>( size, 100.0 ) );
 }
 
-Distribution Distribution::Exponential( size_t size )
+Distribution Distribution::exponential( size_t size )
 {
   std::vector<double> probabilities( size );
   double v = 1.0;
@@ -25,7 +25,7 @@ Distribution Distribution::Exponential( size_t size )
   return Distribution( probabilities );
 }
 
-Distribution Distribution::Add( const Distribution& d1, const Distribution& d2 )
+Distribution Distribution::add( const Distribution& d1, const Distribution& d2 )
 {
   auto p1 = d1.probabilities();
   auto p2 = d2.probabilities();
@@ -41,7 +41,7 @@ Distribution Distribution::Add( const Distribution& d1, const Distribution& d2 )
   return Distribution( p );
 }
 
-Distribution Distribution::Mutate( const Distribution& d, std::mt19937& gen )
+Distribution Distribution::mutate( const Distribution& d, std::mt19937& gen )
 {
   std::vector<double> x;
   x.resize( 100, 1 );
@@ -55,7 +55,7 @@ Distribution Distribution::Mutate( const Distribution& d, std::mt19937& gen )
   return Distribution( p2 );
 }
 
-void Distribution::Print() const
+void Distribution::print() const
 {
   auto probs = probabilities();
   std::cout << "[";

@@ -19,19 +19,19 @@ State::State()
 void State::print()
 {
   std::cout << "[";
-  operation_dist.Print();
+  operation_dist.print();
   std::cout << ",";
-  target_type_dist.Print();
+  target_type_dist.print();
   std::cout << ",";
-  target_value_dist.Print();
+  target_value_dist.print();
   std::cout << ",";
-  source_type_dist.Print();
+  source_type_dist.print();
   std::cout << ",";
-  source_value_dist.Print();
+  source_value_dist.print();
   std::cout << ",";
-  transition_dist.Print();
+  transition_dist.print();
   std::cout << ",";
-  position_dist.Print();
+  position_dist.print();
   std::cout << "]";
 }
 
@@ -51,24 +51,24 @@ void Generator::print()
 
 State::State( size_t numStates, size_t maxConstant, size_t num_operation_types, size_t num_target_types,
     size_t num_source_types )
-    : operation_dist( Distribution::Uniform( num_operation_types ) ),
-      target_type_dist( Distribution::Exponential( num_target_types ) ),
-      target_value_dist( Distribution::Uniform( maxConstant + 1 ) ),
-      source_type_dist( Distribution::Exponential( num_source_types ) ),
-      source_value_dist( Distribution::Uniform( maxConstant + 1 ) ),
-      transition_dist( Distribution::Uniform( numStates ) ),
-      position_dist( Distribution::Uniform( POSITION_RANGE ) )
+    : operation_dist( Distribution::uniform( num_operation_types ) ),
+      target_type_dist( Distribution::exponential( num_target_types ) ),
+      target_value_dist( Distribution::uniform( maxConstant + 1 ) ),
+      source_type_dist( Distribution::exponential( num_source_types ) ),
+      source_value_dist( Distribution::uniform( maxConstant + 1 ) ),
+      transition_dist( Distribution::uniform( numStates ) ),
+      position_dist( Distribution::uniform( POSITION_RANGE ) )
 {
 }
 
 State State::operator+( const State& other )
 {
   State r;
-  r.operation_dist = Distribution::Add( operation_dist, other.operation_dist );
-  r.target_type_dist = Distribution::Add( target_type_dist, other.target_type_dist );
-  r.source_type_dist = Distribution::Add( source_type_dist, other.source_type_dist );
-  r.transition_dist = Distribution::Add( transition_dist, other.transition_dist );
-  r.position_dist = Distribution::Add( position_dist, other.position_dist );
+  r.operation_dist = Distribution::add( operation_dist, other.operation_dist );
+  r.target_type_dist = Distribution::add( target_type_dist, other.target_type_dist );
+  r.source_type_dist = Distribution::add( source_type_dist, other.source_type_dist );
+  r.transition_dist = Distribution::add( transition_dist, other.transition_dist );
+  r.position_dist = Distribution::add( position_dist, other.position_dist );
   return r;
 }
 
@@ -157,13 +157,13 @@ void Generator::mutate( double delta )
 {
   for ( auto& s : states )
   {
-    Distribution::Mutate( s.operation_dist, gen );
-    Distribution::Mutate( s.target_type_dist, gen );
-    Distribution::Mutate( s.target_value_dist, gen );
-    Distribution::Mutate( s.source_type_dist, gen );
-    Distribution::Mutate( s.source_value_dist, gen );
-    Distribution::Mutate( s.transition_dist, gen );
-    Distribution::Mutate( s.position_dist, gen );
+    Distribution::mutate( s.operation_dist, gen );
+    Distribution::mutate( s.target_type_dist, gen );
+    Distribution::mutate( s.target_value_dist, gen );
+    Distribution::mutate( s.source_type_dist, gen );
+    Distribution::mutate( s.source_value_dist, gen );
+    Distribution::mutate( s.transition_dist, gen );
+    Distribution::mutate( s.position_dist, gen );
   }
 }
 
