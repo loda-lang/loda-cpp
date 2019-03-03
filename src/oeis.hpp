@@ -1,7 +1,7 @@
 #pragma once
 
 #include "number.hpp"
-#include "finder.hpp"
+#include "program.hpp"
 #include "util.hpp"
 
 #include <unordered_map>
@@ -35,7 +35,7 @@ public:
 
 };
 
-class Oeis: public Scorer
+class Oeis
 {
 public:
 
@@ -48,8 +48,6 @@ public:
   }
 
   void load();
-
-  virtual number_t score( const Sequence& s ) override;
 
   std::vector<number_t> findSequence( const Program& p ) const;
 

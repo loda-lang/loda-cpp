@@ -1,4 +1,3 @@
-#include "database.hpp"
 #include "generator.hpp"
 #include "interpreter.hpp"
 #include "miner.hpp"
@@ -21,16 +20,12 @@ void help()
   std::cout << "  minimize <file>  Minimize a program and print it (use -t to set the number of terms)" << std::endl;
   std::cout << "  generate         Generate a random program and print it" << std::endl;
   std::cout << "  mine             Mine programs for OEIS sequences" << std::endl;
-//  std::cout << "  insert           Insert a program into the database" << std::endl;
-//  std::cout << "  search           Search a program in the database" << std::endl;
-//  std::cout << "  programs         Print all program in the database" << std::endl;
-//  std::cout << "  sequences        Print all sequences in the database" << std::endl;
   std::cout << "  test             Run test suite" << std::endl;
   std::cout << "  help             Print this help text" << std::endl;
   std::cout << "General options:" << std::endl;
   std::cout << "  -l <string>      Log level (values:debug,info,warn,error,alert)" << std::endl;
   std::cout << "  -t <number>      Number of sequence terms (default:" << settings.num_terms << ")" << std::endl;
-  std::cout << "Interpeter options:" << std::endl;
+  std::cout << "Interpreter options:" << std::endl;
   std::cout << "  -c <number>      Maximum number of interpreter cycles (default:" << settings.max_cycles << ")"
       << std::endl;
   std::cout << "  -m <number>      Maximum number of used memory cells (default:" << settings.max_memory << ")"
@@ -97,24 +92,6 @@ int main( int argc, char *argv[] )
       Optimizer optimizer( settings );
       optimizer.minimize( program, settings.num_terms );
       printer.print( program, std::cout );
-    }
-    else if ( cmd == "insert" )
-    {
-      Parser a;
-      Program p = a.parse( std::string( args.at( 1 ) ) );
-      Database db( settings );
-      db.insert( std::move( p ) );
-      db.save();
-    }
-    else if ( cmd == "programs" )
-    {
-      Database db( settings );
-      db.printPrograms();
-    }
-    else if ( cmd == "sequences" )
-    {
-      Database db( settings );
-      db.printSequences();
     }
     else if ( cmd == "generate" )
     {

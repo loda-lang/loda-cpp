@@ -36,7 +36,7 @@ std::string OeisSequence::id_str( const std::string& prefix ) const
 
 void throwParseError( const std::string& line )
 {
-  Log::get().error( "error parsing oeis line: " + line, true );
+  Log::get().error( "error parsing OEIS line: " + line, true );
 }
 
 Oeis::Oeis( const Settings& settings )
@@ -277,25 +277,6 @@ void Oeis::load()
 
   Log::get().info(
       "Loaded " + std::to_string( loaded_count ) + "/" + std::to_string( total_count_ ) + " sequences from the OEIS" );
-}
-
-number_t Oeis::score( const Sequence& s )
-{
-  /*
-  auto it = ids.find( s );
-  if ( it != ids.end() )
-  {
-    number_t id = it->second;
-    std::stringstream buf;
-    buf << "Found program for " << sequences[id];
-    Log::get().info( buf.str() );
-    buf.str( "" );
-    buf << "First " << sequences[id].size() << " terms of " << sequences[id].id_str() << ": "
-        << static_cast<Sequence>( sequences[id] );
-    Log::get().debug( buf.str() );
-    return 0;
-  }*/
-  return 1;
 }
 
 std::vector<number_t> Oeis::findSequence( const Program& p ) const

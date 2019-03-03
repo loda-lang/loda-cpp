@@ -8,7 +8,6 @@
 #include "optimizer.hpp"
 #include "parser.hpp"
 #include "printer.hpp"
-#include "serializer.hpp"
 
 #include <deque>
 #include <iomanip>
@@ -43,20 +42,6 @@ void Test::ackermann()
   std::vector<std::vector<number_t> > values = { { 1, 2, 3, 4, 5 }, { 2, 3, 4, 5, 6 }, { 3, 5, 7, 9, 11 }, { 5, 13, 29,
       61, 125 }, { 13, 65533 } };
   testBinary( "ack", "programs/ackermann.asm", values );
-}
-
-void Test::find()
-{
-  Sequence expected( { 0, 1, 1, 2, 3, 5, 8, 13 } );
-//  { 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765, 10946,
-//    17711, 28657, 46368, 75025};
-
-  Settings settings;
-  settings.num_terms = expected.size();
-  Finder finder( settings );
-  FixedSequenceScorer scorer( expected );
-  finder.find( scorer, 23, 10 );
-
 }
 
 void Test::iterate()

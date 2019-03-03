@@ -14,8 +14,6 @@ public:
 
   void ackermann();
 
-  void find();
-
   void iterate();
 
   void serialize();
