@@ -28,6 +28,12 @@ public:
 
   size_t distinct_values() const;
 
+  number_t min() const;
+
+  void add( number_t n );
+
+  void sub( number_t n );
+
   bool operator<( const Sequence& s ) const;
 
   bool operator!=( const Sequence& s ) const;

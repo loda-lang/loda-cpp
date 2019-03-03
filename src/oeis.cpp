@@ -159,7 +159,7 @@ void Oeis::load()
           expected_index = index;
           if ( value != (int) full_sequence.front() )
           {
-            for ( size_t i = 0; i < 5; i++)
+            for ( size_t i = 0; i < 5; i++ )
             {
               if ( value != (int) full_sequence[i] )
               {
@@ -210,7 +210,8 @@ void Oeis::load()
       }
       if ( id == 94966 )
       {
-        big_sequence = Sequence( std::vector<number_t>( big_sequence.begin(), big_sequence.begin() + big_sequence.size() - 2 ) );
+        big_sequence = Sequence(
+            std::vector<number_t>( big_sequence.begin(), big_sequence.begin() + big_sequence.size() - 2 ) );
       }
       if ( !big_sequence.empty() )
       {
@@ -232,6 +233,11 @@ void Oeis::load()
     }
     sequences[id] = OeisSequence( id, "", norm_sequence, full_sequence );
     ids[norm_sequence].push_back( id );
+
+    auto zero_offset_sequence = norm_sequence;
+    zero_offset_sequence.sub( zero_offset_sequence.min() );
+    ids_zero_offset[zero_offset_sequence].push_back( id );
+
     ++loaded_count;
   }
 
@@ -296,7 +302,6 @@ std::vector<number_t> Oeis::findSequence( const Program& p ) const
   {
     return result;
   }
-
   auto it = ids.find( norm_seq );
   if ( it == ids.end() )
   {

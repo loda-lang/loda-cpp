@@ -36,6 +36,42 @@ size_t Sequence::distinct_values() const
   return values.size();
 }
 
+number_t Sequence::min() const
+{
+  number_t min = 0;
+  for ( number_t i = 0; i < size(); ++i )
+  {
+    if ( i == 0 || (*this)[i] < min )
+    {
+      min = (*this)[i];
+    }
+  }
+  return min;
+}
+
+void Sequence::add( number_t n )
+{
+  for ( number_t i = 0; i < size(); ++i )
+  {
+    (*this)[i] += n;
+  }
+}
+
+void Sequence::sub( number_t n )
+{
+  for ( number_t i = 0; i < size(); ++i )
+  {
+    if ( (*this)[i] > n )
+    {
+      (*this)[i] = (*this)[i] - n;
+    }
+    else
+    {
+      (*this)[i] = 0;
+    }
+  }
+}
+
 bool Sequence::operator<( const Sequence& m ) const
 {
   number_t length = size() < m.size() ? size() : m.size();
