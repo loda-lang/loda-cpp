@@ -49,9 +49,18 @@ public:
 
   void load();
 
+  const std::vector<OeisSequence>& getSequences() const;
+
   std::vector<number_t> findSequence( const Program& p ) const;
 
   void dumpProgram( number_t id, Program p, const std::string& file ) const;
+
+  size_t getTotalCount() const
+  {
+    return total_count_;
+  }
+
+private:
 
   struct Hasher
   {

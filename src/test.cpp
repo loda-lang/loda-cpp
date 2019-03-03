@@ -94,7 +94,7 @@ void Test::oeis()
   std::ofstream list_file;
   int list_index = -1;
   size_t num_programs = 0;
-  for ( auto& s : o.sequences )
+  for ( auto& s : o.getSequences() )
   {
     std::string file_name = "programs/oeis/" + s.id_str() + ".asm";
     std::ifstream file( file_name );
@@ -166,7 +166,7 @@ void Test::oeis()
   }
   list_file.close();
   readme_out << "\n" << "Total number of programs: ";
-  readme_out << num_programs << "/" << o.total_count_ << " (" << (int) (100 * num_programs / o.total_count_)
+  readme_out << num_programs << "/" << o.getTotalCount() << " (" << (int) (100 * num_programs / o.getTotalCount())
       << "%)\n\n";
   readme_out
       << "![LODA Program Length Distribution](https://raw.githubusercontent.com/ckrause/loda/master/lengths.png)\n";

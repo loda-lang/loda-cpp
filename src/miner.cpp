@@ -60,8 +60,8 @@ Program Miner::optimizeAndCheck( const Program& p, const OeisSequence& seq ) con
 
 bool Miner::updateProgram( number_t id, const Program& p ) const
 {
-  auto& seq = oeis.sequences[id];
-  std::string file_name = "programs/oeis/" + oeis.sequences[id].id_str() + ".asm";
+  auto& seq = oeis.getSequences().at( id );
+  std::string file_name = "programs/oeis/" + seq.id_str() + ".asm";
   bool is_new = true;
   Program optimized;
   {
@@ -93,7 +93,7 @@ bool Miner::updateProgram( number_t id, const Program& p ) const
   buf << "Found ";
   if ( is_new ) buf << "first";
   else buf << "shorter";
-  buf << " program for " << oeis.sequences[id] << " First terms: " << static_cast<Sequence>( oeis.sequences[id] );
+  buf << " program for " << seq << " First terms: " << static_cast<Sequence>( seq );
   Log::get().alert( buf.str() );
   oeis.dumpProgram( id, optimized, file_name );
   return true;

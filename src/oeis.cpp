@@ -285,6 +285,11 @@ void Oeis::load()
       "Loaded " + std::to_string( loaded_count ) + "/" + std::to_string( total_count_ ) + " sequences from the OEIS" );
 }
 
+const std::vector<OeisSequence>& Oeis::getSequences() const
+{
+  return sequences;
+}
+
 std::vector<number_t> Oeis::findSequence( const Program& p ) const
 {
   std::vector<number_t> result;
