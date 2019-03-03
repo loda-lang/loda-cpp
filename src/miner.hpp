@@ -1,9 +1,11 @@
 #pragma once
 
+#include "interpreter.hpp"
 #include "number.hpp"
-#include "util.hpp"
-#include "program.hpp"
 #include "oeis.hpp"
+#include "optimizer.hpp"
+#include "program.hpp"
+#include "util.hpp"
 
 #include <csignal>
 
@@ -17,8 +19,16 @@ public:
 
 private:
 
+  Program optimizeAndCheck( const Program& p, const OeisSequence& seq ) const;
+
+  bool updateProgram( number_t id, const Program& p ) const;
+
   const Settings& settings;
 
   Oeis oeis;
+
+  Interpreter interpreter;
+
+  Optimizer optimizer;
 
 };

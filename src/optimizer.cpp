@@ -6,7 +6,7 @@
 
 #include <unordered_set>
 
-void Optimizer::optimize( Program& p, size_t num_reserved_cells, size_t num_initialized_cells )
+void Optimizer::optimize( Program& p, size_t num_reserved_cells, size_t num_initialized_cells ) const
 {
   while ( true )
   {
@@ -23,7 +23,7 @@ void Optimizer::optimize( Program& p, size_t num_reserved_cells, size_t num_init
   }
 }
 
-bool Optimizer::removeNops( Program& p )
+bool Optimizer::removeNops( Program& p ) const
 {
   bool removed = false;
   auto it = p.ops.begin();
@@ -45,7 +45,7 @@ bool Optimizer::removeNops( Program& p )
   return removed;
 }
 
-bool Optimizer::removeEmptyLoops( Program& p )
+bool Optimizer::removeEmptyLoops( Program& p ) const
 {
   bool removed = false;
   for ( size_t i = 0; i < p.ops.size(); i++ )
@@ -64,7 +64,7 @@ bool Optimizer::removeEmptyLoops( Program& p )
   return removed;
 }
 
-bool Optimizer::mergeOps( Program& p )
+bool Optimizer::mergeOps( Program& p ) const
 {
   bool merged = false;
   for ( size_t i = 0; i + 1 < p.ops.size(); i++ )
@@ -169,7 +169,7 @@ inline void simplifyOperand( Operand& op, std::unordered_set<number_t>& initiali
   }
 }
 
-void Optimizer::simplifyOperands( Program& p, size_t num_initialized_cells )
+void Optimizer::simplifyOperands( Program& p, size_t num_initialized_cells ) const
 {
   std::unordered_set<number_t> initialized_cells;
   for ( number_t i = 0; i < num_initialized_cells; ++i )
@@ -211,7 +211,7 @@ void Optimizer::simplifyOperands( Program& p, size_t num_initialized_cells )
   }
 }
 
-void Optimizer::minimize( Program& p, size_t num_terms )
+void Optimizer::minimize( Program& p, size_t num_terms ) const
 {
   Interpreter interpreter( settings );
   Sequence target_sequence;
@@ -288,7 +288,7 @@ void Optimizer::minimize( Program& p, size_t num_terms )
   }
 }
 
-bool Optimizer::reduceMemoryCells( Program& p, size_t num_reserved_cells )
+bool Optimizer::reduceMemoryCells( Program& p, size_t num_reserved_cells ) const
 {
   std::unordered_set<number_t> used_cells;
   for ( auto& op : p.ops )

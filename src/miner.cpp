@@ -15,12 +15,14 @@
 
 Miner::Miner( const Settings& settings )
     : settings( settings ),
-      oeis( settings )
+      oeis( settings ),
+      interpreter( settings ),
+      optimizer( settings )
 {
   oeis.load();
 }
 
-Program optimizeAndCheck( const Program& p, Optimizer& optimizer, Interpreter& interpreter, const OeisSequence& seq )
+Program Miner::optimizeAndCheck( const Program& p, const OeisSequence& seq ) const
 {
   // opimize and minimize program
   Program optimized = p;
@@ -56,6 +58,47 @@ Program optimizeAndCheck( const Program& p, Optimizer& optimizer, Interpreter& i
   return optimized;
 }
 
+bool Miner::updateProgram( number_t id, const Program& p ) const
+{
+  auto& seq = oeis.sequences[id];
+  std::string file_name = "programs/oeis/" + oeis.sequences[id].id_str() + ".asm";
+  bool is_new = true;
+  Program optimized;
+  {
+    std::ifstream in( file_name );
+    if ( in.good() )
+    {
+      if ( settings.optimize_existing_programs )
+      {
+        optimized = optimizeAndCheck( p, seq );
+        is_new = false;
+        Parser parser;
+        auto existing_program = parser.parse( in );
+        if ( existing_program.num_ops( false ) <= optimized.num_ops( false ) )
+        {
+          return false;
+        }
+      }
+      else
+      {
+        return false;
+      }
+    }
+  }
+  if ( optimized.ops.empty() )
+  {
+    optimized = optimizeAndCheck( p, seq );
+  }
+  std::stringstream buf;
+  buf << "Found ";
+  if ( is_new ) buf << "first";
+  else buf << "shorter";
+  buf << " program for " << oeis.sequences[id] << " First terms: " << static_cast<Sequence>( oeis.sequences[id] );
+  Log::get().alert( buf.str() );
+  oeis.dumpProgram( id, optimized, file_name );
+  return true;
+}
+
 void Miner::mine( volatile sig_atomic_t& exit_flag )
 {
   Interpreter interpreter( settings );
@@ -71,49 +114,11 @@ void Miner::mine( volatile sig_atomic_t& exit_flag )
     auto ids = oeis.findSequence( program );
     for ( auto id : ids )
     {
-      auto& seq = oeis.sequences[id];
-      std::string file_name = "programs/oeis/" + oeis.sequences[id].id_str() + ".asm";
-      bool write_file = true;
-      bool is_new = true;
-      Program optimized;
+      if ( updateProgram( id, program ) )
       {
-        std::ifstream in( file_name );
-        if ( in.good() )
-        {
-          if ( settings.optimize_existing_programs )
-          {
-            optimized = optimizeAndCheck( program, optimizer, interpreter, seq );
-            is_new = false;
-            Parser parser;
-            auto existing_program = parser.parse( in );
-            if ( existing_program.num_ops( false ) <= optimized.num_ops( false ) )
-            {
-              write_file = false;
-            }
-          }
-          else
-          {
-            write_file = false;
-          }
-        }
-      }
-      if ( write_file )
-      {
-        if ( optimized.ops.empty() )
-        {
-          optimized = optimizeAndCheck( program, optimizer, interpreter, seq );
-        }
-        std::stringstream buf;
-        buf << "Found ";
-        if ( is_new ) buf << "first";
-        else buf << "shorter";
-        buf << " program for " << oeis.sequences[id] << " First terms: " << static_cast<Sequence>( oeis.sequences[id] );
-        Log::get().alert( buf.str() );
-        oeis.dumpProgram( id, optimized, file_name );
         ++found;
       }
     }
-
     ++count;
     auto time2 = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::seconds>( time2 - time );

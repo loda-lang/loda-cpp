@@ -13,21 +13,21 @@ public:
   {
   }
 
-  void optimize( Program& p, size_t num_reserved_cells, size_t num_initialized_cells );
+  void optimize( Program& p, size_t num_reserved_cells, size_t num_initialized_cells ) const;
 
-  void minimize( Program& p, size_t num_terms );
+  void minimize( Program& p, size_t num_terms ) const;
 
 private:
 
-  bool removeNops( Program& p );
+  bool removeNops( Program& p ) const;
 
-  bool removeEmptyLoops( Program& p );
+  bool removeEmptyLoops( Program& p ) const;
 
-  bool mergeOps( Program& p );
+  bool mergeOps( Program& p ) const;
 
-  void simplifyOperands( Program& p, size_t num_initialized_cells );
+  void simplifyOperands( Program& p, size_t num_initialized_cells ) const;
 
-  bool reduceMemoryCells( Program& p, size_t num_reserved_cells );
+  bool reduceMemoryCells( Program& p, size_t num_reserved_cells ) const;
 
   Settings settings;
 
