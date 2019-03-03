@@ -69,13 +69,6 @@ void Test::optimize()
     {
       Log::get().error( "Program evaluated to different sequence after optimization", true );
     }
-    minimized = optimized;
-    optimizer.minimize( minimized, s2.size() );
-    s3 = interpreter.eval( minimized );
-    if ( s2.size() != s3.size() || (s2 != s3) )
-    {
-      Log::get().error( "Program evaluated to different sequence after minimization", true );
-    }
   }
 }
 
