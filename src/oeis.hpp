@@ -63,6 +63,8 @@ public:
 
 private:
 
+  void loadNames();
+
   void findDirect( const Program& p, const Sequence& norm_seq, std::vector<number_t>& result ) const;
 
   struct Hasher

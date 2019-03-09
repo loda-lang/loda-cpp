@@ -39,6 +39,11 @@ void throwParseError( const std::string& line )
   Log::get().error( "error parsing OEIS line: " + line, true );
 }
 
+std::string getHome()
+{
+  return std::string( std::getenv( "HOME" ) ) + "/.loda/oeis/";
+}
+
 Oeis::Oeis( const Settings& settings )
     : settings( settings ),
       interpreter( settings ),
@@ -51,8 +56,7 @@ void Oeis::load()
 {
   // load sequence data
   Log::get().debug( "Loading sequence data from the OEIS" );
-  std::string home = std::string( std::getenv( "HOME" ) ) + "/.loda/oeis/";
-  std::ifstream stripped( home + "stripped" );
+  std::ifstream stripped( getHome() + "stripped" );
   if ( !stripped.good() )
   {
     Log::get().error( "OEIS data not found: run get_oeis.sh to download it", true );
@@ -133,7 +137,7 @@ void Oeis::load()
     // big sequence
     big_sequence.clear();
     std::stringstream big_path;
-    big_path << home << "b/b" << std::setw( 6 ) << std::setfill( '0' ) << id << ".txt";
+    big_path << getHome() << "b/b" << std::setw( 6 ) << std::setfill( '0' ) << id << ".txt";
     std::ifstream big_file( big_path.str() );
     if ( big_file.good() )
     {
@@ -246,13 +250,24 @@ void Oeis::load()
     ++loaded_count;
   }
 
-  // load sequence names
+  loadNames();
+
+  Log::get().info(
+      "Loaded " + std::to_string( loaded_count ) + "/" + std::to_string( total_count_ ) + " sequences from the OEIS" );
+
+}
+
+void Oeis::loadNames()
+{
   Log::get().debug( "Loading sequence names from the OEIS" );
-  std::ifstream names( home + "names" );
+  std::ifstream names( getHome() + "names" );
   if ( !names.good() )
   {
     Log::get().error( "OEIS data not found: run get_oeis.sh to download it", true );
   }
+  std::string line;
+  size_t pos;
+  number_t id;
   while ( std::getline( names, line ) )
   {
     if ( line.empty() || line[0] == '#' )
@@ -285,9 +300,6 @@ void Oeis::load()
       }
     }
   }
-
-  Log::get().info(
-      "Loaded " + std::to_string( loaded_count ) + "/" + std::to_string( total_count_ ) + " sequences from the OEIS" );
 }
 
 const std::vector<OeisSequence>& Oeis::getSequences() const
