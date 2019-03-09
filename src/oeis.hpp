@@ -42,6 +42,8 @@ public:
 
   static size_t MAX_NUM_TERMS;
 
+  using seq_programs_t = std::vector<std::pair<number_t,Program>>;
+
   Oeis( const Settings& settings );
 
   virtual ~Oeis()
@@ -52,7 +54,7 @@ public:
 
   const std::vector<OeisSequence>& getSequences() const;
 
-  std::vector<number_t> findSequence( const Program& p ) const;
+  seq_programs_t findSequence( const Program& p ) const;
 
   void dumpProgram( number_t id, Program p, const std::string& file ) const;
 
@@ -65,7 +67,7 @@ private:
 
   void loadNames();
 
-  void findDirect( const Program& p, const Sequence& norm_seq, std::vector<number_t>& result ) const;
+  void findDirect( const Program& p, const Sequence& norm_seq, seq_programs_t& result ) const;
 
   struct Hasher
   {

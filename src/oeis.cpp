@@ -307,9 +307,9 @@ const std::vector<OeisSequence>& Oeis::getSequences() const
   return sequences;
 }
 
-std::vector<number_t> Oeis::findSequence( const Program& p ) const
+Oeis::seq_programs_t Oeis::findSequence( const Program& p ) const
 {
-  std::vector<number_t> result;
+  seq_programs_t result;
   Sequence norm_seq;
   try
   {
@@ -327,7 +327,7 @@ std::vector<number_t> Oeis::findSequence( const Program& p ) const
   return result;
 }
 
-void Oeis::findDirect( const Program& p, const Sequence& norm_seq, std::vector<number_t>& result ) const
+void Oeis::findDirect( const Program& p, const Sequence& norm_seq, seq_programs_t& result ) const
 {
   auto it = ids.find( norm_seq );
   if ( it == ids.end() )
@@ -346,7 +346,8 @@ void Oeis::findDirect( const Program& p, const Sequence& norm_seq, std::vector<n
       }
       if ( full_seq.size() == expected_full_seq.size() && !(full_seq != expected_full_seq) )
       {
-        result.push_back( id );
+        std::pair<number_t,Program> entry( id, p );
+        result.push_back( std::move( entry ) );
       }
     }
     catch ( const std::exception& )

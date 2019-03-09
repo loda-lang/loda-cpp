@@ -111,10 +111,10 @@ void Miner::mine( volatile sig_atomic_t& exit_flag )
   while ( !exit_flag )
   {
     auto program = generator.generateProgram();
-    auto ids = oeis.findSequence( program );
-    for ( auto id : ids )
+    auto seq_programs = oeis.findSequence( program );
+    for ( auto s : seq_programs )
     {
-      if ( updateProgram( id, program ) )
+      if ( updateProgram( s.first, s.second ) )
       {
         ++found;
       }
