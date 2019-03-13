@@ -69,6 +69,8 @@ private:
 
   void findDirect( const Program& p, const Sequence& norm_seq, seq_programs_t& result ) const;
 
+  void findIndirect( const Program& p, const Sequence& norm_seq, seq_programs_t& result ) const;
+
   struct Hasher
   {
     std::size_t operator()( const Sequence& s ) const

@@ -3,6 +3,7 @@
 #include "interpreter.hpp"
 #include "number.hpp"
 #include "printer.hpp"
+#include "optimizer.hpp"
 #include "util.hpp"
 
 #include <algorithm>
@@ -239,6 +240,7 @@ void Oeis::load()
     sequences[id] = OeisSequence( id, "", norm_sequence, full_sequence );
     ids[norm_sequence].push_back( id );
 
+    // add zero-offset sequence
     number_t offset = norm_sequence.min();
     if ( offset > 0 )
     {
@@ -324,6 +326,7 @@ Oeis::seq_programs_t Oeis::findSequence( const Program& p ) const
     return result;
   }
   findDirect( p, norm_seq, result );
+  findIndirect( p, norm_seq, result );
   return result;
 }
 
@@ -354,6 +357,32 @@ void Oeis::findDirect( const Program& p, const Sequence& norm_seq, seq_programs_
     {
       // program not okay
     }
+  }
+}
+
+void Oeis::findIndirect( const Program& p, const Sequence& norm_seq, seq_programs_t& result ) const
+{
+  int64_t offset = norm_seq.min();
+  if ( offset == 0 )
+  {
+    return;
+  }
+  auto zero_offset_sequence = norm_seq;
+  zero_offset_sequence.sub( offset );
+  auto it = ids_zero_offset.find( zero_offset_sequence );
+  if ( it == ids_zero_offset.end() )
+  {
+    return;
+  }
+  for ( auto id : it->second )
+  {
+    auto& base_seq = sequences[id];
+    int64_t base_offset = base_seq.min();
+    int64_t delta = offset - base_offset;
+    Optimizer optimizer( settings );
+    Program copy = p;
+    optimizer.addPostLinear( copy, 0, delta );
+    findDirect( copy, norm_seq, result );
   }
 }
 

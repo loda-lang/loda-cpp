@@ -362,7 +362,7 @@ bool Optimizer::reduceMemoryCells( Program& p, size_t num_reserved_cells ) const
   return false;
 }
 
-bool Optimizer::addPostLinear( Program& p, number_t slope, number_t offset )
+bool Optimizer::addPostLinear( Program& p, number_t slope, int64_t offset )
 {
   if ( slope > 0 )
   {
@@ -395,6 +395,12 @@ bool Optimizer::addPostLinear( Program& p, number_t slope, number_t offset )
     p.ops.insert( p.ops.end(),
         Operation( Operation::Type::ADD, Operand( Operand::Type::MEM_ACCESS_DIRECT, 1 ),
             Operand( Operand::Type::CONSTANT, offset ) ) );
+  }
+  else if ( offset < 0 )
+  {
+    p.ops.insert( p.ops.end(),
+        Operation( Operation::Type::SUB, Operand( Operand::Type::MEM_ACCESS_DIRECT, 1 ),
+            Operand( Operand::Type::CONSTANT, -offset ) ) );
   }
   return true;
 }
