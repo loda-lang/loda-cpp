@@ -326,7 +326,7 @@ Oeis::seq_programs_t Oeis::findSequence( const Program& p ) const
     return result;
   }
   findDirect( p, norm_seq, result );
-  findIndirect( p, norm_seq, result );
+  // findIndirect( p, norm_seq, result );
   return result;
 }
 
