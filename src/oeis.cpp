@@ -388,12 +388,21 @@ void Oeis::findIndirect( const Program& p, const Sequence& norm_seq, seq_program
 
 void Oeis::dumpProgram( number_t id, Program p, const std::string& file ) const
 {
-  p.removeOps( Operation::Type::NOP );
+  bool has_header = false;
+  if ( p.ops.size() > 1 && p.ops[0].type == Operation::Type::NOP && p.ops[1].type == Operation::Type::NOP )
+  {
+    p.ops.erase( p.ops.begin() );
+    p.ops.erase( p.ops.begin() );
+    has_header = true;
+  }
   std::ofstream out( file );
   auto& seq = sequences.at( id );
   out << "; " << seq << std::endl;
   out << "; " << seq.full << std::endl;
-  out << "; generated using " << settings.getGeneratorArgs() << std::endl << std::endl;
+  if ( !has_header )
+  {
+    out << "; generated using " << settings.getGeneratorArgs() << std::endl << std::endl;
+  }
   Printer r;
   r.print( p, out );
 }
