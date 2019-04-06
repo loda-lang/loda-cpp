@@ -392,7 +392,8 @@ void Oeis::dumpProgram( number_t id, Program p, const std::string& file ) const
   std::ofstream out( file );
   auto& seq = sequences.at( id );
   out << "; " << seq << std::endl;
-  out << "; " << seq.full << std::endl << std::endl;
+  out << "; " << seq.full << std::endl;
+  out << "; generated using " << settings.getGeneratorArgs() << std::endl << std::endl;
   Printer r;
   r.print( p, out );
 }

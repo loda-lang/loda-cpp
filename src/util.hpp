@@ -50,4 +50,6 @@ public:
 
   std::vector<std::string> parseArgs( int argc, char *argv[] );
 
+  std::string getGeneratorArgs() const;
+
 };

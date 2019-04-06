@@ -275,3 +275,15 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
   }
   return unparsed;
 }
+
+std::string Settings::getGeneratorArgs() const
+{
+  std::stringstream ss;
+  ss << "-p " << num_operations << " -n " << max_constant << " -i " << max_index << " -o " << operation_types << " -a "
+      << operand_types;
+  if ( !program_template.empty() )
+  {
+    ss << " -e " << program_template;
+  }
+  return ss.str();
+}
