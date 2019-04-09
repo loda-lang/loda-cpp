@@ -403,7 +403,7 @@ void Oeis::dumpProgram( number_t id, Program p, const std::string& file ) const
   auto& seq = sequences.at( id );
   out << "; " << seq << std::endl;
   out << "; " << seq.full << std::endl;
-  out << "; " << generator_args << std::endl << std::endl;
+//  out << "; " << generator_args << std::endl << std::endl;
   Printer r;
   r.print( p, out );
 }
