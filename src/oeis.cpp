@@ -388,22 +388,12 @@ void Oeis::findIndirect( const Program& p, const Sequence& norm_seq, seq_program
 
 void Oeis::dumpProgram( number_t id, Program p, const std::string& file ) const
 {
-  std::string generator_args;
-  if ( p.ops.size() > 2 && p.ops[2].type == Operation::Type::NOP
-      && p.ops[2].comment.find( "generated" ) != std::string::npos )
-  {
-    generator_args = p.ops[2].comment;
-  }
-  else
-  {
-    generator_args = "generated using " + settings.getGeneratorArgs();
-  }
   p.removeOps( Operation::Type::NOP );
   std::ofstream out( file );
   auto& seq = sequences.at( id );
   out << "; " << seq << std::endl;
   out << "; " << seq.full << std::endl;
-//  out << "; " << generator_args << std::endl << std::endl;
+  out << std::endl;
   Printer r;
   r.print( p, out );
 }
