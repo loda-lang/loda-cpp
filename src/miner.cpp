@@ -24,7 +24,7 @@ Miner::Miner( const Settings& settings )
 
 Program Miner::optimizeAndCheck( const Program& p, const OeisSequence& seq ) const
 {
-  // opimize and minimize program
+  // optimize and minimize program
   Program optimized = p;
   optimizer.minimize( optimized, seq.full.size() );
   optimizer.optimize( optimized, 2, 1 );
@@ -96,6 +96,9 @@ bool Miner::updateProgram( number_t id, const Program& p ) const
   buf << " program for " << seq << " First terms: " << static_cast<Sequence>( seq );
   Log::get().alert( buf.str() );
   oeis.dumpProgram( id, optimized, file_name );
+  std::ofstream gen_args;
+  gen_args.open("programs/oeis/generator_args.txt", std::ios_base::app);
+  gen_args << seq.id_str() << ": " << settings.getGeneratorArgs() << std::endl;
   return true;
 }
 
