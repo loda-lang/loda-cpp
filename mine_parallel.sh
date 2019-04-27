@@ -19,14 +19,15 @@ function start_miners() {
   ./get_oeis.sh
   ./make_charts.sh
   echo "Start mining"
-  for n in 2 4 6; do
+  local l="-l ${log_level}"
+  for n in 2 3 4 5 6; do
     p="${n}0"
-    l="-l ${log_level}"
-    ./loda mine -p $p -a cd -o asm -e programs/templates/T01.asm $l $@ &
-    ./loda mine -p $p -a cd -o asm -e programs/templates/T02.asm $l $@ &
-    ./loda mine -p $p -a cd -n $n $l $@ &
-    ./loda mine -p $p -n $n $l $@ &
+    for t in T01 T02; do
+      ./loda mine -p $p -n $n -a cd -o asm -e programs/templates/${t}.asm $l $@ &
+    done
   done
+  ./loda mine -p 60 -a cd -n 6 $l $@ &
+  ./loda mine -p 60 -n 6 $l $@ &
   ./loda test &
 }
 
