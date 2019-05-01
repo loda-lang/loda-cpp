@@ -309,10 +309,10 @@ const std::vector<OeisSequence>& Oeis::getSequences() const
   return sequences;
 }
 
-Oeis::seq_programs_t Oeis::findSequence( const Program& p ) const
+Oeis::seq_programs_t Oeis::findSequence( const Program& p, Sequence& norm_seq ) const
 {
   seq_programs_t result;
-  Sequence norm_seq;
+  norm_seq.clear();
   try
   {
     norm_seq = interpreter.eval( p );

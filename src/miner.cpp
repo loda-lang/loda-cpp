@@ -102,11 +102,49 @@ bool Miner::updateProgram( number_t id, const Program& p ) const
   return true;
 }
 
+bool Miner::updateCollatz( const Program& p, const Sequence& seq ) const
+{
+	if ( isCollatzValuation( seq ) )
+	{
+	   Log::get().info( "Found possible Collatz valuation: " + seq.to_string() );
+	   return true;
+	}
+	return false;
+}
+
+bool Miner::isCollatzValuation( const Sequence& seq ) const
+{
+  if ( seq.size() < 10 )
+  {
+    return false;
+  }
+  for ( size_t i = 3; i < seq.size(); i++ )
+  {
+	if ( i % 2 == 0 ) // even
+	{
+	  if ( seq[i / 2] >= seq[i] )
+	  {
+	    return false;
+	  }
+	}
+	else // odd
+	{
+	  size_t j = 3 * i + 1;
+	  if ( j < seq.size() && seq[j] >= seq[i] )
+	  {
+	    return false;
+	  }
+	}
+  }
+  return true;
+}
+
 void Miner::mine( volatile sig_atomic_t& exit_flag )
 {
   Interpreter interpreter( settings );
   Optimizer optimizer( settings );
   Generator generator( settings, 5, std::random_device()() );
+  Sequence norm_seq;
   size_t count = 0;
   size_t found = 0;
   auto time = std::chrono::steady_clock::now();
@@ -114,13 +152,17 @@ void Miner::mine( volatile sig_atomic_t& exit_flag )
   while ( !exit_flag )
   {
     auto program = generator.generateProgram();
-    auto seq_programs = oeis.findSequence( program );
+    auto seq_programs = oeis.findSequence( program, norm_seq );
     for ( auto s : seq_programs )
     {
       if ( updateProgram( s.first, s.second ) )
       {
         ++found;
       }
+    }
+    if ( updateCollatz( program, norm_seq ) )
+    {
+      ++found;
     }
     ++count;
     auto time2 = std::chrono::steady_clock::now();

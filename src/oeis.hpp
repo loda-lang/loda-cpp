@@ -54,7 +54,7 @@ public:
 
   const std::vector<OeisSequence>& getSequences() const;
 
-  seq_programs_t findSequence( const Program& p ) const;
+  seq_programs_t findSequence( const Program& p, Sequence& norm_seq ) const;
 
   void dumpProgram( number_t id, Program p, const std::string& file ) const;
 
