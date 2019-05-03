@@ -20,12 +20,10 @@ function start_miners() {
   ./make_charts.sh
   echo "Start mining"
   local l="-l ${log_level}"
-  for n in 2 4 6; do
+  for n in 2 3 4 5 6; do
     p="${n}0"
     for t in T01 T02; do
-      for o in asm asml; do
-        ./loda mine -p $p -n $n -a cd -o $o -e programs/templates/${t}.asm $l $@ &
-      done
+      ./loda mine -p $p -n $n -a cd -o asm -e programs/templates/${t}.asm $l $@ &
     done
   done
   ./loda mine -p 60 -a cd -n 6 $l $@ &
