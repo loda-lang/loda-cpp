@@ -106,7 +106,7 @@ bool Miner::updateCollatz( const Program& p, const Sequence& seq ) const
 {
 	if ( isCollatzValuation( seq ) )
 	{
-	   Log::get().info( "Found possible Collatz valuation: " + seq.to_string() );
+	   Log::get().alert( "Found possible Collatz valuation: " + seq.to_string() );
 	   return true;
 	}
 	return false;
