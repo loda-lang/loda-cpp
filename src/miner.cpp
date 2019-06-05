@@ -106,6 +106,14 @@ bool Miner::updateCollatz( const Program& p, const Sequence& seq ) const
 {
 	if ( isCollatzValuation( seq ) )
 	{
+     auto ms = std::chrono::duration_cast < std::chrono::milliseconds > (std::chrono::system_clock::now().time_since_epoch());
+     std::string file_name = "programs/oeis/collatz_" + std::to_string( ms.count() % 1000000 ) + ".asm";
+     std::ofstream out( file_name );
+     out << "; " << seq << std::endl;
+     out << std::endl;
+     Printer r;
+     r.print( p, out );
+     out.close();
 	   Log::get().alert( "Found possible Collatz valuation: " + seq.to_string() );
 	   return true;
 	}
