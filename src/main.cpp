@@ -107,6 +107,15 @@ int main( int argc, char *argv[] )
       Miner miner( settings );
       miner.mine( EXIT_FLAG );
     }
+    else if ( cmd == "collatz" )
+    {
+      Parser parser;
+      Program program = parser.parse( std::string( args.at( 1 ) ) );
+      Interpreter interpreter( settings );
+      auto sequence = interpreter.eval( program );
+      bool is_collatz = Miner::isCollatzValuation( sequence );
+      std::cout << ( is_collatz ? "true" : "false" ) << std::endl;
+    }
     else
     {
       std::cerr << "Unknown command: " << cmd << std::endl;

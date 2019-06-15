@@ -17,6 +17,8 @@ public:
 
   void mine( volatile sig_atomic_t& exit_flag );
 
+  static bool isCollatzValuation( const Sequence& seq );
+
 private:
 
   Program optimizeAndCheck( const Program& p, const OeisSequence& seq ) const;
@@ -24,8 +26,6 @@ private:
   bool updateProgram( number_t id, const Program& p ) const;
 
   bool updateCollatz( const Program& p, const Sequence& seq ) const;
-
-  bool isCollatzValuation( const Sequence& seq ) const;
 
   const Settings& settings;
 

@@ -120,7 +120,7 @@ bool Miner::updateCollatz( const Program& p, const Sequence& seq ) const
 	return false;
 }
 
-bool Miner::isCollatzValuation( const Sequence& seq ) const
+bool Miner::isCollatzValuation( const Sequence& seq )
 {
   if ( seq.size() < 10 )
   {
