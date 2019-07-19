@@ -5,8 +5,6 @@
 #include "program.hpp"
 #include "util.hpp"
 
-#include <unordered_map>
-
 class OeisSequence: public Sequence
 {
 public:
@@ -71,24 +69,11 @@ private:
 
   void findIndirect( const Program& p, const Sequence& norm_seq, seq_programs_t& result ) const;
 
-  struct Hasher
-  {
-    std::size_t operator()( const Sequence& s ) const
-    {
-      std::size_t seed = s.size();
-      for ( auto& i : s )
-      {
-        seed ^= i + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-      }
-      return seed;
-    }
-  };
-
   const Settings& settings;
   Interpreter interpreter;
   std::vector<OeisSequence> sequences;
-  std::unordered_map<Sequence, std::vector<number_t>, Hasher> ids;
-  std::unordered_map<Sequence, std::vector<number_t>, Hasher> ids_zero_offset;
+  SequenceToIdsMap ids;
+  SequenceToIdsMap ids_zero_offset;
   size_t total_count_;
   bool search_linear_;
 

@@ -5,6 +5,7 @@
 #include <random>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 using number_t = uint64_t;
@@ -43,6 +44,21 @@ public:
   std::string to_string() const;
 
 };
+
+struct SequenceHasher
+{
+  std::size_t operator()( const Sequence& s ) const
+  {
+    std::size_t seed = s.size();
+    for ( auto& i : s )
+    {
+      seed ^= i + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    }
+    return seed;
+  }
+};
+
+using SequenceToIdsMap = std::unordered_map<Sequence, std::vector<number_t>, SequenceHasher>;
 
 class Memory: public std::vector<number_t>
 {
