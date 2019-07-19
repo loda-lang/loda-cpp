@@ -1,6 +1,7 @@
 #pragma once
 
 #include "interpreter.hpp"
+#include "matcher.hpp"
 #include "number.hpp"
 #include "program.hpp"
 #include "util.hpp"
@@ -65,15 +66,12 @@ private:
 
   void loadNames();
 
-  void findDirect( const Program& p, const Sequence& norm_seq, seq_programs_t& result ) const;
-
-  void findIndirect( const Program& p, const Sequence& norm_seq, seq_programs_t& result ) const;
+  void findAll( const Program& p, const Sequence& norm_seq, seq_programs_t& result ) const;
 
   const Settings& settings;
   Interpreter interpreter;
   std::vector<OeisSequence> sequences;
-  SequenceToIdsMap ids;
-  SequenceToIdsMap ids_zero_offset;
+  std::vector<std::unique_ptr<Matcher>> matchers;
   size_t total_count_;
   bool search_linear_;
 

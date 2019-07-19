@@ -51,6 +51,9 @@ Oeis::Oeis( const Settings& settings )
       total_count_( 0 ),
       search_linear_( false )
 {
+  matchers.resize( 2 );
+  matchers[0].reset( new DirectMatcher() );
+  matchers[1].reset( new LinearMatcher() );
 }
 
 void Oeis::load()
@@ -238,15 +241,11 @@ void Oeis::load()
       sequences.resize( 2 * id );
     }
     sequences[id] = OeisSequence( id, "", norm_sequence, full_sequence );
-    ids[norm_sequence].push_back( id );
 
-    // add zero-offset sequence
-    number_t offset = norm_sequence.min();
-    if ( offset > 0 )
+    // add sequences to matchers
+    for ( auto& matcher : matchers )
     {
-      auto zero_offset_sequence = norm_sequence;
-      zero_offset_sequence.sub( offset );
-      ids_zero_offset[zero_offset_sequence].push_back( id );
+      matcher->insert( norm_sequence, id );
     }
 
     ++loaded_count;
@@ -325,64 +324,43 @@ Oeis::seq_programs_t Oeis::findSequence( const Program& p, Sequence& norm_seq ) 
   {
     return result;
   }
-  findDirect( p, norm_seq, result );
-  // findIndirect( p, norm_seq, result );
+  findAll( p, norm_seq, result );
   return result;
 }
 
-void Oeis::findDirect( const Program& p, const Sequence& norm_seq, seq_programs_t& result ) const
+void Oeis::findAll( const Program& p, const Sequence& norm_seq, seq_programs_t& result ) const
 {
-  auto it = ids.find( norm_seq );
-  if ( it == ids.end() )
+  // collect possible matches
+  result.clear();
+  for ( auto& matcher : matchers )
   {
-    return;
+    matcher->match( p, norm_seq, result );
   }
+
+  // validate the found matches
   Sequence full_seq;
-  for ( auto id : it->second )
+  auto it = result.begin();
+  while ( it != result.end() )
   {
-    auto& expected_full_seq = sequences.at( id ).full;
+    auto& expected_full_seq = sequences.at( it->first ).full;
     try
     {
       if ( full_seq.size() != expected_full_seq.size() )
       {
-        full_seq = interpreter.eval( p, expected_full_seq.size() );
+        full_seq = interpreter.eval( it->second, expected_full_seq.size() );
       }
-      if ( full_seq.size() == expected_full_seq.size() && !(full_seq != expected_full_seq) )
+      if ( full_seq.size() != expected_full_seq.size() || full_seq != expected_full_seq )
       {
-        std::pair<number_t,Program> entry( id, p );
-        result.push_back( std::move( entry ) );
+        it = result.erase( it );
+        continue;
       }
     }
     catch ( const std::exception& )
     {
-      // program not okay
+      it = result.erase( it );
+      continue;
     }
-  }
-}
-
-void Oeis::findIndirect( const Program& p, const Sequence& norm_seq, seq_programs_t& result ) const
-{
-  int64_t offset = norm_seq.min();
-  if ( offset == 0 )
-  {
-    return;
-  }
-  auto zero_offset_sequence = norm_seq;
-  zero_offset_sequence.sub( offset );
-  auto it = ids_zero_offset.find( zero_offset_sequence );
-  if ( it == ids_zero_offset.end() )
-  {
-    return;
-  }
-  for ( auto id : it->second )
-  {
-    auto& base_seq = sequences[id];
-    int64_t base_offset = base_seq.min();
-    int64_t delta = offset - base_offset;
-    Optimizer optimizer( settings );
-    Program copy = p;
-    optimizer.addPostLinear( copy, 0, delta );
-    findDirect( copy, norm_seq, result );
+    ++it;
   }
 }
 
