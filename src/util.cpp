@@ -290,5 +290,9 @@ std::string Settings::getGeneratorArgs() const
   {
     ss << " -e " << program_template;
   }
+  if ( search_linear )
+  {
+    ss << " -r";
+  }
   return ss.str();
 }
