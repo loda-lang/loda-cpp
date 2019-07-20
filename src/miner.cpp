@@ -13,6 +13,11 @@
 #include <sstream>
 #include <unordered_set>
 
+std::string getOeisFile( const OeisSequence& seq )
+{
+  return "programs/oeis/" + seq.id_str() + ".asm";
+}
+
 Miner::Miner( const Settings& settings )
     : settings( settings ),
       oeis( settings ),
@@ -20,6 +25,29 @@ Miner::Miner( const Settings& settings )
       optimizer( settings )
 {
   oeis.load();
+  if ( !settings.optimize_existing_programs )
+  {
+    std::vector<number_t> seqs_to_remove;
+    for ( auto& seq : oeis.getSequences() )
+    {
+      std::ifstream in( getOeisFile( seq ) );
+      if ( in.good() )
+      {
+        seqs_to_remove.push_back( seq.id );
+        in.close();
+      }
+    }
+    if ( !seqs_to_remove.empty() )
+    {
+      Log::get().info(
+          "Ignoring " + std::to_string( seqs_to_remove.size() )
+              + " sequences because programs exist for them already" );
+      for ( auto id : seqs_to_remove )
+      {
+        oeis.removeSequence( id );
+      }
+    }
+  }
 }
 
 Program Miner::optimizeAndCheck( const Program& p, const OeisSequence& seq ) const
@@ -61,7 +89,7 @@ Program Miner::optimizeAndCheck( const Program& p, const OeisSequence& seq ) con
 bool Miner::updateProgram( number_t id, const Program& p ) const
 {
   auto& seq = oeis.getSequences().at( id );
-  std::string file_name = "programs/oeis/" + seq.id_str() + ".asm";
+  std::string file_name = getOeisFile( seq );
   bool is_new = true;
   Program optimized;
   {
@@ -175,7 +203,7 @@ void Miner::mine( volatile sig_atomic_t& exit_flag )
     ++count;
     auto time2 = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::seconds>( time2 - time );
-    if ( duration.count() >= 60 )
+    if ( duration.count() >= 1 )
     {
       time = time2;
       Log::get().info( "Generated " + std::to_string( count ) + " programs" );

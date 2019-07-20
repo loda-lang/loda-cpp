@@ -308,6 +308,22 @@ const std::vector<OeisSequence>& Oeis::getSequences() const
   return sequences;
 }
 
+void Oeis::removeSequence( number_t id )
+{
+  if ( id >= sequences.size() )
+  {
+    return;
+  }
+  if ( sequences[id].id == id )
+  {
+    for ( auto& matcher : matchers )
+    {
+      matcher->remove( sequences[id], id );
+    }
+    sequences[id] = OeisSequence();
+  }
+}
+
 Oeis::seq_programs_t Oeis::findSequence( const Program& p, Sequence& norm_seq ) const
 {
   seq_programs_t result;

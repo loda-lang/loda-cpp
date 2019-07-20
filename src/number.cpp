@@ -119,6 +119,26 @@ std::string Sequence::to_string() const
   return ss.str();
 }
 
+void SequenceToIdsMap::remove( Sequence seq, number_t id )
+{
+  auto ids = find( seq );
+  if ( ids != end() )
+  {
+    auto it = ids->second.begin();
+    while ( it != ids->second.end() )
+    {
+      if ( *it == id )
+      {
+        it = ids->second.erase( it );
+      }
+      else
+      {
+        ++it;
+      }
+    }
+  }
+}
+
 // === Memory =================================================================
 
 number_t Memory::get( number_t index ) const

@@ -9,6 +9,11 @@ void DirectMatcher::insert( const Sequence& norm_seq, number_t id )
   ids[norm_seq].push_back( id );
 }
 
+void DirectMatcher::remove( const Sequence& norm_seq, number_t id )
+{
+  ids.remove( norm_seq, id );
+}
+
 void DirectMatcher::match( const Program& p, const Sequence& norm_seq, seq_programs_t& result ) const
 {
   auto it = ids.find( norm_seq );
@@ -32,6 +37,18 @@ void LinearMatcher::insert( const Sequence& norm_seq, number_t id )
     reduced_seq.sub( offset );
     ids[reduced_seq].push_back( id );
     offsets[id] = offset;
+  }
+}
+
+void LinearMatcher::remove( const Sequence& norm_seq, number_t id )
+{
+  number_t offset = norm_seq.min();
+  if ( offset > 0 )
+  {
+    auto reduced_seq = norm_seq;
+    reduced_seq.sub( offset );
+    ids.remove( reduced_seq, id );
+    offsets.erase( id );
   }
 }
 
