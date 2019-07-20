@@ -48,8 +48,7 @@ std::string getHome()
 Oeis::Oeis( const Settings& settings )
     : settings( settings ),
       interpreter( settings ),
-      total_count_( 0 ),
-      search_linear_( false )
+      total_count_( 0 )
 {
   matchers.resize( 2 );
   matchers[0].reset( new DirectMatcher() );
@@ -336,7 +335,7 @@ Oeis::seq_programs_t Oeis::findSequence( const Program& p, Sequence& norm_seq ) 
   {
     return result;
   }
-  if ( !search_linear_ && norm_seq.is_linear() )
+  if ( !settings.search_linear && norm_seq.is_linear() )
   {
     return result;
   }

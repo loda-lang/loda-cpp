@@ -42,6 +42,7 @@ public:
   size_t max_constant;
   size_t max_index;
   bool optimize_existing_programs;
+  bool search_linear;
   std::string operation_types;
   std::string operand_types;
   std::string program_template;

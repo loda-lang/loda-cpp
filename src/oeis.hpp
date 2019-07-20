@@ -75,6 +75,5 @@ private:
   std::vector<OeisSequence> sequences;
   std::vector<std::unique_ptr<Matcher>> matchers;
   size_t total_count_;
-  bool search_linear_;
 
 };

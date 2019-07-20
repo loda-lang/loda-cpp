@@ -107,6 +107,7 @@ Settings::Settings()
       max_constant( 6 ),
       max_index( 6 ),
       optimize_existing_programs( false ),
+      search_linear( false ),
       operation_types( "asml" ),
       operand_types( "cd" )
 {
@@ -246,6 +247,10 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
       else if ( opt == "x" )
       {
         optimize_existing_programs = true;
+      }
+      else if ( opt == "r" )
+      {
+        search_linear = true;
       }
       else if ( opt == "o" )
       {

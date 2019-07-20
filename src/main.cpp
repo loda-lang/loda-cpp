@@ -35,12 +35,13 @@ void help()
       << std::endl;
   std::cout << "  -n <number>      Maximum constant (default:" << settings.max_constant << ")" << std::endl;
   std::cout << "  -i <number>      Maximum index (default:" << settings.max_index << ")" << std::endl;
-  std::cout << "  -x               Optimize and overwrite existing programs" << std::endl;
   std::cout << "  -o <string>      Operation types (default:" << settings.operation_types
       << ";a:add,s:sub,m:mov,l:lpb/lpe)" << std::endl;
   std::cout << "  -a <string>      Operand types (default:" << settings.operand_types
       << ";c:constant,d:direct mem,i:indirect mem)" << std::endl;
   std::cout << "  -e <file>        Program template" << std::endl;
+  std::cout << "  -r               Search for programs of linear sequences (slow)" << std::endl;
+  std::cout << "  -x               Optimize and overwrite existing programs" << std::endl;
 }
 
 volatile sig_atomic_t EXIT_FLAG = 0;
