@@ -108,7 +108,7 @@ Settings::Settings()
       max_index( 6 ),
       optimize_existing_programs( false ),
       operation_types( "asml" ),
-      operand_types( "cdi" )
+      operand_types( "cd" )
 {
 }
 

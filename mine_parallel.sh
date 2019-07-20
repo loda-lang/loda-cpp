@@ -27,7 +27,7 @@ function start_miners() {
     done
   done
   ./loda mine -p 60 -a cd -n 6 $l $@ &
-  ./loda mine -p 60 -n 6 $l $@ &
+  ./loda mine -p 60 -a cdi -n 6 $l $@ &
   ./loda test &
 }
 
