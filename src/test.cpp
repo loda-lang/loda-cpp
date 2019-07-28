@@ -310,14 +310,14 @@ void Test::matcher()
 
     // std::cout << std::endl;
     Log::get().info( "Testing sequence (" + norm_seq.to_string() + ") + " + std::to_string(slope) + "n + " + std::to_string(offset) );
-    matcher.insert( norm_seq, i );
     auto target_seq = norm_seq;
     for (size_t n=0; n < target_seq.size(); n++)
     {
       target_seq[n] += slope * n + offset;
     }
     Matcher::seq_programs_t results;
-    matcher.match( program, target_seq, results );
+    matcher.insert( target_seq, i );
+    matcher.match( program, norm_seq, results );
     if ( results.size() != 1 )
     {
       Printer r;
@@ -345,7 +345,7 @@ void Test::matcher()
       std::cout << "Output sequence: " + result_seq.to_string() << std::endl;
       Log::get().error( "Error: matched program yields wrong unexpected result", true );
     }
-    matcher.remove( norm_seq, i );
+    matcher.remove( target_seq, i );
   }
 }
 

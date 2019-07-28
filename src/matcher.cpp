@@ -90,10 +90,10 @@ void LinearMatcher::match( const Program& p, const Sequence& norm_seq, seq_progr
     {
 //      std::cout << "Matched sequence " << id << std::endl;
       int64_t target_offset = offsets.at( id );
-      int64_t delta_offset = offset - target_offset;
+      int64_t delta_offset = target_offset - offset;
 
       int64_t target_slope = slopes.at( id );
-      int64_t delta_slope = slope - target_slope;
+      int64_t delta_slope = target_slope - slope;
 
       Settings s;
       Optimizer optimizer( s );
