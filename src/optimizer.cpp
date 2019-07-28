@@ -390,6 +390,10 @@ bool Optimizer::addPostLinear( Program& p, number_t slope, int64_t offset )
             Operand( Operand::Type::CONSTANT, 1 ) ) );
 
   }
+  else if ( slope < 0 )
+  {
+    return false;
+  }
   if ( offset > 0 )
   {
     p.ops.insert( p.ops.end(),

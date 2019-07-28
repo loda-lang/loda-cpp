@@ -43,6 +43,8 @@ function push_updates {
     git add programs counts.png lengths.png README.md
     git commit -m "updated $num_changes programs"
     git push
+    echo "Rebuilding loda"
+    pushd src && make clean && make && popd
   fi
 }
 
