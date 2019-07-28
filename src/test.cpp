@@ -264,8 +264,94 @@ void Test::primes2()
   }
 }
 
+void Test::matcher()
+{
+  Settings settings;
+  settings.operand_types = "cd";
+  settings.num_operations = 10;
+  Interpreter interpreter( settings );
+  Optimizer optimizer( settings );
+  std::random_device rand_dev;
+  Generator generator( settings, 5, rand_dev() );
+  LinearMatcher matcher;
+
+  Log::get().info( "Testing matcher" );
+  for ( number_t i=0; i < 10000; i++ )
+  {
+    // generate a program
+    auto program = generator.generateProgram();
+    std::unordered_set<number_t> used_cells;
+    number_t largest_used = 0;
+    if ( !optimizer.getUsedMemoryCells( program, used_cells, largest_used ) )
+    {
+      continue;
+    }
+
+    // evaluate program
+    Sequence norm_seq;
+    try
+    {
+      norm_seq = interpreter.eval( program );
+    }
+    catch ( const std::exception& )
+    {
+      continue;
+    }
+    if ( norm_seq.is_linear() || norm_seq.min() != norm_seq[0] )
+    {
+      continue;
+    }
+
+    // test matcher
+    int64_t slope = rand_dev() % 1000;
+    slope = slope > 0 ? slope : -slope;
+    int64_t offset = rand_dev() % 1000;
+    offset = offset > 0 ? offset : -offset;
+
+    // std::cout << std::endl;
+    Log::get().info( "Testing sequence (" + norm_seq.to_string() + ") + " + std::to_string(slope) + "n + " + std::to_string(offset) );
+    matcher.insert( norm_seq, i );
+    auto target_seq = norm_seq;
+    for (size_t n=0; n < target_seq.size(); n++)
+    {
+      target_seq[n] += slope * n + offset;
+    }
+    Matcher::seq_programs_t results;
+    matcher.match( program, target_seq, results );
+    if ( results.size() != 1 )
+    {
+      Printer r;
+      r.print( program , std::cout );
+      Log::get().error( "Error: no program found", true );
+    }
+    Sequence result_seq;
+    try
+    {
+      result_seq = interpreter.eval( results[0].second );
+    }
+    catch ( const std::exception& )
+    {
+      Log::get().error( "Error evaluating generated program", true );
+    }
+    if ( result_seq != target_seq )
+    {
+      Printer r;
+      std::cout << "Input program: " << std::endl;
+      r.print( program , std::cout );
+
+      std::cout << std::endl << "Output program: " << std::endl;
+      r.print( program , std::cout );
+      std::cout << "Target sequence: " + target_seq.to_string() << std::endl;
+      std::cout << "Output sequence: " + result_seq.to_string() << std::endl;
+      Log::get().error( "Error: matched program yields wrong unexpected result", true );
+    }
+    matcher.remove( norm_seq, i );
+  }
+}
+
 void Test::all()
 {
+  matcher();
 //  primes2();
 //  iterate();
 //  primes();

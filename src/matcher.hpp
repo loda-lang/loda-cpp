@@ -57,6 +57,9 @@ public:
 
 private:
 
+  static void reduce( Sequence& seq, int64_t& slope, int64_t& offset );
+
   std::unordered_map<number_t, number_t> offsets;
+  std::unordered_map<number_t, number_t> slopes;
 
 };

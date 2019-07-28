@@ -21,8 +21,6 @@ public:
 
   bool addPostLinear( Program& p, number_t slope, int64_t offset );
 
-private:
-
   bool removeNops( Program& p ) const;
 
   bool removeEmptyLoops( Program& p ) const;
@@ -34,6 +32,8 @@ private:
   bool reduceMemoryCells( Program& p, size_t num_reserved_cells ) const;
 
   bool getUsedMemoryCells( const Program& p, std::unordered_set<number_t>& used_cells, number_t& larged_used ) const;
+
+private:
 
   Settings settings;
 

@@ -28,47 +28,81 @@ void DirectMatcher::match( const Program& p, const Sequence& norm_seq, seq_progr
 
 // --- Linear Matcher --------------------------------------------------
 
-void LinearMatcher::insert( const Sequence& norm_seq, number_t id )
+void LinearMatcher::reduce( Sequence& seq, int64_t& slope, int64_t& offset )
 {
-  number_t offset = norm_seq.min();
+  auto norm_seq = seq;
+  offset = seq.min();
   if ( offset > 0 )
   {
-    auto reduced_seq = norm_seq;
-    reduced_seq.sub( offset );
-    ids[reduced_seq].push_back( id );
-    offsets[id] = offset;
+    seq.sub( offset );
   }
+  slope = -1;
+  for ( size_t i = 0; i < seq.size(); ++i )
+  {
+    int64_t new_slope = (i == 0) ? -1 : seq[i] / i;
+    slope = (slope == -1) ? new_slope : (new_slope < slope ? new_slope : slope);
+  }
+  if ( slope > 0 )
+  {
+    for ( size_t i = 0; i < seq.size(); ++i )
+    {
+      seq[i] = seq[i] - (slope * i);
+    }
+  }
+//  std::cout << "Input  " + norm_seq.to_string() << std::endl;
+//  std::cout << "Output " + seq.to_string() + " with slope " + std::to_string(slope) + " and offset " + std::to_string(offset) << std::endl;
+}
+
+void LinearMatcher::insert( const Sequence& norm_seq, number_t id )
+{
+//  std::cout << "Adding sequence " << id << std::endl;
+  Sequence seq = norm_seq;
+  int64_t slope;
+  int64_t offset;
+  reduce( seq, slope, offset );
+  ids[seq].push_back( id );
+  offsets[id] = offset;
+  slopes[id] = slope;
 }
 
 void LinearMatcher::remove( const Sequence& norm_seq, number_t id )
 {
-  number_t offset = norm_seq.min();
-  if ( offset > 0 )
-  {
-    auto reduced_seq = norm_seq;
-    reduced_seq.sub( offset );
-    ids.remove( reduced_seq, id );
-    offsets.erase( id );
-  }
+  Sequence seq = norm_seq;
+  int64_t slope;
+  int64_t offset;
+  reduce( seq, slope, offset );
+  ids.remove( seq, id );
+  offsets.erase( id );
+  slopes.erase( id );
 }
 
 void LinearMatcher::match( const Program& p, const Sequence& norm_seq, seq_programs_t& result ) const
 {
-  int64_t offset = norm_seq.min();
-  auto reduced_seq = norm_seq;
-  reduced_seq.sub( offset );
-  auto it = ids.find( reduced_seq );
+//  std::cout << "Matching sequence " << norm_seq.to_string() << std::endl;
+  Sequence seq = norm_seq;
+  int64_t slope;
+  int64_t offset;
+  reduce( seq, slope, offset );
+  auto it = ids.find( seq );
   if ( it != ids.end() )
   {
     for ( auto id : it->second )
     {
-      int64_t base_offset = offsets.at( id );
-      int64_t delta = base_offset - offset;
+//      std::cout << "Matched sequence " << id << std::endl;
+      int64_t target_offset = offsets.at( id );
+      int64_t delta_offset = offset - target_offset;
+
+      int64_t target_slope = slopes.at( id );
+      int64_t delta_slope = slope - target_slope;
+
       Settings s;
       Optimizer optimizer( s );
       Program copy = p;
-      optimizer.addPostLinear( copy, 0, delta );
-      result.push_back( std::pair<number_t, Program>( id, copy ) );
+      if ( optimizer.addPostLinear( copy, delta_slope, delta_offset ) )
+      {
+//        std::cout << "Inject slope " << delta_slope << " and offset " << delta_offset << std::endl;
+        result.push_back( std::pair<number_t, Program>( id, copy ) );
+      }
     }
   }
 }
