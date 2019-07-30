@@ -376,9 +376,9 @@ bool Optimizer::reduceMemoryCells( Program& p, size_t num_reserved_cells ) const
   return false;
 }
 
-bool Optimizer::addPostLinear( Program& p, number_t slope, int64_t offset )
+bool Optimizer::addPostLinear( Program& p, const Polynom& pol ) const
 {
-  if ( slope > 0 )
+  if ( pol.size() > 1 && pol.at( 1 ) > 0 )
   {
     std::unordered_set<number_t> used_cells;
     number_t largest_used = 0;
@@ -395,7 +395,7 @@ bool Optimizer::addPostLinear( Program& p, number_t slope, int64_t offset )
             Operand( Operand::Type::CONSTANT, 1 ) ) );
     p.ops.insert( p.ops.end(),
         Operation( Operation::Type::ADD, Operand( Operand::Type::MEM_ACCESS_DIRECT, 1 ),
-            Operand( Operand::Type::CONSTANT, slope ) ) );
+            Operand( Operand::Type::CONSTANT, pol.at( 1 ) ) ) );
     p.ops.insert( p.ops.end(),
         Operation( Operation::Type::SUB, Operand( Operand::Type::MEM_ACCESS_DIRECT, saved_arg ),
             Operand( Operand::Type::CONSTANT, 1 ) ) );
@@ -404,21 +404,21 @@ bool Optimizer::addPostLinear( Program& p, number_t slope, int64_t offset )
             Operand( Operand::Type::CONSTANT, 1 ) ) );
 
   }
-  else if ( slope < 0 )
+  else if ( pol.size() > 1 && pol.at( 1 ) < 0 )
   {
     return false;
   }
-  if ( offset > 0 )
+  if ( pol.size() > 0 && pol.at( 0 ) > 0 )
   {
     p.ops.insert( p.ops.end(),
         Operation( Operation::Type::ADD, Operand( Operand::Type::MEM_ACCESS_DIRECT, 1 ),
-            Operand( Operand::Type::CONSTANT, offset ) ) );
+            Operand( Operand::Type::CONSTANT, pol.at( 0 ) ) ) );
   }
-  else if ( offset < 0 )
+  else if ( pol.size() > 0 && pol.at( 0 ) < 0 )
   {
     p.ops.insert( p.ops.end(),
         Operation( Operation::Type::SUB, Operand( Operand::Type::MEM_ACCESS_DIRECT, 1 ),
-            Operand( Operand::Type::CONSTANT, -offset ) ) );
+            Operand( Operand::Type::CONSTANT, -pol.at( 0 ) ) ) );
   }
   return true;
 }

@@ -19,7 +19,7 @@ public:
 
   void minimize( Program& p, size_t num_terms ) const;
 
-  bool addPostLinear( Program& p, number_t slope, int64_t offset );
+  bool addPostLinear( Program& p, const Polynom& pol ) const;
 
   bool removeNops( Program& p ) const;
 

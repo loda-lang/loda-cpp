@@ -139,6 +139,34 @@ void SequenceToIdsMap::remove( Sequence seq, number_t id )
   }
 }
 
+Polynom operator+( const Polynom& a, const Polynom& b )
+{
+  Polynom c = a;
+  if ( b.size() > c.size() )
+  {
+    c.resize( b.size() );
+  }
+  for ( size_t i = 0; i < c.size(); i++ )
+  {
+    c[i] += b[i];
+  }
+  return c;
+}
+
+Polynom operator-( const Polynom& a, const Polynom& b )
+{
+  Polynom c = a;
+  if ( b.size() > c.size() )
+  {
+    c.resize( b.size() );
+  }
+  for ( size_t i = 0; i < c.size(); i++ )
+  {
+    c[i] = c[i] - b[i];
+  }
+  return c;
+}
+
 // === Memory =================================================================
 
 number_t Memory::get( number_t index ) const

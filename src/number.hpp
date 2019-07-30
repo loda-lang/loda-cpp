@@ -45,6 +45,29 @@ public:
 
 };
 
+class Polynom: public std::vector<int64_t>
+{
+public:
+
+  Polynom() = default;
+
+  Polynom( const Polynom& s ) = default;
+
+  Polynom( size_t length )
+      : std::vector<int64_t>( length )
+  {
+  }
+
+  Polynom( const std::vector<int64_t>& p )
+      : std::vector<int64_t>( p )
+  {
+  }
+
+  friend Polynom operator+( const Polynom& a, const Polynom& b );
+  friend Polynom operator-( const Polynom& a, const Polynom& b );
+
+};
+
 struct SequenceHasher
 {
   std::size_t operator()( const Sequence& s ) const

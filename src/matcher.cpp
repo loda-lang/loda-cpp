@@ -28,8 +28,9 @@ void DirectMatcher::match( const Program& p, const Sequence& norm_seq, seq_progr
 
 // --- Linear Matcher --------------------------------------------------
 
-void LinearMatcher::reduce( Sequence& seq, int64_t& slope, int64_t& offset )
+Polynom LinearMatcher::reduce( Sequence& seq )
 {
+  int64_t offset, slope;
   auto norm_seq = seq;
   offset = seq.min();
   if ( offset > 0 )
@@ -49,58 +50,49 @@ void LinearMatcher::reduce( Sequence& seq, int64_t& slope, int64_t& offset )
       seq[i] = seq[i] - (slope * i);
     }
   }
+  Polynom result;
+  result.push_back( offset );
+  result.push_back( slope );
 //  std::cout << "Input  " + norm_seq.to_string() << std::endl;
 //  std::cout << "Output " + seq.to_string() + " with slope " + std::to_string(slope) + " and offset " + std::to_string(offset) << std::endl;
+  return result;
 }
 
 void LinearMatcher::insert( const Sequence& norm_seq, number_t id )
 {
 //  std::cout << "Adding sequence " << id << std::endl;
   Sequence seq = norm_seq;
-  int64_t slope;
-  int64_t offset;
-  reduce( seq, slope, offset );
-  ids[seq].push_back( id );
-  offsets[id] = offset;
-  slopes[id] = slope;
+  polynoms[id] = reduce( seq );
+  ids[seq].push_back( id ); // must be after reduce!
 }
 
 void LinearMatcher::remove( const Sequence& norm_seq, number_t id )
 {
   Sequence seq = norm_seq;
-  int64_t slope;
-  int64_t offset;
-  reduce( seq, slope, offset );
+  reduce( seq );
   ids.remove( seq, id );
-  offsets.erase( id );
-  slopes.erase( id );
+  polynoms.erase( id );
 }
 
 void LinearMatcher::match( const Program& p, const Sequence& norm_seq, seq_programs_t& result ) const
 {
 //  std::cout << "Matching sequence " << norm_seq.to_string() << std::endl;
   Sequence seq = norm_seq;
-  int64_t slope;
-  int64_t offset;
-  reduce( seq, slope, offset );
+  Polynom pol = reduce( seq );
   auto it = ids.find( seq );
   if ( it != ids.end() )
   {
     for ( auto id : it->second )
     {
 //      std::cout << "Matched sequence " << id << std::endl;
-      int64_t target_offset = offsets.at( id );
-      int64_t delta_offset = target_offset - offset;
-
-      int64_t target_slope = slopes.at( id );
-      int64_t delta_slope = target_slope - slope;
+      auto diff = polynoms.at( id ) - pol;
 
       Settings s;
       Optimizer optimizer( s );
       Program copy = p;
-      if ( optimizer.addPostLinear( copy, delta_slope, delta_offset ) )
+      if ( optimizer.addPostLinear( copy, diff ) )
       {
-//        std::cout << "Inject slope " << delta_slope << " and offset " << delta_offset << std::endl;
+//        std::cout << "Injected stuff " << std::endl;
         result.push_back( std::pair<number_t, Program>( id, copy ) );
       }
     }
