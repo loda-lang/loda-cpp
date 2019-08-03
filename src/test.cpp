@@ -303,17 +303,28 @@ void Test::matcher()
     }
 
     // test matcher
-    int64_t slope = rand_dev() % 1000;
-    slope = slope > 0 ? slope : -slope;
-    int64_t offset = rand_dev() % 1000;
-    offset = offset > 0 ? offset : -offset;
+    const size_t degree = 1;
+    Polynom pol( degree + 1 );
+    for ( size_t d=0; d<=degree; d++)
+    {
+      pol[d] = rand_dev() % 1000;
+      pol[d] = pol[d] > 0 ? pol[d] : -pol[d];
+    }
 
     // std::cout << std::endl;
-    Log::get().info( "Testing sequence (" + norm_seq.to_string() + ") + " + std::to_string(slope) + "n + " + std::to_string(offset) );
+    Log::get().info( "Testing sequence (" + norm_seq.to_string() + ") + " + pol.to_string() );
     auto target_seq = norm_seq;
     for (size_t n=0; n < target_seq.size(); n++)
     {
-      target_seq[n] += slope * n + offset;
+      for ( size_t d=0; d<=degree; d++)
+      {
+        number_t f = 1;
+        for ( size_t e=0; e<d; e++)
+        {
+          f *= n;
+        }
+        target_seq[n] += pol[d] * f;
+      }
     }
     Matcher::seq_programs_t results;
     matcher.insert( target_seq, i );
@@ -355,10 +366,10 @@ void Test::all()
 //  primes2();
 //  iterate();
 //  primes();
-  exponentiation();
+/*  exponentiation();
   ackermann();
   optimize();
-  oeis();
+  oeis(); */
 }
 
 void Test::testBinary( const std::string& func, const std::string& file,

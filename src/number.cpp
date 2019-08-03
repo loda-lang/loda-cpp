@@ -139,6 +139,19 @@ void SequenceToIdsMap::remove( Sequence seq, number_t id )
   }
 }
 
+std::string Polynom::to_string() const
+{
+  std::stringstream s;
+  for ( int i = ((int) size()) - 1; i >= 0; i-- )
+  {
+    s << (*this)[i];
+    if ( i > 0 ) s << "x";
+    if ( i > 1 ) s << "^" << i;
+    if ( i > 0 ) s << "+";
+  }
+  return s.str();
+}
+
 Polynom operator+( const Polynom& a, const Polynom& b )
 {
   Polynom c = a;

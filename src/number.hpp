@@ -63,6 +63,8 @@ public:
   {
   }
 
+  std::string to_string() const;
+
   friend Polynom operator+( const Polynom& a, const Polynom& b );
   friend Polynom operator-( const Polynom& a, const Polynom& b );
 
