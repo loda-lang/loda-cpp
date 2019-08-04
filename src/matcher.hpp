@@ -45,7 +45,7 @@ class PolynomialMatcher: public Matcher
 {
 public:
 
-  static const size_t DEGREE;
+  static const int DEGREE;
 
   virtual ~PolynomialMatcher()
   {

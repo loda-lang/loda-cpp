@@ -28,36 +28,43 @@ void DirectMatcher::match( const Program& p, const Sequence& norm_seq, seq_progr
 
 // --- Polynomial Matcher --------------------------------------------------
 
-const size_t PolynomialMatcher::DEGREE = 1;
+const int PolynomialMatcher::DEGREE = 1;
 
 Polynom PolynomialMatcher::reduce( Sequence& seq )
 {
-  int64_t offset, slope;
-  auto norm_seq = seq;
-  offset = seq.min();
-  if ( offset > 0 )
+  Polynom polynom( DEGREE );
+//  auto input_seq = seq;
+//  std::cout << "Input  " + input_seq.to_string() << std::endl;
+  for ( int exp = 0; exp <= DEGREE; exp++ )
   {
-    seq.sub( offset );
-  }
-  slope = -1;
-  for ( size_t i = 0; i < seq.size(); ++i )
-  {
-    int64_t new_slope = (i == 0) ? -1 : seq[i] / i;
-    slope = (slope == -1) ? new_slope : (new_slope < slope ? new_slope : slope);
-  }
-  if ( slope > 0 )
-  {
-    for ( size_t i = 0; i < seq.size(); ++i )
+    int64_t factor = -1;
+    for ( size_t x = 0; x < seq.size(); x++ )
     {
-      seq[i] = seq[i] - (slope * i);
+      int64_t x_exp = 1;
+      for ( int e = 0; e < exp; e++ )
+      {
+        x_exp *= x;
+      }
+      int64_t new_factor = (x_exp == 0) ? -1 : seq[x] / x_exp;
+      factor = (factor == -1) ? new_factor : (new_factor < factor ? new_factor : factor);
+      if ( factor == 0 ) break;
     }
+    if ( factor > 0 )
+    {
+      for ( size_t x = 0; x < seq.size(); x++ )
+      {
+        int64_t x_exp = 1;
+        for ( int e = 0; e < exp; e++ )
+        {
+          x_exp *= x;
+        }
+        seq[x] = seq[x] - (factor * x_exp);
+      }
+    }
+    polynom[exp] = factor;
   }
-  Polynom result;
-  result.push_back( offset );
-  result.push_back( slope );
-//  std::cout << "Input  " + norm_seq.to_string() << std::endl;
-//  std::cout << "Output " + seq.to_string() + " with slope " + std::to_string(slope) + " and offset " + std::to_string(offset) << std::endl;
-  return result;
+//  std::cout << "Output " + seq.to_string() + " with polynom " + polynom.to_string() << std::endl;
+  return polynom;
 }
 
 void PolynomialMatcher::insert( const Sequence& norm_seq, number_t id )
