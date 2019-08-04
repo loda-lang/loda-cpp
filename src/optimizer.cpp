@@ -376,7 +376,7 @@ bool Optimizer::reduceMemoryCells( Program& p, size_t num_reserved_cells ) const
   return false;
 }
 
-bool Optimizer::addPostLinear( Program& p, const Polynom& pol ) const
+bool Optimizer::addPostPolynomial( Program& p, const Polynom& pol ) const
 {
   if ( pol.size() > 1 && pol.at( 1 ) > 0 )
   {

@@ -99,7 +99,7 @@ void PolynomialMatcher::match( const Program& p, const Sequence& norm_seq, seq_p
       Settings s;
       Optimizer optimizer( s );
       Program copy = p;
-      if ( optimizer.addPostLinear( copy, diff ) )
+      if ( optimizer.addPostPolynomial( copy, diff ) )
       {
 //        std::cout << "Injected stuff " << std::endl;
         result.push_back( std::pair<number_t, Program>( id, copy ) );
