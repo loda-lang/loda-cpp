@@ -52,7 +52,7 @@ Oeis::Oeis( const Settings& settings )
 {
   matchers.resize( 2 );
   matchers[0].reset( new DirectMatcher() );
-  matchers[1].reset( new LinearMatcher() );
+  matchers[1].reset( new PolynomialMatcher() );
 }
 
 void Oeis::load()

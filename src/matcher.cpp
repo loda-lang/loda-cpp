@@ -26,9 +26,11 @@ void DirectMatcher::match( const Program& p, const Sequence& norm_seq, seq_progr
   }
 }
 
-// --- Linear Matcher --------------------------------------------------
+// --- Polynomial Matcher --------------------------------------------------
 
-Polynom LinearMatcher::reduce( Sequence& seq )
+const size_t PolynomialMatcher::DEGREE = 1;
+
+Polynom PolynomialMatcher::reduce( Sequence& seq )
 {
   int64_t offset, slope;
   auto norm_seq = seq;
@@ -58,7 +60,7 @@ Polynom LinearMatcher::reduce( Sequence& seq )
   return result;
 }
 
-void LinearMatcher::insert( const Sequence& norm_seq, number_t id )
+void PolynomialMatcher::insert( const Sequence& norm_seq, number_t id )
 {
 //  std::cout << "Adding sequence " << id << std::endl;
   Sequence seq = norm_seq;
@@ -66,7 +68,7 @@ void LinearMatcher::insert( const Sequence& norm_seq, number_t id )
   ids[seq].push_back( id ); // must be after reduce!
 }
 
-void LinearMatcher::remove( const Sequence& norm_seq, number_t id )
+void PolynomialMatcher::remove( const Sequence& norm_seq, number_t id )
 {
   Sequence seq = norm_seq;
   reduce( seq );
@@ -74,7 +76,7 @@ void LinearMatcher::remove( const Sequence& norm_seq, number_t id )
   polynoms.erase( id );
 }
 
-void LinearMatcher::match( const Program& p, const Sequence& norm_seq, seq_programs_t& result ) const
+void PolynomialMatcher::match( const Program& p, const Sequence& norm_seq, seq_programs_t& result ) const
 {
 //  std::cout << "Matching sequence " << norm_seq.to_string() << std::endl;
   Sequence seq = norm_seq;

@@ -41,11 +41,13 @@ public:
 
 };
 
-class LinearMatcher: public Matcher
+class PolynomialMatcher: public Matcher
 {
 public:
 
-  virtual ~LinearMatcher()
+  static const size_t DEGREE;
+
+  virtual ~PolynomialMatcher()
   {
   }
 

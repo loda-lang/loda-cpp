@@ -53,8 +53,8 @@ public:
 
   Polynom( const Polynom& s ) = default;
 
-  Polynom( size_t length )
-      : std::vector<int64_t>( length )
+  Polynom( size_t degree )
+      : std::vector<int64_t>( degree + 1 )
   {
   }
 

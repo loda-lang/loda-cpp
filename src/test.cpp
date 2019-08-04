@@ -273,7 +273,7 @@ void Test::matcher()
   Optimizer optimizer( settings );
   std::random_device rand_dev;
   Generator generator( settings, 5, rand_dev() );
-  LinearMatcher matcher;
+  PolynomialMatcher matcher;
 
   Log::get().info( "Testing matcher" );
   for ( number_t i=0; i < 10000; i++ )
@@ -303,9 +303,8 @@ void Test::matcher()
     }
 
     // test matcher
-    const size_t degree = 1;
-    Polynom pol( degree + 1 );
-    for ( size_t d=0; d<=degree; d++)
+    Polynom pol( PolynomialMatcher::DEGREE );
+    for ( size_t d = 0; d < pol.size(); d++ )
     {
       pol[d] = rand_dev() % 1000;
       pol[d] = pol[d] > 0 ? pol[d] : -pol[d];
@@ -314,12 +313,12 @@ void Test::matcher()
     // std::cout << std::endl;
     Log::get().info( "Testing sequence (" + norm_seq.to_string() + ") + " + pol.to_string() );
     auto target_seq = norm_seq;
-    for (size_t n=0; n < target_seq.size(); n++)
+    for ( size_t n = 0; n < target_seq.size(); n++ )
     {
-      for ( size_t d=0; d<=degree; d++)
+      for ( size_t d = 0; d < pol.size(); d++ )
       {
         number_t f = 1;
-        for ( size_t e=0; e<d; e++)
+        for ( size_t e = 0; e < d; e++ )
         {
           f *= n;
         }
