@@ -366,10 +366,10 @@ void Test::all()
 //  primes2();
 //  iterate();
 //  primes();
-/*  exponentiation();
+  exponentiation();
   ackermann();
   optimize();
-  oeis(); */
+  oeis();
 }
 
 void Test::testBinary( const std::string& func, const std::string& file,
