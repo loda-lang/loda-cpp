@@ -20,6 +20,7 @@ void help()
   std::cout << "  minimize <file>  Minimize a program and print it (use -t to set the number of terms)" << std::endl;
   std::cout << "  generate         Generate a random program and print it" << std::endl;
   std::cout << "  mine             Mine programs for OEIS sequences" << std::endl;
+  std::cout << "  synthesize       Synthesize programs for OEIS sequences" << std::endl;
   std::cout << "  test             Run test suite" << std::endl;
   std::cout << "  help             Print this help text" << std::endl;
   std::cout << "General options:" << std::endl;
@@ -107,6 +108,11 @@ int main( int argc, char *argv[] )
     {
       Miner miner( settings );
       miner.mine( EXIT_FLAG );
+    }
+    else if ( cmd == "synthesize" || cmd == "syn" )
+    {
+      Miner miner( settings );
+      miner.synthesize( EXIT_FLAG );
     }
     else if ( cmd == "collatz" )
     {

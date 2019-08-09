@@ -45,28 +45,30 @@ public:
 
 };
 
-class Polynom: public std::vector<int64_t>
+class Polynomial: public std::vector<int64_t>
 {
 public:
 
-  Polynom() = default;
+  Polynomial() = default;
 
-  Polynom( const Polynom& s ) = default;
+  Polynomial( const Polynomial& s ) = default;
 
-  Polynom( size_t degree )
+  Polynomial( size_t degree )
       : std::vector<int64_t>( degree + 1 )
   {
   }
 
-  Polynom( const std::vector<int64_t>& p )
+  Polynomial( const std::vector<int64_t>& p )
       : std::vector<int64_t>( p )
   {
   }
 
+  Sequence eval( number_t length ) const;
+
   std::string to_string() const;
 
-  friend Polynom operator+( const Polynom& a, const Polynom& b );
-  friend Polynom operator-( const Polynom& a, const Polynom& b );
+  friend Polynomial operator+( const Polynomial& a, const Polynomial& b );
+  friend Polynomial operator-( const Polynomial& a, const Polynomial& b );
 
 };
 

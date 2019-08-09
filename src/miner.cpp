@@ -6,6 +6,7 @@
 #include "optimizer.hpp"
 #include "parser.hpp"
 #include "printer.hpp"
+#include "synthesizer.hpp"
 
 #include <chrono>
 #include <fstream>
@@ -68,8 +69,7 @@ bool Miner::isCollatzValuation( const Sequence& seq )
 
 void Miner::mine( volatile sig_atomic_t& exit_flag )
 {
-  Interpreter interpreter( settings );
-  Optimizer optimizer( settings );
+  Log::get().info( "Mining programs for OEIS sequences" );
   Generator generator( settings, 5, std::random_device()() );
   Sequence norm_seq;
   size_t count = 0;
@@ -106,6 +106,31 @@ void Miner::mine( volatile sig_atomic_t& exit_flag )
       else
       {
         --found;
+      }
+    }
+  }
+}
+
+void Miner::synthesize( volatile sig_atomic_t &exit_flag )
+{
+  Log::get().info( "Synthesizing programs for OEIS sequences" );
+  std::vector<std::unique_ptr<Synthesizer>> synthesizers;
+  synthesizers.resize( 1 );
+  synthesizers[0].reset( new PolynomialSynthesizer() );
+  Program program;
+  for ( auto& synthesizer : synthesizers )
+  {
+    for ( auto& seq : oeis.getSequences() )
+    {
+      if ( synthesizer->synthesize( seq.full, program ) )
+      {
+        std::cout << "Found something for " << seq << std::endl << std::endl;
+
+//        oeis.updateProgram( seq.id, program );
+      }
+      if ( exit_flag )
+      {
+        return;
       }
     }
   }

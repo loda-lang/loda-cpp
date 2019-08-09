@@ -11,7 +11,7 @@ public:
   {
   }
 
-  virtual bool synthesize( const Sequence &seq, Program program ) = 0;
+  virtual bool synthesize( const Sequence &seq, Program& program ) = 0;
 
 };
 
@@ -23,6 +23,6 @@ public:
   {
   }
 
-  virtual bool synthesize( const Sequence &seq, Program program ) override;
+  virtual bool synthesize( const Sequence &seq, Program& program ) override;
 
 };

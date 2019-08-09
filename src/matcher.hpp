@@ -59,8 +59,8 @@ public:
 
 private:
 
-  static Polynom reduce( Sequence& seq );
+  static Polynomial reduce( Sequence& seq );
 
-  std::unordered_map<number_t, Polynom> polynoms;
+  std::unordered_map<number_t, Polynomial> polynoms;
 
 };

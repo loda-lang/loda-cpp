@@ -303,7 +303,7 @@ void Test::matcher()
     }
 
     // test matcher
-    Polynom pol( PolynomialMatcher::DEGREE );
+    Polynomial pol( PolynomialMatcher::DEGREE );
     for ( size_t d = 0; d < pol.size(); d++ )
     {
       pol[d] = rand_dev() % 1000;
