@@ -21,10 +21,6 @@ public:
 
 private:
 
-  Program optimizeAndCheck( const Program& p, const OeisSequence& seq ) const;
-
-  bool updateProgram( number_t id, const Program& p ) const;
-
   bool updateCollatz( const Program& p, const Sequence& seq ) const;
 
   const Settings& settings;
@@ -32,7 +28,5 @@ private:
   Oeis oeis;
 
   Interpreter interpreter;
-
-  Optimizer optimizer;
 
 };
