@@ -3,6 +3,7 @@
 #include "interpreter.hpp"
 #include "matcher.hpp"
 #include "number.hpp"
+#include "optimizer.hpp"
 #include "program.hpp"
 #include "util.hpp"
 
@@ -64,14 +65,19 @@ public:
     return total_count_;
   }
 
+  bool updateProgram( number_t id, const Program& p ) const;
+
 private:
 
   void loadNames();
 
   void findAll( const Program& p, const Sequence& norm_seq, seq_programs_t& result ) const;
 
+  Program optimizeAndCheck( const Program& p, const OeisSequence& seq ) const;
+
   const Settings& settings;
   Interpreter interpreter;
+  Optimizer optimizer;
   std::vector<OeisSequence> sequences;
   std::vector<std::unique_ptr<Matcher>> matchers;
   size_t total_count_;

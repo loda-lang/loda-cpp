@@ -8,6 +8,7 @@
 #include "optimizer.hpp"
 #include "parser.hpp"
 #include "printer.hpp"
+#include "synthesizer.hpp"
 
 #include <deque>
 #include <iomanip>
@@ -303,7 +304,7 @@ void Test::matcher()
     }
 
     // test matcher
-    Polynom pol( PolynomialMatcher::DEGREE );
+    Polynomial pol( PolynomialMatcher::DEGREE );
     for ( size_t d = 0; d < pol.size(); d++ )
     {
       pol[d] = rand_dev() % 1000;
@@ -359,8 +360,24 @@ void Test::matcher()
   }
 }
 
+void Test::synthesizer()
+{
+  std::random_device rand_dev;
+  for ( int i=0; i < 1000; i++)
+  {
+    Polynomial pol( 0 );
+    for ( size_t d = 0; d < pol.size(); d++ )
+    {
+      pol[d] = rand_dev() % 1000;
+      pol[d] = pol[d] > 0 ? pol[d] : -pol[d];
+    }
+    Log::get().info( "Testing polynomial synthesizer for " + pol.to_string() );
+  }
+}
+
 void Test::all()
 {
+//  synthesizer();
   matcher();
 //  primes2();
 //  iterate();

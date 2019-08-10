@@ -2,6 +2,7 @@
 
 #include "interpreter.hpp"
 #include "number.hpp"
+#include "parser.hpp"
 #include "printer.hpp"
 #include "optimizer.hpp"
 #include "util.hpp"
@@ -45,9 +46,15 @@ std::string getHome()
   return std::string( std::getenv( "HOME" ) ) + "/.loda/oeis/";
 }
 
+std::string getOeisFile( const OeisSequence& seq )
+{
+  return "programs/oeis/" + seq.id_str() + ".asm";
+}
+
 Oeis::Oeis( const Settings& settings )
     : settings( settings ),
       interpreter( settings ),
+      optimizer( settings ),
       total_count_( 0 )
 {
   matchers.resize( 2 );
@@ -58,7 +65,7 @@ Oeis::Oeis( const Settings& settings )
 void Oeis::load()
 {
   // load sequence data
-  Log::get().debug( "Loading sequence data from the OEIS" );
+  Log::get().info( "Loading sequence data from the OEIS" );
   std::ifstream stripped( getHome() + "stripped" );
   if ( !stripped.good() )
   {
@@ -252,6 +259,30 @@ void Oeis::load()
 
   loadNames();
 
+  if ( !settings.optimize_existing_programs )
+  {
+    std::vector<number_t> seqs_to_remove;
+    for ( auto& seq : sequences )
+    {
+      std::ifstream in( getOeisFile( seq ) );
+      if ( in.good() )
+      {
+        seqs_to_remove.push_back( seq.id );
+        in.close();
+      }
+    }
+    if ( !seqs_to_remove.empty() )
+    {
+      Log::get().info(
+          "Ignoring " + std::to_string( seqs_to_remove.size() )
+              + " sequences because programs exist for them already" );
+      for ( auto id : seqs_to_remove )
+      {
+        removeSequence( id );
+      }
+    }
+  }
+
   Log::get().info(
       "Loaded " + std::to_string( loaded_count ) + "/" + std::to_string( total_count_ ) + " sequences from the OEIS" );
 
@@ -389,4 +420,84 @@ void Oeis::dumpProgram( number_t id, Program p, const std::string& file ) const
   out << std::endl;
   Printer r;
   r.print( p, out );
+}
+
+Program Oeis::optimizeAndCheck( const Program& p, const OeisSequence& seq ) const
+{
+  // optimize and minimize program
+  Program optimized = p;
+  optimizer.minimize( optimized, seq.full.size() );
+  optimizer.optimize( optimized, 2, 1 );
+
+  // check its correctness
+  bool correct = true;
+  try
+  {
+    auto new_seq = interpreter.eval( optimized, seq.full.size() );
+    if ( seq.full.size() != new_seq.size() || seq.full != new_seq )
+    {
+      correct = false;
+    }
+  }
+  catch ( const std::exception& e )
+  {
+    correct = false;
+  }
+
+  // throw error if not correct
+  if ( !correct )
+  {
+    std::cout << "before:" << std::endl;
+    Printer d;
+    d.print( p, std::cout );
+    std::cout << "after:" << std::endl;
+    d.print( optimized, std::cout );
+    Log::get().error( "Program generates wrong result after minimization and optimization", true );
+  }
+
+  return optimized;
+}
+
+bool Oeis::updateProgram( number_t id, const Program& p ) const
+{
+  auto& seq = sequences.at( id );
+  std::string file_name = getOeisFile( seq );
+  bool is_new = true;
+  Program optimized;
+  {
+    std::ifstream in( file_name );
+    if ( in.good() )
+    {
+      if ( settings.optimize_existing_programs )
+      {
+        optimized = optimizeAndCheck( p, seq );
+        is_new = false;
+        Parser parser;
+        auto existing_program = parser.parse( in );
+        if ( existing_program.num_ops( false ) <= optimized.num_ops( false ) )
+        {
+          return false;
+        }
+      }
+      else
+      {
+        return false;
+      }
+    }
+  }
+  if ( optimized.ops.empty() )
+  {
+    optimized = optimizeAndCheck( p, seq );
+  }
+  std::stringstream buf;
+  buf << "Found ";
+  if ( is_new ) buf << "first";
+  else buf << "shorter";
+  buf << " program for " << seq << " First terms: " << static_cast<Sequence>( seq );
+  Log::get().alert( buf.str() );
+  dumpProgram( id, optimized, file_name );
+  std::ofstream gen_args;
+  gen_args.open("programs/oeis/generator_args.txt", std::ios_base::app);
+  gen_args << seq.id_str() << ": " << settings.getGeneratorArgs() << std::endl;
+  return true;
 }

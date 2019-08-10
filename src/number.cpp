@@ -89,17 +89,25 @@ bool Sequence::operator<( const Sequence& m ) const
   return false; // undecidable
 }
 
-bool Sequence::operator!=( const Sequence& m ) const
+bool Sequence::operator==( const Sequence& m ) const
 {
-  number_t length = size() < m.size() ? size() : m.size();
-  for ( number_t i = 0; i < length; ++i )
+  if ( size() != m.size() )
+  {
+    return false;
+  }
+  for ( number_t i = 0; i < size(); ++i )
   {
     if ( (*this)[i] != m[i] )
     {
-      return true; // not equal
+      return false; // not equal
     }
   }
-  return false; // undecidable
+  return true;
+}
+
+bool Sequence::operator!=( const Sequence& m ) const
+{
+  return !( (*this) == m );
 }
 
 std::ostream& operator<<( std::ostream& out, const Sequence& seq )
@@ -139,22 +147,48 @@ void SequenceToIdsMap::remove( Sequence seq, number_t id )
   }
 }
 
-std::string Polynom::to_string() const
+Sequence Polynomial::eval( number_t length ) const
+{
+  Sequence seq;
+  seq.resize( length );
+  for ( size_t n = 0; n < seq.size(); n++ )
+  {
+    for ( size_t d = 0; d < size(); d++ )
+    {
+      number_t f = 1;
+      for ( size_t e = 0; e < d; e++ )
+      {
+        f *= n;
+      }
+      seq[n] += (*this)[d] * f;
+    }
+  }
+  return seq;
+}
+
+std::string Polynomial::to_string() const
 {
   std::stringstream s;
+  bool empty = true;
   for ( int i = ((int) size()) - 1; i >= 0; i-- )
   {
-    s << (*this)[i];
-    if ( i > 0 ) s << "x";
-    if ( i > 1 ) s << "^" << i;
-    if ( i > 0 ) s << "+";
+    auto factor = (*this)[i];
+    if ( factor != 0 )
+    {
+      if ( !empty ) s << "+";
+      empty = false;
+      s << factor;
+      if ( i > 0 ) s << "n";
+      if ( i > 1 ) s << "^" << i;
+    }
   }
+  if ( empty ) s << "0";
   return s.str();
 }
 
-Polynom operator+( const Polynom& a, const Polynom& b )
+Polynomial operator+( const Polynomial& a, const Polynomial& b )
 {
-  Polynom c = a;
+  Polynomial c = a;
   if ( b.size() > c.size() )
   {
     c.resize( b.size() );
@@ -166,9 +200,9 @@ Polynom operator+( const Polynom& a, const Polynom& b )
   return c;
 }
 
-Polynom operator-( const Polynom& a, const Polynom& b )
+Polynomial operator-( const Polynomial& a, const Polynomial& b )
 {
-  Polynom c = a;
+  Polynomial c = a;
   if ( b.size() > c.size() )
   {
     c.resize( b.size() );
@@ -291,7 +325,7 @@ Distribution Distribution::add( const Distribution& d1, const Distribution& d2 )
   auto p2 = d2.probabilities();
   if ( p1.size() != p2.size() )
   {
-    throw std::runtime_error( "incompatibe distributions" );
+    throw std::runtime_error( "incompatible distributions" );
   }
   std::vector<double> p( p1.size() );
   for ( size_t i = 0; i < p.size(); i++ )

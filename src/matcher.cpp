@@ -30,9 +30,9 @@ void DirectMatcher::match( const Program& p, const Sequence& norm_seq, seq_progr
 
 const int PolynomialMatcher::DEGREE = 1;
 
-Polynom PolynomialMatcher::reduce( Sequence& seq )
+Polynomial PolynomialMatcher::reduce( Sequence& seq )
 {
-  Polynom polynom( DEGREE );
+  Polynomial polynom( DEGREE );
 //  auto input_seq = seq;
 //  std::cout << "Input  " + input_seq.to_string() << std::endl;
   for ( int exp = 0; exp <= DEGREE; exp++ )
@@ -87,7 +87,7 @@ void PolynomialMatcher::match( const Program& p, const Sequence& norm_seq, seq_p
 {
 //  std::cout << "Matching sequence " << norm_seq.to_string() << std::endl;
   Sequence seq = norm_seq;
-  Polynom pol = reduce( seq );
+  auto pol = reduce( seq );
   auto it = ids.find( seq );
   if ( it != ids.end() )
   {

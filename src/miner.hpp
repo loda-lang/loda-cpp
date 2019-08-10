@@ -17,13 +17,11 @@ public:
 
   void mine( volatile sig_atomic_t& exit_flag );
 
+  void synthesize( volatile sig_atomic_t& exit_flag );
+
   static bool isCollatzValuation( const Sequence& seq );
 
 private:
-
-  Program optimizeAndCheck( const Program& p, const OeisSequence& seq ) const;
-
-  bool updateProgram( number_t id, const Program& p ) const;
 
   bool updateCollatz( const Program& p, const Sequence& seq ) const;
 
@@ -32,7 +30,5 @@ private:
   Oeis oeis;
 
   Interpreter interpreter;
-
-  Optimizer optimizer;
 
 };
