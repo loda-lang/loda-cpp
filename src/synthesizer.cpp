@@ -111,9 +111,9 @@ bool fitIt( const Sequence &y, int order, Polynomial& coeffs )
 bool PolynomialSynthesizer::synthesize( const Sequence &seq, Program &program )
 {
   Polynomial pol;
-  if ( fitIt( seq, 2, pol ) )
+  for ( size_t order = 1; order <= 10; order++ )
   {
-    if ( !(pol.eval( seq.size() ) != seq) )
+    if ( fitIt( seq, order, pol ) && pol.eval( seq.size() ) == seq )
     {
       std::cout << "Found " << pol.to_string() << std::endl;
       return true;

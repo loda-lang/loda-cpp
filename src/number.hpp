@@ -37,6 +37,8 @@ public:
 
   bool operator<( const Sequence& s ) const;
 
+  bool operator==( const Sequence& s ) const;
+
   bool operator!=( const Sequence& s ) const;
 
   friend std::ostream& operator<<( std::ostream& out, const Sequence& s );
