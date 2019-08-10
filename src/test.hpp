@@ -22,6 +22,8 @@ public:
 
   void matcher();
 
+  void synthesizer();
+
   void all();
 
 private:

@@ -1,5 +1,7 @@
 #include "synthesizer.hpp"
 
+#include "printer.hpp"
+
 #include <vector>
 #include <stdlib.h>
 
@@ -111,7 +113,7 @@ bool fitIt( const Sequence &y, int order, Polynomial& coeffs )
 bool PolynomialSynthesizer::synthesize( const Sequence &seq, Program &program )
 {
   Polynomial pol;
-  for ( size_t order = 1; order <= 10; order++ )
+  for ( size_t order = 1; order <= 3; order++ )
   {
     if ( fitIt( seq, order, pol ) && pol.eval( seq.size() ) == seq )
     {
@@ -120,6 +122,9 @@ bool PolynomialSynthesizer::synthesize( const Sequence &seq, Program &program )
       {
         return false;
       }
+      Printer r;
+      r.print( program, std::cout );
+
       return true;
     }
   }
@@ -129,11 +134,42 @@ bool PolynomialSynthesizer::synthesize( const Sequence &seq, Program &program )
 bool PolynomialSynthesizer::generateProgram( const Polynomial &pol, Program &program ) const
 {
   program.ops.clear();
+  program.ops.push_back(
+      Operation( Operation::Type::MOV, Operand( Operand::Type::MEM_ACCESS_DIRECT, 2 ),
+          Operand( Operand::Type::MEM_ACCESS_DIRECT, 0 ) ) );
   for ( size_t d = 0; d < pol.size(); d++ )
   {
+    if ( d == 0 )
+    {
+      if ( pol[d] != 0 )
+      {
+        program.ops.push_back(
+            Operation( Operation::Type::ADD, Operand( Operand::Type::MEM_ACCESS_DIRECT, 1 ),
+                Operand( Operand::Type::CONSTANT, pol[d] ) ) );
+      }
+    }
+    else
+    {
+      program.ops.push_back(
+          Operation( Operation::Type::MOV, Operand( Operand::Type::MEM_ACCESS_DIRECT, 3 ),
+              Operand( Operand::Type::MEM_ACCESS_DIRECT, 0 ) ) );
+      program.ops.push_back(
+          Operation( Operation::Type::MOV, Operand( Operand::Type::MEM_ACCESS_DIRECT, 5 ),
+              Operand( Operand::Type::MEM_ACCESS_DIRECT, 4 ) ) );
+      program.ops.push_back(
+          Operation( Operation::Type::LPB, Operand( Operand::Type::MEM_ACCESS_DIRECT, 3 ),
+              Operand( Operand::Type::CONSTANT, 1 ) ) );
+      program.ops.push_back(
+          Operation( Operation::Type::ADD, Operand( Operand::Type::MEM_ACCESS_DIRECT, 4 ),
+              Operand( Operand::Type::MEM_ACCESS_DIRECT, 5 ) ) );
+      program.ops.push_back(
+          Operation( Operation::Type::SUB, Operand( Operand::Type::MEM_ACCESS_DIRECT, 3 ),
+              Operand( Operand::Type::CONSTANT, 1 ) ) );
 
+      program.ops.push_back( Operation( Operation::Type::LPE ) );
+
+    }
   }
-
 
   return true;
 }
