@@ -38,7 +38,7 @@ bool fitIt( const Sequence &y, int order, Polynomial& coeffs )
   for ( int i = 0; i < tnp1; ++i )
   {
     X[i] = 0;
-    for ( int j = 0; j < N; ++j )
+    for ( size_t j = 0; j < N; ++j )
       X[i] += (int64_t) pow( j, i );
   }
 
@@ -57,7 +57,7 @@ bool fitIt( const Sequence &y, int order, Polynomial& coeffs )
   for ( int i = 0; i < np1; ++i )
   {
     Y[i] = (int64_t) 0;
-    for ( int j = 0; j < N; ++j )
+    for ( size_t j = 0; j < N; ++j )
     {
       Y[i] += (int64_t) pow( j, i ) * y[j];
     }
