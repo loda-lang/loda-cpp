@@ -116,6 +116,10 @@ bool PolynomialSynthesizer::synthesize( const Sequence &seq, Program &program )
     if ( fitIt( seq, order, pol ) && pol.eval( seq.size() ) == seq )
     {
       std::cout << "Found " << pol.to_string() << std::endl;
+      if ( !generateProgram( pol, program ) )
+      {
+        return false;
+      }
       return true;
     }
   }
@@ -124,6 +128,12 @@ bool PolynomialSynthesizer::synthesize( const Sequence &seq, Program &program )
 
 bool PolynomialSynthesizer::generateProgram( const Polynomial &pol, Program &program ) const
 {
+  program.ops.clear();
+  for ( size_t d = 0; d < pol.size(); d++ )
+  {
+
+  }
+
 
   return true;
 }
