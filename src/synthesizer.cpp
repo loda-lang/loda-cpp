@@ -121,3 +121,9 @@ bool PolynomialSynthesizer::synthesize( const Sequence &seq, Program &program )
   }
   return false;
 }
+
+bool PolynomialSynthesizer::generateProgram( const Polynomial &pol, Program &program ) const
+{
+
+  return true;
+}

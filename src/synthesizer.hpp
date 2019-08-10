@@ -25,4 +25,8 @@ public:
 
   virtual bool synthesize( const Sequence &seq, Program& program ) override;
 
+private:
+
+  bool generateProgram( const Polynomial& pol, Program& program ) const;
+
 };
