@@ -377,6 +377,7 @@ void Test::synthesizer()
 
 void Test::all()
 {
+  oeis();
 //  synthesizer();
   matcher();
 //  primes2();
@@ -385,7 +386,6 @@ void Test::all()
   exponentiation();
   ackermann();
   optimize();
-  oeis();
 }
 
 void Test::testBinary( const std::string& func, const std::string& file,
