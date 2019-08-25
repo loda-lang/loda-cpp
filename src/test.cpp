@@ -75,7 +75,9 @@ void Test::optimize()
 
 void Test::oeis()
 {
+  Log::get().info( "Start checking programs for OEIS sequences" );
   Settings settings;
+  settings.optimize_existing_programs = true;
   Oeis o( settings );
   o.load();
   std::ifstream readme_in( "README.md" );
@@ -174,6 +176,7 @@ void Test::oeis()
   readme_out << "![LODA Program Counts](https://raw.githubusercontent.com/ckrause/loda/master/counts.png)\n";
   readme_out.close();
   std::cout << std::endl;
+  Log::get().info( "Finished checking programs for OEIS sequences" );
 }
 
 void Test::primes()
