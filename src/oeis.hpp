@@ -69,6 +69,8 @@ public:
 
   bool updateProgram( number_t id, const Program &p ) const;
 
+  void maintain( volatile sig_atomic_t &exit_flag );
+
 private:
 
   void loadNames();

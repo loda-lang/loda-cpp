@@ -32,12 +32,15 @@ void Test::ackermann()
 
 void Test::iterate()
 {
+  Log::get().info( "Testing iterator" );
   Iterator it;
-  Printer printer;
-  while ( true )
+//  Printer printer;
+  for ( int i = 0; i < 100000; i++ )
   {
-    std::cout << "\x1B[2J\x1B[H";
-    printer.print( it.next(), std::cout );
+    if ( exit_flag_ ) break;
+    it.next();
+//    std::cout << "\x1B[2J\x1B[H";
+//    printer.print(next, std::cout );
 //    std::cin.ignore();
   }
 }
@@ -51,9 +54,10 @@ void Test::optimize()
   Sequence s1, s2, s3;
   Program program, optimized, minimized;
 
-  Log::get().info( "Testing optimization and minimization" );
-  for ( size_t i = 0; i < 10000; i++ )
+  Log::get().info( "Testing optimizer and minimizer" );
+  for ( size_t i = 0; i < 1000; i++ )
   {
+    if ( exit_flag_ ) break;
     program = generator.generateProgram();
     try
     {
@@ -73,112 +77,6 @@ void Test::optimize()
   }
 }
 
-void Test::oeis()
-{
-  Log::get().info( "Start checking programs for OEIS sequences" );
-  Settings settings;
-  settings.optimize_existing_programs = true;
-  Oeis o( settings );
-  o.load();
-  std::ifstream readme_in( "README.md" );
-  std::stringstream buffer;
-  std::string str;
-  while ( std::getline( readme_in, str ) )
-  {
-    buffer << str << std::endl;
-    if ( str == "## Available Programs" )
-    {
-      break;
-    }
-  }
-  readme_in.close();
-  std::ofstream readme_out( "README.md" );
-  readme_out << buffer.str() << std::endl;
-  std::ofstream list_file;
-  int list_index = -1;
-  size_t num_programs = 0;
-  for ( auto &s : o.getSequences() )
-  {
-    std::string file_name = "programs/oeis/" + s.id_str() + ".asm";
-    std::ifstream file( file_name );
-    if ( file.good() )
-    {
-      num_programs++;
-      Log::get().info( "Checking first " + std::to_string( s.full.size() ) + " terms of " + s.to_string() );
-      Parser parser;
-      Program program = parser.parse( file );
-      Settings settings2 = settings;
-      settings2.num_terms = s.full.size();
-      Interpreter interpreter( settings2 );
-      bool okay;
-      try
-      {
-        Sequence result = interpreter.eval( program );
-        if ( result.size() != s.full.size() || result != s.full )
-        {
-          Log::get().error( "Program did not evaluate to expected sequence" );
-          okay = false;
-        }
-        else
-        {
-          okay = true;
-        }
-      }
-      catch ( const std::exception &exc )
-      {
-        okay = false;
-      }
-      if ( !okay )
-      {
-        Log::get().warn( "Deleting " + file_name );
-        file.close();
-        remove( file_name.c_str() );
-      }
-      else
-      {
-        Log::get().info( "Optimizing and minimizing " + file_name );
-        program.removeOps( Operation::Type::NOP );
-        Program optimized = program;
-        Optimizer optimizer( settings2 );
-        optimizer.minimize( optimized, s.full.size() );
-        optimizer.optimize( optimized, 2, 1 );
-        if ( !(program == optimized) )
-        {
-          Log::get().warn( "Program not optimal! Updating ..." );
-        }
-        o.dumpProgram( s.id, optimized, file_name );
-        if ( list_index < 0 || (int) s.id / 100000 != list_index )
-        {
-          list_index++;
-          std::string list_path = "programs/oeis/list" + std::to_string( list_index ) + ".md";
-          OeisSequence start( (list_index * 100000) + 1 );
-          OeisSequence end( (list_index + 1) * 100000 );
-          readme_out << "* [" << start.id_str() << "-" << end.id_str() << "](" << list_path << ")\n";
-          list_file.close();
-          list_file.open( list_path );
-          list_file << "# Programs for " << start.id_str() << "-" << end.id_str() << "\n\n";
-          list_file
-              << "List of integer sequences with links to LODA programs. An _Ln_ program is a LODA program of length _n_."
-              << "\n\n";
-        }
-        list_file << "* [" << s.id_str() << "](http://oeis.org/" << s.id_str() << ") ([L" << std::setw( 2 )
-            << std::setfill( '0' ) << optimized.num_ops( false ) << " program](" << s.id_str() << ".asm)): " << s.name
-            << "\n";
-      }
-    }
-  }
-  list_file.close();
-  readme_out << "\n" << "Total number of programs: ";
-  readme_out << num_programs << "/" << o.getTotalCount() << " (" << (int) (100 * num_programs / o.getTotalCount())
-      << "%)\n\n";
-  readme_out
-      << "![LODA Program Length Distribution](https://raw.githubusercontent.com/ckrause/loda/master/lengths.png)\n";
-  readme_out << "![LODA Program Counts](https://raw.githubusercontent.com/ckrause/loda/master/counts.png)\n";
-  readme_out.close();
-  std::cout << std::endl;
-  Log::get().info( "Finished checking programs for OEIS sequences" );
-}
-
 void Test::matcher()
 {
   Settings settings;
@@ -191,8 +89,10 @@ void Test::matcher()
   PolynomialMatcher matcher;
 
   Log::get().info( "Testing matcher" );
-  for ( number_t i = 0; i < 10000; i++ )
+  for ( number_t i = 0; i < 1000; i++ )
   {
+    if ( exit_flag_ ) break;
+
     // generate a program
     auto program = generator.generateProgram();
     std::unordered_set<number_t> used_cells;
@@ -226,7 +126,7 @@ void Test::matcher()
     }
 
     // std::cout << std::endl;
-    Log::get().info( "Testing sequence (" + norm_seq.to_string() + ") + " + pol.to_string() );
+    Log::get().debug( "Checking (" + norm_seq.to_string() + ") + " + pol.to_string() );
     auto target_seq = norm_seq;
     for ( size_t n = 0; n < target_seq.size(); n++ )
     {
@@ -276,34 +176,36 @@ void Test::matcher()
 
 void Test::synthesizer()
 {
+  Log::get().info( "Testing synthesizer" );
   std::random_device rand_dev;
   for ( int i = 0; i < 1000; i++ )
   {
+    if ( exit_flag_ ) break;
     Polynomial pol( 0 );
     for ( size_t d = 0; d < pol.size(); d++ )
     {
       pol[d] = rand_dev() % 1000;
       pol[d] = pol[d] > 0 ? pol[d] : -pol[d];
     }
-    Log::get().info( "Testing polynomial synthesizer for " + pol.to_string() );
+    Log::get().debug( "Checking polynomial " + pol.to_string() );
   }
 }
 
 void Test::all()
 {
-  oeis();
-//  synthesizer();
-  matcher();
-//  iterate();
   exponentiation();
   ackermann();
+
+  iterate();
+  synthesizer();
+  matcher();
   optimize();
 }
 
 void Test::testBinary( const std::string &func, const std::string &file,
     const std::vector<std::vector<number_t> > &values )
 {
-  std::cout << "Running tests for " << file << "..." << std::endl;
+  Log::get().info( "Testing " + file );
   Parser parser;
   Settings settings;
   Interpreter interpreter( settings );
@@ -312,37 +214,30 @@ void Test::testBinary( const std::string &func, const std::string &file,
   {
     for ( size_t j = 0; j < values[i].size(); j++ )
     {
-      std::cout << func << "(" << i << "," << j << ")=";
+      if ( exit_flag_ ) break;
       Memory mem;
       mem.set( 0, i );
       mem.set( 1, j );
       interpreter.run( program, mem );
-      std::cout << mem.get( 2 ) << std::endl;
       if ( mem.get( 2 ) != values[i][j] )
       {
-        throw std::runtime_error( "unexpected result: " + std::to_string( mem.get( 2 ) ) );
+        Log::get().error( "unexpected result: " + std::to_string( mem.get( 2 ) ), true );
       }
     }
   }
-  std::cout << std::endl;
 }
 
 void Test::testSeq( const std::string &func, const std::string &file, const Sequence &expected )
 {
-  std::cout << "Running tests for " + file + "..." << std::endl;
-
+  Log::get().info( "Testing " + file );
   Parser parser;
   Settings settings;
   settings.num_terms = expected.size();
   Interpreter interpreter( settings );
-
-  auto fib = parser.parse( file );
-  auto result = interpreter.eval( fib );
-  std::cout << func << "=" << result << "..." << std::endl;
+  auto p = parser.parse( file );
+  auto result = interpreter.eval( p );
   if ( result != expected )
   {
-    throw std::runtime_error( "unexpected result" );
+    Log::get().error( "unexpected result", true );
   }
-  std::cout << std::endl;
-
 }

@@ -156,7 +156,7 @@ void Oeis::load()
       int64_t expected_index = -1, index = 0, value = 0;
       while ( std::getline( big_file, l ) )
       {
-        l.erase( l.begin(), std::find_if( l.begin(), l.end(), []( int ch ) 
+        l.erase( l.begin(), std::find_if( l.begin(), l.end(), []( int ch )
         {
           return !std::isspace(ch);
         } ) );
@@ -501,4 +501,109 @@ bool Oeis::updateProgram( number_t id, const Program &p ) const
   gen_args.open( "programs/oeis/generator_args.txt", std::ios_base::app );
   gen_args << seq.id_str() << ": " << settings.getGeneratorArgs() << std::endl;
   return true;
+}
+
+void Oeis::maintain( volatile sig_atomic_t &exit_flag )
+{
+  if ( !settings.optimize_existing_programs )
+  {
+    Log::get().error( "Option -x required to run maintenance", true );
+  }
+  Log::get().info( "Start maintaining OEIS programs" );
+  const std::string readme( "README.md" );
+  std::ifstream readme_in( readme );
+  std::stringstream buffer;
+  std::string str;
+  while ( std::getline( readme_in, str ) )
+  {
+    buffer << str << std::endl;
+    if ( str == "## Available Programs" )
+    {
+      break;
+    }
+  }
+  readme_in.close();
+  std::ofstream readme_out( readme );
+  readme_out << buffer.str() << std::endl;
+  std::ofstream list_file;
+  int list_index = -1;
+  size_t num_programs = 0;
+  for ( auto &s : sequences )
+  {
+    std::string file_name = getOeisFile( s );
+    std::ifstream file( file_name );
+    if ( file.good() )
+    {
+      num_programs++;
+      if ( exit_flag ) continue;
+      Log::get().info( "Checking program for " + s.to_string() );
+      Parser parser;
+      Program program = parser.parse( file );
+      Settings settings2 = settings;
+      settings2.num_terms = s.full.size();
+      Interpreter interpreter( settings2 );
+      bool okay;
+      try
+      {
+        Sequence result = interpreter.eval( program );
+        if ( result.size() != s.full.size() || result != s.full )
+        {
+          Log::get().error( "Program did not evaluate to expected sequence" );
+          okay = false;
+        }
+        else
+        {
+          okay = true;
+        }
+      }
+      catch ( const std::exception &exc )
+      {
+        okay = false;
+      }
+      if ( !okay )
+      {
+        Log::get().warn( "Deleting " + file_name );
+        file.close();
+        remove( file_name.c_str() );
+      }
+      else
+      {
+        program.removeOps( Operation::Type::NOP );
+        Program optimized = program;
+        Optimizer optimizer( settings2 );
+        optimizer.minimize( optimized, s.full.size() );
+        optimizer.optimize( optimized, 2, 1 );
+        if ( !(program == optimized) )
+        {
+          Log::get().warn( "Program " + file_name + " not optimal! Updating..." );
+        }
+        dumpProgram( s.id, optimized, file_name );
+        if ( list_index < 0 || (int) s.id / 100000 != list_index )
+        {
+          list_index++;
+          std::string list_path = "programs/oeis/list" + std::to_string( list_index ) + ".md";
+          OeisSequence start( (list_index * 100000) + 1 );
+          OeisSequence end( (list_index + 1) * 100000 );
+          readme_out << "* [" << start.id_str() << "-" << end.id_str() << "](" << list_path << ")\n";
+          list_file.close();
+          list_file.open( list_path );
+          list_file << "# Programs for " << start.id_str() << "-" << end.id_str() << "\n\n";
+          list_file
+              << "List of integer sequences with links to LODA programs. An _Ln_ program is a LODA program of length _n_."
+              << "\n\n";
+        }
+        list_file << "* [" << s.id_str() << "](http://oeis.org/" << s.id_str() << ") ([L" << std::setw( 2 )
+            << std::setfill( '0' ) << optimized.num_ops( false ) << " program](" << s.id_str() << ".asm)): " << s.name
+            << "\n";
+      }
+    }
+  }
+  list_file.close();
+  readme_out << "\n" << "Total number of programs: ";
+  readme_out << num_programs << "/" << total_count_ << " (" << (int) (100 * num_programs / total_count_) << "%)\n\n";
+  readme_out
+      << "![LODA Program Length Distribution](https://raw.githubusercontent.com/ckrause/loda/master/lengths.png)\n";
+  readme_out << "![LODA Program Counts](https://raw.githubusercontent.com/ckrause/loda/master/counts.png)\n";
+  readme_out.close();
+  Log::get().info( "Finished checking programs for OEIS sequences" );
 }
