@@ -179,95 +179,6 @@ void Test::oeis()
   Log::get().info( "Finished checking programs for OEIS sequences" );
 }
 
-void Test::primes()
-{
-  int n = 1000, i = 3, count, c;
-  std::vector<size_t> primes;
-  primes.push_back( 2 );
-  for ( count = 2; count <= n; )
-  {
-    for ( c = 2; c <= i - 1; c++ )
-    {
-      if ( i % c == 0 ) break;
-    }
-    if ( c == i )
-    {
-      primes.push_back( i );
-      count++;
-    }
-    i++;
-  }
-
-  size_t index = 0;
-  for ( auto p : primes )
-  {
-    /*    std::cout << "P= " << p << std::endl;
-     std::cout << "R= ";
-     for ( auto r : primes )
-     {
-     std::cout << (p % r) << " ";
-     if ( r == p ) break;
-     }
-     std::cout << std::endl;
-     */if ( p == primes.back() ) continue;
-    size_t diff = primes.at( index + 1 ) - p;
-    std::cout << "D(" << p << ")= ";
-    for ( auto d : primes )
-    {
-      if ( (diff / d) == 0 ) break;
-      std::cout << (diff / d) << " ";
-      if ( d == p ) break;
-    }
-//    std::cout << std::endl;
-    std::cout << std::endl;
-    index++;
-  }
-}
-
-void Test::primes2()
-{
-  int prime = 1; // will store current prime number
-  int gap = 1; // stores the gap to the next prime number
-  std::deque<int> next_gaps = { 1 }; // list of next gap
-
-  for ( int i = 1; i <= 100; i++ )
-  {
-    prime += gap; // next prime is current prime plus gap
-    gap = next_gaps.front(); // use next gap from list
-
-    next_gaps.pop_front(); // move next gap from front...
-    next_gaps.push_back( gap ); // ...to end
-
-    std::deque<int> updated_gaps;
-
-    // make prime number copies of the list
-    if ( next_gaps.size() < 1000 )
-    {
-      for ( int j = 0; j < prime; j++ )
-      {
-        std::copy( next_gaps.begin(), next_gaps.end(), std::back_inserter( updated_gaps ) );
-      }
-    }
-
-    // remove illegal gaps from the list
-    int sum = prime + gap;
-    for ( int j = 0; j < (int) updated_gaps.size(); j++ )
-    {
-      sum = (sum + updated_gaps[j]) % prime;
-      if ( sum == 0 )
-      {
-        sum = (sum + updated_gaps[j + 1]) % prime;
-        updated_gaps[j] += updated_gaps[j + 1];
-        updated_gaps.erase( updated_gaps.begin() + j + 1, updated_gaps.begin() + j + 2 );
-      }
-    }
-    next_gaps = updated_gaps;
-
-    std::cout << "Step " << i << ": p=" << prime << "; g=" << gap << std::endl;
-
-  }
-}
-
 void Test::matcher()
 {
   Settings settings;
@@ -383,9 +294,7 @@ void Test::all()
   oeis();
 //  synthesizer();
   matcher();
-//  primes2();
 //  iterate();
-//  primes();
   exponentiation();
   ackermann();
   optimize();

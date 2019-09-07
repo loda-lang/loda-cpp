@@ -14,10 +14,6 @@ public:
 
   void oeis();
 
-  void primes();
-
-  void primes2();
-
   void optimize();
 
   void matcher();
