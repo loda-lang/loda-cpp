@@ -10,7 +10,7 @@ inline Operand smallest_target()
   return Operand( Operand::Type::MEM_ACCESS_DIRECT, 0 );
 }
 
-bool Iterator::inc( Operand& o )
+bool Iterator::inc( Operand &o )
 {
   if ( o.value * 4 < size_ )
   {
@@ -31,7 +31,7 @@ bool Iterator::inc( Operand& o )
   return false;
 }
 
-bool Iterator::inc( Operation& op )
+bool Iterator::inc( Operation &op )
 {
   if ( op.type == Operation::Type::LPE )
   {

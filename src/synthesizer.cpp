@@ -19,7 +19,7 @@
  * @author Chris Engelsma
  */
 
-bool fitIt( const Sequence &y, int order, Polynomial& coeffs )
+bool fitIt( const Sequence &y, int order, Polynomial &coeffs )
 {
   if ( y.empty() )
   {

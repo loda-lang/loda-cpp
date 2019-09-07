@@ -5,13 +5,15 @@ class Iterator
 public:
 
   Iterator()
-      : size_( 0 )
+      :
+      size_( 0 )
   {
   }
 
-  Iterator( const Program& p )
-      : p_( p ),
-        size_( p.ops.size() )
+  Iterator( const Program &p )
+      :
+      p_( p ),
+      size_( p.ops.size() )
   {
   }
 
@@ -19,9 +21,9 @@ public:
 
 private:
 
-  bool inc( Operation& op );
+  bool inc( Operation &op );
 
-  bool inc( Operand& o );
+  bool inc( Operand &o );
 
   Program p_;
   size_t size_;

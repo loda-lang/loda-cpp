@@ -25,12 +25,12 @@ std::string getOperand( Operand op )
   return "";
 }
 
-std::string getBinaryOperation( int indent, const std::string& name, const Operation& op )
+std::string getBinaryOperation( int indent, const std::string &name, const Operation &op )
 {
   return getIndent( indent ) + name + " " + getOperand( op.target ) + "," + getOperand( op.source );
 }
 
-void Printer::print( const Operation& op, std::ostream& out, int indent )
+void Printer::print( const Operation &op, std::ostream &out, int indent )
 {
   switch ( op.type )
   {
@@ -81,10 +81,10 @@ void Printer::print( const Operation& op, std::ostream& out, int indent )
   }
 }
 
-void Printer::print( const Program& p, std::ostream& out )
+void Printer::print( const Program &p, std::ostream &out )
 {
   int indent = 0;
-  for ( auto& op : p.ops )
+  for ( auto &op : p.ops )
   {
     if ( op.type == Operation::Type::LPE )
     {

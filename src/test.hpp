@@ -28,9 +28,9 @@ public:
 
 private:
 
-  void testSeq( const std::string& func, const std::string& file, const Sequence& values );
+  void testSeq( const std::string &func, const std::string &file, const Sequence &values );
 
-  void testBinary( const std::string& func, const std::string& file,
-      const std::vector<std::vector<number_t> >& values );
+  void testBinary( const std::string &func, const std::string &file,
+      const std::vector<std::vector<number_t> > &values );
 
 };

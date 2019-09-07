@@ -16,10 +16,11 @@ public:
 
   Sequence() = default;
 
-  Sequence( const Sequence& s ) = default;
+  Sequence( const Sequence &s ) = default;
 
-  Sequence( const std::vector<number_t>& s )
-      : std::vector<number_t>( s )
+  Sequence( const std::vector<number_t> &s )
+      :
+      std::vector<number_t>( s )
   {
   }
 
@@ -35,13 +36,13 @@ public:
 
   void sub( number_t n );
 
-  bool operator<( const Sequence& s ) const;
+  bool operator<( const Sequence &s ) const;
 
-  bool operator==( const Sequence& s ) const;
+  bool operator==( const Sequence &s ) const;
 
-  bool operator!=( const Sequence& s ) const;
+  bool operator!=( const Sequence &s ) const;
 
-  friend std::ostream& operator<<( std::ostream& out, const Sequence& s );
+  friend std::ostream& operator<<( std::ostream &out, const Sequence &s );
 
   std::string to_string() const;
 
@@ -53,15 +54,17 @@ public:
 
   Polynomial() = default;
 
-  Polynomial( const Polynomial& s ) = default;
+  Polynomial( const Polynomial &s ) = default;
 
   Polynomial( size_t degree )
-      : std::vector<int64_t>( degree + 1 )
+      :
+      std::vector<int64_t>( degree + 1 )
   {
   }
 
-  Polynomial( const std::vector<int64_t>& p )
-      : std::vector<int64_t>( p )
+  Polynomial( const std::vector<int64_t> &p )
+      :
+      std::vector<int64_t>( p )
   {
   }
 
@@ -69,17 +72,17 @@ public:
 
   std::string to_string() const;
 
-  friend Polynomial operator+( const Polynomial& a, const Polynomial& b );
-  friend Polynomial operator-( const Polynomial& a, const Polynomial& b );
+  friend Polynomial operator+( const Polynomial &a, const Polynomial &b );
+  friend Polynomial operator-( const Polynomial &a, const Polynomial &b );
 
 };
 
 struct SequenceHasher
 {
-  std::size_t operator()( const Sequence& s ) const
+  std::size_t operator()( const Sequence &s ) const
   {
     std::size_t seed = s.size();
-    for ( auto& i : s )
+    for ( auto &i : s )
     {
       seed ^= i + 0x9e3779b9 + (seed << 6) + (seed >> 2);
     }
@@ -99,10 +102,11 @@ public:
 
   Memory() = default;
 
-  Memory( const Memory& m ) = default;
+  Memory( const Memory &m ) = default;
 
-  Memory( const std::vector<number_t>& m )
-      : std::vector<number_t>( m )
+  Memory( const std::vector<number_t> &m )
+      :
+      std::vector<number_t>( m )
   {
   }
 
@@ -112,13 +116,13 @@ public:
 
   Memory fragment( number_t start, number_t length ) const;
 
-  bool operator<( const Memory& m ) const;
+  bool operator<( const Memory &m ) const;
 
-  bool operator==( const Memory& m ) const;
+  bool operator==( const Memory &m ) const;
 
-  bool operator!=( const Memory& m ) const;
+  bool operator!=( const Memory &m ) const;
 
-  friend std::ostream& operator<<( std::ostream& out, const Memory& m );
+  friend std::ostream& operator<<( std::ostream &out, const Memory &m );
 
 };
 
@@ -126,15 +130,15 @@ class Distribution: public std::discrete_distribution<>
 {
 public:
 
-  Distribution( const std::vector<double>& probabilities );
+  Distribution( const std::vector<double> &probabilities );
 
   static Distribution uniform( size_t size );
 
   static Distribution exponential( size_t size );
 
-  static Distribution add( const Distribution& d1, const Distribution& d2 );
+  static Distribution add( const Distribution &d1, const Distribution &d2 );
 
-  static Distribution mutate( const Distribution& d, std::mt19937& gen );
+  static Distribution mutate( const Distribution &d, std::mt19937 &gen );
 
   void print() const;
 

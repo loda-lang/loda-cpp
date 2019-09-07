@@ -16,7 +16,7 @@
 
 size_t Oeis::MAX_NUM_TERMS = 250;
 
-std::ostream& operator<<( std::ostream& out, const OeisSequence& s )
+std::ostream& operator<<( std::ostream &out, const OeisSequence &s )
 {
   out << s.id_str() << ": " << s.name;
   return out;
@@ -29,14 +29,14 @@ std::string OeisSequence::to_string() const
   return ss.str();
 }
 
-std::string OeisSequence::id_str( const std::string& prefix ) const
+std::string OeisSequence::id_str( const std::string &prefix ) const
 {
   std::stringstream s;
   s << prefix << std::setw( 6 ) << std::setfill( '0' ) << id;
   return s.str();
 }
 
-void throwParseError( const std::string& line )
+void throwParseError( const std::string &line )
 {
   Log::get().error( "error parsing OEIS line: " + line, true );
 }
@@ -46,16 +46,17 @@ std::string getHome()
   return std::string( std::getenv( "HOME" ) ) + "/.loda/oeis/";
 }
 
-std::string getOeisFile( const OeisSequence& seq )
+std::string getOeisFile( const OeisSequence &seq )
 {
   return "programs/oeis/" + seq.id_str() + ".asm";
 }
 
-Oeis::Oeis( const Settings& settings )
-    : settings( settings ),
-      interpreter( settings ),
-      optimizer( settings ),
-      total_count_( 0 )
+Oeis::Oeis( const Settings &settings )
+    :
+    settings( settings ),
+    interpreter( settings ),
+    optimizer( settings ),
+    total_count_( 0 )
 {
   matchers.resize( 2 );
   matchers[0].reset( new DirectMatcher() );
@@ -155,7 +156,7 @@ void Oeis::load()
       int64_t expected_index = -1, index = 0, value = 0;
       while ( std::getline( big_file, l ) )
       {
-        l.erase( l.begin(), std::find_if( l.begin(), l.end(), [](int ch)
+        l.erase( l.begin(), std::find_if( l.begin(), l.end(), []( int ch ) 
         {
           return !std::isspace(ch);
         } ) );
@@ -249,7 +250,7 @@ void Oeis::load()
     sequences[id] = OeisSequence( id, "", norm_sequence, full_sequence );
 
     // add sequences to matchers
-    for ( auto& matcher : matchers )
+    for ( auto &matcher : matchers )
     {
       matcher->insert( norm_sequence, id );
     }
@@ -262,7 +263,7 @@ void Oeis::load()
   if ( !settings.optimize_existing_programs )
   {
     std::vector<number_t> seqs_to_remove;
-    for ( auto& seq : sequences )
+    for ( auto &seq : sequences )
     {
       std::ifstream in( getOeisFile( seq ) );
       if ( in.good() )
@@ -346,7 +347,7 @@ void Oeis::removeSequence( number_t id )
   }
   if ( sequences[id].id == id )
   {
-    for ( auto& matcher : matchers )
+    for ( auto &matcher : matchers )
     {
       matcher->remove( sequences[id], id );
     }
@@ -354,7 +355,7 @@ void Oeis::removeSequence( number_t id )
   }
 }
 
-Oeis::seq_programs_t Oeis::findSequence( const Program& p, Sequence& norm_seq ) const
+Oeis::seq_programs_t Oeis::findSequence( const Program &p, Sequence &norm_seq ) const
 {
   seq_programs_t result;
   norm_seq.clear();
@@ -374,11 +375,11 @@ Oeis::seq_programs_t Oeis::findSequence( const Program& p, Sequence& norm_seq ) 
   return result;
 }
 
-void Oeis::findAll( const Program& p, const Sequence& norm_seq, seq_programs_t& result ) const
+void Oeis::findAll( const Program &p, const Sequence &norm_seq, seq_programs_t &result ) const
 {
   // collect possible matches
   result.clear();
-  for ( auto& matcher : matchers )
+  for ( auto &matcher : matchers )
   {
     matcher->match( p, norm_seq, result );
   }
@@ -388,7 +389,7 @@ void Oeis::findAll( const Program& p, const Sequence& norm_seq, seq_programs_t& 
   auto it = result.begin();
   while ( it != result.end() )
   {
-    auto& expected_full_seq = sequences.at( it->first ).full;
+    auto &expected_full_seq = sequences.at( it->first ).full;
     try
     {
       if ( full_seq.size() != expected_full_seq.size() )
@@ -410,11 +411,11 @@ void Oeis::findAll( const Program& p, const Sequence& norm_seq, seq_programs_t& 
   }
 }
 
-void Oeis::dumpProgram( number_t id, Program p, const std::string& file ) const
+void Oeis::dumpProgram( number_t id, Program p, const std::string &file ) const
 {
   p.removeOps( Operation::Type::NOP );
   std::ofstream out( file );
-  auto& seq = sequences.at( id );
+  auto &seq = sequences.at( id );
   out << "; " << seq << std::endl;
   out << "; " << seq.full << std::endl;
   out << std::endl;
@@ -422,7 +423,7 @@ void Oeis::dumpProgram( number_t id, Program p, const std::string& file ) const
   r.print( p, out );
 }
 
-Program Oeis::optimizeAndCheck( const Program& p, const OeisSequence& seq ) const
+Program Oeis::optimizeAndCheck( const Program &p, const OeisSequence &seq ) const
 {
   // optimize and minimize program
   Program optimized = p;
@@ -439,7 +440,7 @@ Program Oeis::optimizeAndCheck( const Program& p, const OeisSequence& seq ) cons
       correct = false;
     }
   }
-  catch ( const std::exception& e )
+  catch ( const std::exception &e )
   {
     correct = false;
   }
@@ -458,9 +459,9 @@ Program Oeis::optimizeAndCheck( const Program& p, const OeisSequence& seq ) cons
   return optimized;
 }
 
-bool Oeis::updateProgram( number_t id, const Program& p ) const
+bool Oeis::updateProgram( number_t id, const Program &p ) const
 {
-  auto& seq = sequences.at( id );
+  auto &seq = sequences.at( id );
   std::string file_name = getOeisFile( seq );
   bool is_new = true;
   Program optimized;
@@ -497,7 +498,7 @@ bool Oeis::updateProgram( number_t id, const Program& p ) const
   Log::get().alert( buf.str() );
   dumpProgram( id, optimized, file_name );
   std::ofstream gen_args;
-  gen_args.open("programs/oeis/generator_args.txt", std::ios_base::app);
+  gen_args.open( "programs/oeis/generator_args.txt", std::ios_base::app );
   gen_args << seq.id_str() << ": " << settings.getGeneratorArgs() << std::endl;
   return true;
 }

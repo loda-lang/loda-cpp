@@ -14,7 +14,8 @@
 #define POSITION_RANGE 100
 
 State::State()
-    : State( 0, 4, 4, 2, 3 )
+    :
+    State( 0, 4, 4, 2, 3 )
 {
 }
 
@@ -53,17 +54,18 @@ void Generator::print()
 
 State::State( size_t numStates, size_t maxConstant, size_t num_operation_types, size_t num_target_types,
     size_t num_source_types )
-    : operation_dist( Distribution::uniform( num_operation_types ) ),
-      target_type_dist( Distribution::exponential( num_target_types ) ),
-      target_value_dist( Distribution::uniform( maxConstant + 1 ) ),
-      source_type_dist( Distribution::exponential( num_source_types ) ),
-      source_value_dist( Distribution::uniform( maxConstant + 1 ) ),
-      transition_dist( Distribution::uniform( numStates ) ),
-      position_dist( Distribution::uniform( POSITION_RANGE ) )
+    :
+    operation_dist( Distribution::uniform( num_operation_types ) ),
+    target_type_dist( Distribution::exponential( num_target_types ) ),
+    target_value_dist( Distribution::uniform( maxConstant + 1 ) ),
+    source_type_dist( Distribution::exponential( num_source_types ) ),
+    source_value_dist( Distribution::uniform( maxConstant + 1 ) ),
+    transition_dist( Distribution::uniform( numStates ) ),
+    position_dist( Distribution::uniform( POSITION_RANGE ) )
 {
 }
 
-State State::operator+( const State& other )
+State State::operator+( const State &other )
 {
   State r;
   r.operation_dist = Distribution::add( operation_dist, other.operation_dist );
@@ -74,8 +76,9 @@ State State::operator+( const State& other )
   return r;
 }
 
-Generator::Generator( const Settings& settings, size_t numStates, int64_t seed )
-    : settings( settings )
+Generator::Generator( const Settings &settings, size_t numStates, int64_t seed )
+    :
+    settings( settings )
 {
   for ( char c : settings.operation_types )
   {
@@ -145,7 +148,7 @@ Generator::Generator( const Settings& settings, size_t numStates, int64_t seed )
   setSeed( seed );
 }
 
-Generator Generator::operator+( const Generator& other )
+Generator Generator::operator+( const Generator &other )
 {
   Generator r( settings, states.size(), gen() );
   for ( number_t s = 0; s < states.size(); s++ )
@@ -157,7 +160,7 @@ Generator Generator::operator+( const Generator& other )
 
 void Generator::mutate( double delta )
 {
-  for ( auto& s : states )
+  for ( auto &s : states )
   {
     s.operation_dist = Distribution::mutate( s.operation_dist, gen );
     s.target_type_dist = Distribution::mutate( s.target_type_dist, gen );
@@ -169,9 +172,9 @@ void Generator::mutate( double delta )
   }
 }
 
-void Generator::generateOperations( Seed& seed )
+void Generator::generateOperations( Seed &seed )
 {
-  auto& s = states.at( seed.state );
+  auto &s = states.at( seed.state );
   auto target_type = target_operand_types.at( s.target_type_dist( gen ) );
   auto source_type = source_operand_types.at( s.source_type_dist( gen ) );
   number_t target_value = s.target_value_dist( gen );
@@ -226,7 +229,7 @@ Program Generator::generateProgram( size_t initialState )
   written_cells.insert( 0 );
   for ( size_t position = 0; position < p.ops.size(); position++ )
   {
-    auto& op = p.ops[position];
+    auto &op = p.ops[position];
 
     // fix source operands in new operation
     if ( op.source.type == Operand::Type::MEM_ACCESS_DIRECT || op.source.type == Operand::Type::MEM_ACCESS_INDIRECT )
@@ -296,7 +299,7 @@ Program Generator::generateProgram( size_t initialState )
 
   // make sure that the target value gets written
   bool written = false;
-  for ( auto& op : p.ops )
+  for ( auto &op : p.ops )
   {
     switch ( op.type )
     {

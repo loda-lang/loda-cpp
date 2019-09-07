@@ -4,17 +4,17 @@
 
 // --- Direct Matcher --------------------------------------------------
 
-void DirectMatcher::insert( const Sequence& norm_seq, number_t id )
+void DirectMatcher::insert( const Sequence &norm_seq, number_t id )
 {
   ids[norm_seq].push_back( id );
 }
 
-void DirectMatcher::remove( const Sequence& norm_seq, number_t id )
+void DirectMatcher::remove( const Sequence &norm_seq, number_t id )
 {
   ids.remove( norm_seq, id );
 }
 
-void DirectMatcher::match( const Program& p, const Sequence& norm_seq, seq_programs_t& result ) const
+void DirectMatcher::match( const Program &p, const Sequence &norm_seq, seq_programs_t &result ) const
 {
   auto it = ids.find( norm_seq );
   if ( it != ids.end() )
@@ -30,7 +30,7 @@ void DirectMatcher::match( const Program& p, const Sequence& norm_seq, seq_progr
 
 const int PolynomialMatcher::DEGREE = 1;
 
-Polynomial PolynomialMatcher::reduce( Sequence& seq )
+Polynomial PolynomialMatcher::reduce( Sequence &seq )
 {
   Polynomial polynom( DEGREE );
 //  auto input_seq = seq;
@@ -67,7 +67,7 @@ Polynomial PolynomialMatcher::reduce( Sequence& seq )
   return polynom;
 }
 
-void PolynomialMatcher::insert( const Sequence& norm_seq, number_t id )
+void PolynomialMatcher::insert( const Sequence &norm_seq, number_t id )
 {
 //  std::cout << "Adding sequence " << id << std::endl;
   Sequence seq = norm_seq;
@@ -75,7 +75,7 @@ void PolynomialMatcher::insert( const Sequence& norm_seq, number_t id )
   ids[seq].push_back( id ); // must be after reduce!
 }
 
-void PolynomialMatcher::remove( const Sequence& norm_seq, number_t id )
+void PolynomialMatcher::remove( const Sequence &norm_seq, number_t id )
 {
   Sequence seq = norm_seq;
   reduce( seq );
@@ -83,7 +83,7 @@ void PolynomialMatcher::remove( const Sequence& norm_seq, number_t id )
   polynoms.erase( id );
 }
 
-void PolynomialMatcher::match( const Program& p, const Sequence& norm_seq, seq_programs_t& result ) const
+void PolynomialMatcher::match( const Program &p, const Sequence &norm_seq, seq_programs_t &result ) const
 {
 //  std::cout << "Matching sequence " << norm_seq.to_string() << std::endl;
   Sequence seq = norm_seq;

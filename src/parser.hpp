@@ -7,15 +7,16 @@ class Parser
 public:
 
   Parser()
-      : in( nullptr )
+      :
+      in( nullptr )
   {
   }
 
-  Program parse( const std::string& file );
+  Program parse( const std::string &file );
 
-  Program parse( std::istream& in );
+  Program parse( std::istream &in );
 
-  void setWorkingDir( const std::string& dir );
+  void setWorkingDir( const std::string &dir );
 
 private:
 
@@ -25,12 +26,12 @@ private:
 
   std::string readIdentifier();
 
-  Operand readOperand( Program& p );
+  Operand readOperand( Program &p );
 
   Operation::Type readOperationType();
 
   std::string working_dir;
-  std::istream* in;
+  std::istream *in;
   std::shared_ptr<std::ifstream> file_in;
 
 };

@@ -13,11 +13,11 @@ public:
   {
   }
 
-  virtual void insert( const Sequence& norm_seq, number_t id ) = 0;
+  virtual void insert( const Sequence &norm_seq, number_t id ) = 0;
 
-  virtual void remove( const Sequence& norm_seq, number_t id ) = 0;
+  virtual void remove( const Sequence &norm_seq, number_t id ) = 0;
 
-  virtual void match( const Program& p, const Sequence& norm_seq, seq_programs_t& result ) const = 0;
+  virtual void match( const Program &p, const Sequence &norm_seq, seq_programs_t &result ) const = 0;
 
 protected:
 
@@ -33,11 +33,11 @@ public:
   {
   }
 
-  virtual void insert( const Sequence& norm_seq, number_t id ) override;
+  virtual void insert( const Sequence &norm_seq, number_t id ) override;
 
-  virtual void remove( const Sequence& norm_seq, number_t id ) override;
+  virtual void remove( const Sequence &norm_seq, number_t id ) override;
 
-  virtual void match( const Program& p, const Sequence& norm_seq, seq_programs_t& result ) const override;
+  virtual void match( const Program &p, const Sequence &norm_seq, seq_programs_t &result ) const override;
 
 };
 
@@ -51,15 +51,15 @@ public:
   {
   }
 
-  virtual void insert( const Sequence& norm_seq, number_t id ) override;
+  virtual void insert( const Sequence &norm_seq, number_t id ) override;
 
-  virtual void remove( const Sequence& norm_seq, number_t id ) override;
+  virtual void remove( const Sequence &norm_seq, number_t id ) override;
 
-  virtual void match( const Program& p, const Sequence& norm_seq, seq_programs_t& result ) const override;
+  virtual void match( const Program &p, const Sequence &norm_seq, seq_programs_t &result ) const override;
 
 private:
 
-  static Polynomial reduce( Sequence& seq );
+  static Polynomial reduce( Sequence &seq );
 
   std::unordered_map<number_t, Polynomial> polynoms;
 

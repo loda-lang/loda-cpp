@@ -11,13 +11,14 @@
 using MemStack = std::stack<Memory>;
 using SizeStack = std::stack<size_t>;
 
-Interpreter::Interpreter( const Settings& settings )
-    : settings( settings ),
-      is_debug( Log::get().level == Log::Level::DEBUG )
+Interpreter::Interpreter( const Settings &settings )
+    :
+    settings( settings ),
+    is_debug( Log::get().level == Log::Level::DEBUG )
 {
 }
 
-bool Interpreter::run( const Program& p, Memory& mem ) const
+bool Interpreter::run( const Program &p, Memory &mem ) const
 {
   // check for empty program
   if ( p.ops.empty() )
@@ -53,7 +54,7 @@ bool Interpreter::run( const Program& p, Memory& mem ) const
 
     pc = pc_stack.top();
     pc_stack.pop();
-    auto& op = p.ops.at( pc );
+    auto &op = p.ops.at( pc );
     pc_next = pc + 1;
 
     switch ( op.type )
@@ -166,7 +167,7 @@ bool Interpreter::run( const Program& p, Memory& mem ) const
   return true;
 }
 
-number_t Interpreter::get( Operand a, const Memory& mem, bool get_address ) const
+number_t Interpreter::get( Operand a, const Memory &mem, bool get_address ) const
 {
   switch ( a.type )
   {
@@ -191,7 +192,7 @@ number_t Interpreter::get( Operand a, const Memory& mem, bool get_address ) cons
   {};
 }
 
-void Interpreter::set( Operand a, number_t v, Memory& mem ) const
+void Interpreter::set( Operand a, number_t v, Memory &mem ) const
 {
   number_t index = 0;
   switch ( a.type )
@@ -214,7 +215,7 @@ void Interpreter::set( Operand a, number_t v, Memory& mem ) const
   mem.set( index, v );
 }
 
-bool Interpreter::isLessThan( const Memory& m1, const Memory& m2, const std::vector<Operand>& cmp_vars ) const
+bool Interpreter::isLessThan( const Memory &m1, const Memory &m2, const std::vector<Operand> &cmp_vars ) const
 {
   for ( Operand v : cmp_vars )
   {
@@ -230,7 +231,7 @@ bool Interpreter::isLessThan( const Memory& m1, const Memory& m2, const std::vec
   return false; // equal
 }
 
-Sequence Interpreter::eval( const Program& p, int num_terms ) const
+Sequence Interpreter::eval( const Program &p, int num_terms ) const
 {
   if ( num_terms < 0 )
   {

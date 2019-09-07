@@ -121,7 +121,7 @@ int main( int argc, char *argv[] )
       Interpreter interpreter( settings );
       auto sequence = interpreter.eval( program );
       bool is_collatz = Miner::isCollatzValuation( sequence );
-      std::cout << ( is_collatz ? "true" : "false" ) << std::endl;
+      std::cout << (is_collatz ? "true" : "false") << std::endl;
     }
     else
     {

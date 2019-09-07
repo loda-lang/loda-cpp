@@ -25,7 +25,7 @@ size_t Program::num_ops( bool withNops ) const
   else
   {
     size_t num_ops = 0;
-    for ( auto& op : ops )
+    for ( auto &op : ops )
     {
       if ( op.type != Operation::Type::NOP )
       {
@@ -36,7 +36,7 @@ size_t Program::num_ops( bool withNops ) const
   }
 }
 
-bool Program::operator==( const Program& p ) const
+bool Program::operator==( const Program &p ) const
 {
   if ( p.ops.size() != ops.size() )
   {

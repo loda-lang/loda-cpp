@@ -11,7 +11,7 @@ public:
   {
   }
 
-  virtual bool synthesize( const Sequence &seq, Program& program ) = 0;
+  virtual bool synthesize( const Sequence &seq, Program &program ) = 0;
 
 };
 
@@ -23,10 +23,10 @@ public:
   {
   }
 
-  virtual bool synthesize( const Sequence &seq, Program& program ) override;
+  virtual bool synthesize( const Sequence &seq, Program &program ) override;
 
 private:
 
-  bool generateProgram( const Polynomial& pol, Program& program ) const;
+  bool generateProgram( const Polynomial &pol, Program &program ) const;
 
 };

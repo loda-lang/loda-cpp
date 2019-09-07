@@ -21,7 +21,7 @@ public:
   Distribution transition_dist;
   Distribution position_dist;
 
-  State operator+( const State& other );
+  State operator+( const State &other );
 
   void print();
 
@@ -41,17 +41,17 @@ public:
 
   using UPtr = std::unique_ptr<Generator>;
 
-  Generator( const Settings& settings, size_t numStates, int64_t seed );
+  Generator( const Settings &settings, size_t numStates, int64_t seed );
 
-  Generator( const Generator& other ) = default;
+  Generator( const Generator &other ) = default;
 
-  Generator operator+( const Generator& other );
+  Generator operator+( const Generator &other );
 
   void mutate( double delta );
 
   Program generateProgram( size_t initialState = 0 );
 
-  void generateOperations( Seed& seed );
+  void generateOperations( Seed &seed );
 
   void setSeed( int64_t seed );
 
@@ -61,7 +61,7 @@ public:
 
 private:
 
-  const Settings& settings;
+  const Settings &settings;
 
   std::vector<State> states;
 

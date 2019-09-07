@@ -59,7 +59,7 @@ void Test::optimize()
     {
       s1 = interpreter.eval( program );
     }
-    catch ( const std::exception& e )
+    catch ( const std::exception &e )
     {
       continue;
     }
@@ -97,7 +97,7 @@ void Test::oeis()
   std::ofstream list_file;
   int list_index = -1;
   size_t num_programs = 0;
-  for ( auto& s : o.getSequences() )
+  for ( auto &s : o.getSequences() )
   {
     std::string file_name = "programs/oeis/" + s.id_str() + ".asm";
     std::ifstream file( file_name );
@@ -124,7 +124,7 @@ void Test::oeis()
           okay = true;
         }
       }
-      catch ( const std::exception& exc )
+      catch ( const std::exception &exc )
       {
         okay = false;
       }
@@ -280,7 +280,7 @@ void Test::matcher()
   PolynomialMatcher matcher;
 
   Log::get().info( "Testing matcher" );
-  for ( number_t i=0; i < 10000; i++ )
+  for ( number_t i = 0; i < 10000; i++ )
   {
     // generate a program
     auto program = generator.generateProgram();
@@ -335,7 +335,7 @@ void Test::matcher()
     if ( results.size() != 1 )
     {
       Printer r;
-      r.print( program , std::cout );
+      r.print( program, std::cout );
       Log::get().error( "Error: no program found", true );
     }
     Sequence result_seq;
@@ -351,10 +351,10 @@ void Test::matcher()
     {
       Printer r;
       std::cout << "Input program: " << std::endl;
-      r.print( program , std::cout );
+      r.print( program, std::cout );
 
       std::cout << std::endl << "Output program: " << std::endl;
-      r.print( program , std::cout );
+      r.print( program, std::cout );
       std::cout << "Target sequence: " + target_seq.to_string() << std::endl;
       std::cout << "Output sequence: " + result_seq.to_string() << std::endl;
       Log::get().error( "Error: matched program yields wrong unexpected result", true );
@@ -366,7 +366,7 @@ void Test::matcher()
 void Test::synthesizer()
 {
   std::random_device rand_dev;
-  for ( int i=0; i < 1000; i++)
+  for ( int i = 0; i < 1000; i++ )
   {
     Polynomial pol( 0 );
     for ( size_t d = 0; d < pol.size(); d++ )
@@ -391,8 +391,8 @@ void Test::all()
   optimize();
 }
 
-void Test::testBinary( const std::string& func, const std::string& file,
-    const std::vector<std::vector<number_t> >& values )
+void Test::testBinary( const std::string &func, const std::string &file,
+    const std::vector<std::vector<number_t> > &values )
 {
   std::cout << "Running tests for " << file << "..." << std::endl;
   Parser parser;
@@ -418,7 +418,7 @@ void Test::testBinary( const std::string& func, const std::string& file,
   std::cout << std::endl;
 }
 
-void Test::testSeq( const std::string& func, const std::string& file, const Sequence& expected )
+void Test::testSeq( const std::string &func, const std::string &file, const Sequence &expected )
 {
   std::cout << "Running tests for " + file + "..." << std::endl;
 
