@@ -174,20 +174,37 @@ void Test::matcher()
   }
 }
 
-void Test::synthesizer()
+void Test::synthesizer( size_t degree )
 {
-  Log::get().info( "Testing synthesizer" );
+  Log::get().info( "Testing polynomial synthesizer for degree " + std::to_string( degree ) );
   std::random_device rand_dev;
-  for ( int i = 0; i < 1000; i++ )
+  Settings settings;
+  PolynomialSynthesizer synth;
+  Interpreter interpreter( settings );
+  Printer printer;
+  Program prog;
+  for ( int i = 0; i < 10000; i++ )
   {
     if ( exit_flag_ ) break;
-    Polynomial pol( 0 );
+    Polynomial pol( degree );
     for ( size_t d = 0; d < pol.size(); d++ )
     {
-      pol[d] = rand_dev() % 1000;
+      pol[d] = rand_dev() % 100;
       pol[d] = pol[d] > 0 ? pol[d] : -pol[d];
     }
     Log::get().debug( "Checking polynomial " + pol.to_string() );
+    auto seq1 = pol.eval( settings.num_terms );
+    if ( !synth.synthesize( seq1, prog ) )
+    {
+      std::cout << "Target sequence " << seq1 << std::endl;
+      Log::get().error( "Error synthesizing program for polynomial " + pol.to_string(), true );
+    }
+    auto seq2 = interpreter.eval( prog );
+    if ( seq1 != seq2 )
+    {
+      printer.print( prog, std::cout );
+      Log::get().error( "Synthesized program for polynomial " + pol.to_string() + " yields incorrect result", true );
+    }
   }
 }
 
@@ -195,9 +212,9 @@ void Test::all()
 {
   exponentiation();
   ackermann();
-
   iterate();
-  synthesizer();
+  synthesizer( 0 );
+//  synthesizer( 1 );
   matcher();
   optimize();
 }

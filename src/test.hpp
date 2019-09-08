@@ -22,7 +22,7 @@ public:
 
   void matcher();
 
-  void synthesizer();
+  void synthesizer( size_t degree );
 
   void all();
 
