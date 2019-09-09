@@ -18,17 +18,17 @@ public:
 
   static Log& get();
 
-  void debug( const std::string& msg );
-  void info( const std::string& msg );
-  void warn( const std::string& msg );
-  void error( const std::string& msg, bool throw_ = false );
-  void alert( const std::string& msg );
+  void debug( const std::string &msg );
+  void info( const std::string &msg );
+  void warn( const std::string &msg );
+  void error( const std::string &msg, bool throw_ = false );
+  void alert( const std::string &msg );
 
   Level level = Level::INFO;
   bool tweet_alerts = true;
 
 private:
-  void log( Level level, const std::string& msg );
+  void log( Level level, const std::string &msg );
 
 };
 

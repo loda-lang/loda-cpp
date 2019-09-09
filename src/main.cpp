@@ -14,15 +14,16 @@ void help()
 {
   Settings settings;
   std::cout << "Usage:             loda <command> <options>" << std::endl;
-  std::cout << "Commands:" << std::endl;
+  std::cout << "Core commands:" << std::endl;
   std::cout << "  evaluate <file>  Evaluate a program to a sequence" << std::endl;
   std::cout << "  optimize <file>  Optimize a program and print it" << std::endl;
   std::cout << "  minimize <file>  Minimize a program and print it (use -t to set the number of terms)" << std::endl;
   std::cout << "  generate         Generate a random program and print it" << std::endl;
+  std::cout << "  test             Run test suite" << std::endl;
+  std::cout << "OEIS commands:" << std::endl;
   std::cout << "  mine             Mine programs for OEIS sequences" << std::endl;
   std::cout << "  synthesize       Synthesize programs for OEIS sequences" << std::endl;
-  std::cout << "  test             Run test suite" << std::endl;
-  std::cout << "  help             Print this help text" << std::endl;
+  std::cout << "  maintain         Maintain programs for OEIS sequences" << std::endl;
   std::cout << "General options:" << std::endl;
   std::cout << "  -l <string>      Log level (values:debug,info,warn,error,alert)" << std::endl;
   std::cout << "  -t <number>      Number of sequence terms (default:" << settings.num_terms << ")" << std::endl;
@@ -66,7 +67,7 @@ int main( int argc, char *argv[] )
     }
     else if ( cmd == "test" )
     {
-      Test test;
+      Test test( EXIT_FLAG );
       test.all();
     }
     else if ( cmd == "evaluate" || cmd == "eval" )
@@ -114,6 +115,13 @@ int main( int argc, char *argv[] )
       Miner miner( settings );
       miner.synthesize( EXIT_FLAG );
     }
+    else if ( cmd == "maintain" )
+    {
+      settings.optimize_existing_programs = true;
+      Oeis o( settings );
+      o.load();
+      o.maintain( EXIT_FLAG );
+    }
     else if ( cmd == "collatz" )
     {
       Parser parser;
@@ -121,7 +129,7 @@ int main( int argc, char *argv[] )
       Interpreter interpreter( settings );
       auto sequence = interpreter.eval( program );
       bool is_collatz = Miner::isCollatzValuation( sequence );
-      std::cout << ( is_collatz ? "true" : "false" ) << std::endl;
+      std::cout << (is_collatz ? "true" : "false") << std::endl;
     }
     else
     {

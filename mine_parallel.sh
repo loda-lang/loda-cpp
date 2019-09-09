@@ -4,6 +4,13 @@ log_level=alert
 restart_interval=86400
 min_changes=20
 
+for cmd in git; do
+  if ! [ -x "$(command -v $cmd)" ]; then
+    echo "Error: $cmd is not installed" >&2
+    exit 1
+  fi
+done
+
 function stop_miners() {
   echo "Stopping miners"
   killall loda > /dev/null
@@ -29,7 +36,7 @@ function start_miners() {
   ./loda mine -p 60 -a cd -n 6 $l $@ &
   ./loda mine -p 60 -a cdi -n 6 $l $@ &
   ./loda mine -p 40 -a cd -n 6 -r $l $@ &
-  ./loda test &
+  ./loda maintain &
 }
 
 function push_updates {

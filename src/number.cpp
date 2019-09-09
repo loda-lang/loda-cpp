@@ -72,7 +72,7 @@ void Sequence::sub( number_t n )
   }
 }
 
-bool Sequence::operator<( const Sequence& m ) const
+bool Sequence::operator<( const Sequence &m ) const
 {
   number_t length = size() < m.size() ? size() : m.size();
   for ( number_t i = 0; i < length; ++i )
@@ -89,7 +89,7 @@ bool Sequence::operator<( const Sequence& m ) const
   return false; // undecidable
 }
 
-bool Sequence::operator==( const Sequence& m ) const
+bool Sequence::operator==( const Sequence &m ) const
 {
   if ( size() != m.size() )
   {
@@ -105,12 +105,12 @@ bool Sequence::operator==( const Sequence& m ) const
   return true;
 }
 
-bool Sequence::operator!=( const Sequence& m ) const
+bool Sequence::operator!=( const Sequence &m ) const
 {
-  return !( (*this) == m );
+  return !((*this) == m);
 }
 
-std::ostream& operator<<( std::ostream& out, const Sequence& seq )
+std::ostream& operator<<( std::ostream &out, const Sequence &seq )
 {
   for ( number_t i = 0; i < seq.size(); ++i )
   {
@@ -186,7 +186,7 @@ std::string Polynomial::to_string() const
   return s.str();
 }
 
-Polynomial operator+( const Polynomial& a, const Polynomial& b )
+Polynomial operator+( const Polynomial &a, const Polynomial &b )
 {
   Polynomial c = a;
   if ( b.size() > c.size() )
@@ -200,7 +200,7 @@ Polynomial operator+( const Polynomial& a, const Polynomial& b )
   return c;
 }
 
-Polynomial operator-( const Polynomial& a, const Polynomial& b )
+Polynomial operator-( const Polynomial &a, const Polynomial &b )
 {
   Polynomial c = a;
   if ( b.size() > c.size() )
@@ -248,7 +248,7 @@ Memory Memory::fragment( number_t start, number_t length ) const
   return f;
 }
 
-bool Memory::operator<( const Memory& m ) const
+bool Memory::operator<( const Memory &m ) const
 {
   number_t length = size() > m.size() ? size() : m.size();
   for ( number_t i = 0; i < length; ++i )
@@ -265,7 +265,7 @@ bool Memory::operator<( const Memory& m ) const
   return false; // equal
 }
 
-bool Memory::operator==( const Memory& m ) const
+bool Memory::operator==( const Memory &m ) const
 {
   number_t length = size() > m.size() ? size() : m.size();
   for ( number_t i = 0; i < length; ++i )
@@ -278,12 +278,12 @@ bool Memory::operator==( const Memory& m ) const
   return true; // equal
 }
 
-bool Memory::operator!=( const Memory& m ) const
+bool Memory::operator!=( const Memory &m ) const
 {
   return !(*this == m);
 }
 
-std::ostream& operator<<( std::ostream& out, const Memory& m )
+std::ostream& operator<<( std::ostream &out, const Memory &m )
 {
   out << "[";
   for ( number_t i = 0; i < m.size(); ++i )
@@ -297,8 +297,9 @@ std::ostream& operator<<( std::ostream& out, const Memory& m )
 
 // === Distribution ====================================================
 
-Distribution::Distribution( const std::vector<double>& probabilities )
-    : std::discrete_distribution<>( probabilities.begin(), probabilities.end() )
+Distribution::Distribution( const std::vector<double> &probabilities )
+    :
+    std::discrete_distribution<>( probabilities.begin(), probabilities.end() )
 {
 }
 
@@ -319,7 +320,7 @@ Distribution Distribution::exponential( size_t size )
   return Distribution( probabilities );
 }
 
-Distribution Distribution::add( const Distribution& d1, const Distribution& d2 )
+Distribution Distribution::add( const Distribution &d1, const Distribution &d2 )
 {
   auto p1 = d1.probabilities();
   auto p2 = d2.probabilities();
@@ -335,7 +336,7 @@ Distribution Distribution::add( const Distribution& d1, const Distribution& d2 )
   return Distribution( p );
 }
 
-Distribution Distribution::mutate( const Distribution& d, std::mt19937& gen )
+Distribution Distribution::mutate( const Distribution &d, std::mt19937 &gen )
 {
   std::vector<double> x;
   x.resize( 100, 1 );

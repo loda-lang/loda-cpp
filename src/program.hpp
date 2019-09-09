@@ -13,17 +13,19 @@ public:
   };
 
   Operand()
-      : Operand( Type::CONSTANT, 0 )
+      :
+      Operand( Type::CONSTANT, 0 )
   {
   }
 
   Operand( Type t, number_t v )
-      : type( t ),
-        value( v )
+      :
+      type( t ),
+      value( v )
   {
   }
 
-  inline bool operator==( const Operand& o ) const
+  inline bool operator==( const Operand &o ) const
   {
     return (type == o.type) && (value == o.value);
   }
@@ -49,24 +51,27 @@ public:
   };
 
   Operation()
-      : Operation( Type::NOP )
+      :
+      Operation( Type::NOP )
   {
   }
 
   Operation( Type y )
-      : Operation( y, { Operand::Type::MEM_ACCESS_DIRECT, 0 }, { Operand::Type::CONSTANT, 0 } )
+      :
+      Operation( y, { Operand::Type::MEM_ACCESS_DIRECT, 0 }, { Operand::Type::CONSTANT, 0 } )
   {
   }
 
-  Operation( Type y, Operand t, Operand s, const std::string& c = "" )
-      : type( y ),
-        target( t ),
-        source( s ),
-        comment( c )
+  Operation( Type y, Operand t, Operand s, const std::string &c = "" )
+      :
+      type( y ),
+      target( t ),
+      source( s ),
+      comment( c )
   {
   }
 
-  inline bool operator==( const Operation& op ) const
+  inline bool operator==( const Operation &op ) const
   {
     return (type == op.type) && (source == op.source) && (target == op.target);
   }
@@ -85,7 +90,7 @@ public:
 
   size_t num_ops( bool withNops ) const;
 
-  bool operator==( const Program& p ) const;
+  bool operator==( const Program &p ) const;
 
   std::vector<Operation> ops;
 };

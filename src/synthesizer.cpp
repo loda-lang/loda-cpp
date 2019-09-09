@@ -19,7 +19,7 @@
  * @author Chris Engelsma
  */
 
-bool fitIt( const Sequence &y, int order, Polynomial& coeffs )
+bool fitIt( const Sequence &y, int order, Polynomial &coeffs )
 {
   if ( y.empty() )
   {
@@ -113,18 +113,14 @@ bool fitIt( const Sequence &y, int order, Polynomial& coeffs )
 bool PolynomialSynthesizer::synthesize( const Sequence &seq, Program &program )
 {
   Polynomial pol;
-  for ( size_t order = 1; order <= 3; order++ )
+  for ( size_t order = 0; order <= 3; order++ )
   {
     if ( fitIt( seq, order, pol ) && pol.eval( seq.size() ) == seq )
     {
-      std::cout << "Found " << pol.to_string() << std::endl;
       if ( !generateProgram( pol, program ) )
       {
         return false;
       }
-      Printer r;
-      r.print( program, std::cout );
-
       return true;
     }
   }

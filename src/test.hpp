@@ -6,31 +6,33 @@ class Test
 {
 public:
 
+  Test( volatile sig_atomic_t &exit_flag )
+      :
+      exit_flag_( exit_flag )
+  {
+  }
+
   void exponentiation();
 
   void ackermann();
 
   void iterate();
 
-  void oeis();
-
-  void primes();
-
-  void primes2();
-
   void optimize();
 
   void matcher();
 
-  void synthesizer();
+  void synthesizer( size_t degree );
 
   void all();
 
 private:
 
-  void testSeq( const std::string& func, const std::string& file, const Sequence& values );
+  volatile sig_atomic_t &exit_flag_;
 
-  void testBinary( const std::string& func, const std::string& file,
-      const std::vector<std::vector<number_t> >& values );
+  void testSeq( const std::string &func, const std::string &file, const Sequence &values );
+
+  void testBinary( const std::string &func, const std::string &file,
+      const std::vector<std::vector<number_t> > &values );
 
 };

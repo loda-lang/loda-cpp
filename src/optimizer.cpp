@@ -4,7 +4,7 @@
 #include "number.hpp"
 #include "util.hpp"
 
-void Optimizer::optimize( Program& p, size_t num_reserved_cells, size_t num_initialized_cells ) const
+void Optimizer::optimize( Program &p, size_t num_reserved_cells, size_t num_initialized_cells ) const
 {
   Log::get().debug( "Starting optimization of program with " + std::to_string( p.ops.size() ) + " operations" );
   while ( true )
@@ -16,14 +16,15 @@ void Optimizer::optimize( Program& p, size_t num_reserved_cells, size_t num_init
     removeEmptyLoops( p );
     size_t new_length = p.num_ops( true );
     if ( new_length == length ) break;
-  };
+  }
+  ;
   while ( reduceMemoryCells( p, num_reserved_cells ) )
   {
   }
   Log::get().debug( "Finished optimization; program now has " + std::to_string( p.ops.size() ) + " operations" );
 }
 
-bool Optimizer::removeNops( Program& p ) const
+bool Optimizer::removeNops( Program &p ) const
 {
   Log::get().debug( "Removing NOP operations" );
   bool removed = false;
@@ -46,13 +47,14 @@ bool Optimizer::removeNops( Program& p ) const
   return removed;
 }
 
-bool Optimizer::removeEmptyLoops( Program& p ) const
+bool Optimizer::removeEmptyLoops( Program &p ) const
 {
   Log::get().debug( "Removing empty loops" );
   bool removed = false;
   for ( int i = 0; i < static_cast<int>( p.ops.size() ); i++ ) // need to use signed integers here
   {
-    if ( i + 1 < static_cast<int>( p.ops.size() ) && p.ops[i].type == Operation::Type::LPB && p.ops[i + 1].type == Operation::Type::LPE )
+    if ( i + 1 < static_cast<int>( p.ops.size() ) && p.ops[i].type == Operation::Type::LPB
+        && p.ops[i + 1].type == Operation::Type::LPE )
     {
       p.ops.erase( p.ops.begin() + i, p.ops.begin() + i + 2 );
       i = i - 2;
@@ -62,7 +64,7 @@ bool Optimizer::removeEmptyLoops( Program& p ) const
   return removed;
 }
 
-bool Optimizer::mergeOps( Program& p ) const
+bool Optimizer::mergeOps( Program &p ) const
 {
   Log::get().debug( "Merging operations" );
   bool merged = false;
@@ -70,8 +72,8 @@ bool Optimizer::mergeOps( Program& p ) const
   {
     bool do_merge = false;
 
-    auto& o1 = p.ops[i];
-    auto& o2 = p.ops[i + 1];
+    auto &o1 = p.ops[i];
+    auto &o2 = p.ops[i + 1];
 
     // operation targets the direct same?
     if ( o1.target == o2.target && o1.target.type == Operand::Type::MEM_ACCESS_DIRECT )
@@ -145,7 +147,7 @@ bool Optimizer::mergeOps( Program& p ) const
   return merged;
 }
 
-inline void simplifyOperand( Operand& op, std::unordered_set<number_t>& initialized_cells, bool is_source )
+inline void simplifyOperand( Operand &op, std::unordered_set<number_t> &initialized_cells, bool is_source )
 {
   Log::get().debug( "Simplifying operand" );
   switch ( op.type )
@@ -169,7 +171,7 @@ inline void simplifyOperand( Operand& op, std::unordered_set<number_t>& initiali
   }
 }
 
-void Optimizer::simplifyOperands( Program& p, size_t num_initialized_cells ) const
+void Optimizer::simplifyOperands( Program &p, size_t num_initialized_cells ) const
 {
   Log::get().debug( "Simplifying operands" );
   std::unordered_set<number_t> initialized_cells;
@@ -177,7 +179,7 @@ void Optimizer::simplifyOperands( Program& p, size_t num_initialized_cells ) con
   {
     initialized_cells.insert( i );
   }
-  for ( auto& op : p.ops )
+  for ( auto &op : p.ops )
   {
     switch ( op.type )
     {
@@ -212,7 +214,7 @@ void Optimizer::simplifyOperands( Program& p, size_t num_initialized_cells ) con
   }
 }
 
-void Optimizer::minimize( Program& p, size_t num_terms ) const
+void Optimizer::minimize( Program &p, size_t num_terms ) const
 {
   Log::get().debug( "Minimizing program" );
   Interpreter interpreter( settings );
@@ -290,10 +292,10 @@ void Optimizer::minimize( Program& p, size_t num_terms ) const
   }
 }
 
-bool Optimizer::getUsedMemoryCells( const Program& p, std::unordered_set<number_t>& used_cells,
-    number_t& largest_used ) const
+bool Optimizer::getUsedMemoryCells( const Program &p, std::unordered_set<number_t> &used_cells,
+    number_t &largest_used ) const
 {
-  for ( auto& op : p.ops )
+  for ( auto &op : p.ops )
   {
     size_t region_length = 1;
     if ( op.source.type == Operand::Type::MEM_ACCESS_INDIRECT || op.target.type == Operand::Type::MEM_ACCESS_INDIRECT )
@@ -338,7 +340,7 @@ bool Optimizer::getUsedMemoryCells( const Program& p, std::unordered_set<number_
   return true;
 }
 
-bool Optimizer::reduceMemoryCells( Program& p, size_t num_reserved_cells ) const
+bool Optimizer::reduceMemoryCells( Program &p, size_t num_reserved_cells ) const
 {
   Log::get().debug( "Reducing memory cells" );
   std::unordered_set<number_t> used_cells;
@@ -365,7 +367,7 @@ bool Optimizer::reduceMemoryCells( Program& p, size_t num_reserved_cells ) const
     if ( free )
     {
       bool replaced = false;
-      for ( auto& op : p.ops )
+      for ( auto &op : p.ops )
       {
         if ( op.source.type == Operand::Type::MEM_ACCESS_DIRECT && op.source.value == largest_used )
         {
@@ -384,7 +386,7 @@ bool Optimizer::reduceMemoryCells( Program& p, size_t num_reserved_cells ) const
   return false;
 }
 
-bool Optimizer::addPostPolynomial( Program& p, const Polynomial& pol ) const
+bool Optimizer::addPostPolynomial( Program &p, const Polynomial &pol ) const
 {
   if ( pol.size() > 1 && pol.at( 1 ) > 0 )
   {

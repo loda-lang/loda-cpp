@@ -10,7 +10,7 @@
 
 #include <stdexcept>
 
-Program Parser::parse( const std::string& file )
+Program Parser::parse( const std::string &file )
 {
   file_in.reset( new std::ifstream( file ) );
   if ( !file_in->good() )
@@ -22,7 +22,7 @@ Program Parser::parse( const std::string& file )
   return p;
 }
 
-Program Parser::parse( std::istream& in_ )
+Program Parser::parse( std::istream &in_ )
 {
   in = &in_;
   Program p;
@@ -134,7 +134,7 @@ std::string Parser::readIdentifier()
   }
 }
 
-Operand Parser::readOperand( Program& p )
+Operand Parser::readOperand( Program &p )
 {
   *in >> std::ws;
   int c = in->peek();
@@ -197,7 +197,7 @@ Operation::Type Parser::readOperationType()
   throw std::runtime_error( "invalid operation: " + t );
 }
 
-void Parser::setWorkingDir( const std::string& dir )
+void Parser::setWorkingDir( const std::string &dir )
 {
   working_dir = dir;
 }

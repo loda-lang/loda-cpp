@@ -13,22 +13,22 @@ Log& Log::get()
   return log;
 }
 
-void Log::debug( const std::string& msg )
+void Log::debug( const std::string &msg )
 {
   log( Log::Level::DEBUG, msg );
 }
 
-void Log::info( const std::string& msg )
+void Log::info( const std::string &msg )
 {
   log( Log::Level::INFO, msg );
 }
 
-void Log::warn( const std::string& msg )
+void Log::warn( const std::string &msg )
 {
   log( Log::Level::WARN, msg );
 }
 
-void Log::error( const std::string& msg, bool throw_ )
+void Log::error( const std::string &msg, bool throw_ )
 {
   log( Log::Level::ERROR, msg );
   if ( throw_ )
@@ -37,7 +37,7 @@ void Log::error( const std::string& msg, bool throw_ )
   }
 }
 
-void Log::alert( const std::string& msg )
+void Log::alert( const std::string &msg )
 {
   log( Log::Level::ALERT, msg );
   std::string copy = msg;
@@ -66,7 +66,7 @@ void Log::alert( const std::string& msg )
   }
 }
 
-void Log::log( Level level, const std::string& msg )
+void Log::log( Level level, const std::string &msg )
 {
   if ( level < this->level )
   {
@@ -100,16 +100,17 @@ void Log::log( Level level, const std::string& msg )
 }
 
 Settings::Settings()
-    : num_terms( 20 ),
-      num_operations( 40 ),
-      max_memory( 100000 ),
-      max_cycles( 10000000 ),
-      max_constant( 6 ),
-      max_index( 6 ),
-      optimize_existing_programs( false ),
-      search_linear( false ),
-      operation_types( "asml" ),
-      operand_types( "cd" )
+    :
+    num_terms( 20 ),
+    num_operations( 40 ),
+    max_memory( 100000 ),
+    max_cycles( 10000000 ),
+    max_constant( 6 ),
+    max_index( 6 ),
+    optimize_existing_programs( false ),
+    search_linear( false ),
+    operation_types( "asml" ),
+    operand_types( "cd" )
 {
 }
 

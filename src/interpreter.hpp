@@ -8,21 +8,21 @@ class Interpreter
 {
 public:
 
-  Interpreter( const Settings& settings );
+  Interpreter( const Settings &settings );
 
-  bool run( const Program& p, Memory& mem ) const;
+  bool run( const Program &p, Memory &mem ) const;
 
-  Sequence eval( const Program& p, int num_terms = -1 ) const;
+  Sequence eval( const Program &p, int num_terms = -1 ) const;
 
 private:
 
-  number_t get( Operand a, const Memory& mem, bool get_address = false ) const;
+  number_t get( Operand a, const Memory &mem, bool get_address = false ) const;
 
-  void set( Operand a, number_t v, Memory& mem ) const;
+  void set( Operand a, number_t v, Memory &mem ) const;
 
-  bool isLessThan( const Memory& m1, const Memory& m2, const std::vector<Operand>& cmp_vars ) const;
+  bool isLessThan( const Memory &m1, const Memory &m2, const std::vector<Operand> &cmp_vars ) const;
 
-  const Settings& settings;
+  const Settings &settings;
 
   const bool is_debug;
 

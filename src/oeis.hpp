@@ -12,25 +12,27 @@ class OeisSequence: public Sequence
 public:
 
   OeisSequence( number_t id = 0 )
-      : id( id )
+      :
+      id( id )
   {
   }
 
-  OeisSequence( number_t id, const std::string& name, const Sequence& s, const Sequence& full )
-      : Sequence( s ),
-        id( id ),
-        name( name ),
-        full( full )
+  OeisSequence( number_t id, const std::string &name, const Sequence &s, const Sequence &full )
+      :
+      Sequence( s ),
+      id( id ),
+      name( name ),
+      full( full )
   {
   }
 
-  std::string id_str( const std::string& prefix = "A" ) const;
+  std::string id_str( const std::string &prefix = "A" ) const;
 
   number_t id;
   std::string name;
   Sequence full;
 
-  friend std::ostream& operator<<( std::ostream& out, const OeisSequence& s );
+  friend std::ostream& operator<<( std::ostream &out, const OeisSequence &s );
 
   std::string to_string() const;
 
@@ -44,7 +46,7 @@ public:
 
   using seq_programs_t = std::vector<std::pair<number_t,Program>>;
 
-  Oeis( const Settings& settings );
+  Oeis( const Settings &settings );
 
   virtual ~Oeis()
   {
@@ -56,26 +58,28 @@ public:
 
   void removeSequence( number_t id );
 
-  seq_programs_t findSequence( const Program& p, Sequence& norm_seq ) const;
+  seq_programs_t findSequence( const Program &p, Sequence &norm_seq ) const;
 
-  void dumpProgram( number_t id, Program p, const std::string& file ) const;
+  void dumpProgram( number_t id, Program p, const std::string &file ) const;
 
   size_t getTotalCount() const
   {
     return total_count_;
   }
 
-  bool updateProgram( number_t id, const Program& p ) const;
+  bool updateProgram( number_t id, const Program &p ) const;
+
+  void maintain( volatile sig_atomic_t &exit_flag );
 
 private:
 
   void loadNames();
 
-  void findAll( const Program& p, const Sequence& norm_seq, seq_programs_t& result ) const;
+  void findAll( const Program &p, const Sequence &norm_seq, seq_programs_t &result ) const;
 
-  Program optimizeAndCheck( const Program& p, const OeisSequence& seq ) const;
+  Program optimizeAndCheck( const Program &p, const OeisSequence &seq ) const;
 
-  const Settings& settings;
+  const Settings &settings;
   Interpreter interpreter;
   Optimizer optimizer;
   std::vector<OeisSequence> sequences;
