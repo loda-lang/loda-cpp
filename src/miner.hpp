@@ -7,8 +7,6 @@
 #include "program.hpp"
 #include "util.hpp"
 
-#include <csignal>
-
 class Miner
 {
 public:

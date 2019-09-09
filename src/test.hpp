@@ -2,6 +2,8 @@
 
 #include "number.hpp"
 
+#include "util.hpp"
+
 class Test
 {
 public:

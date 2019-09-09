@@ -1,5 +1,6 @@
 #pragma once
 
+#include <csignal>
 #include <string>
 #include <vector>
 
