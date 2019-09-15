@@ -603,7 +603,7 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
   readme_out << num_programs << "/" << total_count_ << " (" << (int) (100 * num_programs / total_count_) << "%)\n\n";
   readme_out
       << "![LODA Program Length Distribution](https://raw.githubusercontent.com/ckrause/loda/master/lengths.png)\n";
-  readme_out << "![LODA Program Counts](https://raw.githubusercontent.com/ckrause/loda/master/counts.png)\n";
+  // readme_out << "![LODA Program Counts](https://raw.githubusercontent.com/ckrause/loda/master/counts.png)\n";
   readme_out.close();
   Log::get().info( "Finished checking programs for OEIS sequences" );
 }
