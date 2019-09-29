@@ -58,6 +58,7 @@ function push_updates {
 
 trap abort_miners INT
 
+push_updates
 start_miners $@
 SECONDS=0
 while [ true ]; do
