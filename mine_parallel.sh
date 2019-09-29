@@ -48,7 +48,7 @@ function push_updates {
   if [ "$num_changes" -ge "$min_changes" ]; then
     echo "Pushing updates"
     git pull
-    git add programs counts.png lengths.png README.md
+    git add programs lengths.png README.md
     git commit -m "updated $num_changes programs"
     git push
     echo "Rebuilding loda"
