@@ -129,6 +129,7 @@ void Miner::synthesize( volatile sig_atomic_t &exit_flag )
       {
         Log::get().debug( "Synthesized program for " + seq.to_string() );
         oeis.updateProgram( seq.id, program );
+        found++;
       }
       if ( exit_flag )
       {
