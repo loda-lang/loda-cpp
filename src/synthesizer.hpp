@@ -15,18 +15,14 @@ public:
 
 };
 
-class PolynomialSynthesizer: public Synthesizer
+class LinearSynthesizer: public Synthesizer
 {
 public:
 
-  virtual ~PolynomialSynthesizer()
+  virtual ~LinearSynthesizer()
   {
   }
 
   virtual bool synthesize( const Sequence &seq, Program &program ) override;
-
-private:
-
-  bool generateProgram( const Polynomial &pol, Program &program ) const;
 
 };

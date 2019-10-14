@@ -176,10 +176,10 @@ void Test::matcher()
 
 void Test::synthesizer( size_t degree )
 {
-  Log::get().info( "Testing polynomial synthesizer for degree " + std::to_string( degree ) );
+  Log::get().info( "Testing synthesizer for polynomials of degree " + std::to_string( degree ) );
   std::random_device rand_dev;
   Settings settings;
-  PolynomialSynthesizer synth;
+  LinearSynthesizer synth;
   Interpreter interpreter( settings );
   Printer printer;
   Program prog;
@@ -189,15 +189,16 @@ void Test::synthesizer( size_t degree )
     Polynomial pol( degree );
     for ( size_t d = 0; d < pol.size(); d++ )
     {
-      pol[d] = rand_dev() % 100;
+      pol[d] = rand_dev() % 1000;
       pol[d] = pol[d] > 0 ? pol[d] : -pol[d];
     }
     Log::get().debug( "Checking polynomial " + pol.to_string() );
     auto seq1 = pol.eval( settings.num_terms );
     if ( !synth.synthesize( seq1, prog ) )
     {
-      std::cout << "Target sequence " << seq1 << std::endl;
-      Log::get().error( "Error synthesizing program for polynomial " + pol.to_string(), true );
+      Log::get().error(
+          "Error synthesizing program for polynomial " + pol.to_string() + ", target sequence: " + seq1.to_string(),
+          true );
     }
     auto seq2 = interpreter.eval( prog );
     if ( seq1 != seq2 )
@@ -214,7 +215,7 @@ void Test::all()
   ackermann();
   iterate();
   synthesizer( 0 );
-//  synthesizer( 1 );
+  synthesizer( 1 );
   matcher();
   optimize();
 }

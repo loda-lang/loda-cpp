@@ -96,7 +96,7 @@ int main( int argc, char *argv[] )
       optimizer.minimize( program, settings.num_terms );
       printer.print( program, std::cout );
     }
-    else if ( cmd == "generate" )
+    else if ( cmd == "generate" || cmd == "gen" )
     {
       Optimizer optimizer( settings );
       Generator generator( settings, 5, std::random_device()() );

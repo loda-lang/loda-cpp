@@ -453,7 +453,8 @@ Program Oeis::optimizeAndCheck( const Program &p, const OeisSequence &seq ) cons
     d.print( p, std::cout );
     std::cout << "after:" << std::endl;
     d.print( optimized, std::cout );
-    Log::get().error( "Program generates wrong result after minimization and optimization", true );
+    Log::get().error( "Program generates wrong result; possible error in optimization, minimization or synthesis",
+        true );
   }
 
   return optimized;
