@@ -26,3 +26,15 @@ public:
   virtual bool synthesize( const Sequence &seq, Program &program ) override;
 
 };
+
+class PeriodicSynthesizer: public Synthesizer
+{
+public:
+
+  virtual ~PeriodicSynthesizer()
+  {
+  }
+
+  virtual bool synthesize( const Sequence &seq, Program &program ) override;
+
+};

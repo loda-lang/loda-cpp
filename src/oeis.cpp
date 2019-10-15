@@ -432,9 +432,10 @@ Program Oeis::optimizeAndCheck( const Program &p, const OeisSequence &seq ) cons
 
   // check its correctness
   bool correct = true;
+  Sequence new_seq;
   try
   {
-    auto new_seq = interpreter.eval( optimized, seq.full.size() );
+    new_seq = interpreter.eval( optimized, seq.full.size() );
     if ( seq.full.size() != new_seq.size() || seq.full != new_seq )
     {
       correct = false;
@@ -453,8 +454,9 @@ Program Oeis::optimizeAndCheck( const Program &p, const OeisSequence &seq ) cons
     d.print( p, std::cout );
     std::cout << "after:" << std::endl;
     d.print( optimized, std::cout );
-    Log::get().error( "Program generates wrong result; possible error in optimization, minimization or synthesis",
-        true );
+    Log::get().error(
+        "Program generates wrong result; possible error in optimization, minimization or synthesis; target sequence: "
+            + seq.to_string() + "; expected: " + seq.full.to_string() + "; got: " + new_seq.to_string(), true );
   }
 
   return optimized;

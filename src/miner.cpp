@@ -117,23 +117,28 @@ void Miner::synthesize( volatile sig_atomic_t &exit_flag )
 {
   Log::get().info( "Start synthesizing programs for OEIS sequences" );
   std::vector<std::unique_ptr<Synthesizer>> synthesizers;
-  synthesizers.resize( 1 );
+  synthesizers.resize( 2 );
   synthesizers[0].reset( new LinearSynthesizer() );
+  synthesizers[1].reset( new PeriodicSynthesizer() );
   Program program;
   size_t found = 0;
   for ( auto &synthesizer : synthesizers )
   {
     for ( auto &seq : oeis.getSequences() )
     {
+      if ( exit_flag )
+      {
+        break;
+      }
+      if ( seq.empty() )
+      {
+        continue;
+      }
       if ( synthesizer->synthesize( seq.full, program ) )
       {
         Log::get().debug( "Synthesized program for " + seq.to_string() );
         oeis.updateProgram( seq.id, program );
         found++;
-      }
-      if ( exit_flag )
-      {
-        return;
       }
     }
   }
