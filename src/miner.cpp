@@ -116,6 +116,8 @@ void Miner::mine( volatile sig_atomic_t &exit_flag )
 void Miner::synthesize( volatile sig_atomic_t &exit_flag )
 {
   Log::get().info( "Start synthesizing programs for OEIS sequences" );
+  bool tweet_alerts = Log::get().tweet_alerts;
+  Log::get().tweet_alerts = false;
   std::vector<std::unique_ptr<Synthesizer>> synthesizers;
   synthesizers.resize( 2 );
   synthesizers[0].reset( new LinearSynthesizer() );
@@ -137,10 +139,20 @@ void Miner::synthesize( volatile sig_atomic_t &exit_flag )
       if ( synthesizer->synthesize( seq.full, program ) )
       {
         Log::get().debug( "Synthesized program for " + seq.to_string() );
-        oeis.updateProgram( seq.id, program );
-        found++;
+        if ( oeis.updateProgram( seq.id, program ) )
+        {
+          found++;
+        }
       }
     }
   }
-  Log::get().info( "Finished synthesizing " + std::to_string( found ) + " programs" );
+  Log::get().tweet_alerts = tweet_alerts;
+  if ( found > 0 )
+  {
+    Log::get().alert( "Synthesized " + std::to_string( found ) + " new or shorter programs" );
+  }
+  else
+  {
+    Log::get().info( "Finished synthesis without new results" );
+  }
 }
