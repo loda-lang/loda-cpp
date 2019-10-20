@@ -478,7 +478,17 @@ bool Oeis::updateProgram( number_t id, const Program &p ) const
         is_new = false;
         Parser parser;
         auto existing_program = parser.parse( in );
-        if ( existing_program.num_ops( false ) <= optimized.num_ops( false ) )
+        bool optimized_is_better = false;
+        if ( optimized.num_ops( Operand::Type::MEM_ACCESS_INDIRECT )
+            < existing_program.num_ops( Operand::Type::MEM_ACCESS_INDIRECT ) )
+        {
+          optimized_is_better = true;
+        }
+        else if ( optimized.num_ops( false ) < existing_program.num_ops( false ) )
+        {
+          optimized_is_better = true;
+        }
+        if ( !optimized_is_better )
         {
           return false;
         }

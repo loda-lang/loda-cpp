@@ -3,6 +3,11 @@
 log_level=alert
 restart_interval=86400
 min_changes=20
+alt_params="-x"
+
+tmp_params=""
+
+set -x
 
 for cmd in git; do
   if ! [ -x "$(command -v $cmd)" ]; then
@@ -30,13 +35,18 @@ function start_miners() {
   for n in 2 3 4 5 6; do
     p="${n}0"
     for t in T01 T02; do
-      ./loda mine -p $p -n $n -a cd -o asm -e programs/templates/${t}.asm $l $@ &
+      ./loda mine $tmp_params -p $p -n $n -a cd -o asm -e programs/templates/${t}.asm $l $@ &
     done
   done
-  ./loda mine -p 60 -a cd -n 6 $l $@ &
-  ./loda mine -p 60 -a cdi -n 6 $l $@ &
-  ./loda mine -p 40 -a cd -n 6 -r $l $@ &
+  ./loda mine $tmp_params -p 60 -a cd -n 6 $l $@ &
+  ./loda mine $tmp_params -p 60 -a cdi -n 6 $l $@ &
+  ./loda mine $tmp_params -p 40 -a cd -n 6 -r $l $@ &
   ./loda maintain &
+  if [ -n "$tmp_params" ]; then
+    tmp_params=""
+  else
+    tmp_params=$alt_params
+  fi
 }
 
 function push_updates {

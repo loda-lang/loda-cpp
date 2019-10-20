@@ -90,6 +90,8 @@ public:
 
   size_t num_ops( bool withNops ) const;
 
+  size_t num_ops( Operand::Type type ) const;
+
   bool operator==( const Program &p ) const;
 
   std::vector<Operation> ops;

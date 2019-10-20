@@ -36,6 +36,19 @@ size_t Program::num_ops( bool withNops ) const
   }
 }
 
+size_t Program::num_ops( Operand::Type type ) const
+{
+  size_t num_ops = 0;
+  for ( auto &op : ops )
+  {
+    if ( op.source.type == type || op.target.type == type )
+    {
+      num_ops++;
+    }
+  }
+  return num_ops;
+}
+
 bool Program::operator==( const Program &p ) const
 {
   if ( p.ops.size() != ops.size() )
