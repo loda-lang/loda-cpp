@@ -7,8 +7,6 @@ alt_params="-x"
 
 tmp_params=""
 
-set -x
-
 for cmd in git; do
   if ! [ -x "$(command -v $cmd)" ]; then
     echo "Error: $cmd is not installed" >&2
