@@ -14,19 +14,19 @@ public:
   {
   }
 
+  void all();
+
   void exponentiation();
 
   void ackermann();
 
-  void iterate();
+  void iterator();
 
-  void optimize();
+  void optimizer( size_t tests );
 
-  void matcher();
+  void polynomial_matcher( size_t tests, size_t degree );
 
-  void synthesizer( size_t degree );
-
-  void all();
+  void polynomial_synthesizer( size_t tests, size_t degree );
 
 private:
 

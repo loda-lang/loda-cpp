@@ -33,18 +33,12 @@ const int PolynomialMatcher::DEGREE = 1;
 Polynomial PolynomialMatcher::reduce( Sequence &seq )
 {
   Polynomial polynom( DEGREE );
-//  auto input_seq = seq;
-//  std::cout << "Input  " + input_seq.to_string() << std::endl;
   for ( int exp = 0; exp <= DEGREE; exp++ )
   {
     int64_t factor = -1;
     for ( size_t x = 0; x < seq.size(); x++ )
     {
-      int64_t x_exp = 1;
-      for ( int e = 0; e < exp; e++ )
-      {
-        x_exp *= x;
-      }
+      auto x_exp = pow( x, exp );
       int64_t new_factor = (x_exp == 0) ? -1 : seq[x] / x_exp;
       factor = (factor == -1) ? new_factor : (new_factor < factor ? new_factor : factor);
       if ( factor == 0 ) break;
@@ -53,23 +47,16 @@ Polynomial PolynomialMatcher::reduce( Sequence &seq )
     {
       for ( size_t x = 0; x < seq.size(); x++ )
       {
-        int64_t x_exp = 1;
-        for ( int e = 0; e < exp; e++ )
-        {
-          x_exp *= x;
-        }
-        seq[x] = seq[x] - (factor * x_exp);
+        seq[x] = seq[x] - (factor * pow( x, exp ));
       }
     }
     polynom[exp] = factor;
   }
-//  std::cout << "Output " + seq.to_string() + " with polynom " + polynom.to_string() << std::endl;
   return polynom;
 }
 
 void PolynomialMatcher::insert( const Sequence &norm_seq, number_t id )
 {
-//  std::cout << "Adding sequence " << id << std::endl;
   Sequence seq = norm_seq;
   polynoms[id] = reduce( seq );
   ids[seq].push_back( id ); // must be after reduce!
@@ -83,9 +70,57 @@ void PolynomialMatcher::remove( const Sequence &norm_seq, number_t id )
   polynoms.erase( id );
 }
 
+bool addPostPolynomial( Program &p, const Polynomial &pol )
+{
+  Settings s;
+  Optimizer optimizer( s );
+  if ( pol.size() > 1 && pol.at( 1 ) > 0 )
+  {
+    std::unordered_set<number_t> used_cells;
+    number_t largest_used = 0;
+    if ( !optimizer.getUsedMemoryCells( p, used_cells, largest_used ) )
+    {
+      return false;
+    }
+    number_t saved_arg = largest_used + 1;
+    p.ops.insert( p.ops.begin(),
+        Operation( Operation::Type::MOV, Operand( Operand::Type::MEM_ACCESS_DIRECT, saved_arg ),
+            Operand( Operand::Type::MEM_ACCESS_DIRECT, 0 ) ) );
+    p.ops.insert( p.ops.end(),
+        Operation( Operation::Type::LPB, Operand( Operand::Type::MEM_ACCESS_DIRECT, saved_arg ),
+            Operand( Operand::Type::CONSTANT, 1 ) ) );
+    p.ops.insert( p.ops.end(),
+        Operation( Operation::Type::ADD, Operand( Operand::Type::MEM_ACCESS_DIRECT, 1 ),
+            Operand( Operand::Type::CONSTANT, pol.at( 1 ) ) ) );
+    p.ops.insert( p.ops.end(),
+        Operation( Operation::Type::SUB, Operand( Operand::Type::MEM_ACCESS_DIRECT, saved_arg ),
+            Operand( Operand::Type::CONSTANT, 1 ) ) );
+    p.ops.insert( p.ops.end(),
+        Operation( Operation::Type::LPE, Operand( Operand::Type::CONSTANT, 0 ),
+            Operand( Operand::Type::CONSTANT, 1 ) ) );
+
+  }
+  else if ( pol.size() > 1 && pol.at( 1 ) < 0 )
+  {
+    return false;
+  }
+  if ( pol.size() > 0 && pol.at( 0 ) > 0 )
+  {
+    p.ops.insert( p.ops.end(),
+        Operation( Operation::Type::ADD, Operand( Operand::Type::MEM_ACCESS_DIRECT, 1 ),
+            Operand( Operand::Type::CONSTANT, pol.at( 0 ) ) ) );
+  }
+  else if ( pol.size() > 0 && pol.at( 0 ) < 0 )
+  {
+    p.ops.insert( p.ops.end(),
+        Operation( Operation::Type::SUB, Operand( Operand::Type::MEM_ACCESS_DIRECT, 1 ),
+            Operand( Operand::Type::CONSTANT, -pol.at( 0 ) ) ) );
+  }
+  return true;
+}
+
 void PolynomialMatcher::match( const Program &p, const Sequence &norm_seq, seq_programs_t &result ) const
 {
-//  std::cout << "Matching sequence " << norm_seq.to_string() << std::endl;
   Sequence seq = norm_seq;
   auto pol = reduce( seq );
   auto it = ids.find( seq );
@@ -93,15 +128,10 @@ void PolynomialMatcher::match( const Program &p, const Sequence &norm_seq, seq_p
   {
     for ( auto id : it->second )
     {
-//      std::cout << "Matched sequence " << id << std::endl;
       auto diff = polynoms.at( id ) - pol;
-
-      Settings s;
-      Optimizer optimizer( s );
       Program copy = p;
-      if ( optimizer.addPostPolynomial( copy, diff ) )
+      if ( addPostPolynomial( copy, diff ) )
       {
-//        std::cout << "Injected stuff " << std::endl;
         result.push_back( std::pair<number_t, Program>( id, copy ) );
       }
     }

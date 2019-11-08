@@ -16,6 +16,18 @@
 #include <sstream>
 #include <stdexcept>
 
+void Test::all()
+{
+  exponentiation();
+  ackermann();
+  iterator();
+  polynomial_synthesizer( 1000, 0 );
+  polynomial_synthesizer( 1000, 1 );
+  polynomial_matcher( 1000, 0 );
+  polynomial_matcher( 1000, 1 );
+  optimizer( 1000 );
+}
+
 void Test::exponentiation()
 {
   std::vector<std::vector<number_t> > values = { { 1, 0, 0, 0 }, { 1, 1, 1, 1 }, { 1, 2, 4, 8 }, { 1, 3, 9, 27 }, { 1,
@@ -30,7 +42,7 @@ void Test::ackermann()
   testBinary( "ack", "programs/ackermann.asm", values );
 }
 
-void Test::iterate()
+void Test::iterator()
 {
   Log::get().info( "Testing iterator" );
   Iterator it;
@@ -45,7 +57,7 @@ void Test::iterate()
   }
 }
 
-void Test::optimize()
+void Test::optimizer( size_t tests )
 {
   Settings settings;
   Interpreter interpreter( settings );
@@ -53,9 +65,8 @@ void Test::optimize()
   Generator generator( settings, 5, std::random_device()() );
   Sequence s1, s2, s3;
   Program program, optimized, minimized;
-
   Log::get().info( "Testing optimizer and minimizer" );
-  for ( size_t i = 0; i < 1000; i++ )
+  for ( size_t i = 0; i < tests; i++ )
   {
     if ( exit_flag_ ) break;
     program = generator.generateProgram();
@@ -77,7 +88,7 @@ void Test::optimize()
   }
 }
 
-void Test::matcher()
+void Test::polynomial_matcher( size_t tests, size_t degree )
 {
   Settings settings;
   settings.operand_types = "cd";
@@ -87,9 +98,8 @@ void Test::matcher()
   std::random_device rand_dev;
   Generator generator( settings, 5, rand_dev() );
   PolynomialMatcher matcher;
-
-  Log::get().info( "Testing matcher" );
-  for ( number_t i = 0; i < 1000; i++ )
+  Log::get().info( "Testing polynomial matcher for degree " + std::to_string( degree ) );
+  for ( number_t i = 0; i < tests; i++ )
   {
     if ( exit_flag_ ) break;
 
@@ -117,27 +127,20 @@ void Test::matcher()
       continue;
     }
 
-    // test matcher
-    Polynomial pol( PolynomialMatcher::DEGREE );
+    // test polynomial matcher
+    Polynomial pol( degree );
     for ( size_t d = 0; d < pol.size(); d++ )
     {
       pol[d] = rand_dev() % 1000;
-      pol[d] = pol[d] > 0 ? pol[d] : -pol[d];
     }
 
-    // std::cout << std::endl;
     Log::get().debug( "Checking (" + norm_seq.to_string() + ") + " + pol.to_string() );
     auto target_seq = norm_seq;
     for ( size_t n = 0; n < target_seq.size(); n++ )
     {
       for ( size_t d = 0; d < pol.size(); d++ )
       {
-        number_t f = 1;
-        for ( size_t e = 0; e < d; e++ )
-        {
-          f *= n;
-        }
-        target_seq[n] += pol[d] * f;
+        target_seq[n] += pol[d] * pow( n, d );
       }
     }
     Matcher::seq_programs_t results;
@@ -161,29 +164,28 @@ void Test::matcher()
     if ( result_seq != target_seq )
     {
       Printer r;
-      std::cout << "Input program: " << std::endl;
+      std::cout << "# Input program: " << std::endl;
       r.print( program, std::cout );
-
-      std::cout << std::endl << "Output program: " << std::endl;
+      std::cout << std::endl << "# Output program: " << std::endl;
       r.print( program, std::cout );
-      std::cout << "Target sequence: " + target_seq.to_string() << std::endl;
-      std::cout << "Output sequence: " + result_seq.to_string() << std::endl;
+      std::cout << "# Target sequence: " + target_seq.to_string() << std::endl;
+      std::cout << "# Output sequence: " + result_seq.to_string() << std::endl;
       Log::get().error( "Error: matched program yields wrong unexpected result", true );
     }
     matcher.remove( target_seq, i );
   }
 }
 
-void Test::synthesizer( size_t degree )
+void Test::polynomial_synthesizer( size_t tests, size_t degree )
 {
-  Log::get().info( "Testing synthesizer for polynomials of degree " + std::to_string( degree ) );
+  Log::get().info( "Testing polynomial synthesizer for degree " + std::to_string( degree ) );
   std::random_device rand_dev;
   Settings settings;
   LinearSynthesizer synth;
   Interpreter interpreter( settings );
   Printer printer;
   Program prog;
-  for ( int i = 0; i < 10000; i++ )
+  for ( int i = 0; i < tests; i++ )
   {
     if ( exit_flag_ ) break;
     Polynomial pol( degree );
@@ -207,17 +209,6 @@ void Test::synthesizer( size_t degree )
       Log::get().error( "Synthesized program for polynomial " + pol.to_string() + " yields incorrect result", true );
     }
   }
-}
-
-void Test::all()
-{
-  exponentiation();
-  ackermann();
-  iterate();
-  synthesizer( 0 );
-  synthesizer( 1 );
-  matcher();
-  optimize();
 }
 
 void Test::testBinary( const std::string &func, const std::string &file,

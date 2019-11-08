@@ -20,8 +20,6 @@ public:
 
   void minimize( Program &p, size_t num_terms ) const;
 
-  bool addPostPolynomial( Program &p, const Polynomial &pol ) const;
-
   bool removeNops( Program &p ) const;
 
   bool removeEmptyLoops( Program &p ) const;
