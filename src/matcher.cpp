@@ -82,7 +82,7 @@ bool addPostPolynomial( Program &p, const Polynomial &pol )
     {
       return false;
     }
-    number_t saved_arg = largest_used + 1;
+    number_t saved_arg = std::max( largest_used + 1, (number_t) 2 );
     p.ops.insert( p.ops.begin(),
         Operation( Operation::Type::MOV, Operand( Operand::Type::MEM_ACCESS_DIRECT, saved_arg ),
             Operand( Operand::Type::MEM_ACCESS_DIRECT, 0 ) ) );
@@ -133,6 +133,10 @@ void PolynomialMatcher::match( const Program &p, const Sequence &norm_seq, seq_p
       if ( addPostPolynomial( copy, diff ) )
       {
         result.push_back( std::pair<number_t, Program>( id, copy ) );
+      }
+      else
+      {
+        std::cout << "errorrrrrrrr" << std::endl;
       }
     }
   }

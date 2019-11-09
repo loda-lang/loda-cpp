@@ -1,9 +1,10 @@
 #pragma once
 
-#include <stdlib.h>
+#include <algorithm>
 #include <iostream>
 #include <random>
 #include <memory>
+#include <stdlib.h>
 #include <string>
 #include <unordered_map>
 #include <vector>

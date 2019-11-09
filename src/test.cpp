@@ -91,41 +91,31 @@ void Test::optimizer( size_t tests )
 void Test::polynomial_matcher( size_t tests, size_t degree )
 {
   Settings settings;
-  settings.operand_types = "cd";
-  settings.num_operations = 10;
+  Parser parser;
   Interpreter interpreter( settings );
   Optimizer optimizer( settings );
   std::random_device rand_dev;
-  Generator generator( settings, 5, rand_dev() );
   PolynomialMatcher matcher;
   Log::get().info( "Testing polynomial matcher for degree " + std::to_string( degree ) );
+
+  // load test program
+  std::vector<number_t> program_ids = { 4, 35, 2262 };
+  std::vector<Program> programs;
+  for ( number_t id : program_ids )
+  {
+    auto program = parser.parse( "programs/oeis/" + OeisSequence( id ).id_str() + ".asm" );
+    optimizer.removeNops( program );
+    programs.push_back( program );
+  }
+
+  // run matcher tests
   for ( number_t i = 0; i < tests; i++ )
   {
     if ( exit_flag_ ) break;
 
-    // generate a program
-    auto program = generator.generateProgram();
-    std::unordered_set<number_t> used_cells;
-    number_t largest_used = 0;
-    if ( !optimizer.getUsedMemoryCells( program, used_cells, largest_used ) )
-    {
-      continue;
-    }
-
-    // evaluate program
-    Sequence norm_seq;
-    try
-    {
-      norm_seq = interpreter.eval( program );
-    }
-    catch ( const std::exception& )
-    {
-      continue;
-    }
-    if ( norm_seq.is_linear() || norm_seq.min() != norm_seq[0] )
-    {
-      continue;
-    }
+    // evaluate test program
+    auto program = programs[i % program_ids.size()];
+    auto norm_seq = interpreter.eval( program );
 
     // test polynomial matcher
     Polynomial pol( degree );
@@ -167,7 +157,7 @@ void Test::polynomial_matcher( size_t tests, size_t degree )
       std::cout << "# Input program: " << std::endl;
       r.print( program, std::cout );
       std::cout << std::endl << "# Output program: " << std::endl;
-      r.print( program, std::cout );
+      r.print( results[0].second, std::cout );
       std::cout << "# Target sequence: " + target_seq.to_string() << std::endl;
       std::cout << "# Output sequence: " + result_seq.to_string() << std::endl;
       Log::get().error( "Error: matched program yields wrong unexpected result", true );

@@ -328,11 +328,7 @@ bool Optimizer::getUsedMemoryCells( const Program &p, std::unordered_set<number_
       }
     }
   }
-  if ( used_cells.empty() )
-  {
-    return false;
-  }
-  largest_used = *used_cells.begin();
+  largest_used = used_cells.empty() ? 0 : *used_cells.begin();
   for ( number_t used : used_cells )
   {
     largest_used = std::max( largest_used, used );
