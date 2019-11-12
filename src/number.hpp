@@ -14,7 +14,7 @@ using number_t = uint64_t;
 inline number_t pow( number_t x, number_t exp )
 {
   number_t x_exp = 1;
-  for ( int e = 0; e < exp; e++ )
+  for ( number_t e = 0; e < exp; e++ )
   {
     x_exp *= x;
   }
