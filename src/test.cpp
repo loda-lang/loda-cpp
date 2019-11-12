@@ -25,6 +25,7 @@ void Test::all()
   polynomial_synthesizer( 1000, 1 );
   polynomial_matcher( 10000, 0 );
   polynomial_matcher( 10000, 1 );
+  polynomial_matcher( 10000, 2 );
   optimizer( 1000 );
 }
 
