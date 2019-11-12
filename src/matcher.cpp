@@ -103,7 +103,6 @@ void PolynomialMatcher::remove( const Sequence &norm_seq, number_t id )
 
 bool addPostPolynomial( Program &p, const Polynomial &pol )
 {
-  std::cout << "Pol " << pol.to_string() << std::endl;
   Settings settings;
   Optimizer optimizer( settings );
 
