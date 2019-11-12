@@ -30,42 +30,73 @@ void DirectMatcher::match( const Program &p, const Sequence &norm_seq, seq_progr
 
 const int PolynomialMatcher::DEGREE = 1;
 
-Polynomial PolynomialMatcher::reduce( Sequence &seq )
+Sequence subPoly( const Sequence &s, int64_t factor, int64_t exp )
 {
-  Polynomial polynom( DEGREE );
-  for ( int exp = 0; exp <= DEGREE; exp++ )
+  Sequence t;
+  t.resize( s.size() );
+  for ( size_t x = 0; x < s.size(); x++ )
   {
-    int64_t factor = -1;
-    for ( size_t x = 0; x < seq.size(); x++ )
-    {
-      auto x_exp = pow( x, exp );
-      int64_t new_factor = (x_exp == 0) ? -1 : seq[x] / x_exp;
-      factor = (factor == -1) ? new_factor : (new_factor < factor ? new_factor : factor);
-      if ( factor == 0 ) break;
-    }
-    if ( factor > 0 )
-    {
-      for ( size_t x = 0; x < seq.size(); x++ )
-      {
-        seq[x] = seq[x] - (factor * pow( x, exp ));
-      }
-    }
-    polynom[exp] = factor;
+    t[x] = s[x] - (factor * pow( x, exp ));
   }
-  return polynom;
+  return t;
+}
+
+Polynomial PolynomialMatcher::reduce( Sequence &seq, int64_t degree )
+{
+  // recursion end
+  if ( degree < 0 )
+  {
+    return Polynomial();
+  }
+
+  // calculate maximum factor for current degree
+  int64_t max_factor = -1;
+  for ( size_t x = 0; x < seq.size(); x++ )
+  {
+    auto x_exp = pow( x, degree );
+    int64_t new_factor = (x_exp == 0) ? -1 : seq[x] / x_exp;
+    max_factor = (max_factor == -1) ? new_factor : (new_factor < max_factor ? new_factor : max_factor);
+    if ( max_factor == 0 ) break;
+  }
+
+  int64_t factor = max_factor;
+  Sequence reduced = subPoly( seq, factor, degree );
+  auto poly = reduce( reduced, degree - 1 );
+  auto cost = reduced.sum();
+
+  while ( factor > 0 )
+  {
+    Sequence reduced_new = subPoly( seq, factor - 1, degree );
+    auto poly_new = reduce( reduced_new, degree - 1 );
+    auto cost_new = reduced_new.sum();
+    if ( cost_new < cost )
+    {
+      factor--;
+      reduced = reduced_new;
+      poly = poly_new;
+      cost = cost_new;
+    }
+    else
+    {
+      break;
+    }
+  }
+  poly.push_back( factor );
+  seq = reduced;
+  return poly;
 }
 
 void PolynomialMatcher::insert( const Sequence &norm_seq, number_t id )
 {
   Sequence seq = norm_seq;
-  polynoms[id] = reduce( seq );
+  polynoms[id] = reduce( seq, DEGREE );
   ids[seq].push_back( id ); // must be after reduce!
 }
 
 void PolynomialMatcher::remove( const Sequence &norm_seq, number_t id )
 {
   Sequence seq = norm_seq;
-  reduce( seq );
+  reduce( seq, DEGREE );
   ids.remove( seq, id );
   polynoms.erase( id );
 }
@@ -122,7 +153,7 @@ bool addPostPolynomial( Program &p, const Polynomial &pol )
 void PolynomialMatcher::match( const Program &p, const Sequence &norm_seq, seq_programs_t &result ) const
 {
   Sequence seq = norm_seq;
-  auto pol = reduce( seq );
+  auto pol = reduce( seq, DEGREE );
   auto it = ids.find( seq );
   if ( it != ids.end() )
   {
@@ -133,10 +164,6 @@ void PolynomialMatcher::match( const Program &p, const Sequence &norm_seq, seq_p
       if ( addPostPolynomial( copy, diff ) )
       {
         result.push_back( std::pair<number_t, Program>( id, copy ) );
-      }
-      else
-      {
-        std::cout << "errorrrrrrrr" << std::endl;
       }
     }
   }

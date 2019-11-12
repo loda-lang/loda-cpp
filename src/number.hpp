@@ -47,6 +47,8 @@ public:
 
   void sub( number_t n );
 
+  number_t sum() const;
+
   bool operator<( const Sequence &s ) const;
 
   bool operator==( const Sequence &s ) const;

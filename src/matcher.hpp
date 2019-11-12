@@ -59,7 +59,7 @@ public:
 
 private:
 
-  static Polynomial reduce( Sequence &seq );
+  static Polynomial reduce( Sequence &seq, int64_t exp );
 
   std::unordered_map<number_t, Polynomial> polynoms;
 

@@ -72,6 +72,16 @@ void Sequence::sub( number_t n )
   }
 }
 
+number_t Sequence::sum() const
+{
+  number_t sum = 0;
+  for ( size_t x = 0; x < size(); x++ )
+  {
+    sum += (*this)[x];
+  }
+  return sum;
+}
+
 bool Sequence::operator<( const Sequence &m ) const
 {
   number_t length = size() < m.size() ? size() : m.size();
@@ -209,7 +219,10 @@ Polynomial operator-( const Polynomial &a, const Polynomial &b )
   }
   for ( size_t i = 0; i < c.size(); i++ )
   {
-    c[i] = c[i] - b[i];
+    if ( i < b.size() )
+    {
+      c[i] = c[i] - b[i];
+    }
   }
   return c;
 }

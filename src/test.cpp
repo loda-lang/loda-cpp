@@ -21,10 +21,10 @@ void Test::all()
   exponentiation();
   ackermann();
   iterator();
-  polynomial_synthesizer( 1000, 0 );
+  polynomial_synthesizer( 10000, 0 );
   polynomial_synthesizer( 1000, 1 );
-  polynomial_matcher( 1000, 0 );
-  polynomial_matcher( 1000, 1 );
+  polynomial_matcher( 10000, 0 );
+  polynomial_matcher( 10000, 1 );
   optimizer( 1000 );
 }
 
@@ -121,7 +121,7 @@ void Test::polynomial_matcher( size_t tests, size_t degree )
     Polynomial pol( degree );
     for ( size_t d = 0; d < pol.size(); d++ )
     {
-      pol[d] = rand_dev() % 1000;
+      pol[d] = rand_dev() % 100;
     }
 
     Log::get().debug( "Checking (" + norm_seq.to_string() + ") + " + pol.to_string() );
