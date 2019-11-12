@@ -176,7 +176,7 @@ void Test::polynomial_synthesizer( size_t tests, size_t degree )
   Interpreter interpreter( settings );
   Printer printer;
   Program prog;
-  for ( int i = 0; i < tests; i++ )
+  for ( size_t i = 0; i < tests; i++ )
   {
     if ( exit_flag_ ) break;
     Polynomial pol( degree );
