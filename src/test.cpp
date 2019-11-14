@@ -23,9 +23,10 @@ void Test::all()
   iterator();
   polynomial_synthesizer( 10000, 0 );
   polynomial_synthesizer( 1000, 1 );
-  polynomial_matcher( 10000, 0 );
-  polynomial_matcher( 10000, 1 );
-  polynomial_matcher( 10000, 2 );
+  for ( int d = 0; d <= 3; d++ )
+  {
+    polynomial_matcher( 10000, d );
+  }
   optimizer( 1000 );
 }
 

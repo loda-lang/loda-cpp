@@ -28,7 +28,7 @@ void DirectMatcher::match( const Program &p, const Sequence &norm_seq, seq_progr
 
 // --- Polynomial Matcher --------------------------------------------------
 
-const int PolynomialMatcher::DEGREE = 2;
+const int PolynomialMatcher::DEGREE = 3;
 
 Sequence subPoly( const Sequence &s, int64_t factor, int64_t exp )
 {
