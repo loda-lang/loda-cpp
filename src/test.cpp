@@ -23,7 +23,7 @@ void Test::all()
   iterator();
   polynomial_synthesizer( 10000, 0 );
   polynomial_synthesizer( 1000, 1 );
-  for ( int d = 0; d <= 3; d++ )
+  for ( int d = 0; d <= PolynomialMatcher::DEGREE; d++ )
   {
     polynomial_matcher( 10000, d );
   }
