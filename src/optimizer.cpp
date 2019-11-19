@@ -7,19 +7,30 @@
 void Optimizer::optimize( Program &p, size_t num_reserved_cells, size_t num_initialized_cells ) const
 {
   Log::get().debug( "Starting optimization of program with " + std::to_string( p.ops.size() ) + " operations" );
-  while ( true )
+  bool changed = true;
+  while ( changed )
   {
-    size_t length = p.num_ops( true );
-    simplifyOperands( p, num_initialized_cells );
-    mergeOps( p );
-    removeNops( p );
-    removeEmptyLoops( p );
-    size_t new_length = p.num_ops( true );
-    if ( new_length == length ) break;
-  }
-  ;
-  while ( reduceMemoryCells( p, num_reserved_cells ) )
-  {
+    changed = false;
+    if ( simplifyOperands( p, num_initialized_cells ) )
+    {
+      changed = true;
+    }
+    if ( mergeOps( p ) )
+    {
+      changed = true;
+    }
+    if ( removeNops( p ) )
+    {
+      changed = true;
+    }
+    if ( removeEmptyLoops( p ) )
+    {
+      changed = true;
+    }
+    if ( reduceMemoryCells( p, num_reserved_cells ) )
+    {
+      changed = true;
+    }
   }
   Log::get().debug( "Finished optimization; program now has " + std::to_string( p.ops.size() ) + " operations" );
 }
@@ -147,7 +158,7 @@ bool Optimizer::mergeOps( Program &p ) const
   return merged;
 }
 
-inline void simplifyOperand( Operand &op, std::unordered_set<number_t> &initialized_cells, bool is_source )
+inline bool simplifyOperand( Operand &op, std::unordered_set<number_t> &initialized_cells, bool is_source )
 {
   Log::get().debug( "Simplifying operand" );
   switch ( op.type )
@@ -159,6 +170,7 @@ inline void simplifyOperand( Operand &op, std::unordered_set<number_t> &initiali
     {
       op.type = Operand::Type::CONSTANT;
       op.value = 0;
+      return true;
     }
     break;
   case Operand::Type::MEM_ACCESS_INDIRECT:
@@ -166,12 +178,14 @@ inline void simplifyOperand( Operand &op, std::unordered_set<number_t> &initiali
     {
       op.type = Operand::Type::MEM_ACCESS_DIRECT;
       op.value = 0;
+      return true;
     }
     break;
   }
+  return false;
 }
 
-void Optimizer::simplifyOperands( Program &p, size_t num_initialized_cells ) const
+bool Optimizer::simplifyOperands( Program &p, size_t num_initialized_cells ) const
 {
   Log::get().debug( "Simplifying operands" );
   std::unordered_set<number_t> initialized_cells;
@@ -179,6 +193,7 @@ void Optimizer::simplifyOperands( Program &p, size_t num_initialized_cells ) con
   {
     initialized_cells.insert( i );
   }
+  bool simplified = false;
   for ( auto &op : p.ops )
   {
     switch ( op.type )
@@ -187,15 +202,21 @@ void Optimizer::simplifyOperands( Program &p, size_t num_initialized_cells ) con
     case Operation::Type::SUB:
     case Operation::Type::MOV:
     {
-      simplifyOperand( op.source, initialized_cells, true );
-      simplifyOperand( op.target, initialized_cells, false );
+      if ( simplifyOperand( op.source, initialized_cells, true ) )
+      {
+        simplified = true;
+      }
+      if ( simplifyOperand( op.target, initialized_cells, false ) )
+      {
+        simplified = true;
+      }
       switch ( op.target.type )
       {
       case Operand::Type::MEM_ACCESS_DIRECT:
         initialized_cells.insert( op.target.value );
         break;
       case Operand::Type::MEM_ACCESS_INDIRECT:
-        return; // don't know at this point which cell is written to
+        return simplified; // don't know at this point which cell is written to
       case Operand::Type::CONSTANT:
         Log::get().error( "invalid program" );
         break;
@@ -205,13 +226,14 @@ void Optimizer::simplifyOperands( Program &p, size_t num_initialized_cells ) con
 
     case Operation::Type::NOP:
     case Operation::Type::DBG:
-      break;
+      break; // can be safely ignored
 
     default:
-      return; // not know what happens in other cases
+      return simplified; // not known what happens in other cases
 
     }
   }
+  return simplified;
 }
 
 void Optimizer::minimize( Program &p, size_t num_terms ) const
