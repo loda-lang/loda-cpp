@@ -64,7 +64,7 @@ Polynomial PolynomialMatcher::reduce( Sequence &seq, int64_t degree )
   auto poly = reduce( reduced, degree - 1 );
   auto cost = reduced.sum();
 
-  int64_t min_factor = std::max( (int64_t) 0, factor - 26 ); // magic number
+  int64_t min_factor = std::max( (int64_t) 0, factor - 8 ); // magic number
   while ( factor > min_factor )
   {
     Sequence reduced_new = subPoly( seq, factor - 1, degree );
