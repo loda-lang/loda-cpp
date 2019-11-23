@@ -59,8 +59,32 @@ public:
 
 private:
 
-  static Polynomial reduce( Sequence &seq, int64_t exp );
+  Polynomial reduce( Sequence &seq, int64_t exp ) const;
 
   std::unordered_map<number_t, Polynomial> polynoms;
+
+};
+
+class DeltaMatcher: public Matcher
+{
+public:
+
+  static const int MAX_DELTA;
+
+  virtual ~DeltaMatcher()
+  {
+  }
+
+  virtual void insert( const Sequence &norm_seq, number_t id ) override;
+
+  virtual void remove( const Sequence &norm_seq, number_t id ) override;
+
+  virtual void match( const Program &p, const Sequence &norm_seq, seq_programs_t &result ) const override;
+
+private:
+
+  std::pair<Sequence, int64_t> reduce( const Sequence &seq ) const;
+
+  std::unordered_map<number_t, int64_t> deltas;
 
 };

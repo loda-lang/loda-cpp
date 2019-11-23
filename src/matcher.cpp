@@ -41,7 +41,7 @@ Sequence subPoly( const Sequence &s, int64_t factor, int64_t exp )
   return t;
 }
 
-Polynomial PolynomialMatcher::reduce( Sequence &seq, int64_t degree )
+Polynomial PolynomialMatcher::reduce( Sequence &seq, int64_t degree ) const
 {
   // recursion end
   if ( degree < 0 )
@@ -229,4 +229,55 @@ void PolynomialMatcher::match( const Program &p, const Sequence &norm_seq, seq_p
       }
     }
   }
+}
+
+// --- Delta Matcher --------------------------------------------------
+
+const int DeltaMatcher::MAX_DELTA = 5; // magic number
+
+std::pair<Sequence, int64_t> DeltaMatcher::reduce( const Sequence &seq ) const
+{
+  std::pair<Sequence, int64_t> result;
+  result.first = seq;
+  result.second = 0;
+  for ( int i = 0; i < MAX_DELTA; i++ )
+  {
+    Sequence next;
+    next.resize( result.first.size() - 1 );
+    bool ok = true;
+    for ( size_t j = 0; j < next.size(); j++ )
+    {
+      if ( result.first[j] < result.first[j + 1] )
+      {
+        next[j] = result.first[j + 1] - result.first[j];
+      }
+      else
+      {
+        ok = false;
+        break;
+      }
+    }
+    if ( ok )
+    {
+      result.first = next;
+      result.second++;
+    }
+    else
+    {
+      break;
+    }
+  }
+  return result;
+}
+
+void DeltaMatcher::insert( const Sequence &norm_seq, number_t id )
+{
+}
+
+void DeltaMatcher::remove( const Sequence &norm_seq, number_t id )
+{
+}
+
+void DeltaMatcher::match( const Program &p, const Sequence &norm_seq, seq_programs_t &result ) const
+{
 }
