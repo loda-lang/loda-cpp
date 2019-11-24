@@ -19,17 +19,14 @@ public:
 
   virtual void match( const Program &p, const Sequence &norm_seq, seq_programs_t &result ) const = 0;
 
-protected:
-
-  SequenceToIdsMap ids;
-
 };
 
-class DirectMatcher: public Matcher
+template<class T>
+class AbstractMatcher: public Matcher
 {
 public:
 
-  virtual ~DirectMatcher()
+  virtual ~AbstractMatcher()
   {
   }
 
@@ -39,9 +36,36 @@ public:
 
   virtual void match( const Program &p, const Sequence &norm_seq, seq_programs_t &result ) const override;
 
+protected:
+
+  virtual std::pair<Sequence, T> reduce( const Sequence &seq ) const = 0;
+
+  virtual bool extend( Program &p, T base, T gen ) const = 0;
+
+private:
+
+  SequenceToIdsMap ids;
+  std::unordered_map<number_t, T> data;
+
 };
 
-class PolynomialMatcher: public Matcher
+class DirectMatcher: public AbstractMatcher<int>
+{
+public:
+
+  virtual ~DirectMatcher()
+  {
+  }
+
+protected:
+
+  virtual std::pair<Sequence, int> reduce( const Sequence &seq ) const override;
+
+  virtual bool extend( Program &p, int base, int gen ) const override;
+
+};
+
+class PolynomialMatcher: public AbstractMatcher<Polynomial>
 {
 public:
 
@@ -51,21 +75,19 @@ public:
   {
   }
 
-  virtual void insert( const Sequence &norm_seq, number_t id ) override;
+protected:
 
-  virtual void remove( const Sequence &norm_seq, number_t id ) override;
+  virtual std::pair<Sequence, Polynomial> reduce( const Sequence &seq ) const override;
 
-  virtual void match( const Program &p, const Sequence &norm_seq, seq_programs_t &result ) const override;
+  virtual bool extend( Program &p, Polynomial base, Polynomial gen ) const override;
 
 private:
 
   Polynomial reduce( Sequence &seq, int64_t exp ) const;
 
-  std::unordered_map<number_t, Polynomial> polynoms;
-
 };
 
-class DeltaMatcher: public Matcher
+class DeltaMatcher: public AbstractMatcher<int>
 {
 public:
 
@@ -75,16 +97,10 @@ public:
   {
   }
 
-  virtual void insert( const Sequence &norm_seq, number_t id ) override;
+protected:
 
-  virtual void remove( const Sequence &norm_seq, number_t id ) override;
+  virtual std::pair<Sequence, int> reduce( const Sequence &seq ) const override;
 
-  virtual void match( const Program &p, const Sequence &norm_seq, seq_programs_t &result ) const override;
-
-private:
-
-  std::pair<Sequence, int64_t> reduce( const Sequence &seq ) const;
-
-  std::unordered_map<number_t, int64_t> deltas;
+  virtual bool extend( Program &p, int base, int gen ) const override;
 
 };

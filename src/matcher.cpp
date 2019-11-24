@@ -2,31 +2,58 @@
 
 #include "optimizer.hpp"
 
-// --- Direct Matcher --------------------------------------------------
+// --- AbstractMatcher --------------------------------------------------------
 
-void DirectMatcher::insert( const Sequence &norm_seq, number_t id )
+template<class T>
+void AbstractMatcher<T>::insert( const Sequence &norm_seq, number_t id )
 {
-  ids[norm_seq].push_back( id );
+  auto reduced = reduce( norm_seq );
+  data[id] = reduced.second;
+  ids[reduced.first].push_back( id );
 }
 
-void DirectMatcher::remove( const Sequence &norm_seq, number_t id )
+template<class T>
+void AbstractMatcher<T>::remove( const Sequence &norm_seq, number_t id )
 {
-  ids.remove( norm_seq, id );
+  auto reduced = reduce( norm_seq );
+  ids.remove( reduced.first, id );
+  data.erase( id );
 }
 
-void DirectMatcher::match( const Program &p, const Sequence &norm_seq, seq_programs_t &result ) const
+template<class T>
+void AbstractMatcher<T>::match( const Program &p, const Sequence &norm_seq, seq_programs_t &result ) const
 {
-  auto it = ids.find( norm_seq );
+  auto reduced = reduce( norm_seq );
+  auto it = ids.find( reduced.first );
   if ( it != ids.end() )
   {
     for ( auto id : it->second )
     {
-      result.push_back( std::pair<number_t, Program>( id, p ) );
+      Program copy = p;
+      if ( extend( copy, data.at( id ), reduced.second ) )
+      {
+        result.push_back( std::pair<number_t, Program>( id, copy ) );
+      }
     }
   }
 }
 
-// --- Polynomial Matcher --------------------------------------------------
+// --- Direct Matcher ---------------------------------------------------------
+
+std::pair<Sequence, int> DirectMatcher::reduce( const Sequence &seq ) const
+{
+  std::pair<Sequence, int> result;
+  result.first = seq;
+  result.second = 0;
+  return result;
+}
+
+bool DirectMatcher::extend( Program &p, int base, int gen ) const
+{
+  return true;
+}
+
+// --- Polynomial Matcher -----------------------------------------------------
 
 const int PolynomialMatcher::DEGREE = 5; // magic number
 
@@ -87,19 +114,12 @@ Polynomial PolynomialMatcher::reduce( Sequence &seq, int64_t degree ) const
   return poly;
 }
 
-void PolynomialMatcher::insert( const Sequence &norm_seq, number_t id )
+std::pair<Sequence, Polynomial> PolynomialMatcher::reduce( const Sequence &seq ) const
 {
-  Sequence seq = norm_seq;
-  polynoms[id] = reduce( seq, DEGREE );
-  ids[seq].push_back( id ); // must be after reduce!
-}
-
-void PolynomialMatcher::remove( const Sequence &norm_seq, number_t id )
-{
-  Sequence seq = norm_seq;
-  reduce( seq, DEGREE );
-  ids.remove( seq, id );
-  polynoms.erase( id );
+  std::pair<Sequence, Polynomial> result;
+  result.first = seq;
+  result.second = reduce( result.first, DEGREE );
+  return result;
 }
 
 bool addPostPolynomial( Program &p, const Polynomial &pol )
@@ -212,32 +232,19 @@ bool addPostPolynomial( Program &p, const Polynomial &pol )
   return true;
 }
 
-void PolynomialMatcher::match( const Program &p, const Sequence &norm_seq, seq_programs_t &result ) const
+bool PolynomialMatcher::extend( Program &p, Polynomial base, Polynomial gen ) const
 {
-  Sequence seq = norm_seq;
-  auto pol = reduce( seq, DEGREE );
-  auto it = ids.find( seq );
-  if ( it != ids.end() )
-  {
-    for ( auto id : it->second )
-    {
-      auto diff = polynoms.at( id ) - pol;
-      Program copy = p;
-      if ( addPostPolynomial( copy, diff ) )
-      {
-        result.push_back( std::pair<number_t, Program>( id, copy ) );
-      }
-    }
-  }
+  auto diff = base - gen;
+  return addPostPolynomial( p, diff );
 }
 
-// --- Delta Matcher --------------------------------------------------
+// --- Delta Matcher ----------------------------------------------------------
 
 const int DeltaMatcher::MAX_DELTA = 5; // magic number
 
-std::pair<Sequence, int64_t> DeltaMatcher::reduce( const Sequence &seq ) const
+std::pair<Sequence, int> DeltaMatcher::reduce( const Sequence &seq ) const
 {
-  std::pair<Sequence, int64_t> result;
+  std::pair<Sequence, int> result;
   result.first = seq;
   result.second = 0;
   for ( int i = 0; i < MAX_DELTA; i++ )
@@ -270,14 +277,7 @@ std::pair<Sequence, int64_t> DeltaMatcher::reduce( const Sequence &seq ) const
   return result;
 }
 
-void DeltaMatcher::insert( const Sequence &norm_seq, number_t id )
+bool DeltaMatcher::extend( Program &p, int base, int gen ) const
 {
-}
-
-void DeltaMatcher::remove( const Sequence &norm_seq, number_t id )
-{
-}
-
-void DeltaMatcher::match( const Program &p, const Sequence &norm_seq, seq_programs_t &result ) const
-{
+  return false;
 }
