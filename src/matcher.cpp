@@ -55,7 +55,7 @@ bool DirectMatcher::extend( Program &p, int base, int gen ) const
 
 // --- Polynomial Matcher -----------------------------------------------------
 
-const int PolynomialMatcher::DEGREE = 5; // magic number
+const int PolynomialMatcher::DEGREE = 6; // magic number
 
 Sequence subPoly( const Sequence &s, int64_t factor, int64_t exp )
 {
@@ -91,7 +91,7 @@ Polynomial PolynomialMatcher::reduce( Sequence &seq, int64_t degree ) const
   auto poly = reduce( reduced, degree - 1 );
   auto cost = reduced.sum();
 
-  int64_t min_factor = std::max( (int64_t) 0, factor - 8 ); // magic number
+  int64_t min_factor = std::max( (int64_t) 0, factor - 4 ); // magic number
   while ( factor > min_factor )
   {
     Sequence reduced_new = subPoly( seq, factor - 1, degree );
