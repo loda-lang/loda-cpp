@@ -73,13 +73,13 @@ bool Interpreter::run( const Program &p, Memory &mem ) const
     {
       source = get( op.source, mem );
       target = get( op.target, mem );
-      if ( MAX_NUMBER - source > target )
+      if ( NUM_INF - source > target )
       {
         set( op.target, target + source, mem );
       }
       else
       {
-        set( op.target, MAX_NUMBER, mem );
+        set( op.target, NUM_INF, mem );
       }
       break;
     }
@@ -87,7 +87,11 @@ bool Interpreter::run( const Program &p, Memory &mem ) const
     {
       source = get( op.source, mem );
       target = get( op.target, mem );
-      if ( target > source )
+      if ( target == NUM_INF || source == NUM_INF )
+      {
+        set( op.target, NUM_INF, mem );
+      }
+      else if ( target > source )
       {
         set( op.target, target - source, mem );
       }
@@ -101,13 +105,13 @@ bool Interpreter::run( const Program &p, Memory &mem ) const
     {
       source = get( op.source, mem );
       target = get( op.target, mem );
-      if ( source == 0 || (MAX_NUMBER / source > target) )
+      if ( target != NUM_INF && source != NUM_INF && (source == 0 || (NUM_INF / source > target)) )
       {
         set( op.target, target * source, mem );
       }
       else
       {
-        set( op.target, MAX_NUMBER, mem );
+        set( op.target, NUM_INF, mem );
       }
       break;
     }

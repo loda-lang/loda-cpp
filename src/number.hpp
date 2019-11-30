@@ -12,7 +12,7 @@
 
 using number_t = uint64_t;
 
-#define MAX_NUMBER std::numeric_limits<number_t>::max()
+#define NUM_INF std::numeric_limits<number_t>::max()
 
 inline number_t pow( number_t x, number_t exp )
 {
