@@ -18,7 +18,6 @@
 
 void Test::all()
 {
-  exponentiation();
   ackermann();
   iterator();
   polynomial_synthesizer( 10000, 0 );
@@ -28,13 +27,6 @@ void Test::all()
     polynomial_matcher( 10000, d );
   }
   optimizer( 1000 );
-}
-
-void Test::exponentiation()
-{
-  std::vector<std::vector<number_t> > values = { { 1, 0, 0, 0 }, { 1, 1, 1, 1 }, { 1, 2, 4, 8 }, { 1, 3, 9, 27 }, { 1,
-      4, 16, 64 } };
-  testBinary( "exp", "programs/exponentiation.asm", values );
 }
 
 void Test::ackermann()

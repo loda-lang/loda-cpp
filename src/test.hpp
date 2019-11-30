@@ -16,8 +16,6 @@ public:
 
   void all();
 
-  void exponentiation();
-
   void ackermann();
 
   void iterator();
