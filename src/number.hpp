@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <limits>
 #include <random>
 #include <memory>
 #include <stdlib.h>
@@ -10,6 +11,8 @@
 #include <vector>
 
 using number_t = uint64_t;
+
+#define MAX_NUMBER std::numeric_limits<number_t>::max()
 
 inline number_t pow( number_t x, number_t exp )
 {

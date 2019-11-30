@@ -54,6 +54,11 @@ void Printer::print( const Operation &op, std::ostream &out, int indent )
     out << getBinaryOperation( indent, "sub", op );
     break;
   }
+  case Operation::Type::MUL:
+  {
+    out << getBinaryOperation( indent, "mul", op );
+    break;
+  }
   case Operation::Type::LPB:
   {
     out << getBinaryOperation( indent, "lpb", op );
@@ -97,5 +102,4 @@ void Printer::print( const Program &p, std::ostream &out )
       indent += 2;
     }
   }
-
 }

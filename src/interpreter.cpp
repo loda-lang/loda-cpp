@@ -73,14 +73,42 @@ bool Interpreter::run( const Program &p, Memory &mem ) const
     {
       source = get( op.source, mem );
       target = get( op.target, mem );
-      set( op.target, target + source, mem );
+      if ( MAX_NUMBER - source > target )
+      {
+        set( op.target, target + source, mem );
+      }
+      else
+      {
+        set( op.target, MAX_NUMBER, mem );
+      }
       break;
     }
     case Operation::Type::SUB:
     {
       source = get( op.source, mem );
       target = get( op.target, mem );
-      set( op.target, (target > source) ? (target - source) : 0, mem );
+      if ( target > source )
+      {
+        set( op.target, target - source, mem );
+      }
+      else
+      {
+        set( op.target, 0, mem );
+      }
+      break;
+    }
+    case Operation::Type::MUL:
+    {
+      source = get( op.source, mem );
+      target = get( op.target, mem );
+      if ( source == 0 || (MAX_NUMBER / source > target) )
+      {
+        set( op.target, target * source, mem );
+      }
+      else
+      {
+        set( op.target, MAX_NUMBER, mem );
+      }
       break;
     }
     case Operation::Type::LPB:

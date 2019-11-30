@@ -109,7 +109,7 @@ Settings::Settings()
     max_index( 6 ),
     optimize_existing_programs( false ),
     search_linear( false ),
-    operation_types( "asml" ),
+    operation_types( "asmul" ),
     operand_types( "cd" )
 {
 }

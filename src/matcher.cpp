@@ -55,7 +55,7 @@ bool DirectMatcher::extend( Program &p, int base, int gen ) const
 
 // --- Polynomial Matcher -----------------------------------------------------
 
-const int PolynomialMatcher::DEGREE = 6; // magic number
+const int PolynomialMatcher::DEGREE = 3; // magic number
 
 Sequence subPoly( const Sequence &s, int64_t factor, int64_t exp )
 {

@@ -44,6 +44,7 @@ public:
     MOV,
     ADD,
     SUB,
+    MUL,
     LPB,
     LPE,
     CLR,

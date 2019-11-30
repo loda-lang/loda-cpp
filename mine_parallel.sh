@@ -5,7 +5,7 @@ restart_interval=86400
 min_changes=20
 alt_params="-x"
 
-tmp_params=""
+tmp_params=$alt_params
 
 for cmd in git; do
   if ! [ -x "$(command -v $cmd)" ]; then
@@ -30,12 +30,15 @@ function start_miners() {
   ./make_charts.sh
   echo "Start mining"
   local l="-l ${log_level}"
-  for n in 2 3 4 5 6; do
+  # instantiate templates w/o loops
+  for n in 3 4 5 6; do
     p="${n}0"
     for t in T01 T02; do
-      ./loda mine $tmp_params -p $p -n $n -a cd -o asm -e programs/templates/${t}.asm $l $@ &
+      ./loda mine $tmp_params -p $p -n $n -a cd -o asmu -e programs/templates/${t}.asm $l $@ &
     done
   done
+  # no templates but w/ loops
+  ./loda mine $tmp_params -p 80 -a cd -n 6 $l $@ &
   ./loda mine $tmp_params -p 60 -a cd -n 6 $l $@ &
   ./loda mine $tmp_params -p 60 -a cdi -n 6 $l $@ &
   ./loda mine $tmp_params -p 40 -a cd -n 6 -r $l $@ &

@@ -45,7 +45,8 @@ bool Optimizer::removeNops( Program &p ) const
     if ( it->type == Operation::Type::NOP || it->type == Operation::Type::DBG
         || ((it->type == Operation::Type::ADD || it->type == Operation::Type::SUB)
             && it->source.type == Operand::Type::CONSTANT && it->source.value == 0)
-        || (it->type == Operation::Type::MOV && it->source == it->target) )
+        || (it->type == Operation::Type::MOV && it->source == it->target)
+        || (it->type == Operation::Type::MUL && it->source.type == Operand::Type::CONSTANT && it->source.value == 1) )
     {
       it = p.ops.erase( it );
       removed = true;

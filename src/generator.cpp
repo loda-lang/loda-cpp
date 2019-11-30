@@ -7,6 +7,7 @@
 #include "printer.hpp"
 
 #include <algorithm>
+#include <ctype.h>
 #include <iostream>
 #include <set>
 #include <stdexcept>
@@ -82,22 +83,22 @@ Generator::Generator( const Settings &settings, size_t numStates, int64_t seed )
 {
   for ( char c : settings.operation_types )
   {
+    c = tolower( c );
     switch ( c )
     {
     case 'a':
-    case 'A':
       operation_types.push_back( Operation::Type::ADD );
       break;
     case 's':
-    case 'S':
       operation_types.push_back( Operation::Type::SUB );
       break;
     case 'm':
-    case 'M':
       operation_types.push_back( Operation::Type::MOV );
       break;
+    case 'u':
+      operation_types.push_back( Operation::Type::MUL );
+      break;
     case 'l':
-    case 'L':
       operation_types.push_back( Operation::Type::LPB );
       break;
     default:
@@ -193,6 +194,10 @@ void Generator::generateOperations( Seed &seed )
   {
     source_value = 1;
   }
+  if ( source_type == Operand::Type::CONSTANT && op_type == Operation::Type::MUL )
+  {
+    source_value += 2;
+  }
 
   seed.ops.clear();
   seed.ops.push_back(
@@ -267,6 +272,7 @@ Program Generator::generateProgram( size_t initialState )
     case Operation::Type::ADD:
     case Operation::Type::SUB:
     case Operation::Type::MOV:
+    case Operation::Type::MUL:
     {
       if ( op.target.type == Operand::Type::MEM_ACCESS_DIRECT )
       {
@@ -353,6 +359,7 @@ Program Generator::generateProgram( size_t initialState )
       break;
     }
     case Operation::Type::ADD:
+    case Operation::Type::MUL:
       num_ops++;
       break;
     case Operation::Type::SUB:
