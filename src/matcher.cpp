@@ -209,17 +209,11 @@ bool addPostPolynomial( Program &p, const Polynomial &pol )
             Operation( Operation::Type::MOV, Operand( Operand::Type::MEM_ACCESS_DIRECT, factor_cell ),
                 Operand( Operand::Type::CONSTANT, factor ) ) );
         p.ops.insert( p.ops.end(),
-            Operation( Operation::Type::LPB, Operand( Operand::Type::MEM_ACCESS_DIRECT, factor_cell ),
-                Operand( Operand::Type::CONSTANT, 1 ) ) );
-        p.ops.insert( p.ops.end(),
-            Operation( Operation::Type::ADD, Operand( Operand::Type::MEM_ACCESS_DIRECT, 1 ),
+            Operation( Operation::Type::MUL, Operand( Operand::Type::MEM_ACCESS_DIRECT, factor_cell ),
                 Operand( Operand::Type::MEM_ACCESS_DIRECT, x_cell ) ) );
         p.ops.insert( p.ops.end(),
-            Operation( Operation::Type::SUB, Operand( Operand::Type::MEM_ACCESS_DIRECT, factor_cell ),
-                Operand( Operand::Type::CONSTANT, 1 ) ) );
-        p.ops.insert( p.ops.end(),
-            Operation( Operation::Type::LPE, Operand( Operand::Type::CONSTANT, 0 ),
-                Operand( Operand::Type::CONSTANT, 1 ) ) );
+            Operation( Operation::Type::ADD, Operand( Operand::Type::MEM_ACCESS_DIRECT, 1 ),
+                Operand( Operand::Type::MEM_ACCESS_DIRECT, factor_cell ) ) );
       }
       else if ( factor < 0 )
       {
