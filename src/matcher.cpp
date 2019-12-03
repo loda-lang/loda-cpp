@@ -157,9 +157,7 @@ bool addPostPolynomial( Program &p, const Polynomial &pol )
     max_cell = std::max( max_cell, (number_t) 1 );
     const number_t saved_arg_cell = max_cell + 1;
     const number_t x_cell = max_cell + 2;
-    const number_t x_new_cell = max_cell + 3;
-    const number_t x_counter_cell = max_cell + 4;
-    const number_t factor_cell = max_cell + 5;
+    const number_t term_cell = max_cell + 3;
 
     // save argument
     p.ops.insert( p.ops.begin(),
@@ -179,26 +177,8 @@ bool addPostPolynomial( Program &p, const Polynomial &pol )
       else
       {
         p.ops.insert( p.ops.end(),
-            Operation( Operation::Type::MOV, Operand( Operand::Type::MEM_ACCESS_DIRECT, x_counter_cell ),
+            Operation( Operation::Type::MUL, Operand( Operand::Type::MEM_ACCESS_DIRECT, x_cell ),
                 Operand( Operand::Type::MEM_ACCESS_DIRECT, saved_arg_cell ) ) );
-        p.ops.insert( p.ops.end(),
-            Operation( Operation::Type::MOV, Operand( Operand::Type::MEM_ACCESS_DIRECT, x_new_cell ),
-                Operand( Operand::Type::CONSTANT, 0 ) ) );
-        p.ops.insert( p.ops.end(),
-            Operation( Operation::Type::LPB, Operand( Operand::Type::MEM_ACCESS_DIRECT, x_counter_cell ),
-                Operand( Operand::Type::CONSTANT, 1 ) ) );
-        p.ops.insert( p.ops.end(),
-            Operation( Operation::Type::ADD, Operand( Operand::Type::MEM_ACCESS_DIRECT, x_new_cell ),
-                Operand( Operand::Type::MEM_ACCESS_DIRECT, x_cell ) ) );
-        p.ops.insert( p.ops.end(),
-            Operation( Operation::Type::SUB, Operand( Operand::Type::MEM_ACCESS_DIRECT, x_counter_cell ),
-                Operand( Operand::Type::CONSTANT, 1 ) ) );
-        p.ops.insert( p.ops.end(),
-            Operation( Operation::Type::LPE, Operand( Operand::Type::CONSTANT, 0 ),
-                Operand( Operand::Type::CONSTANT, 1 ) ) );
-        p.ops.insert( p.ops.end(),
-            Operation( Operation::Type::MOV, Operand( Operand::Type::MEM_ACCESS_DIRECT, x_cell ),
-                Operand( Operand::Type::MEM_ACCESS_DIRECT, x_new_cell ) ) );
       }
 
       // update result
@@ -206,14 +186,14 @@ bool addPostPolynomial( Program &p, const Polynomial &pol )
       if ( factor > 0 )
       {
         p.ops.insert( p.ops.end(),
-            Operation( Operation::Type::MOV, Operand( Operand::Type::MEM_ACCESS_DIRECT, factor_cell ),
-                Operand( Operand::Type::CONSTANT, factor ) ) );
-        p.ops.insert( p.ops.end(),
-            Operation( Operation::Type::MUL, Operand( Operand::Type::MEM_ACCESS_DIRECT, factor_cell ),
+            Operation( Operation::Type::MOV, Operand( Operand::Type::MEM_ACCESS_DIRECT, term_cell ),
                 Operand( Operand::Type::MEM_ACCESS_DIRECT, x_cell ) ) );
         p.ops.insert( p.ops.end(),
+            Operation( Operation::Type::MUL, Operand( Operand::Type::MEM_ACCESS_DIRECT, term_cell ),
+                Operand( Operand::Type::CONSTANT, factor ) ) );
+        p.ops.insert( p.ops.end(),
             Operation( Operation::Type::ADD, Operand( Operand::Type::MEM_ACCESS_DIRECT, 1 ),
-                Operand( Operand::Type::MEM_ACCESS_DIRECT, factor_cell ) ) );
+                Operand( Operand::Type::MEM_ACCESS_DIRECT, term_cell ) ) );
       }
       else if ( factor < 0 )
       {
