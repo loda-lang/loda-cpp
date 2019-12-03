@@ -100,8 +100,15 @@ bool Optimizer::mergeOps( Program &p ) const
           do_merge = true;
         }
 
+        // both mul operation?
+        if ( o1.type == o2.type && (o1.type == Operation::Type::MUL) )
+        {
+          o1.source.value *= o2.source.value;
+          do_merge = true;
+        }
+
         // first add, second sub?
-        if ( o1.type == Operation::Type::ADD && o2.type == Operation::Type::SUB )
+        else if ( o1.type == Operation::Type::ADD && o2.type == Operation::Type::SUB )
         {
           if ( o1.source.value > o2.source.value )
           {
@@ -117,7 +124,7 @@ bool Optimizer::mergeOps( Program &p ) const
         }
 
         // both sources same memory cell?
-        if ( o1.source.type == Operand::Type::MEM_ACCESS_DIRECT && o1.source == o2.source )
+        else if ( o1.source.type == Operand::Type::MEM_ACCESS_DIRECT && o1.source == o2.source )
         {
           // add with inverse sub?
           if ( o1.type == Operation::Type::ADD && o2.type == Operation::Type::SUB )
