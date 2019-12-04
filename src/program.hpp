@@ -45,6 +45,7 @@ public:
     ADD,
     SUB,
     MUL,
+    DIV,
     LPB,
     LPE,
     CLR,

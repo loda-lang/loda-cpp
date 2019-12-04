@@ -115,11 +115,29 @@ bool Interpreter::run( const Program &p, Memory &mem ) const
       }
       break;
     }
+    case Operation::Type::DIV:
+    {
+      source = get( op.source, mem );
+      target = get( op.target, mem );
+      if ( target != NUM_INF && source != NUM_INF && source != 0 )
+      {
+        set( op.target, target / source, mem );
+      }
+      else
+      {
+        set( op.target, NUM_INF, mem );
+      }
+      break;
+    }
     case Operation::Type::LPB:
     {
       length = get( op.source, mem );
       start = get( op.target, mem, true );
-      if ( length > settings.max_memory )
+      if ( length == NUM_INF )
+      {
+        Log::get().error( "Infinite loop", true );
+      }
+      else if ( length > settings.max_memory )
       {
         Log::get().error( "Maximum memory fragment length exceeded: " + std::to_string( length ), true );
       }

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 log_level=alert
-restart_interval=86400
+restart_interval=43200
 min_changes=20
 alt_params="-x"
 
@@ -34,7 +34,7 @@ function start_miners() {
   for n in 3 4 5 6; do
     p="${n}0"
     for t in T01 T02; do
-      ./loda mine $tmp_params -p $p -n $n -a cd -o asmu -e programs/templates/${t}.asm $l $@ &
+      ./loda mine $tmp_params -p $p -n $n -a cd -o asmud -e programs/templates/${t}.asm $l $@ &
     done
   done
   # no templates but w/ loops
