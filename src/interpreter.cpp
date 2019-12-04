@@ -133,7 +133,11 @@ bool Interpreter::run( const Program &p, Memory &mem ) const
     {
       length = get( op.source, mem );
       start = get( op.target, mem, true );
-      if ( length > settings.max_memory )
+      if ( length == NUM_INF )
+      {
+        Log::get().error( "Infinite loop", true );
+      }
+      else if ( length > settings.max_memory )
       {
         Log::get().error( "Maximum memory fragment length exceeded: " + std::to_string( length ), true );
       }
