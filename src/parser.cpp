@@ -43,7 +43,7 @@ Program Parser::parse( std::istream &in_ )
       o.type = readOperationType();
       *in >> std::ws;
       if ( o.type == Operation::Type::MOV || o.type == Operation::Type::ADD || o.type == Operation::Type::SUB
-          || o.type == Operation::Type::MUL || o.type == Operation::Type::LPB )
+          || o.type == Operation::Type::MUL || o.type == Operation::Type::DIV || o.type == Operation::Type::LPB )
       {
         o.target = readOperand( p );
         readSeparator( ',' );
@@ -181,6 +181,10 @@ Operation::Type Parser::readOperationType()
   else if ( t == "mul" )
   {
     return Operation::Type::MUL;
+  }
+  else if ( t == "div" )
+  {
+    return Operation::Type::DIV;
   }
   else if ( t == "lpb" )
   {

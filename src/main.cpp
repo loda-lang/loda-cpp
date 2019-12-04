@@ -38,7 +38,7 @@ void help()
   std::cout << "  -n <number>      Maximum constant (default:" << settings.max_constant << ")" << std::endl;
   std::cout << "  -i <number>      Maximum index (default:" << settings.max_index << ")" << std::endl;
   std::cout << "  -o <string>      Operation types (default:" << settings.operation_types
-      << ";a:add,s:sub,m:mov,u:mul,l:lpb/lpe)" << std::endl;
+      << ";a:add,s:sub,m:mov,u:mul,d:div,l:lpb/lpe)" << std::endl;
   std::cout << "  -a <string>      Operand types (default:" << settings.operand_types
       << ";c:constant,d:direct mem,i:indirect mem)" << std::endl;
   std::cout << "  -e <file>        Program template" << std::endl;

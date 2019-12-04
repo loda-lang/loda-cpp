@@ -42,11 +42,12 @@ bool Optimizer::removeNops( Program &p ) const
   auto it = p.ops.begin();
   while ( it != p.ops.end() )
   {
-    if ( it->type == Operation::Type::NOP || it->type == Operation::Type::DBG
-        || ((it->type == Operation::Type::ADD || it->type == Operation::Type::SUB)
-            && it->source.type == Operand::Type::CONSTANT && it->source.value == 0)
-        || (it->type == Operation::Type::MOV && it->source == it->target)
-        || (it->type == Operation::Type::MUL && it->source.type == Operand::Type::CONSTANT && it->source.value == 1) )
+    auto t = it->type;
+    if ( t == Operation::Type::NOP || t == Operation::Type::DBG
+        || ((t == Operation::Type::ADD || t == Operation::Type::SUB) && it->source.type == Operand::Type::CONSTANT
+            && it->source.value == 0) || (t == Operation::Type::MOV && it->source == it->target)
+        || ((t == Operation::Type::MUL || t == Operation::Type::DIV) && it->source.type == Operand::Type::CONSTANT
+            && it->source.value == 1) )
     {
       it = p.ops.erase( it );
       removed = true;
@@ -100,8 +101,8 @@ bool Optimizer::mergeOps( Program &p ) const
           do_merge = true;
         }
 
-        // both mul operation?
-        if ( o1.type == o2.type && (o1.type == Operation::Type::MUL) )
+        // both mul or div operations?
+        if ( o1.type == o2.type && (o1.type == Operation::Type::MUL || o1.type == Operation::Type::DIV) )
         {
           o1.source.value *= o2.source.value;
           do_merge = true;
