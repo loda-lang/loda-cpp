@@ -16,38 +16,28 @@ bool LinearSynthesizer::synthesize( const Sequence &seq, Program &program )
 
   program.ops.clear();
 
-  // constant sequence
   if ( slope == 0 )
   {
     program.ops.push_back(
         Operation( Operation::Type::MOV, Operand( Operand::Type::MEM_ACCESS_DIRECT, 1 ),
             Operand( Operand::Type::CONSTANT, offset ) ) );
-    return true;
   }
-
-  // non-constant (linear) sequence
-  program.ops.push_back(
-      Operation( Operation::Type::MOV, Operand( Operand::Type::MEM_ACCESS_DIRECT, 1 ),
-          Operand( Operand::Type::CONSTANT, offset ) ) );
-  program.ops.push_back(
-      Operation( Operation::Type::LPB, Operand( Operand::Type::MEM_ACCESS_DIRECT, 0 ),
-          Operand( Operand::Type::CONSTANT, 1 ) ) );
-  if ( slope > 0 )
+  else if ( slope > 0 )
   {
+    program.ops.push_back(
+        Operation( Operation::Type::MOV, Operand( Operand::Type::MEM_ACCESS_DIRECT, 1 ),
+            Operand( Operand::Type::MEM_ACCESS_DIRECT, 0 ) ) );
+    program.ops.push_back(
+        Operation( Operation::Type::MUL, Operand( Operand::Type::MEM_ACCESS_DIRECT, 1 ),
+            Operand( Operand::Type::CONSTANT, slope ) ) );
     program.ops.push_back(
         Operation( Operation::Type::ADD, Operand( Operand::Type::MEM_ACCESS_DIRECT, 1 ),
-            Operand( Operand::Type::CONSTANT, slope ) ) );
+            Operand( Operand::Type::CONSTANT, offset ) ) );
   }
-  else
+  else if ( slope < 0 )
   {
-    program.ops.push_back(
-        Operation( Operation::Type::SUB, Operand( Operand::Type::MEM_ACCESS_DIRECT, 1 ),
-            Operand( Operand::Type::CONSTANT, -slope ) ) );
+    return false;
   }
-  program.ops.push_back(
-      Operation( Operation::Type::SUB, Operand( Operand::Type::MEM_ACCESS_DIRECT, 0 ),
-          Operand( Operand::Type::CONSTANT, 1 ) ) );
-  program.ops.push_back( Operation( Operation::Type::LPE ) );
   return true;
 }
 
