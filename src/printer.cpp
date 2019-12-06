@@ -32,58 +32,14 @@ std::string getBinaryOperation( int indent, const std::string &name, const Opera
 
 void Printer::print( const Operation &op, std::ostream &out, int indent )
 {
-  switch ( op.type )
+  auto &metadata = Operation::Metadata::get( op.type );
+  if ( metadata.num_operands == 0 )
   {
-  case Operation::Type::NOP:
-  {
-    out << getIndent( indent );
-    break;
+    out << getIndent( indent ) << metadata.name;
   }
-  case Operation::Type::MOV:
+  else if ( metadata.num_operands == 2 )
   {
-    out << getBinaryOperation( indent, "mov", op );
-    break;
-  }
-  case Operation::Type::ADD:
-  {
-    out << getBinaryOperation( indent, "add", op );
-    break;
-  }
-  case Operation::Type::SUB:
-  {
-    out << getBinaryOperation( indent, "sub", op );
-    break;
-  }
-  case Operation::Type::MUL:
-  {
-    out << getBinaryOperation( indent, "mul", op );
-    break;
-  }
-  case Operation::Type::DIV:
-  {
-    out << getBinaryOperation( indent, "div", op );
-    break;
-  }
-  case Operation::Type::LPB:
-  {
-    out << getBinaryOperation( indent, "lpb", op );
-    break;
-  }
-  case Operation::Type::LPE:
-  {
-    out << getIndent( indent ) << "lpe";
-    break;
-  }
-  case Operation::Type::CLR:
-  {
-    out << getIndent( indent ) << "clr";
-    break;
-  }
-  case Operation::Type::DBG:
-  {
-    out << getIndent( indent ) << "dbg";
-    break;
-  }
+    out << getBinaryOperation( indent, metadata.name, op );
   }
   if ( !op.comment.empty() )
   {

@@ -1,5 +1,43 @@
 #include "program.hpp"
 
+const Operation::Metadata& Operation::Metadata::get( Type t )
+{
+  static Operation::Metadata nop { Operation::Type::NOP, "", 0, 0 };
+  static Operation::Metadata mov { Operation::Type::MOV, "mov", 'm', 2 };
+  static Operation::Metadata add { Operation::Type::ADD, "add", 'a', 2 };
+  static Operation::Metadata sub { Operation::Type::SUB, "sub", 's', 2 };
+  static Operation::Metadata mul { Operation::Type::MUL, "mul", 'u', 2 };
+  static Operation::Metadata div { Operation::Type::DIV, "div", 'd', 2 };
+  static Operation::Metadata lpb { Operation::Type::LPB, "lpb", 'l', 2 };
+  static Operation::Metadata lpe { Operation::Type::LPE, "lpe", 'e', 0 };
+  static Operation::Metadata clr { Operation::Type::CLR, "clr", 'c', 0 };
+  static Operation::Metadata dbg { Operation::Type::DBG, "dbg", 'b', 0 };
+  switch ( t )
+  {
+  case Operation::Type::NOP:
+    return nop;
+  case Operation::Type::MOV:
+    return mov;
+  case Operation::Type::ADD:
+    return add;
+  case Operation::Type::SUB:
+    return sub;
+  case Operation::Type::MUL:
+    return mul;
+  case Operation::Type::DIV:
+    return div;
+  case Operation::Type::LPB:
+    return lpb;
+  case Operation::Type::LPE:
+    return lpe;
+  case Operation::Type::CLR:
+    return clr;
+  case Operation::Type::DBG:
+    return dbg;
+  }
+  return nop;
+}
+
 void Program::removeOps( Operation::Type type )
 {
   auto it = ops.begin();

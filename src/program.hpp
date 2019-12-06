@@ -52,6 +52,17 @@ public:
     DBG,
   };
 
+  class Metadata
+  {
+  public:
+    static const Metadata& get( Type t );
+
+    Type type;
+    std::string name;
+    char short_name;
+    size_t num_operands;
+  };
+
   Operation()
       :
       Operation( Type::NOP )
