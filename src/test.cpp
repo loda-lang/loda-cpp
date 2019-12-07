@@ -18,6 +18,7 @@
 
 void Test::all()
 {
+  fibonacci();
   ackermann();
   iterator();
   polynomial_synthesizer( 10000, 0 );
@@ -27,6 +28,12 @@ void Test::all()
     polynomial_matcher( 10000, d );
   }
   optimizer( 1000 );
+}
+
+void Test::fibonacci()
+{
+  Sequence values( { 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233 } );
+  testSeq( "fib", "programs/oeis/A000045.asm", values );
 }
 
 void Test::ackermann()
@@ -231,6 +238,6 @@ void Test::testSeq( const std::string &func, const std::string &file, const Sequ
   auto result = interpreter.eval( p );
   if ( result != expected )
   {
-    Log::get().error( "unexpected result", true );
+    Log::get().error( "unexpected result: " + result.to_string(), true );
   }
 }

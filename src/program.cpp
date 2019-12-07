@@ -6,7 +6,7 @@ const std::array<Operation::Type, 10> Operation::Types = { Operation::Type::NOP,
 
 const Operation::Metadata& Operation::Metadata::get( Type t )
 {
-  static Operation::Metadata nop { Operation::Type::NOP, "", 0, 0 };
+  static Operation::Metadata nop { Operation::Type::NOP, "nop", 'n', 0 };
   static Operation::Metadata mov { Operation::Type::MOV, "mov", 'm', 2 };
   static Operation::Metadata add { Operation::Type::ADD, "add", 'a', 2 };
   static Operation::Metadata sub { Operation::Type::SUB, "sub", 's', 2 };

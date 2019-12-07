@@ -16,6 +16,8 @@ public:
 
   void all();
 
+  void fibonacci();
+
   void ackermann();
 
   void iterator();

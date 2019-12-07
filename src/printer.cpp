@@ -33,7 +33,7 @@ std::string getBinaryOperation( int indent, const std::string &name, const Opera
 void Printer::print( const Operation &op, std::ostream &out, int indent )
 {
   auto &metadata = Operation::Metadata::get( op.type );
-  if ( metadata.num_operands == 0 )
+  if ( metadata.num_operands == 0 && op.type != Operation::Type::NOP )
   {
     out << getIndent( indent ) << metadata.name;
   }
