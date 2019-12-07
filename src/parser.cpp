@@ -42,8 +42,7 @@ Program Parser::parse( std::istream &in_ )
       // read normal operation
       o.type = readOperationType();
       *in >> std::ws;
-      if ( o.type == Operation::Type::MOV || o.type == Operation::Type::ADD || o.type == Operation::Type::SUB
-          || o.type == Operation::Type::MUL || o.type == Operation::Type::DIV || o.type == Operation::Type::LPB )
+      if ( Operation::Metadata::get( o.type ).num_operands == 2 )
       {
         o.target = readOperand( p );
         readSeparator( ',' );
