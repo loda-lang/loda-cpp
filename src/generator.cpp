@@ -84,29 +84,21 @@ Generator::Generator( const Settings &settings, size_t numStates, int64_t seed )
   for ( char c : settings.operation_types )
   {
     c = tolower( c );
-    switch ( c )
+    auto type = Operation::Type::NOP;
+    for ( auto &t : Operation::Types )
     {
-    case 'a':
-      operation_types.push_back( Operation::Type::ADD );
-      break;
-    case 's':
-      operation_types.push_back( Operation::Type::SUB );
-      break;
-    case 'm':
-      operation_types.push_back( Operation::Type::MOV );
-      break;
-    case 'u':
-      operation_types.push_back( Operation::Type::MUL );
-      break;
-    case 'd':
-      operation_types.push_back( Operation::Type::DIV );
-      break;
-    case 'l':
-      operation_types.push_back( Operation::Type::LPB );
-      break;
-    default:
+      auto &m = Operation::Metadata::get( t );
+      if ( m.is_public && m.short_name == c )
+      {
+        type = t;
+        break;
+      }
+    }
+    if ( type == Operation::Type::NOP )
+    {
       Log::get().error( "Unknown operation type: " + std::to_string( c ), true );
     }
+    operation_types.push_back( type );
   }
   if ( operation_types.empty() )
   {
@@ -271,24 +263,10 @@ Program Generator::generateProgram( size_t initialState )
     }
 
     // update written cells
-    switch ( op.type )
+    if ( Operation::Metadata::get( op.type ).is_writing_target && op.target.type == Operand::Type::MEM_ACCESS_DIRECT )
     {
-    case Operation::Type::ADD:
-    case Operation::Type::SUB:
-    case Operation::Type::MOV:
-    case Operation::Type::MUL:
-    case Operation::Type::DIV:
-    {
-      if ( op.target.type == Operand::Type::MEM_ACCESS_DIRECT )
-      {
-        written_cells.insert( op.target.value );
-      }
-      break;
+      written_cells.insert( op.target.value );
     }
-    default:
-      break;
-    }
-
   }
 
   // make sure that the initial value does not get overridden immediately

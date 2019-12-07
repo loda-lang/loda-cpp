@@ -63,6 +63,8 @@ public:
     std::string name;
     char short_name;
     size_t num_operands;
+    bool is_public;
+    bool is_writing_target;
   };
 
   Operation()

@@ -6,16 +6,16 @@ const std::array<Operation::Type, 10> Operation::Types = { Operation::Type::NOP,
 
 const Operation::Metadata& Operation::Metadata::get( Type t )
 {
-  static Operation::Metadata nop { Operation::Type::NOP, "nop", 'n', 0 };
-  static Operation::Metadata mov { Operation::Type::MOV, "mov", 'm', 2 };
-  static Operation::Metadata add { Operation::Type::ADD, "add", 'a', 2 };
-  static Operation::Metadata sub { Operation::Type::SUB, "sub", 's', 2 };
-  static Operation::Metadata mul { Operation::Type::MUL, "mul", 'u', 2 };
-  static Operation::Metadata div { Operation::Type::DIV, "div", 'd', 2 };
-  static Operation::Metadata lpb { Operation::Type::LPB, "lpb", 'l', 2 };
-  static Operation::Metadata lpe { Operation::Type::LPE, "lpe", 'e', 0 };
-  static Operation::Metadata clr { Operation::Type::CLR, "clr", 'c', 0 };
-  static Operation::Metadata dbg { Operation::Type::DBG, "dbg", 'b', 0 };
+  static Operation::Metadata nop { Operation::Type::NOP, "nop", 'n', 0, false, false };
+  static Operation::Metadata mov { Operation::Type::MOV, "mov", 'm', 2, true, true };
+  static Operation::Metadata add { Operation::Type::ADD, "add", 'a', 2, true, true };
+  static Operation::Metadata sub { Operation::Type::SUB, "sub", 's', 2, true, true };
+  static Operation::Metadata mul { Operation::Type::MUL, "mul", 'u', 2, true, true };
+  static Operation::Metadata div { Operation::Type::DIV, "div", 'd', 2, true, true };
+  static Operation::Metadata lpb { Operation::Type::LPB, "lpb", 'l', 2, true, false };
+  static Operation::Metadata lpe { Operation::Type::LPE, "lpe", 'e', 0, true, false };
+  static Operation::Metadata clr { Operation::Type::CLR, "clr", 'c', 0, false, true };
+  static Operation::Metadata dbg { Operation::Type::DBG, "dbg", 'b', 0, false, false };
   switch ( t )
   {
   case Operation::Type::NOP:
