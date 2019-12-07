@@ -52,6 +52,8 @@ public:
     DBG,
   };
 
+  static const std::array<Type, 10> Types;
+
   class Metadata
   {
   public:

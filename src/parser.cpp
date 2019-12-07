@@ -161,48 +161,15 @@ Operand Parser::readOperand( Program &p )
 
 Operation::Type Parser::readOperationType()
 {
-  auto t = readIdentifier();
-  if ( t == "nop" )
+  auto name = readIdentifier();
+  for ( Operation::Type t : Operation::Types )
   {
-    return Operation::Type::NOP;
+    if ( Operation::Metadata::get( t ).name == name )
+    {
+      return t;
+    }
   }
-  else if ( t == "mov" )
-  {
-    return Operation::Type::MOV;
-  }
-  else if ( t == "add" )
-  {
-    return Operation::Type::ADD;
-  }
-  else if ( t == "sub" )
-  {
-    return Operation::Type::SUB;
-  }
-  else if ( t == "mul" )
-  {
-    return Operation::Type::MUL;
-  }
-  else if ( t == "div" )
-  {
-    return Operation::Type::DIV;
-  }
-  else if ( t == "lpb" )
-  {
-    return Operation::Type::LPB;
-  }
-  else if ( t == "lpe" )
-  {
-    return Operation::Type::LPE;
-  }
-  else if ( t == "clr" )
-  {
-    return Operation::Type::CLR;
-  }
-  else if ( t == "dbg" )
-  {
-    return Operation::Type::DBG;
-  }
-  throw std::runtime_error( "invalid operation: " + t );
+  throw std::runtime_error( "invalid operation: " + name );
 }
 
 void Parser::setWorkingDir( const std::string &dir )
