@@ -9,9 +9,22 @@
 #include "util.hpp"
 
 #include <csignal>
+#include <sstream>
 
 void help()
 {
+  std::stringstream operation_types;
+  bool is_first = true;
+  for ( auto &t : Operation::Types )
+  {
+    auto &m = Operation::Metadata::get( t );
+    if ( m.is_public && t != Operation::Type::LPE )
+    {
+      if ( !is_first ) operation_types << ",";
+      operation_types << std::string( 1, m.short_name ) << ":" << m.name;
+      is_first = false;
+    }
+  }
   Settings settings;
   std::cout << "Usage:             loda <command> <options>" << std::endl;
   std::cout << "Core commands:" << std::endl;
@@ -37,8 +50,8 @@ void help()
       << std::endl;
   std::cout << "  -n <number>      Maximum constant (default:" << settings.max_constant << ")" << std::endl;
   std::cout << "  -i <number>      Maximum index (default:" << settings.max_index << ")" << std::endl;
-  std::cout << "  -o <string>      Operation types (default:" << settings.operation_types
-      << ";a:add,s:sub,m:mov,u:mul,d:div,l:lpb/lpe)" << std::endl;
+  std::cout << "  -o <string>      Operation types (default:" << settings.operation_types << ";"
+      << operation_types.str() << ";^:negate pattern)" << std::endl;
   std::cout << "  -a <string>      Operand types (default:" << settings.operand_types
       << ";c:constant,d:direct mem,i:indirect mem)" << std::endl;
   std::cout << "  -e <file>        Program template" << std::endl;

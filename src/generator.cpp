@@ -81,24 +81,57 @@ Generator::Generator( const Settings &settings, size_t numStates, int64_t seed )
     :
     settings( settings )
 {
+  // parse operation types
+  bool negate = false;
   for ( char c : settings.operation_types )
   {
     c = tolower( c );
-    auto type = Operation::Type::NOP;
-    for ( auto &t : Operation::Types )
+    if ( c == '^' )
     {
-      auto &m = Operation::Metadata::get( t );
-      if ( m.is_public && m.short_name == c )
+      negate = true;
+    }
+    else
+    {
+      auto type = Operation::Type::NOP;
+      for ( auto &t : Operation::Types )
       {
-        type = t;
-        break;
+        auto &m = Operation::Metadata::get( t );
+        if ( m.is_public && m.short_name == c )
+        {
+          type = t;
+          break;
+        }
+      }
+      if ( type == Operation::Type::NOP )
+      {
+        Log::get().error( "Unknown operation type: " + std::string( 1, c ), true );
+      }
+      if ( type != Operation::Type::LPE )
+      {
+        operation_types.push_back( type );
       }
     }
-    if ( type == Operation::Type::NOP )
+  }
+  if ( negate )
+  {
+    std::vector<Operation::Type> tmp_types;
+    for ( auto t : Operation::Types )
     {
-      Log::get().error( "Unknown operation type: " + std::to_string( c ), true );
+      bool found = false;
+      for ( auto o : operation_types )
+      {
+        if ( o == t )
+        {
+          found = true;
+          break;
+        }
+      }
+      if ( !found && Operation::Metadata::get( t ).is_public && t != Operation::Type::LPE )
+      {
+        tmp_types.push_back( t );
+      }
     }
-    operation_types.push_back( type );
+    operation_types = tmp_types;
   }
   if ( operation_types.empty() )
   {
@@ -126,15 +159,17 @@ Generator::Generator( const Settings &settings, size_t numStates, int64_t seed )
   }
   if ( target_operand_types.empty() )
   {
-    Log::get().error( "No source operation types", true );
+    Log::get().error( "No target operation types", true );
   }
 
+  // program template
   if ( !settings.program_template.empty() )
   {
     Parser parser;
     program_template = parser.parse( settings.program_template );
   }
 
+  // create states
   states.resize( numStates );
   for ( number_t state = 0; state < numStates; state++ )
   {
