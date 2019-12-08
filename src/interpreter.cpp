@@ -129,6 +129,20 @@ bool Interpreter::run( const Program &p, Memory &mem ) const
       }
       break;
     }
+    case Operation::Type::MOD:
+    {
+      source = get( op.source, mem );
+      target = get( op.target, mem );
+      if ( target != NUM_INF && source != NUM_INF && source != 0 )
+      {
+        set( op.target, target % source, mem );
+      }
+      else
+      {
+        set( op.target, NUM_INF, mem );
+      }
+      break;
+    }
     case Operation::Type::LPB:
     {
       length = get( op.source, mem );

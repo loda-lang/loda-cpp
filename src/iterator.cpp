@@ -75,6 +75,10 @@ bool Iterator::inc( Operation &op )
     return true;
 
   case Operation::Type::DIV:
+    op.type = Operation::Type::MOD;
+    return true;
+
+  case Operation::Type::MOD:
     op.type = Operation::Type::LPB;
     return true;
 

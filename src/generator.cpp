@@ -221,9 +221,9 @@ void Generator::generateOperations( Seed &seed )
   // avoid meaningless zeros or singularities
   if ( source_type == Operand::Type::CONSTANT && source_value == 0
       && (op_type == Operation::Type::ADD || op_type == Operation::Type::SUB || op_type == Operation::Type::DIV
-          || op_type == Operation::Type::LPB) )
+          || op_type == Operation::Type::MOD || op_type == Operation::Type::LPB) )
   {
-    source_value = 1;
+    source_value += 1;
   }
   if ( source_type == Operand::Type::CONSTANT && op_type == Operation::Type::MUL )
   {
@@ -385,6 +385,7 @@ Program Generator::generateProgram( size_t initialState )
       break;
     case Operation::Type::MOV:
     case Operation::Type::DIV:
+    case Operation::Type::MOD:
       num_ops++;
       can_descent = true;
       break;
