@@ -83,7 +83,12 @@ size_t Program::num_ops( Operand::Type type ) const
   size_t num_ops = 0;
   for ( auto &op : ops )
   {
-    if ( op.source.type == type || op.target.type == type )
+    auto &m = Operation::Metadata::get( op.type );
+    if ( m.num_operands == 1 && op.target.type == type )
+    {
+      num_ops++;
+    }
+    else if ( m.num_operands == 2 && (op.source.type == type || op.target.type == type) )
     {
       num_ops++;
     }
