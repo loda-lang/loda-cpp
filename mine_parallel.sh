@@ -34,7 +34,7 @@ function start_miners() {
   for n in 3 4 5 6; do
     p="${n}0"
     for t in T01 T02; do
-      ./loda mine $tmp_params -p $p -n $n -a cd -o asmud -e programs/templates/${t}.asm $l $@ &
+      ./loda mine $tmp_params -p $p -n $n -a cd -o ^l -e programs/templates/${t}.asm $l $@ &
     done
   done
   # no templates but w/ loops
