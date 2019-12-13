@@ -149,11 +149,25 @@ bool Interpreter::run( const Program &p, Memory &mem ) const
     {
       source = get( op.source, mem );
       target = get( op.target, mem );
-      tmp = 1;
-      while ( target != NUM_INF && source > 0 )
+      if ( target != NUM_INF && source != NUM_INF )
       {
-        tmp = mul( tmp, target );
-        source--;
+        tmp = 1;
+        if ( target == 0 )
+        {
+          tmp = (source == 0) ? 1 : 0;
+        }
+        else if ( target > 1 )
+        {
+          while ( tmp != NUM_INF && source > 0 )
+          {
+            tmp = mul( tmp, target );
+            source--;
+          }
+        }
+      }
+      else
+      {
+        tmp = NUM_INF;
       }
       set( op.target, tmp, mem );
       break;
