@@ -46,8 +46,8 @@ bool Optimizer::removeNops( Program &p ) const
     if ( t == Operation::Type::NOP || t == Operation::Type::DBG
         || ((t == Operation::Type::ADD || t == Operation::Type::SUB) && it->source.type == Operand::Type::CONSTANT
             && it->source.value == 0) || (t == Operation::Type::MOV && it->source == it->target)
-        || ((t == Operation::Type::MUL || t == Operation::Type::DIV) && it->source.type == Operand::Type::CONSTANT
-            && it->source.value == 1) )
+        || ((t == Operation::Type::MUL || t == Operation::Type::DIV || t == Operation::Type::POW)
+            && it->source.type == Operand::Type::CONSTANT && it->source.value == 1) )
     {
       it = p.ops.erase( it );
       removed = true;
@@ -101,8 +101,9 @@ bool Optimizer::mergeOps( Program &p ) const
           do_merge = true;
         }
 
-        // both mul or div operations?
-        if ( o1.type == o2.type && (o1.type == Operation::Type::MUL || o1.type == Operation::Type::DIV) )
+        // both mul, div or pow operations?
+        if ( o1.type == o2.type
+            && (o1.type == Operation::Type::MUL || o1.type == Operation::Type::DIV || o1.type == Operation::Type::POW) )
         {
           o1.source.value *= o2.source.value;
           do_merge = true;

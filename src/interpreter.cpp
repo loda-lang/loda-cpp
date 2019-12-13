@@ -11,6 +11,15 @@
 using MemStack = std::stack<Memory>;
 using SizeStack = std::stack<size_t>;
 
+inline number_t mul( number_t a, number_t b )
+{
+  if ( a != NUM_INF && b != NUM_INF && (b == 0 || (NUM_INF / b > a)) )
+  {
+    return a * b;
+  }
+  return NUM_INF;
+}
+
 Interpreter::Interpreter( const Settings &settings )
     :
     settings( settings ),
@@ -41,7 +50,7 @@ bool Interpreter::run( const Program &p, Memory &mem ) const
   number_t cycles = 0;
   Memory old_mem, frag, frag_prev, prev;
   size_t pc, pc_next, ps_begin;
-  number_t source, target, start, length, length2;
+  number_t source, target, start, length, length2, tmp;
   Operation lpb;
 
   // loop until stack is empty
@@ -105,14 +114,7 @@ bool Interpreter::run( const Program &p, Memory &mem ) const
     {
       source = get( op.source, mem );
       target = get( op.target, mem );
-      if ( target != NUM_INF && source != NUM_INF && (source == 0 || (NUM_INF / source > target)) )
-      {
-        set( op.target, target * source, mem );
-      }
-      else
-      {
-        set( op.target, NUM_INF, mem );
-      }
+      set( op.target, mul( target, source ), mem );
       break;
     }
     case Operation::Type::DIV:
@@ -141,6 +143,19 @@ bool Interpreter::run( const Program &p, Memory &mem ) const
       {
         set( op.target, NUM_INF, mem );
       }
+      break;
+    }
+    case Operation::Type::POW:
+    {
+      source = get( op.source, mem );
+      target = get( op.target, mem );
+      tmp = 1;
+      while ( target != NUM_INF && source > 0 )
+      {
+        tmp = mul( tmp, target );
+        source--;
+      }
+      set( op.target, tmp, mem );
       break;
     }
     case Operation::Type::LPB:

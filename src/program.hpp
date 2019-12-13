@@ -47,13 +47,14 @@ public:
     MUL,
     DIV,
     MOD,
+    POW,
     LPB,
     LPE,
     CLR,
     DBG,
   };
 
-  static const std::array<Type, 11> Types;
+  static const std::array<Type, 12> Types;
 
   class Metadata
   {
