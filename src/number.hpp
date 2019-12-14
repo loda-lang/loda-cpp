@@ -15,16 +15,6 @@ using number_t = uint64_t;
 
 #define NUM_INF std::numeric_limits<number_t>::max()
 
-inline number_t pow( number_t x, number_t exp )
-{
-  number_t x_exp = 1;
-  for ( number_t e = 0; e < exp; e++ )
-  {
-    x_exp *= x;
-  }
-  return x_exp;
-}
-
 class Sequence: public std::vector<number_t>
 {
 public:
