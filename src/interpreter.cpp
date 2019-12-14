@@ -20,6 +20,36 @@ inline number_t mul( number_t a, number_t b )
   return NUM_INF;
 }
 
+inline number_t pow( number_t base, number_t exp )
+{
+  if ( base != NUM_INF && exp != NUM_INF )
+  {
+    if ( base == 0 )
+    {
+      return (exp == 0) ? 1 : 0;
+    }
+    else if ( base == 1 )
+    {
+      return 1;
+    }
+    else if ( base > 1 )
+    {
+      number_t res = 1;
+      while ( res != NUM_INF && exp > 0 )
+      {
+        if ( exp & 1 )
+        {
+          res = mul( res, base );
+        }
+        exp >>= 1;
+        base = mul( base, base );
+      }
+      return res;
+    }
+  }
+  return NUM_INF;
+}
+
 Interpreter::Interpreter( const Settings &settings )
     :
     settings( settings ),
@@ -50,7 +80,7 @@ bool Interpreter::run( const Program &p, Memory &mem ) const
   number_t cycles = 0;
   Memory old_mem, frag, frag_prev, prev;
   size_t pc, pc_next, ps_begin;
-  number_t source, target, start, length, length2, tmp;
+  number_t source, target, start, length, length2;
   Operation lpb;
 
   // loop until stack is empty
@@ -149,27 +179,7 @@ bool Interpreter::run( const Program &p, Memory &mem ) const
     {
       source = get( op.source, mem );
       target = get( op.target, mem );
-      if ( target != NUM_INF && source != NUM_INF )
-      {
-        tmp = 1;
-        if ( target == 0 )
-        {
-          tmp = (source == 0) ? 1 : 0;
-        }
-        else if ( target > 1 )
-        {
-          while ( tmp != NUM_INF && source > 0 )
-          {
-            tmp = mul( tmp, target );
-            source--;
-          }
-        }
-      }
-      else
-      {
-        tmp = NUM_INF;
-      }
-      set( op.target, tmp, mem );
+      set( op.target, pow( target, source ), mem );
       break;
     }
     case Operation::Type::LPB:
