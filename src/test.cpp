@@ -131,7 +131,7 @@ void Test::polynomial_matcher( size_t tests, size_t degree )
     {
       for ( size_t d = 0; d < pol.size(); d++ )
       {
-        target_seq[n] += pol[d] * pow( n, d );
+        target_seq[n] += pol[d] * Interpreter::pow( n, d );
       }
     }
     Matcher::seq_programs_t results;

@@ -14,6 +14,8 @@ public:
 
   Sequence eval( const Program &p, int num_terms = -1 ) const;
 
+  static number_t pow( number_t base, number_t exp );
+
 private:
 
   number_t get( Operand a, const Memory &mem, bool get_address = false ) const;
