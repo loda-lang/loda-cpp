@@ -5,7 +5,7 @@ restart_interval=43200
 min_changes=20
 alt_params="-x"
 
-tmp_params=""
+tmp_params=$alt_params
 
 for cmd in git; do
   if ! [ -x "$(command -v $cmd)" ]; then

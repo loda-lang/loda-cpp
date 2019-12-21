@@ -20,8 +20,6 @@ public:
 
   void ackermann();
 
-  void iterator();
-
   void optimizer( size_t tests );
 
   void polynomial_matcher( size_t tests, size_t degree );

@@ -2,7 +2,6 @@
 
 #include "generator.hpp"
 #include "interpreter.hpp"
-#include "iterator.hpp"
 #include "number.hpp"
 #include "oeis.hpp"
 #include "optimizer.hpp"
@@ -20,7 +19,6 @@ void Test::all()
 {
   fibonacci();
   ackermann();
-  iterator();
   polynomial_synthesizer( 10000, 0 );
   polynomial_synthesizer( 1000, 1 );
   for ( int d = 0; d <= PolynomialMatcher::DEGREE; d++ )
@@ -41,21 +39,6 @@ void Test::ackermann()
   std::vector<std::vector<number_t> > values = { { 1, 2, 3, 4, 5 }, { 2, 3, 4, 5, 6 }, { 3, 5, 7, 9, 11 }, { 5, 13, 29,
       61, 125 }, { 13, 65533 } };
   testBinary( "ack", "programs/ackermann.asm", values );
-}
-
-void Test::iterator()
-{
-  Log::get().info( "Testing iterator" );
-  Iterator it;
-//  Printer printer;
-  for ( int i = 0; i < 100000; i++ )
-  {
-    if ( exit_flag_ ) break;
-    it.next();
-//    std::cout << "\x1B[2J\x1B[H";
-//    printer.print(next, std::cout );
-//    std::cin.ignore();
-  }
 }
 
 void Test::optimizer( size_t tests )

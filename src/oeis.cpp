@@ -52,11 +52,10 @@ std::string getOeisFile( const OeisSequence &seq )
 }
 
 Oeis::Oeis( const Settings &settings )
-    :
-    settings( settings ),
-    interpreter( settings ),
-    optimizer( settings ),
-    total_count_( 0 )
+    : settings( settings ),
+      interpreter( settings ),
+      optimizer( settings ),
+      total_count_( 0 )
 {
   matchers.resize( 2 );
   matchers[0].reset( new DirectMatcher() );
@@ -478,17 +477,8 @@ bool Oeis::updateProgram( number_t id, const Program &p ) const
         is_new = false;
         Parser parser;
         auto existing_program = parser.parse( in );
-        bool optimized_is_better = false;
-        if ( optimized.num_ops( Operand::Type::MEM_ACCESS_INDIRECT )
-            < existing_program.num_ops( Operand::Type::MEM_ACCESS_INDIRECT ) )
-        {
-          optimized_is_better = true;
-        }
-        else if ( optimized.num_ops( false ) < existing_program.num_ops( false ) )
-        {
-          optimized_is_better = true;
-        }
-        if ( !optimized_is_better )
+        if ( optimized.num_ops( Operand::Type::MEM_ACCESS_INDIRECT ) > 0
+            || optimized.num_ops( false ) >= existing_program.num_ops( false ) )
         {
           return false;
         }
@@ -499,7 +489,7 @@ bool Oeis::updateProgram( number_t id, const Program &p ) const
       }
     }
   }
-  if ( optimized.ops.empty() )
+  if ( is_new )
   {
     optimized = optimizeAndCheck( p, seq );
   }
