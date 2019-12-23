@@ -13,7 +13,7 @@
 
 using number_t = uint64_t;
 
-#define NUM_INF std::numeric_limits<number_t>::max()
+static constexpr number_t NUM_INF = std::numeric_limits<number_t>::max();
 
 class Sequence: public std::vector<number_t>
 {
@@ -24,8 +24,7 @@ public:
   Sequence( const Sequence &s ) = default;
 
   Sequence( const std::vector<number_t> &s )
-      :
-      std::vector<number_t>( s )
+      : std::vector<number_t>( s )
   {
   }
 
@@ -64,14 +63,12 @@ public:
   Polynomial( const Polynomial &s ) = default;
 
   Polynomial( size_t degree )
-      :
-      std::vector<int64_t>( degree + 1 )
+      : std::vector<int64_t>( degree + 1 )
   {
   }
 
   Polynomial( const std::vector<int64_t> &p )
-      :
-      std::vector<int64_t>( p )
+      : std::vector<int64_t>( p )
   {
   }
 
@@ -112,8 +109,7 @@ public:
   Memory( const Memory &m ) = default;
 
   Memory( const std::vector<number_t> &m )
-      :
-      std::vector<number_t>( m )
+      : std::vector<number_t>( m )
   {
   }
 

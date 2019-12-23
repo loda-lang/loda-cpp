@@ -1,13 +1,12 @@
 #include "interpreter.hpp"
 
+#include "number.hpp"
 #include "printer.hpp"
 
 #include <array>
 #include <iostream>
-#include <numeric>
 #include <sstream>
 #include <stack>
-#include "number.hpp"
 
 using MemStack = std::stack<Memory>;
 using SizeStack = std::stack<size_t>;
@@ -22,9 +21,8 @@ inline number_t mul( number_t a, number_t b )
 }
 
 Interpreter::Interpreter( const Settings &settings )
-    :
-    settings( settings ),
-    is_debug( Log::get().level == Log::Level::DEBUG )
+    : settings( settings ),
+      is_debug( Log::get().level == Log::Level::DEBUG )
 {
 }
 
@@ -159,7 +157,7 @@ bool Interpreter::run( const Program &p, Memory &mem ) const
       target = get( op.target, mem );
       if ( target != NUM_INF && source != NUM_INF )
       {
-        set( op.target, std::gcd( target, source ), mem );
+        set( op.target, Interpreter::gcd( target, source ), mem );
       }
       else
       {
@@ -370,6 +368,22 @@ number_t Interpreter::pow( number_t base, number_t exp )
       }
       return res;
     }
+  }
+  return NUM_INF;
+}
+
+number_t Interpreter::gcd( number_t a, number_t b )
+{
+  if ( a != NUM_INF && b != NUM_INF )
+  {
+    number_t r;
+    while ( b != 0 )
+    {
+      r = a % b;
+      a = b;
+      b = r;
+    }
+    return a;
   }
   return NUM_INF;
 }
