@@ -1,4 +1,4 @@
-CXXFLAGS=-O2 -g -Wall -fmessage-length=0 -std=c++11
+CXXFLAGS=-O2 -g -Wall -fmessage-length=0 -std=c++17
 
 OBJS=generator.o interpreter.o main.o matcher.o miner.o number.o oeis.o optimizer.o parser.o printer.o program.o synthesizer.o test.o util.o
 

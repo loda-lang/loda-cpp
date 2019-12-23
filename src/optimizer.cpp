@@ -45,7 +45,8 @@ bool Optimizer::removeNops( Program &p ) const
     auto t = it->type;
     if ( t == Operation::Type::NOP || t == Operation::Type::DBG
         || ((t == Operation::Type::ADD || t == Operation::Type::SUB) && it->source.type == Operand::Type::CONSTANT
-            && it->source.value == 0) || (t == Operation::Type::MOV && it->source == it->target)
+            && it->source.value == 0)
+        || ((t == Operation::Type::MOV || t == Operation::Type::GCD) && it->source == it->target)
         || ((t == Operation::Type::MUL || t == Operation::Type::DIV || t == Operation::Type::POW)
             && it->source.type == Operand::Type::CONSTANT && it->source.value == 1) )
     {

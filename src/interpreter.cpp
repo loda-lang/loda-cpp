@@ -4,6 +4,7 @@
 
 #include <array>
 #include <iostream>
+#include <numeric>
 #include <sstream>
 #include <stack>
 #include "number.hpp"
@@ -150,6 +151,20 @@ bool Interpreter::run( const Program &p, Memory &mem ) const
       source = get( op.source, mem );
       target = get( op.target, mem );
       set( op.target, Interpreter::pow( target, source ), mem );
+      break;
+    }
+    case Operation::Type::GCD:
+    {
+      source = get( op.source, mem );
+      target = get( op.target, mem );
+      if ( target != NUM_INF && source != NUM_INF )
+      {
+        set( op.target, std::gcd( target, source ), mem );
+      }
+      else
+      {
+        set( op.target, NUM_INF, mem );
+      }
       break;
     }
     case Operation::Type::LPB:
