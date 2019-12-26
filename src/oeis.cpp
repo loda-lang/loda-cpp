@@ -426,6 +426,7 @@ Program Oeis::optimizeAndCheck( const Program &p, const OeisSequence &seq ) cons
 {
   // optimize and minimize program
   Program optimized = p;
+  optimizer.optimize( optimized, 2, 1 );
   optimizer.minimize( optimized, seq.full.size() );
   optimizer.optimize( optimized, 2, 1 );
 
