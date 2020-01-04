@@ -11,7 +11,7 @@ void Optimizer::optimize( Program &p, size_t num_reserved_cells, size_t num_init
   while ( changed )
   {
     changed = false;
-    if ( simplifyOperands( p, num_initialized_cells ) )
+    if ( simplifyOperations( p, num_initialized_cells ) )
     {
       changed = true;
     }
@@ -196,42 +196,55 @@ inline bool simplifyOperand( Operand &op, std::unordered_set<number_t> &initiali
   return false;
 }
 
-bool Optimizer::simplifyOperands( Program &p, size_t num_initialized_cells ) const
+bool Optimizer::simplifyOperations( Program &p, size_t num_initialized_cells ) const
 {
-  Log::get().debug( "Simplifying operands" );
+  Log::get().debug( "Simplifying operations" );
   std::unordered_set<number_t> initialized_cells;
   for ( number_t i = 0; i < num_initialized_cells; ++i )
   {
     initialized_cells.insert( i );
   }
   bool simplified = false;
+  bool can_simplify_operands = true;
   for ( auto &op : p.ops )
   {
     switch ( op.type )
     {
+    case Operation::Type::MOV:
     case Operation::Type::ADD:
     case Operation::Type::SUB:
-    case Operation::Type::MOV:
+    case Operation::Type::MUL:
+    case Operation::Type::DIV:
+    case Operation::Type::MOD:
+    case Operation::Type::POW:
+    case Operation::Type::GCD:
     {
-      if ( simplifyOperand( op.source, initialized_cells, true ) )
+      // simplify operands
+      if ( can_simplify_operands && simplifyOperand( op.source, initialized_cells, true ) )
       {
         simplified = true;
       }
-      if ( simplifyOperand( op.target, initialized_cells, false ) )
+      if ( can_simplify_operands && simplifyOperand( op.target, initialized_cells, false ) )
       {
         simplified = true;
       }
+
+      // update initialized cells
       switch ( op.target.type )
       {
       case Operand::Type::MEM_ACCESS_DIRECT:
         initialized_cells.insert( op.target.value );
         break;
       case Operand::Type::MEM_ACCESS_INDIRECT:
-        return simplified; // don't know at this point which cell is written to
+        can_simplify_operands = false; // don't know at this point which cell is written to
+        break;
       case Operand::Type::CONSTANT:
         Log::get().error( "invalid program" );
         break;
       }
+
+      // TODO: simplify operation
+
       break;
     }
 
@@ -239,8 +252,11 @@ bool Optimizer::simplifyOperands( Program &p, size_t num_initialized_cells ) con
     case Operation::Type::DBG:
       break; // can be safely ignored
 
-    default:
-      return simplified; // not known what happens in other cases
+    case Operation::Type::LPB:
+    case Operation::Type::LPE:
+    case Operation::Type::CLR:
+      can_simplify_operands = false;
+      break;
 
     }
   }

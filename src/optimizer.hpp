@@ -26,7 +26,7 @@ public:
 
   bool mergeOps( Program &p ) const;
 
-  bool simplifyOperands( Program &p, size_t num_initialized_cells ) const;
+  bool simplifyOperations( Program &p, size_t num_initialized_cells ) const;
 
   bool reduceMemoryCells( Program &p, size_t num_reserved_cells ) const;
 
