@@ -151,6 +151,12 @@ bool Interpreter::run( const Program &p, Memory &mem ) const
       set( op.target, Interpreter::pow( target, source ), mem );
       break;
     }
+    case Operation::Type::FAC:
+    {
+      target = get( op.target, mem );
+      set( op.target, Interpreter::fac( target ), mem );
+      break;
+    }
     case Operation::Type::GCD:
     {
       source = get( op.source, mem );
@@ -368,6 +374,21 @@ number_t Interpreter::pow( number_t base, number_t exp )
       }
       return res;
     }
+  }
+  return NUM_INF;
+}
+
+number_t Interpreter::fac( number_t a )
+{
+  if ( a != NUM_INF )
+  {
+	number_t res = 1;
+	while ( a > 1 && res != NUM_INF )
+	{
+	  res = mul( res, a );
+	  a--;
+	}
+    return res;
   }
   return NUM_INF;
 }

@@ -212,6 +212,18 @@ void Generator::generateOperations( Seed &seed )
   number_t source_value = s.source_value_dist( gen );
   auto op_type = operation_types.at( s.operation_dist( gen ) );
 
+  // check number of operands
+  if ( Operation::Metadata::get( op_type ).num_operands < 2 )
+  {
+	source_type = Operand::Type::CONSTANT;
+	source_value = 0;
+  }
+  if ( Operation::Metadata::get( op_type ).num_operands < 1 )
+  {
+	target_type = Operand::Type::CONSTANT;
+	target_value = 0;
+  }
+
   // bias for constant loop fragment length
   if ( op_type == Operation::Type::LPB && source_type != Operand::Type::CONSTANT && s.position_dist( gen ) % 10 > 0 )
   {
@@ -380,6 +392,7 @@ Program Generator::generateProgram( size_t initialState )
     case Operation::Type::ADD:
     case Operation::Type::MUL:
     case Operation::Type::POW:
+    case Operation::Type::FAC:
       num_ops++;
       break;
     case Operation::Type::SUB:

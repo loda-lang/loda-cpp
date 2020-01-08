@@ -217,16 +217,21 @@ bool Optimizer::simplifyOperations( Program &p, size_t num_initialized_cells ) c
     case Operation::Type::DIV:
     case Operation::Type::MOD:
     case Operation::Type::POW:
+    case Operation::Type::FAC:
     case Operation::Type::GCD:
     {
       // simplify operands
-      if ( can_simplify_operands && simplifyOperand( op.source, initialized_cells, true ) )
+      if ( can_simplify_operands )
       {
-        simplified = true;
-      }
-      if ( can_simplify_operands && simplifyOperand( op.target, initialized_cells, false ) )
-      {
-        simplified = true;
+        bool has_source = Operation::Metadata::get( op.type ).num_operands == 2;
+        if ( has_source && simplifyOperand( op.source, initialized_cells, true ) )
+        {
+          simplified = true;
+        }
+        if ( simplifyOperand( op.target, initialized_cells, false ) )
+        {
+          simplified = true;
+        }
       }
 
       // update initialized cells

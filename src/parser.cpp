@@ -42,11 +42,23 @@ Program Parser::parse( std::istream &in_ )
       // read normal operation
       o.type = readOperationType();
       *in >> std::ws;
-      if ( Operation::Metadata::get( o.type ).num_operands == 2 )
+      switch ( Operation::Metadata::get( o.type ).num_operands )
       {
+      case 0:
+        o.target = Operand( Operand::Type::CONSTANT, 0 );
+        o.source = Operand( Operand::Type::CONSTANT, 0 );
+    	break;
+      case 1:
+        o.target = readOperand( p );
+    	o.source = Operand( Operand::Type::CONSTANT, 0 );
+    	break;
+      case 2:
         o.target = readOperand( p );
         readSeparator( ',' );
         o.source = readOperand( p );
+    	break;
+      default:
+    	throw std::runtime_error( "invalid number of operands" );
       }
     }
 
