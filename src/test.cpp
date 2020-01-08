@@ -67,6 +67,8 @@ void Test::optimizer( size_t tests )
     s2 = interpreter.eval( optimized );
     if ( s1.size() != s2.size() || (s1 != s2) )
     {
+      Printer p;
+      p.print( program, std::cout );
       Log::get().error( "Program evaluated to different sequence after optimization", true );
     }
   }
