@@ -25,16 +25,6 @@ std::string getOperand( Operand op )
   return "";
 }
 
-std::string getUnaryOperation( int indent, const std::string &name, const Operation &op )
-{
-  return getIndent( indent ) + name + " " + getOperand( op.target );
-}
-
-std::string getBinaryOperation( int indent, const std::string &name, const Operation &op )
-{
-  return getIndent( indent ) + name + " " + getOperand( op.target ) + "," + getOperand( op.source );
-}
-
 void Printer::print( const Operation &op, std::ostream &out, int indent )
 {
   auto &metadata = Operation::Metadata::get( op.type );
@@ -44,11 +34,11 @@ void Printer::print( const Operation &op, std::ostream &out, int indent )
   }
   else if ( metadata.num_operands == 1 )
   {
-    out << getUnaryOperation( indent, metadata.name, op );
+    out << getIndent( indent ) << metadata.name << " " << getOperand( op.target );
   }
   else if ( metadata.num_operands == 2 )
   {
-    out << getBinaryOperation( indent, metadata.name, op );
+    out << getIndent( indent ) << metadata.name << " " << getOperand( op.target ) << "," << getOperand( op.source );
   }
   if ( !op.comment.empty() )
   {
