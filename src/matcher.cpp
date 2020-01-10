@@ -1,7 +1,7 @@
 #include "matcher.hpp"
 
-#include "interpreter.hpp"
 #include "optimizer.hpp"
+#include "semantics.hpp"
 
 // --- AbstractMatcher --------------------------------------------------------
 
@@ -64,7 +64,7 @@ Sequence subPoly( const Sequence &s, int64_t factor, int64_t exp )
   t.resize( s.size() );
   for ( size_t x = 0; x < s.size(); x++ )
   {
-    t[x] = s[x] - (factor * Interpreter::pow( x, exp ));
+    t[x] = s[x] - (factor * Semantics::pow( x, exp ));
   }
   return t;
 }
@@ -81,7 +81,7 @@ Polynomial PolynomialMatcher::reduce( Sequence &seq, int64_t degree ) const
   int64_t max_factor = -1;
   for ( size_t x = 0; x < seq.size(); x++ )
   {
-    auto x_exp = Interpreter::pow( x, degree );
+    auto x_exp = Semantics::pow( x, degree );
     int64_t new_factor = (x_exp == 0) ? -1 : seq[x] / x_exp;
     max_factor = (max_factor == -1) ? new_factor : (new_factor < max_factor ? new_factor : max_factor);
     if ( max_factor == 0 ) break;

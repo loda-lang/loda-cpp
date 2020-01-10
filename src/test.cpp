@@ -7,6 +7,7 @@
 #include "optimizer.hpp"
 #include "parser.hpp"
 #include "printer.hpp"
+#include "semantics.hpp"
 #include "synthesizer.hpp"
 
 #include <deque>
@@ -116,7 +117,7 @@ void Test::polynomial_matcher( size_t tests, size_t degree )
     {
       for ( size_t d = 0; d < pol.size(); d++ )
       {
-        target_seq[n] += pol[d] * Interpreter::pow( n, d );
+        target_seq[n] += pol[d] * Semantics::pow( n, d );
       }
     }
     Matcher::seq_programs_t results;

@@ -2,6 +2,7 @@
 
 #include "number.hpp"
 #include "printer.hpp"
+#include "semantics.hpp"
 
 #include <array>
 #include <iostream>
@@ -11,18 +12,10 @@
 using MemStack = std::stack<Memory>;
 using SizeStack = std::stack<size_t>;
 
-inline number_t mul( number_t a, number_t b )
-{
-  if ( a != NUM_INF && b != NUM_INF && (b == 0 || (NUM_INF / b > a)) )
-  {
-    return a * b;
-  }
-  return NUM_INF;
-}
-
 Interpreter::Interpreter( const Settings &settings )
-    : settings( settings ),
-      is_debug( Log::get().level == Log::Level::DEBUG )
+    :
+    settings( settings ),
+    is_debug( Log::get().level == Log::Level::DEBUG )
 {
 }
 
@@ -113,7 +106,7 @@ bool Interpreter::run( const Program &p, Memory &mem ) const
     {
       source = get( op.source, mem );
       target = get( op.target, mem );
-      set( op.target, mul( target, source ), mem );
+      set( op.target, Semantics::mul( target, source ), mem );
       break;
     }
     case Operation::Type::DIV:
@@ -148,13 +141,13 @@ bool Interpreter::run( const Program &p, Memory &mem ) const
     {
       source = get( op.source, mem );
       target = get( op.target, mem );
-      set( op.target, Interpreter::pow( target, source ), mem );
+      set( op.target, Semantics::pow( target, source ), mem );
       break;
     }
     case Operation::Type::FAC:
     {
       target = get( op.target, mem );
-      set( op.target, Interpreter::fac( target ), mem );
+      set( op.target, Semantics::fac( target ), mem );
       break;
     }
     case Operation::Type::GCD:
@@ -163,7 +156,7 @@ bool Interpreter::run( const Program &p, Memory &mem ) const
       target = get( op.target, mem );
       if ( target != NUM_INF && source != NUM_INF )
       {
-        set( op.target, Interpreter::gcd( target, source ), mem );
+        set( op.target, Semantics::gcd( target, source ), mem );
       }
       else
       {
@@ -346,65 +339,4 @@ Sequence Interpreter::eval( const Program &p, int num_terms ) const
     Log::get().debug( buf.str() );
   }
   return seq;
-}
-
-number_t Interpreter::pow( number_t base, number_t exp )
-{
-  if ( base != NUM_INF && exp != NUM_INF )
-  {
-    if ( base == 0 )
-    {
-      return (exp == 0) ? 1 : 0;
-    }
-    else if ( base == 1 )
-    {
-      return 1;
-    }
-    else if ( base > 1 )
-    {
-      number_t res = 1;
-      while ( res != NUM_INF && exp > 0 )
-      {
-        if ( exp & 1 )
-        {
-          res = mul( res, base );
-        }
-        exp >>= 1;
-        base = mul( base, base );
-      }
-      return res;
-    }
-  }
-  return NUM_INF;
-}
-
-number_t Interpreter::fac( number_t a )
-{
-  if ( a != NUM_INF )
-  {
-	number_t res = 1;
-	while ( a > 1 && res != NUM_INF )
-	{
-	  res = mul( res, a );
-	  a--;
-	}
-    return res;
-  }
-  return NUM_INF;
-}
-
-number_t Interpreter::gcd( number_t a, number_t b )
-{
-  if ( a != NUM_INF && b != NUM_INF )
-  {
-    number_t r;
-    while ( b != 0 )
-    {
-      r = a % b;
-      a = b;
-      b = r;
-    }
-    return a;
-  }
-  return NUM_INF;
 }
