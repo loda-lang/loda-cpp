@@ -142,8 +142,8 @@ bool Optimizer::mergeOps( Program &p ) const
       // second operation mov with constant?
       if ( o2.type == Operation::Type::MOV && o2.source.type == Operand::Type::CONSTANT )
       {
-        // first operation add, sub, mov?
-        if ( o1.type == Operation::Type::ADD || o1.type == Operation::Type::SUB || o1.type == Operation::Type::MOV )
+        // first operation writing target?
+        if ( Operation::Metadata::get( o1.type ).is_writing_target )
         {
           // second mov overwrites first operation
           o1 = o2;
@@ -234,7 +234,8 @@ bool Optimizer::simplifyOperations( Program &p, size_t num_initialized_cells ) c
         }
 
         // simplify operation (cell content matters!)
-        if ( op.target.type == Operand::Type::MEM_ACCESS_DIRECT && initialized_cells.find( op.target.value ) == initialized_cells.end() )
+        if ( op.target.type == Operand::Type::MEM_ACCESS_DIRECT
+            && initialized_cells.find( op.target.value ) == initialized_cells.end() )
         {
           // add $n,X => mov $n,X (where $n is uninitialized)
           if ( op.type == Operation::Type::ADD )
@@ -248,20 +249,20 @@ bool Optimizer::simplifyOperations( Program &p, size_t num_initialized_cells ) c
       // simplify operation (cell content doesn't matter)
       if ( op.target.type == Operand::Type::MEM_ACCESS_DIRECT && op.target == op.source )
       {
-         // add $n,$n => mul $n,2
-         if ( op.type == Operation::Type::ADD )
-         {
-           op.type = Operation::Type::MUL;
-           op.source = Operand( Operand::Type::CONSTANT, 2 );
-           simplified = true;
-         }
-         // mul $n,$n => pow $n,2
-         else if ( op.type == Operation::Type::MUL )
-         {
-           op.type = Operation::Type::POW;
-           op.source = Operand( Operand::Type::CONSTANT, 2 );
-           simplified = true;
-         }
+        // add $n,$n => mul $n,2
+        if ( op.type == Operation::Type::ADD )
+        {
+          op.type = Operation::Type::MUL;
+          op.source = Operand( Operand::Type::CONSTANT, 2 );
+          simplified = true;
+        }
+        // mul $n,$n => pow $n,2
+        else if ( op.type == Operation::Type::MUL )
+        {
+          op.type = Operation::Type::POW;
+          op.source = Operand( Operand::Type::CONSTANT, 2 );
+          simplified = true;
+        }
       }
 
       // update initialized cells
