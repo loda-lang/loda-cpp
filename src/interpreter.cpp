@@ -74,32 +74,14 @@ bool Interpreter::run( const Program &p, Memory &mem ) const
     {
       source = get( op.source, mem );
       target = get( op.target, mem );
-      if ( NUM_INF - source > target )
-      {
-        set( op.target, target + source, mem );
-      }
-      else
-      {
-        set( op.target, NUM_INF, mem );
-      }
+      set( op.target, Semantics::add( target, source ), mem );
       break;
     }
     case Operation::Type::SUB:
     {
       source = get( op.source, mem );
       target = get( op.target, mem );
-      if ( target == NUM_INF || source == NUM_INF )
-      {
-        set( op.target, NUM_INF, mem );
-      }
-      else if ( target > source )
-      {
-        set( op.target, target - source, mem );
-      }
-      else
-      {
-        set( op.target, 0, mem );
-      }
+      set( op.target, Semantics::sub( target, source ), mem );
       break;
     }
     case Operation::Type::MUL:
@@ -113,28 +95,14 @@ bool Interpreter::run( const Program &p, Memory &mem ) const
     {
       source = get( op.source, mem );
       target = get( op.target, mem );
-      if ( target != NUM_INF && source != NUM_INF && source != 0 )
-      {
-        set( op.target, target / source, mem );
-      }
-      else
-      {
-        set( op.target, NUM_INF, mem );
-      }
+      set( op.target, Semantics::div( target, source ), mem );
       break;
     }
     case Operation::Type::MOD:
     {
       source = get( op.source, mem );
       target = get( op.target, mem );
-      if ( target != NUM_INF && source != NUM_INF && source != 0 )
-      {
-        set( op.target, target % source, mem );
-      }
-      else
-      {
-        set( op.target, NUM_INF, mem );
-      }
+      set( op.target, Semantics::mod( target, source ), mem );
       break;
     }
     case Operation::Type::POW:
@@ -154,14 +122,7 @@ bool Interpreter::run( const Program &p, Memory &mem ) const
     {
       source = get( op.source, mem );
       target = get( op.target, mem );
-      if ( target != NUM_INF && source != NUM_INF )
-      {
-        set( op.target, Semantics::gcd( target, source ), mem );
-      }
-      else
-      {
-        set( op.target, NUM_INF, mem );
-      }
+      set( op.target, Semantics::gcd( target, source ), mem );
       break;
     }
     case Operation::Type::LPB:

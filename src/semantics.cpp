@@ -1,10 +1,55 @@
 #include "semantics.hpp"
 
+#include "number.hpp"
+
+number_t Semantics::add( number_t a, number_t b )
+{
+  if ( a != NUM_INF && b != NUM_INF && NUM_INF - a > b )
+  {
+    return a + b;
+  }
+  return NUM_INF;
+}
+
+number_t Semantics::sub( number_t a, number_t b )
+{
+  if ( a != NUM_INF && b != NUM_INF )
+  {
+    if ( a > b )
+    {
+      return a - b;
+    }
+    else
+    {
+      return 0;
+    }
+  }
+  return NUM_INF;
+}
+
 number_t Semantics::mul( number_t a, number_t b )
 {
   if ( a != NUM_INF && b != NUM_INF && (b == 0 || (NUM_INF / b >= a)) )
   {
     return a * b;
+  }
+  return NUM_INF;
+}
+
+number_t Semantics::div( number_t a, number_t b )
+{
+  if ( a != NUM_INF && b != NUM_INF && b != 0 )
+  {
+    return a / b;
+  }
+  return NUM_INF;
+}
+
+number_t Semantics::mod( number_t a, number_t b )
+{
+  if ( a != NUM_INF && b != NUM_INF && b != 0 )
+  {
+    return a % b;
   }
   return NUM_INF;
 }
