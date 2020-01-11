@@ -71,7 +71,7 @@ bool Miner::isCollatzValuation( const Sequence &seq )
 void Miner::mine( volatile sig_atomic_t &exit_flag )
 {
   Log::get().info( "Mining programs for OEIS sequences" );
-  Generator generator( settings, 5, std::random_device()() );
+  Generator generator( settings, 1, std::random_device()() );
   Sequence norm_seq;
   size_t count = 0;
   size_t found = 0;
