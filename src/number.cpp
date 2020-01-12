@@ -339,22 +339,6 @@ Distribution Distribution::exponential( size_t size )
   return Distribution( probabilities );
 }
 
-Distribution Distribution::add( const Distribution &d1, const Distribution &d2 )
-{
-  auto p1 = d1.probabilities();
-  auto p2 = d2.probabilities();
-  if ( p1.size() != p2.size() )
-  {
-    throw std::runtime_error( "incompatible distributions" );
-  }
-  std::vector<double> p( p1.size() );
-  for ( size_t i = 0; i < p.size(); i++ )
-  {
-    p[i] = (p1[i] + p2[i]) / 2;
-  }
-  return Distribution( p );
-}
-
 Distribution Distribution::mutate( const Distribution &d, std::mt19937 &gen )
 {
   std::vector<double> x;
@@ -367,19 +351,4 @@ Distribution Distribution::mutate( const Distribution &d, std::mt19937 &gen )
     p2[i] = p1[i] + ((static_cast<double>( v( gen ) ) / x.size()) / 50);
   }
   return Distribution( p2 );
-}
-
-void Distribution::print() const
-{
-  auto probs = probabilities();
-  std::cout << "[";
-  for ( size_t i = 0; i < probs.size(); i++ )
-  {
-    if ( i > 0 )
-    {
-      std::cout << ",";
-    }
-    std::cout << probs[i];
-  }
-  std::cout << "]";
 }
