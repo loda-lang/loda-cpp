@@ -24,7 +24,8 @@ public:
   Sequence( const Sequence &s ) = default;
 
   Sequence( const std::vector<number_t> &s )
-      : std::vector<number_t>( s )
+      :
+      std::vector<number_t>( s )
   {
   }
 
@@ -63,12 +64,14 @@ public:
   Polynomial( const Polynomial &s ) = default;
 
   Polynomial( size_t degree )
-      : std::vector<int64_t>( degree + 1 )
+      :
+      std::vector<int64_t>( degree + 1 )
   {
   }
 
   Polynomial( const std::vector<int64_t> &p )
-      : std::vector<int64_t>( p )
+      :
+      std::vector<int64_t>( p )
   {
   }
 
@@ -109,7 +112,8 @@ public:
   Memory( const Memory &m ) = default;
 
   Memory( const std::vector<number_t> &m )
-      : std::vector<number_t>( m )
+      :
+      std::vector<number_t>( m )
   {
   }
 
@@ -132,6 +136,8 @@ public:
 class Distribution: public std::discrete_distribution<>
 {
 public:
+
+  Distribution();
 
   Distribution( const std::vector<double> &probabilities );
 

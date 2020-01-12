@@ -47,7 +47,7 @@ void Test::optimizer( size_t tests )
   Settings settings;
   Interpreter interpreter( settings );
   Optimizer optimizer( settings );
-  Generator generator( settings, 5, std::random_device()() );
+  Generator generator( settings, std::random_device()() );
   Sequence s1, s2, s3;
   Program program, optimized, minimized;
   Log::get().info( "Testing optimizer and minimizer" );

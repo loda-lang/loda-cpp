@@ -310,6 +310,12 @@ std::ostream& operator<<( std::ostream &out, const Memory &m )
 
 // === Distribution ====================================================
 
+Distribution::Distribution()
+    :
+    std::discrete_distribution<>()
+{
+}
+
 Distribution::Distribution( const std::vector<double> &probabilities )
     :
     std::discrete_distribution<>( probabilities.begin(), probabilities.end() )

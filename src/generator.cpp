@@ -14,70 +14,7 @@
 
 #define POSITION_RANGE 100
 
-State::State()
-    :
-    State( 0, 4, 4, 2, 3 )
-{
-}
-
-void State::print()
-{
-  std::cout << "[";
-  operation_dist.print();
-  std::cout << ",";
-  target_type_dist.print();
-  std::cout << ",";
-  target_value_dist.print();
-  std::cout << ",";
-  source_type_dist.print();
-  std::cout << ",";
-  source_value_dist.print();
-  std::cout << ",";
-  transition_dist.print();
-  std::cout << ",";
-  position_dist.print();
-  std::cout << "]";
-}
-
-void Generator::print()
-{
-  std::cout << "[" << score << ",";
-  for ( size_t i = 0; i < states.size(); i++ )
-  {
-    if ( i > 0 )
-    {
-      std::cout << ",";
-    }
-    states[i].print();
-  }
-  std::cout << "]";
-}
-
-State::State( size_t numStates, size_t maxConstant, size_t num_operation_types, size_t num_target_types,
-    size_t num_source_types )
-    :
-    operation_dist( Distribution::uniform( num_operation_types ) ),
-    target_type_dist( Distribution::exponential( num_target_types ) ),
-    target_value_dist( Distribution::uniform( maxConstant + 1 ) ),
-    source_type_dist( Distribution::exponential( num_source_types ) ),
-    source_value_dist( Distribution::uniform( maxConstant + 1 ) ),
-    transition_dist( Distribution::uniform( numStates ) ),
-    position_dist( Distribution::uniform( POSITION_RANGE ) )
-{
-}
-
-State State::operator+( const State &other )
-{
-  State r;
-  r.operation_dist = Distribution::add( operation_dist, other.operation_dist );
-  r.target_type_dist = Distribution::add( target_type_dist, other.target_type_dist );
-  r.source_type_dist = Distribution::add( source_type_dist, other.source_type_dist );
-  r.transition_dist = Distribution::add( transition_dist, other.transition_dist );
-  r.position_dist = Distribution::add( position_dist, other.position_dist );
-  return r;
-}
-
-Generator::Generator( const Settings &settings, size_t numStates, int64_t seed )
+Generator::Generator( const Settings &settings, int64_t seed )
     :
     settings( settings )
 {
@@ -169,63 +106,49 @@ Generator::Generator( const Settings &settings, size_t numStates, int64_t seed )
     program_template = parser.parse( settings.program_template );
   }
 
-  // create states
-  states.resize( numStates );
-  for ( number_t state = 0; state < numStates; state++ )
-  {
-    states[state] = State( numStates, settings.max_constant, operation_types.size(), target_operand_types.size(),
-        source_operand_types.size() );
-  }
-  setSeed( seed );
-}
+  // initialize distributions
+  operation_dist = Distribution::uniform( operation_types.size() );
+  target_type_dist = Distribution::exponential( target_operand_types.size() );
+  target_value_dist = Distribution::uniform( settings.max_constant + 1 );
+  source_type_dist = Distribution::exponential( source_operand_types.size() );
+  source_value_dist = Distribution::uniform( settings.max_constant + 1 );
+  position_dist = Distribution::uniform( POSITION_RANGE );
 
-Generator Generator::operator+( const Generator &other )
-{
-  Generator r( settings, states.size(), gen() );
-  for ( number_t s = 0; s < states.size(); s++ )
-  {
-    r.states[s] = states[s] + other.states[s];
-  }
-  return r;
+  setSeed( seed );
 }
 
 void Generator::mutate( double delta )
 {
-  for ( auto &s : states )
-  {
-    s.operation_dist = Distribution::mutate( s.operation_dist, gen );
-    s.target_type_dist = Distribution::mutate( s.target_type_dist, gen );
-    s.target_value_dist = Distribution::mutate( s.target_value_dist, gen );
-    s.source_type_dist = Distribution::mutate( s.source_type_dist, gen );
-    s.source_value_dist = Distribution::mutate( s.source_value_dist, gen );
-    s.transition_dist = Distribution::mutate( s.transition_dist, gen );
-    s.position_dist = Distribution::mutate( s.position_dist, gen );
-  }
+  operation_dist = Distribution::mutate( operation_dist, gen );
+  target_type_dist = Distribution::mutate( target_type_dist, gen );
+  target_value_dist = Distribution::mutate( target_value_dist, gen );
+  source_type_dist = Distribution::mutate( source_type_dist, gen );
+  source_value_dist = Distribution::mutate( source_value_dist, gen );
+  position_dist = Distribution::mutate( position_dist, gen );
 }
 
-void Generator::generateOperations( Seed &seed )
+void Generator::generateOperations()
 {
-  auto &s = states.at( seed.state );
-  auto target_type = target_operand_types.at( s.target_type_dist( gen ) );
-  auto source_type = source_operand_types.at( s.source_type_dist( gen ) );
-  number_t target_value = s.target_value_dist( gen );
-  number_t source_value = s.source_value_dist( gen );
-  auto op_type = operation_types.at( s.operation_dist( gen ) );
+  auto target_type = target_operand_types.at( target_type_dist( gen ) );
+  auto source_type = source_operand_types.at( source_type_dist( gen ) );
+  number_t target_value = target_value_dist( gen );
+  number_t source_value = source_value_dist( gen );
+  auto op_type = operation_types.at( operation_dist( gen ) );
 
   // check number of operands
   if ( Operation::Metadata::get( op_type ).num_operands < 2 )
   {
-	source_type = Operand::Type::CONSTANT;
-	source_value = 0;
+    source_type = Operand::Type::CONSTANT;
+    source_value = 0;
   }
   if ( Operation::Metadata::get( op_type ).num_operands < 1 )
   {
-	target_type = Operand::Type::CONSTANT;
-	target_value = 0;
+    target_type = Operand::Type::CONSTANT;
+    target_value = 0;
   }
 
   // bias for constant loop fragment length
-  if ( op_type == Operation::Type::LPB && source_type != Operand::Type::CONSTANT && s.position_dist( gen ) % 10 > 0 )
+  if ( op_type == Operation::Type::LPB && source_type != Operand::Type::CONSTANT && position_dist( gen ) % 10 > 0 )
   {
     source_type = Operand::Type::CONSTANT;
   }
@@ -243,33 +166,30 @@ void Generator::generateOperations( Seed &seed )
     source_value = 2;
   }
 
-  seed.ops.clear();
-  seed.ops.push_back(
+  next_ops.clear();
+  next_ops.push_back(
       Operation( op_type, Operand( target_type, target_value ), Operand( source_type, source_value ) ) );
   if ( op_type == Operation::Type::LPB )
   {
-    seed.ops.push_back( Operation( Operation::Type::LPE ) );
+    next_ops.push_back( Operation( Operation::Type::LPE ) );
   }
 
-  seed.position = static_cast<double>( s.position_dist( gen ) ) / POSITION_RANGE;
-  seed.state = s.transition_dist( gen );
+  next_position = static_cast<double>( position_dist( gen ) ) / POSITION_RANGE;
 }
 
-Program Generator::generateProgram( size_t initialState )
+Program Generator::generateProgram()
 {
   // use template for base program
   Program p = program_template;
 
   // fill program with random operations
-  Seed seed;
-  seed.state = initialState;
   while ( p.ops.size() < settings.num_operations )
   {
-    generateOperations( seed );
-    size_t position = (seed.position * (p.ops.size() + 1));
-    for ( size_t j = 0; j < seed.ops.size(); j++ )
+    generateOperations();
+    size_t position = (next_position * (p.ops.size() + 1));
+    for ( size_t j = 0; j < next_ops.size(); j++ )
     {
-      p.ops.emplace( p.ops.begin() + position + j, std::move( seed.ops[j] ) );
+      p.ops.emplace( p.ops.begin() + position + j, Operation( next_ops[j] ) );
     }
   }
 
@@ -416,7 +336,7 @@ Program Generator::generateProgram( size_t initialState )
       }
       if ( num_ops == 0 )
       {
-        size_t val = (seed.position * 5) + 1;
+        size_t val = (next_position * 5) + 1;
         Operation add( Operation::Type::ADD, Operand( Operand::Type::MEM_ACCESS_DIRECT, mem + 1 ),
             Operand( Operand::Type::CONSTANT, val ) );
         p.ops.insert( p.ops.begin() + i, add );

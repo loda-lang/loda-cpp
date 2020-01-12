@@ -112,7 +112,7 @@ int main( int argc, char *argv[] )
     else if ( cmd == "generate" || cmd == "gen" )
     {
       Optimizer optimizer( settings );
-      Generator generator( settings, 5, std::random_device()() );
+      Generator generator( settings, std::random_device()() );
       auto program = generator.generateProgram();
       optimizer.optimize( program, 2, 1 );
       Printer r;

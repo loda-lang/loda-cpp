@@ -102,7 +102,7 @@ void Log::log( Level level, const std::string &msg )
 Settings::Settings()
     :
     num_terms( 20 ),
-    num_operations( 40 ),
+    num_operations( 20 ),
     max_memory( 100000 ),
     max_cycles( 10000000 ),
     max_constant( 6 ),

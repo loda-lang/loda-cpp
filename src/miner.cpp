@@ -15,9 +15,10 @@
 #include <unordered_set>
 
 Miner::Miner( const Settings &settings )
-    : settings( settings ),
-      oeis( settings ),
-      interpreter( settings )
+    :
+    settings( settings ),
+    oeis( settings ),
+    interpreter( settings )
 {
   oeis.load();
 }
@@ -26,8 +27,8 @@ bool Miner::updateCollatz( const Program &p, const Sequence &seq ) const
 {
   if ( isCollatzValuation( seq ) )
   {
-    auto ms = std::chrono::duration_cast < std::chrono::milliseconds
-        > (std::chrono::system_clock::now().time_since_epoch());
+    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now().time_since_epoch() );
     std::string file_name = "programs/oeis/collatz_" + std::to_string( ms.count() % 1000000 ) + ".asm";
     std::ofstream out( file_name );
     out << "; " << seq << std::endl;
@@ -71,7 +72,7 @@ bool Miner::isCollatzValuation( const Sequence &seq )
 void Miner::mine( volatile sig_atomic_t &exit_flag )
 {
   Log::get().info( "Mining programs for OEIS sequences" );
-  Generator generator( settings, 1, std::random_device()() );
+  Generator generator( settings, std::random_device()() );
   Sequence norm_seq;
   size_t count = 0;
   size_t found = 0;
@@ -94,7 +95,7 @@ void Miner::mine( volatile sig_atomic_t &exit_flag )
     }
     ++count;
     auto time2 = std::chrono::steady_clock::now();
-    auto duration = std::chrono::duration_cast < std::chrono::seconds > (time2 - time);
+    auto duration = std::chrono::duration_cast<std::chrono::seconds>( time2 - time );
     if ( duration.count() >= 60 )
     {
       time = time2;
