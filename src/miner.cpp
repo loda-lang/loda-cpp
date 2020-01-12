@@ -100,16 +100,6 @@ void Miner::mine( volatile sig_atomic_t &exit_flag )
     {
       time = time2;
       Log::get().info( "Generated " + std::to_string( count ) + " programs" );
-      /*      if ( found == 0 )
-       {
-       generator.mutate( 0.5 );
-       generator.setSeed( std::random_device()() );
-       }
-       else
-       {
-       --found;
-       }
-       */
     }
   }
 }

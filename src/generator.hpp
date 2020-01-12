@@ -14,8 +14,6 @@ public:
 
   Generator( const Generator &other ) = default;
 
-  void mutate( double delta );
-
   Program generateProgram();
 
   void setSeed( int64_t seed );
@@ -26,12 +24,12 @@ private:
 
   const Settings &settings;
 
-  Distribution operation_dist;
-  Distribution target_type_dist;
-  Distribution target_value_dist;
-  Distribution source_type_dist;
-  Distribution source_value_dist;
-  Distribution position_dist;
+  std::discrete_distribution<> operation_dist;
+  std::discrete_distribution<> target_type_dist;
+  std::discrete_distribution<> target_value_dist;
+  std::discrete_distribution<> source_type_dist;
+  std::discrete_distribution<> source_value_dist;
+  std::discrete_distribution<> position_dist;
 
   std::vector<Operation::Type> operation_types;
   std::vector<Operand::Type> source_operand_types;

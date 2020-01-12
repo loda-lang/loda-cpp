@@ -1,7 +1,7 @@
 #!/bin/bash
 
 log_level=alert
-restart_interval=43200
+restart_interval=28800
 min_changes=20
 alt_params="-x"
 

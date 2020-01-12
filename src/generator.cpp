@@ -14,6 +14,24 @@
 
 #define POSITION_RANGE 100
 
+std::discrete_distribution<> uniformDist( size_t size )
+{
+  std::vector<double> p( size, 100.0 );
+  return std::discrete_distribution<>( p.begin(), p.end() );
+}
+
+std::discrete_distribution<> exponentialDist( size_t size )
+{
+  std::vector<double> p( size );
+  double v = 1.0;
+  for ( int i = size - 1; i >= 0; --i )
+  {
+    p[i] = v;
+    v *= 2.0;
+  }
+  return std::discrete_distribution<>( p.begin(), p.end() );
+}
+
 Generator::Generator( const Settings &settings, int64_t seed )
     :
     settings( settings )
@@ -107,24 +125,14 @@ Generator::Generator( const Settings &settings, int64_t seed )
   }
 
   // initialize distributions
-  operation_dist = Distribution::uniform( operation_types.size() );
-  target_type_dist = Distribution::exponential( target_operand_types.size() );
-  target_value_dist = Distribution::uniform( settings.max_constant + 1 );
-  source_type_dist = Distribution::exponential( source_operand_types.size() );
-  source_value_dist = Distribution::uniform( settings.max_constant + 1 );
-  position_dist = Distribution::uniform( POSITION_RANGE );
+  operation_dist = uniformDist( operation_types.size() );
+  target_type_dist = exponentialDist( target_operand_types.size() );
+  target_value_dist = uniformDist( settings.max_constant + 1 );
+  source_type_dist = exponentialDist( source_operand_types.size() );
+  source_value_dist = uniformDist( settings.max_constant + 1 );
+  position_dist = uniformDist( POSITION_RANGE );
 
   setSeed( seed );
-}
-
-void Generator::mutate( double delta )
-{
-  operation_dist = Distribution::mutate( operation_dist, gen );
-  target_type_dist = Distribution::mutate( target_type_dist, gen );
-  target_value_dist = Distribution::mutate( target_value_dist, gen );
-  source_type_dist = Distribution::mutate( source_type_dist, gen );
-  source_value_dist = Distribution::mutate( source_value_dist, gen );
-  position_dist = Distribution::mutate( position_dist, gen );
 }
 
 void Generator::generateOperations()
