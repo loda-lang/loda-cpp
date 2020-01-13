@@ -69,6 +69,7 @@ public:
     size_t num_operands;
     bool is_public;
     bool is_writing_target;
+    int64_t rate;
   };
 
   Operation()

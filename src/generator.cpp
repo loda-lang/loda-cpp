@@ -20,14 +20,12 @@ std::discrete_distribution<> uniformDist( size_t size )
   return std::discrete_distribution<>( p.begin(), p.end() );
 }
 
-std::discrete_distribution<> exponentialDist( size_t size )
+std::discrete_distribution<> operationDist( const std::vector<Operation::Type> &operation_types )
 {
-  std::vector<double> p( size );
-  double v = 1.0;
-  for ( int i = size - 1; i >= 0; --i )
+  std::vector<double> p( operation_types.size() );
+  for ( size_t i = 0; i < operation_types.size(); i++ )
   {
-    p[i] = v;
-    v *= 2.0;
+    p[i] = Operation::Metadata::get( operation_types[i] ).rate;
   }
   return std::discrete_distribution<>( p.begin(), p.end() );
 }
@@ -93,20 +91,26 @@ Generator::Generator( const Settings &settings, int64_t seed )
     Log::get().error( "No operation types", true );
   }
 
-  // order of operand types is important as it defines its probability
-  if ( settings.operand_types.find( 'd' ) != std::string::npos )
-  {
-    source_operand_types.push_back( Operand::Type::MEM_ACCESS_DIRECT );
-    target_operand_types.push_back( Operand::Type::MEM_ACCESS_DIRECT );
-  }
+  std::vector<double> source_type_rates;
+  std::vector<double> target_type_rates;
   if ( settings.operand_types.find( 'c' ) != std::string::npos )
   {
     source_operand_types.push_back( Operand::Type::CONSTANT );
+    source_type_rates.push_back( 4 );
+  }
+  if ( settings.operand_types.find( 'd' ) != std::string::npos )
+  {
+    source_operand_types.push_back( Operand::Type::MEM_ACCESS_DIRECT );
+    source_type_rates.push_back( 4 );
+    target_operand_types.push_back( Operand::Type::MEM_ACCESS_DIRECT );
+    target_type_rates.push_back( 4 );
   }
   if ( settings.operand_types.find( 'i' ) != std::string::npos )
   {
     source_operand_types.push_back( Operand::Type::MEM_ACCESS_INDIRECT );
+    source_type_rates.push_back( 1 );
     target_operand_types.push_back( Operand::Type::MEM_ACCESS_INDIRECT );
+    target_type_rates.push_back( 1 );
   }
   if ( source_operand_types.empty() )
   {
@@ -125,10 +129,10 @@ Generator::Generator( const Settings &settings, int64_t seed )
   }
 
   // initialize distributions
-  operation_dist = uniformDist( operation_types.size() );
-  target_type_dist = exponentialDist( target_operand_types.size() );
+  operation_dist = operationDist( operation_types );
+  target_type_dist = std::discrete_distribution<>( target_type_rates.begin(), target_type_rates.end() );
   target_value_dist = uniformDist( settings.max_constant + 1 );
-  source_type_dist = exponentialDist( source_operand_types.size() );
+  source_type_dist = std::discrete_distribution<>( source_type_rates.begin(), source_type_rates.end() );
   source_value_dist = uniformDist( settings.max_constant + 1 );
   position_dist = uniformDist( POSITION_RANGE );
 
