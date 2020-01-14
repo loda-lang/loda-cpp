@@ -52,10 +52,11 @@ std::string getOeisFile( const OeisSequence &seq )
 }
 
 Oeis::Oeis( const Settings &settings )
-    : settings( settings ),
-      interpreter( settings ),
-      optimizer( settings ),
-      total_count_( 0 )
+    :
+    settings( settings ),
+    interpreter( settings ),
+    optimizer( settings ),
+    total_count_( 0 )
 {
   matchers.resize( 2 );
   matchers[0].reset( new DirectMatcher() );
@@ -397,12 +398,14 @@ void Oeis::findAll( const Program &p, const Sequence &norm_seq, seq_programs_t &
       }
       if ( full_seq.size() != expected_full_seq.size() || full_seq != expected_full_seq )
       {
+        Log::get().error( "Program from matcher generates wrong result", false );
         it = result.erase( it );
         continue;
       }
     }
     catch ( const std::exception& )
     {
+      Log::get().error( "Program from matcher throws runtime error", false );
       it = result.erase( it );
       continue;
     }
