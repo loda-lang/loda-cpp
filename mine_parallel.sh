@@ -1,6 +1,6 @@
 #!/bin/bash
 
-log_level=error
+log_level=alert
 restart_interval=28800
 min_changes=20
 alt_params="-x"
