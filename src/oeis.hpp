@@ -67,7 +67,7 @@ public:
     return total_count_;
   }
 
-  bool updateProgram( number_t id, const Program &p ) const;
+  std::pair<bool, bool> updateProgram( number_t id, const Program &p ) const;
 
   void maintain( volatile sig_atomic_t &exit_flag );
 

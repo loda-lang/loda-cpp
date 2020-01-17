@@ -1,6 +1,7 @@
 #pragma once
 
 #include <csignal>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -30,6 +31,21 @@ public:
 
 private:
   void log( Level level, const std::string &msg );
+
+};
+
+class Metrics
+{
+public:
+
+  Metrics();
+
+  static Metrics& get();
+
+  void write( const std::string &field, const std::map<std::string, std::string>& labels, double value ) const;
+
+private:
+  std::string host;
 
 };
 

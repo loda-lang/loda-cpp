@@ -398,14 +398,12 @@ void Oeis::findAll( const Program &p, const Sequence &norm_seq, seq_programs_t &
       }
       if ( full_seq.size() != expected_full_seq.size() || full_seq != expected_full_seq )
       {
-        Log::get().error( "Program from matcher generates wrong result", false );
         it = result.erase( it );
         continue;
       }
     }
     catch ( const std::exception& )
     {
-      Log::get().error( "Program from matcher throws runtime error", false );
       it = result.erase( it );
       continue;
     }
@@ -465,7 +463,7 @@ Program Oeis::optimizeAndCheck( const Program &p, const OeisSequence &seq ) cons
   return optimized;
 }
 
-bool Oeis::updateProgram( number_t id, const Program &p ) const
+std::pair<bool, bool> Oeis::updateProgram( number_t id, const Program &p ) const
 {
   auto &seq = sequences.at( id );
   std::string file_name = getOeisFile( seq );
@@ -484,12 +482,14 @@ bool Oeis::updateProgram( number_t id, const Program &p ) const
         if ( optimized.num_ops( Operand::Type::MEM_ACCESS_INDIRECT ) > 0
             || optimized.num_ops( false ) >= existing_program.num_ops( false ) )
         {
-          return false;
+          return
+          { false,false};
         }
       }
       else
       {
-        return false;
+        return
+        { false,false};
       }
     }
   }
@@ -507,7 +507,8 @@ bool Oeis::updateProgram( number_t id, const Program &p ) const
   std::ofstream gen_args;
   gen_args.open( "programs/oeis/generator_args.txt", std::ios_base::app );
   gen_args << seq.id_str() << ": " << settings.getGeneratorArgs() << std::endl;
-  return true;
+  return
+  { true,is_new};
 }
 
 void Oeis::maintain( volatile sig_atomic_t &exit_flag )

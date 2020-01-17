@@ -72,10 +72,21 @@ bool Miner::isCollatzValuation( const Sequence &seq )
 void Miner::mine( volatile sig_atomic_t &exit_flag )
 {
   Log::get().info( "Mining programs for OEIS sequences" );
+
+  // metrics labels
+  std::map<std::string, std::string> labels = { { "num_operations", std::to_string( settings.num_operations ) }, {
+      "max_constant", std::to_string( settings.max_constant ) }, { "max_index", std::to_string( settings.max_index ) },
+      { "operation_types", settings.operation_types }, { "operand_types", settings.operand_types }, };
+  if ( !settings.program_template.empty() )
+  {
+    labels.emplace( "program_template", settings.program_template );
+  }
+
   Generator generator( settings, std::random_device()() );
   Sequence norm_seq;
-  size_t count = 0;
-  size_t found = 0;
+  size_t generated = 0;
+  size_t fresh = 0;
+  size_t updated = 0;
   auto time = std::chrono::steady_clock::now();
 
   while ( !exit_flag )
@@ -84,22 +95,36 @@ void Miner::mine( volatile sig_atomic_t &exit_flag )
     auto seq_programs = oeis.findSequence( program, norm_seq );
     for ( auto s : seq_programs )
     {
-      if ( oeis.updateProgram( s.first, s.second ) )
+      auto r = oeis.updateProgram( s.first, s.second );
+      if ( r.first )
       {
-        ++found;
+        if ( r.second )
+        {
+          fresh++;
+        }
+        else
+        {
+          updated++;
+        }
       }
     }
     if ( updateCollatz( program, norm_seq ) )
     {
-      ++found;
+      fresh++;
     }
-    ++count;
+    generated++;
     auto time2 = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::seconds>( time2 - time );
     if ( duration.count() >= 60 )
     {
       time = time2;
-      Log::get().info( "Generated " + std::to_string( count ) + " programs" );
+      Log::get().info( "Generated " + std::to_string( generated ) + " programs" );
+      Metrics::get().write( "generated", labels, generated );
+      Metrics::get().write( "fresh", labels, fresh );
+      Metrics::get().write( "updated", labels, updated );
+      generated = 0;
+      fresh = 0;
+      updated = 0;
     }
   }
 }
@@ -130,7 +155,8 @@ void Miner::synthesize( volatile sig_atomic_t &exit_flag )
       if ( synthesizer->synthesize( seq.full, program ) )
       {
         Log::get().debug( "Synthesized program for " + seq.to_string() );
-        if ( oeis.updateProgram( seq.id, program ) )
+        auto r = oeis.updateProgram( seq.id, program );
+        if ( r.first )
         {
           found++;
         }

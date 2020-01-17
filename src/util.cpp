@@ -1,11 +1,11 @@
 #include "util.hpp"
 
+#include <cstdlib>
 #include <ctime>
 #include <iostream>
 #include <sstream>
-#include <stdlib.h>
-
 #include <stdexcept>
+#include <stdlib.h>
 
 Log& Log::get()
 {
@@ -97,6 +97,43 @@ void Log::log( Level level, const std::string &msg )
     break;
   }
   std::cerr << std::string( buffer ) << "|" << lev << "|" << msg << std::endl;
+}
+
+Metrics::Metrics()
+{
+  auto h = std::getenv( "LODA_INFLUXDB_HOST" );
+  if ( h )
+  {
+    host = std::string( h );
+    Log::get().info( "Publishing metrics to InfluxDB at " + host );
+  }
+}
+
+Metrics& Metrics::get()
+{
+  static Metrics metrics;
+  return metrics;
+}
+
+void Metrics::write( const std::string &field, const std::map<std::string, std::string>& labels, double value ) const
+{
+  if ( Metrics::host.empty() )
+  {
+    return;
+  }
+  std::stringstream buf;
+  buf << "curl -i -XPOST '" << host << "/write?db=loda' --data-binary '" << field;
+  for ( auto& l : labels )
+  {
+    buf << "," << l.first << "=" << l.second;
+  }
+  buf << " value=" << value << "' > /dev/null";
+  auto cmd = buf.str();
+  auto exit_code = system( cmd.c_str() );
+  if ( exit_code != 0 )
+  {
+    Log::get().error( "Error publishing metrics; error code " + std::to_string( exit_code ), false );
+  }
 }
 
 Settings::Settings()
