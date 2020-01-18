@@ -122,7 +122,7 @@ void Metrics::write( const std::string &field, const std::map<std::string, std::
     return;
   }
   std::stringstream buf;
-  buf << "curl -i -XPOST '" << host << "/write?db=loda' --data-binary '" << field;
+  buf << "curl -i -s -XPOST '" << host << "/write?db=loda' --data-binary '" << field;
   for ( auto& l : labels )
   {
     buf << "," << l.first << "=" << l.second;
