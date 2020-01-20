@@ -1,6 +1,6 @@
 #!/bin/bash
 
-log_level=alert
+log_level=errpr
 restart_interval=28800
 min_changes=20
 alt_params="-x"
@@ -31,7 +31,7 @@ function start_miners() {
   echo "Start mining"
   local l="-l ${log_level}"
   # instantiate templates w/o loops
-  for n in 4 5 6 7; do
+  for n in 5 6 7 8; do
     p="${n}0"
     for t in T01 T02; do
       ./loda mine $tmp_params -p $p -n $n -a cd -o ^l -e programs/templates/${t}.asm $l $@ &
@@ -42,7 +42,7 @@ function start_miners() {
   ./loda mine $tmp_params -p 60 -a cd -n 8 $l $@ &
   ./loda mine $tmp_params -p 60 -a cdi -n 6 $l $@ &
   ./loda mine $tmp_params -p 40 -a cd -n 6 -r $l $@ &
-  ./loda maintain &
+  ./loda maintain $l &
   if [ -n "$tmp_params" ]; then
     tmp_params=""
   else
