@@ -20,6 +20,8 @@ public:
 
   void ackermann();
 
+  void collatz();
+
   void optimizer( size_t tests );
 
   void polynomial_matcher( size_t tests, size_t degree );
