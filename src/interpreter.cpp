@@ -131,11 +131,11 @@ bool Interpreter::run( const Program &p, Memory &mem ) const
       start = get( op.target, mem, true );
       if ( length == NUM_INF )
       {
-        Log::get().error( "Infinite loop", true );
+        throw std::runtime_error( "Infinite loop" );
       }
       else if ( length > settings.max_memory )
       {
-        Log::get().error( "Maximum memory fragment length exceeded: " + std::to_string( length ), true );
+        throw std::runtime_error( "Maximum memory fragment length exceeded: " + std::to_string( length ) );
       }
       frag = mem.fragment( start, length );
       loop_stack.push( pc );
@@ -207,7 +207,7 @@ bool Interpreter::run( const Program &p, Memory &mem ) const
 
     if ( ++cycles >= settings.max_cycles )
     {
-      Log::get().error( "Program did not terminate after " + std::to_string( cycles ) + " cycles", true );
+      throw std::runtime_error( "Program did not terminate after " + std::to_string( cycles ) + " cycles" );
     }
   }
   return true;
@@ -221,7 +221,7 @@ number_t Interpreter::get( Operand a, const Memory &mem, bool get_address ) cons
   {
     if ( get_address )
     {
-      Log::get().error( "Cannot get address of a constant", true );
+      throw std::runtime_error( "Cannot get address of a constant" );
     }
     return a.value;
   }
@@ -244,7 +244,7 @@ void Interpreter::set( Operand a, number_t v, Memory &mem ) const
   switch ( a.type )
   {
   case Operand::Type::CONSTANT:
-    Log::get().error( "Cannot set value of a constant", true );
+    throw std::runtime_error( "Cannot set value of a constant" );
     index = 0; // we don't get here
     break;
   case Operand::Type::MEM_ACCESS_DIRECT:
@@ -256,7 +256,7 @@ void Interpreter::set( Operand a, number_t v, Memory &mem ) const
   }
   if ( index > settings.max_memory )
   {
-    Log::get().error( "Memory index out of range: " + std::to_string( index ), true );
+    throw std::runtime_error( "Memory index out of range: " + std::to_string( index ) );
   }
   mem.set( index, v );
 }
