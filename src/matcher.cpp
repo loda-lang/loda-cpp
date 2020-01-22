@@ -54,6 +54,70 @@ bool DirectMatcher::extend( Program &p, int base, int gen ) const
   return true;
 }
 
+// --- Linear Matcher ---------------------------------------------------------
+
+std::pair<Sequence, std::pair<int, int>> LinearMatcher::reduce( const Sequence &seq ) const
+{
+  std::pair<Sequence, std::pair<int, int>> result;
+  int offset = seq.min();
+  int factor = -1;
+  for ( auto x : seq )
+  {
+    int d = x - offset;
+    if ( d > 0 )
+    {
+      if ( factor == -1 )
+      {
+        factor = d;
+      }
+      else
+      {
+        factor = Semantics::gcd( factor, d );
+      }
+    }
+  }
+  if ( factor == -1 )
+  {
+    factor = 1;
+  }
+  result.first.resize( seq.size() );
+  for ( size_t i = 0; i < seq.size(); i++ )
+  {
+    result.first[i] = (seq[i] - offset) / factor;
+  }
+  result.second = std::pair<int, int>( offset, factor );
+  return result;
+}
+
+bool LinearMatcher::extend( Program &p, std::pair<int, int> base, std::pair<int, int> gen ) const
+{
+  if ( gen.first > 0 )
+  {
+    p.ops.insert( p.ops.end(),
+        Operation( Operation::Type::SUB, Operand( Operand::Type::MEM_ACCESS_DIRECT, 1 ),
+            Operand( Operand::Type::CONSTANT, gen.first ) ) );
+  }
+  if ( gen.second > 1 )
+  {
+    p.ops.insert( p.ops.end(),
+        Operation( Operation::Type::DIV, Operand( Operand::Type::MEM_ACCESS_DIRECT, 1 ),
+            Operand( Operand::Type::CONSTANT, gen.second ) ) );
+  }
+  if ( base.second > 1 )
+  {
+    p.ops.insert( p.ops.end(),
+        Operation( Operation::Type::MUL, Operand( Operand::Type::MEM_ACCESS_DIRECT, 1 ),
+            Operand( Operand::Type::CONSTANT, base.second ) ) );
+  }
+  if ( base.first > 0 )
+  {
+    p.ops.insert( p.ops.end(),
+        Operation( Operation::Type::ADD, Operand( Operand::Type::MEM_ACCESS_DIRECT, 1 ),
+            Operand( Operand::Type::CONSTANT, base.first ) ) );
+  }
+  return true;
+}
+
 // --- Polynomial Matcher -----------------------------------------------------
 
 const int PolynomialMatcher::DEGREE = 3; // magic number

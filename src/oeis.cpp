@@ -58,9 +58,10 @@ Oeis::Oeis( const Settings &settings )
     optimizer( settings ),
     total_count_( 0 )
 {
-  matchers.resize( 2 );
+  matchers.resize( 3 );
   matchers[0].reset( new DirectMatcher() );
-  matchers[1].reset( new PolynomialMatcher() );
+  matchers[1].reset( new LinearMatcher() );
+  matchers[2].reset( new PolynomialMatcher() );
 }
 
 void Oeis::load()
