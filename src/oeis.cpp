@@ -52,11 +52,10 @@ std::string getOeisFile( const OeisSequence &seq )
 }
 
 Oeis::Oeis( const Settings &settings )
-    :
-    settings( settings ),
-    interpreter( settings ),
-    optimizer( settings ),
-    total_count_( 0 )
+    : settings( settings ),
+      interpreter( settings ),
+      optimizer( settings ),
+      total_count_( 0 )
 {
   matchers.resize( 3 );
   matchers[0].reset( new DirectMatcher() );
@@ -424,41 +423,42 @@ void Oeis::dumpProgram( number_t id, Program p, const std::string &file ) const
   r.print( p, out );
 }
 
-Program Oeis::optimizeAndCheck( const Program &p, const OeisSequence &seq ) const
+std::pair<bool, Program> Oeis::optimizeAndCheck( const Program &p, const OeisSequence &seq ) const
 {
   // optimize and minimize program
-  Program optimized = p;
-  optimizer.optimize( optimized, 2, 1 );
-  optimizer.minimize( optimized, seq.full.size() );
-  optimizer.optimize( optimized, 2, 1 );
+  std::pair<bool, Program> optimized;
+  optimized.first = true;
+  optimized.second = p;
+  optimizer.optimize( optimized.second, 2, 1 );
+  optimizer.minimize( optimized.second, seq.full.size() );
+  optimizer.optimize( optimized.second, 2, 1 );
 
   // check its correctness
-  bool correct = true;
   Sequence new_seq;
   try
   {
-    new_seq = interpreter.eval( optimized, seq.full.size() );
+    new_seq = interpreter.eval( optimized.second, seq.full.size() );
     if ( seq.full.size() != new_seq.size() || seq.full != new_seq )
     {
-      correct = false;
+      optimized.first = false;
     }
   }
   catch ( const std::exception &e )
   {
-    correct = false;
+    optimized.first = false;
   }
 
   // throw error if not correct
-  if ( !correct )
+  if ( !optimized.first )
   {
     std::cout << "before:" << std::endl;
     Printer d;
     d.print( p, std::cout );
     std::cout << "after:" << std::endl;
-    d.print( optimized, std::cout );
+    d.print( optimized.second, std::cout );
     Log::get().error(
         "Program generates wrong result; possible error in optimization, minimization or synthesis; target sequence: "
-            + seq.to_string() + "; expected: " + seq.full.to_string() + "; got: " + new_seq.to_string(), true );
+            + seq.to_string() + "; expected: " + seq.full.to_string() + "; got: " + new_seq.to_string(), false );
   }
 
   return optimized;
@@ -469,7 +469,7 @@ std::pair<bool, bool> Oeis::updateProgram( number_t id, const Program &p ) const
   auto &seq = sequences.at( id );
   std::string file_name = getOeisFile( seq );
   bool is_new = true;
-  Program optimized;
+  std::pair<bool, Program> optimized;
   {
     std::ifstream in( file_name );
     if ( in.good() )
@@ -477,11 +477,16 @@ std::pair<bool, bool> Oeis::updateProgram( number_t id, const Program &p ) const
       if ( settings.optimize_existing_programs )
       {
         optimized = optimizeAndCheck( p, seq );
+        if ( !optimized.first )
+        {
+          return
+          { false,false};
+        }
         is_new = false;
         Parser parser;
         auto existing_program = parser.parse( in );
-        if ( optimized.num_ops( Operand::Type::MEM_ACCESS_INDIRECT ) > 0
-            || optimized.num_ops( false ) >= existing_program.num_ops( false ) )
+        if ( optimized.second.num_ops( Operand::Type::MEM_ACCESS_INDIRECT ) > 0
+            || optimized.second.num_ops( false ) >= existing_program.num_ops( false ) )
         {
           return
           { false,false};
@@ -497,6 +502,11 @@ std::pair<bool, bool> Oeis::updateProgram( number_t id, const Program &p ) const
   if ( is_new )
   {
     optimized = optimizeAndCheck( p, seq );
+    if ( !optimized.first )
+    {
+      return
+      { false,false};
+    }
   }
   std::stringstream buf;
   buf << "Found ";
@@ -504,7 +514,7 @@ std::pair<bool, bool> Oeis::updateProgram( number_t id, const Program &p ) const
   else buf << "shorter";
   buf << " program for " << seq << " First terms: " << static_cast<Sequence>( seq );
   Log::get().alert( buf.str() );
-  dumpProgram( id, optimized, file_name );
+  dumpProgram( id, optimized.second, file_name );
   std::ofstream gen_args;
   gen_args.open( "programs/oeis/generator_args.txt", std::ios_base::app );
   gen_args << seq.id_str() << ": " << settings.getGeneratorArgs() << std::endl;

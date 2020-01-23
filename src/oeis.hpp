@@ -77,7 +77,7 @@ private:
 
   void findAll( const Program &p, const Sequence &norm_seq, seq_programs_t &result ) const;
 
-  Program optimizeAndCheck( const Program &p, const OeisSequence &seq ) const;
+  std::pair<bool, Program> optimizeAndCheck( const Program &p, const OeisSequence &seq ) const;
 
   const Settings &settings;
   Interpreter interpreter;
