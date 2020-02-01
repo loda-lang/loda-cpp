@@ -8,8 +8,8 @@ public:
   enum class Type
   {
     CONSTANT,
-    MEM_ACCESS_DIRECT,
-    MEM_ACCESS_INDIRECT
+    DIRECT,
+    INDIRECT
   };
 
   Operand()
@@ -80,7 +80,7 @@ public:
 
   Operation( Type y )
       :
-      Operation( y, { Operand::Type::MEM_ACCESS_DIRECT, 0 }, { Operand::Type::CONSTANT, 0 } )
+      Operation( y, { Operand::Type::DIRECT, 0 }, { Operand::Type::CONSTANT, 0 } )
   {
   }
 
@@ -108,11 +108,9 @@ class Program
 {
 public:
 
-  void removeOps( Operation::Type type );
+  void push_front( Operation::Type t, Operand::Type tt, number_t tv, Operand::Type st, number_t sv );
 
-  size_t num_ops( bool withNops ) const;
-
-  size_t num_ops( Operand::Type type ) const;
+  void push_back( Operation::Type t, Operand::Type tt, number_t tv, Operand::Type st, number_t sv );
 
   bool operator==( const Program &p ) const;
 

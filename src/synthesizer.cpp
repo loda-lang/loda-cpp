@@ -1,7 +1,5 @@
 #include "synthesizer.hpp"
 
-#include "printer.hpp"
-
 #include <vector>
 #include <stdlib.h>
 
@@ -18,21 +16,13 @@ bool LinearSynthesizer::synthesize( const Sequence &seq, Program &program )
 
   if ( slope == 0 )
   {
-    program.ops.push_back(
-        Operation( Operation::Type::MOV, Operand( Operand::Type::MEM_ACCESS_DIRECT, 1 ),
-            Operand( Operand::Type::CONSTANT, offset ) ) );
+    program.push_back( Operation::Type::MOV, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, offset );
   }
   else if ( slope > 0 )
   {
-    program.ops.push_back(
-        Operation( Operation::Type::MOV, Operand( Operand::Type::MEM_ACCESS_DIRECT, 1 ),
-            Operand( Operand::Type::MEM_ACCESS_DIRECT, 0 ) ) );
-    program.ops.push_back(
-        Operation( Operation::Type::MUL, Operand( Operand::Type::MEM_ACCESS_DIRECT, 1 ),
-            Operand( Operand::Type::CONSTANT, slope ) ) );
-    program.ops.push_back(
-        Operation( Operation::Type::ADD, Operand( Operand::Type::MEM_ACCESS_DIRECT, 1 ),
-            Operand( Operand::Type::CONSTANT, offset ) ) );
+    program.push_back( Operation::Type::MOV, Operand::Type::DIRECT, 1, Operand::Type::DIRECT, 0 );
+    program.push_back( Operation::Type::MUL, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, slope );
+    program.push_back( Operation::Type::ADD, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, offset );
   }
   else if ( slope < 0 )
   {
@@ -71,30 +61,16 @@ bool PeriodicSynthesizer::synthesize( const Sequence &seq, Program &program )
     return false;
   }
   program.ops.clear();
-  program.ops.push_back(
-      Operation( Operation::Type::MOV, Operand( Operand::Type::MEM_ACCESS_DIRECT, period + 1 ),
-          Operand( Operand::Type::MEM_ACCESS_DIRECT, 0 ) ) );
-  program.ops.push_back(
-      Operation( Operation::Type::LPB, Operand( Operand::Type::MEM_ACCESS_DIRECT, 2 ),
-          Operand( Operand::Type::MEM_ACCESS_DIRECT, period + 1 ) ) );
-  program.ops.push_back(
-      Operation( Operation::Type::SUB, Operand( Operand::Type::MEM_ACCESS_DIRECT, period + 1 ),
-          Operand( Operand::Type::CONSTANT, period ) ) );
+  program.push_back( Operation::Type::MOV, Operand::Type::DIRECT, period + 1, Operand::Type::DIRECT, 0 );
+  program.push_back( Operation::Type::LPB, Operand::Type::DIRECT, 2, Operand::Type::DIRECT, period + 1 );
+  program.push_back( Operation::Type::SUB, Operand::Type::DIRECT, period + 1, Operand::Type::CONSTANT, period );
   program.ops.push_back( Operation( Operation::Type::LPE ) );
-  program.ops.push_back(
-      Operation( Operation::Type::MOV, Operand( Operand::Type::MEM_ACCESS_DIRECT, 2 ),
-          Operand( Operand::Type::MEM_ACCESS_DIRECT, period + 1 ) ) );
-  program.ops.push_back(
-      Operation( Operation::Type::ADD, Operand( Operand::Type::MEM_ACCESS_DIRECT, 2 ),
-          Operand( Operand::Type::CONSTANT, 3 ) ) );
+  program.push_back( Operation::Type::MOV, Operand::Type::DIRECT, 2, Operand::Type::DIRECT, period + 1 );
+  program.push_back( Operation::Type::ADD, Operand::Type::DIRECT, 2, Operand::Type::CONSTANT, 3 );
   for ( size_t i = 0; i < period; i++ )
   {
-    program.ops.push_back(
-        Operation( Operation::Type::MOV, Operand( Operand::Type::MEM_ACCESS_DIRECT, 3 + i ),
-            Operand( Operand::Type::CONSTANT, seq[i] ) ) );
+    program.push_back( Operation::Type::MOV, Operand::Type::DIRECT, 3 + i, Operand::Type::CONSTANT, seq[i] );
   }
-  program.ops.push_back(
-      Operation( Operation::Type::MOV, Operand( Operand::Type::MEM_ACCESS_DIRECT, 1 ),
-          Operand( Operand::Type::MEM_ACCESS_INDIRECT, 2 ) ) );
+  program.push_back( Operation::Type::MOV, Operand::Type::DIRECT, 1, Operand::Type::INDIRECT, 2 );
   return true;
 }

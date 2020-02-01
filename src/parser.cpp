@@ -156,11 +156,11 @@ Operand Parser::readOperand( Program &p )
     if ( c == '$' )
     {
       in->get();
-      return Operand( Operand::Type::MEM_ACCESS_INDIRECT, readValue() );
+      return Operand( Operand::Type::INDIRECT, readValue() );
     }
     else
     {
-      return Operand( Operand::Type::MEM_ACCESS_DIRECT, readValue() );
+      return Operand( Operand::Type::DIRECT, readValue() );
     }
 
   }

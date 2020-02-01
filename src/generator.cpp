@@ -4,7 +4,6 @@
 #include "interpreter.hpp"
 #include "optimizer.hpp"
 #include "parser.hpp"
-#include "printer.hpp"
 
 #include <algorithm>
 #include <ctype.h>
@@ -100,16 +99,16 @@ Generator::Generator( const Settings &settings, int64_t seed )
   }
   if ( settings.operand_types.find( 'd' ) != std::string::npos )
   {
-    source_operand_types.push_back( Operand::Type::MEM_ACCESS_DIRECT );
+    source_operand_types.push_back( Operand::Type::DIRECT );
     source_type_rates.push_back( 4 );
-    target_operand_types.push_back( Operand::Type::MEM_ACCESS_DIRECT );
+    target_operand_types.push_back( Operand::Type::DIRECT );
     target_type_rates.push_back( 4 );
   }
   if ( settings.operand_types.find( 'i' ) != std::string::npos )
   {
-    source_operand_types.push_back( Operand::Type::MEM_ACCESS_INDIRECT );
+    source_operand_types.push_back( Operand::Type::INDIRECT );
     source_type_rates.push_back( 1 );
-    target_operand_types.push_back( Operand::Type::MEM_ACCESS_INDIRECT );
+    target_operand_types.push_back( Operand::Type::INDIRECT );
     target_type_rates.push_back( 1 );
   }
   if ( source_operand_types.empty() )
@@ -213,7 +212,7 @@ Program Generator::generateProgram()
     auto &op = p.ops[position];
 
     // fix source operands in new operation
-    if ( op.source.type == Operand::Type::MEM_ACCESS_DIRECT || op.source.type == Operand::Type::MEM_ACCESS_INDIRECT )
+    if ( op.source.type == Operand::Type::DIRECT || op.source.type == Operand::Type::INDIRECT )
     {
       int x = op.source.value % written_cells.size();
       for ( number_t cell : written_cells )
@@ -243,7 +242,7 @@ Program Generator::generateProgram()
     }
 
     // update written cells
-    if ( Operation::Metadata::get( op.type ).is_writing_target && op.target.type == Operand::Type::MEM_ACCESS_DIRECT )
+    if ( Operation::Metadata::get( op.type ).is_writing_target && op.target.type == Operand::Type::DIRECT )
     {
       written_cells.insert( op.target.value );
     }
@@ -276,7 +275,7 @@ Program Generator::generateProgram()
     case Operation::Type::SUB:
     case Operation::Type::MOV:
     {
-      if ( op.target.type == Operand::Type::MEM_ACCESS_DIRECT )
+      if ( op.target.type == Operand::Type::DIRECT )
       {
         if ( op.target.value == 1 )
         {
@@ -302,8 +301,8 @@ Program Generator::generateProgram()
       source = cell;
     }
     p.ops.push_back(
-        Operation( Operation::Type::MOV, Operand( Operand::Type::MEM_ACCESS_DIRECT, 1 ),
-            Operand( Operand::Type::MEM_ACCESS_DIRECT, source ) ) );
+        Operation( Operation::Type::MOV, Operand( Operand::Type::DIRECT, 1 ),
+            Operand( Operand::Type::DIRECT, source ) ) );
   }
 
   // make sure loops do something
@@ -341,7 +340,7 @@ Program Generator::generateProgram()
     {
       if ( !can_descent )
       {
-        Operation sub( Operation::Type::SUB, Operand( Operand::Type::MEM_ACCESS_DIRECT, mem ),
+        Operation sub( Operation::Type::SUB, Operand( Operand::Type::DIRECT, mem ),
             Operand( Operand::Type::CONSTANT, 1 ) );
         p.ops.insert( p.ops.begin() + i, sub );
         i++;
@@ -349,7 +348,7 @@ Program Generator::generateProgram()
       if ( num_ops == 0 )
       {
         size_t val = (next_position * 5) + 1;
-        Operation add( Operation::Type::ADD, Operand( Operand::Type::MEM_ACCESS_DIRECT, mem + 1 ),
+        Operation add( Operation::Type::ADD, Operand( Operand::Type::DIRECT, mem + 1 ),
             Operand( Operand::Type::CONSTANT, val ) );
         p.ops.insert( p.ops.begin() + i, add );
         i++;

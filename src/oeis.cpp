@@ -2,9 +2,9 @@
 
 #include "interpreter.hpp"
 #include "number.hpp"
-#include "parser.hpp"
-#include "printer.hpp"
 #include "optimizer.hpp"
+#include "parser.hpp"
+#include "program_util.hpp"
 #include "util.hpp"
 
 #include <algorithm>
@@ -52,10 +52,11 @@ std::string getOeisFile( const OeisSequence &seq )
 }
 
 Oeis::Oeis( const Settings &settings )
-    : settings( settings ),
-      interpreter( settings ),
-      optimizer( settings ),
-      total_count_( 0 )
+    :
+    settings( settings ),
+    interpreter( settings ),
+    optimizer( settings ),
+    total_count_( 0 )
 {
   matchers.resize( 3 );
   matchers[0].reset( new DirectMatcher() );
@@ -413,14 +414,13 @@ void Oeis::findAll( const Program &p, const Sequence &norm_seq, seq_programs_t &
 
 void Oeis::dumpProgram( number_t id, Program p, const std::string &file ) const
 {
-  p.removeOps( Operation::Type::NOP );
+  ProgramUtil::removeOps( p, Operation::Type::NOP );
   std::ofstream out( file );
   auto &seq = sequences.at( id );
   out << "; " << seq << std::endl;
   out << "; " << seq.full << std::endl;
   out << std::endl;
-  Printer r;
-  r.print( p, out );
+  ProgramUtil::print( p, out );
 }
 
 std::pair<bool, Program> Oeis::optimizeAndCheck( const Program &p, const OeisSequence &seq ) const
@@ -452,10 +452,9 @@ std::pair<bool, Program> Oeis::optimizeAndCheck( const Program &p, const OeisSeq
   if ( !optimized.first )
   {
     std::cout << "before:" << std::endl;
-    Printer d;
-    d.print( p, std::cout );
+    ProgramUtil::print( p, std::cout );
     std::cout << "after:" << std::endl;
-    d.print( optimized.second, std::cout );
+    ProgramUtil::print( optimized.second, std::cout );
     Log::get().error(
         "Program generates wrong result; possible error in optimization, minimization or synthesis; target sequence: "
             + seq.to_string() + "; expected: " + seq.full.to_string() + "; got: " + new_seq.to_string(), false );
@@ -485,8 +484,8 @@ std::pair<bool, bool> Oeis::updateProgram( number_t id, const Program &p ) const
         is_new = false;
         Parser parser;
         auto existing_program = parser.parse( in );
-        if ( optimized.second.num_ops( Operand::Type::MEM_ACCESS_INDIRECT ) > 0
-            || optimized.second.num_ops( false ) >= existing_program.num_ops( false ) )
+        if ( ProgramUtil::numOps( optimized.second, Operand::Type::INDIRECT ) > 0
+            || ProgramUtil::numOps( optimized.second, false ) >= ProgramUtil::numOps( existing_program, false ) )
         {
           return
           { false,false};
@@ -587,7 +586,7 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
       }
       else
       {
-        program.removeOps( Operation::Type::NOP );
+        ProgramUtil::removeOps( program, Operation::Type::NOP );
         Program optimized = program;
         Optimizer optimizer( settings2 );
         optimizer.minimize( optimized, s.full.size() );
@@ -612,8 +611,8 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
               << "\n\n";
         }
         list_file << "* [" << s.id_str() << "](http://oeis.org/" << s.id_str() << ") ([L" << std::setw( 2 )
-            << std::setfill( '0' ) << optimized.num_ops( false ) << " program](" << s.id_str() << ".asm)): " << s.name
-            << "\n";
+            << std::setfill( '0' ) << ProgramUtil::numOps( optimized, false ) << " program](" << s.id_str()
+            << ".asm)): " << s.name << "\n";
       }
     }
   }

@@ -56,23 +56,30 @@ bool DirectMatcher::extend( Program &p, int base, int gen ) const
 
 // --- Linear Matcher ---------------------------------------------------------
 
-std::pair<Sequence, std::pair<int, int>> LinearMatcher::reduce( const Sequence &seq ) const
+int truncate( Sequence &seq )
 {
-  std::pair<Sequence, std::pair<int, int>> result;
   int offset = seq.min();
-  int factor = -1;
-  for ( auto x : seq )
+  for ( size_t i = 0; i < seq.size(); i++ )
   {
-    int d = x - offset;
-    if ( d > 0 )
+    seq[i] = seq[i] - offset;
+  }
+  return offset;
+}
+
+int shrink( Sequence &seq )
+{
+  int factor = -1;
+  for ( size_t i = 0; i < seq.size(); i++ )
+  {
+    if ( seq[i] > 0 )
     {
       if ( factor == -1 )
       {
-        factor = d;
+        factor = seq[i];
       }
       else
       {
-        factor = Semantics::gcd( factor, d );
+        factor = Semantics::gcd( factor, seq[i] );
       }
     }
   }
@@ -80,40 +87,42 @@ std::pair<Sequence, std::pair<int, int>> LinearMatcher::reduce( const Sequence &
   {
     factor = 1;
   }
-  result.first.resize( seq.size() );
-  for ( size_t i = 0; i < seq.size(); i++ )
+  else
   {
-    result.first[i] = (seq[i] - offset) / factor;
+    for ( size_t i = 0; i < seq.size(); i++ )
+    {
+      seq[i] = seq[i] / factor;
+    }
   }
-  result.second = std::pair<int, int>( offset, factor );
+  return factor;
+}
+
+std::pair<Sequence, line> LinearMatcher::reduce( const Sequence &seq ) const
+{
+  std::pair<Sequence, line> result;
+  result.first = seq;
+  result.second.offset = truncate( result.first );
+  result.second.factor = shrink( result.first );
   return result;
 }
 
-bool LinearMatcher::extend( Program &p, std::pair<int, int> base, std::pair<int, int> gen ) const
+bool LinearMatcher::extend( Program &p, line base, line gen ) const
 {
-  if ( gen.first > 0 )
+  if ( gen.offset > 0 )
   {
-    p.ops.insert( p.ops.end(),
-        Operation( Operation::Type::SUB, Operand( Operand::Type::MEM_ACCESS_DIRECT, 1 ),
-            Operand( Operand::Type::CONSTANT, gen.first ) ) );
+    p.push_back( Operation::Type::SUB, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, gen.offset );
   }
-  if ( gen.second > 1 )
+  if ( gen.factor > 1 )
   {
-    p.ops.insert( p.ops.end(),
-        Operation( Operation::Type::DIV, Operand( Operand::Type::MEM_ACCESS_DIRECT, 1 ),
-            Operand( Operand::Type::CONSTANT, gen.second ) ) );
+    p.push_back( Operation::Type::DIV, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, gen.factor );
   }
-  if ( base.second > 1 )
+  if ( base.factor > 1 )
   {
-    p.ops.insert( p.ops.end(),
-        Operation( Operation::Type::MUL, Operand( Operand::Type::MEM_ACCESS_DIRECT, 1 ),
-            Operand( Operand::Type::CONSTANT, base.second ) ) );
+    p.push_back( Operation::Type::MUL, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, base.factor );
   }
-  if ( base.first > 0 )
+  if ( base.offset > 0 )
   {
-    p.ops.insert( p.ops.end(),
-        Operation( Operation::Type::ADD, Operand( Operand::Type::MEM_ACCESS_DIRECT, 1 ),
-            Operand( Operand::Type::CONSTANT, base.first ) ) );
+    p.push_back( Operation::Type::ADD, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, base.offset );
   }
   return true;
 }
@@ -198,15 +207,11 @@ bool addPostPolynomial( Program &p, const Polynomial &pol )
     const auto constant = pol[0];
     if ( constant > 0 )
     {
-      p.ops.insert( p.ops.end(),
-          Operation( Operation::Type::ADD, Operand( Operand::Type::MEM_ACCESS_DIRECT, 1 ),
-              Operand( Operand::Type::CONSTANT, constant ) ) );
+      p.push_back( Operation::Type::ADD, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, constant );
     }
     else if ( constant < 0 )
     {
-      p.ops.insert( p.ops.end(),
-          Operation( Operation::Type::SUB, Operand( Operand::Type::MEM_ACCESS_DIRECT, 1 ),
-              Operand( Operand::Type::CONSTANT, -constant ) ) );
+      p.push_back( Operation::Type::SUB, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, -constant );
     }
   }
 
@@ -225,9 +230,7 @@ bool addPostPolynomial( Program &p, const Polynomial &pol )
     const number_t term_cell = max_cell + 3;
 
     // save argument
-    p.ops.insert( p.ops.begin(),
-        Operation( Operation::Type::MOV, Operand( Operand::Type::MEM_ACCESS_DIRECT, saved_arg_cell ),
-            Operand( Operand::Type::MEM_ACCESS_DIRECT, 0 ) ) );
+    p.push_front( Operation::Type::MOV, Operand::Type::DIRECT, saved_arg_cell, Operand::Type::DIRECT, 0 );
 
     // polynomial evaluation code
     for ( number_t exp = 1; exp < pol.size(); exp++ )
@@ -235,30 +238,20 @@ bool addPostPolynomial( Program &p, const Polynomial &pol )
       // update x^exp
       if ( exp == 1 )
       {
-        p.ops.insert( p.ops.end(),
-            Operation( Operation::Type::MOV, Operand( Operand::Type::MEM_ACCESS_DIRECT, x_cell ),
-                Operand( Operand::Type::MEM_ACCESS_DIRECT, saved_arg_cell ) ) );
+        p.push_back( Operation::Type::MOV, Operand::Type::DIRECT, x_cell, Operand::Type::DIRECT, saved_arg_cell );
       }
       else
       {
-        p.ops.insert( p.ops.end(),
-            Operation( Operation::Type::MUL, Operand( Operand::Type::MEM_ACCESS_DIRECT, x_cell ),
-                Operand( Operand::Type::MEM_ACCESS_DIRECT, saved_arg_cell ) ) );
+        p.push_back( Operation::Type::MUL, Operand::Type::DIRECT, x_cell, Operand::Type::DIRECT, saved_arg_cell );
       }
 
       // update result
       const auto factor = pol[exp];
       if ( factor > 0 )
       {
-        p.ops.insert( p.ops.end(),
-            Operation( Operation::Type::MOV, Operand( Operand::Type::MEM_ACCESS_DIRECT, term_cell ),
-                Operand( Operand::Type::MEM_ACCESS_DIRECT, x_cell ) ) );
-        p.ops.insert( p.ops.end(),
-            Operation( Operation::Type::MUL, Operand( Operand::Type::MEM_ACCESS_DIRECT, term_cell ),
-                Operand( Operand::Type::CONSTANT, factor ) ) );
-        p.ops.insert( p.ops.end(),
-            Operation( Operation::Type::ADD, Operand( Operand::Type::MEM_ACCESS_DIRECT, 1 ),
-                Operand( Operand::Type::MEM_ACCESS_DIRECT, term_cell ) ) );
+        p.push_back( Operation::Type::MOV, Operand::Type::DIRECT, term_cell, Operand::Type::DIRECT, x_cell );
+        p.push_back( Operation::Type::MUL, Operand::Type::DIRECT, term_cell, Operand::Type::CONSTANT, factor );
+        p.push_back( Operation::Type::ADD, Operand::Type::DIRECT, 1, Operand::Type::DIRECT, term_cell );
       }
       else if ( factor < 0 )
       {

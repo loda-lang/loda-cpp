@@ -5,7 +5,7 @@
 #include "oeis.hpp"
 #include "optimizer.hpp"
 #include "parser.hpp"
-#include "printer.hpp"
+#include "program_util.hpp"
 #include "synthesizer.hpp"
 
 #include <chrono>
@@ -33,8 +33,7 @@ bool Miner::updateCollatz( const Program &p, const Sequence &seq ) const
     std::ofstream out( file_name );
     out << "; " << seq << std::endl;
     out << std::endl;
-    Printer r;
-    r.print( p, out );
+    ProgramUtil::print( p, out );
     out.close();
     Log::get().alert( "Found possible Collatz valuation: " + seq.to_string() );
     return true;

@@ -1,5 +1,7 @@
 #include "program.hpp"
 
+#include "number.hpp"
+
 const std::array<Operation::Type, 14> Operation::Types = { Operation::Type::NOP, Operation::Type::MOV,
     Operation::Type::ADD, Operation::Type::SUB, Operation::Type::MUL, Operation::Type::DIV, Operation::Type::MOD,
     Operation::Type::POW, Operation::Type::FAC, Operation::Type::GCD, Operation::Type::LPB, Operation::Type::LPE,
@@ -55,58 +57,14 @@ const Operation::Metadata& Operation::Metadata::get( Type t )
   return nop;
 }
 
-void Program::removeOps( Operation::Type type )
+void Program::push_front( Operation::Type t, Operand::Type tt, number_t tv, Operand::Type st, number_t sv )
 {
-  auto it = ops.begin();
-  while ( it != ops.end() )
-  {
-    if ( it->type == type )
-    {
-      it = ops.erase( it );
-    }
-    else
-    {
-      it++;
-    }
-  }
+  ops.insert( ops.begin(), Operation( t, Operand( tt, tv ), Operand( st, sv ) ) );
 }
 
-size_t Program::num_ops( bool withNops ) const
+void Program::push_back( Operation::Type t, Operand::Type tt, number_t tv, Operand::Type st, number_t sv )
 {
-  if ( withNops )
-  {
-    return ops.size();
-  }
-  else
-  {
-    size_t num_ops = 0;
-    for ( auto &op : ops )
-    {
-      if ( op.type != Operation::Type::NOP )
-      {
-        num_ops++;
-      }
-    }
-    return num_ops;
-  }
-}
-
-size_t Program::num_ops( Operand::Type type ) const
-{
-  size_t num_ops = 0;
-  for ( auto &op : ops )
-  {
-    auto &m = Operation::Metadata::get( op.type );
-    if ( m.num_operands == 1 && op.target.type == type )
-    {
-      num_ops++;
-    }
-    else if ( m.num_operands == 2 && (op.source.type == type || op.target.type == type) )
-    {
-      num_ops++;
-    }
-  }
-  return num_ops;
+  ops.insert( ops.end(), Operation( t, Operand( tt, tv ), Operand( st, sv ) ) );
 }
 
 bool Program::operator==( const Program &p ) const

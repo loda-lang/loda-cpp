@@ -7,7 +7,7 @@
 #include "oeis.hpp"
 #include "optimizer.hpp"
 #include "parser.hpp"
-#include "printer.hpp"
+#include "program_util.hpp"
 #include "semantics.hpp"
 #include "synthesizer.hpp"
 
@@ -84,8 +84,7 @@ void Test::optimizer( size_t tests )
     s2 = interpreter.eval( optimized );
     if ( s1.size() != s2.size() || (s1 != s2) )
     {
-      Printer p;
-      p.print( program, std::cout );
+      ProgramUtil::print( program, std::cout );
       Log::get().error( "Program evaluated to different sequence after optimization", true );
     }
   }
@@ -141,8 +140,7 @@ void Test::polynomial_matcher( size_t tests, size_t degree )
     matcher.match( program, norm_seq, results );
     if ( results.size() != 1 )
     {
-      Printer r;
-      r.print( program, std::cout );
+      ProgramUtil::print( program, std::cout );
       Log::get().error( "Error: no program found", true );
     }
     Sequence result_seq;
@@ -156,11 +154,10 @@ void Test::polynomial_matcher( size_t tests, size_t degree )
     }
     if ( result_seq != target_seq )
     {
-      Printer r;
       std::cout << "# Input program: " << std::endl;
-      r.print( program, std::cout );
+      ProgramUtil::print( program, std::cout );
       std::cout << std::endl << "# Output program: " << std::endl;
-      r.print( results[0].second, std::cout );
+      ProgramUtil::print( results[0].second, std::cout );
       std::cout << "# Target sequence: " + target_seq.to_string() << std::endl;
       std::cout << "# Output sequence: " + result_seq.to_string() << std::endl;
       Log::get().error( "Error: matched program yields wrong unexpected result", true );
@@ -176,7 +173,6 @@ void Test::polynomial_synthesizer( size_t tests, size_t degree )
   Settings settings;
   LinearSynthesizer synth;
   Interpreter interpreter( settings );
-  Printer printer;
   Program prog;
   for ( size_t i = 0; i < tests; i++ )
   {
@@ -198,7 +194,7 @@ void Test::polynomial_synthesizer( size_t tests, size_t degree )
     auto seq2 = interpreter.eval( prog );
     if ( seq1 != seq2 )
     {
-      printer.print( prog, std::cout );
+      ProgramUtil::print( prog, std::cout );
       Log::get().error( "Synthesized program for polynomial " + pol.to_string() + " yields incorrect result", true );
     }
   }

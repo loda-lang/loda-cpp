@@ -4,7 +4,7 @@
 #include "oeis.hpp"
 #include "optimizer.hpp"
 #include "parser.hpp"
-#include "printer.hpp"
+#include "program_util.hpp"
 #include "test.hpp"
 #include "util.hpp"
 
@@ -94,20 +94,18 @@ int main( int argc, char *argv[] )
     else if ( cmd == "optimize" || cmd == "opt" )
     {
       Parser parser;
-      Printer printer;
       Program program = parser.parse( std::string( args.at( 1 ) ) );
       Optimizer optimizer( settings );
       optimizer.optimize( program, 2, 1 );
-      printer.print( program, std::cout );
+      ProgramUtil::print( program, std::cout );
     }
     else if ( cmd == "minimize" || cmd == "min" )
     {
       Parser parser;
-      Printer printer;
       Program program = parser.parse( std::string( args.at( 1 ) ) );
       Optimizer optimizer( settings );
       optimizer.minimize( program, settings.num_terms );
-      printer.print( program, std::cout );
+      ProgramUtil::print( program, std::cout );
     }
     else if ( cmd == "generate" || cmd == "gen" )
     {
@@ -115,8 +113,7 @@ int main( int argc, char *argv[] )
       Generator generator( settings, std::random_device()() );
       auto program = generator.generateProgram();
       optimizer.optimize( program, 2, 1 );
-      Printer r;
-      r.print( program, std::cout );
+      ProgramUtil::print( program, std::cout );
     }
     else if ( cmd == "mine" )
     {

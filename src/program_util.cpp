@@ -1,5 +1,58 @@
-#include "printer.hpp"
-#include "program.hpp"
+#include "program_util.hpp"
+
+void ProgramUtil::removeOps( Program &p, Operation::Type type )
+{
+  auto it = p.ops.begin();
+  while ( it != p.ops.end() )
+  {
+    if ( it->type == type )
+    {
+      it = p.ops.erase( it );
+    }
+    else
+    {
+      it++;
+    }
+  }
+}
+
+size_t ProgramUtil::numOps( const Program &p, bool withNops )
+{
+  if ( withNops )
+  {
+    return p.ops.size();
+  }
+  else
+  {
+    size_t num_ops = 0;
+    for ( auto &op : p.ops )
+    {
+      if ( op.type != Operation::Type::NOP )
+      {
+        num_ops++;
+      }
+    }
+    return num_ops;
+  }
+}
+
+size_t ProgramUtil::numOps( const Program &p, Operand::Type type )
+{
+  size_t num_ops = 0;
+  for ( auto &op : p.ops )
+  {
+    auto &m = Operation::Metadata::get( op.type );
+    if ( m.num_operands == 1 && op.target.type == type )
+    {
+      num_ops++;
+    }
+    else if ( m.num_operands == 2 && (op.source.type == type || op.target.type == type) )
+    {
+      num_ops++;
+    }
+  }
+  return num_ops;
+}
 
 std::string getIndent( int indent )
 {
@@ -17,15 +70,15 @@ std::string getOperand( Operand op )
   {
   case Operand::Type::CONSTANT:
     return std::to_string( op.value );
-  case Operand::Type::MEM_ACCESS_DIRECT:
+  case Operand::Type::DIRECT:
     return "$" + std::to_string( op.value );
-  case Operand::Type::MEM_ACCESS_INDIRECT:
+  case Operand::Type::INDIRECT:
     return "$$" + std::to_string( op.value );
   }
   return "";
 }
 
-void Printer::print( const Operation &op, std::ostream &out, int indent )
+void ProgramUtil::print( const Operation &op, std::ostream &out, int indent )
 {
   auto &metadata = Operation::Metadata::get( op.type );
   if ( metadata.num_operands == 0 && op.type != Operation::Type::NOP )
@@ -46,7 +99,7 @@ void Printer::print( const Operation &op, std::ostream &out, int indent )
   }
 }
 
-void Printer::print( const Program &p, std::ostream &out )
+void ProgramUtil::print( const Program &p, std::ostream &out )
 {
   int indent = 0;
   for ( auto &op : p.ops )

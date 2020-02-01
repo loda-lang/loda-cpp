@@ -90,7 +90,7 @@ bool Optimizer::mergeOps( Program &p ) const
     auto &o2 = p.ops[i + 1];
 
     // operation targets the direct same?
-    if ( o1.target == o2.target && o1.target.type == Operand::Type::MEM_ACCESS_DIRECT )
+    if ( o1.target == o2.target && o1.target.type == Operand::Type::DIRECT )
     {
       // both sources constants?
       if ( o1.source.type == Operand::Type::CONSTANT && o2.source.type == Operand::Type::CONSTANT )
@@ -127,7 +127,7 @@ bool Optimizer::mergeOps( Program &p ) const
         }
 
         // both sources same memory cell?
-        else if ( o1.source.type == Operand::Type::MEM_ACCESS_DIRECT && o1.source == o2.source )
+        else if ( o1.source.type == Operand::Type::DIRECT && o1.source == o2.source )
         {
           // add with inverse sub?
           if ( o1.type == Operation::Type::ADD && o2.type == Operation::Type::SUB )
@@ -176,7 +176,7 @@ inline bool simplifyOperand( Operand &op, std::unordered_set<number_t> &initiali
   {
   case Operand::Type::CONSTANT:
     break;
-  case Operand::Type::MEM_ACCESS_DIRECT:
+  case Operand::Type::DIRECT:
     if ( initialized_cells.find( op.value ) == initialized_cells.end() && is_source )
     {
       op.type = Operand::Type::CONSTANT;
@@ -184,10 +184,10 @@ inline bool simplifyOperand( Operand &op, std::unordered_set<number_t> &initiali
       return true;
     }
     break;
-  case Operand::Type::MEM_ACCESS_INDIRECT:
+  case Operand::Type::INDIRECT:
     if ( initialized_cells.find( op.value ) == initialized_cells.end() )
     {
-      op.type = Operand::Type::MEM_ACCESS_DIRECT;
+      op.type = Operand::Type::DIRECT;
       op.value = 0;
       return true;
     }
@@ -234,7 +234,7 @@ bool Optimizer::simplifyOperations( Program &p, size_t num_initialized_cells ) c
         }
 
         // simplify operation (cell content matters!)
-        if ( op.target.type == Operand::Type::MEM_ACCESS_DIRECT
+        if ( op.target.type == Operand::Type::DIRECT
             && initialized_cells.find( op.target.value ) == initialized_cells.end() )
         {
           // add $n,X => mov $n,X (where $n is uninitialized)
@@ -247,7 +247,7 @@ bool Optimizer::simplifyOperations( Program &p, size_t num_initialized_cells ) c
       }
 
       // simplify operation (cell content doesn't matter)
-      if ( op.target.type == Operand::Type::MEM_ACCESS_DIRECT && op.target == op.source )
+      if ( op.target.type == Operand::Type::DIRECT && op.target == op.source )
       {
         // add $n,$n => mul $n,2
         if ( op.type == Operation::Type::ADD )
@@ -268,10 +268,10 @@ bool Optimizer::simplifyOperations( Program &p, size_t num_initialized_cells ) c
       // update initialized cells
       switch ( op.target.type )
       {
-      case Operand::Type::MEM_ACCESS_DIRECT:
+      case Operand::Type::DIRECT:
         initialized_cells.insert( op.target.value );
         break;
-      case Operand::Type::MEM_ACCESS_INDIRECT:
+      case Operand::Type::INDIRECT:
         can_simplify = false; // don't know at this point which cell is written to
         break;
       case Operand::Type::CONSTANT:
@@ -381,7 +381,7 @@ bool Optimizer::getUsedMemoryCells( const Program &p, std::unordered_set<number_
   for ( auto &op : p.ops )
   {
     size_t region_length = 1;
-    if ( op.source.type == Operand::Type::MEM_ACCESS_INDIRECT || op.target.type == Operand::Type::MEM_ACCESS_INDIRECT )
+    if ( op.source.type == Operand::Type::INDIRECT || op.target.type == Operand::Type::INDIRECT )
     {
       return false;
     }
@@ -396,14 +396,14 @@ bool Optimizer::getUsedMemoryCells( const Program &p, std::unordered_set<number_
         return false;
       }
     }
-    if ( op.source.type == Operand::Type::MEM_ACCESS_DIRECT )
+    if ( op.source.type == Operand::Type::DIRECT )
     {
       for ( size_t i = 0; i < region_length; i++ )
       {
         used_cells.insert( op.source.value + i );
       }
     }
-    if ( op.target.type == Operand::Type::MEM_ACCESS_DIRECT )
+    if ( op.target.type == Operand::Type::DIRECT )
     {
       for ( size_t i = 0; i < region_length; i++ )
       {
@@ -448,12 +448,12 @@ bool Optimizer::reduceMemoryCells( Program &p, size_t num_reserved_cells ) const
       bool replaced = false;
       for ( auto &op : p.ops )
       {
-        if ( op.source.type == Operand::Type::MEM_ACCESS_DIRECT && op.source.value == largest_used )
+        if ( op.source.type == Operand::Type::DIRECT && op.source.value == largest_used )
         {
           op.source.value = candidate;
           replaced = true;
         }
-        if ( op.target.type == Operand::Type::MEM_ACCESS_DIRECT && op.target.value == largest_used )
+        if ( op.target.type == Operand::Type::DIRECT && op.target.value == largest_used )
         {
           op.target.value = candidate;
           replaced = true;

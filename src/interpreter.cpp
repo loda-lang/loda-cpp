@@ -1,7 +1,7 @@
 #include "interpreter.hpp"
 
 #include "number.hpp"
-#include "printer.hpp"
+#include "program_util.hpp"
 #include "semantics.hpp"
 
 #include <array>
@@ -36,8 +36,6 @@ bool Interpreter::run( const Program &p, Memory &mem ) const
 
   // push first operation to stack
   pc_stack.push( 0 );
-
-  Printer printer;
 
   number_t cycles = 0;
   Memory old_mem, frag, frag_prev, prev;
@@ -200,7 +198,7 @@ bool Interpreter::run( const Program &p, Memory &mem ) const
     {
       std::stringstream buf;
       buf << "Executing ";
-      printer.print( op, buf );
+      ProgramUtil::print( op, buf );
       buf << " " << old_mem << " => " << mem;
       Log::get().debug( buf.str() );
     }
@@ -225,11 +223,11 @@ number_t Interpreter::get( Operand a, const Memory &mem, bool get_address ) cons
     }
     return a.value;
   }
-  case Operand::Type::MEM_ACCESS_DIRECT:
+  case Operand::Type::DIRECT:
   {
     return get_address ? a.value : mem.get( a.value );
   }
-  case Operand::Type::MEM_ACCESS_INDIRECT:
+  case Operand::Type::INDIRECT:
   {
     return get_address ? mem.get( a.value ) : mem.get( mem.get( a.value ) );
   }
@@ -247,10 +245,10 @@ void Interpreter::set( Operand a, number_t v, Memory &mem ) const
     throw std::runtime_error( "Cannot set value of a constant" );
     index = 0; // we don't get here
     break;
-  case Operand::Type::MEM_ACCESS_DIRECT:
+  case Operand::Type::DIRECT:
     index = a.value;
     break;
-  case Operand::Type::MEM_ACCESS_INDIRECT:
+  case Operand::Type::INDIRECT:
     index = mem.get( a.value );
     break;
   }
