@@ -87,7 +87,7 @@ int shrink( Sequence &seq )
   {
     factor = 1;
   }
-  else
+  if ( factor > 1 )
   {
     for ( size_t i = 0; i < seq.size(); i++ )
     {
