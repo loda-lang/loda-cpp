@@ -127,6 +127,36 @@ bool LinearMatcher::extend( Program &p, line base, line gen ) const
   return true;
 }
 
+std::pair<Sequence, line> LinearMatcher2::reduce( const Sequence &seq ) const
+{
+  std::pair<Sequence, line> result;
+  result.first = seq;
+  result.second.factor = shrink( result.first );
+  result.second.offset = truncate( result.first );
+  return result;
+}
+
+bool LinearMatcher2::extend( Program &p, line base, line gen ) const
+{
+  if ( gen.factor > 1 )
+  {
+    p.push_back( Operation::Type::DIV, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, gen.factor );
+  }
+  if ( gen.offset > 0 )
+  {
+    p.push_back( Operation::Type::SUB, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, gen.offset );
+  }
+  if ( base.offset > 0 )
+  {
+    p.push_back( Operation::Type::ADD, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, base.offset );
+  }
+  if ( base.factor > 1 )
+  {
+    p.push_back( Operation::Type::MUL, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, base.factor );
+  }
+  return true;
+}
+
 // --- Polynomial Matcher -----------------------------------------------------
 
 const int PolynomialMatcher::DEGREE = 3; // magic number

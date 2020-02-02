@@ -87,6 +87,22 @@ protected:
 
 };
 
+class LinearMatcher2: public AbstractMatcher<line>
+{
+public:
+
+  virtual ~LinearMatcher2()
+  {
+  }
+
+protected:
+
+  virtual std::pair<Sequence, line> reduce( const Sequence &seq ) const override;
+
+  virtual bool extend( Program &p, line base, line gen ) const override;
+
+};
+
 class PolynomialMatcher: public AbstractMatcher<Polynomial>
 {
 public:
