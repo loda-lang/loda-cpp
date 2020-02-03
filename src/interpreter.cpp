@@ -127,7 +127,11 @@ bool Interpreter::run( const Program &p, Memory &mem ) const
     {
       length = get( op.source, mem );
       start = get( op.target, mem, true );
-      if ( length > settings.max_memory )
+      if ( length == NUM_INF )
+      {
+        throw std::runtime_error( "Infinite loop" );
+      }
+      else if ( length > settings.max_memory )
       {
         throw std::runtime_error( "Maximum memory fragment length exceeded: " + std::to_string( length ) );
       }
@@ -209,7 +213,6 @@ bool Interpreter::run( const Program &p, Memory &mem ) const
 
 number_t Interpreter::get( Operand a, const Memory &mem, bool get_address ) const
 {
-  number_t result;
   switch ( a.type )
   {
   case Operand::Type::CONSTANT:
@@ -218,25 +221,19 @@ number_t Interpreter::get( Operand a, const Memory &mem, bool get_address ) cons
     {
       throw std::runtime_error( "Cannot get address of a constant" );
     }
-    result = a.value;
-    break;
+    return a.value;
   }
   case Operand::Type::DIRECT:
   {
-    result = get_address ? a.value : mem.get( a.value );
-    break;
+    return get_address ? a.value : mem.get( a.value );
   }
   case Operand::Type::INDIRECT:
   {
-    result = get_address ? mem.get( a.value ) : mem.get( mem.get( a.value ) );
-    break;
+    return get_address ? mem.get( a.value ) : mem.get( mem.get( a.value ) );
   }
   }
-  if ( result == NUM_INF )
-  {
-    throw std::runtime_error( "Hit simple pole" );
-  }
-  return result;
+  return
+  {};
 }
 
 void Interpreter::set( Operand a, number_t v, Memory &mem ) const
