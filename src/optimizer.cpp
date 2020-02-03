@@ -243,6 +243,13 @@ bool Optimizer::simplifyOperations( Program &p, size_t num_initialized_cells ) c
             op.type = Operation::Type::MOV;
             simplified = true;
           }
+          // fac $n => mov $n,1 (where $n is uninitialized)
+          else if ( op.type == Operation::Type::FAC )
+          {
+            op.type = Operation::Type::MOV;
+            op.source = Operand( Operand::Type::CONSTANT, 0 );
+            simplified = true;
+          }
         }
       }
 
