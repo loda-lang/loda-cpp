@@ -32,10 +32,10 @@ void Optimizer::optimize( Program &p, size_t num_reserved_cells, size_t num_init
     {
       changed = true;
     }
-//    if ( evalConstants( p, num_initialized_cells ) )
-//    {
-//      changed = true;
-//    }
+    if ( evalConstants( p, num_initialized_cells ) )
+    {
+      changed = true;
+    }
   }
   Log::get().debug( "Finished optimization; program now has " + std::to_string( p.ops.size() ) + " operations" );
 }

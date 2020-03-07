@@ -547,6 +547,7 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
   std::ofstream list_file;
   int list_index = -1;
   size_t num_programs = 0;
+  size_t num_optimized = 0;
   for ( auto &s : sequences )
   {
     std::string file_name = getOeisFile( s );
@@ -595,6 +596,7 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
         if ( !(program == optimized) )
         {
           Log::get().warn( "Program " + file_name + " not optimal! Updating..." );
+          num_optimized++;
         }
         dumpProgram( s.id, optimized, file_name );
         if ( list_index < 0 || (int) s.id / 100000 != list_index )
@@ -624,5 +626,9 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
       << "![LODA Program Length Distribution](https://raw.githubusercontent.com/ckrause/loda/master/lengths.png)\n";
   // readme_out << "![LODA Program Counts](https://raw.githubusercontent.com/ckrause/loda/master/counts.png)\n";
   readme_out.close();
+  if ( num_optimized > 0 )
+  {
+    Log::get().alert( "Optimized " + std::to_string( num_optimized ) + " programs" );
+  }
   Log::get().info( "Finished checking programs for OEIS sequences" );
 }
