@@ -2,6 +2,7 @@
 
 #include "interpreter.hpp"
 #include "number.hpp"
+#include "semantics.hpp"
 #include "util.hpp"
 
 void Optimizer::optimize( Program &p, size_t num_reserved_cells, size_t num_initialized_cells ) const
@@ -31,6 +32,10 @@ void Optimizer::optimize( Program &p, size_t num_reserved_cells, size_t num_init
     {
       changed = true;
     }
+//    if ( evalConstants( p, num_initialized_cells ) )
+//    {
+//      changed = true;
+//    }
   }
   Log::get().debug( "Finished optimization; program now has " + std::to_string( p.ops.size() ) + " operations" );
 }
@@ -392,6 +397,158 @@ bool Optimizer::reduceMemoryCells( Program &p, size_t num_reserved_cells ) const
     }
   }
   return false;
+}
+
+struct update_state
+{
+  bool changed;
+  bool stop;
+};
+
+update_state updateConstantsArithmetic( Operation &op, std::unordered_map<number_t, number_t> &values,
+    std::unordered_set<number_t> &unknown_cells )
+{
+  // make sure there is not indirect memory access
+  auto num_ops = Operation::Metadata::get( op.type ).num_operands;
+  if ( (num_ops > 0 && op.target.type == Operand::Type::INDIRECT)
+      || (num_ops > 1 && op.source.type == Operand::Type::INDIRECT) )
+  {
+    update_state result;
+    result.changed = false;
+    result.stop = true;
+    return result;
+  }
+
+  bool unknown = false;
+
+  // deduce source value
+  number_t source_value = 0;
+  if ( num_ops > 1 )
+  {
+    if ( op.source.type == Operand::Type::CONSTANT )
+    {
+      source_value = op.source.value;
+    }
+    else // direct
+    {
+      if ( unknown_cells.find( op.source.value ) != unknown_cells.end() )
+      {
+        unknown = true;
+      }
+      else
+      {
+        auto found = values.find( op.source.value );
+        if ( found != values.end() )
+        {
+          source_value = found->second;
+        }
+      }
+    }
+  }
+
+  // deduce target value
+  number_t target_value = 0;
+  if ( unknown_cells.find( op.target.value ) != unknown_cells.end() && op.type != Operation::Type::MOV )
+  {
+    unknown = true;
+  }
+  else
+  {
+    auto found = values.find( op.target.value );
+    if ( found != values.end() )
+    {
+      target_value = found->second;
+    }
+  }
+
+  // calculate new value
+  bool update = true;
+  switch ( op.type )
+  {
+  case Operation::Type::MOV:
+    target_value = source_value;
+    break;
+  case Operation::Type::ADD:
+    target_value = Semantics::add( target_value, source_value );
+    break;
+  case Operation::Type::SUB:
+    target_value = Semantics::sub( target_value, source_value );
+    break;
+  case Operation::Type::MUL:
+    target_value = Semantics::mul( target_value, source_value );
+    break;
+  case Operation::Type::DIV:
+    target_value = Semantics::div( target_value, source_value );
+    break;
+  case Operation::Type::MOD:
+    target_value = Semantics::mod( target_value, source_value );
+    break;
+  case Operation::Type::POW:
+    target_value = Semantics::pow( target_value, source_value );
+    break;
+  case Operation::Type::FAC:
+    target_value = Semantics::fac( target_value );
+    break;
+  case Operation::Type::GCD:
+    target_value = Semantics::gcd( target_value, source_value );
+    break;
+
+  case Operation::Type::NOP:
+  case Operation::Type::DBG:
+    update = false;
+    break;
+
+  case Operation::Type::LPB:
+  case Operation::Type::LPE:
+  case Operation::Type::CLR:
+  {
+    update_state result;
+    result.changed = false;
+    result.stop = true;
+    return result;
+  }
+  }
+
+  update_state result;
+  result.changed = false;
+  result.stop = false;
+
+  if ( unknown )
+  {
+    unknown_cells.insert( op.target.value );
+  }
+  else if ( update )
+  {
+    values[op.target.value] = target_value;
+    if ( op.source.type == Operand::Type::DIRECT )
+    {
+      op.type = Operation::Type::MOV;
+      op.source = Operand( Operand::Type::CONSTANT, target_value );
+      result.changed = true;
+    }
+  }
+  return result;
+}
+
+bool Optimizer::evalConstants( Program &p, size_t num_initialized_cells ) const
+{
+  std::unordered_map<number_t, number_t> values;
+  std::unordered_set<number_t> unknown_cells;
+  for ( size_t i = 0; i < num_initialized_cells; i++ )
+  {
+    unknown_cells.insert( i );
+  }
+  bool changed = false;
+  for ( auto &op : p.ops )
+  {
+    auto state = updateConstantsArithmetic( op, values, unknown_cells );
+    if ( state.stop )
+    {
+      return changed;
+    }
+    changed = changed || state.changed;
+  }
+  return changed;
 }
 
 void Optimizer::minimize( Program &p, size_t num_terms ) const

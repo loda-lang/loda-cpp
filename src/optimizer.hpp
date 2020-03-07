@@ -32,6 +32,8 @@ public:
 
   bool getUsedMemoryCells( const Program &p, std::unordered_set<number_t> &used_cells, number_t &larged_used ) const;
 
+  bool evalConstants( Program &p, size_t num_initialized_cells ) const;
+
 private:
 
   Settings settings;
