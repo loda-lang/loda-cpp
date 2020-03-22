@@ -42,7 +42,7 @@ public:
 
   static Metrics& get();
 
-  void write( const std::string &field, const std::map<std::string, std::string>& labels, double value ) const;
+  void write( const std::string &field, const std::map<std::string, std::string> &labels, double value ) const;
 
 private:
   std::string host;
@@ -60,6 +60,7 @@ public:
   size_t max_index;
   bool optimize_existing_programs;
   bool search_linear;
+  bool throw_on_overflow;
   std::string operation_types;
   std::string operand_types;
   std::string program_template;

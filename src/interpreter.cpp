@@ -256,6 +256,10 @@ void Interpreter::set( Operand a, number_t v, Memory &mem ) const
   {
     throw std::runtime_error( "Memory index out of range: " + std::to_string( index ) );
   }
+  if ( settings.throw_on_overflow && v == NUM_INF )
+  {
+    throw std::runtime_error( "Overflow in cell: " + std::to_string( index ) );
+  }
   mem.set( index, v );
 }
 

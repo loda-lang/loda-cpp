@@ -115,7 +115,7 @@ Metrics& Metrics::get()
   return metrics;
 }
 
-void Metrics::write( const std::string &field, const std::map<std::string, std::string>& labels, double value ) const
+void Metrics::write( const std::string &field, const std::map<std::string, std::string> &labels, double value ) const
 {
   if ( Metrics::host.empty() )
   {
@@ -123,7 +123,7 @@ void Metrics::write( const std::string &field, const std::map<std::string, std::
   }
   std::stringstream buf;
   buf << "curl -i -s -XPOST '" << host << "/write?db=loda' --data-binary '" << field;
-  for ( auto& l : labels )
+  for ( auto &l : labels )
   {
     buf << "," << l.first << "=" << l.second;
   }
@@ -146,6 +146,7 @@ Settings::Settings()
     max_index( 6 ),
     optimize_existing_programs( false ),
     search_linear( false ),
+    throw_on_overflow( false ),
     operation_types( "^" ),
     operand_types( "cd" )
 {
