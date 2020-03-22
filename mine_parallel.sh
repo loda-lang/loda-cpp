@@ -31,17 +31,18 @@ function start_miners() {
   echo "Start mining"
   local l="-l ${log_level}"
   # instantiate templates w/o loops
-  for n in 6 7 8 9; do
+  for n in 7 8 9 10; do
     p="${n}0"
     for t in T01 T02; do
       ./loda mine $tmp_params -p $p -n $n -a cd -o ^l -e programs/templates/${t}.asm $l $@ &
     done
   done
   # no templates but w/ loops
+  ./loda mine $tmp_params -p 100 -a cd -n 10 $l $@ &
+  ./loda mine $tmp_params -p 90 -a cd -n 9 $l $@ &
   ./loda mine $tmp_params -p 80 -a cd -n 8 $l $@ &
   ./loda mine $tmp_params -p 60 -a cd -n 8 $l $@ &
   ./loda mine $tmp_params -p 60 -a cdi -n 6 $l $@ &
-  ./loda mine $tmp_params -p 40 -a cd -n 6 -r $l $@ &
   ./loda maintain $l &
   if [ -n "$tmp_params" ]; then
     tmp_params=""
