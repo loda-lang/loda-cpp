@@ -146,7 +146,7 @@ Settings::Settings()
     max_index( 6 ),
     optimize_existing_programs( false ),
     search_linear( false ),
-    throw_on_overflow( false ),
+      throw_on_overflow( true ),
     operation_types( "^" ),
     operand_types( "cd" )
 {

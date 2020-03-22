@@ -65,6 +65,11 @@ Oeis::Oeis( const Settings &settings )
   matchers[3].reset( new PolynomialMatcher() );
 }
 
+bool isCloseToOverflow( number_t n )
+{
+  return n > (NUM_INF / 1000);
+}
+
 void Oeis::load()
 {
   // load sequence data
@@ -119,7 +124,7 @@ void Oeis::load()
       }
       else if ( line[pos] >= '0' && line[pos] <= '9' )
       {
-        if ( num > 1844674407370955100ul )
+        if ( isCloseToOverflow( num ) )
         {
           break;
         }
@@ -201,7 +206,7 @@ void Oeis::load()
           big_sequence.clear();
           break;
         }
-        if ( value == std::numeric_limits<int64_t>::max() )
+        if ( isCloseToOverflow( (number_t) value ) )
         {
           break;
         }
