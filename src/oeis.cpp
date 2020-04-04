@@ -52,11 +52,10 @@ std::string getOeisFile( const OeisSequence &seq )
 }
 
 Oeis::Oeis( const Settings &settings )
-    :
-    settings( settings ),
-    interpreter( settings ),
-    optimizer( settings ),
-    total_count_( 0 )
+    : settings( settings ),
+      interpreter( settings ),
+      optimizer( settings ),
+      total_count_( 0 )
 {
   matchers.resize( 4 );
   matchers[0].reset( new DirectMatcher() );
@@ -435,9 +434,13 @@ std::pair<bool, Program> Oeis::optimizeAndCheck( const Program &p, const OeisSeq
   std::pair<bool, Program> optimized;
   optimized.first = true;
   optimized.second = p;
-  optimizer.optimize( optimized.second, 2, 1 );
-  optimizer.minimize( optimized.second, seq.full.size() );
-  optimizer.optimize( optimized.second, 2, 1 );
+  size_t length;
+  do
+  {
+    length = optimized.second.ops.size();
+    optimizer.optimize( optimized.second, 2, 1 );
+    optimizer.minimize( optimized.second, seq.full.size() );
+  } while ( optimized.second.ops.size() < length );
 
   // check its correctness
   Sequence new_seq;

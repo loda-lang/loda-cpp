@@ -112,7 +112,6 @@ int main( int argc, char *argv[] )
       Optimizer optimizer( settings );
       Generator generator( settings, std::random_device()() );
       auto program = generator.generateProgram();
-      optimizer.optimize( program, 2, 1 );
       ProgramUtil::print( program, std::cout );
     }
     else if ( cmd == "mine" )
