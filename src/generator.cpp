@@ -205,46 +205,34 @@ Program Generator::generateProgram()
   }
 
   // fix causality of read operations
-  std::set<number_t> written_cells;
-  written_cells.insert( 0 );
+  std::vector<number_t> written_cells;
+  written_cells.push_back( 0 );
   for ( size_t position = 0; position < p.ops.size(); position++ )
   {
     auto &op = p.ops[position];
+    auto &meta = Operation::Metadata::get( op.type );
 
     // fix source operands in new operation
-    if ( op.source.type == Operand::Type::DIRECT || op.source.type == Operand::Type::INDIRECT )
+    if ( meta.num_operands == 2 && op.source.type == Operand::Type::DIRECT )
     {
-      int x = op.source.value % written_cells.size();
-      for ( number_t cell : written_cells )
-      {
-        if ( x-- == 0 )
-        {
-          op.source.value = cell;
-          break;
-        }
-      }
-    }
-    if ( op.type == Operation::Type::LPB )
-    {
-      int x = op.target.value % written_cells.size();
-      for ( number_t cell : written_cells )
-      {
-        if ( x-- == 0 )
-        {
-          op.target.value = cell;
-          break;
-        }
-      }
-    }
-    if ( op.type == Operation::Type::SUB && written_cells.find( op.target.value ) == written_cells.end() )
-    {
-      op.type = Operation::Type::ADD;
+      op.source.value = written_cells[op.source.value % written_cells.size()];
     }
 
-    // update written cells
-    if ( Operation::Metadata::get( op.type ).is_writing_target && op.target.type == Operand::Type::DIRECT )
+    // check if target cell not written yet
+    if ( meta.is_writing_target && op.target.type == Operand::Type::DIRECT
+        && std::find( written_cells.begin(), written_cells.end(), op.target.value ) == written_cells.end() )
     {
-      written_cells.insert( op.target.value );
+      if ( meta.is_reading_target )
+      {
+        op.type = Operation::Type::MOV;
+        if ( op.target == op.source )
+        {
+          op.target.value++;
+        }
+      }
+
+      // update written cells
+      written_cells.push_back( op.target.value );
     }
   }
 
