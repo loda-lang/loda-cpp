@@ -68,6 +68,7 @@ public:
     char short_name;
     size_t num_operands;
     bool is_public;
+    bool is_reading_target;
     bool is_writing_target;
     int64_t rate;
   };
