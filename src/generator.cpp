@@ -200,7 +200,8 @@ Program Generator::generateProgram()
     size_t position = (next_position * (p.ops.size() + 1));
     for ( size_t j = 0; j < next_ops.size(); j++ )
     {
-      p.ops.emplace( p.ops.begin() + position + j, Operation( next_ops[j] ) );
+      p.ops.emplace( p.ops.begin() + position, Operation( next_ops[j] ) );
+      position = ((position + p.ops.size()) / 2) + 1;
     }
   }
 
@@ -212,7 +213,7 @@ Program Generator::generateProgram()
     auto &op = p.ops[position];
     auto &meta = Operation::Metadata::get( op.type );
 
-    // fix source operands in new operation
+    // fix source operand in new operation
     if ( meta.num_operands == 2 && op.source.type == Operand::Type::DIRECT )
     {
       op.source.value = written_cells[op.source.value % written_cells.size()];
