@@ -442,6 +442,7 @@ update_state updateConstantsArithmetic( Operation &op, std::unordered_map<number
         {
           source_value = found->second;
         }
+        op.source = Operand( Operand::Type::CONSTANT, source_value );
       }
     }
   }
