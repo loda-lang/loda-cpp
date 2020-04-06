@@ -52,10 +52,11 @@ std::string getOeisFile( const OeisSequence &seq )
 }
 
 Oeis::Oeis( const Settings &settings )
-    : settings( settings ),
-      interpreter( settings ),
-      optimizer( settings ),
-      total_count_( 0 )
+    :
+    settings( settings ),
+    interpreter( settings ),
+    optimizer( settings ),
+    total_count_( 0 )
 {
   matchers.resize( 4 );
   matchers[0].reset( new DirectMatcher() );
@@ -434,13 +435,7 @@ std::pair<bool, Program> Oeis::optimizeAndCheck( const Program &p, const OeisSeq
   std::pair<bool, Program> optimized;
   optimized.first = true;
   optimized.second = p;
-  size_t length;
-  do
-  {
-    length = optimized.second.ops.size();
-    optimizer.optimize( optimized.second, 2, 1 );
-    optimizer.minimize( optimized.second, seq.full.size() );
-  } while ( optimized.second.ops.size() < length );
+  optimizer.optimizeAndMinimize( optimized.second, 2, 1, seq.full.size() );
 
   // check its correctness
   Sequence new_seq;
@@ -599,8 +594,7 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
         ProgramUtil::removeOps( program, Operation::Type::NOP );
         Program optimized = program;
         Optimizer optimizer( settings2 );
-        optimizer.minimize( optimized, s.full.size() );
-        optimizer.optimize( optimized, 2, 1 );
+        optimizer.optimizeAndMinimize( optimized, 2, 1, s.full.size() );
         if ( !(program == optimized) )
         {
           Log::get().warn( "Program " + file_name + " not optimal! Updating..." );

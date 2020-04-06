@@ -20,6 +20,9 @@ public:
 
   void minimize( Program &p, size_t num_terms ) const;
 
+  void optimizeAndMinimize( Program &p, size_t num_reserved_cells, size_t num_initialized_cells,
+      size_t num_terms ) const;
+
   bool removeNops( Program &p ) const;
 
   bool removeEmptyLoops( Program &p ) const;

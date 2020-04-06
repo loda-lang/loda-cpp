@@ -629,3 +629,15 @@ void Optimizer::minimize( Program &p, size_t num_terms ) const
     Log::get().debug( "Removed " + std::to_string( removed_ops ) + " operations during minimization" );
   }
 }
+
+void Optimizer::optimizeAndMinimize( Program &p, size_t num_reserved_cells, size_t num_initialized_cells,
+    size_t num_terms ) const
+{
+  size_t length;
+  do
+  {
+    length = p.ops.size();
+    optimize( p, num_reserved_cells, num_initialized_cells );
+    minimize( p, num_terms );
+  } while ( p.ops.size() < length );
+}
