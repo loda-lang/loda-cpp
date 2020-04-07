@@ -420,6 +420,7 @@ update_state updateConstantsArithmetic( Operation &op, std::unordered_map<number
   }
 
   bool unknown = false;
+  bool updated_source = false;
 
   // deduce source value
   number_t source_value = 0;
@@ -443,6 +444,7 @@ update_state updateConstantsArithmetic( Operation &op, std::unordered_map<number
           source_value = found->second;
         }
         op.source = Operand( Operand::Type::CONSTANT, source_value );
+        updated_source = true;
       }
     }
   }
@@ -511,7 +513,7 @@ update_state updateConstantsArithmetic( Operation &op, std::unordered_map<number
   }
 
   update_state result;
-  result.changed = false;
+  result.changed = updated_source;
   result.stop = false;
 
   if ( unknown )
@@ -521,7 +523,7 @@ update_state updateConstantsArithmetic( Operation &op, std::unordered_map<number
   else if ( update )
   {
     values[op.target.value] = target_value;
-    if ( op.source.type == Operand::Type::DIRECT )
+    if ( op.type != Operation::Type::MOV )
     {
       op.type = Operation::Type::MOV;
       op.source = Operand( Operand::Type::CONSTANT, target_value );
