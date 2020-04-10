@@ -139,6 +139,10 @@ void Miner::mine( volatile sig_atomic_t &exit_flag )
         Metrics::get().write( "matches", matcher_labels, oeis.getMatcherStats()[i].false_positives );
         matcher_labels["type"] = "error";
         Metrics::get().write( "matches", matcher_labels, oeis.getMatcherStats()[i].errors );
+        matcher_labels["type"] = "success";
+        Metrics::get().write( "matches", matcher_labels,
+            oeis.getMatcherStats()[i].candidates - oeis.getMatcherStats()[i].false_positives
+                - oeis.getMatcherStats()[i].errors );
         oeis.getMatcherStats()[i].candidates = 0;
         oeis.getMatcherStats()[i].false_positives = 0;
         oeis.getMatcherStats()[i].errors = 0;
