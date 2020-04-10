@@ -63,6 +63,13 @@ Oeis::Oeis( const Settings &settings )
   matchers[1].reset( new LinearMatcher() );
   matchers[2].reset( new LinearMatcher2() );
   matchers[3].reset( new PolynomialMatcher() );
+  matcher_stats.resize( matchers.size() );
+  for ( auto &s : matcher_stats )
+  {
+    s.matches = 0;
+    s.mistakes = 0;
+    s.errors = 0;
+  }
 }
 
 bool isCloseToOverflow( number_t n )
@@ -386,35 +393,36 @@ void Oeis::findAll( const Program &p, const Sequence &norm_seq, seq_programs_t &
 {
   // collect possible matches
   result.clear();
+  seq_programs_t temp_result;
+  Sequence full_seq;
   for ( auto &matcher : matchers )
   {
-    matcher->match( p, norm_seq, result );
-  }
+    temp_result.clear();
+    matcher->match( p, norm_seq, temp_result );
 
-  // validate the found matches
-  Sequence full_seq;
-  auto it = result.begin();
-  while ( it != result.end() )
-  {
-    auto &expected_full_seq = sequences.at( it->first ).full;
-    try
+    // validate the found matches
+    full_seq.clear();
+    for ( auto t : temp_result )
     {
-      if ( full_seq.size() != expected_full_seq.size() )
+      auto &expected_full_seq = sequences.at( t.first ).full;
+      try
       {
-        full_seq = interpreter.eval( it->second, expected_full_seq.size() );
+        if ( full_seq.size() != expected_full_seq.size() )
+        {
+          full_seq = interpreter.eval( t.second, expected_full_seq.size() );
+        }
+        if ( full_seq.size() != expected_full_seq.size() || full_seq != expected_full_seq )
+        {
+          continue;
+        }
+        // successful match!
+        result.push_back( t );
       }
-      if ( full_seq.size() != expected_full_seq.size() || full_seq != expected_full_seq )
+      catch ( const std::exception& )
       {
-        it = result.erase( it );
         continue;
       }
     }
-    catch ( const std::exception& )
-    {
-      it = result.erase( it );
-      continue;
-    }
-    ++it;
   }
 }
 
