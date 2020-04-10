@@ -40,8 +40,8 @@ public:
 
 struct MatcherStats
 {
-  size_t matches;
-  size_t mistakes;
+  size_t candidates;
+  size_t false_positives;
   size_t errors;
 };
 
@@ -78,6 +78,16 @@ public:
 
   void maintain( volatile sig_atomic_t &exit_flag );
 
+  std::vector<std::unique_ptr<Matcher>>& getMatchers()
+  {
+    return matchers;
+  }
+
+  std::vector<MatcherStats>& getMatcherStats()
+  {
+    return matcher_stats;
+  }
+
 private:
 
   void loadNames();
@@ -91,7 +101,7 @@ private:
   Optimizer optimizer;
   std::vector<OeisSequence> sequences;
   std::vector<std::unique_ptr<Matcher>> matchers;
-  std::vector<MatcherStats> matcher_stats;
+  mutable std::vector<MatcherStats> matcher_stats;
   size_t total_count_;
 
 };

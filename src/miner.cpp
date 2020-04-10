@@ -75,13 +75,17 @@ void Miner::mine( volatile sig_atomic_t &exit_flag )
   Log::get().info( "Mining programs for OEIS sequences" );
 
   // metrics labels
-  std::map<std::string, std::string> labels = { { "num_operations", std::to_string( settings.num_operations ) }, {
-      "max_constant", std::to_string( settings.max_constant ) }, { "max_index", std::to_string( settings.max_index ) },
-      { "operation_types", settings.operation_types }, { "operand_types", settings.operand_types }, };
+  std::map<std::string, std::string> settings_labels = {
+      { "num_operations", std::to_string( settings.num_operations ) }, { "max_constant", std::to_string(
+          settings.max_constant ) }, { "max_index", std::to_string( settings.max_index ) }, { "operation_types",
+          settings.operation_types }, { "operand_types", settings.operand_types }, };
   if ( !settings.program_template.empty() )
   {
-    labels.emplace( "program_template", settings.program_template );
+    settings_labels.emplace( "program_template", settings.program_template );
   }
+
+  std::map<std::string, std::string> matcher_labels;
+  const size_t num_matchers = oeis.getMatchers().size();
 
   Generator generator( settings, std::random_device()() );
   Sequence norm_seq;
@@ -120,12 +124,25 @@ void Miner::mine( volatile sig_atomic_t &exit_flag )
     {
       time = time2;
       Log::get().info( "Generated " + std::to_string( generated ) + " programs" );
-      Metrics::get().write( "generated", labels, generated );
-      Metrics::get().write( "fresh", labels, fresh );
-      Metrics::get().write( "updated", labels, updated );
+      Metrics::get().write( "generated", settings_labels, generated );
+      Metrics::get().write( "fresh", settings_labels, fresh );
+      Metrics::get().write( "updated", settings_labels, updated );
       generated = 0;
       fresh = 0;
       updated = 0;
+      for ( size_t i = 0; i < num_matchers; i++ )
+      {
+        matcher_labels["matcher"] = oeis.getMatchers()[i]->getName();
+        matcher_labels["type"] = "candidate";
+        Metrics::get().write( "matches", matcher_labels, oeis.getMatcherStats()[i].candidates );
+        matcher_labels["type"] = "false_positive";
+        Metrics::get().write( "matches", matcher_labels, oeis.getMatcherStats()[i].false_positives );
+        matcher_labels["type"] = "error";
+        Metrics::get().write( "matches", matcher_labels, oeis.getMatcherStats()[i].errors );
+        oeis.getMatcherStats()[i].candidates = 0;
+        oeis.getMatcherStats()[i].false_positives = 0;
+        oeis.getMatcherStats()[i].errors = 0;
+      }
     }
   }
 }

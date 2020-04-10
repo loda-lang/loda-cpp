@@ -19,12 +19,20 @@ public:
 
   virtual void match( const Program &p, const Sequence &norm_seq, seq_programs_t &result ) const = 0;
 
+  virtual const std::string& getName() const = 0;
+
 };
 
 template<class T>
 class AbstractMatcher: public Matcher
 {
 public:
+
+  AbstractMatcher( const std::string &name )
+      :
+      name( name )
+  {
+  }
 
   virtual ~AbstractMatcher()
   {
@@ -36,6 +44,11 @@ public:
 
   virtual void match( const Program &p, const Sequence &norm_seq, seq_programs_t &result ) const override;
 
+  virtual const std::string& getName() const override
+  {
+    return name;
+  }
+
 protected:
 
   virtual std::pair<Sequence, T> reduce( const Sequence &seq ) const = 0;
@@ -44,6 +57,7 @@ protected:
 
 private:
 
+  std::string name;
   SequenceToIdsMap ids;
   std::unordered_map<number_t, T> data;
 
@@ -52,6 +66,12 @@ private:
 class DirectMatcher: public AbstractMatcher<int>
 {
 public:
+
+  DirectMatcher()
+      :
+      AbstractMatcher( "direct" )
+  {
+  }
 
   virtual ~DirectMatcher()
   {
@@ -75,6 +95,12 @@ class LinearMatcher: public AbstractMatcher<line>
 {
 public:
 
+  LinearMatcher()
+      :
+      AbstractMatcher( "linear1" )
+  {
+  }
+
   virtual ~LinearMatcher()
   {
   }
@@ -90,6 +116,12 @@ protected:
 class LinearMatcher2: public AbstractMatcher<line>
 {
 public:
+
+  LinearMatcher2()
+      :
+      AbstractMatcher( "linear2" )
+  {
+  }
 
   virtual ~LinearMatcher2()
   {
@@ -108,6 +140,12 @@ class PolynomialMatcher: public AbstractMatcher<Polynomial>
 public:
 
   static const int DEGREE;
+
+  PolynomialMatcher()
+      :
+      AbstractMatcher( "polynomial" )
+  {
+  }
 
   virtual ~PolynomialMatcher()
   {
@@ -130,6 +168,12 @@ class DeltaMatcher: public AbstractMatcher<int>
 public:
 
   static const int MAX_DELTA;
+
+  DeltaMatcher()
+      :
+      AbstractMatcher( "delta" )
+  {
+  }
 
   virtual ~DeltaMatcher()
   {

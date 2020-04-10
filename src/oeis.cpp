@@ -66,8 +66,8 @@ Oeis::Oeis( const Settings &settings )
   matcher_stats.resize( matchers.size() );
   for ( auto &s : matcher_stats )
   {
-    s.matches = 0;
-    s.mistakes = 0;
+    s.candidates = 0;
+    s.false_positives = 0;
     s.errors = 0;
   }
 }
@@ -395,15 +395,16 @@ void Oeis::findAll( const Program &p, const Sequence &norm_seq, seq_programs_t &
   result.clear();
   seq_programs_t temp_result;
   Sequence full_seq;
-  for ( auto &matcher : matchers )
+  for ( size_t i = 0; i < matchers.size(); i++ )
   {
     temp_result.clear();
-    matcher->match( p, norm_seq, temp_result );
+    matchers[i]->match( p, norm_seq, temp_result );
 
     // validate the found matches
     full_seq.clear();
     for ( auto t : temp_result )
     {
+      matcher_stats[i].candidates++;
       auto &expected_full_seq = sequences.at( t.first ).full;
       try
       {
@@ -413,14 +414,17 @@ void Oeis::findAll( const Program &p, const Sequence &norm_seq, seq_programs_t &
         }
         if ( full_seq.size() != expected_full_seq.size() || full_seq != expected_full_seq )
         {
-          continue;
+          matcher_stats[i].false_positives++;
         }
-        // successful match!
-        result.push_back( t );
+        else
+        {
+          // successful match!
+          result.push_back( t );
+        }
       }
       catch ( const std::exception& )
       {
-        continue;
+        matcher_stats[i].errors++;
       }
     }
   }
