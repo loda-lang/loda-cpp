@@ -314,35 +314,24 @@ bool Optimizer::getUsedMemoryCells( const Program &p, std::unordered_set<number_
 {
   for ( auto &op : p.ops )
   {
-    size_t region_length = 1;
     if ( op.source.type == Operand::Type::INDIRECT || op.target.type == Operand::Type::INDIRECT )
     {
       return false;
     }
     if ( op.type == Operation::Type::LPB )
     {
-      if ( op.source.type == Operand::Type::CONSTANT )
-      {
-        region_length = op.source.value;
-      }
-      else
+      if ( op.source.type != Operand::Type::CONSTANT || op.source.value != 1 )
       {
         return false;
       }
     }
     if ( op.source.type == Operand::Type::DIRECT )
     {
-      for ( size_t i = 0; i < region_length; i++ )
-      {
-        used_cells.insert( op.source.value + i );
-      }
+      used_cells.insert( op.source.value );
     }
     if ( op.target.type == Operand::Type::DIRECT )
     {
-      for ( size_t i = 0; i < region_length; i++ )
-      {
-        used_cells.insert( op.target.value + i );
-      }
+      used_cells.insert( op.target.value );
     }
   }
   largest_used = used_cells.empty() ? 0 : *used_cells.begin();
