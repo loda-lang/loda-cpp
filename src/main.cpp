@@ -31,6 +31,8 @@ void help()
   std::cout << "  evaluate <file>  Evaluate a program to a sequence" << std::endl;
   std::cout << "  optimize <file>  Optimize a program and print it" << std::endl;
   std::cout << "  minimize <file>  Minimize a program and print it (use -t to set the number of terms)" << std::endl;
+  std::cout << "  optmin <file>    Optimize and minimize a program and print it (use -t to set the number of terms)"
+      << std::endl;
   std::cout << "  generate         Generate a random program and print it" << std::endl;
   std::cout << "  test             Run test suite" << std::endl;
   std::cout << "OEIS commands:" << std::endl;
@@ -105,6 +107,14 @@ int main( int argc, char *argv[] )
       Program program = parser.parse( std::string( args.at( 1 ) ) );
       Optimizer optimizer( settings );
       optimizer.minimize( program, settings.num_terms );
+      ProgramUtil::print( program, std::cout );
+    }
+    else if ( cmd == "optmin" )
+    {
+      Parser parser;
+      Program program = parser.parse( std::string( args.at( 1 ) ) );
+      Optimizer optimizer( settings );
+      optimizer.optimizeAndMinimize( program, 2, 1, settings.num_terms );
       ProgramUtil::print( program, std::cout );
     }
     else if ( cmd == "generate" || cmd == "gen" )
