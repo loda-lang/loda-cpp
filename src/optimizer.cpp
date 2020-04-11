@@ -420,7 +420,7 @@ update_state updateConstantsArithmetic( Operation &op, std::unordered_map<number
   }
 
   bool unknown = false;
-  bool updated_source = false;
+  bool update_source = false;
 
   // deduce source value
   number_t source_value = 0;
@@ -443,8 +443,7 @@ update_state updateConstantsArithmetic( Operation &op, std::unordered_map<number
         {
           source_value = found->second;
         }
-        op.source = Operand( Operand::Type::CONSTANT, source_value );
-        updated_source = true;
+        update_source = true;
       }
     }
   }
@@ -465,7 +464,7 @@ update_state updateConstantsArithmetic( Operation &op, std::unordered_map<number
   }
 
   // calculate new value
-  bool update = true;
+  bool update_target = true;
   switch ( op.type )
   {
   case Operation::Type::MOV:
@@ -498,7 +497,7 @@ update_state updateConstantsArithmetic( Operation &op, std::unordered_map<number
 
   case Operation::Type::NOP:
   case Operation::Type::DBG:
-    update = false;
+    update_target = false;
     break;
 
   case Operation::Type::LPB:
@@ -513,14 +512,19 @@ update_state updateConstantsArithmetic( Operation &op, std::unordered_map<number
   }
 
   update_state result;
-  result.changed = updated_source;
+  result.changed = false;
   result.stop = false;
 
+  if ( update_source )
+  {
+    op.source = Operand( Operand::Type::CONSTANT, source_value );
+    result.changed = true;
+  }
   if ( unknown )
   {
     unknown_cells.insert( op.target.value );
   }
-  else if ( update )
+  else if ( update_target )
   {
     values[op.target.value] = target_value;
     if ( op.type != Operation::Type::MOV )
