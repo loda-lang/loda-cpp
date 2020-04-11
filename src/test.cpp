@@ -28,7 +28,7 @@ void Test::all()
   {
     polynomial_matcher( 10000, d );
   }
-  optimizer( 1000 );
+  optimizer( 10000 );
 }
 
 void Test::fibonacci()
@@ -41,7 +41,7 @@ void Test::ackermann()
 {
   std::vector<std::vector<number_t> > values = { { 1, 2, 3, 4, 5 }, { 2, 3, 4, 5, 6 }, { 3, 5, 7, 9, 11 }, { 5, 13, 29,
       61, 125 }, { 13, 65533 } };
-  testBinary( "ack", "programs/ackermann.asm", values );
+  testBinary( "ack", "programs/general/ackermann.asm", values );
 }
 
 void Test::collatz()

@@ -467,13 +467,11 @@ std::pair<bool, Program> Oeis::optimizeAndCheck( const Program &p, const OeisSeq
   // throw error if not correct
   if ( !optimized.first )
   {
-    std::cout << "before:" << std::endl;
-    ProgramUtil::print( p, std::cout );
-    std::cout << "after:" << std::endl;
-    ProgramUtil::print( optimized.second, std::cout );
     Log::get().error(
-        "Program generates wrong result; possible error in optimization, minimization or synthesis; target sequence: "
-            + seq.to_string() + "; expected: " + seq.full.to_string() + "; got: " + new_seq.to_string(), false );
+        "Program for " + seq.id_str() + " generates wrong result after optimization, minimization or synthesis",
+        false );
+    std::ofstream out( "programs/opterr/" + seq.id_str() + ".asm" );
+    ProgramUtil::print( p, out );
   }
 
   return optimized;
