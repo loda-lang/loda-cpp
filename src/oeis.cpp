@@ -52,11 +52,10 @@ std::string getOeisFile( const OeisSequence &seq )
 }
 
 Oeis::Oeis( const Settings &settings )
-    :
-    settings( settings ),
-    interpreter( settings ),
-    optimizer( settings ),
-    total_count_( 0 )
+    : settings( settings ),
+      interpreter( settings ),
+      optimizer( settings ),
+      total_count_( 0 )
 {
   matchers.resize( 4 );
   matchers[0].reset( new DirectMatcher() );
@@ -402,6 +401,7 @@ void Oeis::findAll( const Program &p, const Sequence &norm_seq, seq_programs_t &
 
     // validate the found matches
     full_seq.clear();
+    size_t j = 0;
     for ( auto t : temp_result )
     {
       matcher_stats[i].candidates++;
@@ -415,6 +415,19 @@ void Oeis::findAll( const Program &p, const Sequence &norm_seq, seq_programs_t &
         if ( full_seq.size() != expected_full_seq.size() || full_seq != expected_full_seq )
         {
           matcher_stats[i].false_positives++;
+//          Sequence sub_seq( std::vector<number_t>( full_seq.begin(), full_seq.begin() + norm_seq.size() ) );
+//          if ( sub_seq != norm_seq )
+//          {
+//            auto id = sequences.at( t.first ).id_str();
+//            Log::get().error( "Matcher (" + matchers[i]->getName() + ") generates wrong program for " + id, false );
+//            Log::get().error( "Exp: " + norm_seq.to_string() );
+//            Log::get().error( "Got: " + sub_seq.to_string() );
+//            std::ofstream o1( "programs/materr/" + id + ".asm" );
+//            ProgramUtil::print( p, o1 );
+//            std::ofstream o2(
+//                "programs/materr/" + id + "-" + matchers[i]->getName() + "-" + std::to_string( j ) + ".asm" );
+//            ProgramUtil::print( t.second, o2 );
+//          }
         }
         else
         {
@@ -426,6 +439,7 @@ void Oeis::findAll( const Program &p, const Sequence &norm_seq, seq_programs_t &
       {
         matcher_stats[i].errors++;
       }
+      j++;
     }
   }
 }
