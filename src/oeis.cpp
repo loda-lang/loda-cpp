@@ -400,7 +400,6 @@ void Oeis::findAll( const Program &p, const Sequence &norm_seq, seq_programs_t &
     matchers[i]->match( p, norm_seq, temp_result );
 
     // validate the found matches
-    full_seq.clear();
     size_t j = 0;
     for ( auto t : temp_result )
     {
@@ -408,26 +407,27 @@ void Oeis::findAll( const Program &p, const Sequence &norm_seq, seq_programs_t &
       auto &expected_full_seq = sequences.at( t.first ).full;
       try
       {
-        if ( full_seq.size() != expected_full_seq.size() )
-        {
-          full_seq = interpreter.eval( t.second, expected_full_seq.size() );
-        }
+        full_seq.clear();
+        full_seq = interpreter.eval( t.second, expected_full_seq.size() );
         if ( full_seq.size() != expected_full_seq.size() || full_seq != expected_full_seq )
         {
           matcher_stats[i].false_positives++;
-//          Sequence sub_seq( std::vector<number_t>( full_seq.begin(), full_seq.begin() + norm_seq.size() ) );
-//          if ( sub_seq != norm_seq )
-//          {
-//            auto id = sequences.at( t.first ).id_str();
-//            Log::get().error( "Matcher (" + matchers[i]->getName() + ") generates wrong program for " + id, false );
-//            Log::get().error( "Exp: " + norm_seq.to_string() );
-//            Log::get().error( "Got: " + sub_seq.to_string() );
-//            std::ofstream o1( "programs/materr/" + id + ".asm" );
+          Sequence got( std::vector<number_t>( full_seq.begin(), full_seq.begin() + norm_seq.size() ) );
+          Sequence exp(
+              std::vector<number_t>( expected_full_seq.begin(), expected_full_seq.begin() + norm_seq.size() ) );
+          if ( got != exp )
+          {
+            auto id = sequences.at( t.first ).id_str();
+            Log::get().error( "Matcher (" + matchers[i]->getName() + ") generates wrong program for " + id, false );
+//            Log::get().error( "Exp: " + exp.to_string() );
+//            Log::get().error( "Got: " + got.to_string() );
+//            Log::get().error( "Cal: " + norm_seq.to_string() );
+//            std::ofstream o1( "programs/debug/matcher/" + id + ".asm" );
 //            ProgramUtil::print( p, o1 );
 //            std::ofstream o2(
 //                "programs/materr/" + id + "-" + matchers[i]->getName() + "-" + std::to_string( j ) + ".asm" );
 //            ProgramUtil::print( t.second, o2 );
-//          }
+          }
         }
         else
         {
@@ -484,7 +484,7 @@ std::pair<bool, Program> Oeis::optimizeAndCheck( const Program &p, const OeisSeq
     Log::get().error(
         "Program for " + seq.id_str() + " generates wrong result after optimization, minimization or synthesis",
         false );
-    std::ofstream out( "programs/opterr/" + seq.id_str() + ".asm" );
+    std::ofstream out( "programs/debug/optimizer" + seq.id_str() + ".asm" );
     ProgramUtil::print( p, out );
   }
 
