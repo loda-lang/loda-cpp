@@ -24,12 +24,13 @@ public:
   Sequence( const Sequence &s ) = default;
 
   Sequence( const std::vector<number_t> &s )
-      :
-      std::vector<number_t>( s )
+      : std::vector<number_t>( s )
   {
   }
 
-  Sequence subsequence( size_t start );
+  Sequence subsequence( size_t start ) const;
+
+  Sequence subsequence( size_t start, size_t length ) const;
 
   bool is_linear() const;
 
@@ -64,14 +65,12 @@ public:
   Polynomial( const Polynomial &s ) = default;
 
   Polynomial( size_t degree )
-      :
-      std::vector<int64_t>( degree + 1 )
+      : std::vector<int64_t>( degree + 1 )
   {
   }
 
   Polynomial( const std::vector<int64_t> &p )
-      :
-      std::vector<int64_t>( p )
+      : std::vector<int64_t>( p )
   {
   }
 
@@ -112,8 +111,7 @@ public:
   Memory( const Memory &m ) = default;
 
   Memory( const std::vector<number_t> &m )
-      :
-      std::vector<number_t>( m )
+      : std::vector<number_t>( m )
   {
   }
 

@@ -7,9 +7,14 @@
 
 // === Sequence ===============================================================
 
-Sequence Sequence::subsequence( size_t start )
+Sequence Sequence::subsequence( size_t start ) const
 {
   return Sequence( std::vector<number_t>( begin() + start, end() ) );
+}
+
+Sequence Sequence::subsequence( size_t start, size_t length ) const
+{
+  return Sequence( std::vector<number_t>( begin() + start, begin() + start + length ) );
 }
 
 bool Sequence::is_linear() const

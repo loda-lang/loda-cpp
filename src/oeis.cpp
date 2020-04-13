@@ -412,9 +412,8 @@ void Oeis::findAll( const Program &p, const Sequence &norm_seq, seq_programs_t &
         if ( full_seq.size() != expected_full_seq.size() || full_seq != expected_full_seq )
         {
           matcher_stats[i].false_positives++;
-          Sequence got( std::vector<number_t>( full_seq.begin(), full_seq.begin() + norm_seq.size() ) );
-          Sequence exp(
-              std::vector<number_t>( expected_full_seq.begin(), expected_full_seq.begin() + norm_seq.size() ) );
+          auto got = full_seq.subsequence( 0, norm_seq.size() );
+          auto exp = expected_full_seq.subsequence( 0, norm_seq.size() );
           if ( got != exp )
           {
             auto id = sequences.at( t.first ).id_str();
@@ -425,7 +424,7 @@ void Oeis::findAll( const Program &p, const Sequence &norm_seq, seq_programs_t &
 //            std::ofstream o1( "programs/debug/matcher/" + id + ".asm" );
 //            ProgramUtil::print( p, o1 );
 //            std::ofstream o2(
-//                "programs/materr/" + id + "-" + matchers[i]->getName() + "-" + std::to_string( j ) + ".asm" );
+//                "programs/debug/matcher/" + id + "-" + matchers[i]->getName() + "-" + std::to_string( j ) + ".asm" );
 //            ProgramUtil::print( t.second, o2 );
           }
         }
