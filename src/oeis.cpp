@@ -52,10 +52,11 @@ std::string getOeisFile( const OeisSequence &seq )
 }
 
 Oeis::Oeis( const Settings &settings )
-    : settings( settings ),
-      interpreter( settings ),
-      optimizer( settings ),
-      total_count_( 0 )
+    :
+    settings( settings ),
+    interpreter( settings ),
+    optimizer( settings ),
+    total_count_( 0 )
 {
   matchers.resize( 4 );
   matchers[0].reset( new DirectMatcher() );
@@ -169,7 +170,7 @@ void Oeis::load()
       int64_t expected_index = -1, index = 0, value = 0;
       while ( std::getline( big_file, l ) )
       {
-        l.erase( l.begin(), std::find_if( l.begin(), l.end(), []( int ch )
+        l.erase( l.begin(), std::find_if( l.begin(), l.end(), []( int ch ) 
         {
           return !std::isspace(ch);
         } ) );
@@ -418,14 +419,14 @@ void Oeis::findAll( const Program &p, const Sequence &norm_seq, seq_programs_t &
           {
             auto id = sequences.at( t.first ).id_str();
             Log::get().error( "Matcher (" + matchers[i]->getName() + ") generates wrong program for " + id, false );
-//            Log::get().error( "Exp: " + exp.to_string() );
-//            Log::get().error( "Got: " + got.to_string() );
-//            Log::get().error( "Cal: " + norm_seq.to_string() );
-//            std::ofstream o1( "programs/debug/matcher/" + id + ".asm" );
-//            ProgramUtil::print( p, o1 );
-//            std::ofstream o2(
-//                "programs/debug/matcher/" + id + "-" + matchers[i]->getName() + "-" + std::to_string( j ) + ".asm" );
-//            ProgramUtil::print( t.second, o2 );
+            Log::get().error( " Expected: " + exp.to_string() );
+            Log::get().error( "      Got: " + got.to_string() );
+            Log::get().error( "Generated: " + norm_seq.to_string() );
+            std::ofstream o1( "programs/debug/matcher/" + id + ".asm" );
+            ProgramUtil::print( p, o1 );
+            std::ofstream o2(
+                "programs/debug/matcher/" + id + "-" + matchers[i]->getName() + "-" + std::to_string( j ) + ".asm" );
+            ProgramUtil::print( t.second, o2 );
           }
         }
         else
