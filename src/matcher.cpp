@@ -336,10 +336,35 @@ std::pair<Sequence, int> DeltaMatcher::reduce( const Sequence &seq ) const
       break;
     }
   }
+  if ( result.first.size() != seq.size() - MAX_DELTA )
+  {
+    result.first.resize( seq.size() - MAX_DELTA );
+  }
   return result;
+}
+
+void diff( Program &p )
+{
+  // TODO
+}
+
+void sum( Program &p )
+{
+  // TODO
 }
 
 bool DeltaMatcher::extend( Program &p, int base, int gen ) const
 {
-  return false;
+  int delta = base - gen;
+  while ( delta < 0 )
+  {
+    sum( p );
+    delta++;
+  }
+  while ( delta > 0 )
+  {
+    diff( p );
+    delta--;
+  }
+  return true;
 }
