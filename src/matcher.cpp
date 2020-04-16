@@ -343,14 +343,27 @@ std::pair<Sequence, int> DeltaMatcher::reduce( const Sequence &seq ) const
   return result;
 }
 
-void diff( Program &p )
+bool extend_delta( Program &p, const bool sum )
 {
-  // TODO
-}
+  Settings settings;
+  Optimizer optimizer( settings );
+  std::unordered_set<number_t> used_cells;
+  number_t largest_used = 0;
+  if ( !optimizer.getUsedMemoryCells( p, used_cells, largest_used ) )
+  {
+    return false;
+  }
+  largest_used = std::max( (number_t) 1, largest_used );
+  auto loop_counter_cell = largest_used + 1;
 
-void sum( Program &p )
-{
+  p.push_front( Operation::Type::MOV, Operand::Type::DIRECT, loop_counter_cell, Operand::Type::CONSTANT, 2 );
+  p.push_front( Operation::Type::LPB, Operand::Type::DIRECT, loop_counter_cell, Operand::Type::CONSTANT, 1 );
+
+  p.push_back( Operation::Type::SUB, Operand::Type::DIRECT, loop_counter_cell, Operand::Type::CONSTANT, 1 );
+  p.push_back( Operation::Type::LPE, Operand::Type::CONSTANT, 0, Operand::Type::CONSTANT, 0 );
+
   // TODO
+  return false;
 }
 
 bool DeltaMatcher::extend( Program &p, int base, int gen ) const
@@ -358,12 +371,18 @@ bool DeltaMatcher::extend( Program &p, int base, int gen ) const
   int delta = base - gen;
   while ( delta < 0 )
   {
-    sum( p );
+    if ( !extend_delta( p, true ) )
+    {
+      return false;
+    }
     delta++;
   }
   while ( delta > 0 )
   {
-    diff( p );
+    if ( !extend_delta( p, false ) )
+    {
+      return false;
+    }
     delta--;
   }
   return true;
