@@ -170,7 +170,7 @@ void Oeis::load()
       int64_t expected_index = -1, index = 0, value = 0;
       while ( std::getline( big_file, l ) )
       {
-        l.erase( l.begin(), std::find_if( l.begin(), l.end(), []( int ch ) 
+        l.erase( l.begin(), std::find_if( l.begin(), l.end(), []( int ch )
         {
           return !std::isspace(ch);
         } ) );
@@ -230,18 +230,14 @@ void Oeis::load()
           big_sequence.clear();
         }
       }
+      else
+      {
+        Log::get().debug( "Sequence in b-file too short: " + big_path.str() );
+        big_sequence.clear();
+      }
       if ( big_sequence.size() > MAX_NUM_TERMS )
       {
         big_sequence = Sequence( std::vector<number_t>( big_sequence.begin(), big_sequence.begin() + MAX_NUM_TERMS ) );
-      }
-      if ( big_sequence.size() == 64 )
-      {
-        big_sequence = Sequence( std::vector<number_t>( big_sequence.begin(), big_sequence.begin() + 63 ) );
-      }
-      if ( id == 94966 )
-      {
-        big_sequence = Sequence(
-            std::vector<number_t>( big_sequence.begin(), big_sequence.begin() + big_sequence.size() - 2 ) );
       }
       if ( !big_sequence.empty() )
       {
