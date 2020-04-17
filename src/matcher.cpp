@@ -376,10 +376,14 @@ bool extend_delta( Program &p, const bool sum )
 
   if ( sum )
   {
-
+    p.push_back( Operation::Type::ADD, Operand::Type::DIRECT, 1, Operand::Type::DIRECT, saved_result_cell );
   }
-  // TODO
-  return false;
+  else
+  {
+    p.push_back( Operation::Type::SUB, Operand::Type::DIRECT, saved_result_cell, Operand::Type::DIRECT, 1 );
+    p.push_back( Operation::Type::MOV, Operand::Type::DIRECT, 1, Operand::Type::DIRECT, saved_result_cell );
+  }
+  return true;
 }
 
 bool DeltaMatcher::extend( Program &p, int base, int gen ) const
