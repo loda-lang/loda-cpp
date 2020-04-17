@@ -354,14 +354,30 @@ bool extend_delta( Program &p, const bool sum )
     return false;
   }
   largest_used = std::max( (number_t) 1, largest_used );
-  auto loop_counter_cell = largest_used + 1;
+  auto saved_arg_cell = largest_used + 1;
+  auto saved_result_cell = largest_used + 2;
+  auto loop_counter_cell = largest_used + 3;
+  auto tmp_counter_cell = largest_used + 4;
 
+  p.push_front( Operation::Type::MOV, Operand::Type::DIRECT, saved_arg_cell, Operand::Type::DIRECT, 0 );
   p.push_front( Operation::Type::MOV, Operand::Type::DIRECT, loop_counter_cell, Operand::Type::CONSTANT, 2 );
   p.push_front( Operation::Type::LPB, Operand::Type::DIRECT, loop_counter_cell, Operand::Type::CONSTANT, 1 );
+  p.push_front( Operation::Type::CLR, Operand::Type::DIRECT, 0, Operand::Type::CONSTANT, largest_used );
+  p.push_front( Operation::Type::SUB, Operand::Type::DIRECT, loop_counter_cell, Operand::Type::CONSTANT, 1 );
+  p.push_front( Operation::Type::MOV, Operand::Type::DIRECT, 0, Operand::Type::DIRECT, saved_arg_cell );
+  p.push_front( Operation::Type::ADD, Operand::Type::DIRECT, 0, Operand::Type::CONSTANT, loop_counter_cell );
 
-  p.push_back( Operation::Type::SUB, Operand::Type::DIRECT, loop_counter_cell, Operand::Type::CONSTANT, 1 );
+  p.push_back( Operation::Type::LPB, Operand::Type::DIRECT, tmp_counter_cell, Operand::Type::DIRECT,
+      loop_counter_cell );
+  p.push_back( Operation::Type::MOV, Operand::Type::DIRECT, saved_result_cell, Operand::Type::DIRECT, 1 );
+  p.push_back( Operation::Type::SUB, Operand::Type::DIRECT, tmp_counter_cell, Operand::Type::CONSTANT, 1 );
+  p.push_back( Operation::Type::LPE, Operand::Type::CONSTANT, 0, Operand::Type::CONSTANT, 0 );
   p.push_back( Operation::Type::LPE, Operand::Type::CONSTANT, 0, Operand::Type::CONSTANT, 0 );
 
+  if ( sum )
+  {
+
+  }
   // TODO
   return false;
 }
