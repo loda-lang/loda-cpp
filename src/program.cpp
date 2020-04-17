@@ -21,7 +21,7 @@ const Operation::Metadata& Operation::Metadata::get( Type t )
   static Operation::Metadata gcd { Operation::Type::GCD, "gcd", 'g', 2, true, true, true, 6 };
   static Operation::Metadata lpb { Operation::Type::LPB, "lpb", 'l', 2, true, true, false, 8 };
   static Operation::Metadata lpe { Operation::Type::LPE, "lpe", 'e', 0, true, false, false, 0 };
-  static Operation::Metadata clr { Operation::Type::CLR, "clr", 'c', 0, false, false, true, 0 };
+  static Operation::Metadata clr { Operation::Type::CLR, "clr", 'c', 2, true, false, true, 0 };
   static Operation::Metadata dbg { Operation::Type::DBG, "dbg", 'b', 0, false, false, false, 0 };
   switch ( t )
   {

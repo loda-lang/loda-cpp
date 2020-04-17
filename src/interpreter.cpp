@@ -180,7 +180,16 @@ bool Interpreter::run( const Program &p, Memory &mem ) const
     }
     case Operation::Type::CLR:
     {
-      mem.clear();
+      length = get( op.source, mem );
+      start = get( op.target, mem, true );
+      if ( length == NUM_INF )
+      {
+        length = mem.size();
+      }
+      for ( number_t i = start; i < (start + length) && i < mem.size(); i++ )
+      {
+        mem.set( i, 0 );
+      }
       break;
     }
     case Operation::Type::DBG:
