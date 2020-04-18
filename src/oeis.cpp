@@ -63,6 +63,7 @@ Oeis::Oeis( const Settings &settings )
   matchers[1].reset( new LinearMatcher() );
   matchers[2].reset( new LinearMatcher2() );
   matchers[3].reset( new PolynomialMatcher() );
+  //matchers[4].reset( new DeltaMatcher() );
   matcher_stats.resize( matchers.size() );
   for ( auto &s : matcher_stats )
   {
@@ -296,6 +297,14 @@ void Oeis::load()
 
   Log::get().info(
       "Loaded " + std::to_string( loaded_count ) + "/" + std::to_string( total_count_ ) + " sequences from the OEIS" );
+  std::stringstream buf;
+  buf << "Matcher compaction ratios: ";
+  for ( size_t i = 0; i < matchers.size(); i++ )
+  {
+    if ( i > 0 ) buf << ", ";
+    buf << matchers[i]->getName() << ":" << (100 * matchers[i]->getDomainSize() / loaded_count) << "%";
+  }
+  Log::get().info( buf.str() );
 
 }
 

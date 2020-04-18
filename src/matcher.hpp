@@ -21,6 +21,8 @@ public:
 
   virtual const std::string& getName() const = 0;
 
+  virtual size_t getDomainSize() const = 0;
+
 };
 
 template<class T>
@@ -47,6 +49,11 @@ public:
   virtual const std::string& getName() const override
   {
     return name;
+  }
+
+  virtual size_t getDomainSize() const override
+  {
+    return ids.size();
   }
 
 protected:
