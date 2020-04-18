@@ -340,6 +340,9 @@ std::pair<Sequence, int> DeltaMatcher::reduce( const Sequence &seq ) const
   {
     result.first.resize( seq.size() - MAX_DELTA );
   }
+//  Log::get().info(
+//      "Reduced " + seq.to_string() + " to " + result.first.to_string() + " using delta "
+//          + std::to_string( result.second ) );
   return result;
 }
 
