@@ -418,15 +418,16 @@ void Oeis::findAll( const Program &p, const Sequence &norm_seq, seq_programs_t &
         if ( full_seq.size() != expected_full_seq.size() || full_seq != expected_full_seq )
         {
           matcher_stats[i].false_positives++;
-          auto got = full_seq.subsequence( 0, norm_seq.size() );
-          auto exp = expected_full_seq.subsequence( 0, norm_seq.size() );
+          auto match_length = norm_seq.size();
+          auto got = full_seq.subsequence( 0, match_length );
+          auto exp = expected_full_seq.subsequence( 0, match_length );
           if ( got != exp )
           {
             auto id = sequences.at( t.first ).id_str();
-            Log::get().error( "Matcher (" + matchers[i]->getName() + ") generates wrong program for " + id, false );
-            Log::get().error( " Expected: " + exp.to_string() );
-            Log::get().error( "      Got: " + got.to_string() );
-            Log::get().error( "Generated: " + norm_seq.to_string() );
+            Log::get().error( matchers[i]->getName() + " matcher generates wrong program for " + id, false );
+            Log::get().error( " -  expected: " + exp.to_string() );
+            Log::get().error( " -       got: " + got.to_string() );
+            Log::get().error( " - generated: " + norm_seq.to_string() );
             std::ofstream o1( "programs/debug/matcher/" + id + ".asm" );
             ProgramUtil::print( p, o1 );
             std::ofstream o2(
