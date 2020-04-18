@@ -312,13 +312,14 @@ std::pair<Sequence, int> DeltaMatcher::reduce( const Sequence &seq ) const
   for ( int i = 0; i < MAX_DELTA; i++ )
   {
     Sequence next;
-    next.resize( result.first.size() - 1 );
+    next.resize( result.first.size() );
     bool ok = true;
     for ( size_t j = 0; j < next.size(); j++ )
     {
-      if ( result.first[j] < result.first[j + 1] )
+      number_t p = (j == 0) ? 0 : result.first[j - 1];
+      if ( p < result.first[j] )
       {
-        next[j] = result.first[j + 1] - result.first[j];
+        next[j] = result.first[j] - p;
       }
       else
       {
@@ -335,10 +336,6 @@ std::pair<Sequence, int> DeltaMatcher::reduce( const Sequence &seq ) const
     {
       break;
     }
-  }
-  if ( result.first.size() != seq.size() - MAX_DELTA )
-  {
-    result.first.resize( seq.size() - MAX_DELTA );
   }
 //  Log::get().info(
 //      "Reduced " + seq.to_string() + " to " + result.first.to_string() + " using delta "
@@ -409,6 +406,11 @@ bool extend_delta( Program &p, const bool sum )
 
 bool DeltaMatcher::extend( Program &p, int base, int gen ) const
 {
+  // TODO remove this when fixed
+  if ( base != 0 && gen != 0 )
+  {
+    return false;
+  }
   int delta = base - gen;
   while ( delta < 0 )
   {
