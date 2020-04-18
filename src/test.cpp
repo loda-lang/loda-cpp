@@ -2,6 +2,7 @@
 
 #include "generator.hpp"
 #include "interpreter.hpp"
+#include "matcher.hpp"
 #include "miner.hpp"
 #include "number.hpp"
 #include "oeis.hpp"
@@ -28,13 +29,19 @@ void Test::all()
   {
     polynomial_matcher( 10000, d );
   }
+  delta_matcher();
   optimizer( 10000 );
+}
+
+std::string get_oeis_file( number_t id )
+{
+  return "programs/oeis/" + OeisSequence( id ).id_str() + ".asm";
 }
 
 void Test::fibonacci()
 {
   Sequence values( { 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233 } );
-  testSeq( "fib", "programs/oeis/A000045.asm", values );
+  testSeq( "fib", get_oeis_file( 45 ), values );
 }
 
 void Test::ackermann()
@@ -90,6 +97,45 @@ void Test::optimizer( size_t tests )
   }
 }
 
+void Test::delta_matcher()
+{
+  delta_matcher_pair( 27, 12 );
+  delta_matcher_pair( 12, 27 );
+}
+
+void Test::delta_matcher_pair( number_t id1, number_t id2 )
+{
+  Log::get().info(
+      "Testing delta matcher for " + OeisSequence( id1 ).id_str() + " -> " + OeisSequence( id2 ).id_str() );
+  Parser parser;
+  Settings settings;
+  Interpreter interpreter( settings );
+  DeltaMatcher matcher;
+  auto p1 = parser.parse( get_oeis_file( id1 ) );
+  auto p2 = parser.parse( get_oeis_file( id2 ) );
+  ProgramUtil::removeOps( p1, Operation::Type::NOP );
+  ProgramUtil::removeOps( p2, Operation::Type::NOP );
+  auto s1 = interpreter.eval( p1 );
+  auto s2 = interpreter.eval( p2 );
+  matcher.insert( s2, id2 );
+  Matcher::seq_programs_t result;
+  matcher.match( p1, s1, result );
+  if ( result.size() != 1 )
+  {
+    Log::get().error( "Delta matcher unable to match sequence", true );
+  }
+  if ( result[0].first != id2 )
+  {
+    Log::get().error( "Delta matcher returned unexpected sequence ID", true );
+  }
+  auto s3 = interpreter.eval( result[0].second );
+  if ( s2.size() != s3.size() || s2 != s3 )
+  {
+    ProgramUtil::print( result[0].second, std::cout );
+    Log::get().error( "Delta matcher generated wrong program for " + OeisSequence( id2 ).id_str(), false );
+  }
+}
+
 void Test::polynomial_matcher( size_t tests, size_t degree )
 {
   Settings settings;
@@ -105,7 +151,7 @@ void Test::polynomial_matcher( size_t tests, size_t degree )
   std::vector<Program> programs;
   for ( number_t id : program_ids )
   {
-    auto program = parser.parse( "programs/oeis/" + OeisSequence( id ).id_str() + ".asm" );
+    auto program = parser.parse( get_oeis_file( id ) );
     optimizer.removeNops( program );
     programs.push_back( program );
   }

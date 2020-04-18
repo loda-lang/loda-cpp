@@ -359,24 +359,42 @@ bool extend_delta( Program &p, const bool sum )
   auto loop_counter_cell = largest_used + 3;
   auto tmp_counter_cell = largest_used + 4;
 
-  p.push_front( Operation::Type::MOV, Operand::Type::DIRECT, saved_arg_cell, Operand::Type::DIRECT, 0 );
-  p.push_front( Operation::Type::MOV, Operand::Type::DIRECT, loop_counter_cell, Operand::Type::CONSTANT, 2 );
-  p.push_front( Operation::Type::LPB, Operand::Type::DIRECT, loop_counter_cell, Operand::Type::CONSTANT, 1 );
-  p.push_front( Operation::Type::CLR, Operand::Type::DIRECT, 0, Operand::Type::CONSTANT, largest_used );
-  p.push_front( Operation::Type::SUB, Operand::Type::DIRECT, loop_counter_cell, Operand::Type::CONSTANT, 1 );
-  p.push_front( Operation::Type::MOV, Operand::Type::DIRECT, 0, Operand::Type::DIRECT, saved_arg_cell );
-  p.push_front( Operation::Type::ADD, Operand::Type::DIRECT, 0, Operand::Type::CONSTANT, loop_counter_cell );
+  Program prefix;
+  prefix.push_back( Operation::Type::MOV, Operand::Type::DIRECT, saved_arg_cell, Operand::Type::DIRECT, 0 );
+  if ( sum )
+  {
+    prefix.push_back( Operation::Type::MOV, Operand::Type::DIRECT, loop_counter_cell, Operand::Type::DIRECT, 0 );
+    prefix.push_back( Operation::Type::ADD, Operand::Type::DIRECT, loop_counter_cell, Operand::Type::CONSTANT, 1 );
+  }
+  else
+  {
+    prefix.push_back( Operation::Type::MOV, Operand::Type::DIRECT, loop_counter_cell, Operand::Type::CONSTANT, 2 );
+  }
+  prefix.push_back( Operation::Type::LPB, Operand::Type::DIRECT, loop_counter_cell, Operand::Type::CONSTANT, 1 );
+  prefix.push_back( Operation::Type::CLR, Operand::Type::DIRECT, 0, Operand::Type::CONSTANT, largest_used + 1 );
+  prefix.push_back( Operation::Type::SUB, Operand::Type::DIRECT, loop_counter_cell, Operand::Type::CONSTANT, 1 );
+  prefix.push_back( Operation::Type::MOV, Operand::Type::DIRECT, 0, Operand::Type::DIRECT, saved_arg_cell );
+  prefix.push_back( Operation::Type::ADD, Operand::Type::DIRECT, 0, Operand::Type::DIRECT, loop_counter_cell );
+  p.ops.insert( p.ops.begin(), prefix.ops.begin(), prefix.ops.end() );
 
-  p.push_back( Operation::Type::LPB, Operand::Type::DIRECT, tmp_counter_cell, Operand::Type::DIRECT,
-      loop_counter_cell );
-  p.push_back( Operation::Type::MOV, Operand::Type::DIRECT, saved_result_cell, Operand::Type::DIRECT, 1 );
-  p.push_back( Operation::Type::SUB, Operand::Type::DIRECT, tmp_counter_cell, Operand::Type::CONSTANT, 1 );
-  p.push_back( Operation::Type::LPE, Operand::Type::CONSTANT, 0, Operand::Type::CONSTANT, 0 );
+  if ( sum )
+  {
+    p.push_back( Operation::Type::ADD, Operand::Type::DIRECT, saved_result_cell, Operand::Type::DIRECT, 1 );
+  }
+  else
+  {
+    p.push_back( Operation::Type::MOV, Operand::Type::DIRECT, tmp_counter_cell, Operand::Type::DIRECT,
+        loop_counter_cell );
+    p.push_back( Operation::Type::LPB, Operand::Type::DIRECT, tmp_counter_cell, Operand::Type::CONSTANT, 1 );
+    p.push_back( Operation::Type::MOV, Operand::Type::DIRECT, saved_result_cell, Operand::Type::DIRECT, 1 );
+    p.push_back( Operation::Type::SUB, Operand::Type::DIRECT, tmp_counter_cell, Operand::Type::CONSTANT, 1 );
+    p.push_back( Operation::Type::LPE, Operand::Type::CONSTANT, 0, Operand::Type::CONSTANT, 0 );
+  }
   p.push_back( Operation::Type::LPE, Operand::Type::CONSTANT, 0, Operand::Type::CONSTANT, 0 );
 
   if ( sum )
   {
-    p.push_back( Operation::Type::ADD, Operand::Type::DIRECT, 1, Operand::Type::DIRECT, saved_result_cell );
+    p.push_back( Operation::Type::MOV, Operand::Type::DIRECT, 1, Operand::Type::DIRECT, saved_result_cell );
   }
   else
   {
@@ -391,7 +409,7 @@ bool DeltaMatcher::extend( Program &p, int base, int gen ) const
   int delta = base - gen;
   while ( delta < 0 )
   {
-    if ( !extend_delta( p, true ) )
+    if ( !extend_delta( p, false ) )
     {
       return false;
     }
@@ -399,7 +417,7 @@ bool DeltaMatcher::extend( Program &p, int base, int gen ) const
   }
   while ( delta > 0 )
   {
-    if ( !extend_delta( p, false ) )
+    if ( !extend_delta( p, true ) )
     {
       return false;
     }
