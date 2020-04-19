@@ -381,6 +381,7 @@ bool extend_delta( Program &p, const bool sum )
   else
   {
     prefix.push_back( Operation::Type::ADD, Operand::Type::DIRECT, 0, Operand::Type::DIRECT, loop_counter_cell );
+    prefix.push_back( Operation::Type::SUB, Operand::Type::DIRECT, 0, Operand::Type::CONSTANT, 1 );
   }
   p.ops.insert( p.ops.begin(), prefix.ops.begin(), prefix.ops.end() );
 
@@ -405,7 +406,10 @@ bool extend_delta( Program &p, const bool sum )
   }
   else
   {
+    p.push_back( Operation::Type::LPB, Operand::Type::DIRECT, saved_arg_cell, Operand::Type::CONSTANT, 1 );
     p.push_back( Operation::Type::SUB, Operand::Type::DIRECT, saved_result_cell, Operand::Type::DIRECT, 1 );
+    p.push_back( Operation::Type::MOV, Operand::Type::DIRECT, saved_arg_cell, Operand::Type::CONSTANT, 0 );
+    p.push_back( Operation::Type::LPE, Operand::Type::CONSTANT, 0, Operand::Type::CONSTANT, 0 );
     p.push_back( Operation::Type::MOV, Operand::Type::DIRECT, 1, Operand::Type::DIRECT, saved_result_cell );
   }
   return true;

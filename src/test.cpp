@@ -102,7 +102,7 @@ void Test::delta_matcher()
   delta_matcher_pair( 12, 27 );
   delta_matcher_pair( 27, 12 );
   delta_matcher_pair( 290, 330 );
-//  delta_matcher_pair( 330, 290 );
+  delta_matcher_pair( 330, 290 );
 }
 
 void Test::delta_matcher_pair( number_t id1, number_t id2 )
