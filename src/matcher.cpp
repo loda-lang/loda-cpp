@@ -142,17 +142,14 @@ bool LinearMatcher2::extend( Program &p, line base, line gen ) const
   {
     p.push_back( Operation::Type::DIV, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, gen.factor );
   }
-
-  int diff = base.offset - gen.offset;
-  if ( diff < 0 )
+  if ( gen.offset > 0 )
   {
-    p.push_back( Operation::Type::SUB, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, -diff );
+    p.push_back( Operation::Type::SUB, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, gen.offset );
   }
-  else if ( diff > 0 )
+  if ( base.offset > 0 )
   {
-    p.push_back( Operation::Type::ADD, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, diff );
+    p.push_back( Operation::Type::ADD, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, base.offset );
   }
-
   if ( base.factor > 1 )
   {
     p.push_back( Operation::Type::MUL, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, base.factor );
