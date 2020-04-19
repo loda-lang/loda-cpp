@@ -318,7 +318,7 @@ bool Optimizer::getUsedMemoryCells( const Program &p, std::unordered_set<number_
     {
       return false;
     }
-    if ( op.type == Operation::Type::LPB )
+    if ( op.type == Operation::Type::LPB || op.type == Operation::Type::CLR )
     {
       if ( op.source.type != Operand::Type::CONSTANT || op.source.value != 1 )
       {

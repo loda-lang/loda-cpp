@@ -58,12 +58,12 @@ Oeis::Oeis( const Settings &settings )
     optimizer( settings ),
     total_count_( 0 )
 {
-  matchers.resize( 4 );
+  matchers.resize( 5 );
   matchers[0].reset( new DirectMatcher() );
   matchers[1].reset( new LinearMatcher() );
   matchers[2].reset( new LinearMatcher2() );
   matchers[3].reset( new PolynomialMatcher() );
-  //matchers[4].reset( new DeltaMatcher() );
+  matchers[4].reset( new DeltaMatcher() );
   matcher_stats.resize( matchers.size() );
   for ( auto &s : matcher_stats )
   {
@@ -302,7 +302,8 @@ void Oeis::load()
   for ( size_t i = 0; i < matchers.size(); i++ )
   {
     if ( i > 0 ) buf << ", ";
-    buf << matchers[i]->getName() << ":" << (100 * matchers[i]->getDomainSize() / loaded_count) << "%";
+    double ratio = 100.0 * (double) matchers[i]->getDomainSize() / (double) loaded_count;
+    buf << matchers[i]->getName() << ": " << std::setprecision( 4 ) << ratio << "%";
   }
   Log::get().info( buf.str() );
 
