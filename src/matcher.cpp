@@ -317,7 +317,7 @@ std::pair<Sequence, int> DeltaMatcher::reduce( const Sequence &seq ) const
     for ( size_t j = 0; j < next.size(); j++ )
     {
       number_t p = (j == 0) ? 0 : result.first[j - 1];
-      if ( p < result.first[j] )
+      if ( p <= result.first[j] )
       {
         next[j] = result.first[j] - p;
       }
@@ -374,7 +374,14 @@ bool extend_delta( Program &p, const bool sum )
   prefix.push_back( Operation::Type::CLR, Operand::Type::DIRECT, 0, Operand::Type::CONSTANT, largest_used + 1 );
   prefix.push_back( Operation::Type::SUB, Operand::Type::DIRECT, loop_counter_cell, Operand::Type::CONSTANT, 1 );
   prefix.push_back( Operation::Type::MOV, Operand::Type::DIRECT, 0, Operand::Type::DIRECT, saved_arg_cell );
-  prefix.push_back( Operation::Type::ADD, Operand::Type::DIRECT, 0, Operand::Type::DIRECT, loop_counter_cell );
+  if ( sum )
+  {
+    prefix.push_back( Operation::Type::SUB, Operand::Type::DIRECT, 0, Operand::Type::DIRECT, loop_counter_cell );
+  }
+  else
+  {
+    prefix.push_back( Operation::Type::ADD, Operand::Type::DIRECT, 0, Operand::Type::DIRECT, loop_counter_cell );
+  }
   p.ops.insert( p.ops.begin(), prefix.ops.begin(), prefix.ops.end() );
 
   if ( sum )
@@ -406,11 +413,6 @@ bool extend_delta( Program &p, const bool sum )
 
 bool DeltaMatcher::extend( Program &p, int base, int gen ) const
 {
-  // TODO remove this when fixed
-  if ( base != 0 && gen != 0 )
-  {
-    return false;
-  }
   int delta = base - gen;
   while ( delta < 0 )
   {
