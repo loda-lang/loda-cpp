@@ -490,7 +490,7 @@ std::pair<bool, Program> Oeis::optimizeAndCheck( const Program &p, const OeisSeq
     Log::get().error(
         "Program for " + seq.id_str() + " generates wrong result after optimization, minimization or synthesis",
         false );
-    std::ofstream out( "programs/debug/optimizer" + seq.id_str() + ".asm" );
+    std::ofstream out( "programs/debug/optimizer/" + seq.id_str() + ".asm" );
     ProgramUtil::print( p, out );
   }
 
