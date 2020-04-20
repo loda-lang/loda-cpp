@@ -314,6 +314,49 @@ bool Optimizer::getUsedMemoryCells( const Program &p, std::unordered_set<number_
 {
   for ( auto &op : p.ops )
   {
+    size_t region_length = 1;
+    if ( op.source.type == Operand::Type::INDIRECT || op.target.type == Operand::Type::INDIRECT )
+    {
+      return false;
+    }
+    if ( op.type == Operation::Type::LPB || op.type == Operation::Type::CLR )
+    {
+      if ( op.source.type == Operand::Type::CONSTANT )
+      {
+        region_length = op.source.value;
+      }
+      else
+      {
+        return false;
+      }
+    }
+    if ( op.source.type == Operand::Type::DIRECT )
+    {
+      for ( size_t i = 0; i < region_length; i++ )
+      {
+        used_cells.insert( op.source.value + i );
+      }
+    }
+    if ( op.target.type == Operand::Type::DIRECT )
+    {
+      for ( size_t i = 0; i < region_length; i++ )
+      {
+        used_cells.insert( op.target.value + i );
+      }
+    }
+  }
+  largest_used = used_cells.empty() ? 0 : *used_cells.begin();
+  for ( number_t used : used_cells )
+  {
+    largest_used = std::max( largest_used, used );
+  }
+  return true;
+}
+
+bool Optimizer::canChangeVariableOrder( const Program &p ) const
+{
+  for ( auto &op : p.ops )
+  {
     if ( op.source.type == Operand::Type::INDIRECT || op.target.type == Operand::Type::INDIRECT )
     {
       return false;
@@ -325,19 +368,6 @@ bool Optimizer::getUsedMemoryCells( const Program &p, std::unordered_set<number_
         return false;
       }
     }
-    if ( op.source.type == Operand::Type::DIRECT )
-    {
-      used_cells.insert( op.source.value );
-    }
-    if ( op.target.type == Operand::Type::DIRECT )
-    {
-      used_cells.insert( op.target.value );
-    }
-  }
-  largest_used = used_cells.empty() ? 0 : *used_cells.begin();
-  for ( number_t used : used_cells )
-  {
-    largest_used = std::max( largest_used, used );
   }
   return true;
 }
@@ -347,6 +377,10 @@ bool Optimizer::reduceMemoryCells( Program &p, size_t num_reserved_cells ) const
   Log::get().debug( "Reducing memory cells" );
   std::unordered_set<number_t> used_cells;
   number_t largest_used = 0;
+  if ( !canChangeVariableOrder( p ) )
+  {
+    return false;
+  }
   if ( !getUsedMemoryCells( p, used_cells, largest_used ) )
   {
     return false;
