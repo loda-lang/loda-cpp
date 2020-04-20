@@ -1,7 +1,7 @@
 #pragma once
 
+#include "matcher.hpp"
 #include "number.hpp"
-
 #include "util.hpp"
 
 class Test
@@ -24,13 +24,11 @@ public:
 
   void optimizer( size_t tests );
 
-  void delta_matcher();
+  void deltaMatcher();
 
-  void delta_matcher_pair( number_t id1, number_t id2 );
+  void polynomialMatcher( size_t tests, size_t degree );
 
-  void polynomial_matcher( size_t tests, size_t degree );
-
-  void polynomial_synthesizer( size_t tests, size_t degree );
+  void polynomialSynthesizer( size_t tests, size_t degree );
 
 private:
 
@@ -40,5 +38,7 @@ private:
 
   void testBinary( const std::string &func, const std::string &file,
       const std::vector<std::vector<number_t> > &values );
+
+  void testMatcherPair( Matcher &matcher, number_t id1, number_t id2 );
 
 };

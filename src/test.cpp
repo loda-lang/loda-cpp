@@ -23,17 +23,17 @@ void Test::all()
   fibonacci();
   ackermann();
   collatz();
-  polynomial_synthesizer( 10000, 0 );
-  polynomial_synthesizer( 1000, 1 );
+  polynomialSynthesizer( 10000, 0 );
+  polynomialSynthesizer( 1000, 1 );
   for ( int d = 0; d <= PolynomialMatcher::DEGREE; d++ )
   {
-    polynomial_matcher( 10000, d );
+    polynomialMatcher( 10000, d );
   }
-  delta_matcher();
+  deltaMatcher();
   optimizer( 10000 );
 }
 
-std::string get_oeis_file( number_t id )
+std::string getOeisFile( number_t id )
 {
   return "programs/oeis/" + OeisSequence( id ).id_str() + ".asm";
 }
@@ -41,7 +41,7 @@ std::string get_oeis_file( number_t id )
 void Test::fibonacci()
 {
   Sequence values( { 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233 } );
-  testSeq( "fib", get_oeis_file( 45 ), values );
+  testSeq( "fib", getOeisFile( 45 ), values );
 }
 
 void Test::ackermann()
@@ -97,48 +97,16 @@ void Test::optimizer( size_t tests )
   }
 }
 
-void Test::delta_matcher()
+void Test::deltaMatcher()
 {
-  delta_matcher_pair( 12, 27 );
-  delta_matcher_pair( 27, 12 );
-  delta_matcher_pair( 290, 330 );
-  delta_matcher_pair( 330, 290 );
-}
-
-void Test::delta_matcher_pair( number_t id1, number_t id2 )
-{
-  Log::get().info(
-      "Testing delta matcher for " + OeisSequence( id1 ).id_str() + " -> " + OeisSequence( id2 ).id_str() );
-  Parser parser;
-  Settings settings;
-  Interpreter interpreter( settings );
   DeltaMatcher matcher;
-  auto p1 = parser.parse( get_oeis_file( id1 ) );
-  auto p2 = parser.parse( get_oeis_file( id2 ) );
-  ProgramUtil::removeOps( p1, Operation::Type::NOP );
-  ProgramUtil::removeOps( p2, Operation::Type::NOP );
-  auto s1 = interpreter.eval( p1 );
-  auto s2 = interpreter.eval( p2 );
-  matcher.insert( s2, id2 );
-  Matcher::seq_programs_t result;
-  matcher.match( p1, s1, result );
-  if ( result.size() != 1 )
-  {
-    Log::get().error( "Delta matcher unable to match sequence", true );
-  }
-  if ( result[0].first != id2 )
-  {
-    Log::get().error( "Delta matcher returned unexpected sequence ID", true );
-  }
-  auto s3 = interpreter.eval( result[0].second );
-  if ( s2.size() != s3.size() || s2 != s3 )
-  {
-    ProgramUtil::print( result[0].second, std::cout );
-    Log::get().error( "Delta matcher generated wrong program for " + OeisSequence( id2 ).id_str(), false );
-  }
+  testMatcherPair( matcher, 12, 27 );
+  testMatcherPair( matcher, 27, 12 );
+  testMatcherPair( matcher, 290, 330 );
+  testMatcherPair( matcher, 330, 290 );
 }
 
-void Test::polynomial_matcher( size_t tests, size_t degree )
+void Test::polynomialMatcher( size_t tests, size_t degree )
 {
   Settings settings;
   Parser parser;
@@ -153,7 +121,7 @@ void Test::polynomial_matcher( size_t tests, size_t degree )
   std::vector<Program> programs;
   for ( number_t id : program_ids )
   {
-    auto program = parser.parse( get_oeis_file( id ) );
+    auto program = parser.parse( getOeisFile( id ) );
     optimizer.removeNops( program );
     programs.push_back( program );
   }
@@ -214,7 +182,7 @@ void Test::polynomial_matcher( size_t tests, size_t degree )
   }
 }
 
-void Test::polynomial_synthesizer( size_t tests, size_t degree )
+void Test::polynomialSynthesizer( size_t tests, size_t degree )
 {
   Log::get().info( "Testing polynomial synthesizer for degree " + std::to_string( degree ) );
   std::random_device rand_dev;
@@ -285,5 +253,40 @@ void Test::testSeq( const std::string &func, const std::string &file, const Sequ
   if ( result != expected )
   {
     Log::get().error( "unexpected result: " + result.to_string(), true );
+  }
+}
+
+void Test::testMatcherPair( Matcher &matcher, number_t id1, number_t id2 )
+{
+  Log::get().info(
+      "Testing " + matcher.getName() + " matcher for " + OeisSequence( id1 ).id_str() + " -> "
+          + OeisSequence( id2 ).id_str() );
+  Parser parser;
+  Settings settings;
+  Interpreter interpreter( settings );
+  auto p1 = parser.parse( getOeisFile( id1 ) );
+  auto p2 = parser.parse( getOeisFile( id2 ) );
+  ProgramUtil::removeOps( p1, Operation::Type::NOP );
+  ProgramUtil::removeOps( p2, Operation::Type::NOP );
+  auto s1 = interpreter.eval( p1 );
+  auto s2 = interpreter.eval( p2 );
+  matcher.insert( s2, id2 );
+  Matcher::seq_programs_t result;
+  matcher.match( p1, s1, result );
+  matcher.remove( s2, id2 );
+  if ( result.size() != 1 )
+  {
+    Log::get().error( matcher.getName() + " matcher unable to match sequence", true );
+  }
+  if ( result[0].first != id2 )
+  {
+    Log::get().error( matcher.getName() + " matcher returned unexpected sequence ID", true );
+  }
+  auto s3 = interpreter.eval( result[0].second );
+  if ( s2.size() != s3.size() || s2 != s3 )
+  {
+    ProgramUtil::print( result[0].second, std::cout );
+    Log::get().error( matcher.getName() + " matcher generated wrong program for " + OeisSequence( id2 ).id_str(),
+        false );
   }
 }
