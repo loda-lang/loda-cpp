@@ -23,13 +23,13 @@ void Test::all()
   fibonacci();
   ackermann();
   collatz();
+  deltaMatcher();
   polynomialSynthesizer( 10000, 0 );
   polynomialSynthesizer( 1000, 1 );
   for ( int d = 0; d <= PolynomialMatcher::DEGREE; d++ )
   {
     polynomialMatcher( 10000, d );
   }
-  deltaMatcher();
   optimizer( 10000 );
 }
 
@@ -100,10 +100,8 @@ void Test::optimizer( size_t tests )
 void Test::deltaMatcher()
 {
   DeltaMatcher matcher;
-  testMatcherPair( matcher, 12, 27 );
-  testMatcherPair( matcher, 27, 12 );
-  testMatcherPair( matcher, 290, 330 );
-  testMatcherPair( matcher, 330, 290 );
+  testMatcherSet( matcher, { 12, 27 } );
+  testMatcherSet( matcher, { /* 4273, */290, 330 } );
 }
 
 void Test::polynomialMatcher( size_t tests, size_t degree )
@@ -253,6 +251,17 @@ void Test::testSeq( const std::string &func, const std::string &file, const Sequ
   if ( result != expected )
   {
     Log::get().error( "unexpected result: " + result.to_string(), true );
+  }
+}
+
+void Test::testMatcherSet( Matcher &matcher, const std::vector<number_t> &ids )
+{
+  for ( auto id1 : ids )
+  {
+    for ( auto id2 : ids )
+    {
+      testMatcherPair( matcher, id1, id2 );
+    }
   }
 }
 
