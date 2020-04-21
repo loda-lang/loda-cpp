@@ -70,6 +70,30 @@ bool Miner::isCollatzValuation( const Sequence &seq )
   return true;
 }
 
+bool Miner::isPrimeSequence( const Sequence &seq ) const
+{
+  if ( primes_cache.empty() )
+  {
+    Log::get().debug( "Loading prime numbers" );
+    auto &primes = oeis.getSequences().at( 40 );
+    if ( primes.full.at( 10 ) != 29 )
+    {
+      Log::get().error(
+          "Expected 10th value of primes (A000040) to be 29, but found " + std::to_string( primes.full.at( 10 ) ),
+          true );
+    }
+    primes_cache.insert( primes.begin(), primes.end() );
+  }
+  for ( auto n : seq )
+  {
+    if ( primes_cache.count( n ) == 0 )
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
 void Miner::mine( volatile sig_atomic_t &exit_flag )
 {
   Log::get().info( "Mining programs for OEIS sequences" );

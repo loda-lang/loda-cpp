@@ -19,6 +19,8 @@ public:
 
   static bool isCollatzValuation( const Sequence &seq );
 
+  bool isPrimeSequence( const Sequence &seq ) const;
+
 private:
 
   bool updateCollatz( const Program &p, const Sequence &seq ) const;
@@ -28,5 +30,7 @@ private:
   Oeis oeis;
 
   Interpreter interpreter;
+
+  mutable std::unordered_set<number_t> primes_cache;
 
 };
