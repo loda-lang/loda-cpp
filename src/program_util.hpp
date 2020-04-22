@@ -17,4 +17,10 @@ public:
 
   static void print( const Operation &op, std::ostream &out, int indent = 0 );
 
+  static size_t hash( const Program &p );
+
+  static size_t hash( const Operation &op );
+
+  static size_t hash( const Operand &op );
+
 };

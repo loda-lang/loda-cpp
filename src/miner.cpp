@@ -8,7 +8,6 @@
 #include "program_util.hpp"
 #include "synthesizer.hpp"
 
-#include <chrono>
 #include <fstream>
 #include <random>
 #include <sstream>
@@ -23,19 +22,28 @@ Miner::Miner( const Settings &settings )
   oeis.load();
 }
 
-bool Miner::updateCollatz( const Program &p, const Sequence &seq ) const
+bool Miner::updateSpecialSequences( const Program &p, const Sequence &seq ) const
 {
   if ( isCollatzValuation( seq ) )
   {
-    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::system_clock::now().time_since_epoch() );
-    std::string file_name = "programs/oeis/collatz_" + std::to_string( ms.count() % 1000000 ) + ".asm";
+    std::string file_name = "programs/special/collatz_" + std::to_string( ProgramUtil::hash( p ) % 1000000 ) + ".asm";
     std::ofstream out( file_name );
     out << "; " << seq << std::endl;
     out << std::endl;
     ProgramUtil::print( p, out );
     out.close();
     Log::get().alert( "Found possible Collatz valuation: " + seq.to_string() );
+    return true;
+  }
+  if ( isPrimeSequence( seq ) )
+  {
+    std::string file_name = "programs/special/primes_" + std::to_string( ProgramUtil::hash( p ) % 1000000 ) + ".asm";
+    std::ofstream out( file_name );
+    out << "; " << seq << std::endl;
+    out << std::endl;
+    ProgramUtil::print( p, out );
+    out.close();
+    Log::get().alert( "Found possible primes sequence: " + seq.to_string() );
     return true;
   }
   return false;
@@ -137,7 +145,7 @@ void Miner::mine( volatile sig_atomic_t &exit_flag )
         }
       }
     }
-    if ( updateCollatz( program, norm_seq ) )
+    if ( updateSpecialSequences( program, norm_seq ) )
     {
       fresh++;
     }

@@ -23,7 +23,7 @@ public:
 
 private:
 
-  bool updateCollatz( const Program &p, const Sequence &seq ) const;
+  bool updateSpecialSequences( const Program &p, const Sequence &seq ) const;
 
   const Settings &settings;
 

@@ -116,3 +116,36 @@ void ProgramUtil::print( const Program &p, std::ostream &out )
     }
   }
 }
+
+size_t ProgramUtil::hash( const Program &p )
+{
+  size_t h = 0;
+  for ( auto &op : p.ops )
+  {
+    if ( op.type != Operation::Type::NOP )
+    {
+      h = (h * 3) + hash( op );
+    }
+  }
+  return h;
+}
+
+size_t ProgramUtil::hash( const Operation &op )
+{
+  auto &meta = Operation::Metadata::get( op.type );
+  size_t h = static_cast<size_t>( op.type );
+  if ( meta.num_operands > 0 )
+  {
+    h = (5 * h) + hash( op.target );
+  }
+  if ( meta.num_operands > 1 )
+  {
+    h = (7 * h) + hash( op.source );
+  }
+  return h;
+}
+
+size_t ProgramUtil::hash( const Operand &op )
+{
+  return (11 * static_cast<size_t>( op.type )) + op.value;
+}
