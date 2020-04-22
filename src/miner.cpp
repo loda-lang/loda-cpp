@@ -8,6 +8,7 @@
 #include "program_util.hpp"
 #include "synthesizer.hpp"
 
+#include <chrono>
 #include <fstream>
 #include <random>
 #include <sstream>
