@@ -85,10 +85,10 @@ bool Miner::isPrimeSequence( const Sequence &seq ) const
   {
     Log::get().debug( "Loading prime numbers" );
     auto &primes = oeis.getSequences().at( 40 );
-    if ( primes.full.at( 10 ) != 29 )
+    if ( primes.full.at( 10 ) != 31 )
     {
       Log::get().error(
-          "Expected 10th value of primes (A000040) to be 29, but found " + std::to_string( primes.full.at( 10 ) ),
+          "Expected 10th value of primes (A000040) to be 31, but found " + std::to_string( primes.full.at( 10 ) ),
           true );
     }
     primes_cache.insert( primes.begin(), primes.end() );
