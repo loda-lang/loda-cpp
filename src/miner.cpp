@@ -15,37 +15,36 @@
 #include <unordered_set>
 
 Miner::Miner( const Settings &settings )
-    :
-    settings( settings ),
-    oeis( settings ),
-    interpreter( settings )
+    : settings( settings ),
+      oeis( settings ),
+      interpreter( settings )
 {
   oeis.load();
 }
 
 bool Miner::updateSpecialSequences( const Program &p, const Sequence &seq ) const
 {
+  std::string kind;
   if ( isCollatzValuation( seq ) )
   {
-    std::string file_name = "programs/special/collatz_" + std::to_string( ProgramUtil::hash( p ) % 1000000 ) + ".asm";
-    std::ofstream out( file_name );
-    out << "; " << seq << std::endl;
-    out << std::endl;
-    ProgramUtil::print( p, out );
-    out.close();
-    Log::get().alert( "Found possible Collatz valuation: " + seq.to_string() );
-    return true;
+    kind = "collatz";
   }
   if ( isPrimeSequence( seq ) )
   {
-    std::string file_name = "programs/special/primes_" + std::to_string( ProgramUtil::hash( p ) % 1000000 ) + ".asm";
+    kind = "primes";
+  }
+  if ( !kind.empty() )
+  {
+    std::string file_name = "programs/special/" + kind + "_" + std::to_string( ProgramUtil::hash( p ) % 1000000 )
+        + ".asm";
     std::ofstream out( file_name );
     out << "; " << seq << std::endl;
     out << std::endl;
     ProgramUtil::print( p, out );
     out.close();
-    Log::get().alert( "Found possible primes sequence: " + seq.to_string() );
+    Log::get().alert( "Found possible " + kind + " sequence: " + seq.to_string() );
     return true;
+
   }
   return false;
 }
@@ -81,6 +80,10 @@ bool Miner::isCollatzValuation( const Sequence &seq )
 
 bool Miner::isPrimeSequence( const Sequence &seq ) const
 {
+  if ( seq.size() < 10 )
+  {
+    return false;
+  }
   if ( primes_cache.empty() )
   {
     Log::get().debug( "Loading prime numbers" );
@@ -93,12 +96,18 @@ bool Miner::isPrimeSequence( const Sequence &seq ) const
     }
     primes_cache.insert( primes.begin(), primes.end() );
   }
+  std::unordered_set<number_t> found;
   for ( auto n : seq )
   {
     if ( primes_cache.count( n ) == 0 )
     {
       return false;
     }
+    if ( found.count( n ) > 0 )
+    {
+      return false;
+    }
+    found.insert( n );
   }
   return true;
 }
@@ -152,7 +161,7 @@ void Miner::mine( volatile sig_atomic_t &exit_flag )
     }
     generated++;
     auto time2 = std::chrono::steady_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::seconds>( time2 - time );
+    auto duration = std::chrono::duration_cast < std::chrono::seconds > (time2 - time);
     if ( duration.count() >= 60 )
     {
       time = time2;
