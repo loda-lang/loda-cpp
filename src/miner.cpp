@@ -89,7 +89,7 @@ bool Miner::isPrimeSequence( const Sequence &seq ) const
     {
       Log::get().error(
           "Expected 10th value of primes (A000040) to be 31, but found " + std::to_string( primes.full.at( 10 ) ),
-          true );
+          false );
     }
     primes_cache.insert( primes.begin(), primes.end() );
   }
