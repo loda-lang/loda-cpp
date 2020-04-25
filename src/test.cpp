@@ -100,7 +100,7 @@ void Test::optimizer( size_t tests )
 void Test::deltaMatcher()
 {
   DeltaMatcher matcher;
-  testMatcherSet( matcher, { 12, 27 } );
+  testMatcherSet( matcher, { 7, 12, 27 } );
   testMatcherSet( matcher, { 4273, 290, 330 } );
 }
 

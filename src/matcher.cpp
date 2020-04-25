@@ -314,12 +314,17 @@ std::pair<Sequence, int> DeltaMatcher::reduce( const Sequence &seq ) const
     Sequence next;
     next.resize( result.first.size() );
     bool ok = true;
+    bool same = true;
     for ( size_t j = 0; j < next.size(); j++ )
     {
       number_t p = (j == 0) ? 0 : result.first[j - 1];
       if ( p <= result.first[j] )
       {
         next[j] = result.first[j] - p;
+        if ( p != 0 )
+        {
+          same = false;
+        }
       }
       else
       {
@@ -327,7 +332,7 @@ std::pair<Sequence, int> DeltaMatcher::reduce( const Sequence &seq ) const
         break;
       }
     }
-    if ( ok )
+    if ( ok && !same )
     {
       result.first = next;
       result.second++;
@@ -337,9 +342,9 @@ std::pair<Sequence, int> DeltaMatcher::reduce( const Sequence &seq ) const
       break;
     }
   }
-//  Log::get().info(
-//      "Reduced " + seq.to_string() + " to " + result.first.to_string() + " using delta "
-//          + std::to_string( result.second ) );
+  Log::get().info(
+      "Reduced " + seq.to_string() + " to " + result.first.to_string() + " using delta "
+          + std::to_string( result.second ) );
   return result;
 }
 
