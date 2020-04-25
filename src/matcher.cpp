@@ -1,6 +1,7 @@
 #include "matcher.hpp"
 
 #include "optimizer.hpp"
+#include "reducer.hpp"
 #include "semantics.hpp"
 
 // --- AbstractMatcher --------------------------------------------------------
@@ -56,53 +57,12 @@ bool DirectMatcher::extend( Program &p, int base, int gen ) const
 
 // --- Linear Matcher ---------------------------------------------------------
 
-int truncate( Sequence &seq )
-{
-  int offset = seq.min();
-  for ( size_t i = 0; i < seq.size(); i++ )
-  {
-    seq[i] = seq[i] - offset;
-  }
-  return offset;
-}
-
-int shrink( Sequence &seq )
-{
-  int factor = -1;
-  for ( size_t i = 0; i < seq.size(); i++ )
-  {
-    if ( seq[i] > 0 )
-    {
-      if ( factor == -1 )
-      {
-        factor = seq[i];
-      }
-      else
-      {
-        factor = Semantics::gcd( factor, seq[i] );
-      }
-    }
-  }
-  if ( factor == -1 )
-  {
-    factor = 1;
-  }
-  if ( factor > 1 )
-  {
-    for ( size_t i = 0; i < seq.size(); i++ )
-    {
-      seq[i] = seq[i] / factor;
-    }
-  }
-  return factor;
-}
-
 std::pair<Sequence, line> LinearMatcher::reduce( const Sequence &seq ) const
 {
   std::pair<Sequence, line> result;
   result.first = seq;
-  result.second.offset = truncate( result.first );
-  result.second.factor = shrink( result.first );
+  result.second.offset = Reducer::truncate( result.first );
+  result.second.factor = Reducer::shrink( result.first );
   return result;
 }
 
@@ -131,8 +91,8 @@ std::pair<Sequence, line> LinearMatcher2::reduce( const Sequence &seq ) const
 {
   std::pair<Sequence, line> result;
   result.first = seq;
-  result.second.factor = shrink( result.first );
-  result.second.offset = truncate( result.first );
+  result.second.factor = Reducer::shrink( result.first );
+  result.second.offset = Reducer::truncate( result.first );
   return result;
 }
 
@@ -161,80 +121,24 @@ bool LinearMatcher2::extend( Program &p, line base, line gen ) const
 
 const int PolynomialMatcher::DEGREE = 3; // magic number
 
-Sequence subPoly( const Sequence &s, int64_t factor, int64_t exp )
-{
-  Sequence t;
-  t.resize( s.size() );
-  for ( size_t x = 0; x < s.size(); x++ )
-  {
-    t[x] = s[x] - (factor * Semantics::pow( x, exp ));
-  }
-  return t;
-}
-
-Polynomial PolynomialMatcher::reduce( Sequence &seq, int64_t degree ) const
-{
-  // recursion end
-  if ( degree < 0 )
-  {
-    return Polynomial();
-  }
-
-  // calculate maximum factor for current degree
-  int64_t max_factor = -1;
-  for ( size_t x = 0; x < seq.size(); x++ )
-  {
-    auto x_exp = Semantics::pow( x, degree );
-    int64_t new_factor = (x_exp == 0) ? -1 : seq[x] / x_exp;
-    max_factor = (max_factor == -1) ? new_factor : (new_factor < max_factor ? new_factor : max_factor);
-    if ( max_factor == 0 ) break;
-  }
-
-  int64_t factor = max_factor;
-  Sequence reduced = subPoly( seq, factor, degree );
-  auto poly = reduce( reduced, degree - 1 );
-  auto cost = reduced.sum();
-
-  int64_t min_factor = std::max( (int64_t) 0, factor - 8 ); // magic number
-  while ( factor > min_factor )
-  {
-    Sequence reduced_new = subPoly( seq, factor - 1, degree );
-    auto poly_new = reduce( reduced_new, degree - 1 );
-    auto cost_new = reduced_new.sum();
-    if ( cost_new < cost )
-    {
-      factor--;
-      reduced = reduced_new;
-      poly = poly_new;
-      cost = cost_new;
-    }
-    else
-    {
-      break;
-    }
-  }
-  poly.push_back( factor );
-  seq = reduced;
-  return poly;
-}
-
 std::pair<Sequence, Polynomial> PolynomialMatcher::reduce( const Sequence &seq ) const
 {
   std::pair<Sequence, Polynomial> result;
   result.first = seq;
-  result.second = reduce( result.first, DEGREE );
+  result.second = Reducer::polynomial( result.first, DEGREE );
   return result;
 }
 
-bool addPostPolynomial( Program &p, const Polynomial &pol )
+bool PolynomialMatcher::extend( Program &p, Polynomial base, Polynomial gen ) const
 {
   Settings settings;
   Optimizer optimizer( settings );
+  auto diff = base - gen;
 
   // constant term
-  if ( pol.size() > 0 )
+  if ( diff.size() > 0 )
   {
-    const auto constant = pol[0];
+    const auto constant = diff[0];
     if ( constant > 0 )
     {
       p.push_back( Operation::Type::ADD, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, constant );
@@ -246,7 +150,7 @@ bool addPostPolynomial( Program &p, const Polynomial &pol )
   }
 
   // non-constant terms
-  if ( pol.size() > 1 )
+  if ( diff.size() > 1 )
   {
     std::unordered_set<number_t> used_cells;
     number_t max_cell = 0;
@@ -263,7 +167,7 @@ bool addPostPolynomial( Program &p, const Polynomial &pol )
     p.push_front( Operation::Type::MOV, Operand::Type::DIRECT, saved_arg_cell, Operand::Type::DIRECT, 0 );
 
     // polynomial evaluation code
-    for ( number_t exp = 1; exp < pol.size(); exp++ )
+    for ( number_t exp = 1; exp < diff.size(); exp++ )
     {
       // update x^exp
       if ( exp == 1 )
@@ -276,7 +180,7 @@ bool addPostPolynomial( Program &p, const Polynomial &pol )
       }
 
       // update result
-      const auto factor = pol[exp];
+      const auto factor = diff[exp];
       if ( factor > 0 )
       {
         p.push_back( Operation::Type::MOV, Operand::Type::DIRECT, term_cell, Operand::Type::DIRECT, x_cell );
@@ -292,12 +196,6 @@ bool addPostPolynomial( Program &p, const Polynomial &pol )
 
   }
   return true;
-}
-
-bool PolynomialMatcher::extend( Program &p, Polynomial base, Polynomial gen ) const
-{
-  auto diff = base - gen;
-  return addPostPolynomial( p, diff );
 }
 
 // --- Delta Matcher ----------------------------------------------------------
@@ -343,7 +241,7 @@ std::pair<Sequence, delta_t> DeltaMatcher::reduce( const Sequence &seq ) const
       break;
     }
   }
-  result.second.factor = shrink( result.first );
+  result.second.factor = Reducer::shrink( result.first );
 //  Log::get().info(
 //      "Reduced " + seq.to_string() + " to " + result.first.to_string() + " using delta "
 //          + std::to_string( result.second.delta ) + ", factor " + std::to_string( result.second.factor ) );
