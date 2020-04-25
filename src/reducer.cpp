@@ -1,6 +1,7 @@
 #include "reducer.hpp"
 
 #include "semantics.hpp"
+#include "util.hpp"
 
 int Reducer::truncate( Sequence &seq )
 {
@@ -104,6 +105,7 @@ delta_t Reducer::delta( Sequence &seq, int max_delta )
 {
   delta_t result;
   result.delta = 0;
+  result.offset = 0;
   result.factor = 1;
   const int size = seq.size();
   for ( int i = 0; i < max_delta; i++ )
@@ -139,9 +141,10 @@ delta_t Reducer::delta( Sequence &seq, int max_delta )
       break;
     }
   }
+  result.offset = truncate( seq );
   result.factor = shrink( seq );
 //  Log::get().info(
-//      "Reduced " + seq.to_string() + " to " + result.first.to_string() + " using delta "
-//          + std::to_string( result.second.delta ) + ", factor " + std::to_string( result.second.factor ) );
+//      "Reduced sequence to " + seq.to_string() + " using delta=" + std::to_string( result.delta ) + ", offset="
+//          + std::to_string( result.offset ) + ", factor=" + std::to_string( result.factor ) );
   return result;
 }

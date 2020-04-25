@@ -282,31 +282,62 @@ bool extend_delta( Program &p, const bool sum )
   return true;
 }
 
+bool extend_delta_it( Program &p, int delta )
+{
+  while ( delta < 0 )
+  {
+    if ( !extend_delta( p, false ) )
+    {
+      return false;
+    }
+    delta++;
+  }
+  while ( delta > 0 )
+  {
+    if ( !extend_delta( p, true ) )
+    {
+      return false;
+    }
+    delta--;
+  }
+  return true;
+}
+
 bool DeltaMatcher::extend( Program &p, delta_t base, delta_t gen ) const
 {
-  if ( base.factor == gen.factor )
+  if ( base.offset == gen.offset && base.factor == gen.factor )
   {
-    int delta = base.delta - gen.delta;
-    while ( delta < 0 )
-    {
-      if ( !extend_delta( p, false ) )
-      {
-        return false;
-      }
-      delta++;
-    }
-    while ( delta > 0 )
-    {
-      if ( !extend_delta( p, true ) )
-      {
-        return false;
-      }
-      delta--;
-    }
+    return extend_delta_it( p, base.delta - gen.delta );
   }
   else
   {
-    return false;
+    if ( !extend_delta_it( p, -gen.delta ) )
+    {
+      return false;
+    }
+
+    // TODO: reuse linear matcher code
+    if ( gen.offset > 0 )
+    {
+      p.push_back( Operation::Type::SUB, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, gen.offset );
+    }
+    if ( gen.factor > 1 )
+    {
+      p.push_back( Operation::Type::DIV, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, gen.factor );
+    }
+    if ( base.factor > 1 )
+    {
+      p.push_back( Operation::Type::MUL, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, base.factor );
+    }
+    if ( base.offset > 0 )
+    {
+      p.push_back( Operation::Type::ADD, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, base.offset );
+    }
+
+    if ( !extend_delta_it( p, base.delta ) )
+    {
+      return false;
+    }
   }
   return true;
 }

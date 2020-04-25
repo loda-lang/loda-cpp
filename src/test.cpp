@@ -102,7 +102,7 @@ void Test::deltaMatcher()
   DeltaMatcher matcher;
   testMatcherSet( matcher, { 7, 12, 27 } );
   testMatcherSet( matcher, { 4273, 290, 330 } );
-//  testMatcherSet( matcher, { 168380, 193356 } );
+  testMatcherSet( matcher, { 168380, 193356 } );
 }
 
 void Test::polynomialMatcher( size_t tests, size_t degree )

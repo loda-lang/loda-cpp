@@ -5,6 +5,7 @@
 struct delta_t
 {
   int delta;
+  int offset;
   int factor;
 };
 
