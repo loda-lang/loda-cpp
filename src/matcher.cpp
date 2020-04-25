@@ -206,45 +206,7 @@ std::pair<Sequence, delta_t> DeltaMatcher::reduce( const Sequence &seq ) const
 {
   std::pair<Sequence, delta_t> result;
   result.first = seq;
-  result.second.delta = 0;
-  result.second.factor = 1;
-  for ( int i = 0; i < MAX_DELTA; i++ )
-  {
-    Sequence next;
-    next.resize( result.first.size() );
-    bool ok = true;
-    bool same = true;
-    for ( size_t j = 0; j < next.size(); j++ )
-    {
-      number_t p = (j == 0) ? 0 : result.first[j - 1];
-      if ( p <= result.first[j] )
-      {
-        next[j] = result.first[j] - p;
-        if ( p != 0 )
-        {
-          same = false;
-        }
-      }
-      else
-      {
-        ok = false;
-        break;
-      }
-    }
-    if ( ok && !same )
-    {
-      result.first = next;
-      result.second.delta++;
-    }
-    else
-    {
-      break;
-    }
-  }
-  result.second.factor = Reducer::shrink( result.first );
-//  Log::get().info(
-//      "Reduced " + seq.to_string() + " to " + result.first.to_string() + " using delta "
-//          + std::to_string( result.second.delta ) + ", factor " + std::to_string( result.second.factor ) );
+  result.second = Reducer::delta( result.first, MAX_DELTA );
   return result;
 }
 

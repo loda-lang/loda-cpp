@@ -2,6 +2,12 @@
 
 #include "number.hpp"
 
+struct delta_t
+{
+  int delta;
+  int factor;
+};
+
 class Reducer
 {
 public:
@@ -10,6 +16,8 @@ public:
 
   static int shrink( Sequence &seq );
 
-  static Polynomial polynomial( Sequence &seq, int64_t degree );
+  static Polynomial polynomial( Sequence &seq, int degree );
+
+  static delta_t delta( Sequence &seq, int max_delta );
 
 };

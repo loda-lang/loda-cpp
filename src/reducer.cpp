@@ -54,7 +54,7 @@ Sequence subPoly( const Sequence &s, int64_t factor, int64_t exp )
   return t;
 }
 
-Polynomial Reducer::polynomial( Sequence &seq, int64_t degree )
+Polynomial Reducer::polynomial( Sequence &seq, int degree )
 {
   // recursion end
   if ( degree < 0 )
@@ -98,4 +98,50 @@ Polynomial Reducer::polynomial( Sequence &seq, int64_t degree )
   poly.push_back( factor );
   seq = reduced;
   return poly;
+}
+
+delta_t Reducer::delta( Sequence &seq, int max_delta )
+{
+  delta_t result;
+  result.delta = 0;
+  result.factor = 1;
+  const int size = seq.size();
+  for ( int i = 0; i < max_delta; i++ )
+  {
+    Sequence next;
+    next.resize( size );
+    bool ok = true;
+    bool same = true;
+    for ( size_t j = 0; j < size; j++ )
+    {
+      number_t p = (j == 0) ? 0 : seq[j - 1];
+      if ( p <= seq[j] )
+      {
+        next[j] = seq[j] - p;
+        if ( p != 0 )
+        {
+          same = false;
+        }
+      }
+      else
+      {
+        ok = false;
+        break;
+      }
+    }
+    if ( ok && !same )
+    {
+      seq = next;
+      result.delta++;
+    }
+    else
+    {
+      break;
+    }
+  }
+  result.factor = shrink( seq );
+//  Log::get().info(
+//      "Reduced " + seq.to_string() + " to " + result.first.to_string() + " using delta "
+//          + std::to_string( result.second.delta ) + ", factor " + std::to_string( result.second.factor ) );
+  return result;
 }

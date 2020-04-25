@@ -2,6 +2,7 @@
 
 #include "number.hpp"
 #include "program.hpp"
+#include "reducer.hpp"
 
 class Matcher
 {
@@ -168,12 +169,6 @@ private:
 
   Polynomial reduce( Sequence &seq, int64_t exp ) const;
 
-};
-
-struct delta_t
-{
-  int delta;
-  int factor;
 };
 
 class DeltaMatcher: public AbstractMatcher<delta_t>
