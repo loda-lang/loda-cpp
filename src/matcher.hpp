@@ -170,7 +170,13 @@ private:
 
 };
 
-class DeltaMatcher: public AbstractMatcher<int>
+struct delta_t
+{
+  int delta;
+  int factor;
+};
+
+class DeltaMatcher: public AbstractMatcher<delta_t>
 {
 public:
 
@@ -188,8 +194,8 @@ public:
 
 protected:
 
-  virtual std::pair<Sequence, int> reduce( const Sequence &seq ) const override;
+  virtual std::pair<Sequence, delta_t> reduce( const Sequence &seq ) const override;
 
-  virtual bool extend( Program &p, int base, int gen ) const override;
+  virtual bool extend( Program &p, delta_t base, delta_t gen ) const override;
 
 };

@@ -304,11 +304,12 @@ bool PolynomialMatcher::extend( Program &p, Polynomial base, Polynomial gen ) co
 
 const int DeltaMatcher::MAX_DELTA = 5; // magic number
 
-std::pair<Sequence, int> DeltaMatcher::reduce( const Sequence &seq ) const
+std::pair<Sequence, delta_t> DeltaMatcher::reduce( const Sequence &seq ) const
 {
-  std::pair<Sequence, int> result;
+  std::pair<Sequence, delta_t> result;
   result.first = seq;
-  result.second = 0;
+  result.second.delta = 0;
+  result.second.factor = 1;
   for ( int i = 0; i < MAX_DELTA; i++ )
   {
     Sequence next;
@@ -335,16 +336,17 @@ std::pair<Sequence, int> DeltaMatcher::reduce( const Sequence &seq ) const
     if ( ok && !same )
     {
       result.first = next;
-      result.second++;
+      result.second.delta++;
     }
     else
     {
       break;
     }
   }
-  Log::get().info(
-      "Reduced " + seq.to_string() + " to " + result.first.to_string() + " using delta "
-          + std::to_string( result.second ) );
+  result.second.factor = shrink( result.first );
+//  Log::get().info(
+//      "Reduced " + seq.to_string() + " to " + result.first.to_string() + " using delta "
+//          + std::to_string( result.second.delta ) + ", factor " + std::to_string( result.second.factor ) );
   return result;
 }
 
@@ -420,24 +422,31 @@ bool extend_delta( Program &p, const bool sum )
   return true;
 }
 
-bool DeltaMatcher::extend( Program &p, int base, int gen ) const
+bool DeltaMatcher::extend( Program &p, delta_t base, delta_t gen ) const
 {
-  int delta = base - gen;
-  while ( delta < 0 )
+  if ( base.factor == gen.factor )
   {
-    if ( !extend_delta( p, false ) )
+    int delta = base.delta - gen.delta;
+    while ( delta < 0 )
     {
-      return false;
+      if ( !extend_delta( p, false ) )
+      {
+        return false;
+      }
+      delta++;
     }
-    delta++;
+    while ( delta > 0 )
+    {
+      if ( !extend_delta( p, true ) )
+      {
+        return false;
+      }
+      delta--;
+    }
   }
-  while ( delta > 0 )
+  else
   {
-    if ( !extend_delta( p, true ) )
-    {
-      return false;
-    }
-    delta--;
+    return false;
   }
   return true;
 }
