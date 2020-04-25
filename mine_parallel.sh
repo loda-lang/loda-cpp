@@ -44,7 +44,7 @@ function start_miners() {
   ./loda mine $tmp_params -p 80 -a cd -n 8 $l $@ &
   ./loda mine $tmp_params -p 60 -a cd -n 8 $l $@ &
   ./loda mine $tmp_params -p 60 -a cdi -n 6 $l $@ &
-  ./loda maintain $l &
+  ./loda maintain &
   if [ -n "$tmp_params" ]; then
     tmp_params=""
   else

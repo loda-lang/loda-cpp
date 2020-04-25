@@ -590,7 +590,7 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
     {
       num_programs++;
       if ( exit_flag ) continue;
-      Log::get().info( "Checking program for " + s.to_string() );
+      Log::get().debug( "Checking program for " + s.to_string() );
       Parser parser;
       Program program = parser.parse( file );
       Settings settings2 = settings;
@@ -602,7 +602,7 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
         Sequence result = interpreter.eval( program );
         if ( result.size() != s.full.size() || result != s.full )
         {
-          Log::get().error( "Program did not evaluate to expected sequence" );
+          Log::get().error( "Program did not evaluate to expected sequence: " + file_name );
           okay = false;
         }
         else
@@ -616,7 +616,7 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
       }
       if ( !okay )
       {
-        Log::get().warn( "Deleting " + file_name );
+        Log::get().warn( "Deleting program due to evaluation error: " + file_name );
         file.close();
         remove( file_name.c_str() );
       }
@@ -628,7 +628,7 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
         optimizer.optimizeAndMinimize( optimized, 2, 1, s.full.size() );
         if ( !(program == optimized) )
         {
-          Log::get().warn( "Program " + file_name + " not optimal! Updating..." );
+          Log::get().warn( "Updating program because it is not optimal: " + file_name );
           num_optimized++;
         }
         dumpProgram( s.id, optimized, file_name );
