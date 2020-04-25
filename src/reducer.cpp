@@ -107,7 +107,7 @@ delta_t Reducer::delta( Sequence &seq, int max_delta )
   result.delta = 0;
   result.offset = 0;
   result.factor = 1;
-  const int size = seq.size();
+  const size_t size = seq.size();
   for ( int i = 0; i < max_delta; i++ )
   {
     Sequence next;
