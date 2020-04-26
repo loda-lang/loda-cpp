@@ -1,6 +1,6 @@
 #!/bin/bash
 
-log_level=error
+log_level=info
 restart_interval=86400
 min_changes=20
 

@@ -403,12 +403,12 @@ Oeis::seq_programs_t Oeis::findSequence( const Program &p, Sequence &norm_seq ) 
   if ( attempts.count >= attempts.check_point )
   {
     attempts.check_point *= 2;
-    // Log::get().info( "Matching sequence " + norm_seq.to_string() );
+    Log::get().info( "Matching sequence " + norm_seq.to_string() );
     findAll( p, norm_seq, result );
   }
   else
   {
-    // Log::get().info( "Back-off matching sequence " + norm_seq.to_string() );
+    Log::get().info( "Back off matching " + norm_seq.to_string() );
   }
   return result;
 }
