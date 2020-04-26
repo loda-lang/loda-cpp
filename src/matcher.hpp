@@ -26,6 +26,12 @@ public:
 
 };
 
+struct MatchAttempts
+{
+  size_t count;
+  size_t check_point;
+};
+
 template<class T>
 class AbstractMatcher: public Matcher
 {
@@ -33,7 +39,8 @@ public:
 
   AbstractMatcher( const std::string &name )
       :
-      name( name )
+      name( name ),
+      backoff( true )
   {
   }
 
@@ -57,6 +64,11 @@ public:
     return ids.size();
   }
 
+  void setBackOff( bool backoff )
+  {
+    this->backoff = backoff;
+  }
+
 protected:
 
   virtual std::pair<Sequence, T> reduce( const Sequence &seq ) const = 0;
@@ -68,6 +80,8 @@ private:
   std::string name;
   SequenceToIdsMap ids;
   std::unordered_map<number_t, T> data;
+  mutable std::unordered_map<Sequence, MatchAttempts, SequenceHasher> match_attempts;
+  bool backoff;
 
 };
 
