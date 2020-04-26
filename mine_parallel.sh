@@ -1,7 +1,7 @@
 #!/bin/bash
 
 log_level=info
-restart_interval=86400
+check_interval=28800
 min_changes=20
 
 for cmd in git; do
@@ -54,6 +54,8 @@ function push_updates {
   fi
   num_changes=$(git status programs -s | wc -l)
   if [ "$num_changes" -ge "$min_changes" ]; then
+  	stop_miners
+    ./make_charts.sh 
     echo "Pushing updates"
     git pull
     git add programs lengths.png README.md
@@ -61,21 +63,18 @@ function push_updates {
     git push
     echo "Rebuilding loda"
     pushd src && make clean && make && popd
+  	start_miners $@
   fi
 }
 
 trap abort_miners INT
 
-push_updates
 start_miners $@
 SECONDS=0
 while [ true ]; do
-  if (( SECONDS >= restart_interval )); then
-  	stop_miners
-    ./make_charts.sh 
+  if (( SECONDS >= check_interval )); then
   	push_updates
-  	start_miners $@
     SECONDS=0
   fi
-  sleep 60
+  sleep 600
 done
