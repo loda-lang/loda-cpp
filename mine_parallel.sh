@@ -22,17 +22,16 @@ function abort_miners() {
 }
 
 function run_loda {
-  echo "Starting loda %@"
+  echo "Starting loda $@"
   ./loda $@ &
 }
 
 function start_miners() {
   echo "Updating OEIS database"
   ./get_oeis.sh
-  ./make_charts.sh
   echo "Start mining"
   local l="-l ${log_level}"
-  for n in 9 10; do
+  for n in 8 10; do
     for x in "" "-x"; do
       args="-n $n -p ${n}0 -a cd $x $l"
       # instantiate templates w/o loops
@@ -40,12 +39,12 @@ function start_miners() {
         run_loda mine $args -o ^l -e programs/templates/${t}.asm $@
       done
       # no templates but w/ loops
-      run_loda mine $@ &
+      run_loda mine $args $@
     done
   done
   # indirect memory access
-  run_loda mine -p 60 -a cdi -n 6 $l $@ &
-  run_loda maintain &
+  run_loda mine -p 60 -a cdi -n 6 $l $@
+  run_loda maintain
 }
 
 function push_updates {
@@ -73,6 +72,7 @@ SECONDS=0
 while [ true ]; do
   if (( SECONDS >= restart_interval )); then
   	stop_miners
+    ./make_charts.sh 
   	push_updates
   	start_miners $@
     SECONDS=0
