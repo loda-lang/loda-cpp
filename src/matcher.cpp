@@ -26,41 +26,17 @@ template<class T>
 void AbstractMatcher<T>::match( const Program &p, const Sequence &norm_seq, seq_programs_t &result ) const
 {
   auto reduced = reduce( norm_seq );
-  if ( match_attempts.find( reduced.first ) == match_attempts.end() )
+  auto it = ids.find( reduced.first );
+  if ( it != ids.end() )
   {
-    MatchAttempts a;
-    a.count = 0;
-    a.check_point = 1;
-    match_attempts[reduced.first] = a;
-  }
-  auto &attempts = match_attempts[reduced.first];
-  attempts.count++;
-  if ( attempts.count >= attempts.check_point )
-  {
-    if ( backoff )
+    for ( auto id : it->second )
     {
-      attempts.check_point *= 2;
-    }
-    else
-    {
-      attempts.check_point++;
-    }
-    auto it = ids.find( reduced.first );
-    if ( it != ids.end() )
-    {
-      for ( auto id : it->second )
+      Program copy = p;
+      if ( extend( copy, data.at( id ), reduced.second ) )
       {
-        Program copy = p;
-        if ( extend( copy, data.at( id ), reduced.second ) )
-        {
-          result.push_back( std::pair<number_t, Program>( id, copy ) );
-        }
+        result.push_back( std::pair<number_t, Program>( id, copy ) );
       }
     }
-  }
-  else
-  {
-    Log::get().info( "Back off matching of already matched sequence " + reduced.first.to_string() );
   }
 }
 
