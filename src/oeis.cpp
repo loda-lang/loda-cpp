@@ -391,7 +391,25 @@ Oeis::seq_programs_t Oeis::findSequence( const Program &p, Sequence &norm_seq ) 
   {
     return result;
   }
-  findAll( p, norm_seq, result );
+  if ( match_attempts.find( norm_seq ) == match_attempts.end() )
+  {
+    MatchAttempts a;
+    a.count = 0;
+    a.check_point = 1;
+    match_attempts[norm_seq] = a;
+  }
+  auto &attempts = match_attempts[norm_seq];
+  attempts.count++;
+  if ( attempts.count >= attempts.check_point )
+  {
+    attempts.check_point *= 2;
+    // Log::get().info( "Matching sequence " + norm_seq.to_string() );
+    findAll( p, norm_seq, result );
+  }
+  else
+  {
+    // Log::get().info( "Back-off matching sequence " + norm_seq.to_string() );
+  }
   return result;
 }
 
@@ -462,13 +480,16 @@ void Oeis::dumpProgram( number_t id, Program p, const std::string &file ) const
   ProgramUtil::print( p, out );
 }
 
-std::pair<bool, Program> Oeis::optimizeAndCheck( const Program &p, const OeisSequence &seq ) const
+std::pair<bool, Program> Oeis::optimizeAndCheck( const Program &p, const OeisSequence &seq, bool optimize ) const
 {
   // optimize and minimize program
   std::pair<bool, Program> optimized;
   optimized.first = true;
   optimized.second = p;
-  optimizer.optimizeAndMinimize( optimized.second, 2, 1, seq.full.size() );
+  if ( optimize )
+  {
+    optimizer.optimizeAndMinimize( optimized.second, 2, 1, seq.full.size() );
+  }
 
   // check its correctness
   Sequence new_seq;
@@ -488,9 +509,12 @@ std::pair<bool, Program> Oeis::optimizeAndCheck( const Program &p, const OeisSeq
   // throw error if not correct
   if ( !optimized.first )
   {
-    Log::get().error(
-        "Program for " + seq.id_str() + " generates wrong result after optimization, minimization or synthesis",
-        false );
+    std::string msg = "Program for " + seq.id_str() + " generates wrong result";
+    if ( optimize )
+    {
+      msg = msg + " after optimization or minimization";
+    }
+    Log::get().error( msg, false );
     std::ofstream out( "programs/debug/optimizer/" + seq.id_str() + ".asm" );
     ProgramUtil::print( p, out );
   }
@@ -510,7 +534,7 @@ std::pair<bool, bool> Oeis::updateProgram( number_t id, const Program &p ) const
     {
       if ( settings.optimize_existing_programs )
       {
-        optimized = optimizeAndCheck( p, seq );
+        optimized = optimizeAndCheck( p, seq, true );
         if ( !optimized.first )
         {
           return
@@ -535,7 +559,7 @@ std::pair<bool, bool> Oeis::updateProgram( number_t id, const Program &p ) const
   }
   if ( is_new )
   {
-    optimized = optimizeAndCheck( p, seq );
+    optimized = optimizeAndCheck( p, seq, false );
     if ( !optimized.first )
     {
       return

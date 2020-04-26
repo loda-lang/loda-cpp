@@ -45,6 +45,12 @@ struct MatcherStats
   size_t errors;
 };
 
+struct MatchAttempts
+{
+  size_t count;
+  size_t check_point;
+};
+
 class Oeis
 {
 public:
@@ -94,7 +100,7 @@ private:
 
   void findAll( const Program &p, const Sequence &norm_seq, seq_programs_t &result ) const;
 
-  std::pair<bool, Program> optimizeAndCheck( const Program &p, const OeisSequence &seq ) const;
+  std::pair<bool, Program> optimizeAndCheck( const Program &p, const OeisSequence &seq, bool optimize ) const;
 
   const Settings &settings;
   Interpreter interpreter;
@@ -102,6 +108,7 @@ private:
   std::vector<OeisSequence> sequences;
   std::vector<std::unique_ptr<Matcher>> matchers;
   mutable std::vector<MatcherStats> matcher_stats;
+  mutable std::unordered_map<Sequence, MatchAttempts, SequenceHasher> match_attempts;
   size_t total_count_;
 
 };

@@ -1,12 +1,8 @@
 #!/bin/bash
 
 log_level=error
-restart_interval=28800
+restart_interval=86400
 min_changes=20
-# alt_params="-x"
-alt_params=
-
-tmp_params="$alt_params"
 
 for cmd in git; do
   if ! [ -x "$(command -v $cmd)" ]; then
@@ -25,31 +21,31 @@ function abort_miners() {
   exit 1
 }
 
+function run_loda {
+  echo "Starting loda %@"
+  ./loda $@ &
+}
+
 function start_miners() {
   echo "Updating OEIS database"
   ./get_oeis.sh
   ./make_charts.sh
   echo "Start mining"
   local l="-l ${log_level}"
-  # instantiate templates w/o loops
-  for n in 7 8 9 10; do
-    p="${n}0"
-    for t in T01 T02; do
-      ./loda mine $tmp_params -p $p -n $n -a cd -o ^l -e programs/templates/${t}.asm $l $@ &
+  for n in 9 10; do
+    for x in "" "-x"; do
+      args="-n $n -p ${n}0 -a cd $x $l"
+      # instantiate templates w/o loops
+      for t in T01 T02; do
+        run_loda mine $args -o ^l -e programs/templates/${t}.asm $@
+      done
+      # no templates but w/ loops
+      run_loda mine $@ &
     done
   done
-  # no templates but w/ loops
-  ./loda mine $tmp_params -p 100 -a cd -n 10 $l $@ &
-  ./loda mine $tmp_params -p 90 -a cd -n 9 $l $@ &
-  ./loda mine $tmp_params -p 80 -a cd -n 8 $l $@ &
-  ./loda mine $tmp_params -p 60 -a cd -n 8 $l $@ &
-  ./loda mine $tmp_params -p 60 -a cdi -n 6 $l $@ &
-  ./loda maintain &
-  if [ -n "$tmp_params" ]; then
-    tmp_params=""
-  else
-    tmp_params=$alt_params
-  fi
+  # indirect memory access
+  run_loda mine -p 60 -a cdi -n 6 $l $@ &
+  run_loda maintain &
 }
 
 function push_updates {

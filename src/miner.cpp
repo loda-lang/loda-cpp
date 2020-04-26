@@ -15,9 +15,10 @@
 #include <unordered_set>
 
 Miner::Miner( const Settings &settings )
-    : settings( settings ),
-      oeis( settings ),
-      interpreter( settings )
+    :
+    settings( settings ),
+    oeis( settings ),
+    interpreter( settings )
 {
   oeis.load();
 }
@@ -161,7 +162,7 @@ void Miner::mine( volatile sig_atomic_t &exit_flag )
     }
     generated++;
     auto time2 = std::chrono::steady_clock::now();
-    auto duration = std::chrono::duration_cast < std::chrono::seconds > (time2 - time);
+    auto duration = std::chrono::duration_cast<std::chrono::seconds>( time2 - time );
     if ( duration.count() >= 60 )
     {
       time = time2;
