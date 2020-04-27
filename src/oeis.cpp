@@ -61,17 +61,17 @@ Oeis::Oeis( const Settings &settings )
   if ( settings.optimize_existing_programs )
   {
     matchers.resize( 2 );
-    matchers[0].reset( new DirectMatcher() );
-    matchers[1].reset( new LinearMatcher() );
+    matchers[0].reset( new DirectMatcher( false ) );
+    matchers[1].reset( new LinearMatcher( false ) );
   }
   else
   {
     matchers.resize( 5 );
-    matchers[0].reset( new DirectMatcher() );
-    matchers[1].reset( new LinearMatcher() );
-    matchers[2].reset( new LinearMatcher2() );
-    matchers[3].reset( new PolynomialMatcher() );
-    matchers[4].reset( new DeltaMatcher() );
+    matchers[0].reset( new DirectMatcher( true ) );
+    matchers[1].reset( new LinearMatcher( true ) );
+    matchers[2].reset( new LinearMatcher2( true ) );
+    matchers[3].reset( new PolynomialMatcher( true ) );
+    matchers[4].reset( new DeltaMatcher( true ) );
   }
   matcher_stats.resize( matchers.size() );
   for ( auto &s : matcher_stats )

@@ -33,10 +33,10 @@ class AbstractMatcher: public Matcher
 {
 public:
 
-  AbstractMatcher( const std::string &name )
+  AbstractMatcher( const std::string &name, bool backoff )
       :
       name( name ),
-      backoff( true )
+      backoff( backoff )
   {
   }
 
@@ -58,11 +58,6 @@ public:
   virtual size_t getDomainSize() const override
   {
     return ids.size();
-  }
-
-  void setBackOff( bool backoff )
-  {
-    this->backoff = backoff;
   }
 
 protected:
@@ -87,9 +82,9 @@ class DirectMatcher: public AbstractMatcher<int>
 {
 public:
 
-  DirectMatcher()
+  DirectMatcher( bool backoff )
       :
-      AbstractMatcher( "direct" )
+      AbstractMatcher( "direct", backoff )
   {
   }
 
@@ -115,9 +110,9 @@ class LinearMatcher: public AbstractMatcher<line>
 {
 public:
 
-  LinearMatcher()
+  LinearMatcher( bool backoff )
       :
-      AbstractMatcher( "linear1" )
+      AbstractMatcher( "linear1", backoff )
   {
   }
 
@@ -137,9 +132,9 @@ class LinearMatcher2: public AbstractMatcher<line>
 {
 public:
 
-  LinearMatcher2()
+  LinearMatcher2( bool backoff )
       :
-      AbstractMatcher( "linear2" )
+      AbstractMatcher( "linear2", backoff )
   {
   }
 
@@ -161,9 +156,9 @@ public:
 
   static const int DEGREE;
 
-  PolynomialMatcher()
+  PolynomialMatcher( bool backoff )
       :
-      AbstractMatcher( "polynomial" )
+      AbstractMatcher( "polynomial", backoff )
   {
   }
 
@@ -189,9 +184,9 @@ public:
 
   static const int MAX_DELTA;
 
-  DeltaMatcher()
+  DeltaMatcher( bool backoff )
       :
-      AbstractMatcher( "delta" )
+      AbstractMatcher( "delta", backoff )
   {
   }
 

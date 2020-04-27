@@ -99,8 +99,7 @@ void Test::optimizer( size_t tests )
 
 void Test::deltaMatcher()
 {
-  DeltaMatcher matcher;
-  matcher.setBackOff( false );
+  DeltaMatcher matcher( false );
   testMatcherSet( matcher, { 7, 12, 27 } );
   testMatcherSet( matcher, { 4273, 290, 330 } );
   testMatcherSet( matcher, { 168380, 193356 } );
@@ -113,8 +112,7 @@ void Test::polynomialMatcher( size_t tests, size_t degree )
   Interpreter interpreter( settings );
   Optimizer optimizer( settings );
   std::random_device rand_dev;
-  PolynomialMatcher matcher;
-  matcher.setBackOff( false );
+  PolynomialMatcher matcher( false );
   Log::get().info( "Testing polynomial matcher for degree " + std::to_string( degree ) );
 
   // load test program
