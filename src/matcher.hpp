@@ -4,6 +4,8 @@
 #include "program.hpp"
 #include "reducer.hpp"
 
+#include <unordered_set>
+
 class Matcher
 {
 public:
@@ -33,7 +35,8 @@ public:
 
   AbstractMatcher( const std::string &name )
       :
-      name( name )
+      name( name ),
+      backoff( true )
   {
   }
 
@@ -57,6 +60,11 @@ public:
     return ids.size();
   }
 
+  void setBackOff( bool backoff )
+  {
+    this->backoff = backoff;
+  }
+
 protected:
 
   virtual std::pair<Sequence, T> reduce( const Sequence &seq ) const = 0;
@@ -65,9 +73,13 @@ protected:
 
 private:
 
+  bool shouldMatchSequence( const Sequence &seq ) const;
+
   std::string name;
   SequenceToIdsMap ids;
   std::unordered_map<number_t, T> data;
+  mutable std::unordered_set<Sequence, SequenceHasher> match_attempts;
+  bool backoff;
 
 };
 

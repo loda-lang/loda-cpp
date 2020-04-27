@@ -391,25 +391,8 @@ Oeis::seq_programs_t Oeis::findSequence( const Program &p, Sequence &norm_seq ) 
   {
     return result;
   }
-  if ( match_attempts.find( norm_seq ) == match_attempts.end() )
-  {
-    MatchAttempts a;
-    a.count = 0;
-    a.check_point = 1;
-    match_attempts[norm_seq] = a;
-  }
-  auto &attempts = match_attempts[norm_seq];
-  attempts.count++;
-  if ( attempts.count >= attempts.check_point )
-  {
-    attempts.check_point *= 2;
-    Log::get().info( "Matching sequence " + norm_seq.to_string() );
-    findAll( p, norm_seq, result );
-  }
-  else
-  {
-    Log::get().info( "Back off matching " + norm_seq.to_string() );
-  }
+  Log::get().info( "Matching sequence " + norm_seq.to_string() );
+  findAll( p, norm_seq, result );
   return result;
 }
 

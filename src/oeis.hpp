@@ -45,12 +45,6 @@ struct MatcherStats
   size_t errors;
 };
 
-struct MatchAttempts
-{
-  size_t count;
-  size_t check_point;
-};
-
 class Oeis
 {
 public:
@@ -108,7 +102,6 @@ private:
   std::vector<OeisSequence> sequences;
   std::vector<std::unique_ptr<Matcher>> matchers;
   mutable std::vector<MatcherStats> matcher_stats;
-  mutable std::unordered_map<Sequence, MatchAttempts, SequenceHasher> match_attempts;
   size_t total_count_;
 
 };

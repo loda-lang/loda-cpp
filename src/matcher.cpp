@@ -25,7 +25,15 @@ void AbstractMatcher<T>::remove( const Sequence &norm_seq, number_t id )
 template<class T>
 void AbstractMatcher<T>::match( const Program &p, const Sequence &norm_seq, seq_programs_t &result ) const
 {
+  if ( !shouldMatchSequence( norm_seq ) )
+  {
+    return;
+  }
   auto reduced = reduce( norm_seq );
+  if ( !shouldMatchSequence( reduced.first ) )
+  {
+    return;
+  }
   auto it = ids.find( reduced.first );
   if ( it != ids.end() )
   {
@@ -38,6 +46,18 @@ void AbstractMatcher<T>::match( const Program &p, const Sequence &norm_seq, seq_
       }
     }
   }
+}
+
+template<class T>
+bool AbstractMatcher<T>::shouldMatchSequence( const Sequence &seq ) const
+{
+  if ( backoff && match_attempts.find( seq ) != match_attempts.end() )
+  {
+    Log::get().debug( "Back off matching of already matched sequence " + seq.to_string() );
+    return false;
+  }
+  match_attempts.insert( seq );
+  return true;
 }
 
 // --- Direct Matcher ---------------------------------------------------------
