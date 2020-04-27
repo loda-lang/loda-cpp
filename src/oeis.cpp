@@ -400,7 +400,7 @@ Oeis::seq_programs_t Oeis::findSequence( const Program &p, Sequence &norm_seq ) 
   {
     return result;
   }
-  Log::get().info( "Matching sequence " + norm_seq.to_string() );
+  // Log::get().info( "Matching sequence " + norm_seq.to_string() );
   findAll( p, norm_seq, result );
   return result;
 }

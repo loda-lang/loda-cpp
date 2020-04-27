@@ -53,7 +53,7 @@ bool AbstractMatcher<T>::shouldMatchSequence( const Sequence &seq ) const
 {
   if ( backoff && match_attempts.find( seq ) != match_attempts.end() )
   {
-    Log::get().debug( "Back off matching of already matched sequence " + seq.to_string() );
+    // Log::get().debug( "Back off matching of already matched sequence " + seq.to_string() );
     return false;
   }
   match_attempts.insert( seq );
