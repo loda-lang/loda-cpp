@@ -58,12 +58,21 @@ Oeis::Oeis( const Settings &settings )
     optimizer( settings ),
     total_count_( 0 )
 {
-  matchers.resize( 5 );
-  matchers[0].reset( new DirectMatcher() );
-  matchers[1].reset( new LinearMatcher() );
-  matchers[2].reset( new LinearMatcher2() );
-  matchers[3].reset( new PolynomialMatcher() );
-  matchers[4].reset( new DeltaMatcher() );
+  if ( settings.optimize_existing_programs )
+  {
+    matchers.resize( 2 );
+    matchers[0].reset( new DirectMatcher() );
+    matchers[1].reset( new LinearMatcher() );
+  }
+  else
+  {
+    matchers.resize( 5 );
+    matchers[0].reset( new DirectMatcher() );
+    matchers[1].reset( new LinearMatcher() );
+    matchers[2].reset( new LinearMatcher2() );
+    matchers[3].reset( new PolynomialMatcher() );
+    matchers[4].reset( new DeltaMatcher() );
+  }
   matcher_stats.resize( matchers.size() );
   for ( auto &s : matcher_stats )
   {
