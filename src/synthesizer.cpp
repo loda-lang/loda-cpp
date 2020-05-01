@@ -33,14 +33,14 @@ bool LinearSynthesizer::synthesize( const Sequence &seq, Program &program )
 
 bool PeriodicSynthesizer::synthesize( const Sequence &seq, Program &program )
 {
-  if ( seq.size() < 4 )
+  if ( seq.size() < 10 )
   {
     return false;
   }
   bool ok = false;
   size_t period = 0;
   const size_t max_period = seq.size() / 2;
-  for ( period = 2; period < max_period; period++ )
+  for ( period = 1; period < max_period; period++ )
   {
     ok = true;
     for ( size_t i = 0; i < seq.size(); i++ )
@@ -61,16 +61,20 @@ bool PeriodicSynthesizer::synthesize( const Sequence &seq, Program &program )
     return false;
   }
   program.ops.clear();
-  program.push_back( Operation::Type::MOV, Operand::Type::DIRECT, period + 1, Operand::Type::DIRECT, 0 );
-  program.push_back( Operation::Type::LPB, Operand::Type::DIRECT, 2, Operand::Type::DIRECT, period + 1 );
-  program.push_back( Operation::Type::SUB, Operand::Type::DIRECT, period + 1, Operand::Type::CONSTANT, period );
-  program.ops.push_back( Operation( Operation::Type::LPE ) );
-  program.push_back( Operation::Type::MOV, Operand::Type::DIRECT, 2, Operand::Type::DIRECT, period + 1 );
-  program.push_back( Operation::Type::ADD, Operand::Type::DIRECT, 2, Operand::Type::CONSTANT, 3 );
-  for ( size_t i = 0; i < period; i++ )
+  if ( period == 1 )
   {
-    program.push_back( Operation::Type::MOV, Operand::Type::DIRECT, 3 + i, Operand::Type::CONSTANT, seq[i] );
+    program.push_back( Operation::Type::MOV, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, seq[0] );
   }
-  program.push_back( Operation::Type::MOV, Operand::Type::DIRECT, 1, Operand::Type::INDIRECT, 2 );
+  else
+  {
+    program.push_back( Operation::Type::MOD, Operand::Type::DIRECT, 0, Operand::Type::CONSTANT, period );
+    for ( size_t i = 0; i < period; i++ )
+    {
+      program.push_back( Operation::Type::MOV, Operand::Type::DIRECT, 2, Operand::Type::DIRECT, 0 );
+      program.push_back( Operation::Type::CMP, Operand::Type::DIRECT, 2, Operand::Type::CONSTANT, i );
+      program.push_back( Operation::Type::MUL, Operand::Type::DIRECT, 2, Operand::Type::CONSTANT, seq[i] );
+      program.push_back( Operation::Type::ADD, Operand::Type::DIRECT, 1, Operand::Type::DIRECT, 2 );
+    }
+  }
   return true;
 }
