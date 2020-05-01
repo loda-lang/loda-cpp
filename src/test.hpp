@@ -2,6 +2,7 @@
 
 #include "matcher.hpp"
 #include "number.hpp"
+#include "synthesizer.hpp"
 #include "util.hpp"
 
 class Test
@@ -28,7 +29,9 @@ public:
 
   void polynomialMatcher( size_t tests, size_t degree );
 
-  void polynomialSynthesizer( size_t tests, size_t degree );
+  void linearSynthesizer( size_t tests, size_t degree );
+
+  void periodicSynthesizer( size_t tests, size_t period, size_t prefix );
 
 private:
 
@@ -42,5 +45,7 @@ private:
   void testMatcherSet( Matcher &matcher, const std::vector<number_t> &ids );
 
   void testMatcherPair( Matcher &matcher, number_t id1, number_t id2 );
+
+  void testSynthesizer( Synthesizer &syn, const Sequence &seq );
 
 };

@@ -24,13 +24,20 @@ void Test::all()
   ackermann();
   collatz();
   deltaMatcher();
-  polynomialSynthesizer( 10000, 0 );
-  polynomialSynthesizer( 1000, 1 );
-  for ( int d = 0; d <= PolynomialMatcher::DEGREE; d++ )
+  size_t tests = 1000;
+  for ( size_t degree = 0; degree <= 1; degree++ )
   {
-    polynomialMatcher( 10000, d );
+    linearSynthesizer( tests, degree );
   }
-  optimizer( 10000 );
+  for ( size_t period = 1; period <= 5; period++ )
+  {
+    periodicSynthesizer( tests, period, 0 );
+  }
+  for ( size_t degree = 0; degree <= PolynomialMatcher::DEGREE; degree++ )
+  {
+    polynomialMatcher( tests, degree );
+  }
+  optimizer( tests );
 }
 
 std::string getOeisFile( number_t id )
@@ -181,14 +188,12 @@ void Test::polynomialMatcher( size_t tests, size_t degree )
   }
 }
 
-void Test::polynomialSynthesizer( size_t tests, size_t degree )
+void Test::linearSynthesizer( size_t tests, size_t degree )
 {
-  Log::get().info( "Testing polynomial synthesizer for degree " + std::to_string( degree ) );
+  Log::get().info( "Testing linear synthesizer for degree " + std::to_string( degree ) );
   std::random_device rand_dev;
+  LinearSynthesizer syn;
   Settings settings;
-  LinearSynthesizer synth;
-  Interpreter interpreter( settings );
-  Program prog;
   for ( size_t i = 0; i < tests; i++ )
   {
     if ( exit_flag_ ) break;
@@ -199,19 +204,32 @@ void Test::polynomialSynthesizer( size_t tests, size_t degree )
       pol[d] = pol[d] > 0 ? pol[d] : -pol[d];
     }
     Log::get().debug( "Checking polynomial " + pol.to_string() );
-    auto seq1 = pol.eval( settings.num_terms );
-    if ( !synth.synthesize( seq1, prog ) )
+    auto seq = pol.eval( settings.num_terms );
+    testSynthesizer( syn, seq );
+  }
+}
+
+void Test::periodicSynthesizer( size_t tests, size_t period, size_t prefix )
+{
+  Log::get().info(
+      "Testing periodic synthesizer for period " + std::to_string( period ) + ", prefix " + std::to_string( prefix ) );
+  std::random_device rand_dev;
+  PeriodicSynthesizer syn;
+  Settings settings;
+  for ( size_t i = 0; i < tests; i++ )
+  {
+    if ( exit_flag_ ) break;
+    Sequence seq;
+    for ( size_t i = 0; i < period; i++ )
     {
-      Log::get().error(
-          "Error synthesizing program for polynomial " + pol.to_string() + ", target sequence: " + seq1.to_string(),
-          true );
+      seq.push_back( rand_dev() % 1000 );
     }
-    auto seq2 = interpreter.eval( prog );
-    if ( seq1 != seq2 )
+    while ( seq.size() < settings.num_terms )
     {
-      ProgramUtil::print( prog, std::cout );
-      Log::get().error( "Synthesized program for polynomial " + pol.to_string() + " yields incorrect result", true );
+      seq.insert( seq.end(), seq.begin(), seq.begin() + period );
     }
+    seq.resize( settings.num_terms );
+    testSynthesizer( syn, seq );
   }
 }
 
@@ -298,5 +316,22 @@ void Test::testMatcherPair( Matcher &matcher, number_t id1, number_t id2 )
     ProgramUtil::print( result[0].second, std::cout );
     Log::get().error( matcher.getName() + " matcher generated wrong program for " + OeisSequence( id2 ).id_str(),
         false );
+  }
+}
+
+void Test::testSynthesizer( Synthesizer &syn, const Sequence &seq )
+{
+  Settings settings;
+  Interpreter interpreter( settings );
+  Program prog;
+  if ( !syn.synthesize( seq, prog ) )
+  {
+    Log::get().error( "Error synthesizing program for sequence " + seq.to_string(), true );
+  }
+  auto seq2 = interpreter.eval( prog );
+  if ( seq != seq2 )
+  {
+    ProgramUtil::print( prog, std::cout );
+    Log::get().error( "Synthesized program for sequence " + seq.to_string() + " yields incorrect result", true );
   }
 }
