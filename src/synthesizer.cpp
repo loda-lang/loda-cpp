@@ -33,13 +33,13 @@ bool LinearSynthesizer::synthesize( const Sequence &seq, Program &program )
 
 bool PeriodicSynthesizer::synthesize( const Sequence &seq, Program &program )
 {
-  if ( seq.size() < 10 )
+  if ( seq.size() < 12 )
   {
     return false;
   }
   bool ok = false;
   size_t period = 0;
-  const size_t max_period = seq.size() / 2;
+  const size_t max_period = seq.size() / 4;
   for ( period = 1; period < max_period; period++ )
   {
     ok = true;
