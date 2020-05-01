@@ -33,7 +33,7 @@ void Test::all()
   {
     periodicSynthesizer( tests, period, 0 );
   }
-  for ( size_t degree = 0; degree <= PolynomialMatcher::DEGREE; degree++ )
+  for ( size_t degree = 0; degree <= (size_t) PolynomialMatcher::DEGREE; degree++ )
   {
     polynomialMatcher( tests, degree );
   }
