@@ -70,10 +70,13 @@ bool PeriodicSynthesizer::synthesize( const Sequence &seq, Program &program )
     program.push_back( Operation::Type::MOD, Operand::Type::DIRECT, 0, Operand::Type::CONSTANT, period );
     for ( size_t i = 0; i < period; i++ )
     {
-      program.push_back( Operation::Type::MOV, Operand::Type::DIRECT, 2, Operand::Type::DIRECT, 0 );
-      program.push_back( Operation::Type::CMP, Operand::Type::DIRECT, 2, Operand::Type::CONSTANT, i );
-      program.push_back( Operation::Type::MUL, Operand::Type::DIRECT, 2, Operand::Type::CONSTANT, seq[i] );
-      program.push_back( Operation::Type::ADD, Operand::Type::DIRECT, 1, Operand::Type::DIRECT, 2 );
+      if ( seq[i] > 0 )
+      {
+        program.push_back( Operation::Type::MOV, Operand::Type::DIRECT, 2, Operand::Type::DIRECT, 0 );
+        program.push_back( Operation::Type::CMP, Operand::Type::DIRECT, 2, Operand::Type::CONSTANT, i );
+        program.push_back( Operation::Type::MUL, Operand::Type::DIRECT, 2, Operand::Type::CONSTANT, seq[i] );
+        program.push_back( Operation::Type::ADD, Operand::Type::DIRECT, 1, Operand::Type::DIRECT, 2 );
+      }
     }
   }
   return true;

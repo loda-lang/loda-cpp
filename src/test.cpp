@@ -200,7 +200,7 @@ void Test::linearSynthesizer( size_t tests, size_t degree )
     Polynomial pol( degree );
     for ( size_t d = 0; d < pol.size(); d++ )
     {
-      pol[d] = rand_dev() % 1000;
+      pol[d] = rand_dev() % 100;
       pol[d] = pol[d] > 0 ? pol[d] : -pol[d];
     }
     Log::get().debug( "Checking polynomial " + pol.to_string() );
@@ -222,7 +222,7 @@ void Test::periodicSynthesizer( size_t tests, size_t period, size_t prefix )
     Sequence seq;
     for ( size_t i = 0; i < period; i++ )
     {
-      seq.push_back( rand_dev() % 1000 );
+      seq.push_back( rand_dev() % 100 );
     }
     while ( seq.size() < settings.num_terms )
     {
