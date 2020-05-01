@@ -22,4 +22,6 @@ public:
 
   static number_t gcd( number_t a, number_t b );
 
+  static number_t cmp( number_t a, number_t b );
+
 };

@@ -50,13 +50,14 @@ public:
     POW,
     FAC,
     GCD,
+    CMP,
     LPB,
     LPE,
     CLR,
     DBG,
   };
 
-  static const std::array<Type, 14> Types;
+  static const std::array<Type, 15> Types;
 
   class Metadata
   {

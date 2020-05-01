@@ -114,3 +114,12 @@ number_t Semantics::gcd( number_t a, number_t b )
   }
   return NUM_INF;
 }
+
+number_t Semantics::cmp( number_t a, number_t b )
+{
+  if ( a != NUM_INF && b != NUM_INF )
+  {
+    return (a == b) ? 1 : 0;
+  }
+  return NUM_INF;
+}

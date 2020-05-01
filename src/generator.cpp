@@ -322,6 +322,7 @@ Program Generator::generateProgram()
     case Operation::Type::DIV:
     case Operation::Type::MOD:
     case Operation::Type::GCD:
+    case Operation::Type::CMP:
       num_ops++;
       can_descent = true;
       break;
