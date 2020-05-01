@@ -1,6 +1,6 @@
 #!/bin/bash
 
-log_level=info
+log_level=error
 check_interval=28800
 min_changes=20
 
