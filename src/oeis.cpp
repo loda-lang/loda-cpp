@@ -60,9 +60,10 @@ Oeis::Oeis( const Settings &settings )
 {
   if ( settings.optimize_existing_programs )
   {
-    matchers.resize( 2 );
+    matchers.resize( 3 );
     matchers[0].reset( new DirectMatcher( false ) );
     matchers[1].reset( new LinearMatcher( false ) );
+    matchers[2].reset( new LinearMatcher2( false ) );
   }
   else
   {
