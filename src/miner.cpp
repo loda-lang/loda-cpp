@@ -227,6 +227,34 @@ void Miner::synthesize( volatile sig_atomic_t &exit_flag )
         }
       }
     }
+    for ( auto &matcher : oeis.getMatchers() )
+    {
+      for ( auto &reduced : matcher->getReducedSequences() )
+      {
+        if ( exit_flag )
+        {
+          break;
+        }
+        if ( reduced.first.empty() )
+        {
+          continue;
+        }
+        if ( synthesizer->synthesize( reduced.first, program ) )
+        {
+          Sequence seq;
+          auto progs = oeis.findSequence( program, seq );
+          for ( auto &p : progs )
+          {
+            Log::get().debug( "Synthesized program for " + OeisSequence( p.first ).to_string() );
+            auto r = oeis.updateProgram( p.first, p.second );
+            if ( r.first )
+            {
+              found++;
+            }
+          }
+        }
+      }
+    }
   }
   Log::get().tweet_alerts = tweet_alerts;
   if ( found > 0 )
