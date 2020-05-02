@@ -24,7 +24,7 @@ public:
 
   virtual const std::string& getName() const = 0;
 
-  virtual size_t getDomainSize() const = 0;
+  virtual const SequenceToIdsMap& getReducedSequences() const = 0;
 
 };
 
@@ -55,9 +55,9 @@ public:
     return name;
   }
 
-  virtual size_t getDomainSize() const override
+  virtual const SequenceToIdsMap& getReducedSequences() const override
   {
-    return ids.size();
+    return ids;
   }
 
 protected:

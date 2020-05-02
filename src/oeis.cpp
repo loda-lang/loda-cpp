@@ -311,7 +311,7 @@ void Oeis::load()
   for ( size_t i = 0; i < matchers.size(); i++ )
   {
     if ( i > 0 ) buf << ", ";
-    double ratio = 100.0 * (double) matchers[i]->getDomainSize() / (double) loaded_count;
+    double ratio = 100.0 * (double) matchers[i]->getReducedSequences().size() / (double) loaded_count;
     buf << matchers[i]->getName() << ": " << std::setprecision( 4 ) << ratio << "%";
   }
   Log::get().info( buf.str() );
