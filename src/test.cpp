@@ -87,7 +87,7 @@ void Test::optimizer( size_t tests )
     program = generator.generateProgram();
     try
     {
-      s1 = interpreter.eval( program );
+      interpreter.eval( program, s1 );
     }
     catch ( const std::exception &e )
     {
@@ -95,7 +95,7 @@ void Test::optimizer( size_t tests )
     }
     optimized = program;
     optimizer.optimize( optimized, 2, 1 );
-    s2 = interpreter.eval( optimized );
+    interpreter.eval( optimized, s2 );
     if ( s1.size() != s2.size() || (s1 != s2) )
     {
       ProgramUtil::print( program, std::cout );
@@ -139,7 +139,8 @@ void Test::polynomialMatcher( size_t tests, size_t degree )
 
     // evaluate test program
     auto program = programs[i % program_ids.size()];
-    auto norm_seq = interpreter.eval( program );
+    Sequence norm_seq;
+    interpreter.eval( program, norm_seq );
 
     // test polynomial matcher
     Polynomial pol( degree );
@@ -168,7 +169,7 @@ void Test::polynomialMatcher( size_t tests, size_t degree )
     Sequence result_seq;
     try
     {
-      result_seq = interpreter.eval( results[0].second );
+      interpreter.eval( results[0].second, result_seq );
     }
     catch ( const std::exception& )
     {
@@ -266,7 +267,8 @@ void Test::testSeq( const std::string &func, const std::string &file, const Sequ
   settings.num_terms = expected.size();
   Interpreter interpreter( settings );
   auto p = parser.parse( file );
-  auto result = interpreter.eval( p );
+  Sequence result;
+  interpreter.eval( p, result );
   if ( result != expected )
   {
     Log::get().error( "unexpected result: " + result.to_string(), true );
@@ -296,8 +298,9 @@ void Test::testMatcherPair( Matcher &matcher, number_t id1, number_t id2 )
   auto p2 = parser.parse( getOeisFile( id2 ) );
   ProgramUtil::removeOps( p1, Operation::Type::NOP );
   ProgramUtil::removeOps( p2, Operation::Type::NOP );
-  auto s1 = interpreter.eval( p1 );
-  auto s2 = interpreter.eval( p2 );
+  Sequence s1, s2, s3;
+  interpreter.eval( p1, s1 );
+  interpreter.eval( p2, s2 );
   matcher.insert( s2, id2 );
   Matcher::seq_programs_t result;
   matcher.match( p1, s1, result );
@@ -310,7 +313,7 @@ void Test::testMatcherPair( Matcher &matcher, number_t id1, number_t id2 )
   {
     Log::get().error( matcher.getName() + " matcher returned unexpected sequence ID", true );
   }
-  auto s3 = interpreter.eval( result[0].second );
+  interpreter.eval( result[0].second, s3 );
   if ( s2.size() != s3.size() || s2 != s3 )
   {
     ProgramUtil::print( result[0].second, std::cout );
@@ -328,7 +331,8 @@ void Test::testSynthesizer( Synthesizer &syn, const Sequence &seq )
   {
     Log::get().error( "Error synthesizing program for sequence " + seq.to_string(), true );
   }
-  auto seq2 = interpreter.eval( prog );
+  Sequence seq2;
+  interpreter.eval( prog, seq2 );
   if ( seq != seq2 )
   {
     ProgramUtil::print( prog, std::cout );

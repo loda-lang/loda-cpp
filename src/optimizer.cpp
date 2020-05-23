@@ -617,7 +617,7 @@ void Optimizer::minimize( Program &p, size_t num_terms ) const
   Sequence target_sequence;
   try
   {
-    target_sequence = interpreter.eval( p, num_terms );
+    interpreter.eval( p, target_sequence, num_terms );
   }
   catch ( const std::exception& )
   {
@@ -639,7 +639,8 @@ void Optimizer::minimize( Program &p, size_t num_terms ) const
         bool can_reset = true;
         try
         {
-          auto new_sequence = interpreter.eval( p, num_terms );
+          Sequence new_sequence;
+          interpreter.eval( p, new_sequence, num_terms );
           if ( new_sequence.size() != target_sequence.size() || new_sequence != target_sequence )
           {
             can_reset = false;
@@ -661,7 +662,8 @@ void Optimizer::minimize( Program &p, size_t num_terms ) const
       bool can_remove = true;
       try
       {
-        auto new_sequence = interpreter.eval( p, num_terms );
+        Sequence new_sequence;
+        interpreter.eval( p, new_sequence, num_terms );
         if ( new_sequence.size() != target_sequence.size() || new_sequence != target_sequence )
         {
           can_remove = false;

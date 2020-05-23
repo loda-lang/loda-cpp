@@ -302,13 +302,12 @@ bool Interpreter::isLessThan( const Memory &m1, const Memory &m2, const std::vec
   return false; // equal
 }
 
-Sequence Interpreter::eval( const Program &p, int num_terms ) const
+void Interpreter::eval( const Program &p, Sequence &seq, int num_terms ) const
 {
   if ( num_terms < 0 )
   {
     num_terms = settings.num_terms;
   }
-  Sequence seq;
   seq.resize( num_terms );
   Memory mem;
   for ( int i = 0; i < num_terms; i++ )
@@ -324,5 +323,4 @@ Sequence Interpreter::eval( const Program &p, int num_terms ) const
     buf << "Evaluated program to sequence " << seq;
     Log::get().debug( buf.str() );
   }
-  return seq;
 }

@@ -12,7 +12,7 @@ public:
 
   bool run( const Program &p, Memory &mem ) const;
 
-  Sequence eval( const Program &p, int num_terms = -1 ) const;
+  void eval( const Program &p, Sequence &seq, int num_terms = -1 ) const;
 
 private:
 

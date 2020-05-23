@@ -388,10 +388,9 @@ void Oeis::removeSequence( number_t id )
 Oeis::seq_programs_t Oeis::findSequence( const Program &p, Sequence &norm_seq ) const
 {
   seq_programs_t result;
-  norm_seq.clear();
   try
   {
-    norm_seq = interpreter.eval( p );
+    interpreter.eval( p, norm_seq );
   }
   catch ( const std::exception& )
   {
@@ -426,7 +425,7 @@ void Oeis::findAll( const Program &p, const Sequence &norm_seq, seq_programs_t &
       try
       {
         full_seq.clear();
-        full_seq = interpreter.eval( t.second, expected_full_seq.size() );
+        interpreter.eval( t.second, full_seq, expected_full_seq.size() );
         if ( full_seq.size() != expected_full_seq.size() || full_seq != expected_full_seq )
         {
           matcher_stats[i].false_positives++;
@@ -488,7 +487,7 @@ std::pair<bool, Program> Oeis::optimizeAndCheck( const Program &p, const OeisSeq
   Sequence new_seq;
   try
   {
-    new_seq = interpreter.eval( optimized.second, seq.full.size() );
+    interpreter.eval( optimized.second, new_seq, seq.full.size() );
     if ( seq.full.size() != new_seq.size() || seq.full != new_seq )
     {
       optimized.first = false;
@@ -616,7 +615,8 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
       bool okay;
       try
       {
-        Sequence result = interpreter.eval( program );
+        Sequence result;
+        interpreter.eval( program, result );
         if ( result.size() != s.full.size() || result != s.full )
         {
           Log::get().error( "Program did not evaluate to expected sequence: " + file_name );

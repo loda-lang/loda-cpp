@@ -90,8 +90,9 @@ int main( int argc, char *argv[] )
       Parser parser;
       Program program = parser.parse( std::string( args.at( 1 ) ) );
       Interpreter interpreter( settings );
-      auto sequence = interpreter.eval( program );
-      std::cout << sequence << std::endl;
+      Sequence seq;
+      interpreter.eval( program, seq );
+      std::cout << seq << std::endl;
     }
     else if ( cmd == "optimize" || cmd == "opt" )
     {
@@ -146,8 +147,9 @@ int main( int argc, char *argv[] )
       Parser parser;
       Program program = parser.parse( std::string( args.at( 1 ) ) );
       Interpreter interpreter( settings );
-      auto sequence = interpreter.eval( program );
-      bool is_collatz = Miner::isCollatzValuation( sequence );
+      Sequence seq;
+      interpreter.eval( program, seq );
+      bool is_collatz = Miner::isCollatzValuation( seq );
       std::cout << (is_collatz ? "true" : "false") << std::endl;
     }
     else
