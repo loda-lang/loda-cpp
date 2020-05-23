@@ -40,7 +40,7 @@ bool PeriodicSynthesizer::synthesize( const Sequence &seq, Program &program )
   bool ok = false;
   size_t period = 0;
   const size_t max_period = seq.size() / 4;
-  for ( period = 1; period < max_period; period++ )
+  for ( period = 1; period <= max_period; period++ )
   {
     ok = true;
     for ( size_t i = 0; i < seq.size(); i++ )
