@@ -19,7 +19,7 @@ const Operation::Metadata& Operation::Metadata::get( Type t )
   static Operation::Metadata pow { Operation::Type::POW, "pow", 'p', 2, true, true, true, 18 };
   static Operation::Metadata fac { Operation::Type::FAC, "fac", 'f', 1, true, true, true, 6 };
   static Operation::Metadata gcd { Operation::Type::GCD, "gcd", 'g', 2, true, true, true, 6 };
-  static Operation::Metadata bin { Operation::Type::BIN, "bin", 'b', 2, true, true, true, 6 };
+  static Operation::Metadata bin { Operation::Type::BIN, "bin", 'b', 2, true, true, true, 3 };
   static Operation::Metadata cmp { Operation::Type::CMP, "cmp", 'c', 2, true, true, true, 6 };
   static Operation::Metadata lpb { Operation::Type::LPB, "lpb", 'l', 2, true, true, false, 8 };
   static Operation::Metadata lpe { Operation::Type::LPE, "lpe", 'e', 0, true, false, false, 0 };
