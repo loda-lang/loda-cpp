@@ -130,8 +130,12 @@ number_t Semantics::bin( number_t n, number_t k )
     }
     for ( number_t i = 0; i < k; i++ )
     {
-      r *= (n - i);
-      r /= (i + 1);
+      r = mul( r, n - i );
+      r = div( r, i + 1 );
+      if ( r == NUM_INF )
+      {
+        break;
+      }
     }
     return r;
   }
