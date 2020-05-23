@@ -50,6 +50,7 @@ public:
     POW,
     FAC,
     GCD,
+    BIN,
     CMP,
     LPB,
     LPE,
@@ -57,7 +58,7 @@ public:
     DBG,
   };
 
-  static const std::array<Type, 15> Types;
+  static const std::array<Type, 16> Types;
 
   class Metadata
   {

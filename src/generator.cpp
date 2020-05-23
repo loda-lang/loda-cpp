@@ -172,7 +172,7 @@ void Generator::generateOperations()
   }
   if ( source_type == Operand::Type::CONSTANT && source_value < 2
       && (op_type == Operation::Type::MUL || op_type == Operation::Type::DIV || op_type == Operation::Type::MOD
-          || op_type == Operation::Type::POW || op_type == Operation::Type::GCD) )
+          || op_type == Operation::Type::POW || op_type == Operation::Type::GCD || op_type == Operation::Type::BIN) )
   {
     source_value = 2;
   }
@@ -322,6 +322,7 @@ Program Generator::generateProgram()
     case Operation::Type::DIV:
     case Operation::Type::MOD:
     case Operation::Type::GCD:
+    case Operation::Type::BIN:
     case Operation::Type::CMP:
       num_ops++;
       can_descent = true;

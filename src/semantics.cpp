@@ -115,6 +115,29 @@ number_t Semantics::gcd( number_t a, number_t b )
   return NUM_INF;
 }
 
+number_t Semantics::bin( number_t n, number_t k )
+{
+  if ( n != NUM_INF && k != NUM_INF )
+  {
+    if ( k > n )
+    {
+      return 0;
+    }
+    number_t r = 1;
+    if ( 2 * k > n )
+    {
+      k = n - k;
+    }
+    for ( number_t i = 0; i < k; i++ )
+    {
+      r *= (n - i);
+      r /= (i + 1);
+    }
+    return r;
+  }
+  return NUM_INF;
+}
+
 number_t Semantics::cmp( number_t a, number_t b )
 {
   if ( a != NUM_INF && b != NUM_INF )

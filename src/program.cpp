@@ -2,10 +2,10 @@
 
 #include "number.hpp"
 
-const std::array<Operation::Type, 15> Operation::Types = { Operation::Type::NOP, Operation::Type::MOV,
+const std::array<Operation::Type, 16> Operation::Types = { Operation::Type::NOP, Operation::Type::MOV,
     Operation::Type::ADD, Operation::Type::SUB, Operation::Type::MUL, Operation::Type::DIV, Operation::Type::MOD,
-    Operation::Type::POW, Operation::Type::FAC, Operation::Type::GCD, Operation::Type::CMP, Operation::Type::LPB,
-    Operation::Type::LPE, Operation::Type::CLR, Operation::Type::DBG, };
+    Operation::Type::POW, Operation::Type::FAC, Operation::Type::GCD, Operation::Type::BIN, Operation::Type::CMP,
+    Operation::Type::LPB, Operation::Type::LPE, Operation::Type::CLR, Operation::Type::DBG, };
 
 const Operation::Metadata& Operation::Metadata::get( Type t )
 {
@@ -19,11 +19,12 @@ const Operation::Metadata& Operation::Metadata::get( Type t )
   static Operation::Metadata pow { Operation::Type::POW, "pow", 'p', 2, true, true, true, 18 };
   static Operation::Metadata fac { Operation::Type::FAC, "fac", 'f', 1, true, true, true, 6 };
   static Operation::Metadata gcd { Operation::Type::GCD, "gcd", 'g', 2, true, true, true, 6 };
+  static Operation::Metadata bin { Operation::Type::BIN, "bin", 'b', 2, true, true, true, 6 };
   static Operation::Metadata cmp { Operation::Type::CMP, "cmp", 'c', 2, true, true, true, 6 };
   static Operation::Metadata lpb { Operation::Type::LPB, "lpb", 'l', 2, true, true, false, 8 };
   static Operation::Metadata lpe { Operation::Type::LPE, "lpe", 'e', 0, true, false, false, 0 };
   static Operation::Metadata clr { Operation::Type::CLR, "clr", 'r', 2, true, false, true, 0 };
-  static Operation::Metadata dbg { Operation::Type::DBG, "dbg", 'b', 0, false, false, false, 0 };
+  static Operation::Metadata dbg { Operation::Type::DBG, "dbg", 'g', 0, false, false, false, 0 };
   switch ( t )
   {
   case Operation::Type::NOP:
@@ -46,6 +47,8 @@ const Operation::Metadata& Operation::Metadata::get( Type t )
     return fac;
   case Operation::Type::GCD:
     return gcd;
+  case Operation::Type::BIN:
+    return bin;
   case Operation::Type::CMP:
     return cmp;
   case Operation::Type::LPB:

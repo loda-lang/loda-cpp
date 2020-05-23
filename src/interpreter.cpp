@@ -123,6 +123,13 @@ bool Interpreter::run( const Program &p, Memory &mem ) const
       set( op.target, Semantics::gcd( target, source ), mem );
       break;
     }
+    case Operation::Type::BIN:
+    {
+      source = get( op.source, mem );
+      target = get( op.target, mem );
+      set( op.target, Semantics::bin( target, source ), mem );
+      break;
+    }
     case Operation::Type::CMP:
     {
       source = get( op.source, mem );

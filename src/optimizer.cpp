@@ -48,12 +48,26 @@ bool Optimizer::removeNops( Program &p ) const
   while ( it != p.ops.end() )
   {
     auto t = it->type;
-    if ( t == Operation::Type::NOP || t == Operation::Type::DBG
-        || ((t == Operation::Type::ADD || t == Operation::Type::SUB) && it->source.type == Operand::Type::CONSTANT
-            && it->source.value == 0)
-        || ((t == Operation::Type::MOV || t == Operation::Type::GCD) && it->source == it->target)
-        || ((t == Operation::Type::MUL || t == Operation::Type::DIV || t == Operation::Type::POW)
-            && it->source.type == Operand::Type::CONSTANT && it->source.value == 1) )
+    bool is_nop = false;
+    if ( t == Operation::Type::NOP || t == Operation::Type::DBG )
+    {
+      is_nop = true;
+    }
+    if ( (t == Operation::Type::MOV || t == Operation::Type::GCD) && it->source == it->target )
+    {
+      is_nop = true;
+    }
+    if ( (t == Operation::Type::ADD || t == Operation::Type::SUB) && it->source.type == Operand::Type::CONSTANT
+        && it->source.value == 0 )
+    {
+      is_nop = true;
+    }
+    if ( ((t == Operation::Type::MUL || t == Operation::Type::DIV || t == Operation::Type::POW
+        || t == Operation::Type::BIN) && it->source.type == Operand::Type::CONSTANT && it->source.value == 1) )
+    {
+      is_nop = true;
+    }
+    if ( is_nop )
     {
       it = p.ops.erase( it );
       removed = true;
@@ -224,6 +238,7 @@ bool Optimizer::simplifyOperations( Program &p, size_t num_initialized_cells ) c
     case Operation::Type::POW:
     case Operation::Type::FAC:
     case Operation::Type::GCD:
+    case Operation::Type::BIN:
     case Operation::Type::CMP:
     {
       if ( can_simplify )
@@ -524,6 +539,9 @@ update_state updateConstantsArithmetic( Operation &op, std::unordered_map<number
     break;
   case Operation::Type::GCD:
     target_value = Semantics::gcd( target_value, source_value );
+    break;
+  case Operation::Type::BIN:
+    target_value = Semantics::bin( target_value, source_value );
     break;
   case Operation::Type::CMP:
     target_value = Semantics::cmp( target_value, source_value );
