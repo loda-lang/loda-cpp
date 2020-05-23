@@ -77,64 +77,32 @@ bool DirectMatcher::extend( Program &p, int base, int gen ) const
 
 // --- Linear Matcher ---------------------------------------------------------
 
-std::pair<Sequence, line> LinearMatcher::reduce( const Sequence &seq ) const
+std::pair<Sequence, line_t> LinearMatcher::reduce( const Sequence &seq ) const
 {
-  std::pair<Sequence, line> result;
+  std::pair<Sequence, line_t> result;
   result.first = seq;
   result.second.offset = Reducer::truncate( result.first );
   result.second.factor = Reducer::shrink( result.first );
   return result;
 }
 
-bool LinearMatcher::extend( Program &p, line base, line gen ) const
+bool LinearMatcher::extend( Program &p, line_t base, line_t gen ) const
 {
-  if ( gen.offset > 0 )
-  {
-    p.push_back( Operation::Type::SUB, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, gen.offset );
-  }
-  if ( gen.factor > 1 )
-  {
-    p.push_back( Operation::Type::DIV, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, gen.factor );
-  }
-  if ( base.factor > 1 )
-  {
-    p.push_back( Operation::Type::MUL, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, base.factor );
-  }
-  if ( base.offset > 0 )
-  {
-    p.push_back( Operation::Type::ADD, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, base.offset );
-  }
-  return true;
+  return Extender::linear1( p, gen, base );
 }
 
-std::pair<Sequence, line> LinearMatcher2::reduce( const Sequence &seq ) const
+std::pair<Sequence, line_t> LinearMatcher2::reduce( const Sequence &seq ) const
 {
-  std::pair<Sequence, line> result;
+  std::pair<Sequence, line_t> result;
   result.first = seq;
   result.second.factor = Reducer::shrink( result.first );
   result.second.offset = Reducer::truncate( result.first );
   return result;
 }
 
-bool LinearMatcher2::extend( Program &p, line base, line gen ) const
+bool LinearMatcher2::extend( Program &p, line_t base, line_t gen ) const
 {
-  if ( gen.factor > 1 )
-  {
-    p.push_back( Operation::Type::DIV, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, gen.factor );
-  }
-  if ( gen.offset > 0 )
-  {
-    p.push_back( Operation::Type::SUB, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, gen.offset );
-  }
-  if ( base.offset > 0 )
-  {
-    p.push_back( Operation::Type::ADD, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, base.offset );
-  }
-  if ( base.factor > 1 )
-  {
-    p.push_back( Operation::Type::MUL, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, base.factor );
-  }
-  return true;
+  return Extender::linear2( p, gen, base );
 }
 
 // --- Polynomial Matcher -----------------------------------------------------
@@ -151,71 +119,8 @@ std::pair<Sequence, Polynomial> PolynomialMatcher::reduce( const Sequence &seq )
 
 bool PolynomialMatcher::extend( Program &p, Polynomial base, Polynomial gen ) const
 {
-  Settings settings;
-  Optimizer optimizer( settings );
   auto diff = base - gen;
-
-  // constant term
-  if ( diff.size() > 0 )
-  {
-    const auto constant = diff[0];
-    if ( constant > 0 )
-    {
-      p.push_back( Operation::Type::ADD, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, constant );
-    }
-    else if ( constant < 0 )
-    {
-      p.push_back( Operation::Type::SUB, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, -constant );
-    }
-  }
-
-  // non-constant terms
-  if ( diff.size() > 1 )
-  {
-    std::unordered_set<number_t> used_cells;
-    number_t max_cell = 0;
-    if ( !optimizer.getUsedMemoryCells( p, used_cells, max_cell ) )
-    {
-      return false;
-    }
-    max_cell = std::max( max_cell, (number_t) 1 );
-    const number_t saved_arg_cell = max_cell + 1;
-    const number_t x_cell = max_cell + 2;
-    const number_t term_cell = max_cell + 3;
-
-    // save argument
-    p.push_front( Operation::Type::MOV, Operand::Type::DIRECT, saved_arg_cell, Operand::Type::DIRECT, 0 );
-
-    // polynomial evaluation code
-    for ( number_t exp = 1; exp < diff.size(); exp++ )
-    {
-      // update x^exp
-      if ( exp == 1 )
-      {
-        p.push_back( Operation::Type::MOV, Operand::Type::DIRECT, x_cell, Operand::Type::DIRECT, saved_arg_cell );
-      }
-      else
-      {
-        p.push_back( Operation::Type::MUL, Operand::Type::DIRECT, x_cell, Operand::Type::DIRECT, saved_arg_cell );
-      }
-
-      // update result
-      const auto factor = diff[exp];
-      if ( factor > 0 )
-      {
-        p.push_back( Operation::Type::MOV, Operand::Type::DIRECT, term_cell, Operand::Type::DIRECT, x_cell );
-        p.push_back( Operation::Type::MUL, Operand::Type::DIRECT, term_cell, Operand::Type::CONSTANT, factor );
-        p.push_back( Operation::Type::ADD, Operand::Type::DIRECT, 1, Operand::Type::DIRECT, term_cell );
-      }
-      else if ( factor < 0 )
-      {
-        return false;
-      }
-
-    }
-
-  }
-  return true;
+  return Extender::polynomial( p, diff );
 }
 
 // --- Delta Matcher ----------------------------------------------------------
@@ -230,131 +135,29 @@ std::pair<Sequence, delta_t> DeltaMatcher::reduce( const Sequence &seq ) const
   return result;
 }
 
-bool extend_delta( Program &p, const bool sum )
-{
-  Settings settings;
-  Optimizer optimizer( settings );
-  std::unordered_set<number_t> used_cells;
-  number_t largest_used = 0;
-  if ( !optimizer.getUsedMemoryCells( p, used_cells, largest_used ) )
-  {
-    return false;
-  }
-  largest_used = std::max( (number_t) 1, largest_used );
-  auto saved_arg_cell = largest_used + 1;
-  auto saved_result_cell = largest_used + 2;
-  auto loop_counter_cell = largest_used + 3;
-  auto tmp_counter_cell = largest_used + 4;
-
-  Program prefix;
-  prefix.push_back( Operation::Type::MOV, Operand::Type::DIRECT, saved_arg_cell, Operand::Type::DIRECT, 0 );
-  if ( sum )
-  {
-    prefix.push_back( Operation::Type::MOV, Operand::Type::DIRECT, loop_counter_cell, Operand::Type::DIRECT, 0 );
-    prefix.push_back( Operation::Type::ADD, Operand::Type::DIRECT, loop_counter_cell, Operand::Type::CONSTANT, 1 );
-  }
-  else
-  {
-    prefix.push_back( Operation::Type::MOV, Operand::Type::DIRECT, loop_counter_cell, Operand::Type::CONSTANT, 2 );
-  }
-  prefix.push_back( Operation::Type::LPB, Operand::Type::DIRECT, loop_counter_cell, Operand::Type::CONSTANT, 1 );
-  prefix.push_back( Operation::Type::CLR, Operand::Type::DIRECT, 0, Operand::Type::CONSTANT, largest_used + 1 );
-  prefix.push_back( Operation::Type::SUB, Operand::Type::DIRECT, loop_counter_cell, Operand::Type::CONSTANT, 1 );
-  prefix.push_back( Operation::Type::MOV, Operand::Type::DIRECT, 0, Operand::Type::DIRECT, saved_arg_cell );
-  if ( sum )
-  {
-    prefix.push_back( Operation::Type::SUB, Operand::Type::DIRECT, 0, Operand::Type::DIRECT, loop_counter_cell );
-  }
-  else
-  {
-    prefix.push_back( Operation::Type::ADD, Operand::Type::DIRECT, 0, Operand::Type::DIRECT, loop_counter_cell );
-    prefix.push_back( Operation::Type::SUB, Operand::Type::DIRECT, 0, Operand::Type::CONSTANT, 1 );
-  }
-  p.ops.insert( p.ops.begin(), prefix.ops.begin(), prefix.ops.end() );
-
-  if ( sum )
-  {
-    p.push_back( Operation::Type::ADD, Operand::Type::DIRECT, saved_result_cell, Operand::Type::DIRECT, 1 );
-  }
-  else
-  {
-    p.push_back( Operation::Type::MOV, Operand::Type::DIRECT, tmp_counter_cell, Operand::Type::DIRECT,
-        loop_counter_cell );
-    p.push_back( Operation::Type::LPB, Operand::Type::DIRECT, tmp_counter_cell, Operand::Type::CONSTANT, 1 );
-    p.push_back( Operation::Type::MOV, Operand::Type::DIRECT, saved_result_cell, Operand::Type::DIRECT, 1 );
-    p.push_back( Operation::Type::SUB, Operand::Type::DIRECT, tmp_counter_cell, Operand::Type::CONSTANT, 1 );
-    p.push_back( Operation::Type::LPE, Operand::Type::CONSTANT, 0, Operand::Type::CONSTANT, 0 );
-  }
-  p.push_back( Operation::Type::LPE, Operand::Type::CONSTANT, 0, Operand::Type::CONSTANT, 0 );
-
-  if ( sum )
-  {
-    p.push_back( Operation::Type::MOV, Operand::Type::DIRECT, 1, Operand::Type::DIRECT, saved_result_cell );
-  }
-  else
-  {
-    p.push_back( Operation::Type::LPB, Operand::Type::DIRECT, saved_arg_cell, Operand::Type::CONSTANT, 1 );
-    p.push_back( Operation::Type::SUB, Operand::Type::DIRECT, saved_result_cell, Operand::Type::DIRECT, 1 );
-    p.push_back( Operation::Type::MOV, Operand::Type::DIRECT, saved_arg_cell, Operand::Type::CONSTANT, 0 );
-    p.push_back( Operation::Type::LPE, Operand::Type::CONSTANT, 0, Operand::Type::CONSTANT, 0 );
-    p.push_back( Operation::Type::MOV, Operand::Type::DIRECT, 1, Operand::Type::DIRECT, saved_result_cell );
-  }
-  return true;
-}
-
-bool extend_delta_it( Program &p, int delta )
-{
-  while ( delta < 0 )
-  {
-    if ( !extend_delta( p, false ) )
-    {
-      return false;
-    }
-    delta++;
-  }
-  while ( delta > 0 )
-  {
-    if ( !extend_delta( p, true ) )
-    {
-      return false;
-    }
-    delta--;
-  }
-  return true;
-}
-
 bool DeltaMatcher::extend( Program &p, delta_t base, delta_t gen ) const
 {
   if ( base.offset == gen.offset && base.factor == gen.factor )
   {
-    return extend_delta_it( p, base.delta - gen.delta );
+    return Extender::delta_it( p, base.delta - gen.delta );
   }
   else
   {
-    if ( !extend_delta_it( p, -gen.delta ) )
+    if ( !Extender::delta_it( p, -gen.delta ) )
     {
       return false;
     }
-
-    // TODO: reuse linear matcher code
-    if ( gen.offset > 0 )
+    line_t base_line;
+    base_line.offset = base.offset;
+    base_line.factor = base.factor;
+    line_t gen_line;
+    gen_line.offset = gen.offset;
+    gen_line.factor = gen.factor;
+    if ( !Extender::linear1( p, gen_line, base_line ) )
     {
-      p.push_back( Operation::Type::SUB, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, gen.offset );
+      return false;
     }
-    if ( gen.factor > 1 )
-    {
-      p.push_back( Operation::Type::DIV, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, gen.factor );
-    }
-    if ( base.factor > 1 )
-    {
-      p.push_back( Operation::Type::MUL, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, base.factor );
-    }
-    if ( base.offset > 0 )
-    {
-      p.push_back( Operation::Type::ADD, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, base.offset );
-    }
-
-    if ( !extend_delta_it( p, base.delta ) )
+    if ( !Extender::delta_it( p, base.delta ) )
     {
       return false;
     }

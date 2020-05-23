@@ -3,6 +3,7 @@
 #include "number.hpp"
 #include "program.hpp"
 #include "reducer.hpp"
+#include "extender.hpp"
 
 #include <unordered_set>
 
@@ -100,13 +101,7 @@ protected:
 
 };
 
-struct line
-{
-  int offset;
-  int factor;
-};
-
-class LinearMatcher: public AbstractMatcher<line>
+class LinearMatcher: public AbstractMatcher<line_t>
 {
 public:
 
@@ -122,13 +117,13 @@ public:
 
 protected:
 
-  virtual std::pair<Sequence, line> reduce( const Sequence &seq ) const override;
+  virtual std::pair<Sequence, line_t> reduce( const Sequence &seq ) const override;
 
-  virtual bool extend( Program &p, line base, line gen ) const override;
+  virtual bool extend( Program &p, line_t base, line_t gen ) const override;
 
 };
 
-class LinearMatcher2: public AbstractMatcher<line>
+class LinearMatcher2: public AbstractMatcher<line_t>
 {
 public:
 
@@ -144,9 +139,9 @@ public:
 
 protected:
 
-  virtual std::pair<Sequence, line> reduce( const Sequence &seq ) const override;
+  virtual std::pair<Sequence, line_t> reduce( const Sequence &seq ) const override;
 
-  virtual bool extend( Program &p, line base, line gen ) const override;
+  virtual bool extend( Program &p, line_t base, line_t gen ) const override;
 
 };
 
