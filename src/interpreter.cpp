@@ -324,3 +324,26 @@ void Interpreter::eval( const Program &p, Sequence &seq, int num_terms ) const
     Log::get().debug( buf.str() );
   }
 }
+
+void Interpreter::eval( const Program &p, std::vector<Sequence> &seqs, int num_terms ) const
+{
+  if ( num_terms < 0 )
+  {
+    num_terms = settings.num_terms;
+  }
+  for ( size_t s = 0; s < seqs.size(); s++ )
+  {
+    seqs[s].resize( num_terms );
+  }
+  Memory mem;
+  for ( int i = 0; i < num_terms; i++ )
+  {
+    mem.clear();
+    mem.set( 0, i );
+    run( p, mem );
+    for ( size_t s = 0; s < seqs.size(); s++ )
+    {
+      seqs[s][i] = mem.get( s );
+    }
+  }
+}

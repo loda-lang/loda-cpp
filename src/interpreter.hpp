@@ -14,6 +14,8 @@ public:
 
   void eval( const Program &p, Sequence &seq, int num_terms = -1 ) const;
 
+  void eval( const Program &p, std::vector<Sequence> &seqs, int num_terms = -1 ) const;
+
 private:
 
   number_t get( Operand a, const Memory &mem, bool get_address = false ) const;
