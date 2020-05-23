@@ -387,28 +387,41 @@ void Oeis::removeSequence( number_t id )
 
 Oeis::seq_programs_t Oeis::findSequence( const Program &p, Sequence &norm_seq ) const
 {
+  std::vector<Sequence> seqs;
+  seqs.resize( std::max<size_t>( 2, settings.max_index + 1 ) );
   seq_programs_t result;
   try
   {
-    interpreter.eval( p, norm_seq );
+    interpreter.eval( p, seqs );
+    norm_seq = seqs[1];
   }
   catch ( const std::exception& )
   {
     return result;
   }
-  if ( !settings.search_linear && norm_seq.is_linear() )
+  Program p2 = p;
+  p2.push_back( Operation::Type::MOV, Operand::Type::DIRECT, 1, Operand::Type::DIRECT, 0 );
+  for ( size_t i = 0; i < seqs.size(); i++ )
   {
-    return result;
+    if ( settings.search_linear || !seqs[i].is_linear() )
+    {
+      if ( i == 1 )
+      {
+        findAll( p, seqs[i], result );
+      }
+      else
+      {
+        p2.ops.back().source.value = i;
+        findAll( p2, seqs[i], result );
+      }
+    }
   }
-  // Log::get().info( "Matching sequence " + norm_seq.to_string() );
-  findAll( p, norm_seq, result );
   return result;
 }
 
 void Oeis::findAll( const Program &p, const Sequence &norm_seq, seq_programs_t &result ) const
 {
   // collect possible matches
-  result.clear();
   seq_programs_t temp_result;
   Sequence full_seq;
   for ( size_t i = 0; i < matchers.size(); i++ )
