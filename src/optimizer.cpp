@@ -53,17 +53,18 @@ bool Optimizer::removeNops( Program &p ) const
     {
       is_nop = true;
     }
-    if ( (t == Operation::Type::MOV || t == Operation::Type::GCD) && it->source == it->target )
+    else if ( it->source == it->target && (t == Operation::Type::MOV || t == Operation::Type::GCD) )
     {
       is_nop = true;
     }
-    if ( (t == Operation::Type::ADD || t == Operation::Type::SUB) && it->source.type == Operand::Type::CONSTANT
-        && it->source.value == 0 )
+    else if ( it->source.type == Operand::Type::CONSTANT && it->source.value == 0
+        && (t == Operation::Type::ADD || t == Operation::Type::SUB) )
     {
       is_nop = true;
     }
-    if ( ((t == Operation::Type::MUL || t == Operation::Type::DIV || t == Operation::Type::POW
-        || t == Operation::Type::BIN) && it->source.type == Operand::Type::CONSTANT && it->source.value == 1) )
+    else if ( it->source.type == Operand::Type::CONSTANT && it->source.value == 1
+        && ((t == Operation::Type::MUL || t == Operation::Type::DIV || t == Operation::Type::POW
+            || t == Operation::Type::BIN)) )
     {
       is_nop = true;
     }
@@ -254,7 +255,7 @@ bool Optimizer::simplifyOperations( Program &p, size_t num_initialized_cells ) c
           simplified = true;
         }
 
-        // simplify operation (cell content matters!)
+        // simplify operation: target uninitialized (cell content matters!)
         if ( op.target.type == Operand::Type::DIRECT
             && initialized_cells.find( op.target.value ) == initialized_cells.end() )
         {
@@ -274,7 +275,7 @@ bool Optimizer::simplifyOperations( Program &p, size_t num_initialized_cells ) c
         }
       }
 
-      // simplify operation (cell content doesn't matter)
+      // simplify operation: target equals source (cell content doesn't matter)
       if ( op.target.type == Operand::Type::DIRECT && op.target == op.source )
       {
         // add $n,$n => mul $n,2
@@ -291,8 +292,8 @@ bool Optimizer::simplifyOperations( Program &p, size_t num_initialized_cells ) c
           op.source = Operand( Operand::Type::CONSTANT, 2 );
           simplified = true;
         }
-        // cmp $n,$n => mov $n,1
-        else if ( op.type == Operation::Type::CMP )
+        // cmp $n,$n / bin $n,$n => mov $n,1
+        else if ( op.type == Operation::Type::CMP || op.type == Operation::Type::BIN )
         {
           op.type = Operation::Type::MOV;
           op.source = Operand( Operand::Type::CONSTANT, 1 );
@@ -454,12 +455,13 @@ struct update_state
 update_state updateConstantsArithmetic( Operation &op, std::unordered_map<number_t, number_t> &values,
     std::unordered_set<number_t> &unknown_cells )
 {
+  update_state result;
+
   // make sure there is not indirect memory access
   auto num_ops = Operation::Metadata::get( op.type ).num_operands;
   if ( (num_ops > 0 && op.target.type == Operand::Type::INDIRECT)
       || (num_ops > 1 && op.source.type == Operand::Type::INDIRECT) )
   {
-    update_state result;
     result.changed = false;
     result.stop = true;
     return result;
@@ -556,14 +558,12 @@ update_state updateConstantsArithmetic( Operation &op, std::unordered_map<number
   case Operation::Type::LPE:
   case Operation::Type::CLR:
   {
-    update_state result;
     result.changed = false;
     result.stop = true;
     return result;
   }
   }
 
-  update_state result;
   result.changed = false;
   result.stop = false;
 
