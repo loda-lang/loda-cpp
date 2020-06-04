@@ -237,6 +237,7 @@ bool Optimizer::simplifyOperations( Program &p, size_t num_initialized_cells ) c
     case Operation::Type::DIV:
     case Operation::Type::MOD:
     case Operation::Type::POW:
+    case Operation::Type::LOG:
     case Operation::Type::FAC:
     case Operation::Type::GCD:
     case Operation::Type::BIN:
@@ -292,8 +293,9 @@ bool Optimizer::simplifyOperations( Program &p, size_t num_initialized_cells ) c
           op.source = Operand( Operand::Type::CONSTANT, 2 );
           simplified = true;
         }
-        // cmp $n,$n / bin $n,$n => mov $n,1
-        else if ( op.type == Operation::Type::CMP || op.type == Operation::Type::BIN )
+        // cmp $n,$n / bin $n,$n / log $n,$n => mov $n,1
+        else if ( op.type == Operation::Type::CMP || op.type == Operation::Type::BIN
+            || op.type == Operation::Type::LOG )
         {
           op.type = Operation::Type::MOV;
           op.source = Operand( Operand::Type::CONSTANT, 1 );
@@ -535,6 +537,9 @@ update_state updateConstantsArithmetic( Operation &op, std::unordered_map<number
     break;
   case Operation::Type::POW:
     target_value = Semantics::pow( target_value, source_value );
+    break;
+  case Operation::Type::LOG:
+    target_value = Semantics::log( target_value, source_value );
     break;
   case Operation::Type::FAC:
     target_value = Semantics::fac( target_value );

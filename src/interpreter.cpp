@@ -110,6 +110,13 @@ bool Interpreter::run( const Program &p, Memory &mem ) const
       set( op.target, Semantics::pow( target, source ), mem );
       break;
     }
+    case Operation::Type::LOG:
+    {
+      source = get( op.source, mem );
+      target = get( op.target, mem );
+      set( op.target, Semantics::log( target, source ), mem );
+      break;
+    }
     case Operation::Type::FAC:
     {
       target = get( op.target, mem );

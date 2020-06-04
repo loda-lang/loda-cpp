@@ -84,6 +84,30 @@ number_t Semantics::pow( number_t base, number_t exp )
   return NUM_INF;
 }
 
+number_t Semantics::log( number_t n, number_t base )
+{
+  if ( n != NUM_INF && base != NUM_INF && n != 0 )
+  {
+    if ( n == 1 )
+    {
+      return 0;
+    }
+    if ( base < 2 )
+    {
+      return NUM_INF;
+    }
+    number_t m = 1;
+    number_t res = 0;
+    while ( m < n )
+    {
+      m = mul( m, base );
+      res++;
+    }
+    return (m == n) ? res : res - 1;
+  }
+  return NUM_INF;
+}
+
 number_t Semantics::fac( number_t a )
 {
   if ( a != NUM_INF )

@@ -316,6 +316,7 @@ Program Generator::generateProgram()
       num_ops++;
       break;
     case Operation::Type::SUB:
+    case Operation::Type::LOG:
       can_descent = true;
       break;
     case Operation::Type::MOV:
