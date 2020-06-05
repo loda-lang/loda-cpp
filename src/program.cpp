@@ -17,7 +17,7 @@ const Operation::Metadata& Operation::Metadata::get( Type t )
   static Operation::Metadata div { Operation::Type::DIV, "div", 'd', 2, true, true, true, 24 };
   static Operation::Metadata mod { Operation::Type::MOD, "mod", 'o', 2, true, true, true, 12 };
   static Operation::Metadata pow { Operation::Type::POW, "pow", 'p', 2, true, true, true, 18 };
-  static Operation::Metadata log { Operation::Type::LOG, "log", 'k', 2, true, true, true, 6 };
+  static Operation::Metadata log { Operation::Type::LOG, "log", 'k', 2, true, true, true, 3 };
   static Operation::Metadata fac { Operation::Type::FAC, "fac", 'f', 1, true, true, true, 6 };
   static Operation::Metadata gcd { Operation::Type::GCD, "gcd", 'g', 2, true, true, true, 6 };
   static Operation::Metadata bin { Operation::Type::BIN, "bin", 'b', 2, true, true, true, 3 };
