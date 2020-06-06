@@ -293,9 +293,8 @@ bool Optimizer::simplifyOperations( Program &p, size_t num_initialized_cells ) c
           op.source = Operand( Operand::Type::CONSTANT, 2 );
           simplified = true;
         }
-        // cmp $n,$n / bin $n,$n / log $n,$n => mov $n,1
-        else if ( op.type == Operation::Type::CMP || op.type == Operation::Type::BIN
-            || op.type == Operation::Type::LOG )
+        // cmp $n,$n / bin $n,$n => mov $n,1
+        else if ( op.type == Operation::Type::CMP || op.type == Operation::Type::BIN )
         {
           op.type = Operation::Type::MOV;
           op.source = Operand( Operand::Type::CONSTANT, 1 );
