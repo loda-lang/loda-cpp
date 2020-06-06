@@ -612,7 +612,7 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
   size_t num_programs = 0;
   size_t num_optimized = 0;
   std::vector<size_t> num_programs_per_length;
-  std::vector<size_t> num_ops_per_type( sizeof(Operation::Types), 0 );
+  std::vector<size_t> num_ops_per_type( Operation::Types.size(), 0 );
   for ( auto &s : sequences )
   {
     std::string file_name = getOeisFile( s );
