@@ -669,7 +669,7 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
         const size_t num_ops = ProgramUtil::numOps( optimized, false );
         if ( num_ops >= num_programs_per_length.size() )
         {
-          num_programs_per_length.resize( num_ops );
+          num_programs_per_length.resize( num_ops + 1 );
         }
         num_programs_per_length[num_ops]++;
         for ( auto &op : optimized.ops )
