@@ -611,13 +611,14 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
   int list_index = -1;
   size_t num_programs = 0;
   size_t num_optimized = 0;
+  std::vector<size_t> num_programs_per_length;
+  std::vector<size_t> num_ops_per_type( sizeof(Operation::Types), 0 );
   for ( auto &s : sequences )
   {
     std::string file_name = getOeisFile( s );
     std::ifstream file( file_name );
     if ( file.good() )
     {
-      num_programs++;
       if ( exit_flag ) continue;
       Log::get().debug( "Checking program for " + s.to_string() );
       Parser parser;
@@ -662,6 +663,21 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
           num_optimized++;
         }
         dumpProgram( s.id, optimized, file_name );
+
+        // collect stats
+        num_programs++;
+        const size_t num_ops = ProgramUtil::numOps( optimized, false );
+        if ( num_ops >= num_programs_per_length.size() )
+        {
+          num_programs_per_length.resize( num_ops );
+        }
+        num_programs_per_length[num_ops]++;
+        for ( auto &op : optimized.ops )
+        {
+          num_ops_per_type[static_cast<size_t>( op.type )]++;
+        }
+
+        // write list file
         if ( list_index < 0 || (int) s.id / 100000 != list_index )
         {
           list_index++;
@@ -677,8 +693,7 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
               << "\n\n";
         }
         list_file << "* [" << s.id_str() << "](http://oeis.org/" << s.id_str() << ") ([L" << std::setw( 2 )
-            << std::setfill( '0' ) << ProgramUtil::numOps( optimized, false ) << " program](" << s.id_str()
-            << ".asm)): " << s.name << "\n";
+            << std::setfill( '0' ) << num_ops << " program](" << s.id_str() << ".asm)): " << s.name << "\n";
       }
     }
   }
@@ -689,6 +704,23 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
       << "![LODA Program Length Distribution](https://raw.githubusercontent.com/ckrause/loda/master/lengths.png)\n";
   // readme_out << "![LODA Program Counts](https://raw.githubusercontent.com/ckrause/loda/master/counts.png)\n";
   readme_out.close();
+
+  // write stats
+  const std::string sep( "," );
+  std::ofstream lengths( "stats/program_lengths.csv" );
+  for ( size_t i = 0; i < num_programs_per_length.size(); i++ )
+  {
+    lengths << std::to_string( i ) << sep << std::to_string( num_programs_per_length[i] ) << "\n";
+  }
+  lengths.close();
+  std::ofstream op_counts( "stats/operation_counts.csv" );
+  for ( size_t i = 0; i < num_ops_per_type.size(); i++ )
+  {
+    op_counts << Operation::Metadata::get( static_cast<Operation::Type>( i ) ).name << sep
+        << std::to_string( num_ops_per_type[i] ) << "\n";
+  }
+  op_counts.close();
+
   if ( num_optimized > 0 )
   {
     Log::get().alert( "Optimized " + std::to_string( num_optimized ) + " programs" );
