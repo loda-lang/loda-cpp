@@ -58,7 +58,7 @@ function push_updates {
     ./make_charts.sh 
     echo "Pushing updates"
     git pull
-    git add programs lengths.png README.md
+    git add programs stats README.md
     git commit -m "updated $num_changes programs"
     git push
     echo "Rebuilding loda"

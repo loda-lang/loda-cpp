@@ -701,8 +701,8 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
   readme_out << "\n" << "Total number of programs: ";
   readme_out << num_programs << "/" << total_count_ << " (" << (int) (100 * num_programs / total_count_) << "%)\n\n";
   readme_out
-      << "![LODA Program Length Distribution](https://raw.githubusercontent.com/ckrause/loda/master/lengths.png)\n";
-  // readme_out << "![LODA Program Counts](https://raw.githubusercontent.com/ckrause/loda/master/counts.png)\n";
+      << "![LODA Program Length Distribution](https://raw.githubusercontent.com/ckrause/loda/master/stats/lengths.png)\n";
+  // readme_out << "![LODA Program Counts](https://raw.githubusercontent.com/ckrause/loda/master/stats/counts.png)\n";
   readme_out.close();
 
   // write stats
