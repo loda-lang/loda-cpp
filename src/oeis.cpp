@@ -52,11 +52,10 @@ std::string getOeisFile( const OeisSequence &seq )
 }
 
 Oeis::Oeis( const Settings &settings )
-    :
-    settings( settings ),
-    interpreter( settings ),
-    optimizer( settings ),
-    total_count_( 0 )
+    : settings( settings ),
+      interpreter( settings ),
+      optimizer( settings ),
+      total_count_( 0 )
 {
   if ( settings.optimize_existing_programs )
   {
@@ -611,6 +610,7 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
   int list_index = -1;
   size_t num_programs = 0;
   size_t num_optimized = 0;
+  std::vector<size_t> num_constants;
   std::vector<size_t> num_programs_per_length;
   std::vector<size_t> num_ops_per_type( Operation::Types.size(), 0 );
   for ( auto &s : sequences )
@@ -675,6 +675,14 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
         for ( auto &op : optimized.ops )
         {
           num_ops_per_type[static_cast<size_t>( op.type )]++;
+          if ( Operation::Metadata::get( op.type ).num_operands == 2 && op.source.type == Operand::Type::CONSTANT )
+          {
+            if ( op.source.value >= num_constants.size() )
+            {
+              num_constants.resize( op.source.value + 1 );
+            }
+            num_constants[op.source.value]++;
+          }
         }
 
         // write list file
@@ -707,17 +715,32 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
 
   // write stats
   const std::string sep( "," );
+  std::ofstream constants( "stats/constant_counts.csv" );
+  for ( size_t i = 0; i < num_constants.size(); i++ )
+  {
+    if ( num_constants[i] > 0 )
+    {
+      constants << std::to_string( i ) << sep << std::to_string( num_constants[i] ) << "\n";
+    }
+  }
+  constants.close();
   std::ofstream lengths( "stats/program_lengths.csv" );
   for ( size_t i = 0; i < num_programs_per_length.size(); i++ )
   {
-    lengths << std::to_string( i ) << sep << std::to_string( num_programs_per_length[i] ) << "\n";
+    if ( num_programs_per_length[i] > 0 )
+    {
+      lengths << std::to_string( i ) << sep << std::to_string( num_programs_per_length[i] ) << "\n";
+    }
   }
   lengths.close();
   std::ofstream op_counts( "stats/operation_counts.csv" );
   for ( size_t i = 0; i < num_ops_per_type.size(); i++ )
   {
-    op_counts << Operation::Metadata::get( static_cast<Operation::Type>( i ) ).name << sep
-        << std::to_string( num_ops_per_type[i] ) << "\n";
+    if ( num_ops_per_type[i] > 0 )
+    {
+      op_counts << Operation::Metadata::get( static_cast<Operation::Type>( i ) ).name << sep
+          << std::to_string( num_ops_per_type[i] ) << "\n";
+    }
   }
   op_counts.close();
 
