@@ -7,7 +7,10 @@
 
 void Optimizer::optimize( Program &p, size_t num_reserved_cells, size_t num_initialized_cells ) const
 {
-  Log::get().debug( "Starting optimization of program with " + std::to_string( p.ops.size() ) + " operations" );
+  if ( Log::get().level == Log::Level::DEBUG )
+  {
+    Log::get().debug( "Starting optimization of program with " + std::to_string( p.ops.size() ) + " operations" );
+  }
   bool changed = true;
   while ( changed )
   {
@@ -37,12 +40,14 @@ void Optimizer::optimize( Program &p, size_t num_reserved_cells, size_t num_init
       changed = true;
     }
   }
-  Log::get().debug( "Finished optimization; program now has " + std::to_string( p.ops.size() ) + " operations" );
+  if ( Log::get().level == Log::Level::DEBUG )
+  {
+    Log::get().debug( "Finished optimization; program now has " + std::to_string( p.ops.size() ) + " operations" );
+  }
 }
 
 bool Optimizer::removeNops( Program &p ) const
 {
-  Log::get().debug( "Removing NOP operations" );
   bool removed = false;
   auto it = p.ops.begin();
   while ( it != p.ops.end() )
@@ -70,6 +75,10 @@ bool Optimizer::removeNops( Program &p ) const
     }
     if ( is_nop )
     {
+      if ( Log::get().level == Log::Level::DEBUG )
+      {
+        Log::get().debug( "Removing nop operation" );
+      }
       it = p.ops.erase( it );
       removed = true;
     }
@@ -83,13 +92,16 @@ bool Optimizer::removeNops( Program &p ) const
 
 bool Optimizer::removeEmptyLoops( Program &p ) const
 {
-  Log::get().debug( "Removing empty loops" );
   bool removed = false;
   for ( int i = 0; i < static_cast<int>( p.ops.size() ); i++ ) // need to use signed integers here
   {
     if ( i + 1 < static_cast<int>( p.ops.size() ) && p.ops[i].type == Operation::Type::LPB
         && p.ops[i + 1].type == Operation::Type::LPE )
     {
+      if ( Log::get().level == Log::Level::DEBUG )
+      {
+        Log::get().debug( "Removing empty loop" );
+      }
       p.ops.erase( p.ops.begin() + i, p.ops.begin() + i + 2 );
       i = i - 2;
       removed = true;
@@ -100,7 +112,6 @@ bool Optimizer::removeEmptyLoops( Program &p ) const
 
 bool Optimizer::mergeOps( Program &p ) const
 {
-  Log::get().debug( "Merging operations" );
   bool merged = false;
   for ( size_t i = 0; i + 1 < p.ops.size(); i++ )
   {
@@ -163,7 +174,7 @@ bool Optimizer::mergeOps( Program &p ) const
       if ( o2.type == Operation::Type::MOV && o2.source.type == Operand::Type::CONSTANT )
       {
         // first operation writing target?
-        if ( Operation::Metadata::get( o1.type ).is_writing_target )
+        if ( Operation::Metadata::get( o1.type ).is_writing_target && o1.type != Operation::Type::CLR )
         {
           // second mov overwrites first operation
           o1 = o2;
@@ -191,7 +202,6 @@ bool Optimizer::mergeOps( Program &p ) const
 
 inline bool simplifyOperand( Operand &op, std::unordered_set<number_t> &initialized_cells, bool is_source )
 {
-  Log::get().debug( "Simplifying operand" );
   switch ( op.type )
   {
   case Operand::Type::CONSTANT:
@@ -199,6 +209,10 @@ inline bool simplifyOperand( Operand &op, std::unordered_set<number_t> &initiali
   case Operand::Type::DIRECT:
     if ( initialized_cells.find( op.value ) == initialized_cells.end() && is_source )
     {
+      if ( Log::get().level == Log::Level::DEBUG )
+      {
+        Log::get().debug( "Simplifying operand $" + std::to_string( op.value ) + " to 0" );
+      }
       op.type = Operand::Type::CONSTANT;
       op.value = 0;
       return true;
@@ -207,6 +221,10 @@ inline bool simplifyOperand( Operand &op, std::unordered_set<number_t> &initiali
   case Operand::Type::INDIRECT:
     if ( initialized_cells.find( op.value ) == initialized_cells.end() )
     {
+      if ( Log::get().level == Log::Level::DEBUG )
+      {
+        Log::get().debug( "Simplifying operand $$" + std::to_string( op.value ) + " to $0" );
+      }
       op.type = Operand::Type::DIRECT;
       op.value = 0;
       return true;
@@ -218,7 +236,6 @@ inline bool simplifyOperand( Operand &op, std::unordered_set<number_t> &initiali
 
 bool Optimizer::simplifyOperations( Program &p, size_t num_initialized_cells ) const
 {
-  Log::get().debug( "Simplifying operations" );
   std::unordered_set<number_t> initialized_cells;
   for ( number_t i = 0; i < num_initialized_cells; ++i )
   {
@@ -331,6 +348,10 @@ bool Optimizer::simplifyOperations( Program &p, size_t num_initialized_cells ) c
 
     }
   }
+  if ( simplified && Log::get().level == Log::Level::DEBUG )
+  {
+    Log::get().debug( "Simplifying operations" );
+  }
   return simplified;
 }
 
@@ -399,7 +420,6 @@ bool Optimizer::canChangeVariableOrder( const Program &p ) const
 
 bool Optimizer::reduceMemoryCells( Program &p, size_t num_reserved_cells ) const
 {
-  Log::get().debug( "Reducing memory cells" );
   std::unordered_set<number_t> used_cells;
   number_t largest_used = 0;
   if ( !canChangeVariableOrder( p ) )
@@ -440,6 +460,10 @@ bool Optimizer::reduceMemoryCells( Program &p, size_t num_reserved_cells ) const
           op.target.value = candidate;
           replaced = true;
         }
+      }
+      if ( replaced && Log::get().level == Log::Level::DEBUG )
+      {
+        Log::get().debug( "Reducing memory cell" );
       }
       return replaced;
     }
