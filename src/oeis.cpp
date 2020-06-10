@@ -13,7 +13,7 @@
 #include <limits>
 #include <fstream>
 #include <sstream>
-#include <unordered_map>
+#include <map>
 
 size_t Oeis::MAX_NUM_TERMS = 250;
 
@@ -611,7 +611,7 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
   int list_index = -1;
   size_t num_programs = 0;
   size_t num_optimized = 0;
-  std::unordered_map<number_t, size_t> num_constants;
+  std::map<number_t, size_t> num_constants;
   std::vector<size_t> num_programs_per_length;
   std::vector<size_t> num_ops_per_type( Operation::Types.size(), 0 );
   for ( auto &s : sequences )
@@ -717,12 +717,9 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
   // write stats
   const std::string sep( "," );
   std::ofstream constants( "stats/constant_counts.csv" );
-  for ( size_t i = 0; i < num_constants.size(); i++ )
+  for ( auto& e : num_constants )
   {
-    if ( num_constants[i] > 0 )
-    {
-      constants << std::to_string( i ) << sep << std::to_string( num_constants[i] ) << "\n";
-    }
+    constants << std::to_string( e.first ) << sep << std::to_string( e.second ) << "\n";
   }
   constants.close();
   std::ofstream lengths( "stats/program_lengths.csv" );
