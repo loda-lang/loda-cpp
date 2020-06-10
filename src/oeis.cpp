@@ -13,6 +13,7 @@
 #include <limits>
 #include <fstream>
 #include <sstream>
+#include <unordered_map>
 
 size_t Oeis::MAX_NUM_TERMS = 250;
 
@@ -610,7 +611,7 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
   int list_index = -1;
   size_t num_programs = 0;
   size_t num_optimized = 0;
-  std::vector<size_t> num_constants;
+  std::unordered_map<number_t, size_t> num_constants;
   std::vector<size_t> num_programs_per_length;
   std::vector<size_t> num_ops_per_type( Operation::Types.size(), 0 );
   for ( auto &s : sequences )
@@ -677,9 +678,9 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
           num_ops_per_type[static_cast<size_t>( op.type )]++;
           if ( Operation::Metadata::get( op.type ).num_operands == 2 && op.source.type == Operand::Type::CONSTANT )
           {
-            if ( op.source.value >= num_constants.size() )
+            if ( num_constants.find( op.source.value ) == num_constants.end() )
             {
-              num_constants.resize( op.source.value + 1 );
+              num_constants[op.source.value] = 0;
             }
             num_constants[op.source.value]++;
           }
