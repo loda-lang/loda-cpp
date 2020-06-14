@@ -1,5 +1,7 @@
 #include "program_util.hpp"
 
+#include <fstream>
+
 void ProgramUtil::removeOps( Program &p, Operation::Type type )
 {
   auto it = p.ops.begin();
@@ -148,4 +150,69 @@ size_t ProgramUtil::hash( const Operation &op )
 size_t ProgramUtil::hash( const Operand &op )
 {
   return (11 * static_cast<size_t>( op.type )) + op.value;
+}
+
+ProgramUtil::Stats::Stats()
+    :
+    num_programs( 0 ),
+    num_ops_per_type( Operation::Types.size(), 0 )
+{
+}
+
+void ProgramUtil::Stats::load()
+{
+  // TODO
+}
+
+void ProgramUtil::Stats::save()
+{
+  const std::string sep( "," );
+  std::ofstream constants( "stats/constant_counts.csv" );
+  for ( auto &e : num_constants )
+  {
+    constants << std::to_string( e.first ) << sep << std::to_string( e.second ) << "\n";
+  }
+  constants.close();
+  std::ofstream lengths( "stats/program_lengths.csv" );
+  for ( size_t i = 0; i < num_programs_per_length.size(); i++ )
+  {
+    if ( num_programs_per_length[i] > 0 )
+    {
+      lengths << std::to_string( i ) << sep << std::to_string( num_programs_per_length[i] ) << "\n";
+    }
+  }
+  lengths.close();
+  std::ofstream op_counts( "stats/operation_counts.csv" );
+  for ( size_t i = 0; i < num_ops_per_type.size(); i++ )
+  {
+    if ( num_ops_per_type[i] > 0 )
+    {
+      op_counts << Operation::Metadata::get( static_cast<Operation::Type>( i ) ).name << sep
+          << std::to_string( num_ops_per_type[i] ) << "\n";
+    }
+  }
+  op_counts.close();
+}
+
+void ProgramUtil::Stats::update( const Program &program )
+{
+  num_programs++;
+  const size_t num_ops = ProgramUtil::numOps( program, false );
+  if ( num_ops >= num_programs_per_length.size() )
+  {
+    num_programs_per_length.resize( num_ops + 1 );
+  }
+  num_programs_per_length[num_ops]++;
+  for ( auto &op : program.ops )
+  {
+    num_ops_per_type[static_cast<size_t>( op.type )]++;
+    if ( Operation::Metadata::get( op.type ).num_operands == 2 && op.source.type == Operand::Type::CONSTANT )
+    {
+      if ( num_constants.find( op.source.value ) == num_constants.end() )
+      {
+        num_constants[op.source.value] = 0;
+      }
+      num_constants[op.source.value]++;
+    }
+  }
 }

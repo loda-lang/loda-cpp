@@ -3,9 +3,29 @@
 #include "number.hpp"
 #include "program.hpp"
 
+#include <map>
+
 class ProgramUtil
 {
 public:
+
+  class Stats
+  {
+  public:
+
+    Stats();
+
+    void load();
+
+    void save();
+
+    void update( const Program &program );
+
+    size_t num_programs;
+    std::map<number_t, size_t> num_constants;
+    std::vector<size_t> num_programs_per_length;
+    std::vector<size_t> num_ops_per_type;
+  };
 
   static void removeOps( Program &p, Operation::Type type );
 
