@@ -1,6 +1,8 @@
 #include "program_util.hpp"
 
+#include <iostream>
 #include <fstream>
+#include <sstream>
 
 void ProgramUtil::removeOps( Program &p, Operation::Type type )
 {
@@ -161,6 +163,17 @@ ProgramUtil::Stats::Stats()
 
 void ProgramUtil::Stats::load()
 {
+  const std::string sep( "," );
+  std::ifstream constants( "stats/constant_counts.csv" );
+  std::string line, key, value;
+  while ( std::getline( constants, line ) )
+  {
+    std::stringstream s( line );
+    std::getline( s, key, ',' );
+    std::getline( s, value );
+    num_constants[std::stol( key )] = std::stol( value );
+  }
+  constants.close();
   // TODO
 }
 
