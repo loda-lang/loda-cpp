@@ -4,6 +4,7 @@
 #include "interpreter.hpp"
 #include "optimizer.hpp"
 #include "parser.hpp"
+#include "program_util.hpp"
 
 #include <algorithm>
 #include <ctype.h>
@@ -22,9 +23,19 @@ std::discrete_distribution<> uniformDist( size_t size )
 std::discrete_distribution<> operationDist( const std::vector<Operation::Type> &operation_types )
 {
   std::vector<double> p( operation_types.size() );
+  ProgramUtil::Stats stats;
+  stats.load( "stats" );
   for ( size_t i = 0; i < operation_types.size(); i++ )
   {
-    p[i] = Operation::Metadata::get( operation_types[i] ).rate;
+    // auto rate = Operation::Metadata::get( operation_types[i] ).rate;
+    int64_t rate = stats.num_ops_per_type.at( static_cast<size_t>( operation_types[i] ) );
+    if ( rate <= 0 )
+    {
+      Log::get().error( "Unexpected stats for operation type: " + Operation::Metadata::get( operation_types[i] ).name,
+          true );
+    }
+    rate = std::min<int64_t>( rate / 1000, 1 );
+    p[i] = rate;
   }
   return std::discrete_distribution<>( p.begin(), p.end() );
 }

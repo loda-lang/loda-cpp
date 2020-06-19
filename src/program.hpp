@@ -66,6 +66,8 @@ public:
   public:
     static const Metadata& get( Type t );
 
+    static const Metadata& get( const std::string &name );
+
     Type type;
     std::string name;
     char short_name;

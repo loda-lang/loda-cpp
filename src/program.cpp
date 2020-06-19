@@ -66,6 +66,19 @@ const Operation::Metadata& Operation::Metadata::get( Type t )
   return nop;
 }
 
+const Operation::Metadata& Operation::Metadata::get( const std::string &name )
+{
+  for ( auto t : Operation::Types )
+  {
+    auto &m = get( t );
+    if ( m.name == name )
+    {
+      return m;
+    }
+  }
+  throw std::runtime_error( "invalid operation: " + name );
+}
+
 void Program::push_front( Operation::Type t, Operand::Type tt, number_t tv, Operand::Type st, number_t sv )
 {
   ops.insert( ops.begin(), Operation( t, Operand( tt, tv ), Operand( st, sv ) ) );

@@ -33,6 +33,8 @@ public:
 
   void periodicSynthesizer( size_t tests, size_t period, size_t prefix );
 
+  void stats();
+
 private:
 
   volatile sig_atomic_t &exit_flag_;

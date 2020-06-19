@@ -161,10 +161,10 @@ ProgramUtil::Stats::Stats()
 {
 }
 
-void ProgramUtil::Stats::load()
+void ProgramUtil::Stats::load( const std::string &path )
 {
   const std::string sep( "," );
-  std::ifstream constants( "stats/constant_counts.csv" );
+  std::ifstream constants( path + "/constant_counts.csv" );
   std::string line, key, value;
   while ( std::getline( constants, line ) )
   {
@@ -174,19 +174,30 @@ void ProgramUtil::Stats::load()
     num_constants[std::stol( key )] = std::stol( value );
   }
   constants.close();
-  // TODO
+  std::ifstream op_counts( path + "/operation_counts.csv" );
+
+  while ( std::getline( op_counts, line ) )
+  {
+    std::stringstream s( line );
+    std::getline( s, key, ',' );
+    std::getline( s, value );
+    auto type = Operation::Metadata::get( key ).type;
+    num_ops_per_type.at( static_cast<size_t>( type ) ) = std::stol( value );
+  }
+  op_counts.close();
+  // TODO: remaining stats
 }
 
-void ProgramUtil::Stats::save()
+void ProgramUtil::Stats::save( const std::string &path )
 {
   const std::string sep( "," );
-  std::ofstream constants( "stats/constant_counts.csv" );
+  std::ofstream constants( path + "/constant_counts.csv" );
   for ( auto &e : num_constants )
   {
     constants << std::to_string( e.first ) << sep << std::to_string( e.second ) << "\n";
   }
   constants.close();
-  std::ofstream lengths( "stats/program_lengths.csv" );
+  std::ofstream lengths( path + "/program_lengths.csv" );
   for ( size_t i = 0; i < num_programs_per_length.size(); i++ )
   {
     if ( num_programs_per_length[i] > 0 )
@@ -195,7 +206,7 @@ void ProgramUtil::Stats::save()
     }
   }
   lengths.close();
-  std::ofstream op_counts( "stats/operation_counts.csv" );
+  std::ofstream op_counts( path + "/operation_counts.csv" );
   for ( size_t i = 0; i < num_ops_per_type.size(); i++ )
   {
     if ( num_ops_per_type[i] > 0 )

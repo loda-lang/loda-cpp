@@ -15,9 +15,9 @@ public:
 
     Stats();
 
-    void load();
+    void load( const std::string &path );
 
-    void save();
+    void save( const std::string &path );
 
     void update( const Program &program );
 

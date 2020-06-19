@@ -47,18 +47,18 @@ Program Parser::parse( std::istream &in_ )
       case 0:
         o.target = Operand( Operand::Type::CONSTANT, 0 );
         o.source = Operand( Operand::Type::CONSTANT, 0 );
-    	break;
+        break;
       case 1:
         o.target = readOperand( p );
-    	o.source = Operand( Operand::Type::CONSTANT, 0 );
-    	break;
+        o.source = Operand( Operand::Type::CONSTANT, 0 );
+        break;
       case 2:
         o.target = readOperand( p );
         readSeparator( ',' );
         o.source = readOperand( p );
-    	break;
+        break;
       default:
-    	throw std::runtime_error( "invalid number of operands" );
+        throw std::runtime_error( "invalid number of operands" );
       }
     }
 
@@ -173,14 +173,7 @@ Operand Parser::readOperand( Program &p )
 Operation::Type Parser::readOperationType()
 {
   auto name = readIdentifier();
-  for ( Operation::Type t : Operation::Types )
-  {
-    if ( Operation::Metadata::get( t ).name == name )
-    {
-      return t;
-    }
-  }
-  throw std::runtime_error( "invalid operation: " + name );
+  return Operation::Metadata::get( name ).type;
 }
 
 void Parser::setWorkingDir( const std::string &dir )

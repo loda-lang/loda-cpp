@@ -696,7 +696,7 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
   readme_out.close();
 
   // write stats
-  stats.save();
+  stats.save( "stats" );
 
   if ( num_optimized > 0 )
   {

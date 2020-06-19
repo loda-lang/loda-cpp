@@ -20,6 +20,7 @@
 
 void Test::all()
 {
+  stats();
   fibonacci();
   ackermann();
   collatz();
@@ -69,6 +70,41 @@ void Test::collatz()
   if ( !Miner::isCollatzValuation( s ) )
   {
     Log::get().error( "A006577 is not a Collatz valuation", true );
+  }
+}
+
+void Test::stats()
+{
+  Log::get().info( "Testing stats loading and saving" );
+  ProgramUtil::Stats s, t;
+  s.load( "stats" );
+  if ( s.num_constants.at( 1 ) == 0 )
+  {
+    Log::get().error( "Error loading constants counts from stats" );
+  }
+  if ( s.num_ops_per_type.at( static_cast<size_t>( Operation::Type::MOV ) ) == 0 )
+  {
+    Log::get().error( "Error loading operation counts from stats" );
+  }
+  s.save( "/tmp" );
+  t.load( "/tmp" );
+  for ( auto &e : s.num_constants )
+  {
+    auto m = e.second;
+    auto n = t.num_constants.at( e.first );
+    if ( m != n )
+    {
+      Log::get().error( "Unexpected number of constants count: " + std::to_string( m ) + "!=" + std::to_string( n ) );
+    }
+  }
+  for ( size_t i = 0; i < s.num_ops_per_type.size(); i++ )
+  {
+    auto m = s.num_ops_per_type.at( i );
+    auto n = t.num_ops_per_type.at( i );
+    if ( m != n )
+    {
+      Log::get().error( "Unexpected number if operations count: " + std::to_string( m ) + "!=" + std::to_string( n ) );
+    }
   }
 }
 
