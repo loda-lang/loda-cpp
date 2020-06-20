@@ -31,7 +31,7 @@ function start_miners() {
   ./get_oeis.sh
   echo "Start mining"
   local l="-l ${log_level}"
-  for n in 8 10; do
+  for n in 6 8 10; do
     for x in "" "-x"; do
       args="-n $n -p ${n}0 -a cd $x $l"
       # instantiate templates w/o loops
