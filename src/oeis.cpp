@@ -16,6 +16,11 @@
 
 size_t Oeis::MAX_NUM_TERMS = 250;
 
+std::string getHome()
+{
+  return std::string( std::getenv( "HOME" ) ) + "/.loda/oeis/";
+}
+
 std::ostream& operator<<( std::ostream &out, const OeisSequence &s )
 {
   out << s.id_str() << ": " << s.name;
@@ -36,19 +41,19 @@ std::string OeisSequence::id_str( const std::string &prefix ) const
   return s.str();
 }
 
+std::string OeisSequence::getProgramPath() const
+{
+  return "programs/oeis/" + id_str() + ".asm";
+}
+
+std::string OeisSequence::getBFilePath() const
+{
+  return getHome() + "b/" + id_str( "b" ) + ".txt";
+}
+
 void throwParseError( const std::string &line )
 {
   Log::get().error( "error parsing OEIS line: " + line, true );
-}
-
-std::string getHome()
-{
-  return std::string( std::getenv( "HOME" ) ) + "/.loda/oeis/";
-}
-
-std::string getOeisFile( const OeisSequence &seq )
-{
-  return "programs/oeis/" + seq.id_str() + ".asm";
 }
 
 Oeis::Oeis( const Settings &settings )
@@ -172,9 +177,8 @@ void Oeis::load()
 
     // big sequence
     big_sequence.clear();
-    std::stringstream big_path;
-    big_path << getHome() << "b/" << OeisSequence( id ).id_str( "b" ) << ".txt";
-    std::ifstream big_file( big_path.str() );
+    std::string big_path = OeisSequence( id ).getBFilePath();
+    std::ifstream big_file( big_path );
     if ( big_file.good() )
     {
       std::string l;
@@ -215,7 +219,7 @@ void Oeis::load()
         }
         if ( index != expected_index )
         {
-          Log::get().warn( "Unexpected index " + std::to_string( index ) + " in b-file " + big_path.str() );
+          Log::get().warn( "Unexpected index " + std::to_string( index ) + " in b-file " + big_path );
           big_sequence.clear();
           break;
         }
@@ -237,13 +241,13 @@ void Oeis::load()
             std::vector<number_t>( big_sequence.begin(), big_sequence.begin() + full_sequence.size() ) );
         if ( test_sequence != full_sequence )
         {
-          Log::get().warn( "Unexpected terms in b-file " + big_path.str() );
+          Log::get().warn( "Unexpected terms in b-file " + big_path );
           big_sequence.clear();
         }
       }
       else
       {
-        Log::get().debug( "Sequence in b-file too short: " + big_path.str() );
+        Log::get().debug( "Sequence in b-file too short: " + big_path );
         big_sequence.clear();
       }
       if ( big_sequence.size() > MAX_NUM_TERMS )
@@ -260,7 +264,7 @@ void Oeis::load()
     }
     else
     {
-      Log::get().debug( "b-file not found: " + big_path.str() );
+      Log::get().debug( "b-file not found: " + big_path );
     }
 
     // add sequence to index
@@ -286,7 +290,7 @@ void Oeis::load()
     std::vector<number_t> seqs_to_remove;
     for ( auto &seq : sequences )
     {
-      std::ifstream in( getOeisFile( seq ) );
+      std::ifstream in( seq.getProgramPath() );
       if ( in.good() )
       {
         seqs_to_remove.push_back( seq.id );
@@ -530,7 +534,7 @@ std::pair<bool, Program> Oeis::optimizeAndCheck( const Program &p, const OeisSeq
 std::pair<bool, bool> Oeis::updateProgram( number_t id, const Program &p ) const
 {
   auto &seq = sequences.at( id );
-  std::string file_name = getOeisFile( seq );
+  std::string file_name = seq.getProgramPath();
   bool is_new = true;
   std::pair<bool, Program> optimized;
   {
@@ -613,7 +617,7 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
   size_t num_optimized = 0;
   for ( auto &s : sequences )
   {
-    std::string file_name = getOeisFile( s );
+    std::string file_name = s.getProgramPath();
     std::ifstream file( file_name );
     if ( file.good() )
     {

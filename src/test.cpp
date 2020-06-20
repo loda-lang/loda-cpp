@@ -41,15 +41,10 @@ void Test::all()
   optimizer( tests );
 }
 
-std::string getOeisFile( number_t id )
-{
-  return "programs/oeis/" + OeisSequence( id ).id_str() + ".asm";
-}
-
 void Test::fibonacci()
 {
   Sequence values( { 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233 } );
-  testSeq( "fib", getOeisFile( 45 ), values );
+  testSeq( "fib", OeisSequence( 45 ).getProgramPath(), values );
 }
 
 void Test::ackermann()
@@ -163,7 +158,7 @@ void Test::polynomialMatcher( size_t tests, size_t degree )
   std::vector<Program> programs;
   for ( number_t id : program_ids )
   {
-    auto program = parser.parse( getOeisFile( id ) );
+    auto program = parser.parse( OeisSequence( id ).getProgramPath() );
     optimizer.removeNops( program );
     programs.push_back( program );
   }
@@ -330,8 +325,8 @@ void Test::testMatcherPair( Matcher &matcher, number_t id1, number_t id2 )
   Parser parser;
   Settings settings;
   Interpreter interpreter( settings );
-  auto p1 = parser.parse( getOeisFile( id1 ) );
-  auto p2 = parser.parse( getOeisFile( id2 ) );
+  auto p1 = parser.parse( OeisSequence( id1 ).getProgramPath() );
+  auto p2 = parser.parse( OeisSequence( id2 ).getProgramPath() );
   ProgramUtil::removeOps( p1, Operation::Type::NOP );
   ProgramUtil::removeOps( p2, Operation::Type::NOP );
   Sequence s1, s2, s3;

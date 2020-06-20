@@ -28,6 +28,10 @@ public:
 
   std::string id_str( const std::string &prefix = "A" ) const;
 
+  std::string getProgramPath() const;
+
+  std::string getBFilePath() const;
+
   number_t id;
   std::string name;
   Sequence full;
