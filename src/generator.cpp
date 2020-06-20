@@ -38,6 +38,21 @@ std::discrete_distribution<> operationDist( const ProgramUtil::Stats& stats,
   return std::discrete_distribution<>( p.begin(), p.end() );
 }
 
+std::discrete_distribution<> constantsDist( const std::vector<number_t>& constants, const ProgramUtil::Stats& stats )
+{
+  std::vector<double> p( constants.size() );
+  for ( size_t i = 0; i < constants.size(); i++ )
+  {
+    int64_t rate = stats.num_constants.at( constants[i] );
+    if ( rate <= 0 )
+    {
+      Log::get().error( "Unexpected stats for constant: " + std::to_string( constants[i] ), true );
+    }
+    p[i] = rate;
+  }
+  return std::discrete_distribution<>( p.begin(), p.end() );
+}
+
 Generator::Generator( const Settings &settings, int64_t seed )
     : settings( settings )
 {
@@ -138,6 +153,14 @@ Generator::Generator( const Settings &settings, int64_t seed )
   // initialize distributions
   ProgramUtil::Stats stats;
   stats.load( "stats" );
+  constants.resize( stats.num_constants.size() );
+  size_t i = 0;
+  for ( auto& c : stats.num_constants )
+  {
+    constants[i++] = c.first;
+  }
+
+  constants_dist = constantsDist( constants, stats );
   operation_dist = operationDist( stats, operation_types );
   target_type_dist = std::discrete_distribution<>( target_type_rates.begin(), target_type_rates.end() );
   target_value_dist = uniformDist( settings.max_constant + 1 );
@@ -172,6 +195,12 @@ void Generator::generateOperations()
   if ( op_type == Operation::Type::LPB && source_type != Operand::Type::CONSTANT && position_dist( gen ) % 10 > 0 )
   {
     source_type = Operand::Type::CONSTANT;
+  }
+
+  // use constants distribution from stats
+  if ( source_type == Operand::Type::CONSTANT )
+  {
+    source_value = constants.at( constants_dist( gen ) );
   }
 
   // avoid meaningless zeros or singularities
