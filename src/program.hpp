@@ -75,7 +75,6 @@ public:
     bool is_public;
     bool is_reading_target;
     bool is_writing_target;
-    int64_t rate;
   };
 
   Operation()

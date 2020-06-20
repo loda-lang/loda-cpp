@@ -20,14 +20,12 @@ std::discrete_distribution<> uniformDist( size_t size )
   return std::discrete_distribution<>( p.begin(), p.end() );
 }
 
-std::discrete_distribution<> operationDist( const std::vector<Operation::Type> &operation_types )
+std::discrete_distribution<> operationDist( const ProgramUtil::Stats& stats,
+    const std::vector<Operation::Type> &operation_types )
 {
   std::vector<double> p( operation_types.size() );
-  ProgramUtil::Stats stats;
-  stats.load( "stats" );
   for ( size_t i = 0; i < operation_types.size(); i++ )
   {
-    // auto rate = Operation::Metadata::get( operation_types[i] ).rate;
     int64_t rate = stats.num_ops_per_type.at( static_cast<size_t>( operation_types[i] ) );
     if ( rate <= 0 )
     {
@@ -41,8 +39,7 @@ std::discrete_distribution<> operationDist( const std::vector<Operation::Type> &
 }
 
 Generator::Generator( const Settings &settings, int64_t seed )
-    :
-    settings( settings )
+    : settings( settings )
 {
   // parse operation types
   bool negate = false;
@@ -139,7 +136,9 @@ Generator::Generator( const Settings &settings, int64_t seed )
   }
 
   // initialize distributions
-  operation_dist = operationDist( operation_types );
+  ProgramUtil::Stats stats;
+  stats.load( "stats" );
+  operation_dist = operationDist( stats, operation_types );
   target_type_dist = std::discrete_distribution<>( target_type_rates.begin(), target_type_rates.end() );
   target_value_dist = uniformDist( settings.max_constant + 1 );
   source_type_dist = std::discrete_distribution<>( source_type_rates.begin(), source_type_rates.end() );
