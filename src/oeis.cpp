@@ -173,7 +173,7 @@ void Oeis::load()
     // big sequence
     big_sequence.clear();
     std::stringstream big_path;
-    big_path << getHome() << "b/b" << std::setw( 6 ) << std::setfill( '0' ) << id << ".txt";
+    big_path << getHome() << "b/" << OeisSequence( id ).id_str( "b" ) << ".txt";
     std::ifstream big_file( big_path.str() );
     if ( big_file.good() )
     {
