@@ -57,11 +57,10 @@ void throwParseError( const std::string &line )
 }
 
 Oeis::Oeis( const Settings &settings )
-    :
-    settings( settings ),
-    interpreter( settings ),
-    optimizer( settings ),
-    total_count_( 0 )
+    : settings( settings ),
+      interpreter( settings ),
+      optimizer( settings ),
+      total_count_( 0 )
 {
   if ( settings.optimize_existing_programs )
   {
@@ -109,6 +108,7 @@ void Oeis::load()
   Sequence norm_sequence;
   Sequence big_sequence;
   size_t loaded_count = 0;
+  size_t big_loaded_count = 0;
   while ( std::getline( stripped, line ) )
   {
     if ( line.empty() || line[0] == '#' )
@@ -247,7 +247,10 @@ void Oeis::load()
       }
       else
       {
-        Log::get().debug( "Sequence in b-file too short: " + big_path );
+        if ( Log::get().level == Log::Level::DEBUG )
+        {
+          Log::get().debug( "Sequence in b-file too short: " + big_path );
+        }
         big_sequence.clear();
       }
       if ( big_sequence.size() > MAX_NUM_TERMS )
@@ -256,13 +259,17 @@ void Oeis::load()
       }
       if ( !big_sequence.empty() )
       {
+        big_loaded_count++;
         full_sequence = big_sequence;
-        Log::get().debug(
-            "Loaded b-file for sequence " + std::to_string( id ) + " with " + std::to_string( big_sequence.size() )
-                + " terms" );
+        if ( Log::get().level == Log::Level::DEBUG )
+        {
+          Log::get().debug(
+              "Loaded b-file for sequence " + std::to_string( id ) + " with " + std::to_string( big_sequence.size() )
+                  + " terms" );
+        }
       }
     }
-    else
+    else if ( Log::get().level == Log::Level::DEBUG )
     {
       Log::get().debug( "b-file not found: " + big_path );
     }
@@ -310,7 +317,8 @@ void Oeis::load()
   }
 
   Log::get().info(
-      "Loaded " + std::to_string( loaded_count ) + "/" + std::to_string( total_count_ ) + " sequences from the OEIS" );
+      "Loaded " + std::to_string( loaded_count ) + "/" + std::to_string( total_count_ ) + " sequences and "
+          + std::to_string( big_loaded_count ) + " b-files" );
   std::stringstream buf;
   buf << "Matcher compaction ratios: ";
   for ( size_t i = 0; i < matchers.size(); i++ )
@@ -622,7 +630,10 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
     if ( file.good() )
     {
       if ( exit_flag ) continue;
-      Log::get().debug( "Checking program for " + s.to_string() );
+      if ( Log::get().level == Log::Level::DEBUG )
+      {
+        Log::get().debug( "Checking program for " + s.to_string() );
+      }
       Parser parser;
       Program program = parser.parse( file );
       Settings settings2 = settings;
