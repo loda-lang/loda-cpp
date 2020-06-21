@@ -58,11 +58,10 @@ void throwParseError( const std::string &line )
 }
 
 Oeis::Oeis( const Settings &settings )
-    :
-    settings( settings ),
-    interpreter( settings ),
-    optimizer( settings ),
-    total_count_( 0 )
+    : settings( settings ),
+      interpreter( settings ),
+      optimizer( settings ),
+      total_count_( 0 )
 {
   if ( settings.optimize_existing_programs )
   {
@@ -106,7 +105,7 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
   std::ifstream stripped( getHome() + "stripped" );
   if ( !stripped.good() )
   {
-    Log::get().error( "OEIS data not found: run get_oeis.sh to download it", true );
+    Log::get().error( "OEIS data not found: run \"loda update\" to download it", true );
   }
   std::string line;
   size_t pos;
@@ -348,7 +347,7 @@ void Oeis::loadNames( volatile sig_atomic_t &exit_flag )
   std::ifstream names( getHome() + "names" );
   if ( !names.good() )
   {
-    Log::get().error( "OEIS data not found: run get_oeis.sh to download it", true );
+    Log::get().error( "OEIS data not found: run \"loda update\" to download it", true );
   }
   std::string line;
   size_t pos;
@@ -398,9 +397,15 @@ void Oeis::update( volatile sig_atomic_t &exit_flag )
     Log::get().error( "Option -x required to run update", true );
   }
   Log::get().info( "Updating OEIS index" );
-  std::vector<std::string> files = { "stripped", "names" };
   std::string cmd, path;
   int exit_code;
+  cmd = "mkdir -p " + getHome();
+  exit_code = system( cmd.c_str() );
+  if ( exit_code != 0 )
+  {
+    Log::get().error( "Error creating " + getHome(), true );
+  }
+  std::vector<std::string> files = { "stripped", "names" };
   for ( auto &file : files )
   {
     if ( exit_flag )
@@ -452,6 +457,7 @@ void Oeis::update( volatile sig_atomic_t &exit_flag )
     b_file.close();
     program_file.close();
   }
+  Log::get().info( "Finished update" );
 }
 
 const std::vector<OeisSequence>& Oeis::getSequences() const
@@ -796,5 +802,5 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
   {
     Log::get().alert( "Optimized " + std::to_string( num_optimized ) + " programs" );
   }
-  Log::get().info( "Finished checking programs for OEIS sequences" );
+  Log::get().info( "Finished maintaining programs" );
 }

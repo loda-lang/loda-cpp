@@ -27,8 +27,7 @@ function run_loda {
 }
 
 function start_miners() {
-  echo "Updating OEIS database"
-  ./get_oeis.sh
+  ./loda update
   echo "Start mining"
   local l="-l ${log_level}"
   for n in 6 8 10; do
