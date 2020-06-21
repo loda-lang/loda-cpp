@@ -39,6 +39,7 @@ void help()
   std::cout << "  mine             Mine programs for OEIS sequences" << std::endl;
   std::cout << "  synthesize       Synthesize programs for OEIS sequences" << std::endl;
   std::cout << "  maintain         Maintain programs for OEIS sequences" << std::endl;
+  std::cout << "  update           Update OEIS index" << std::endl;
   std::cout << "General options:" << std::endl;
   std::cout << "  -l <string>      Log level (values:debug,info,warn,error,alert)" << std::endl;
   std::cout << "  -t <number>      Number of sequence terms (default:" << settings.num_terms << ")" << std::endl;
@@ -137,10 +138,17 @@ int main( int argc, char *argv[] )
     }
     else if ( cmd == "maintain" )
     {
+      // need to set the override flag!
       settings.optimize_existing_programs = true;
       Oeis o( settings );
-      o.load();
       o.maintain( EXIT_FLAG );
+    }
+    else if ( cmd == "update" )
+    {
+      // need to set the override flag!
+      settings.optimize_existing_programs = true;
+      Oeis o( settings );
+      o.update( EXIT_FLAG );
     }
     else if ( cmd == "collatz" )
     {

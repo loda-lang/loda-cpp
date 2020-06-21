@@ -13,6 +13,7 @@
 #include <limits>
 #include <fstream>
 #include <sstream>
+#include <stdlib.h>
 
 size_t Oeis::MAX_NUM_TERMS = 250;
 
@@ -57,10 +58,11 @@ void throwParseError( const std::string &line )
 }
 
 Oeis::Oeis( const Settings &settings )
-    : settings( settings ),
-      interpreter( settings ),
-      optimizer( settings ),
-      total_count_( 0 )
+    :
+    settings( settings ),
+    interpreter( settings ),
+    optimizer( settings ),
+    total_count_( 0 )
 {
   if ( settings.optimize_existing_programs )
   {
@@ -92,8 +94,13 @@ bool isCloseToOverflow( number_t n )
   return n > (NUM_INF / 10000);
 }
 
-void Oeis::load()
+void Oeis::load( volatile sig_atomic_t &exit_flag )
 {
+  // check if already loaded
+  if ( total_count_ > 0 )
+  {
+    return;
+  }
   // load sequence data
   Log::get().info( "Loading sequence data from the OEIS" );
   std::ifstream stripped( getHome() + "stripped" );
@@ -111,6 +118,10 @@ void Oeis::load()
   size_t big_loaded_count = 0;
   while ( std::getline( stripped, line ) )
   {
+    if ( exit_flag )
+    {
+      break;
+    }
     if ( line.empty() || line[0] == '#' )
     {
       continue;
@@ -290,7 +301,7 @@ void Oeis::load()
     ++loaded_count;
   }
 
-  loadNames();
+  loadNames( exit_flag );
 
   if ( !settings.optimize_existing_programs )
   {
@@ -331,7 +342,7 @@ void Oeis::load()
 
 }
 
-void Oeis::loadNames()
+void Oeis::loadNames( volatile sig_atomic_t &exit_flag )
 {
   Log::get().debug( "Loading sequence names from the OEIS" );
   std::ifstream names( getHome() + "names" );
@@ -344,6 +355,10 @@ void Oeis::loadNames()
   number_t id;
   while ( std::getline( names, line ) )
   {
+    if ( exit_flag )
+    {
+      break;
+    }
     if ( line.empty() || line[0] == '#' )
     {
       continue;
@@ -373,6 +388,69 @@ void Oeis::loadNames()
         Log::get().debug( buf.str() );
       }
     }
+  }
+}
+
+void Oeis::update( volatile sig_atomic_t &exit_flag )
+{
+  if ( !settings.optimize_existing_programs )
+  {
+    Log::get().error( "Option -x required to run update", true );
+  }
+  Log::get().info( "Updating OEIS index" );
+  std::vector<std::string> files = { "stripped", "names" };
+  std::string cmd, path;
+  int exit_code;
+  for ( auto &file : files )
+  {
+    if ( exit_flag )
+    {
+      break;
+    }
+    path = getHome() + file;
+    cmd = "wget -nv -O " + path + ".gz https://oeis.org/" + file + ".gz";
+    exit_code = system( cmd.c_str() );
+    if ( exit_code != 0 )
+    {
+      Log::get().error( "Error fetching " + file + " file", true );
+    }
+    std::ifstream f( getHome() + file );
+    if ( f.good() )
+    {
+      f.close();
+      std::remove( path.c_str() );
+    }
+    cmd = "gzip -d " + path + ".gz";
+    exit_code = system( cmd.c_str() );
+    if ( exit_code != 0 )
+    {
+      Log::get().error( "Error unzipping " + path + ".gz", true );
+    }
+  }
+  load( exit_flag );
+  for ( auto &s : sequences )
+  {
+    if ( exit_flag )
+    {
+      break;
+    }
+    if ( s.id == 0 )
+    {
+      continue;
+    }
+    std::ifstream program_file( s.getProgramPath() );
+    std::ifstream b_file( s.getBFilePath() );
+    if ( program_file.good() && !b_file.good() )
+    {
+      cmd = "wget -nv -O " + s.getBFilePath() + " https://oeis.org/" + s.id_str() + "/" + s.id_str( "b" ) + ".txt";
+      exit_code = system( cmd.c_str() );
+      if ( exit_code != 0 )
+      {
+        Log::get().error( "Error unzipping " + path + ".gz", true );
+      }
+    }
+    b_file.close();
+    program_file.close();
   }
 }
 
@@ -603,6 +681,7 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
   {
     Log::get().error( "Option -x required to run maintenance", true );
   }
+  load( exit_flag );
   Log::get().info( "Start maintaining OEIS programs" );
   const std::string readme( "README.md" );
   std::ifstream readme_in( readme );

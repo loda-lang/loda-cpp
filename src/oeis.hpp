@@ -63,7 +63,9 @@ public:
   {
   }
 
-  void load();
+  void load( volatile sig_atomic_t &exit_flag );
+
+  void update( volatile sig_atomic_t &exit_flag );
 
   const std::vector<OeisSequence>& getSequences() const;
 
@@ -94,7 +96,7 @@ public:
 
 private:
 
-  void loadNames();
+  void loadNames( volatile sig_atomic_t &exit_flag );
 
   void findAll( const Program &p, const Sequence &norm_seq, seq_programs_t &result ) const;
 

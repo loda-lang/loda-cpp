@@ -20,7 +20,6 @@ Miner::Miner( const Settings &settings )
     oeis( settings ),
     interpreter( settings )
 {
-  oeis.load();
 }
 
 bool Miner::updateSpecialSequences( const Program &p, const Sequence &seq ) const
@@ -115,6 +114,7 @@ bool Miner::isPrimeSequence( const Sequence &seq ) const
 
 void Miner::mine( volatile sig_atomic_t &exit_flag )
 {
+  oeis.load( exit_flag );
   Log::get().info( "Mining programs for OEIS sequences" );
 
   // metrics labels
