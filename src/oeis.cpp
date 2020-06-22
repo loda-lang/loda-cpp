@@ -19,12 +19,27 @@ size_t Oeis::MAX_NUM_TERMS = 250;
 
 std::string getHome()
 {
+  // don't remove the trailing /
   return std::string( std::getenv( "HOME" ) ) + "/.loda/oeis/";
 }
 
 void ensureDir( const std::string &path )
 {
-  // TODO
+  auto index = path.find_last_of( "/" );
+  if ( index != std::string::npos )
+  {
+    auto dir = path.substr( 0, index );
+    auto cmd = "mkdir -p " + dir;
+    auto exit_code = system( cmd.c_str() );
+    if ( exit_code != 0 )
+    {
+      Log::get().error( "Error creating directory " + dir, true );
+    }
+  }
+  else
+  {
+    Log::get().error( "Error determining directory for " + path, true );
+  }
 }
 
 std::ostream& operator<<( std::ostream &out, const OeisSequence &s )
@@ -410,14 +425,9 @@ void Oeis::update( volatile sig_atomic_t &exit_flag )
     Log::get().error( "Option -x required to run update", true );
   }
   Log::get().info( "Updating OEIS index" );
+  ensureDir( getHome() );
   std::string cmd, path;
   int exit_code;
-  cmd = "mkdir -p " + getHome();
-  exit_code = system( cmd.c_str() );
-  if ( exit_code != 0 )
-  {
-    Log::get().error( "Error creating " + getHome(), true );
-  }
   std::vector<std::string> files = { "stripped", "names" };
   for ( auto &file : files )
   {
