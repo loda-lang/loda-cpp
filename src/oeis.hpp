@@ -28,6 +28,8 @@ public:
 
   std::string id_str( const std::string &prefix = "A" ) const;
 
+  std::string dir_str() const;
+
   std::string getProgramPath() const;
 
   std::string getBFilePath() const;
@@ -66,6 +68,8 @@ public:
   void load( volatile sig_atomic_t &exit_flag );
 
   void update( volatile sig_atomic_t &exit_flag );
+
+  void migrate( volatile sig_atomic_t &exit_flag );
 
   const std::vector<OeisSequence>& getSequences() const;
 

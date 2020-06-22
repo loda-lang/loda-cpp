@@ -22,6 +22,11 @@ std::string getHome()
   return std::string( std::getenv( "HOME" ) ) + "/.loda/oeis/";
 }
 
+void ensureDir( const std::string &path )
+{
+  // TODO
+}
+
 std::ostream& operator<<( std::ostream &out, const OeisSequence &s )
 {
   out << s.id_str() << ": " << s.name;
@@ -42,6 +47,13 @@ std::string OeisSequence::id_str( const std::string &prefix ) const
   return s.str();
 }
 
+std::string OeisSequence::dir_str() const
+{
+  std::stringstream s;
+  s << std::setw( 3 ) << std::setfill( '0' ) << (id / 1000);
+  return s.str();
+}
+
 std::string OeisSequence::getProgramPath() const
 {
   return "programs/oeis/" + id_str() + ".asm";
@@ -58,10 +70,11 @@ void throwParseError( const std::string &line )
 }
 
 Oeis::Oeis( const Settings &settings )
-    : settings( settings ),
-      interpreter( settings ),
-      optimizer( settings ),
-      total_count_( 0 )
+    :
+    settings( settings ),
+    interpreter( settings ),
+    optimizer( settings ),
+    total_count_( 0 )
 {
   if ( settings.optimize_existing_programs )
   {
@@ -458,6 +471,39 @@ void Oeis::update( volatile sig_atomic_t &exit_flag )
     program_file.close();
   }
   Log::get().info( "Finished update" );
+}
+
+void migrateFile( const std::string &from, const std::string &to )
+{
+  std::ifstream f( from );
+  if ( f.good() )
+  {
+    Log::get().warn( "Migrating " + from + " -> " + to );
+    // TODO
+  }
+}
+
+void Oeis::migrate( volatile sig_atomic_t &exit_flag )
+{
+  if ( !settings.optimize_existing_programs )
+  {
+    Log::get().error( "Option -x required to run migration", true );
+  }
+  for ( auto &s : sequences )
+  {
+    if ( exit_flag )
+    {
+      break;
+    }
+    if ( s.id == 0 )
+    {
+      continue;
+    }
+    auto old_program_path = "programs/oeis/" + s.id_str() + ".asm";
+    migrateFile( old_program_path, s.getProgramPath() );
+    auto old_b_file_path = getHome() + "b/" + s.id_str( "b" ) + ".txt";
+    migrateFile( old_b_file_path, s.getBFilePath() );
+  }
 }
 
 const std::vector<OeisSequence>& Oeis::getSequences() const
