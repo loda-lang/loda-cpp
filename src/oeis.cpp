@@ -85,11 +85,10 @@ void throwParseError( const std::string &line )
 }
 
 Oeis::Oeis( const Settings &settings )
-    :
-    settings( settings ),
-    interpreter( settings ),
-    optimizer( settings ),
-    total_count_( 0 )
+    : settings( settings ),
+      interpreter( settings ),
+      optimizer( settings ),
+      total_count_( 0 )
 {
   if ( settings.optimize_existing_programs )
   {
@@ -839,7 +838,8 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
         }
         const size_t num_ops = ProgramUtil::numOps( program, false );
         list_file << "* [" << s.id_str() << "](http://oeis.org/" << s.id_str() << ") ([L" << std::setw( 2 )
-            << std::setfill( '0' ) << num_ops << " program](" << s.id_str() << ".asm)): " << s.name << "\n";
+            << std::setfill( '0' ) << num_ops << " program](" << s.dir_str() << "/" << s.id_str() << ".asm)): "
+            << s.name << "\n";
       }
     }
   }
