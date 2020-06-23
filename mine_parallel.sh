@@ -1,7 +1,7 @@
 #!/bin/bash
 
 log_level=error
-check_interval=43200
+check_interval=86400
 min_changes=20
 
 for cmd in git; do
