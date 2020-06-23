@@ -502,11 +502,7 @@ void migrateFile( const std::string &from, const std::string &to )
 
 void Oeis::migrate( volatile sig_atomic_t &exit_flag )
 {
-  if ( !settings.optimize_existing_programs )
-  {
-    Log::get().error( "Option -x required to run migration", true );
-  }
-  for ( size_t id = 1; id < 400000; id++ )
+  for ( size_t id = 1; id <= 400000; id++ )
   {
     if ( exit_flag )
     {
