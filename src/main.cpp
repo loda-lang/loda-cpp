@@ -150,6 +150,11 @@ int main( int argc, char *argv[] )
       Oeis o( settings );
       o.update( EXIT_FLAG );
     }
+    else if ( cmd == "migrate" )
+    {
+      Oeis o( settings );
+      o.migrate( EXIT_FLAG );
+    }
     else if ( cmd == "collatz" )
     {
       Parser parser;

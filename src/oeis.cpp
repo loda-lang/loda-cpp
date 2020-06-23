@@ -71,12 +71,12 @@ std::string OeisSequence::dir_str() const
 
 std::string OeisSequence::getProgramPath() const
 {
-  return "programs/oeis/" + id_str() + ".asm";
+  return "programs/oeis/" + dir_str() + "/" + id_str() + ".asm";
 }
 
 std::string OeisSequence::getBFilePath() const
 {
-  return getHome() + "b/" + id_str( "b" ) + ".txt";
+  return getHome() + "b/" + dir_str() + "/" + id_str( "b" ) + ".txt";
 }
 
 void throwParseError( const std::string &line )
@@ -489,7 +489,14 @@ void migrateFile( const std::string &from, const std::string &to )
   if ( f.good() )
   {
     Log::get().warn( "Migrating " + from + " -> " + to );
-    // TODO
+    f.close();
+    ensureDir( to );
+    auto cmd = "mv " + from + " " + to;
+    auto exit_code = system( cmd.c_str() );
+    if ( exit_code != 0 )
+    {
+      Log::get().error( "Error moving file " + from, true );
+    }
   }
 }
 
@@ -499,16 +506,13 @@ void Oeis::migrate( volatile sig_atomic_t &exit_flag )
   {
     Log::get().error( "Option -x required to run migration", true );
   }
-  for ( auto &s : sequences )
+  for ( size_t id = 1; id < 400000; id++ )
   {
     if ( exit_flag )
     {
       break;
     }
-    if ( s.id == 0 )
-    {
-      continue;
-    }
+    OeisSequence s( id );
     auto old_program_path = "programs/oeis/" + s.id_str() + ".asm";
     migrateFile( old_program_path, s.getProgramPath() );
     auto old_b_file_path = getHome() + "b/" + s.id_str( "b" ) + ".txt";
@@ -629,6 +633,7 @@ void Oeis::findAll( const Program &p, const Sequence &norm_seq, seq_programs_t &
 void Oeis::dumpProgram( number_t id, Program p, const std::string &file ) const
 {
   ProgramUtil::removeOps( p, Operation::Type::NOP );
+  ensureDir( file );
   std::ofstream out( file );
   auto &seq = sequences.at( id );
   out << "; " << seq << std::endl;
