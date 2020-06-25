@@ -194,15 +194,22 @@ void ProgramUtil::Stats::save( const std::string &path )
   std::ofstream constants( path + "/constant_counts.csv" );
   for ( auto &e : num_constants )
   {
-    constants << std::to_string( e.first ) << sep << std::to_string( e.second ) << "\n";
+    constants << e.first << sep << e.second << "\n";
   }
   constants.close();
+
+  std::ofstream programs( path + "/programs.csv" );
+  for ( size_t i = 0; i < found_programs.size(); i++ )
+  {
+    programs << i << sep << found_programs.at( i ) << sep << cached_b_files.at( i ) << "\n";
+  }
+  programs.close();
   std::ofstream lengths( path + "/program_lengths.csv" );
   for ( size_t i = 0; i < num_programs_per_length.size(); i++ )
   {
     if ( num_programs_per_length[i] > 0 )
     {
-      lengths << std::to_string( i ) << sep << std::to_string( num_programs_per_length[i] ) << "\n";
+      lengths << i << sep << num_programs_per_length[i] << "\n";
     }
   }
   lengths.close();
@@ -211,14 +218,14 @@ void ProgramUtil::Stats::save( const std::string &path )
   {
     if ( num_ops_per_type[i] > 0 )
     {
-      op_counts << Operation::Metadata::get( static_cast<Operation::Type>( i ) ).name << sep
-          << std::to_string( num_ops_per_type[i] ) << "\n";
+      op_counts << Operation::Metadata::get( static_cast<Operation::Type>( i ) ).name << sep << num_ops_per_type[i]
+          << "\n";
     }
   }
   op_counts.close();
 }
 
-void ProgramUtil::Stats::update( const Program &program )
+void ProgramUtil::Stats::updateProgram( const Program &program )
 {
   num_programs++;
   const size_t num_ops = ProgramUtil::numOps( program, false );
@@ -239,4 +246,15 @@ void ProgramUtil::Stats::update( const Program &program )
       num_constants[op.source.value]++;
     }
   }
+}
+
+void ProgramUtil::Stats::updateSequence( number_t id, bool program_found, bool has_b_file )
+{
+  if ( id >= found_programs.size() )
+  {
+    found_programs.resize( id + 1 );
+    cached_b_files.resize( id + 1 );
+  }
+  found_programs[id] = program_found;
+  cached_b_files[id] = has_b_file;
 }

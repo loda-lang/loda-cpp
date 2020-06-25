@@ -85,10 +85,11 @@ void throwParseError( const std::string &line )
 }
 
 Oeis::Oeis( const Settings &settings )
-    : settings( settings ),
-      interpreter( settings ),
-      optimizer( settings ),
-      total_count_( 0 )
+    :
+    settings( settings ),
+    interpreter( settings ),
+    optimizer( settings ),
+    total_count_( 0 )
 {
   if ( settings.optimize_existing_programs )
   {
@@ -767,8 +768,11 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
   for ( auto &s : sequences )
   {
     std::string file_name = s.getProgramPath();
-    std::ifstream file( file_name );
-    if ( file.good() )
+    std::ifstream program_file( file_name );
+    std::ifstream b_file( s.getBFilePath() );
+    bool has_b_file = b_file.good();
+    bool has_program = false;
+    if ( program_file.good() )
     {
       if ( exit_flag ) continue;
       if ( Log::get().level == Log::Level::DEBUG )
@@ -776,7 +780,7 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
         Log::get().debug( "Checking program for " + s.to_string() );
       }
       Parser parser;
-      Program program = parser.parse( file );
+      Program program = parser.parse( program_file );
       Settings settings2 = settings;
       settings2.num_terms = s.full.size();
       Interpreter interpreter( settings2 );
@@ -802,11 +806,12 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
       if ( !okay )
       {
         Log::get().warn( "Deleting program due to evaluation error: " + file_name );
-        file.close();
+        program_file.close();
         remove( file_name.c_str() );
       }
       else
       {
+        has_program = true;
         ProgramUtil::removeOps( program, Operation::Type::NOP );
         Program optimized = program;
         Optimizer optimizer( settings2 );
@@ -819,7 +824,7 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
         dumpProgram( s.id, optimized, file_name );
 
         // collect stats
-        stats.update( optimized );
+        stats.updateProgram( optimized );
 
         // write list file
         if ( list_index < 0 || (int) s.id / 100000 != list_index )
@@ -842,6 +847,7 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
             << s.name << "\n";
       }
     }
+    stats.updateSequence( s.id, has_program, has_b_file );
   }
   list_file.close();
   readme_out << "\n" << "Total number of programs: ";
