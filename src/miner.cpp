@@ -131,6 +131,7 @@ void Miner::mine( volatile sig_atomic_t &exit_flag )
   const size_t num_matchers = oeis.getMatchers().size();
 
   Generator generator( settings, std::random_device()() );
+  std::stack<Program> progs;
   Sequence norm_seq;
   size_t generated = 0;
   size_t fresh = 0;
@@ -139,7 +140,12 @@ void Miner::mine( volatile sig_atomic_t &exit_flag )
 
   while ( !exit_flag )
   {
-    auto program = generator.generateProgram();
+    if ( progs.empty() )
+    {
+      progs.push( generator.generateProgram() );
+    }
+    Program program = progs.top();
+    progs.pop();
     auto seq_programs = oeis.findSequence( program, norm_seq );
     for ( auto s : seq_programs )
     {
@@ -149,6 +155,7 @@ void Miner::mine( volatile sig_atomic_t &exit_flag )
         if ( r.second )
         {
           fresh++;
+          generator.mutateConstants( s.second, 100, progs );
         }
         else
         {
