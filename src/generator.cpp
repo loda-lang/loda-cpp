@@ -20,7 +20,7 @@ std::discrete_distribution<> uniformDist( size_t size )
   return std::discrete_distribution<>( p.begin(), p.end() );
 }
 
-std::discrete_distribution<> operationDist( const ProgramUtil::Stats& stats,
+std::discrete_distribution<> operationDist( const ProgramUtil::Stats &stats,
     const std::vector<Operation::Type> &operation_types )
 {
   std::vector<double> p( operation_types.size() );
@@ -38,7 +38,7 @@ std::discrete_distribution<> operationDist( const ProgramUtil::Stats& stats,
   return std::discrete_distribution<>( p.begin(), p.end() );
 }
 
-std::discrete_distribution<> constantsDist( const std::vector<number_t>& constants, const ProgramUtil::Stats& stats )
+std::discrete_distribution<> constantsDist( const std::vector<number_t> &constants, const ProgramUtil::Stats &stats )
 {
   std::vector<double> p( constants.size() );
   for ( size_t i = 0; i < constants.size(); i++ )
@@ -54,7 +54,8 @@ std::discrete_distribution<> constantsDist( const std::vector<number_t>& constan
 }
 
 Generator::Generator( const Settings &settings, int64_t seed )
-    : settings( settings )
+    :
+    settings( settings )
 {
   // parse operation types
   bool negate = false;
@@ -155,7 +156,7 @@ Generator::Generator( const Settings &settings, int64_t seed )
   stats.load( "stats" );
   constants.resize( stats.num_constants.size() );
   size_t i = 0;
-  for ( auto& c : stats.num_constants )
+  for ( auto &c : stats.num_constants )
   {
     constants[i++] = c.first;
   }
@@ -397,4 +398,37 @@ Program Generator::generateProgram()
 void Generator::setSeed( int64_t seed )
 {
   gen.seed( seed );
+}
+
+void Generator::mutateConstants( const Program &program, size_t num_results, std::stack<Program> &result )
+{
+  std::vector<size_t> indices;
+  for ( size_t i = 0; i < program.ops.size(); i++ )
+  {
+    if ( Operation::Metadata::get( program.ops[i].type ).num_operands == 2
+        && program.ops[i].source.type == Operand::Type::CONSTANT )
+    {
+      indices.resize( indices.size() + 1 );
+      indices[indices.size() - 1] = i;
+    }
+  }
+  if ( indices.empty() )
+  {
+    return;
+  }
+  int var = std::max<int>( 1, num_results / indices.size() );
+  for ( size_t i : indices )
+  {
+    number_t b = program.ops[i].source.value;
+    number_t s = b - std::min<number_t>( var / 2, b );
+    for ( size_t v = s; v <= s + var; v++ )
+    {
+      if ( v != b )
+      {
+        auto p = program;
+        p.ops[i].source.value = v;
+        result.push( p );
+      }
+    }
+  }
 }
