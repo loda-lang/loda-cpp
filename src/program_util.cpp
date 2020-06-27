@@ -197,7 +197,7 @@ void ProgramUtil::Stats::load( const std::string &path )
     std::getline( s, k, ',' );
     std::getline( s, v, ',' );
     std::getline( s, w );
-    int id = std::stol( k );
+    number_t id = std::stol( k );
     largest_id = std::max<int>( largest_id, id );
     if ( id >= found_programs.size() )
     {
