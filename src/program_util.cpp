@@ -164,27 +164,54 @@ ProgramUtil::Stats::Stats()
 void ProgramUtil::Stats::load( const std::string &path )
 {
   const std::string sep( "," );
+
   std::ifstream constants( path + "/constant_counts.csv" );
-  std::string line, key, value;
+  std::string line, k, v, w;
   while ( std::getline( constants, line ) )
   {
     std::stringstream s( line );
-    std::getline( s, key, ',' );
-    std::getline( s, value );
-    num_constants[std::stol( key )] = std::stol( value );
+    std::getline( s, k, ',' );
+    std::getline( s, v );
+    num_constants[std::stol( k )] = std::stol( v );
   }
   constants.close();
-  std::ifstream op_counts( path + "/operation_counts.csv" );
 
+  std::ifstream op_counts( path + "/operation_counts.csv" );
   while ( std::getline( op_counts, line ) )
   {
     std::stringstream s( line );
-    std::getline( s, key, ',' );
-    std::getline( s, value );
-    auto type = Operation::Metadata::get( key ).type;
-    num_ops_per_type.at( static_cast<size_t>( type ) ) = std::stol( value );
+    std::getline( s, k, ',' );
+    std::getline( s, v );
+    auto type = Operation::Metadata::get( k ).type;
+    num_ops_per_type.at( static_cast<size_t>( type ) ) = std::stol( v );
   }
   op_counts.close();
+
+  std::ifstream programs( path + "/programs.csv" );
+  found_programs.resize( 100000, false );
+  cached_b_files.resize( 100000, false );
+  int largest_id = 0;
+  while ( std::getline( programs, line ) )
+  {
+    std::stringstream s( line );
+    std::getline( s, k, ',' );
+    std::getline( s, v, ',' );
+    std::getline( s, w );
+    int id = std::stol( k );
+    largest_id = std::max<int>( largest_id, id );
+    if ( id >= found_programs.size() )
+    {
+      size_t new_size = std::max<size_t>( found_programs.size() * 2, id + 1 );
+      found_programs.resize( new_size );
+      cached_b_files.resize( new_size );
+    }
+    found_programs[id] = std::stol( v );
+    cached_b_files[id] = std::stol( w );
+  }
+  found_programs.resize( largest_id + 1 );
+  cached_b_files.resize( largest_id + 1 );
+  programs.close();
+
   // TODO: remaining stats
 }
 
@@ -197,11 +224,15 @@ void ProgramUtil::Stats::save( const std::string &path )
     constants << e.first << sep << e.second << "\n";
   }
   constants.close();
-
   std::ofstream programs( path + "/programs.csv" );
   for ( size_t i = 0; i < found_programs.size(); i++ )
   {
-    programs << i << sep << found_programs.at( i ) << sep << cached_b_files.at( i ) << "\n";
+    bool f = found_programs.at( i );
+    bool b = cached_b_files.at( i );
+    if ( f || b )
+    {
+      programs << i << sep << f << sep << b << "\n";
+    }
   }
   programs.close();
   std::ofstream lengths( path + "/program_lengths.csv" );

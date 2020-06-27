@@ -81,6 +81,10 @@ void Test::stats()
   {
     Log::get().error( "Error loading operation counts from stats" );
   }
+  if ( !s.found_programs.at( 4 ) || !s.cached_b_files.at( 4 ) )
+  {
+    Log::get().error( "Error loading program summary from stats" );
+  }
   s.save( "/tmp" );
   t.load( "/tmp" );
   for ( auto &e : s.num_constants )
@@ -89,7 +93,8 @@ void Test::stats()
     auto n = t.num_constants.at( e.first );
     if ( m != n )
     {
-      Log::get().error( "Unexpected number of constants count: " + std::to_string( m ) + "!=" + std::to_string( n ) );
+      Log::get().error( "Unexpected number of constants count: " + std::to_string( m ) + "!=" + std::to_string( n ),
+          true );
     }
   }
   for ( size_t i = 0; i < s.num_ops_per_type.size(); i++ )
@@ -98,7 +103,40 @@ void Test::stats()
     auto n = t.num_ops_per_type.at( i );
     if ( m != n )
     {
-      Log::get().error( "Unexpected number if operations count: " + std::to_string( m ) + "!=" + std::to_string( n ) );
+      Log::get().error( "Unexpected number of operations count: " + std::to_string( m ) + "!=" + std::to_string( n ),
+          true );
+    }
+  }
+  if ( s.found_programs.size() != t.found_programs.size() )
+  {
+    Log::get().error(
+        "Unexpected number of found programs: " + std::to_string( s.found_programs.size() ) + "!="
+            + std::to_string( t.found_programs.size() ), true );
+  }
+  if ( s.cached_b_files.size() != t.cached_b_files.size() )
+  {
+    Log::get().error(
+        "Unexpected number of cached b-files: " + std::to_string( s.cached_b_files.size() ) + "!="
+            + std::to_string( t.cached_b_files.size() ), true );
+  }
+  for ( size_t i = 0; i < s.found_programs.size(); i++ )
+  {
+    Log::get().info( std::to_string( i ) );
+    auto a = s.found_programs.at( i );
+    auto b = t.found_programs.at( i );
+    if ( a != b )
+    {
+      Log::get().error( "Unexpected found programs for: " + std::to_string( i ), true );
+    }
+  }
+  for ( size_t i = 0; i < s.cached_b_files.size(); i++ )
+  {
+    Log::get().info( "b" + std::to_string( i ) );
+    auto a = s.cached_b_files.at( i );
+    auto b = t.cached_b_files.at( i );
+    if ( a != b )
+    {
+      Log::get().error( "Unexpected cached b-files for: " + std::to_string( i ), true );
     }
   }
 }
