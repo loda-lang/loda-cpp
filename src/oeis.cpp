@@ -474,7 +474,7 @@ void Oeis::update( volatile sig_atomic_t &exit_flag )
       exit_code = system( cmd.c_str() );
       if ( exit_code != 0 )
       {
-        Log::get().error( "Error unzipping " + path + ".gz", true );
+        Log::get().error( "Error fetching b-file for " + s.id_str(), true );
       }
     }
     b_file.close();
