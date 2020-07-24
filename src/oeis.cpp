@@ -687,6 +687,24 @@ bool Oeis::isOptimizedBetter( const Program &existing, const Program &optimized 
   {
     return true;
   }
+  try
+  {
+    Memory mem;
+    const number_t input = settings.num_terms - 1;
+    mem.set( 0, input );
+    size_t existing_cycles = interpreter.run( existing, mem );
+    mem.clear();
+    mem.set( 0, input );
+    size_t optimized_cycles = interpreter.run( optimized, mem );
+    if ( optimized_cycles < existing_cycles )
+    {
+      return true;
+    }
+  }
+  catch ( const std::exception &e )
+  {
+    // TODO: input might be to large
+  }
   if ( ProgramUtil::numOps( optimized, false ) < ProgramUtil::numOps( existing, false ) )
   {
     return true;
