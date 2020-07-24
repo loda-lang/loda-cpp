@@ -680,7 +680,7 @@ std::pair<bool, Program> Oeis::optimizeAndCheck( const Program &p, const OeisSeq
   return optimized;
 }
 
-bool isOptimizedBetter( const Program &existing, const Program &optimized )
+bool Oeis::isOptimizedBetter( const Program &existing, const Program &optimized ) const
 {
   if ( ProgramUtil::numOps( optimized, Operand::Type::INDIRECT )
       < ProgramUtil::numOps( existing, Operand::Type::INDIRECT ) )

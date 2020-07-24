@@ -106,6 +106,8 @@ private:
 
   std::pair<bool, Program> optimizeAndCheck( const Program &p, const OeisSequence &seq, bool optimize ) const;
 
+  bool isOptimizedBetter( const Program &existing, const Program &optimized ) const;
+
   const Settings &settings;
   Interpreter interpreter;
   Optimizer optimizer;
