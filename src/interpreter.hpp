@@ -10,11 +10,11 @@ public:
 
   Interpreter( const Settings &settings );
 
-  bool run( const Program &p, Memory &mem ) const;
+  size_t run( const Program &p, Memory &mem ) const;
 
-  void eval( const Program &p, Sequence &seq, int num_terms = -1 ) const;
+  size_t eval( const Program &p, Sequence &seq, int num_terms = -1 ) const;
 
-  void eval( const Program &p, std::vector<Sequence> &seqs, int num_terms = -1 ) const;
+  size_t eval( const Program &p, std::vector<Sequence> &seqs, int num_terms = -1 ) const;
 
 private:
 

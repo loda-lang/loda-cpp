@@ -19,12 +19,12 @@ Interpreter::Interpreter( const Settings &settings )
 {
 }
 
-bool Interpreter::run( const Program &p, Memory &mem ) const
+size_t Interpreter::run( const Program &p, Memory &mem ) const
 {
   // check for empty program
   if ( p.ops.empty() )
   {
-    return true;
+    return 0;
   }
 
   // define stacks
@@ -37,7 +37,7 @@ bool Interpreter::run( const Program &p, Memory &mem ) const
   // push first operation to stack
   pc_stack.push( 0 );
 
-  number_t cycles = 0;
+  size_t cycles = 0;
   Memory old_mem, frag, frag_prev, prev;
   size_t pc, pc_next, ps_begin;
   number_t source, target, start, length, length2;
@@ -238,7 +238,11 @@ bool Interpreter::run( const Program &p, Memory &mem ) const
       throw std::runtime_error( "Program did not terminate after " + std::to_string( cycles ) + " cycles" );
     }
   }
-  return true;
+  if ( is_debug )
+  {
+    Log::get().debug( "Finished execution after " + std::to_string( cycles ) + " cycles" );
+  }
+  return cycles;
 }
 
 number_t Interpreter::get( Operand a, const Memory &mem, bool get_address ) const
@@ -309,7 +313,7 @@ bool Interpreter::isLessThan( const Memory &m1, const Memory &m2, const std::vec
   return false; // equal
 }
 
-void Interpreter::eval( const Program &p, Sequence &seq, int num_terms ) const
+size_t Interpreter::eval( const Program &p, Sequence &seq, int num_terms ) const
 {
   if ( num_terms < 0 )
   {
@@ -317,11 +321,12 @@ void Interpreter::eval( const Program &p, Sequence &seq, int num_terms ) const
   }
   seq.resize( num_terms );
   Memory mem;
+  size_t cycles = 0;
   for ( int i = 0; i < num_terms; i++ )
   {
     mem.clear();
     mem.set( 0, i );
-    run( p, mem );
+    cycles += run( p, mem );
     seq[i] = mem.get( 1 );
   }
   if ( is_debug )
@@ -330,9 +335,10 @@ void Interpreter::eval( const Program &p, Sequence &seq, int num_terms ) const
     buf << "Evaluated program to sequence " << seq;
     Log::get().debug( buf.str() );
   }
+  return cycles;
 }
 
-void Interpreter::eval( const Program &p, std::vector<Sequence> &seqs, int num_terms ) const
+size_t Interpreter::eval( const Program &p, std::vector<Sequence> &seqs, int num_terms ) const
 {
   if ( num_terms < 0 )
   {
@@ -343,14 +349,16 @@ void Interpreter::eval( const Program &p, std::vector<Sequence> &seqs, int num_t
     seqs[s].resize( num_terms );
   }
   Memory mem;
+  size_t cycles = 0;
   for ( int i = 0; i < num_terms; i++ )
   {
     mem.clear();
     mem.set( 0, i );
-    run( p, mem );
+    cycles += run( p, mem );
     for ( size_t s = 0; s < seqs.size(); s++ )
     {
       seqs[s][i] = mem.get( s );
     }
   }
+  return cycles;
 }

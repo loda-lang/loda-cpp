@@ -714,8 +714,8 @@ std::pair<bool, bool> Oeis::updateProgram( number_t id, const Program &p ) const
         }
         is_new = false;
         Parser parser;
-        auto existing_program = parser.parse( in );
-        if ( !isOptimizedBetter( existing_program, optimized.second ) )
+        auto existing = parser.parse( in );
+        if ( !isOptimizedBetter( existing, optimized.second ) )
         {
           return
           { false,false};
