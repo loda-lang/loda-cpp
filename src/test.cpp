@@ -121,7 +121,6 @@ void Test::stats()
   }
   for ( size_t i = 0; i < s.found_programs.size(); i++ )
   {
-    Log::get().info( std::to_string( i ) );
     auto a = s.found_programs.at( i );
     auto b = t.found_programs.at( i );
     if ( a != b )
@@ -131,7 +130,6 @@ void Test::stats()
   }
   for ( size_t i = 0; i < s.cached_b_files.size(); i++ )
   {
-    Log::get().info( "b" + std::to_string( i ) );
     auto a = s.cached_b_files.at( i );
     auto b = t.cached_b_files.at( i );
     if ( a != b )

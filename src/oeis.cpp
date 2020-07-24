@@ -680,6 +680,20 @@ std::pair<bool, Program> Oeis::optimizeAndCheck( const Program &p, const OeisSeq
   return optimized;
 }
 
+bool isOptimizedBetter( const Program &existing, const Program &optimized )
+{
+  if ( ProgramUtil::numOps( optimized, Operand::Type::INDIRECT )
+      < ProgramUtil::numOps( existing, Operand::Type::INDIRECT ) )
+  {
+    return true;
+  }
+  if ( ProgramUtil::numOps( optimized, false ) < ProgramUtil::numOps( existing, false ) )
+  {
+    return true;
+  }
+  return false;
+}
+
 std::pair<bool, bool> Oeis::updateProgram( number_t id, const Program &p ) const
 {
   auto &seq = sequences.at( id );
@@ -701,8 +715,7 @@ std::pair<bool, bool> Oeis::updateProgram( number_t id, const Program &p ) const
         is_new = false;
         Parser parser;
         auto existing_program = parser.parse( in );
-        if ( ProgramUtil::numOps( optimized.second, Operand::Type::INDIRECT ) > 0
-            || ProgramUtil::numOps( optimized.second, false ) >= ProgramUtil::numOps( existing_program, false ) )
+        if ( !isOptimizedBetter( existing_program, optimized.second ) )
         {
           return
           { false,false};
@@ -855,10 +868,10 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
       << "%)\n\n";
   readme_out
       << "![LODA Program Length Distribution](https://raw.githubusercontent.com/ckrause/loda/master/stats/lengths.png)\n";
-  // readme_out << "![LODA Program Counts](https://raw.githubusercontent.com/ckrause/loda/master/stats/counts.png)\n";
+// readme_out << "![LODA Program Counts](https://raw.githubusercontent.com/ckrause/loda/master/stats/counts.png)\n";
   readme_out.close();
 
-  // write stats
+// write stats
   stats.save( "stats" );
 
   if ( num_optimized > 0 )
