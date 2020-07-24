@@ -687,6 +687,7 @@ bool Oeis::isOptimizedBetter( const Program &existing, const Program &optimized 
   {
     return true;
   }
+  /*
   try
   {
     Memory mem;
@@ -705,6 +706,7 @@ bool Oeis::isOptimizedBetter( const Program &existing, const Program &optimized 
   {
     // TODO: input might be to large
   }
+   */
   if ( ProgramUtil::numOps( optimized, false ) < ProgramUtil::numOps( existing, false ) )
   {
     return true;
