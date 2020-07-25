@@ -680,14 +680,20 @@ std::pair<bool, Program> Oeis::optimizeAndCheck( const Program &p, const OeisSeq
   return optimized;
 }
 
-bool Oeis::isOptimizedBetter( const Program &existing, const Program &optimized ) const
+std::string Oeis::isOptimizedBetter( Program existing, Program optimized ) const
 {
+  // we prefer programs w/o indirect memory access
   if ( ProgramUtil::numOps( optimized, Operand::Type::INDIRECT )
       < ProgramUtil::numOps( existing, Operand::Type::INDIRECT ) )
   {
-    return true;
+    return "Simpler";
   }
-  /*
+
+  // now remove nops...
+  optimizer.removeNops( existing );
+  optimizer.removeNops( optimized );
+
+  // ...and compare number of execution cycles
   try
   {
     Memory mem;
@@ -699,19 +705,20 @@ bool Oeis::isOptimizedBetter( const Program &existing, const Program &optimized 
     size_t optimized_cycles = interpreter.run( optimized, mem );
     if ( optimized_cycles < existing_cycles )
     {
-      return true;
+      return "Faster";
     }
   }
   catch ( const std::exception &e )
   {
     // TODO: input might be to large
   }
-   */
-  if ( ProgramUtil::numOps( optimized, false ) < ProgramUtil::numOps( existing, false ) )
+
+  // shorter programs are better (nops have been removed already at this point)
+  if ( ProgramUtil::numOps( optimized, true ) < ProgramUtil::numOps( existing, true ) )
   {
-    return true;
+    return "Shorter";
   }
-  return false;
+  return "";
 }
 
 std::pair<bool, bool> Oeis::updateProgram( number_t id, const Program &p ) const
@@ -719,6 +726,7 @@ std::pair<bool, bool> Oeis::updateProgram( number_t id, const Program &p ) const
   auto &seq = sequences.at( id );
   std::string file_name = seq.getProgramPath();
   bool is_new = true;
+  std::string change;
   std::pair<bool, Program> optimized;
   {
     std::ifstream in( file_name );
@@ -735,7 +743,8 @@ std::pair<bool, bool> Oeis::updateProgram( number_t id, const Program &p ) const
         is_new = false;
         Parser parser;
         auto existing = parser.parse( in );
-        if ( !isOptimizedBetter( existing, optimized.second ) )
+        change = isOptimizedBetter( existing, optimized.second );
+        if ( change.empty() )
         {
           return
           { false,false};
@@ -758,10 +767,9 @@ std::pair<bool, bool> Oeis::updateProgram( number_t id, const Program &p ) const
     }
   }
   std::stringstream buf;
-  buf << "Found ";
-  if ( is_new ) buf << "first";
-  else buf << "shorter";
-  buf << " program for " << seq << " First terms: " << static_cast<Sequence>( seq );
+  if ( is_new ) buf << "First";
+  else buf << change;
+  buf << " program for " << seq << " Terms: " << static_cast<Sequence>( seq );
   Log::get().alert( buf.str() );
   dumpProgram( id, optimized.second, file_name );
   std::ofstream gen_args;
