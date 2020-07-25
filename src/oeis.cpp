@@ -470,6 +470,7 @@ void Oeis::update( volatile sig_atomic_t &exit_flag )
     std::ifstream b_file( s.getBFilePath() );
     if ( program_file.good() && !b_file.good() )
     {
+      ensureDir( s.getBFilePath() );
       cmd = "wget -nv -O " + s.getBFilePath() + " https://oeis.org/" + s.id_str() + "/" + s.id_str( "b" ) + ".txt";
       exit_code = system( cmd.c_str() );
       if ( exit_code != 0 )
