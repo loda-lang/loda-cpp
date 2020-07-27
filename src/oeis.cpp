@@ -85,11 +85,10 @@ void throwParseError( const std::string &line )
 }
 
 Oeis::Oeis( const Settings &settings )
-    :
-    settings( settings ),
-    interpreter( settings ),
-    optimizer( settings ),
-    total_count_( 0 )
+    : settings( settings ),
+      interpreter( settings ),
+      optimizer( settings ),
+      total_count_( 0 )
 {
   if ( settings.optimize_existing_programs )
   {
@@ -708,9 +707,14 @@ std::string Oeis::isOptimizedBetter( Program existing, Program optimized ) const
     {
       return "Faster";
     }
+    else if ( optimized_cycles > existing_cycles )
+    {
+      return "";
+    }
   }
   catch ( const std::exception &e )
   {
+    Log::get().error( "Error checking if program is faster than other", false );
     // TODO: input might be to large
   }
 
