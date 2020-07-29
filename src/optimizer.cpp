@@ -35,7 +35,7 @@ void Optimizer::optimize( Program &p, size_t num_reserved_cells, size_t num_init
     {
       changed = true;
     }
-    if ( evalConstants( p, num_initialized_cells ) )
+    if ( partialEval( p, num_initialized_cells ) )
     {
       changed = true;
     }
@@ -477,7 +477,7 @@ struct update_state
   bool stop;
 };
 
-update_state updateConstantsArithmetic( Operation &op, std::unordered_map<number_t, number_t> &values,
+update_state doPartialEval( Operation &op, std::unordered_map<number_t, Operand> &values,
     std::unordered_set<number_t> &unknown_cells )
 {
   update_state result;
@@ -496,12 +496,12 @@ update_state updateConstantsArithmetic( Operation &op, std::unordered_map<number
   bool update_source = false;
 
   // deduce source value
-  number_t source_value = 0;
+  Operand source( Operand::Type::CONSTANT, 0 );
   if ( num_ops > 1 )
   {
-    if ( op.source.type == Operand::Type::CONSTANT )
+    if ( op.source.type == Operand::Type::CONSTANT ) // constant
     {
-      source_value = op.source.value;
+      source = op.source;
     }
     else // direct
     {
@@ -514,7 +514,7 @@ update_state updateConstantsArithmetic( Operation &op, std::unordered_map<number
         auto found = values.find( op.source.value );
         if ( found != values.end() )
         {
-          source_value = found->second;
+          source = found->second;
         }
         update_source = true;
       }
@@ -522,7 +522,7 @@ update_state updateConstantsArithmetic( Operation &op, std::unordered_map<number
   }
 
   // deduce target value
-  number_t target_value = 0;
+  Operand target( Operand::Type::CONSTANT, 0 );
   if ( unknown_cells.find( op.target.value ) != unknown_cells.end() && op.type != Operation::Type::MOV )
   {
     unknown = true;
@@ -532,7 +532,7 @@ update_state updateConstantsArithmetic( Operation &op, std::unordered_map<number
     auto found = values.find( op.target.value );
     if ( found != values.end() )
     {
-      target_value = found->second;
+      target = found->second;
     }
   }
 
@@ -541,40 +541,40 @@ update_state updateConstantsArithmetic( Operation &op, std::unordered_map<number
   switch ( op.type )
   {
   case Operation::Type::MOV:
-    target_value = source_value;
+    target = source;
     break;
   case Operation::Type::ADD:
-    target_value = Semantics::add( target_value, source_value );
+    target.value = Semantics::add( target.value, source.value );
     break;
   case Operation::Type::SUB:
-    target_value = Semantics::sub( target_value, source_value );
+    target.value = Semantics::sub( target.value, source.value );
     break;
   case Operation::Type::MUL:
-    target_value = Semantics::mul( target_value, source_value );
+    target.value = Semantics::mul( target.value, source.value );
     break;
   case Operation::Type::DIV:
-    target_value = Semantics::div( target_value, source_value );
+    target.value = Semantics::div( target.value, source.value );
     break;
   case Operation::Type::MOD:
-    target_value = Semantics::mod( target_value, source_value );
+    target.value = Semantics::mod( target.value, source.value );
     break;
   case Operation::Type::POW:
-    target_value = Semantics::pow( target_value, source_value );
+    target.value = Semantics::pow( target.value, source.value );
     break;
   case Operation::Type::LOG:
-    target_value = Semantics::log( target_value, source_value );
+    target.value = Semantics::log( target.value, source.value );
     break;
   case Operation::Type::FAC:
-    target_value = Semantics::fac( target_value );
+    target.value = Semantics::fac( target.value );
     break;
   case Operation::Type::GCD:
-    target_value = Semantics::gcd( target_value, source_value );
+    target.value = Semantics::gcd( target.value, source.value );
     break;
   case Operation::Type::BIN:
-    target_value = Semantics::bin( target_value, source_value );
+    target.value = Semantics::bin( target.value, source.value );
     break;
   case Operation::Type::CMP:
-    target_value = Semantics::cmp( target_value, source_value );
+    target.value = Semantics::cmp( target.value, source.value );
     break;
 
   case Operation::Type::NOP:
@@ -597,7 +597,7 @@ update_state updateConstantsArithmetic( Operation &op, std::unordered_map<number
 
   if ( update_source )
   {
-    op.source = Operand( Operand::Type::CONSTANT, source_value );
+    op.source = source;
     result.changed = true;
   }
   if ( unknown )
@@ -606,20 +606,20 @@ update_state updateConstantsArithmetic( Operation &op, std::unordered_map<number
   }
   else if ( update_target )
   {
-    values[op.target.value] = target_value;
+    values[op.target.value] = target;
     if ( op.type != Operation::Type::MOV )
     {
       op.type = Operation::Type::MOV;
-      op.source = Operand( Operand::Type::CONSTANT, target_value );
+      op.source = target;
       result.changed = true;
     }
   }
   return result;
 }
 
-bool Optimizer::evalConstants( Program &p, size_t num_initialized_cells ) const
+bool Optimizer::partialEval( Program &p, size_t num_initialized_cells ) const
 {
-  std::unordered_map<number_t, number_t> values;
+  std::unordered_map<number_t, Operand> values;
   std::unordered_set<number_t> unknown_cells;
   for ( size_t i = 0; i < num_initialized_cells; i++ )
   {
@@ -628,7 +628,7 @@ bool Optimizer::evalConstants( Program &p, size_t num_initialized_cells ) const
   bool changed = false;
   for ( auto &op : p.ops )
   {
-    auto state = updateConstantsArithmetic( op, values, unknown_cells );
+    auto state = doPartialEval( op, values, unknown_cells );
     if ( state.stop )
     {
       return changed;

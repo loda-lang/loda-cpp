@@ -37,7 +37,7 @@ public:
 
   bool canChangeVariableOrder( const Program &p ) const;
 
-  bool evalConstants( Program &p, size_t num_initialized_cells ) const;
+  bool partialEval( Program &p, size_t num_initialized_cells ) const;
 
 private:
 
