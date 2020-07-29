@@ -38,7 +38,7 @@ void Test::all()
   {
     polynomialMatcher( tests, degree );
   }
-  optimizer( tests );
+  optimizerMinimizer( tests );
 }
 
 void Test::fibonacci()
@@ -139,7 +139,7 @@ void Test::stats()
   }
 }
 
-void Test::optimizer( size_t tests )
+void Test::optimizerMinimizer( size_t tests )
 {
   Settings settings;
   Interpreter interpreter( settings );
@@ -161,7 +161,7 @@ void Test::optimizer( size_t tests )
       continue;
     }
     optimized = program;
-    optimizer.optimize( optimized, 2, 1 );
+    optimizer.optimizeAndMinimize( optimized, 2, 1, s1.size() );
     interpreter.eval( optimized, s2 );
     if ( s1.size() != s2.size() || (s1 != s2) )
     {
