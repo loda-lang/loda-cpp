@@ -119,5 +119,7 @@ public:
 
   bool operator==( const Program &p ) const;
 
+  bool operator!=( const Program &p ) const;
+
   std::vector<Operation> ops;
 };

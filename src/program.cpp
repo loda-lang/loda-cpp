@@ -104,3 +104,8 @@ bool Program::operator==( const Program &p ) const
   }
   return true;
 }
+
+bool Program::operator!=( const Program &p ) const
+{
+  return !(*this == p);
+}

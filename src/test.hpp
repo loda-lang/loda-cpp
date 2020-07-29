@@ -23,7 +23,9 @@ public:
 
   void collatz();
 
-  void optimizerMinimizer( size_t tests );
+  void optimizer();
+
+  void minimizer( size_t tests );
 
   void deltaMatcher();
 

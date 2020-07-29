@@ -38,7 +38,8 @@ void Test::all()
   {
     polynomialMatcher( tests, degree );
   }
-  optimizerMinimizer( tests );
+  optimizer();
+  minimizer( tests );
 }
 
 void Test::fibonacci()
@@ -139,7 +140,60 @@ void Test::stats()
   }
 }
 
-void Test::optimizerMinimizer( size_t tests )
+void Test::optimizer()
+{
+  Log::get().info( "Testing optimizer" );
+  Settings settings;
+  Interpreter interpreter( settings );
+  Optimizer optimizer( settings );
+  Parser parser;
+  size_t i = 1;
+  while ( true )
+  {
+    std::stringstream s;
+    s << "programs/tests/optimizer/E" << std::setw( 3 ) << std::setfill( '0' ) << i << ".asm";
+    std::ifstream file( s.str() );
+    if ( !file.good() )
+    {
+      break;
+    }
+    Log::get().info( "Testing " + s.str() );
+    auto p = parser.parse( file );
+    int in = -1, out = -1;
+    for ( size_t i = 0; i < p.ops.size(); i++ )
+    {
+      if ( p.ops[i].type == Operation::Type::NOP )
+      {
+        if ( p.ops[i].comment == "in" )
+        {
+          in = i;
+        }
+        else if ( p.ops[i].comment == "out" )
+        {
+          out = i;
+        }
+      }
+    }
+    if ( in < 0 || out < 0 || in >= out )
+    {
+      Log::get().error( "Error parsing test", true );
+    }
+    Program pin;
+    pin.ops.insert( pin.ops.begin(), p.ops.begin() + in + 1, p.ops.begin() + out );
+    Program pout;
+    pout.ops.insert( pout.ops.begin(), p.ops.begin() + out + 1, p.ops.end() );
+    i++;
+    Program optimized = pin;
+    optimizer.optimize( optimized, 2, 1 );
+    if ( optimized != pout )
+    {
+      ProgramUtil::print( optimized, std::cerr );
+      Log::get().error( "Unexpected optimized output" );
+    }
+  }
+}
+
+void Test::minimizer( size_t tests )
 {
   Settings settings;
   Interpreter interpreter( settings );
@@ -147,7 +201,7 @@ void Test::optimizerMinimizer( size_t tests )
   Generator generator( settings, std::random_device()() );
   Sequence s1, s2, s3;
   Program program, optimized, minimized;
-  Log::get().info( "Testing optimizer and minimizer" );
+  Log::get().info( "Testing minimizer" );
   for ( size_t i = 0; i < tests; i++ )
   {
     if ( exit_flag_ ) break;
