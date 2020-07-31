@@ -1,9 +1,22 @@
 #!/bin/bash
 
+# common settings
 log_level=error
 check_interval=86400
 min_changes=20
+min_cpus=4
 
+# get and check the number of cpus
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  num_cpus=$(sysctl -n hw.ncpu)
+else
+  num_cpus=$(cat /proc/cpuinfo | grep processor | wc -l)
+fi
+if [ "$num_cpus" -lt "$min_cpus" ]; then
+  echo "Need at least ${min_cpus} CPUs, but only ${num_cpus} were found"
+fi
+
+# check required commands
 for cmd in git; do
   if ! [ -x "$(command -v $cmd)" ]; then
     echo "Error: $cmd is not installed" >&2
@@ -22,7 +35,7 @@ function abort_miners() {
 }
 
 function run_loda {
-  echo "Starting loda $@"
+  echo "loda $@"
   ./loda $@ &
 }
 
@@ -30,11 +43,31 @@ function start_miners() {
   ./loda update
   echo "Start mining"
   local l="-l ${log_level}"
-  for n in 6 8 10; do
+  templates=T01
+  if [ "$num_cpus" -ge 6 ]; then
+    templates=T01 T02
+  fi
+  num_vars=4
+  if [ "$num_cpus" -ge 8 ]; then
+    num_vars=4 6
+  fi
+  if [ "$num_cpus" -ge 12 ]; then
+    num_vars=4 6 8
+  fi
+  if [ "$num_cpus" -ge 16 ]; then
+    num_vars=4 6 8 10
+  fi
+  if [ "$num_cpus" -ge 20 ]; then
+    num_vars=2 4 6 8 10
+  fi
+  if [ "$num_cpus" -ge 24 ]; then
+    num_vars=2 4 6 7 8 10
+  fi
+  for n in $num_vars; do
     for x in "" "-x"; do
       args="-n $n -p ${n}0 -a cd $x $l"
       # instantiate templates w/o loops
-      for t in T01 T02; do
+      for t in $templates; do
         run_loda mine $args -o ^l -e programs/templates/${t}.asm $@
       done
       # no templates but w/ loops
