@@ -75,7 +75,7 @@ function start_miners() {
     done
   done
   # indirect memory access
-  run_loda mine -p 60 -a cdi -n 6 $l $@
+  run_loda mine -n 6 -p 60 -a cdi $l $@
   run_loda maintain
 }
 

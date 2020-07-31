@@ -85,10 +85,11 @@ void throwParseError( const std::string &line )
 }
 
 Oeis::Oeis( const Settings &settings )
-    : settings( settings ),
-      interpreter( settings ),
-      optimizer( settings ),
-      total_count_( 0 )
+    :
+    settings( settings ),
+    interpreter( settings ),
+    optimizer( settings ),
+    total_count_( 0 )
 {
   if ( settings.optimize_existing_programs )
   {
@@ -455,6 +456,8 @@ void Oeis::update( volatile sig_atomic_t &exit_flag )
     }
   }
   load( exit_flag );
+  ProgramUtil::Stats stats;
+  stats.load( "stats" );
   for ( auto &s : sequences )
   {
     if ( exit_flag )
@@ -467,7 +470,7 @@ void Oeis::update( volatile sig_atomic_t &exit_flag )
     }
     std::ifstream program_file( s.getProgramPath() );
     std::ifstream b_file( s.getBFilePath() );
-    if ( program_file.good() && !b_file.good() )
+    if ( !b_file.good() && (program_file.good() || (stats.cached_b_files.size() > s.id && stats.cached_b_files[s.id])) )
     {
       ensureDir( s.getBFilePath() );
       cmd = "wget -nv -O " + s.getBFilePath() + " https://oeis.org/" + s.id_str() + "/" + s.id_str( "b" ) + ".txt";
