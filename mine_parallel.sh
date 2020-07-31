@@ -99,13 +99,17 @@ function push_updates {
     git push
     echo "Rebuilding loda"
     pushd src && make clean && make && popd
+  fi
+  ps -A > /tmp/loda-ps.txt
+  if ! grep loda /tmp/loda-ps.txt; then
   	start_miners $@
   fi
+  rm /tmp/loda-ps.txt
 }
 
 trap abort_miners INT
 
-start_miners $@
+push_updates
 SECONDS=0
 while [ true ]; do
   if (( SECONDS >= check_interval )); then
