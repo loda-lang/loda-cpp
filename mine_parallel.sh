@@ -44,23 +44,23 @@ function start_miners() {
   echo "Start mining"
   local l="-l ${log_level}"
   templates=T01
-  if [ "$num_cpus" -ge 6 ]; then
-    templates="T01 T02"
-  fi
   num_vars=4
   if [ "$num_cpus" -ge 8 ]; then
-    num_vars="4 6"
+    templates="T01 T02"
   fi
   if [ "$num_cpus" -ge 12 ]; then
-    num_vars="4 6 8"
+    num_vars="4 6"
   fi
   if [ "$num_cpus" -ge 16 ]; then
-    num_vars="4 6 8 10"
+    num_vars="4 6 8"
   fi
   if [ "$num_cpus" -ge 20 ]; then
-    num_vars="2 4 6 8 10"
+    num_vars="4 6 8 10"
   fi
   if [ "$num_cpus" -ge 24 ]; then
+    num_vars="2 4 6 8 10"
+  fi
+  if [ "$num_cpus" -ge 28 ]; then
     num_vars="2 4 6 7 8 10"
   fi
   for n in ${num_vars}; do
