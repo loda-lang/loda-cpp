@@ -90,7 +90,11 @@ function push_updates {
     ./make_charts.sh 
     echo "Pushing updates"
     git pull
-    git add programs stats README.md
+    git add programs
+    branch=$(git branch --show-current)
+    if [ "$branch" = "master" ]; then
+      git add stats README.md
+    fi
     git commit -m "updated $num_changes programs"
     git push
     echo "Rebuilding loda"
