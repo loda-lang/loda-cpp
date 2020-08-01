@@ -144,7 +144,7 @@ std::string Sequence::to_string() const
   return ss.str();
 }
 
-void SequenceToIdsMap::remove( Sequence seq, number_t id )
+void SequenceToIdsMap::remove( Sequence seq, size_t id )
 {
   auto ids = find( seq );
   if ( ids != end() )

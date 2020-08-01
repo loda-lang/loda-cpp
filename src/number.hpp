@@ -104,10 +104,10 @@ struct SequenceHasher
   }
 };
 
-class SequenceToIdsMap: public std::unordered_map<Sequence, std::vector<number_t>, SequenceHasher>
+class SequenceToIdsMap: public std::unordered_map<Sequence, std::vector<size_t>, SequenceHasher>
 {
 public:
-  void remove( Sequence seq, number_t id );
+  void remove( Sequence seq, size_t id );
 };
 
 class Memory: public std::vector<number_t>

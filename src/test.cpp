@@ -244,9 +244,9 @@ void Test::polynomialMatcher( size_t tests, size_t degree )
   Log::get().info( "Testing polynomial matcher for degree " + std::to_string( degree ) );
 
   // load test program
-  std::vector<number_t> program_ids = { 4, 35, 2262 };
+  std::vector<size_t> program_ids = { 4, 35, 2262 };
   std::vector<Program> programs;
-  for ( number_t id : program_ids )
+  for ( auto id : program_ids )
   {
     auto program = parser.parse( OeisSequence( id ).getProgramPath() );
     optimizer.removeNops( program );
@@ -396,7 +396,7 @@ void Test::testSeq( const std::string &func, const std::string &file, const Sequ
   }
 }
 
-void Test::testMatcherSet( Matcher &matcher, const std::vector<number_t> &ids )
+void Test::testMatcherSet( Matcher &matcher, const std::vector<size_t> &ids )
 {
   for ( auto id1 : ids )
   {
@@ -407,7 +407,7 @@ void Test::testMatcherSet( Matcher &matcher, const std::vector<number_t> &ids )
   }
 }
 
-void Test::testMatcherPair( Matcher &matcher, number_t id1, number_t id2 )
+void Test::testMatcherPair( Matcher &matcher, size_t id1, size_t id2 )
 {
   Log::get().info(
       "Testing " + matcher.getName() + " matcher for " + OeisSequence( id1 ).id_str() + " -> "

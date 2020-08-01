@@ -11,13 +11,13 @@ class OeisSequence: public Sequence
 {
 public:
 
-  OeisSequence( number_t id = 0 )
+  OeisSequence( size_t id = 0 )
       :
       id( id )
   {
   }
 
-  OeisSequence( number_t id, const std::string &name, const Sequence &s, const Sequence &full )
+  OeisSequence( size_t id, const std::string &name, const Sequence &s, const Sequence &full )
       :
       Sequence( s ),
       id( id ),
@@ -34,7 +34,7 @@ public:
 
   std::string getBFilePath() const;
 
-  number_t id;
+  size_t id;
   std::string name;
   Sequence full;
 
@@ -73,18 +73,18 @@ public:
 
   const std::vector<OeisSequence>& getSequences() const;
 
-  void removeSequence( number_t id );
+  void removeSequence( size_t id );
 
   seq_programs_t findSequence( const Program &p, Sequence &norm_seq ) const;
 
-  void dumpProgram( number_t id, Program p, const std::string &file ) const;
+  void dumpProgram( size_t id, Program p, const std::string &file ) const;
 
   size_t getTotalCount() const
   {
     return total_count_;
   }
 
-  std::pair<bool, bool> updateProgram( number_t id, const Program &p ) const;
+  std::pair<bool, bool> updateProgram( size_t id, const Program &p ) const;
 
   void maintain( volatile sig_atomic_t &exit_flag );
 

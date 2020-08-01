@@ -17,9 +17,9 @@ public:
   {
   }
 
-  virtual void insert( const Sequence &norm_seq, number_t id ) = 0;
+  virtual void insert( const Sequence &norm_seq, size_t id ) = 0;
 
-  virtual void remove( const Sequence &norm_seq, number_t id ) = 0;
+  virtual void remove( const Sequence &norm_seq, size_t id ) = 0;
 
   virtual void match( const Program &p, const Sequence &norm_seq, seq_programs_t &result ) const = 0;
 
@@ -45,9 +45,9 @@ public:
   {
   }
 
-  virtual void insert( const Sequence &norm_seq, number_t id ) override;
+  virtual void insert( const Sequence &norm_seq, size_t id ) override;
 
-  virtual void remove( const Sequence &norm_seq, number_t id ) override;
+  virtual void remove( const Sequence &norm_seq, size_t id ) override;
 
   virtual void match( const Program &p, const Sequence &norm_seq, seq_programs_t &result ) const override;
 
@@ -73,7 +73,7 @@ private:
 
   std::string name;
   SequenceToIdsMap ids;
-  std::unordered_map<number_t, T> data;
+  std::unordered_map<size_t, T> data;
   mutable std::unordered_set<Sequence, SequenceHasher> match_attempts;
   bool backoff;
 

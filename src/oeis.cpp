@@ -132,7 +132,7 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
   }
   std::string line;
   size_t pos;
-  number_t id, num;
+  size_t id, num;
   Sequence full_sequence;
   Sequence norm_sequence;
   Sequence big_sequence;
@@ -308,7 +308,7 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
     }
 
     // add sequence to index
-    if ( (size_t) id >= sequences.size() )
+    if ( id >= sequences.size() )
     {
       sequences.resize( 2 * id );
     }
@@ -374,7 +374,7 @@ void Oeis::loadNames( volatile sig_atomic_t &exit_flag )
   }
   std::string line;
   size_t pos;
-  number_t id;
+  size_t id;
   while ( std::getline( names, line ) )
   {
     if ( exit_flag )
@@ -400,7 +400,7 @@ void Oeis::loadNames( volatile sig_atomic_t &exit_flag )
       throwParseError( line );
     }
     ++pos;
-    if ( (size_t) id < sequences.size() && sequences[id].id == id )
+    if ( id < sequences.size() && sequences[id].id == id )
     {
       sequences[id].name = line.substr( pos );
       if ( Log::get().level == Log::Level::DEBUG )
@@ -520,9 +520,9 @@ const std::vector<OeisSequence>& Oeis::getSequences() const
   return sequences;
 }
 
-void Oeis::removeSequence( number_t id )
+void Oeis::removeSequence( size_t id )
 {
-  if ( (size_t) id >= sequences.size() )
+  if ( id >= sequences.size() )
   {
     return;
   }
@@ -625,7 +625,7 @@ void Oeis::findAll( const Program &p, const Sequence &norm_seq, seq_programs_t &
   }
 }
 
-void Oeis::dumpProgram( number_t id, Program p, const std::string &file ) const
+void Oeis::dumpProgram( size_t id, Program p, const std::string &file ) const
 {
   ProgramUtil::removeOps( p, Operation::Type::NOP );
   ensureDir( file );
@@ -725,7 +725,7 @@ std::string Oeis::isOptimizedBetter( Program existing, Program optimized ) const
   return "";
 }
 
-std::pair<bool, bool> Oeis::updateProgram( number_t id, const Program &p ) const
+std::pair<bool, bool> Oeis::updateProgram( size_t id, const Program &p ) const
 {
   auto &seq = sequences.at( id );
   std::string file_name = seq.getProgramPath();

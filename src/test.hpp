@@ -46,9 +46,9 @@ private:
   void testBinary( const std::string &func, const std::string &file,
       const std::vector<std::vector<number_t> > &values );
 
-  void testMatcherSet( Matcher &matcher, const std::vector<number_t> &ids );
+  void testMatcherSet( Matcher &matcher, const std::vector<size_t> &ids );
 
-  void testMatcherPair( Matcher &matcher, number_t id1, number_t id2 );
+  void testMatcherPair( Matcher &matcher, size_t id1, size_t id2 );
 
   void testSynthesizer( Synthesizer &syn, const Sequence &seq );
 

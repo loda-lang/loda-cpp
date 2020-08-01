@@ -7,7 +7,7 @@
 // --- AbstractMatcher --------------------------------------------------------
 
 template<class T>
-void AbstractMatcher<T>::insert( const Sequence &norm_seq, number_t id )
+void AbstractMatcher<T>::insert( const Sequence &norm_seq, size_t id )
 {
   auto reduced = reduce( norm_seq );
   data[id] = reduced.second;
@@ -15,7 +15,7 @@ void AbstractMatcher<T>::insert( const Sequence &norm_seq, number_t id )
 }
 
 template<class T>
-void AbstractMatcher<T>::remove( const Sequence &norm_seq, number_t id )
+void AbstractMatcher<T>::remove( const Sequence &norm_seq, size_t id )
 {
   auto reduced = reduce( norm_seq );
   ids.remove( reduced.first, id );
@@ -42,7 +42,7 @@ void AbstractMatcher<T>::match( const Program &p, const Sequence &norm_seq, seq_
       Program copy = p;
       if ( extend( copy, data.at( id ), reduced.second ) )
       {
-        result.push_back( std::pair<number_t, Program>( id, copy ) );
+        result.push_back( std::pair<size_t, Program>( id, copy ) );
       }
     }
   }

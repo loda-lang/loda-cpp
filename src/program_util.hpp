@@ -21,7 +21,7 @@ public:
 
     void updateProgram( const Program &program );
 
-    void updateSequence( number_t id, bool program_found, bool has_b_file );
+    void updateSequence( size_t id, bool program_found, bool has_b_file );
 
     size_t num_programs;
     std::map<number_t, size_t> num_constants;
