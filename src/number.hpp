@@ -11,9 +11,14 @@
 #include <unordered_map>
 #include <vector>
 
-using number_t = uint64_t;
+using number_t = int64_t;
 
 static constexpr number_t NUM_INF = std::numeric_limits<number_t>::max();
+
+inline bool isCloseToOverflow( number_t n )
+{
+  return (n > (NUM_INF / 1000)) || (n < (NUM_INF / -1000));
+}
 
 class Sequence: public std::vector<number_t>
 {
@@ -24,7 +29,8 @@ public:
   Sequence( const Sequence &s ) = default;
 
   Sequence( const std::vector<number_t> &s )
-      : std::vector<number_t>( s )
+      :
+      std::vector<number_t>( s )
   {
   }
 
@@ -36,7 +42,7 @@ public:
 
   size_t distinct_values() const;
 
-  number_t min() const;
+  number_t min( bool includeNegative ) const;
 
   void add( number_t n );
 
@@ -65,12 +71,14 @@ public:
   Polynomial( const Polynomial &s ) = default;
 
   Polynomial( size_t degree )
-      : std::vector<int64_t>( degree + 1 )
+      :
+      std::vector<int64_t>( degree + 1 )
   {
   }
 
   Polynomial( const std::vector<int64_t> &p )
-      : std::vector<int64_t>( p )
+      :
+      std::vector<int64_t>( p )
   {
   }
 
@@ -111,7 +119,8 @@ public:
   Memory( const Memory &m ) = default;
 
   Memory( const std::vector<number_t> &m )
-      : std::vector<number_t>( m )
+      :
+      std::vector<number_t>( m )
   {
   }
 

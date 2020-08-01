@@ -116,11 +116,6 @@ Oeis::Oeis( const Settings &settings )
   }
 }
 
-bool isCloseToOverflow( number_t n )
-{
-  return n > (NUM_INF / 10000);
-}
-
 void Oeis::load( volatile sig_atomic_t &exit_flag )
 {
   // check if already loaded

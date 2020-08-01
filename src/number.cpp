@@ -41,14 +41,16 @@ size_t Sequence::distinct_values() const
   return values.size();
 }
 
-number_t Sequence::min() const
+number_t Sequence::min( bool includeNegative ) const
 {
   number_t min = 0;
+  number_t cur = 0;
   for ( number_t i = 0; i < size(); ++i )
   {
-    if ( i == 0 || (*this)[i] < min )
+    cur = (*this)[i];
+    if ( i == 0 || ((cur < min) && (includeNegative || cur >= 0)) )
     {
-      min = (*this)[i];
+      min = cur;
     }
   }
   return min;
