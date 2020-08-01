@@ -536,11 +536,11 @@ void Oeis::removeSequence( size_t id )
   }
 }
 
-Oeis::seq_programs_t Oeis::findSequence( const Program &p, Sequence &norm_seq ) const
+Matcher::seq_programs_t Oeis::findSequence( const Program &p, Sequence &norm_seq ) const
 {
   std::vector<Sequence> seqs;
   seqs.resize( std::max<size_t>( 2, settings.max_index + 1 ) );
-  seq_programs_t result;
+  Matcher::seq_programs_t result;
   try
   {
     interpreter.eval( p, seqs );
@@ -570,10 +570,10 @@ Oeis::seq_programs_t Oeis::findSequence( const Program &p, Sequence &norm_seq ) 
   return result;
 }
 
-void Oeis::findAll( const Program &p, const Sequence &norm_seq, seq_programs_t &result ) const
+void Oeis::findAll( const Program &p, const Sequence &norm_seq, Matcher::seq_programs_t &result ) const
 {
   // collect possible matches
-  seq_programs_t temp_result;
+  Matcher::seq_programs_t temp_result;
   Sequence full_seq;
   for ( size_t i = 0; i < matchers.size(); i++ )
   {

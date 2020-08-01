@@ -11,7 +11,7 @@ class Matcher
 {
 public:
 
-  using seq_programs_t = std::vector<std::pair<number_t,Program>>;
+  using seq_programs_t = std::vector<std::pair<size_t,Program>>;
 
   virtual ~Matcher()
   {

@@ -57,8 +57,6 @@ public:
 
   static size_t MAX_NUM_TERMS;
 
-  using seq_programs_t = std::vector<std::pair<number_t,Program>>;
-
   Oeis( const Settings &settings );
 
   virtual ~Oeis()
@@ -75,7 +73,7 @@ public:
 
   void removeSequence( size_t id );
 
-  seq_programs_t findSequence( const Program &p, Sequence &norm_seq ) const;
+  Matcher::seq_programs_t findSequence( const Program &p, Sequence &norm_seq ) const;
 
   void dumpProgram( size_t id, Program p, const std::string &file ) const;
 
@@ -102,7 +100,7 @@ private:
 
   void loadNames( volatile sig_atomic_t &exit_flag );
 
-  void findAll( const Program &p, const Sequence &norm_seq, seq_programs_t &result ) const;
+  void findAll( const Program &p, const Sequence &norm_seq, Matcher::seq_programs_t &result ) const;
 
   std::pair<bool, Program> optimizeAndCheck( const Program &p, const OeisSequence &seq, bool optimize ) const;
 
