@@ -152,7 +152,7 @@ size_t Interpreter::run( const Program &p, Memory &mem ) const
       {
         throw std::runtime_error( "Infinite loop" );
       }
-      else if ( length > settings.max_memory )
+      else if ( length > (number_t) settings.max_memory )
       {
         throw std::runtime_error( "Maximum memory fragment length exceeded: " + std::to_string( length ) );
       }
@@ -207,7 +207,7 @@ size_t Interpreter::run( const Program &p, Memory &mem ) const
       {
         length = mem.size();
       }
-      for ( number_t i = start; i < (start + length) && i < mem.size(); i++ )
+      for ( number_t i = start; i < (start + length) && i < (number_t) mem.size(); i++ )
       {
         mem.set( i, 0 );
       }
@@ -286,7 +286,7 @@ void Interpreter::set( Operand a, number_t v, Memory &mem ) const
     index = mem.get( a.value );
     break;
   }
-  if ( index > settings.max_memory )
+  if ( index > (number_t) settings.max_memory )
   {
     throw std::runtime_error( "Memory index out of range: " + std::to_string( index ) );
   }

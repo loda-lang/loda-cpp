@@ -421,7 +421,7 @@ void Generator::mutateConstants( const Program &program, size_t num_results, std
   {
     number_t b = program.ops[i].source.value;
     number_t s = b - std::min<number_t>( var / 2, b );
-    for ( size_t v = s; v <= s + var; v++ )
+    for ( number_t v = s; v <= s + var; v++ )
     {
       if ( v != b )
       {

@@ -45,7 +45,7 @@ number_t Sequence::min( bool includeNegative ) const
 {
   number_t min = 0;
   number_t cur = 0;
-  for ( number_t i = 0; i < size(); ++i )
+  for ( size_t i = 0; i < size(); ++i )
   {
     cur = (*this)[i];
     if ( i == 0 || ((cur < min) && (includeNegative || cur >= 0)) )
@@ -58,7 +58,7 @@ number_t Sequence::min( bool includeNegative ) const
 
 void Sequence::add( number_t n )
 {
-  for ( number_t i = 0; i < size(); ++i )
+  for ( size_t i = 0; i < size(); ++i )
   {
     (*this)[i] += n;
   }
@@ -66,7 +66,7 @@ void Sequence::add( number_t n )
 
 void Sequence::sub( number_t n )
 {
-  for ( number_t i = 0; i < size(); ++i )
+  for ( size_t i = 0; i < size(); ++i )
   {
     if ( (*this)[i] > n )
     {
@@ -112,7 +112,7 @@ bool Sequence::operator==( const Sequence &m ) const
   {
     return false;
   }
-  for ( number_t i = 0; i < size(); ++i )
+  for ( size_t i = 0; i < size(); ++i )
   {
     if ( (*this)[i] != m[i] )
     {
@@ -129,7 +129,7 @@ bool Sequence::operator!=( const Sequence &m ) const
 
 std::ostream& operator<<( std::ostream &out, const Sequence &seq )
 {
-  for ( number_t i = 0; i < seq.size(); ++i )
+  for ( size_t i = 0; i < seq.size(); ++i )
   {
     if ( i > 0 ) out << ",";
     out << seq[i];
@@ -238,7 +238,7 @@ Polynomial operator-( const Polynomial &a, const Polynomial &b )
 
 number_t Memory::get( number_t index ) const
 {
-  if ( index >= size() )
+  if ( (size_t) index >= size() )
   {
     return 0;
   }
@@ -247,7 +247,7 @@ number_t Memory::get( number_t index ) const
 
 void Memory::set( number_t index, number_t value )
 {
-  if ( index >= size() )
+  if ( (size_t) index >= size() )
   {
     resize( index + 1, 0 );
   }
@@ -259,7 +259,7 @@ Memory Memory::fragment( number_t start, number_t length ) const
   Memory f;
   for ( number_t i = 0; i < length; ++i )
   {
-    if ( start + i >= size() )
+    if ( (size_t) (start + i) >= size() )
     {
       break;
     }
@@ -306,7 +306,7 @@ bool Memory::operator!=( const Memory &m ) const
 std::ostream& operator<<( std::ostream &out, const Memory &m )
 {
   out << "[";
-  for ( number_t i = 0; i < m.size(); ++i )
+  for ( size_t i = 0; i < m.size(); ++i )
   {
     if ( i > 0 ) out << ",";
     out << m[i];

@@ -237,7 +237,7 @@ inline bool simplifyOperand( Operand &op, std::unordered_set<number_t> &initiali
 bool Optimizer::simplifyOperations( Program &p, size_t num_initialized_cells ) const
 {
   std::unordered_set<number_t> initialized_cells;
-  for ( number_t i = 0; i < num_initialized_cells; ++i )
+  for ( size_t i = 0; i < num_initialized_cells; ++i )
   {
     initialized_cells.insert( i );
   }
@@ -433,7 +433,7 @@ bool Optimizer::reduceMemoryCells( Program &p, size_t num_reserved_cells ) const
   for ( number_t candidate = 0; candidate < largest_used; ++candidate )
   {
     bool free = true;
-    if ( candidate < num_reserved_cells )
+    if ( (size_t) candidate < num_reserved_cells )
     {
       free = false;
     }

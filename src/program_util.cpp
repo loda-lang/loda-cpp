@@ -199,7 +199,7 @@ void ProgramUtil::Stats::load( const std::string &path )
     std::getline( s, w );
     number_t id = std::stol( k );
     largest_id = std::max<int>( largest_id, id );
-    if ( id >= found_programs.size() )
+    if ( (size_t) id >= found_programs.size() )
     {
       size_t new_size = std::max<size_t>( found_programs.size() * 2, id + 1 );
       found_programs.resize( new_size );
@@ -281,7 +281,7 @@ void ProgramUtil::Stats::updateProgram( const Program &program )
 
 void ProgramUtil::Stats::updateSequence( number_t id, bool program_found, bool has_b_file )
 {
-  if ( id >= found_programs.size() )
+  if ( (size_t) id >= found_programs.size() )
   {
     found_programs.resize( id + 1 );
     cached_b_files.resize( id + 1 );

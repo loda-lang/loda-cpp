@@ -86,7 +86,7 @@ bool Extender::polynomial( Program &p, const Polynomial &diff )
     p.push_front( Operation::Type::MOV, Operand::Type::DIRECT, saved_arg_cell, Operand::Type::DIRECT, 0 );
 
     // polynomial evaluation code
-    for ( number_t exp = 1; exp < diff.size(); exp++ )
+    for ( size_t exp = 1; exp < diff.size(); exp++ )
     {
       // update x^exp
       if ( exp == 1 )

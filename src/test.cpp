@@ -254,7 +254,7 @@ void Test::polynomialMatcher( size_t tests, size_t degree )
   }
 
   // run matcher tests
-  for ( number_t i = 0; i < tests; i++ )
+  for ( size_t i = 0; i < tests; i++ )
   {
     if ( exit_flag_ ) break;
 

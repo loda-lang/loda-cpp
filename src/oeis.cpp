@@ -308,7 +308,7 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
     }
 
     // add sequence to index
-    if ( id >= sequences.size() )
+    if ( (size_t) id >= sequences.size() )
     {
       sequences.resize( 2 * id );
     }
@@ -400,7 +400,7 @@ void Oeis::loadNames( volatile sig_atomic_t &exit_flag )
       throwParseError( line );
     }
     ++pos;
-    if ( id < sequences.size() && sequences[id].id == id )
+    if ( (size_t) id < sequences.size() && sequences[id].id == id )
     {
       sequences[id].name = line.substr( pos );
       if ( Log::get().level == Log::Level::DEBUG )
@@ -465,7 +465,8 @@ void Oeis::update( volatile sig_atomic_t &exit_flag )
     }
     std::ifstream program_file( s.getProgramPath() );
     std::ifstream b_file( s.getBFilePath() );
-    if ( !b_file.good() && (program_file.good() || (stats.cached_b_files.size() > s.id && stats.cached_b_files[s.id])) )
+    if ( !b_file.good()
+        && (program_file.good() || (stats.cached_b_files.size() > (size_t) s.id && stats.cached_b_files[s.id])) )
     {
       ensureDir( s.getBFilePath() );
       cmd = "wget -nv -O " + s.getBFilePath() + " https://oeis.org/" + s.id_str() + "/" + s.id_str( "b" ) + ".txt";
@@ -521,7 +522,7 @@ const std::vector<OeisSequence>& Oeis::getSequences() const
 
 void Oeis::removeSequence( number_t id )
 {
-  if ( id >= sequences.size() )
+  if ( (size_t) id >= sequences.size() )
   {
     return;
   }
