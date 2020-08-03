@@ -2,7 +2,7 @@
 
 # common settings
 log_level=error
-check_interval=86400
+check_interval=172800
 min_changes=20
 min_cpus=4
 
