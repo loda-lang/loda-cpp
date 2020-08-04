@@ -8,6 +8,7 @@
 #include "util.hpp"
 
 #include <algorithm>
+#include <chrono>
 #include <cstdlib>
 #include <iomanip>
 #include <limits>
@@ -85,11 +86,10 @@ void throwParseError( const std::string &line )
 }
 
 Oeis::Oeis( const Settings &settings )
-    :
-    settings( settings ),
-    interpreter( settings ),
-    optimizer( settings ),
-    total_count_( 0 )
+    : settings( settings ),
+      interpreter( settings ),
+      optimizer( settings ),
+      total_count_( 0 )
 {
   if ( settings.optimize_existing_programs )
   {
@@ -713,6 +713,13 @@ std::string Oeis::isOptimizedBetter( Program existing, Program optimized ) const
   }
   catch ( const std::exception &e )
   {
+    auto timestamp = std::to_string(
+        std::chrono::duration_cast < std::chrono::milliseconds
+            > (std::chrono::system_clock::now().time_since_epoch()).count() % 1000000 );
+    std::ofstream o1( "programs/debug/interpreter/" + timestamp + "-existing.asm" );
+    ProgramUtil::print( existing, o1 );
+    std::ofstream o2( "programs/debug/interpreter/" + timestamp + "-optimized.asm" );
+    ProgramUtil::print( optimized, o2 );
     Log::get().error( "Error checking if program is faster than other", false );
     // TODO: input might be to large
   }
