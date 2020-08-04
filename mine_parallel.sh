@@ -91,7 +91,7 @@ function push_updates {
     echo "Pushing updates"
     git pull
     git add programs
-    branch=$(git branch --show-current)
+    branch=$(git rev-parse --abbrev-ref HEAD)
     if [ "$branch" = "master" ]; then
       git add stats README.md
     fi
