@@ -603,7 +603,9 @@ void Oeis::findAll( const Program &p, const Sequence &norm_seq, Matcher::seq_pro
             Log::get().error( " -  expected: " + exp.to_string() );
             Log::get().error( " -       got: " + got.to_string() );
             Log::get().error( " - generated: " + norm_seq.to_string() );
-            std::ofstream o1( "programs/debug/matcher/" + id + ".asm" );
+            std::string f = "programs/debug/matcher/" + id + ".asm";
+            ensureDir( f );
+            std::ofstream o1( f );
             ProgramUtil::print( p, o1 );
             std::ofstream o2(
                 "programs/debug/matcher/" + id + "-" + matchers[i]->getName() + "-" + std::to_string( j ) + ".asm" );
@@ -672,11 +674,38 @@ std::pair<bool, Program> Oeis::optimizeAndCheck( const Program &p, const OeisSeq
       msg = msg + " after optimization or minimization";
     }
     Log::get().error( msg, false );
-    std::ofstream out( "programs/debug/optimizer/" + seq.id_str() + ".asm" );
+    std::string f = "programs/debug/optimizer/" + seq.id_str() + ".asm";
+    ensureDir( f );
+    std::ofstream out( f );
     ProgramUtil::print( p, out );
   }
 
   return optimized;
+}
+
+int Oeis::getNumCycles( const Program& p ) const
+{
+  Memory mem;
+  const number_t input = settings.num_terms - 1;
+  mem.set( 0, input );
+  try
+  {
+    return interpreter.run( p, mem );
+  }
+  catch ( const std::exception &e )
+  {
+    auto timestamp = std::to_string(
+        std::chrono::duration_cast < std::chrono::milliseconds
+            > (std::chrono::system_clock::now().time_since_epoch()).count() % 1000000 );
+    std::string f = "programs/debug/interpreter/" + timestamp + ".asm";
+    ensureDir( f );
+    std::ofstream o( f );
+    ProgramUtil::print( p, o );
+    o.close();
+    Log::get().error( "Error evaluating program for n=" + std::to_string( input ) + ": " + f, false );
+    // TODO: input might be to large
+  }
+  return -1;
 }
 
 std::string Oeis::isOptimizedBetter( Program existing, Program optimized ) const
@@ -693,15 +722,10 @@ std::string Oeis::isOptimizedBetter( Program existing, Program optimized ) const
   optimizer.removeNops( optimized );
 
   // ...and compare number of execution cycles
-  try
+  auto existing_cycles = getNumCycles( existing );
+  auto optimized_cycles = getNumCycles( optimized );
+  if ( existing_cycles >= 0 && optimized_cycles >= 0 )
   {
-    Memory mem;
-    const number_t input = settings.num_terms - 1;
-    mem.set( 0, input );
-    size_t existing_cycles = interpreter.run( existing, mem );
-    mem.clear();
-    mem.set( 0, input );
-    size_t optimized_cycles = interpreter.run( optimized, mem );
     if ( optimized_cycles < existing_cycles )
     {
       return "Faster";
@@ -710,18 +734,6 @@ std::string Oeis::isOptimizedBetter( Program existing, Program optimized ) const
     {
       return "";
     }
-  }
-  catch ( const std::exception &e )
-  {
-    auto timestamp = std::to_string(
-        std::chrono::duration_cast < std::chrono::milliseconds
-            > (std::chrono::system_clock::now().time_since_epoch()).count() % 1000000 );
-    std::ofstream o1( "programs/debug/interpreter/" + timestamp + "-existing.asm" );
-    ProgramUtil::print( existing, o1 );
-    std::ofstream o2( "programs/debug/interpreter/" + timestamp + "-optimized.asm" );
-    ProgramUtil::print( optimized, o2 );
-    Log::get().error( "Error checking if program is faster than other", false );
-    // TODO: input might be to large
   }
 
   // shorter programs are better (nops have been removed already at this point)

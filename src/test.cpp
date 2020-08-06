@@ -221,8 +221,8 @@ void Test::semantics()
   SEM_CHECK( fac( NI ), NI );
 
   SEM_CHECK( gcd( 0, 0 ), NI );
-  SEM_CHECK( gcd( 0, 2 ), NI );
-  SEM_CHECK( gcd( 2, 0 ), NI );
+  SEM_CHECK( gcd( 0, 2 ), 2 );
+  SEM_CHECK( gcd( 2, 0 ), 2 );
   SEM_CHECK( gcd( 1, 1 ), 1 );
   SEM_CHECK( gcd( 1, 3 ), 1 );
   SEM_CHECK( gcd( 1, -3 ), 1 );

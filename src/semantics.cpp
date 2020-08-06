@@ -5,7 +5,6 @@
 #define CHECK_INF1(a) if ( a == NUM_INF ) return NUM_INF;
 #define CHECK_INF2(a,b) if ( a == NUM_INF || b == NUM_INF ) return NUM_INF;
 #define CHECK_ZERO1(a) if ( a == 0 ) return NUM_INF;
-#define CHECK_ZERO2(a,b) if ( a == 0 || b==0 ) return NUM_INF;
 
 number_t Semantics::add( number_t a, number_t b )
 {
@@ -132,7 +131,10 @@ number_t Semantics::fac( number_t a )
 number_t Semantics::gcd( number_t a, number_t b )
 {
   CHECK_INF2( a, b );
-  CHECK_ZERO2( a, b );
+  if ( a == 0 && b == 0 )
+  {
+    return NUM_INF;
+  }
   a = std::abs( a );
   b = std::abs( b );
   number_t r;

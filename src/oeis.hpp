@@ -12,17 +12,15 @@ class OeisSequence: public Sequence
 public:
 
   OeisSequence( size_t id = 0 )
-      :
-      id( id )
+      : id( id )
   {
   }
 
   OeisSequence( size_t id, const std::string &name, const Sequence &s, const Sequence &full )
-      :
-      Sequence( s ),
-      id( id ),
-      name( name ),
-      full( full )
+      : Sequence( s ),
+        id( id ),
+        name( name ),
+        full( full )
   {
   }
 
@@ -103,6 +101,8 @@ private:
   void findAll( const Program &p, const Sequence &norm_seq, Matcher::seq_programs_t &result ) const;
 
   std::pair<bool, Program> optimizeAndCheck( const Program &p, const OeisSequence &seq, bool optimize ) const;
+
+  int getNumCycles( const Program& p ) const;
 
   std::string isOptimizedBetter( Program existing, Program optimized ) const;
 
