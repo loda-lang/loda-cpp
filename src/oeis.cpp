@@ -86,10 +86,11 @@ void throwParseError( const std::string &line )
 }
 
 Oeis::Oeis( const Settings &settings )
-    : settings( settings ),
-      interpreter( settings ),
-      optimizer( settings ),
-      total_count_( 0 )
+    :
+    settings( settings ),
+    interpreter( settings ),
+    optimizer( settings ),
+    total_count_( 0 )
 {
   if ( settings.optimize_existing_programs )
   {
@@ -132,7 +133,8 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
   }
   std::string line;
   size_t pos;
-  size_t id, num;
+  size_t id;
+  int64_t num;
   Sequence full_sequence;
   Sequence norm_sequence;
   Sequence big_sequence;
@@ -683,7 +685,7 @@ std::pair<bool, Program> Oeis::optimizeAndCheck( const Program &p, const OeisSeq
   return optimized;
 }
 
-int Oeis::getNumCycles( const Program& p ) const
+int Oeis::getNumCycles( const Program &p ) const
 {
   Memory mem;
   const number_t input = settings.num_terms - 1;
@@ -694,9 +696,10 @@ int Oeis::getNumCycles( const Program& p ) const
   }
   catch ( const std::exception &e )
   {
-    auto timestamp = std::to_string(
-        std::chrono::duration_cast < std::chrono::milliseconds
-            > (std::chrono::system_clock::now().time_since_epoch()).count() % 1000000 );
+    auto timestamp =
+        std::to_string(
+            std::chrono::duration_cast<std::chrono::milliseconds>( std::chrono::system_clock::now().time_since_epoch() ).count()
+                % 1000000 );
     std::string f = "programs/debug/interpreter/" + timestamp + ".asm";
     ensureDir( f );
     std::ofstream o( f );
