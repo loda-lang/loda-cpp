@@ -1,28 +1,32 @@
 #!/bin/bash
 
-# common settings
-log_level=error
-check_interval=172800
-min_changes=20
-min_cpus=4
-
-# get and check the number of cpus
-if [[ "$OSTYPE" == "darwin"* ]]; then
-  num_cpus=$(sysctl -n hw.ncpu)
-else
-  num_cpus=$(cat /proc/cpuinfo | grep processor | wc -l)
-fi
-if [ "$num_cpus" -lt "$min_cpus" ]; then
-  echo "Need at least ${min_cpus} CPUs, but only ${num_cpus} were found"
-fi
-
 # check required commands
-for cmd in git; do
+for cmd in git make; do
   if ! [ -x "$(command -v $cmd)" ]; then
     echo "Error: $cmd is not installed" >&2
     exit 1
   fi
 done
+
+# common settings
+log_level=error
+check_interval=172800
+min_changes=20
+min_cpus=4
+branch=$(git rev-parse --abbrev-ref HEAD)
+
+# get the number of cpus
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  num_cpus=$(sysctl -n hw.ncpu)
+else
+  num_cpus=$(cat /proc/cpuinfo | grep processor | wc -l)
+fi
+
+# check the minimum number of cpus
+if [ "$num_cpus" -lt "$min_cpus" ]; then
+  echo "Need at least ${min_cpus} CPUs, but only ${num_cpus} were found"
+  exit 1
+fi
 
 function stop_miners() {
   echo "Stopping miners"
@@ -42,6 +46,7 @@ function run_loda {
 function start_miners() {
   ./loda update
   echo "Start mining"
+
   local l="-l ${log_level}"
   templates=T01
   num_vars=4
@@ -63,6 +68,8 @@ function start_miners() {
   if [ "$num_cpus" -ge 28 ]; then
     num_vars="2 4 6 7 8 10"
   fi
+
+  # start parameterized miners
   for n in ${num_vars}; do
     for x in "" "-x"; do
       args="-n $n -p ${n}0 -a cd $x $l"
@@ -74,9 +81,14 @@ function start_miners() {
       run_loda mine $args $@
     done
   done
+
   # indirect memory access
   run_loda mine -n 6 -p 60 -a cdi $l $@
-  run_loda maintain
+
+  # maintenance
+  if [ "$branch" = "master" ]; then
+    run_loda maintain
+  fi
 }
 
 function push_updates {
@@ -87,11 +99,12 @@ function push_updates {
   num_changes=$(git status programs -s | wc -l)
   if [ "$num_changes" -ge "$min_changes" ]; then
   	stop_miners
-    ./make_charts.sh 
+  	if [ "$branch" = "master" ]; then
+      ./make_charts.sh
+    fi 
     echo "Pushing updates"
     git pull
     git add programs
-    branch=$(git rev-parse --abbrev-ref HEAD)
     if [ "$branch" = "master" ]; then
       git add stats README.md
     fi
