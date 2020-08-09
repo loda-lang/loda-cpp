@@ -269,7 +269,7 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
         {
           Log::get().warn( "Unexpected terms in b-file " + big_path );
           Log::get().warn( "- expected: " + seq_full.to_string() );
-          Log::get().error( "- found:    " + seq_big.to_string(), true );
+          Log::get().warn( "- found:    " + seq_big.to_string() );
           seq_big.clear();
         }
       }
