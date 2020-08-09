@@ -172,7 +172,7 @@ void ProgramUtil::Stats::load( const std::string &path )
     std::stringstream s( line );
     std::getline( s, k, ',' );
     std::getline( s, v );
-    num_constants[std::stol( k )] = std::stol( v );
+    num_constants[std::stoll( k )] = std::stoll( v );
   }
   constants.close();
 
@@ -183,7 +183,7 @@ void ProgramUtil::Stats::load( const std::string &path )
     std::getline( s, k, ',' );
     std::getline( s, v );
     auto type = Operation::Metadata::get( k ).type;
-    num_ops_per_type.at( static_cast<size_t>( type ) ) = std::stol( v );
+    num_ops_per_type.at( static_cast<size_t>( type ) ) = std::stoll( v );
   }
   op_counts.close();
 
@@ -197,16 +197,16 @@ void ProgramUtil::Stats::load( const std::string &path )
     std::getline( s, k, ',' );
     std::getline( s, v, ',' );
     std::getline( s, w );
-    int id = std::stol( k );
-    largest_id = std::max<int>( largest_id, id );
+    int64_t id = std::stoll( k );
+    largest_id = std::max<int64_t>( largest_id, id );
     if ( (size_t) id >= found_programs.size() )
     {
       size_t new_size = std::max<size_t>( found_programs.size() * 2, id + 1 );
       found_programs.resize( new_size );
       cached_b_files.resize( new_size );
     }
-    found_programs[id] = std::stol( v );
-    cached_b_files[id] = std::stol( w );
+    found_programs[id] = std::stoll( v );
+    cached_b_files[id] = std::stoll( w );
   }
   found_programs.resize( largest_id + 1 );
   cached_b_files.resize( largest_id + 1 );

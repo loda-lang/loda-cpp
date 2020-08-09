@@ -111,7 +111,7 @@ bool Sequence::align( const Sequence &s, int64_t max_offset )
   max_offset = std::abs( max_offset );
   for ( int64_t offset = 1; offset <= max_offset; ++offset )
   {
-    if ( offset >= min_length )
+    if ( offset >= (int64_t) min_length )
     {
       break;
     }

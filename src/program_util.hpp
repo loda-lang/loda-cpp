@@ -23,10 +23,10 @@ public:
 
     void updateSequence( size_t id, bool program_found, bool has_b_file );
 
-    size_t num_programs;
-    std::map<number_t, size_t> num_constants;
-    std::vector<size_t> num_programs_per_length;
-    std::vector<size_t> num_ops_per_type;
+    int64_t num_programs;
+    std::map<number_t, int64_t> num_constants;
+    std::vector<int64_t> num_programs_per_length;
+    std::vector<int64_t> num_ops_per_type;
     std::vector<bool> found_programs;
     std::vector<bool> cached_b_files;
   };
