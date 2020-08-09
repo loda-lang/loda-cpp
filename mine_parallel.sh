@@ -47,11 +47,14 @@ function start_miners() {
   ./loda update
   echo "Start mining"
 
+  # configuration
   local l="-l ${log_level}"
   templates=T01
   num_vars=4
+  indirect=false
   if [ "$num_cpus" -ge 8 ]; then
     templates="T01 T02"
+    indirect=true
   fi
   if [ "$num_cpus" -ge 12 ]; then
     num_vars="4 6"
@@ -83,7 +86,9 @@ function start_miners() {
   done
 
   # indirect memory access
-  run_loda mine -n 6 -p 60 -a cdi $l $@
+  if [ "$indirect" = "true" ]; then
+    run_loda mine -n 6 -p 60 -a cdi $l $@
+  fi
 
   # maintenance
   if [ "$branch" = "master" ]; then
