@@ -89,6 +89,59 @@ number_t Sequence::sum() const
   return sum;
 }
 
+bool Sequence::align( const Sequence &s, int64_t max_offset )
+{
+  // check if they agree on prefix already
+  size_t min_length = std::min( size(), s.size() );
+  bool agree = true;
+  for ( size_t i = 0; i < min_length; ++i )
+  {
+    if ( (*this)[i] != s[i] )
+    {
+      agree = false;
+      break;
+    }
+  }
+  if ( agree )
+  {
+    return true;
+  }
+
+  // try to align them
+  max_offset = std::abs( max_offset );
+  for ( int64_t offset = 1; offset <= max_offset; ++offset )
+  {
+    if ( offset >= min_length )
+    {
+      break;
+    }
+    bool agree_pos = true;
+    bool agree_neg = true;
+    for ( size_t i = 0; i < min_length; ++i )
+    {
+      if ( i + offset < size() && (*this)[i + offset] != s[i] )
+      {
+        agree_pos = false;
+      }
+      if ( i + offset < s.size() && (*this)[i] != s[i + offset] )
+      {
+        agree_neg = false;
+      }
+    }
+    if ( agree_pos )
+    {
+      erase( begin(), begin() + offset );
+      return true;
+    }
+    if ( agree_neg )
+    {
+      insert( begin(), s.begin(), s.begin() + offset );
+      return true;
+    }
+  }
+  return false;
+}
+
 bool Sequence::operator<( const Sequence &m ) const
 {
   number_t length = size() < m.size() ? size() : m.size();

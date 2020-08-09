@@ -125,7 +125,7 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
     return;
   }
   // load sequence data
-  Log::get().info( "Loading sequence data from the OEIS" );
+  Log::get().info( "Loading sequences from the OEIS index" );
   std::ifstream stripped( getHome() + "stripped" );
   if ( !stripped.good() )
   {
@@ -135,9 +135,7 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
   size_t pos;
   size_t id;
   int64_t num;
-  Sequence full_sequence;
-  Sequence norm_sequence;
-  Sequence big_sequence;
+  Sequence seq_full, seq_norm, seq_big;
   size_t loaded_count = 0;
   size_t big_loaded_count = 0;
   while ( std::getline( stripped, line ) )
@@ -172,12 +170,12 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
     }
     ++pos;
     num = 0;
-    full_sequence.clear();
+    seq_full.clear();
     while ( pos < line.length() )
     {
       if ( line[pos] == ',' )
       {
-        full_sequence.push_back( num );
+        seq_full.push_back( num );
         num = 0;
       }
       else if ( line[pos] >= '0' && line[pos] <= '9' )
@@ -190,7 +188,7 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
       }
       else if ( line[pos] == '-' )
       {
-        full_sequence.clear();
+        seq_full.clear();
         break;
       }
       else
@@ -201,17 +199,16 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
     }
 
     // check minimum number of terms
-    if ( full_sequence.size() < settings.num_terms )
+    if ( seq_full.size() < settings.num_terms )
     {
       continue;
     }
 
     // normalized sequence
-    norm_sequence = Sequence(
-        std::vector<number_t>( full_sequence.begin(), full_sequence.begin() + settings.num_terms ) );
+    seq_norm = Sequence( std::vector<number_t>( seq_full.begin(), seq_full.begin() + settings.num_terms ) );
 
     // big sequence
-    big_sequence.clear();
+    seq_big.clear();
     std::string big_path = OeisSequence( id ).getBFilePath();
     std::ifstream big_file( big_path );
     if ( big_file.good() )
@@ -232,74 +229,66 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
         ss >> index >> value;
         if ( expected_index == -1 )
         {
-          if ( index < 0 )
-          {
-            continue;
-          }
           expected_index = index;
-          if ( value != (int) full_sequence.front() )
-          {
-            for ( size_t i = 0; i < 5; i++ )
-            {
-              if ( value != (int) full_sequence[i] )
-              {
-                big_sequence.push_back( full_sequence[i] );
-              }
-              else
-              {
-                break;
-              }
-            }
-          }
         }
         if ( index != expected_index )
         {
           Log::get().warn( "Unexpected index " + std::to_string( index ) + " in b-file " + big_path );
-          big_sequence.clear();
+          seq_big.clear();
           break;
         }
         if ( value < 0 )
         {
-          big_sequence.clear();
+          seq_big.clear();
           break;
         }
-        if ( isCloseToOverflow( (number_t) value ) )
+        if ( isCloseToOverflow( value ) )
         {
           break;
         }
-        big_sequence.push_back( value );
+        seq_big.push_back( value );
         ++expected_index;
       }
-      if ( big_sequence.size() >= full_sequence.size() )
+
+      // align sequences on common prefix (will verify correctness below again!)
+      seq_big.align( seq_full, 5 );
+
+      // check length
+      if ( seq_big.size() < seq_full.size() )
       {
-        Sequence test_sequence(
-            std::vector<number_t>( big_sequence.begin(), big_sequence.begin() + full_sequence.size() ) );
-        if ( test_sequence != full_sequence )
-        {
-          Log::get().warn( "Unexpected terms in b-file " + big_path );
-          big_sequence.clear();
-        }
+        Log::get().debug(
+            "Sequence in b-file too short: " + big_path + " (" + std::to_string( seq_big.size() ) + "<"
+                + std::to_string( seq_full.size() ) + ")" );
+        seq_big.clear();
       }
       else
       {
-        if ( Log::get().level == Log::Level::DEBUG )
+        // check that the sequences agree on prefix
+        Sequence test_sequence( std::vector<number_t>( seq_big.begin(), seq_big.begin() + seq_full.size() ) );
+        if ( test_sequence != seq_full )
         {
-          Log::get().debug( "Sequence in b-file too short: " + big_path );
+          Log::get().warn( "Unexpected terms in b-file " + big_path );
+          Log::get().warn( "- expected: " + seq_full.to_string() );
+          Log::get().error( "- found:    " + seq_big.to_string(), true );
+          seq_big.clear();
         }
-        big_sequence.clear();
       }
-      if ( big_sequence.size() > MAX_NUM_TERMS )
+
+      // shrink big sequence to maximum number of terms
+      if ( seq_big.size() > MAX_NUM_TERMS )
       {
-        big_sequence = Sequence( std::vector<number_t>( big_sequence.begin(), big_sequence.begin() + MAX_NUM_TERMS ) );
+        seq_big = Sequence( std::vector<number_t>( seq_big.begin(), seq_big.begin() + MAX_NUM_TERMS ) );
       }
-      if ( !big_sequence.empty() )
+
+      // use data from big sequence from now on
+      if ( !seq_big.empty() )
       {
         big_loaded_count++;
-        full_sequence = big_sequence;
+        seq_full = seq_big;
         if ( Log::get().level == Log::Level::DEBUG )
         {
           Log::get().debug(
-              "Loaded b-file for sequence " + std::to_string( id ) + " with " + std::to_string( big_sequence.size() )
+              "Loaded b-file for sequence " + std::to_string( id ) + " with " + std::to_string( seq_big.size() )
                   + " terms" );
         }
       }
@@ -314,12 +303,12 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
     {
       sequences.resize( 2 * id );
     }
-    sequences[id] = OeisSequence( id, "", norm_sequence, full_sequence );
+    sequences[id] = OeisSequence( id, "", seq_norm, seq_full );
 
     // add sequences to matchers
     for ( auto &matcher : matchers )
     {
-      matcher->insert( norm_sequence, id );
+      matcher->insert( seq_norm, id );
     }
 
     ++loaded_count;
@@ -368,7 +357,7 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
 
 void Oeis::loadNames( volatile sig_atomic_t &exit_flag )
 {
-  Log::get().debug( "Loading sequence names from the OEIS" );
+  Log::get().debug( "Loading sequence names from the OEIS index" );
   std::ifstream names( getHome() + "names" );
   if ( !names.good() )
   {

@@ -50,6 +50,8 @@ public:
 
   number_t sum() const;
 
+  bool align( const Sequence &s, int64_t max_offset );
+
   bool operator<( const Sequence &s ) const;
 
   bool operator==( const Sequence &s ) const;
