@@ -264,12 +264,12 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
       else
       {
         // check that the sequences agree on prefix
-        Sequence test_sequence( std::vector<number_t>( seq_big.begin(), seq_big.begin() + seq_full.size() ) );
-        if ( test_sequence != seq_full )
+        Sequence seq_test( std::vector<number_t>( seq_big.begin(), seq_big.begin() + seq_full.size() ) );
+        if ( seq_test != seq_full )
         {
           Log::get().warn( "Unexpected terms in b-file " + big_path );
           Log::get().warn( "- expected: " + seq_full.to_string() );
-          Log::get().warn( "- found:    " + seq_big.to_string() );
+          Log::get().warn( "- found:    " + seq_test.to_string() );
           seq_big.clear();
         }
       }
