@@ -7,6 +7,22 @@
 #include <stdexcept>
 #include <stdlib.h>
 
+Log::Log()
+    :
+    level( Level::INFO )
+{
+  auto t = std::getenv( "LODA_TWEET_ALERTS" );
+  if ( t )
+  {
+    std::string s( t );
+    tweet_alerts = (s == "yes" || s == "true");
+  }
+  else
+  {
+    tweet_alerts = false;
+  }
+}
+
 Log& Log::get()
 {
   static Log log;
@@ -137,17 +153,18 @@ void Metrics::write( const std::string &field, const std::map<std::string, std::
 }
 
 Settings::Settings()
-    : num_terms( 20 ),
-      num_operations( 20 ),
-      max_memory( 100000 ),
-      max_cycles( 10000000 ),
-      max_constant( 6 ),
-      max_index( 6 ),
-      optimize_existing_programs( false ),
-      search_linear( false ),
-      throw_on_overflow( true ),
-      operation_types( "^" ),
-      operand_types( "cd" )
+    :
+    num_terms( 20 ),
+    num_operations( 20 ),
+    max_memory( 100000 ),
+    max_cycles( 10000000 ),
+    max_constant( 6 ),
+    max_index( 6 ),
+    optimize_existing_programs( false ),
+    search_linear( false ),
+    throw_on_overflow( true ),
+    operation_types( "^" ),
+    operand_types( "cd" )
 {
 }
 

@@ -18,6 +18,8 @@ public:
     ALERT
   };
 
+  Log();
+
   static Log& get();
 
   void debug( const std::string &msg );
@@ -26,8 +28,8 @@ public:
   void error( const std::string &msg, bool throw_ = false );
   void alert( const std::string &msg );
 
-  Level level = Level::INFO;
-  bool tweet_alerts = true;
+  Level level;
+  bool tweet_alerts;
 
 private:
   void log( Level level, const std::string &msg );
