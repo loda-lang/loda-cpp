@@ -24,6 +24,7 @@ public:
     void updateSequence( size_t id, bool program_found, bool has_b_file );
 
     int64_t num_programs;
+    int64_t num_sequences;
     std::map<number_t, int64_t> num_constants;
     std::vector<int64_t> num_programs_per_length;
     std::vector<int64_t> num_ops_per_type;

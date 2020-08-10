@@ -802,21 +802,6 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
   }
   load( exit_flag );
   Log::get().info( "Start maintaining OEIS programs" );
-  const std::string readme( "README.md" );
-  std::ifstream readme_in( readme );
-  std::stringstream buffer;
-  std::string str;
-  while ( std::getline( readme_in, str ) )
-  {
-    buffer << str << std::endl;
-    if ( str == "## Available Programs" )
-    {
-      break;
-    }
-  }
-  readme_in.close();
-  std::ofstream readme_out( readme );
-  readme_out << buffer.str() << std::endl;
   std::ofstream list_file;
   int list_index = -1;
   ProgramUtil::Stats stats;
@@ -889,7 +874,6 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
           std::string list_path = "programs/oeis/list" + std::to_string( list_index ) + ".md";
           OeisSequence start( (list_index * 100000) + 1 );
           OeisSequence end( (list_index + 1) * 100000 );
-          readme_out << "* [" << start.id_str() << "-" << end.id_str() << "](" << list_path << ")\n";
           list_file.close();
           list_file.open( list_path );
           list_file << "# Programs for " << start.id_str() << "-" << end.id_str() << "\n\n";
@@ -906,20 +890,14 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
     stats.updateSequence( s.id, has_program, has_b_file );
   }
   list_file.close();
-  readme_out << "\n" << "Total number of programs: ";
-  readme_out << stats.num_programs << "/" << total_count_ << " (" << (int) (100 * stats.num_programs / total_count_)
-      << "%)\n\n";
-  readme_out
-      << "![LODA Program Length Distribution](https://raw.githubusercontent.com/ckrause/loda/master/stats/lengths.png)\n";
-// readme_out << "![LODA Program Counts](https://raw.githubusercontent.com/ckrause/loda/master/stats/counts.png)\n";
-  readme_out.close();
 
-// write stats
+  // write stats
   stats.save( "stats" );
 
   if ( num_optimized > 0 )
   {
-    Log::get().alert( "Optimized " + std::to_string( num_optimized ) + " programs" );
+    Log::get().alert(
+        "Optimized " + std::to_string( num_optimized ) + "/" + std::to_string( stats.num_programs ) + " programs." );
   }
   Log::get().info( "Finished maintaining programs" );
 }
