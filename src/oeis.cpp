@@ -89,6 +89,7 @@ Oeis::Oeis( const Settings &settings )
     :
     settings( settings ),
     interpreter( settings ),
+    minimizer( settings ),
     optimizer( settings ),
     total_count_( 0 )
 {
@@ -638,7 +639,7 @@ std::pair<bool, Program> Oeis::optimizeAndCheck( const Program &p, const OeisSeq
   optimized.second = p;
   if ( optimize )
   {
-    optimizer.optimizeAndMinimize( optimized.second, 2, 1, seq.full.size() );
+    minimizer.optimizeAndMinimize( optimized.second, 2, 1, seq.full.size() );
   }
 
   // check its correctness
@@ -824,12 +825,12 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
       Program program = parser.parse( program_file );
       Settings settings2 = settings;
       settings2.num_terms = s.full.size();
-      Interpreter interpreter( settings2 );
+      Interpreter interpreter2( settings2 );
       bool okay;
       try
       {
         Sequence result;
-        interpreter.eval( program, result );
+        interpreter2.eval( program, result );
         if ( result.size() != s.full.size() || result != s.full )
         {
           Log::get().error( "Program did not evaluate to expected sequence: " + file_name );
@@ -855,8 +856,8 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
         has_program = true;
         ProgramUtil::removeOps( program, Operation::Type::NOP );
         Program optimized = program;
-        Optimizer optimizer( settings2 );
-        optimizer.optimizeAndMinimize( optimized, 2, 1, s.full.size() );
+        Minimizer minimizer2( settings2 );
+        minimizer2.optimizeAndMinimize( optimized, 2, 1, s.full.size() );
         if ( !(program == optimized) )
         {
           Log::get().warn( "Updating program because it is not optimal: " + file_name );

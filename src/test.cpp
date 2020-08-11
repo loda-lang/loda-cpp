@@ -4,6 +4,7 @@
 #include "interpreter.hpp"
 #include "matcher.hpp"
 #include "miner.hpp"
+#include "minimizer.hpp"
 #include "number.hpp"
 #include "oeis.hpp"
 #include "optimizer.hpp"
@@ -423,10 +424,10 @@ void Test::minimizer( size_t tests )
 {
   Settings settings;
   Interpreter interpreter( settings );
-  Optimizer optimizer( settings );
+  Minimizer minimizer( settings );
   Generator generator( settings, std::random_device()() );
   Sequence s1, s2, s3;
-  Program program, optimized, minimized;
+  Program program, minimized;
   Log::get().info( "Testing minimizer" );
   for ( size_t i = 0; i < tests; i++ )
   {
@@ -440,9 +441,9 @@ void Test::minimizer( size_t tests )
     {
       continue;
     }
-    optimized = program;
-    optimizer.optimizeAndMinimize( optimized, 2, 1, s1.size() );
-    interpreter.eval( optimized, s2 );
+    minimized = program;
+    minimizer.optimizeAndMinimize( minimized, 2, 1, s1.size() );
+    interpreter.eval( minimized, s2 );
     if ( s1.size() != s2.size() || (s1 != s2) )
     {
       ProgramUtil::print( program, std::cout );

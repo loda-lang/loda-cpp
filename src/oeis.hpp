@@ -2,6 +2,7 @@
 
 #include "interpreter.hpp"
 #include "matcher.hpp"
+#include "minimizer.hpp"
 #include "number.hpp"
 #include "optimizer.hpp"
 #include "program.hpp"
@@ -12,15 +13,17 @@ class OeisSequence: public Sequence
 public:
 
   OeisSequence( size_t id = 0 )
-      : id( id )
+      :
+      id( id )
   {
   }
 
   OeisSequence( size_t id, const std::string &name, const Sequence &s, const Sequence &full )
-      : Sequence( s ),
-        id( id ),
-        name( name ),
-        full( full )
+      :
+      Sequence( s ),
+      id( id ),
+      name( name ),
+      full( full )
   {
   }
 
@@ -102,12 +105,13 @@ private:
 
   std::pair<bool, Program> optimizeAndCheck( const Program &p, const OeisSequence &seq, bool optimize ) const;
 
-  int getNumCycles( const Program& p ) const;
+  int getNumCycles( const Program &p ) const;
 
   std::string isOptimizedBetter( Program existing, Program optimized ) const;
 
   const Settings &settings;
   Interpreter interpreter;
+  Minimizer minimizer;
   Optimizer optimizer;
   std::vector<OeisSequence> sequences;
   std::vector<std::unique_ptr<Matcher>> matchers;

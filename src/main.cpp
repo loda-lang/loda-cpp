@@ -1,6 +1,7 @@
 #include "generator.hpp"
 #include "interpreter.hpp"
 #include "miner.hpp"
+#include "minimizer.hpp"
 #include "oeis.hpp"
 #include "optimizer.hpp"
 #include "parser.hpp"
@@ -107,16 +108,16 @@ int main( int argc, char *argv[] )
     {
       Parser parser;
       Program program = parser.parse( std::string( args.at( 1 ) ) );
-      Optimizer optimizer( settings );
-      optimizer.minimize( program, settings.num_terms );
+      Minimizer minimizer( settings );
+      minimizer.minimize( program, settings.num_terms );
       ProgramUtil::print( program, std::cout );
     }
     else if ( cmd == "optmin" )
     {
       Parser parser;
       Program program = parser.parse( std::string( args.at( 1 ) ) );
-      Optimizer optimizer( settings );
-      optimizer.optimizeAndMinimize( program, 2, 1, settings.num_terms );
+      Minimizer minimizer( settings );
+      minimizer.optimizeAndMinimize( program, 2, 1, settings.num_terms );
       ProgramUtil::print( program, std::cout );
     }
     else if ( cmd == "generate" || cmd == "gen" )
