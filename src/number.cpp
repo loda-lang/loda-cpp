@@ -336,7 +336,7 @@ Memory Memory::fragment( number_t start, size_t length ) const
 
 bool Memory::is_less( const Memory &m, size_t length ) const
 {
-  for ( number_t i = 0; i < length; ++i )
+  for ( number_t i = 0; i < (number_t) length; ++i )
   {
     if ( get( i ) < m.get( i ) )
     {
