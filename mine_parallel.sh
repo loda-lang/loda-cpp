@@ -45,6 +45,10 @@ function run_loda {
 
 function start_miners() {
   ./loda update
+  if ! ./loda test; then
+    echo "Error during tests"
+    exit 1
+  fi
   echo "Start mining"
 
   # configuration
