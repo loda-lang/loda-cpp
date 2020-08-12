@@ -289,42 +289,56 @@ Polynomial operator-( const Polynomial &a, const Polynomial &b )
 
 // === Memory =================================================================
 
+Memory::Memory()
+{
+  cache.fill( 0 );
+}
+
+void Memory::clear()
+{
+  cache.fill( 0 );
+  full.clear();
+}
+
 number_t Memory::get( number_t index ) const
 {
-  if ( (size_t) index >= size() )
+  if ( index >= 0 && index < MEMORY_CACHE_SIZE )
   {
-    return 0;
+    return cache[index];
   }
-  return (*this)[index];
+  auto it = full.find( index );
+  if ( it != full.end() )
+  {
+    return it->second;
+  }
+  return 0;
 }
 
 void Memory::set( number_t index, number_t value )
 {
-  if ( (size_t) index >= size() )
+  if ( index >= 0 && index < MEMORY_CACHE_SIZE )
   {
-    resize( index + 1, 0 );
+    cache[index] = value;
   }
-  (*this)[index] = value;
+  else
+  {
+    full[index] = value;
+  }
 }
 
-Memory Memory::fragment( number_t start, number_t length ) const
+Memory Memory::fragment( number_t start, size_t length ) const
 {
   Memory f;
-  for ( number_t i = 0; i < length; ++i )
+  for ( number_t i = 0; i < (number_t) length; ++i )
   {
-    if ( (size_t) (start + i) >= size() )
-    {
-      break;
-    }
-    f.set( i, (*this)[start + i] );
+    f.set( i, get( start + i ) );
   }
   return f;
 }
 
-bool Memory::operator<( const Memory &m ) const
+bool Memory::is_less( const Memory &m, size_t length ) const
 {
-  number_t length = size() > m.size() ? size() : m.size();
-  for ( number_t i = 0; i < length; ++i )
+  for ( number_t i = 0; i < (number_t) length; ++i )
   {
     if ( get( i ) < m.get( i ) )
     {
@@ -340,12 +354,33 @@ bool Memory::operator<( const Memory &m ) const
 
 bool Memory::operator==( const Memory &m ) const
 {
-  number_t length = size() > m.size() ? size() : m.size();
-  for ( number_t i = 0; i < length; ++i )
+  for ( size_t i = 0; i < MEMORY_CACHE_SIZE; i++ )
   {
-    if ( get( i ) != m.get( i ) )
+    if ( cache[i] != m.cache[i] )
     {
       return false;
+    }
+  }
+  for ( auto i : full )
+  {
+    if ( i.second != 0 )
+    {
+      auto j = m.full.find( i.first );
+      if ( j == m.full.end() || i.second != j->second )
+      {
+        return false;
+      }
+    }
+  }
+  for ( auto i : m.full )
+  {
+    if ( i.second != 0 )
+    {
+      auto j = full.find( i.first );
+      if ( j == full.end() || i.second != j->second )
+      {
+        return false;
+      }
     }
   }
   return true; // equal
@@ -359,10 +394,14 @@ bool Memory::operator!=( const Memory &m ) const
 std::ostream& operator<<( std::ostream &out, const Memory &m )
 {
   out << "[";
-  for ( size_t i = 0; i < m.size(); ++i )
+  for ( size_t i = 0; i < MEMORY_CACHE_SIZE; ++i )
   {
     if ( i > 0 ) out << ",";
-    out << m[i];
+    out << m.cache[i];
+  }
+  if ( !m.full.empty() )
+  {
+    out << "...";
   }
   out << "]";
   return out;
