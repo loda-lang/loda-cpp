@@ -631,37 +631,37 @@ void Oeis::dumpProgram( size_t id, Program p, const std::string &file ) const
   ProgramUtil::print( p, out );
 }
 
-std::pair<bool, Program> Oeis::optimizeAndCheck( const Program &p, const OeisSequence &seq, bool optimize ) const
+std::pair<bool, Program> Oeis::minimizeAndCheck( const Program &p, const OeisSequence &seq, bool minimize ) const
 {
   // optimize and minimize program
-  std::pair<bool, Program> optimized;
-  optimized.first = true;
-  optimized.second = p;
-  if ( optimize )
+  std::pair<bool, Program> minimized;
+  minimized.first = true;
+  minimized.second = p;
+  if ( minimize )
   {
-    minimizer.optimizeAndMinimize( optimized.second, 2, 1, seq.full.size() );
+    minimizer.optimizeAndMinimize( minimized.second, 2, 1, seq.full.size() );
   }
 
   // check its correctness
   Sequence new_seq;
   try
   {
-    interpreter.eval( optimized.second, new_seq, seq.full.size() );
+    interpreter.eval( minimized.second, new_seq, seq.full.size() );
     if ( seq.full.size() != new_seq.size() || seq.full != new_seq )
     {
-      optimized.first = false;
+      minimized.first = false;
     }
   }
   catch ( const std::exception &e )
   {
-    optimized.first = false;
+    minimized.first = false;
   }
 
   // throw error if not correct
-  if ( !optimized.first )
+  if ( !minimized.first )
   {
     std::string msg = "Program for " + seq.id_str() + " generates wrong result";
-    if ( optimize )
+    if ( minimize )
     {
       msg = msg + " after optimization or minimization";
     }
@@ -672,7 +672,7 @@ std::pair<bool, Program> Oeis::optimizeAndCheck( const Program &p, const OeisSeq
     ProgramUtil::print( p, out );
   }
 
-  return optimized;
+  return minimized;
 }
 
 int Oeis::getNumCycles( const Program &p ) const
@@ -695,8 +695,8 @@ int Oeis::getNumCycles( const Program &p ) const
     std::ofstream o( f );
     ProgramUtil::print( p, o );
     o.close();
-    Log::get().error( "Error evaluating program for n=" + std::to_string( input ) + ": " + f, false );
-    // TODO: input might be to large
+    Log::get().error( "Error evaluating program for n=" + std::to_string( input ) + ": " + std::string( e.what() ),
+        true );
   }
   return -1;
 }
@@ -750,7 +750,7 @@ std::pair<bool, bool> Oeis::updateProgram( size_t id, const Program &p ) const
     {
       if ( settings.optimize_existing_programs )
       {
-        optimized = optimizeAndCheck( p, seq, true );
+        optimized = minimizeAndCheck( p, seq, true );
         if ( !optimized.first )
         {
           return
@@ -775,7 +775,7 @@ std::pair<bool, bool> Oeis::updateProgram( size_t id, const Program &p ) const
   }
   if ( is_new )
   {
-    optimized = optimizeAndCheck( p, seq, false );
+    optimized = minimizeAndCheck( p, seq, false );
     if ( !optimized.first )
     {
       return
@@ -788,9 +788,6 @@ std::pair<bool, bool> Oeis::updateProgram( size_t id, const Program &p ) const
   buf << " program for " << seq << " Terms: " << static_cast<Sequence>( seq );
   Log::get().alert( buf.str() );
   dumpProgram( id, optimized.second, file_name );
-  std::ofstream gen_args;
-  gen_args.open( "programs/oeis/generator_args.txt", std::ios_base::app );
-  gen_args << seq.id_str() << ": " << settings.getGeneratorArgs() << std::endl;
   return
   { true,is_new};
 }

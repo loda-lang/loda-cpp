@@ -103,7 +103,7 @@ private:
 
   void findAll( const Program &p, const Sequence &norm_seq, Matcher::seq_programs_t &result ) const;
 
-  std::pair<bool, Program> optimizeAndCheck( const Program &p, const OeisSequence &seq, bool optimize ) const;
+  std::pair<bool, Program> minimizeAndCheck( const Program &p, const OeisSequence &seq, bool optimize ) const;
 
   int getNumCycles( const Program &p ) const;
 
