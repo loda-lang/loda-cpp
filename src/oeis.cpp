@@ -591,10 +591,6 @@ void Oeis::findAll( const Program &p, const Sequence &norm_seq, Matcher::seq_pro
           if ( got != exp )
           {
             auto id = sequences.at( t.first ).id_str();
-            Log::get().error( matchers[i]->getName() + " matcher generates wrong program for " + id, false );
-            Log::get().error( " -  expected: " + exp.to_string() );
-            Log::get().error( " -       got: " + got.to_string() );
-            Log::get().error( " - generated: " + norm_seq.to_string() );
             std::string f = "programs/debug/matcher/" + id + ".asm";
             ensureDir( f );
             std::ofstream o1( f );
@@ -602,6 +598,10 @@ void Oeis::findAll( const Program &p, const Sequence &norm_seq, Matcher::seq_pro
             std::ofstream o2(
                 "programs/debug/matcher/" + id + "-" + matchers[i]->getName() + "-" + std::to_string( j ) + ".asm" );
             ProgramUtil::print( t.second, o2 );
+            Log::get().error( matchers[i]->getName() + " matcher generates wrong program for " + id );
+            Log::get().error( " -  expected: " + exp.to_string() );
+            Log::get().error( " -       got: " + got.to_string() );
+            Log::get().error( " - generated: " + norm_seq.to_string(), true );
           }
         }
         else
