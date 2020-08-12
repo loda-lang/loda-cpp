@@ -22,6 +22,8 @@ private:
 
   void set( Operand a, number_t v, Memory &mem ) const;
 
+  bool isLessThan( const Memory &m1, const Memory &m2, const std::vector<Operand> &cmp_vars ) const;
+
   const Settings &settings;
 
   const bool is_debug;

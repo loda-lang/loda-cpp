@@ -185,7 +185,7 @@ size_t Interpreter::run( const Program &p, Memory &mem ) const
 
       frag = mem.fragment( start, length );
 
-      if ( frag.is_less( frag_prev, length ) )
+      if ( frag < frag_prev )
       {
         pc_next = ps_begin + 1;
         mem_stack.push( mem );
@@ -205,11 +205,11 @@ size_t Interpreter::run( const Program &p, Memory &mem ) const
       start = get( op.target, mem, true );
       if ( length == NUM_INF )
       {
-        mem.clear();
+        length = mem.size();
       }
-      else if ( length > 0 )
+      for ( number_t i = start; i < (start + length) && i < (number_t) mem.size(); i++ )
       {
-        mem.clear( start, length );
+        mem.set( i, 0 );
       }
       break;
     }
@@ -295,6 +295,22 @@ void Interpreter::set( Operand a, number_t v, Memory &mem ) const
     throw std::runtime_error( "Overflow in cell: " + std::to_string( index ) );
   }
   mem.set( index, v );
+}
+
+bool Interpreter::isLessThan( const Memory &m1, const Memory &m2, const std::vector<Operand> &cmp_vars ) const
+{
+  for ( Operand v : cmp_vars )
+  {
+    if ( get( v, m1 ) < get( v, m2 ) )
+    {
+      return true; // less
+    }
+    else if ( get( v, m1 ) > get( v, m2 ) )
+    {
+      return false; // greater
+    }
+  }
+  return false; // equal
 }
 
 size_t Interpreter::eval( const Program &p, Sequence &seq, int num_terms ) const
