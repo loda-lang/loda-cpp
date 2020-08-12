@@ -21,6 +21,10 @@ public:
 
   void fibonacci();
 
+  void firstdigit();
+
+  void numdiv();
+
   void ackermann();
 
   void collatz();
