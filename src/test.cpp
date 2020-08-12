@@ -24,6 +24,8 @@ void Test::all()
   semantics();
   stats();
   fibonacci();
+  firstdigit();
+  numdiv();
   ackermann();
   collatz();
   deltaMatcher();
@@ -271,8 +273,20 @@ void Test::semantics()
 
 void Test::fibonacci()
 {
-  Sequence values( { 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233 } );
+  Sequence values( { 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181 } );
   testSeq( "fib", OeisSequence( 45 ).getProgramPath(), values );
+}
+
+void Test::firstdigit()
+{
+  Sequence values( { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2 } );
+  testSeq( "firstdigit", OeisSequence( 30 ).getProgramPath(), values );
+}
+
+void Test::numdiv()
+{
+  Sequence values( { 1, 2, 2, 3, 2, 4, 2, 4, 3, 4, 2, 6, 2, 4, 4, 5, 2, 6, 2, 6 } );
+  testSeq( "numdiv", OeisSequence( 5 ).getProgramPath(), values );
 }
 
 void Test::ackermann()

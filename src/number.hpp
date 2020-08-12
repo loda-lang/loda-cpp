@@ -112,32 +112,35 @@ public:
   void remove( Sequence seq, size_t id );
 };
 
-class Memory: public std::vector<number_t>
+#define MEMORY_CACHE_SIZE 16
+
+class Memory
 {
 public:
 
-  Memory() = default;
+  Memory();
 
-  Memory( const Memory &m ) = default;
+  void clear();
 
-  Memory( const std::vector<number_t> &m )
-      :
-      std::vector<number_t>( m )
-  {
-  }
+  void clear( number_t start, size_t length );
 
   number_t get( number_t i ) const;
 
   void set( number_t i, number_t v );
 
-  Memory fragment( number_t start, number_t length ) const;
+  Memory fragment( number_t start, size_t length ) const;
 
-  bool operator<( const Memory &m ) const;
+  bool is_less( const Memory &m, size_t length ) const;
 
   bool operator==( const Memory &m ) const;
 
   bool operator!=( const Memory &m ) const;
 
   friend std::ostream& operator<<( std::ostream &out, const Memory &m );
+
+private:
+
+  std::array<number_t, MEMORY_CACHE_SIZE> cache;
+  std::unordered_map<number_t, number_t> full;
 
 };
