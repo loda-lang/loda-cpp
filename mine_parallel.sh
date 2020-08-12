@@ -72,9 +72,6 @@ function start_miners() {
   if [ "$num_cpus" -ge 24 ]; then
     num_vars="2 4 6 8 10"
   fi
-  if [ "$num_cpus" -ge 28 ]; then
-    num_vars="2 4 6 7 8 10"
-  fi
 
   # start parameterized miners
   for n in ${num_vars}; do
