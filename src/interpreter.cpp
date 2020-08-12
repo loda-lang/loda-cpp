@@ -185,7 +185,7 @@ size_t Interpreter::run( const Program &p, Memory &mem ) const
 
       frag = mem.fragment( start, length );
 
-      if ( frag.is_less( frag_prev, length ) )
+      if ( frag < frag_prev )
       {
         pc_next = ps_begin + 1;
         mem_stack.push( mem );
@@ -205,14 +205,11 @@ size_t Interpreter::run( const Program &p, Memory &mem ) const
       start = get( op.target, mem, true );
       if ( length == NUM_INF )
       {
-        mem.clear();
+        length = mem.size();
       }
-      else
+      for ( number_t i = start; i < (start + length) && i < (number_t) mem.size(); i++ )
       {
-        for ( number_t i = start; i < (start + length); i++ )
-        {
-          mem.set( i, 0 );
-        }
+        mem.set( i, 0 );
       }
       break;
     }
