@@ -302,18 +302,23 @@ void Memory::clear()
 
 void Memory::clear( number_t start, size_t length )
 {
+  if ( start == NUM_INF || length <= 0 )
+  {
+    return;
+  }
+  number_t end = start + length;
   if ( length < MEMORY_CACHE_SIZE )
   {
-    for ( number_t i = start; i < (start + length); i++ )
+    for ( number_t i = start; i < end; i++ )
     {
       set( i, 0 );
     }
   }
   else
   {
-    for ( size_t i = 0; i < MEMORY_CACHE_SIZE; ++i )
+    for ( number_t i = 0; i < (number_t) MEMORY_CACHE_SIZE; ++i )
     {
-      if ( i >= start && i < start + length )
+      if ( i >= start && i < end )
       {
         cache[i] = 0;
       }
@@ -321,7 +326,7 @@ void Memory::clear( number_t start, size_t length )
     auto i = full.begin();
     while ( i != full.end() )
     {
-      if ( i->first >= start && i->first < start + length )
+      if ( i->first >= start && i->first < end )
       {
         i = full.erase( i );
       }

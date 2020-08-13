@@ -10,7 +10,7 @@ done
 
 # common settings
 log_level=error
-check_interval=172800
+check_interval=21600
 min_changes=20
 min_cpus=4
 branch=$(git rev-parse --abbrev-ref HEAD)
