@@ -30,15 +30,10 @@ void Minimizer::minimize( Program &p, size_t num_terms ) const
       if ( op.source.type != Operand::Type::CONSTANT || op.source.value != 1 )
       {
         p.ops.at( i ).source = Operand( Operand::Type::CONSTANT, 1 );
-        bool can_reset = true;
+        bool can_reset;
         try
         {
-          Sequence new_sequence;
-          interpreter.eval( p, new_sequence, num_terms );
-          if ( new_sequence.size() != target_sequence.size() || new_sequence != target_sequence )
-          {
-            can_reset = false;
-          }
+          can_reset = interpreter.check( p, target_sequence );
         }
         catch ( const std::exception& )
         {
@@ -53,15 +48,10 @@ void Minimizer::minimize( Program &p, size_t num_terms ) const
     else
     {
       p.ops.erase( p.ops.begin() + i, p.ops.begin() + i + 1 );
-      bool can_remove = true;
+      bool can_remove;
       try
       {
-        Sequence new_sequence;
-        interpreter.eval( p, new_sequence, num_terms );
-        if ( new_sequence.size() != target_sequence.size() || new_sequence != target_sequence )
-        {
-          can_remove = false;
-        }
+        can_remove = interpreter.check( p, target_sequence );
       }
       catch ( const std::exception& )
       {

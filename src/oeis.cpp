@@ -830,7 +830,6 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
         interpreter2.eval( program, result );
         if ( result.size() != s.full.size() || result != s.full )
         {
-          Log::get().error( "Program did not evaluate to expected sequence: " + file_name );
           okay = false;
         }
         else

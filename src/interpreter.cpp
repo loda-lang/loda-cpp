@@ -346,3 +346,19 @@ size_t Interpreter::eval( const Program &p, std::vector<Sequence> &seqs, int num
   }
   return cycles;
 }
+
+bool Interpreter::check( const Program &p, const Sequence &expected_seq ) const
+{
+  Memory mem;
+  for ( size_t i = 0; i < expected_seq.size(); i++ )
+  {
+    mem.clear();
+    mem.set( 0, i );
+    run( p, mem );
+    if ( mem.get( 1 ) != expected_seq[i] )
+    {
+      return false;
+    }
+  }
+  return true;
+}

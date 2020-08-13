@@ -16,6 +16,8 @@ public:
 
   size_t eval( const Program &p, std::vector<Sequence> &seqs, int num_terms = -1 ) const;
 
+  bool check( const Program &p, const Sequence &expected_seq ) const;
+
 private:
 
   number_t get( Operand a, const Memory &mem, bool get_address = false ) const;
