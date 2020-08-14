@@ -106,7 +106,7 @@ number_t Parser::readValue()
   int c;
   *in >> std::ws;
   c = in->peek();
-  if ( !std::isdigit( c ) )
+  if ( !std::isdigit( c ) && c != '-' )
   {
     throw std::runtime_error( "invalid value" );
   }
