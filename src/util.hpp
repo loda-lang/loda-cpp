@@ -60,6 +60,7 @@ public:
   size_t max_cycles;
   size_t max_constant;
   size_t max_index;
+  bool dump_last_program;
   bool optimize_existing_programs;
   bool search_linear;
   bool throw_on_overflow;
@@ -71,6 +72,8 @@ public:
 
   std::vector<std::string> parseArgs( int argc, char *argv[] );
 
-  std::string getGeneratorArgs() const;
-
 };
+
+std::string getLodaHome();
+
+void ensureDir( const std::string &path );
