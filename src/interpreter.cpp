@@ -5,18 +5,34 @@
 #include "semantics.hpp"
 
 #include <array>
+#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <stack>
+#include <unistd.h>
 
 using MemStack = std::stack<Memory>;
 using SizeStack = std::stack<size_t>;
+
+int64_t Interpreter::PROCESS_ID = 0;
 
 Interpreter::Interpreter( const Settings &settings )
     :
     settings( settings ),
     is_debug( Log::get().level == Log::Level::DEBUG )
 {
+  if ( settings.dump_last_program )
+  {
+    if ( !PROCESS_ID )
+    {
+      PROCESS_ID = getpid();
+      if ( PROCESS_ID <= 0 )
+      {
+        Log::get().error( "Error determining process ID", true );
+      }
+      ensureDir( getLodaHome() + "dump/" );
+    }
+  }
 }
 
 size_t Interpreter::run( const Program &p, Memory &mem ) const
@@ -297,8 +313,19 @@ void Interpreter::set( Operand a, number_t v, Memory &mem ) const
   mem.set( index, v );
 }
 
+void Interpreter::dump( const Program &p ) const
+{
+  if ( settings.dump_last_program )
+  {
+    std::ofstream dump( getLodaHome() + "dump/" + std::to_string( PROCESS_ID ) + ".asm" );
+    ProgramUtil::print( p, dump );
+    dump.close();
+  }
+}
+
 size_t Interpreter::eval( const Program &p, Sequence &seq, int num_terms ) const
 {
+  dump( p );
   if ( num_terms < 0 )
   {
     num_terms = settings.num_terms;
@@ -324,6 +351,7 @@ size_t Interpreter::eval( const Program &p, Sequence &seq, int num_terms ) const
 
 size_t Interpreter::eval( const Program &p, std::vector<Sequence> &seqs, int num_terms ) const
 {
+  dump( p );
   if ( num_terms < 0 )
   {
     num_terms = settings.num_terms;
@@ -349,6 +377,7 @@ size_t Interpreter::eval( const Program &p, std::vector<Sequence> &seqs, int num
 
 bool Interpreter::check( const Program &p, const Sequence &expected_seq ) const
 {
+  dump( p );
   Memory mem;
   for ( size_t i = 0; i < expected_seq.size(); i++ )
   {

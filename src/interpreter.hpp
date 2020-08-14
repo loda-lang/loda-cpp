@@ -24,8 +24,12 @@ private:
 
   void set( Operand a, number_t v, Memory &mem ) const;
 
+  void dump( const Program &p ) const;
+
   const Settings &settings;
 
   const bool is_debug;
+
+  static int64_t PROCESS_ID;
 
 };
