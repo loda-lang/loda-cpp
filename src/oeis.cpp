@@ -18,29 +18,10 @@
 
 size_t Oeis::MAX_NUM_TERMS = 250;
 
-std::string getHome()
+std::string getOeisHome()
 {
   // don't remove the trailing /
-  return std::string( std::getenv( "HOME" ) ) + "/.loda/oeis/";
-}
-
-void ensureDir( const std::string &path )
-{
-  auto index = path.find_last_of( "/" );
-  if ( index != std::string::npos )
-  {
-    auto dir = path.substr( 0, index );
-    auto cmd = "mkdir -p " + dir;
-    auto exit_code = system( cmd.c_str() );
-    if ( exit_code != 0 )
-    {
-      Log::get().error( "Error creating directory " + dir, true );
-    }
-  }
-  else
-  {
-    Log::get().error( "Error determining directory for " + path, true );
-  }
+  return getLodaHome() + "oeis/";
 }
 
 std::ostream& operator<<( std::ostream &out, const OeisSequence &s )
@@ -77,7 +58,7 @@ std::string OeisSequence::getProgramPath() const
 
 std::string OeisSequence::getBFilePath() const
 {
-  return getHome() + "b/" + dir_str() + "/" + id_str( "b" ) + ".txt";
+  return getOeisHome() + "b/" + dir_str() + "/" + id_str( "b" ) + ".txt";
 }
 
 void throwParseError( const std::string &line )
@@ -127,7 +108,7 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
   }
   // load sequence data
   Log::get().info( "Loading sequences from the OEIS index" );
-  std::ifstream stripped( getHome() + "stripped" );
+  std::ifstream stripped( getOeisHome() + "stripped" );
   if ( !stripped.good() )
   {
     Log::get().error( "OEIS data not found: run \"loda update\" to download it", true );
@@ -359,7 +340,7 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
 void Oeis::loadNames( volatile sig_atomic_t &exit_flag )
 {
   Log::get().debug( "Loading sequence names from the OEIS index" );
-  std::ifstream names( getHome() + "names" );
+  std::ifstream names( getOeisHome() + "names" );
   if ( !names.good() )
   {
     Log::get().error( "OEIS data not found: run \"loda update\" to download it", true );
@@ -412,7 +393,7 @@ void Oeis::update( volatile sig_atomic_t &exit_flag )
     Log::get().error( "Option -x required to run update", true );
   }
   Log::get().info( "Updating OEIS index" );
-  ensureDir( getHome() );
+  ensureDir( getOeisHome() );
   std::string cmd, path;
   int exit_code;
   std::vector<std::string> files = { "stripped", "names" };
@@ -422,14 +403,14 @@ void Oeis::update( volatile sig_atomic_t &exit_flag )
     {
       break;
     }
-    path = getHome() + file;
+    path = getOeisHome() + file;
     cmd = "wget -nv -O " + path + ".gz https://oeis.org/" + file + ".gz";
     exit_code = system( cmd.c_str() );
     if ( exit_code != 0 )
     {
       Log::get().error( "Error fetching " + file + " file", true );
     }
-    std::ifstream f( getHome() + file );
+    std::ifstream f( getOeisHome() + file );
     if ( f.good() )
     {
       f.close();
@@ -502,7 +483,7 @@ void Oeis::migrate( volatile sig_atomic_t &exit_flag )
     OeisSequence s( id );
     auto old_program_path = "programs/oeis/" + s.id_str() + ".asm";
     migrateFile( old_program_path, s.getProgramPath() );
-    auto old_b_file_path = getHome() + "b/" + s.id_str( "b" ) + ".txt";
+    auto old_b_file_path = getOeisHome() + "b/" + s.id_str( "b" ) + ".txt";
     migrateFile( old_b_file_path, s.getBFilePath() );
   }
 }

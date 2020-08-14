@@ -7,20 +7,22 @@
 #include <stdexcept>
 #include <stdlib.h>
 
-Log::Log()
-    :
-    level( Level::INFO )
+bool getEnvFlag( const std::string &var )
 {
-  auto t = std::getenv( "LODA_TWEET_ALERTS" );
+  auto t = std::getenv( var.c_str() );
   if ( t )
   {
     std::string s( t );
-    tweet_alerts = (s == "yes" || s == "true");
+    return (s == "yes" || s == "true");
   }
-  else
-  {
-    tweet_alerts = false;
-  }
+  return false;
+}
+
+Log::Log()
+    :
+    level( Level::INFO ),
+    tweet_alerts( getEnvFlag( "LODA_TWEET_ALERTS" ) )
+{
 }
 
 Log& Log::get()
@@ -160,6 +162,7 @@ Settings::Settings()
     max_cycles( 10000000 ),
     max_constant( 6 ),
     max_index( 6 ),
+    dump_last_program( getEnvFlag( "LODA_DUMP_LAST_PROGRAM" ) ),
     optimize_existing_programs( false ),
     search_linear( false ),
     throw_on_overflow( true ),
@@ -336,18 +339,27 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
   return unparsed;
 }
 
-std::string Settings::getGeneratorArgs() const
+std::string getLodaHome()
 {
-  std::stringstream ss;
-  ss << "-p " << num_operations << " -n " << max_constant << " -i " << max_index << " -o " << operation_types << " -a "
-      << operand_types;
-  if ( !program_template.empty() )
+  // don't remove the trailing /
+  return std::string( std::getenv( "HOME" ) ) + "/.loda/";
+}
+
+void ensureDir( const std::string &path )
+{
+  auto index = path.find_last_of( "/" );
+  if ( index != std::string::npos )
   {
-    ss << " -e " << program_template;
+    auto dir = path.substr( 0, index );
+    auto cmd = "mkdir -p " + dir;
+    auto exit_code = system( cmd.c_str() );
+    if ( exit_code != 0 )
+    {
+      Log::get().error( "Error creating directory " + dir, true );
+    }
   }
-  if ( search_linear )
+  else
   {
-    ss << " -r";
+    Log::get().error( "Error determining directory for " + path, true );
   }
-  return ss.str();
 }

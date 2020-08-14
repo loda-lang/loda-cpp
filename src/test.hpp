@@ -19,11 +19,7 @@ public:
 
   void semantics();
 
-  void fibonacci();
-
-  void firstdigit();
-
-  void numdiv();
+  void knownPrograms();
 
   void ackermann();
 
@@ -47,7 +43,7 @@ private:
 
   volatile sig_atomic_t &exit_flag_;
 
-  void testSeq( const std::string &func, const std::string &file, const Sequence &values );
+  void testSeq( size_t id, const Sequence &values );
 
   void testBinary( const std::string &func, const std::string &file,
       const std::vector<std::vector<number_t> > &values );
