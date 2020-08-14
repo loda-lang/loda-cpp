@@ -360,7 +360,14 @@ void Memory::set( number_t index, number_t value )
   }
   else
   {
-    full[index] = value;
+    if ( value == 0 )
+    {
+      full.erase( index );
+    }
+    else
+    {
+      full[index] = value;
+    }
   }
 }
 
