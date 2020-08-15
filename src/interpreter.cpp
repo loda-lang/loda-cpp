@@ -164,9 +164,13 @@ size_t Interpreter::run( const Program &p, Memory &mem ) const
     {
       length = get( op.source, mem );
       start = get( op.target, mem, true );
-      if ( length == NUM_INF )
+      if ( start == NUM_INF || length == NUM_INF )
       {
         throw std::runtime_error( "Infinite loop" );
+      }
+      if ( length > settings.max_memory )
+      {
+        throw std::runtime_error( "Maximum memory exceeded: " + std::to_string( length ) );
       }
       frag = mem.fragment( start, length );
       loop_stack.push( pc );

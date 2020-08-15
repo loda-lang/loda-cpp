@@ -824,7 +824,7 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
       }
       if ( !okay )
       {
-        Log::get().warn( "Deleting program due to evaluation error: " + file_name );
+        Log::get().alert( "Removing invalid program for " + s.to_string() );
         program_file.close();
         remove( file_name.c_str() );
       }

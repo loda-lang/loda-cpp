@@ -2,6 +2,8 @@
 
 #include "number.hpp"
 
+#include <array>
+
 class Operand
 {
 public:
