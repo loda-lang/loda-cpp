@@ -311,7 +311,7 @@ void Interpreter::set( Operand a, number_t v, Memory &mem ) const
   }
   if ( index > (number_t) settings.max_memory )
   {
-    throw std::runtime_error( "Memory index out of range: " + std::to_string( index ) );
+    throw std::runtime_error( "Maximum memory exceeded: " + std::to_string( index ) );
   }
   if ( settings.throw_on_overflow && v == NUM_INF )
   {
