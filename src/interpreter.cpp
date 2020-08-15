@@ -168,7 +168,7 @@ size_t Interpreter::run( const Program &p, Memory &mem ) const
       {
         throw std::runtime_error( "Infinite loop" );
       }
-      if ( length > settings.max_memory )
+      if ( length > (number_t) settings.max_memory )
       {
         throw std::runtime_error( "Maximum memory exceeded: " + std::to_string( length ) );
       }

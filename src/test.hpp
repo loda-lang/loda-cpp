@@ -19,6 +19,8 @@ public:
 
   void semantics();
 
+  void memory();
+
   void knownPrograms();
 
   void ackermann();

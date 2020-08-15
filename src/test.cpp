@@ -22,6 +22,7 @@
 void Test::all()
 {
   semantics();
+  memory();
   stats();
   knownPrograms();
   ackermann();
@@ -267,6 +268,52 @@ void Test::semantics()
   SEM_CHECK( cmp( 0, -1 ), 0 );
   SEM_CHECK_ARG_INF( cmp );
 
+}
+
+void checkMemory( const Memory &mem, number_t index, number_t value )
+{
+  if ( mem.get( index ) != value )
+  {
+    Log::get().error(
+        "Unexpected memory value at index " + std::to_string( index ) + "; expected: " + std::to_string( value )
+            + "; found: " + std::to_string( mem.get( index ) ), true );
+  }
+}
+
+void Test::memory()
+{
+  Log::get().info( "Testing memory" );
+
+  // get and set
+  Memory base;
+  number_t size = 100;
+  for ( number_t i = 0; i < size; i++ )
+  {
+    base.set( i, i );
+    checkMemory( base, i, i );
+  }
+  checkMemory( base, -1, 0 );
+  checkMemory( base, size + 1, 0 );
+
+  // fragments
+  size_t max_frag_length = 50;
+  for ( number_t start = -10; start < size + 10; start++ )
+  {
+    for ( size_t length = 0; length < max_frag_length; length++ )
+    {
+      auto frag = base.fragment( start, length );
+      for ( number_t i = 0; i < length; i++ )
+      {
+        number_t j = start + i; // old index
+        number_t v = (j < 0 || j >= size) ? 0 : j;
+        checkMemory( frag, i, v );
+      }
+      checkMemory( frag, -1, 0 );
+      checkMemory( frag, -2, 0 );
+      checkMemory( frag, length, 0 );
+      checkMemory( frag, length + 1, 0 );
+    }
+  }
 }
 
 void Test::knownPrograms()

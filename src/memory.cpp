@@ -1,5 +1,7 @@
 #include "memory.hpp"
 
+#include "number.hpp"
+
 Memory::Memory()
 {
   cache.fill( 0 );
@@ -99,9 +101,12 @@ Memory Memory::fragment( number_t start, size_t length ) const
   else
   {
     number_t end = start + length;
-    for ( number_t i = start; (i < end) && (i < (number_t) MEMORY_CACHE_SIZE); ++i )
+    for ( number_t i = 0; i < MEMORY_CACHE_SIZE; i++ )
     {
-      f.set( i - start, cache[i] );
+      if ( i >= start && i < end )
+      {
+        f.set( i - start, cache[i] );
+      }
     }
     auto i = full.begin();
     while ( i != full.end() )
@@ -110,6 +115,7 @@ Memory Memory::fragment( number_t start, size_t length ) const
       {
         f.set( i->first - start, i->second );
       }
+      i++;
     }
   }
   return f;
