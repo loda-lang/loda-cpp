@@ -638,6 +638,7 @@ void Test::testBinary( const std::string &func, const std::string &file,
   Log::get().info( "Testing " + file );
   Parser parser;
   Settings settings;
+  settings.max_memory = 100000;
   Interpreter interpreter( settings );
   auto program = parser.parse( file );
   for ( size_t i = 0; i < values.size(); i++ )
