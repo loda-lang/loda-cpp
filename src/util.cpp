@@ -18,6 +18,17 @@ bool getEnvFlag( const std::string &var )
   return false;
 }
 
+int64_t getEnvInt( const std::string &var, int64_t default_value )
+{
+  auto t = std::getenv( var.c_str() );
+  if ( t )
+  {
+    std::string s( t );
+    return std::stoll( s );
+  }
+  return default_value;
+}
+
 Log::Log()
     :
     level( Level::INFO ),
@@ -158,8 +169,8 @@ Settings::Settings()
     :
     num_terms( 20 ),
     num_operations( 20 ),
-    max_memory( 100000 ),
-    max_cycles( 10000000 ),
+    max_memory( getEnvInt( "LODA_MAX_MEMORY", 100000 ) ),
+    max_cycles( getEnvInt( "LODA_MAX_CYCLES", 10000000 ) ),
     max_constant( 6 ),
     max_index( 6 ),
     dump_last_program( getEnvFlag( "LODA_DUMP_LAST_PROGRAM" ) ),
