@@ -388,15 +388,9 @@ Memory Memory::fragment( number_t start, size_t length ) const
   else
   {
     number_t end = start + length;
-    if ( start < MEMORY_CACHE_SIZE )
+    for ( number_t i = start; (i < end) && (i < (number_t) MEMORY_CACHE_SIZE); ++i )
     {
-      for ( number_t i = 0; i < (number_t) MEMORY_CACHE_SIZE; ++i )
-      {
-        if ( i >= start && i < end )
-        {
-          f.set( i - start, cache[i] );
-        }
-      }
+      f.set( i - start, cache[i] );
     }
     auto i = full.begin();
     while ( i != full.end() )
