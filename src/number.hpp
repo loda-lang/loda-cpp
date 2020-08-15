@@ -120,15 +120,17 @@ public:
 
   Memory();
 
-  void clear();
-
-  void clear( number_t start, size_t length );
-
   number_t get( number_t i ) const;
 
   void set( number_t i, number_t v );
 
+  void clear();
+
+  void clear( number_t start, size_t length );
+
   Memory fragment( number_t start, size_t length ) const;
+
+  size_t approximate_size() const;
 
   bool is_less( const Memory &m, size_t length ) const;
 

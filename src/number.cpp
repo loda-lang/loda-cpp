@@ -294,6 +294,39 @@ Memory::Memory()
   cache.fill( 0 );
 }
 
+number_t Memory::get( number_t index ) const
+{
+  if ( index >= 0 && index < MEMORY_CACHE_SIZE )
+  {
+    return cache[index];
+  }
+  auto it = full.find( index );
+  if ( it != full.end() )
+  {
+    return it->second;
+  }
+  return 0;
+}
+
+void Memory::set( number_t index, number_t value )
+{
+  if ( index >= 0 && index < MEMORY_CACHE_SIZE )
+  {
+    cache[index] = value;
+  }
+  else
+  {
+    if ( value == 0 )
+    {
+      full.erase( index );
+    }
+    else
+    {
+      full[index] = value;
+    }
+  }
+}
+
 void Memory::clear()
 {
   cache.fill( 0 );
@@ -338,47 +371,48 @@ void Memory::clear( number_t start, size_t length )
   }
 }
 
-number_t Memory::get( number_t index ) const
-{
-  if ( index >= 0 && index < MEMORY_CACHE_SIZE )
-  {
-    return cache[index];
-  }
-  auto it = full.find( index );
-  if ( it != full.end() )
-  {
-    return it->second;
-  }
-  return 0;
-}
-
-void Memory::set( number_t index, number_t value )
-{
-  if ( index >= 0 && index < MEMORY_CACHE_SIZE )
-  {
-    cache[index] = value;
-  }
-  else
-  {
-    if ( value == 0 )
-    {
-      full.erase( index );
-    }
-    else
-    {
-      full[index] = value;
-    }
-  }
-}
-
 Memory Memory::fragment( number_t start, size_t length ) const
 {
   Memory f;
-  for ( number_t i = 0; i < (number_t) length; ++i )
+  if ( start == NUM_INF || length <= 0 )
   {
-    f.set( i, get( start + i ) );
+    return f;
+  }
+  if ( length < MEMORY_CACHE_SIZE )
+  {
+    for ( number_t i = 0; i < (number_t) length; ++i )
+    {
+      f.set( i, get( start + i ) );
+    }
+  }
+  else
+  {
+    number_t end = start + length;
+    if ( start < MEMORY_CACHE_SIZE )
+    {
+      for ( number_t i = 0; i < (number_t) MEMORY_CACHE_SIZE; ++i )
+      {
+        if ( i >= start && i < end )
+        {
+          f.set( i - start, cache[i] );
+        }
+      }
+    }
+    auto i = full.begin();
+    while ( i != full.end() )
+    {
+      if ( i->first >= start && i->first < end )
+      {
+        f.set( i->first - start, i->second );
+      }
+    }
   }
   return f;
+}
+
+size_t Memory::approximate_size() const
+{
+  return full.size() + MEMORY_CACHE_SIZE;
 }
 
 bool Memory::is_less( const Memory &m, size_t length ) const

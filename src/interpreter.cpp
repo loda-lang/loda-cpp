@@ -168,10 +168,6 @@ size_t Interpreter::run( const Program &p, Memory &mem ) const
       {
         throw std::runtime_error( "Infinite loop" );
       }
-      else if ( length > (number_t) settings.max_memory )
-      {
-        throw std::runtime_error( "Maximum memory fragment length exceeded: " + std::to_string( length ) );
-      }
       frag = mem.fragment( start, length );
       loop_stack.push( pc );
       mem_stack.push( mem );
@@ -240,6 +236,7 @@ size_t Interpreter::run( const Program &p, Memory &mem ) const
       pc_stack.push( pc_next );
     }
 
+    // print debug information
     if ( is_debug )
     {
       std::stringstream buf;
@@ -249,10 +246,16 @@ size_t Interpreter::run( const Program &p, Memory &mem ) const
       Log::get().debug( buf.str() );
     }
 
+    // check resource constraints
     if ( ++cycles >= settings.max_cycles )
     {
       throw std::runtime_error( "Program did not terminate after " + std::to_string( cycles ) + " cycles" );
     }
+    if ( mem.approximate_size() > settings.max_memory )
+    {
+      throw std::runtime_error( "Maximum memory exceeded: " + std::to_string( mem.approximate_size() ) );
+    }
+
   }
   if ( is_debug )
   {
