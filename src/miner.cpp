@@ -155,11 +155,14 @@ void Miner::mine( volatile sig_atomic_t &exit_flag )
         if ( r.second )
         {
           fresh++;
-          generator.mutateConstants( s.second, 100, progs );
         }
         else
         {
           updated++;
+        }
+        if ( progs.size() < 1000 )
+        {
+          generator.mutateConstants( s.second, 100, progs );
         }
       }
     }

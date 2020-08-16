@@ -172,6 +172,10 @@ size_t Interpreter::run( const Program &p, Memory &mem ) const
       {
         throw std::runtime_error( "Maximum memory exceeded: " + std::to_string( length ) );
       }
+      if ( loop_stack.size() >= settings.max_stack_size )
+      {
+        throw std::runtime_error( "Maximum stack size exceeded: " + std::to_string( loop_stack.size() ) );
+      }
       frag = mem.fragment( start, length );
       loop_stack.push( pc );
       mem_stack.push( mem );

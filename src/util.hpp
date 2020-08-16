@@ -60,6 +60,7 @@ public:
   size_t max_cycles;
   size_t max_constant;
   size_t max_index;
+  size_t max_stack_size;
   bool dump_last_program;
   bool optimize_existing_programs;
   bool search_linear;

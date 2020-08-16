@@ -173,6 +173,7 @@ Settings::Settings()
     max_cycles( getEnvInt( "LODA_MAX_CYCLES", 10000000 ) ),
     max_constant( 6 ),
     max_index( 6 ),
+    max_stack_size( getEnvInt( "LODA_MAX_STACK_SIZE", 100 ) ),
     dump_last_program( getEnvFlag( "LODA_DUMP_LAST_PROGRAM" ) ),
     optimize_existing_programs( false ),
     search_linear( false ),
