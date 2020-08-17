@@ -84,18 +84,18 @@ void Memory::clear( number_t start, size_t length )
   }
 }
 
-Memory Memory::fragment( number_t start, size_t length ) const
+Memory Memory::fragment( number_t start, size_t length, bool normalize ) const
 {
-  Memory f;
+  Memory frag;
   if ( start == NUM_INF || length <= 0 )
   {
-    return f;
+    return frag;
   }
   if ( length < MEMORY_CACHE_SIZE )
   {
     for ( number_t i = 0; i < (number_t) length; ++i )
     {
-      f.set( i, get( start + i ) );
+      frag.set( i, normalize ? std::abs( get( start + i ) ) : get( start + i ) );
     }
   }
   else
@@ -105,7 +105,7 @@ Memory Memory::fragment( number_t start, size_t length ) const
     {
       if ( i >= start && i < end )
       {
-        f.set( i - start, cache[i] );
+        frag.set( i - start, normalize ? std::abs( cache[i] ) : cache[i] );
       }
     }
     auto i = full.begin();
@@ -113,12 +113,12 @@ Memory Memory::fragment( number_t start, size_t length ) const
     {
       if ( i->first >= start && i->first < end )
       {
-        f.set( i->first - start, i->second );
+        frag.set( i->first - start, normalize ? std::abs( i->second ) : i->second );
       }
       i++;
     }
   }
-  return f;
+  return frag;
 }
 
 size_t Memory::approximate_size() const

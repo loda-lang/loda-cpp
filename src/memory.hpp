@@ -22,7 +22,7 @@ public:
 
   void clear( number_t start, size_t length );
 
-  Memory fragment( number_t start, size_t length ) const;
+  Memory fragment( number_t start, size_t length, bool normalize ) const;
 
   size_t approximate_size() const;
 
