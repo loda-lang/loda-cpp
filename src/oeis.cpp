@@ -298,11 +298,16 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
 
   loadNames( exit_flag );
 
+  // remove known sequences if they should be ignored
   if ( !settings.optimize_existing_programs )
   {
     std::vector<number_t> seqs_to_remove;
     for ( auto &seq : sequences )
     {
+      if ( seq.id == 0 )
+      {
+        continue;
+      }
       std::ifstream in( seq.getProgramPath() );
       if ( in.good() )
       {
@@ -322,6 +327,21 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
     }
   }
 
+  // shrink sequences vector again
+  if ( !sequences.empty() )
+  {
+    size_t i;
+    for ( i = sequences.size() - 1; i > 0; i-- )
+    {
+      if ( sequences[i].id != 0 )
+      {
+        break;
+      }
+    }
+    sequences.resize( i + 1 );
+  }
+
+  // print summary
   Log::get().info(
       "Loaded " + std::to_string( loaded_count ) + "/" + std::to_string( total_count_ ) + " sequences and "
           + std::to_string( big_loaded_count ) + " b-files" );
@@ -787,6 +807,10 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
   size_t num_optimized = 0;
   for ( auto &s : sequences )
   {
+    if ( s.id == 0 )
+    {
+      continue;
+    }
     std::string file_name = s.getProgramPath();
     std::ifstream program_file( file_name );
     std::ifstream b_file( s.getBFilePath() );
