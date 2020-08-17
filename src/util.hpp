@@ -32,6 +32,9 @@ public:
   bool tweet_alerts;
 
 private:
+
+  int twitter_client;
+
   void log( Level level, const std::string &msg );
 
 };

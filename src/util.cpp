@@ -1,5 +1,6 @@
 #include "util.hpp"
 
+#include <algorithm>
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
@@ -29,10 +30,32 @@ int64_t getEnvInt( const std::string &var, int64_t default_value )
   return default_value;
 }
 
+enum TwitterClient
+{
+  TW_UNKNOWN = 0,
+  TW_NONE = 1,
+  TW_TWIDGE = 2,
+  TW_RAINBOWSTREAM = 3
+};
+
+TwitterClient findTwitterClient()
+{
+  if ( system( "twidge -h" ) == 0 )
+  {
+    return TW_TWIDGE;
+  }
+  if ( system( "rainbowstream -h" ) == 0 )
+  {
+    return TW_RAINBOWSTREAM;
+  }
+  return TW_NONE;
+}
+
 Log::Log()
     :
     level( Level::INFO ),
-    tweet_alerts( getEnvFlag( "LODA_TWEET_ALERTS" ) )
+    tweet_alerts( getEnvFlag( "LODA_TWEET_ALERTS" ) ),
+    twitter_client( TW_UNKNOWN )
 {
 }
 
@@ -73,6 +96,7 @@ void Log::alert( const std::string &msg )
   if ( copy.length() > 140 )
   {
     copy = copy.substr( 0, 137 );
+    std::replace( copy.begin(), copy.end(), '"', '\'' );
     while ( !copy.empty() )
     {
       char ch = copy.at( copy.size() - 1 );
@@ -86,11 +110,33 @@ void Log::alert( const std::string &msg )
   }
   if ( tweet_alerts && !copy.empty() )
   {
-    std::string cmd = "twidge update \"" + copy + "\"";
-    auto exit_code = system( cmd.c_str() );
-    if ( exit_code != 0 )
+    if ( twitter_client == TW_UNKNOWN )
     {
-      error( "Error sending alert using twidge: exit code " + std::to_string( exit_code ), false );
+      twitter_client = findTwitterClient();
+    }
+    std::string cmd;
+    switch ( twitter_client )
+    {
+    case TW_UNKNOWN:
+    case TW_NONE:
+      break;
+    case TW_TWIDGE:
+    {
+      cmd = "twidge update \"" + copy + "\"";
+      break;
+    }
+    case TW_RAINBOWSTREAM:
+      cmd = "printf \"t " + copy + "\\nexit()\\n\" | rainbowstream";
+      break;
+    }
+    if ( !cmd.empty() )
+    {
+      auto exit_code = system( cmd.c_str() );
+      if ( exit_code != 0 )
+      {
+        error( "Error tweeting alert! Failed command: " + cmd, false );
+        twitter_client = TW_NONE;
+      }
     }
   }
 }
