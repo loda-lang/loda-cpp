@@ -40,11 +40,11 @@ enum TwitterClient
 
 TwitterClient findTwitterClient()
 {
-  if ( system( "twidge -h" ) == 0 )
+  if ( system( "twidge -h > /dev/null" ) == 0 )
   {
     return TW_TWIDGE;
   }
-  if ( system( "rainbowstream -h" ) == 0 )
+  if ( system( "rainbowstream -h > /dev/null" ) == 0 )
   {
     return TW_RAINBOWSTREAM;
   }
@@ -122,11 +122,11 @@ void Log::alert( const std::string &msg )
       break;
     case TW_TWIDGE:
     {
-      cmd = "twidge update \"" + copy + "\"";
+      cmd = "twidge update \"" + copy + "\" > /dev/null";
       break;
     }
     case TW_RAINBOWSTREAM:
-      cmd = "printf \"t " + copy + "\\nexit()\\n\" | rainbowstream";
+      cmd = "printf \"t " + copy + "\\nexit()\\n\" | rainbowstream > /dev/null";
       break;
     }
     if ( !cmd.empty() )
