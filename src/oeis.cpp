@@ -70,33 +70,11 @@ Oeis::Oeis( const Settings &settings )
     :
     settings( settings ),
     interpreter( settings ),
+    finder( settings ),
     minimizer( settings ),
     optimizer( settings ),
     total_count_( 0 )
 {
-  if ( settings.optimize_existing_programs )
-  {
-    matchers.resize( 3 );
-    matchers[0].reset( new DirectMatcher( false ) );
-    matchers[1].reset( new LinearMatcher( false ) );
-    matchers[2].reset( new LinearMatcher2( false ) );
-  }
-  else
-  {
-    matchers.resize( 5 );
-    matchers[0].reset( new DirectMatcher( true ) );
-    matchers[1].reset( new LinearMatcher( true ) );
-    matchers[2].reset( new LinearMatcher2( true ) );
-    matchers[3].reset( new PolynomialMatcher( true ) );
-    matchers[4].reset( new DeltaMatcher( true ) );
-  }
-  matcher_stats.resize( matchers.size() );
-  for ( auto &s : matcher_stats )
-  {
-    s.candidates = 0;
-    s.false_positives = 0;
-    s.errors = 0;
-  }
 }
 
 void Oeis::load( volatile sig_atomic_t &exit_flag )
@@ -288,10 +266,7 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
     sequences[id] = OeisSequence( id, "", seq_norm, seq_full );
 
     // add sequences to matchers
-    for ( auto &matcher : matchers )
-    {
-      matcher->insert( seq_norm, id );
-    }
+    finder.insert( seq_norm, id );
 
     ++loaded_count;
   }
@@ -347,11 +322,11 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
           + std::to_string( big_loaded_count ) + " b-files" );
   std::stringstream buf;
   buf << "Matcher compaction ratios: ";
-  for ( size_t i = 0; i < matchers.size(); i++ )
+  for ( size_t i = 0; i < finder.getMatchers().size(); i++ )
   {
     if ( i > 0 ) buf << ", ";
-    double ratio = 100.0 * (double) matchers[i]->getReducedSequences().size() / (double) loaded_count;
-    buf << matchers[i]->getName() << ": " << std::setprecision( 4 ) << ratio << "%";
+    double ratio = 100.0 * (double) finder.getMatchers()[i]->getReducedSequences().size() / (double) loaded_count;
+    buf << finder.getMatchers()[i]->getName() << ": " << std::setprecision( 4 ) << ratio << "%";
   }
   Log::get().info( buf.str() );
 
@@ -521,102 +496,8 @@ void Oeis::removeSequence( size_t id )
   }
   if ( sequences[id].id == id )
   {
-    for ( auto &matcher : matchers )
-    {
-      matcher->remove( sequences[id], id );
-    }
+    finder.remove( sequences[id], id );
     sequences[id] = OeisSequence();
-  }
-}
-
-Matcher::seq_programs_t Oeis::findSequence( const Program &p, Sequence &norm_seq ) const
-{
-  std::vector<Sequence> seqs;
-  seqs.resize( std::max<size_t>( 2, settings.max_index + 1 ) );
-  Matcher::seq_programs_t result;
-  try
-  {
-    interpreter.eval( p, seqs );
-    norm_seq = seqs[1];
-  }
-  catch ( const std::exception& )
-  {
-    return result;
-  }
-  Program p2 = p;
-  p2.push_back( Operation::Type::MOV, Operand::Type::DIRECT, 1, Operand::Type::DIRECT, 0 );
-  for ( size_t i = 0; i < seqs.size(); i++ )
-  {
-    if ( settings.search_linear || !seqs[i].is_linear() )
-    {
-      if ( i == 1 )
-      {
-        findAll( p, seqs[i], result );
-      }
-      else
-      {
-        p2.ops.back().source.value = i;
-        findAll( p2, seqs[i], result );
-      }
-    }
-  }
-  return result;
-}
-
-void Oeis::findAll( const Program &p, const Sequence &norm_seq, Matcher::seq_programs_t &result ) const
-{
-  // collect possible matches
-  Matcher::seq_programs_t temp_result;
-  Sequence full_seq;
-  for ( size_t i = 0; i < matchers.size(); i++ )
-  {
-    temp_result.clear();
-    matchers[i]->match( p, norm_seq, temp_result );
-
-    // validate the found matches
-    size_t j = 0;
-    for ( auto t : temp_result )
-    {
-      matcher_stats[i].candidates++;
-      auto &expected_full_seq = sequences.at( t.first ).full;
-      try
-      {
-        full_seq.clear();
-        interpreter.eval( t.second, full_seq, expected_full_seq.size() );
-        if ( full_seq.size() != expected_full_seq.size() || full_seq != expected_full_seq )
-        {
-          matcher_stats[i].false_positives++;
-          auto match_length = norm_seq.size();
-          auto got = full_seq.subsequence( 0, match_length );
-          auto exp = expected_full_seq.subsequence( 0, match_length );
-          if ( got != exp )
-          {
-            auto id = sequences.at( t.first ).id_str();
-            std::string f = "programs/debug/matcher/" + id + ".asm";
-            ensureDir( f );
-            std::ofstream o1( f );
-            ProgramUtil::print( p, o1 );
-            std::ofstream o2(
-                "programs/debug/matcher/" + id + "-" + matchers[i]->getName() + "-" + std::to_string( j ) + ".asm" );
-            ProgramUtil::print( t.second, o2 );
-            Log::get().error( matchers[i]->getName() + " matcher generates wrong program for " + id );
-            Log::get().error( " -  expected: " + exp.to_string() );
-            Log::get().error( " -       got: " + got.to_string() );
-            Log::get().error( " - generated: " + norm_seq.to_string(), true );
-          }
-        }
-        else
-        {
-          // successful match!
-          result.push_back( t );
-        }
-      }
-      catch ( const std::exception& )
-      {
-        matcher_stats[i].errors++;
-      }
-      j++;
-    }
   }
 }
 
