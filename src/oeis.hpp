@@ -1,7 +1,7 @@
 #pragma once
 
+#include "finder.hpp"
 #include "interpreter.hpp"
-#include "matcher.hpp"
 #include "minimizer.hpp"
 #include "number.hpp"
 #include "optimizer.hpp"
@@ -45,13 +45,6 @@ public:
 
 };
 
-struct MatcherStats
-{
-  size_t candidates;
-  size_t false_positives;
-  size_t errors;
-};
-
 class Oeis
 {
 public:
@@ -74,7 +67,10 @@ public:
 
   void removeSequence( size_t id );
 
-  Matcher::seq_programs_t findSequence( const Program &p, Sequence &norm_seq ) const;
+  Finder& getFinder()
+  {
+    return finder;
+  }
 
   void dumpProgram( size_t id, Program p, const std::string &file ) const;
 
@@ -87,21 +83,9 @@ public:
 
   void maintain( volatile sig_atomic_t &exit_flag );
 
-  std::vector<std::unique_ptr<Matcher>>& getMatchers()
-  {
-    return matchers;
-  }
-
-  std::vector<MatcherStats>& getMatcherStats()
-  {
-    return matcher_stats;
-  }
-
 private:
 
   void loadNames( volatile sig_atomic_t &exit_flag );
-
-  void findAll( const Program &p, const Sequence &norm_seq, Matcher::seq_programs_t &result ) const;
 
   std::pair<bool, Program> minimizeAndCheck( const Program &p, const OeisSequence &seq, bool optimize ) const;
 
@@ -111,11 +95,10 @@ private:
 
   const Settings &settings;
   Interpreter interpreter;
+  Finder finder;
   Minimizer minimizer;
   Optimizer optimizer;
   std::vector<OeisSequence> sequences;
-  std::vector<std::unique_ptr<Matcher>> matchers;
-  mutable std::vector<MatcherStats> matcher_stats;
   size_t total_count_;
 
 };
