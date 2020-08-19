@@ -127,9 +127,7 @@ void Miner::mine( volatile sig_atomic_t &exit_flag )
     settings_labels.emplace( "program_template", settings.program_template );
   }
 
-  std::map<std::string, std::string> matcher_labels;
   auto &finder = oeis.getFinder();
-  const size_t num_matchers = finder.getMatchers().size();
 
   Generator generator( settings, std::random_device()() );
   std::stack<Program> progs;
@@ -184,24 +182,7 @@ void Miner::mine( volatile sig_atomic_t &exit_flag )
       generated = 0;
       fresh = 0;
       updated = 0;
-      auto &finder = oeis.getFinder();
-      for ( size_t i = 0; i < num_matchers; i++ )
-      {
-        matcher_labels["matcher"] = finder.getMatchers()[i]->getName();
-        matcher_labels["type"] = "candidate";
-        Metrics::get().write( "matches", matcher_labels, finder.getMatcherStats()[i].candidates );
-        matcher_labels["type"] = "false_positive";
-        Metrics::get().write( "matches", matcher_labels, finder.getMatcherStats()[i].false_positives );
-        matcher_labels["type"] = "error";
-        Metrics::get().write( "matches", matcher_labels, finder.getMatcherStats()[i].errors );
-        matcher_labels["type"] = "success";
-        Metrics::get().write( "matches", matcher_labels,
-            finder.getMatcherStats()[i].candidates - finder.getMatcherStats()[i].false_positives
-                - finder.getMatcherStats()[i].errors );
-        finder.getMatcherStats()[i].candidates = 0;
-        finder.getMatcherStats()[i].false_positives = 0;
-        finder.getMatcherStats()[i].errors = 0;
-      }
+      finder.publishMetrics();
     }
   }
 }

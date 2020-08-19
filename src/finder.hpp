@@ -39,6 +39,8 @@ public:
     return matcher_stats;
   }
 
+  void publishMetrics();
+
 private:
 
   void findAll( const Program &p, const Sequence &norm_seq, const std::vector<OeisSequence> &sequences,

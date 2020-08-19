@@ -144,3 +144,25 @@ void Finder::findAll( const Program &p, const Sequence &norm_seq, const std::vec
     }
   }
 }
+
+void Finder::publishMetrics()
+{
+	std::map<std::string, std::string> matcher_labels;
+    for ( size_t i = 0; i < matchers.size(); i++ )
+    {
+      matcher_labels["matcher"] = matchers[i]->getName();
+      matcher_labels["type"] = "candidate";
+      Metrics::get().write( "matches", matcher_labels, matcher_stats[i].candidates );
+      matcher_labels["type"] = "false_positive";
+      Metrics::get().write( "matches", matcher_labels, matcher_stats[i].false_positives );
+      matcher_labels["type"] = "error";
+      Metrics::get().write( "matches", matcher_labels, matcher_stats[i].errors );
+      matcher_labels["type"] = "success";
+      Metrics::get().write( "matches", matcher_labels,
+    		  matcher_stats[i].candidates - matcher_stats[i].false_positives
+              - matcher_stats[i].errors );
+      matcher_stats[i].candidates = 0;
+      matcher_stats[i].false_positives = 0;
+      matcher_stats[i].errors = 0;
+    }
+}
