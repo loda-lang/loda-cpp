@@ -50,5 +50,6 @@ private:
   Interpreter interpreter;
   std::vector<std::unique_ptr<Matcher>> matchers;
   mutable std::vector<MatcherStats> matcher_stats;
+  mutable size_t num_find_attempts;
 
 };
