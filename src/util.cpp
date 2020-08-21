@@ -54,9 +54,10 @@ TwitterClient findTwitterClient()
 }
 
 Log::Log()
-    : level( Level::INFO ),
-      tweet_alerts( getEnvFlag( "LODA_TWEET_ALERTS" ) ),
-      twitter_client( TW_UNKNOWN )
+    :
+    level( Level::INFO ),
+    tweet_alerts( getEnvFlag( "LODA_TWEET_ALERTS" ) ),
+    twitter_client( TW_UNKNOWN )
 {
 }
 
@@ -212,20 +213,21 @@ void Metrics::write( const std::string &field, const std::map<std::string, std::
 }
 
 Settings::Settings()
-    : num_terms( 20 ),
-      num_operations( 20 ),
-      max_memory( getEnvInt( "LODA_MAX_MEMORY", 100000 ) ),
-      max_cycles( getEnvInt( "LODA_MAX_CYCLES", 10000000 ) ),
-      max_constant( 4 ),
-      max_index( 4 ),
-      max_stack_size( getEnvInt( "LODA_MAX_STACK_SIZE", 100 ) ),
-      max_physical_memory( getEnvInt( "LODA_MAX_PHYSICAL_MEMORY", 1024 * 1024 * 1024 ) ),
-      dump_last_program( getEnvFlag( "LODA_DUMP_LAST_PROGRAM" ) ),
-      optimize_existing_programs( false ),
-      search_linear( false ),
-      throw_on_overflow( true ),
-      operation_types( "^" ),
-      operand_types( "cd" )
+    :
+    num_terms( 20 ),
+    num_operations( 20 ),
+    max_memory( getEnvInt( "LODA_MAX_MEMORY", 100000 ) ),
+    max_cycles( getEnvInt( "LODA_MAX_CYCLES", 10000000 ) ),
+    max_constant( 4 ),
+    max_index( 4 ),
+    max_stack_size( getEnvInt( "LODA_MAX_STACK_SIZE", 100 ) ),
+    max_physical_memory( getEnvInt( "LODA_MAX_PHYSICAL_MEMORY", 1024 ) * 1024 * 1024 ),
+    dump_last_program( getEnvFlag( "LODA_DUMP_LAST_PROGRAM" ) ),
+    optimize_existing_programs( false ),
+    search_linear( false ),
+    throw_on_overflow( true ),
+    operation_types( "^" ),
+    operand_types( "cd" )
 {
 }
 
@@ -460,7 +462,8 @@ size_t getMemUsage()
 #elif __APPLE__ || __MACH__
   mach_msg_type_number_t cnt = MACH_TASK_BASIC_INFO_COUNT;
   mach_task_basic_info info;
-  if ( task_info( mach_task_self(), MACH_TASK_BASIC_INFO, reinterpret_cast<task_info_t>( &info ), &cnt ) == KERN_SUCCESS )
+  if ( task_info( mach_task_self(), MACH_TASK_BASIC_INFO, reinterpret_cast<task_info_t>( &info ), &cnt )
+      == KERN_SUCCESS )
   {
     mem_usage = info.resident_size;
   }
