@@ -9,7 +9,8 @@
 Finder::Finder( const Settings &settings )
     :
     settings( settings ),
-    interpreter( settings )
+    interpreter( settings ),
+    num_find_attempts( 0 )
 {
   if ( settings.optimize_existing_programs )
   {
@@ -55,6 +56,16 @@ void Finder::remove( const Sequence &norm_seq, size_t id )
 Matcher::seq_programs_t Finder::findSequence( const Program &p, Sequence &norm_seq,
     const std::vector<OeisSequence> &sequences ) const
 {
+  // update memory usage info
+  if ( num_find_attempts++ % 1000 == 0 )
+  {
+    bool has_memory = settings.hasMemory();
+    for ( auto &matcher : matchers )
+    {
+      matcher->has_memory = has_memory;
+    }
+  }
+
   std::vector<Sequence> seqs;
   seqs.resize( std::max<size_t>( 2, settings.max_index + 1 ) );
   Matcher::seq_programs_t result;

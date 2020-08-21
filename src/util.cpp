@@ -7,6 +7,8 @@
 #include <sstream>
 #include <stdexcept>
 #include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
 
 bool getEnvFlag( const std::string &var )
 {
@@ -52,10 +54,9 @@ TwitterClient findTwitterClient()
 }
 
 Log::Log()
-    :
-    level( Level::INFO ),
-    tweet_alerts( getEnvFlag( "LODA_TWEET_ALERTS" ) ),
-    twitter_client( TW_UNKNOWN )
+    : level( Level::INFO ),
+      tweet_alerts( getEnvFlag( "LODA_TWEET_ALERTS" ) ),
+      twitter_client( TW_UNKNOWN )
 {
 }
 
@@ -211,20 +212,20 @@ void Metrics::write( const std::string &field, const std::map<std::string, std::
 }
 
 Settings::Settings()
-    :
-    num_terms( 20 ),
-    num_operations( 20 ),
-    max_memory( getEnvInt( "LODA_MAX_MEMORY", 100000 ) ),
-    max_cycles( getEnvInt( "LODA_MAX_CYCLES", 10000000 ) ),
-    max_constant( 4 ),
-    max_index( 4 ),
-    max_stack_size( getEnvInt( "LODA_MAX_STACK_SIZE", 100 ) ),
-    dump_last_program( getEnvFlag( "LODA_DUMP_LAST_PROGRAM" ) ),
-    optimize_existing_programs( false ),
-    search_linear( false ),
-    throw_on_overflow( true ),
-    operation_types( "^" ),
-    operand_types( "cd" )
+    : num_terms( 20 ),
+      num_operations( 20 ),
+      max_memory( getEnvInt( "LODA_MAX_MEMORY", 100000 ) ),
+      max_cycles( getEnvInt( "LODA_MAX_CYCLES", 10000000 ) ),
+      max_constant( 4 ),
+      max_index( 4 ),
+      max_stack_size( getEnvInt( "LODA_MAX_STACK_SIZE", 100 ) ),
+      max_physical_memory( getEnvInt( "LODA_MAX_PHYSICAL_MEMORY", 1024 * 1024 * 1024 ) ),
+      dump_last_program( getEnvFlag( "LODA_DUMP_LAST_PROGRAM" ) ),
+      optimize_existing_programs( false ),
+      search_linear( false ),
+      throw_on_overflow( true ),
+      operation_types( "^" ),
+      operand_types( "cd" )
 {
 }
 
@@ -237,6 +238,7 @@ enum class Option
   MAX_CYCLES,
   MAX_CONSTANT,
   MAX_INDEX,
+  MAX_PHYSICAL_MEMORY,
   OPERATION_TYPES,
   OPERAND_TYPES,
   PROGRAM_TEMPLATE,
@@ -251,7 +253,8 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
   {
     std::string arg( argv[i] );
     if ( option == Option::NUM_TERMS || option == Option::NUM_OPERATIONS || option == Option::MAX_MEMORY
-        || option == Option::MAX_CYCLES || option == Option::MAX_CONSTANT || option == Option::MAX_INDEX )
+        || option == Option::MAX_CYCLES || option == Option::MAX_CONSTANT || option == Option::MAX_INDEX
+        || option == Option::MAX_PHYSICAL_MEMORY )
     {
       std::stringstream s( arg );
       int val;
@@ -279,6 +282,9 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
         break;
       case Option::MAX_INDEX:
         max_index = val;
+        break;
+      case Option::MAX_PHYSICAL_MEMORY:
+        max_physical_memory = val * 1024 * 1024;
         break;
       case Option::LOG_LEVEL:
       case Option::OPERATION_TYPES:
@@ -359,6 +365,10 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
       {
         option = Option::MAX_INDEX;
       }
+      else if ( opt == "s" )
+      {
+        option = Option::MAX_PHYSICAL_MEMORY;
+      }
       else if ( opt == "x" )
       {
         optimize_existing_programs = true;
@@ -396,6 +406,17 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
   return unparsed;
 }
 
+bool Settings::hasMemory() const
+{
+  bool has_memory = getMemUsage() <= (size_t) (0.95 * max_physical_memory);
+  if ( !has_memory )
+  {
+    Log::get().info(
+        "Reached maximum physical memory limit of " + std::to_string( max_physical_memory / (1024 * 1024) ) + "MB" );
+  }
+  return has_memory;
+}
+
 std::string getLodaHome()
 {
   // don't remove the trailing /
@@ -419,4 +440,30 @@ void ensureDir( const std::string &path )
   {
     Log::get().error( "Error determining directory for " + path, true );
   }
+}
+
+size_t getMemUsage()
+{
+  size_t mem_usage = 0;
+#if __linux__
+  auto fp = fopen( "/proc/self/statm", "r" );
+  if ( fp )
+  {
+    long rss = 0;
+    if ( fscanf( fp, "%*s%ld", &rss ) != 1 )
+    {
+      rss = 0;
+    }
+    fclose( fp );
+    mem_usage = (size_t) (rss) * (size_t) (sysconf( _SC_PAGE_SIZE ));
+  }
+#elif __APPLE__ || __MACH__
+  mach_msg_type_number_t cnt = MACH_TASK_BASIC_INFO_COUNT;
+  mach_task_basic_info info;
+  if ( task_info( mach_task_self(), MACH_TASK_BASIC_INFO, reinterpret_cast<task_info_t>( &info ), &cnt ) == KERN_SUCCESS )
+  {
+    mem_usage = info.resident_size;
+  }
+#endif
+  return mem_usage;
 }

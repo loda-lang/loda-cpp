@@ -49,6 +49,8 @@ void help()
   std::cout << "General options:" << std::endl;
   std::cout << "  -l <string>      Log level (values:debug,info,warn,error,alert)" << std::endl;
   std::cout << "  -t <number>      Number of sequence terms (default:" << settings.num_terms << ")" << std::endl;
+  std::cout << "  -s <number>      Maximum physical memory (default:" << settings.max_physical_memory / (1024 * 1024)
+      << ")" << std::endl;
   std::cout << "Interpreter options:" << std::endl;
   std::cout << "  -c <number>      Maximum number of interpreter cycles (default:" << settings.max_cycles << ")"
       << std::endl;

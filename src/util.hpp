@@ -64,6 +64,7 @@ public:
   size_t max_constant;
   size_t max_index;
   size_t max_stack_size;
+  size_t max_physical_memory;
   bool dump_last_program;
   bool optimize_existing_programs;
   bool search_linear;
@@ -76,8 +77,12 @@ public:
 
   std::vector<std::string> parseArgs( int argc, char *argv[] );
 
+  bool hasMemory() const;
+
 };
 
 std::string getLodaHome();
 
 void ensureDir( const std::string &path );
+
+size_t getMemUsage();

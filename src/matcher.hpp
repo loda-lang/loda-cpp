@@ -27,6 +27,8 @@ public:
 
   virtual const SequenceToIdsMap& getReducedSequences() const = 0;
 
+  bool has_memory = true;
+
 };
 
 template<class T>

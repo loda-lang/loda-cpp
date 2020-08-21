@@ -56,7 +56,10 @@ bool AbstractMatcher<T>::shouldMatchSequence( const Sequence &seq ) const
     // Log::get().debug( "Back off matching of already matched sequence " + seq.to_string() );
     return false;
   }
-  match_attempts.insert( seq );
+  if ( has_memory )
+  {
+    match_attempts.insert( seq );
+  }
   return true;
 }
 

@@ -159,7 +159,7 @@ void Miner::mine( volatile sig_atomic_t &exit_flag )
         {
           updated++;
         }
-        if ( progs.size() < 1000 )
+        if ( progs.size() < 1000 || settings.hasMemory() )
         {
           generator.mutateConstants( s.second, 100, progs );
         }
