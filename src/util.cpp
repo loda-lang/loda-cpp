@@ -10,6 +10,10 @@
 #include <unistd.h>
 #include <sys/types.h>
 
+#if __MACH__
+#include <mach/mach.h>
+#endif
+
 bool getEnvFlag( const std::string &var )
 {
   auto t = std::getenv( var.c_str() );
@@ -459,11 +463,11 @@ size_t getMemUsage()
     fclose( fp );
     mem_usage = (size_t) (rss) * (size_t) (sysconf( _SC_PAGE_SIZE ));
   }
-#elif __APPLE__ || __MACH__
+#elif __MACH__
   mach_msg_type_number_t cnt = MACH_TASK_BASIC_INFO_COUNT;
   mach_task_basic_info info;
-  if ( task_info( mach_task_self(), MACH_TASK_BASIC_INFO, reinterpret_cast<task_info_t>( &info ), &cnt )
-      == KERN_SUCCESS )
+  if ( task_info( mach_task_self( ), MACH_TASK_BASIC_INFO, reinterpret_cast<task_info_t>( &info ),
+      &cnt ) == KERN_SUCCESS )
   {
     mem_usage = info.resident_size;
   }
