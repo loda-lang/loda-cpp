@@ -686,17 +686,23 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
   int list_index = -1;
   ProgramUtil::Stats stats;
   size_t num_optimized = 0;
+  Parser parser;
+  Program program, optimized;
+  Sequence result;
+  std::string file_name;
+  bool has_b_file, has_program, is_okay;
+
   for ( auto &s : sequences )
   {
     if ( s.id == 0 )
     {
       continue;
     }
-    std::string file_name = s.getProgramPath();
+    file_name = s.getProgramPath();
     std::ifstream program_file( file_name );
     std::ifstream b_file( s.getBFilePath() );
-    bool has_b_file = b_file.good();
-    bool has_program = false;
+    has_b_file = b_file.good();
+    has_program = false;
     if ( program_file.good() )
     {
       if ( exit_flag ) continue;
@@ -704,30 +710,17 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
       {
         Log::get().debug( "Checking program for " + s.to_string() );
       }
-      Parser parser;
-      Program program = parser.parse( program_file );
-      Settings settings2 = settings;
-      settings2.num_terms = s.full.size();
-      Interpreter interpreter2( settings2 );
-      bool okay;
+      program = parser.parse( program_file );
       try
       {
-        Sequence result;
-        interpreter2.eval( program, result );
-        if ( result.size() != s.full.size() || result != s.full )
-        {
-          okay = false;
-        }
-        else
-        {
-          okay = true;
-        }
+        interpreter.eval( program, result, s.full.size() );
+        is_okay = (result == s.full);
       }
       catch ( const std::exception &exc )
       {
-        okay = false;
+        is_okay = false;
       }
-      if ( !okay )
+      if ( !is_okay )
       {
         Log::get().alert( "Removing invalid program for " + s.to_string() );
         program_file.close();
@@ -737,10 +730,9 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
       {
         has_program = true;
         ProgramUtil::removeOps( program, Operation::Type::NOP );
-        Program optimized = program;
-        Minimizer minimizer2( settings2 );
-        minimizer2.optimizeAndMinimize( optimized, 2, 1, s.full.size() );
-        if ( !(program == optimized) )
+        optimized = program;
+        minimizer.optimizeAndMinimize( optimized, 2, 1, s.full.size() );
+        if ( program != optimized )
         {
           Log::get().warn( "Updating program because it is not optimal: " + file_name );
           num_optimized++;
