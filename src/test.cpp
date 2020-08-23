@@ -27,6 +27,7 @@ void Test::all()
   knownPrograms();
   ackermann();
   collatz();
+  linearMatcher();
   deltaMatcher();
   size_t tests = 1000;
   for ( size_t degree = 0; degree <= 1; degree++ )
@@ -500,6 +501,13 @@ void Test::minimizer( size_t tests )
       Log::get().error( "Program evaluated to different sequence after optimization", true );
     }
   }
+}
+
+void Test::linearMatcher()
+{
+  LinearMatcher matcher( false );
+  testMatcherSet( matcher, { 27, 5843, 8585, 16789 } );
+  testMatcherSet( matcher, { 290, 1105, 117950 } );
 }
 
 void Test::deltaMatcher()

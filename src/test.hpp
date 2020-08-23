@@ -31,6 +31,8 @@ public:
 
   void minimizer( size_t tests );
 
+  void linearMatcher();
+
   void deltaMatcher();
 
   void polynomialMatcher( size_t tests, size_t degree );
