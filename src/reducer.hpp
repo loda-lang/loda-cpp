@@ -13,9 +13,9 @@ class Reducer
 {
 public:
 
-  static int truncate( Sequence &seq );
+  static number_t truncate( Sequence &seq );
 
-  static int shrink( Sequence &seq );
+  static number_t shrink( Sequence &seq );
 
   static Polynomial polynomial( Sequence &seq, int degree );
 

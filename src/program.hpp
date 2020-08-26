@@ -46,6 +46,7 @@ public:
     MOV,
     ADD,
     SUB,
+    TRN,
     MUL,
     DIV,
     MOD,
@@ -61,7 +62,7 @@ public:
     DBG,
   };
 
-  static const std::array<Type, 17> Types;
+  static const std::array<Type, 18> Types;
 
   class Metadata
   {

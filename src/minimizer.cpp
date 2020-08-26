@@ -25,6 +25,23 @@ void Minimizer::minimize( Program &p, size_t num_terms ) const
     {
       continue;
     }
+    else if ( op.type == Operation::Type::TRN )
+    {
+      p.ops.at( i ).type = Operation::Type::SUB;
+      bool can_replace;
+      try
+      {
+        can_replace = interpreter.check( p, target_sequence );
+      }
+      catch ( const std::exception& )
+      {
+        can_replace = false;
+      }
+      if ( !can_replace )
+      {
+        p.ops.at( i ) = op;
+      }
+    }
     else if ( op.type == Operation::Type::LPB )
     {
       if ( op.source.type != Operand::Type::CONSTANT || op.source.value != 1 )

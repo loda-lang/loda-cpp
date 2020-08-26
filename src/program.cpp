@@ -2,10 +2,11 @@
 
 #include "number.hpp"
 
-const std::array<Operation::Type, 17> Operation::Types = { Operation::Type::NOP, Operation::Type::MOV,
-    Operation::Type::ADD, Operation::Type::SUB, Operation::Type::MUL, Operation::Type::DIV, Operation::Type::MOD,
-    Operation::Type::POW, Operation::Type::LOG, Operation::Type::FAC, Operation::Type::GCD, Operation::Type::BIN,
-    Operation::Type::CMP, Operation::Type::LPB, Operation::Type::LPE, Operation::Type::CLR, Operation::Type::DBG, };
+const std::array<Operation::Type, 18> Operation::Types = { Operation::Type::NOP, Operation::Type::MOV,
+    Operation::Type::ADD, Operation::Type::SUB, Operation::Type::TRN, Operation::Type::MUL, Operation::Type::DIV,
+    Operation::Type::MOD, Operation::Type::POW, Operation::Type::LOG, Operation::Type::FAC, Operation::Type::GCD,
+    Operation::Type::BIN, Operation::Type::CMP, Operation::Type::LPB, Operation::Type::LPE, Operation::Type::CLR,
+    Operation::Type::DBG, };
 
 const Operation::Metadata& Operation::Metadata::get( Type t )
 {
@@ -13,6 +14,7 @@ const Operation::Metadata& Operation::Metadata::get( Type t )
   static Operation::Metadata mov { Operation::Type::MOV, "mov", 'm', 2, true, false, true };
   static Operation::Metadata add { Operation::Type::ADD, "add", 'a', 2, true, true, true };
   static Operation::Metadata sub { Operation::Type::SUB, "sub", 's', 2, true, true, true };
+  static Operation::Metadata trn { Operation::Type::TRN, "trn", 't', 2, true, true, true };
   static Operation::Metadata mul { Operation::Type::MUL, "mul", 'u', 2, true, true, true };
   static Operation::Metadata div { Operation::Type::DIV, "div", 'd', 2, true, true, true };
   static Operation::Metadata mod { Operation::Type::MOD, "mod", 'o', 2, true, true, true };
@@ -36,6 +38,8 @@ const Operation::Metadata& Operation::Metadata::get( Type t )
     return add;
   case Operation::Type::SUB:
     return sub;
+  case Operation::Type::TRN:
+    return trn;
   case Operation::Type::MUL:
     return mul;
   case Operation::Type::DIV:

@@ -80,12 +80,12 @@ void Test::semantics()
   SEM_CHECK_ARG_INF( add );
 
   SEM_CHECK( sub( 0, 0 ), 0 );
-  SEM_CHECK( sub( 0, 3 ), 0 );
+  SEM_CHECK( sub( 0, 3 ), -3 );
   SEM_CHECK( sub( 2, 0 ), 2 );
   SEM_CHECK( sub( 3, 2 ), 1 );
-  SEM_CHECK( sub( 2, 3 ), 0 );
+  SEM_CHECK( sub( 2, 3 ), -1 );
   SEM_CHECK( sub( 0, -3 ), 3 );
-  SEM_CHECK( sub( -2, 0 ), 0 );
+  SEM_CHECK( sub( -2, 0 ), -2 );
   SEM_CHECK( sub( -2, -3 ), 1 );
   SEM_CHECK( sub( AI, AI ), 0 );
   SEM_CHECK( sub( -AI, -AI ), 0 );

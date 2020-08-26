@@ -3,9 +3,13 @@
 #include "semantics.hpp"
 #include "util.hpp"
 
-int Reducer::truncate( Sequence &seq )
+number_t Reducer::truncate( Sequence &seq )
 {
-  int offset = seq.min( false );
+  auto offset = seq.min( false );
+  if ( offset == 0 || offset == NUM_INF )
+  {
+    return 0;
+  }
   for ( size_t i = 0; i < seq.size(); i++ )
   {
     seq[i] = seq[i] - offset;
@@ -13,28 +17,28 @@ int Reducer::truncate( Sequence &seq )
   return offset;
 }
 
-int Reducer::shrink( Sequence &seq )
+number_t Reducer::shrink( Sequence &seq )
 {
-  int factor = -1;
+  number_t factor = NUM_INF;
   for ( size_t i = 0; i < seq.size(); i++ )
   {
-    if ( seq[i] > 0 )
+    if ( seq[i] != 0 )
     {
-      if ( factor == -1 )
+      if ( factor == NUM_INF )
       {
-        factor = seq[i];
+        factor = std::abs( seq[i] );
       }
       else
       {
-        factor = Semantics::gcd( factor, seq[i] );
+        factor = Semantics::gcd( factor, std::abs( seq[i] ) );
       }
     }
   }
-  if ( factor == -1 )
+  if ( factor == NUM_INF )
   {
     factor = 1;
   }
-  if ( factor > 1 )
+  if ( factor != 1 )
   {
     for ( size_t i = 0; i < seq.size(); i++ )
     {
@@ -64,12 +68,12 @@ Polynomial Reducer::polynomial( Sequence &seq, int degree )
   }
 
   // calculate maximum factor for current degree
-  int64_t max_factor = -1;
+  int64_t max_factor = NUM_INF;
   for ( size_t x = 0; x < seq.size(); x++ )
   {
     auto x_exp = Semantics::pow( x, degree );
-    int64_t new_factor = (x_exp == 0) ? -1 : seq[x] / x_exp;
-    max_factor = (max_factor == -1) ? new_factor : (new_factor < max_factor ? new_factor : max_factor);
+    int64_t new_factor = (x_exp == 0) ? NUM_INF : seq[x] / x_exp;
+    max_factor = (max_factor == NUM_INF) ? new_factor : (new_factor < max_factor ? new_factor : max_factor);
     if ( max_factor == 0 ) break;
   }
 
