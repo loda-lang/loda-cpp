@@ -94,7 +94,7 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
   std::string line;
   size_t pos;
   size_t id;
-  int64_t num;
+  int64_t num, sign;
   Sequence seq_full, seq_norm, seq_big;
   size_t loaded_count = 0;
   size_t big_loaded_count = 0;
@@ -130,13 +130,15 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
     }
     ++pos;
     num = 0;
+    sign = 1;
     seq_full.clear();
     while ( pos < line.length() )
     {
       if ( line[pos] == ',' )
       {
-        seq_full.push_back( num );
+        seq_full.push_back( sign * num );
         num = 0;
+        sign = 1;
       }
       else if ( line[pos] >= '0' && line[pos] <= '9' )
       {
@@ -148,8 +150,7 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
       }
       else if ( line[pos] == '-' )
       {
-        seq_full.clear();
-        break;
+        sign = -1;
       }
       else
       {
@@ -194,11 +195,6 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
         if ( index != expected_index )
         {
           Log::get().warn( "Unexpected index " + std::to_string( index ) + " in b-file " + big_path );
-          seq_big.clear();
-          break;
-        }
-        if ( value < 0 )
-        {
           seq_big.clear();
           break;
         }
@@ -592,6 +588,12 @@ std::string Oeis::isOptimizedBetter( Program existing, Program optimized ) const
     return "Simpler";
   }
 
+  // we prefer sub over trn
+  if ( ProgramUtil::numOps( optimized, Operation::Type::TRN ) < ProgramUtil::numOps( existing, Operation::Type::TRN ) )
+  {
+    return "Simpler";
+  }
+
   // now remove nops...
   optimizer.removeNops( existing );
   optimizer.removeNops( optimized );
@@ -722,9 +724,17 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
       }
       if ( !is_okay )
       {
-        Log::get().alert( "Removing invalid program for " + s.to_string() );
-        program_file.close();
-        remove( file_name.c_str() );
+        if ( ProgramUtil::replaceOps( program, Operation::Type::SUB, Operation::Type::TRN ) )
+        {
+          Log::get().warn( "Replacing subtraction in program for " + s.to_string() );
+          dumpProgram( s.id, program, file_name );
+        }
+        else
+        {
+          Log::get().alert( "Removing invalid program for " + s.to_string() );
+          program_file.close();
+          remove( file_name.c_str() );
+        }
       }
       else
       {

@@ -27,6 +27,7 @@ void Test::all()
   knownPrograms();
   ackermann();
   collatz();
+  linearMatcher();
   deltaMatcher();
   size_t tests = 1000;
   for ( size_t degree = 0; degree <= 1; degree++ )
@@ -79,12 +80,12 @@ void Test::semantics()
   SEM_CHECK_ARG_INF( add );
 
   SEM_CHECK( sub( 0, 0 ), 0 );
-  SEM_CHECK( sub( 0, 3 ), 0 );
+  SEM_CHECK( sub( 0, 3 ), -3 );
   SEM_CHECK( sub( 2, 0 ), 2 );
   SEM_CHECK( sub( 3, 2 ), 1 );
-  SEM_CHECK( sub( 2, 3 ), 0 );
+  SEM_CHECK( sub( 2, 3 ), -1 );
   SEM_CHECK( sub( 0, -3 ), 3 );
-  SEM_CHECK( sub( -2, 0 ), 0 );
+  SEM_CHECK( sub( -2, 0 ), -2 );
   SEM_CHECK( sub( -2, -3 ), 1 );
   SEM_CHECK( sub( AI, AI ), 0 );
   SEM_CHECK( sub( -AI, -AI ), 0 );
@@ -500,6 +501,13 @@ void Test::minimizer( size_t tests )
       Log::get().error( "Program evaluated to different sequence after optimization", true );
     }
   }
+}
+
+void Test::linearMatcher()
+{
+  LinearMatcher matcher( false );
+  testMatcherSet( matcher, { 27, 5843, 8585, 16789 } );
+  testMatcherSet( matcher, { 290, 1105, 117950 } );
 }
 
 void Test::deltaMatcher()

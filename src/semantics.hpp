@@ -10,6 +10,8 @@ public:
 
   static number_t sub( number_t a, number_t b );
 
+  static number_t trn( number_t a, number_t b );
+
   static number_t mul( number_t a, number_t b );
 
   static number_t div( number_t a, number_t b );
