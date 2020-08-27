@@ -582,16 +582,15 @@ int Oeis::getNumCycles( const Program &p ) const
 std::string Oeis::isOptimizedBetter( Program existing, Program optimized ) const
 {
   // we prefer programs w/o indirect memory access
-  if ( ProgramUtil::numOps( optimized, Operand::Type::INDIRECT )
-      < ProgramUtil::numOps( existing, Operand::Type::INDIRECT ) )
+  auto in_opt = ProgramUtil::numOps( optimized, Operand::Type::INDIRECT );
+  auto in_ext = ProgramUtil::numOps( existing, Operand::Type::INDIRECT );
+  if ( in_opt < in_ext )
   {
     return "Simpler";
   }
-
-  // we prefer sub over trn
-  if ( ProgramUtil::numOps( optimized, Operation::Type::TRN ) < ProgramUtil::numOps( existing, Operation::Type::TRN ) )
+  else if ( in_opt > in_ext )
   {
-    return "Simpler";
+    return "";
   }
 
   // now remove nops...
@@ -642,7 +641,17 @@ std::pair<bool, bool> Oeis::updateProgram( size_t id, const Program &p ) const
         }
         is_new = false;
         Parser parser;
-        auto existing = parser.parse( in );
+        Program existing;
+        try
+        {
+          existing = parser.parse( in );
+        }
+        catch ( const std::exception &exc )
+        {
+          Log::get().error( "Error parsing " + file_name, false );
+          return
+          { false,false};
+        }
         change = isOptimizedBetter( existing, optimized.second );
         if ( change.empty() )
         {
@@ -712,7 +721,15 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
       {
         Log::get().debug( "Checking program for " + s.to_string() );
       }
-      program = parser.parse( program_file );
+      try
+      {
+        program = parser.parse( program_file );
+      }
+      catch ( const std::exception &exc )
+      {
+        Log::get().error( "Error parsing " + file_name, false );
+        continue;
+      }
       try
       {
         interpreter.eval( program, result, s.full.size() );
@@ -724,17 +741,9 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
       }
       if ( !is_okay )
       {
-        if ( ProgramUtil::replaceOps( program, Operation::Type::SUB, Operation::Type::TRN ) )
-        {
-          Log::get().warn( "Replacing subtraction in program for " + s.to_string() );
-          dumpProgram( s.id, program, file_name );
-        }
-        else
-        {
-          Log::get().alert( "Removing invalid program for " + s.to_string() );
-          program_file.close();
-          remove( file_name.c_str() );
-        }
+        Log::get().alert( "Removing invalid program for " + s.to_string() );
+        program_file.close();
+        remove( file_name.c_str() );
       }
       else
       {

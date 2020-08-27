@@ -48,7 +48,7 @@ number_t Reducer::shrink( Sequence &seq )
   return factor;
 }
 
-Sequence subPoly( const Sequence &s, int64_t factor, int64_t exp )
+Sequence subPoly( const Sequence &s, number_t factor, int64_t exp )
 {
   Sequence t;
   t.resize( s.size() );
@@ -68,21 +68,21 @@ Polynomial Reducer::polynomial( Sequence &seq, int degree )
   }
 
   // calculate maximum factor for current degree
-  int64_t max_factor = NUM_INF;
+  number_t max_factor = NUM_INF;
   for ( size_t x = 0; x < seq.size(); x++ )
   {
     auto x_exp = Semantics::pow( x, degree );
-    int64_t new_factor = (x_exp == 0) ? NUM_INF : seq[x] / x_exp;
+    number_t new_factor = (x_exp == 0) ? NUM_INF : seq[x] / x_exp;
     max_factor = (max_factor == NUM_INF) ? new_factor : (new_factor < max_factor ? new_factor : max_factor);
     if ( max_factor == 0 ) break;
   }
 
-  int64_t factor = max_factor;
+  number_t factor = max_factor;
   Sequence reduced = subPoly( seq, factor, degree );
   auto poly = polynomial( reduced, degree - 1 );
   auto cost = reduced.sum();
 
-  int64_t min_factor = std::max( (int64_t) 0, factor - 8 ); // magic number
+  number_t min_factor = std::max( (number_t) 0, factor - 8 ); // magic number
   while ( factor > min_factor )
   {
     Sequence reduced_new = subPoly( seq, factor - 1, degree );

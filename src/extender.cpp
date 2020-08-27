@@ -2,7 +2,7 @@
 
 #include "optimizer.hpp"
 
-void add_or_sub( Program &p, int c )
+void add_or_sub( Program &p, number_t c )
 {
   if ( c > 0 )
   {
