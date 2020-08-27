@@ -4,9 +4,9 @@
 
 struct delta_t
 {
-  int delta;
-  int offset;
-  int factor;
+  number_t delta;
+  number_t offset;
+  number_t factor;
 };
 
 class Reducer
