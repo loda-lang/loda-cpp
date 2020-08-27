@@ -593,18 +593,6 @@ std::string Oeis::isOptimizedBetter( Program existing, Program optimized ) const
     return "";
   }
 
-  // we prefer sub over trn
-  auto trn_opt = ProgramUtil::numOps( optimized, Operation::Type::TRN );
-  auto trn_ext = ProgramUtil::numOps( existing, Operation::Type::TRN );
-  if ( trn_opt < trn_ext )
-  {
-    return "Simpler";
-  }
-  else if ( trn_opt > trn_ext )
-  {
-    return "";
-  }
-
   // now remove nops...
   optimizer.removeNops( existing );
   optimizer.removeNops( optimized );
