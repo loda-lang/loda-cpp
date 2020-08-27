@@ -582,16 +582,27 @@ int Oeis::getNumCycles( const Program &p ) const
 std::string Oeis::isOptimizedBetter( Program existing, Program optimized ) const
 {
   // we prefer programs w/o indirect memory access
-  if ( ProgramUtil::numOps( optimized, Operand::Type::INDIRECT )
-      < ProgramUtil::numOps( existing, Operand::Type::INDIRECT ) )
+  auto in_opt = ProgramUtil::numOps( optimized, Operand::Type::INDIRECT );
+  auto in_ext = ProgramUtil::numOps( existing, Operand::Type::INDIRECT );
+  if ( in_opt < in_ext )
   {
     return "Simpler";
   }
+  else if ( in_opt > in_ext )
+  {
+    return "";
+  }
 
   // we prefer sub over trn
-  if ( ProgramUtil::numOps( optimized, Operation::Type::TRN ) < ProgramUtil::numOps( existing, Operation::Type::TRN ) )
+  auto trn_opt = ProgramUtil::numOps( optimized, Operation::Type::TRN );
+  auto trn_ext = ProgramUtil::numOps( existing, Operation::Type::TRN );
+  if ( trn_opt < trn_ext )
   {
     return "Simpler";
+  }
+  else if ( trn_opt > trn_ext )
+  {
+    return "";
   }
 
   // now remove nops...
