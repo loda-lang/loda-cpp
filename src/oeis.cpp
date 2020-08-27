@@ -653,7 +653,17 @@ std::pair<bool, bool> Oeis::updateProgram( size_t id, const Program &p ) const
         }
         is_new = false;
         Parser parser;
-        auto existing = parser.parse( in );
+        Program existing;
+        try
+        {
+          existing = parser.parse( in );
+        }
+        catch ( const std::exception &exc )
+        {
+          Log::get().error( "Error parsing " + file_name, false );
+          return
+          { false,false};
+        }
         change = isOptimizedBetter( existing, optimized.second );
         if ( change.empty() )
         {
@@ -723,7 +733,15 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
       {
         Log::get().debug( "Checking program for " + s.to_string() );
       }
-      program = parser.parse( program_file );
+      try
+      {
+        program = parser.parse( program_file );
+      }
+      catch ( const std::exception &exc )
+      {
+        Log::get().error( "Error parsing " + file_name, false );
+        continue;
+      }
       try
       {
         interpreter.eval( program, result, s.full.size() );
