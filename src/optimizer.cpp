@@ -56,7 +56,7 @@ bool Optimizer::removeNops( Program &p ) const
     {
       is_nop = true;
     }
-    else if ( it->source == it->target && (t == Operation::Type::MOV || t == Operation::Type::GCD) )
+    else if ( it->source == it->target && (t == Operation::Type::MOV) )
     {
       is_nop = true;
     }

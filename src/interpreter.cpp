@@ -205,10 +205,8 @@ size_t Interpreter::run( const Program &p, Memory &mem ) const
 
       start = get( lpb.target, mem, true );
       length2 = get( lpb.source, mem );
-      if ( length > length2 )
-      {
-        length = length2;
-      }
+
+      length = std::min( length, length2 );
 
       frag = mem.fragment( start, length, true );
 
