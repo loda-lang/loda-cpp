@@ -375,6 +375,10 @@ bool Optimizer::getUsedMemoryCells( const Program &p, std::unordered_set<number_
         return false;
       }
     }
+    if ( region_length > settings.max_memory )
+    {
+      return false;
+    }
     if ( op.source.type == Operand::Type::DIRECT )
     {
       for ( size_t i = 0; i < region_length; i++ )
