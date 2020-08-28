@@ -20,13 +20,13 @@ public:
 
   void clear();
 
-  void clear( number_t start, size_t length );
+  void clear( number_t start, int64_t length );
 
-  Memory fragment( number_t start, size_t length, bool normalize ) const;
+  Memory fragment( number_t start, int64_t length, bool normalize ) const;
 
   size_t approximate_size() const;
 
-  bool is_less( const Memory &m, size_t length ) const;
+  bool is_less( const Memory &m, int64_t length ) const;
 
   bool operator==( const Memory &m ) const;
 

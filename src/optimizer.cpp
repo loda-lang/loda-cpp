@@ -56,7 +56,7 @@ bool Optimizer::removeNops( Program &p ) const
     {
       is_nop = true;
     }
-    else if ( it->source == it->target && (t == Operation::Type::MOV || t == Operation::Type::GCD) )
+    else if ( it->source == it->target && (t == Operation::Type::MOV) )
     {
       is_nop = true;
     }
@@ -374,6 +374,10 @@ bool Optimizer::getUsedMemoryCells( const Program &p, std::unordered_set<number_
       {
         return false;
       }
+    }
+    if ( region_length > settings.max_memory )
+    {
+      return false;
     }
     if ( op.source.type == Operand::Type::DIRECT )
     {

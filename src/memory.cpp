@@ -46,7 +46,7 @@ void Memory::clear()
   full.clear();
 }
 
-void Memory::clear( number_t start, size_t length )
+void Memory::clear( number_t start, int64_t length )
 {
   if ( start == NUM_INF || length <= 0 )
   {
@@ -84,7 +84,7 @@ void Memory::clear( number_t start, size_t length )
   }
 }
 
-Memory Memory::fragment( number_t start, size_t length, bool normalize ) const
+Memory Memory::fragment( number_t start, int64_t length, bool normalize ) const
 {
   Memory frag;
   if ( start == NUM_INF || length <= 0 )
@@ -126,8 +126,12 @@ size_t Memory::approximate_size() const
   return full.size() + MEMORY_CACHE_SIZE;
 }
 
-bool Memory::is_less( const Memory &m, size_t length ) const
+bool Memory::is_less( const Memory &m, int64_t length ) const
 {
+  if ( length <= 0 )
+  {
+    return false;
+  }
   // TODO: this is slow for large lengths
   for ( number_t i = 0; i < (number_t) length; ++i )
   {
