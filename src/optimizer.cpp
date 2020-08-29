@@ -139,18 +139,15 @@ bool Optimizer::mergeOps( Program &p ) const
           do_merge = true;
         }
 
-        // first add, second sub?
-        else if ( o1.type == Operation::Type::ADD && o2.type == Operation::Type::SUB )
+        // one add, the other sub?
+        else if ( (o1.type == Operation::Type::ADD && o2.type == Operation::Type::SUB)
+            || (o1.type == Operation::Type::SUB && o2.type == Operation::Type::ADD) )
         {
-          if ( o1.source.value > o2.source.value )
+          o1.source.value = o1.source.value - o2.source.value;
+          if ( o1.source.value < 0 )
           {
-            o1.source.value = o1.source.value - o2.source.value;
-            o1.type = Operation::Type::ADD;
-          }
-          else
-          {
-            o1.source.value = o2.source.value - o1.source.value;
-            o1.type = Operation::Type::SUB;
+            o1.source.value = -o1.source.value;
+            o1.type = (o1.type == Operation::Type::ADD) ? Operation::Type::SUB : Operation::Type::ADD;
           }
           do_merge = true;
         }
