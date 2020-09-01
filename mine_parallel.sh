@@ -104,24 +104,27 @@ function push_updates {
   fi
   num_changes=$(git status programs -s | wc -l)
   if [ "$num_changes" -ge "$min_changes" ]; then
-  	stop_miners
-  	if [ "$branch" = "master" ]; then
+    stop_miners
+    if [ "$branch" = "master" ]; then
       ./make_charts.sh
-    fi 
+    fi
     echo "Pushing updates"
-    git pull
     git add programs
     if [ "$branch" = "master" ]; then
-      git add stats README.md
+      git add stats
     fi
     git commit -m "updated $num_changes programs"
+    git pull
+    if [ "$branch" != "master" ]; then
+      git merge -X theirs -m "merge master into $branch" origin/master
+    fi
     git push
     echo "Rebuilding loda"
     pushd src && make clean && make && popd
   fi
   ps -A > /tmp/loda-ps.txt
   if ! grep loda /tmp/loda-ps.txt; then
-  	start_miners $@
+    start_miners $@
   fi
   rm /tmp/loda-ps.txt
 }
