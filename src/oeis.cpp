@@ -693,8 +693,7 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
   }
   load( exit_flag );
   Log::get().info( "Start maintaining OEIS programs" );
-  std::ofstream list_file;
-  int list_index = -1;
+  std::vector<std::stringstream> list_files( 10 );
   ProgramUtil::Stats stats;
   size_t num_optimized = 0;
   Parser parser;
@@ -762,31 +761,36 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
         stats.updateProgram( optimized );
 
         // write list file
-        if ( list_index < 0 || (int) s.id / 100000 != list_index )
-        {
-          list_index++;
-          std::string list_path = "programs/oeis/list" + std::to_string( list_index ) + ".md";
-          OeisSequence start( (list_index * 100000) + 1 );
-          OeisSequence end( (list_index + 1) * 100000 );
-          list_file.close();
-          list_file.open( list_path );
-          list_file << "# Programs for " << start.id_str() << "-" << end.id_str() << "\n\n";
-          list_file
-              << "List of integer sequences with links to LODA programs. An _Ln_ program is a LODA program of length _n_."
-              << "\n\n";
-        }
-        const size_t num_ops = ProgramUtil::numOps( program, false );
-        list_file << "* [" << s.id_str() << "](http://oeis.org/" << s.id_str() << ") ([L" << std::setw( 2 )
-            << std::setfill( '0' ) << num_ops << " program](" << s.dir_str() << "/" << s.id_str() << ".asm)): "
-            << s.name << "\n";
+        size_t list_index = s.id / 100000;
+        size_t num_ops = ProgramUtil::numOps( program, false );
+        list_files.at( list_index ) << "* [" << s.id_str() << "](http://oeis.org/" << s.id_str() << ") ([L"
+            << std::setw( 2 ) << std::setfill( '0' ) << num_ops << " program](" << s.dir_str() << "/" << s.id_str()
+            << ".asm)): " << s.name << "\n";
       }
     }
     stats.updateSequence( s.id, has_program, has_b_file );
   }
-  list_file.close();
 
   // write stats
   stats.save( "stats" );
+
+  // write lists
+  for ( size_t i = 0; i < list_files.size(); i++ )
+  {
+    auto buf = list_files[i].str();
+    if ( !buf.empty() )
+    {
+      std::string list_path = "programs/oeis/list" + std::to_string( i ) + ".md";
+      OeisSequence start( (i * 100000) + 1 );
+      OeisSequence end( (i + 1) * 100000 );
+      std::ofstream list_file( list_path );
+      list_file << "# Programs for " << start.id_str() << "-" << end.id_str() << "\n\n";
+      list_file
+          << "List of integer sequences with links to LODA programs. An _Ln_ program is a LODA program of length _n_."
+          << "\n\n";
+      list_file << buf;
+    }
+  }
 
   if ( num_optimized > 0 )
   {
