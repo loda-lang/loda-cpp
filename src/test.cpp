@@ -429,7 +429,7 @@ void Test::optimizer()
   while ( true )
   {
     std::stringstream s;
-    s << "programs/tests/optimizer/E" << std::setw( 3 ) << std::setfill( '0' ) << i << ".asm";
+    s << "tests/optimizer/E" << std::setw( 3 ) << std::setfill( '0' ) << i << ".asm";
     std::ifstream file( s.str() );
     if ( !file.good() )
     {
