@@ -35,6 +35,73 @@ Interpreter::Interpreter( const Settings &settings )
   }
 }
 
+number_t Interpreter::calc( const Operation &op, number_t target, number_t source ) const
+{
+  switch ( op.type )
+  {
+  case Operation::Type::MOV:
+  {
+    return source;
+  }
+  case Operation::Type::ADD:
+  {
+    return Semantics::add( target, source );
+  }
+  case Operation::Type::SUB:
+  {
+    return Semantics::sub( target, source );
+  }
+  case Operation::Type::TRN:
+  {
+    return Semantics::trn( target, source );
+  }
+  case Operation::Type::MUL:
+  {
+    return Semantics::mul( target, source );
+  }
+  case Operation::Type::DIV:
+  {
+    return Semantics::div( target, source );
+  }
+  case Operation::Type::MOD:
+  {
+    return Semantics::mod( target, source );
+  }
+  case Operation::Type::POW:
+  {
+    return Semantics::pow( target, source );
+  }
+  case Operation::Type::LOG:
+  {
+    return Semantics::log( target, source );
+  }
+  case Operation::Type::FAC:
+  {
+    return Semantics::fac( target );
+  }
+  case Operation::Type::GCD:
+  {
+    return Semantics::gcd( target, source );
+  }
+  case Operation::Type::BIN:
+  {
+    return Semantics::bin( target, source );
+  }
+  case Operation::Type::CMP:
+  {
+    return Semantics::cmp( target, source );
+  }
+  case Operation::Type::NOP:
+  case Operation::Type::DBG:
+  case Operation::Type::LPB:
+  case Operation::Type::LPE:
+  case Operation::Type::CLR:
+    Log::get().error( "non-arithmetic operation: " + Operation::Metadata::get( op.type ).name, true );
+    break;
+  }
+  return 0;
+}
+
 size_t Interpreter::run( const Program &p, Memory &mem ) const
 {
   // check for empty program
@@ -76,95 +143,6 @@ size_t Interpreter::run( const Program &p, Memory &mem ) const
     {
     case Operation::Type::NOP:
     {
-      break;
-    }
-    case Operation::Type::MOV:
-    {
-      source = get( op.source, mem );
-      set( op.target, source, mem );
-      break;
-    }
-    case Operation::Type::ADD:
-    {
-      source = get( op.source, mem );
-      target = get( op.target, mem );
-      set( op.target, Semantics::add( target, source ), mem );
-      break;
-    }
-    case Operation::Type::SUB:
-    {
-      source = get( op.source, mem );
-      target = get( op.target, mem );
-      set( op.target, Semantics::sub( target, source ), mem );
-      break;
-    }
-    case Operation::Type::TRN:
-    {
-      source = get( op.source, mem );
-      target = get( op.target, mem );
-      set( op.target, Semantics::trn( target, source ), mem );
-      break;
-    }
-    case Operation::Type::MUL:
-    {
-      source = get( op.source, mem );
-      target = get( op.target, mem );
-      set( op.target, Semantics::mul( target, source ), mem );
-      break;
-    }
-    case Operation::Type::DIV:
-    {
-      source = get( op.source, mem );
-      target = get( op.target, mem );
-      set( op.target, Semantics::div( target, source ), mem );
-      break;
-    }
-    case Operation::Type::MOD:
-    {
-      source = get( op.source, mem );
-      target = get( op.target, mem );
-      set( op.target, Semantics::mod( target, source ), mem );
-      break;
-    }
-    case Operation::Type::POW:
-    {
-      source = get( op.source, mem );
-      target = get( op.target, mem );
-      set( op.target, Semantics::pow( target, source ), mem );
-      break;
-    }
-    case Operation::Type::LOG:
-    {
-      source = get( op.source, mem );
-      target = get( op.target, mem );
-      set( op.target, Semantics::log( target, source ), mem );
-      break;
-    }
-    case Operation::Type::FAC:
-    {
-      target = get( op.target, mem );
-      set( op.target, Semantics::fac( target ), mem );
-      break;
-    }
-    case Operation::Type::GCD:
-    {
-      source = get( op.source, mem );
-      target = get( op.target, mem );
-      set( op.target, Semantics::gcd( target, source ), mem );
-      break;
-    }
-    case Operation::Type::BIN:
-    {
-      source = get( op.source, mem );
-      target = get( op.target, mem );
-      set( op.target, Semantics::bin( target, source ), mem );
-      break;
-    }
-    case Operation::Type::CMP:
-    {
-      source = get( op.source, mem );
-      target = get( op.target, mem );
-      set( op.target, Semantics::cmp( target, source ), mem );
       break;
     }
     case Operation::Type::LPB:
@@ -241,6 +219,16 @@ size_t Interpreter::run( const Program &p, Memory &mem ) const
     case Operation::Type::DBG:
     {
       std::cout << mem << std::endl;
+      break;
+    }
+    default:
+    {
+      source = get( op.source, mem );
+      if ( Operation::Metadata::get( op.type ).num_operands == 2 )
+      {
+        target = get( op.target, mem );
+      }
+      set( op.target, calc( target, source ), mem );
       break;
     }
     }

@@ -22,6 +22,7 @@
 void Test::all()
 {
   semantics();
+  semantics2();
   memory();
   stats();
   knownPrograms();
@@ -269,6 +270,41 @@ void Test::semantics()
   SEM_CHECK( cmp( 0, -1 ), 0 );
   SEM_CHECK_ARG_INF( cmp );
 
+}
+
+void Test::semantics2()
+{
+  for ( auto &type : Operation::Types )
+  {
+    std::string test_path = "tests/semantics/" + Operation::Metadata::get( type ).name + ".txt";
+    std::ifstream test_file( test_path );
+    if ( !test_file.good() )
+    {
+      Log::get().error( "Test file not found: " + test_path, true );
+    }
+    std::string line;
+    int64_t op1, op2, expected, result;
+    while ( std::getline( test_file, line ) )
+    {
+      if ( line.empty() || line[0] == '#' )
+      {
+        continue;
+      }
+      std::stringstream ss( line );
+      ss >> op1 >> op2 >> expected;
+      switch ( type )
+      {
+      case Operation::Type::ADD:
+        result = Semantics::add( op1, op2 );
+        break;
+      case Operation::Type::SUB:
+        result = Semantics::sub( op1, op2 );
+        break;
+
+      }
+
+    }
+  }
 }
 
 void checkMemory( const Memory &mem, number_t index, number_t value )

@@ -19,6 +19,8 @@ public:
 
   void semantics();
 
+  void semantics2();
+
   void memory();
 
   void knownPrograms();
