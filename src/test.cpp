@@ -22,7 +22,7 @@
 void Test::all()
 {
   semantics();
-  semantics2();
+  // semantics2();
   memory();
   stats();
   knownPrograms();
@@ -274,6 +274,7 @@ void Test::semantics()
 
 void Test::semantics2()
 {
+  /*
   for ( auto &type : Operation::Types )
   {
     std::string test_path = "tests/semantics/" + Operation::Metadata::get( type ).name + ".txt";
@@ -305,6 +306,7 @@ void Test::semantics2()
 
     }
   }
+   */
 }
 
 void checkMemory( const Memory &mem, number_t index, number_t value )

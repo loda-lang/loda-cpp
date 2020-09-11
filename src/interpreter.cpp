@@ -35,9 +35,9 @@ Interpreter::Interpreter( const Settings &settings )
   }
 }
 
-number_t Interpreter::calc( const Operation &op, number_t target, number_t source ) const
+number_t Interpreter::calc( const Operation::Type type, number_t target, number_t source ) const
 {
-  switch ( op.type )
+  switch ( type )
   {
   case Operation::Type::MOV:
   {
@@ -96,7 +96,7 @@ number_t Interpreter::calc( const Operation &op, number_t target, number_t sourc
   case Operation::Type::LPB:
   case Operation::Type::LPE:
   case Operation::Type::CLR:
-    Log::get().error( "non-arithmetic operation: " + Operation::Metadata::get( op.type ).name, true );
+    Log::get().error( "non-arithmetic operation: " + Operation::Metadata::get( type ).name, true );
     break;
   }
   return 0;
@@ -123,7 +123,8 @@ size_t Interpreter::run( const Program &p, Memory &mem ) const
   size_t cycles = 0;
   Memory old_mem, frag, frag_prev, prev;
   size_t pc, pc_next, ps_begin;
-  number_t source, target, start, length, length2;
+  number_t source = 0, target = 0;
+  number_t start, length, length2;
   Operation lpb;
 
   // loop until stack is empty
@@ -223,12 +224,12 @@ size_t Interpreter::run( const Program &p, Memory &mem ) const
     }
     default:
     {
-      source = get( op.source, mem );
+      target = get( op.target, mem );
       if ( Operation::Metadata::get( op.type ).num_operands == 2 )
       {
-        target = get( op.target, mem );
+        source = get( op.source, mem );
       }
-      set( op.target, calc( target, source ), mem );
+      set( op.target, calc( op.type, target, source ), mem );
       break;
     }
     }
