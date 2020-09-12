@@ -7,9 +7,10 @@ class OeisSequence;
 
 struct MatcherStats
 {
-  size_t candidates;
-  size_t false_positives;
-  size_t errors;
+  int64_t candidates;
+  int64_t successes;
+  int64_t false_positives;
+  int64_t errors;
 };
 
 class Finder
