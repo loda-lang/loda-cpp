@@ -32,6 +32,7 @@ Finder::Finder( const Settings &settings )
   for ( auto &s : matcher_stats )
   {
     s.candidates = 0;
+    s.successes = 0;
     s.false_positives = 0;
     s.errors = 0;
   }
@@ -145,6 +146,7 @@ void Finder::findAll( const Program &p, const Sequence &norm_seq, const std::vec
         {
           // successful match!
           result.push_back( t );
+          matcher_stats[i].successes++;
         }
       }
       catch ( const std::exception& )
@@ -164,15 +166,14 @@ void Finder::publishMetrics()
       matcher_labels["matcher"] = matchers[i]->getName();
       matcher_labels["type"] = "candidate";
       Metrics::get().write( "matches", matcher_labels, matcher_stats[i].candidates );
+      matcher_labels["type"] = "success";
+      Metrics::get().write( "matches", matcher_labels, matcher_stats[i].successes );
       matcher_labels["type"] = "false_positive";
       Metrics::get().write( "matches", matcher_labels, matcher_stats[i].false_positives );
       matcher_labels["type"] = "error";
       Metrics::get().write( "matches", matcher_labels, matcher_stats[i].errors );
-      matcher_labels["type"] = "success";
-      Metrics::get().write( "matches", matcher_labels,
-    		  matcher_stats[i].candidates - matcher_stats[i].false_positives
-              - matcher_stats[i].errors );
       matcher_stats[i].candidates = 0;
+      matcher_stats[i].successes = 0;
       matcher_stats[i].false_positives = 0;
       matcher_stats[i].errors = 0;
     }

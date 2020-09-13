@@ -274,9 +274,14 @@ void Test::semantics()
 
 void Test::semantics2()
 {
-  /*
+  Settings settings;
+  Interpreter interpreter(settings);
   for ( auto &type : Operation::Types )
   {
+    if ( type == Operation::Type::NOP || type == Operation::Type::LPB || type == Operation::Type::LPE || type == Operation::Type::CLR || type == Operation::Type::DBG )
+    {
+      continue;
+    }
     std::string test_path = "tests/semantics/" + Operation::Metadata::get( type ).name + ".txt";
     std::ifstream test_file( test_path );
     if ( !test_file.good() )
@@ -293,20 +298,13 @@ void Test::semantics2()
       }
       std::stringstream ss( line );
       ss >> op1 >> op2 >> expected;
-      switch ( type )
+      result = interpreter.calc( type, op1, op2 );
+      if ( result != expected )
       {
-      case Operation::Type::ADD:
-        result = Semantics::add( op1, op2 );
-        break;
-      case Operation::Type::SUB:
-        result = Semantics::sub( op1, op2 );
-        break;
-
+    	Log::get().error("Unexpected value for " + Operation::Metadata::get(type).name + "(" + std::to_string(op1) + "," + std::to_string(op2) + "); expected " + std::to_string(expected) + "; got " + std::to_string(result), true);
       }
-
     }
   }
-   */
 }
 
 void checkMemory( const Memory &mem, number_t index, number_t value )
