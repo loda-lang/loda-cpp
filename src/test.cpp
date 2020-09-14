@@ -22,7 +22,7 @@
 void Test::all()
 {
   semantics();
-  // semantics2();
+  semantics2();
   memory();
   stats();
   knownPrograms();
@@ -275,21 +275,24 @@ void Test::semantics()
 void Test::semantics2()
 {
   Settings settings;
-  Interpreter interpreter(settings);
+  Interpreter interpreter( settings );
   for ( auto &type : Operation::Types )
   {
-    if ( type == Operation::Type::NOP || type == Operation::Type::LPB || type == Operation::Type::LPE || type == Operation::Type::CLR || type == Operation::Type::DBG )
+    if ( type == Operation::Type::NOP || type == Operation::Type::LPB || type == Operation::Type::LPE
+        || type == Operation::Type::CLR || type == Operation::Type::DBG )
     {
       continue;
     }
-    std::string test_path = "tests/semantics/" + Operation::Metadata::get( type ).name + ".txt";
+    std::string test_path = "tests/semantics/" + Operation::Metadata::get( type ).name + ".csv";
     std::ifstream test_file( test_path );
     if ( !test_file.good() )
     {
-      Log::get().error( "Test file not found: " + test_path, true );
+      Log::get().error( "Test file not found: " + test_path, false );
+      continue;
     }
-    std::string line;
+    std::string line, s;
     int64_t op1, op2, expected, result;
+    std::getline( test_file, line ); // skip header
     while ( std::getline( test_file, line ) )
     {
       if ( line.empty() || line[0] == '#' )
@@ -297,11 +300,19 @@ void Test::semantics2()
         continue;
       }
       std::stringstream ss( line );
-      ss >> op1 >> op2 >> expected;
+      std::getline( ss, s, ',' );
+      op1 = std::stoll( s );
+      std::getline( ss, s, ',' );
+      op2 = std::stoll( s );
+      std::getline( ss, s );
+      expected = std::stoll( s );
       result = interpreter.calc( type, op1, op2 );
       if ( result != expected )
       {
-    	Log::get().error("Unexpected value for " + Operation::Metadata::get(type).name + "(" + std::to_string(op1) + "," + std::to_string(op2) + "); expected " + std::to_string(expected) + "; got " + std::to_string(result), true);
+        Log::get().error(
+            "Unexpected value for " + Operation::Metadata::get( type ).name + "(" + std::to_string( op1 ) + ","
+                + std::to_string( op2 ) + "); expected " + std::to_string( expected ) + "; got "
+                + std::to_string( result ), true );
       }
     }
   }
