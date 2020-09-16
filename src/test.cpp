@@ -22,7 +22,6 @@
 void Test::all()
 {
   semantics();
-  semantics2();
   memory();
   stats();
   knownPrograms();
@@ -47,232 +46,20 @@ void Test::all()
   minimizer( tests );
 }
 
-#define NI NUM_INF
-#define AI (NUM_INF - 10)
-
-#define SEM_CHECK(x,y) \
-  if ( Semantics::x != y) \
-    Log::get().error(std::string("Error evaluating ") + #x + "; expected " + #y + "; got " + std::to_string(Semantics::x), true);
-
-#define SEM_CHECK_ARG_INF(op) \
-  SEM_CHECK( op( NI, 0 ), NI ); \
-  SEM_CHECK( op( NI, 3 ), NI ); \
-  SEM_CHECK( op( NI, -3 ), NI ); \
-  SEM_CHECK( op( 0, NI ), NI ); \
-  SEM_CHECK( op( 2, NI ), NI ); \
-  SEM_CHECK( op( -2, NI ), NI ); \
-  SEM_CHECK( op( NI, NI ), NI );
-
-void Test::semantics()
+number_t read_num( const std::string &s )
 {
-  Log::get().info( "Testing semantics" );
-
-  SEM_CHECK( add( 0, 0 ), 0 );
-  SEM_CHECK( add( 0, 3 ), 3 );
-  SEM_CHECK( add( 2, 0 ), 2 );
-  SEM_CHECK( add( 2, 3 ), 5 );
-  SEM_CHECK( add( 0, -3 ), -3 );
-  SEM_CHECK( add( -2, 0 ), -2 );
-  SEM_CHECK( add( -2, -3 ), -5 );
-  SEM_CHECK( add( AI, AI ), NI );
-  SEM_CHECK( add( -AI, -AI ), NI );
-  SEM_CHECK( add( AI, -AI ), 0 );
-  SEM_CHECK( add( -AI, AI ), 0 );
-  SEM_CHECK_ARG_INF( add );
-
-  SEM_CHECK( sub( 0, 0 ), 0 );
-  SEM_CHECK( sub( 0, 3 ), -3 );
-  SEM_CHECK( sub( 2, 0 ), 2 );
-  SEM_CHECK( sub( 3, 2 ), 1 );
-  SEM_CHECK( sub( 2, 3 ), -1 );
-  SEM_CHECK( sub( 0, -3 ), 3 );
-  SEM_CHECK( sub( -2, 0 ), -2 );
-  SEM_CHECK( sub( -2, -3 ), 1 );
-  SEM_CHECK( sub( AI, AI ), 0 );
-  SEM_CHECK( sub( -AI, -AI ), 0 );
-  SEM_CHECK( sub( AI, -AI ), NI );
-  SEM_CHECK( sub( -AI, AI ), NI );
-  SEM_CHECK_ARG_INF( sub );
-
-  SEM_CHECK( mul( 0, 0 ), 0 );
-  SEM_CHECK( mul( 0, 3 ), 0 );
-  SEM_CHECK( mul( 0, -3 ), 0 );
-  SEM_CHECK( mul( 2, 0 ), 0 );
-  SEM_CHECK( mul( -2, 0 ), 0 );
-  SEM_CHECK( mul( 1, 1 ), 1 );
-  SEM_CHECK( mul( 1, 3 ), 3 );
-  SEM_CHECK( mul( 1, -3 ), -3 );
-  SEM_CHECK( mul( 2, 1 ), 2 );
-  SEM_CHECK( mul( -2, 1 ), -2 );
-  SEM_CHECK( mul( 3, 2 ), 6 );
-  SEM_CHECK( mul( 2, 3 ), 6 );
-  SEM_CHECK( mul( -2, 3 ), -6 );
-  SEM_CHECK( mul( 2, -3 ), -6 );
-  SEM_CHECK( mul( -2, -3 ), 6 );
-  SEM_CHECK( mul( AI, 2 ), NI );
-  SEM_CHECK( mul( 2, AI ), NI );
-  SEM_CHECK( mul( -AI, 2 ), NI );
-  SEM_CHECK( mul( 2, -AI ), NI );
-  SEM_CHECK( mul( AI, AI ), NI );
-  SEM_CHECK( mul( -AI, -AI ), NI );
-  SEM_CHECK( mul( AI, -AI ), NI );
-  SEM_CHECK( mul( -AI, AI ), NI );
-  SEM_CHECK_ARG_INF( mul );
-
-  SEM_CHECK( div( 0, 0 ), NI );
-  SEM_CHECK( div( 0, 3 ), 0 );
-  SEM_CHECK( div( 0, -3 ), 0 );
-  SEM_CHECK( div( 2, 0 ), NI );
-  SEM_CHECK( div( -2, 0 ), NI );
-  SEM_CHECK( div( 1, 1 ), 1 );
-  SEM_CHECK( div( 1, 3 ), 0 );
-  SEM_CHECK( div( 1, -3 ), 0 );
-  SEM_CHECK( div( 2, 1 ), 2 );
-  SEM_CHECK( div( -2, 1 ), -2 );
-  SEM_CHECK( div( 3, 2 ), 1 );
-  SEM_CHECK( div( 4, 2 ), 2 );
-  SEM_CHECK( div( 2, 3 ), 0 );
-  SEM_CHECK( div( -6, 3 ), -2 );
-  SEM_CHECK( div( 6, -3 ), -2 );
-  SEM_CHECK( div( -6, -3 ), 2 );
-  SEM_CHECK( div( AI, AI ), 1 );
-  SEM_CHECK( div( AI, -AI ), -1 );
-  SEM_CHECK( div( AI, 1 ), AI );
-  SEM_CHECK( div( AI, -1 ), -AI );
-  SEM_CHECK_ARG_INF( div );
-
-  SEM_CHECK( mod( 0, 0 ), NI );
-  SEM_CHECK( mod( 0, 3 ), 0 );
-  SEM_CHECK( mod( 0, -3 ), 0 );
-  SEM_CHECK( mod( 2, 0 ), NI );
-  SEM_CHECK( mod( -2, 0 ), NI );
-  SEM_CHECK( mod( 1, 1 ), 0 );
-  SEM_CHECK( mod( 1, 3 ), 1 );
-  SEM_CHECK( mod( 1, -3 ), 1 );
-  SEM_CHECK( mod( 2, 1 ), 0 );
-  SEM_CHECK( mod( -2, 1 ), 0 );
-  SEM_CHECK( mod( 3, 2 ), 1 );
-  SEM_CHECK( mod( 4, 2 ), 0 );
-  SEM_CHECK( mod( 2, 3 ), 2 );
-  SEM_CHECK( mod( -6, 3 ), 0 );
-  SEM_CHECK( mod( 6, -3 ), 0 );
-  SEM_CHECK( mod( -6, -3 ), 0 );
-  SEM_CHECK( mod( 11, 3 ), 2 );
-  SEM_CHECK( mod( 11, -3 ), 2 );
-  SEM_CHECK( mod( -11, -3 ), -2 );
-  SEM_CHECK( mod( AI, AI ), 0 );
-  SEM_CHECK( mod( AI, -AI ), 0 );
-  SEM_CHECK( mod( AI, 1 ), 0 );
-  SEM_CHECK( mod( AI, -1 ), 0 );
-  SEM_CHECK_ARG_INF( mod );
-
-  SEM_CHECK( pow( 0, 0 ), 1 );
-  SEM_CHECK( pow( 0, 3 ), 0 );
-  SEM_CHECK( pow( 0, -3 ), NI );
-  SEM_CHECK( pow( 2, 0 ), 1 );
-  SEM_CHECK( pow( -2, 0 ), 1 );
-  SEM_CHECK( pow( 1, 1 ), 1 );
-  SEM_CHECK( pow( 1, 3 ), 1 );
-  SEM_CHECK( pow( 1, -3 ), 1 );
-  SEM_CHECK( pow( 2, 1 ), 2 );
-  SEM_CHECK( pow( -2, 1 ), -2 );
-  SEM_CHECK( pow( 3, 2 ), 9 );
-  SEM_CHECK( pow( 4, 3 ), 64 );
-  SEM_CHECK( pow( 2, 3 ), 8 );
-  SEM_CHECK( pow( -6, 2 ), 36 );
-  SEM_CHECK( pow( -6, 3 ), -216 );
-  SEM_CHECK( pow( 6, -3 ), 0 );
-  SEM_CHECK( pow( -6, -3 ), 0 );
-  SEM_CHECK( pow( AI, 2 ), NI );
-  SEM_CHECK( pow( AI, 1 ), AI );
-  SEM_CHECK( pow( AI, 0 ), 1 );
-  SEM_CHECK( pow( AI, -1 ), 0 );
-  SEM_CHECK( pow( AI, -2 ), 0 );
-  SEM_CHECK( pow( AI, -AI ), 0 );
-  SEM_CHECK_ARG_INF( pow );
-
-  SEM_CHECK( log( 0, 0 ), NI );
-  SEM_CHECK( log( 0, 3 ), NI );
-  SEM_CHECK( log( 0, -3 ), NI );
-  SEM_CHECK( log( 1, 0 ), 0 );
-  SEM_CHECK( log( 2, 0 ), NI );
-  SEM_CHECK( log( -2, 0 ), NI );
-  SEM_CHECK( log( 1, 1 ), 0 );
-  SEM_CHECK( log( 1, 3 ), 0 );
-  SEM_CHECK( log( 1, -3 ), 0 );
-  SEM_CHECK( log( 2, 1 ), NI );
-  SEM_CHECK( log( -2, 1 ), NI );
-  SEM_CHECK( log( 8, 2 ), 3 );
-  SEM_CHECK( log( 9, 2 ), 3 );
-  SEM_CHECK( log( 9, 3 ), 2 );
-  SEM_CHECK( log( 3, 2 ), 1 );
-  SEM_CHECK( log( -8, 2 ), NI );
-  SEM_CHECK( log( 9, -3 ), NI );
-  SEM_CHECK( log( -9, -3 ), NI );
-  SEM_CHECK( log( AI, AI ), 1 );
-  SEM_CHECK_ARG_INF( log );
-
-  SEM_CHECK( fac( -4 ), 24 );
-  SEM_CHECK( fac( -3 ), -6 );
-  SEM_CHECK( fac( -2 ), 2 );
-  SEM_CHECK( fac( -1 ), -1 );
-  SEM_CHECK( fac( 0 ), 1 );
-  SEM_CHECK( fac( 1 ), 1 );
-  SEM_CHECK( fac( 2 ), 2 );
-  SEM_CHECK( fac( 3 ), 6 );
-  SEM_CHECK( fac( 4 ), 24 );
-  SEM_CHECK( fac( AI ), NI );
-  SEM_CHECK( fac( NI ), NI );
-
-  SEM_CHECK( gcd( 0, 0 ), NI );
-  SEM_CHECK( gcd( 0, 2 ), 2 );
-  SEM_CHECK( gcd( 2, 0 ), 2 );
-  SEM_CHECK( gcd( 1, 1 ), 1 );
-  SEM_CHECK( gcd( 1, 3 ), 1 );
-  SEM_CHECK( gcd( 1, -3 ), 1 );
-  SEM_CHECK( gcd( 3, 1 ), 1 );
-  SEM_CHECK( gcd( -3, 1 ), 1 );
-  SEM_CHECK( gcd( 12, 18 ), 6 );
-  SEM_CHECK( gcd( 18, 12 ), 6 );
-  SEM_CHECK( gcd( -12, 18 ), 6 );
-  SEM_CHECK( gcd( 18, -12 ), 6 );
-  SEM_CHECK( gcd( -18, -12 ), 6 );
-  SEM_CHECK( gcd( AI, AI ), AI );
-  SEM_CHECK( gcd( AI, 1 ), 1 );
-  SEM_CHECK( gcd( AI, -1 ), 1 );
-  SEM_CHECK_ARG_INF( gcd );
-
-  SEM_CHECK( bin( 0, 0 ), 1 );
-  SEM_CHECK( bin( 0, 5 ), 0 );
-  SEM_CHECK( bin( 1, 5 ), 0 );
-  SEM_CHECK( bin( 5, 0 ), 1 );
-  SEM_CHECK( bin( 5, 1 ), 5 );
-  SEM_CHECK( bin( 5, 2 ), 10 );
-  SEM_CHECK( bin( 5, 3 ), 10 );
-  SEM_CHECK( bin( 5, 4 ), 5 );
-  SEM_CHECK( bin( 5, 5 ), 1 );
-  SEM_CHECK( bin( 1, 1 ), 1 );
-  SEM_CHECK( bin( 5, -2 ), 0 );
-  SEM_CHECK( bin( -5, -2 ), 0 );
-  SEM_CHECK( bin( -5, 2 ), 15 );
-  SEM_CHECK( bin( -5, 3 ), -35 );
-  SEM_CHECK( bin( -5, -6 ), -5 );
-  SEM_CHECK_ARG_INF( bin );
-
-  SEM_CHECK( cmp( 0, 0 ), 1 );
-  SEM_CHECK( cmp( 1, 1 ), 1 );
-  SEM_CHECK( cmp( 2, 2 ), 1 );
-  SEM_CHECK( cmp( -1, -1 ), 1 );
-  SEM_CHECK( cmp( -2, -2 ), 1 );
-  SEM_CHECK( cmp( 1, 0 ), 0 );
-  SEM_CHECK( cmp( 0, 1 ), 0 );
-  SEM_CHECK( cmp( -1, 0 ), 0 );
-  SEM_CHECK( cmp( 0, -1 ), 0 );
-  SEM_CHECK_ARG_INF( cmp );
-
+  return (s == "NI") ? NUM_INF : std::stoll( s );
 }
 
-void Test::semantics2()
+void check_inf( number_t n )
+{
+  if ( n != NUM_INF )
+  {
+    Log::get().error( "Expected infinity instead of " + std::to_string( n ), true );
+  }
+}
+
+void Test::semantics()
 {
   Settings settings;
   Interpreter interpreter( settings );
@@ -283,13 +70,15 @@ void Test::semantics2()
     {
       continue;
     }
+    auto &meta = Operation::Metadata::get( type );
     std::string test_path = "tests/semantics/" + Operation::Metadata::get( type ).name + ".csv";
     std::ifstream test_file( test_path );
     if ( !test_file.good() )
     {
-      Log::get().error( "Test file not found: " + test_path, false );
+      Log::get().error( "Test file not found: " + test_path, true );
       continue;
     }
+    Log::get().info( "Testing " + test_path );
     std::string line, s;
     int64_t op1, op2, expected, result;
     std::getline( test_file, line ); // skip header
@@ -301,19 +90,33 @@ void Test::semantics2()
       }
       std::stringstream ss( line );
       std::getline( ss, s, ',' );
-      op1 = std::stoll( s );
-      std::getline( ss, s, ',' );
-      op2 = std::stoll( s );
+      op1 = read_num( s );
+      if ( meta.num_operands == 2 )
+      {
+        std::getline( ss, s, ',' );
+        op2 = read_num( s );
+      }
       std::getline( ss, s );
-      expected = std::stoll( s );
+      expected = read_num( s );
       result = interpreter.calc( type, op1, op2 );
       if ( result != expected )
       {
         Log::get().error(
-            "Unexpected value for " + Operation::Metadata::get( type ).name + "(" + std::to_string( op1 ) + ","
-                + std::to_string( op2 ) + "); expected " + std::to_string( expected ) + "; got "
-                + std::to_string( result ), true );
+            "Unexpected value for " + meta.name + "(" + std::to_string( op1 ) + "," + std::to_string( op2 )
+                + "); expected " + std::to_string( expected ) + "; got " + std::to_string( result ), true );
       }
+    }
+    if ( type != Operation::Type::MOV )
+    {
+      check_inf( interpreter.calc( type, NUM_INF, 0 ) );
+      check_inf( interpreter.calc( type, NUM_INF, 1 ) );
+      check_inf( interpreter.calc( type, NUM_INF, -1 ) );
+    }
+    if ( meta.num_operands == 2 )
+    {
+      check_inf( interpreter.calc( type, 0, NUM_INF ) );
+      check_inf( interpreter.calc( type, 1, NUM_INF ) );
+      check_inf( interpreter.calc( type, -1, NUM_INF ) );
     }
   }
 }
