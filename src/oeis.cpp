@@ -5,6 +5,7 @@
 #include "optimizer.hpp"
 #include "parser.hpp"
 #include "program_util.hpp"
+#include "stats.hpp"
 #include "util.hpp"
 
 #include <algorithm>
@@ -415,7 +416,7 @@ void Oeis::update( volatile sig_atomic_t &exit_flag )
     }
   }
   load( exit_flag );
-  ProgramUtil::Stats stats;
+  Stats stats;
   stats.load( "stats" );
   for ( auto &s : sequences )
   {
@@ -694,7 +695,7 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
   load( exit_flag );
   Log::get().info( "Start maintaining OEIS programs" );
   std::vector<std::stringstream> list_files( 10 );
-  ProgramUtil::Stats stats;
+  Stats stats;
   size_t num_optimized = 0;
   Parser parser;
   Program program, optimized;

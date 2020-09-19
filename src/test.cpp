@@ -11,6 +11,7 @@
 #include "parser.hpp"
 #include "program_util.hpp"
 #include "semantics.hpp"
+#include "stats.hpp"
 #include "synthesizer.hpp"
 
 #include <deque>
@@ -200,7 +201,7 @@ void Test::collatz()
 void Test::stats()
 {
   Log::get().info( "Testing stats loading and saving" );
-  ProgramUtil::Stats s, t;
+  Stats s, t;
   s.load( "stats" );
   if ( s.num_constants.at( 1 ) == 0 )
   {
