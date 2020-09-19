@@ -80,7 +80,7 @@ void Test::semantics()
     }
     Log::get().info( "Testing " + test_path );
     std::string line, s;
-    int64_t op1, op2, expected, result;
+    int64_t op1 = 0, op2 = 0, expected, result;
     std::getline( test_file, line ); // skip header
     while ( std::getline( test_file, line ) )
     {
