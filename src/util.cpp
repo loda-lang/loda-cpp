@@ -226,7 +226,6 @@ Settings::Settings()
     max_index( 4 ),
     max_stack_size( getEnvInt( "LODA_MAX_STACK_SIZE", 100 ) ),
     max_physical_memory( getEnvInt( "LODA_MAX_PHYSICAL_MEMORY", 1024 ) * 1024 * 1024 ),
-    dump_last_program( getEnvFlag( "LODA_DUMP_LAST_PROGRAM" ) ),
     optimize_existing_programs( false ),
     search_linear( false ),
     throw_on_overflow( true ),
