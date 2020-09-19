@@ -107,12 +107,19 @@ void Stats::save( const std::string &path )
     }
   }
   op_counts.close();
+  std::ofstream full_op_counts( "/tmp/full_operation_counts.csv" );
+  for ( auto &op : num_operations )
+  {
+    ProgramUtil::print( op.first, full_op_counts, 0 );
+    full_op_counts << "|" << op.second << "\n"; // can't use comma as separator here
+  }
+  full_op_counts.close();
   std::ofstream summary( path + "/summary.csv" );
   summary << num_programs << sep << num_sequences << "\n";
   summary.close();
 }
 
-void Stats::updateProgram( const Program &program )
+void Stats::updateProgramStats( const Program &program )
 {
   num_programs++;
   const size_t num_ops = ProgramUtil::numOps( program, false );
@@ -132,10 +139,21 @@ void Stats::updateProgram( const Program &program )
       }
       num_constants[op.source.value]++;
     }
+    if ( op.type != Operation::Type::NOP )
+    {
+      if ( num_operations.find( op ) == num_operations.end() )
+      {
+        num_operations[op] = 1;
+      }
+      else
+      {
+        num_operations[op]++;
+      }
+    }
   }
 }
 
-void Stats::updateSequence( size_t id, bool program_found, bool has_b_file )
+void Stats::updateSequenceStats( size_t id, bool program_found, bool has_b_file )
 {
   num_sequences++;
   if ( id >= found_programs.size() )

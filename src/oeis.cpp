@@ -759,7 +759,7 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
         dumpProgram( s.id, optimized, file_name );
 
         // collect stats
-        stats.updateProgram( optimized );
+        stats.updateProgramStats( optimized );
 
         // write list file
         size_t list_index = s.id / 100000;
@@ -769,7 +769,7 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
             << ".asm)): " << s.name << "\n";
       }
     }
-    stats.updateSequence( s.id, has_program, has_b_file );
+    stats.updateSequenceStats( s.id, has_program, has_b_file );
   }
 
   // write stats

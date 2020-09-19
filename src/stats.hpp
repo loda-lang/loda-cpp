@@ -15,13 +15,14 @@ public:
 
   void save( const std::string &path );
 
-  void updateProgram( const Program &program );
+  void updateProgramStats( const Program &program );
 
-  void updateSequence( size_t id, bool program_found, bool has_b_file );
+  void updateSequenceStats( size_t id, bool program_found, bool has_b_file );
 
   int64_t num_programs;
   int64_t num_sequences;
   std::map<number_t, int64_t> num_constants;
+  std::map<Operation, int64_t> num_operations;
   std::vector<int64_t> num_programs_per_length;
   std::vector<int64_t> num_ops_per_type;
   std::vector<bool> found_programs;
