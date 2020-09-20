@@ -29,7 +29,7 @@ void Stats::load( const std::string &path )
   }
   constants.close();
 
-  std::ifstream op_counts( path + "/operation_counts.csv" );
+  std::ifstream op_counts( path + "/operation_type_counts.csv" );
   while ( std::getline( op_counts, line ) )
   {
     std::stringstream s( line );
@@ -97,23 +97,24 @@ void Stats::save( const std::string &path )
     }
   }
   lengths.close();
-  std::ofstream op_counts( path + "/operation_counts.csv" );
+  std::ofstream op_type_counts( path + "/operation_type_counts.csv" );
   for ( size_t i = 0; i < num_ops_per_type.size(); i++ )
   {
     if ( num_ops_per_type[i] > 0 )
     {
-      op_counts << Operation::Metadata::get( static_cast<Operation::Type>( i ) ).name << sep << num_ops_per_type[i]
+      op_type_counts << Operation::Metadata::get( static_cast<Operation::Type>( i ) ).name << sep << num_ops_per_type[i]
           << "\n";
     }
   }
-  op_counts.close();
-  std::ofstream full_op_counts( "/tmp/full_operation_counts.csv" );
+  op_type_counts.close();
+  std::ofstream op_counts( path + "/operation_counts.csv" );
   for ( auto &op : num_operations )
   {
-    ProgramUtil::print( op.first, full_op_counts, 0 );
-    full_op_counts << "|" << op.second << "\n"; // can't use comma as separator here
+    const auto& meta = Operation::Metadata::get( op.first.type );
+    op_counts << meta.name << sep << ProgramUtil::operandToString( op.first.target ) << sep
+        << ProgramUtil::operandToString( op.first.source ) << sep << op.second << "\n";
   }
-  full_op_counts.close();
+  op_counts.close();
   std::ofstream summary( path + "/summary.csv" );
   summary << num_programs << sep << num_sequences << "\n";
   summary.close();
