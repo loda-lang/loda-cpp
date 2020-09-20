@@ -478,7 +478,7 @@ struct update_state
 };
 
 update_state doPartialEval( Operation &op, std::unordered_map<number_t, Operand> &values,
-    std::unordered_set<number_t> &unknown_cells )
+    std::unordered_set<number_t> &unknown_cells, const Interpreter& interpreter )
 {
   update_state result;
 
@@ -540,46 +540,6 @@ update_state doPartialEval( Operation &op, std::unordered_map<number_t, Operand>
   bool update_target = true;
   switch ( op.type )
   {
-  case Operation::Type::MOV:
-    target = source;
-    break;
-  case Operation::Type::ADD:
-    target.value = Semantics::add( target.value, source.value );
-    break;
-  case Operation::Type::SUB:
-    target.value = Semantics::sub( target.value, source.value );
-    break;
-  case Operation::Type::TRN:
-    target.value = Semantics::trn( target.value, source.value );
-    break;
-  case Operation::Type::MUL:
-    target.value = Semantics::mul( target.value, source.value );
-    break;
-  case Operation::Type::DIV:
-    target.value = Semantics::div( target.value, source.value );
-    break;
-  case Operation::Type::MOD:
-    target.value = Semantics::mod( target.value, source.value );
-    break;
-  case Operation::Type::POW:
-    target.value = Semantics::pow( target.value, source.value );
-    break;
-  case Operation::Type::LOG:
-    target.value = Semantics::log( target.value, source.value );
-    break;
-  case Operation::Type::FAC:
-    target.value = Semantics::fac( target.value );
-    break;
-  case Operation::Type::GCD:
-    target.value = Semantics::gcd( target.value, source.value );
-    break;
-  case Operation::Type::BIN:
-    target.value = Semantics::bin( target.value, source.value );
-    break;
-  case Operation::Type::CMP:
-    target.value = Semantics::cmp( target.value, source.value );
-    break;
-
   case Operation::Type::NOP:
   case Operation::Type::DBG:
     update_target = false;
@@ -593,6 +553,13 @@ update_state doPartialEval( Operation &op, std::unordered_map<number_t, Operand>
     result.stop = true;
     return result;
   }
+
+  default:
+  {
+    target.value = interpreter.calc( op.type, target.value, source.value );
+    break;
+  }
+
   }
 
   result.changed = false;
@@ -631,7 +598,7 @@ bool Optimizer::partialEval( Program &p, size_t num_initialized_cells ) const
   bool changed = false;
   for ( auto &op : p.ops )
   {
-    auto state = doPartialEval( op, values, unknown_cells );
+    auto state = doPartialEval( op, values, unknown_cells, interpreter );
     if ( state.stop )
     {
       return changed;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "interpreter.hpp"
 #include "number.hpp"
 #include "program.hpp"
 #include "util.hpp"
@@ -12,7 +13,8 @@ public:
 
   Optimizer( const Settings &settings )
       :
-      settings( settings )
+      settings( settings ),
+        interpreter( settings )
   {
   }
 
@@ -37,5 +39,6 @@ public:
 private:
 
   Settings settings;
+  Interpreter interpreter;
 
 };

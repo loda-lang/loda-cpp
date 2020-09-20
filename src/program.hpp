@@ -32,6 +32,18 @@ public:
     return (type == o.type) && (value == o.value);
   }
 
+  inline bool operator!=( const Operand &o ) const
+  {
+    return !((*this) == o);
+  }
+
+  inline bool operator<( const Operand &o ) const
+  {
+    if ( type != o.type ) return type < o.type;
+    if ( value != o.value ) return value < o.value;
+    return false; // equal
+  }
+
   Type type;
   number_t value;
 
@@ -104,6 +116,19 @@ public:
   inline bool operator==( const Operation &op ) const
   {
     return (type == op.type) && (source == op.source) && (target == op.target);
+  }
+
+  inline bool operator!=( const Operation &op ) const
+  {
+    return !((*this) == op);
+  }
+
+  inline bool operator<( const Operation &op ) const
+  {
+    if ( type != op.type ) return type < op.type;
+    if ( target != op.target ) return target < op.target;
+    if ( source != op.source ) return source < op.source;
+    return false; // equal
   }
 
   Type type;

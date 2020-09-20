@@ -11,6 +11,7 @@
 #include "parser.hpp"
 #include "program_util.hpp"
 #include "semantics.hpp"
+#include "stats.hpp"
 #include "synthesizer.hpp"
 
 #include <deque>
@@ -80,7 +81,7 @@ void Test::semantics()
     }
     Log::get().info( "Testing " + test_path );
     std::string line, s;
-    int64_t op1, op2, expected, result;
+    int64_t op1 = 0, op2 = 0, expected, result;
     std::getline( test_file, line ); // skip header
     while ( std::getline( test_file, line ) )
     {
@@ -200,7 +201,7 @@ void Test::collatz()
 void Test::stats()
 {
   Log::get().info( "Testing stats loading and saving" );
-  ProgramUtil::Stats s, t;
+  Stats s, t;
   s.load( "stats" );
   if ( s.num_constants.at( 1 ) == 0 )
   {
