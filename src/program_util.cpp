@@ -95,7 +95,7 @@ std::string getIndent( int indent )
   return s;
 }
 
-std::string getOperand( Operand op )
+std::string ProgramUtil::operandToString( const Operand& op )
 {
   switch ( op.type )
   {
@@ -118,11 +118,12 @@ void ProgramUtil::print( const Operation &op, std::ostream &out, int indent )
   }
   else if ( metadata.num_operands == 1 )
   {
-    out << getIndent( indent ) << metadata.name << " " << getOperand( op.target );
+    out << getIndent( indent ) << metadata.name << " " << operandToString( op.target );
   }
   else if ( metadata.num_operands == 2 )
   {
-    out << getIndent( indent ) << metadata.name << " " << getOperand( op.target ) << "," << getOperand( op.source );
+    out << getIndent( indent ) << metadata.name << " " << operandToString( op.target ) << ","
+        << operandToString( op.source );
   }
   if ( !op.comment.empty() )
   {
