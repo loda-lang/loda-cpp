@@ -322,7 +322,8 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
   for ( size_t i = 0; i < finder.getMatchers().size(); i++ )
   {
     if ( i > 0 ) buf << ", ";
-    double ratio = 100.0 * (double) finder.getMatchers()[i]->getReducedSequences().size() / (double) loaded_count;
+    double ratio = 100.0 * (double) finder.getMatchers()[i]->getReducedSequences().size()
+        / (double) std::max<size_t>( loaded_count, 1 );
     buf << finder.getMatchers()[i]->getName() << ": " << std::setprecision( 4 ) << ratio << "%";
   }
   Log::get().info( buf.str() );
