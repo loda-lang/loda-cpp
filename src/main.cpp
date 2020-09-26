@@ -1,4 +1,3 @@
-#include "generator.hpp"
 #include "interpreter.hpp"
 #include "miner.hpp"
 #include "minimizer.hpp"
@@ -140,8 +139,10 @@ int main( int argc, char *argv[] )
     else if ( cmd == "generate" || cmd == "gen" )
     {
       Optimizer optimizer( settings );
-      Generator generator( settings, std::random_device()() );
-      auto program = generator.generateProgram();
+      Miner miner( settings );
+      std::random_device rand;
+      auto generator = miner.createGenerator( rand() );
+      auto program = generator->generateProgram();
       ProgramUtil::print( program, std::cout );
     }
     else if ( cmd == "mine" )

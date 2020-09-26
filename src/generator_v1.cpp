@@ -1,4 +1,4 @@
-#include "generator.hpp"
+#include "generator_v1.hpp"
 
 #include "number.hpp"
 #include "interpreter.hpp"
@@ -53,9 +53,9 @@ std::discrete_distribution<> constantsDist( const std::vector<number_t> &constan
   return std::discrete_distribution<>( p.begin(), p.end() );
 }
 
-Generator::Generator( const Settings &settings, int64_t seed )
+GeneratorV1::GeneratorV1( const Settings &settings, int64_t seed )
     :
-    settings( settings ),
+    Generator( settings, seed ),
     next_position( 0 )
 {
   // parse operation types
@@ -169,12 +169,9 @@ Generator::Generator( const Settings &settings, int64_t seed )
   source_type_dist = std::discrete_distribution<>( source_type_rates.begin(), source_type_rates.end() );
   source_value_dist = uniformDist( settings.max_constant + 1 );
   position_dist = uniformDist( POSITION_RANGE );
-
-  gen.seed( seed );
-
 }
 
-void Generator::generateOperations()
+void GeneratorV1::generateOperations()
 {
   auto target_type = target_operand_types.at( target_type_dist( gen ) );
   auto source_type = source_operand_types.at( source_type_dist( gen ) );
@@ -230,7 +227,7 @@ void Generator::generateOperations()
   next_position = static_cast<double>( position_dist( gen ) ) / POSITION_RANGE;
 }
 
-Program Generator::generateProgram()
+Program GeneratorV1::generateProgram()
 {
   // use template for base program
   Program p = program_template;

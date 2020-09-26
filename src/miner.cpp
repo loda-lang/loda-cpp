@@ -1,6 +1,6 @@
 #include "miner.hpp"
 
-#include "generator.hpp"
+#include "generator_v1.hpp"
 #include "interpreter.hpp"
 #include "mutator.hpp"
 #include "oeis.hpp"
@@ -21,6 +21,13 @@ Miner::Miner( const Settings &settings )
     oeis( settings ),
     interpreter( settings )
 {
+}
+
+Generator::UPtr Miner::createGenerator( int64_t seed ) const
+{
+  Generator::UPtr generator;
+  generator.reset( new GeneratorV1( settings, seed ) );
+  return generator;
 }
 
 bool Miner::updateSpecialSequences( const Program &p, const Sequence &seq ) const
@@ -131,7 +138,7 @@ void Miner::mine( volatile sig_atomic_t &exit_flag )
   auto &finder = oeis.getFinder();
 
   std::random_device rand;
-  Generator generator( settings, rand() );
+  auto generator = createGenerator( rand() );
   Mutator mutator( rand() );
   std::stack<Program> progs;
   Sequence norm_seq;
@@ -144,7 +151,7 @@ void Miner::mine( volatile sig_atomic_t &exit_flag )
   {
     if ( progs.empty() )
     {
-      progs.push( generator.generateProgram() );
+      progs.push( generator->generateProgram() );
     }
     Program program = progs.top();
     progs.pop();
