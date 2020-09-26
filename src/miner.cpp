@@ -2,6 +2,7 @@
 
 #include "generator.hpp"
 #include "interpreter.hpp"
+#include "mutator.hpp"
 #include "oeis.hpp"
 #include "optimizer.hpp"
 #include "parser.hpp"
@@ -129,7 +130,9 @@ void Miner::mine( volatile sig_atomic_t &exit_flag )
 
   auto &finder = oeis.getFinder();
 
-  Generator generator( settings, std::random_device()() );
+  std::random_device rand;
+  Generator generator( settings, rand() );
+  Mutator mutator( rand() );
   std::stack<Program> progs;
   Sequence norm_seq;
   size_t generated = 0;
@@ -161,7 +164,7 @@ void Miner::mine( volatile sig_atomic_t &exit_flag )
         }
         if ( progs.size() < 1000 || settings.hasMemory() )
         {
-          generator.mutateConstants( s.second, 100, progs );
+          mutator.mutateConstants( s.second, 100, progs );
         }
       }
     }

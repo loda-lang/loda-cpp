@@ -18,10 +18,6 @@ public:
 
   Program generateProgram();
 
-  void setSeed( int64_t seed );
-
-  void mutateConstants( const Program &program, size_t num_results, std::stack<Program> &result );
-
 private:
 
   void generateOperations();
