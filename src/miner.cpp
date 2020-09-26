@@ -26,7 +26,15 @@ Miner::Miner( const Settings &settings )
 Generator::UPtr Miner::createGenerator( int64_t seed ) const
 {
   Generator::UPtr generator;
-  generator.reset( new GeneratorV1( settings, seed ) );
+  switch ( settings.generator_version )
+  {
+  case 1:
+    generator.reset( new GeneratorV1( settings, seed ) );
+    break;
+  default:
+    Log::get().error( "Invalid generator version: " + std::to_string( settings.generator_version ), true );
+    break;
+  }
   return generator;
 }
 
@@ -126,10 +134,10 @@ void Miner::mine( volatile sig_atomic_t &exit_flag )
   Log::get().info( "Mining programs for OEIS sequences" );
 
   // metrics labels
-  std::map<std::string, std::string> settings_labels = {
-      { "num_operations", std::to_string( settings.num_operations ) }, { "max_constant", std::to_string(
-          settings.max_constant ) }, { "max_index", std::to_string( settings.max_index ) }, { "operation_types",
-          settings.operation_types }, { "operand_types", settings.operand_types }, };
+  std::map<std::string, std::string> settings_labels = { { "generator_version", std::to_string(
+      settings.generator_version ) }, { "num_operations", std::to_string( settings.num_operations ) }, { "max_constant",
+      std::to_string( settings.max_constant ) }, { "max_index", std::to_string( settings.max_index ) }, {
+      "operation_types", settings.operation_types }, { "operand_types", settings.operand_types }, };
   if ( !settings.program_template.empty() )
   {
     settings_labels.emplace( "program_template", settings.program_template );

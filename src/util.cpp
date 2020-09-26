@@ -226,6 +226,7 @@ Settings::Settings()
     max_index( 4 ),
     max_stack_size( getEnvInt( "LODA_MAX_STACK_SIZE", 100 ) ),
     max_physical_memory( getEnvInt( "LODA_MAX_PHYSICAL_MEMORY", 1024 ) * 1024 * 1024 ),
+    generator_version( 1 ),
     optimize_existing_programs( false ),
     search_linear( false ),
     throw_on_overflow( true ),
@@ -244,6 +245,7 @@ enum class Option
   MAX_CONSTANT,
   MAX_INDEX,
   MAX_PHYSICAL_MEMORY,
+  GENERATOR_VERSION,
   OPERATION_TYPES,
   OPERAND_TYPES,
   PROGRAM_TEMPLATE,
@@ -259,7 +261,7 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
     std::string arg( argv[i] );
     if ( option == Option::NUM_TERMS || option == Option::NUM_OPERATIONS || option == Option::MAX_MEMORY
         || option == Option::MAX_CYCLES || option == Option::MAX_CONSTANT || option == Option::MAX_INDEX
-        || option == Option::MAX_PHYSICAL_MEMORY )
+        || option == Option::MAX_PHYSICAL_MEMORY || option == Option::GENERATOR_VERSION )
     {
       std::stringstream s( arg );
       int val;
@@ -290,6 +292,9 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
         break;
       case Option::MAX_PHYSICAL_MEMORY:
         max_physical_memory = val * 1024 * 1024;
+        break;
+      case Option::GENERATOR_VERSION:
+        generator_version = val;
         break;
       case Option::LOG_LEVEL:
       case Option::OPERATION_TYPES:
@@ -373,6 +378,10 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
       else if ( opt == "s" )
       {
         option = Option::MAX_PHYSICAL_MEMORY;
+      }
+      else if ( opt == "g" )
+      {
+        option = Option::GENERATOR_VERSION;
       }
       else if ( opt == "x" )
       {

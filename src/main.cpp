@@ -56,6 +56,7 @@ void help()
   std::cout << "  -m <number>      Maximum number of used memory cells (default:" << settings.max_memory << ")"
       << std::endl;
   std::cout << "Generator options:" << std::endl;
+  std::cout << "  -g <number>      Generator version (default:" << settings.generator_version << ")" << std::endl;
   std::cout << "  -p <number>      Maximum number of operations (default:" << settings.num_operations << ")"
       << std::endl;
   std::cout << "  -n <number>      Maximum constant (default:" << settings.max_constant << ")" << std::endl;
