@@ -1,5 +1,6 @@
 #pragma once
 
+#include "generator.hpp"
 #include "interpreter.hpp"
 #include "number.hpp"
 #include "oeis.hpp"
@@ -12,6 +13,8 @@ class Miner
 public:
 
   Miner( const Settings &settings );
+
+  Generator::UPtr createGenerator( int64_t seed ) const;
 
   void mine( volatile sig_atomic_t &exit_flag );
 

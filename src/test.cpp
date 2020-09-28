@@ -1,6 +1,5 @@
 #include "test.hpp"
 
-#include "generator.hpp"
 #include "interpreter.hpp"
 #include "matcher.hpp"
 #include "miner.hpp"
@@ -327,14 +326,16 @@ void Test::minimizer( size_t tests )
   Settings settings;
   Interpreter interpreter( settings );
   Minimizer minimizer( settings );
-  Generator generator( settings, std::random_device()() );
+  Miner miner( settings );
+  std::random_device rand;
+  auto generator = miner.createGenerator( rand() );
   Sequence s1, s2, s3;
   Program program, minimized;
   Log::get().info( "Testing minimizer" );
   for ( size_t i = 0; i < tests; i++ )
   {
     if ( exit_flag_ ) break;
-    program = generator.generateProgram();
+    program = generator->generateProgram();
     try
     {
       interpreter.eval( program, s1 );

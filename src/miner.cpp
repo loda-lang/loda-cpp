@@ -1,7 +1,8 @@
 #include "miner.hpp"
 
-#include "generator.hpp"
+#include "generator_v1.hpp"
 #include "interpreter.hpp"
+#include "mutator.hpp"
 #include "oeis.hpp"
 #include "optimizer.hpp"
 #include "parser.hpp"
@@ -20,6 +21,21 @@ Miner::Miner( const Settings &settings )
     oeis( settings ),
     interpreter( settings )
 {
+}
+
+Generator::UPtr Miner::createGenerator( int64_t seed ) const
+{
+  Generator::UPtr generator;
+  switch ( settings.generator_version )
+  {
+  case 1:
+    generator.reset( new GeneratorV1( settings, seed ) );
+    break;
+  default:
+    Log::get().error( "Invalid generator version: " + std::to_string( settings.generator_version ), true );
+    break;
+  }
+  return generator;
 }
 
 bool Miner::updateSpecialSequences( const Program &p, const Sequence &seq ) const
@@ -118,10 +134,10 @@ void Miner::mine( volatile sig_atomic_t &exit_flag )
   Log::get().info( "Mining programs for OEIS sequences" );
 
   // metrics labels
-  std::map<std::string, std::string> settings_labels = {
-      { "num_operations", std::to_string( settings.num_operations ) }, { "max_constant", std::to_string(
-          settings.max_constant ) }, { "max_index", std::to_string( settings.max_index ) }, { "operation_types",
-          settings.operation_types }, { "operand_types", settings.operand_types }, };
+  std::map<std::string, std::string> settings_labels = { { "generator_version", std::to_string(
+      settings.generator_version ) }, { "num_operations", std::to_string( settings.num_operations ) }, { "max_constant",
+      std::to_string( settings.max_constant ) }, { "max_index", std::to_string( settings.max_index ) }, {
+      "operation_types", settings.operation_types }, { "operand_types", settings.operand_types }, };
   if ( !settings.program_template.empty() )
   {
     settings_labels.emplace( "program_template", settings.program_template );
@@ -129,7 +145,9 @@ void Miner::mine( volatile sig_atomic_t &exit_flag )
 
   auto &finder = oeis.getFinder();
 
-  Generator generator( settings, std::random_device()() );
+  std::random_device rand;
+  auto generator = createGenerator( rand() );
+  Mutator mutator( rand() );
   std::stack<Program> progs;
   Sequence norm_seq;
   size_t generated = 0;
@@ -141,7 +159,7 @@ void Miner::mine( volatile sig_atomic_t &exit_flag )
   {
     if ( progs.empty() )
     {
-      progs.push( generator.generateProgram() );
+      progs.push( generator->generateProgram() );
     }
     Program program = progs.top();
     progs.pop();
@@ -161,7 +179,7 @@ void Miner::mine( volatile sig_atomic_t &exit_flag )
         }
         if ( progs.size() < 1000 || settings.hasMemory() )
         {
-          generator.mutateConstants( s.second, 100, progs );
+          mutator.mutateConstants( s.second, 100, progs );
         }
       }
     }

@@ -1,32 +1,18 @@
 #pragma once
 
-#include "number.hpp"
-#include "program.hpp"
-#include "util.hpp"
+#include "generator.hpp"
 
-#include <stack>
-
-class Generator
+class GeneratorV1: public Generator
 {
 public:
 
-  using UPtr = std::unique_ptr<Generator>;
+  GeneratorV1( const Settings &settings, int64_t seed );
 
-  Generator( const Settings &settings, int64_t seed );
-
-  Generator( const Generator &other ) = default;
-
-  Program generateProgram();
-
-  void setSeed( int64_t seed );
-
-  void mutateConstants( const Program &program, size_t num_results, std::stack<Program> &result );
+  virtual Program generateProgram() override;
 
 private:
 
   void generateOperations();
-
-  const Settings &settings;
 
   std::discrete_distribution<> operation_dist;
   std::discrete_distribution<> target_type_dist;
@@ -44,7 +30,5 @@ private:
 
   std::vector<Operation> next_ops;
   double next_position;
-
-  std::mt19937 gen;
 
 };

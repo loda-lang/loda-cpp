@@ -1,4 +1,3 @@
-#include "generator.hpp"
 #include "interpreter.hpp"
 #include "miner.hpp"
 #include "minimizer.hpp"
@@ -57,6 +56,7 @@ void help()
   std::cout << "  -m <number>      Maximum number of used memory cells (default:" << settings.max_memory << ")"
       << std::endl;
   std::cout << "Generator options:" << std::endl;
+  std::cout << "  -g <number>      Generator version (default:" << settings.generator_version << ")" << std::endl;
   std::cout << "  -p <number>      Maximum number of operations (default:" << settings.num_operations << ")"
       << std::endl;
   std::cout << "  -n <number>      Maximum constant (default:" << settings.max_constant << ")" << std::endl;
@@ -140,8 +140,10 @@ int main( int argc, char *argv[] )
     else if ( cmd == "generate" || cmd == "gen" )
     {
       Optimizer optimizer( settings );
-      Generator generator( settings, std::random_device()() );
-      auto program = generator.generateProgram();
+      Miner miner( settings );
+      std::random_device rand;
+      auto generator = miner.createGenerator( rand() );
+      auto program = generator->generateProgram();
       ProgramUtil::print( program, std::cout );
     }
     else if ( cmd == "mine" )

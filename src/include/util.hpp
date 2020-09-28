@@ -65,6 +65,7 @@ public:
   size_t max_index;
   size_t max_stack_size;
   size_t max_physical_memory;
+  int64_t generator_version;
   bool optimize_existing_programs;
   bool search_linear;
   bool throw_on_overflow;
