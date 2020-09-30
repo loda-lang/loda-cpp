@@ -51,7 +51,8 @@ void Generator::ensureSourceNotOverwritten( Program &p )
     if ( it->target.value == 0 )
     {
       if ( it->type == Operation::Type::MOV
-          || (it->type == Operation::Type::SUB && (it->source.type != Operand::Type::CONSTANT && it->source.value == 0)) )
+          || ((it->type == Operation::Type::SUB || it->type == Operation::Type::TRN)
+              && (it->source.type != Operand::Type::CONSTANT && it->source.value == 0)) )
       {
         it = p.ops.erase( it );
       }
@@ -165,5 +166,20 @@ void Generator::ensureMeaningfulLoops( Program &p )
       break;
     }
   }
+}
 
+void Generator::generateStateless( Program &p, size_t num_operations )
+{
+  // fill program with random operations
+  while ( p.ops.size() < num_operations )
+  {
+    auto next_op = generateOperation();
+    size_t position = (next_op.second * (p.ops.size() + 1));
+    p.ops.emplace( p.ops.begin() + position, Operation( next_op.first ) );
+    if ( next_op.first.type == Operation::Type::LPB )
+    {
+      position = ((position + p.ops.size()) / 2) + 1;
+      p.ops.emplace( p.ops.begin() + position, Operation( Operation::Type::LPE ) );
+    }
+  }
 }

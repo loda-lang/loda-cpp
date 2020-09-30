@@ -55,8 +55,7 @@ std::discrete_distribution<> constantsDist( const std::vector<number_t> &constan
 
 GeneratorV1::GeneratorV1( const Settings &settings, int64_t seed )
     :
-    Generator( settings, seed ),
-    next_position( 0 )
+    Generator( settings, seed )
 {
   // parse operation types
   bool negate = false;
@@ -171,7 +170,7 @@ GeneratorV1::GeneratorV1( const Settings &settings, int64_t seed )
   position_dist = uniformDist( POSITION_RANGE );
 }
 
-void GeneratorV1::generateOperations()
+std::pair<Operation, double> GeneratorV1::generateOperation()
 {
   auto target_type = target_operand_types.at( target_type_dist( gen ) );
   auto source_type = source_operand_types.at( source_type_dist( gen ) );
@@ -216,38 +215,20 @@ void GeneratorV1::generateOperations()
     source_value = 2;
   }
 
-  next_ops.clear();
-  next_ops.push_back(
-      Operation( op_type, Operand( target_type, target_value ), Operand( source_type, source_value ) ) );
-  if ( op_type == Operation::Type::LPB )
-  {
-    next_ops.push_back( Operation( Operation::Type::LPE ) );
-  }
-
-  next_position = static_cast<double>( position_dist( gen ) ) / POSITION_RANGE;
+  std::pair<Operation, double> next_op;
+  next_op.first = Operation( op_type, Operand( target_type, target_value ), Operand( source_type, source_value ) );
+  next_op.second = static_cast<double>( position_dist( gen ) ) / POSITION_RANGE;
+  return next_op;
 }
 
 Program GeneratorV1::generateProgram()
 {
   // use template for base program
   Program p = program_template;
-
-  // fill program with random operations
-  while ( p.ops.size() < settings.num_operations )
-  {
-    generateOperations();
-    size_t position = (next_position * (p.ops.size() + 1));
-    for ( size_t j = 0; j < next_ops.size(); j++ )
-    {
-      p.ops.emplace( p.ops.begin() + position, Operation( next_ops[j] ) );
-      position = ((position + p.ops.size()) / 2) + 1;
-    }
-  }
-
+  generateStateless( p, settings.num_operations );
   auto written_cells = fixCausality( p );
   ensureSourceNotOverwritten( p );
   ensureTargetWritten( p, written_cells );
   ensureMeaningfulLoops( p );
-
   return p;
 }

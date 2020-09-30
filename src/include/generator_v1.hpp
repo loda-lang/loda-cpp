@@ -10,9 +10,11 @@ public:
 
   virtual Program generateProgram() override;
 
-private:
+protected:
 
-  void generateOperations();
+  virtual std::pair<Operation, double> generateOperation() override;
+
+private:
 
   std::discrete_distribution<> operation_dist;
   std::discrete_distribution<> target_type_dist;
@@ -27,8 +29,5 @@ private:
   std::vector<Operand::Type> target_operand_types;
   std::vector<number_t> constants;
   Program program_template;
-
-  std::vector<Operation> next_ops;
-  double next_position;
 
 };

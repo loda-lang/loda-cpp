@@ -20,6 +20,10 @@ public:
 
 protected:
 
+  void generateStateless( Program &p, size_t num_operations );
+
+  virtual std::pair<Operation, double> generateOperation() = 0;
+
   std::vector<number_t> fixCausality( Program &p );
 
   void ensureSourceNotOverwritten( Program &p );
