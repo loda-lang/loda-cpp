@@ -140,9 +140,8 @@ int main( int argc, char *argv[] )
     else if ( cmd == "generate" || cmd == "gen" )
     {
       Optimizer optimizer( settings );
-      Miner miner( settings );
       std::random_device rand;
-      auto generator = miner.createGenerator( rand() );
+      auto generator = Generator::Factory::createGenerator( settings, rand() );
       auto program = generator->generateProgram();
       ProgramUtil::print( program, std::cout );
     }

@@ -14,8 +14,6 @@ public:
 
   Miner( const Settings &settings );
 
-  Generator::UPtr createGenerator( int64_t seed ) const;
-
   void mine( volatile sig_atomic_t &exit_flag );
 
   void synthesize( volatile sig_atomic_t &exit_flag );

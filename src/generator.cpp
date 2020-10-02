@@ -1,5 +1,26 @@
 #include "generator.hpp"
 
+#include "generator_v1.hpp"
+#include "generator_v2.hpp"
+
+Generator::UPtr Generator::Factory::createGenerator( const Settings &settings, int64_t seed )
+{
+  Generator::UPtr generator;
+  switch ( settings.generator_version )
+  {
+  case 1:
+    generator.reset( new GeneratorV1( settings, seed ) );
+    break;
+  case 2:
+    generator.reset( new GeneratorV2( settings, seed ) );
+    break;
+  default:
+    Log::get().error( "Invalid generator version: " + std::to_string( settings.generator_version ), true );
+    break;
+  }
+  return generator;
+}
+
 Generator::Generator( const Settings &settings, int64_t seed )
     :
     settings( settings )
