@@ -30,6 +30,21 @@ void Stats::load( const std::string &path )
   }
   constants.close();
 
+  std::ifstream program_lengths( path + "/program_lengths.csv" );
+  while ( std::getline( program_lengths, line ) )
+  {
+    std::stringstream s( line );
+    std::getline( s, k, ',' );
+    std::getline( s, v );
+    auto l = std::stoll( k );
+    while ( l >= (int64_t) num_programs_per_length.size() )
+    {
+      num_programs_per_length.push_back( 0 );
+    }
+    num_programs_per_length[l] = std::stoll( v );
+  }
+  program_lengths.close();
+
   std::ifstream op_type_counts( path + "/operation_type_counts.csv" );
   while ( std::getline( op_type_counts, line ) )
   {

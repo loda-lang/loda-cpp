@@ -192,9 +192,15 @@ void Generator::ensureMeaningfulLoops( Program &p )
 void Generator::generateStateless( Program &p, size_t num_operations )
 {
   // fill program with random operations
-  while ( p.ops.size() < num_operations )
+  size_t nops = 0;
+  while ( p.ops.size() + nops < num_operations )
   {
     auto next_op = generateOperation();
+    if ( next_op.first.type == Operation::Type::NOP || next_op.first.type == Operation::Type::LPE )
+    {
+      nops++;
+      continue;
+    }
     size_t position = (next_op.second * (p.ops.size() + 1));
     p.ops.emplace( p.ops.begin() + position, Operation( next_op.first ) );
     if ( next_op.first.type == Operation::Type::LPB )
