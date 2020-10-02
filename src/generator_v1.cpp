@@ -55,8 +55,7 @@ std::discrete_distribution<> constantsDist( const std::vector<number_t> &constan
 
 GeneratorV1::GeneratorV1( const Settings &settings, int64_t seed )
     :
-    Generator( settings, seed ),
-    next_position( 0 )
+    Generator( settings, seed )
 {
   // parse operation types
   bool negate = false;
@@ -171,7 +170,7 @@ GeneratorV1::GeneratorV1( const Settings &settings, int64_t seed )
   position_dist = uniformDist( POSITION_RANGE );
 }
 
-void GeneratorV1::generateOperations()
+std::pair<Operation, double> GeneratorV1::generateOperation()
 {
   auto target_type = target_operand_types.at( target_type_dist( gen ) );
   auto source_type = source_operand_types.at( source_type_dist( gen ) );
@@ -216,180 +215,20 @@ void GeneratorV1::generateOperations()
     source_value = 2;
   }
 
-  next_ops.clear();
-  next_ops.push_back(
-      Operation( op_type, Operand( target_type, target_value ), Operand( source_type, source_value ) ) );
-  if ( op_type == Operation::Type::LPB )
-  {
-    next_ops.push_back( Operation( Operation::Type::LPE ) );
-  }
-
-  next_position = static_cast<double>( position_dist( gen ) ) / POSITION_RANGE;
+  std::pair<Operation, double> next_op;
+  next_op.first = Operation( op_type, Operand( target_type, target_value ), Operand( source_type, source_value ) );
+  next_op.second = static_cast<double>( position_dist( gen ) ) / POSITION_RANGE;
+  return next_op;
 }
 
 Program GeneratorV1::generateProgram()
 {
   // use template for base program
   Program p = program_template;
-
-  // fill program with random operations
-  while ( p.ops.size() < settings.num_operations )
-  {
-    generateOperations();
-    size_t position = (next_position * (p.ops.size() + 1));
-    for ( size_t j = 0; j < next_ops.size(); j++ )
-    {
-      p.ops.emplace( p.ops.begin() + position, Operation( next_ops[j] ) );
-      position = ((position + p.ops.size()) / 2) + 1;
-    }
-  }
-
-  // fix causality of read operations
-  std::vector<number_t> written_cells;
-  written_cells.push_back( 0 );
-  for ( size_t position = 0; position < p.ops.size(); position++ )
-  {
-    auto &op = p.ops[position];
-    auto &meta = Operation::Metadata::get( op.type );
-
-    // fix source operand in new operation
-    if ( meta.num_operands == 2 && op.source.type == Operand::Type::DIRECT )
-    {
-      op.source.value = written_cells[op.source.value % written_cells.size()];
-    }
-
-    // check if target cell not written yet
-    if ( meta.is_writing_target && op.target.type == Operand::Type::DIRECT
-        && std::find( written_cells.begin(), written_cells.end(), op.target.value ) == written_cells.end() )
-    {
-      if ( meta.is_reading_target )
-      {
-        op.type = Operation::Type::MOV;
-        if ( op.target == op.source )
-        {
-          op.target.value++;
-        }
-      }
-
-      // update written cells
-      written_cells.push_back( op.target.value );
-    }
-  }
-
-  // make sure that the initial value does not get overridden immediately
-  for ( auto it = p.ops.begin(); it < p.ops.end(); it++ )
-  {
-    if ( it->target.value == 0 )
-    {
-      if ( it->type == Operation::Type::MOV
-          || (it->type == Operation::Type::SUB && (it->source.type != Operand::Type::CONSTANT && it->source.value == 0)) )
-      {
-        it = p.ops.erase( it );
-      }
-    }
-    else if ( it->source.type != Operand::Type::CONSTANT && it->source.value == 0 )
-    {
-      break;
-    }
-  }
-
-  // make sure that the target value gets written
-  bool written = false;
-  for ( auto &op : p.ops )
-  {
-    switch ( op.type )
-    {
-    case Operation::Type::ADD:
-    case Operation::Type::SUB:
-    case Operation::Type::MOV:
-    {
-      if ( op.target.type == Operand::Type::DIRECT )
-      {
-        if ( op.target.value == 1 )
-        {
-          if ( !written && op.type == Operation::Type::SUB )
-          {
-            op.type = Operation::Type::ADD;
-          }
-          written = true;
-        }
-      }
-      break;
-    }
-    default:
-      break;
-    }
-    if ( written ) break;
-  }
-  if ( !written )
-  {
-    number_t source = 0;
-    for ( number_t cell : written_cells )
-    {
-      source = cell;
-    }
-    p.ops.push_back(
-        Operation( Operation::Type::MOV, Operand( Operand::Type::DIRECT, 1 ),
-            Operand( Operand::Type::DIRECT, source ) ) );
-  }
-
-  // make sure loops do something
-  number_t mem = 0;
-  number_t num_ops = 0;
-  bool can_descent = false;
-  for ( size_t i = 0; i < p.ops.size(); i++ )
-  {
-    switch ( p.ops[i].type )
-    {
-    case Operation::Type::LPB:
-    {
-      mem = p.ops[i].target.value;
-      can_descent = false;
-      num_ops = 0;
-      break;
-    }
-    case Operation::Type::ADD:
-    case Operation::Type::MUL:
-    case Operation::Type::POW:
-    case Operation::Type::FAC:
-      num_ops++;
-      break;
-    case Operation::Type::SUB:
-    case Operation::Type::LOG:
-      can_descent = true;
-      break;
-    case Operation::Type::MOV:
-    case Operation::Type::DIV:
-    case Operation::Type::MOD:
-    case Operation::Type::GCD:
-    case Operation::Type::BIN:
-    case Operation::Type::CMP:
-      num_ops++;
-      can_descent = true;
-      break;
-    case Operation::Type::LPE:
-    {
-      if ( !can_descent )
-      {
-        Operation sub( Operation::Type::SUB, Operand( Operand::Type::DIRECT, mem ),
-            Operand( Operand::Type::CONSTANT, 1 ) );
-        p.ops.insert( p.ops.begin() + i, sub );
-        i++;
-      }
-      if ( num_ops == 0 )
-      {
-        size_t val = (next_position * 5) + 1;
-        Operation add( Operation::Type::ADD, Operand( Operand::Type::DIRECT, mem + 1 ),
-            Operand( Operand::Type::CONSTANT, val ) );
-        p.ops.insert( p.ops.begin() + i, add );
-        i++;
-      }
-      break;
-    }
-    default:
-      break;
-    }
-  }
-
+  generateStateless( p, settings.num_operations );
+  auto written_cells = fixCausality( p );
+  ensureSourceNotOverwritten( p );
+  ensureTargetWritten( p, written_cells );
+  ensureMeaningfulLoops( p );
   return p;
 }
