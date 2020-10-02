@@ -22,7 +22,7 @@ public:
 
   std::string readIdentifier();
 
-  Operand readOperand( Program &p );
+  Operand readOperand();
 
   Operation::Type readOperationType();
 
