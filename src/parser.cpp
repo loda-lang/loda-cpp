@@ -175,8 +175,3 @@ Operation::Type Parser::readOperationType()
   auto name = readIdentifier();
   return Operation::Metadata::get( name ).type;
 }
-
-void Parser::setWorkingDir( const std::string &dir )
-{
-  working_dir = dir;
-}
