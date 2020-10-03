@@ -33,6 +33,7 @@ std::vector<number_t> Generator::fixCausality( Program &p )
   // fix causality of read operations
   std::vector<number_t> written_cells;
   written_cells.push_back( 0 );
+  int64_t new_cell;
   for ( size_t position = 0; position < p.ops.size(); position++ )
   {
     auto &op = p.ops[position];
@@ -42,14 +43,20 @@ std::vector<number_t> Generator::fixCausality( Program &p )
     if ( meta.num_operands == 2 && op.source.type == Operand::Type::DIRECT
         && std::find( written_cells.begin(), written_cells.end(), op.source.value ) == written_cells.end() )
     {
-      op.source.value = written_cells[op.source.value % written_cells.size()];
+      new_cell = op.source.value % written_cells.size();
+      if ( new_cell == op.target.value )
+      {
+        new_cell = written_cells.size() - new_cell - 1;
+      }
+      op.source.value = written_cells[new_cell];
     }
 
     // fix target operand in new operation
-    if ( meta.num_operands > 0 && meta.is_reading_target && op.target.type == Operand::Type::DIRECT
+    if ( meta.num_operands > 0 && meta.is_reading_target && op.type != Operation::Type::ADD
+        && op.target.type == Operand::Type::DIRECT
         && std::find( written_cells.begin(), written_cells.end(), op.target.value ) == written_cells.end() )
     {
-      auto new_cell = op.target.value % written_cells.size();
+      new_cell = op.target.value % written_cells.size();
       if ( new_cell == op.source.value )
       {
         new_cell = written_cells.size() - new_cell - 1;
@@ -71,18 +78,28 @@ std::vector<number_t> Generator::fixCausality( Program &p )
 void Generator::ensureSourceNotOverwritten( Program &p )
 {
   // make sure that the initial value does not get overridden immediately
-  for ( auto it = p.ops.begin(); it < p.ops.end(); it++ )
+  bool resets;
+  for ( auto &op : p.ops )
   {
-    if ( it->target.value == 0 )
+    if ( op.target.type == Operand::Type::DIRECT && op.target.value == 0 )
     {
-      if ( it->type == Operation::Type::MOV
-          || ((it->type == Operation::Type::SUB || it->type == Operation::Type::TRN)
-              && (it->source.type != Operand::Type::CONSTANT && it->source.value == 0)) )
+      resets = false;
+      if ( op.type == Operation::Type::MOV || op.type == Operation::Type::CLR )
       {
-        it = p.ops.erase( it );
+        resets = true;
+      }
+      else if ( (op.source == op.target)
+          && (op.type == Operation::Type::SUB || op.type == Operation::Type::TRN || op.type == Operation::Type::DIV
+              || op.type == Operation::Type::MOD) )
+      {
+        resets = true;
+      }
+      if ( resets )
+      {
+        op.target.value = (gen() % 4) + 1;
       }
     }
-    else if ( it->source.type != Operand::Type::CONSTANT && it->source.value == 0 )
+    else if ( op.source.type == Operand::Type::DIRECT && op.source.value == 0 )
     {
       break;
     }
