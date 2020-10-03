@@ -39,24 +39,28 @@ std::vector<number_t> Generator::fixCausality( Program &p )
     auto &meta = Operation::Metadata::get( op.type );
 
     // fix source operand in new operation
-    if ( meta.num_operands == 2 && op.source.type == Operand::Type::DIRECT )
+    if ( meta.num_operands == 2 && op.source.type == Operand::Type::DIRECT
+        && std::find( written_cells.begin(), written_cells.end(), op.source.value ) == written_cells.end() )
     {
       op.source.value = written_cells[op.source.value % written_cells.size()];
+    }
+
+    // fix target operand in new operation
+    if ( meta.num_operands > 0 && meta.is_reading_target && op.target.type == Operand::Type::DIRECT
+        && std::find( written_cells.begin(), written_cells.end(), op.target.value ) == written_cells.end() )
+    {
+      auto new_cell = op.target.value % written_cells.size();
+      if ( new_cell == op.source.value )
+      {
+        new_cell = written_cells.size() - new_cell - 1;
+      }
+      op.target.value = written_cells[new_cell];
     }
 
     // check if target cell not written yet
     if ( meta.is_writing_target && op.target.type == Operand::Type::DIRECT
         && std::find( written_cells.begin(), written_cells.end(), op.target.value ) == written_cells.end() )
     {
-      if ( meta.is_reading_target )
-      {
-        op.type = Operation::Type::MOV;
-        if ( op.target == op.source )
-        {
-          op.target.value++;
-        }
-      }
-
       // update written cells
       written_cells.push_back( op.target.value );
     }
@@ -91,36 +95,19 @@ void Generator::ensureTargetWritten( Program &p, const std::vector<number_t> &wr
   bool written = false;
   for ( auto &op : p.ops )
   {
-    switch ( op.type )
+    if ( op.type != Operation::Type::LPB && Operation::Metadata::get( op.type ).num_operands == 2
+        && op.target.type == Operand::Type::DIRECT && op.target.value == 1 )
     {
-    case Operation::Type::ADD:
-    case Operation::Type::SUB:
-    case Operation::Type::MOV:
-    {
-      if ( op.target.type == Operand::Type::DIRECT )
-      {
-        if ( op.target.value == 1 )
-        {
-          if ( !written && op.type == Operation::Type::SUB )
-          {
-            op.type = Operation::Type::ADD;
-          }
-          written = true;
-        }
-      }
+      written = true;
       break;
     }
-    default:
-      break;
-    }
-    if ( written ) break;
   }
   if ( !written )
   {
     number_t source = 0;
-    for ( number_t cell : written_cells )
+    if ( !written_cells.empty() )
     {
-      source = cell;
+      source = written_cells.at( gen() % written_cells.size() );
     }
     p.ops.push_back(
         Operation( Operation::Type::MOV, Operand( Operand::Type::DIRECT, 1 ),
@@ -153,8 +140,6 @@ void Generator::ensureMeaningfulLoops( Program &p )
       break;
     case Operation::Type::SUB:
     case Operation::Type::LOG:
-      can_descent = true;
-      break;
     case Operation::Type::MOV:
     case Operation::Type::DIV:
     case Operation::Type::MOD:
@@ -162,24 +147,46 @@ void Generator::ensureMeaningfulLoops( Program &p )
     case Operation::Type::BIN:
     case Operation::Type::CMP:
       num_ops++;
-      can_descent = true;
+      if ( p.ops[i].target.value == mem )
+      {
+        can_descent = true;
+      }
       break;
     case Operation::Type::LPE:
     {
       if ( !can_descent )
       {
-        Operation sub( Operation::Type::SUB, Operand( Operand::Type::DIRECT, mem ),
-            Operand( Operand::Type::CONSTANT, 1 ) );
-        p.ops.insert( p.ops.begin() + i, sub );
+        Operation dec;
+        dec.target = Operand( Operand::Type::DIRECT, mem );
+        dec.source = Operand( Operand::Type::CONSTANT, (gen() % 4) + 1 );
+        switch ( gen() % 3 )
+        {
+        case 0:
+          dec.type = Operation::Type::SUB;
+          break;
+        case 1:
+          dec.type = Operation::Type::DIV;
+          dec.source.value++;
+          break;
+        case 2:
+          dec.type = Operation::Type::MOD;
+          dec.source.value++;
+          break;
+        }
+        p.ops.insert( p.ops.begin() + i, dec );
         i++;
       }
-      if ( num_ops == 0 )
+      if ( num_ops < 2 )
       {
-        number_t val = (gen() * 5) + 1;
-        Operation add( Operation::Type::ADD, Operand( Operand::Type::DIRECT, mem + 1 ),
-            Operand( Operand::Type::CONSTANT, val ) );
-        p.ops.insert( p.ops.begin() + i, add );
-        i++;
+        for ( int64_t j = (gen() % 3) + 1; j > 0; j-- )
+        {
+          auto op = generateOperation();
+          if ( op.first.type != Operation::Type::LPB && op.first.type != Operation::Type::LPE )
+          {
+            p.ops.insert( p.ops.begin() + i, op.first );
+            i++;
+          }
+        }
       }
       break;
     }

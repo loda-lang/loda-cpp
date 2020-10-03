@@ -32,7 +32,7 @@ std::pair<Operation, double> GeneratorV2::generateOperation()
 {
   std::pair<Operation, double> next_op;
   next_op.first = operations.at( operation_dist( gen ) );
-  next_op.second = 0.99;
+  next_op.second = (double) (gen() % 100) / 100.0;
   return next_op;
 }
 
