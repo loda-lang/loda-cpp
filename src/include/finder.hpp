@@ -2,6 +2,8 @@
 
 #include "interpreter.hpp"
 #include "matcher.hpp"
+#include "number.hpp"
+#include "optimizer.hpp"
 
 class OeisSequence;
 
@@ -49,6 +51,7 @@ private:
 
   const Settings &settings;
   Interpreter interpreter;
+  Optimizer optimizer;
   std::vector<std::unique_ptr<Matcher>> matchers;
   mutable std::vector<MatcherStats> matcher_stats;
   mutable size_t num_find_attempts;
