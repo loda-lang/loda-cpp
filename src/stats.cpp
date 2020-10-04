@@ -1,5 +1,6 @@
 #include "stats.hpp"
 
+#include "parser.hpp"
 #include "program_util.hpp"
 
 #include <iostream>
@@ -29,14 +30,52 @@ void Stats::load( const std::string &path )
   }
   constants.close();
 
-  std::ifstream op_counts( path + "/operation_type_counts.csv" );
-  while ( std::getline( op_counts, line ) )
+  std::ifstream program_lengths( path + "/program_lengths.csv" );
+  while ( std::getline( program_lengths, line ) )
+  {
+    std::stringstream s( line );
+    std::getline( s, k, ',' );
+    std::getline( s, v );
+    auto l = std::stoll( k );
+    while ( l >= (int64_t) num_programs_per_length.size() )
+    {
+      num_programs_per_length.push_back( 0 );
+    }
+    num_programs_per_length[l] = std::stoll( v );
+  }
+  program_lengths.close();
+
+  std::ifstream op_type_counts( path + "/operation_type_counts.csv" );
+  while ( std::getline( op_type_counts, line ) )
   {
     std::stringstream s( line );
     std::getline( s, k, ',' );
     std::getline( s, v );
     auto type = Operation::Metadata::get( k ).type;
     num_ops_per_type.at( static_cast<size_t>( type ) ) = std::stoll( v );
+  }
+  op_type_counts.close();
+
+  std::ifstream op_counts( path + "/operation_counts.csv" );
+  Parser parser;
+  parser.in = &op_counts;
+  Operation op;
+  Operand count;
+  while ( true )
+  {
+    op_counts >> std::ws;
+    if ( op_counts.peek() == EOF )
+    {
+      break;
+    }
+    op.type = parser.readOperationType();
+    parser.readSeparator( ',' );
+    op.target = parser.readOperand();
+    parser.readSeparator( ',' );
+    op.source = parser.readOperand();
+    parser.readSeparator( ',' );
+    count = parser.readOperand();
+    num_operations[op] = count.value;
   }
   op_counts.close();
 
@@ -110,7 +149,7 @@ void Stats::save( const std::string &path )
   std::ofstream op_counts( path + "/operation_counts.csv" );
   for ( auto &op : num_operations )
   {
-    const auto& meta = Operation::Metadata::get( op.first.type );
+    const auto &meta = Operation::Metadata::get( op.first.type );
     op_counts << meta.name << sep << ProgramUtil::operandToString( op.first.target ) << sep
         << ProgramUtil::operandToString( op.first.source ) << sep << op.second << "\n";
   }

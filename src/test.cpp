@@ -208,6 +208,12 @@ void Test::stats()
   }
   if ( s.num_ops_per_type.at( static_cast<size_t>( Operation::Type::MOV ) ) == 0 )
   {
+    Log::get().error( "Error loading operation type counts from stats" );
+  }
+  if ( s.num_operations.at(
+      Operation( Operation::Type::ADD, Operand( Operand::Type::DIRECT, 0 ), Operand( Operand::Type::CONSTANT, 1 ) ) )
+      == 0 )
+  {
     Log::get().error( "Error loading operation counts from stats" );
   }
   if ( !s.found_programs.at( 4 ) || !s.cached_b_files.at( 4 ) )
@@ -232,8 +238,15 @@ void Test::stats()
     auto n = t.num_ops_per_type.at( i );
     if ( m != n )
     {
-      Log::get().error( "Unexpected number of operations count: " + std::to_string( m ) + "!=" + std::to_string( n ),
-          true );
+      Log::get().error(
+          "Unexpected number of operation type count: " + std::to_string( m ) + "!=" + std::to_string( n ), true );
+    }
+  }
+  for ( auto it : s.num_operations )
+  {
+    if ( it.second != t.num_operations.at( it.first ) )
+    {
+      Log::get().error( "Unexpected number of operations count", true );
     }
   }
   if ( s.found_programs.size() != t.found_programs.size() )
@@ -326,9 +339,8 @@ void Test::minimizer( size_t tests )
   Settings settings;
   Interpreter interpreter( settings );
   Minimizer minimizer( settings );
-  Miner miner( settings );
   std::random_device rand;
-  auto generator = miner.createGenerator( rand() );
+  auto generator = Generator::Factory::createGenerator( settings, rand() );
   Sequence s1, s2, s3;
   Program program, minimized;
   Log::get().info( "Testing minimizer" );

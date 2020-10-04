@@ -1,5 +1,6 @@
 #include "finder.hpp"
 
+#include "number.hpp"
 #include "oeis.hpp"
 #include "program_util.hpp"
 #include "util.hpp"
@@ -10,6 +11,7 @@ Finder::Finder( const Settings &settings )
     :
     settings( settings ),
     interpreter( settings ),
+    optimizer( settings ),
     num_find_attempts( 0 )
 {
   if ( settings.optimize_existing_programs )
@@ -67,8 +69,18 @@ Matcher::seq_programs_t Finder::findSequence( const Program &p, Sequence &norm_s
     }
   }
 
+  // determine largest memory cell to check
+  int64_t max_index = settings.max_index;
+  number_t largest_used_cell;
+  std::unordered_set<number_t> used_cells;
+  if ( optimizer.getUsedMemoryCells( p, used_cells, largest_used_cell ) && largest_used_cell <= 100 )
+  {
+    max_index = largest_used_cell;
+  }
+
+  // interpret program
   std::vector<Sequence> seqs;
-  seqs.resize( std::max<size_t>( 2, settings.max_index + 1 ) );
+  seqs.resize( std::max<size_t>( 2, max_index + 1 ) );
   Matcher::seq_programs_t result;
   try
   {
@@ -160,21 +172,21 @@ void Finder::findAll( const Program &p, const Sequence &norm_seq, const std::vec
 
 void Finder::publishMetrics()
 {
-	std::map<std::string, std::string> matcher_labels;
-    for ( size_t i = 0; i < matchers.size(); i++ )
-    {
-      matcher_labels["matcher"] = matchers[i]->getName();
-      matcher_labels["type"] = "candidate";
-      Metrics::get().write( "matches", matcher_labels, matcher_stats[i].candidates );
-      matcher_labels["type"] = "success";
-      Metrics::get().write( "matches", matcher_labels, matcher_stats[i].successes );
-      matcher_labels["type"] = "false_positive";
-      Metrics::get().write( "matches", matcher_labels, matcher_stats[i].false_positives );
-      matcher_labels["type"] = "error";
-      Metrics::get().write( "matches", matcher_labels, matcher_stats[i].errors );
-      matcher_stats[i].candidates = 0;
-      matcher_stats[i].successes = 0;
-      matcher_stats[i].false_positives = 0;
-      matcher_stats[i].errors = 0;
-    }
+  std::map<std::string, std::string> matcher_labels;
+  for ( size_t i = 0; i < matchers.size(); i++ )
+  {
+    matcher_labels["matcher"] = matchers[i]->getName();
+    matcher_labels["type"] = "candidate";
+    Metrics::get().write( "matches", matcher_labels, matcher_stats[i].candidates );
+    matcher_labels["type"] = "success";
+    Metrics::get().write( "matches", matcher_labels, matcher_stats[i].successes );
+    matcher_labels["type"] = "false_positive";
+    Metrics::get().write( "matches", matcher_labels, matcher_stats[i].false_positives );
+    matcher_labels["type"] = "error";
+    Metrics::get().write( "matches", matcher_labels, matcher_stats[i].errors );
+    matcher_stats[i].candidates = 0;
+    matcher_stats[i].successes = 0;
+    matcher_stats[i].false_positives = 0;
+    matcher_stats[i].errors = 0;
+  }
 }

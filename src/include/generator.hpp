@@ -10,6 +10,12 @@ public:
 
   using UPtr = std::unique_ptr<Generator>;
 
+  class Factory
+  {
+  public:
+    static Generator::UPtr createGenerator( const Settings &settings, int64_t seed );
+  };
+
   Generator( const Settings &settings, int64_t seed );
 
   virtual ~Generator()
