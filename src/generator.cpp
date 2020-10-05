@@ -175,7 +175,7 @@ void Generator::ensureMeaningfulLoops( Program &p )
       {
         Operation dec;
         dec.target = Operand( Operand::Type::DIRECT, mem );
-        dec.source = Operand( Operand::Type::CONSTANT, (gen() % 4) + 1 );
+        dec.source = Operand( Operand::Type::CONSTANT, (gen() % 9) + 1 );
         switch ( gen() % 3 )
         {
         case 0:
@@ -195,7 +195,7 @@ void Generator::ensureMeaningfulLoops( Program &p )
       }
       if ( num_ops < 2 )
       {
-        for ( int64_t j = (gen() % 3) + 1; j > 0; j-- )
+        for ( int64_t j = (gen() % 3) + 3; j > 0; j-- )
         {
           auto op = generateOperation();
           if ( op.first.type != Operation::Type::LPB && op.first.type != Operation::Type::LPE )
