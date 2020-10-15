@@ -5,6 +5,33 @@
 
 #include <map>
 
+class OpPos
+{
+public:
+
+  Operation op;
+  size_t pos;
+  size_t len;
+
+  inline bool operator==( const OpPos &o ) const
+  {
+    return op == o.op && pos == o.pos && len == o.len;
+  }
+
+  inline bool operator!=( const OpPos &o ) const
+  {
+    return !((*this) == o);
+  }
+
+  inline bool operator<( const OpPos &o ) const
+  {
+    if ( pos != o.pos ) return pos < o.pos;
+    if ( len != o.len ) return len < o.len;
+    if ( op != o.op ) return op < o.op;
+    return false; // equal
+  }
+};
+
 class Stats
 {
 public:
@@ -23,6 +50,7 @@ public:
   int64_t num_sequences;
   std::map<number_t, int64_t> num_constants;
   std::map<Operation, int64_t> num_operations;
+  std::map<OpPos, int64_t> num_operation_positions;
   std::vector<int64_t> num_programs_per_length;
   std::vector<int64_t> num_ops_per_type;
   std::vector<bool> found_programs;

@@ -154,6 +154,15 @@ void Stats::save( const std::string &path )
         << ProgramUtil::operandToString( op.first.source ) << sep << op.second << "\n";
   }
   op_counts.close();
+  std::ofstream oppos_counts( "/tmp/operation_pos_counts.csv" );
+  for ( auto &o : num_operation_positions )
+  {
+    const auto &meta = Operation::Metadata::get( o.first.op.type );
+    oppos_counts << o.first.pos << sep << o.first.len << sep << meta.name << sep
+        << ProgramUtil::operandToString( o.first.op.target ) << sep << ProgramUtil::operandToString( o.first.op.source )
+        << sep << o.second << "\n";
+  }
+  oppos_counts.close();
   std::ofstream summary( path + "/summary.csv" );
   summary << num_programs << sep << num_sequences << "\n";
   summary.close();
@@ -168,6 +177,9 @@ void Stats::updateProgramStats( const Program &program )
     num_programs_per_length.resize( num_ops + 1 );
   }
   num_programs_per_length[num_ops]++;
+  OpPos o;
+  o.len = program.ops.size();
+  o.pos = 0;
   for ( auto &op : program.ops )
   {
     num_ops_per_type[static_cast<size_t>( op.type )]++;
@@ -189,7 +201,17 @@ void Stats::updateProgramStats( const Program &program )
       {
         num_operations[op]++;
       }
+      o.op = op;
+      if ( num_operation_positions.find( o ) == num_operation_positions.end() )
+      {
+        num_operation_positions[o] = 1;
+      }
+      else
+      {
+        num_operation_positions[o]++;
+      }
     }
+    o.pos++;
   }
 }
 
