@@ -79,6 +79,36 @@ void Stats::load( const std::string &path )
   }
   op_counts.close();
 
+  /*
+  std::ifstream op_pos_counts( path + "/operation_pos_counts.csv" );
+  parser.in = &op_pos_counts;
+  OpPos opPos;
+  Operand pos, length;
+  while ( true )
+  {
+    op_pos_counts >> std::ws;
+    if ( op_pos_counts.peek() == EOF )
+    {
+      break;
+    }
+    pos = parser.readOperand();
+    opPos.pos = pos.value;
+    parser.readSeparator( ',' );
+    length = parser.readOperand();
+    opPos.len = length.value;
+    parser.readSeparator( ',' );
+    opPos.op.type = parser.readOperationType();
+    parser.readSeparator( ',' );
+    opPos.op.target = parser.readOperand();
+    parser.readSeparator( ',' );
+    opPos.op.source = parser.readOperand();
+    parser.readSeparator( ',' );
+    count = parser.readOperand();
+    num_operation_positions[opPos] = count.value;
+  }
+  op_pos_counts.close();
+   */
+
   std::ifstream programs( path + "/programs.csv" );
   found_programs.resize( 100000, false );
   cached_b_files.resize( 100000, false );
@@ -154,7 +184,7 @@ void Stats::save( const std::string &path )
         << ProgramUtil::operandToString( op.first.source ) << sep << op.second << "\n";
   }
   op_counts.close();
-  std::ofstream oppos_counts( "/tmp/operation_pos_counts.csv" );
+  std::ofstream oppos_counts( path + "/operation_pos_counts.csv" );
   for ( auto &o : num_operation_positions )
   {
     const auto &meta = Operation::Metadata::get( o.first.op.type );
