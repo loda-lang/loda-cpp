@@ -26,9 +26,11 @@ public:
 
 protected:
 
+  virtual std::pair<Operation, double> generateOperation();
+
   void generateStateless( Program &p, size_t num_operations );
 
-  virtual std::pair<Operation, double> generateOperation() = 0;
+  void applyPostprocessing( Program &p );
 
   std::vector<number_t> fixCausality( Program &p );
 

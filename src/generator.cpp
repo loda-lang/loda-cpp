@@ -2,6 +2,7 @@
 
 #include "generator_v1.hpp"
 #include "generator_v2.hpp"
+#include "generator_v3.hpp"
 
 Generator::UPtr Generator::Factory::createGenerator( const Settings &settings, int64_t seed )
 {
@@ -13,6 +14,9 @@ Generator::UPtr Generator::Factory::createGenerator( const Settings &settings, i
     break;
   case 2:
     generator.reset( new GeneratorV2( settings, seed ) );
+    break;
+  case 3:
+    generator.reset( new GeneratorV3( settings, seed ) );
     break;
   default:
     Log::get().error( "Invalid generator version: " + std::to_string( settings.generator_version ), true );
@@ -26,6 +30,43 @@ Generator::Generator( const Settings &settings, int64_t seed )
     settings( settings )
 {
   gen.seed( seed );
+}
+
+std::pair<Operation, double> Generator::generateOperation()
+{
+  Log::get().error( "Not implemented: Generator::generateOperation()", true );
+  return
+  {};
+}
+
+void Generator::generateStateless( Program &p, size_t num_operations )
+{
+  // fill program with random operations
+  size_t nops = 0;
+  while ( p.ops.size() + nops < num_operations )
+  {
+    auto next_op = generateOperation();
+    if ( next_op.first.type == Operation::Type::NOP || next_op.first.type == Operation::Type::LPE )
+    {
+      nops++;
+      continue;
+    }
+    size_t position = (next_op.second * (p.ops.size() + 1));
+    p.ops.emplace( p.ops.begin() + position, Operation( next_op.first ) );
+    if ( next_op.first.type == Operation::Type::LPB )
+    {
+      position = ((position + p.ops.size()) / 2) + 1;
+      p.ops.emplace( p.ops.begin() + position, Operation( Operation::Type::LPE ) );
+    }
+  }
+}
+
+void Generator::applyPostprocessing( Program &p )
+{
+  auto written_cells = fixCausality( p );
+  ensureSourceNotOverwritten( p );
+  ensureTargetWritten( p, written_cells );
+  ensureMeaningfulLoops( p );
 }
 
 std::vector<number_t> Generator::fixCausality( Program &p )
@@ -209,28 +250,6 @@ void Generator::ensureMeaningfulLoops( Program &p )
     }
     default:
       break;
-    }
-  }
-}
-
-void Generator::generateStateless( Program &p, size_t num_operations )
-{
-  // fill program with random operations
-  size_t nops = 0;
-  while ( p.ops.size() + nops < num_operations )
-  {
-    auto next_op = generateOperation();
-    if ( next_op.first.type == Operation::Type::NOP || next_op.first.type == Operation::Type::LPE )
-    {
-      nops++;
-      continue;
-    }
-    size_t position = (next_op.second * (p.ops.size() + 1));
-    p.ops.emplace( p.ops.begin() + position, Operation( next_op.first ) );
-    if ( next_op.first.type == Operation::Type::LPB )
-    {
-      position = ((position + p.ops.size()) / 2) + 1;
-      p.ops.emplace( p.ops.begin() + position, Operation( Operation::Type::LPE ) );
     }
   }
 }
