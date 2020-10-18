@@ -1,5 +1,6 @@
 #include "optimizer.hpp"
 
+#include "interpreter.hpp"
 #include "semantics.hpp"
 #include "util.hpp"
 
@@ -242,19 +243,17 @@ bool Optimizer::simplifyOperations( Program &p, size_t num_initialized_cells ) c
   {
     switch ( op.type )
     {
-    case Operation::Type::MOV:
-    case Operation::Type::ADD:
-    case Operation::Type::SUB:
-    case Operation::Type::TRN:
-    case Operation::Type::MUL:
-    case Operation::Type::DIV:
-    case Operation::Type::MOD:
-    case Operation::Type::POW:
-    case Operation::Type::LOG:
-    case Operation::Type::FAC:
-    case Operation::Type::GCD:
-    case Operation::Type::BIN:
-    case Operation::Type::CMP:
+    case Operation::Type::NOP:
+    case Operation::Type::DBG:
+      break; // can be safely ignored
+
+    case Operation::Type::LPB:
+    case Operation::Type::LPE:
+    case Operation::Type::CLR:
+      can_simplify = false;
+      break;
+
+    default:
     {
       if ( can_simplify )
       {
@@ -328,20 +327,8 @@ bool Optimizer::simplifyOperations( Program &p, size_t num_initialized_cells ) c
         Log::get().error( "invalid program" );
         break;
       }
-
       break;
     }
-
-    case Operation::Type::NOP:
-    case Operation::Type::DBG:
-      break; // can be safely ignored
-
-    case Operation::Type::LPB:
-    case Operation::Type::LPE:
-    case Operation::Type::CLR:
-      can_simplify = false;
-      break;
-
     }
   }
   if ( simplified && Log::get().level == Log::Level::DEBUG )
@@ -478,7 +465,7 @@ struct update_state
 };
 
 update_state doPartialEval( Operation &op, std::unordered_map<number_t, Operand> &values,
-    std::unordered_set<number_t> &unknown_cells, const Interpreter& interpreter )
+    std::unordered_set<number_t> &unknown_cells, const Interpreter &interpreter )
 {
   update_state result;
 
