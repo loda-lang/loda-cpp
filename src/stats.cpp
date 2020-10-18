@@ -79,7 +79,6 @@ void Stats::load( const std::string &path )
   }
   op_counts.close();
 
-  /*
   std::ifstream op_pos_counts( path + "/operation_pos_counts.csv" );
   parser.in = &op_pos_counts;
   OpPos opPos;
@@ -107,7 +106,6 @@ void Stats::load( const std::string &path )
     num_operation_positions[opPos] = count.value;
   }
   op_pos_counts.close();
-   */
 
   std::ifstream programs( path + "/programs.csv" );
   found_programs.resize( 100000, false );
