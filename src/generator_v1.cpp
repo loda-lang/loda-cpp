@@ -226,9 +226,6 @@ Program GeneratorV1::generateProgram()
   // use template for base program
   Program p = program_template;
   generateStateless( p, settings.num_operations );
-  auto written_cells = fixCausality( p );
-  ensureSourceNotOverwritten( p );
-  ensureTargetWritten( p, written_cells );
-  ensureMeaningfulLoops( p );
+  applyPostprocessing( p );
   return p;
 }

@@ -200,8 +200,12 @@ void Test::collatz()
 void Test::stats()
 {
   Log::get().info( "Testing stats loading and saving" );
+
+  // load stats
   Stats s, t;
   s.load( "stats" );
+
+  // sanity check for loaded stats
   if ( s.num_constants.at( 1 ) == 0 )
   {
     Log::get().error( "Error loading constants counts from stats" );
@@ -210,18 +214,35 @@ void Test::stats()
   {
     Log::get().error( "Error loading operation type counts from stats" );
   }
-  if ( s.num_operations.at(
-      Operation( Operation::Type::ADD, Operand( Operand::Type::DIRECT, 0 ), Operand( Operand::Type::CONSTANT, 1 ) ) )
-      == 0 )
+  Operation op( Operation::Type::ADD, Operand( Operand::Type::DIRECT, 0 ), Operand( Operand::Type::CONSTANT, 1 ) );
+  if ( s.num_operations.at( op ) == 0 )
   {
     Log::get().error( "Error loading operation counts from stats" );
+  }
+  if ( s.num_operation_positions.size() < 100000 )
+  {
+    Log::get().error( "Unexpected number of operation position counts in stats" );
+  }
+  OpPos op_pos;
+  op_pos.pos = 0;
+  op_pos.len = 2;
+  op_pos.op.type = Operation::Type::MOV;
+  op_pos.op.target = Operand( Operand::Type::DIRECT, 1 );
+  op_pos.op.source = Operand( Operand::Type::DIRECT, 0 );
+  if ( s.num_operation_positions.at( op_pos ) == 0 )
+  {
+    Log::get().error( "Error loading operation position counts from stats" );
   }
   if ( !s.found_programs.at( 4 ) || !s.cached_b_files.at( 4 ) )
   {
     Log::get().error( "Error loading program summary from stats" );
   }
+
+  // save & reload stats
   s.save( "/tmp" );
   t.load( "/tmp" );
+
+  // compare loaded to original
   for ( auto &e : s.num_constants )
   {
     auto m = e.second;
@@ -247,6 +268,13 @@ void Test::stats()
     if ( it.second != t.num_operations.at( it.first ) )
     {
       Log::get().error( "Unexpected number of operations count", true );
+    }
+  }
+  for ( auto it : s.num_operation_positions )
+  {
+    if ( it.second != t.num_operation_positions.at( it.first ) )
+    {
+      Log::get().error( "Unexpected number of operation position count", true );
     }
   }
   if ( s.found_programs.size() != t.found_programs.size() )
