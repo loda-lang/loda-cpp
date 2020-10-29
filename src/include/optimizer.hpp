@@ -14,7 +14,7 @@ public:
   Optimizer( const Settings &settings )
       :
       settings( settings ),
-        interpreter( settings )
+      interpreter( settings )
   {
   }
 
@@ -35,6 +35,10 @@ public:
   bool canChangeVariableOrder( const Program &p ) const;
 
   bool partialEval( Program &p, size_t num_initialized_cells ) const;
+
+  bool shouldSwitchOperations( const Operation &first, const Operation &second ) const;
+
+  bool sortOperations( Program &p ) const;
 
 private:
 

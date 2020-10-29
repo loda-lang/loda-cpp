@@ -38,6 +38,10 @@ void Optimizer::optimize( Program &p, size_t num_reserved_cells, size_t num_init
     {
       changed = true;
     }
+    if ( sortOperations( p ) )
+    {
+      changed = true;
+    }
   }
   if ( Log::get().level == Log::Level::DEBUG )
   {
@@ -593,4 +597,14 @@ bool Optimizer::partialEval( Program &p, size_t num_initialized_cells ) const
     changed = changed || state.changed;
   }
   return changed;
+}
+
+bool Optimizer::shouldSwitchOperations( const Operation &first, const Operation &second ) const
+{
+  return false;
+}
+
+bool Optimizer::sortOperations( Program &p ) const
+{
+  return false;
 }
