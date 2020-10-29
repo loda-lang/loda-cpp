@@ -105,7 +105,7 @@ std::pair<Operation, double> GeneratorV3::generateOperation()
 {
   std::pair<Operation, double> next_op;
   auto &op_dist = operation_dists[gen() % operation_dists.size()];
-  next_op.first = op_dist[gen() & op_dist.size()].operation;
+  next_op.first = op_dist[gen() % op_dist.size()].operation;
   next_op.second = (double) (gen() % 100) / 100.0;
   return next_op;
 }
