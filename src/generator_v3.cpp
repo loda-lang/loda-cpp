@@ -59,15 +59,53 @@ Program GeneratorV3::generateProgram()
 {
   Program p;
   const size_t len = length_dist( gen );
-  size_t sum;
+  size_t sample, left, right, mid;
+  size_t num_loops = 0;
   for ( size_t pos = 0; pos < len; pos++ )
   {
     auto &op_dist = operation_dists.at( getIndex( pos, len ) );
-    sum = op_dist.back().partial_sum;
-
-    // TODO
-
+    sample = gen() % op_dist.back().partial_sum;
+    left = 0;
+    right = op_dist.size();
+    while ( right - left > 1 )
+    {
+      mid = (left + right) / 2;
+      if ( sample > op_dist[mid].partial_sum )
+      {
+        left = mid;
+      }
+      else
+      {
+        right = mid;
+      }
+    }
+    if ( op_dist[left].operation.type != Operation::Type::LPE || num_loops > 0 )
+    {
+      p.ops.push_back( op_dist[left].operation );
+    }
+    if ( op_dist[left].operation.type == Operation::Type::LPB )
+    {
+      num_loops++;
+    }
+    else if ( op_dist[left].operation.type == Operation::Type::LPE )
+    {
+      num_loops--;
+    }
+  }
+  while ( num_loops > 0 )
+  {
+    p.ops.push_back( Operation::Type::LPE );
+    num_loops--;
   }
   applyPostprocessing( p );
   return p;
+}
+
+std::pair<Operation, double> GeneratorV3::generateOperation()
+{
+  std::pair<Operation, double> next_op;
+  auto &op_dist = operation_dists[gen() % operation_dists.size()];
+  next_op.first = op_dist[gen() & op_dist.size()].operation;
+  next_op.second = (double) (gen() % 100) / 100.0;
+  return next_op;
 }
