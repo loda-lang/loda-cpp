@@ -32,13 +32,6 @@ Generator::Generator( const Settings &settings, int64_t seed )
   gen.seed( seed );
 }
 
-std::pair<Operation, double> Generator::generateOperation()
-{
-  Log::get().error( "Not implemented: Generator::generateOperation()", true );
-  return
-  {};
-}
-
 void Generator::generateStateless( Program &p, size_t num_operations )
 {
   // fill program with random operations

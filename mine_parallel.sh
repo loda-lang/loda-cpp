@@ -57,6 +57,7 @@ function start_miners() {
   num_vars=4
   indirect=false
   num_gen_v2=0
+  num_gen_v3=0
   if [ "$num_cpus" -ge 8 ]; then
     templates="T01 T02"
     indirect=true
@@ -71,7 +72,7 @@ function start_miners() {
     num_gen_v2=4
   fi
   if [ "$num_cpus" -ge 24 ]; then
-    num_gen_v2=8
+    num_gen_v3=4
   fi
 
   # start parameterized miners
@@ -91,6 +92,13 @@ function start_miners() {
   if [ "$num_gen_v2" -ne 0 ]; then
     for n in $(seq 1 $num_gen_v2); do
       run_loda mine -g 2 $l $@
+    done
+  fi
+
+  # generator v3
+  if [ "$num_gen_v3" -ne 0 ]; then
+    for n in $(seq 1 $num_gen_v3); do
+      run_loda mine -g 3 $l $@
     done
   fi
 

@@ -26,7 +26,7 @@ public:
 
 protected:
 
-  virtual std::pair<Operation, double> generateOperation();
+  virtual std::pair<Operation, double> generateOperation() = 0;
 
   void generateStateless( Program &p, size_t num_operations );
 
