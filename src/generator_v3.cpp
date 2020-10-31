@@ -93,14 +93,14 @@ Program GeneratorV3::generateProgram()
     if ( op_type != Operation::Type::LPE || num_loops > 0 )
     {
       p.ops.push_back( op_dist[left].operation );
-    }
-    if ( op_type == Operation::Type::LPB )
-    {
-      num_loops++;
-    }
-    else if ( op_type == Operation::Type::LPE )
-    {
-      num_loops--;
+      if ( op_type == Operation::Type::LPB )
+      {
+        num_loops++;
+      }
+      else if ( op_type == Operation::Type::LPE )
+      {
+        num_loops--;
+      }
     }
   }
   while ( num_loops > 0 )
