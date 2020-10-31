@@ -29,6 +29,10 @@ GeneratorV3::GeneratorV3( const Settings &settings, int64_t seed )
       max_len = len;
     }
   }
+  if ( max_len == 0 )
+  {
+    Log::get().error( "Maximum  program length is zero", true );
+  }
   operation_dists.resize( getIndex( max_len - 1, max_len ) + 1 );
 
   // initialize operation distributions
@@ -64,6 +68,12 @@ Program GeneratorV3::generateProgram()
   for ( size_t pos = 0; pos < len; pos++ )
   {
     auto &op_dist = operation_dists.at( getIndex( pos, len ) );
+    if ( op_dist.back().partial_sum == 0 )
+    {
+      Log::get().error(
+          "Zero partial sum for distribution and position " + std::to_string( pos ) + "," + std::to_string( len ),
+          true );
+    }
     sample = gen() % op_dist.back().partial_sum;
     left = 0;
     right = op_dist.size();
@@ -104,8 +114,16 @@ Program GeneratorV3::generateProgram()
 std::pair<Operation, double> GeneratorV3::generateOperation()
 {
   std::pair<Operation, double> next_op;
-  auto &op_dist = operation_dists[gen() % operation_dists.size()];
-  next_op.first = op_dist[gen() % op_dist.size()].operation;
-  next_op.second = (double) (gen() % 100) / 100.0;
-  return next_op;
+  while ( true )
+  {
+    auto &op_dist = operation_dists[gen() % operation_dists.size()];
+    if ( !op_dist.empty() )
+    {
+      next_op.first = op_dist[gen() % op_dist.size()].operation;
+      next_op.second = (double) (gen() % 100) / 100.0;
+      return next_op;
+    }
+  }
+  return
+  {};
 }
