@@ -68,15 +68,14 @@ Program GeneratorV3::generateProgram()
   for ( size_t pos = 0; pos < len; pos++ )
   {
     auto &op_dist = operation_dists.at( getIndex( pos, len ) );
-    if ( op_dist.back().partial_sum == 0 )
+    if ( op_dist.empty() || op_dist.back().partial_sum == 0 )
     {
       Log::get().error(
-          "Zero partial sum for distribution and position " + std::to_string( pos ) + "," + std::to_string( len ),
-          true );
+          "Invalid operation distribution at position " + std::to_string( pos ) + "," + std::to_string( len ), true );
     }
     sample = gen() % op_dist.back().partial_sum;
     left = 0;
-    right = op_dist.size();
+    right = op_dist.size() - 1;
     while ( right - left > 1 )
     {
       mid = (left + right) / 2;
