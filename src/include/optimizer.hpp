@@ -36,7 +36,7 @@ public:
 
   bool partialEval( Program &p, size_t num_initialized_cells ) const;
 
-  bool shouldSwitchOperations( const Operation &first, const Operation &second ) const;
+  bool shouldSwapOperations( const Operation &first, const Operation &second ) const;
 
   bool sortOperations( Program &p ) const;
 
