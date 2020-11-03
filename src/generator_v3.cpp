@@ -29,6 +29,10 @@ GeneratorV3::GeneratorV3( const Settings &settings, int64_t seed )
       max_len = len;
     }
   }
+  if ( max_len == 0 )
+  {
+    Log::get().error( "Maximum  program length is zero", true );
+  }
   operation_dists.resize( getIndex( max_len - 1, max_len ) + 1 );
 
   // initialize operation distributions
@@ -61,16 +65,22 @@ Program GeneratorV3::generateProgram()
   const size_t len = length_dist( gen );
   size_t sample, left, right, mid;
   size_t num_loops = 0;
+  Operation::Type op_type;
   for ( size_t pos = 0; pos < len; pos++ )
   {
     auto &op_dist = operation_dists.at( getIndex( pos, len ) );
+    if ( op_dist.empty() || op_dist.back().partial_sum == 0 )
+    {
+      Log::get().error(
+          "Invalid operation distribution at position " + std::to_string( pos ) + "," + std::to_string( len ), true );
+    }
     sample = gen() % op_dist.back().partial_sum;
     left = 0;
-    right = op_dist.size();
+    right = op_dist.size() - 1;
     while ( right - left > 1 )
     {
       mid = (left + right) / 2;
-      if ( sample > op_dist[mid].partial_sum )
+      if ( sample > op_dist.at( mid ).partial_sum )
       {
         left = mid;
       }
@@ -79,17 +89,18 @@ Program GeneratorV3::generateProgram()
         right = mid;
       }
     }
-    if ( op_dist[left].operation.type != Operation::Type::LPE || num_loops > 0 )
+    op_type = op_dist.at( left ).operation.type;
+    if ( op_type != Operation::Type::LPE || num_loops > 0 )
     {
       p.ops.push_back( op_dist[left].operation );
-    }
-    if ( op_dist[left].operation.type == Operation::Type::LPB )
-    {
-      num_loops++;
-    }
-    else if ( op_dist[left].operation.type == Operation::Type::LPE )
-    {
-      num_loops--;
+      if ( op_type == Operation::Type::LPB )
+      {
+        num_loops++;
+      }
+      else if ( op_type == Operation::Type::LPE )
+      {
+        num_loops--;
+      }
     }
   }
   while ( num_loops > 0 )
@@ -104,8 +115,16 @@ Program GeneratorV3::generateProgram()
 std::pair<Operation, double> GeneratorV3::generateOperation()
 {
   std::pair<Operation, double> next_op;
-  auto &op_dist = operation_dists[gen() % operation_dists.size()];
-  next_op.first = op_dist[gen() % op_dist.size()].operation;
-  next_op.second = (double) (gen() % 100) / 100.0;
-  return next_op;
+  while ( true )
+  {
+    auto &op_dist = operation_dists.at( gen() % operation_dists.size() );
+    if ( !op_dist.empty() )
+    {
+      next_op.first = op_dist.at( gen() % op_dist.size() ).operation;
+      next_op.second = (double) (gen() % 100) / 100.0;
+      return next_op;
+    }
+  }
+  return
+  {};
 }

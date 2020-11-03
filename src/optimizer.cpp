@@ -599,12 +599,33 @@ bool Optimizer::partialEval( Program &p, size_t num_initialized_cells ) const
   return changed;
 }
 
-bool Optimizer::shouldSwitchOperations( const Operation &first, const Operation &second ) const
+bool Optimizer::shouldSwapOperations( const Operation &first, const Operation &second ) const
 {
+  if ( first == second )
+  {
+    return false;
+  }
+
   return false;
 }
 
 bool Optimizer::sortOperations( Program &p ) const
 {
-  return false;
+  bool changed = false;
+  for ( int64_t i = 1; i < static_cast<int64_t>( p.ops.size() ); i++ )
+  {
+    for ( int64_t j = i - 1; j >= 0; j-- )
+    {
+      if ( shouldSwapOperations( p.ops[j], p.ops[j + 1] ) )
+      {
+        std::swap( p.ops[j], p.ops[j + 1] );
+        changed = true;
+      }
+      else
+      {
+        break;
+      }
+    }
+  }
+  return changed;
 }

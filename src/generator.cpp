@@ -77,10 +77,10 @@ std::vector<number_t> Generator::fixCausality( Program &p )
     if ( meta.num_operands == 2 && op.source.type == Operand::Type::DIRECT
         && std::find( written_cells.begin(), written_cells.end(), op.source.value ) == written_cells.end() )
     {
-      new_cell = op.source.value % written_cells.size();
+      new_cell = op.source.value % written_cells.size(); // size of written_cells is >=1
       if ( new_cell == op.target.value )
       {
-        new_cell = written_cells.size() - new_cell - 1;
+        new_cell = (new_cell + 1) % written_cells.size();
       }
       op.source.value = written_cells[new_cell];
     }
@@ -93,7 +93,7 @@ std::vector<number_t> Generator::fixCausality( Program &p )
       new_cell = op.target.value % written_cells.size();
       if ( new_cell == op.source.value )
       {
-        new_cell = written_cells.size() - new_cell - 1;
+        new_cell = (new_cell + 1) % written_cells.size();
       }
       op.target.value = written_cells[new_cell];
     }
