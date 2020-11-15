@@ -470,7 +470,7 @@ struct update_state
 };
 
 update_state doPartialEval( Operation &op, std::unordered_map<number_t, Operand> &values,
-    std::unordered_set<number_t> &unknown_cells, const Interpreter &interpreter )
+    const Interpreter &interpreter )
 {
   update_state result;
 
@@ -497,7 +497,7 @@ update_state doPartialEval( Operation &op, std::unordered_map<number_t, Operand>
     }
     else // direct
     {
-      if ( unknown_cells.find( op.source.value ) != unknown_cells.end() )
+      if ( values.find( op.source.value ) == values.end() )
       {
         unknown = true;
       }
@@ -515,7 +515,7 @@ update_state doPartialEval( Operation &op, std::unordered_map<number_t, Operand>
 
   // deduce target value
   Operand target( Operand::Type::CONSTANT, 0 );
-  if ( unknown_cells.find( op.target.value ) != unknown_cells.end() && op.type != Operation::Type::MOV )
+  if ( values.find( op.target.value ) == values.end() && op.type != Operation::Type::MOV )
   {
     unknown = true;
   }
@@ -564,7 +564,7 @@ update_state doPartialEval( Operation &op, std::unordered_map<number_t, Operand>
   }
   if ( unknown )
   {
-    unknown_cells.insert( op.target.value );
+    values.erase( op.target.value );
   }
   else if ( update_target )
   {
@@ -581,16 +581,21 @@ update_state doPartialEval( Operation &op, std::unordered_map<number_t, Operand>
 
 bool Optimizer::partialEval( Program &p, size_t num_initialized_cells ) const
 {
-  std::unordered_map<number_t, Operand> values;
-  std::unordered_set<number_t> unknown_cells;
-  for ( size_t i = 0; i < num_initialized_cells; i++ )
+  std::unordered_set<number_t> used_cells;
+  number_t largest_used = 0;
+  if ( !getUsedMemoryCells( p, used_cells, largest_used ) )
   {
-    unknown_cells.insert( i );
+    return false;
+  }
+  std::unordered_map<number_t, Operand> values;
+  for ( size_t i = num_initialized_cells; i <= largest_used; i++ )
+  {
+    values[i] = Operand( Operand::Type::CONSTANT, 0 );
   }
   bool changed = false;
   for ( auto &op : p.ops )
   {
-    auto state = doPartialEval( op, values, unknown_cells, interpreter );
+    auto state = doPartialEval( op, values, interpreter );
     if ( state.stop )
     {
       return changed;
