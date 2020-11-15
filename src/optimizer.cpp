@@ -1,6 +1,7 @@
 #include "optimizer.hpp"
 
 #include "interpreter.hpp"
+#include "number.hpp"
 #include "semantics.hpp"
 #include "util.hpp"
 
