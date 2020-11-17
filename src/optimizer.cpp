@@ -1,6 +1,7 @@
 #include "optimizer.hpp"
 
 #include "interpreter.hpp"
+#include "number.hpp"
 #include "semantics.hpp"
 #include "util.hpp"
 
@@ -462,25 +463,15 @@ bool Optimizer::reduceMemoryCells( Program &p, size_t num_reserved_cells ) const
   return false;
 }
 
-struct update_state
+bool doPartialEval( Operation &op, std::unordered_map<number_t, Operand> &values, const Interpreter &interpreter )
 {
-  bool changed;
-  bool stop;
-};
-
-update_state doPartialEval( Operation &op, std::unordered_map<number_t, Operand> &values,
-    std::unordered_set<number_t> &unknown_cells, const Interpreter &interpreter )
-{
-  update_state result;
-
   // make sure there is not indirect memory access
   auto num_ops = Operation::Metadata::get( op.type ).num_operands;
   if ( (num_ops > 0 && op.target.type == Operand::Type::INDIRECT)
       || (num_ops > 1 && op.source.type == Operand::Type::INDIRECT) )
   {
-    result.changed = false;
-    result.stop = true;
-    return result;
+    values.clear();
+    return false;
   }
 
   bool unknown = false;
@@ -496,7 +487,7 @@ update_state doPartialEval( Operation &op, std::unordered_map<number_t, Operand>
     }
     else // direct
     {
-      if ( unknown_cells.find( op.source.value ) != unknown_cells.end() )
+      if ( values.find( op.source.value ) == values.end() )
       {
         unknown = true;
       }
@@ -514,7 +505,7 @@ update_state doPartialEval( Operation &op, std::unordered_map<number_t, Operand>
 
   // deduce target value
   Operand target( Operand::Type::CONSTANT, 0 );
-  if ( unknown_cells.find( op.target.value ) != unknown_cells.end() && op.type != Operation::Type::MOV )
+  if ( values.find( op.target.value ) == values.end() && op.type != Operation::Type::MOV )
   {
     unknown = true;
   }
@@ -540,9 +531,8 @@ update_state doPartialEval( Operation &op, std::unordered_map<number_t, Operand>
   case Operation::Type::LPE:
   case Operation::Type::CLR:
   {
-    result.changed = false;
-    result.stop = true;
-    return result;
+    values.clear();
+    return false;
   }
 
   default:
@@ -553,17 +543,15 @@ update_state doPartialEval( Operation &op, std::unordered_map<number_t, Operand>
 
   }
 
-  result.changed = false;
-  result.stop = false;
-
+  bool changed = false;
   if ( update_source )
   {
     op.source = source;
-    result.changed = true;
+    changed = true;
   }
   if ( unknown )
   {
-    unknown_cells.insert( op.target.value );
+    values.erase( op.target.value );
   }
   else if ( update_target )
   {
@@ -572,29 +560,32 @@ update_state doPartialEval( Operation &op, std::unordered_map<number_t, Operand>
     {
       op.type = Operation::Type::MOV;
       op.source = target;
-      result.changed = true;
+      changed = true;
     }
   }
-  return result;
+  return changed;
 }
 
 bool Optimizer::partialEval( Program &p, size_t num_initialized_cells ) const
 {
-  std::unordered_map<number_t, Operand> values;
-  std::unordered_set<number_t> unknown_cells;
-  for ( size_t i = 0; i < num_initialized_cells; i++ )
+  std::unordered_set<number_t> used_cells;
+  number_t largest_used = 0;
+  if ( !getUsedMemoryCells( p, used_cells, largest_used ) )
   {
-    unknown_cells.insert( i );
+    return false;
+  }
+  std::unordered_map<number_t, Operand> values;
+  for ( number_t i = num_initialized_cells; i <= largest_used; i++ )
+  {
+    values[i] = Operand( Operand::Type::CONSTANT, 0 );
   }
   bool changed = false;
   for ( auto &op : p.ops )
   {
-    auto state = doPartialEval( op, values, unknown_cells, interpreter );
-    if ( state.stop )
+    if ( doPartialEval( op, values, interpreter ) )
     {
-      return changed;
+      changed = true;
     }
-    changed = changed || state.changed;
   }
   return changed;
 }
