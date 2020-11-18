@@ -4,5 +4,5 @@ add $1,1
 mul $1,2
 add $0,$1
 ; out
-mov $1,8
 add $0,8
+mov $1,8
