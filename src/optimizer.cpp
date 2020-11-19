@@ -463,12 +463,18 @@ bool Optimizer::reduceMemoryCells( Program &p, size_t num_reserved_cells ) const
   return false;
 }
 
+bool hasIndirectOperand( const Operation &op )
+{
+  const auto num_ops = Operation::Metadata::get( op.type ).num_operands;
+  return (num_ops > 0 && op.target.type == Operand::Type::INDIRECT)
+      || (num_ops > 1 && op.source.type == Operand::Type::INDIRECT);
+}
+
 bool doPartialEval( Operation &op, std::unordered_map<number_t, Operand> &values, const Interpreter &interpreter )
 {
   // make sure there is not indirect memory access
-  auto num_ops = Operation::Metadata::get( op.type ).num_operands;
-  if ( (num_ops > 0 && op.target.type == Operand::Type::INDIRECT)
-      || (num_ops > 1 && op.source.type == Operand::Type::INDIRECT) )
+  const auto num_ops = Operation::Metadata::get( op.type ).num_operands;
+  if ( hasIndirectOperand( op ) )
   {
     values.clear();
     return false;
@@ -590,13 +596,45 @@ bool Optimizer::partialEval( Program &p, size_t num_initialized_cells ) const
   return changed;
 }
 
+bool isArithmetic( Operation::Type t )
+{
+  return !(t == Operation::Type::NOP || t == Operation::Type::DBG || t == Operation::Type::LPB
+      || t == Operation::Type::LPE || t == Operation::Type::CLR);
+}
+
 bool Optimizer::shouldSwapOperations( const Operation &first, const Operation &second ) const
 {
-  if ( first == second )
+  // check if we can swap
+  if ( !isArithmetic( first.type ) || !isArithmetic( second.type ) )
   {
     return false;
   }
-
+  if ( hasIndirectOperand( first ) || hasIndirectOperand( second ) )
+  {
+    return false;
+  }
+  if ( first.target.value == second.target.value )
+  {
+    return false;
+  }
+  if ( first.source.type == Operand::Type::DIRECT && second.target.value == first.source.value )
+  {
+    return false;
+  }
+  if ( second.source.type == Operand::Type::DIRECT && first.target.value == second.source.value )
+  {
+    return false;
+  }
+  // check if we should swap
+  if ( first.target.value < second.target.value )
+  {
+    return false;
+  }
+  if ( first.target.value > second.target.value )
+  {
+    return true;
+  }
+  // TODO: additional checks
   return false;
 }
 
