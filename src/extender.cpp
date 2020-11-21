@@ -6,11 +6,11 @@ void add_or_sub( Program &p, number_t c )
 {
   if ( c > 0 )
   {
-    p.push_back( Operation::Type::ADD, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, c );
+    p.push_back( Operation::Type::ADD, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::CONSTANT, c );
   }
   else if ( c < 0 )
   {
-    p.push_back( Operation::Type::SUB, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, -c );
+    p.push_back( Operation::Type::SUB, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::CONSTANT, -c );
   }
 }
 
@@ -26,11 +26,13 @@ bool Extender::linear1( Program &p, line_t inverse, line_t target )
   }
   if ( inverse.factor != 1 )
   {
-    p.push_back( Operation::Type::DIV, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, inverse.factor );
+    p.push_back( Operation::Type::DIV, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::CONSTANT,
+        inverse.factor );
   }
   if ( target.factor != 1 )
   {
-    p.push_back( Operation::Type::MUL, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, target.factor );
+    p.push_back( Operation::Type::MUL, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::CONSTANT,
+        target.factor );
   }
   if ( target.offset != 0 )
   {
@@ -47,12 +49,14 @@ bool Extender::linear2( Program &p, line_t inverse, line_t target )
   }
   if ( inverse.factor != 1 )
   {
-    p.push_back( Operation::Type::DIV, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, inverse.factor );
+    p.push_back( Operation::Type::DIV, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::CONSTANT,
+        inverse.factor );
   }
   add_or_sub( p, target.offset - inverse.offset );
   if ( target.factor != 1 )
   {
-    p.push_back( Operation::Type::MUL, Operand::Type::DIRECT, 1, Operand::Type::CONSTANT, target.factor );
+    p.push_back( Operation::Type::MUL, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::CONSTANT,
+        target.factor );
   }
   return true;
 }
@@ -77,7 +81,7 @@ bool Extender::polynomial( Program &p, const Polynomial &diff )
     {
       return false;
     }
-    max_cell = std::max( max_cell, (number_t) 1 );
+    max_cell = std::max( max_cell, (number_t) Program::OUTPUT_CELL );
     const number_t saved_arg_cell = max_cell + 1;
     const number_t x_cell = max_cell + 2;
     const number_t term_cell = max_cell + 3;
@@ -104,7 +108,8 @@ bool Extender::polynomial( Program &p, const Polynomial &diff )
       {
         p.push_back( Operation::Type::MOV, Operand::Type::DIRECT, term_cell, Operand::Type::DIRECT, x_cell );
         p.push_back( Operation::Type::MUL, Operand::Type::DIRECT, term_cell, Operand::Type::CONSTANT, factor );
-        p.push_back( Operation::Type::ADD, Operand::Type::DIRECT, 1, Operand::Type::DIRECT, term_cell );
+        p.push_back( Operation::Type::ADD, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::DIRECT,
+            term_cell );
       }
       else if ( factor < 0 )
       {
@@ -125,7 +130,7 @@ bool Extender::delta_one( Program &p, const bool sum )
   {
     return false;
   }
-  largest_used = std::max( (number_t) 1, largest_used );
+  largest_used = std::max( (number_t) Program::OUTPUT_CELL, largest_used );
   auto saved_arg_cell = largest_used + 1;
   auto saved_result_cell = largest_used + 2;
   auto loop_counter_cell = largest_used + 3;
@@ -159,14 +164,16 @@ bool Extender::delta_one( Program &p, const bool sum )
 
   if ( sum )
   {
-    p.push_back( Operation::Type::ADD, Operand::Type::DIRECT, saved_result_cell, Operand::Type::DIRECT, 1 );
+    p.push_back( Operation::Type::ADD, Operand::Type::DIRECT, saved_result_cell, Operand::Type::DIRECT,
+        Program::OUTPUT_CELL );
   }
   else
   {
     p.push_back( Operation::Type::MOV, Operand::Type::DIRECT, tmp_counter_cell, Operand::Type::DIRECT,
         loop_counter_cell );
     p.push_back( Operation::Type::LPB, Operand::Type::DIRECT, tmp_counter_cell, Operand::Type::CONSTANT, 1 );
-    p.push_back( Operation::Type::MOV, Operand::Type::DIRECT, saved_result_cell, Operand::Type::DIRECT, 1 );
+    p.push_back( Operation::Type::MOV, Operand::Type::DIRECT, saved_result_cell, Operand::Type::DIRECT,
+        Program::OUTPUT_CELL );
     p.push_back( Operation::Type::SUB, Operand::Type::DIRECT, tmp_counter_cell, Operand::Type::CONSTANT, 1 );
     p.push_back( Operation::Type::LPE, Operand::Type::CONSTANT, 0, Operand::Type::CONSTANT, 0 );
   }
@@ -174,15 +181,18 @@ bool Extender::delta_one( Program &p, const bool sum )
 
   if ( sum )
   {
-    p.push_back( Operation::Type::MOV, Operand::Type::DIRECT, 1, Operand::Type::DIRECT, saved_result_cell );
+    p.push_back( Operation::Type::MOV, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::DIRECT,
+        saved_result_cell );
   }
   else
   {
     p.push_back( Operation::Type::LPB, Operand::Type::DIRECT, saved_arg_cell, Operand::Type::CONSTANT, 1 );
-    p.push_back( Operation::Type::SUB, Operand::Type::DIRECT, saved_result_cell, Operand::Type::DIRECT, 1 );
+    p.push_back( Operation::Type::SUB, Operand::Type::DIRECT, saved_result_cell, Operand::Type::DIRECT,
+        Program::OUTPUT_CELL );
     p.push_back( Operation::Type::MOV, Operand::Type::DIRECT, saved_arg_cell, Operand::Type::CONSTANT, 0 );
     p.push_back( Operation::Type::LPE, Operand::Type::CONSTANT, 0, Operand::Type::CONSTANT, 0 );
-    p.push_back( Operation::Type::MOV, Operand::Type::DIRECT, 1, Operand::Type::DIRECT, saved_result_cell );
+    p.push_back( Operation::Type::MOV, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::DIRECT,
+        saved_result_cell );
   }
   return true;
 }

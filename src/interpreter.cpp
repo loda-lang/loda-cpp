@@ -316,9 +316,9 @@ size_t Interpreter::eval( const Program &p, Sequence &seq, int num_terms ) const
   for ( int i = 0; i < num_terms; i++ )
   {
     mem.clear();
-    mem.set( 0, i );
+    mem.set( Program::INPUT_CELL, i );
     cycles += run( p, mem );
-    seq[i] = mem.get( 1 );
+    seq[i] = mem.get( Program::OUTPUT_CELL );
   }
   if ( is_debug )
   {
@@ -360,9 +360,9 @@ bool Interpreter::check( const Program &p, const Sequence &expected_seq ) const
   for ( size_t i = 0; i < expected_seq.size(); i++ )
   {
     mem.clear();
-    mem.set( 0, i );
+    mem.set( Program::INPUT_CELL, i );
     run( p, mem );
-    if ( mem.get( 1 ) != expected_seq[i] )
+    if ( mem.get( Program::OUTPUT_CELL ) != expected_seq[i] )
     {
       return false;
     }

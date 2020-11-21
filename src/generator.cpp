@@ -147,7 +147,7 @@ void Generator::ensureTargetWritten( Program &p, const std::vector<number_t> &wr
   for ( auto &op : p.ops )
   {
     if ( op.type != Operation::Type::LPB && Operation::Metadata::get( op.type ).num_operands == 2
-        && op.target.type == Operand::Type::DIRECT && op.target.value == 1 )
+        && op.target.type == Operand::Type::DIRECT && op.target.value == Program::OUTPUT_CELL )
     {
       written = true;
       break;
@@ -161,7 +161,7 @@ void Generator::ensureTargetWritten( Program &p, const std::vector<number_t> &wr
       source = written_cells.at( gen() % written_cells.size() );
     }
     p.ops.push_back(
-        Operation( Operation::Type::MOV, Operand( Operand::Type::DIRECT, 1 ),
+        Operation( Operation::Type::MOV, Operand( Operand::Type::DIRECT, Program::OUTPUT_CELL ),
             Operand( Operand::Type::DIRECT, source ) ) );
   }
 }
