@@ -92,12 +92,12 @@ Matcher::seq_programs_t Finder::findSequence( const Program &p, Sequence &norm_s
     return result;
   }
   Program p2 = p;
-  p2.push_back( Operation::Type::MOV, Operand::Type::DIRECT, 1, Operand::Type::DIRECT, 0 );
+  p2.push_back( Operation::Type::MOV, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::DIRECT, 0 );
   for ( size_t i = 0; i < seqs.size(); i++ )
   {
     if ( settings.search_linear || !seqs[i].is_linear() )
     {
-      if ( i == 1 )
+      if ( i == Program::OUTPUT_CELL )
       {
         findAll( p, seqs[i], sequences, result );
       }
