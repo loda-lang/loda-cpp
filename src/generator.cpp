@@ -115,7 +115,7 @@ void Generator::ensureSourceNotOverwritten( Program &p )
   bool resets;
   for ( auto &op : p.ops )
   {
-    if ( op.target.type == Operand::Type::DIRECT && op.target.value == 0 )
+    if ( op.target.type == Operand::Type::DIRECT && op.target.value == Program::INPUT_CELL )
     {
       resets = false;
       if ( op.type == Operation::Type::MOV || op.type == Operation::Type::CLR )
@@ -133,7 +133,7 @@ void Generator::ensureSourceNotOverwritten( Program &p )
         op.target.value = (gen() % 4) + 1;
       }
     }
-    else if ( op.source.type == Operand::Type::DIRECT && op.source.value == 0 )
+    else if ( op.source.type == Operand::Type::DIRECT && op.source.value == Program::INPUT_CELL )
     {
       break;
     }
@@ -155,7 +155,7 @@ void Generator::ensureTargetWritten( Program &p, const std::vector<number_t> &wr
   }
   if ( !written )
   {
-    number_t source = 0;
+    number_t source = Program::INPUT_CELL;
     if ( !written_cells.empty() )
     {
       source = written_cells.at( gen() % written_cells.size() );

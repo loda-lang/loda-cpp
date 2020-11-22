@@ -87,7 +87,8 @@ bool Extender::polynomial( Program &p, const Polynomial &diff )
     const number_t term_cell = max_cell + 3;
 
     // save argument
-    p.push_front( Operation::Type::MOV, Operand::Type::DIRECT, saved_arg_cell, Operand::Type::DIRECT, 0 );
+    p.push_front( Operation::Type::MOV, Operand::Type::DIRECT, saved_arg_cell, Operand::Type::DIRECT,
+        Program::INPUT_CELL );
 
     // polynomial evaluation code
     for ( size_t exp = 1; exp < diff.size(); exp++ )
@@ -137,10 +138,12 @@ bool Extender::delta_one( Program &p, const bool sum )
   auto tmp_counter_cell = largest_used + 4;
 
   Program prefix;
-  prefix.push_back( Operation::Type::MOV, Operand::Type::DIRECT, saved_arg_cell, Operand::Type::DIRECT, 0 );
+  prefix.push_back( Operation::Type::MOV, Operand::Type::DIRECT, saved_arg_cell, Operand::Type::DIRECT,
+      Program::INPUT_CELL );
   if ( sum )
   {
-    prefix.push_back( Operation::Type::MOV, Operand::Type::DIRECT, loop_counter_cell, Operand::Type::DIRECT, 0 );
+    prefix.push_back( Operation::Type::MOV, Operand::Type::DIRECT, loop_counter_cell, Operand::Type::DIRECT,
+        Program::INPUT_CELL );
     prefix.push_back( Operation::Type::ADD, Operand::Type::DIRECT, loop_counter_cell, Operand::Type::CONSTANT, 1 );
   }
   else
@@ -148,17 +151,21 @@ bool Extender::delta_one( Program &p, const bool sum )
     prefix.push_back( Operation::Type::MOV, Operand::Type::DIRECT, loop_counter_cell, Operand::Type::CONSTANT, 2 );
   }
   prefix.push_back( Operation::Type::LPB, Operand::Type::DIRECT, loop_counter_cell, Operand::Type::CONSTANT, 1 );
-  prefix.push_back( Operation::Type::CLR, Operand::Type::DIRECT, 0, Operand::Type::CONSTANT, largest_used + 1 );
+  prefix.push_back( Operation::Type::CLR, Operand::Type::DIRECT, Program::INPUT_CELL, Operand::Type::CONSTANT,
+      largest_used + 1 );
   prefix.push_back( Operation::Type::SUB, Operand::Type::DIRECT, loop_counter_cell, Operand::Type::CONSTANT, 1 );
-  prefix.push_back( Operation::Type::MOV, Operand::Type::DIRECT, 0, Operand::Type::DIRECT, saved_arg_cell );
+  prefix.push_back( Operation::Type::MOV, Operand::Type::DIRECT, Program::INPUT_CELL, Operand::Type::DIRECT,
+      saved_arg_cell );
   if ( sum )
   {
-    prefix.push_back( Operation::Type::SUB, Operand::Type::DIRECT, 0, Operand::Type::DIRECT, loop_counter_cell );
+    prefix.push_back( Operation::Type::SUB, Operand::Type::DIRECT, Program::INPUT_CELL, Operand::Type::DIRECT,
+        loop_counter_cell );
   }
   else
   {
-    prefix.push_back( Operation::Type::ADD, Operand::Type::DIRECT, 0, Operand::Type::DIRECT, loop_counter_cell );
-    prefix.push_back( Operation::Type::SUB, Operand::Type::DIRECT, 0, Operand::Type::CONSTANT, 1 );
+    prefix.push_back( Operation::Type::ADD, Operand::Type::DIRECT, Program::INPUT_CELL, Operand::Type::DIRECT,
+        loop_counter_cell );
+    prefix.push_back( Operation::Type::SUB, Operand::Type::DIRECT, Program::INPUT_CELL, Operand::Type::CONSTANT, 1 );
   }
   p.ops.insert( p.ops.begin(), prefix.ops.begin(), prefix.ops.end() );
 
