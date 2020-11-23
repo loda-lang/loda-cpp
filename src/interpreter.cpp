@@ -344,7 +344,7 @@ size_t Interpreter::eval( const Program &p, std::vector<Sequence> &seqs, int num
   for ( int i = 0; i < num_terms; i++ )
   {
     mem.clear();
-    mem.set( 0, i );
+    mem.set( Program::INPUT_CELL, i );
     cycles += run( p, mem );
     for ( size_t s = 0; s < seqs.size(); s++ )
     {
