@@ -16,6 +16,21 @@ public:
     static Generator::UPtr createGenerator( const Settings &settings, int64_t seed );
   };
 
+  class Config
+  {
+  public:
+    int64_t generator_version;
+    size_t num_operations;
+    size_t max_constant;
+    size_t max_index;
+    std::string operation_types;
+    std::string operand_types;
+    std::string program_template;
+
+    static std::vector<Config> load( std::istream &in );
+
+  };
+
   Generator( const Settings &settings, int64_t seed );
 
   virtual ~Generator()
