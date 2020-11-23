@@ -19,12 +19,13 @@ public:
   class Config
   {
   public:
-    int64_t generator_version;
-    size_t num_operations;
-    size_t max_constant;
-    size_t max_index;
-    std::string operation_types;
-    std::string operand_types;
+    int64_t version;
+    int64_t replicas;
+    int64_t length;
+    int64_t max_constant;
+    int64_t max_index;
+    bool loops;
+    bool indirect_access;
     std::string program_template;
 
     static std::vector<Config> load( std::istream &in );
