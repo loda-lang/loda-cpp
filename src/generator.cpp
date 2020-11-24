@@ -3,6 +3,7 @@
 #include "generator_v1.hpp"
 #include "generator_v2.hpp"
 #include "generator_v3.hpp"
+#include "jute.h"
 
 Generator::UPtr Generator::Factory::createGenerator( const Settings &settings, int64_t seed )
 {
@@ -23,6 +24,20 @@ Generator::UPtr Generator::Factory::createGenerator( const Settings &settings, i
     break;
   }
   return generator;
+}
+
+std::vector<Generator::Config> Generator::Config::load( std::istream &in )
+{
+  std::vector<Generator::Config> configs;
+  std::string str = "";
+  std::string tmp;
+  while ( getline( in, tmp ) )
+  {
+    str += tmp;
+  }
+  jute::jValue v = jute::parser::parse( str );
+  std::cout << v.to_string() << std::endl;
+  return configs;
 }
 
 Generator::Generator( const Settings &settings, int64_t seed )

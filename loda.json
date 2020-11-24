@@ -1,0 +1,14 @@
+{
+	"generators": [
+		{
+			"version": 1,
+			"replicas": 1,
+			"length": 40,
+			"maxConstant": 4,
+			"maxCell": 4,
+			"loops": false,
+			"indirectAccess": false,
+			"template": "programs/templates/T01.asm"
+		}
+	]
+}
