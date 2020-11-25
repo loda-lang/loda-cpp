@@ -3,6 +3,7 @@
 #include "generator_v1.hpp"
 #include "generator_v2.hpp"
 #include "generator_v3.hpp"
+#include "util.hpp"
 #include "jute.h"
 
 Generator::UPtr Generator::Factory::createGenerator( const Settings &settings, int64_t seed )
@@ -35,8 +36,23 @@ std::vector<Generator::Config> Generator::Config::load( std::istream &in )
   {
     str += tmp;
   }
-  jute::jValue v = jute::parser::parse( str );
-  std::cout << v.to_string() << std::endl;
+  auto spec = jute::parser::parse( str );
+  auto gens = spec["generators"];
+  for ( int i = 0; i < gens.size(); i++ )
+  {
+    auto g = gens[i];
+    Generator::Config c;
+    // TODO
+    int instances = 1;
+    if ( g["instances"].get_type() != jute::jType::JNUMBER )
+    {
+      instances = g["instances"].as_int();
+    }
+    for ( int i = 0; i < instances; i++ )
+    {
+      configs.push_back( c );
+    }
+  }
   return configs;
 }
 
