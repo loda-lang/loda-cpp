@@ -20,7 +20,7 @@ public:
   {
   public:
     int64_t version;
-    int64_t replicas;
+    int64_t instances;
     int64_t length;
     int64_t max_constant;
     int64_t max_index;
