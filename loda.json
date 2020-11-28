@@ -58,11 +58,11 @@
 		},
 		{
 			"version": 2,
-			"instances": 3
+			"priority": 3
 		},
 		{
 			"version": 3,
-			"instances": 3
+			"priority": 3
 		}
 	]
 }
