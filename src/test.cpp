@@ -198,12 +198,13 @@ void Test::collatz()
   }
 }
 
-void check_size( const std::string &s, int64_t expected, int64_t value )
+void check_int( const std::string &s, int64_t min, int64_t max, int64_t value )
 {
-  if ( expected != value )
+  if ( value < min || value > max )
   {
-    Log::get().error( "Expected '" + s + "' value: " + std::to_string( expected ) + ", got: " + std::to_string( value ),
-        true );
+    Log::get().error(
+        "Expected '" + s + "' min: " + std::to_string( min ) + ", max: " + std::to_string( max ) + ", got: "
+            + std::to_string( value ), true );
   }
 }
 
@@ -211,8 +212,22 @@ void Test::config()
 {
   Log::get().info( "Testing config" );
   std::ifstream in( "loda.json" );
-  auto config = Generator::Config::load( in );
-  check_size( "numGenerators", 11, config.size() );
+  auto configs = Generator::Config::load( in );
+  check_int( "numGenerators", 11, 11, configs.size() );
+  for ( auto &c : configs )
+  {
+    check_int( "version", 1, 3, c.version );
+    check_int( "priority", 1, 3, c.priority );
+    if ( c.version == 1 )
+    {
+      check_int( "length", 20, 100, c.length );
+      check_int( "max_constant", 4, 10, c.max_constant );
+      check_int( "max_index", 4, 10, c.max_index );
+      int64_t t = c.program_template.empty();
+      check_int( "loops", t, t, c.loops );
+      check_int( "indirectAccess", t, t, c.indirect_access );
+    }
+  }
 }
 
 void Test::stats()
