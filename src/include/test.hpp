@@ -43,6 +43,8 @@ public:
 
   void stats();
 
+  void config();
+
 private:
 
   volatile sig_atomic_t &exit_flag_;

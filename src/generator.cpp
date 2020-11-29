@@ -27,6 +27,24 @@ Generator::UPtr Generator::Factory::createGenerator( const Settings &settings, i
   return generator;
 }
 
+int64_t get_jint( jute::jValue &v, const std::string &key, int64_t def )
+{
+  if ( v[key].get_type() == jute::jType::JNUMBER )
+  {
+    return v[key].as_int();
+  }
+  return def;
+}
+
+bool get_jbool( jute::jValue &v, const std::string &key, bool def )
+{
+  if ( v[key].get_type() == jute::jType::JBOOLEAN )
+  {
+    return v[key].as_bool();
+  }
+  return def;
+}
+
 std::vector<Generator::Config> Generator::Config::load( std::istream &in )
 {
   std::vector<Generator::Config> configs;
@@ -42,15 +60,39 @@ std::vector<Generator::Config> Generator::Config::load( std::istream &in )
   {
     auto g = gens[i];
     Generator::Config c;
-    // TODO
-    int instances = 1;
-    if ( g["instances"].get_type() != jute::jType::JNUMBER )
+    c.version = get_jint( g, "version", 1 );
+    c.priority = get_jint( g, "priority", 1 );
+    c.length = get_jint( g, "length", 20 );
+    c.max_constant = get_jint( g, "maxConstant", 4 );
+    c.max_index = get_jint( g, "maxIndex", 4 );
+    c.loops = get_jbool( g, "loops", true );
+    c.indirect_access = get_jbool( g, "indirectAccess", false );
+    switch ( g["template"].get_type() )
     {
-      instances = g["instances"].as_int();
+    case jute::jType::JSTRING:
+    {
+      c.program_template = g["template"].as_string();
+      configs.push_back( c );
+      break;
     }
-    for ( int i = 0; i < instances; i++ )
+    case jute::jType::JARRAY:
+    {
+      auto a = g["template"];
+      for ( int i = 0; i < a.size(); i++ )
+      {
+        if ( a[i].get_type() == jute::jType::JSTRING )
+        {
+          c.program_template = a[i].as_string();
+          configs.push_back( c );
+        }
+      }
+      break;
+    }
+    default:
     {
       configs.push_back( c );
+      break;
+    }
     }
   }
   return configs;

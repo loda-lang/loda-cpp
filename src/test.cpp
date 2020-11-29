@@ -23,6 +23,7 @@ void Test::all()
 {
   semantics();
   memory();
+  config();
   stats();
   knownPrograms();
   ackermann();
@@ -197,15 +198,47 @@ void Test::collatz()
   }
 }
 
+void check_int( const std::string &s, int64_t min, int64_t max, int64_t value )
+{
+  if ( value < min || value > max )
+  {
+    Log::get().error(
+        "Expected '" + s + "' min: " + std::to_string( min ) + ", max: " + std::to_string( max ) + ", got: "
+            + std::to_string( value ), true );
+  }
+}
+
+void Test::config()
+{
+  Log::get().info( "Testing config" );
+  std::ifstream in( "loda.json" );
+  auto configs = Generator::Config::load( in );
+  check_int( "numGenerators", 11, 11, configs.size() );
+  for ( auto &c : configs )
+  {
+    check_int( "version", 1, 3, c.version );
+    check_int( "priority", 1, 3, c.priority );
+    if ( c.version == 1 )
+    {
+      check_int( "length", 20, 100, c.length );
+      check_int( "max_constant", 4, 10, c.max_constant );
+      check_int( "max_index", 4, 10, c.max_index );
+      int64_t t = c.program_template.empty();
+      check_int( "loops", t, t, c.loops );
+      check_int( "indirectAccess", t, t, c.indirect_access );
+    }
+  }
+}
+
 void Test::stats()
 {
   Log::get().info( "Testing stats loading and saving" );
 
-  // load stats
+// load stats
   Stats s, t;
   s.load( "stats" );
 
-  // sanity check for loaded stats
+// sanity check for loaded stats
   if ( s.num_constants.at( 1 ) == 0 )
   {
     Log::get().error( "Error loading constants counts from stats" );
@@ -238,11 +271,11 @@ void Test::stats()
     Log::get().error( "Error loading program summary from stats" );
   }
 
-  // save & reload stats
+// save & reload stats
   s.save( "/tmp" );
   t.load( "/tmp" );
 
-  // compare loaded to original
+// compare loaded to original
   for ( auto &e : s.num_constants )
   {
     auto m = e.second;
@@ -420,7 +453,7 @@ void Test::polynomialMatcher( size_t tests, size_t degree )
   PolynomialMatcher matcher( false );
   Log::get().info( "Testing polynomial matcher for degree " + std::to_string( degree ) );
 
-  // load test program
+// load test program
   std::vector<size_t> program_ids = { 4, 35, 2262 };
   std::vector<Program> programs;
   for ( auto id : program_ids )
@@ -430,7 +463,7 @@ void Test::polynomialMatcher( size_t tests, size_t degree )
     programs.push_back( program );
   }
 
-  // run matcher tests
+// run matcher tests
   for ( size_t i = 0; i < tests; i++ )
   {
     if ( exit_flag_ ) break;
@@ -538,7 +571,7 @@ void Test::testBinary( const std::string &func, const std::string &file,
   Log::get().info( "Testing " + file );
   Parser parser;
   Settings settings;
-  // settings needed for ackermann
+// settings needed for ackermann
   settings.max_memory = 100000;
   settings.max_cycles = 10000000;
   Interpreter interpreter( settings );
