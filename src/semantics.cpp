@@ -74,6 +74,10 @@ number_t Semantics::pow( number_t base, number_t exp )
   {
     return 1; // 1^x is always 1
   }
+  else if ( base == -1 )
+  {
+    return (exp % 2 == 0) ? 1 : -1; // (-1)^x
+  }
   else
   {
     if ( exp < 0 )
