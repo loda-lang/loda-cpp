@@ -55,11 +55,20 @@ std::discrete_distribution<> constantsDist( const std::vector<number_t> &constan
 
 GeneratorV1::GeneratorV1( const Settings &settings, int64_t seed )
     :
-    Generator( settings, seed )
+    GeneratorV1( settings.operation_types, settings.operand_types, settings.program_template, settings.max_constant,
+        settings.num_operations, seed )
+{
+}
+
+GeneratorV1::GeneratorV1( const std::string &operation_types, const std::string &operand_types,
+    const std::string &program_template, int64_t max_constant, int64_t num_operations, int64_t seed )
+    :
+    Generator( seed ),
+    num_operations( num_operations )
 {
   // parse operation types
   bool negate = false;
-  for ( char c : settings.operation_types )
+  for ( char c : operation_types )
   {
     c = tolower( c );
     if ( c == '^' )
@@ -84,7 +93,7 @@ GeneratorV1::GeneratorV1( const Settings &settings, int64_t seed )
       }
       if ( type != Operation::Type::LPE )
       {
-        operation_types.push_back( type );
+        this->operation_types.push_back( type );
       }
     }
   }
@@ -94,7 +103,7 @@ GeneratorV1::GeneratorV1( const Settings &settings, int64_t seed )
     for ( auto t : Operation::Types )
     {
       bool found = false;
-      for ( auto o : operation_types )
+      for ( auto o : this->operation_types )
       {
         if ( o == t )
         {
@@ -107,7 +116,7 @@ GeneratorV1::GeneratorV1( const Settings &settings, int64_t seed )
         tmp_types.push_back( t );
       }
     }
-    operation_types = tmp_types;
+    this->operation_types = tmp_types;
   }
   if ( operation_types.empty() )
   {
@@ -116,19 +125,19 @@ GeneratorV1::GeneratorV1( const Settings &settings, int64_t seed )
 
   std::vector<double> source_type_rates;
   std::vector<double> target_type_rates;
-  if ( settings.operand_types.find( 'c' ) != std::string::npos )
+  if ( operand_types.find( 'c' ) != std::string::npos )
   {
     source_operand_types.push_back( Operand::Type::CONSTANT );
     source_type_rates.push_back( 4 );
   }
-  if ( settings.operand_types.find( 'd' ) != std::string::npos )
+  if ( operand_types.find( 'd' ) != std::string::npos )
   {
     source_operand_types.push_back( Operand::Type::DIRECT );
     source_type_rates.push_back( 4 );
     target_operand_types.push_back( Operand::Type::DIRECT );
     target_type_rates.push_back( 4 );
   }
-  if ( settings.operand_types.find( 'i' ) != std::string::npos )
+  if ( operand_types.find( 'i' ) != std::string::npos )
   {
     source_operand_types.push_back( Operand::Type::INDIRECT );
     source_type_rates.push_back( 1 );
@@ -145,10 +154,10 @@ GeneratorV1::GeneratorV1( const Settings &settings, int64_t seed )
   }
 
   // program template
-  if ( !settings.program_template.empty() )
+  if ( !program_template.empty() )
   {
     Parser parser;
-    program_template = parser.parse( settings.program_template );
+    this->program_template = parser.parse( program_template );
   }
 
   // initialize distributions
@@ -162,11 +171,11 @@ GeneratorV1::GeneratorV1( const Settings &settings, int64_t seed )
   }
 
   constants_dist = constantsDist( constants, stats );
-  operation_dist = operationDist( stats, operation_types );
+  operation_dist = operationDist( stats, this->operation_types );
   target_type_dist = std::discrete_distribution<>( target_type_rates.begin(), target_type_rates.end() );
-  target_value_dist = uniformDist( settings.max_constant + 1 );
+  target_value_dist = uniformDist( max_constant + 1 );
   source_type_dist = std::discrete_distribution<>( source_type_rates.begin(), source_type_rates.end() );
-  source_value_dist = uniformDist( settings.max_constant + 1 );
+  source_value_dist = uniformDist( max_constant + 1 );
   position_dist = uniformDist( POSITION_RANGE );
 }
 
@@ -225,7 +234,7 @@ Program GeneratorV1::generateProgram()
 {
   // use template for base program
   Program p = program_template;
-  generateStateless( p, settings.num_operations );
+  generateStateless( p, num_operations );
   applyPostprocessing( p );
   return p;
 }

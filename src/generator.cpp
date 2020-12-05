@@ -99,8 +99,11 @@ std::vector<Generator::Config> Generator::Config::load( std::istream &in )
 }
 
 Generator::Generator( const Settings &settings, int64_t seed )
-    :
-    settings( settings )
+{
+  gen.seed( seed );
+}
+
+Generator::Generator( int64_t seed )
 {
   gen.seed( seed );
 }

@@ -34,6 +34,8 @@ public:
 
   Generator( const Settings &settings, int64_t seed );
 
+  Generator( int64_t seed );
+
   virtual ~Generator()
   {
   }
@@ -56,7 +58,6 @@ protected:
 
   void ensureMeaningfulLoops( Program &p );
 
-  const Settings &settings;
   std::mt19937 gen;
 
 };
