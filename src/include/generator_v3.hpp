@@ -16,8 +16,6 @@ public:
 
   virtual Program generateProgram() override;
 
-protected:
-
   virtual std::pair<Operation, double> generateOperation() override;
 
 private:

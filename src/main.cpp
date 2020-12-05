@@ -47,6 +47,7 @@ void help()
   std::cout << "  update           Update OEIS index" << std::endl;
   std::cout << "General options:" << std::endl;
   std::cout << "  -l <string>      Log level (values:debug,info,warn,error,alert)" << std::endl;
+  std::cout << "  -k <string>      Configuration file (default:loda.json)" << std::endl;
   std::cout << "  -t <number>      Number of sequence terms (default:" << settings.num_terms << ")" << std::endl;
   std::cout << "  -s <number>      Maximum physical memory (default:" << settings.max_physical_memory / (1024 * 1024)
       << ")" << std::endl;
