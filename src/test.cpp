@@ -217,7 +217,7 @@ void Test::config()
   for ( auto &c : configs )
   {
     check_int( "version", 1, 3, c.version );
-    check_int( "priority", 1, 3, c.priority );
+    check_int( "replicas", 1, 3, c.replicas );
     if ( c.version == 1 )
     {
       check_int( "length", 20, 100, c.length );

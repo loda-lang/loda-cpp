@@ -61,7 +61,7 @@ std::vector<Generator::Config> Generator::Config::load( std::istream &in )
     auto g = gens[i];
     Generator::Config c;
     c.version = get_jint( g, "version", 1 );
-    c.priority = get_jint( g, "priority", 1 );
+    c.replicas = get_jint( g, "replicas", 1 );
     c.length = get_jint( g, "length", 20 );
     c.max_constant = get_jint( g, "maxConstant", 4 );
     c.max_index = get_jint( g, "maxIndex", 4 );
@@ -99,8 +99,11 @@ std::vector<Generator::Config> Generator::Config::load( std::istream &in )
 }
 
 Generator::Generator( const Settings &settings, int64_t seed )
-    :
-    settings( settings )
+{
+  gen.seed( seed );
+}
+
+Generator::Generator( int64_t seed )
 {
   gen.seed( seed );
 }
@@ -318,4 +321,36 @@ void Generator::ensureMeaningfulLoops( Program &p )
       break;
     }
   }
+}
+
+MultiGenerator::MultiGenerator( const Settings &settings, int64_t seed )
+    :
+    Generator( settings, seed )
+{
+  std::ifstream loda_conf( settings.loda_config );
+  configs = Generator::Config::load( loda_conf );
+  if ( configs.empty() )
+  {
+    Log::get().error( "No generators configurations found", true );
+  }
+
+  // TODO: create generators
+
+  generator_index = gen() % configs.size();
+  replica_index = gen() % configs.at( gen() % configs.size() ).replicas;
+}
+
+Program MultiGenerator::generateProgram()
+{
+  if ( replica_index >= configs[generator_index].replicas )
+  {
+    generator_index = (generator_index + 1) % configs.size();
+    replica_index = 0;
+  }
+  return generators[generator_index]->generateProgram();
+}
+
+std::pair<Operation, double> MultiGenerator::generateOperation()
+{
+  return generators[generator_index]->generateOperation();
 }

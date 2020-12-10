@@ -231,7 +231,8 @@ Settings::Settings()
     search_linear( false ),
     throw_on_overflow( true ),
     operation_types( "^" ),
-    operand_types( "cd" )
+    operand_types( "cd" ),
+    loda_config( "loda.json" )
 {
 }
 
@@ -249,6 +250,7 @@ enum class Option
   OPERATION_TYPES,
   OPERAND_TYPES,
   PROGRAM_TEMPLATE,
+  LODA_CONFIG,
   LOG_LEVEL
 };
 
@@ -299,6 +301,7 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
       case Option::LOG_LEVEL:
       case Option::OPERATION_TYPES:
       case Option::OPERAND_TYPES:
+      case Option::LODA_CONFIG:
       case Option::PROGRAM_TEMPLATE:
       case Option::NONE:
         break;
@@ -318,6 +321,11 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
     else if ( option == Option::PROGRAM_TEMPLATE )
     {
       program_template = arg;
+      option = Option::NONE;
+    }
+    else if ( option == Option::LODA_CONFIG )
+    {
+      loda_config = arg;
       option = Option::NONE;
     }
     else if ( option == Option::LOG_LEVEL )
@@ -402,6 +410,10 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
       else if ( opt == "e" )
       {
         option = Option::PROGRAM_TEMPLATE;
+      }
+      else if ( opt == "k" )
+      {
+        option = Option::LODA_CONFIG;
       }
       else if ( opt == "l" )
       {

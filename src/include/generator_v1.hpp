@@ -8,14 +8,16 @@ public:
 
   GeneratorV1( const Settings &settings, int64_t seed );
 
-  virtual Program generateProgram() override;
+  GeneratorV1( const std::string &operation_types, const std::string &operand_types,
+      const std::string &program_template, int64_t max_constant, int64_t num_operations, int64_t seed );
 
-protected:
+  virtual Program generateProgram() override;
 
   virtual std::pair<Operation, double> generateOperation() override;
 
 private:
 
+  int64_t num_operations;
   std::discrete_distribution<> operation_dist;
   std::discrete_distribution<> target_type_dist;
   std::discrete_distribution<> target_value_dist;

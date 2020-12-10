@@ -58,11 +58,11 @@
 		},
 		{
 			"version": 2,
-			"priority": 3
+			"replicas": 3
 		},
 		{
 			"version": 3,
-			"priority": 3
+			"replicas": 3
 		}
 	]
 }

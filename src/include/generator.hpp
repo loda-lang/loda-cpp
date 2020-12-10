@@ -20,7 +20,7 @@ public:
   {
   public:
     int64_t version;
-    int64_t priority;
+    int64_t replicas;
     int64_t length;
     int64_t max_constant;
     int64_t max_index;
@@ -34,15 +34,17 @@ public:
 
   Generator( const Settings &settings, int64_t seed );
 
+  Generator( int64_t seed );
+
   virtual ~Generator()
   {
   }
 
   virtual Program generateProgram() = 0;
 
-protected:
-
   virtual std::pair<Operation, double> generateOperation() = 0;
+
+protected:
 
   void generateStateless( Program &p, size_t num_operations );
 
@@ -56,7 +58,25 @@ protected:
 
   void ensureMeaningfulLoops( Program &p );
 
-  const Settings &settings;
   std::mt19937 gen;
+
+};
+
+class MultiGenerator: public Generator
+{
+public:
+
+  MultiGenerator( const Settings &settings, int64_t seed );
+
+  virtual Program generateProgram() override;
+
+  virtual std::pair<Operation, double> generateOperation() override;
+
+private:
+
+  std::vector<Generator::Config> configs;
+  std::vector<Generator::UPtr> generators;
+  int64_t generator_index;
+  int64_t replica_index;
 
 };
