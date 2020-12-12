@@ -347,6 +347,10 @@ Program MultiGenerator::generateProgram()
     generator_index = (generator_index + 1) % configs.size();
     replica_index = 0;
   }
+  else
+  {
+    replica_index++;
+  }
   return generators[generator_index]->generateProgram();
 }
 
