@@ -1,4 +1,5 @@
 #include "generator_v3.hpp"
+#include "generator.hpp"
 
 #include "stats.hpp"
 
@@ -10,9 +11,9 @@ inline size_t getIndex( size_t pos, size_t len )
   return (((len - 1) * len) / 2) + pos;
 }
 
-GeneratorV3::GeneratorV3( const Settings &settings, int64_t seed )
+GeneratorV3::GeneratorV3( int64_t seed )
     :
-    Generator( settings, seed )
+    Generator( seed )
 {
   Stats stats;
   stats.load( "stats" );
