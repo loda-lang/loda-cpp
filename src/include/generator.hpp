@@ -10,12 +10,6 @@ public:
 
   using UPtr = std::unique_ptr<Generator>;
 
-  class Factory
-  {
-  public:
-    static Generator::UPtr createGenerator( const Settings &settings, int64_t seed );
-  };
-
   class Config
   {
   public:
@@ -30,6 +24,13 @@ public:
 
     static std::vector<Config> load( std::istream &in );
 
+  };
+
+  class Factory
+  {
+  public:
+    static Generator::UPtr createGenerator( const Settings &settings, int64_t seed );
+    static Generator::UPtr createGenerator( const Config &config, int64_t seed );
   };
 
   Generator( const Settings &settings, int64_t seed );
