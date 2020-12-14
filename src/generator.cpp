@@ -15,14 +15,47 @@ Generator::UPtr Generator::Factory::createGenerator( const Settings &settings, i
     generator.reset( new GeneratorV1( settings, seed ) );
     break;
   case 2:
-    generator.reset( new GeneratorV2( settings, seed ) );
+    generator.reset( new GeneratorV2( seed ) );
     break;
   case 3:
-    generator.reset( new GeneratorV3( settings, seed ) );
+    generator.reset( new GeneratorV3( seed ) );
     break;
   default:
     Log::get().error( "Invalid generator version: " + std::to_string( settings.generator_version ), true );
     break;
+  }
+  return generator;
+}
+
+Generator::UPtr Generator::Factory::createGenerator( const Config &config, int64_t seed )
+{
+  Generator::UPtr generator;
+  switch ( config.version )
+  {
+  case 1:
+  {
+    std::string operation_types = config.loops ? "^" : "^l";
+    std::string operand_types = config.indirect_access ? "cdi" : "cd";
+    generator.reset(
+        new GeneratorV1( operation_types, operand_types, config.program_template, config.max_constant, config.length,
+            seed ) );
+    break;
+  }
+  case 2:
+  {
+    generator.reset( new GeneratorV2( seed ) );
+    break;
+  }
+  case 3:
+  {
+    generator.reset( new GeneratorV3( seed ) );
+    break;
+  }
+  default:
+  {
+    Log::get().error( "Invalid generator version: " + std::to_string( config.version ), true );
+    break;
+  }
   }
   return generator;
 }
@@ -333,9 +366,11 @@ MultiGenerator::MultiGenerator( const Settings &settings, int64_t seed )
   {
     Log::get().error( "No generators configurations found", true );
   }
-
-  // TODO: create generators
-
+  generators.resize( configs.size() );
+  for ( size_t i = 0; i < configs.size(); i++ )
+  {
+    generators[i] = Generator::Factory::createGenerator( configs[i], gen() );
+  }
   generator_index = gen() % configs.size();
   replica_index = gen() % configs.at( gen() % configs.size() ).replicas;
 }
@@ -346,6 +381,10 @@ Program MultiGenerator::generateProgram()
   {
     generator_index = (generator_index + 1) % configs.size();
     replica_index = 0;
+  }
+  else
+  {
+    replica_index++;
   }
   return generators[generator_index]->generateProgram();
 }

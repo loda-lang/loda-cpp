@@ -1,10 +1,11 @@
 #include "generator_v2.hpp"
+#include "generator.hpp"
 
 #include "stats.hpp"
 
-GeneratorV2::GeneratorV2( const Settings &settings, int64_t seed )
+GeneratorV2::GeneratorV2( int64_t seed )
     :
-    Generator( settings, seed )
+    Generator( seed )
 {
   Stats stats;
   stats.load( "stats" );
