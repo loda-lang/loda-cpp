@@ -142,8 +142,8 @@ int main( int argc, char *argv[] )
     {
       Optimizer optimizer( settings );
       std::random_device rand;
-      auto generator = Generator::Factory::createGenerator( settings, rand() );
-      auto program = generator->generateProgram();
+      MultiGenerator multi_generator( settings, rand() );
+      auto program = multi_generator.getGenerator()->generateProgram();
       ProgramUtil::print( program, std::cout );
     }
     else if ( cmd == "mine" )
