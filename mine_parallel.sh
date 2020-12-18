@@ -60,7 +60,7 @@ function start_miners() {
   fi
 
   # start miners
-  for n in ${num_inst}; do
+  for n in $(seq ${num_inst}); do
     run_loda mine $l $@
     run_loda mine $l -x $@
   done
