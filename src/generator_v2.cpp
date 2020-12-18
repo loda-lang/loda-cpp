@@ -3,9 +3,9 @@
 
 #include "stats.hpp"
 
-GeneratorV2::GeneratorV2( int64_t seed )
+GeneratorV2::GeneratorV2( const Config &config, int64_t seed )
     :
-    Generator( seed )
+    Generator( config, seed )
 {
   Stats stats;
   stats.load( "stats" );

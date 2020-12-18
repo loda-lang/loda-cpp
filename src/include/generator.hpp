@@ -26,16 +26,29 @@ public:
 
   };
 
+  class GStats
+  {
+  public:
+    GStats()
+        :
+        generated( 0 ),
+        fresh( 0 ),
+        updated( 0 )
+    {
+    }
+
+    int64_t generated;
+    int64_t fresh;
+    int64_t updated;
+  };
+
   class Factory
   {
   public:
-    static Generator::UPtr createGenerator( const Settings &settings, int64_t seed );
     static Generator::UPtr createGenerator( const Config &config, int64_t seed );
   };
 
-  Generator( const Settings &settings, int64_t seed );
-
-  Generator( int64_t seed );
+  Generator( const Config &config, int64_t seed );
 
   virtual ~Generator()
   {
@@ -44,6 +57,12 @@ public:
   virtual Program generateProgram() = 0;
 
   virtual std::pair<Operation, double> generateOperation() = 0;
+
+  const Config config;
+
+  std::map<std::string, std::string> metric_labels;
+
+  GStats stats;
 
 protected:
 
@@ -63,17 +82,15 @@ protected:
 
 };
 
-class MultiGenerator: public Generator
+class MultiGenerator
 {
 public:
 
   MultiGenerator( const Settings &settings, int64_t seed );
 
-  virtual Program generateProgram() override;
+  Generator* getGenerator();
 
-  virtual std::pair<Operation, double> generateOperation() override;
-
-private:
+  void next();
 
   std::vector<Generator::Config> configs;
   std::vector<Generator::UPtr> generators;

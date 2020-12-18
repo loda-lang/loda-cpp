@@ -401,14 +401,15 @@ void Test::minimizer( size_t tests )
   Interpreter interpreter( settings );
   Minimizer minimizer( settings );
   std::random_device rand;
-  auto generator = Generator::Factory::createGenerator( settings, rand() );
+  MultiGenerator multi_generator( settings, rand() );
   Sequence s1, s2, s3;
   Program program, minimized;
   Log::get().info( "Testing minimizer" );
   for ( size_t i = 0; i < tests; i++ )
   {
     if ( exit_flag_ ) break;
-    program = generator->generateProgram();
+    program = multi_generator.getGenerator()->generateProgram();
+    multi_generator.next();
     try
     {
       interpreter.eval( program, s1 );
