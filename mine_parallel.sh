@@ -53,59 +53,17 @@ function start_miners() {
 
   # configuration
   local l="-l ${log_level}"
-  templates=T01
-  num_vars=4
-  indirect=false
-  num_gen_v2=0
-  num_gen_v3=0
-  if [ "$num_cpus" -ge 8 ]; then
-    templates="T01 T02"
-    indirect=true
-  fi
-  if [ "$num_cpus" -ge 12 ]; then
-    num_vars="6 8"
-  fi
-  if [ "$num_cpus" -ge 16 ]; then
-    num_vars="6 8 10"
-  fi
-  if [ "$num_cpus" -ge 20 ]; then
-    num_gen_v2=4
-  fi
-  if [ "$num_cpus" -ge 24 ]; then
-    num_gen_v3=4
+
+  num_inst=$(( $num_cpus / 2 ))
+  if [ "$num_inst" -ge 8 ]; then
+    num_inst=$(( $num_inst - 2 ))
   fi
 
-  # start parameterized miners
-  for n in ${num_vars}; do
-    for x in "" "-x"; do
-      args="-n $n -p ${n}0 -a cd $x $l"
-      # instantiate templates w/o loops
-      for t in ${templates}; do
-        run_loda mine $args -o ^l -e programs/templates/${t}.asm $@
-      done
-      # no templates but w/ loops
-      run_loda mine $args $@
-    done
+  # start miners
+  for n in ${num_inst}; do
+    run_loda mine $l $@
+    run_loda mine $l -x $@
   done
-
-  # generator v2
-  if [ "$num_gen_v2" -ne 0 ]; then
-    for n in $(seq 1 $num_gen_v2); do
-      run_loda mine -g 2 $l $@
-    done
-  fi
-
-  # generator v3
-  if [ "$num_gen_v3" -ne 0 ]; then
-    for n in $(seq 1 $num_gen_v3); do
-      run_loda mine -g 3 $l $@
-    done
-  fi
-
-  # indirect memory access
-  if [ "$indirect" = "true" ]; then
-    run_loda mine -n 6 -p 60 -a cdi $l $@
-  fi
 
   # maintenance
   if [ "$branch" = "master" ]; then

@@ -58,20 +58,13 @@ class Settings
 {
 public:
   size_t num_terms;
-  size_t num_operations;
   size_t max_memory;
   size_t max_cycles;
-  size_t max_constant;
-  size_t max_index;
   size_t max_stack_size;
   size_t max_physical_memory;
-  int64_t generator_version;
   bool optimize_existing_programs;
   bool search_linear;
   bool throw_on_overflow;
-  std::string operation_types;
-  std::string operand_types;
-  std::string program_template;
   std::string loda_config;
 
   Settings();

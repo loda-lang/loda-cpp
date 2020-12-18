@@ -56,17 +56,7 @@ void help()
       << std::endl;
   std::cout << "  -m <number>      Maximum number of used memory cells (default:" << settings.max_memory << ")"
       << std::endl;
-  std::cout << "Generator options:" << std::endl;
-  std::cout << "  -g <number>      Generator version (default:" << settings.generator_version << ")" << std::endl;
-  std::cout << "  -p <number>      Maximum number of operations (default:" << settings.num_operations << ")"
-      << std::endl;
-  std::cout << "  -n <number>      Maximum constant (default:" << settings.max_constant << ")" << std::endl;
-  std::cout << "  -i <number>      Maximum index (default:" << settings.max_index << ")" << std::endl;
-  std::cout << "  -o <string>      Operation types (default:" << settings.operation_types << ";"
-      << operation_types.str() << ";^:negate pattern)" << std::endl;
-  std::cout << "  -a <string>      Operand types (default:" << settings.operand_types
-      << ";c:constant,d:direct mem,i:indirect mem)" << std::endl;
-  std::cout << "  -e <file>        Program template" << std::endl;
+  std::cout << "Miner options:" << std::endl;
   std::cout << "  -r               Search for programs of linear sequences (slow)" << std::endl;
   std::cout << "  -x               Optimize and overwrite existing programs" << std::endl;
 }

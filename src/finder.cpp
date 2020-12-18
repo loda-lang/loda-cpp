@@ -70,7 +70,7 @@ Matcher::seq_programs_t Finder::findSequence( const Program &p, Sequence &norm_s
   }
 
   // determine largest memory cell to check
-  int64_t max_index = settings.max_index;
+  int64_t max_index = 20; // magic number
   number_t largest_used_cell;
   std::unordered_set<number_t> used_cells;
   if ( optimizer.getUsedMemoryCells( p, used_cells, largest_used_cell ) && largest_used_cell <= 100 )
