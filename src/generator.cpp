@@ -113,7 +113,12 @@ Generator::Generator( const Config &config, int64_t seed )
   gen.seed( seed );
   metric_labels = { { "version", std::to_string( config.version ) }, { "length", std::to_string( config.length ) }, {
       "max_constant", std::to_string( config.max_constant ) }, { "loops", std::to_string( config.loops ) }, {
-      "indirect", std::to_string( config.indirect_access ) }, { "template", config.program_template } };
+      "indirect", std::to_string( config.indirect_access ) } };
+  // label values must not be empty
+  if ( !config.program_template.empty() )
+  {
+    metric_labels.emplace( "template", config.program_template );
+  }
 }
 
 void Generator::generateStateless( Program &p, size_t num_operations )
