@@ -179,7 +179,7 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
       int64_t expected_index = -1, index = 0, value = 0;
       while ( std::getline( big_file, l ) )
       {
-        l.erase( l.begin(), std::find_if( l.begin(), l.end(), []( int ch ) 
+        l.erase( l.begin(), std::find_if( l.begin(), l.end(), []( int ch )
         {
           return !std::isspace(ch);
         } ) );
@@ -272,7 +272,7 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
 
   std::vector<number_t> seqs_to_remove;
 
-  // collect known sequences if they should be ignored
+  // collect known / linear sequences if they should be ignored
   if ( !settings.optimize_existing_programs )
   {
     for ( auto &seq : sequences )
@@ -281,27 +281,16 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
       {
         continue;
       }
+      if ( !settings.search_linear && seq.full.is_linear( settings.linear_prefix ) )
+      {
+        seqs_to_remove.push_back( seq.id );
+        continue;
+      }
       std::ifstream in( seq.getProgramPath() );
       if ( in.good() )
       {
         seqs_to_remove.push_back( seq.id );
         in.close();
-      }
-    }
-  }
-
-  // collect linear sequences if they should be ignored
-  if ( !settings.search_linear )
-  {
-    for ( auto &seq : sequences )
-    {
-      if ( seq.id == 0 )
-      {
-        continue;
-      }
-      if ( seq.full.is_linear( settings.linear_prefix ) )
-      {
-        seqs_to_remove.push_back( seq.id );
       }
     }
   }
