@@ -17,14 +17,14 @@ Sequence Sequence::subsequence( size_t start, size_t length ) const
   return Sequence( std::vector<number_t>( begin() + start, begin() + start + length ) );
 }
 
-bool Sequence::is_linear() const
+bool Sequence::is_linear( size_t start ) const
 {
-  if ( size() < 3 )
+  if ( start + 3 > size() )
   {
     return true;
   }
-  int64_t d = (*this)[1] - (*this)[0];
-  for ( size_t i = 2; i < size(); ++i )
+  int64_t d = (*this)[start + 1] - (*this)[start];
+  for ( size_t i = start + 2; i < size(); ++i )
   {
     if ( (*this)[i - 1] + d != (*this)[i] )
     {
