@@ -23,7 +23,7 @@ bool Sequence::is_linear() const
   {
     return true;
   }
-  int d = (*this)[1] - (*this)[0];
+  int64_t d = (*this)[1] - (*this)[0];
   for ( size_t i = 2; i < size(); ++i )
   {
     if ( (*this)[i - 1] + d != (*this)[i] )

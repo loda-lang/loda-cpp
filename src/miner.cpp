@@ -154,6 +154,11 @@ void Miner::mine( volatile sig_atomic_t &exit_flag )
         {
           generator->stats.updated++;
         }
+
+        // increase priority of successful generator
+        multi_generator.configs[multi_generator.generator_index].replicas++;
+
+        // mutate successful program
         if ( progs.size() < 1000 || settings.hasMemory() )
         {
           mutator.mutateConstants( s.second, 100, progs );
