@@ -111,15 +111,9 @@ Generator::Generator( const Config &config, int64_t seed )
     config( config )
 {
   gen.seed( seed );
-
-  metric_labels = { { "generator_version", std::to_string( config.version ) }, { "num_operations", std::to_string(
-      config.length ) }, { "max_constant", std::to_string( config.max_constant ) }, { "max_index", std::to_string(
-      config.max_index ) }, { "loops", std::to_string( config.loops ) }, { "indirect_access", std::to_string(
-      config.indirect_access ) }, };
-  if ( !config.program_template.empty() )
-  {
-    metric_labels.emplace( "program_template", config.program_template );
-  }
+  metric_labels = { { "version", std::to_string( config.version ) }, { "length", std::to_string( config.length ) }, {
+      "max_constant", std::to_string( config.max_constant ) }, { "loops", std::to_string( config.loops ) }, {
+      "indirect", std::to_string( config.indirect_access ) }, { "template", config.program_template } };
 }
 
 void Generator::generateStateless( Program &p, size_t num_operations )
