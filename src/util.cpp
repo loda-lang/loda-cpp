@@ -223,6 +223,7 @@ Settings::Settings()
     max_cycles( getEnvInt( "LODA_MAX_CYCLES", 10000000 ) ),
     max_stack_size( getEnvInt( "LODA_MAX_STACK_SIZE", 100 ) ),
     max_physical_memory( getEnvInt( "LODA_MAX_PHYSICAL_MEMORY", 1024 ) * 1024 * 1024 ),
+    linear_prefix( 5 ),
     optimize_existing_programs( false ),
     search_linear( false ),
     throw_on_overflow( true ),
