@@ -21,7 +21,7 @@ bool Sequence::is_linear( size_t start ) const
 {
   if ( start + 3 > size() )
   {
-    return true;
+    return false;
   }
   int64_t d = (*this)[start + 1] - (*this)[start];
   for ( size_t i = start + 2; i < size(); ++i )
