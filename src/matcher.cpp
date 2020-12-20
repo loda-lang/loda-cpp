@@ -128,7 +128,7 @@ bool PolynomialMatcher::extend( Program &p, Polynomial base, Polynomial gen ) co
 
 // --- Delta Matcher ----------------------------------------------------------
 
-const int DeltaMatcher::MAX_DELTA = 5; // magic number
+const int DeltaMatcher::MAX_DELTA = 4; // magic number
 
 std::pair<Sequence, delta_t> DeltaMatcher::reduce( const Sequence &seq ) const
 {

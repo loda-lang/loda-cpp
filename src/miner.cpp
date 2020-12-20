@@ -1,5 +1,6 @@
 #include "miner.hpp"
 
+#include "generator.hpp"
 #include "interpreter.hpp"
 #include "mutator.hpp"
 #include "oeis.hpp"
@@ -13,6 +14,8 @@
 #include <random>
 #include <sstream>
 #include <unordered_set>
+
+#define METRIC_PUBLISH_INTERVAL 120
 
 Miner::Miner( const Settings &settings )
     :
@@ -117,32 +120,22 @@ void Miner::mine( volatile sig_atomic_t &exit_flag )
   oeis.load( exit_flag );
   Log::get().info( "Mining programs for OEIS sequences" );
 
-  // metrics labels
-  std::map<std::string, std::string> settings_labels = { { "generator_version", std::to_string(
-      settings.generator_version ) }, { "num_operations", std::to_string( settings.num_operations ) }, { "max_constant",
-      std::to_string( settings.max_constant ) }, { "max_index", std::to_string( settings.max_index ) }, {
-      "operation_types", settings.operation_types }, { "operand_types", settings.operand_types }, };
-  if ( !settings.program_template.empty() )
-  {
-    settings_labels.emplace( "program_template", settings.program_template );
-  }
-
   auto &finder = oeis.getFinder();
 
   std::random_device rand;
-  auto generator = Generator::Factory::createGenerator( settings, rand() );
+  MultiGenerator multi_generator( settings, rand() );
   Mutator mutator( rand() );
   std::stack<Program> progs;
   Sequence norm_seq;
-  size_t generated = 0;
-  size_t fresh = 0;
-  size_t updated = 0;
   auto time = std::chrono::steady_clock::now();
 
+  Generator *generator = multi_generator.getGenerator();
   while ( !exit_flag )
   {
     if ( progs.empty() )
     {
+      multi_generator.next(); // need to call "next" *before* generating the problems
+      generator = multi_generator.getGenerator();
       progs.push( generator->generateProgram() );
     }
     Program program = progs.top();
@@ -155,12 +148,17 @@ void Miner::mine( volatile sig_atomic_t &exit_flag )
       {
         if ( r.second )
         {
-          fresh++;
+          generator->stats.fresh++;
         }
         else
         {
-          updated++;
+          generator->stats.updated++;
         }
+
+        // increase priority of successful generator
+        multi_generator.configs[multi_generator.generator_index].replicas++;
+
+        // mutate successful program
         if ( progs.size() < 1000 || settings.hasMemory() )
         {
           mutator.mutateConstants( s.second, 100, progs );
@@ -169,21 +167,25 @@ void Miner::mine( volatile sig_atomic_t &exit_flag )
     }
     if ( updateSpecialSequences( program, norm_seq ) )
     {
-      fresh++;
+      generator->stats.fresh++;
     }
-    generated++;
+    generator->stats.generated++;
     auto time2 = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::seconds>( time2 - time );
-    if ( duration.count() >= 60 )
+    if ( duration.count() >= METRIC_PUBLISH_INTERVAL )
     {
       time = time2;
-      Log::get().info( "Generated " + std::to_string( generated ) + " programs" );
-      Metrics::get().write( "generated", settings_labels, generated );
-      Metrics::get().write( "fresh", settings_labels, fresh );
-      Metrics::get().write( "updated", settings_labels, updated );
-      generated = 0;
-      fresh = 0;
-      updated = 0;
+      int64_t total_generated = 0;
+      for ( size_t i = 0; i < multi_generator.generators.size(); i++ )
+      {
+        auto gen = multi_generator.generators[i].get();
+        Metrics::get().write( "generated", gen->metric_labels, gen->stats.generated );
+        Metrics::get().write( "fresh", gen->metric_labels, gen->stats.fresh );
+        Metrics::get().write( "updated", gen->metric_labels, gen->stats.updated );
+        total_generated += gen->stats.generated;
+        gen->stats = Generator::GStats();
+      }
+      Log::get().info( "Generated " + std::to_string( total_generated ) + " programs" );
       finder.publishMetrics();
     }
   }

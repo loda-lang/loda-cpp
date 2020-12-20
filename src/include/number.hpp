@@ -37,7 +37,7 @@ public:
 
   Sequence subsequence( size_t start, size_t length ) const;
 
-  bool is_linear() const;
+  bool is_linear( size_t start ) const;
 
   size_t distinct_values() const;
 

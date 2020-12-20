@@ -270,14 +270,20 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
 
   loadNames( exit_flag );
 
-  // remove known sequences if they should be ignored
+  std::vector<number_t> seqs_to_remove;
+
+  // collect known / linear sequences if they should be ignored
   if ( !settings.optimize_existing_programs )
   {
-    std::vector<number_t> seqs_to_remove;
     for ( auto &seq : sequences )
     {
       if ( seq.id == 0 )
       {
+        continue;
+      }
+      if ( !settings.search_linear && seq.full.is_linear( settings.linear_prefix ) )
+      {
+        seqs_to_remove.push_back( seq.id );
         continue;
       }
       std::ifstream in( seq.getProgramPath() );
@@ -287,15 +293,15 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
         in.close();
       }
     }
-    if ( !seqs_to_remove.empty() )
+  }
+
+  // remove sequences
+  if ( !seqs_to_remove.empty() )
+  {
+    Log::get().info( "Ignoring " + std::to_string( seqs_to_remove.size() ) + " sequences" );
+    for ( auto id : seqs_to_remove )
     {
-      Log::get().info(
-          "Ignoring " + std::to_string( seqs_to_remove.size() )
-              + " sequences because programs exist for them already" );
-      for ( auto id : seqs_to_remove )
-      {
-        removeSequence( id );
-      }
+      removeSequence( id );
     }
   }
 

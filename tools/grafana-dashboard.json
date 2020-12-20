@@ -34,7 +34,7 @@
       },
       "hiddenSeries": false,
       "id": 2,
-      "interval": "30m",
+      "interval": "15m",
       "legend": {
         "alignAsTable": true,
         "avg": true,
@@ -62,7 +62,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "alias": "-g $tag_generator_version -p $tag_num_operations -n $tag_max_constant -a $tag_operand_types -o $tag_operation_types  -e $tag_program_template",
+          "alias": "version:$tag_version, length:$tag_length, max_constant:$tag_max_constant loops:$tag_loops indirect:$tag_indirect  template:$tag_template",
           "groupBy": [
             {
               "params": [
@@ -86,7 +86,7 @@
           "measurement": "generated",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT mean(\"value\") FROM \"generated\" WHERE $timeFilter GROUP BY time($__interval), \"generator_version\", \"num_operations\", \"max_constant\", \"operation_types\", \"operand_types\", \"program_template\" fill(none)",
+          "query": "SELECT mean(\"value\") FROM \"generated\" WHERE $timeFilter GROUP BY time($__interval), \"version\", \"length\", \"max_constant\", \"loops\", \"indirect\", \"template\" fill(none)",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -164,7 +164,7 @@
       },
       "hiddenSeries": false,
       "id": 3,
-      "interval": "30m",
+      "interval": "15m",
       "legend": {
         "alignAsTable": true,
         "avg": false,
@@ -196,7 +196,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "alias": "-g $tag_generator_version -p $tag_num_operations -n $tag_max_constant -a $tag_operand_types -o $tag_operation_types  -e $tag_program_template",
+          "alias": "version:$tag_version, length:$tag_length, max_constant:$tag_max_constant loops:$tag_loops indirect:$tag_indirect  template:$tag_template",
           "groupBy": [
             {
               "params": [
@@ -213,7 +213,7 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT sum(\"value\") FROM \"fresh\" WHERE $timeFilter GROUP BY time($__interval), \"generator_version\", \"num_operations\", \"max_constant\", \"operation_types\", \"operand_types\", \"program_template\" fill(none)",
+          "query": "SELECT sum(\"value\") FROM \"fresh\" WHERE $timeFilter GROUP BY time($__interval), \"version\", \"length\", \"max_constant\", \"loops\", \"indirect\", \"template\" fill(none)",
           "rawQuery": true,
           "refId": "B",
           "resultFormat": "time_series",
@@ -291,7 +291,7 @@
       },
       "hiddenSeries": false,
       "id": 4,
-      "interval": "30m",
+      "interval": "15m",
       "legend": {
         "alignAsTable": true,
         "avg": false,
@@ -320,7 +320,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "alias": "-g $tag_generator_version -p $tag_num_operations -n $tag_max_constant -a $tag_operand_types -o $tag_operation_types  -e $tag_program_template",
+          "alias": "version:$tag_version, length:$tag_length, max_constant:$tag_max_constant loops:$tag_loops indirect:$tag_indirect  template:$tag_template",
           "groupBy": [
             {
               "params": [
@@ -337,7 +337,7 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT sum(\"value\") FROM \"updated\" WHERE $timeFilter GROUP BY time($__interval), \"generator_version\", \"num_operations\", \"max_constant\", \"operation_types\", \"operand_types\", \"program_template\" fill(none)",
+          "query": "SELECT sum(\"value\") FROM \"updated\" WHERE $timeFilter GROUP BY time($__interval), \"version\", \"length\", \"max_constant\", \"loops\", \"indirect\", \"template\" fill(none)",
           "rawQuery": true,
           "refId": "B",
           "resultFormat": "time_series",
@@ -415,7 +415,7 @@
       },
       "hiddenSeries": false,
       "id": 5,
-      "interval": "30m",
+      "interval": "15m",
       "legend": {
         "alignAsTable": true,
         "avg": true,
@@ -539,7 +539,7 @@
       },
       "hiddenSeries": false,
       "id": 8,
-      "interval": "30m",
+      "interval": "15m",
       "legend": {
         "alignAsTable": true,
         "avg": true,
@@ -663,7 +663,7 @@
       },
       "hiddenSeries": false,
       "id": 6,
-      "interval": "30m",
+      "interval": "15m",
       "legend": {
         "alignAsTable": true,
         "avg": true,
@@ -787,7 +787,7 @@
       },
       "hiddenSeries": false,
       "id": 7,
-      "interval": "30m",
+      "interval": "15m",
       "legend": {
         "alignAsTable": true,
         "avg": true,
@@ -924,5 +924,5 @@
   "timezone": "",
   "title": "LODA",
   "uid": "loda",
-  "version": 3
+  "version": 8
 }

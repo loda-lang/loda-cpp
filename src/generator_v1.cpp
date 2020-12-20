@@ -53,19 +53,14 @@ std::discrete_distribution<> constantsDist( const std::vector<number_t> &constan
   return std::discrete_distribution<>( p.begin(), p.end() );
 }
 
-GeneratorV1::GeneratorV1( const Settings &settings, int64_t seed )
+GeneratorV1::GeneratorV1( const Config &config, int64_t seed )
     :
-    GeneratorV1( settings.operation_types, settings.operand_types, settings.program_template, settings.max_constant,
-        settings.num_operations, seed )
+    Generator( config, seed ),
+    num_operations( config.length )
 {
-}
+  std::string operation_types = config.loops ? "^" : "^l";
+  std::string operand_types = config.indirect_access ? "cdi" : "cd";
 
-GeneratorV1::GeneratorV1( const std::string &operation_types, const std::string &operand_types,
-    const std::string &program_template, int64_t max_constant, int64_t num_operations, int64_t seed )
-    :
-    Generator( seed ),
-    num_operations( num_operations )
-{
   // parse operation types
   bool negate = false;
   for ( char c : operation_types )
@@ -154,10 +149,10 @@ GeneratorV1::GeneratorV1( const std::string &operation_types, const std::string 
   }
 
   // program template
-  if ( !program_template.empty() )
+  if ( !config.program_template.empty() )
   {
     Parser parser;
-    this->program_template = parser.parse( program_template );
+    this->program_template = parser.parse( config.program_template );
   }
 
   // initialize distributions
@@ -173,9 +168,9 @@ GeneratorV1::GeneratorV1( const std::string &operation_types, const std::string 
   constants_dist = constantsDist( constants, stats );
   operation_dist = operationDist( stats, this->operation_types );
   target_type_dist = std::discrete_distribution<>( target_type_rates.begin(), target_type_rates.end() );
-  target_value_dist = uniformDist( max_constant + 1 );
+  target_value_dist = uniformDist( config.max_constant + 1 );
   source_type_dist = std::discrete_distribution<>( source_type_rates.begin(), source_type_rates.end() );
-  source_value_dist = uniformDist( max_constant + 1 );
+  source_value_dist = uniformDist( config.max_constant + 1 );
   position_dist = uniformDist( POSITION_RANGE );
 }
 

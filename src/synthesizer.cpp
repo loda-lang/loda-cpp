@@ -5,7 +5,7 @@
 
 bool LinearSynthesizer::synthesize( const Sequence &seq, Program &program )
 {
-  if ( seq.size() < 3 || !seq.is_linear() )
+  if ( seq.size() < 3 || !seq.is_linear( 0 ) )
   {
     return false;
   }

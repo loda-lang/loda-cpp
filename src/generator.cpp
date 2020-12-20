@@ -6,27 +6,6 @@
 #include "util.hpp"
 #include "jute.h"
 
-Generator::UPtr Generator::Factory::createGenerator( const Settings &settings, int64_t seed )
-{
-  Generator::UPtr generator;
-  switch ( settings.generator_version )
-  {
-  case 1:
-    generator.reset( new GeneratorV1( settings, seed ) );
-    break;
-  case 2:
-    generator.reset( new GeneratorV2( seed ) );
-    break;
-  case 3:
-    generator.reset( new GeneratorV3( seed ) );
-    break;
-  default:
-    Log::get().error( "Invalid generator version: " + std::to_string( settings.generator_version ), true );
-    break;
-  }
-  return generator;
-}
-
 Generator::UPtr Generator::Factory::createGenerator( const Config &config, int64_t seed )
 {
   Generator::UPtr generator;
@@ -34,21 +13,17 @@ Generator::UPtr Generator::Factory::createGenerator( const Config &config, int64
   {
   case 1:
   {
-    std::string operation_types = config.loops ? "^" : "^l";
-    std::string operand_types = config.indirect_access ? "cdi" : "cd";
-    generator.reset(
-        new GeneratorV1( operation_types, operand_types, config.program_template, config.max_constant, config.length,
-            seed ) );
+    generator.reset( new GeneratorV1( config, seed ) );
     break;
   }
   case 2:
   {
-    generator.reset( new GeneratorV2( seed ) );
+    generator.reset( new GeneratorV2( config, seed ) );
     break;
   }
   case 3:
   {
-    generator.reset( new GeneratorV3( seed ) );
+    generator.reset( new GeneratorV3( config, seed ) );
     break;
   }
   default:
@@ -131,14 +106,19 @@ std::vector<Generator::Config> Generator::Config::load( std::istream &in )
   return configs;
 }
 
-Generator::Generator( const Settings &settings, int64_t seed )
+Generator::Generator( const Config &config, int64_t seed )
+    :
+    config( config )
 {
   gen.seed( seed );
-}
-
-Generator::Generator( int64_t seed )
-{
-  gen.seed( seed );
+  metric_labels = { { "version", std::to_string( config.version ) }, { "length", std::to_string( config.length ) }, {
+      "max_constant", std::to_string( config.max_constant ) }, { "loops", std::to_string( config.loops ) }, {
+      "indirect", std::to_string( config.indirect_access ) } };
+  // label values must not be empty
+  if ( !config.program_template.empty() )
+  {
+    metric_labels.emplace( "template", config.program_template );
+  }
 }
 
 void Generator::generateStateless( Program &p, size_t num_operations )
@@ -357,9 +337,8 @@ void Generator::ensureMeaningfulLoops( Program &p )
 }
 
 MultiGenerator::MultiGenerator( const Settings &settings, int64_t seed )
-    :
-    Generator( settings, seed )
 {
+  std::mt19937 gen( seed * 13 + 17 );
   std::ifstream loda_conf( settings.loda_config );
   configs = Generator::Config::load( loda_conf );
   if ( configs.empty() )
@@ -375,7 +354,12 @@ MultiGenerator::MultiGenerator( const Settings &settings, int64_t seed )
   replica_index = gen() % configs.at( gen() % configs.size() ).replicas;
 }
 
-Program MultiGenerator::generateProgram()
+Generator* MultiGenerator::getGenerator()
+{
+  return generators[generator_index].get();
+}
+
+void MultiGenerator::next()
 {
   if ( replica_index >= configs[generator_index].replicas )
   {
@@ -386,10 +370,4 @@ Program MultiGenerator::generateProgram()
   {
     replica_index++;
   }
-  return generators[generator_index]->generateProgram();
-}
-
-std::pair<Operation, double> MultiGenerator::generateOperation()
-{
-  return generators[generator_index]->generateOperation();
 }

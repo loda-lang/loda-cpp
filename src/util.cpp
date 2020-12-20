@@ -219,19 +219,14 @@ void Metrics::write( const std::string &field, const std::map<std::string, std::
 Settings::Settings()
     :
     num_terms( 20 ),
-    num_operations( 20 ),
     max_memory( getEnvInt( "LODA_MAX_MEMORY", 100000 ) ),
     max_cycles( getEnvInt( "LODA_MAX_CYCLES", 10000000 ) ),
-    max_constant( 4 ),
-    max_index( 4 ),
     max_stack_size( getEnvInt( "LODA_MAX_STACK_SIZE", 100 ) ),
     max_physical_memory( getEnvInt( "LODA_MAX_PHYSICAL_MEMORY", 1024 ) * 1024 * 1024 ),
-    generator_version( 1 ),
+    linear_prefix( 5 ),
     optimize_existing_programs( false ),
     search_linear( false ),
     throw_on_overflow( true ),
-    operation_types( "^" ),
-    operand_types( "cd" ),
     loda_config( "loda.json" )
 {
 }
@@ -240,16 +235,9 @@ enum class Option
 {
   NONE,
   NUM_TERMS,
-  NUM_OPERATIONS,
   MAX_MEMORY,
   MAX_CYCLES,
-  MAX_CONSTANT,
-  MAX_INDEX,
   MAX_PHYSICAL_MEMORY,
-  GENERATOR_VERSION,
-  OPERATION_TYPES,
-  OPERAND_TYPES,
-  PROGRAM_TEMPLATE,
   LODA_CONFIG,
   LOG_LEVEL
 };
@@ -261,9 +249,8 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
   for ( int i = 1; i < argc; ++i )
   {
     std::string arg( argv[i] );
-    if ( option == Option::NUM_TERMS || option == Option::NUM_OPERATIONS || option == Option::MAX_MEMORY
-        || option == Option::MAX_CYCLES || option == Option::MAX_CONSTANT || option == Option::MAX_INDEX
-        || option == Option::MAX_PHYSICAL_MEMORY || option == Option::GENERATOR_VERSION )
+    if ( option == Option::NUM_TERMS || option == Option::MAX_MEMORY || option == Option::MAX_CYCLES
+        || option == Option::MAX_PHYSICAL_MEMORY )
     {
       std::stringstream s( arg );
       int val;
@@ -277,50 +264,20 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
       case Option::NUM_TERMS:
         num_terms = val;
         break;
-      case Option::NUM_OPERATIONS:
-        num_operations = val;
-        break;
       case Option::MAX_MEMORY:
         max_memory = val;
         break;
       case Option::MAX_CYCLES:
         max_cycles = val;
         break;
-      case Option::MAX_CONSTANT:
-        max_constant = val;
-        break;
-      case Option::MAX_INDEX:
-        max_index = val;
-        break;
       case Option::MAX_PHYSICAL_MEMORY:
         max_physical_memory = val * 1024 * 1024;
         break;
-      case Option::GENERATOR_VERSION:
-        generator_version = val;
-        break;
       case Option::LOG_LEVEL:
-      case Option::OPERATION_TYPES:
-      case Option::OPERAND_TYPES:
       case Option::LODA_CONFIG:
-      case Option::PROGRAM_TEMPLATE:
       case Option::NONE:
         break;
       }
-      option = Option::NONE;
-    }
-    else if ( option == Option::OPERATION_TYPES )
-    {
-      operation_types = arg;
-      option = Option::NONE;
-    }
-    else if ( option == Option::OPERAND_TYPES )
-    {
-      operand_types = arg;
-      option = Option::NONE;
-    }
-    else if ( option == Option::PROGRAM_TEMPLATE )
-    {
-      program_template = arg;
       option = Option::NONE;
     }
     else if ( option == Option::LODA_CONFIG )
@@ -363,10 +320,6 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
       {
         option = Option::NUM_TERMS;
       }
-      else if ( opt == "p" )
-      {
-        option = Option::NUM_OPERATIONS;
-      }
       else if ( opt == "m" )
       {
         option = Option::MAX_MEMORY;
@@ -375,21 +328,9 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
       {
         option = Option::MAX_CYCLES;
       }
-      else if ( opt == "n" )
-      {
-        option = Option::MAX_CONSTANT;
-      }
-      else if ( opt == "i" )
-      {
-        option = Option::MAX_INDEX;
-      }
       else if ( opt == "s" )
       {
         option = Option::MAX_PHYSICAL_MEMORY;
-      }
-      else if ( opt == "g" )
-      {
-        option = Option::GENERATOR_VERSION;
       }
       else if ( opt == "x" )
       {
@@ -398,18 +339,6 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
       else if ( opt == "r" )
       {
         search_linear = true;
-      }
-      else if ( opt == "o" )
-      {
-        option = Option::OPERATION_TYPES;
-      }
-      else if ( opt == "a" )
-      {
-        option = Option::OPERAND_TYPES;
-      }
-      else if ( opt == "e" )
-      {
-        option = Option::PROGRAM_TEMPLATE;
       }
       else if ( opt == "k" )
       {

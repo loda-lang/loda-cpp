@@ -1,68 +1,68 @@
 {
-	"generators": [
-		{
-			"version": 1,
-			"length": 40,
-			"maxConstant": 4,
-			"maxCell": 4,
-			"loops": false,
-			"indirectAccess": false,
-			"template": [
-				"programs/templates/T01.asm",
-				"programs/templates/T02.asm"
-			]
-		},
-		{
-			"version": 1,
-			"length": 60,
-			"maxConstant": 6,
-			"maxCell": 6,
-			"loops": false,
-			"indirectAccess": false,
-			"template": [
-				"programs/templates/T01.asm",
-				"programs/templates/T02.asm"
-			]
-		},
-		{
-			"version": 1,
-			"length": 80,
-			"maxConstant": 8,
-			"maxCell": 8,
-			"loops": false,
-			"indirectAccess": false,
-			"template": [
-				"programs/templates/T01.asm",
-				"programs/templates/T02.asm"
-			]
-		},
-		{
-			"version": 1,
-			"length": 100,
-			"maxConstant": 10,
-			"maxCell": 10,
-			"loops": false,
-			"indirectAccess": false,
-			"template": [
-				"programs/templates/T01.asm",
-				"programs/templates/T02.asm"
-			]
-		},
-		{
-			"version": 1,
-			"length": 60,
-			"maxConstant": 6,
-			"maxCell": 6,
-			"loops": true,
-			"indirectAccess": true
-		},
-		{
-			"version": 2,
-			"replicas": 3
-		},
-		{
-			"version": 3,
-			"replicas": 3
-		}
-	]
+  "generators": [
+    {
+      "version": 1,
+      "length": 40,
+      "maxConstant": 4,
+      "maxCell": 4,
+      "loops": false,
+      "indirectAccess": false,
+      "template": [
+        "programs/templates/T01.asm",
+        "programs/templates/T02.asm"
+      ]
+    },
+    {
+      "version": 1,
+      "length": 60,
+      "maxConstant": 6,
+      "maxCell": 6,
+      "loops": false,
+      "indirectAccess": false,
+      "template": [
+        "programs/templates/T01.asm",
+        "programs/templates/T02.asm"
+      ]
+    },
+    {
+      "version": 1,
+      "length": 80,
+      "maxConstant": 8,
+      "maxCell": 8,
+      "loops": false,
+      "indirectAccess": false,
+      "template": [
+        "programs/templates/T01.asm",
+        "programs/templates/T02.asm"
+      ]
+    },
+    {
+      "version": 1,
+      "length": 100,
+      "maxConstant": 10,
+      "maxCell": 10,
+      "loops": false,
+      "indirectAccess": false,
+      "template": [
+        "programs/templates/T01.asm",
+        "programs/templates/T02.asm"
+      ]
+    },
+    {
+      "version": 1,
+      "length": 60,
+      "maxConstant": 6,
+      "maxCell": 6,
+      "loops": true,
+      "indirectAccess": true
+    },
+    {
+      "version": 2,
+      "replicas": 3
+    },
+    {
+      "version": 3,
+      "replicas": 3
+    }
+  ]
 }
