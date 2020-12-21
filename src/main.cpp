@@ -65,7 +65,11 @@ volatile sig_atomic_t EXIT_FLAG = 0;
 
 void handle_sigint( int s )
 {
-  EXIT_FLAG = 1;
+  if ( !EXIT_FLAG )
+  {
+    Log::get().info( "Shutting down instance" );
+    EXIT_FLAG = 1;
+  }
 }
 
 void handle_sigsegv( int s )

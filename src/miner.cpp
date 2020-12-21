@@ -146,17 +146,19 @@ void Miner::mine( volatile sig_atomic_t &exit_flag )
       auto r = oeis.updateProgram( s.first, s.second );
       if ( r.first )
       {
+        // update stats and increase priority of successful generator
+        auto replicas = multi_generator.configs[multi_generator.generator_index].replicas;
         if ( r.second )
         {
           generator->stats.fresh++;
+          replicas = replicas * 2;
         }
         else
         {
           generator->stats.updated++;
+          replicas = replicas + 1;
         }
-
-        // increase priority of successful generator
-        multi_generator.configs[multi_generator.generator_index].replicas++;
+        multi_generator.configs[multi_generator.generator_index].replicas = replicas;
 
         // mutate successful program
         if ( progs.size() < 1000 || settings.hasMemory() )

@@ -43,6 +43,10 @@ void AbstractMatcher<T>::match( const Program &p, const Sequence &norm_seq, seq_
       if ( extend( copy, data.at( id ), reduced.second ) )
       {
         result.push_back( std::pair<size_t, Program>( id, copy ) );
+        if ( result.size() >= MAX_NUM_MATCHES )
+        {
+          break;
+        }
       }
     }
   }
