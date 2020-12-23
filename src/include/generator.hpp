@@ -13,13 +13,13 @@ public:
   class Config
   {
   public:
-    int64_t version;
-    int64_t replicas;
-    int64_t length;
-    int64_t max_constant;
-    int64_t max_index;
-    bool loops;
-    bool indirect_access;
+    int64_t version = 1;
+    int64_t replicas = 1;
+    int64_t length = 0;
+    int64_t max_constant = 0;
+    int64_t max_index = 0;
+    bool loops = true;
+    bool indirect_access = false;
     std::string program_template;
 
     static std::vector<Config> load( std::istream &in );

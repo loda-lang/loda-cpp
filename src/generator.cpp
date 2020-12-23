@@ -70,11 +70,14 @@ std::vector<Generator::Config> Generator::Config::load( std::istream &in )
     Generator::Config c;
     c.version = get_jint( g, "version", 1 );
     c.replicas = get_jint( g, "replicas", 1 );
-    c.length = get_jint( g, "length", 20 );
-    c.max_constant = get_jint( g, "maxConstant", 4 );
-    c.max_index = get_jint( g, "maxIndex", 4 );
-    c.loops = get_jbool( g, "loops", true );
-    c.indirect_access = get_jbool( g, "indirectAccess", false );
+    if ( c.version == 1 )
+    {
+      c.length = get_jint( g, "length", 20 );
+      c.max_constant = get_jint( g, "maxConstant", 4 );
+      c.max_index = get_jint( g, "maxIndex", 4 );
+      c.loops = get_jbool( g, "loops", true );
+      c.indirect_access = get_jbool( g, "indirectAccess", false );
+    }
     switch ( g["template"].get_type() )
     {
     case jute::jType::JSTRING:

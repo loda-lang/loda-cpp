@@ -50,6 +50,46 @@
     },
     {
       "version": 1,
+      "length": 40,
+      "maxConstant": 4,
+      "maxCell": 4,
+      "loops": true,
+      "indirectAccess": false
+    },
+    {
+      "version": 1,
+      "length": 60,
+      "maxConstant": 6,
+      "maxCell": 6,
+      "loops": true,
+      "indirectAccess": false
+    },
+    {
+      "version": 1,
+      "length": 80,
+      "maxConstant": 8,
+      "maxCell": 8,
+      "loops": true,
+      "indirectAccess": false
+    },
+    {
+      "version": 1,
+      "length": 100,
+      "maxConstant": 10,
+      "maxCell": 10,
+      "loops": true,
+      "indirectAccess": false
+    },
+    {
+      "version": 1,
+      "length": 120,
+      "maxConstant": 8,
+      "maxCell": 8,
+      "loops": true,
+      "indirectAccess": false
+    },
+    {
+      "version": 1,
       "length": 60,
       "maxConstant": 6,
       "maxCell": 6,

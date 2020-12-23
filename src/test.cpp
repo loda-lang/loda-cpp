@@ -213,19 +213,19 @@ void Test::config()
   Log::get().info( "Testing config" );
   std::ifstream in( "loda.json" );
   auto configs = Generator::Config::load( in );
-  check_int( "numGenerators", 11, 11, configs.size() );
+  check_int( "numGenerators", 10, 100, configs.size() );
   for ( auto &c : configs )
   {
     check_int( "version", 1, 3, c.version );
     check_int( "replicas", 1, 3, c.replicas );
     if ( c.version == 1 )
     {
-      check_int( "length", 20, 100, c.length );
+      check_int( "length", 20, 120, c.length );
       check_int( "max_constant", 4, 10, c.max_constant );
       check_int( "max_index", 4, 10, c.max_index );
       int64_t t = c.program_template.empty();
       check_int( "loops", t, t, c.loops );
-      check_int( "indirectAccess", t, t, c.indirect_access );
+      check_int( "indirectAccess", 0, 1, c.indirect_access );
     }
   }
 }
