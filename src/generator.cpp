@@ -6,24 +6,24 @@
 #include "util.hpp"
 #include "jute.h"
 
-Generator::UPtr Generator::Factory::createGenerator( const Config &config, int64_t seed )
+Generator::UPtr Generator::Factory::createGenerator( const Config &config, const Stats &stats, int64_t seed )
 {
   Generator::UPtr generator;
   switch ( config.version )
   {
   case 1:
   {
-    generator.reset( new GeneratorV1( config, seed ) );
+    generator.reset( new GeneratorV1( config, stats, seed ) );
     break;
   }
   case 2:
   {
-    generator.reset( new GeneratorV2( config, seed ) );
+    generator.reset( new GeneratorV2( config, stats, seed ) );
     break;
   }
   case 3:
   {
-    generator.reset( new GeneratorV3( config, seed ) );
+    generator.reset( new GeneratorV3( config, stats, seed ) );
     break;
   }
   default:
@@ -343,6 +343,8 @@ void Generator::ensureMeaningfulLoops( Program &p )
 
 MultiGenerator::MultiGenerator( const Settings &settings, int64_t seed )
 {
+  Stats stats;
+  stats.load( "stats" );
   std::mt19937 gen( seed );
   std::ifstream loda_conf( settings.loda_config );
   configs = Generator::Config::load( loda_conf, settings.optimize_existing_programs );
@@ -353,7 +355,7 @@ MultiGenerator::MultiGenerator( const Settings &settings, int64_t seed )
   generators.resize( configs.size() );
   for ( size_t i = 0; i < configs.size(); i++ )
   {
-    generators[i] = Generator::Factory::createGenerator( configs[i], gen() );
+    generators[i] = Generator::Factory::createGenerator( configs[i], stats, gen() );
   }
   generator_index = gen() % configs.size();
   replica_index = gen() % configs.at( gen() % configs.size() ).replicas;

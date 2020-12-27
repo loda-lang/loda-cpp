@@ -53,7 +53,7 @@ std::discrete_distribution<> constantsDist( const std::vector<number_t> &constan
   return std::discrete_distribution<>( p.begin(), p.end() );
 }
 
-GeneratorV1::GeneratorV1( const Config &config, int64_t seed )
+GeneratorV1::GeneratorV1( const Config &config, const Stats &stats, int64_t seed )
     :
     Generator( config, seed ),
     num_operations( config.length )
@@ -156,8 +156,6 @@ GeneratorV1::GeneratorV1( const Config &config, int64_t seed )
   }
 
   // initialize distributions
-  Stats stats;
-  stats.load( "stats" );
   constants.resize( stats.num_constants.size() );
   size_t i = 0;
   for ( auto &c : stats.num_constants )

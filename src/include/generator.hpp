@@ -2,6 +2,7 @@
 
 #include "number.hpp"
 #include "program.hpp"
+#include "stats.hpp"
 #include "util.hpp"
 
 class Generator
@@ -45,7 +46,7 @@ public:
   class Factory
   {
   public:
-    static Generator::UPtr createGenerator( const Config &config, int64_t seed );
+    static Generator::UPtr createGenerator( const Config &config, const Stats &stats, int64_t seed );
   };
 
   Generator( const Config &config, int64_t seed );

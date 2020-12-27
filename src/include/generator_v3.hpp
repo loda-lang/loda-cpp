@@ -12,7 +12,7 @@ class GeneratorV3: public Generator
 {
 public:
 
-  GeneratorV3( const Config &config, int64_t seed );
+  GeneratorV3( const Config &config, const Stats &stats, int64_t seed );
 
   virtual Program generateProgram() override;
 
