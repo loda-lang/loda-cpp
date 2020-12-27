@@ -212,8 +212,8 @@ void Test::config()
 {
   Log::get().info( "Testing config" );
   std::ifstream in( "loda.json" );
-  auto configs = Generator::Config::load( in );
-  check_int( "numGenerators", 10, 100, configs.size() );
+  auto configs = Generator::Config::load( in, false );
+  check_int( "numGenerators", 2, 20, configs.size() );
   for ( auto &c : configs )
   {
     check_int( "version", 1, 3, c.version );

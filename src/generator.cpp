@@ -53,7 +53,7 @@ bool get_jbool( jute::jValue &v, const std::string &key, bool def )
   return def;
 }
 
-std::vector<Generator::Config> Generator::Config::load( std::istream &in )
+std::vector<Generator::Config> Generator::Config::load( std::istream &in, bool optimize_existing_programs )
 {
   std::vector<Generator::Config> configs;
   std::string str = "";
@@ -63,7 +63,8 @@ std::vector<Generator::Config> Generator::Config::load( std::istream &in )
     str += tmp;
   }
   auto spec = jute::parser::parse( str );
-  auto gens = spec["generators"];
+  auto generators = spec["generators"];
+  auto gens = optimize_existing_programs ? generators["update"] : generators["new"];
   for ( int i = 0; i < gens.size(); i++ )
   {
     auto g = gens[i];
@@ -106,6 +107,7 @@ std::vector<Generator::Config> Generator::Config::load( std::istream &in )
     }
     }
   }
+  Log::get().info( "Loaded " + std::to_string( configs.size() ) + " generator configurations" );
   return configs;
 }
 
@@ -341,9 +343,9 @@ void Generator::ensureMeaningfulLoops( Program &p )
 
 MultiGenerator::MultiGenerator( const Settings &settings, int64_t seed )
 {
-  std::mt19937 gen( seed * 13 + 17 );
+  std::mt19937 gen( seed );
   std::ifstream loda_conf( settings.loda_config );
-  configs = Generator::Config::load( loda_conf );
+  configs = Generator::Config::load( loda_conf, settings.optimize_existing_programs );
   if ( configs.empty() )
   {
     Log::get().error( "No generators configurations found", true );

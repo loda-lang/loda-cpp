@@ -22,7 +22,7 @@ public:
     bool indirect_access = false;
     std::string program_template;
 
-    static std::vector<Config> load( std::istream &in );
+    static std::vector<Config> load( std::istream &in, bool optimize_existing_programs );
 
   };
 
