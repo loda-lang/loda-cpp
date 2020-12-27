@@ -107,7 +107,7 @@ std::vector<Generator::Config> Generator::Config::load( std::istream &in, bool o
     }
     }
   }
-  Log::get().info( "Loaded " + std::to_string( configs.size() ) + " generator configurations" );
+  Log::get().debug( "Loaded " + std::to_string( configs.size() ) + " generator configurations" );
   return configs;
 }
 
