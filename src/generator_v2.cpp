@@ -3,13 +3,10 @@
 
 #include "stats.hpp"
 
-GeneratorV2::GeneratorV2( const Config &config, int64_t seed )
+GeneratorV2::GeneratorV2( const Config &config, const Stats &stats, int64_t seed )
     :
     Generator( config, seed )
 {
-  Stats stats;
-  stats.load( "stats" );
-
   size_t i;
   std::vector<double> probs;
 

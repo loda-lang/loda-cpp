@@ -6,7 +6,7 @@ class GeneratorV1: public Generator
 {
 public:
 
-  GeneratorV1( const Config &config, int64_t seed );
+  GeneratorV1( const Config &config, const Stats &stats, int64_t seed );
 
   virtual Program generateProgram() override;
 

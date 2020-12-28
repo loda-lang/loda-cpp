@@ -147,17 +147,16 @@ void Miner::mine( volatile sig_atomic_t &exit_flag )
       if ( r.first )
       {
         // update stats and increase priority of successful generator
-        auto replicas = multi_generator.configs[multi_generator.generator_index].replicas;
         if ( r.second )
         {
           generator->stats.fresh++;
-          replicas = replicas * 2;
         }
         else
         {
           generator->stats.updated++;
-          replicas = replicas + 1;
         }
+        auto replicas = multi_generator.configs[multi_generator.generator_index].replicas;
+        replicas = replicas + 20; // magic number
         multi_generator.configs[multi_generator.generator_index].replicas = replicas;
 
         // mutate successful program
