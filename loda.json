@@ -3,9 +3,9 @@
     "new": [
       {
         "version": 1,
-        "length": 80,
-        "maxConstant": 8,
-        "maxCell": 8,
+        "length": 60,
+        "maxConstant": 4,
+        "maxCell": 4,
         "loops": false,
         "indirectAccess": false,
         "template": [
@@ -15,9 +15,9 @@
       },
       {
         "version": 1,
-        "length": 80,
-        "maxConstant": 8,
-        "maxCell": 8,
+        "length": 60,
+        "maxConstant": 4,
+        "maxCell": 4,
         "loops": true,
         "indirectAccess": false
       }
