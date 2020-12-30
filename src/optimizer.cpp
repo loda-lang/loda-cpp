@@ -210,10 +210,6 @@ inline bool simplifyOperand( Operand &op, std::unordered_set<number_t> &initiali
   case Operand::Type::DIRECT:
     if ( initialized_cells.find( op.value ) == initialized_cells.end() && is_source )
     {
-      if ( Log::get().level == Log::Level::DEBUG )
-      {
-        Log::get().debug( "Simplifying operand $" + std::to_string( op.value ) + " to 0" );
-      }
       op.type = Operand::Type::CONSTANT;
       op.value = 0;
       return true;
@@ -222,10 +218,6 @@ inline bool simplifyOperand( Operand &op, std::unordered_set<number_t> &initiali
   case Operand::Type::INDIRECT:
     if ( initialized_cells.find( op.value ) == initialized_cells.end() )
     {
-      if ( Log::get().level == Log::Level::DEBUG )
-      {
-        Log::get().debug( "Simplifying operand $$" + std::to_string( op.value ) + " to $0" );
-      }
       op.type = Operand::Type::DIRECT;
       op.value = 0;
       return true;
@@ -290,6 +282,25 @@ bool Optimizer::simplifyOperations( Program &p, size_t num_initialized_cells ) c
             op.source = Operand( Operand::Type::CONSTANT, 1 );
             simplified = true;
           }
+        }
+      }
+
+      // simplify operation: source is negative constant (cell content doesn't matter)
+      if ( op.source.type == Operand::Type::CONSTANT && op.source.value < 0 )
+      {
+        // add $n,-k => sub $n,k
+        if ( op.type == Operation::Type::ADD )
+        {
+          op.type = Operation::Type::SUB;
+          op.source.value = -op.source.value;
+          simplified = true;
+        }
+        // sub $n,-k => add $n,k
+        else if ( op.type == Operation::Type::SUB )
+        {
+          op.type = Operation::Type::ADD;
+          op.source.value = -op.source.value;
+          simplified = true;
         }
       }
 

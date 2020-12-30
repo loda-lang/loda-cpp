@@ -7,6 +7,7 @@ class Semantics
 public:
 
   static number_t add( number_t a, number_t b );
+  static domain_t add( domain_t a, domain_t b );
 
   static number_t sub( number_t a, number_t b );
 
