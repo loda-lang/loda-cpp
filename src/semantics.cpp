@@ -16,6 +16,11 @@ number_t Semantics::add( number_t a, number_t b )
   return a + b;
 }
 
+domain_t Semantics::add( domain_t a, domain_t b )
+{
+  return domain_t( add( a.min, b.min ), add( a.max, b.max ), a.maybe_undef || b.maybe_undef );
+}
+
 number_t Semantics::sub( number_t a, number_t b )
 {
   CHECK_INF2( a, b );

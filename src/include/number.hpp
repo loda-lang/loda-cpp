@@ -14,6 +14,29 @@ using number_t = int64_t;
 
 static constexpr number_t NUM_INF = std::numeric_limits<number_t>::max();
 
+class domain_t
+{
+public:
+
+  domain_t( number_t min, number_t max, bool maybe_undef )
+      :
+      min( min ),
+      max( max ),
+      maybe_undef( maybe_undef )
+  {
+  }
+
+  domain_t()
+      :
+      domain_t( NUM_INF, NUM_INF, false )
+  {
+  }
+
+  number_t min;
+  number_t max;
+  bool maybe_undef;
+};
+
 inline bool isCloseToOverflow( number_t n )
 {
   return (n > (NUM_INF / 1000)) || (n < (NUM_INF / -1000));
