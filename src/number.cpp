@@ -5,6 +5,14 @@
 #include <sstream>
 #include <unordered_set>
 
+std::string domain_t::to_string() const
+{
+  std::string undef = maybe_undef ? "!" : "?";
+  std::string x = (min == NUM_INF) ? undef : std::to_string( min );
+  std::string y = (max == NUM_INF) ? undef : std::to_string( max );
+  return "[" + x + ";" + y + "]";
+}
+
 // === Sequence ===============================================================
 
 Sequence Sequence::subsequence( size_t start ) const

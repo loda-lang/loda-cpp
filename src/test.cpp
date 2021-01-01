@@ -81,7 +81,8 @@ void Test::semantics()
     }
     Log::get().info( "Testing " + test_path );
     std::string line, s;
-    int64_t op1 = 0, op2 = 0, expected, result;
+    number_t op1 = 0, op2 = 0, expected_op, result_op;
+//    domain_t dom1, dom2, expected_dom, result_dom;
     std::getline( test_file, line ); // skip header
     while ( std::getline( test_file, line ) )
     {
@@ -91,20 +92,27 @@ void Test::semantics()
       }
       std::stringstream ss( line );
       std::getline( ss, s, ',' );
-      op1 = read_num( s );
-      if ( meta.num_operands == 2 )
+      if ( s[0] == '[' )
       {
-        std::getline( ss, s, ',' );
-        op2 = read_num( s );
+// TODO: parse and test domains
       }
-      std::getline( ss, s );
-      expected = read_num( s );
-      result = interpreter.calc( type, op1, op2 );
-      if ( result != expected )
+      else
       {
-        Log::get().error(
-            "Unexpected value for " + meta.name + "(" + std::to_string( op1 ) + "," + std::to_string( op2 )
-                + "); expected " + std::to_string( expected ) + "; got " + std::to_string( result ), true );
+        op1 = read_num( s );
+        if ( meta.num_operands == 2 )
+        {
+          std::getline( ss, s, ',' );
+          op2 = read_num( s );
+        }
+        std::getline( ss, s );
+        expected_op = read_num( s );
+        result_op = interpreter.calc( type, op1, op2 );
+        if ( result_op != expected_op )
+        {
+          Log::get().error(
+              "Unexpected value for " + meta.name + "(" + std::to_string( op1 ) + "," + std::to_string( op2 )
+                  + "); expected " + std::to_string( expected_op ) + "; got " + std::to_string( result_op ), true );
+        }
       }
     }
     if ( type != Operation::Type::MOV )

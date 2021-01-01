@@ -88,6 +88,26 @@ number_t Interpreter::calc( const Operation::Type type, number_t target, number_
   return 0;
 }
 
+domain_t Interpreter::calc( const Operation::Type type, domain_t target, domain_t source ) const
+{
+  switch ( type )
+  {
+  case Operation::Type::MOV:
+  {
+    return source;
+  }
+  case Operation::Type::ADD:
+  {
+    return Semantics::add( target, source );
+  }
+  default:
+    Log::get().error( "non-arithmetic operation: " + Operation::Metadata::get( type ).name, true );
+    break;
+  }
+  return
+  {};
+}
+
 size_t Interpreter::run( const Program &p, Memory &mem ) const
 {
   // check for empty program

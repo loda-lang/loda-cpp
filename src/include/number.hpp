@@ -32,6 +32,8 @@ public:
   {
   }
 
+  std::string to_string() const;
+
   number_t min;
   number_t max;
   bool maybe_undef;
