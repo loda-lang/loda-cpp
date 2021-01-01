@@ -32,6 +32,20 @@ public:
   {
   }
 
+  domain_t( const std::string &str );
+
+  std::string to_string() const;
+
+  inline bool operator==( const domain_t &other ) const
+  {
+    return (min == other.min && max == other.max && maybe_undef == other.maybe_undef);
+  }
+
+  inline bool operator!=( const domain_t &other ) const
+  {
+    return !(*this == other);
+  }
+
   number_t min;
   number_t max;
   bool maybe_undef;

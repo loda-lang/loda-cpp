@@ -12,6 +12,8 @@ public:
 
   number_t calc( const Operation::Type type, number_t target, number_t source ) const;
 
+  domain_t calc( const Operation::Type type, domain_t target, domain_t source ) const;
+
   size_t run( const Program &p, Memory &mem ) const;
 
   size_t eval( const Program &p, Sequence &seq, int num_terms = -1 ) const;

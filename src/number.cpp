@@ -5,6 +5,28 @@
 #include <sstream>
 #include <unordered_set>
 
+domain_t::domain_t( const std::string &str )
+{
+  auto pos = str.find_first_of( ';' );
+  if ( pos == std::string::npos || str.at( 0 ) != '[' || str.at( str.length() - 1 ) != ']' )
+  {
+    throw std::runtime_error( "error parsing domain: " + str );
+  }
+  auto x = str.substr( 1, pos - 1 );
+  auto y = str.substr( pos + 1, str.length() - pos - 2 );
+  min = (x == "?" || x == "!") ? NUM_INF : std::stoll( x );
+  max = (y == "?" || y == "!") ? NUM_INF : std::stoll( y );
+  maybe_undef = (x == "!" || y == "!");
+}
+
+std::string domain_t::to_string() const
+{
+  std::string undef = maybe_undef ? "!" : "?";
+  std::string x = (min == NUM_INF) ? undef : std::to_string( min );
+  std::string y = (max == NUM_INF) ? undef : std::to_string( max );
+  return "[" + x + ";" + y + "]";
+}
+
 // === Sequence ===============================================================
 
 Sequence Sequence::subsequence( size_t start ) const
