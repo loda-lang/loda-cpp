@@ -51,6 +51,10 @@ domain_t Semantics::trn( domain_t a, domain_t b )
   {
     dom.min = 0;
   }
+  if ( dom.max < 0 )
+  {
+    dom.max = 0;
+  }
   return dom;
 }
 
