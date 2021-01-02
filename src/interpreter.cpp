@@ -100,6 +100,10 @@ domain_t Interpreter::calc( const Operation::Type type, domain_t target, domain_
   {
     return Semantics::add( target, source );
   }
+  case Operation::Type::SUB:
+  {
+    return Semantics::sub( target, source );
+  }
   default:
     Log::get().error( "non-arithmetic operation: " + Operation::Metadata::get( type ).name, true );
     break;
