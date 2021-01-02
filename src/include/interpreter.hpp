@@ -2,6 +2,7 @@
 
 #include "memory.hpp"
 #include "program.hpp"
+#include "sequence.hpp"
 #include "util.hpp"
 
 class Interpreter

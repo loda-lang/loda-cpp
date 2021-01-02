@@ -1,6 +1,6 @@
 #pragma once
 
-#include "number.hpp"
+#include "sequence.hpp"
 
 struct delta_t
 {

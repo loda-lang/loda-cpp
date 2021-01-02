@@ -3,6 +3,7 @@
 #include "number.hpp"
 
 #include <array>
+#include <vector>
 
 class Operand
 {
