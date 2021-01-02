@@ -5,6 +5,8 @@
 #include "number.hpp"
 #include "optimizer.hpp"
 
+#include <memory>
+
 class OeisSequence;
 
 struct MatcherStats

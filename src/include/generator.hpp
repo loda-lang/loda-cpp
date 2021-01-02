@@ -5,6 +5,8 @@
 #include "stats.hpp"
 #include "util.hpp"
 
+#include <memory>
+
 class Generator
 {
 public:

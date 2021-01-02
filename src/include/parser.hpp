@@ -2,6 +2,8 @@
 
 #include "program.hpp"
 
+#include <memory>
+
 class Parser
 {
 public:

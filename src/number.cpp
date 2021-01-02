@@ -1,5 +1,7 @@
 #include "number.hpp"
 
+#include <stdexcept>
+
 domain_t::domain_t( const std::string &str )
 {
   auto p1 = str.find_first_of( ';' );
