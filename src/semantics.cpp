@@ -6,6 +6,8 @@
 #define CHECK_INF2(a,b) if ( a == NUM_INF || b == NUM_INF ) return NUM_INF;
 #define CHECK_ZERO1(a) if ( a == 0 ) return NUM_INF;
 
+/* === add === */
+
 number_t Semantics::add( number_t a, number_t b )
 {
   CHECK_INF2( a, b );
@@ -21,6 +23,8 @@ domain_t Semantics::add( domain_t a, domain_t b )
   return domain_t( add( a.min, b.min ), add( a.max, b.max ), a.maybe_undef || b.maybe_undef );
 }
 
+/* === sub === */
+
 number_t Semantics::sub( number_t a, number_t b )
 {
   CHECK_INF2( a, b );
@@ -32,10 +36,22 @@ domain_t Semantics::sub( domain_t a, domain_t b )
   return domain_t( sub( a.min, b.max ), sub( a.max, b.min ), a.maybe_undef || b.maybe_undef );
 }
 
+/* === trn === */
+
 number_t Semantics::trn( number_t a, number_t b )
 {
   CHECK_INF2( a, b );
   return std::max<number_t>( add( a, -b ), 0 );
+}
+
+domain_t Semantics::trn( domain_t a, domain_t b )
+{
+  domain_t dom = sub( a, b );
+  if ( dom.min < 0 || dom.min == NUM_INF )
+  {
+    dom.min = 0;
+  }
+  return dom;
 }
 
 number_t Semantics::mul( number_t a, number_t b )
