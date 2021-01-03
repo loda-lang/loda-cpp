@@ -1,5 +1,7 @@
 #include "program_util.hpp"
 
+#include "program.hpp"
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -95,7 +97,7 @@ std::string getIndent( int indent )
   return s;
 }
 
-std::string ProgramUtil::operandToString( const Operand& op )
+std::string ProgramUtil::operandToString( const Operand &op )
 {
   switch ( op.type )
   {
@@ -109,26 +111,32 @@ std::string ProgramUtil::operandToString( const Operand& op )
   return "";
 }
 
-void ProgramUtil::print( const Operation &op, std::ostream &out, int indent )
+std::string ProgramUtil::operationToString( const Operation &op )
 {
   auto &metadata = Operation::Metadata::get( op.type );
+  std::string str;
   if ( metadata.num_operands == 0 && op.type != Operation::Type::NOP )
   {
-    out << getIndent( indent ) << metadata.name;
+    str = metadata.name;
   }
   else if ( metadata.num_operands == 1 )
   {
-    out << getIndent( indent ) << metadata.name << " " << operandToString( op.target );
+    str = metadata.name + " " + operandToString( op.target );
   }
   else if ( metadata.num_operands == 2 )
   {
-    out << getIndent( indent ) << metadata.name << " " << operandToString( op.target ) << ","
-        << operandToString( op.source );
+    str = metadata.name + " " + operandToString( op.target ) + "," + operandToString( op.source );
   }
   if ( !op.comment.empty() )
   {
-    out << " ; " << op.comment;
+    str = str + " ; " + op.comment;
   }
+  return str;
+}
+
+void ProgramUtil::print( const Operation &op, std::ostream &out, int indent )
+{
+  out << getIndent( indent ) << operationToString( op );
 }
 
 void ProgramUtil::print( const Program &p, std::ostream &out )

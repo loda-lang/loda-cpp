@@ -25,7 +25,7 @@ private:
 
   number_t get( Operand a, const Memory &mem, bool get_address = false ) const;
 
-  void set( Operand a, number_t v, Memory &mem ) const;
+  void set( Operand a, number_t v, Memory &mem, const Operation &last_op ) const;
 
   const Settings &settings;
 

@@ -215,7 +215,7 @@ size_t Interpreter::run( const Program &p, Memory &mem ) const
       {
         source = get( op.source, mem );
       }
-      set( op.target, calc( op.type, target, source ), mem );
+      set( op.target, calc( op.type, target, source ), mem, op );
       break;
     }
     }
@@ -237,11 +237,15 @@ size_t Interpreter::run( const Program &p, Memory &mem ) const
     // check resource constraints
     if ( ++cycles >= settings.max_cycles )
     {
-      throw std::runtime_error( "Program did not terminate after " + std::to_string( cycles ) + " cycles" );
+      throw std::runtime_error(
+          "Program did not terminate after " + std::to_string( cycles ) + " cycles; last operation: "
+              + ProgramUtil::operationToString( op ) );
     }
     if ( mem.approximate_size() > settings.max_memory )
     {
-      throw std::runtime_error( "Maximum memory exceeded: " + std::to_string( mem.approximate_size() ) );
+      throw std::runtime_error(
+          "Maximum memory exceeded: " + std::to_string( mem.approximate_size() ) + "; last operation: "
+              + ProgramUtil::operationToString( op ) );
     }
 
   }
@@ -277,7 +281,7 @@ number_t Interpreter::get( Operand a, const Memory &mem, bool get_address ) cons
   {};
 }
 
-void Interpreter::set( Operand a, number_t v, Memory &mem ) const
+void Interpreter::set( Operand a, number_t v, Memory &mem, const Operation &last_op ) const
 {
   number_t index = 0;
   switch ( a.type )
@@ -295,11 +299,15 @@ void Interpreter::set( Operand a, number_t v, Memory &mem ) const
   }
   if ( index > (number_t) settings.max_memory )
   {
-    throw std::runtime_error( "Maximum memory exceeded: " + std::to_string( index ) );
+    throw std::runtime_error(
+        "Maximum memory exceeded: " + std::to_string( index ) + "; last operation: "
+            + ProgramUtil::operationToString( last_op ) );
   }
   if ( settings.throw_on_overflow && v == NUM_INF )
   {
-    throw std::runtime_error( "Overflow in cell: " + std::to_string( index ) );
+    throw std::runtime_error(
+        "Overflow in cell $" + std::to_string( index ) + "; last operation: "
+            + ProgramUtil::operationToString( last_op ) );
   }
   mem.set( index, v );
 }

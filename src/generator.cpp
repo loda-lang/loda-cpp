@@ -207,7 +207,7 @@ std::vector<number_t> Generator::fixCausality( Program &p )
 void Generator::fixSingularities( Program &p )
 {
   static const Operand tmp( Operand::Type::DIRECT, 26 ); // magic number
-  static const number_t max_exponent = 8; // magic number
+  static const number_t max_exponent = 5; // magic number
   for ( size_t i = 0; i < p.ops.size(); i++ )
   {
     if ( (p.ops[i].type == Operation::Type::DIV || p.ops[i].type == Operation::Type::MOD)
@@ -220,10 +220,26 @@ void Generator::fixSingularities( Program &p )
       p.ops.insert( p.ops.begin() + i + 2, Operation( Operation::Type::ADD, divisor, tmp ) );
       i += 3;
     }
-    else if ( p.ops[i].type == Operation::Type::POW && p.ops[i].source.type == Operand::Type::CONSTANT
-        && (p.ops[i].source.value < 2 || p.ops[i].source.value > max_exponent) )
+    if ( p.ops[i].type == Operation::Type::LOG )
     {
-      p.ops[i].source.value = (gen() % (max_exponent - 2)) + 2;
+      auto target = p.ops[i].target;
+      p.ops.insert( p.ops.begin() + i, Operation( Operation::Type::MOV, tmp, target ) );
+      p.ops.insert( p.ops.begin() + i + 1,
+          Operation( Operation::Type::CMP, tmp, Operand( Operand::Type::CONSTANT, 0 ) ) );
+      p.ops.insert( p.ops.begin() + i + 2, Operation( Operation::Type::ADD, target, tmp ) );
+      i += 3;
+    }
+    if ( p.ops[i].type == Operation::Type::POW )
+    {
+      if ( p.ops[i].source.type == Operand::Type::CONSTANT
+          && (p.ops[i].source.value < 2 || p.ops[i].source.value > max_exponent) )
+      {
+        p.ops[i].source.value = (gen() % (max_exponent - 2)) + 2;
+      }
+      else if ( p.ops[i].source.type == Operand::Type::DIRECT && gen() % 5 > 0 ) // magic number
+      {
+        p.ops[i].source.type = Operand::Type::CONSTANT;
+      }
     }
   }
 }

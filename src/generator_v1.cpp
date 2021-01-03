@@ -215,7 +215,8 @@ std::pair<Operation, double> GeneratorV1::generateOperation()
     }
     if ( (op.source.value == 0 || op.source.value == 1)
         && (op.type == Operation::Type::MUL || op.type == Operation::Type::DIV || op.type == Operation::Type::MOD
-            || op.type == Operation::Type::POW || op.type == Operation::Type::GCD || op.type == Operation::Type::BIN) )
+            || op.type == Operation::Type::POW || op.type == Operation::Type::GCD || op.type == Operation::Type::BIN
+            || op.type == Operation::Type::LOG) )
     {
       op.source.value = 2;
     }
