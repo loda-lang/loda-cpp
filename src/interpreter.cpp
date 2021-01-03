@@ -1,8 +1,12 @@
 #include "interpreter.hpp"
 
 #include "number.hpp"
+#include "oeis.hpp"
+#include "parser.hpp"
+#include "program.hpp"
 #include "program_util.hpp"
 #include "semantics.hpp"
+#include "sequence.hpp"
 
 #include <array>
 #include <fstream>
@@ -82,6 +86,7 @@ number_t Interpreter::calc( const Operation::Type type, number_t target, number_
   case Operation::Type::LPB:
   case Operation::Type::LPE:
   case Operation::Type::CLR:
+  case Operation::Type::CAL:
     Log::get().error( "non-arithmetic operation: " + Operation::Metadata::get( type ).name, true );
     break;
   }
@@ -107,11 +112,15 @@ size_t Interpreter::run( const Program &p, Memory &mem ) const
   pc_stack.push( 0 );
 
   size_t cycles = 0;
-  Memory old_mem, frag, frag_prev, prev;
+  Memory old_mem, frag, frag_prev, prev, tmp;
   size_t pc, pc_next, ps_begin;
   number_t source = 0, target = 0;
   number_t start, length, length2;
   Operation lpb;
+
+  std::string call_path, str;
+  Program call_program;
+  Parser parser;
 
   // loop until stack is empty
   while ( !pc_stack.empty() )
@@ -187,6 +196,22 @@ size_t Interpreter::run( const Program &p, Memory &mem ) const
         mem = prev;
         loop_stack.pop();
       }
+      break;
+    }
+    case Operation::Type::CAL:
+    {
+      target = get( op.target, mem );
+      source = get( op.source, mem );
+      str = OeisSequence( source ).getProgramPath();
+      if ( call_path != str )
+      {
+        call_path = str;
+        call_program = parser.parse( call_path );
+      }
+      tmp.clear();
+      tmp.set( Program::INPUT_CELL, target );
+      cycles += run( call_program, tmp );
+      set( op.target, tmp.get( Program::OUTPUT_CELL ), mem, op );
       break;
     }
     case Operation::Type::CLR:

@@ -67,7 +67,7 @@ void Test::semantics()
   for ( auto &type : Operation::Types )
   {
     if ( type == Operation::Type::NOP || type == Operation::Type::LPB || type == Operation::Type::LPE
-        || type == Operation::Type::CLR || type == Operation::Type::DBG )
+        || type == Operation::Type::CLR || type == Operation::Type::CAL || type == Operation::Type::DBG )
     {
       continue;
     }
