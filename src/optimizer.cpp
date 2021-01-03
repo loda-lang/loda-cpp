@@ -138,7 +138,7 @@ bool Optimizer::mergeOps( Program &p ) const
         }
 
         // both mul, div or pow operations?
-        if ( o1.type == o2.type
+        else if ( o1.type == o2.type
             && (o1.type == Operation::Type::MUL || o1.type == Operation::Type::DIV || o1.type == Operation::Type::POW) )
         {
           o1.source.value *= o2.source.value;
@@ -155,6 +155,14 @@ bool Optimizer::mergeOps( Program &p ) const
             o1.source.value = -o1.source.value;
             o1.type = (o1.type == Operation::Type::ADD) ? Operation::Type::SUB : Operation::Type::ADD;
           }
+          do_merge = true;
+        }
+
+        // first mul, second div?
+        else if ( o1.type == Operation::Type::MUL && o2.type == Operation::Type::DIV && o1.source.value > 0
+            && o2.source.value > 0 && o1.source.value % o2.source.value == 0 )
+        {
+          o1.source.value = o1.source.value / o2.source.value;
           do_merge = true;
         }
 
