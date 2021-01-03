@@ -82,7 +82,6 @@ void Test::semantics()
     Log::get().info( "Testing " + test_path );
     std::string line, s, t, r;
     number_t op1 = 0, op2 = 0, expected_op, result_op;
-    domain_t dom1, dom2, expected_dom, result_dom;
     std::getline( test_file, line ); // skip header
     while ( std::getline( test_file, line ) )
     {
@@ -97,37 +96,18 @@ void Test::semantics()
         std::getline( ss, t, ',' );
       }
       std::getline( ss, r );
-      if ( s[0] == '[' )
+      op1 = read_num( s );
+      if ( meta.num_operands == 2 )
       {
-        dom1 = domain_t( s );
-        if ( meta.num_operands == 2 )
-        {
-          dom2 = domain_t( t );
-        }
-        expected_dom = domain_t( r );
-        result_dom = interpreter.calc( type, dom1, dom2 );
-        if ( result_dom != expected_dom )
-        {
-          Log::get().error(
-              "Unexpected domain for " + meta.name + "(" + dom1.to_string() + "," + dom2.to_string() + "); expected "
-                  + expected_dom.to_string() + "; got " + result_dom.to_string(), true );
-        }
+        op2 = read_num( t );
       }
-      else
+      expected_op = read_num( r );
+      result_op = interpreter.calc( type, op1, op2 );
+      if ( result_op != expected_op )
       {
-        op1 = read_num( s );
-        if ( meta.num_operands == 2 )
-        {
-          op2 = read_num( t );
-        }
-        expected_op = read_num( r );
-        result_op = interpreter.calc( type, op1, op2 );
-        if ( result_op != expected_op )
-        {
-          Log::get().error(
-              "Unexpected value for " + meta.name + "(" + std::to_string( op1 ) + "," + std::to_string( op2 )
-                  + "); expected " + std::to_string( expected_op ) + "; got " + std::to_string( result_op ), true );
-        }
+        Log::get().error(
+            "Unexpected value for " + meta.name + "(" + std::to_string( op1 ) + "," + std::to_string( op2 )
+                + "); expected " + std::to_string( expected_op ) + "; got " + std::to_string( result_op ), true );
       }
     }
     if ( type != Operation::Type::MOV )
