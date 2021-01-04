@@ -112,15 +112,11 @@ size_t Interpreter::run( const Program &p, Memory &mem ) const
   pc_stack.push( 0 );
 
   size_t cycles = 0;
-  Memory old_mem, frag, frag_prev, prev, tmp;
+  Memory old_mem, frag, frag_prev, prev;
   size_t pc, pc_next, ps_begin;
   number_t source = 0, target = 0;
   number_t start, length, length2;
   Operation lpb;
-
-  std::string call_path, str;
-  Program call_program;
-  Parser parser;
 
   // loop until stack is empty
   while ( !pc_stack.empty() )
@@ -202,13 +198,8 @@ size_t Interpreter::run( const Program &p, Memory &mem ) const
     {
       target = get( op.target, mem );
       source = get( op.source, mem );
-      str = OeisSequence( source ).getProgramPath();
-      if ( call_path != str )
-      {
-        call_path = str;
-        call_program = parser.parse( call_path );
-      }
-      tmp.clear();
+      auto call_program = getProgram( source );
+      Memory tmp;
       tmp.set( Program::INPUT_CELL, target );
       cycles += run( call_program, tmp );
       set( op.target, tmp.get( Program::OUTPUT_CELL ), mem, op );
@@ -401,4 +392,17 @@ bool Interpreter::check( const Program &p, const Sequence &expected_seq ) const
     }
   }
   return true;
+}
+
+Program Interpreter::getProgram( number_t id ) const
+{
+  if ( program_cache.find( id ) == program_cache.end() )
+  {
+    Parser parser;
+    auto path = OeisSequence( id ).getProgramPath();
+    auto program = parser.parse( path );
+    program_cache[id] = program;
+    return program;
+  }
+  return program_cache[id];
 }

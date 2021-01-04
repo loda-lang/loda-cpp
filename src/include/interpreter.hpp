@@ -27,10 +27,12 @@ private:
 
   void set( Operand a, number_t v, Memory &mem, const Operation &last_op ) const;
 
+  Program getProgram( number_t id ) const;
+
   const Settings &settings;
 
   const bool is_debug;
 
-  static int64_t PROCESS_ID;
+  mutable std::unordered_map<number_t, Program> program_cache;
 
 };

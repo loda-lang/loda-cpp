@@ -589,14 +589,16 @@ int Oeis::getNumCycles( const Program &p ) const
 
 std::string Oeis::isOptimizedBetter( Program existing, Program optimized ) const
 {
-  // we prefer programs w/o indirect memory access
+  // we prefer programs w/o indirect memory access and without cal operations
   auto in_opt = ProgramUtil::numOps( optimized, Operand::Type::INDIRECT );
   auto in_ext = ProgramUtil::numOps( existing, Operand::Type::INDIRECT );
-  if ( in_opt < in_ext )
+  auto cal_opt = ProgramUtil::numOps( optimized, Operation::Type::CAL );
+  auto cal_ext = ProgramUtil::numOps( existing, Operation::Type::CAL );
+  if ( in_opt < in_ext || cal_opt < cal_ext )
   {
     return "Simpler";
   }
-  else if ( in_opt > in_ext )
+  else if ( in_opt > in_ext || cal_opt > cal_ext )
   {
     return "";
   }
