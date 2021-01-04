@@ -27,11 +27,6 @@ std::discrete_distribution<> operationDist( const Stats &stats, const std::vecto
   for ( size_t i = 0; i < operation_types.size(); i++ )
   {
     int64_t rate = stats.num_ops_per_type.at( static_cast<size_t>( operation_types[i] ) );
-    if ( rate <= 0 )
-    {
-      Log::get().error( "Unexpected stats for operation type: " + Operation::Metadata::get( operation_types[i] ).name,
-          true );
-    }
     rate = std::max<int64_t>( rate / 1000, 1 );
     p[i] = rate;
   }
