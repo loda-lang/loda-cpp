@@ -2,11 +2,11 @@
 
 #include "number.hpp"
 
-const std::array<Operation::Type, 18> Operation::Types = { Operation::Type::NOP, Operation::Type::MOV,
+const std::array<Operation::Type, 19> Operation::Types = { Operation::Type::NOP, Operation::Type::MOV,
     Operation::Type::ADD, Operation::Type::SUB, Operation::Type::TRN, Operation::Type::MUL, Operation::Type::DIV,
     Operation::Type::MOD, Operation::Type::POW, Operation::Type::LOG, Operation::Type::FAC, Operation::Type::GCD,
     Operation::Type::BIN, Operation::Type::CMP, Operation::Type::LPB, Operation::Type::LPE, Operation::Type::CLR,
-    Operation::Type::DBG, };
+    Operation::Type::CAL, Operation::Type::DBG, };
 
 const Operation::Metadata& Operation::Metadata::get( Type t )
 {
@@ -27,7 +27,8 @@ const Operation::Metadata& Operation::Metadata::get( Type t )
   static Operation::Metadata lpb { Operation::Type::LPB, "lpb", 'l', 2, true, true, false };
   static Operation::Metadata lpe { Operation::Type::LPE, "lpe", 'e', 0, true, false, false };
   static Operation::Metadata clr { Operation::Type::CLR, "clr", 'r', 2, true, false, true };
-  static Operation::Metadata dbg { Operation::Type::DBG, "dbg", 'c', 0, false, false, false };
+  static Operation::Metadata cal { Operation::Type::CAL, "cal", 'c', 2, true, true, true };
+  static Operation::Metadata dbg { Operation::Type::DBG, "dbg", 'x', 0, false, false, false };
   switch ( t )
   {
   case Operation::Type::NOP:
@@ -64,6 +65,8 @@ const Operation::Metadata& Operation::Metadata::get( Type t )
     return lpe;
   case Operation::Type::CLR:
     return clr;
+  case Operation::Type::CAL:
+    return cal;
   case Operation::Type::DBG:
     return dbg;
   }

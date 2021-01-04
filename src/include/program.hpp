@@ -72,10 +72,11 @@ public:
     LPB,
     LPE,
     CLR,
+    CAL,
     DBG,
   };
 
-  static const std::array<Type, 18> Types;
+  static const std::array<Type, 19> Types;
 
   class Metadata
   {

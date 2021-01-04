@@ -1,8 +1,12 @@
 #include "interpreter.hpp"
 
 #include "number.hpp"
+#include "oeis.hpp"
+#include "parser.hpp"
+#include "program.hpp"
 #include "program_util.hpp"
 #include "semantics.hpp"
+#include "sequence.hpp"
 
 #include <array>
 #include <fstream>
@@ -82,6 +86,7 @@ number_t Interpreter::calc( const Operation::Type type, number_t target, number_
   case Operation::Type::LPB:
   case Operation::Type::LPE:
   case Operation::Type::CLR:
+  case Operation::Type::CAL:
     Log::get().error( "non-arithmetic operation: " + Operation::Metadata::get( type ).name, true );
     break;
   }
@@ -187,6 +192,17 @@ size_t Interpreter::run( const Program &p, Memory &mem ) const
         mem = prev;
         loop_stack.pop();
       }
+      break;
+    }
+    case Operation::Type::CAL:
+    {
+      target = get( op.target, mem );
+      source = get( op.source, mem );
+      auto call_program = getProgram( source );
+      Memory tmp;
+      tmp.set( Program::INPUT_CELL, target );
+      cycles += run( call_program, tmp );
+      set( op.target, tmp.get( Program::OUTPUT_CELL ), mem, op );
       break;
     }
     case Operation::Type::CLR:
@@ -376,4 +392,17 @@ bool Interpreter::check( const Program &p, const Sequence &expected_seq ) const
     }
   }
   return true;
+}
+
+Program Interpreter::getProgram( number_t id ) const
+{
+  if ( program_cache.find( id ) == program_cache.end() )
+  {
+    Parser parser;
+    auto path = OeisSequence( id ).getProgramPath();
+    auto program = parser.parse( path );
+    program_cache[id] = program;
+    return program;
+  }
+  return program_cache[id];
 }

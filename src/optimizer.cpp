@@ -255,6 +255,7 @@ bool Optimizer::simplifyOperations( Program &p, size_t num_initialized_cells ) c
     case Operation::Type::LPB:
     case Operation::Type::LPE:
     case Operation::Type::CLR:
+    case Operation::Type::CAL:
       can_simplify = false;
       break;
 
@@ -555,6 +556,7 @@ bool doPartialEval( Operation &op, std::unordered_map<number_t, Operand> &values
   case Operation::Type::LPB:
   case Operation::Type::LPE:
   case Operation::Type::CLR:
+  case Operation::Type::CAL:
   {
     values.clear();
     return false;
@@ -618,7 +620,7 @@ bool Optimizer::partialEval( Program &p, size_t num_initialized_cells ) const
 bool isArithmetic( Operation::Type t )
 {
   return !(t == Operation::Type::NOP || t == Operation::Type::DBG || t == Operation::Type::LPB
-      || t == Operation::Type::LPE || t == Operation::Type::CLR);
+      || t == Operation::Type::LPE || t == Operation::Type::CLR || t == Operation::Type::CAL);
 }
 
 bool Optimizer::shouldSwapOperations( const Operation &first, const Operation &second ) const
