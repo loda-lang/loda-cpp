@@ -13,7 +13,7 @@ inline size_t getIndex( size_t pos, size_t len )
 
 GeneratorV3::GeneratorV3( const Config &config, const Stats &stats, int64_t seed )
     :
-    Generator( config, seed )
+    Generator( config, stats, seed )
 {
   size_t i;
   std::vector<double> probs;

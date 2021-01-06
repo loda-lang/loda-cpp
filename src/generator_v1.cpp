@@ -50,7 +50,7 @@ std::discrete_distribution<> constantsDist( const std::vector<number_t> &constan
 
 GeneratorV1::GeneratorV1( const Config &config, const Stats &stats, int64_t seed )
     :
-    Generator( config, seed ),
+    Generator( config, stats, seed ),
     num_operations( config.length )
 {
   std::string operation_types = config.loops ? "^" : "^l";

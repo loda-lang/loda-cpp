@@ -111,9 +111,10 @@ std::vector<Generator::Config> Generator::Config::load( std::istream &in, bool o
   return configs;
 }
 
-Generator::Generator( const Config &config, int64_t seed )
+Generator::Generator( const Config &config, const Stats &stats, int64_t seed )
     :
-    config( config )
+    config( config ),
+    found_programs( stats.found_programs )
 {
   gen.seed( seed );
   metric_labels = { { "version", std::to_string( config.version ) }, { "length", std::to_string( config.length ) }, {
@@ -152,6 +153,7 @@ void Generator::applyPostprocessing( Program &p )
 {
   auto written_cells = fixCausality( p );
   fixSingularities( p );
+  fixCalls( p );
   ensureSourceNotOverwritten( p );
   ensureTargetWritten( p, written_cells );
   ensureMeaningfulLoops( p );
@@ -239,6 +241,26 @@ void Generator::fixSingularities( Program &p )
       else if ( p.ops[i].source.type == Operand::Type::DIRECT && gen() % 5 > 0 ) // magic number
       {
         p.ops[i].source.type = Operand::Type::CONSTANT;
+      }
+    }
+  }
+}
+
+void Generator::fixCalls( Program &p )
+{
+  for ( auto &op : p.ops )
+  {
+    if ( op.type == Operation::Type::CAL )
+    {
+      if ( op.source.type != Operand::Type::CONSTANT
+          || (op.source.value < 0 || op.source.value >= found_programs.size() || !found_programs[op.source.value]) )
+      {
+        number_t id;
+        do
+        {
+          id = gen() % found_programs.size();
+        } while ( !found_programs[id] );
+        op.source = Operand( Operand::Type::CONSTANT, id );
       }
     }
   }
