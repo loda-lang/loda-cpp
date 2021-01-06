@@ -9,6 +9,7 @@
 #include "sequence.hpp"
 
 #include <array>
+#include <exception>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -396,13 +397,26 @@ bool Interpreter::check( const Program &p, const Sequence &expected_seq ) const
 
 Program Interpreter::getProgram( number_t id ) const
 {
+  if ( missing_programs.find( id ) != missing_programs.end() )
+  {
+    throw std::runtime_error( "program not found" );
+  }
   if ( program_cache.find( id ) == program_cache.end() )
   {
     Parser parser;
     auto path = OeisSequence( id ).getProgramPath();
-    auto program = parser.parse( path );
-    program_cache[id] = program;
-    return program;
+    Program program;
+    try
+    {
+      program = parser.parse( path );
+      program_cache[id] = program;
+      return program;
+    }
+    catch ( ... )
+    {
+      missing_programs.insert( id );
+      std::rethrow_exception( std::current_exception() );
+    }
   }
   return program_cache[id];
 }

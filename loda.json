@@ -12,6 +12,14 @@
           "programs/templates/T01.asm",
           "programs/templates/T02.asm"
         ]
+      },
+      {
+        "version": 1,
+        "length": 60,
+        "maxConstant": 6,
+        "maxCell": 6,
+        "loops": true,
+        "indirectAccess": false
       }
     ],
     "update": [

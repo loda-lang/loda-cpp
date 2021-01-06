@@ -51,7 +51,7 @@ public:
     static Generator::UPtr createGenerator( const Config &config, const Stats &stats, int64_t seed );
   };
 
-  Generator( const Config &config, int64_t seed );
+  Generator( const Config &config, const Stats &stats, int64_t seed );
 
   virtual ~Generator()
   {
@@ -62,6 +62,8 @@ public:
   virtual std::pair<Operation, double> generateOperation() = 0;
 
   const Config config;
+
+  const std::vector<bool> found_programs;
 
   std::map<std::string, std::string> metric_labels;
 
@@ -76,6 +78,8 @@ protected:
   std::vector<number_t> fixCausality( Program &p );
 
   void fixSingularities( Program &p );
+
+  void fixCalls( Program &p );
 
   void ensureSourceNotOverwritten( Program &p );
 

@@ -5,6 +5,8 @@
 #include "sequence.hpp"
 #include "util.hpp"
 
+#include <unordered_set>
+
 class Interpreter
 {
 public:
@@ -34,5 +36,6 @@ private:
   const bool is_debug;
 
   mutable std::unordered_map<number_t, Program> program_cache;
+  mutable std::unordered_set<number_t> missing_programs;
 
 };

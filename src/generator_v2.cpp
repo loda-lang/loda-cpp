@@ -5,7 +5,7 @@
 
 GeneratorV2::GeneratorV2( const Config &config, const Stats &stats, int64_t seed )
     :
-    Generator( config, seed )
+    Generator( config, stats, seed )
 {
   size_t i;
   std::vector<double> probs;
