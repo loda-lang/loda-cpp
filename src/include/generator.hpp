@@ -5,6 +5,8 @@
 #include "stats.hpp"
 #include "util.hpp"
 
+#include <memory>
+
 class Generator
 {
 public:
@@ -72,6 +74,8 @@ protected:
   void applyPostprocessing( Program &p );
 
   std::vector<number_t> fixCausality( Program &p );
+
+  void fixSingularities( Program &p );
 
   void ensureSourceNotOverwritten( Program &p );
 

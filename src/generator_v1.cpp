@@ -27,11 +27,6 @@ std::discrete_distribution<> operationDist( const Stats &stats, const std::vecto
   for ( size_t i = 0; i < operation_types.size(); i++ )
   {
     int64_t rate = stats.num_ops_per_type.at( static_cast<size_t>( operation_types[i] ) );
-    if ( rate <= 0 )
-    {
-      Log::get().error( "Unexpected stats for operation type: " + Operation::Metadata::get( operation_types[i] ).name,
-          true );
-    }
     rate = std::max<int64_t>( rate / 1000, 1 );
     p[i] = rate;
   }
@@ -174,51 +169,65 @@ GeneratorV1::GeneratorV1( const Config &config, const Stats &stats, int64_t seed
 
 std::pair<Operation, double> GeneratorV1::generateOperation()
 {
-  auto target_type = target_operand_types.at( target_type_dist( gen ) );
-  auto source_type = source_operand_types.at( source_type_dist( gen ) );
-  number_t target_value = target_value_dist( gen );
-  number_t source_value = source_value_dist( gen );
-  auto op_type = operation_types.at( operation_dist( gen ) );
+  Operation op;
+  op.type = operation_types.at( operation_dist( gen ) );
+  op.target.type = target_operand_types.at( target_type_dist( gen ) );
+  op.target.value = target_value_dist( gen );
+  op.source.type = source_operand_types.at( source_type_dist( gen ) );
+  op.source.value = source_value_dist( gen );
 
   // check number of operands
-  if ( Operation::Metadata::get( op_type ).num_operands < 2 )
+  if ( Operation::Metadata::get( op.type ).num_operands < 2 )
   {
-    source_type = Operand::Type::CONSTANT;
-    source_value = 0;
+    op.source.type = Operand::Type::CONSTANT;
+    op.source.value = 0;
   }
-  if ( Operation::Metadata::get( op_type ).num_operands < 1 )
+  if ( Operation::Metadata::get( op.type ).num_operands < 1 )
   {
-    target_type = Operand::Type::CONSTANT;
-    target_value = 0;
+    op.target.type = Operand::Type::CONSTANT;
+    op.target.value = 0;
   }
 
   // bias for constant loop fragment length
-  if ( op_type == Operation::Type::LPB && source_type != Operand::Type::CONSTANT && position_dist( gen ) % 10 > 0 )
+  if ( op.type == Operation::Type::LPB && op.source.type != Operand::Type::CONSTANT && position_dist( gen ) % 10 > 0 )
   {
-    source_type = Operand::Type::CONSTANT;
+    op.source.type = Operand::Type::CONSTANT;
   }
 
   // use constants distribution from stats
-  if ( source_type == Operand::Type::CONSTANT )
+  if ( op.source.type == Operand::Type::CONSTANT )
   {
-    source_value = constants.at( constants_dist( gen ) );
+    op.source.value = constants.at( constants_dist( gen ) );
   }
 
   // avoid meaningless zeros or singularities
-  if ( source_type == Operand::Type::CONSTANT && source_value < 1
-      && (op_type == Operation::Type::ADD || op_type == Operation::Type::SUB || op_type == Operation::Type::LPB) )
+  if ( op.source.type == Operand::Type::CONSTANT )
   {
-    source_value = 1;
+    if ( op.source.value == 0
+        && (op.type == Operation::Type::ADD || op.type == Operation::Type::SUB || op.type == Operation::Type::LPB) )
+    {
+      op.source.value = 1;
+    }
+    if ( (op.source.value == 0 || op.source.value == 1)
+        && (op.type == Operation::Type::MUL || op.type == Operation::Type::DIV || op.type == Operation::Type::MOD
+            || op.type == Operation::Type::POW || op.type == Operation::Type::GCD || op.type == Operation::Type::BIN
+            || op.type == Operation::Type::LOG) )
+    {
+      op.source.value = 2;
+    }
   }
-  if ( source_type == Operand::Type::CONSTANT && source_value < 2
-      && (op_type == Operation::Type::MUL || op_type == Operation::Type::DIV || op_type == Operation::Type::MOD
-          || op_type == Operation::Type::POW || op_type == Operation::Type::GCD || op_type == Operation::Type::BIN) )
+  else if ( op.source.type == Operand::Type::DIRECT )
   {
-    source_value = 2;
+    if ( (op.source.value == op.target.value)
+        && (op.type == Operation::Type::MOV || op.type == Operation::Type::DIV || op.type == Operation::Type::MOD
+            || op.type == Operation::Type::GCD || op.type == Operation::Type::BIN) )
+    {
+      op.target.value++;
+    }
   }
 
   std::pair<Operation, double> next_op;
-  next_op.first = Operation( op_type, Operand( target_type, target_value ), Operand( source_type, source_value ) );
+  next_op.first = op;
   next_op.second = static_cast<double>( position_dist( gen ) ) / POSITION_RANGE;
   return next_op;
 }

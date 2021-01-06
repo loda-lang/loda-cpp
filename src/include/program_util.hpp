@@ -19,7 +19,9 @@ public:
 
   static size_t numOps( const Program &p, Operand::Type type );
 
-  static std::string operandToString( const Operand& op );
+  static std::string operandToString( const Operand &op );
+
+  static std::string operationToString( const Operation &op );
 
   static void print( const Program &p, std::ostream &out );
 

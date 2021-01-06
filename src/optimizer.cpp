@@ -138,7 +138,7 @@ bool Optimizer::mergeOps( Program &p ) const
         }
 
         // both mul, div or pow operations?
-        if ( o1.type == o2.type
+        else if ( o1.type == o2.type
             && (o1.type == Operation::Type::MUL || o1.type == Operation::Type::DIV || o1.type == Operation::Type::POW) )
         {
           o1.source.value *= o2.source.value;
@@ -155,6 +155,14 @@ bool Optimizer::mergeOps( Program &p ) const
             o1.source.value = -o1.source.value;
             o1.type = (o1.type == Operation::Type::ADD) ? Operation::Type::SUB : Operation::Type::ADD;
           }
+          do_merge = true;
+        }
+
+        // first mul, second div?
+        else if ( o1.type == Operation::Type::MUL && o2.type == Operation::Type::DIV && o1.source.value > 0
+            && o2.source.value > 0 && o1.source.value % o2.source.value == 0 )
+        {
+          o1.source.value = o1.source.value / o2.source.value;
           do_merge = true;
         }
 
@@ -247,6 +255,7 @@ bool Optimizer::simplifyOperations( Program &p, size_t num_initialized_cells ) c
     case Operation::Type::LPB:
     case Operation::Type::LPE:
     case Operation::Type::CLR:
+    case Operation::Type::CAL:
       can_simplify = false;
       break;
 
@@ -547,6 +556,7 @@ bool doPartialEval( Operation &op, std::unordered_map<number_t, Operand> &values
   case Operation::Type::LPB:
   case Operation::Type::LPE:
   case Operation::Type::CLR:
+  case Operation::Type::CAL:
   {
     values.clear();
     return false;
@@ -610,7 +620,7 @@ bool Optimizer::partialEval( Program &p, size_t num_initialized_cells ) const
 bool isArithmetic( Operation::Type t )
 {
   return !(t == Operation::Type::NOP || t == Operation::Type::DBG || t == Operation::Type::LPB
-      || t == Operation::Type::LPE || t == Operation::Type::CLR);
+      || t == Operation::Type::LPE || t == Operation::Type::CLR || t == Operation::Type::CAL);
 }
 
 bool Optimizer::shouldSwapOperations( const Operation &first, const Operation &second ) const

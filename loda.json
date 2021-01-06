@@ -3,7 +3,7 @@
     "new": [
       {
         "version": 1,
-        "length": 60,
+        "length": 20,
         "maxConstant": 4,
         "maxCell": 4,
         "loops": false,
@@ -12,14 +12,6 @@
           "programs/templates/T01.asm",
           "programs/templates/T02.asm"
         ]
-      },
-      {
-        "version": 1,
-        "length": 60,
-        "maxConstant": 4,
-        "maxCell": 4,
-        "loops": true,
-        "indirectAccess": false
       }
     ],
     "update": [

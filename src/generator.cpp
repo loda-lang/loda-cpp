@@ -151,6 +151,7 @@ void Generator::generateStateless( Program &p, size_t num_operations )
 void Generator::applyPostprocessing( Program &p )
 {
   auto written_cells = fixCausality( p );
+  fixSingularities( p );
   ensureSourceNotOverwritten( p );
   ensureTargetWritten( p, written_cells );
   ensureMeaningfulLoops( p );
@@ -201,6 +202,46 @@ std::vector<number_t> Generator::fixCausality( Program &p )
     }
   }
   return written_cells;
+}
+
+void Generator::fixSingularities( Program &p )
+{
+  static const Operand tmp( Operand::Type::DIRECT, 26 ); // magic number
+  static const number_t max_exponent = 5; // magic number
+  for ( size_t i = 0; i < p.ops.size(); i++ )
+  {
+    if ( (p.ops[i].type == Operation::Type::DIV || p.ops[i].type == Operation::Type::MOD)
+        && (p.ops[i].source.type == Operand::Type::DIRECT) )
+    {
+      auto divisor = p.ops[i].source;
+      p.ops.insert( p.ops.begin() + i, Operation( Operation::Type::MOV, tmp, divisor ) );
+      p.ops.insert( p.ops.begin() + i + 1,
+          Operation( Operation::Type::CMP, tmp, Operand( Operand::Type::CONSTANT, 0 ) ) );
+      p.ops.insert( p.ops.begin() + i + 2, Operation( Operation::Type::ADD, divisor, tmp ) );
+      i += 3;
+    }
+    if ( p.ops[i].type == Operation::Type::LOG )
+    {
+      auto target = p.ops[i].target;
+      p.ops.insert( p.ops.begin() + i, Operation( Operation::Type::MOV, tmp, target ) );
+      p.ops.insert( p.ops.begin() + i + 1,
+          Operation( Operation::Type::CMP, tmp, Operand( Operand::Type::CONSTANT, 0 ) ) );
+      p.ops.insert( p.ops.begin() + i + 2, Operation( Operation::Type::ADD, target, tmp ) );
+      i += 3;
+    }
+    if ( p.ops[i].type == Operation::Type::POW )
+    {
+      if ( p.ops[i].source.type == Operand::Type::CONSTANT
+          && (p.ops[i].source.value < 2 || p.ops[i].source.value > max_exponent) )
+      {
+        p.ops[i].source.value = (gen() % (max_exponent - 2)) + 2;
+      }
+      else if ( p.ops[i].source.type == Operand::Type::DIRECT && gen() % 5 > 0 ) // magic number
+      {
+        p.ops[i].source.type = Operand::Type::CONSTANT;
+      }
+    }
+  }
 }
 
 void Generator::ensureSourceNotOverwritten( Program &p )

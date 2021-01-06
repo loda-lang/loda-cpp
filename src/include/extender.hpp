@@ -1,7 +1,7 @@
 #pragma once
 
-#include "number.hpp"
 #include "program.hpp"
+#include "sequence.hpp"
 
 struct line_t
 {

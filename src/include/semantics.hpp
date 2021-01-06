@@ -7,13 +7,10 @@ class Semantics
 public:
 
   static number_t add( number_t a, number_t b );
-  static domain_t add( domain_t a, domain_t b );
 
   static number_t sub( number_t a, number_t b );
-  static domain_t sub( domain_t a, domain_t b );
 
   static number_t trn( number_t a, number_t b );
-  static domain_t trn( domain_t a, domain_t b );
 
   static number_t mul( number_t a, number_t b );
 
