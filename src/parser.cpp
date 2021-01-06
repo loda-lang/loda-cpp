@@ -15,7 +15,7 @@ Program Parser::parse( const std::string &file )
   file_in.reset( new std::ifstream( file ) );
   if ( !file_in->good() )
   {
-    Log::get().error( "Error opening file: " + file, true );
+    throw std::runtime_error( "Error opening file: " + file );
   }
   auto p = parse( *file_in );
   file_in->close();
