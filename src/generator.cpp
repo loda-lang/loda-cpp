@@ -253,7 +253,8 @@ void Generator::fixCalls( Program &p )
     if ( op.type == Operation::Type::CAL )
     {
       if ( op.source.type != Operand::Type::CONSTANT
-          || (op.source.value < 0 || op.source.value >= found_programs.size() || !found_programs[op.source.value]) )
+          || (op.source.value < 0 || op.source.value >= static_cast<number_t>( found_programs.size() )
+              || !found_programs[op.source.value]) )
       {
         number_t id;
         do
