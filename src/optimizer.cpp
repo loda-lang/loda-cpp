@@ -550,16 +550,23 @@ bool doPartialEval( Operation &op, std::unordered_map<number_t, Operand> &values
   {
   case Operation::Type::NOP:
   case Operation::Type::DBG:
+  {
     update_target = false;
     break;
+  }
 
   case Operation::Type::LPB:
   case Operation::Type::LPE:
   case Operation::Type::CLR:
-  case Operation::Type::CAL:
   {
     values.clear();
     return false;
+  }
+
+  case Operation::Type::CAL:
+  {
+    unknown = true;
+    break;
   }
 
   default:
