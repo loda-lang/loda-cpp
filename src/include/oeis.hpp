@@ -91,7 +91,7 @@ private:
 
   int getNumCycles( const Program &p ) const;
 
-  std::string isOptimizedBetter( Program existing, Program optimized ) const;
+  std::string isOptimizedBetter( Program existing, Program optimized, size_t id ) const;
 
   const Settings &settings;
   Interpreter interpreter;

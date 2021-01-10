@@ -200,9 +200,23 @@ size_t Interpreter::run( const Program &p, Memory &mem ) const
       target = get( op.target, mem );
       source = get( op.source, mem );
       auto call_program = getProgram( source );
+      if ( running_programs.find( source ) != running_programs.end() )
+      {
+        throw std::runtime_error( "recursion detected" );
+      }
+      running_programs.insert( source );
       Memory tmp;
       tmp.set( Program::INPUT_CELL, target );
-      cycles += run( call_program, tmp );
+      try
+      {
+        cycles += run( call_program, tmp );
+        running_programs.erase( source );
+      }
+      catch ( ... )
+      {
+        running_programs.erase( source );
+        std::rethrow_exception( std::current_exception() );
+      }
       set( op.target, tmp.get( Program::OUTPUT_CELL ), mem, op );
       break;
     }

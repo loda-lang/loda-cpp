@@ -587,8 +587,20 @@ int Oeis::getNumCycles( const Program &p ) const
   return -1;
 }
 
-std::string Oeis::isOptimizedBetter( Program existing, Program optimized ) const
+std::string Oeis::isOptimizedBetter( Program existing, Program optimized, size_t id ) const
 {
+  // check if there are illegal recursions
+  for ( auto &op : optimized.ops )
+  {
+    if ( op.type == Operation::Type::CAL )
+    {
+      if ( op.source.type != Operand::Type::CONSTANT || op.source.value == static_cast<number_t>( id ) )
+      {
+        return "";
+      }
+    }
+  }
+
   // we prefer programs w/o indirect memory access and without cal operations
   auto in_opt = ProgramUtil::numOps( optimized, Operand::Type::INDIRECT );
   auto in_ext = ProgramUtil::numOps( existing, Operand::Type::INDIRECT );
@@ -662,7 +674,7 @@ std::pair<bool, bool> Oeis::updateProgram( size_t id, const Program &p ) const
           return
           { false,false};
         }
-        change = isOptimizedBetter( existing, optimized.second );
+        change = isOptimizedBetter( existing, optimized.second, id );
         if ( change.empty() )
         {
           return
