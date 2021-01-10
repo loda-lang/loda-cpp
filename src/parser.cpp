@@ -41,7 +41,6 @@ Program Parser::parse( std::istream &in_ )
     {
       // read normal operation
       o.type = readOperationType();
-      *in >> std::ws;
       switch ( Operation::Metadata::get( o.type ).num_operands )
       {
       case 0:

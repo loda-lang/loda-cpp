@@ -5,6 +5,8 @@
 #include "semantics.hpp"
 #include "util.hpp"
 
+#include <stack>
+
 void Optimizer::optimize( Program &p, size_t num_reserved_cells, size_t num_initialized_cells ) const
 {
   if ( Log::get().level == Log::Level::DEBUG )
@@ -40,6 +42,10 @@ void Optimizer::optimize( Program &p, size_t num_reserved_cells, size_t num_init
       changed = true;
     }
     if ( sortOperations( p ) )
+    {
+      changed = true;
+    }
+    if ( mergeLoops( p ) )
     {
       changed = true;
     }
@@ -685,4 +691,40 @@ bool Optimizer::sortOperations( Program &p ) const
     }
   }
   return changed;
+}
+
+bool Optimizer::mergeLoops( Program &p ) const
+{
+  std::stack<size_t> loop_begins;
+  for ( size_t i = 0; i + 1 < p.ops.size(); i++ )
+  {
+    if ( p.ops[i].type == Operation::Type::LPB )
+    {
+      loop_begins.push( i );
+    }
+    else if ( p.ops[i].type == Operation::Type::LPE )
+    {
+      if ( loop_begins.empty() )
+      {
+        throw std::runtime_error( "invalid loop" );
+      }
+      auto lpb2 = loop_begins.top();
+      loop_begins.pop();
+      if ( p.ops[i + 1].type == Operation::Type::LPE )
+      {
+        if ( loop_begins.empty() )
+        {
+          throw std::runtime_error( "invalid loop" );
+        }
+        auto lpb1 = loop_begins.top();
+        if ( lpb1 + 1 == lpb2 && p.ops[lpb1] == p.ops[lpb2] )
+        {
+          p.ops.erase( p.ops.begin() + i, p.ops.begin() + i + 1 );
+          p.ops.erase( p.ops.begin() + lpb1, p.ops.begin() + lpb1 + 1 );
+          return true;
+        }
+      }
+    }
+  }
+  return false;
 }
