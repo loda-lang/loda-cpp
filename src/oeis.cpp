@@ -99,6 +99,7 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
   Sequence seq_full, seq_norm, seq_big;
   size_t loaded_count = 0;
   size_t big_loaded_count = 0;
+  std::random_device rand;
   while ( std::getline( stripped, line ) )
   {
     if ( exit_flag )
@@ -228,6 +229,10 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
           Log::get().warn( "- expected: " + seq_full.to_string() );
           Log::get().warn( "- found:    " + seq_test.to_string() );
           seq_big.clear();
+          if ( rand() % 5 == 0 )
+          {
+            std::remove( big_path.c_str() );
+          }
         }
       }
 
