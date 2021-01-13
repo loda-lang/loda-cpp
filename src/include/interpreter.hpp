@@ -37,5 +37,6 @@ private:
 
   mutable std::unordered_map<number_t, Program> program_cache;
   mutable std::unordered_set<number_t> missing_programs;
+  mutable std::unordered_set<number_t> running_programs;
 
 };

@@ -40,6 +40,8 @@ public:
 
   bool sortOperations( Program &p ) const;
 
+  bool mergeLoops( Program &p ) const;
+
 private:
 
   Settings settings;
