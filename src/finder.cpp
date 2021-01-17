@@ -72,20 +72,19 @@ Matcher::seq_programs_t Finder::findSequence( const Program &p, Sequence &norm_s
   // determine largest memory cell to check
   int64_t max_index = 20; // magic number
   number_t largest_used_cell;
-  std::unordered_set<number_t> used_cells;
-  if ( optimizer.getUsedMemoryCells( p, used_cells, largest_used_cell ) && largest_used_cell <= 100 )
+  tmp_used_cells.clear();
+  if ( optimizer.getUsedMemoryCells( p, tmp_used_cells, largest_used_cell ) && largest_used_cell <= 100 )
   {
     max_index = largest_used_cell;
   }
 
   // interpret program
-  std::vector<Sequence> seqs;
-  seqs.resize( std::max<size_t>( 2, max_index + 1 ) );
+  tmp_seqs.resize( std::max<size_t>( 2, max_index + 1 ) );
   Matcher::seq_programs_t result;
   try
   {
-    interpreter.eval( p, seqs );
-    norm_seq = seqs[1];
+    interpreter.eval( p, tmp_seqs );
+    norm_seq = tmp_seqs[1];
   }
   catch ( const std::exception& )
   {
@@ -93,18 +92,18 @@ Matcher::seq_programs_t Finder::findSequence( const Program &p, Sequence &norm_s
   }
   Program p2 = p;
   p2.push_back( Operation::Type::MOV, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::DIRECT, 0 );
-  for ( size_t i = 0; i < seqs.size(); i++ )
+  for ( size_t i = 0; i < tmp_seqs.size(); i++ )
   {
-    if ( settings.search_linear || !seqs[i].is_linear( settings.linear_prefix ) )
+    if ( settings.search_linear || !tmp_seqs[i].is_linear( settings.linear_prefix ) )
     {
       if ( i == Program::OUTPUT_CELL )
       {
-        findAll( p, seqs[i], sequences, result );
+        findAll( p, tmp_seqs[i], sequences, result );
       }
       else
       {
         p2.ops.back().source.value = i;
-        findAll( p2, seqs[i], sequences, result );
+        findAll( p2, tmp_seqs[i], sequences, result );
       }
     }
   }
@@ -115,28 +114,26 @@ void Finder::findAll( const Program &p, const Sequence &norm_seq, const std::vec
     Matcher::seq_programs_t &result ) const
 {
   // collect possible matches
-  Matcher::seq_programs_t temp_result;
-  Sequence full_seq;
   for ( size_t i = 0; i < matchers.size(); i++ )
   {
-    temp_result.clear();
-    matchers[i]->match( p, norm_seq, temp_result );
+    tmp_result.clear();
+    matchers[i]->match( p, norm_seq, tmp_result );
 
     // validate the found matches
     size_t j = 0;
-    for ( auto t : temp_result )
+    for ( auto t : tmp_result )
     {
       matcher_stats[i].candidates++;
       auto &expected_full_seq = sequences.at( t.first ).full;
       try
       {
-        full_seq.clear();
-        interpreter.eval( t.second, full_seq, expected_full_seq.size() );
-        if ( full_seq.size() != expected_full_seq.size() || full_seq != expected_full_seq )
+        tmp_full_seq.clear();
+        interpreter.eval( t.second, tmp_full_seq, expected_full_seq.size() );
+        if ( tmp_full_seq.size() != expected_full_seq.size() || tmp_full_seq != expected_full_seq )
         {
           matcher_stats[i].false_positives++;
           auto match_length = norm_seq.size();
-          auto got = full_seq.subsequence( 0, match_length );
+          auto got = tmp_full_seq.subsequence( 0, match_length );
           auto exp = expected_full_seq.subsequence( 0, match_length );
           if ( got != exp )
           {
@@ -172,18 +169,17 @@ void Finder::findAll( const Program &p, const Sequence &norm_seq, const std::vec
 
 void Finder::publishMetrics()
 {
-  std::map<std::string, std::string> matcher_labels;
   for ( size_t i = 0; i < matchers.size(); i++ )
   {
-    matcher_labels["matcher"] = matchers[i]->getName();
-    matcher_labels["type"] = "candidate";
-    Metrics::get().write( "matches", matcher_labels, matcher_stats[i].candidates );
-    matcher_labels["type"] = "success";
-    Metrics::get().write( "matches", matcher_labels, matcher_stats[i].successes );
-    matcher_labels["type"] = "false_positive";
-    Metrics::get().write( "matches", matcher_labels, matcher_stats[i].false_positives );
-    matcher_labels["type"] = "error";
-    Metrics::get().write( "matches", matcher_labels, matcher_stats[i].errors );
+    tmp_matcher_labels["matcher"] = matchers[i]->getName();
+    tmp_matcher_labels["type"] = "candidate";
+    Metrics::get().write( "matches", tmp_matcher_labels, matcher_stats[i].candidates );
+    tmp_matcher_labels["type"] = "success";
+    Metrics::get().write( "matches", tmp_matcher_labels, matcher_stats[i].successes );
+    tmp_matcher_labels["type"] = "false_positive";
+    Metrics::get().write( "matches", tmp_matcher_labels, matcher_stats[i].false_positives );
+    tmp_matcher_labels["type"] = "error";
+    Metrics::get().write( "matches", tmp_matcher_labels, matcher_stats[i].errors );
     matcher_stats[i].candidates = 0;
     matcher_stats[i].successes = 0;
     matcher_stats[i].false_positives = 0;

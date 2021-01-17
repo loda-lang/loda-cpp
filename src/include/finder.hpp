@@ -58,4 +58,11 @@ private:
   mutable std::vector<MatcherStats> matcher_stats;
   mutable size_t num_find_attempts;
 
+  // temporary containers (cached as members)
+  mutable std::unordered_set<number_t> tmp_used_cells;
+  mutable Sequence tmp_full_seq;
+  mutable std::vector<Sequence> tmp_seqs;
+  mutable Matcher::seq_programs_t tmp_result;
+  mutable std::map<std::string, std::string> tmp_matcher_labels;
+
 };
