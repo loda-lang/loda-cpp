@@ -496,7 +496,7 @@ bool hasIndirectOperand( const Operation &op )
       || (num_ops > 1 && op.source.type == Operand::Type::INDIRECT);
 }
 
-bool doPartialEval( Operation &op, std::unordered_map<number_t, Operand> &values, const Interpreter &interpreter )
+bool doPartialEval( Operation &op, std::unordered_map<number_t, Operand> &values )
 {
   // make sure there is not indirect memory access
   const auto num_ops = Operation::Metadata::get( op.type ).num_operands;
@@ -577,7 +577,7 @@ bool doPartialEval( Operation &op, std::unordered_map<number_t, Operand> &values
 
   default:
   {
-    target.value = interpreter.calc( op.type, target.value, source.value );
+    target.value = Interpreter::calc( op.type, target.value, source.value );
     break;
   }
 
@@ -622,7 +622,7 @@ bool Optimizer::partialEval( Program &p, size_t num_initialized_cells ) const
   bool changed = false;
   for ( auto &op : p.ops )
   {
-    if ( doPartialEval( op, values, interpreter ) )
+    if ( doPartialEval( op, values ) )
     {
       changed = true;
     }

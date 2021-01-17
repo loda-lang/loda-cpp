@@ -26,7 +26,7 @@ Interpreter::Interpreter( const Settings &settings )
 {
 }
 
-number_t Interpreter::calc( const Operation::Type type, number_t target, number_t source ) const
+number_t Interpreter::calc( const Operation::Type type, number_t target, number_t source )
 {
   switch ( type )
   {
@@ -94,7 +94,7 @@ number_t Interpreter::calc( const Operation::Type type, number_t target, number_
   return 0;
 }
 
-size_t Interpreter::run( const Program &p, Memory &mem ) const
+size_t Interpreter::run( const Program &p, Memory &mem )
 {
   // check for empty program
   if ( p.ops.empty() )
@@ -343,7 +343,7 @@ void Interpreter::set( Operand a, number_t v, Memory &mem, const Operation &last
   mem.set( index, v );
 }
 
-size_t Interpreter::eval( const Program &p, Sequence &seq, int num_terms ) const
+size_t Interpreter::eval( const Program &p, Sequence &seq, int num_terms )
 {
   if ( num_terms < 0 )
   {
@@ -368,7 +368,7 @@ size_t Interpreter::eval( const Program &p, Sequence &seq, int num_terms ) const
   return cycles;
 }
 
-size_t Interpreter::eval( const Program &p, std::vector<Sequence> &seqs, int num_terms ) const
+size_t Interpreter::eval( const Program &p, std::vector<Sequence> &seqs, int num_terms )
 {
   if ( num_terms < 0 )
   {
@@ -393,7 +393,7 @@ size_t Interpreter::eval( const Program &p, std::vector<Sequence> &seqs, int num
   return cycles;
 }
 
-bool Interpreter::check( const Program &p, const Sequence &expected_seq ) const
+bool Interpreter::check( const Program &p, const Sequence &expected_seq )
 {
   Memory mem;
   for ( size_t i = 0; i < expected_seq.size(); i++ )

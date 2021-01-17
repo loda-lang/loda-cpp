@@ -79,7 +79,7 @@ public:
     return total_count_;
   }
 
-  std::pair<bool, bool> updateProgram( size_t id, const Program &p ) const;
+  std::pair<bool, bool> updateProgram( size_t id, const Program &p );
 
   void maintain( volatile sig_atomic_t &exit_flag );
 
@@ -87,11 +87,11 @@ private:
 
   void loadNames( volatile sig_atomic_t &exit_flag );
 
-  std::pair<bool, Program> minimizeAndCheck( const Program &p, const OeisSequence &seq, bool optimize ) const;
+  std::pair<bool, Program> minimizeAndCheck( const Program &p, const OeisSequence &seq, bool optimize );
 
-  int getNumCycles( const Program &p ) const;
+  int getNumCycles( const Program &p );
 
-  std::string isOptimizedBetter( Program existing, Program optimized, size_t id ) const;
+  std::string isOptimizedBetter( Program existing, Program optimized, size_t id );
 
   const Settings &settings;
   Interpreter interpreter;

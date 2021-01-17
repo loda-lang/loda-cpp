@@ -62,8 +62,6 @@ void check_inf( number_t n )
 
 void Test::semantics()
 {
-  Settings settings;
-  Interpreter interpreter( settings );
   for ( auto &type : Operation::Types )
   {
     if ( type == Operation::Type::NOP || type == Operation::Type::LPB || type == Operation::Type::LPE
@@ -102,7 +100,7 @@ void Test::semantics()
         op2 = read_num( t );
       }
       expected_op = read_num( r );
-      result_op = interpreter.calc( type, op1, op2 );
+      result_op = Interpreter::calc( type, op1, op2 );
       if ( result_op != expected_op )
       {
         Log::get().error(
@@ -112,15 +110,15 @@ void Test::semantics()
     }
     if ( type != Operation::Type::MOV )
     {
-      check_inf( interpreter.calc( type, NUM_INF, 0 ) );
-      check_inf( interpreter.calc( type, NUM_INF, 1 ) );
-      check_inf( interpreter.calc( type, NUM_INF, -1 ) );
+      check_inf( Interpreter::calc( type, NUM_INF, 0 ) );
+      check_inf( Interpreter::calc( type, NUM_INF, 1 ) );
+      check_inf( Interpreter::calc( type, NUM_INF, -1 ) );
     }
     if ( meta.num_operands == 2 )
     {
-      check_inf( interpreter.calc( type, 0, NUM_INF ) );
-      check_inf( interpreter.calc( type, 1, NUM_INF ) );
-      check_inf( interpreter.calc( type, -1, NUM_INF ) );
+      check_inf( Interpreter::calc( type, 0, NUM_INF ) );
+      check_inf( Interpreter::calc( type, 1, NUM_INF ) );
+      check_inf( Interpreter::calc( type, -1, NUM_INF ) );
     }
   }
 }
