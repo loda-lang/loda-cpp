@@ -556,7 +556,8 @@ std::pair<bool, Program> Oeis::minimizeAndCheck( const Program &p, const OeisSeq
     {
       msg = msg + " after optimization or minimization";
     }
-    Log::get().error( msg, false );
+    Log::get().alert( msg );
+    Log::get().error( msg, true );
     std::string f = "programs/debug/optimizer/" + seq.id_str() + ".asm";
     ensureDir( f );
     std::ofstream out( f );
