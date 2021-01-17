@@ -23,8 +23,6 @@ public:
 
   bool check( const Program &p, const Sequence &expected_seq );
 
-  mutable number_t current_program; // TODO: refactor
-
 private:
 
   number_t get( Operand a, const Memory &mem, bool get_address = false ) const;

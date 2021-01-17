@@ -21,7 +21,6 @@ using SizeStack = std::stack<size_t>;
 
 Interpreter::Interpreter( const Settings &settings )
     :
-    current_program( -1 ),
     settings( settings ),
     is_debug( Log::get().level == Log::Level::DEBUG )
 {
@@ -201,8 +200,7 @@ size_t Interpreter::run( const Program &p, Memory &mem )
       target = get( op.target, mem );
       source = get( op.source, mem );
       auto call_program = getProgram( source );
-      if ( (current_program >= 0 && source == current_program)
-          || running_programs.find( source ) != running_programs.end() )
+      if ( running_programs.find( source ) != running_programs.end() )
       {
         throw std::runtime_error( "recursion detected" );
       }
