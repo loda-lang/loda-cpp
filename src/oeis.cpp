@@ -522,7 +522,7 @@ void Oeis::dumpProgram( size_t id, Program p, const std::string &file ) const
   ProgramUtil::print( p, out );
 }
 
-std::pair<bool, Program> Oeis::minimizeAndCheck( const Program &p, const OeisSequence &seq, bool minimize ) const
+std::pair<bool, Program> Oeis::minimizeAndCheck( const Program &p, const OeisSequence &seq, bool minimize )
 {
   // optimize and minimize program
   std::pair<bool, Program> minimized;
@@ -568,7 +568,7 @@ std::pair<bool, Program> Oeis::minimizeAndCheck( const Program &p, const OeisSeq
   return minimized;
 }
 
-int Oeis::getNumCycles( const Program &p ) const
+int Oeis::getNumCycles( const Program &p )
 {
   Memory mem;
   const number_t input = settings.num_terms - 1;
@@ -594,7 +594,7 @@ int Oeis::getNumCycles( const Program &p ) const
   return -1;
 }
 
-std::string Oeis::isOptimizedBetter( Program existing, Program optimized, size_t id ) const
+std::string Oeis::isOptimizedBetter( Program existing, Program optimized, size_t id )
 {
   // check if there are illegal recursions
   for ( auto &op : optimized.ops )
@@ -649,7 +649,7 @@ std::string Oeis::isOptimizedBetter( Program existing, Program optimized, size_t
   return "";
 }
 
-std::pair<bool, bool> Oeis::updateProgram( size_t id, const Program &p ) const
+std::pair<bool, bool> Oeis::updateProgram( size_t id, const Program &p )
 {
   auto &seq = sequences.at( id );
   std::string file_name = seq.getProgramPath();

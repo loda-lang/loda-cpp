@@ -57,7 +57,7 @@ void Finder::remove( const Sequence &norm_seq, size_t id )
 }
 
 Matcher::seq_programs_t Finder::findSequence( const Program &p, Sequence &norm_seq,
-    const std::vector<OeisSequence> &sequences ) const
+    const std::vector<OeisSequence> &sequences )
 {
   // update memory usage info
   if ( num_find_attempts++ % 1000 == 0 )
@@ -111,7 +111,7 @@ Matcher::seq_programs_t Finder::findSequence( const Program &p, Sequence &norm_s
 }
 
 void Finder::findAll( const Program &p, const Sequence &norm_seq, const std::vector<OeisSequence> &sequences,
-    Matcher::seq_programs_t &result ) const
+    Matcher::seq_programs_t &result )
 {
   // collect possible matches
   for ( size_t i = 0; i < matchers.size(); i++ )

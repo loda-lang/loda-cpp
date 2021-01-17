@@ -32,7 +32,7 @@ public:
   void remove( const Sequence &norm_seq, size_t id );
 
   Matcher::seq_programs_t findSequence( const Program &p, Sequence &norm_seq,
-      const std::vector<OeisSequence> &sequences ) const;
+      const std::vector<OeisSequence> &sequences );
 
   std::vector<std::unique_ptr<Matcher>>& getMatchers()
   {
@@ -49,7 +49,7 @@ public:
 private:
 
   void findAll( const Program &p, const Sequence &norm_seq, const std::vector<OeisSequence> &sequences,
-      Matcher::seq_programs_t &result ) const;
+      Matcher::seq_programs_t &result );
 
   const Settings &settings;
   Interpreter interpreter;
