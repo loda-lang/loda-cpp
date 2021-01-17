@@ -537,6 +537,7 @@ std::pair<bool, Program> Oeis::minimizeAndCheck( const Program &p, const OeisSeq
   Sequence new_seq;
   try
   {
+    interpreter.current_program = seq.id;
     interpreter.eval( minimized.second, new_seq, seq.full.size() );
     if ( seq.full.size() != new_seq.size() || seq.full != new_seq )
     {
@@ -547,6 +548,7 @@ std::pair<bool, Program> Oeis::minimizeAndCheck( const Program &p, const OeisSeq
   {
     minimized.first = false;
   }
+  interpreter.current_program = -1;
 
   // throw error if not correct
   if ( !minimized.first )
