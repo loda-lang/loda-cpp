@@ -138,12 +138,13 @@ void Finder::findAll( const Program &p, const Sequence &norm_seq, const std::vec
           if ( got != exp )
           {
             auto id = sequences.at( t.first ).id_str();
-            std::string f = "programs/debug/matcher/" + id + ".asm";
+            std::string f = getLodaHome() + "debug/matcher/" + id + ".asm";
             ensureDir( f );
             std::ofstream o1( f );
             ProgramUtil::print( p, o1 );
             std::ofstream o2(
-                "programs/debug/matcher/" + id + "-" + matchers[i]->getName() + "-" + std::to_string( j ) + ".asm" );
+                getLodaHome() + "debug/matcher/" + id + "-" + matchers[i]->getName() + "-" + std::to_string( j )
+                    + ".asm" );
             ProgramUtil::print( t.second, o2 );
             Log::get().error( matchers[i]->getName() + " matcher generates wrong program for " + id );
             Log::get().error( " -  expected: " + exp.to_string() );
