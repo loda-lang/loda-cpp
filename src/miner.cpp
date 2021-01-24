@@ -38,16 +38,16 @@ bool Miner::updateSpecialSequences( const Program &p, const Sequence &seq ) cons
   }
   if ( !kind.empty() )
   {
+    Log::get().alert( "Found possible " + kind + " sequence: " + seq.to_string() );
     std::string file_name = "programs/special/" + kind + "_" + std::to_string( ProgramUtil::hash( p ) % 1000000 )
         + ".asm";
+    ensureDir( file_name );
     std::ofstream out( file_name );
     out << "; " << seq << std::endl;
     out << std::endl;
     ProgramUtil::print( p, out );
     out.close();
-    Log::get().alert( "Found possible " + kind + " sequence: " + seq.to_string() );
     return true;
-
   }
   return false;
 }

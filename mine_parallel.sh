@@ -87,7 +87,8 @@ function push_updates {
     if [ "$branch" = "master" ]; then
       git add stats
     fi
-    git commit -m "updated $num_changes programs"
+    num_progs=$(cat stats/summary.csv | cut -d , -f 1)
+    git commit -m "updated ${num_changes}/${num_progs} programs"
     git pull -r
     if [ "$branch" != "master" ]; then
       git merge -X theirs -m "merge master into $branch" origin/master

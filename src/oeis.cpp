@@ -558,7 +558,7 @@ std::pair<bool, Program> Oeis::minimizeAndCheck( const Program &p, const OeisSeq
     }
     Log::get().alert( msg );
     Log::get().error( msg, true );
-    std::string f = "programs/debug/optimizer/" + seq.id_str() + ".asm";
+    std::string f = getLodaHome() + "debug/optimizer/" + seq.id_str() + ".asm";
     ensureDir( f );
     std::ofstream out( f );
     ProgramUtil::print( p, out );
@@ -582,7 +582,7 @@ int Oeis::getNumCycles( const Program &p )
         std::to_string(
             std::chrono::duration_cast<std::chrono::milliseconds>( std::chrono::system_clock::now().time_since_epoch() ).count()
                 % 1000000 );
-    std::string f = "programs/debug/interpreter/" + timestamp + ".asm";
+    std::string f = getLodaHome() + "debug/interpreter/" + timestamp + ".asm";
     ensureDir( f );
     std::ofstream o( f );
     ProgramUtil::print( p, o );
