@@ -518,7 +518,7 @@ void Oeis::dumpProgram( size_t id, Program p, const std::string &file ) const
     if ( op.type == Operation::Type::CAL && op.source.type == Operand::Type::CONSTANT )
     {
       auto id = op.source.value;
-      if ( id >= 0 && id < sequences.size() && sequences[id].id )
+      if ( id >= 0 && id < (int64_t) sequences.size() && sequences[id].id )
       {
         op.comment = sequences[id].name;
       }
@@ -731,7 +731,7 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
   }
   load( exit_flag );
   Log::get().info( "Start maintaining OEIS programs" );
-  const size_t list_file_size = 100000;
+  const size_t list_file_size = 50000;
   std::vector<std::stringstream> list_files( 1000000 / list_file_size );
   Stats stats;
   size_t num_optimized = 0;
