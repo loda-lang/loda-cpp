@@ -513,6 +513,17 @@ void Oeis::removeSequence( size_t id )
 void Oeis::dumpProgram( size_t id, Program p, const std::string &file ) const
 {
   ProgramUtil::removeOps( p, Operation::Type::NOP );
+  for ( auto &op : p.ops )
+  {
+    if ( op.type == Operation::Type::CAL && op.source.type == Operand::Type::CONSTANT )
+    {
+      auto id = op.source.value;
+      if ( id >= 0 && id < sequences.size() && sequences[id].id )
+      {
+        op.comment = sequences[id].name;
+      }
+    }
+  }
   ensureDir( file );
   std::ofstream out( file );
   auto &seq = sequences.at( id );
@@ -721,7 +732,8 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
   }
   load( exit_flag );
   Log::get().info( "Start maintaining OEIS programs" );
-  std::vector<std::stringstream> list_files( 10 );
+  const size_t list_file_size = 100000;
+  std::vector<std::stringstream> list_files( 1000000 / list_file_size );
   Stats stats;
   size_t num_optimized = 0;
   Parser parser;
@@ -789,7 +801,7 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
         stats.updateProgramStats( optimized );
 
         // write list file
-        size_t list_index = s.id / 100000;
+        size_t list_index = s.id / list_file_size;
         size_t num_ops = ProgramUtil::numOps( program, false );
         list_files.at( list_index ) << "* [" << s.id_str() << "](http://oeis.org/" << s.id_str() << ") ([L"
             << std::setw( 2 ) << std::setfill( '0' ) << num_ops << " program](" << s.dir_str() << "/" << s.id_str()
@@ -809,8 +821,8 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
     if ( !buf.empty() )
     {
       std::string list_path = "programs/oeis/list" + std::to_string( i ) + ".md";
-      OeisSequence start( (i * 100000) + 1 );
-      OeisSequence end( (i + 1) * 100000 );
+      OeisSequence start( (i * list_file_size) + 1 );
+      OeisSequence end( (i + 1) * list_file_size );
       std::ofstream list_file( list_path );
       list_file << "# Programs for " << start.id_str() << "-" << end.id_str() << "\n\n";
       list_file
