@@ -519,35 +519,29 @@ bool doPartialEval( Operation &op, std::unordered_map<number_t, Operand> &values
     }
     else // direct
     {
-      if ( values.find( op.source.value ) == values.end() )
+      auto found = values.find( op.source.value );
+      if ( found != values.end() )
       {
-        unknown = true;
+        source = found->second;
+        update_source = true;
       }
       else
       {
-        auto found = values.find( op.source.value );
-        if ( found != values.end() )
-        {
-          source = found->second;
-        }
-        update_source = true;
+        unknown = true;
       }
     }
   }
 
   // deduce target value
   Operand target( Operand::Type::CONSTANT, 0 );
-  if ( values.find( op.target.value ) == values.end() && op.type != Operation::Type::MOV )
+  auto found = values.find( op.target.value );
+  if ( found != values.end() )
+  {
+    target = found->second;
+  }
+  else if ( op.type != Operation::Type::MOV )
   {
     unknown = true;
-  }
-  else
-  {
-    auto found = values.find( op.target.value );
-    if ( found != values.end() )
-    {
-      target = found->second;
-    }
   }
 
   // calculate new value
