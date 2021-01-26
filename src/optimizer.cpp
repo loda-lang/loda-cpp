@@ -5,6 +5,7 @@
 #include "semantics.hpp"
 #include "util.hpp"
 
+#include <map>
 #include <stack>
 
 void Optimizer::optimize( Program &p, size_t num_reserved_cells, size_t num_initialized_cells ) const
@@ -496,7 +497,7 @@ bool hasIndirectOperand( const Operation &op )
       || (num_ops > 1 && op.source.type == Operand::Type::INDIRECT);
 }
 
-bool doPartialEval( Operation &op, std::unordered_map<number_t, Operand> &values )
+bool doPartialEval( Operation &op, std::map<number_t, Operand> &values )
 {
   // make sure there is not indirect memory access
   const auto num_ops = Operation::Metadata::get( op.type ).num_operands;
@@ -506,52 +507,29 @@ bool doPartialEval( Operation &op, std::unordered_map<number_t, Operand> &values
     return false;
   }
 
-  bool unknown = false;
-  bool update_source = false;
-
   // deduce source value
-  Operand source( Operand::Type::CONSTANT, 0 );
-  if ( num_ops > 1 )
+  auto source = op.source;
+  if ( op.source.type == Operand::Type::DIRECT && values.find( op.source.value ) != values.end() )
   {
-    if ( op.source.type == Operand::Type::CONSTANT ) // constant
-    {
-      source = op.source;
-    }
-    else // direct
-    {
-      auto found = values.find( op.source.value );
-      if ( found != values.end() )
-      {
-        source = found->second;
-        update_source = true;
-      }
-      else
-      {
-        unknown = true;
-      }
-    }
+    source = values[op.source.value];
   }
 
   // deduce target value
-  Operand target( Operand::Type::CONSTANT, 0 );
-  auto found = values.find( op.target.value );
-  if ( found != values.end() )
+  auto target = op.target;
+  if ( op.target.type == Operand::Type::DIRECT && values.find( op.target.value ) != values.end() )
   {
-    target = found->second;
-  }
-  else if ( op.type != Operation::Type::MOV )
-  {
-    unknown = true;
+    target = values[op.target.value];
   }
 
   // calculate new value
-  bool update_target = true;
+  bool has_result = false;
+
   switch ( op.type )
   {
   case Operation::Type::NOP:
   case Operation::Type::DBG:
+  case Operation::Type::CAL:
   {
-    update_target = false;
     break;
   }
 
@@ -563,40 +541,67 @@ bool doPartialEval( Operation &op, std::unordered_map<number_t, Operand> &values
     return false;
   }
 
-  case Operation::Type::CAL:
+  case Operation::Type::MOV:
   {
-    unknown = true;
+    target = source;
+    has_result = true;
     break;
   }
 
   default:
   {
-    target.value = Interpreter::calc( op.type, target.value, source.value );
+    if ( target.type == Operand::Type::CONSTANT && (num_ops == 1 || source.type == Operand::Type::CONSTANT) )
+    {
+      target.value = Interpreter::calc( op.type, target.value, source.value );
+      has_result = true;
+    }
     break;
   }
 
   }
 
   bool changed = false;
-  if ( update_source )
+
+  // update source value
+  if ( num_ops == 2 && op.source != source )
   {
     op.source = source;
     changed = true;
   }
-  if ( unknown )
+
+  if ( num_ops > 0 )
   {
-    values.erase( op.target.value );
-  }
-  else if ( update_target )
-  {
-    values[op.target.value] = target;
-    if ( op.type != Operation::Type::MOV )
+    // update target value
+    if ( has_result )
     {
-      op.type = Operation::Type::MOV;
-      op.source = target;
-      changed = true;
+      values[op.target.value] = target;
+      if ( op.type != Operation::Type::MOV )
+      {
+        op.type = Operation::Type::MOV;
+        op.source = target;
+        changed = true;
+      }
+    }
+    else
+    {
+      values.erase( op.target.value );
+    }
+
+    // remove references to target because they are out-dated now
+    auto it = values.begin();
+    while ( it != values.end() )
+    {
+      if ( it->second == op.target )
+      {
+        it = values.erase( it );
+      }
+      else
+      {
+        it++;
+      }
     }
   }
+
   return changed;
 }
 
@@ -608,7 +613,7 @@ bool Optimizer::partialEval( Program &p, size_t num_initialized_cells ) const
   {
     return false;
   }
-  std::unordered_map<number_t, Operand> values;
+  std::map<number_t, Operand> values;
   for ( number_t i = num_initialized_cells; i <= largest_used; i++ )
   {
     values[i] = Operand( Operand::Type::CONSTANT, 0 );
