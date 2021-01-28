@@ -227,6 +227,7 @@ Settings::Settings()
     optimize_existing_programs( false ),
     search_linear( false ),
     throw_on_overflow( true ),
+    use_steps( false ),
     loda_config( "loda.json" )
 {
 }
@@ -328,7 +329,7 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
       {
         option = Option::MAX_CYCLES;
       }
-      else if ( opt == "s" )
+      else if ( opt == "p" )
       {
         option = Option::MAX_PHYSICAL_MEMORY;
       }
@@ -339,6 +340,10 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
       else if ( opt == "r" )
       {
         search_linear = true;
+      }
+      else if ( opt == "s" )
+      {
+        use_steps = true;
       }
       else if ( opt == "k" )
       {

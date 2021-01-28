@@ -45,18 +45,17 @@ void help()
   std::cout << "  synthesize       Synthesize programs for OEIS sequences" << std::endl;
   std::cout << "  maintain         Maintain programs for OEIS sequences" << std::endl;
   std::cout << "  update           Update OEIS index" << std::endl;
-  std::cout << "General options:" << std::endl;
+  std::cout << "Options:" << std::endl;
   std::cout << "  -l <string>      Log level (values:debug,info,warn,error,alert)" << std::endl;
   std::cout << "  -k <string>      Configuration file (default:loda.json)" << std::endl;
   std::cout << "  -t <number>      Number of sequence terms (default:" << settings.num_terms << ")" << std::endl;
-  std::cout << "  -s <number>      Maximum physical memory (default:" << settings.max_physical_memory / (1024 * 1024)
-      << ")" << std::endl;
-  std::cout << "Interpreter options:" << std::endl;
+  std::cout << "  -p <number>      Maximum physical memory in MB (default:"
+      << settings.max_physical_memory / (1024 * 1024) << ")" << std::endl;
   std::cout << "  -c <number>      Maximum number of interpreter cycles (default:" << settings.max_cycles << ")"
       << std::endl;
   std::cout << "  -m <number>      Maximum number of used memory cells (default:" << settings.max_memory << ")"
       << std::endl;
-  std::cout << "Miner options:" << std::endl;
+  std::cout << "  -s               Evaluate to number of execution steps" << std::endl;
   std::cout << "  -r               Search for programs of linear sequences (slow)" << std::endl;
   std::cout << "  -x               Optimize and overwrite existing programs" << std::endl;
 }
@@ -90,6 +89,10 @@ int main( int argc, char *argv[] )
   if ( !args.empty() )
   {
     std::string cmd = args.front();
+    if ( settings.use_steps && cmd != "evaluate" && cmd != "eval" )
+    {
+      Log::get().error( "Option -s only allowed in evaluate command", true );
+    }
     if ( cmd == "help" )
     {
       help();

@@ -66,6 +66,7 @@ public:
   bool optimize_existing_programs;
   bool search_linear;
   bool throw_on_overflow;
+  bool use_steps;
   std::string loda_config;
 
   Settings();

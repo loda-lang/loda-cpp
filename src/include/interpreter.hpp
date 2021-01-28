@@ -17,9 +17,9 @@ public:
 
   size_t run( const Program &p, Memory &mem );
 
-  size_t eval( const Program &p, Sequence &seq, int num_terms = -1 );
+  size_t eval( const Program &p, Sequence &seq, int64_t num_terms = -1 );
 
-  size_t eval( const Program &p, std::vector<Sequence> &seqs, int num_terms = -1 );
+  size_t eval( const Program &p, std::vector<Sequence> &seqs, int64_t num_terms = -1 );
 
   bool check( const Program &p, const Sequence &expected_seq );
 
