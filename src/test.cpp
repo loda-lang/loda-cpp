@@ -23,7 +23,7 @@ void Test::all()
 {
   semantics();
   memory();
-//  config();
+  config();
   stats();
   knownPrograms();
   ackermann();
