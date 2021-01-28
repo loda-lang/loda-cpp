@@ -11,7 +11,6 @@ Finder::Finder( const Settings &settings )
     :
     settings( settings ),
     interpreter( settings ),
-    optimizer( settings ),
     num_find_attempts( 0 )
 {
   if ( settings.optimize_existing_programs )
@@ -73,7 +72,8 @@ Matcher::seq_programs_t Finder::findSequence( const Program &p, Sequence &norm_s
   int64_t max_index = 20; // magic number
   number_t largest_used_cell;
   tmp_used_cells.clear();
-  if ( optimizer.getUsedMemoryCells( p, tmp_used_cells, largest_used_cell ) && largest_used_cell <= 100 )
+  if ( ProgramUtil::getUsedMemoryCells( p, tmp_used_cells, largest_used_cell, settings.max_memory )
+      && largest_used_cell <= 100 )
   {
     max_index = largest_used_cell;
   }

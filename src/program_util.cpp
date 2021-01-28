@@ -87,6 +87,61 @@ size_t ProgramUtil::numOps( const Program &p, Operand::Type type )
   return num_ops;
 }
 
+bool ProgramUtil::isArithmetic( Operation::Type t )
+{
+  // TODO: model this as metadata
+  return (t != Operation::Type::NOP && t != Operation::Type::DBG && t != Operation::Type::LPB
+      && t != Operation::Type::LPE && t != Operation::Type::CLR && t != Operation::Type::CAL);
+}
+
+bool ProgramUtil::getUsedMemoryCells( const Program &p, std::unordered_set<number_t> &used_cells,
+    number_t &largest_used, size_t max_memory )
+{
+  for ( auto &op : p.ops )
+  {
+    size_t region_length = 1;
+    if ( op.source.type == Operand::Type::INDIRECT || op.target.type == Operand::Type::INDIRECT )
+    {
+      return false;
+    }
+    if ( op.type == Operation::Type::LPB || op.type == Operation::Type::CLR )
+    {
+      if ( op.source.type == Operand::Type::CONSTANT )
+      {
+        region_length = op.source.value;
+      }
+      else
+      {
+        return false;
+      }
+    }
+    if ( region_length > max_memory )
+    {
+      return false;
+    }
+    if ( op.source.type == Operand::Type::DIRECT )
+    {
+      for ( size_t i = 0; i < region_length; i++ )
+      {
+        used_cells.insert( op.source.value + i );
+      }
+    }
+    if ( op.target.type == Operand::Type::DIRECT )
+    {
+      for ( size_t i = 0; i < region_length; i++ )
+      {
+        used_cells.insert( op.target.value + i );
+      }
+    }
+  }
+  largest_used = used_cells.empty() ? 0 : *used_cells.begin();
+  for ( number_t used : used_cells )
+  {
+    largest_used = std::max( largest_used, used );
+  }
+  return true;
+}
+
 std::string getIndent( int indent )
 {
   std::string s;

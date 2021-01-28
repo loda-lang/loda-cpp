@@ -1,6 +1,7 @@
 #include "extender.hpp"
 
-#include "optimizer.hpp"
+#include "program_util.hpp"
+#include "util.hpp"
 
 void add_or_sub( Program &p, number_t c )
 {
@@ -64,7 +65,6 @@ bool Extender::linear2( Program &p, line_t inverse, line_t target )
 bool Extender::polynomial( Program &p, const Polynomial &diff )
 {
   Settings settings;
-  Optimizer optimizer( settings );
 
   // constant term
   if ( diff.size() > 0 )
@@ -77,7 +77,7 @@ bool Extender::polynomial( Program &p, const Polynomial &diff )
   {
     std::unordered_set<number_t> used_cells;
     number_t max_cell = 0;
-    if ( !optimizer.getUsedMemoryCells( p, used_cells, max_cell ) )
+    if ( !ProgramUtil::getUsedMemoryCells( p, used_cells, max_cell, settings.max_memory ) )
     {
       return false;
     }
@@ -124,10 +124,9 @@ bool Extender::polynomial( Program &p, const Polynomial &diff )
 bool Extender::delta_one( Program &p, const bool sum )
 {
   Settings settings;
-  Optimizer optimizer( settings );
   std::unordered_set<number_t> used_cells;
   number_t largest_used = 0;
-  if ( !optimizer.getUsedMemoryCells( p, used_cells, largest_used ) )
+  if ( !ProgramUtil::getUsedMemoryCells( p, used_cells, largest_used, settings.max_memory ) )
   {
     return false;
   }
