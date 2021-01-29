@@ -1,0 +1,12 @@
+; in
+mov $2,$0
+lpb $2,1
+  add $2,$0
+mov $1,$2
+log $1,5
+; out
+mov $1,$0
+lpb $1,1
+  add $1,$0
+mov $2,$1
+log $1,5

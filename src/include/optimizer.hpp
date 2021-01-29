@@ -4,8 +4,6 @@
 #include "program.hpp"
 #include "util.hpp"
 
-#include <unordered_set>
-
 class Optimizer
 {
 public:
@@ -28,7 +26,7 @@ public:
 
   bool reduceMemoryCells( Program &p, size_t num_reserved_cells ) const;
 
-  bool getUsedMemoryCells( const Program &p, std::unordered_set<number_t> &used_cells, number_t &larged_used ) const;
+  bool swapMemoryCells( Program &p, size_t num_reserved_cells ) const;
 
   bool canChangeVariableOrder( const Program &p ) const;
 

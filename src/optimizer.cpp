@@ -2,6 +2,7 @@
 
 #include "interpreter.hpp"
 #include "number.hpp"
+#include "program_util.hpp"
 #include "semantics.hpp"
 #include "util.hpp"
 
@@ -35,6 +36,10 @@ void Optimizer::optimize( Program &p, size_t num_reserved_cells, size_t num_init
       changed = true;
     }
     if ( reduceMemoryCells( p, num_reserved_cells ) )
+    {
+      changed = true;
+    }
+    if ( swapMemoryCells( p, num_reserved_cells ) )
     {
       changed = true;
     }
@@ -370,54 +375,6 @@ bool Optimizer::simplifyOperations( Program &p, size_t num_initialized_cells ) c
   return simplified;
 }
 
-bool Optimizer::getUsedMemoryCells( const Program &p, std::unordered_set<number_t> &used_cells,
-    number_t &largest_used ) const
-{
-  for ( auto &op : p.ops )
-  {
-    size_t region_length = 1;
-    if ( op.source.type == Operand::Type::INDIRECT || op.target.type == Operand::Type::INDIRECT )
-    {
-      return false;
-    }
-    if ( op.type == Operation::Type::LPB || op.type == Operation::Type::CLR )
-    {
-      if ( op.source.type == Operand::Type::CONSTANT )
-      {
-        region_length = op.source.value;
-      }
-      else
-      {
-        return false;
-      }
-    }
-    if ( region_length > settings.max_memory )
-    {
-      return false;
-    }
-    if ( op.source.type == Operand::Type::DIRECT )
-    {
-      for ( size_t i = 0; i < region_length; i++ )
-      {
-        used_cells.insert( op.source.value + i );
-      }
-    }
-    if ( op.target.type == Operand::Type::DIRECT )
-    {
-      for ( size_t i = 0; i < region_length; i++ )
-      {
-        used_cells.insert( op.target.value + i );
-      }
-    }
-  }
-  largest_used = used_cells.empty() ? 0 : *used_cells.begin();
-  for ( number_t used : used_cells )
-  {
-    largest_used = std::max( largest_used, used );
-  }
-  return true;
-}
-
 bool Optimizer::canChangeVariableOrder( const Program &p ) const
 {
   for ( auto &op : p.ops )
@@ -445,7 +402,7 @@ bool Optimizer::reduceMemoryCells( Program &p, size_t num_reserved_cells ) const
   {
     return false;
   }
-  if ( !getUsedMemoryCells( p, used_cells, largest_used ) )
+  if ( !ProgramUtil::getUsedMemoryCells( p, used_cells, largest_used, settings.max_memory ) )
   {
     return false;
   }
@@ -495,6 +452,75 @@ bool hasIndirectOperand( const Operation &op )
   const auto num_ops = Operation::Metadata::get( op.type ).num_operands;
   return (num_ops > 0 && op.target.type == Operand::Type::INDIRECT)
       || (num_ops > 1 && op.source.type == Operand::Type::INDIRECT);
+}
+
+bool Optimizer::swapMemoryCells( Program &p, size_t num_reserved_cells ) const
+{
+  if ( num_reserved_cells < 2 )
+  {
+    return false;
+  }
+  const number_t target_cell = num_reserved_cells - 1;
+  int64_t mov_target = -1;
+  for ( int64_t i = p.ops.size() - 1; i >= 0; i-- )
+  {
+    if ( hasIndirectOperand( p.ops[i] ) )
+    {
+      return false;
+    }
+    if ( p.ops[i].type == Operation::Type::CLR )
+    {
+      return false;
+    }
+    if ( p.ops[i].type == Operation::Type::LPB && p.ops[i].source != Operand( Operand::Type::CONSTANT, 1 ) )
+    {
+      return false;
+    }
+    if ( mov_target == -1 )
+    {
+      if ( !ProgramUtil::isArithmetic( p.ops[i].type )
+          || p.ops[i].target != Operand( Operand::Type::DIRECT, target_cell ) )
+      {
+        return false;
+      }
+      else if ( p.ops[i].type == Operation::Type::MOV )
+      {
+        mov_target = i;
+      }
+    }
+  }
+  if ( mov_target == -1 )
+  {
+    return false;
+  }
+  auto s = p.ops[mov_target].source;
+  auto t = p.ops[mov_target].target;
+  if ( s.type != Operand::Type::DIRECT || s.value <= t.value )
+  {
+    return false;
+  }
+  // ok, ready to swap cells
+  for ( int64_t i = 0; i <= mov_target; i++ )
+  {
+    auto &op = p.ops[i];
+    if ( op.source == s )
+    {
+      op.source = t;
+    }
+    else if ( op.source == t )
+    {
+      op.source = s;
+    }
+    if ( op.target == s )
+    {
+      op.target = t;
+    }
+    else if ( op.target == t )
+    {
+      op.target = s;
+    }
+  }
+  return true;
 }
 
 bool doPartialEval( Operation &op, std::map<number_t, Operand> &values )
@@ -609,7 +635,7 @@ bool Optimizer::partialEval( Program &p, size_t num_initialized_cells ) const
 {
   std::unordered_set<number_t> used_cells;
   number_t largest_used = 0;
-  if ( !getUsedMemoryCells( p, used_cells, largest_used ) )
+  if ( !ProgramUtil::getUsedMemoryCells( p, used_cells, largest_used, settings.max_memory ) )
   {
     return false;
   }
