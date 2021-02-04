@@ -224,8 +224,7 @@ void Test::config()
       check_int( "length", 20, 120, c.length );
       check_int( "max_constant", 4, 10, c.max_constant );
       check_int( "max_index", 4, 10, c.max_index );
-      int64_t t = c.program_template.empty();
-      check_int( "loops", t, t, c.loops );
+      check_int( "loops", 0, 1, c.loops );
       check_int( "indirectAccess", 0, 1, c.indirect_access );
     }
   }
