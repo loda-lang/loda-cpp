@@ -8,22 +8,20 @@
 #include "program.hpp"
 #include "util.hpp"
 
-class OeisSequence: public Sequence
+class OeisSequence
 {
 public:
 
   OeisSequence( size_t id = 0 )
-      :
-      id( id )
+      : id( id )
   {
   }
 
   OeisSequence( size_t id, const std::string &name, const Sequence &s, const Sequence &full )
-      :
-      Sequence( s ),
-      id( id ),
-      name( name ),
-      full( full )
+      : id( id ),
+        name( name ),
+        norm( s ),
+        full( full )
   {
   }
 
@@ -37,6 +35,7 @@ public:
 
   size_t id;
   std::string name;
+  Sequence norm;
   Sequence full;
 
   friend std::ostream& operator<<( std::ostream &out, const OeisSequence &s );

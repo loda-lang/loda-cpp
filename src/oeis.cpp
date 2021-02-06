@@ -505,7 +505,7 @@ void Oeis::removeSequence( size_t id )
   }
   if ( sequences[id].id == id )
   {
-    finder.remove( sequences[id], id );
+    finder.remove( sequences[id].norm, id );
     sequences[id] = OeisSequence();
   }
 }
@@ -716,7 +716,7 @@ std::pair<bool, bool> Oeis::updateProgram( size_t id, const Program &p )
   std::stringstream buf;
   if ( is_new ) buf << "First";
   else buf << change;
-  buf << " program for " << seq << " Terms: " << static_cast<Sequence>( seq );
+  buf << " program for " << seq << " Terms: " << seq.norm;
   Log::get().alert( buf.str() );
   dumpProgram( id, optimized.second, file_name );
   return
