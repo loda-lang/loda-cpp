@@ -198,7 +198,6 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
   int64_t num, sign;
   Sequence seq_full, seq_norm, seq_big;
   size_t loaded_count = 0;
-  size_t big_loaded_count = 0;
   std::random_device rand;
   while ( std::getline( stripped, line ) )
   {
@@ -313,7 +312,6 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
   // remove sequences
   if ( !seqs_to_remove.empty() )
   {
-    Log::get().info( "Ignoring " + std::to_string( seqs_to_remove.size() ) + " sequences" );
     for ( auto id : seqs_to_remove )
     {
       removeSequence( id );
@@ -336,8 +334,8 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
 
   // print summary
   Log::get().info(
-      "Loaded " + std::to_string( loaded_count ) + "/" + std::to_string( total_count_ ) + " sequences and "
-          + std::to_string( big_loaded_count ) + " b-files" );
+      "Loaded " + std::to_string( loaded_count ) + "/" + std::to_string( total_count_ ) + " sequences (ignored "
+          + std::to_string( seqs_to_remove.size() ) + ")" );
   std::stringstream buf;
   buf << "Matcher compaction ratios: ";
   for ( size_t i = 0; i < finder.getMatchers().size(); i++ )
