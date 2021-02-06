@@ -13,7 +13,8 @@ class OeisSequence
 public:
 
   OeisSequence( size_t id = 0 )
-      : id( id )
+      : id( id ),
+        loaded_bfile( false )
   {
   }
 
@@ -21,7 +22,8 @@ public:
       : id( id ),
         name( name ),
         norm( s ),
-        full( full )
+        full( full ),
+        loaded_bfile( false )
   {
   }
 
@@ -33,14 +35,20 @@ public:
 
   std::string getBFilePath() const;
 
+  const Sequence& getFull() const;
+
   size_t id;
   std::string name;
   Sequence norm;
-  Sequence full;
 
   friend std::ostream& operator<<( std::ostream &out, const OeisSequence &s );
 
   std::string to_string() const;
+
+private:
+
+  mutable Sequence full;
+  mutable bool loaded_bfile;
 
 };
 

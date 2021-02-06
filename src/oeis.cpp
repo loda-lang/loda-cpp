@@ -150,6 +150,24 @@ bool loadBFile( size_t id, const Sequence& seq_full, Sequence& seq_big )
   return true;
 }
 
+const Sequence& OeisSequence::getFull() const
+{
+  if ( !loaded_bfile )
+  {
+    loaded_bfile = true;
+    if ( id != 0 )
+    {
+      Sequence big;
+      if ( loadBFile( id, full, big ) )
+      {
+        // use data from big sequence from now on
+        full = big;
+      }
+    }
+  }
+  return full;
+}
+
 Oeis::Oeis( const Settings &settings )
     : settings( settings ),
       interpreter( settings ),
@@ -252,14 +270,6 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
     // normalized sequence
     seq_norm = Sequence( std::vector<number_t>( seq_full.begin(), seq_full.begin() + settings.num_terms ) );
 
-    // big sequence
-    seq_big.clear();
-    if ( loadBFile( id, seq_full, seq_big ) )
-    {
-      // use data from big sequence from now on
-      seq_full = seq_big;
-    }
-
     // add sequence to index
     if ( id >= sequences.size() )
     {
@@ -286,7 +296,7 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
       {
         continue;
       }
-      if ( !settings.search_linear && seq.full.is_linear( settings.linear_prefix ) )
+      if ( !settings.search_linear && seq.norm.is_linear( settings.linear_prefix ) )
       {
         seqs_to_remove.push_back( seq.id );
         continue;
@@ -528,7 +538,7 @@ void Oeis::dumpProgram( size_t id, Program p, const std::string &file ) const
   std::ofstream out( file );
   auto &seq = sequences.at( id );
   out << "; " << seq << std::endl;
-  out << "; " << seq.full << std::endl;
+  out << "; " << seq.getFull() << std::endl;
   out << std::endl;
   ProgramUtil::print( p, out );
 }
@@ -539,17 +549,18 @@ std::pair<bool, Program> Oeis::minimizeAndCheck( const Program &p, const OeisSeq
   std::pair<bool, Program> minimized;
   minimized.first = true;
   minimized.second = p;
+  auto& full = seq.getFull();
   if ( minimize )
   {
-    minimizer.optimizeAndMinimize( minimized.second, 2, 1, seq.full.size() );
+    minimizer.optimizeAndMinimize( minimized.second, 2, 1, full.size() );
   }
 
   // check its correctness
   Sequence new_seq;
   try
   {
-    interpreter.eval( minimized.second, new_seq, seq.full.size() );
-    if ( seq.full.size() != new_seq.size() || seq.full != new_seq )
+    interpreter.eval( minimized.second, new_seq, full.size() );
+    if ( full.size() != new_seq.size() || full != new_seq )
     {
       minimized.first = false;
     }
@@ -770,8 +781,9 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
       }
       try
       {
-        interpreter.eval( program, result, s.full.size() );
-        is_okay = (result == s.full);
+        auto& full = s.getFull();
+        interpreter.eval( program, result, full.size() );
+        is_okay = (result == full);
       }
       catch ( const std::exception &exc )
       {
@@ -788,7 +800,7 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
         has_program = true;
         ProgramUtil::removeOps( program, Operation::Type::NOP );
         optimized = program;
-        minimizer.optimizeAndMinimize( optimized, 2, 1, s.full.size() );
+        minimizer.optimizeAndMinimize( optimized, 2, 1, s.getFull().size() );
         if ( program != optimized )
         {
           Log::get().warn( "Updating program because it is not optimal: " + file_name );
