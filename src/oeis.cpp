@@ -67,14 +67,96 @@ void throwParseError( const std::string &line )
   Log::get().error( "error parsing OEIS line: " + line, true );
 }
 
+bool loadBFile( size_t id, const Sequence& seq_full, Sequence& seq_big )
+{
+  std::string big_path = OeisSequence( id ).getBFilePath();
+  std::ifstream big_file( big_path );
+  if ( !big_file.good() )
+  {
+    if ( Log::get().level == Log::Level::DEBUG )
+    {
+      Log::get().debug( "b-file not found: " + big_path );
+    }
+    return false;
+  }
+  std::string l;
+  int64_t expected_index = -1, index = 0, value = 0;
+  while ( std::getline( big_file, l ) )
+  {
+    l.erase( l.begin(), std::find_if( l.begin(), l.end(), []( int ch )
+    {
+      return !std::isspace(ch);
+    } ) );
+    if ( l.empty() || l[0] == '#' )
+    {
+      continue;
+    }
+    std::stringstream ss( l );
+    ss >> index >> value;
+    if ( expected_index == -1 )
+    {
+      expected_index = index;
+    }
+    if ( index != expected_index )
+    {
+      Log::get().warn( "Unexpected index " + std::to_string( index ) + " in b-file " + big_path );
+      return false;
+    }
+    if ( isCloseToOverflow( value ) )
+    {
+      break;
+    }
+    seq_big.push_back( value );
+    ++expected_index;
+  }
+
+  // align sequences on common prefix (will verify correctness below again!)
+  seq_big.align( seq_full, 5 );
+
+  // check length
+  if ( seq_big.empty() || seq_big.size() < seq_full.size() )
+  {
+    Log::get().debug(
+        "Sequence in b-file too short: " + big_path + " (" + std::to_string( seq_big.size() ) + "<"
+            + std::to_string( seq_full.size() ) + ")" );
+    return false;
+  }
+
+  // check that the sequences agree on prefix
+  Sequence seq_test( std::vector<number_t>( seq_big.begin(), seq_big.begin() + seq_full.size() ) );
+  if ( seq_test != seq_full )
+  {
+    Log::get().warn( "Unexpected terms in b-file " + big_path );
+    Log::get().warn( "- expected: " + seq_full.to_string() );
+    Log::get().warn( "- found:    " + seq_test.to_string() );
+    if ( rand() % 5 == 0 )
+    {
+      std::remove( big_path.c_str() );
+    }
+    return false;
+  }
+
+  // shrink big sequence to maximum number of terms
+  if ( seq_big.size() > Oeis::MAX_NUM_TERMS )
+  {
+    seq_big = Sequence( std::vector<number_t>( seq_big.begin(), seq_big.begin() + Oeis::MAX_NUM_TERMS ) );
+  }
+
+  if ( Log::get().level == Log::Level::DEBUG )
+  {
+    Log::get().debug(
+        "Loaded b-file for sequence " + std::to_string( id ) + " with " + std::to_string( seq_big.size() ) + " terms" );
+  }
+  return true;
+}
+
 Oeis::Oeis( const Settings &settings )
-    :
-    settings( settings ),
-    interpreter( settings ),
-    finder( settings ),
-    minimizer( settings ),
-    optimizer( settings ),
-    total_count_( 0 )
+    : settings( settings ),
+      interpreter( settings ),
+      finder( settings ),
+      minimizer( settings ),
+      optimizer( settings ),
+      total_count_( 0 )
 {
 }
 
@@ -172,92 +254,10 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
 
     // big sequence
     seq_big.clear();
-    std::string big_path = OeisSequence( id ).getBFilePath();
-    std::ifstream big_file( big_path );
-    if ( big_file.good() )
+    if ( loadBFile( id, seq_full, seq_big ) )
     {
-      std::string l;
-      int64_t expected_index = -1, index = 0, value = 0;
-      while ( std::getline( big_file, l ) )
-      {
-        l.erase( l.begin(), std::find_if( l.begin(), l.end(), []( int ch )
-        {
-          return !std::isspace(ch);
-        } ) );
-        if ( l.empty() || l[0] == '#' )
-        {
-          continue;
-        }
-        std::stringstream ss( l );
-        ss >> index >> value;
-        if ( expected_index == -1 )
-        {
-          expected_index = index;
-        }
-        if ( index != expected_index )
-        {
-          Log::get().warn( "Unexpected index " + std::to_string( index ) + " in b-file " + big_path );
-          seq_big.clear();
-          break;
-        }
-        if ( isCloseToOverflow( value ) )
-        {
-          break;
-        }
-        seq_big.push_back( value );
-        ++expected_index;
-      }
-
-      // align sequences on common prefix (will verify correctness below again!)
-      seq_big.align( seq_full, 5 );
-
-      // check length
-      if ( seq_big.size() < seq_full.size() )
-      {
-        Log::get().debug(
-            "Sequence in b-file too short: " + big_path + " (" + std::to_string( seq_big.size() ) + "<"
-                + std::to_string( seq_full.size() ) + ")" );
-        seq_big.clear();
-      }
-      else
-      {
-        // check that the sequences agree on prefix
-        Sequence seq_test( std::vector<number_t>( seq_big.begin(), seq_big.begin() + seq_full.size() ) );
-        if ( seq_test != seq_full )
-        {
-          Log::get().warn( "Unexpected terms in b-file " + big_path );
-          Log::get().warn( "- expected: " + seq_full.to_string() );
-          Log::get().warn( "- found:    " + seq_test.to_string() );
-          seq_big.clear();
-          if ( rand() % 5 == 0 )
-          {
-            std::remove( big_path.c_str() );
-          }
-        }
-      }
-
-      // shrink big sequence to maximum number of terms
-      if ( seq_big.size() > MAX_NUM_TERMS )
-      {
-        seq_big = Sequence( std::vector<number_t>( seq_big.begin(), seq_big.begin() + MAX_NUM_TERMS ) );
-      }
-
       // use data from big sequence from now on
-      if ( !seq_big.empty() )
-      {
-        big_loaded_count++;
-        seq_full = seq_big;
-        if ( Log::get().level == Log::Level::DEBUG )
-        {
-          Log::get().debug(
-              "Loaded b-file for sequence " + std::to_string( id ) + " with " + std::to_string( seq_big.size() )
-                  + " terms" );
-        }
-      }
-    }
-    else if ( Log::get().level == Log::Level::DEBUG )
-    {
-      Log::get().debug( "b-file not found: " + big_path );
+      seq_full = seq_big;
     }
 
     // add sequence to index
