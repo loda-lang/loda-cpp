@@ -35,7 +35,7 @@ public:
 
   std::string getBFilePath() const;
 
-  const Sequence& getFull() const;
+  const Sequence& getFull( bool fetch = false ) const;
 
   size_t id;
   std::string name;

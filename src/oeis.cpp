@@ -150,7 +150,7 @@ bool loadBFile( size_t id, const Sequence& seq_full, Sequence& seq_big )
   return true;
 }
 
-const Sequence& OeisSequence::getFull() const
+const Sequence& OeisSequence::getFull( bool fetch ) const
 {
   if ( !loaded_bfile )
   {
@@ -158,7 +158,26 @@ const Sequence& OeisSequence::getFull() const
     if ( id != 0 )
     {
       Sequence big;
+      bool success = false;
       if ( loadBFile( id, full, big ) )
+      {
+        success = true;
+      }
+      else if ( fetch )
+      {
+        ensureDir( getBFilePath() );
+        std::string cmd = "wget -nv -O " + getBFilePath() + " https://oeis.org/" + id_str() + "/" + id_str( "b" )
+            + ".txt";
+        if ( system( cmd.c_str() ) != 0 )
+        {
+          Log::get().error( "Error fetching b-file for " + id_str(), true ); // need to exit here to be able to cancel
+        }
+        else if ( loadBFile( id, full, big ) )
+        {
+          success = true;
+        }
+      }
+      if ( success )
       {
         // use data from big sequence from now on
         full = big;
@@ -453,13 +472,7 @@ void Oeis::update( volatile sig_atomic_t &exit_flag )
     if ( !b_file.good()
         && (program_file.good() || (stats.cached_b_files.size() > (size_t) s.id && stats.cached_b_files[s.id])) )
     {
-      ensureDir( s.getBFilePath() );
-      cmd = "wget -nv -O " + s.getBFilePath() + " https://oeis.org/" + s.id_str() + "/" + s.id_str( "b" ) + ".txt";
-      exit_code = system( cmd.c_str() );
-      if ( exit_code != 0 )
-      {
-        Log::get().error( "Error fetching b-file for " + s.id_str(), true );
-      }
+      s.getFull( true );
     }
     b_file.close();
     program_file.close();
