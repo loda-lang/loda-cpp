@@ -18,10 +18,9 @@
 #define METRIC_PUBLISH_INTERVAL 120
 
 Miner::Miner( const Settings &settings )
-    :
-    settings( settings ),
-    oeis( settings ),
-    interpreter( settings )
+    : settings( settings ),
+      oeis( settings ),
+      interpreter( settings )
 {
 }
 
@@ -91,13 +90,13 @@ bool Miner::isPrimeSequence( const Sequence &seq ) const
   {
     Log::get().debug( "Loading prime numbers" );
     auto &primes = oeis.getSequences().at( 40 );
-    if ( primes.full.at( 10 ) != 31 )
+    if ( primes.getFull().at( 10 ) != 31 )
     {
       Log::get().error(
-          "Expected 10th value of primes (A000040) to be 31, but found " + std::to_string( primes.full.at( 10 ) ),
+          "Expected 10th value of primes (A000040) to be 31, but found " + std::to_string( primes.getFull().at( 10 ) ),
           false );
     }
-    primes_cache.insert( primes.begin(), primes.end() );
+    primes_cache.insert( primes.norm.begin(), primes.norm.end() );
   }
   std::unordered_set<number_t> found;
   for ( auto n : seq )
@@ -212,11 +211,11 @@ void Miner::synthesize( volatile sig_atomic_t &exit_flag )
       {
         break;
       }
-      if ( seq.empty() )
+      if ( seq.norm.empty() )
       {
         continue;
       }
-      if ( synthesizer->synthesize( seq.full, program ) )
+      if ( synthesizer->synthesize( seq.getFull(), program ) )
       {
         Log::get().debug( "Synthesized program for " + seq.to_string() );
         auto r = oeis.updateProgram( seq.id, program );

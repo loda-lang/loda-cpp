@@ -67,14 +67,133 @@ void throwParseError( const std::string &line )
   Log::get().error( "error parsing OEIS line: " + line, true );
 }
 
+bool loadBFile( size_t id, const Sequence& seq_full, Sequence& seq_big )
+{
+  std::string big_path = OeisSequence( id ).getBFilePath();
+  std::ifstream big_file( big_path );
+  if ( !big_file.good() )
+  {
+    if ( Log::get().level == Log::Level::DEBUG )
+    {
+      Log::get().debug( "b-file not found: " + big_path );
+    }
+    return false;
+  }
+  std::string l;
+  int64_t expected_index = -1, index = 0, value = 0;
+  while ( std::getline( big_file, l ) )
+  {
+    l.erase( l.begin(), std::find_if( l.begin(), l.end(), []( int ch )
+    {
+      return !std::isspace(ch);
+    } ) );
+    if ( l.empty() || l[0] == '#' )
+    {
+      continue;
+    }
+    std::stringstream ss( l );
+    ss >> index >> value;
+    if ( expected_index == -1 )
+    {
+      expected_index = index;
+    }
+    if ( index != expected_index )
+    {
+      Log::get().warn( "Unexpected index " + std::to_string( index ) + " in b-file " + big_path );
+      return false;
+    }
+    if ( isCloseToOverflow( value ) )
+    {
+      break;
+    }
+    seq_big.push_back( value );
+    ++expected_index;
+  }
+
+  // align sequences on common prefix (will verify correctness below again!)
+  seq_big.align( seq_full, 5 );
+
+  // check length
+  if ( seq_big.empty() || seq_big.size() < seq_full.size() )
+  {
+    Log::get().debug(
+        "Sequence in b-file too short: " + big_path + " (" + std::to_string( seq_big.size() ) + "<"
+            + std::to_string( seq_full.size() ) + ")" );
+    return false;
+  }
+
+  // check that the sequences agree on prefix
+  Sequence seq_test( std::vector<number_t>( seq_big.begin(), seq_big.begin() + seq_full.size() ) );
+  if ( seq_test != seq_full )
+  {
+    Log::get().warn( "Unexpected terms in b-file " + big_path );
+    Log::get().warn( "- expected: " + seq_full.to_string() );
+    Log::get().warn( "- found:    " + seq_test.to_string() );
+    if ( rand() % 5 == 0 )
+    {
+      std::remove( big_path.c_str() );
+    }
+    return false;
+  }
+
+  // shrink big sequence to maximum number of terms
+  if ( seq_big.size() > Oeis::MAX_NUM_TERMS )
+  {
+    seq_big = Sequence( std::vector<number_t>( seq_big.begin(), seq_big.begin() + Oeis::MAX_NUM_TERMS ) );
+  }
+
+  if ( Log::get().level == Log::Level::DEBUG )
+  {
+    Log::get().debug(
+        "Loaded b-file for sequence " + std::to_string( id ) + " with " + std::to_string( seq_big.size() ) + " terms" );
+  }
+  return true;
+}
+
+const Sequence& OeisSequence::getFull( bool fetch ) const
+{
+  if ( !loaded_bfile )
+  {
+    loaded_bfile = true;
+    if ( id != 0 )
+    {
+      Sequence big;
+      bool success = false;
+      if ( loadBFile( id, full, big ) )
+      {
+        success = true;
+      }
+      else if ( fetch )
+      {
+        ensureDir( getBFilePath() );
+        std::string cmd = "wget -nv -O " + getBFilePath() + " https://oeis.org/" + id_str() + "/" + id_str( "b" )
+            + ".txt";
+        if ( system( cmd.c_str() ) != 0 )
+        {
+          Log::get().error( "Error fetching b-file for " + id_str(), true ); // need to exit here to be able to cancel
+        }
+        else if ( loadBFile( id, full, big ) )
+        {
+          success = true;
+        }
+      }
+      if ( success )
+      {
+        // use data from big sequence from now on
+        full = big;
+      }
+    }
+  }
+  return full;
+}
+
 Oeis::Oeis( const Settings &settings )
-    :
-    settings( settings ),
-    interpreter( settings ),
-    finder( settings ),
-    minimizer( settings ),
-    optimizer( settings ),
-    total_count_( 0 )
+    : settings( settings ),
+      interpreter( settings ),
+      finder( settings ),
+      minimizer( settings ),
+      optimizer( settings ),
+      total_count_( 0 )
 {
 }
 
@@ -98,7 +217,6 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
   int64_t num, sign;
   Sequence seq_full, seq_norm, seq_big;
   size_t loaded_count = 0;
-  size_t big_loaded_count = 0;
   std::random_device rand;
   while ( std::getline( stripped, line ) )
   {
@@ -170,96 +288,6 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
     // normalized sequence
     seq_norm = Sequence( std::vector<number_t>( seq_full.begin(), seq_full.begin() + settings.num_terms ) );
 
-    // big sequence
-    seq_big.clear();
-    std::string big_path = OeisSequence( id ).getBFilePath();
-    std::ifstream big_file( big_path );
-    if ( big_file.good() )
-    {
-      std::string l;
-      int64_t expected_index = -1, index = 0, value = 0;
-      while ( std::getline( big_file, l ) )
-      {
-        l.erase( l.begin(), std::find_if( l.begin(), l.end(), []( int ch )
-        {
-          return !std::isspace(ch);
-        } ) );
-        if ( l.empty() || l[0] == '#' )
-        {
-          continue;
-        }
-        std::stringstream ss( l );
-        ss >> index >> value;
-        if ( expected_index == -1 )
-        {
-          expected_index = index;
-        }
-        if ( index != expected_index )
-        {
-          Log::get().warn( "Unexpected index " + std::to_string( index ) + " in b-file " + big_path );
-          seq_big.clear();
-          break;
-        }
-        if ( isCloseToOverflow( value ) )
-        {
-          break;
-        }
-        seq_big.push_back( value );
-        ++expected_index;
-      }
-
-      // align sequences on common prefix (will verify correctness below again!)
-      seq_big.align( seq_full, 5 );
-
-      // check length
-      if ( seq_big.size() < seq_full.size() )
-      {
-        Log::get().debug(
-            "Sequence in b-file too short: " + big_path + " (" + std::to_string( seq_big.size() ) + "<"
-                + std::to_string( seq_full.size() ) + ")" );
-        seq_big.clear();
-      }
-      else
-      {
-        // check that the sequences agree on prefix
-        Sequence seq_test( std::vector<number_t>( seq_big.begin(), seq_big.begin() + seq_full.size() ) );
-        if ( seq_test != seq_full )
-        {
-          Log::get().warn( "Unexpected terms in b-file " + big_path );
-          Log::get().warn( "- expected: " + seq_full.to_string() );
-          Log::get().warn( "- found:    " + seq_test.to_string() );
-          seq_big.clear();
-          if ( rand() % 5 == 0 )
-          {
-            std::remove( big_path.c_str() );
-          }
-        }
-      }
-
-      // shrink big sequence to maximum number of terms
-      if ( seq_big.size() > MAX_NUM_TERMS )
-      {
-        seq_big = Sequence( std::vector<number_t>( seq_big.begin(), seq_big.begin() + MAX_NUM_TERMS ) );
-      }
-
-      // use data from big sequence from now on
-      if ( !seq_big.empty() )
-      {
-        big_loaded_count++;
-        seq_full = seq_big;
-        if ( Log::get().level == Log::Level::DEBUG )
-        {
-          Log::get().debug(
-              "Loaded b-file for sequence " + std::to_string( id ) + " with " + std::to_string( seq_big.size() )
-                  + " terms" );
-        }
-      }
-    }
-    else if ( Log::get().level == Log::Level::DEBUG )
-    {
-      Log::get().debug( "b-file not found: " + big_path );
-    }
-
     // add sequence to index
     if ( id >= sequences.size() )
     {
@@ -286,7 +314,7 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
       {
         continue;
       }
-      if ( !settings.search_linear && seq.full.is_linear( settings.linear_prefix ) )
+      if ( !settings.search_linear && seq.norm.is_linear( settings.linear_prefix ) )
       {
         seqs_to_remove.push_back( seq.id );
         continue;
@@ -303,7 +331,6 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
   // remove sequences
   if ( !seqs_to_remove.empty() )
   {
-    Log::get().info( "Ignoring " + std::to_string( seqs_to_remove.size() ) + " sequences" );
     for ( auto id : seqs_to_remove )
     {
       removeSequence( id );
@@ -326,8 +353,8 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
 
   // print summary
   Log::get().info(
-      "Loaded " + std::to_string( loaded_count ) + "/" + std::to_string( total_count_ ) + " sequences and "
-          + std::to_string( big_loaded_count ) + " b-files" );
+      "Loaded " + std::to_string( loaded_count ) + "/" + std::to_string( total_count_ ) + " sequences (ignored "
+          + std::to_string( seqs_to_remove.size() ) + ")" );
   std::stringstream buf;
   buf << "Matcher compaction ratios: ";
   for ( size_t i = 0; i < finder.getMatchers().size(); i++ )
@@ -445,13 +472,7 @@ void Oeis::update( volatile sig_atomic_t &exit_flag )
     if ( !b_file.good()
         && (program_file.good() || (stats.cached_b_files.size() > (size_t) s.id && stats.cached_b_files[s.id])) )
     {
-      ensureDir( s.getBFilePath() );
-      cmd = "wget -nv -O " + s.getBFilePath() + " https://oeis.org/" + s.id_str() + "/" + s.id_str( "b" ) + ".txt";
-      exit_code = system( cmd.c_str() );
-      if ( exit_code != 0 )
-      {
-        Log::get().error( "Error fetching b-file for " + s.id_str(), true );
-      }
+      s.getFull( true );
     }
     b_file.close();
     program_file.close();
@@ -505,7 +526,7 @@ void Oeis::removeSequence( size_t id )
   }
   if ( sequences[id].id == id )
   {
-    finder.remove( sequences[id], id );
+    finder.remove( sequences[id].norm, id );
     sequences[id] = OeisSequence();
   }
 }
@@ -528,7 +549,7 @@ void Oeis::dumpProgram( size_t id, Program p, const std::string &file ) const
   std::ofstream out( file );
   auto &seq = sequences.at( id );
   out << "; " << seq << std::endl;
-  out << "; " << seq.full << std::endl;
+  out << "; " << seq.getFull() << std::endl;
   out << std::endl;
   ProgramUtil::print( p, out );
 }
@@ -539,17 +560,18 @@ std::pair<bool, Program> Oeis::minimizeAndCheck( const Program &p, const OeisSeq
   std::pair<bool, Program> minimized;
   minimized.first = true;
   minimized.second = p;
+  auto& full = seq.getFull();
   if ( minimize )
   {
-    minimizer.optimizeAndMinimize( minimized.second, 2, 1, seq.full.size() );
+    minimizer.optimizeAndMinimize( minimized.second, 2, 1, full.size() );
   }
 
   // check its correctness
   Sequence new_seq;
   try
   {
-    interpreter.eval( minimized.second, new_seq, seq.full.size() );
-    if ( seq.full.size() != new_seq.size() || seq.full != new_seq )
+    interpreter.eval( minimized.second, new_seq, full.size() );
+    if ( full.size() != new_seq.size() || full != new_seq )
     {
       minimized.first = false;
     }
@@ -716,7 +738,7 @@ std::pair<bool, bool> Oeis::updateProgram( size_t id, const Program &p )
   std::stringstream buf;
   if ( is_new ) buf << "First";
   else buf << change;
-  buf << " program for " << seq << " Terms: " << static_cast<Sequence>( seq );
+  buf << " program for " << seq << " Terms: " << seq.norm;
   Log::get().alert( buf.str() );
   dumpProgram( id, optimized.second, file_name );
   return
@@ -770,8 +792,9 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
       }
       try
       {
-        interpreter.eval( program, result, s.full.size() );
-        is_okay = (result == s.full);
+        auto& full = s.getFull();
+        interpreter.eval( program, result, full.size() );
+        is_okay = (result == full);
       }
       catch ( const std::exception &exc )
       {
@@ -788,7 +811,7 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
         has_program = true;
         ProgramUtil::removeOps( program, Operation::Type::NOP );
         optimized = program;
-        minimizer.optimizeAndMinimize( optimized, 2, 1, s.full.size() );
+        minimizer.optimizeAndMinimize( optimized, 2, 1, s.getFull().size() );
         if ( program != optimized )
         {
           Log::get().warn( "Updating program because it is not optimal: " + file_name );

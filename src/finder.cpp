@@ -8,10 +8,9 @@
 #include <fstream>
 
 Finder::Finder( const Settings &settings )
-    :
-    settings( settings ),
-    interpreter( settings ),
-    num_find_attempts( 0 )
+    : settings( settings ),
+      interpreter( settings ),
+      num_find_attempts( 0 )
 {
   if ( settings.optimize_existing_programs )
   {
@@ -124,7 +123,7 @@ void Finder::findAll( const Program &p, const Sequence &norm_seq, const std::vec
     for ( auto t : tmp_result )
     {
       matcher_stats[i].candidates++;
-      auto &expected_full_seq = sequences.at( t.first ).full;
+      auto &expected_full_seq = sequences.at( t.first ).getFull();
       try
       {
         tmp_full_seq.clear();

@@ -79,9 +79,6 @@ function push_updates {
   num_changes=$(git status programs -s | wc -l)
   if [ "$num_changes" -ge "$min_changes" ]; then
     stop_miners
-    if [ "$branch" = "master" ]; then
-      ./make_charts.sh
-    fi
     echo "Pushing updates"
     git add programs
     if [ "$branch" = "master" ]; then

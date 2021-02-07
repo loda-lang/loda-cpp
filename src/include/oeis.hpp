@@ -8,22 +8,22 @@
 #include "program.hpp"
 #include "util.hpp"
 
-class OeisSequence: public Sequence
+class OeisSequence
 {
 public:
 
   OeisSequence( size_t id = 0 )
-      :
-      id( id )
+      : id( id ),
+        loaded_bfile( false )
   {
   }
 
   OeisSequence( size_t id, const std::string &name, const Sequence &s, const Sequence &full )
-      :
-      Sequence( s ),
-      id( id ),
-      name( name ),
-      full( full )
+      : id( id ),
+        name( name ),
+        norm( s ),
+        full( full ),
+        loaded_bfile( false )
   {
   }
 
@@ -35,13 +35,20 @@ public:
 
   std::string getBFilePath() const;
 
+  const Sequence& getFull( bool fetch = false ) const;
+
   size_t id;
   std::string name;
-  Sequence full;
+  Sequence norm;
 
   friend std::ostream& operator<<( std::ostream &out, const OeisSequence &s );
 
   std::string to_string() const;
+
+private:
+
+  mutable Sequence full;
+  mutable bool loaded_bfile;
 
 };
 
