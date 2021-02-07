@@ -15,7 +15,10 @@
 #include <limits>
 #include <fstream>
 #include <sstream>
+#include <sys/stat.h>
 #include <stdlib.h>
+#include <sys/file.h>
+#include <unistd.h>
 
 size_t Oeis::MAX_NUM_TERMS = 250;
 
@@ -200,11 +203,33 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
   {
     return;
   }
-  Log::get().info( "Loading sequences from the OEIS index" );
+  size_t loaded_count = 0;
 
-  // load sequence data and names
-  auto loaded_count = loadData( exit_flag );
-  loadNames( exit_flag );
+  {
+    // obtain lock
+    ensureDir( getOeisHome() );
+    std::string lockfile = getOeisHome() + "lock";
+    int fd = 0;
+    while ( true )
+    {
+      fd = open( lockfile.c_str(), O_CREAT );
+      flock( fd, LOCK_EX );
+      struct stat st0, st1;
+      fstat( fd, &st0 );
+      stat( lockfile.c_str(), &st1 );
+      if ( st0.st_ino == st1.st_ino ) break;
+      close( fd );
+    }
+
+    // load sequence data and names
+    Log::get().info( "Loading sequences from the OEIS index" );
+    loaded_count = loadData( exit_flag );
+    loadNames( exit_flag );
+
+    // remove lock
+    unlink( lockfile.c_str() );
+    flock( fd, LOCK_UN );
+  }
 
   // collect known / linear sequences if they should be ignored
   std::vector<number_t> seqs_to_remove;
