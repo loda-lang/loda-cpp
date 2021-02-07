@@ -44,7 +44,6 @@ void help()
   std::cout << "  mine             Mine programs for OEIS sequences" << std::endl;
   std::cout << "  synthesize       Synthesize programs for OEIS sequences" << std::endl;
   std::cout << "  maintain         Maintain programs for OEIS sequences" << std::endl;
-  std::cout << "  update           Update OEIS index" << std::endl;
   std::cout << "Options:" << std::endl;
   std::cout << "  -l <string>      Log level (values:debug,info,warn,error,alert)" << std::endl;
   std::cout << "  -k <string>      Configuration file (default:loda.json)" << std::endl;
@@ -159,13 +158,6 @@ int main( int argc, char *argv[] )
       settings.optimize_existing_programs = true;
       Oeis o( settings );
       o.maintain( EXIT_FLAG );
-    }
-    else if ( cmd == "update" )
-    {
-      // need to set the override flag!
-      settings.optimize_existing_programs = true;
-      Oeis o( settings );
-      o.update( EXIT_FLAG );
     }
     else if ( cmd == "migrate" )
     {

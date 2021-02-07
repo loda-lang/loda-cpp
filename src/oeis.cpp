@@ -18,6 +18,7 @@
 #include <sys/stat.h>
 #include <stdlib.h>
 #include <sys/file.h>
+#include <time.h>
 #include <unistd.h>
 
 size_t Oeis::MAX_NUM_TERMS = 250;
@@ -220,6 +221,9 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
       if ( st0.st_ino == st1.st_ino ) break;
       close( fd );
     }
+
+    // update index if needed
+    update( exit_flag );
 
     // load sequence data and names
     Log::get().info( "Loading sequences from the OEIS index" );
@@ -445,38 +449,57 @@ void Oeis::loadNames( volatile sig_atomic_t &exit_flag )
 
 void Oeis::update( volatile sig_atomic_t &exit_flag )
 {
-  Log::get().info( "Updating OEIS index" );
-  ensureDir( getOeisHome() );
-  std::string cmd, path;
-  int exit_code;
   std::vector<std::string> files = { "stripped", "names" };
-  for ( auto &file : files )
+
+  // check which files need to be updated
+  auto it = files.begin();
+  while ( it != files.end() )
   {
-    if ( exit_flag )
+    struct stat st;
+    auto path = getOeisHome() + *it;
+    if ( stat( path.c_str(), &st ) == 0 )
     {
-      break;
+      time_t now = time( 0 );
+      auto hours = (now - st.st_mtime) / 3600;
+      if ( hours < 24 )
+      {
+        // no need to update this file
+        it = files.erase( it );
+        continue;
+      }
     }
-    path = getOeisHome() + file;
-    cmd = "wget -nv -O " + path + ".gz https://oeis.org/" + file + ".gz";
-    exit_code = system( cmd.c_str() );
-    if ( exit_code != 0 )
+    it++;
+  }
+  if ( !files.empty() )
+  {
+    Log::get().info( "Updating OEIS index" );
+    ensureDir( getOeisHome() );
+    std::string cmd, path;
+    for ( auto &file : files )
     {
-      Log::get().error( "Error fetching " + file + " file", true );
-    }
-    std::ifstream f( getOeisHome() + file );
-    if ( f.good() )
-    {
-      f.close();
-      std::remove( path.c_str() );
-    }
-    cmd = "gzip -d " + path + ".gz";
-    exit_code = system( cmd.c_str() );
-    if ( exit_code != 0 )
-    {
-      Log::get().error( "Error unzipping " + path + ".gz", true );
+      if ( exit_flag )
+      {
+        break;
+      }
+      path = getOeisHome() + file;
+      cmd = "wget -nv -O " + path + ".gz https://oeis.org/" + file + ".gz";
+      if ( system( cmd.c_str() ) != 0 )
+      {
+        Log::get().error( "Error fetching " + file + " file", true );
+      }
+      std::ifstream f( getOeisHome() + file );
+      if ( f.good() )
+      {
+        f.close();
+        std::remove( path.c_str() );
+      }
+      cmd = "gzip -d " + path + ".gz";
+      if ( system( cmd.c_str() ) != 0 )
+      {
+        Log::get().error( "Error unzipping " + path + ".gz", true );
+      }
     }
   }
-  Log::get().info( "Finished update" );
 }
 
 void migrateFile( const std::string &from, const std::string &to )
