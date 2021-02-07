@@ -179,6 +179,7 @@ void OeisSequence::fetchBFile() const
     {
       Log::get().error( "Error fetching b-file for " + id_str(), true ); // need to exit here to be able to cancel
     }
+    loaded_bfile = false; // reload on next access
   }
 }
 
@@ -667,6 +668,7 @@ std::pair<bool, bool> Oeis::updateProgram( size_t id, const Program &p )
     {
       if ( settings.optimize_existing_programs )
       {
+        seq.fetchBFile(); // ensure b-file gets fetched before checking
         optimized = minimizeAndCheck( p, seq, true );
         if ( !optimized.first )
         {
