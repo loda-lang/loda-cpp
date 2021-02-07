@@ -212,7 +212,7 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
     int fd = 0;
     while ( true )
     {
-      fd = open( lockfile.c_str(), O_CREAT );
+      fd = open( lockfile.c_str(), O_CREAT, 0644 );
       flock( fd, LOCK_EX );
       struct stat st0, st1;
       fstat( fd, &st0 );
