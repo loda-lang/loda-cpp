@@ -158,26 +158,7 @@ const Sequence& OeisSequence::getFull() const
     if ( id != 0 )
     {
       Sequence big;
-      bool success = false;
       if ( loadBFile( id, full, big ) )
-      {
-        success = true;
-      }
-      else
-      {
-        ensureDir( getBFilePath() );
-        std::string cmd = "wget -nv -O " + getBFilePath() + " https://oeis.org/" + id_str() + "/" + id_str( "b" )
-            + ".txt";
-        if ( system( cmd.c_str() ) != 0 )
-        {
-          Log::get().error( "Error fetching b-file for " + id_str(), true ); // need to exit here to be able to cancel
-        }
-        else if ( loadBFile( id, full, big ) )
-        {
-          success = true;
-        }
-      }
-      if ( success )
       {
         // use data from big sequence from now on
         full = big;
@@ -185,6 +166,20 @@ const Sequence& OeisSequence::getFull() const
     }
   }
   return full;
+}
+
+void OeisSequence::fetchBFile() const
+{
+  Sequence big;
+  if ( !loadBFile( id, full, big ) )
+  {
+    ensureDir( getBFilePath() );
+    std::string cmd = "wget -nv -O " + getBFilePath() + " https://oeis.org/" + id_str() + "/" + id_str( "b" ) + ".txt";
+    if ( system( cmd.c_str() ) != 0 )
+    {
+      Log::get().error( "Error fetching b-file for " + id_str(), true ); // need to exit here to be able to cancel
+    }
+  }
 }
 
 Oeis::Oeis( const Settings &settings )
@@ -529,6 +524,8 @@ void Oeis::dumpProgram( size_t id, Program p, const std::string &file ) const
   out << "; " << seq.getFull() << std::endl;
   out << std::endl;
   ProgramUtil::print( p, out );
+  out.close();
+  seq.fetchBFile(); // ensure b-file gets downloaded for the next run
 }
 
 std::pair<bool, Program> Oeis::minimizeAndCheck( const Program &p, const OeisSequence &seq, bool minimize )

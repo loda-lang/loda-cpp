@@ -37,6 +37,8 @@ public:
 
   const Sequence& getFull() const;
 
+  void fetchBFile() const;
+
   size_t id;
   std::string name;
   Sequence norm;
