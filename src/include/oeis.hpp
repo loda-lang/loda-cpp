@@ -94,6 +94,8 @@ public:
 
 private:
 
+  size_t loadData( volatile sig_atomic_t &exit_flag );
+
   void loadNames( volatile sig_atomic_t &exit_flag );
 
   std::pair<bool, Program> minimizeAndCheck( const Program &p, const OeisSequence &seq, bool optimize );

@@ -200,8 +200,78 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
   {
     return;
   }
-  // load sequence data
   Log::get().info( "Loading sequences from the OEIS index" );
+
+  // load sequence data and names
+  auto loaded_count = loadData( exit_flag );
+  loadNames( exit_flag );
+
+  // collect known / linear sequences if they should be ignored
+  std::vector<number_t> seqs_to_remove;
+  if ( !settings.optimize_existing_programs )
+  {
+    for ( auto &seq : sequences )
+    {
+      if ( seq.id == 0 )
+      {
+        continue;
+      }
+      if ( !settings.search_linear && seq.norm.is_linear( settings.linear_prefix ) )
+      {
+        seqs_to_remove.push_back( seq.id );
+        continue;
+      }
+      std::ifstream in( seq.getProgramPath() );
+      if ( in.good() )
+      {
+        seqs_to_remove.push_back( seq.id );
+        in.close();
+      }
+    }
+  }
+
+  // remove sequences
+  if ( !seqs_to_remove.empty() )
+  {
+    for ( auto id : seqs_to_remove )
+    {
+      removeSequence( id );
+    }
+  }
+
+  // shrink sequences vector again
+  if ( !sequences.empty() )
+  {
+    size_t i;
+    for ( i = sequences.size() - 1; i > 0; i-- )
+    {
+      if ( sequences[i].id != 0 )
+      {
+        break;
+      }
+    }
+    sequences.resize( i + 1 );
+  }
+
+  // print summary
+  Log::get().info(
+      "Loaded " + std::to_string( loaded_count ) + "/" + std::to_string( total_count_ ) + " sequences (ignored "
+          + std::to_string( seqs_to_remove.size() ) + ")" );
+  std::stringstream buf;
+  buf << "Matcher compaction ratios: ";
+  for ( size_t i = 0; i < finder.getMatchers().size(); i++ )
+  {
+    if ( i > 0 ) buf << ", ";
+    double ratio = 100.0 * (double) finder.getMatchers()[i]->getReducedSequences().size()
+        / (double) std::max<size_t>( loaded_count, 1 );
+    buf << finder.getMatchers()[i]->getName() << ": " << std::setprecision( 4 ) << ratio << "%";
+  }
+  Log::get().info( buf.str() );
+
+}
+
+size_t Oeis::loadData( volatile sig_atomic_t &exit_flag )
+{
   std::ifstream stripped( getOeisHome() + "stripped" );
   if ( !stripped.good() )
   {
@@ -296,72 +366,7 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
 
     ++loaded_count;
   }
-
-  loadNames( exit_flag );
-
-  std::vector<number_t> seqs_to_remove;
-
-  // collect known / linear sequences if they should be ignored
-  if ( !settings.optimize_existing_programs )
-  {
-    for ( auto &seq : sequences )
-    {
-      if ( seq.id == 0 )
-      {
-        continue;
-      }
-      if ( !settings.search_linear && seq.norm.is_linear( settings.linear_prefix ) )
-      {
-        seqs_to_remove.push_back( seq.id );
-        continue;
-      }
-      std::ifstream in( seq.getProgramPath() );
-      if ( in.good() )
-      {
-        seqs_to_remove.push_back( seq.id );
-        in.close();
-      }
-    }
-  }
-
-  // remove sequences
-  if ( !seqs_to_remove.empty() )
-  {
-    for ( auto id : seqs_to_remove )
-    {
-      removeSequence( id );
-    }
-  }
-
-  // shrink sequences vector again
-  if ( !sequences.empty() )
-  {
-    size_t i;
-    for ( i = sequences.size() - 1; i > 0; i-- )
-    {
-      if ( sequences[i].id != 0 )
-      {
-        break;
-      }
-    }
-    sequences.resize( i + 1 );
-  }
-
-  // print summary
-  Log::get().info(
-      "Loaded " + std::to_string( loaded_count ) + "/" + std::to_string( total_count_ ) + " sequences (ignored "
-          + std::to_string( seqs_to_remove.size() ) + ")" );
-  std::stringstream buf;
-  buf << "Matcher compaction ratios: ";
-  for ( size_t i = 0; i < finder.getMatchers().size(); i++ )
-  {
-    if ( i > 0 ) buf << ", ";
-    double ratio = 100.0 * (double) finder.getMatchers()[i]->getReducedSequences().size()
-        / (double) std::max<size_t>( loaded_count, 1 );
-    buf << finder.getMatchers()[i]->getName() << ": " << std::setprecision( 4 ) << ratio << "%";
-  }
-  Log::get().info( buf.str() );
-
+  return loaded_count;
 }
 
 void Oeis::loadNames( volatile sig_atomic_t &exit_flag )
@@ -415,10 +420,6 @@ void Oeis::loadNames( volatile sig_atomic_t &exit_flag )
 
 void Oeis::update( volatile sig_atomic_t &exit_flag )
 {
-  if ( !settings.optimize_existing_programs )
-  {
-    Log::get().error( "Option -x required to run update", true );
-  }
   Log::get().info( "Updating OEIS index" );
   ensureDir( getOeisHome() );
   std::string cmd, path;
