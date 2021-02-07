@@ -23,7 +23,8 @@ public:
         name( name ),
         norm( s ),
         full( full ),
-        loaded_bfile( false )
+        loaded_bfile( false ),
+        found_bfile( false )
   {
   }
 
@@ -51,6 +52,7 @@ private:
 
   mutable Sequence full;
   mutable bool loaded_bfile;
+  mutable bool found_bfile;
 
 };
 

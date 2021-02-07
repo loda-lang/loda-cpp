@@ -165,6 +165,7 @@ const Sequence& OeisSequence::getFull() const
       if ( loadBFile( id, full, big ) )
       {
         // use data from big sequence from now on
+        found_bfile = true;
         full = big;
       }
     }
@@ -174,16 +175,20 @@ const Sequence& OeisSequence::getFull() const
 
 void OeisSequence::fetchBFile() const
 {
-  std::ifstream big_file( getBFilePath() );
-  if ( !big_file.good() )
+  if ( !found_bfile )
   {
-    ensureDir( getBFilePath() );
-    std::string cmd = "wget -nv -O " + getBFilePath() + " https://oeis.org/" + id_str() + "/" + id_str( "b" ) + ".txt";
-    if ( system( cmd.c_str() ) != 0 )
+    std::ifstream big_file( getBFilePath() );
+    if ( !big_file.good() )
     {
-      Log::get().error( "Error fetching b-file for " + id_str(), true ); // need to exit here to be able to cancel
+      ensureDir( getBFilePath() );
+      std::string cmd = "wget -nv -O " + getBFilePath() + " https://oeis.org/" + id_str() + "/" + id_str( "b" )
+          + ".txt";
+      if ( system( cmd.c_str() ) != 0 )
+      {
+        Log::get().error( "Error fetching b-file for " + id_str(), true ); // need to exit here to be able to cancel
+      }
+      loaded_bfile = false; // reload on next access
     }
-    loaded_bfile = false; // reload on next access
   }
 }
 
@@ -634,10 +639,9 @@ int Oeis::getNumCycles( const Program &p )
   }
   catch ( const std::exception &e )
   {
-    auto timestamp =
-        std::to_string(
-            std::chrono::duration_cast<std::chrono::milliseconds>( std::chrono::system_clock::now().time_since_epoch() ).count()
-                % 1000000 );
+    auto timestamp = std::to_string(
+        std::chrono::duration_cast < std::chrono::milliseconds
+            > (std::chrono::system_clock::now().time_since_epoch()).count() % 1000000 );
     std::string f = getLodaHome() + "debug/interpreter/" + timestamp + ".asm";
     ensureDir( f );
     std::ofstream o( f );
