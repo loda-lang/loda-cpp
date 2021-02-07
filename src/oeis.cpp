@@ -170,8 +170,8 @@ const Sequence& OeisSequence::getFull() const
 
 void OeisSequence::fetchBFile() const
 {
-  Sequence big;
-  if ( !loadBFile( id, full, big ) )
+  std::ifstream big_file( getBFilePath() );
+  if ( !big_file.good() )
   {
     ensureDir( getBFilePath() );
     std::string cmd = "wget -nv -O " + getBFilePath() + " https://oeis.org/" + id_str() + "/" + id_str( "b" ) + ".txt";
@@ -766,6 +766,7 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
         Log::get().error( "Error parsing " + file_name, false );
         continue;
       }
+      s.fetchBFile(); // ensure b-file is loaded
       try
       {
         auto& full = s.getFull();
