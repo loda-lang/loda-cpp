@@ -150,7 +150,7 @@ bool loadBFile( size_t id, const Sequence& seq_full, Sequence& seq_big )
   return true;
 }
 
-const Sequence& OeisSequence::getFull( bool fetch ) const
+const Sequence& OeisSequence::getFull() const
 {
   if ( !loaded_bfile )
   {
@@ -163,7 +163,7 @@ const Sequence& OeisSequence::getFull( bool fetch ) const
       {
         success = true;
       }
-      else if ( fetch )
+      else
       {
         ensureDir( getBFilePath() );
         std::string cmd = "wget -nv -O " + getBFilePath() + " https://oeis.org/" + id_str() + "/" + id_str( "b" )
@@ -453,29 +453,6 @@ void Oeis::update( volatile sig_atomic_t &exit_flag )
     {
       Log::get().error( "Error unzipping " + path + ".gz", true );
     }
-  }
-  load( exit_flag );
-  Stats stats;
-  stats.load( "stats" );
-  for ( auto &s : sequences )
-  {
-    if ( exit_flag )
-    {
-      break;
-    }
-    if ( s.id == 0 )
-    {
-      continue;
-    }
-    std::ifstream program_file( s.getProgramPath() );
-    std::ifstream b_file( s.getBFilePath() );
-    if ( !b_file.good()
-        && (program_file.good() || (stats.cached_b_files.size() > (size_t) s.id && stats.cached_b_files[s.id])) )
-    {
-      s.getFull( true );
-    }
-    b_file.close();
-    program_file.close();
   }
   Log::get().info( "Finished update" );
 }
