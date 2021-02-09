@@ -44,12 +44,6 @@ function run_loda {
 }
 
 function start_miners() {
-  ./loda update
-  if ! ./loda test; then
-    echo "Error during tests"
-    exit 1
-  fi
-  echo "Start mining"
 
   # configuration
   local l="-l ${log_level}"
@@ -60,9 +54,10 @@ function start_miners() {
   fi
 
   # start miners
+  echo "Start mining using ${num_cpus} instances"
   for n in $(seq ${num_inst}); do
-    run_loda mine $l $@
-    run_loda mine $l -x $@
+    ./loda mine $l $@ &
+    ./loda mine $l -x $@ &
   done
 
   # maintenance

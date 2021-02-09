@@ -15,7 +15,11 @@
 #include <limits>
 #include <fstream>
 #include <sstream>
+#include <sys/stat.h>
 #include <stdlib.h>
+#include <sys/file.h>
+#include <time.h>
+#include <unistd.h>
 
 size_t Oeis::MAX_NUM_TERMS = 250;
 
@@ -150,7 +154,7 @@ bool loadBFile( size_t id, const Sequence& seq_full, Sequence& seq_big )
   return true;
 }
 
-const Sequence& OeisSequence::getFull( bool fetch ) const
+const Sequence& OeisSequence::getFull() const
 {
   if ( !loaded_bfile )
   {
@@ -158,33 +162,34 @@ const Sequence& OeisSequence::getFull( bool fetch ) const
     if ( id != 0 )
     {
       Sequence big;
-      bool success = false;
       if ( loadBFile( id, full, big ) )
       {
-        success = true;
-      }
-      else if ( fetch )
-      {
-        ensureDir( getBFilePath() );
-        std::string cmd = "wget -nv -O " + getBFilePath() + " https://oeis.org/" + id_str() + "/" + id_str( "b" )
-            + ".txt";
-        if ( system( cmd.c_str() ) != 0 )
-        {
-          Log::get().error( "Error fetching b-file for " + id_str(), true ); // need to exit here to be able to cancel
-        }
-        else if ( loadBFile( id, full, big ) )
-        {
-          success = true;
-        }
-      }
-      if ( success )
-      {
         // use data from big sequence from now on
+        found_bfile = true;
         full = big;
       }
     }
   }
   return full;
+}
+
+void OeisSequence::fetchBFile() const
+{
+  if ( !found_bfile )
+  {
+    std::ifstream big_file( getBFilePath() );
+    if ( !big_file.good() )
+    {
+      ensureDir( getBFilePath() );
+      std::string cmd = "wget -nv -O " + getBFilePath() + " https://oeis.org/" + id_str() + "/" + id_str( "b" )
+          + ".txt";
+      if ( system( cmd.c_str() ) != 0 )
+      {
+        Log::get().error( "Error fetching b-file for " + id_str(), true ); // need to exit here to be able to cancel
+      }
+      loaded_bfile = false; // reload on next access
+    }
+  }
 }
 
 Oeis::Oeis( const Settings &settings )
@@ -204,8 +209,103 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
   {
     return;
   }
-  // load sequence data
-  Log::get().info( "Loading sequences from the OEIS index" );
+  size_t loaded_count = 0;
+
+  {
+    // obtain lock
+    ensureDir( getOeisHome() );
+    std::string lockfile = getOeisHome() + "lock";
+    int fd = 0;
+    while ( true )
+    {
+      fd = open( lockfile.c_str(), O_CREAT, 0644 );
+      flock( fd, LOCK_EX );
+      struct stat st0, st1;
+      fstat( fd, &st0 );
+      stat( lockfile.c_str(), &st1 );
+      if ( st0.st_ino == st1.st_ino ) break;
+      close( fd );
+    }
+
+    // update index if needed
+    update( exit_flag );
+
+    // load sequence data and names
+    Log::get().info( "Loading sequences from the OEIS index" );
+    loaded_count = loadData( exit_flag );
+    loadNames( exit_flag );
+
+    // remove lock
+    unlink( lockfile.c_str() );
+    flock( fd, LOCK_UN );
+  }
+
+  // collect known / linear sequences if they should be ignored
+  std::vector<number_t> seqs_to_remove;
+  if ( !settings.optimize_existing_programs )
+  {
+    for ( auto &seq : sequences )
+    {
+      if ( seq.id == 0 )
+      {
+        continue;
+      }
+      if ( !settings.search_linear && seq.norm.is_linear( settings.linear_prefix ) )
+      {
+        seqs_to_remove.push_back( seq.id );
+        continue;
+      }
+      std::ifstream in( seq.getProgramPath() );
+      if ( in.good() )
+      {
+        seqs_to_remove.push_back( seq.id );
+        in.close();
+      }
+    }
+  }
+
+  // remove sequences
+  if ( !seqs_to_remove.empty() )
+  {
+    for ( auto id : seqs_to_remove )
+    {
+      removeSequence( id );
+    }
+  }
+
+  // shrink sequences vector again
+  if ( !sequences.empty() )
+  {
+    size_t i;
+    for ( i = sequences.size() - 1; i > 0; i-- )
+    {
+      if ( sequences[i].id != 0 )
+      {
+        break;
+      }
+    }
+    sequences.resize( i + 1 );
+  }
+
+  // print summary
+  Log::get().info(
+      "Loaded " + std::to_string( loaded_count ) + "/" + std::to_string( total_count_ ) + " sequences (ignored "
+          + std::to_string( seqs_to_remove.size() ) + ")" );
+  std::stringstream buf;
+  buf << "Matcher compaction ratios: ";
+  for ( size_t i = 0; i < finder.getMatchers().size(); i++ )
+  {
+    if ( i > 0 ) buf << ", ";
+    double ratio = 100.0 * (double) finder.getMatchers()[i]->getReducedSequences().size()
+        / (double) std::max<size_t>( loaded_count, 1 );
+    buf << finder.getMatchers()[i]->getName() << ": " << std::setprecision( 4 ) << ratio << "%";
+  }
+  Log::get().info( buf.str() );
+
+}
+
+size_t Oeis::loadData( volatile sig_atomic_t &exit_flag )
+{
   std::ifstream stripped( getOeisHome() + "stripped" );
   if ( !stripped.good() )
   {
@@ -300,72 +400,7 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
 
     ++loaded_count;
   }
-
-  loadNames( exit_flag );
-
-  std::vector<number_t> seqs_to_remove;
-
-  // collect known / linear sequences if they should be ignored
-  if ( !settings.optimize_existing_programs )
-  {
-    for ( auto &seq : sequences )
-    {
-      if ( seq.id == 0 )
-      {
-        continue;
-      }
-      if ( !settings.search_linear && seq.norm.is_linear( settings.linear_prefix ) )
-      {
-        seqs_to_remove.push_back( seq.id );
-        continue;
-      }
-      std::ifstream in( seq.getProgramPath() );
-      if ( in.good() )
-      {
-        seqs_to_remove.push_back( seq.id );
-        in.close();
-      }
-    }
-  }
-
-  // remove sequences
-  if ( !seqs_to_remove.empty() )
-  {
-    for ( auto id : seqs_to_remove )
-    {
-      removeSequence( id );
-    }
-  }
-
-  // shrink sequences vector again
-  if ( !sequences.empty() )
-  {
-    size_t i;
-    for ( i = sequences.size() - 1; i > 0; i-- )
-    {
-      if ( sequences[i].id != 0 )
-      {
-        break;
-      }
-    }
-    sequences.resize( i + 1 );
-  }
-
-  // print summary
-  Log::get().info(
-      "Loaded " + std::to_string( loaded_count ) + "/" + std::to_string( total_count_ ) + " sequences (ignored "
-          + std::to_string( seqs_to_remove.size() ) + ")" );
-  std::stringstream buf;
-  buf << "Matcher compaction ratios: ";
-  for ( size_t i = 0; i < finder.getMatchers().size(); i++ )
-  {
-    if ( i > 0 ) buf << ", ";
-    double ratio = 100.0 * (double) finder.getMatchers()[i]->getReducedSequences().size()
-        / (double) std::max<size_t>( loaded_count, 1 );
-    buf << finder.getMatchers()[i]->getName() << ": " << std::setprecision( 4 ) << ratio << "%";
-  }
-  Log::get().info( buf.str() );
-
+  return loaded_count;
 }
 
 void Oeis::loadNames( volatile sig_atomic_t &exit_flag )
@@ -419,65 +454,57 @@ void Oeis::loadNames( volatile sig_atomic_t &exit_flag )
 
 void Oeis::update( volatile sig_atomic_t &exit_flag )
 {
-  if ( !settings.optimize_existing_programs )
-  {
-    Log::get().error( "Option -x required to run update", true );
-  }
-  Log::get().info( "Updating OEIS index" );
-  ensureDir( getOeisHome() );
-  std::string cmd, path;
-  int exit_code;
   std::vector<std::string> files = { "stripped", "names" };
-  for ( auto &file : files )
+
+  // check which files need to be updated
+  auto it = files.begin();
+  while ( it != files.end() )
   {
-    if ( exit_flag )
+    struct stat st;
+    auto path = getOeisHome() + *it;
+    if ( stat( path.c_str(), &st ) == 0 )
     {
-      break;
+      time_t now = time( 0 );
+      auto hours = (now - st.st_mtime) / 3600;
+      if ( hours < 24 )
+      {
+        // no need to update this file
+        it = files.erase( it );
+        continue;
+      }
     }
-    path = getOeisHome() + file;
-    cmd = "wget -nv -O " + path + ".gz https://oeis.org/" + file + ".gz";
-    exit_code = system( cmd.c_str() );
-    if ( exit_code != 0 )
+    it++;
+  }
+  if ( !files.empty() )
+  {
+    Log::get().info( "Updating OEIS index" );
+    ensureDir( getOeisHome() );
+    std::string cmd, path;
+    for ( auto &file : files )
     {
-      Log::get().error( "Error fetching " + file + " file", true );
-    }
-    std::ifstream f( getOeisHome() + file );
-    if ( f.good() )
-    {
-      f.close();
-      std::remove( path.c_str() );
-    }
-    cmd = "gzip -d " + path + ".gz";
-    exit_code = system( cmd.c_str() );
-    if ( exit_code != 0 )
-    {
-      Log::get().error( "Error unzipping " + path + ".gz", true );
+      if ( exit_flag )
+      {
+        break;
+      }
+      path = getOeisHome() + file;
+      cmd = "wget -nv -O " + path + ".gz https://oeis.org/" + file + ".gz";
+      if ( system( cmd.c_str() ) != 0 )
+      {
+        Log::get().error( "Error fetching " + file + " file", true );
+      }
+      std::ifstream f( getOeisHome() + file );
+      if ( f.good() )
+      {
+        f.close();
+        std::remove( path.c_str() );
+      }
+      cmd = "gzip -d " + path + ".gz";
+      if ( system( cmd.c_str() ) != 0 )
+      {
+        Log::get().error( "Error unzipping " + path + ".gz", true );
+      }
     }
   }
-  load( exit_flag );
-  Stats stats;
-  stats.load( "stats" );
-  for ( auto &s : sequences )
-  {
-    if ( exit_flag )
-    {
-      break;
-    }
-    if ( s.id == 0 )
-    {
-      continue;
-    }
-    std::ifstream program_file( s.getProgramPath() );
-    std::ifstream b_file( s.getBFilePath() );
-    if ( !b_file.good()
-        && (program_file.good() || (stats.cached_b_files.size() > (size_t) s.id && stats.cached_b_files[s.id])) )
-    {
-      s.getFull( true );
-    }
-    b_file.close();
-    program_file.close();
-  }
-  Log::get().info( "Finished update" );
 }
 
 void migrateFile( const std::string &from, const std::string &to )
@@ -552,6 +579,8 @@ void Oeis::dumpProgram( size_t id, Program p, const std::string &file ) const
   out << "; " << seq.getFull() << std::endl;
   out << std::endl;
   ProgramUtil::print( p, out );
+  out.close();
+  seq.fetchBFile(); // ensure b-file gets downloaded for the next run
 }
 
 std::pair<bool, Program> Oeis::minimizeAndCheck( const Program &p, const OeisSequence &seq, bool minimize )
@@ -610,10 +639,9 @@ int Oeis::getNumCycles( const Program &p )
   }
   catch ( const std::exception &e )
   {
-    auto timestamp =
-        std::to_string(
-            std::chrono::duration_cast<std::chrono::milliseconds>( std::chrono::system_clock::now().time_since_epoch() ).count()
-                % 1000000 );
+    auto timestamp = std::to_string(
+        std::chrono::duration_cast < std::chrono::milliseconds
+            > (std::chrono::system_clock::now().time_since_epoch()).count() % 1000000 );
     std::string f = getLodaHome() + "debug/interpreter/" + timestamp + ".asm";
     ensureDir( f );
     std::ofstream o( f );
@@ -693,6 +721,7 @@ std::pair<bool, bool> Oeis::updateProgram( size_t id, const Program &p )
     {
       if ( settings.optimize_existing_programs )
       {
+        seq.fetchBFile(); // ensure b-file gets fetched before checking
         optimized = minimizeAndCheck( p, seq, true );
         if ( !optimized.first )
         {
@@ -790,6 +819,7 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
         Log::get().error( "Error parsing " + file_name, false );
         continue;
       }
+      s.fetchBFile(); // ensure b-file is loaded
       try
       {
         auto& full = s.getFull();

@@ -23,7 +23,8 @@ public:
         name( name ),
         norm( s ),
         full( full ),
-        loaded_bfile( false )
+        loaded_bfile( false ),
+        found_bfile( false )
   {
   }
 
@@ -35,7 +36,9 @@ public:
 
   std::string getBFilePath() const;
 
-  const Sequence& getFull( bool fetch = false ) const;
+  const Sequence& getFull() const;
+
+  void fetchBFile() const;
 
   size_t id;
   std::string name;
@@ -49,6 +52,7 @@ private:
 
   mutable Sequence full;
   mutable bool loaded_bfile;
+  mutable bool found_bfile;
 
 };
 
@@ -65,8 +69,6 @@ public:
   }
 
   void load( volatile sig_atomic_t &exit_flag );
-
-  void update( volatile sig_atomic_t &exit_flag );
 
   void migrate( volatile sig_atomic_t &exit_flag );
 
@@ -92,7 +94,11 @@ public:
 
 private:
 
+  size_t loadData( volatile sig_atomic_t &exit_flag );
+
   void loadNames( volatile sig_atomic_t &exit_flag );
+
+  void update( volatile sig_atomic_t &exit_flag );
 
   std::pair<bool, Program> minimizeAndCheck( const Program &p, const OeisSequence &seq, bool optimize );
 
