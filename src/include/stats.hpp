@@ -1,5 +1,6 @@
 #pragma once
 
+#include "interpreter.hpp"
 #include "number.hpp"
 #include "program.hpp"
 
@@ -48,6 +49,7 @@ public:
 
   int64_t num_programs;
   int64_t num_sequences;
+  steps_t steps;
   std::map<number_t, int64_t> num_constants;
   std::map<Operation, int64_t> num_operations;
   std::map<OpPos, int64_t> num_operation_positions;

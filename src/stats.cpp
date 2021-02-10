@@ -8,10 +8,9 @@
 #include <sstream>
 
 Stats::Stats()
-    :
-    num_programs( 0 ),
-    num_sequences( 0 ),
-    num_ops_per_type( Operation::Types.size(), 0 )
+    : num_programs( 0 ),
+      num_sequences( 0 ),
+      num_ops_per_type( Operation::Types.size(), 0 )
 {
 }
 
@@ -191,9 +190,16 @@ void Stats::save( const std::string &path )
         << sep << o.second << "\n";
   }
   oppos_counts.close();
+
   std::ofstream summary( path + "/summary.csv" );
+  summary << "num_programs,num_sequences\n";
   summary << num_programs << sep << num_sequences << "\n";
   summary.close();
+
+  std::ofstream steps_out( path + "/steps.csv" );
+  steps_out << "total,min,max,runs\n";
+  steps_out << steps.total << sep << steps.min << sep << steps.max << sep << steps.runs << "\n";
+  steps_out.close();
 }
 
 void Stats::updateProgramStats( const Program &program )
