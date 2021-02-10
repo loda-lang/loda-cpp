@@ -11,7 +11,6 @@
 #include "program_util.hpp"
 #include "semantics.hpp"
 #include "stats.hpp"
-#include "synthesizer.hpp"
 
 #include <deque>
 #include <iomanip>
@@ -31,14 +30,6 @@ void Test::all()
   linearMatcher();
   deltaMatcher();
   size_t tests = 1000;
-  for ( size_t degree = 0; degree <= 1; degree++ )
-  {
-    linearSynthesizer( tests, degree );
-  }
-  for ( size_t period = 1; period <= 5; period++ )
-  {
-    periodicSynthesizer( tests, period, 0 );
-  }
   for ( size_t degree = 0; degree <= (size_t) PolynomialMatcher::DEGREE; degree++ )
   {
     polynomialMatcher( tests, degree );
@@ -521,51 +512,6 @@ void Test::polynomialMatcher( size_t tests, size_t degree )
   }
 }
 
-void Test::linearSynthesizer( size_t tests, size_t degree )
-{
-  Log::get().info( "Testing linear synthesizer for degree " + std::to_string( degree ) );
-  std::random_device rand_dev;
-  LinearSynthesizer syn;
-  Settings settings;
-  for ( size_t i = 0; i < tests; i++ )
-  {
-    if ( exit_flag_ ) break;
-    Polynomial pol( degree );
-    for ( size_t d = 0; d < pol.size(); d++ )
-    {
-      pol[d] = rand_dev() % 100;
-      pol[d] = pol[d] > 0 ? pol[d] : -pol[d];
-    }
-    Log::get().debug( "Checking polynomial " + pol.to_string() );
-    auto seq = pol.eval( settings.num_terms );
-    testSynthesizer( syn, seq );
-  }
-}
-
-void Test::periodicSynthesizer( size_t tests, size_t period, size_t prefix )
-{
-  Log::get().info(
-      "Testing periodic synthesizer for period " + std::to_string( period ) + ", prefix " + std::to_string( prefix ) );
-  std::random_device rand_dev;
-  PeriodicSynthesizer syn;
-  Settings settings;
-  for ( size_t i = 0; i < tests; i++ )
-  {
-    if ( exit_flag_ ) break;
-    Sequence seq;
-    for ( size_t i = 0; i < period; i++ )
-    {
-      seq.push_back( rand_dev() % 100 );
-    }
-    while ( seq.size() < settings.num_terms )
-    {
-      seq.insert( seq.end(), seq.begin(), seq.begin() + period );
-    }
-    seq.resize( settings.num_terms );
-    testSynthesizer( syn, seq );
-  }
-}
-
 void Test::testBinary( const std::string &func, const std::string &file,
     const std::vector<std::vector<number_t> > &values )
 {
@@ -655,23 +601,5 @@ void Test::testMatcherPair( Matcher &matcher, size_t id1, size_t id2 )
     ProgramUtil::print( result[0].second, std::cout );
     Log::get().error( matcher.getName() + " matcher generated wrong program for " + OeisSequence( id2 ).id_str(),
         false );
-  }
-}
-
-void Test::testSynthesizer( Synthesizer &syn, const Sequence &seq )
-{
-  Settings settings;
-  Interpreter interpreter( settings );
-  Program prog;
-  if ( !syn.synthesize( seq, prog ) )
-  {
-    Log::get().error( "Error synthesizing program for sequence " + seq.to_string(), true );
-  }
-  Sequence seq2;
-  interpreter.eval( prog, seq2 );
-  if ( seq != seq2 )
-  {
-    ProgramUtil::print( prog, std::cout );
-    Log::get().error( "Synthesized program for sequence " + seq.to_string() + " yields incorrect result", true );
   }
 }
