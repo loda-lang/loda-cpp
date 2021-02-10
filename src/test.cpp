@@ -234,11 +234,11 @@ void Test::stats()
 {
   Log::get().info( "Testing stats loading and saving" );
 
-// load stats
+  // load stats
   Stats s, t;
   s.load( "stats" );
 
-// sanity check for loaded stats
+  // sanity check for loaded stats
   if ( s.num_constants.at( 1 ) == 0 )
   {
     Log::get().error( "Error loading constants counts from stats" );
@@ -271,11 +271,11 @@ void Test::stats()
     Log::get().error( "Error loading program summary from stats" );
   }
 
-// save & reload stats
+  // save & reload stats
   s.save( "/tmp" );
   t.load( "/tmp" );
 
-// compare loaded to original
+  // compare loaded to original
   for ( auto &e : s.num_constants )
   {
     auto m = e.second;

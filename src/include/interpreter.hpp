@@ -7,6 +7,18 @@
 
 #include <unordered_set>
 
+class steps_t
+{
+public:
+  steps_t();
+  size_t min;
+  size_t max;
+  size_t total;
+  size_t runs;
+  void add( size_t s );
+  void add( const steps_t& s );
+};
+
 class Interpreter
 {
 public:
@@ -17,9 +29,9 @@ public:
 
   size_t run( const Program &p, Memory &mem );
 
-  size_t eval( const Program &p, Sequence &seq, int64_t num_terms = -1 );
+  steps_t eval( const Program &p, Sequence &seq, int64_t num_terms = -1 );
 
-  size_t eval( const Program &p, std::vector<Sequence> &seqs, int64_t num_terms = -1 );
+  steps_t eval( const Program &p, std::vector<Sequence> &seqs, int64_t num_terms = -1 );
 
   bool check( const Program &p, const Sequence &expected_seq );
 

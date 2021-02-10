@@ -639,9 +639,10 @@ int Oeis::getNumCycles( const Program &p )
   }
   catch ( const std::exception &e )
   {
-    auto timestamp = std::to_string(
-        std::chrono::duration_cast < std::chrono::milliseconds
-            > (std::chrono::system_clock::now().time_since_epoch()).count() % 1000000 );
+    auto timestamp =
+        std::to_string(
+            std::chrono::duration_cast<std::chrono::milliseconds>( std::chrono::system_clock::now().time_since_epoch() ).count()
+                % 1000000 );
     std::string f = getLodaHome() + "debug/interpreter/" + timestamp + ".asm";
     ensureDir( f );
     std::ofstream o( f );
@@ -823,7 +824,7 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
       try
       {
         auto& full = s.getFull();
-        interpreter.eval( program, result, full.size() );
+        stats.steps.add( interpreter.eval( program, result, full.size() ) );
         is_okay = (result == full);
       }
       catch ( const std::exception &exc )
