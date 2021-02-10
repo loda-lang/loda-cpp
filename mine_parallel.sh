@@ -38,11 +38,6 @@ function abort_miners() {
   exit 1
 }
 
-function run_loda {
-  echo "loda $@"
-  ./loda $@ &
-}
-
 function start_miners() {
 
   # configuration
@@ -62,7 +57,8 @@ function start_miners() {
 
   # maintenance
   if [ "$branch" = "master" ]; then
-    run_loda maintain
+    echo "Start maintenance"
+    ./loda maintain &
   fi
 }
 
