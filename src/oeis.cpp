@@ -686,6 +686,12 @@ std::string Oeis::isOptimizedBetter( Program existing, Program optimized, size_t
   optimizer.removeNops( existing );
   optimizer.removeNops( optimized );
 
+  // we want at least one operation (avoid empty program for A000004
+  if ( optimized.ops.empty() )
+  {
+    return "";
+  }
+
   // ...and compare number of execution cycles
   auto existing_cycles = getNumCycles( existing );
   auto optimized_cycles = getNumCycles( optimized );
