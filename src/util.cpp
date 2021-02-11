@@ -58,10 +58,9 @@ TwitterClient findTwitterClient()
 }
 
 Log::Log()
-    :
-    level( Level::INFO ),
-    tweet_alerts( getEnvFlag( "LODA_TWEET_ALERTS" ) ),
-    twitter_client( TW_UNKNOWN )
+    : level( Level::INFO ),
+      tweet_alerts( getEnvFlag( "LODA_TWEET_ALERTS" ) ),
+      twitter_client( TW_UNKNOWN )
 {
 }
 
@@ -99,10 +98,11 @@ void Log::alert( const std::string &msg )
 {
   log( Log::Level::ALERT, msg );
   std::string copy = msg;
+  std::replace( copy.begin(), copy.end(), '"', ' ' );
+  std::replace( copy.begin(), copy.end(), '\'', ' ' );
   if ( copy.length() > 140 )
   {
     copy = copy.substr( 0, 137 );
-    std::replace( copy.begin(), copy.end(), '"', '\'' );
     while ( !copy.empty() )
     {
       char ch = copy.at( copy.size() - 1 );
@@ -217,18 +217,17 @@ void Metrics::write( const std::string &field, const std::map<std::string, std::
 }
 
 Settings::Settings()
-    :
-    num_terms( 20 ),
-    max_memory( getEnvInt( "LODA_MAX_MEMORY", 100000 ) ),
-    max_cycles( getEnvInt( "LODA_MAX_CYCLES", 10000000 ) ),
-    max_stack_size( getEnvInt( "LODA_MAX_STACK_SIZE", 100 ) ),
-    max_physical_memory( getEnvInt( "LODA_MAX_PHYSICAL_MEMORY", 1024 ) * 1024 * 1024 ),
-    linear_prefix( 1 ),
-    optimize_existing_programs( false ),
-    search_linear( false ),
-    throw_on_overflow( true ),
-    use_steps( false ),
-    loda_config( "loda.json" )
+    : num_terms( 20 ),
+      max_memory( getEnvInt( "LODA_MAX_MEMORY", 100000 ) ),
+      max_cycles( getEnvInt( "LODA_MAX_CYCLES", 10000000 ) ),
+      max_stack_size( getEnvInt( "LODA_MAX_STACK_SIZE", 100 ) ),
+      max_physical_memory( getEnvInt( "LODA_MAX_PHYSICAL_MEMORY", 1024 ) * 1024 * 1024 ),
+      linear_prefix( 1 ),
+      optimize_existing_programs( false ),
+      search_linear( false ),
+      throw_on_overflow( true ),
+      use_steps( false ),
+      loda_config( "loda.json" )
 {
 }
 
