@@ -36,13 +36,10 @@ void help()
   std::cout << "  evaluate <file>  Evaluate a program to a sequence" << std::endl;
   std::cout << "  optimize <file>  Optimize a program and print it" << std::endl;
   std::cout << "  minimize <file>  Minimize a program and print it (use -t to set the number of terms)" << std::endl;
-  std::cout << "  optmin <file>    Optimize and minimize a program and print it (use -t to set the number of terms)"
-      << std::endl;
   std::cout << "  generate         Generate a random program and print it" << std::endl;
   std::cout << "  test             Run test suite" << std::endl;
   std::cout << "OEIS commands:" << std::endl;
   std::cout << "  mine             Mine programs for OEIS sequences" << std::endl;
-  std::cout << "  synthesize       Synthesize programs for OEIS sequences" << std::endl;
   std::cout << "  maintain         Maintain programs for OEIS sequences" << std::endl;
   std::cout << "Options:" << std::endl;
   std::cout << "  -l <string>      Log level (values:debug,info,warn,error,alert)" << std::endl;
@@ -123,14 +120,6 @@ int main( int argc, char *argv[] )
       Parser parser;
       Program program = parser.parse( std::string( args.at( 1 ) ) );
       Minimizer minimizer( settings );
-      minimizer.minimize( program, settings.num_terms );
-      ProgramUtil::print( program, std::cout );
-    }
-    else if ( cmd == "optmin" )
-    {
-      Parser parser;
-      Program program = parser.parse( std::string( args.at( 1 ) ) );
-      Minimizer minimizer( settings );
       minimizer.optimizeAndMinimize( program, 2, 1, settings.num_terms );
       ProgramUtil::print( program, std::cout );
     }
@@ -146,11 +135,6 @@ int main( int argc, char *argv[] )
     {
       Miner miner( settings );
       miner.mine( EXIT_FLAG );
-    }
-    else if ( cmd == "synthesize" || cmd == "syn" )
-    {
-      Miner miner( settings );
-      miner.synthesize( EXIT_FLAG );
     }
     else if ( cmd == "maintain" )
     {

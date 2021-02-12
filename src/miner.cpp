@@ -7,7 +7,6 @@
 #include "optimizer.hpp"
 #include "parser.hpp"
 #include "program_util.hpp"
-#include "synthesizer.hpp"
 
 #include <chrono>
 #include <fstream>
@@ -188,79 +187,5 @@ void Miner::mine( volatile sig_atomic_t &exit_flag )
       Log::get().info( "Generated " + std::to_string( total_generated ) + " programs" );
       finder.publishMetrics();
     }
-  }
-}
-
-void Miner::synthesize( volatile sig_atomic_t &exit_flag )
-{
-  Log::get().info( "Start synthesizing programs for OEIS sequences" );
-  bool tweet_alerts = Log::get().tweet_alerts;
-  Log::get().tweet_alerts = false;
-  std::vector<std::unique_ptr<Synthesizer>> synthesizers;
-  synthesizers.resize( 2 );
-  synthesizers[0].reset( new LinearSynthesizer() );
-  synthesizers[1].reset( new PeriodicSynthesizer() );
-  Program program;
-  size_t found = 0;
-  auto &finder = oeis.getFinder();
-  for ( auto &synthesizer : synthesizers )
-  {
-    for ( auto &seq : oeis.getSequences() )
-    {
-      if ( exit_flag )
-      {
-        break;
-      }
-      if ( seq.norm.empty() )
-      {
-        continue;
-      }
-      if ( synthesizer->synthesize( seq.getFull(), program ) )
-      {
-        Log::get().debug( "Synthesized program for " + seq.to_string() );
-        auto r = oeis.updateProgram( seq.id, program );
-        if ( r.first )
-        {
-          found++;
-        }
-      }
-    }
-    for ( auto &matcher : finder.getMatchers() )
-    {
-      for ( auto &reduced : matcher->getReducedSequences() )
-      {
-        if ( exit_flag )
-        {
-          break;
-        }
-        if ( reduced.first.empty() )
-        {
-          continue;
-        }
-        if ( synthesizer->synthesize( reduced.first, program ) )
-        {
-          Sequence seq;
-          auto progs = finder.findSequence( program, seq, oeis.getSequences() );
-          for ( auto &p : progs )
-          {
-            Log::get().debug( "Synthesized program for " + OeisSequence( p.first ).to_string() );
-            auto r = oeis.updateProgram( p.first, p.second );
-            if ( r.first )
-            {
-              found++;
-            }
-          }
-        }
-      }
-    }
-  }
-  Log::get().tweet_alerts = tweet_alerts;
-  if ( found > 0 )
-  {
-    Log::get().alert( "Synthesized " + std::to_string( found ) + " new or shorter programs" );
-  }
-  else
-  {
-    Log::get().info( "Finished synthesis without new results" );
   }
 }

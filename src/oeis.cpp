@@ -639,9 +639,10 @@ int Oeis::getNumCycles( const Program &p )
   }
   catch ( const std::exception &e )
   {
-    auto timestamp = std::to_string(
-        std::chrono::duration_cast < std::chrono::milliseconds
-            > (std::chrono::system_clock::now().time_since_epoch()).count() % 1000000 );
+    auto timestamp =
+        std::to_string(
+            std::chrono::duration_cast<std::chrono::milliseconds>( std::chrono::system_clock::now().time_since_epoch() ).count()
+                % 1000000 );
     std::string f = getLodaHome() + "debug/interpreter/" + timestamp + ".asm";
     ensureDir( f );
     std::ofstream o( f );
@@ -684,6 +685,12 @@ std::string Oeis::isOptimizedBetter( Program existing, Program optimized, size_t
   // now remove nops...
   optimizer.removeNops( existing );
   optimizer.removeNops( optimized );
+
+  // we want at least one operation (avoid empty program for A000004
+  if ( optimized.ops.empty() )
+  {
+    return "";
+  }
 
   // ...and compare number of execution cycles
   auto existing_cycles = getNumCycles( existing );
@@ -823,7 +830,7 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
       try
       {
         auto& full = s.getFull();
-        interpreter.eval( program, result, full.size() );
+        stats.steps.add( interpreter.eval( program, result, full.size() ) );
         is_okay = (result == full);
       }
       catch ( const std::exception &exc )

@@ -16,10 +16,13 @@
       {
         "version": 1,
         "length": 70,
-        "maxConstant": 6,
-        "maxCell": 6,
+        "maxConstant": 10,
+        "maxCell": 10,
         "loops": true,
-        "indirectAccess": false
+        "indirectAccess": false,
+        "template": [
+          "programs/oeis/230/A230980.asm"
+        ]
       }
     ],
     "update": [

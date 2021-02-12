@@ -19,10 +19,33 @@
 using MemStack = std::stack<Memory>;
 using SizeStack = std::stack<size_t>;
 
+steps_t::steps_t()
+    : min( 0 ),
+      max( 0 ),
+      total( 0 ),
+      runs( 0 )
+{
+}
+
+void steps_t::add( size_t s )
+{
+  min = std::min( min, s );
+  max = std::max( max, s );
+  total += s;
+  runs++;
+}
+
+void steps_t::add( const steps_t& s )
+{
+  min = std::min( min, s.min );
+  max = std::max( max, s.max );
+  total += s.total;
+  runs += s.runs;
+}
+
 Interpreter::Interpreter( const Settings &settings )
-    :
-    settings( settings ),
-    is_debug( Log::get().level == Log::Level::DEBUG )
+    : settings( settings ),
+      is_debug( Log::get().level == Log::Level::DEBUG )
 {
 }
 
@@ -343,7 +366,7 @@ void Interpreter::set( Operand a, number_t v, Memory &mem, const Operation &last
   mem.set( index, v );
 }
 
-size_t Interpreter::eval( const Program &p, Sequence &seq, int64_t num_terms )
+steps_t Interpreter::eval( const Program &p, Sequence &seq, int64_t num_terms )
 {
   if ( num_terms < 0 )
   {
@@ -351,14 +374,15 @@ size_t Interpreter::eval( const Program &p, Sequence &seq, int64_t num_terms )
   }
   seq.resize( num_terms );
   Memory mem;
-  size_t steps, total_steps = 0;
+  steps_t steps;
+  size_t s;
   for ( int i = 0; i < num_terms; i++ )
   {
     mem.clear();
     mem.set( Program::INPUT_CELL, i );
-    steps = run( p, mem );
-    total_steps += steps;
-    seq[i] = settings.use_steps ? steps : mem.get( Program::OUTPUT_CELL );
+    s = run( p, mem );
+    steps.add( s );
+    seq[i] = settings.use_steps ? s : mem.get( Program::OUTPUT_CELL );
   }
   if ( is_debug )
   {
@@ -366,10 +390,10 @@ size_t Interpreter::eval( const Program &p, Sequence &seq, int64_t num_terms )
     buf << "Evaluated program to sequence " << seq;
     Log::get().debug( buf.str() );
   }
-  return total_steps;
+  return steps;
 }
 
-size_t Interpreter::eval( const Program &p, std::vector<Sequence> &seqs, int64_t num_terms )
+steps_t Interpreter::eval( const Program &p, std::vector<Sequence> &seqs, int64_t num_terms )
 {
   if ( num_terms < 0 )
   {
@@ -380,18 +404,18 @@ size_t Interpreter::eval( const Program &p, std::vector<Sequence> &seqs, int64_t
     seqs[s].resize( num_terms );
   }
   Memory mem;
-  size_t total_steps = 0;
+  steps_t steps;
   for ( int i = 0; i < num_terms; i++ )
   {
     mem.clear();
     mem.set( Program::INPUT_CELL, i );
-    total_steps += run( p, mem );
+    steps.add( run( p, mem ) );
     for ( size_t s = 0; s < seqs.size(); s++ )
     {
       seqs[s][i] = mem.get( s );
     }
   }
-  return total_steps;
+  return steps;
 }
 
 bool Interpreter::check( const Program &p, const Sequence &expected_seq )

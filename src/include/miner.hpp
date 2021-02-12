@@ -16,8 +16,6 @@ public:
 
   void mine( volatile sig_atomic_t &exit_flag );
 
-  void synthesize( volatile sig_atomic_t &exit_flag );
-
   static bool isCollatzValuation( const Sequence &seq );
 
   bool isPrimeSequence( const Sequence &seq ) const;
