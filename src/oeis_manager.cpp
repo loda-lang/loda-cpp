@@ -419,11 +419,15 @@ void Oeis::dumpProgram( size_t id, Program p, const std::string &file ) const
 
 std::pair<bool, Program> Oeis::minimizeAndCheck( const Program &p, const OeisSequence &seq, bool minimize )
 {
-  // optimize and minimize program
   std::pair<bool, Program> minimized;
   minimized.first = true;
   minimized.second = p;
+
+  // ensure b-file gets fetched before checking
+  seq.fetchBFile();
   auto& full = seq.getFull();
+
+  // optimize and minimize program
   if ( minimize )
   {
     minimizer.optimizeAndMinimize( minimized.second, 2, 1, full.size() );
@@ -444,21 +448,16 @@ std::pair<bool, Program> Oeis::minimizeAndCheck( const Program &p, const OeisSeq
     minimized.first = false;
   }
 
-  // throw error if not correct
-  if ( !minimized.first )
+  // log error if not correct and revert program change
+  if ( !minimized.first && minimize )
   {
-    std::string msg = "Program for " + seq.id_str() + " generates wrong result";
-    if ( minimize )
-    {
-      msg = msg + " after optimization or minimization";
-    }
-    Log::get().error( msg, false );
+    minimized.second = p;
+    Log::get().error( "Program for " + seq.id_str() + " generates wrong result after minimization", false );
     std::string f = getLodaHome() + "debug/optimizer/" + seq.id_str() + ".asm";
     ensureDir( f );
     std::ofstream out( f );
     ProgramUtil::print( p, out );
   }
-
   return minimized;
 }
 
@@ -562,7 +561,6 @@ std::pair<bool, bool> Oeis::updateProgram( size_t id, const Program &p )
     {
       if ( settings.optimize_existing_programs )
       {
-        seq.fetchBFile(); // ensure b-file gets fetched before checking
         optimized = minimizeAndCheck( p, seq, true );
         if ( !optimized.first )
         {
@@ -598,11 +596,20 @@ std::pair<bool, bool> Oeis::updateProgram( size_t id, const Program &p )
   }
   if ( is_new )
   {
+    // first check if it is still correct when using the full sequence
     optimized = minimizeAndCheck( p, seq, false );
     if ( !optimized.first )
     {
       return
       { false,false};
+    }
+    // now we minimize the newly found program
+    optimized = minimizeAndCheck( p, seq, true );
+    if ( !optimized.first )
+    {
+      // if there is a program during minimization, we still want
+      // to keep the original new file
+      optimized.second = p;
     }
   }
   std::stringstream buf;
