@@ -4,63 +4,14 @@
 #include "interpreter.hpp"
 #include "minimizer.hpp"
 #include "number.hpp"
+#include "oeis_sequence.hpp"
 #include "optimizer.hpp"
 #include "program.hpp"
 #include "util.hpp"
 
-class OeisSequence
-{
-public:
-
-  OeisSequence( size_t id = 0 )
-      : id( id ),
-        loaded_bfile( false )
-  {
-  }
-
-  OeisSequence( size_t id, const std::string &name, const Sequence &s, const Sequence &full )
-      : id( id ),
-        name( name ),
-        norm( s ),
-        full( full ),
-        loaded_bfile( false ),
-        found_bfile( false )
-  {
-  }
-
-  std::string id_str( const std::string &prefix = "A" ) const;
-
-  std::string dir_str() const;
-
-  std::string getProgramPath() const;
-
-  std::string getBFilePath() const;
-
-  const Sequence& getFull() const;
-
-  void fetchBFile() const;
-
-  size_t id;
-  std::string name;
-  Sequence norm;
-
-  friend std::ostream& operator<<( std::ostream &out, const OeisSequence &s );
-
-  std::string to_string() const;
-
-private:
-
-  mutable Sequence full;
-  mutable bool loaded_bfile;
-  mutable bool found_bfile;
-
-};
-
 class Oeis
 {
 public:
-
-  static size_t MAX_NUM_TERMS;
 
   Oeis( const Settings &settings );
 

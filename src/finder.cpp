@@ -1,7 +1,7 @@
 #include "finder.hpp"
 
 #include "number.hpp"
-#include "oeis.hpp"
+#include "oeis_sequence.hpp"
 #include "program_util.hpp"
 #include "util.hpp"
 
