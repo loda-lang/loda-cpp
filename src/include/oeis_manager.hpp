@@ -32,8 +32,6 @@ public:
     return finder;
   }
 
-  void dumpProgram( size_t id, Program p, const std::string &file ) const;
-
   size_t getTotalCount() const
   {
     return total_count_;
@@ -50,6 +48,8 @@ private:
   void loadNames( volatile sig_atomic_t &exit_flag );
 
   void update( volatile sig_atomic_t &exit_flag );
+
+  void dumpProgram( size_t id, Program p, const std::string &file ) const;
 
   std::pair<bool, Program> minimizeAndCheck( const Program &p, const OeisSequence &seq, bool optimize );
 
