@@ -654,6 +654,10 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
     {
       continue;
     }
+    if ( exit_flag )
+    {
+      break;
+    }
     file_name = s.getProgramPath();
     std::ifstream program_file( file_name );
     std::ifstream b_file( s.getBFilePath() );
@@ -661,7 +665,6 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
     has_program = false;
     if ( program_file.good() )
     {
-      if ( exit_flag ) continue;
       if ( Log::get().level == Log::Level::DEBUG )
       {
         Log::get().debug( "Checking program for " + s.to_string() );
@@ -721,6 +724,12 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
       }
     }
     stats.updateSequenceStats( s.id, has_program, has_b_file );
+  }
+
+  // we must check the exit flag here because the stats might be incomplete!
+  if ( exit_flag )
+  {
+    return;
   }
 
   // write stats
