@@ -85,6 +85,11 @@ void Minimizer::minimize( Program &p, size_t num_terms ) const
       }
     }
   }
+  // avoid empty program for zero sequence (A000004)
+  if ( p.ops.empty() )
+  {
+    p.push_back( Operation::Type::MOV, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::CONSTANT, 0 );
+  }
   if ( removed_ops > 0 )
   {
     Log::get().debug( "Removed " + std::to_string( removed_ops ) + " operations during minimization" );

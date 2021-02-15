@@ -1,7 +1,7 @@
 #include "interpreter.hpp"
 #include "miner.hpp"
 #include "minimizer.hpp"
-#include "oeis.hpp"
+#include "oeis_manager.hpp"
 #include "optimizer.hpp"
 #include "parser.hpp"
 #include "program_util.hpp"

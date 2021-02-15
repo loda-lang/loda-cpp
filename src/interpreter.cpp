@@ -1,7 +1,7 @@
 #include "interpreter.hpp"
 
 #include "number.hpp"
-#include "oeis.hpp"
+#include "oeis_sequence.hpp"
 #include "parser.hpp"
 #include "program.hpp"
 #include "program_util.hpp"

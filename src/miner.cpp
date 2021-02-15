@@ -3,7 +3,7 @@
 #include "generator.hpp"
 #include "interpreter.hpp"
 #include "mutator.hpp"
-#include "oeis.hpp"
+#include "oeis_manager.hpp"
 #include "optimizer.hpp"
 #include "parser.hpp"
 #include "program_util.hpp"

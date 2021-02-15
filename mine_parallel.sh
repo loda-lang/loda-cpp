@@ -71,7 +71,7 @@ function push_updates {
   if [ "$num_changes" -ge "$min_changes" ]; then
     stop_miners
     echo "Pushing updates"
-    git add programs
+    git add programs/oeis
     if [ "$branch" = "master" ]; then
       git add stats
     fi
