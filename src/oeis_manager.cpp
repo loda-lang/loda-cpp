@@ -292,6 +292,7 @@ void Oeis::update( volatile sig_atomic_t &exit_flag )
 
   // check which files need to be updated
   auto it = files.begin();
+  int64_t age_in_days = -1;
   while ( it != files.end() )
   {
     struct stat st;
@@ -299,8 +300,8 @@ void Oeis::update( volatile sig_atomic_t &exit_flag )
     if ( stat( path.c_str(), &st ) == 0 )
     {
       time_t now = time( 0 );
-      auto hours = (now - st.st_mtime) / 3600;
-      if ( hours < 24 )
+      age_in_days = (now - st.st_mtime) / (3600 * 24);
+      if ( age_in_days < 1 ) // one day
       {
         // no need to update this file
         it = files.erase( it );
@@ -311,8 +312,15 @@ void Oeis::update( volatile sig_atomic_t &exit_flag )
   }
   if ( !files.empty() )
   {
-    Log::get().info( "Updating OEIS index" );
-    ensureDir( OeisSequence::getHome() );
+    if ( age_in_days == -1 )
+    {
+      Log::get().info( "Creating OEIS index at " + OeisSequence::getHome() );
+      ensureDir( OeisSequence::getHome() );
+    }
+    else
+    {
+      Log::get().info( "Updating OEIS index (last update " + std::to_string( age_in_days ) + " days ago)" );
+    }
     std::string cmd, path;
     for ( auto &file : files )
     {
@@ -633,7 +641,7 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
   const size_t list_file_size = 50000;
   std::vector<std::stringstream> list_files( 1000000 / list_file_size );
   Stats stats;
-  size_t num_optimized = 0;
+  size_t num_processed = 0, num_optimized = 0;
   Parser parser;
   Program program, optimized;
   Sequence result;
@@ -707,11 +715,16 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
             << std::setw( 2 ) << std::setfill( '0' ) << num_ops << " program](" << s.dir_str() << "/" << s.id_str()
             << ".asm)): " << s.name << "\n";
       }
+      if ( ++num_processed % 100 == 0 )
+      {
+        Log::get().info( "Processed " + std::to_string( num_processed ) + " programs" );
+      }
     }
     stats.updateSequenceStats( s.id, has_program, has_b_file );
   }
 
   // write stats
+  Log::get().info( "Updating stats and program lists" );
   stats.save( "stats" );
 
   // write lists
@@ -737,5 +750,5 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
     Log::get().alert(
         "Optimized " + std::to_string( num_optimized ) + "/" + std::to_string( stats.num_programs ) + " programs." );
   }
-  Log::get().info( "Finished maintaining programs" );
+  Log::get().info( "Finished maintenance of " + std::to_string( num_processed ) + " programs" );
 }

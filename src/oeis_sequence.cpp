@@ -1,5 +1,6 @@
 #include "oeis_sequence.hpp"
 
+#include "parser.hpp"
 #include "util.hpp"
 
 #include <iomanip>
@@ -71,45 +72,103 @@ std::string OeisSequence::getBFilePath() const
 
 bool loadBFile( size_t id, const Sequence& seq_full, Sequence& seq_big )
 {
-  std::string big_path = OeisSequence( id ).getBFilePath();
-  std::ifstream big_file( big_path );
-  if ( !big_file.good() )
+  const OeisSequence oeis_seq( id );
+
+  // try to read b-file
+  std::ifstream big_file( oeis_seq.getBFilePath() );
+  if ( big_file.good() )
+  {
+    std::string l;
+    int64_t expected_index = -1, index = 0, value = 0;
+    while ( std::getline( big_file, l ) )
+    {
+      l.erase( l.begin(), std::find_if( l.begin(), l.end(), []( int ch )
+      {
+        return !std::isspace(ch);
+      } ) );
+      if ( l.empty() || l[0] == '#' )
+      {
+        continue;
+      }
+      std::stringstream ss( l );
+      ss >> index >> value;
+      if ( expected_index == -1 )
+      {
+        expected_index = index;
+      }
+      if ( index != expected_index )
+      {
+        Log::get().warn( "Unexpected index " + std::to_string( index ) + " in b-file " + oeis_seq.getBFilePath() );
+        return false;
+      }
+      if ( isCloseToOverflow( value ) )
+      {
+        break;
+      }
+      seq_big.push_back( value );
+      ++expected_index;
+    }
+    Log::get().debug( "Read b-file for " + oeis_seq.id_str() + " with " + std::to_string( seq_big.size() ) + " terms" );
+  }
+  else
+  {
+    // if b-file not found, try to parse comment from existing program
+    std::ifstream program_file( oeis_seq.getProgramPath() );
+    if ( program_file.good() )
+    {
+      try
+      {
+        Parser parser;
+        auto p = parser.parse( oeis_seq.getProgramPath() );
+        if ( p.ops.size() > 1 && p.ops[1].type == Operation::Type::NOP && !p.ops[1].comment.empty() )
+        {
+          std::stringstream ss( p.ops[1].comment );
+          parser.in = &ss;
+          while ( true )
+          {
+            ss >> std::ws;
+            auto c = ss.peek();
+            if ( c == EOF )
+            {
+              break;
+            }
+            seq_big.push_back( parser.readValue() );
+            c = ss.peek();
+            if ( c == EOF )
+            {
+              break;
+            }
+            parser.readSeparator( ',' );
+          }
+        }
+        // if the number of terms in the comment is less than MAX_NUM_TERMS,
+        // we can't be sure it's coming from the b-file. thus we discard it in this case.
+        if ( seq_big.size() != OeisSequence::MAX_NUM_TERMS )
+        {
+          seq_big.clear();
+        }
+        else
+        {
+          Log::get().debug(
+              "Read sequence from program for " + oeis_seq.id_str() + " with " + std::to_string( seq_big.size() )
+                  + " terms" );
+        }
+      }
+      catch ( const std::exception& e )
+      {
+        Log::get().warn( "Error parsing " + oeis_seq.getProgramPath() );
+      }
+    }
+  }
+
+  // not found?
+  if ( seq_big.empty() )
   {
     if ( Log::get().level == Log::Level::DEBUG )
     {
-      Log::get().debug( "b-file not found: " + big_path );
+      Log::get().debug( "Neither b-file nor program found: " + oeis_seq.id_str() );
     }
     return false;
-  }
-  std::string l;
-  int64_t expected_index = -1, index = 0, value = 0;
-  while ( std::getline( big_file, l ) )
-  {
-    l.erase( l.begin(), std::find_if( l.begin(), l.end(), []( int ch )
-    {
-      return !std::isspace(ch);
-    } ) );
-    if ( l.empty() || l[0] == '#' )
-    {
-      continue;
-    }
-    std::stringstream ss( l );
-    ss >> index >> value;
-    if ( expected_index == -1 )
-    {
-      expected_index = index;
-    }
-    if ( index != expected_index )
-    {
-      Log::get().warn( "Unexpected index " + std::to_string( index ) + " in b-file " + big_path );
-      return false;
-    }
-    if ( isCloseToOverflow( value ) )
-    {
-      break;
-    }
-    seq_big.push_back( value );
-    ++expected_index;
   }
 
   // align sequences on common prefix (will verify correctness below again!)
@@ -119,7 +178,7 @@ bool loadBFile( size_t id, const Sequence& seq_full, Sequence& seq_big )
   if ( seq_big.empty() || seq_big.size() < seq_full.size() )
   {
     Log::get().debug(
-        "Sequence in b-file too short: " + big_path + " (" + std::to_string( seq_big.size() ) + "<"
+        "Sequence in b-file too short for " + oeis_seq.id_str() + " (" + std::to_string( seq_big.size() ) + "<"
             + std::to_string( seq_full.size() ) + ")" );
     return false;
   }
@@ -128,12 +187,13 @@ bool loadBFile( size_t id, const Sequence& seq_full, Sequence& seq_big )
   Sequence seq_test( std::vector<number_t>( seq_big.begin(), seq_big.begin() + seq_full.size() ) );
   if ( seq_test != seq_full )
   {
-    Log::get().warn( "Unexpected terms in b-file " + big_path );
+    Log::get().warn( "Unexpected terms in b-file or program for " + oeis_seq.id_str() );
     Log::get().warn( "- expected: " + seq_full.to_string() );
     Log::get().warn( "- found:    " + seq_test.to_string() );
     if ( rand() % 5 == 0 )
     {
-      std::remove( big_path.c_str() );
+      Log::get().debug( "Removing " + oeis_seq.getBFilePath() );
+      std::remove( oeis_seq.getBFilePath().c_str() );
     }
     return false;
   }
@@ -147,7 +207,8 @@ bool loadBFile( size_t id, const Sequence& seq_full, Sequence& seq_big )
   if ( Log::get().level == Log::Level::DEBUG )
   {
     Log::get().debug(
-        "Loaded b-file for sequence " + std::to_string( id ) + " with " + std::to_string( seq_big.size() ) + " terms" );
+        "Loaded long version of sequence " + oeis_seq.id_str() + " with " + std::to_string( seq_big.size() )
+            + " terms" );
   }
   return true;
 }
@@ -173,6 +234,10 @@ const Sequence& OeisSequence::getFull() const
 
 void OeisSequence::fetchBFile() const
 {
+  if ( !attempted_bfile )
+  {
+    getFull();
+  }
   if ( !loaded_bfile )
   {
     std::ifstream big_file( getBFilePath() );
