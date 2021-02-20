@@ -29,7 +29,7 @@ void Test::all()
   collatz();
   linearMatcher();
   deltaMatcher();
-  size_t tests = 1000;
+  size_t tests = 100;
   for ( size_t degree = 0; degree <= (size_t) PolynomialMatcher::DEGREE; degree++ )
   {
     polynomialMatcher( tests, degree );
@@ -395,9 +395,12 @@ void Test::minimizer( size_t tests )
   MultiGenerator multi_generator( settings, rand() );
   Sequence s1, s2, s3;
   Program program, minimized;
-  Log::get().info( "Testing minimizer" );
   for ( size_t i = 0; i < tests; i++ )
   {
+    if ( i % (tests / 10) == 0 )
+    {
+      Log::get().info( "Testing minimizer " + std::to_string( i ) );
+    }
     if ( exit_flag_ ) break;
     program = multi_generator.getGenerator()->generateProgram();
     multi_generator.next();
