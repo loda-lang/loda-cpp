@@ -3,7 +3,7 @@
     "new": [
       {
         "version": 1,
-        "length": 30,
+        "length": 40,
         "maxConstant": 5,
         "maxCell": 5,
         "loops": true,
@@ -19,10 +19,7 @@
         "maxConstant": 10,
         "maxCell": 10,
         "loops": true,
-        "indirectAccess": false,
-        "template": [
-          "programs/oeis/230/A230980.asm"
-        ]
+        "indirectAccess": false
       }
     ],
     "update": [
