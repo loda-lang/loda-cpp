@@ -646,7 +646,7 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
   Program program, optimized;
   Sequence result;
   std::string file_name;
-  bool has_b_file, has_program, is_okay;
+  bool has_b_file, has_program, is_okay, is_manual;
 
   for ( auto &s : sequences )
   {
@@ -675,7 +675,7 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
       }
       catch ( const std::exception &exc )
       {
-        Log::get().error( "Error parsing " + file_name, false );
+        Log::get().error( "Error parsing " + file_name + ": " + std::string( exc.what() ), false );
         continue;
       }
       s.fetchBFile(); // ensure b-file is loaded
@@ -698,15 +698,24 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
       else
       {
         has_program = true;
-        ProgramUtil::removeOps( program, Operation::Type::NOP );
-        optimized = program;
-        minimizer.optimizeAndMinimize( optimized, 2, 1, s.getFull().size() );
-        if ( program != optimized )
+        is_manual = false;
+        if ( program.ops.size() > 1 && program.ops[1].type == Operation::Type::NOP )
         {
-          Log::get().warn( "Updating program because it is not optimal: " + file_name );
-          num_optimized++;
+          const std::string& comment = program.ops[1].comment;
+          is_manual = comment.find( "Coded manually" ) != std::string::npos;
         }
-        dumpProgram( s.id, optimized, file_name );
+        if ( !is_manual )
+        {
+          ProgramUtil::removeOps( program, Operation::Type::NOP );
+          optimized = program;
+          minimizer.optimizeAndMinimize( optimized, 2, 1, s.getFull().size() );
+          if ( program != optimized )
+          {
+            Log::get().warn( "Updating program because it is not optimal: " + file_name );
+            num_optimized++;
+          }
+          dumpProgram( s.id, optimized, file_name );
+        }
 
         // collect stats
         stats.updateProgramStats( optimized );

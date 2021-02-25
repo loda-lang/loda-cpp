@@ -156,7 +156,7 @@ bool loadBFile( size_t id, const Sequence& seq_full, Sequence& seq_big )
       }
       catch ( const std::exception& e )
       {
-        Log::get().warn( "Error parsing " + oeis_seq.getProgramPath() );
+        Log::get().warn( "Failed to extract terms from " + oeis_seq.getProgramPath() + "; falling back to b-file" );
       }
     }
   }
