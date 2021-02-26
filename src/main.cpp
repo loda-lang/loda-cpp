@@ -9,7 +9,6 @@
 #include "util.hpp"
 
 #include <csignal>
-#include <execinfo.h>
 #include <signal.h>
 #include <sstream>
 #include <stdio.h>
@@ -65,16 +64,6 @@ void handle_sigint( int s )
     Log::get().info( "Shutting down instance" );
     EXIT_FLAG = 1;
   }
-}
-
-void handle_sigsegv( int s )
-{
-  void *array[10];
-  size_t size;
-  size = backtrace( array, 10 );
-  fprintf( stderr, "Fatal: signal %d:\n", s );
-  backtrace_symbols_fd( array, size, STDERR_FILENO );
-  exit( 1 );
 }
 
 int main( int argc, char *argv[] )
