@@ -59,6 +59,7 @@ TwitterClient findTwitterClient()
 
 Log::Log()
     : level( Level::INFO ),
+      slack_alerts( getEnvFlag( "LODA_SLACK_ALERTS" ) ),
       tweet_alerts( getEnvFlag( "LODA_TWEET_ALERTS" ) ),
       twitter_client( TW_UNKNOWN )
 {
@@ -114,33 +115,46 @@ void Log::alert( const std::string &msg )
       copy = copy + "...";
     }
   }
-  if ( tweet_alerts && !copy.empty() )
+  if ( !copy.empty() )
   {
-    if ( twitter_client == TW_UNKNOWN )
+    if ( slack_alerts )
     {
-      twitter_client = findTwitterClient();
-    }
-    std::string cmd;
-    switch ( twitter_client )
-    {
-    case TW_UNKNOWN:
-      break;
-    case TW_NONE:
-      break;
-    case TW_TWIDGE:
-      cmd = "twidge update \"" + copy + "\" > /dev/null";
-      break;
-    case TW_RAINBOWSTREAM:
-      cmd = "printf \"t " + copy + "\\nexit()\\n\" | rainbowstream > /dev/null";
-      break;
-    }
-    if ( !cmd.empty() )
-    {
+      std::string cmd = "slack chat send \"" + copy + "\" \"#miner\" > /dev/null";
       auto exit_code = system( cmd.c_str() );
       if ( exit_code != 0 )
       {
-        error( "Error tweeting alert! Failed command: " + cmd, false );
-        twitter_client = TW_NONE;
+        error( "Error sending alert to Slack! Failed command: " + cmd, false );
+        slack_alerts = false;
+      }
+    }
+    if ( tweet_alerts )
+    {
+      if ( twitter_client == TW_UNKNOWN )
+      {
+        twitter_client = findTwitterClient();
+      }
+      std::string cmd;
+      switch ( twitter_client )
+      {
+      case TW_UNKNOWN:
+        break;
+      case TW_NONE:
+        break;
+      case TW_TWIDGE:
+        cmd = "twidge update \"" + copy + "\" > /dev/null";
+        break;
+      case TW_RAINBOWSTREAM:
+        cmd = "printf \"t " + copy + "\\nexit()\\n\" | rainbowstream > /dev/null";
+        break;
+      }
+      if ( !cmd.empty() )
+      {
+        auto exit_code = system( cmd.c_str() );
+        if ( exit_code != 0 )
+        {
+          error( "Error tweeting alert! Failed command: " + cmd, false );
+          twitter_client = TW_NONE;
+        }
       }
     }
   }

@@ -29,6 +29,7 @@ public:
   void alert( const std::string &msg );
 
   Level level;
+  bool slack_alerts;
   bool tweet_alerts;
 
 private:
