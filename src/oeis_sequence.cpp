@@ -98,7 +98,7 @@ bool loadBFile( size_t id, const Sequence& seq_full, Sequence& seq_big )
 {
   const OeisSequence oeis_seq( id );
 
-// try to read b-file
+  // try to read b-file
   std::ifstream big_file( oeis_seq.getBFilePath() );
   if ( big_file.good() )
   {
@@ -185,7 +185,7 @@ bool loadBFile( size_t id, const Sequence& seq_full, Sequence& seq_big )
     }
   }
 
-// not found?
+  // not found?
   if ( seq_big.empty() )
   {
     if ( Log::get().level == Log::Level::DEBUG )
@@ -195,10 +195,10 @@ bool loadBFile( size_t id, const Sequence& seq_full, Sequence& seq_big )
     return false;
   }
 
-// align sequences on common prefix (will verify correctness below again!)
+  // align sequences on common prefix (will verify correctness below again!)
   seq_big.align( seq_full, 5 );
 
-// check length
+  // check length
   if ( seq_big.empty() || seq_big.size() < seq_full.size() )
   {
     Log::get().debug(
@@ -207,7 +207,7 @@ bool loadBFile( size_t id, const Sequence& seq_full, Sequence& seq_big )
     return false;
   }
 
-// check that the sequences agree on prefix
+  // check that the sequences agree on prefix
   Sequence seq_test( std::vector<number_t>( seq_big.begin(), seq_big.begin() + seq_full.size() ) );
   if ( seq_test != seq_full )
   {
@@ -222,7 +222,7 @@ bool loadBFile( size_t id, const Sequence& seq_full, Sequence& seq_big )
     return false;
   }
 
-// shrink big sequence to maximum number of terms
+  // shrink big sequence to maximum number of terms
   if ( seq_big.size() > OeisSequence::MAX_NUM_TERMS )
   {
     seq_big = Sequence( std::vector<number_t>( seq_big.begin(), seq_big.begin() + OeisSequence::MAX_NUM_TERMS ) );
@@ -268,8 +268,7 @@ void OeisSequence::fetchBFile() const
     if ( !big_file.good() )
     {
       ensureDir( getBFilePath() );
-      std::string cmd = "wget -nv -O " + getBFilePath() + " https://oeis.org/" + id_str() + "/" + id_str( "b" )
-          + ".txt";
+      std::string cmd = "wget -nv -O " + getBFilePath() + " " + url_str() + "/" + id_str( "b" ) + ".txt";
       if ( system( cmd.c_str() ) != 0 )
       {
         Log::get().error( "Error fetching b-file for " + id_str(), true ); // need to exit here to be able to cancel

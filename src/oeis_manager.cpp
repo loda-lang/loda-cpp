@@ -638,7 +638,7 @@ std::pair<bool, bool> Oeis::updateProgram( size_t id, const Program &p )
   ProgramUtil::print( optimized.second, buf, "\\n" );
   buf << "\\`\\`\\`";
   details.text = buf.str();
-  Log::get().alert( buf.str(), details );
+  Log::get().alert( msg, details );
 
   return
   { true,is_new};
