@@ -23,6 +23,25 @@ OeisSequence::OeisSequence( size_t id )
 {
 }
 
+OeisSequence::OeisSequence( std::string id_str )
+    : attempted_bfile( false ),
+      loaded_bfile( false )
+{
+  if ( id_str.empty() || id_str[0] != 'A' )
+  {
+    throw std::invalid_argument( id_str );
+  }
+  id_str = id_str.substr( 1 );
+  for ( char c : id_str )
+  {
+    if ( !std::isdigit( c ) )
+    {
+      throw std::invalid_argument( id_str );
+    }
+  }
+  id = std::stoll( id_str );
+}
+
 OeisSequence::OeisSequence( size_t id, const std::string &name, const Sequence &s, const Sequence &full )
     : id( id ),
       name( name ),
@@ -79,7 +98,7 @@ bool loadBFile( size_t id, const Sequence& seq_full, Sequence& seq_big )
 {
   const OeisSequence oeis_seq( id );
 
-  // try to read b-file
+// try to read b-file
   std::ifstream big_file( oeis_seq.getBFilePath() );
   if ( big_file.good() )
   {
@@ -166,7 +185,7 @@ bool loadBFile( size_t id, const Sequence& seq_full, Sequence& seq_big )
     }
   }
 
-  // not found?
+// not found?
   if ( seq_big.empty() )
   {
     if ( Log::get().level == Log::Level::DEBUG )
@@ -176,10 +195,10 @@ bool loadBFile( size_t id, const Sequence& seq_full, Sequence& seq_big )
     return false;
   }
 
-  // align sequences on common prefix (will verify correctness below again!)
+// align sequences on common prefix (will verify correctness below again!)
   seq_big.align( seq_full, 5 );
 
-  // check length
+// check length
   if ( seq_big.empty() || seq_big.size() < seq_full.size() )
   {
     Log::get().debug(
@@ -188,7 +207,7 @@ bool loadBFile( size_t id, const Sequence& seq_full, Sequence& seq_big )
     return false;
   }
 
-  // check that the sequences agree on prefix
+// check that the sequences agree on prefix
   Sequence seq_test( std::vector<number_t>( seq_big.begin(), seq_big.begin() + seq_full.size() ) );
   if ( seq_test != seq_full )
   {
@@ -203,7 +222,7 @@ bool loadBFile( size_t id, const Sequence& seq_full, Sequence& seq_big )
     return false;
   }
 
-  // shrink big sequence to maximum number of terms
+// shrink big sequence to maximum number of terms
   if ( seq_big.size() > OeisSequence::MAX_NUM_TERMS )
   {
     seq_big = Sequence( std::vector<number_t>( seq_big.begin(), seq_big.begin() + OeisSequence::MAX_NUM_TERMS ) );

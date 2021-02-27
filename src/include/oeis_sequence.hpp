@@ -12,6 +12,8 @@ public:
 
   OeisSequence( size_t id = 0 );
 
+  OeisSequence( std::string id_str );
+
   OeisSequence( size_t id, const std::string &name, const Sequence &s, const Sequence &full );
 
   std::string id_str( const std::string &prefix = "A" ) const;

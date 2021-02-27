@@ -66,6 +66,20 @@ void handle_sigint( int s )
   }
 }
 
+std::string get_program_path( std::string arg )
+{
+  try
+  {
+    OeisSequence s( arg );
+    return s.getProgramPath();
+  }
+  catch ( ... )
+  {
+    // not an ID string
+  }
+  return arg;
+}
+
 int main( int argc, char *argv[] )
 {
   std::signal( SIGINT, handle_sigint );
@@ -90,7 +104,7 @@ int main( int argc, char *argv[] )
     else if ( cmd == "evaluate" || cmd == "eval" )
     {
       Parser parser;
-      Program program = parser.parse( std::string( args.at( 1 ) ) );
+      Program program = parser.parse( get_program_path( args.at( 1 ) ) );
       Interpreter interpreter( settings );
       Sequence seq;
       interpreter.eval( program, seq );
@@ -99,7 +113,7 @@ int main( int argc, char *argv[] )
     else if ( cmd == "optimize" || cmd == "opt" )
     {
       Parser parser;
-      Program program = parser.parse( std::string( args.at( 1 ) ) );
+      Program program = parser.parse( get_program_path( args.at( 1 ) ) );
       Optimizer optimizer( settings );
       optimizer.optimize( program, 2, 1 );
       ProgramUtil::print( program, std::cout );
@@ -107,7 +121,7 @@ int main( int argc, char *argv[] )
     else if ( cmd == "minimize" || cmd == "min" )
     {
       Parser parser;
-      Program program = parser.parse( std::string( args.at( 1 ) ) );
+      Program program = parser.parse( get_program_path( args.at( 1 ) ) );
       Minimizer minimizer( settings );
       minimizer.optimizeAndMinimize( program, 2, 1, settings.num_terms );
       ProgramUtil::print( program, std::cout );
