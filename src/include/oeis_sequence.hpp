@@ -18,6 +18,8 @@ public:
 
   std::string dir_str() const;
 
+  std::string url_str() const;
+
   std::string getProgramPath() const;
 
   std::string getBFilePath() const;

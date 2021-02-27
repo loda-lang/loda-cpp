@@ -95,7 +95,7 @@ void Log::error( const std::string &msg, bool throw_ )
   }
 }
 
-void Log::alert( const std::string &msg )
+void Log::alert( const std::string &msg, AlertDetails details )
 {
   log( Log::Level::ALERT, msg );
   std::string copy = msg;
@@ -119,7 +119,26 @@ void Log::alert( const std::string &msg )
   {
     if ( slack_alerts )
     {
-      std::string cmd = "slack chat send \"" + copy + "\" \"#miner\" > /dev/null";
+      std::string cmd;
+      if ( !details.text.empty() )
+      {
+        std::replace( details.text.begin(), details.text.end(), '"', ' ' );
+        std::replace( details.title.begin(), details.title.end(), '"', ' ' );
+        size_t index = 0;
+        while ( true )
+        {
+          index = details.text.find( "$", index );
+          if ( index == std::string::npos ) break;
+          details.text.replace( index, 1, "\\$" );
+          index += 2;
+        }
+        cmd = "slack chat send --text \"" + details.text + "\" --title \"" + details.title + "\" --title-link "
+            + details.title_link + " --color " + details.color + " --channel \"#miner\" > /dev/null";
+      }
+      else
+      {
+        cmd = "slack chat send \"" + copy + "\" \"#miner\" > /dev/null";
+      }
       auto exit_code = system( cmd.c_str() );
       if ( exit_code != 0 )
       {

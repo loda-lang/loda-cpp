@@ -60,6 +60,11 @@ std::string OeisSequence::dir_str() const
   return s.str();
 }
 
+std::string OeisSequence::url_str() const
+{
+  return "https://oeis.org/" + id_str();
+}
+
 std::string OeisSequence::getProgramPath() const
 {
   return "programs/oeis/" + dir_str() + "/" + id_str() + ".asm";

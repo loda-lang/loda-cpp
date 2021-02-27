@@ -18,6 +18,15 @@ public:
     ALERT
   };
 
+  class AlertDetails
+  {
+  public:
+    std::string text;
+    std::string title;
+    std::string title_link;
+    std::string color;
+  };
+
   Log();
 
   static Log& get();
@@ -26,7 +35,7 @@ public:
   void info( const std::string &msg );
   void warn( const std::string &msg );
   void error( const std::string &msg, bool throw_ = false );
-  void alert( const std::string &msg );
+  void alert( const std::string &msg, AlertDetails details = AlertDetails() );
 
   Level level;
   bool slack_alerts;
