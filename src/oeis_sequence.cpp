@@ -23,6 +23,25 @@ OeisSequence::OeisSequence( size_t id )
 {
 }
 
+OeisSequence::OeisSequence( std::string id_str )
+    : attempted_bfile( false ),
+      loaded_bfile( false )
+{
+  if ( id_str.empty() || id_str[0] != 'A' )
+  {
+    throw std::invalid_argument( id_str );
+  }
+  id_str = id_str.substr( 1 );
+  for ( char c : id_str )
+  {
+    if ( !std::isdigit( c ) )
+    {
+      throw std::invalid_argument( id_str );
+    }
+  }
+  id = std::stoll( id_str );
+}
+
 OeisSequence::OeisSequence( size_t id, const std::string &name, const Sequence &s, const Sequence &full )
     : id( id ),
       name( name ),
@@ -58,6 +77,11 @@ std::string OeisSequence::dir_str() const
   std::stringstream s;
   s << std::setw( 3 ) << std::setfill( '0' ) << (id / 1000);
   return s.str();
+}
+
+std::string OeisSequence::url_str() const
+{
+  return "https://oeis.org/" + id_str();
 }
 
 std::string OeisSequence::getProgramPath() const
@@ -244,8 +268,7 @@ void OeisSequence::fetchBFile() const
     if ( !big_file.good() )
     {
       ensureDir( getBFilePath() );
-      std::string cmd = "wget -nv -O " + getBFilePath() + " https://oeis.org/" + id_str() + "/" + id_str( "b" )
-          + ".txt";
+      std::string cmd = "wget -nv -O " + getBFilePath() + " " + url_str() + "/" + id_str( "b" ) + ".txt";
       if ( system( cmd.c_str() ) != 0 )
       {
         Log::get().error( "Error fetching b-file for " + id_str(), true ); // need to exit here to be able to cancel

@@ -194,7 +194,7 @@ void ProgramUtil::print( const Operation &op, std::ostream &out, int indent )
   out << getIndent( indent ) << operationToString( op );
 }
 
-void ProgramUtil::print( const Program &p, std::ostream &out )
+void ProgramUtil::print( const Program &p, std::ostream &out, std::string newline )
 {
   int indent = 0;
   for ( auto &op : p.ops )
@@ -204,7 +204,7 @@ void ProgramUtil::print( const Program &p, std::ostream &out )
       indent -= 2;
     }
     print( op, out, indent );
-    out << std::endl;
+    out << newline;
     if ( op.type == Operation::Type::LPB )
     {
       indent += 2;

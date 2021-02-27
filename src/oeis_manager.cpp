@@ -620,12 +620,26 @@ std::pair<bool, bool> Oeis::updateProgram( size_t id, const Program &p )
       optimized.second = p;
     }
   }
+
+  // write new or optimized program version
+  dumpProgram( id, optimized.second, file_name );
+
+  // send alert
   std::stringstream buf;
   if ( is_new ) buf << "First";
   else buf << change;
   buf << " program for " << seq << " Terms: " << seq.norm;
-  Log::get().alert( buf.str() );
-  dumpProgram( id, optimized.second, file_name );
+  auto msg = buf.str();
+  Log::AlertDetails details;
+  details.title = seq.id_str();
+  details.title_link = seq.url_str();
+  details.color = is_new ? "good" : "warning";
+  buf << "\\n\\`\\`\\`\\n";
+  ProgramUtil::print( optimized.second, buf, "\\n" );
+  buf << "\\`\\`\\`";
+  details.text = buf.str();
+  Log::get().alert( msg, details );
+
   return
   { true,is_new};
 }
@@ -691,7 +705,12 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
       }
       if ( !is_okay )
       {
-        Log::get().alert( "Removing invalid program for " + s.to_string() );
+        Log::AlertDetails details;
+        details.title = s.id_str();
+        details.title_link = s.url_str();
+        details.color = "danger";
+        details.text = "Removing invalid program for " + s.to_string();
+        Log::get().alert( details.text, details );
         program_file.close();
         remove( file_name.c_str() );
       }

@@ -12,11 +12,15 @@ public:
 
   OeisSequence( size_t id = 0 );
 
+  OeisSequence( std::string id_str );
+
   OeisSequence( size_t id, const std::string &name, const Sequence &s, const Sequence &full );
 
   std::string id_str( const std::string &prefix = "A" ) const;
 
   std::string dir_str() const;
+
+  std::string url_str() const;
 
   std::string getProgramPath() const;
 
