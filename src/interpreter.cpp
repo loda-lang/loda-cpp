@@ -376,10 +376,10 @@ steps_t Interpreter::eval( const Program &p, Sequence &seq, int64_t num_terms )
   Memory mem;
   steps_t steps;
   size_t s;
-  for ( int i = 0; i < num_terms; i++ )
+  for ( int64_t i = 0; i < num_terms; i++ )
   {
     mem.clear();
-    mem.set( Program::INPUT_CELL, i );
+    mem.set( Program::INPUT_CELL, settings.offset + i );
     s = run( p, mem );
     steps.add( s );
     seq[i] = settings.use_steps ? s : mem.get( Program::OUTPUT_CELL );

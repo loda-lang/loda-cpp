@@ -50,6 +50,8 @@ void help()
       << std::endl;
   std::cout << "  -m <number>      Maximum number of used memory cells (default:" << settings.max_memory << ")"
       << std::endl;
+  std::cout << "  -o <number>      Evaluate starting from a given offset (default:" << settings.offset << ")"
+      << std::endl;
   std::cout << "  -s               Evaluate to number of execution steps" << std::endl;
   std::cout << "  -r               Search for programs of linear sequences (slow)" << std::endl;
   std::cout << "  -x               Optimize and overwrite existing programs" << std::endl;
@@ -88,9 +90,16 @@ int main( int argc, char *argv[] )
   if ( !args.empty() )
   {
     std::string cmd = args.front();
-    if ( settings.use_steps && cmd != "evaluate" && cmd != "eval" )
+    if ( cmd != "evaluate" && cmd != "eval" )
     {
-      Log::get().error( "Option -s only allowed in evaluate command", true );
+      if ( settings.use_steps )
+      {
+        Log::get().error( "Option -s only allowed in evaluate command", true );
+      }
+      if ( settings.offset )
+      {
+        Log::get().error( "Option -o only allowed in evaluate command", true );
+      }
     }
     if ( cmd == "help" )
     {

@@ -68,6 +68,7 @@ class Settings
 {
 public:
   size_t num_terms;
+  int64_t offset;
   size_t max_memory;
   size_t max_cycles;
   size_t max_stack_size;
