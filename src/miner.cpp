@@ -132,7 +132,7 @@ void Miner::mine( volatile sig_atomic_t &exit_flag )
   {
     if ( progs.empty() )
     {
-      multi_generator.next(); // need to call "next" *before* generating the problems
+      multi_generator.next(); // need to call "next" *before* generating the programs
       generator = multi_generator.getGenerator();
       progs.push( generator->generateProgram() );
     }
