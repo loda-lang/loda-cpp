@@ -14,7 +14,7 @@ public:
 
   Miner( const Settings &settings );
 
-  void mine( volatile sig_atomic_t &exit_flag );
+  void mine();
 
   static bool isCollatzValuation( const Sequence &seq );
 

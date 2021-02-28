@@ -113,9 +113,9 @@ bool Miner::isPrimeSequence( const Sequence &seq ) const
   return true;
 }
 
-void Miner::mine( volatile sig_atomic_t &exit_flag )
+void Miner::mine()
 {
-  oeis.load( exit_flag );
+  oeis.load();
   Log::get().info( "Mining programs for OEIS sequences" );
 
   auto &finder = oeis.getFinder();
@@ -128,7 +128,7 @@ void Miner::mine( volatile sig_atomic_t &exit_flag )
   auto time = std::chrono::steady_clock::now();
 
   Generator *generator = multi_generator.getGenerator();
-  while ( !exit_flag )
+  while ( true )
   {
     if ( progs.empty() )
     {

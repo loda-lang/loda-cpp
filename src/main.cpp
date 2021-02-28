@@ -8,8 +8,6 @@
 #include "test.hpp"
 #include "util.hpp"
 
-#include <csignal>
-#include <signal.h>
 #include <sstream>
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,18 +15,6 @@
 
 void help()
 {
-  std::stringstream operation_types;
-  bool is_first = true;
-  for ( auto &t : Operation::Types )
-  {
-    auto &m = Operation::Metadata::get( t );
-    if ( m.is_public && t != Operation::Type::LPE )
-    {
-      if ( !is_first ) operation_types << ",";
-      operation_types << std::string( 1, m.short_name ) << ":" << m.name;
-      is_first = false;
-    }
-  }
   Settings settings;
   std::cout << "Usage:             loda <command> <options>" << std::endl;
   std::cout << "Core commands:" << std::endl;
@@ -58,17 +44,6 @@ void help()
   std::cout << "  -x               Optimize and overwrite existing programs" << std::endl;
 }
 
-volatile sig_atomic_t EXIT_FLAG = 0;
-
-void handle_sigint( int s )
-{
-  if ( !EXIT_FLAG )
-  {
-    Log::get().info( "Shutting down instance" );
-    EXIT_FLAG = 1;
-  }
-}
-
 std::string get_program_path( std::string arg )
 {
   try
@@ -85,7 +60,6 @@ std::string get_program_path( std::string arg )
 
 int main( int argc, char *argv[] )
 {
-  std::signal( SIGINT, handle_sigint );
   Settings settings;
   auto args = settings.parseArgs( argc, argv );
   if ( !args.empty() )
@@ -108,7 +82,7 @@ int main( int argc, char *argv[] )
     }
     else if ( cmd == "test" )
     {
-      Test test( EXIT_FLAG );
+      Test test;
       test.all();
     }
     else if ( cmd == "evaluate" || cmd == "eval" )
@@ -150,19 +124,19 @@ int main( int argc, char *argv[] )
     else if ( cmd == "mine" )
     {
       Miner miner( settings );
-      miner.mine( EXIT_FLAG );
+      miner.mine();
     }
     else if ( cmd == "maintain" )
     {
       // need to set the override flag!
       settings.optimize_existing_programs = true;
       Oeis o( settings );
-      o.maintain( EXIT_FLAG );
+      o.maintain();
     }
     else if ( cmd == "migrate" )
     {
       Oeis o( settings );
-      o.migrate( EXIT_FLAG );
+      o.migrate();
     }
     else if ( cmd == "collatz" )
     {
