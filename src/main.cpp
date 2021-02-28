@@ -53,6 +53,7 @@ void help()
   std::cout << "  -o <number>      Evaluate starting from a given offset (default:" << settings.offset << ")"
       << std::endl;
   std::cout << "  -s               Evaluate to number of execution steps" << std::endl;
+  std::cout << "  -b               Print evaluation result in b-file format" << std::endl;
   std::cout << "  -r               Search for programs of linear sequences (slow)" << std::endl;
   std::cout << "  -x               Optimize and overwrite existing programs" << std::endl;
 }
@@ -117,7 +118,10 @@ int main( int argc, char *argv[] )
       Interpreter interpreter( settings );
       Sequence seq;
       interpreter.eval( program, seq );
-      std::cout << seq << std::endl;
+      if ( !settings.print_as_b_file )
+      {
+        std::cout << seq << std::endl;
+      }
     }
     else if ( cmd == "optimize" || cmd == "opt" )
     {

@@ -78,6 +78,7 @@ public:
   bool search_linear;
   bool throw_on_overflow;
   bool use_steps;
+  bool print_as_b_file;
   std::string loda_config;
 
   Settings();

@@ -261,6 +261,7 @@ Settings::Settings()
       search_linear( false ),
       throw_on_overflow( true ),
       use_steps( false ),
+      print_as_b_file( false ),
       loda_config( "loda.json" )
 {
 }
@@ -385,6 +386,10 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
       else if ( opt == "s" )
       {
         use_steps = true;
+      }
+      else if ( opt == "b" )
+      {
+        print_as_b_file = true;
       }
       else if ( opt == "k" )
       {
