@@ -33,7 +33,7 @@ public:
 
   steps_t eval( const Program &p, std::vector<Sequence> &seqs, int64_t num_terms = -1 );
 
-  bool check( const Program &p, const Sequence &expected_seq );
+  std::pair<bool, steps_t> check( const Program &p, const Sequence &expected_seq );
 
 private:
 

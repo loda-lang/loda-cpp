@@ -376,13 +376,17 @@ steps_t Interpreter::eval( const Program &p, Sequence &seq, int64_t num_terms )
   Memory mem;
   steps_t steps;
   size_t s;
-  for ( int i = 0; i < num_terms; i++ )
+  for ( int64_t i = 0; i < num_terms; i++ )
   {
     mem.clear();
-    mem.set( Program::INPUT_CELL, i );
+    mem.set( Program::INPUT_CELL, settings.offset + i );
     s = run( p, mem );
     steps.add( s );
     seq[i] = settings.use_steps ? s : mem.get( Program::OUTPUT_CELL );
+    if ( settings.print_as_b_file )
+    {
+      std::cout << (settings.offset + i) << " " << seq[i] << std::endl;
+    }
   }
   if ( is_debug )
   {
@@ -418,20 +422,23 @@ steps_t Interpreter::eval( const Program &p, std::vector<Sequence> &seqs, int64_
   return steps;
 }
 
-bool Interpreter::check( const Program &p, const Sequence &expected_seq )
+std::pair<bool, steps_t> Interpreter::check( const Program &p, const Sequence &expected_seq )
 {
+  std::pair<bool, steps_t> result;
   Memory mem;
   for ( size_t i = 0; i < expected_seq.size(); i++ )
   {
     mem.clear();
     mem.set( Program::INPUT_CELL, i );
-    run( p, mem );
+    result.second.add( run( p, mem ) );
     if ( mem.get( Program::OUTPUT_CELL ) != expected_seq[i] )
     {
-      return false;
+      result.first = false;
+      return result;
     }
   }
-  return true;
+  result.first = true;
+  return result;
 }
 
 Program Interpreter::getProgram( number_t id ) const

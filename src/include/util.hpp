@@ -68,6 +68,7 @@ class Settings
 {
 public:
   size_t num_terms;
+  int64_t offset;
   size_t max_memory;
   size_t max_cycles;
   size_t max_stack_size;
@@ -77,6 +78,7 @@ public:
   bool search_linear;
   bool throw_on_overflow;
   bool use_steps;
+  bool print_as_b_file;
   std::string loda_config;
 
   Settings();

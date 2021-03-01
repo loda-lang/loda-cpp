@@ -9,9 +9,10 @@ void Minimizer::minimize( Program &p, size_t num_terms ) const
   Log::get().debug( "Minimizing program" );
   Interpreter interpreter( settings );
   Sequence target_sequence;
+  steps_t target_steps;
   try
   {
-    interpreter.eval( p, target_sequence, num_terms );
+    target_steps = interpreter.eval( p, target_sequence, num_terms );
   }
   catch ( const std::exception& )
   {
@@ -31,7 +32,8 @@ void Minimizer::minimize( Program &p, size_t num_terms ) const
       bool can_replace;
       try
       {
-        can_replace = interpreter.check( p, target_sequence );
+        auto res = interpreter.check( p, target_sequence );
+        can_replace = res.first && (res.second.total <= target_steps.total);
       }
       catch ( const std::exception& )
       {
@@ -50,7 +52,8 @@ void Minimizer::minimize( Program &p, size_t num_terms ) const
         bool can_reset;
         try
         {
-          can_reset = interpreter.check( p, target_sequence );
+          auto res = interpreter.check( p, target_sequence );
+          can_reset = res.first && (res.second.total <= target_steps.total);
         }
         catch ( const std::exception& )
         {
@@ -68,7 +71,8 @@ void Minimizer::minimize( Program &p, size_t num_terms ) const
       bool can_remove;
       try
       {
-        can_remove = interpreter.check( p, target_sequence );
+        auto res = interpreter.check( p, target_sequence );
+        can_remove = res.first && (res.second.total <= target_steps.total);
       }
       catch ( const std::exception& )
       {
