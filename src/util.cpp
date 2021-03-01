@@ -251,7 +251,6 @@ void Metrics::write( const std::string &field, const std::map<std::string, std::
 
 Settings::Settings()
     : num_terms( 20 ),
-      offset( 0 ),
       max_memory( getEnvInt( "LODA_MAX_MEMORY", 100000 ) ),
       max_cycles( getEnvInt( "LODA_MAX_CYCLES", 10000000 ) ),
       max_stack_size( getEnvInt( "LODA_MAX_STACK_SIZE", 100 ) ),
@@ -261,8 +260,9 @@ Settings::Settings()
       search_linear( false ),
       throw_on_overflow( true ),
       use_steps( false ),
+      loda_config( "loda.json" ),
       print_as_b_file( false ),
-      loda_config( "loda.json" )
+      print_as_b_file_offset( 0 )
 {
 }
 
@@ -270,10 +270,10 @@ enum class Option
 {
   NONE,
   NUM_TERMS,
-  OFFSET,
   MAX_MEMORY,
   MAX_CYCLES,
   MAX_PHYSICAL_MEMORY,
+  B_FILE_OFFSET,
   LODA_CONFIG,
   LOG_LEVEL
 };
@@ -285,13 +285,13 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
   for ( int i = 1; i < argc; ++i )
   {
     std::string arg( argv[i] );
-    if ( option == Option::NUM_TERMS || option == Option::OFFSET || option == Option::MAX_MEMORY
-        || option == Option::MAX_CYCLES || option == Option::MAX_PHYSICAL_MEMORY )
+    if ( option == Option::NUM_TERMS || option == Option::MAX_MEMORY || option == Option::MAX_CYCLES
+        || option == Option::MAX_PHYSICAL_MEMORY || option == Option::B_FILE_OFFSET )
     {
       std::stringstream s( arg );
       int64_t val;
       s >> val;
-      if ( option != Option::OFFSET && val < 1 )
+      if ( option != Option::B_FILE_OFFSET && val < 1 )
       {
         Log::get().error( "Invalid value for option: " + std::to_string( val ), true );
       }
@@ -300,8 +300,9 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
       case Option::NUM_TERMS:
         num_terms = val;
         break;
-      case Option::OFFSET:
-        offset = val;
+      case Option::B_FILE_OFFSET:
+        print_as_b_file = true;
+        print_as_b_file_offset = val;
         break;
       case Option::MAX_MEMORY:
         max_memory = val;
@@ -359,10 +360,6 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
       {
         option = Option::NUM_TERMS;
       }
-      else if ( opt == "o" )
-      {
-        option = Option::OFFSET;
-      }
       else if ( opt == "m" )
       {
         option = Option::MAX_MEMORY;
@@ -389,7 +386,7 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
       }
       else if ( opt == "b" )
       {
-        print_as_b_file = true;
+        option = Option::B_FILE_OFFSET;
       }
       else if ( opt == "k" )
       {
