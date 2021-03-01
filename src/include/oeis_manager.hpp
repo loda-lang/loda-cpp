@@ -19,9 +19,9 @@ public:
   {
   }
 
-  void load( volatile sig_atomic_t &exit_flag );
+  void load();
 
-  void migrate( volatile sig_atomic_t &exit_flag );
+  void migrate();
 
   const std::vector<OeisSequence>& getSequences() const;
 
@@ -39,15 +39,15 @@ public:
 
   std::pair<bool, bool> updateProgram( size_t id, const Program &p );
 
-  void maintain( volatile sig_atomic_t &exit_flag );
+  void maintain();
 
 private:
 
-  size_t loadData( volatile sig_atomic_t &exit_flag );
+  size_t loadData();
 
-  void loadNames( volatile sig_atomic_t &exit_flag );
+  void loadNames();
 
-  void update( volatile sig_atomic_t &exit_flag );
+  void update();
 
   void dumpProgram( size_t id, Program p, const std::string &file ) const;
 

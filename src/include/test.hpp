@@ -8,8 +8,7 @@ class Test
 {
 public:
 
-  Test( volatile sig_atomic_t &exit_flag )
-      : exit_flag_( exit_flag )
+  Test()
   {
   }
 
@@ -40,8 +39,6 @@ public:
   void config();
 
 private:
-
-  volatile sig_atomic_t &exit_flag_;
 
   void testSeq( size_t id, const Sequence &values );
 

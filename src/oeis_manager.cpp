@@ -36,7 +36,7 @@ Oeis::Oeis( const Settings &settings )
 {
 }
 
-void Oeis::load( volatile sig_atomic_t &exit_flag )
+void Oeis::load()
 {
   // check if already loaded
   if ( total_count_ > 0 )
@@ -62,12 +62,12 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
     }
 
     // update index if needed
-    update( exit_flag );
+    update();
 
     // load sequence data and names
     Log::get().info( "Loading sequences from the OEIS index" );
-    loaded_count = loadData( exit_flag );
-    loadNames( exit_flag );
+    loaded_count = loadData();
+    loadNames();
 
     // remove lock
     unlink( lockfile.c_str() );
@@ -138,7 +138,7 @@ void Oeis::load( volatile sig_atomic_t &exit_flag )
 
 }
 
-size_t Oeis::loadData( volatile sig_atomic_t &exit_flag )
+size_t Oeis::loadData()
 {
   std::ifstream stripped( OeisSequence::getHome() + "stripped" );
   if ( !stripped.good() )
@@ -154,10 +154,6 @@ size_t Oeis::loadData( volatile sig_atomic_t &exit_flag )
   std::random_device rand;
   while ( std::getline( stripped, line ) )
   {
-    if ( exit_flag )
-    {
-      break;
-    }
     if ( line.empty() || line[0] == '#' )
     {
       continue;
@@ -237,7 +233,7 @@ size_t Oeis::loadData( volatile sig_atomic_t &exit_flag )
   return loaded_count;
 }
 
-void Oeis::loadNames( volatile sig_atomic_t &exit_flag )
+void Oeis::loadNames()
 {
   Log::get().debug( "Loading sequence names from the OEIS index" );
   std::ifstream names( OeisSequence::getHome() + "names" );
@@ -250,10 +246,6 @@ void Oeis::loadNames( volatile sig_atomic_t &exit_flag )
   size_t id;
   while ( std::getline( names, line ) )
   {
-    if ( exit_flag )
-    {
-      break;
-    }
     if ( line.empty() || line[0] == '#' )
     {
       continue;
@@ -286,7 +278,7 @@ void Oeis::loadNames( volatile sig_atomic_t &exit_flag )
   }
 }
 
-void Oeis::update( volatile sig_atomic_t &exit_flag )
+void Oeis::update()
 {
   std::vector<std::string> files = { "stripped", "names" };
 
@@ -324,10 +316,6 @@ void Oeis::update( volatile sig_atomic_t &exit_flag )
     std::string cmd, path;
     for ( auto &file : files )
     {
-      if ( exit_flag )
-      {
-        break;
-      }
       path = OeisSequence::getHome() + file;
       cmd = "wget -nv -O " + path + ".gz https://oeis.org/" + file + ".gz";
       if ( system( cmd.c_str() ) != 0 )
@@ -366,14 +354,10 @@ void migrateFile( const std::string &from, const std::string &to )
   }
 }
 
-void Oeis::migrate( volatile sig_atomic_t &exit_flag )
+void Oeis::migrate()
 {
   for ( size_t id = 1; id <= 400000; id++ )
   {
-    if ( exit_flag )
-    {
-      break;
-    }
     OeisSequence s( id );
     auto old_program_path = "programs/oeis/" + s.id_str() + ".asm";
     migrateFile( old_program_path, s.getProgramPath() );
@@ -644,13 +628,13 @@ std::pair<bool, bool> Oeis::updateProgram( size_t id, const Program &p )
   { true,is_new};
 }
 
-void Oeis::maintain( volatile sig_atomic_t &exit_flag )
+void Oeis::maintain()
 {
   if ( !settings.optimize_existing_programs )
   {
     Log::get().error( "Option -x required to run maintenance", true );
   }
-  load( exit_flag );
+  load();
   Log::get().info( "Start maintaining OEIS programs" );
   const size_t list_file_size = 50000;
   std::vector<std::stringstream> list_files( 1000000 / list_file_size );
@@ -667,10 +651,6 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
     if ( s.id == 0 )
     {
       continue;
-    }
-    if ( exit_flag )
-    {
-      break;
     }
     file_name = s.getProgramPath();
     std::ifstream program_file( file_name );
@@ -752,12 +732,6 @@ void Oeis::maintain( volatile sig_atomic_t &exit_flag )
       }
     }
     stats.updateSequenceStats( s.id, has_program, has_b_file );
-  }
-
-  // we must check the exit flag here because the stats might be incomplete!
-  if ( exit_flag )
-  {
-    return;
   }
 
   // write stats

@@ -401,7 +401,6 @@ void Test::minimizer( size_t tests )
     {
       Log::get().info( "Testing minimizer " + std::to_string( i ) );
     }
-    if ( exit_flag_ ) break;
     program = multi_generator.getGenerator()->generateProgram();
     multi_generator.next();
     try
@@ -461,8 +460,6 @@ void Test::polynomialMatcher( size_t tests, size_t degree )
 // run matcher tests
   for ( size_t i = 0; i < tests; i++ )
   {
-    if ( exit_flag_ ) break;
-
     // evaluate test program
     auto program = programs[i % program_ids.size()];
     Sequence norm_seq;
@@ -530,7 +527,6 @@ void Test::testBinary( const std::string &func, const std::string &file,
   {
     for ( size_t j = 0; j < values[i].size(); j++ )
     {
-      if ( exit_flag_ ) break;
       Memory mem;
       mem.set( 0, i );
       mem.set( 1, j );
