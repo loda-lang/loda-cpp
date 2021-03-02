@@ -11,9 +11,10 @@ done
 # common settings
 log_level=error
 check_interval=43200
-min_changes=20
+min_changes=50
 min_cpus=4
 branch=$(git rev-parse --abbrev-ref HEAD)
+remote_origin=$(git config --get remote.origin.url)
 
 # get the number of cpus
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -56,7 +57,7 @@ function start_miners() {
   done
 
   # maintenance
-  if [ "$branch" = "master" ]; then
+  if [ "$remote_origin" = "git@github.com:ckrause/loda.git" ] && [ "$branch" = "master" ]; then
     echo "Start maintenance"
     ./loda maintain &
   fi
