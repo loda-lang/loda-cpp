@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 
 #if __MACH__
@@ -443,6 +444,17 @@ void ensureDir( const std::string &path )
   {
     Log::get().error( "Error determining directory for " + path, true );
   }
+}
+
+int64_t getFileAgeInDays( const std::string &path )
+{
+  struct stat st;
+  if ( stat( path.c_str(), &st ) == 0 )
+  {
+    time_t now = time( 0 );
+    return (now - st.st_mtime) / (3600 * 24);
+  }
+  return -1;
 }
 
 size_t getMemUsage()
