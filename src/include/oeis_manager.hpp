@@ -49,6 +49,8 @@ private:
 
   void update();
 
+  void addCalComments( Program& p ) const;
+
   void dumpProgram( size_t id, Program p, const std::string &file ) const;
 
   std::pair<bool, Program> minimizeAndCheck( const Program &p, const OeisSequence &seq, bool optimize );
