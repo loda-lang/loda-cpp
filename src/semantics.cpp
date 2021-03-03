@@ -45,6 +45,16 @@ number_t Semantics::div( number_t a, number_t b )
   return a / b;
 }
 
+number_t Semantics::dif( number_t a, number_t b )
+{
+  number_t d = div( a, b );
+  if ( d == NUM_INF )
+  {
+    return NUM_INF;
+  }
+  return (a == b * d) ? d : a;
+}
+
 number_t Semantics::mod( number_t a, number_t b )
 {
   CHECK_INF2( a, b );

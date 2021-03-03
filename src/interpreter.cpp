@@ -77,6 +77,10 @@ number_t Interpreter::calc( const Operation::Type type, number_t target, number_
   {
     return Semantics::div( target, source );
   }
+  case Operation::Type::DIF:
+  {
+    return Semantics::dif( target, source );
+  }
   case Operation::Type::MOD:
   {
     return Semantics::mod( target, source );

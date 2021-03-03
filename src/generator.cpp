@@ -112,14 +112,19 @@ std::vector<Generator::Config> Generator::Config::load( std::istream &in, bool o
 }
 
 Generator::Generator( const Config &config, const Stats &stats, int64_t seed )
-    :
-    config( config ),
-    found_programs( stats.found_programs )
+    : config( config ),
+      found_programs( stats.found_programs )
 {
   gen.seed( seed );
-  metric_labels = { { "version", std::to_string( config.version ) }, { "length", std::to_string( config.length ) }, {
-      "max_constant", std::to_string( config.max_constant ) }, { "loops", std::to_string( config.loops ) }, {
-      "indirect", std::to_string( config.indirect_access ) } };
+  metric_labels =
+  {
+    { "version", std::to_string( config.version )},
+    { "length", std::to_string( config.length )},
+    {
+      "max_constant", std::to_string( config.max_constant )},
+    { "loops", std::to_string( config.loops )},
+    {
+      "indirect", std::to_string( config.indirect_access )}};
   // label values must not be empty
   if ( !config.program_template.empty() )
   {
@@ -212,8 +217,8 @@ void Generator::fixSingularities( Program &p )
   static const number_t max_exponent = 5; // magic number
   for ( size_t i = 0; i < p.ops.size(); i++ )
   {
-    if ( (p.ops[i].type == Operation::Type::DIV || p.ops[i].type == Operation::Type::MOD)
-        && (p.ops[i].source.type == Operand::Type::DIRECT) )
+    if ( (p.ops[i].type == Operation::Type::DIV || p.ops[i].type == Operation::Type::DIF
+        || p.ops[i].type == Operation::Type::MOD) && (p.ops[i].source.type == Operand::Type::DIRECT) )
     {
       auto divisor = p.ops[i].source;
       p.ops.insert( p.ops.begin() + i, Operation( Operation::Type::MOV, tmp, divisor ) );
@@ -282,7 +287,7 @@ void Generator::ensureSourceNotOverwritten( Program &p )
       }
       else if ( (op.source == op.target)
           && (op.type == Operation::Type::SUB || op.type == Operation::Type::TRN || op.type == Operation::Type::DIV
-              || op.type == Operation::Type::MOD) )
+              || op.type == Operation::Type::DIF || op.type == Operation::Type::MOD) )
       {
         resets = true;
       }
@@ -351,6 +356,7 @@ void Generator::ensureMeaningfulLoops( Program &p )
     case Operation::Type::LOG:
     case Operation::Type::MOV:
     case Operation::Type::DIV:
+    case Operation::Type::DIF:
     case Operation::Type::MOD:
     case Operation::Type::GCD:
     case Operation::Type::BIN:
@@ -368,7 +374,7 @@ void Generator::ensureMeaningfulLoops( Program &p )
         Operation dec;
         dec.target = Operand( Operand::Type::DIRECT, mem );
         dec.source = Operand( Operand::Type::CONSTANT, (gen() % 9) + 1 );
-        switch ( gen() % 3 )
+        switch ( gen() % 4 )
         {
         case 0:
           dec.type = Operation::Type::SUB;
@@ -378,6 +384,10 @@ void Generator::ensureMeaningfulLoops( Program &p )
           dec.source.value++;
           break;
         case 2:
+          dec.type = Operation::Type::DIF;
+          dec.source.value++;
+          break;
+        case 3:
           dec.type = Operation::Type::MOD;
           dec.source.value++;
           break;

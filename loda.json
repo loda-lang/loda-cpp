@@ -15,9 +15,9 @@
       },
       {
         "version": 1,
-        "length": 40,
-        "maxConstant": 10,
-        "maxCell": 10,
+        "length": 50,
+        "maxConstant": 5,
+        "maxCell": 5,
         "loops": true,
         "indirectAccess": false
       }
