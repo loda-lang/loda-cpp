@@ -174,7 +174,8 @@ std::string ProgramUtil::operationToString( const Operation &op )
   {
     str = metadata.name;
   }
-  else if ( metadata.num_operands == 1 )
+  else if ( metadata.num_operands == 1
+      || (op.type == Operation::Type::LPB && op.source.type == Operand::Type::CONSTANT && op.source.value == 1) ) // lpb has an optional second argument
   {
     str = metadata.name + " " + operandToString( op.target );
   }
