@@ -53,6 +53,10 @@ function start_miners() {
 
   # start miners
   echo "Start mining using ${num_use_cpus} instances"
+  for n in $(seq ${num_inst}); do
+    ./loda mine -l ${log_level} -c ${max_mine_cycles} $@ &
+    ./loda mine -l ${log_level} -c ${max_mine_cycles} -x $@ &
+  done
 
   # maintenance
   if [ "$remote_origin" = "git@github.com:ckrause/loda.git" ] && [ "$branch" = "master" ]; then
