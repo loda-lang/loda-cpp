@@ -13,6 +13,7 @@ log_level=error
 check_interval=43200
 min_changes=50
 min_cpus=4
+max_mine_cycles=1000000
 branch=$(git rev-parse --abbrev-ref HEAD)
 remote_origin=$(git config --get remote.origin.url)
 
@@ -41,9 +42,6 @@ function abort_miners() {
 
 function start_miners() {
 
-  # configuration
-  local l="-l ${log_level}"
-
   num_inst=$(( $num_cpus / 2 ))
   if [ "$num_inst" -ge 8 ]; then
     num_inst=$(( $num_inst - 2 ))
@@ -52,8 +50,8 @@ function start_miners() {
   # start miners
   echo "Start mining using ${num_cpus} instances"
   for n in $(seq ${num_inst}); do
-    ./loda mine $l $@ &
-    ./loda mine $l -x $@ &
+    ./loda mine -l ${log_level} -c ${max_mine_cycles} $@ &
+    ./loda mine -l ${log_level} -c ${max_mine_cycles} -x $@ &
   done
 
   # maintenance
