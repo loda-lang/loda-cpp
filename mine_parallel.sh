@@ -42,17 +42,17 @@ function abort_miners() {
 
 function start_miners() {
 
-  num_inst=$(( $num_cpus / 2 ))
-  if [ "$num_inst" -ge 8 ]; then
-    num_inst=$(( $num_inst - 2 ))
+  num_use_cpus=$num_cpus
+  if [ "$num_cpus" -ge 16 ]; then
+    num_use_cpus=$(( $num_cpus - 4 ))
   fi
+  if [ "$num_cpus" -ge 32 ]; then
+    num_use_cpus=$(( $num_cpus - 8 ))
+  fi
+  num_inst=$(( $num_cpus / 2 ))
 
   # start miners
-  echo "Start mining using ${num_cpus} instances"
-  for n in $(seq ${num_inst}); do
-    ./loda mine -l ${log_level} -c ${max_mine_cycles} $@ &
-    ./loda mine -l ${log_level} -c ${max_mine_cycles} -x $@ &
-  done
+  echo "Start mining using ${num_use_cpus} instances"
 
   # maintenance
   if [ "$remote_origin" = "git@github.com:ckrause/loda.git" ] && [ "$branch" = "master" ]; then
