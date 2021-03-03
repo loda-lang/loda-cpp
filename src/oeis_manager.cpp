@@ -379,9 +379,8 @@ void Oeis::removeSequence( size_t id )
   }
 }
 
-void Oeis::dumpProgram( size_t id, Program p, const std::string &file ) const
+void Oeis::addCalComments( Program& p ) const
 {
-  ProgramUtil::removeOps( p, Operation::Type::NOP );
   for ( auto &op : p.ops )
   {
     if ( op.type == Operation::Type::CAL && op.source.type == Operand::Type::CONSTANT )
@@ -393,6 +392,12 @@ void Oeis::dumpProgram( size_t id, Program p, const std::string &file ) const
       }
     }
   }
+}
+
+void Oeis::dumpProgram( size_t id, Program p, const std::string &file ) const
+{
+  ProgramUtil::removeOps( p, Operation::Type::NOP );
+  addCalComments( p );
   ensureDir( file );
   std::ofstream out( file );
   auto &seq = sequences.at( id );
@@ -614,7 +619,9 @@ std::pair<bool, bool> Oeis::updateProgram( size_t id, const Program &p )
   details.title_link = seq.url_str();
   details.color = is_new ? "good" : "warning";
   buf << "\\n\\`\\`\\`\\n";
-  ProgramUtil::print( optimized.second, buf, "\\n" );
+  Program o = optimized.second;
+  addCalComments( o );
+  ProgramUtil::print( o, buf, "\\n" );
   buf << "\\`\\`\\`";
   details.text = buf.str();
   Log::get().alert( msg, details );
