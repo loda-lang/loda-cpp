@@ -235,7 +235,7 @@ bool loadBFile( size_t id, const Sequence& seq_full, Sequence& seq_big )
   // remove b-files if they are issues (we use a heuristic to avoid massive amount of downloads at the same time)
   if ( !error_state.empty() )
   {
-    if ( getFileAgeInDays( oeis_seq.getBFilePath() ) >= 60 && rand() % 5 == 0 )
+    if ( rand() % 10 == 0 && getFileAgeInDays( oeis_seq.getBFilePath() ) >= 60 )
     {
       Log::get().warn( "Removing " + error_state + " b-file " + oeis_seq.getBFilePath() );
       std::remove( oeis_seq.getBFilePath().c_str() );
