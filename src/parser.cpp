@@ -53,8 +53,29 @@ Program Parser::parse( std::istream &in_ )
         break;
       case 2:
         o.target = readOperand();
-        readSeparator( ',' );
-        o.source = readOperand();
+        if ( o.type == Operation::Type::LPB ) // lpb has an optional second argument
+        {
+          c = in->peek();
+          while ( c == ' ' || c == '\t' )
+          {
+            in->get();
+            c = in->peek();
+          }
+          if ( c == ',' )
+          {
+            readSeparator( ',' );
+            o.source = readOperand();
+          }
+          else
+          {
+            o.source = Operand( Operand::Type::CONSTANT, 1 ); // default second argument is 1 for lpb
+          }
+        }
+        else
+        {
+          readSeparator( ',' );
+          o.source = readOperand();
+        }
         break;
       default:
         throw std::runtime_error( "invalid number of operands" );

@@ -7,7 +7,6 @@
 #include <fstream>
 #include <sstream>
 
-// TODO: this should be configurable
 const size_t OeisSequence::MAX_NUM_TERMS = 250;
 
 std::string OeisSequence::getHome()
@@ -97,11 +96,14 @@ std::string OeisSequence::getBFilePath() const
 bool loadBFile( size_t id, const Sequence& seq_full, Sequence& seq_big )
 {
   const OeisSequence oeis_seq( id );
+  bool has_b_file = false;
+  bool has_overflow = false;
 
   // try to read b-file
   std::ifstream big_file( oeis_seq.getBFilePath() );
   if ( big_file.good() )
   {
+    has_b_file = true;
     std::string l;
     int64_t expected_index = -1, index = 0, value = 0;
     while ( std::getline( big_file, l ) )
@@ -125,8 +127,14 @@ bool loadBFile( size_t id, const Sequence& seq_full, Sequence& seq_big )
         Log::get().warn( "Unexpected index " + std::to_string( index ) + " in b-file " + oeis_seq.getBFilePath() );
         return false;
       }
+      if ( !ss )
+      {
+        has_overflow = true;
+        break;
+      }
       if ( isCloseToOverflow( value ) )
       {
+        has_overflow = true;
         break;
       }
       seq_big.push_back( value );
@@ -186,7 +194,7 @@ bool loadBFile( size_t id, const Sequence& seq_full, Sequence& seq_big )
   }
 
   // not found?
-  if ( seq_big.empty() )
+  if ( seq_big.empty() && !has_b_file )
   {
     if ( Log::get().level == Log::Level::DEBUG )
     {
@@ -199,24 +207,37 @@ bool loadBFile( size_t id, const Sequence& seq_full, Sequence& seq_big )
   seq_big.align( seq_full, 5 );
 
   // check length
-  if ( seq_big.empty() || seq_big.size() < seq_full.size() )
+  std::string error_state;
+
+  if ( seq_big.size() < seq_full.size() )
   {
-    Log::get().debug(
-        "Sequence in b-file too short for " + oeis_seq.id_str() + " (" + std::to_string( seq_big.size() ) + "<"
-            + std::to_string( seq_full.size() ) + ")" );
-    return false;
+    // big should never be shorter (there can be parser issues causing this)
+    seq_big = seq_full;
   }
 
-  // check that the sequences agree on prefix
-  Sequence seq_test( std::vector<number_t>( seq_big.begin(), seq_big.begin() + seq_full.size() ) );
-  if ( seq_test != seq_full )
+  if ( seq_big.size() < OeisSequence::MAX_NUM_TERMS && !has_overflow )
   {
-    Log::get().warn( "Unexpected terms in b-file or program for " + oeis_seq.id_str() );
-    Log::get().warn( "- expected: " + seq_full.to_string() );
-    Log::get().warn( "- found:    " + seq_test.to_string() );
-    if ( rand() % 5 == 0 )
+    error_state = "too short";
+  }
+  else
+  {
+    // check that the sequences agree on prefix
+    Sequence seq_test( std::vector<number_t>( seq_big.begin(), seq_big.begin() + seq_full.size() ) );
+    if ( seq_test != seq_full )
     {
-      Log::get().debug( "Removing " + oeis_seq.getBFilePath() );
+      Log::get().warn( "Unexpected terms in b-file or program for " + oeis_seq.id_str() );
+      Log::get().warn( "- expected: " + seq_full.to_string() );
+      Log::get().warn( "- found:    " + seq_test.to_string() );
+      error_state = "invalid";
+    }
+  }
+
+  // remove b-files if they are issues (we use a heuristic to avoid massive amount of downloads at the same time)
+  if ( !error_state.empty() )
+  {
+    if ( getFileAgeInDays( oeis_seq.getBFilePath() ) >= 60 && rand() % 5 == 0 )
+    {
+      Log::get().warn( "Removing " + error_state + " b-file " + oeis_seq.getBFilePath() );
       std::remove( oeis_seq.getBFilePath().c_str() );
     }
     return false;
@@ -268,7 +289,8 @@ void OeisSequence::fetchBFile() const
     if ( !big_file.good() )
     {
       ensureDir( getBFilePath() );
-      std::string cmd = "wget -nv -O " + getBFilePath() + " " + url_str() + "/" + id_str( "b" ) + ".txt";
+      std::string cmd = "wget -nv --no-use-server-timestamps -O " + getBFilePath() + " " + url_str() + "/"
+          + id_str( "b" ) + ".txt";
       if ( system( cmd.c_str() ) != 0 )
       {
         Log::get().error( "Error fetching b-file for " + id_str(), true ); // need to exit here to be able to cancel

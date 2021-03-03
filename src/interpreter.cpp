@@ -379,13 +379,13 @@ steps_t Interpreter::eval( const Program &p, Sequence &seq, int64_t num_terms )
   for ( int64_t i = 0; i < num_terms; i++ )
   {
     mem.clear();
-    mem.set( Program::INPUT_CELL, settings.offset + i );
+    mem.set( Program::INPUT_CELL, i );
     s = run( p, mem );
     steps.add( s );
     seq[i] = settings.use_steps ? s : mem.get( Program::OUTPUT_CELL );
     if ( settings.print_as_b_file )
     {
-      std::cout << (settings.offset + i) << " " << seq[i] << std::endl;
+      std::cout << (settings.print_as_b_file_offset + i) << " " << seq[i] << std::endl;
     }
   }
   if ( is_debug )

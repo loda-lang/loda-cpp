@@ -287,18 +287,13 @@ void Oeis::update()
   int64_t age_in_days = -1;
   while ( it != files.end() )
   {
-    struct stat st;
     auto path = OeisSequence::getHome() + *it;
-    if ( stat( path.c_str(), &st ) == 0 )
+    age_in_days = getFileAgeInDays( path );
+    if ( age_in_days < 1 ) // one day
     {
-      time_t now = time( 0 );
-      age_in_days = (now - st.st_mtime) / (3600 * 24);
-      if ( age_in_days < 1 ) // one day
-      {
-        // no need to update this file
-        it = files.erase( it );
-        continue;
-      }
+      // no need to update this file
+      it = files.erase( it );
+      continue;
     }
     it++;
   }
@@ -317,7 +312,7 @@ void Oeis::update()
     for ( auto &file : files )
     {
       path = OeisSequence::getHome() + file;
-      cmd = "wget -nv -O " + path + ".gz https://oeis.org/" + file + ".gz";
+      cmd = "wget -nv --no-use-server-timestamps -O " + path + ".gz https://oeis.org/" + file + ".gz";
       if ( system( cmd.c_str() ) != 0 )
       {
         Log::get().error( "Error fetching " + file + " file", true );
