@@ -84,8 +84,8 @@ bool Optimizer::removeNops( Program &p ) const
       is_nop = true;
     }
     else if ( it->source.type == Operand::Type::CONSTANT && it->source.value == 1
-        && ((t == Operation::Type::MUL || t == Operation::Type::DIV || t == Operation::Type::POW
-            || t == Operation::Type::BIN)) )
+        && ((t == Operation::Type::MUL || t == Operation::Type::DIV || t == Operation::Type::DIF
+            || t == Operation::Type::POW || t == Operation::Type::BIN)) )
     {
       is_nop = true;
     }
