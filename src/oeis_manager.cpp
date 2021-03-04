@@ -103,7 +103,7 @@ void Oeis::load()
   {
     for ( auto id : seqs_to_remove )
     {
-      removeSequence( id );
+      removeSequenceFromFinder( id );
     }
   }
 
@@ -366,7 +366,7 @@ const std::vector<OeisSequence>& Oeis::getSequences() const
   return sequences;
 }
 
-void Oeis::removeSequence( size_t id )
+void Oeis::removeSequenceFromFinder( size_t id )
 {
   if ( id >= sequences.size() )
   {
@@ -375,7 +375,8 @@ void Oeis::removeSequence( size_t id )
   if ( sequences[id].id == id )
   {
     finder.remove( sequences[id].norm, id );
-    sequences[id] = OeisSequence();
+    // we still want to keep it in the index to retain metadata about called programs
+    // sequences[id] = OeisSequence();
   }
 }
 
