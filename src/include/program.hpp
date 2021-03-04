@@ -16,15 +16,13 @@ public:
   };
 
   Operand()
-      :
-      Operand( Type::CONSTANT, 0 )
+      : Operand( Type::CONSTANT, 0 )
   {
   }
 
   Operand( Type t, number_t v )
-      :
-      type( t ),
-      value( v )
+      : type( t ),
+        value( v )
   {
   }
 
@@ -62,6 +60,7 @@ public:
     TRN,
     MUL,
     DIV,
+    DIF,
     MOD,
     POW,
     LOG,
@@ -76,7 +75,7 @@ public:
     DBG,
   };
 
-  static const std::array<Type, 19> Types;
+  static const std::array<Type, 20> Types;
 
   class Metadata
   {
@@ -95,23 +94,20 @@ public:
   };
 
   Operation()
-      :
-      Operation( Type::NOP )
+      : Operation( Type::NOP )
   {
   }
 
   Operation( Type y )
-      :
-      Operation( y, { Operand::Type::DIRECT, 0 }, { Operand::Type::CONSTANT, 0 } )
+      : Operation( y, { Operand::Type::DIRECT, 0 }, { Operand::Type::CONSTANT, 0 } )
   {
   }
 
   Operation( Type y, Operand t, Operand s, const std::string &c = "" )
-      :
-      type( y ),
-      target( t ),
-      source( s ),
-      comment( c )
+      : type( y ),
+        target( t ),
+        source( s ),
+        comment( c )
   {
   }
 

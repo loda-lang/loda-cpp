@@ -49,9 +49,8 @@ std::discrete_distribution<> constantsDist( const std::vector<number_t> &constan
 }
 
 GeneratorV1::GeneratorV1( const Config &config, const Stats &stats, int64_t seed )
-    :
-    Generator( config, stats, seed ),
-    num_operations( config.length )
+    : Generator( config, stats, seed ),
+      num_operations( config.length )
 {
   std::string operation_types = config.loops ? "^" : "^l";
   std::string operand_types = config.indirect_access ? "cdi" : "cd";
@@ -209,9 +208,9 @@ std::pair<Operation, double> GeneratorV1::generateOperation()
       op.source.value = 1;
     }
     if ( (op.source.value == 0 || op.source.value == 1)
-        && (op.type == Operation::Type::MUL || op.type == Operation::Type::DIV || op.type == Operation::Type::MOD
-            || op.type == Operation::Type::POW || op.type == Operation::Type::GCD || op.type == Operation::Type::BIN
-            || op.type == Operation::Type::LOG) )
+        && (op.type == Operation::Type::MUL || op.type == Operation::Type::DIV || op.type == Operation::Type::DIF
+            || op.type == Operation::Type::MOD || op.type == Operation::Type::POW || op.type == Operation::Type::GCD
+            || op.type == Operation::Type::BIN || op.type == Operation::Type::LOG) )
     {
       op.source.value = 2;
     }
@@ -219,8 +218,8 @@ std::pair<Operation, double> GeneratorV1::generateOperation()
   else if ( op.source.type == Operand::Type::DIRECT )
   {
     if ( (op.source.value == op.target.value)
-        && (op.type == Operation::Type::MOV || op.type == Operation::Type::DIV || op.type == Operation::Type::MOD
-            || op.type == Operation::Type::GCD || op.type == Operation::Type::BIN) )
+        && (op.type == Operation::Type::MOV || op.type == Operation::Type::DIV || op.type == Operation::Type::DIF
+            || op.type == Operation::Type::MOD || op.type == Operation::Type::GCD || op.type == Operation::Type::BIN) )
     {
       op.target.value++;
     }

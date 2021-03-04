@@ -25,7 +25,7 @@ public:
 
   const std::vector<OeisSequence>& getSequences() const;
 
-  void removeSequence( size_t id );
+  void removeSequenceFromFinder( size_t id );
 
   Finder& getFinder()
   {
@@ -48,6 +48,8 @@ private:
   void loadNames();
 
   void update();
+
+  void addCalComments( Program& p ) const;
 
   void dumpProgram( size_t id, Program p, const std::string &file ) const;
 

@@ -16,6 +16,8 @@ public:
 
   static number_t div( number_t a, number_t b );
 
+  static number_t dif( number_t a, number_t b );
+
   static number_t mod( number_t a, number_t b );
 
   static number_t pow( number_t base, number_t exp );
