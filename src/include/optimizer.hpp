@@ -9,8 +9,7 @@ class Optimizer
 public:
 
   Optimizer( const Settings &settings )
-      :
-      settings( settings )
+      : settings( settings )
   {
   }
 
@@ -37,6 +36,8 @@ public:
   bool sortOperations( Program &p ) const;
 
   bool mergeLoops( Program &p ) const;
+
+  bool pullUpMov( Program &p ) const;
 
 private:
 
