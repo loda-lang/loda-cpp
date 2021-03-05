@@ -30,10 +30,6 @@ bool Miner::updateSpecialSequences( const Program &p, const Sequence &seq ) cons
   {
     kind = "collatz";
   }
-  if ( isPrimeSequence( seq ) )
-  {
-    kind = "primes";
-  }
   if ( !kind.empty() )
   {
     Log::get().alert( "Found possible " + kind + " sequence: " + seq.to_string() );
@@ -75,40 +71,6 @@ bool Miner::isCollatzValuation( const Sequence &seq )
         return false;
       }
     }
-  }
-  return true;
-}
-
-bool Miner::isPrimeSequence( const Sequence &seq ) const
-{
-  if ( seq.size() < 10 )
-  {
-    return false;
-  }
-  if ( primes_cache.empty() )
-  {
-    Log::get().debug( "Loading prime numbers" );
-    auto &primes = oeis.getSequences().at( 40 );
-    if ( primes.getFull().at( 10 ) != 31 )
-    {
-      Log::get().error(
-          "Expected 10th value of primes (A000040) to be 31, but found " + std::to_string( primes.getFull().at( 10 ) ),
-          false );
-    }
-    primes_cache.insert( primes.norm.begin(), primes.norm.end() );
-  }
-  std::unordered_set<number_t> found;
-  for ( auto n : seq )
-  {
-    if ( primes_cache.count( n ) == 0 )
-    {
-      return false;
-    }
-    if ( found.count( n ) > 0 )
-    {
-      return false;
-    }
-    found.insert( n );
   }
   return true;
 }

@@ -18,8 +18,6 @@ public:
 
   static bool isCollatzValuation( const Sequence &seq );
 
-  bool isPrimeSequence( const Sequence &seq ) const;
-
 private:
 
   bool updateSpecialSequences( const Program &p, const Sequence &seq ) const;
