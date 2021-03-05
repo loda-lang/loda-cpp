@@ -135,11 +135,13 @@ bool Memory::is_less( const Memory &m, int64_t length ) const
   // TODO: this is slow for large lengths
   for ( number_t i = 0; i < (number_t) length; ++i )
   {
-    if ( get( i ) < m.get( i ) )
+    auto lhs = get( i );
+    auto rhs = m.get( i );
+    if ( lhs < rhs )
     {
       return true; // less
     }
-    else if ( get( i ) > m.get( i ) )
+    else if ( lhs > rhs )
     {
       return false; // greater
     }
