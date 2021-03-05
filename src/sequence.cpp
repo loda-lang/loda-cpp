@@ -262,7 +262,10 @@ Polynomial operator+( const Polynomial &a, const Polynomial &b )
   }
   for ( size_t i = 0; i < c.size(); i++ )
   {
-    c[i] += b[i];
+    if ( i < b.size() )
+    {
+      c[i] += b[i];
+    }
   }
   return c;
 }
