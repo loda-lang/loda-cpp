@@ -21,7 +21,7 @@ void Mutator::mutateConstants( const Program &program, size_t num_results, std::
   {
     return;
   }
-  int var = std::max<int>( 1, num_results / indices.size() );
+  int64_t var = std::max<int64_t>( 1, num_results / indices.size() );
   for ( size_t i : indices )
   {
     number_t b = program.ops[i].source.value;

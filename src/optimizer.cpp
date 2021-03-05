@@ -113,9 +113,9 @@ bool Optimizer::removeNops( Program &p ) const
 bool Optimizer::removeEmptyLoops( Program &p ) const
 {
   bool removed = false;
-  for ( int i = 0; i < static_cast<int>( p.ops.size() ); i++ ) // need to use signed integers here
+  for ( int64_t i = 0; i < static_cast<int64_t>( p.ops.size() ); i++ ) // need to use signed integers here
   {
-    if ( i + 1 < static_cast<int>( p.ops.size() ) && p.ops[i].type == Operation::Type::LPB
+    if ( i + 1 < static_cast<int64_t>( p.ops.size() ) && p.ops[i].type == Operation::Type::LPB
         && p.ops[i + 1].type == Operation::Type::LPE )
     {
       if ( Log::get().level == Log::Level::DEBUG )

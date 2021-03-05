@@ -413,7 +413,7 @@ steps_t Interpreter::eval( const Program &p, std::vector<Sequence> &seqs, int64_
   }
   Memory mem;
   steps_t steps;
-  for ( int i = 0; i < num_terms; i++ )
+  for ( int64_t i = 0; i < num_terms; i++ )
   {
     mem.clear();
     mem.set( Program::INPUT_CELL, i );

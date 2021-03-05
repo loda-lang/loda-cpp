@@ -54,10 +54,10 @@ bool Miner::isCollatzValuation( const Sequence &seq )
   }
   for ( size_t i = 1; i < seq.size() - 1; i++ )
   {
-    int n = i + 1;
+    size_t n = i + 1;
     if ( n % 2 == 0 ) // even
     {
-      size_t j = (n / 2) - 1;
+      size_t j = (n / 2) - 1; // >=0
       if ( seq[j] >= seq[i] )
       {
         return false;
@@ -65,7 +65,7 @@ bool Miner::isCollatzValuation( const Sequence &seq )
     }
     else // odd
     {
-      size_t j = (((3 * n) + 1) / 2) - 1;
+      size_t j = (((3 * n) + 1) / 2) - 1; // >=0
       if ( j < seq.size() && seq[j] >= seq[i] )
       {
         return false;

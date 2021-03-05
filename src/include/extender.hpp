@@ -21,6 +21,6 @@ public:
 
   static bool delta_one( Program &p, const bool sum );
 
-  static bool delta_it( Program &p, int delta );
+  static bool delta_it( Program &p, int64_t delta );
 
 };
