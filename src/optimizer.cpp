@@ -55,6 +55,10 @@ void Optimizer::optimize( Program &p, size_t num_reserved_cells, size_t num_init
     {
       changed = true;
     }
+    if ( pullUpMov( p ) )
+    {
+      changed = true;
+    }
   }
   if ( Log::get().level == Log::Level::DEBUG )
   {
@@ -109,9 +113,9 @@ bool Optimizer::removeNops( Program &p ) const
 bool Optimizer::removeEmptyLoops( Program &p ) const
 {
   bool removed = false;
-  for ( int i = 0; i < static_cast<int>( p.ops.size() ); i++ ) // need to use signed integers here
+  for ( int64_t i = 0; i < static_cast<int64_t>( p.ops.size() ); i++ ) // need to use signed integers here
   {
-    if ( i + 1 < static_cast<int>( p.ops.size() ) && p.ops[i].type == Operation::Type::LPB
+    if ( i + 1 < static_cast<int64_t>( p.ops.size() ) && p.ops[i].type == Operation::Type::LPB
         && p.ops[i + 1].type == Operation::Type::LPE )
     {
       if ( Log::get().level == Log::Level::DEBUG )
@@ -752,4 +756,43 @@ bool Optimizer::mergeLoops( Program &p ) const
     }
   }
   return false;
+}
+
+bool Optimizer::pullUpMov( Program &p ) const
+{
+  // see tests E014 and E015
+  bool changed = false;
+  for ( size_t i = 0; i + 2 < p.ops.size(); i++ )
+  {
+    auto& a = p.ops[i];
+    auto& b = p.ops[i + 1];
+    auto& c = p.ops[i + 2];
+    // check operation types
+    if ( !((a.type == Operation::Type::ADD && c.type == Operation::Type::SUB)
+        || (a.type == Operation::Type::MUL && c.type == Operation::Type::DIV)) )
+    {
+      continue;
+    }
+    if ( b.type != Operation::Type::MOV )
+    {
+      continue;
+    }
+    // check operand types
+    if ( a.target.type != Operand::Type::DIRECT || a.source.type != Operand::Type::CONSTANT
+        || b.target.type != Operand::Type::DIRECT || b.source.type != Operand::Type::DIRECT
+        || c.target.type != Operand::Type::DIRECT || c.source.type != Operand::Type::CONSTANT )
+    {
+      continue;
+    }
+    // check operand values
+    if ( a.target.value != b.source.value || a.source.value != c.source.value || b.target.value != c.target.value )
+    {
+      continue;
+    }
+    // okay, we are ready to optimize!
+    std::swap( a, b );
+    p.ops.erase( p.ops.begin() + i + 2, p.ops.begin() + i + 3 ); // remove c
+    changed = true;
+  }
+  return changed;
 }

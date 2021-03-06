@@ -18,8 +18,8 @@ void Minimizer::minimize( Program &p, size_t num_terms ) const
   {
     return;
   }
-  int removed_ops = 0;
-  for ( int i = 0; i < (int) p.ops.size(); ++i )
+  int64_t removed_ops = 0;
+  for ( int64_t i = 0; i < (int64_t) p.ops.size(); ++i )
   {
     auto op = p.ops.at( i );
     if ( op.type == Operation::Type::LPE )
