@@ -349,7 +349,6 @@ void Generator::ensureMeaningfulLoops( Program &p )
     case Operation::Type::ADD:
     case Operation::Type::MUL:
     case Operation::Type::POW:
-    case Operation::Type::FAC:
       num_ops++;
       break;
     case Operation::Type::SUB:
