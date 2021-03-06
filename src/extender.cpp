@@ -203,7 +203,7 @@ bool Extender::delta_one( Program &p, const bool sum )
   return true;
 }
 
-bool Extender::delta_it( Program &p, int delta )
+bool Extender::delta_it( Program &p, int64_t delta )
 {
   while ( delta < 0 )
   {
