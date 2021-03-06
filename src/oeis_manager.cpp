@@ -494,16 +494,21 @@ std::string Oeis::isOptimizedBetter( Program existing, Program optimized, size_t
     }
   }
 
-  // we prefer programs w/o indirect memory access and without cal operations
+  // we prefer programs the following programs:
+  // - w/o indirect memory access
+  // - w/o cal operations
+  // - w/o log operations
   auto in_opt = ProgramUtil::numOps( optimized, Operand::Type::INDIRECT );
   auto in_ext = ProgramUtil::numOps( existing, Operand::Type::INDIRECT );
   auto cal_opt = ProgramUtil::numOps( optimized, Operation::Type::CAL );
   auto cal_ext = ProgramUtil::numOps( existing, Operation::Type::CAL );
-  if ( in_opt < in_ext || cal_opt < cal_ext )
+  auto log_opt = ProgramUtil::numOps( optimized, Operation::Type::LOG );
+  auto log_ext = ProgramUtil::numOps( existing, Operation::Type::LOG );
+  if ( in_opt < in_ext || cal_opt < cal_ext || log_opt < log_ext )
   {
     return "Simpler";
   }
-  else if ( in_opt > in_ext || cal_opt > cal_ext )
+  else if ( in_opt > in_ext || cal_opt > cal_ext || log_opt > log_ext )
   {
     return "";
   }
