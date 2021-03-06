@@ -93,10 +93,6 @@ number_t Interpreter::calc( const Operation::Type type, number_t target, number_
   {
     return Semantics::log( target, source );
   }
-  case Operation::Type::FAC:
-  {
-    return Semantics::fac( target );
-  }
   case Operation::Type::GCD:
   {
     return Semantics::gcd( target, source );
