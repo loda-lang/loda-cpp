@@ -23,7 +23,7 @@ const Operation::Metadata& Operation::Metadata::get( Type t )
   static Operation::Metadata log { Operation::Type::LOG, "log", 'k', 2, true, true, true };
   static Operation::Metadata gcd { Operation::Type::GCD, "gcd", 'g', 2, true, true, true };
   static Operation::Metadata bin { Operation::Type::BIN, "bin", 'b', 2, true, true, true };
-  static Operation::Metadata cmp { Operation::Type::CMP, "cmp", 'c', 2, true, true, true };
+  static Operation::Metadata cmp { Operation::Type::CMP, "cmp", 'f', 2, true, true, true };
   static Operation::Metadata lpb { Operation::Type::LPB, "lpb", 'l', 2, true, true, false };
   static Operation::Metadata lpe { Operation::Type::LPE, "lpe", 'e', 0, true, false, false };
   static Operation::Metadata clr { Operation::Type::CLR, "clr", 'r', 2, true, false, true };
