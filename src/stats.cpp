@@ -196,10 +196,13 @@ void Stats::save( const std::string &path )
   summary << num_programs << sep << num_sequences << "\n";
   summary.close();
 
-  std::ofstream steps_out( path + "/steps.csv" );
-  steps_out << "total,min,max,runs\n";
-  steps_out << steps.total << sep << steps.min << sep << steps.max << sep << steps.runs << "\n";
-  steps_out.close();
+  if ( steps.total ) // write steps stats only if present
+  {
+    std::ofstream steps_out( path + "/steps.csv" );
+    steps_out << "total,min,max,runs\n";
+    steps_out << steps.total << sep << steps.min << sep << steps.max << sep << steps.runs << "\n";
+    steps_out.close();
+  }
 }
 
 void Stats::updateProgramStats( const Program &program )
