@@ -642,18 +642,21 @@ void Oeis::maintain()
   {
     Log::get().error( "Option -x required to run maintenance", true );
   }
+
+  // load and generate stats
   load();
+  generateStats( steps_t() );
+
   Log::get().info( "Start maintaining OEIS programs" );
-  const size_t list_file_size = 50000;
-  std::vector<std::stringstream> list_files( 1000000 / list_file_size );
-  Stats stats;
   size_t num_processed = 0, num_optimized = 0;
   Parser parser;
   Program program, optimized;
   Sequence result;
   std::string file_name;
-  bool has_b_file, has_program, is_okay, is_manual;
+  bool is_okay, is_manual;
+  steps_t steps;
 
+  // process programs for all sequences
   for ( auto &s : sequences )
   {
     if ( s.id == 0 )
@@ -662,9 +665,6 @@ void Oeis::maintain()
     }
     file_name = s.getProgramPath();
     std::ifstream program_file( file_name );
-    std::ifstream b_file( s.getBFilePath() );
-    has_b_file = b_file.good();
-    has_program = false;
     if ( program_file.good() )
     {
       if ( Log::get().level == Log::Level::DEBUG )
@@ -684,7 +684,7 @@ void Oeis::maintain()
       try
       {
         auto& full = s.getFull();
-        stats.steps.add( interpreter.eval( program, result, full.size() ) );
+        steps.add( interpreter.eval( program, result, full.size() ) );
         is_okay = (result == full);
       }
       catch ( const std::exception &exc )
@@ -704,7 +704,6 @@ void Oeis::maintain()
       }
       else
       {
-        has_program = true;
         is_manual = false;
         if ( program.ops.size() > 1 && program.ops[1].type == Operation::Type::NOP )
         {
@@ -724,17 +723,76 @@ void Oeis::maintain()
           dumpProgram( s.id, optimized, file_name );
         }
 
-        // collect stats
-        stats.updateProgramStats( optimized );
-
-        // write list file
-        size_t list_index = s.id / list_file_size;
-        size_t num_ops = ProgramUtil::numOps( program, false );
-        list_files.at( list_index ) << "* [" << s.id_str() << "](http://oeis.org/" << s.id_str() << ") ([L"
-            << std::setw( 2 ) << std::setfill( '0' ) << num_ops << " program](" << s.dir_str() << "/" << s.id_str()
-            << ".asm)): " << s.name << "\n";
       }
       if ( ++num_processed % 100 == 0 )
+      {
+        Log::get().info( "Processed " + std::to_string( num_processed ) + " programs" );
+      }
+    }
+  }
+
+  if ( num_optimized > 0 )
+  {
+    Log::get().alert(
+        "Optimized " + std::to_string( num_optimized ) + "/" + std::to_string( num_processed ) + " programs." );
+  }
+  Log::get().info( "Finished maintenance of " + std::to_string( num_processed ) + " programs" );
+
+  // generate stats again
+  generateStats( steps );
+
+}
+
+void Oeis::generateStats( const steps_t& steps )
+{
+  load();
+  Log::get().info( "Start generating stats" );
+  const size_t list_file_size = 50000;
+  std::vector<std::stringstream> list_files( 1000000 / list_file_size );
+  Stats stats;
+  size_t num_processed = 0;
+  Parser parser;
+  Program program;
+  std::string file_name;
+  bool has_b_file, has_program;
+
+  for ( auto &s : sequences )
+  {
+    if ( s.id == 0 )
+    {
+      continue;
+    }
+    file_name = s.getProgramPath();
+    std::ifstream program_file( file_name );
+    std::ifstream b_file( s.getBFilePath() );
+    has_b_file = b_file.good();
+    has_program = false;
+    if ( program_file.good() )
+    {
+      try
+      {
+        program = parser.parse( program_file );
+        has_program = true;
+      }
+      catch ( const std::exception &exc )
+      {
+        Log::get().error( "Error parsing " + file_name + ": " + std::string( exc.what() ), false );
+        continue;
+      }
+
+      ProgramUtil::removeOps( program, Operation::Type::NOP );
+
+      // collect stats
+      stats.updateProgramStats( program );
+
+      // write list file
+      size_t list_index = s.id / list_file_size;
+      size_t num_ops = ProgramUtil::numOps( program, false );
+      list_files.at( list_index ) << "* [" << s.id_str() << "](http://oeis.org/" << s.id_str() << ") ([L"
+          << std::setw( 2 ) << std::setfill( '0' ) << num_ops << " program](" << s.dir_str() << "/" << s.id_str()
+          << ".asm)): " << s.name << "\n";
+
+      if ( ++num_processed % 1000 == 0 )
       {
         Log::get().info( "Processed " + std::to_string( num_processed ) + " programs" );
       }
@@ -763,11 +821,6 @@ void Oeis::maintain()
       list_file << buf;
     }
   }
+  Log::get().info( "Finished generation of stats for " + std::to_string( num_processed ) + " programs" );
 
-  if ( num_optimized > 0 )
-  {
-    Log::get().alert(
-        "Optimized " + std::to_string( num_optimized ) + "/" + std::to_string( stats.num_programs ) + " programs." );
-  }
-  Log::get().info( "Finished maintenance of " + std::to_string( num_processed ) + " programs" );
 }
