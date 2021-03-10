@@ -422,15 +422,28 @@ steps_t Interpreter::eval( const Program &p, std::vector<Sequence> &seqs, int64_
   return steps;
 }
 
-std::pair<bool, steps_t> Interpreter::check( const Program &p, const Sequence &expected_seq )
+std::pair<bool, steps_t> Interpreter::check( const Program &p, const Sequence &expected_seq,
+    int64_t num_terminating_terms )
 {
+  if ( num_terminating_terms < 0 )
+  {
+    num_terminating_terms = expected_seq.size();
+  }
   std::pair<bool, steps_t> result;
   Memory mem;
   for ( size_t i = 0; i < expected_seq.size(); i++ )
   {
     mem.clear();
     mem.set( Program::INPUT_CELL, i );
-    result.second.add( run( p, mem ) );
+    try
+    {
+      result.second.add( run( p, mem ) );
+    }
+    catch ( std::exception& )
+    {
+      result.first = (int64_t) i >= num_terminating_terms;
+      return result;
+    }
     if ( mem.get( Program::OUTPUT_CELL ) != expected_seq[i] )
     {
       result.first = false;
