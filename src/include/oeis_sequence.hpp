@@ -6,7 +6,9 @@ class OeisSequence
 {
 public:
 
-  static const size_t MAX_NUM_TERMS;
+  static const size_t LONG_SEQ_LENGTH;
+
+  static const size_t VERY_LONG_SEQ_LENGTH;
 
   static std::string getHome();
 
@@ -14,7 +16,7 @@ public:
 
   OeisSequence( std::string id_str );
 
-  OeisSequence( size_t id, const std::string &name, const Sequence &s, const Sequence &full );
+  OeisSequence( size_t id, const std::string &name, const Sequence &full );
 
   std::string id_str( const std::string &prefix = "A" ) const;
 
@@ -26,13 +28,12 @@ public:
 
   std::string getBFilePath() const;
 
-  const Sequence& getFull() const;
+  Sequence getTerms( int64_t max_num_terms ) const;
 
   void fetchBFile() const;
 
   size_t id;
   std::string name;
-  Sequence norm;
 
   friend std::ostream& operator<<( std::ostream &out, const OeisSequence &s );
 
