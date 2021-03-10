@@ -433,11 +433,15 @@ std::pair<bool, Program> Oeis::minimizeAndCheck( const Program &p, const OeisSeq
   if ( !minimized.first && minimize )
   {
     minimized.second = p;
-    Log::get().error( "Program for " + seq.id_str() + " generates wrong result after minimization", false );
-    std::string f = getLodaHome() + "debug/optimizer/" + seq.id_str() + ".asm";
-    ensureDir( f );
-    std::ofstream out( f );
-    ProgramUtil::print( p, out );
+    auto check2 = interpreter.check( p, very_long_seq, OeisSequence::LONG_SEQ_LENGTH );
+    if ( check2.first )
+    {
+      Log::get().error( "Program for " + seq.id_str() + " generates wrong result after minimization", false );
+      std::string f = getLodaHome() + "debug/optimizer/" + seq.id_str() + ".asm";
+      ensureDir( f );
+      std::ofstream out( f );
+      ProgramUtil::print( p, out );
+    }
   }
   return minimized;
 }
