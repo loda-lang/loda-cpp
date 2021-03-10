@@ -45,7 +45,9 @@ void steps_t::add( const steps_t& s )
 
 Interpreter::Interpreter( const Settings &settings )
     : settings( settings ),
-      is_debug( Log::get().level == Log::Level::DEBUG )
+      is_debug( Log::get().level == Log::Level::DEBUG ),
+      has_memory( true ),
+      num_memory_checks( 0 )
 {
 }
 
@@ -222,25 +224,9 @@ size_t Interpreter::run( const Program &p, Memory &mem )
     {
       target = get( op.target, mem );
       source = get( op.source, mem );
-      auto call_program = getProgram( source );
-      if ( running_programs.find( source ) != running_programs.end() )
-      {
-        throw std::runtime_error( "recursion detected" );
-      }
-      running_programs.insert( source );
-      Memory tmp;
-      tmp.set( Program::INPUT_CELL, target );
-      try
-      {
-        cycles += run( call_program, tmp );
-        running_programs.erase( source );
-      }
-      catch ( ... )
-      {
-        running_programs.erase( source );
-        std::rethrow_exception( std::current_exception() );
-      }
-      set( op.target, tmp.get( Program::OUTPUT_CELL ), mem, op );
+      auto result = call( source, target );
+      set( op.target, result.first, mem, op );
+      cycles += result.second;
       break;
     }
     case Operation::Type::CLR:
@@ -454,7 +440,55 @@ std::pair<bool, steps_t> Interpreter::check( const Program &p, const Sequence &e
   return result;
 }
 
-Program Interpreter::getProgram( number_t id ) const
+std::pair<number_t, number_t> Interpreter::call( number_t id, number_t arg )
+{
+  // check if already cached
+  std::pair<number_t, number_t> key( id, arg );
+  auto it = terms_cache.find( key );
+  if ( it != terms_cache.end() )
+  {
+    return it->second;
+  }
+
+  // check if program exists
+  auto& call_program = getProgram( id );
+
+  // check for recursive calls
+  if ( running_programs.find( id ) != running_programs.end() )
+  {
+    throw std::runtime_error( "recursion detected" );
+  }
+
+  // evaluate program
+  std::pair<number_t, number_t> result;
+  running_programs.insert( id );
+  Memory tmp;
+  tmp.set( Program::INPUT_CELL, arg );
+  try
+  {
+    result.second = run( call_program, tmp );
+    result.first = tmp.get( Program::OUTPUT_CELL );
+    running_programs.erase( id );
+  }
+  catch ( ... )
+  {
+    running_programs.erase( id );
+    std::rethrow_exception( std::current_exception() );
+  }
+
+  // add to cache if there is memory available
+  if ( ++num_memory_checks % 10000 == 0 && has_memory )
+  {
+    has_memory = settings.hasMemory();
+  }
+  if ( has_memory )
+  {
+    terms_cache[key] = result;
+  }
+  return result;
+}
+
+const Program& Interpreter::getProgram( number_t id )
 {
   if ( missing_programs.find( id ) != missing_programs.end() )
   {
@@ -464,12 +498,9 @@ Program Interpreter::getProgram( number_t id ) const
   {
     Parser parser;
     auto path = OeisSequence( id ).getProgramPath();
-    Program program;
     try
     {
-      program = parser.parse( path );
-      program_cache[id] = program;
-      return program;
+      program_cache[id] = parser.parse( path );
     }
     catch ( ... )
     {
