@@ -9,15 +9,11 @@
 #include "program.hpp"
 #include "util.hpp"
 
-class Oeis
+class OeisManager
 {
 public:
 
-  Oeis( const Settings &settings );
-
-  virtual ~Oeis()
-  {
-  }
+  OeisManager( const Settings &settings );
 
   void load();
 
@@ -39,8 +35,6 @@ public:
 
   std::pair<bool, bool> updateProgram( size_t id, const Program &p );
 
-  void maintain();
-
 private:
 
   size_t loadData();
@@ -59,7 +53,7 @@ private:
 
   std::string isOptimizedBetter( Program existing, Program optimized, size_t id );
 
-  void generateStats( const steps_t& steps );
+  friend class OeisMaintenance;
 
   const Settings &settings;
   Interpreter interpreter;

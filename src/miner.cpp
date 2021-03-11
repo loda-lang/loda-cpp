@@ -18,7 +18,7 @@
 
 Miner::Miner( const Settings &settings )
     : settings( settings ),
-      oeis( settings ),
+      manager( settings ),
       interpreter( settings )
 {
 }
@@ -77,10 +77,10 @@ bool Miner::isCollatzValuation( const Sequence &seq )
 
 void Miner::mine()
 {
-  oeis.load();
+  manager.load();
   Log::get().info( "Mining programs for OEIS sequences" );
 
-  auto &finder = oeis.getFinder();
+  auto &finder = manager.getFinder();
 
   std::random_device rand;
   MultiGenerator multi_generator( settings, rand() );
@@ -100,10 +100,10 @@ void Miner::mine()
     }
     Program program = progs.top();
     progs.pop();
-    auto seq_programs = finder.findSequence( program, norm_seq, oeis.getSequences() );
+    auto seq_programs = finder.findSequence( program, norm_seq, manager.getSequences() );
     for ( auto s : seq_programs )
     {
-      auto r = oeis.updateProgram( s.first, s.second );
+      auto r = manager.updateProgram( s.first, s.second );
       if ( r.first )
       {
         // update stats and increase priority of successful generator

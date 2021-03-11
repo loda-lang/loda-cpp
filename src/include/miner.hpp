@@ -23,11 +23,7 @@ private:
   bool updateSpecialSequences( const Program &p, const Sequence &seq ) const;
 
   const Settings &settings;
-
-  Oeis oeis;
-
+  OeisManager manager;
   Interpreter interpreter;
-
-  mutable std::unordered_set<number_t> primes_cache;
 
 };

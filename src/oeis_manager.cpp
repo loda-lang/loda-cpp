@@ -26,7 +26,7 @@ void throwParseError( const std::string &line )
   Log::get().error( "error parsing OEIS line: " + line, true );
 }
 
-Oeis::Oeis( const Settings &settings )
+OeisManager::OeisManager( const Settings &settings )
     : settings( settings ),
       interpreter( settings ),
       finder( settings ),
@@ -36,7 +36,7 @@ Oeis::Oeis( const Settings &settings )
 {
 }
 
-void Oeis::load()
+void OeisManager::load()
 {
   // check if already loaded
   if ( total_count_ > 0 )
@@ -139,7 +139,7 @@ void Oeis::load()
 
 }
 
-size_t Oeis::loadData()
+size_t OeisManager::loadData()
 {
   std::ifstream stripped( OeisSequence::getHome() + "stripped" );
   if ( !stripped.good() )
@@ -232,7 +232,7 @@ size_t Oeis::loadData()
   return loaded_count;
 }
 
-void Oeis::loadNames()
+void OeisManager::loadNames()
 {
   Log::get().debug( "Loading sequence names from the OEIS index" );
   std::ifstream names( OeisSequence::getHome() + "names" );
@@ -277,7 +277,7 @@ void Oeis::loadNames()
   }
 }
 
-void Oeis::update()
+void OeisManager::update()
 {
   std::vector<std::string> files = { "stripped", "names" };
 
@@ -348,7 +348,7 @@ void migrateFile( const std::string &from, const std::string &to )
   }
 }
 
-void Oeis::migrate()
+void OeisManager::migrate()
 {
   for ( size_t id = 1; id <= 400000; id++ )
   {
@@ -360,12 +360,12 @@ void Oeis::migrate()
   }
 }
 
-const std::vector<OeisSequence>& Oeis::getSequences() const
+const std::vector<OeisSequence>& OeisManager::getSequences() const
 {
   return sequences;
 }
 
-void Oeis::removeSequenceFromFinder( size_t id )
+void OeisManager::removeSequenceFromFinder( size_t id )
 {
   if ( id >= sequences.size() )
   {
@@ -379,7 +379,7 @@ void Oeis::removeSequenceFromFinder( size_t id )
   }
 }
 
-void Oeis::addCalComments( Program& p ) const
+void OeisManager::addCalComments( Program& p ) const
 {
   for ( auto &op : p.ops )
   {
@@ -394,7 +394,7 @@ void Oeis::addCalComments( Program& p ) const
   }
 }
 
-void Oeis::dumpProgram( size_t id, Program p, const std::string &file ) const
+void OeisManager::dumpProgram( size_t id, Program p, const std::string &file ) const
 {
   ProgramUtil::removeOps( p, Operation::Type::NOP );
   addCalComments( p );
@@ -409,7 +409,7 @@ void Oeis::dumpProgram( size_t id, Program p, const std::string &file ) const
   seq.fetchBFile(); // ensure b-file gets downloaded for the next run
 }
 
-std::pair<bool, Program> Oeis::minimizeAndCheck( const Program &p, const OeisSequence &seq, bool minimize )
+std::pair<bool, Program> OeisManager::minimizeAndCheck( const Program &p, const OeisSequence &seq, bool minimize )
 {
   std::pair<bool, Program> minimized;
   minimized.first = true;
@@ -446,7 +446,7 @@ std::pair<bool, Program> Oeis::minimizeAndCheck( const Program &p, const OeisSeq
   return minimized;
 }
 
-int Oeis::getNumCycles( const Program &p )
+int OeisManager::getNumCycles( const Program &p )
 {
   Memory mem;
   const number_t input = settings.num_terms - 1;
@@ -472,7 +472,7 @@ int Oeis::getNumCycles( const Program &p )
   return -1;
 }
 
-std::string Oeis::isOptimizedBetter( Program existing, Program optimized, size_t id )
+std::string OeisManager::isOptimizedBetter( Program existing, Program optimized, size_t id )
 {
   // check if there are illegal recursions
   for ( auto &op : optimized.ops )
@@ -538,7 +538,7 @@ std::string Oeis::isOptimizedBetter( Program existing, Program optimized, size_t
   return "";
 }
 
-std::pair<bool, bool> Oeis::updateProgram( size_t id, const Program &p )
+std::pair<bool, bool> OeisManager::updateProgram( size_t id, const Program &p )
 {
   auto &seq = sequences.at( id );
   std::string file_name = seq.getProgramPath();
@@ -626,189 +626,4 @@ std::pair<bool, bool> Oeis::updateProgram( size_t id, const Program &p )
 
   return
   { true,is_new};
-}
-
-void Oeis::maintain()
-{
-  if ( !settings.optimize_existing_programs )
-  {
-    Log::get().error( "Option -x required to run maintenance", true );
-  }
-
-  // load and generate stats
-  load();
-  generateStats( steps_t() );
-
-  Log::get().info( "Start maintaining OEIS programs" );
-  size_t num_processed = 0, num_optimized = 0;
-  Parser parser;
-  Program program, optimized;
-  Sequence result;
-  std::string file_name;
-  bool is_okay, is_manual;
-  steps_t steps;
-
-  // process programs for all sequences
-  for ( auto &s : sequences )
-  {
-    if ( s.id == 0 )
-    {
-      continue;
-    }
-    file_name = s.getProgramPath();
-    std::ifstream program_file( file_name );
-    if ( program_file.good() )
-    {
-      if ( Log::get().level == Log::Level::DEBUG )
-      {
-        Log::get().debug( "Checking program for " + s.to_string() );
-      }
-      try
-      {
-        program = parser.parse( program_file );
-      }
-      catch ( const std::exception &exc )
-      {
-        Log::get().error( "Error parsing " + file_name + ": " + std::string( exc.what() ), false );
-        continue;
-      }
-      s.fetchBFile(); // ensure b-file is loaded
-      auto very_long_seq = s.getTerms( OeisSequence::VERY_LONG_SEQ_LENGTH );
-
-      // check its correctness
-      auto check = interpreter.check( program, very_long_seq, OeisSequence::LONG_SEQ_LENGTH );
-      is_okay = check.first;
-
-      if ( !is_okay )
-      {
-        Log::AlertDetails details;
-        details.title = s.id_str();
-        details.title_link = s.url_str();
-        details.color = "danger";
-        details.text = "Removing invalid program for " + s.to_string();
-        Log::get().alert( details.text, details );
-        program_file.close();
-        remove( file_name.c_str() );
-      }
-      else
-      {
-        is_manual = false;
-        if ( program.ops.size() > 1 && program.ops[1].type == Operation::Type::NOP )
-        {
-          const std::string& comment = program.ops[1].comment;
-          is_manual = comment.find( "Coded manually" ) != std::string::npos;
-        }
-        if ( !is_manual )
-        {
-          ProgramUtil::removeOps( program, Operation::Type::NOP );
-          optimized = program;
-          minimizer.optimizeAndMinimize( optimized, 2, 1, OeisSequence::LONG_SEQ_LENGTH );
-          if ( program != optimized )
-          {
-            Log::get().warn( "Updating program because it is not optimal: " + file_name );
-            num_optimized++;
-          }
-          dumpProgram( s.id, optimized, file_name );
-        }
-
-      }
-      if ( ++num_processed % 100 == 0 )
-      {
-        Log::get().info( "Processed " + std::to_string( num_processed ) + " programs" );
-      }
-    }
-  }
-
-  if ( num_optimized > 0 )
-  {
-    Log::get().alert(
-        "Optimized " + std::to_string( num_optimized ) + "/" + std::to_string( num_processed ) + " programs." );
-  }
-  Log::get().info( "Finished maintenance of " + std::to_string( num_processed ) + " programs" );
-
-  // generate stats again
-  generateStats( steps );
-
-}
-
-void Oeis::generateStats( const steps_t& steps )
-{
-  load();
-  Log::get().info( "Start generating stats" );
-  const size_t list_file_size = 50000;
-  std::vector<std::stringstream> list_files( 1000000 / list_file_size );
-  Stats stats;
-  size_t num_processed = 0;
-  Parser parser;
-  Program program;
-  std::string file_name;
-  bool has_b_file, has_program;
-
-  for ( auto &s : sequences )
-  {
-    if ( s.id == 0 )
-    {
-      continue;
-    }
-    file_name = s.getProgramPath();
-    std::ifstream program_file( file_name );
-    std::ifstream b_file( s.getBFilePath() );
-    has_b_file = b_file.good();
-    has_program = false;
-    if ( program_file.good() )
-    {
-      try
-      {
-        program = parser.parse( program_file );
-        has_program = true;
-      }
-      catch ( const std::exception &exc )
-      {
-        Log::get().error( "Error parsing " + file_name + ": " + std::string( exc.what() ), false );
-        continue;
-      }
-
-      ProgramUtil::removeOps( program, Operation::Type::NOP );
-
-      // collect stats
-      stats.updateProgramStats( program );
-
-      // write list file
-      size_t list_index = s.id / list_file_size;
-      size_t num_ops = ProgramUtil::numOps( program, false );
-      list_files.at( list_index ) << "* [" << s.id_str() << "](http://oeis.org/" << s.id_str() << ") ([L"
-          << std::setw( 2 ) << std::setfill( '0' ) << num_ops << " program](" << s.dir_str() << "/" << s.id_str()
-          << ".asm)): " << s.name << "\n";
-
-      if ( ++num_processed % 1000 == 0 )
-      {
-        Log::get().info( "Processed " + std::to_string( num_processed ) + " programs" );
-      }
-    }
-    stats.updateSequenceStats( s.id, has_program, has_b_file );
-  }
-
-  // write stats
-  Log::get().info( "Updating stats and program lists" );
-  stats.save( "stats" );
-
-  // write lists
-  for ( size_t i = 0; i < list_files.size(); i++ )
-  {
-    auto buf = list_files[i].str();
-    if ( !buf.empty() )
-    {
-      std::string list_path = "programs/oeis/list" + std::to_string( i ) + ".md";
-      OeisSequence start( (i * list_file_size) + 1 );
-      OeisSequence end( (i + 1) * list_file_size );
-      std::ofstream list_file( list_path );
-      list_file << "# Programs for " << start.id_str() << "-" << end.id_str() << "\n\n";
-      list_file
-          << "List of integer sequences with links to LODA programs. An _Ln_ program is a LODA program of length _n_."
-          << "\n\n";
-      list_file << buf;
-    }
-  }
-  Log::get().info( "Finished generation of stats for " + std::to_string( num_processed ) + " programs" );
-
 }
