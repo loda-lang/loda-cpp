@@ -59,6 +59,8 @@ private:
 
   std::string isOptimizedBetter( Program existing, Program optimized, size_t id );
 
+  void generateStats( const steps_t& steps );
+
   const Settings &settings;
   Interpreter interpreter;
   Finder finder;

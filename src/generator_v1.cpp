@@ -52,7 +52,15 @@ GeneratorV1::GeneratorV1( const Config &config, const Stats &stats, int64_t seed
     : Generator( config, stats, seed ),
       num_operations( config.length )
 {
-  std::string operation_types = config.loops ? "^" : "^l";
+  std::string operation_types = "^"; // negate operation types (exclusion pattern)
+  if ( !config.loops )
+  {
+    operation_types += "l";
+  }
+  if ( !config.calls )
+  {
+    operation_types += "c";
+  }
   std::string operand_types = config.indirect_access ? "cdi" : "cd";
 
   // parse operation types

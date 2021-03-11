@@ -22,6 +22,7 @@ public:
     int64_t max_constant = 0;
     int64_t max_index = 0;
     bool loops = true;
+    bool calls = true;
     bool indirect_access = false;
     std::string program_template;
 
@@ -33,10 +34,9 @@ public:
   {
   public:
     GStats()
-        :
-        generated( 0 ),
-        fresh( 0 ),
-        updated( 0 )
+        : generated( 0 ),
+          fresh( 0 ),
+          updated( 0 )
     {
     }
 

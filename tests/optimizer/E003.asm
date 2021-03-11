@@ -1,6 +1,6 @@
 ; in
 mov $1,3
-fac $1
+mul $1,2
 mov $2,$1
 mul $0,$2
 ; out

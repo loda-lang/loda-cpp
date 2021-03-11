@@ -2,11 +2,11 @@
 
 #include "number.hpp"
 
-const std::array<Operation::Type, 20> Operation::Types = { Operation::Type::NOP, Operation::Type::MOV,
+const std::array<Operation::Type, 19> Operation::Types = { Operation::Type::NOP, Operation::Type::MOV,
     Operation::Type::ADD, Operation::Type::SUB, Operation::Type::TRN, Operation::Type::MUL, Operation::Type::DIV,
-    Operation::Type::DIF, Operation::Type::MOD, Operation::Type::POW, Operation::Type::LOG, Operation::Type::FAC,
-    Operation::Type::GCD, Operation::Type::BIN, Operation::Type::CMP, Operation::Type::LPB, Operation::Type::LPE,
-    Operation::Type::CLR, Operation::Type::CAL, Operation::Type::DBG, };
+    Operation::Type::DIF, Operation::Type::MOD, Operation::Type::POW, Operation::Type::LOG, Operation::Type::GCD,
+    Operation::Type::BIN, Operation::Type::CMP, Operation::Type::LPB, Operation::Type::LPE, Operation::Type::CLR,
+    Operation::Type::CAL, Operation::Type::DBG, };
 
 const Operation::Metadata& Operation::Metadata::get( Type t )
 {
@@ -21,10 +21,9 @@ const Operation::Metadata& Operation::Metadata::get( Type t )
   static Operation::Metadata mod { Operation::Type::MOD, "mod", 'o', 2, true, true, true };
   static Operation::Metadata pow { Operation::Type::POW, "pow", 'p', 2, true, true, true };
   static Operation::Metadata log { Operation::Type::LOG, "log", 'k', 2, true, true, true };
-  static Operation::Metadata fac { Operation::Type::FAC, "fac", 'f', 1, true, true, true };
   static Operation::Metadata gcd { Operation::Type::GCD, "gcd", 'g', 2, true, true, true };
   static Operation::Metadata bin { Operation::Type::BIN, "bin", 'b', 2, true, true, true };
-  static Operation::Metadata cmp { Operation::Type::CMP, "cmp", 'c', 2, true, true, true };
+  static Operation::Metadata cmp { Operation::Type::CMP, "cmp", 'f', 2, true, true, true };
   static Operation::Metadata lpb { Operation::Type::LPB, "lpb", 'l', 2, true, true, false };
   static Operation::Metadata lpe { Operation::Type::LPE, "lpe", 'e', 0, true, false, false };
   static Operation::Metadata clr { Operation::Type::CLR, "clr", 'r', 2, true, false, true };
@@ -54,8 +53,6 @@ const Operation::Metadata& Operation::Metadata::get( Type t )
     return pow;
   case Operation::Type::LOG:
     return log;
-  case Operation::Type::FAC:
-    return fac;
   case Operation::Type::GCD:
     return gcd;
   case Operation::Type::BIN:

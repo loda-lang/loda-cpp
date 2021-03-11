@@ -19,6 +19,14 @@ public:
   void add( const steps_t& s );
 };
 
+struct pair_hasher
+{
+  std::size_t operator()( const std::pair<number_t, number_t> &p ) const
+  {
+    return (p.first << 32) ^ p.second;
+  }
+};
+
 class Interpreter
 {
 public:
@@ -33,7 +41,7 @@ public:
 
   steps_t eval( const Program &p, std::vector<Sequence> &seqs, int64_t num_terms = -1 );
 
-  std::pair<bool, steps_t> check( const Program &p, const Sequence &expected_seq );
+  std::pair<bool, steps_t> check( const Program &p, const Sequence &expected_seq, int64_t num_terminating_terms = -1 );
 
 private:
 
@@ -41,14 +49,20 @@ private:
 
   void set( Operand a, number_t v, Memory &mem, const Operation &last_op ) const;
 
-  Program getProgram( number_t id ) const;
+  std::pair<number_t, number_t> call( number_t id, number_t arg );
+
+  const Program& getProgram( number_t id );
 
   const Settings &settings;
 
   const bool is_debug;
+  bool has_memory;
+  size_t num_memory_checks;
 
-  mutable std::unordered_map<number_t, Program> program_cache;
-  mutable std::unordered_set<number_t> missing_programs;
-  mutable std::unordered_set<number_t> running_programs;
+  std::unordered_map<number_t, Program> program_cache;
+  std::unordered_set<number_t> missing_programs;
+  std::unordered_set<number_t> running_programs;
+
+  std::unordered_map<std::pair<number_t, number_t>, std::pair<number_t, number_t>, pair_hasher> terms_cache;
 
 };

@@ -84,7 +84,8 @@ void Oeis::load()
       {
         continue;
       }
-      if ( !settings.search_linear && seq.norm.is_linear( settings.linear_prefix ) )
+      auto terms = seq.getTerms( settings.num_terms );
+      if ( !settings.search_linear && terms.is_linear( settings.linear_prefix ) )
       {
         seqs_to_remove.push_back( seq.id );
         continue;
@@ -149,7 +150,7 @@ size_t Oeis::loadData()
   size_t pos;
   size_t id;
   int64_t num, sign;
-  Sequence seq_full, seq_norm, seq_big;
+  Sequence seq_full, seq_big;
   size_t loaded_count = 0;
   std::random_device rand;
   while ( std::getline( stripped, line ) )
@@ -215,17 +216,15 @@ size_t Oeis::loadData()
       continue;
     }
 
-    // normalized sequence
-    seq_norm = Sequence( std::vector<number_t>( seq_full.begin(), seq_full.begin() + settings.num_terms ) );
-
     // add sequence to index
     if ( id >= sequences.size() )
     {
       sequences.resize( 2 * id );
     }
-    sequences[id] = OeisSequence( id, "", seq_norm, seq_full );
+    sequences[id] = OeisSequence( id, "", seq_full );
 
     // add sequences to matchers
+    auto seq_norm = sequences[id].getTerms( settings.num_terms );
     finder.insert( seq_norm, id );
 
     ++loaded_count;
@@ -374,7 +373,7 @@ void Oeis::removeSequenceFromFinder( size_t id )
   }
   if ( sequences[id].id == id )
   {
-    finder.remove( sequences[id].norm, id );
+    finder.remove( sequences[id].getTerms( settings.num_terms ), id );
     // we still want to keep it in the index to retain metadata about called programs
     // sequences[id] = OeisSequence();
   }
@@ -403,7 +402,7 @@ void Oeis::dumpProgram( size_t id, Program p, const std::string &file ) const
   std::ofstream out( file );
   auto &seq = sequences.at( id );
   out << "; " << seq << std::endl;
-  out << "; " << seq.getFull() << std::endl;
+  out << "; " << seq.getTerms( OeisSequence::LONG_SEQ_LENGTH ) << std::endl;
   out << std::endl;
   ProgramUtil::print( p, out );
   out.close();
@@ -416,40 +415,33 @@ std::pair<bool, Program> Oeis::minimizeAndCheck( const Program &p, const OeisSeq
   minimized.first = true;
   minimized.second = p;
 
-  // ensure b-file gets fetched before checking
-  seq.fetchBFile();
-  auto& full = seq.getFull();
-
   // optimize and minimize program
   if ( minimize )
   {
-    minimizer.optimizeAndMinimize( minimized.second, 2, 1, full.size() );
+    minimizer.optimizeAndMinimize( minimized.second, 2, 1, OeisSequence::LONG_SEQ_LENGTH );
   }
 
+  // ensure b-file gets fetched before checking
+  seq.fetchBFile();
+  auto very_long_seq = seq.getTerms( OeisSequence::VERY_LONG_SEQ_LENGTH );
+
   // check its correctness
-  Sequence new_seq;
-  try
-  {
-    interpreter.eval( minimized.second, new_seq, full.size() );
-    if ( full.size() != new_seq.size() || full != new_seq )
-    {
-      minimized.first = false;
-    }
-  }
-  catch ( const std::exception &e )
-  {
-    minimized.first = false;
-  }
+  auto check = interpreter.check( minimized.second, very_long_seq, OeisSequence::LONG_SEQ_LENGTH );
+  minimized.first = check.first;
 
   // log error if not correct and revert program change
   if ( !minimized.first && minimize )
   {
     minimized.second = p;
-    Log::get().error( "Program for " + seq.id_str() + " generates wrong result after minimization", false );
-    std::string f = getLodaHome() + "debug/optimizer/" + seq.id_str() + ".asm";
-    ensureDir( f );
-    std::ofstream out( f );
-    ProgramUtil::print( p, out );
+    auto check2 = interpreter.check( p, very_long_seq, OeisSequence::LONG_SEQ_LENGTH );
+    if ( check2.first )
+    {
+      Log::get().error( "Program for " + seq.id_str() + " generates wrong result after minimization", false );
+      std::string f = getLodaHome() + "debug/optimizer/" + seq.id_str() + ".asm";
+      ensureDir( f );
+      std::ofstream out( f );
+      ProgramUtil::print( p, out );
+    }
   }
   return minimized;
 }
@@ -494,16 +486,21 @@ std::string Oeis::isOptimizedBetter( Program existing, Program optimized, size_t
     }
   }
 
-  // we prefer programs w/o indirect memory access and without cal operations
+  // we prefer programs the following programs:
+  // - w/o indirect memory access
+  // - w/o cal operations
+  // - w/o log operations
   auto in_opt = ProgramUtil::numOps( optimized, Operand::Type::INDIRECT );
   auto in_ext = ProgramUtil::numOps( existing, Operand::Type::INDIRECT );
   auto cal_opt = ProgramUtil::numOps( optimized, Operation::Type::CAL );
   auto cal_ext = ProgramUtil::numOps( existing, Operation::Type::CAL );
-  if ( in_opt < in_ext || cal_opt < cal_ext )
+  auto log_opt = ProgramUtil::numOps( optimized, Operation::Type::LOG );
+  auto log_ext = ProgramUtil::numOps( existing, Operation::Type::LOG );
+  if ( in_opt < in_ext || cal_opt < cal_ext || log_opt < log_ext )
   {
     return "Simpler";
   }
-  else if ( in_opt > in_ext || cal_opt > cal_ext )
+  else if ( in_opt > in_ext || cal_opt > cal_ext || log_opt > log_ext )
   {
     return "";
   }
@@ -613,7 +610,7 @@ std::pair<bool, bool> Oeis::updateProgram( size_t id, const Program &p )
   std::stringstream buf;
   if ( is_new ) buf << "First";
   else buf << change;
-  buf << " program for " << seq << " Terms: " << seq.norm;
+  buf << " program for " << seq << " Terms: " << seq.getTerms( settings.num_terms );
   auto msg = buf.str();
   Log::AlertDetails details;
   details.title = seq.id_str();
@@ -637,18 +634,21 @@ void Oeis::maintain()
   {
     Log::get().error( "Option -x required to run maintenance", true );
   }
+
+  // load and generate stats
   load();
+  generateStats( steps_t() );
+
   Log::get().info( "Start maintaining OEIS programs" );
-  const size_t list_file_size = 50000;
-  std::vector<std::stringstream> list_files( 1000000 / list_file_size );
-  Stats stats;
   size_t num_processed = 0, num_optimized = 0;
   Parser parser;
   Program program, optimized;
   Sequence result;
   std::string file_name;
-  bool has_b_file, has_program, is_okay, is_manual;
+  bool is_okay, is_manual;
+  steps_t steps;
 
+  // process programs for all sequences
   for ( auto &s : sequences )
   {
     if ( s.id == 0 )
@@ -657,9 +657,6 @@ void Oeis::maintain()
     }
     file_name = s.getProgramPath();
     std::ifstream program_file( file_name );
-    std::ifstream b_file( s.getBFilePath() );
-    has_b_file = b_file.good();
-    has_program = false;
     if ( program_file.good() )
     {
       if ( Log::get().level == Log::Level::DEBUG )
@@ -676,16 +673,12 @@ void Oeis::maintain()
         continue;
       }
       s.fetchBFile(); // ensure b-file is loaded
-      try
-      {
-        auto& full = s.getFull();
-        stats.steps.add( interpreter.eval( program, result, full.size() ) );
-        is_okay = (result == full);
-      }
-      catch ( const std::exception &exc )
-      {
-        is_okay = false;
-      }
+      auto very_long_seq = s.getTerms( OeisSequence::VERY_LONG_SEQ_LENGTH );
+
+      // check its correctness
+      auto check = interpreter.check( program, very_long_seq, OeisSequence::LONG_SEQ_LENGTH );
+      is_okay = check.first;
+
       if ( !is_okay )
       {
         Log::AlertDetails details;
@@ -699,7 +692,6 @@ void Oeis::maintain()
       }
       else
       {
-        has_program = true;
         is_manual = false;
         if ( program.ops.size() > 1 && program.ops[1].type == Operation::Type::NOP )
         {
@@ -710,7 +702,7 @@ void Oeis::maintain()
         {
           ProgramUtil::removeOps( program, Operation::Type::NOP );
           optimized = program;
-          minimizer.optimizeAndMinimize( optimized, 2, 1, s.getFull().size() );
+          minimizer.optimizeAndMinimize( optimized, 2, 1, OeisSequence::LONG_SEQ_LENGTH );
           if ( program != optimized )
           {
             Log::get().warn( "Updating program because it is not optimal: " + file_name );
@@ -719,17 +711,76 @@ void Oeis::maintain()
           dumpProgram( s.id, optimized, file_name );
         }
 
-        // collect stats
-        stats.updateProgramStats( optimized );
-
-        // write list file
-        size_t list_index = s.id / list_file_size;
-        size_t num_ops = ProgramUtil::numOps( program, false );
-        list_files.at( list_index ) << "* [" << s.id_str() << "](http://oeis.org/" << s.id_str() << ") ([L"
-            << std::setw( 2 ) << std::setfill( '0' ) << num_ops << " program](" << s.dir_str() << "/" << s.id_str()
-            << ".asm)): " << s.name << "\n";
       }
       if ( ++num_processed % 100 == 0 )
+      {
+        Log::get().info( "Processed " + std::to_string( num_processed ) + " programs" );
+      }
+    }
+  }
+
+  if ( num_optimized > 0 )
+  {
+    Log::get().alert(
+        "Optimized " + std::to_string( num_optimized ) + "/" + std::to_string( num_processed ) + " programs." );
+  }
+  Log::get().info( "Finished maintenance of " + std::to_string( num_processed ) + " programs" );
+
+  // generate stats again
+  generateStats( steps );
+
+}
+
+void Oeis::generateStats( const steps_t& steps )
+{
+  load();
+  Log::get().info( "Start generating stats" );
+  const size_t list_file_size = 50000;
+  std::vector<std::stringstream> list_files( 1000000 / list_file_size );
+  Stats stats;
+  size_t num_processed = 0;
+  Parser parser;
+  Program program;
+  std::string file_name;
+  bool has_b_file, has_program;
+
+  for ( auto &s : sequences )
+  {
+    if ( s.id == 0 )
+    {
+      continue;
+    }
+    file_name = s.getProgramPath();
+    std::ifstream program_file( file_name );
+    std::ifstream b_file( s.getBFilePath() );
+    has_b_file = b_file.good();
+    has_program = false;
+    if ( program_file.good() )
+    {
+      try
+      {
+        program = parser.parse( program_file );
+        has_program = true;
+      }
+      catch ( const std::exception &exc )
+      {
+        Log::get().error( "Error parsing " + file_name + ": " + std::string( exc.what() ), false );
+        continue;
+      }
+
+      ProgramUtil::removeOps( program, Operation::Type::NOP );
+
+      // collect stats
+      stats.updateProgramStats( program );
+
+      // write list file
+      size_t list_index = s.id / list_file_size;
+      size_t num_ops = ProgramUtil::numOps( program, false );
+      list_files.at( list_index ) << "* [" << s.id_str() << "](http://oeis.org/" << s.id_str() << ") ([L"
+          << std::setw( 2 ) << std::setfill( '0' ) << num_ops << " program](" << s.dir_str() << "/" << s.id_str()
+          << ".asm)): " << s.name << "\n";
+
+      if ( ++num_processed % 1000 == 0 )
       {
         Log::get().info( "Processed " + std::to_string( num_processed ) + " programs" );
       }
@@ -758,11 +809,6 @@ void Oeis::maintain()
       list_file << buf;
     }
   }
+  Log::get().info( "Finished generation of stats for " + std::to_string( num_processed ) + " programs" );
 
-  if ( num_optimized > 0 )
-  {
-    Log::get().alert(
-        "Optimized " + std::to_string( num_optimized ) + "/" + std::to_string( stats.num_programs ) + " programs." );
-  }
-  Log::get().info( "Finished maintenance of " + std::to_string( num_processed ) + " programs" );
 }

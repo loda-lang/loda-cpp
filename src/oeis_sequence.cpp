@@ -7,7 +7,9 @@
 #include <fstream>
 #include <sstream>
 
-const size_t OeisSequence::MAX_NUM_TERMS = 250;
+const size_t OeisSequence::LONG_SEQ_LENGTH = 250;
+
+const size_t OeisSequence::VERY_LONG_SEQ_LENGTH = 1000;
 
 std::string OeisSequence::getHome()
 {
@@ -41,10 +43,9 @@ OeisSequence::OeisSequence( std::string id_str )
   id = std::stoll( id_str );
 }
 
-OeisSequence::OeisSequence( size_t id, const std::string &name, const Sequence &s, const Sequence &full )
+OeisSequence::OeisSequence( size_t id, const std::string &name, const Sequence &full )
     : id( id ),
       name( name ),
-      norm( s ),
       full( full ),
       attempted_bfile( false ),
       loaded_bfile( false )
@@ -177,12 +178,6 @@ bool loadBFile( size_t id, const Sequence& seq_full, Sequence& seq_big )
             parser.readSeparator( ',' );
           }
         }
-        // if the number of terms in the comment is less than MAX_NUM_TERMS,
-        // we can't be sure it's coming from the b-file. thus we discard it in this case.
-        if ( seq_big.size() != OeisSequence::MAX_NUM_TERMS )
-        {
-          seq_big.clear();
-        }
         else if ( Log::get().level == Log::Level::DEBUG )
         {
           Log::get().debug(
@@ -219,7 +214,7 @@ bool loadBFile( size_t id, const Sequence& seq_full, Sequence& seq_big )
     seq_big = seq_full;
   }
 
-  if ( seq_big.size() < OeisSequence::MAX_NUM_TERMS && !has_overflow )
+  if ( seq_big.size() < OeisSequence::LONG_SEQ_LENGTH && !has_overflow )
   {
     error_state = "too short";
   }
@@ -248,9 +243,10 @@ bool loadBFile( size_t id, const Sequence& seq_full, Sequence& seq_big )
   }
 
   // shrink big sequence to maximum number of terms
-  if ( seq_big.size() > OeisSequence::MAX_NUM_TERMS )
+  if ( seq_big.size() > OeisSequence::VERY_LONG_SEQ_LENGTH )
   {
-    seq_big = Sequence( std::vector<number_t>( seq_big.begin(), seq_big.begin() + OeisSequence::MAX_NUM_TERMS ) );
+    seq_big = Sequence(
+        std::vector<number_t>( seq_big.begin(), seq_big.begin() + OeisSequence::VERY_LONG_SEQ_LENGTH ) );
   }
 
   if ( Log::get().level == Log::Level::DEBUG )
@@ -262,9 +258,10 @@ bool loadBFile( size_t id, const Sequence& seq_full, Sequence& seq_big )
   return true;
 }
 
-const Sequence& OeisSequence::getFull() const
+Sequence OeisSequence::getTerms( int64_t max_num_terms ) const
 {
-  if ( !attempted_bfile )
+  size_t real_max_terms = (max_num_terms >= 0) ? max_num_terms : 10000; // magic number
+  if ( real_max_terms > full.size() && !attempted_bfile )
   {
     attempted_bfile = true;
     if ( id != 0 )
@@ -278,14 +275,22 @@ const Sequence& OeisSequence::getFull() const
       }
     }
   }
-  return full;
+  real_max_terms = std::min( real_max_terms, full.size() );
+  if ( real_max_terms == full.size() )
+  {
+    return full;
+  }
+  else
+  {
+    return Sequence( std::vector<number_t>( full.begin(), full.begin() + real_max_terms ) );
+  }
 }
 
 void OeisSequence::fetchBFile() const
 {
   if ( !attempted_bfile )
   {
-    getFull();
+    getTerms( -1 );
   }
   if ( !loaded_bfile )
   {
