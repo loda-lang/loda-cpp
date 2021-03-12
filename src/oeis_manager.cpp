@@ -437,7 +437,9 @@ std::pair<bool, Program> OeisManager::minimizeAndCheck( const Program &p, const 
     auto check2 = interpreter.check( p, very_long_seq, OeisSequence::LONG_SEQ_LENGTH );
     if ( check2.first )
     {
-      Log::get().error( "Program for " + seq.id_str() + " generates wrong result after minimization", false );
+      Log::get().warn(
+          "Program for " + seq.id_str() + " generates wrong result after minimization with "
+              + std::to_string( OeisSequence::LONG_SEQ_LENGTH ) + " terms" );
       std::string f = getLodaHome() + "debug/optimizer/" + seq.id_str() + ".asm";
       ensureDir( f );
       std::ofstream out( f );

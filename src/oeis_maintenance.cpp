@@ -4,8 +4,10 @@
 #include "program_util.hpp"
 #include "stats.hpp"
 
+#include <algorithm>
 #include <iomanip>
 #include <fstream>
+#include <random>
 #include <sstream>
 
 OeisMaintenance::OeisMaintenance( const Settings &settings )
@@ -28,14 +30,11 @@ void OeisMaintenance::maintain()
   // generate stats
   generateStats( steps_t() );
 
-  // remove invalid programs
-  auto num_removed = checkPrograms();
-
-  // minimize programs
-  auto num_minimized = minimizePrograms();
+  // check and minimize programs
+  auto num_changed = checkAndMinimizePrograms();
 
   // generate stats again if there was a change
-  if ( num_removed > 0 || num_minimized > 0 )
+  if ( num_changed > 0 )
   {
     generateStats( steps_t() );
   }
@@ -124,18 +123,30 @@ void OeisMaintenance::generateStats( const steps_t& steps )
 
 }
 
-size_t OeisMaintenance::checkPrograms()
+size_t OeisMaintenance::checkAndMinimizePrograms()
 {
-  Log::get().info( "Checking correctness of OEIS programs" );
-  size_t num_processed = 0, num_removed = 0;
+  Log::get().info( "Checking and minimizing programs" );
+  size_t num_processed = 0, num_removed = 0, num_minimized = 0;
   Parser parser;
-  Program program;
+  Program program, minimized;
   std::string file_name;
-  bool is_okay;
+  bool is_okay, is_manual;
+
+  // generate random order of sequences
+  std::vector<size_t> ids;
+  ids.resize( manager.sequences.size() );
+  const size_t l = ids.size();
+  for ( size_t i = 0; i < l; i++ )
+  {
+    ids[i] = i;
+  }
+  auto rng = std::default_random_engine { };
+  std::shuffle( std::begin( ids ), std::end( ids ), rng );
 
   // check programs for all sequences
-  for ( auto &s : manager.sequences )
+  for ( auto id : ids )
   {
+    auto& s = manager.sequences[id];
     if ( s.id == 0 )
     {
       continue;
@@ -176,6 +187,27 @@ size_t OeisMaintenance::checkPrograms()
         program_file.close();
         remove( file_name.c_str() );
       }
+      else
+      {
+        is_manual = false;
+        if ( program.ops.size() > 1 && program.ops[1].type == Operation::Type::NOP )
+        {
+          is_manual = program.ops[1].comment.find( "Coded manually" ) != std::string::npos;
+        }
+        if ( !is_manual )
+        {
+          ProgramUtil::removeOps( program, Operation::Type::NOP );
+          minimized = program;
+          manager.minimizer.optimizeAndMinimize( minimized, 2, 1, OeisSequence::LONG_SEQ_LENGTH );
+          if ( program != minimized )
+          {
+            Log::get().info( "Updating program because it is not minimal: " + file_name );
+            num_minimized++;
+          }
+          manager.dumpProgram( s.id, minimized, file_name );
+        }
+      }
+
       if ( ++num_processed % 100 == 0 )
       {
         Log::get().info( "Processed " + std::to_string( num_processed ) + " programs" );
@@ -187,74 +219,11 @@ size_t OeisMaintenance::checkPrograms()
   {
     Log::get().alert( "Removed " + std::to_string( num_removed ) + " invalid programs" );
   }
-  return num_removed;
-}
-
-size_t OeisMaintenance::minimizePrograms()
-{
-  Log::get().info( "Minimizing OEIS programs" );
-  size_t num_processed = 0, num_minimized = 0;
-  Parser parser;
-  Program program, minimized;
-  Sequence result;
-  std::string file_name;
-  bool is_manual;
-  steps_t steps;
-
-  // minimize programs for all sequences
-  for ( auto &s : manager.sequences )
-  {
-    if ( s.id == 0 )
-    {
-      continue;
-    }
-    file_name = s.getProgramPath();
-    std::ifstream program_file( file_name );
-    if ( program_file.good() )
-    {
-      if ( Log::get().level == Log::Level::DEBUG )
-      {
-        Log::get().debug( "Minimizing program for " + s.to_string() );
-      }
-      try
-      {
-        program = parser.parse( program_file );
-      }
-      catch ( const std::exception &exc )
-      {
-        Log::get().error( "Error parsing " + file_name + ": " + std::string( exc.what() ), false );
-        continue;
-      }
-
-      is_manual = false;
-      if ( program.ops.size() > 1 && program.ops[1].type == Operation::Type::NOP )
-      {
-        is_manual = program.ops[1].comment.find( "Coded manually" ) != std::string::npos;
-      }
-      if ( !is_manual )
-      {
-        ProgramUtil::removeOps( program, Operation::Type::NOP );
-        minimized = program;
-        manager.minimizer.optimizeAndMinimize( minimized, 2, 1, OeisSequence::LONG_SEQ_LENGTH );
-        if ( program != minimized )
-        {
-          Log::get().info( "Updating program because it is not minimal: " + file_name );
-          num_minimized++;
-        }
-        manager.dumpProgram( s.id, minimized, file_name );
-      }
-
-      if ( ++num_processed % 100 == 0 )
-      {
-        Log::get().info( "Processed " + std::to_string( num_processed ) + " programs" );
-      }
-    }
-  }
-
   if ( num_minimized > 0 )
   {
     Log::get().alert(
-        "Optimized " + std::to_string( num_minimized ) + "/" + std::to_string( num_processed ) + " programs" );
+        "Minimized " + std::to_string( num_minimized ) + "/" + std::to_string( num_processed ) + " programs" );
   }
-  return num_minimized;
+
+  return num_removed + num_minimized;
 }

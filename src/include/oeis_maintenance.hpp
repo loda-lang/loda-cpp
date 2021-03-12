@@ -14,9 +14,7 @@ private:
 
   void generateStats( const steps_t& steps );
 
-  size_t checkPrograms();
-
-  size_t minimizePrograms();
+  size_t checkAndMinimizePrograms();
 
   const Settings &settings;
   Interpreter interpreter;
