@@ -141,10 +141,11 @@ void OeisManager::load()
 
 size_t OeisManager::loadData()
 {
-  std::ifstream stripped( OeisSequence::getHome() + "stripped" );
+  std::string path = OeisSequence::getHome() + "stripped";
+  std::ifstream stripped( path );
   if ( !stripped.good() )
   {
-    Log::get().error( "OEIS data not found: run \"loda update\" to download it", true );
+    Log::get().error( "OEIS data not found: " + path, true );
   }
   std::string line;
   size_t pos;
@@ -288,7 +289,7 @@ void OeisManager::update()
   {
     auto path = OeisSequence::getHome() + *it;
     age_in_days = getFileAgeInDays( path );
-    if ( age_in_days < 1 ) // one day
+    if ( age_in_days >= 0 && age_in_days < 1 ) // one day
     {
       // no need to update this file
       it = files.erase( it );
@@ -472,6 +473,17 @@ int OeisManager::getNumCycles( const Program &p )
   return -1;
 }
 
+size_t getBadOpsCount( const Program& p )
+{
+  // we prefer programs the following programs:
+  // - w/o indirect memory access
+  // - w/o cal operations
+  // - w/o log operations
+  // - w/o loops that have non-constant args
+  return ProgramUtil::numOps( p, Operand::Type::INDIRECT ) + ProgramUtil::numOps( p, Operation::Type::CAL )
+      + ProgramUtil::numOps( p, Operation::Type::LOG ) + ProgramUtil::numLoopsWithNonConstant( p );
+}
+
 std::string OeisManager::isOptimizedBetter( Program existing, Program optimized, size_t id )
 {
   // check if there are illegal recursions
@@ -486,23 +498,16 @@ std::string OeisManager::isOptimizedBetter( Program existing, Program optimized,
     }
   }
 
-  // we prefer programs the following programs:
-  // - w/o indirect memory access
-  // - w/o cal operations
-  // - w/o log operations
-  auto in_opt = ProgramUtil::numOps( optimized, Operand::Type::INDIRECT );
-  auto in_ext = ProgramUtil::numOps( existing, Operand::Type::INDIRECT );
-  auto cal_opt = ProgramUtil::numOps( optimized, Operation::Type::CAL );
-  auto cal_ext = ProgramUtil::numOps( existing, Operation::Type::CAL );
-  auto log_opt = ProgramUtil::numOps( optimized, Operation::Type::LOG );
-  auto log_ext = ProgramUtil::numOps( existing, Operation::Type::LOG );
-  if ( in_opt < in_ext || cal_opt < cal_ext || log_opt < log_ext )
+  // compare number of "bad" operations
+  auto optimized_bad_count = getBadOpsCount( optimized );
+  auto existing_bad_count = getBadOpsCount( existing );
+  if ( optimized_bad_count < existing_bad_count )
   {
     return "Simpler";
   }
-  else if ( in_opt > in_ext || cal_opt > cal_ext || log_opt > log_ext )
+  else if ( optimized_bad_count > existing_bad_count )
   {
-    return "";
+    return ""; // optimized is worse
   }
 
   // now remove nops...
