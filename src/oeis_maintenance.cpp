@@ -5,6 +5,7 @@
 #include "stats.hpp"
 
 #include <algorithm>
+#include <chrono>
 #include <iomanip>
 #include <fstream>
 #include <random>
@@ -141,6 +142,7 @@ size_t OeisMaintenance::checkAndMinimizePrograms()
     ids[i] = i;
   }
   auto rng = std::default_random_engine { };
+  rng.seed( std::chrono::system_clock::now().time_since_epoch().count() );
   std::shuffle( std::begin( ids ), std::end( ids ), rng );
 
   // check programs for all sequences
@@ -155,10 +157,7 @@ size_t OeisMaintenance::checkAndMinimizePrograms()
     std::ifstream program_file( file_name );
     if ( program_file.good() )
     {
-      if ( Log::get().level == Log::Level::DEBUG )
-      {
-        Log::get().debug( "Checking program for " + s.to_string() );
-      }
+      Log::get().info( "Checking program for " + s.to_string() );
       try
       {
         program = parser.parse( program_file );
@@ -208,10 +207,10 @@ size_t OeisMaintenance::checkAndMinimizePrograms()
         }
       }
 
-      if ( ++num_processed % 100 == 0 )
-      {
-        Log::get().info( "Processed " + std::to_string( num_processed ) + " programs" );
-      }
+//      if ( ++num_processed % 100 == 0 )
+//      {
+//        Log::get().info( "Processed " + std::to_string( num_processed ) + " programs" );
+//      }
     }
   }
 
