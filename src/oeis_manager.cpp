@@ -64,10 +64,11 @@ void OeisManager::load()
     // update index if needed
     update();
 
-    // load sequence data and names
+    // load sequence data, names and deny list
     Log::get().info( "Loading sequences from the OEIS index" );
     loaded_count = loadData();
     loadNames();
+    loadDenylist();
 
     // remove lock
     unlink( lockfile.c_str() );
@@ -76,20 +77,31 @@ void OeisManager::load()
 
   // collect known / linear sequences if they should be ignored
   std::vector<number_t> seqs_to_remove;
-  if ( !settings.optimize_existing_programs )
+  for ( auto &seq : sequences )
   {
-    for ( auto &seq : sequences )
+    if ( seq.id == 0 )
     {
-      if ( seq.id == 0 )
-      {
-        continue;
-      }
+      continue;
+    }
+
+    // sequence on the denylist?
+    if ( denylist.find( seq.id ) != denylist.end() )
+    {
+      seqs_to_remove.push_back( seq.id );
+      continue;
+    }
+
+    // if not overwriting existing programs...
+    if ( !settings.optimize_existing_programs )
+    {
+      // linear sequence?
       auto terms = seq.getTerms( settings.num_terms );
       if ( !settings.search_linear && terms.is_linear( settings.linear_prefix ) )
       {
         seqs_to_remove.push_back( seq.id );
         continue;
       }
+      // already exists?
       std::ifstream in( seq.getProgramPath() );
       if ( in.good() )
       {
@@ -236,10 +248,11 @@ size_t OeisManager::loadData()
 void OeisManager::loadNames()
 {
   Log::get().debug( "Loading sequence names from the OEIS index" );
-  std::ifstream names( OeisSequence::getHome() + "names" );
+  std::string path = OeisSequence::getHome() + "names";
+  std::ifstream names( path );
   if ( !names.good() )
   {
-    Log::get().error( "OEIS data not found: run \"loda update\" to download it", true );
+    Log::get().error( "OEIS data not found: " + path, true );
   }
   std::string line;
   size_t pos;
@@ -275,6 +288,39 @@ void OeisManager::loadNames()
         Log::get().debug( buf.str() );
       }
     }
+  }
+}
+
+void OeisManager::loadDenylist()
+{
+  Log::get().debug( "Loading denylist" );
+  std::string path = "programs/oeis/denylist.txt";
+  std::ifstream names( path );
+  if ( !names.good() )
+  {
+    Log::get().error( "Denylist data not found: " + path, true );
+  }
+  std::string line, id;
+  while ( std::getline( names, line ) )
+  {
+    if ( line.empty() || line[0] == '#' )
+    {
+      continue;
+    }
+    if ( line[0] != 'A' )
+    {
+      throwParseError( line );
+    }
+    id = "";
+    for ( char ch : line )
+    {
+      if ( ch == ':' || ch == ';' || ch == ' ' || ch == '\t' || ch == '\n' )
+      {
+        break;
+      }
+      id += ch;
+    }
+    denylist.insert( OeisSequence( id ).id );
   }
 }
 
@@ -412,41 +458,54 @@ void OeisManager::dumpProgram( size_t id, Program p, const std::string &file ) c
 
 std::pair<bool, Program> OeisManager::minimizeAndCheck( const Program &p, const OeisSequence &seq, bool minimize )
 {
-  std::pair<bool, Program> minimized;
-  minimized.first = true;
-  minimized.second = p;
-
-  // optimize and minimize program
-  if ( minimize )
-  {
-    minimizer.optimizeAndMinimize( minimized.second, 2, 1, OeisSequence::LONG_SEQ_LENGTH );
-  }
+  std::pair<bool, steps_t> check;
+  std::pair<bool, Program> result;
+  result.second = p;
 
   // ensure b-file gets fetched before checking
   seq.fetchBFile();
   auto very_long_seq = seq.getTerms( OeisSequence::VERY_LONG_SEQ_LENGTH );
 
-  // check its correctness
-  auto check = interpreter.check( minimized.second, very_long_seq, OeisSequence::LONG_SEQ_LENGTH );
-  minimized.first = check.first;
-
-  // log error if not correct and revert program change
-  if ( !minimized.first && minimize )
+  if ( minimize )
   {
-    minimized.second = p;
-    auto check2 = interpreter.check( p, very_long_seq, OeisSequence::LONG_SEQ_LENGTH );
-    if ( check2.first )
+    // minimize for default number of terms
+    minimizer.optimizeAndMinimize( result.second, 2, 1, OeisSequence::LONG_SEQ_LENGTH ); // default length
+    check = interpreter.check( result.second, very_long_seq, OeisSequence::LONG_SEQ_LENGTH );
+    result.first = check.first;
+    if ( result.first )
     {
-      Log::get().warn(
-          "Program for " + seq.id_str() + " generates wrong result after minimization with "
-              + std::to_string( OeisSequence::LONG_SEQ_LENGTH ) + " terms" );
-      std::string f = getLodaHome() + "debug/optimizer/" + seq.id_str() + ".asm";
-      ensureDir( f );
-      std::ofstream out( f );
-      ProgramUtil::print( p, out );
+      return result;
+    }
+
+    // minimize for extended number of terms
+    result.second = p;
+    minimizer.optimizeAndMinimize( result.second, 2, 1, OeisSequence::VERY_LONG_SEQ_LENGTH ); // extended length
+    check = interpreter.check( result.second, very_long_seq, OeisSequence::LONG_SEQ_LENGTH );
+    result.first = check.first;
+    if ( result.first )
+    {
+      return result;
     }
   }
-  return minimized;
+
+  // check w/o minimization
+  result.second = p;
+  check = interpreter.check( p, very_long_seq, OeisSequence::LONG_SEQ_LENGTH );
+  result.first = check.first;
+
+  // log error in case minimization did not yield correct result
+  if ( result.first && minimize )
+  {
+    Log::get().warn(
+        "Program for " + seq.id_str() + " generates wrong result after minimization with "
+            + std::to_string( OeisSequence::LONG_SEQ_LENGTH ) + " terms" );
+    std::string f = getLodaHome() + "debug/optimizer/" + seq.id_str() + ".asm";
+    ensureDir( f );
+    std::ofstream out( f );
+    ProgramUtil::print( p, out );
+  }
+
+  return result;
 }
 
 int OeisManager::getNumCycles( const Program &p )

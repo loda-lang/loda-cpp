@@ -41,13 +41,15 @@ private:
 
   void loadNames();
 
+  void loadDenylist();
+
   void update();
 
   void addCalComments( Program& p ) const;
 
   void dumpProgram( size_t id, Program p, const std::string &file ) const;
 
-  std::pair<bool, Program> minimizeAndCheck( const Program &p, const OeisSequence &seq, bool optimize );
+  std::pair<bool, Program> minimizeAndCheck( const Program &p, const OeisSequence &seq, bool minimize );
 
   int getNumCycles( const Program &p );
 
@@ -61,6 +63,7 @@ private:
   Minimizer minimizer;
   Optimizer optimizer;
   std::vector<OeisSequence> sequences;
+  std::unordered_set<size_t> denylist;
   size_t total_count_;
 
 };

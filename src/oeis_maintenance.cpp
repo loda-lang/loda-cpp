@@ -167,6 +167,12 @@ size_t OeisMaintenance::checkAndMinimizePrograms()
         // check its correctness
         auto check = interpreter.check( program, very_long_seq, OeisSequence::LONG_SEQ_LENGTH );
         is_okay = check.first;
+
+        // check if it is on the deny list
+        if ( manager.denylist.find( s.id ) != manager.denylist.end() )
+        {
+          is_okay = false;
+        }
       }
       catch ( const std::exception &exc )
       {
