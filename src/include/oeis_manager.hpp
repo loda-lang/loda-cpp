@@ -41,6 +41,8 @@ private:
 
   void loadNames();
 
+  void loadDenylist();
+
   void update();
 
   void addCalComments( Program& p ) const;
@@ -61,6 +63,7 @@ private:
   Minimizer minimizer;
   Optimizer optimizer;
   std::vector<OeisSequence> sequences;
+  std::unordered_set<size_t> denylist;
   size_t total_count_;
 
 };

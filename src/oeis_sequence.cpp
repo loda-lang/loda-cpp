@@ -37,7 +37,7 @@ OeisSequence::OeisSequence( std::string id_str )
   {
     if ( !std::isdigit( c ) )
     {
-      throw std::invalid_argument( id_str );
+      throw std::invalid_argument( "A" + id_str );
     }
   }
   id = std::stoll( id_str );

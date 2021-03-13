@@ -64,10 +64,11 @@ void OeisManager::load()
     // update index if needed
     update();
 
-    // load sequence data and names
+    // load sequence data, names and deny list
     Log::get().info( "Loading sequences from the OEIS index" );
     loaded_count = loadData();
     loadNames();
+    loadDenylist();
 
     // remove lock
     unlink( lockfile.c_str() );
@@ -76,20 +77,31 @@ void OeisManager::load()
 
   // collect known / linear sequences if they should be ignored
   std::vector<number_t> seqs_to_remove;
-  if ( !settings.optimize_existing_programs )
+  for ( auto &seq : sequences )
   {
-    for ( auto &seq : sequences )
+    if ( seq.id == 0 )
     {
-      if ( seq.id == 0 )
-      {
-        continue;
-      }
+      continue;
+    }
+
+    // sequence on the denylist?
+    if ( denylist.find( seq.id ) != denylist.end() )
+    {
+      seqs_to_remove.push_back( seq.id );
+      continue;
+    }
+
+    // if not overwriting existing programs...
+    if ( !settings.optimize_existing_programs )
+    {
+      // linear sequence?
       auto terms = seq.getTerms( settings.num_terms );
       if ( !settings.search_linear && terms.is_linear( settings.linear_prefix ) )
       {
         seqs_to_remove.push_back( seq.id );
         continue;
       }
+      // already exists?
       std::ifstream in( seq.getProgramPath() );
       if ( in.good() )
       {
@@ -236,10 +248,11 @@ size_t OeisManager::loadData()
 void OeisManager::loadNames()
 {
   Log::get().debug( "Loading sequence names from the OEIS index" );
-  std::ifstream names( OeisSequence::getHome() + "names" );
+  std::string path = OeisSequence::getHome() + "names";
+  std::ifstream names( path );
   if ( !names.good() )
   {
-    Log::get().error( "OEIS data not found: run \"loda update\" to download it", true );
+    Log::get().error( "OEIS data not found: " + path, true );
   }
   std::string line;
   size_t pos;
@@ -275,6 +288,39 @@ void OeisManager::loadNames()
         Log::get().debug( buf.str() );
       }
     }
+  }
+}
+
+void OeisManager::loadDenylist()
+{
+  Log::get().debug( "Loading denylist" );
+  std::string path = "programs/oeis/denylist.txt";
+  std::ifstream names( path );
+  if ( !names.good() )
+  {
+    Log::get().error( "Denylist data not found: " + path, true );
+  }
+  std::string line, id;
+  while ( std::getline( names, line ) )
+  {
+    if ( line.empty() || line[0] == '#' )
+    {
+      continue;
+    }
+    if ( line[0] != 'A' )
+    {
+      throwParseError( line );
+    }
+    id = "";
+    for ( char ch : line )
+    {
+      if ( ch == ':' || ch == ';' || ch == ' ' || ch == '\t' || ch == '\n' )
+      {
+        break;
+      }
+      id += ch;
+    }
+    denylist.insert( OeisSequence( id ).id );
   }
 }
 
