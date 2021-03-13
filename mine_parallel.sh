@@ -13,7 +13,7 @@ log_level=error
 check_interval=86400
 min_changes=50
 min_cpus=4
-max_mine_cycles=1000000
+max_mine_cycles=10000000
 branch=$(git rev-parse --abbrev-ref HEAD)
 remote_origin=$(git config --get remote.origin.url)
 
