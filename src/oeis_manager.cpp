@@ -412,41 +412,54 @@ void OeisManager::dumpProgram( size_t id, Program p, const std::string &file ) c
 
 std::pair<bool, Program> OeisManager::minimizeAndCheck( const Program &p, const OeisSequence &seq, bool minimize )
 {
-  std::pair<bool, Program> minimized;
-  minimized.first = true;
-  minimized.second = p;
-
-  // optimize and minimize program
-  if ( minimize )
-  {
-    minimizer.optimizeAndMinimize( minimized.second, 2, 1, OeisSequence::LONG_SEQ_LENGTH );
-  }
+  std::pair<bool, steps_t> check;
+  std::pair<bool, Program> result;
+  result.second = p;
 
   // ensure b-file gets fetched before checking
   seq.fetchBFile();
   auto very_long_seq = seq.getTerms( OeisSequence::VERY_LONG_SEQ_LENGTH );
 
-  // check its correctness
-  auto check = interpreter.check( minimized.second, very_long_seq, OeisSequence::LONG_SEQ_LENGTH );
-  minimized.first = check.first;
-
-  // log error if not correct and revert program change
-  if ( !minimized.first && minimize )
+  if ( minimize )
   {
-    minimized.second = p;
-    auto check2 = interpreter.check( p, very_long_seq, OeisSequence::LONG_SEQ_LENGTH );
-    if ( check2.first )
+    // minimize for default number of terms
+    minimizer.optimizeAndMinimize( result.second, 2, 1, OeisSequence::LONG_SEQ_LENGTH ); // default length
+    check = interpreter.check( result.second, very_long_seq, OeisSequence::LONG_SEQ_LENGTH );
+    result.first = check.first;
+    if ( result.first )
     {
-      Log::get().warn(
-          "Program for " + seq.id_str() + " generates wrong result after minimization with "
-              + std::to_string( OeisSequence::LONG_SEQ_LENGTH ) + " terms" );
-      std::string f = getLodaHome() + "debug/optimizer/" + seq.id_str() + ".asm";
-      ensureDir( f );
-      std::ofstream out( f );
-      ProgramUtil::print( p, out );
+      return result;
+    }
+
+    // minimize for extended number of terms
+    result.second = p;
+    minimizer.optimizeAndMinimize( result.second, 2, 1, OeisSequence::VERY_LONG_SEQ_LENGTH ); // extended length
+    check = interpreter.check( result.second, very_long_seq, OeisSequence::LONG_SEQ_LENGTH );
+    result.first = check.first;
+    if ( result.first )
+    {
+      return result;
     }
   }
-  return minimized;
+
+  // check w/o minimization
+  result.second = p;
+  check = interpreter.check( p, very_long_seq, OeisSequence::LONG_SEQ_LENGTH );
+  result.first = check.first;
+
+  // log error in case minimization did not yield correct result
+  if ( result.first && minimize )
+  {
+    Log::get().warn(
+        "Program for " + seq.id_str() + " generates wrong result after minimization with "
+            + std::to_string( OeisSequence::LONG_SEQ_LENGTH ) + " terms" );
+    std::string f = getLodaHome() + "debug/optimizer/" + seq.id_str() + ".asm";
+    ensureDir( f );
+    std::ofstream out( f );
+    ProgramUtil::print( p, out );
+  }
+
+  return result;
 }
 
 int OeisManager::getNumCycles( const Program &p )

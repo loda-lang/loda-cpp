@@ -47,7 +47,7 @@ private:
 
   void dumpProgram( size_t id, Program p, const std::string &file ) const;
 
-  std::pair<bool, Program> minimizeAndCheck( const Program &p, const OeisSequence &seq, bool optimize );
+  std::pair<bool, Program> minimizeAndCheck( const Program &p, const OeisSequence &seq, bool minimize );
 
   int getNumCycles( const Program &p );
 
