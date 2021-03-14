@@ -32,4 +32,8 @@ public:
 
   static number_t cmp( number_t a, number_t b );
 
+  static number_t min( number_t a, number_t b );
+
+  static number_t max( number_t a, number_t b );
+
 };
