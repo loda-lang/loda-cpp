@@ -218,3 +218,15 @@ number_t Semantics::cmp( number_t a, number_t b )
   CHECK_INF2( a, b );
   return (a == b) ? 1 : 0;
 }
+
+number_t Semantics::min( number_t a, number_t b )
+{
+  CHECK_INF2( a, b );
+  return std::min<number_t>( a, b );
+}
+
+number_t Semantics::max( number_t a, number_t b )
+{
+  CHECK_INF2( a, b );
+  return std::max<number_t>( a, b );
+}

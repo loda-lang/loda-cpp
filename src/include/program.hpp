@@ -67,6 +67,8 @@ public:
     GCD,
     BIN,
     CMP,
+    MIN,
+    MAX,
     LPB,
     LPE,
     CLR,
@@ -74,7 +76,7 @@ public:
     DBG,
   };
 
-  static const std::array<Type, 19> Types;
+  static const std::array<Type, 21> Types;
 
   class Metadata
   {

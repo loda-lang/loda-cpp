@@ -78,7 +78,8 @@ bool Optimizer::removeNops( Program &p ) const
     {
       is_nop = true;
     }
-    else if ( it->source == it->target && (t == Operation::Type::MOV) )
+    else if ( it->source == it->target
+        && (t == Operation::Type::MOV || t == Operation::Type::MIN || t == Operation::Type::MAX) )
     {
       is_nop = true;
     }
