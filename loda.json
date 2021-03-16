@@ -3,9 +3,9 @@
     "new": [
       {
         "version": 1,
-        "length": 50,
-        "maxConstant": 5,
-        "maxCell": 5,
+        "length": 60,
+        "maxConstant": 6,
+        "maxCell": 6,
         "loops": false,
         "calls": false,
         "indirectAccess": false,
@@ -17,30 +17,36 @@
       },
       {
         "version": 1,
-        "length": 50,
-        "maxConstant": 5,
-        "maxCell": 5,
+        "length": 60,
+        "maxConstant": 6,
+        "maxCell": 6,
         "loops": true,
         "calls": false,
         "indirectAccess": false
       },
       {
         "version": 1,
-        "length": 50,
-        "maxConstant": 5,
-        "maxCell": 5,
+        "length": 60,
+        "maxConstant": 6,
+        "maxCell": 6,
         "loops": false,
         "calls": true,
         "indirectAccess": false
       },
       {
         "version": 1,
-        "length": 50,
-        "maxConstant": 5,
-        "maxCell": 5,
+        "length": 60,
+        "maxConstant": 6,
+        "maxCell": 6,
         "loops": true,
         "calls": true,
         "indirectAccess": false
+      },
+      {
+        "version": 2
+      },
+      {
+        "version": 3
       }
     ],
     "update": [
