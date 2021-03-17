@@ -3,25 +3,50 @@
     "new": [
       {
         "version": 1,
-        "length": 40,
-        "maxConstant": 5,
-        "maxCell": 5,
+        "length": 60,
+        "maxConstant": 6,
+        "maxCell": 6,
         "loops": false,
         "calls": false,
         "indirectAccess": false,
         "template": [
-          "programs/templates/T01.asm",
-          "programs/templates/T02.asm"
+          "programs/templates/call.asm",
+          "programs/templates/loop.asm",
+          "programs/templates/loop_call.asm"
         ]
       },
       {
         "version": 1,
-        "length": 30,
-        "maxConstant": 5,
-        "maxCell": 5,
+        "length": 60,
+        "maxConstant": 6,
+        "maxCell": 6,
+        "loops": true,
+        "calls": false,
+        "indirectAccess": false
+      },
+      {
+        "version": 1,
+        "length": 60,
+        "maxConstant": 6,
+        "maxCell": 6,
+        "loops": false,
+        "calls": true,
+        "indirectAccess": false
+      },
+      {
+        "version": 1,
+        "length": 60,
+        "maxConstant": 6,
+        "maxCell": 6,
         "loops": true,
         "calls": true,
         "indirectAccess": false
+      },
+      {
+        "version": 2
+      },
+      {
+        "version": 3
       }
     ],
     "update": [

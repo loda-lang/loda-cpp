@@ -87,6 +87,19 @@ size_t ProgramUtil::numOps( const Program &p, Operand::Type type )
   return num_ops;
 }
 
+size_t ProgramUtil::numLoopsWithNonConstant( const Program &p )
+{
+  size_t num_ops = 0;
+  for ( auto &op : p.ops )
+  {
+    if ( op.type == Operation::Type::LPB && op.source.type != Operand::Type::CONSTANT )
+    {
+      num_ops++;
+    }
+  }
+  return num_ops;
+}
+
 bool ProgramUtil::isArithmetic( Operation::Type t )
 {
   // TODO: model this as metadata

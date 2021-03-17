@@ -107,6 +107,14 @@ number_t Interpreter::calc( const Operation::Type type, number_t target, number_
   {
     return Semantics::cmp( target, source );
   }
+  case Operation::Type::MIN:
+  {
+    return Semantics::min( target, source );
+  }
+  case Operation::Type::MAX:
+  {
+    return Semantics::max( target, source );
+  }
   case Operation::Type::NOP:
   case Operation::Type::DBG:
   case Operation::Type::LPB:

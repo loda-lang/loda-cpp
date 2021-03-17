@@ -9,7 +9,7 @@
 
 const size_t OeisSequence::LONG_SEQ_LENGTH = 250;
 
-const size_t OeisSequence::VERY_LONG_SEQ_LENGTH = 1000;
+const size_t OeisSequence::VERY_LONG_SEQ_LENGTH = 2000;
 
 std::string OeisSequence::getHome()
 {
@@ -37,7 +37,7 @@ OeisSequence::OeisSequence( std::string id_str )
   {
     if ( !std::isdigit( c ) )
     {
-      throw std::invalid_argument( id_str );
+      throw std::invalid_argument( "A" + id_str );
     }
   }
   id = std::stoll( id_str );

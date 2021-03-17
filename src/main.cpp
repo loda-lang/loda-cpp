@@ -2,6 +2,7 @@
 #include "miner.hpp"
 #include "minimizer.hpp"
 #include "oeis_manager.hpp"
+#include "oeis_maintenance.hpp"
 #include "optimizer.hpp"
 #include "parser.hpp"
 #include "program_util.hpp"
@@ -128,13 +129,13 @@ int main( int argc, char *argv[] )
     {
       // need to set the override flag!
       settings.optimize_existing_programs = true;
-      Oeis o( settings );
-      o.maintain();
+      OeisMaintenance maintenance( settings );
+      maintenance.maintain();
     }
     else if ( cmd == "migrate" )
     {
-      Oeis o( settings );
-      o.migrate();
+      OeisManager manager( settings );
+      manager.migrate();
     }
     else if ( cmd == "collatz" )
     {

@@ -9,15 +9,11 @@
 #include "program.hpp"
 #include "util.hpp"
 
-class Oeis
+class OeisManager
 {
 public:
 
-  Oeis( const Settings &settings );
-
-  virtual ~Oeis()
-  {
-  }
+  OeisManager( const Settings &settings );
 
   void load();
 
@@ -39,13 +35,13 @@ public:
 
   std::pair<bool, bool> updateProgram( size_t id, const Program &p );
 
-  void maintain();
-
 private:
 
   size_t loadData();
 
   void loadNames();
+
+  void loadDenylist();
 
   void update();
 
@@ -53,13 +49,13 @@ private:
 
   void dumpProgram( size_t id, Program p, const std::string &file ) const;
 
-  std::pair<bool, Program> minimizeAndCheck( const Program &p, const OeisSequence &seq, bool optimize );
+  std::pair<bool, Program> minimizeAndCheck( const Program &p, const OeisSequence &seq, bool minimize );
 
   int getNumCycles( const Program &p );
 
   std::string isOptimizedBetter( Program existing, Program optimized, size_t id );
 
-  void generateStats( const steps_t& steps );
+  friend class OeisMaintenance;
 
   const Settings &settings;
   Interpreter interpreter;
@@ -67,6 +63,7 @@ private:
   Minimizer minimizer;
   Optimizer optimizer;
   std::vector<OeisSequence> sequences;
+  std::unordered_set<size_t> denylist;
   size_t total_count_;
 
 };
