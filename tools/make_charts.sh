@@ -70,3 +70,14 @@ EOF
 gnuplot counts.gp
 rm counts.gp
 rm counts.dat
+
+echo "Generating cal graph"
+echo "digraph D {" > cal_graph.dot
+{
+  read
+  while IFS=, read -r c1 c2; do
+    echo "  $c1 -> $c2" >> cal_graph.dot
+  done 
+} < ../stats/cal_graph.csv
+echo "}" >> cal_graph.dot
+mv cal_graph.dot ../stats
