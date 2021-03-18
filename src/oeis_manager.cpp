@@ -541,8 +541,26 @@ size_t getBadOpsCount( const Program& p )
   // - w/o cal operations
   // - w/o log operations
   // - w/o loops that have non-constant args
-  return ProgramUtil::numOps( p, Operand::Type::INDIRECT ) + ProgramUtil::numOps( p, Operation::Type::CAL )
-      + ProgramUtil::numOps( p, Operation::Type::LOG ) + ProgramUtil::numLoopsWithNonConstant( p );
+  // - w/o gcd with powers of 2
+  size_t num_ops = ProgramUtil::numOps( p, Operand::Type::INDIRECT ) + ProgramUtil::numOps( p, Operation::Type::CAL )
+      + ProgramUtil::numOps( p, Operation::Type::LOG );
+  for ( auto &op : p.ops )
+  {
+    if ( op.type == Operation::Type::LPB && op.source.type != Operand::Type::CONSTANT )
+    {
+      num_ops++;
+    }
+    if ( op.type == Operation::Type::GCD && op.source.type == Operand::Type::CONSTANT )
+    {
+      auto v = op.source.value;
+      if ( v == 729 || v == 1024 || v == 2028 || v == 4096 || v == 8192 || v == 16384 || v == 32768 || v == 65536
+          || v == 262144 || v == 1073741824 || v == 281474976710656 )
+      {
+        num_ops++;
+      }
+    }
+  }
+  return num_ops;
 }
 
 std::string OeisManager::isOptimizedBetter( Program existing, Program optimized, size_t id )
