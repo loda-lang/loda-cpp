@@ -20,8 +20,6 @@ public:
 
   static size_t numOps( const Program &p, Operand::Type type );
 
-  static size_t numLoopsWithNonConstant( const Program &p );
-
   static bool isArithmetic( Operation::Type t );
 
   static bool getUsedMemoryCells( const Program &p, std::unordered_set<number_t> &used_cells, number_t &larged_used,
