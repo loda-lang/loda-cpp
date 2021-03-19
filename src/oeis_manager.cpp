@@ -553,8 +553,8 @@ size_t getBadOpsCount( const Program& p )
     if ( op.type == Operation::Type::GCD && op.source.type == Operand::Type::CONSTANT )
     {
       auto v = op.source.value;
-      if ( v == 729 || v == 43046721 || v == 1024 || v == 2028 || v == 4096 || v == 8192 || v == 16384 || v == 32768
-          || v == 65536 || v == 131072 || v == 262144 || v == 1073741824 || v == 281474976710656 )
+      if ( getPowerOf( v, 2 ) >= 10 || getPowerOf( v, 3 ) >= 6 || getPowerOf( v, 5 ) >= 5 || getPowerOf( v, 7 ) >= 4
+          || getPowerOf( v, 10 ) >= 3 )
       {
         num_ops++;
       }

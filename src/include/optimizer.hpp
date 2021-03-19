@@ -13,7 +13,7 @@ public:
   {
   }
 
-  void optimize( Program &p, size_t num_reserved_cells, size_t num_initialized_cells ) const;
+  bool optimize( Program &p, size_t num_reserved_cells, size_t num_initialized_cells ) const;
 
   bool removeNops( Program &p ) const;
 
