@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for cmd in cat date git gnuplot neato grep seq; do
+for cmd in cat date git gnuplot neato convert grep seq; do
   if ! [ -x "$(command -v $cmd)" ]; then
     echo "Error: $cmd is not installed" >&2
     exit 1
@@ -73,6 +73,7 @@ rm counts.dat
 
 echo "Generating cal graph"
 echo "graph D {" > cal_graph.dot
+echo "  node [shape=box];" >> cal_graph.dot
 {
   read
   while IFS=, read -r c1 c2; do
@@ -80,5 +81,6 @@ echo "graph D {" > cal_graph.dot
   done 
 } < ../stats/cal_graph.csv
 echo "}" >> cal_graph.dot
-neato -Tpng cal_graph.dot -o ../stats/cal_graph.png
-rm cal_graph.dot
+neato -Tpng cal_graph.dot -o tmp.png
+convert tmp.png ../stats/cal_graph.png
+rm cal_graph.dot tmp.png
