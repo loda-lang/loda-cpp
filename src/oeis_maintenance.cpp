@@ -82,7 +82,7 @@ void OeisMaintenance::generateStats( const steps_t& steps )
       ProgramUtil::removeOps( program, Operation::Type::NOP );
 
       // collect stats
-      stats.updateProgramStats( program );
+      stats.updateProgramStats( s.id, program );
 
       // write list file
       size_t list_index = s.id / list_file_size;

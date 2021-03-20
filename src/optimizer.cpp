@@ -9,13 +9,14 @@
 #include <map>
 #include <stack>
 
-void Optimizer::optimize( Program &p, size_t num_reserved_cells, size_t num_initialized_cells ) const
+bool Optimizer::optimize( Program &p, size_t num_reserved_cells, size_t num_initialized_cells ) const
 {
   if ( Log::get().level == Log::Level::DEBUG )
   {
     Log::get().debug( "Starting optimization of program with " + std::to_string( p.ops.size() ) + " operations" );
   }
   bool changed = true;
+  bool result = false;
   while ( changed )
   {
     changed = false;
@@ -59,11 +60,13 @@ void Optimizer::optimize( Program &p, size_t num_reserved_cells, size_t num_init
     {
       changed = true;
     }
+    result = result || changed;
   }
   if ( Log::get().level == Log::Level::DEBUG )
   {
     Log::get().debug( "Finished optimization; program now has " + std::to_string( p.ops.size() ) + " operations" );
   }
+  return result;
 }
 
 bool Optimizer::removeNops( Program &p ) const

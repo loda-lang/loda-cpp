@@ -1,5 +1,6 @@
 #include "stats.hpp"
 
+#include "oeis_sequence.hpp"
 #include "parser.hpp"
 #include "program_util.hpp"
 
@@ -196,6 +197,14 @@ void Stats::save( const std::string &path )
   summary << num_programs << sep << num_sequences << "\n";
   summary.close();
 
+  std::ofstream cal( path + "/cal_graph.csv" );
+  cal << "caller,callee\n";
+  for ( auto it : cal_graph )
+  {
+    cal << OeisSequence( it.first ).id_str() << sep << OeisSequence( it.second ).id_str() << "\n";
+  }
+  cal.close();
+
   if ( steps.total ) // write steps stats only if present
   {
     std::ofstream steps_out( path + "/steps.csv" );
@@ -205,7 +214,7 @@ void Stats::save( const std::string &path )
   }
 }
 
-void Stats::updateProgramStats( const Program &program )
+void Stats::updateProgramStats( size_t id, const Program &program )
 {
   num_programs++;
   const size_t num_ops = ProgramUtil::numOps( program, false );
@@ -247,6 +256,10 @@ void Stats::updateProgramStats( const Program &program )
       {
         num_operation_positions[o]++;
       }
+    }
+    if ( op.type == Operation::Type::CAL && op.source.type == Operand::Type::CONSTANT )
+    {
+      cal_graph.insert( std::pair<number_t, number_t>( id, op.source.value ) );
     }
     o.pos++;
   }

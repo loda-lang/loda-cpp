@@ -8,14 +8,13 @@ class Minimizer
 public:
 
   Minimizer( const Settings &settings )
-      :
-      settings( settings )
+      : settings( settings )
   {
   }
 
-  void minimize( Program &p, size_t num_terms ) const;
+  bool minimize( Program &p, size_t num_terms ) const;
 
-  void optimizeAndMinimize( Program &p, size_t num_reserved_cells, size_t num_initialized_cells,
+  bool optimizeAndMinimize( Program &p, size_t num_reserved_cells, size_t num_initialized_cells,
       size_t num_terms ) const;
 
 private:
