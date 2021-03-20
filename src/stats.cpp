@@ -1,5 +1,6 @@
 #include "stats.hpp"
 
+#include "oeis_sequence.hpp"
 #include "parser.hpp"
 #include "program_util.hpp"
 
@@ -200,7 +201,7 @@ void Stats::save( const std::string &path )
   cal << "caller,callee\n";
   for ( auto it : cal_graph )
   {
-    cal << it.first << sep << it.second << "\n";
+    cal << OeisSequence( it.first ).id_str() << sep << OeisSequence( it.second ).id_str() << "\n";
   }
   cal.close();
 

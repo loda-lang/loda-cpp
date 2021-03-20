@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for cmd in cat date git gnuplot grep seq; do
+for cmd in cat date git gnuplot neato grep seq; do
   if ! [ -x "$(command -v $cmd)" ]; then
     echo "Error: $cmd is not installed" >&2
     exit 1
@@ -31,7 +31,7 @@ set boxwidth 0.75
 set style fill solid
 set xrange [0:30]
 unset key
-set title "LODA program length distribution"
+set title "LODA Program Length Distribution"
 plot "../stats/program_lengths.csv" using 2:xtic(1) with boxes linecolor rgb "#0000FF"
 EOF
 
@@ -63,7 +63,7 @@ set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
 set grid xtics lc rgb "#bbbbbb" lw 1 lt 0
 unset key
 set datafile separator ','
-set title "Number of LODA programs"
+set title "Number of LODA Programs"
 plot "counts.dat" using 1:2 with lines linecolor rgb "#0000FF"
 EOF
 
@@ -72,12 +72,13 @@ rm counts.gp
 rm counts.dat
 
 echo "Generating cal graph"
-echo "digraph D {" > cal_graph.dot
+echo "graph D {" > cal_graph.dot
 {
   read
   while IFS=, read -r c1 c2; do
-    echo "  $c1 -> $c2" >> cal_graph.dot
+    echo "  $c1 -- $c2" >> cal_graph.dot
   done 
 } < ../stats/cal_graph.csv
 echo "}" >> cal_graph.dot
-mv cal_graph.dot ../stats
+neato -Tpng cal_graph.dot -o ../stats/cal_graph.png
+rm cal_graph.dot
