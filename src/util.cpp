@@ -415,7 +415,7 @@ bool Settings::hasMemory() const
   bool has_memory = getMemUsage() <= (size_t) (0.95 * max_physical_memory);
   if ( !has_memory )
   {
-    Log::get().info(
+    Log::get().warn(
         "Reached maximum physical memory limit of " + std::to_string( max_physical_memory / (1024 * 1024) ) + "MB" );
   }
   return has_memory;
