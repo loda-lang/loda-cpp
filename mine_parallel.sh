@@ -10,7 +10,7 @@ done
 
 # common settings
 log_level=error
-check_interval=86400
+check_interval=43200
 min_changes=50
 min_cpus=4
 max_mine_cycles=10000000
