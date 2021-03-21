@@ -29,14 +29,15 @@ OeisManager::OeisManager( const Settings &settings )
       finder( settings ),
       minimizer( settings ),
       optimizer( settings ),
-      total_count_( 0 )
+      total_count( 0 ),
+      stats_loaded( false )
 {
 }
 
 void OeisManager::load()
 {
   // check if already loaded
-  if ( total_count_ > 0 )
+  if ( total_count > 0 )
   {
     return;
   }
@@ -119,7 +120,7 @@ void OeisManager::load()
 
   // print summary
   Log::get().info(
-      "Loaded " + std::to_string( loaded_count ) + "/" + std::to_string( total_count_ ) + " sequences (ignored "
+      "Loaded " + std::to_string( loaded_count ) + "/" + std::to_string( total_count ) + " sequences (ignored "
           + std::to_string( seqs_to_remove.size() ) + ")" );
   std::stringstream buf;
   buf << "Matcher compaction ratios: ";
@@ -159,7 +160,7 @@ size_t OeisManager::loadData()
     {
       throwParseError( line );
     }
-    ++total_count_;
+    ++total_count;
     pos = 1;
     id = 0;
     for ( pos = 1; pos < line.length() && line[pos] >= '0' && line[pos] <= '9'; ++pos )
@@ -393,6 +394,16 @@ void OeisManager::migrate()
 const std::vector<OeisSequence>& OeisManager::getSequences() const
 {
   return sequences;
+}
+
+const Stats& OeisManager::getStats()
+{
+  if ( !stats_loaded )
+  {
+    stats.load( "stats" );
+    stats_loaded = true;
+  }
+  return stats;
 }
 
 void OeisManager::removeSequenceFromFinder( size_t id )

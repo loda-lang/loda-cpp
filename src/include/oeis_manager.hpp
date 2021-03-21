@@ -7,6 +7,7 @@
 #include "oeis_sequence.hpp"
 #include "optimizer.hpp"
 #include "program.hpp"
+#include "stats.hpp"
 #include "util.hpp"
 
 class OeisManager
@@ -21,7 +22,7 @@ public:
 
   const std::vector<OeisSequence>& getSequences() const;
 
-  void removeSequenceFromFinder( size_t id );
+  const Stats& getStats();
 
   Finder& getFinder()
   {
@@ -30,8 +31,10 @@ public:
 
   size_t getTotalCount() const
   {
-    return total_count_;
+    return total_count;
   }
+
+  void removeSequenceFromFinder( size_t id );
 
   std::pair<bool, bool> updateProgram( size_t id, const Program &p );
 
@@ -64,6 +67,9 @@ private:
   Optimizer optimizer;
   std::vector<OeisSequence> sequences;
   std::unordered_set<size_t> denylist;
-  size_t total_count_;
+  size_t total_count;
+
+  Stats stats;
+  bool stats_loaded;
 
 };

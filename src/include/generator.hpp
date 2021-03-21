@@ -95,7 +95,7 @@ class MultiGenerator
 {
 public:
 
-  MultiGenerator( const Settings &settings, int64_t seed );
+  MultiGenerator( const Settings &settings, const Stats& stats, int64_t seed );
 
   Generator* getGenerator();
 

@@ -391,8 +391,9 @@ void Test::minimizer( size_t tests )
   Settings settings;
   Interpreter interpreter( settings );
   Minimizer minimizer( settings );
+  OeisManager manager( settings );
   std::random_device rand;
-  MultiGenerator multi_generator( settings, rand() );
+  MultiGenerator multi_generator( settings, manager.getStats(), rand() );
   Sequence s1, s2, s3;
   Program program, minimized;
   for ( size_t i = 0; i < tests; i++ )
