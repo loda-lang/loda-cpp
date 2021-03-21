@@ -28,7 +28,10 @@ void OeisMaintenance::maintain()
   // load sequence data
   manager.load();
 
-  // generate stats
+  // update stats
+  manager.getStats();
+
+  // generate lists
   generateLists();
 
   // check and minimize programs
