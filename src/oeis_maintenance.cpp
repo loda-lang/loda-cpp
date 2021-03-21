@@ -28,32 +28,33 @@ void OeisMaintenance::maintain()
   // load sequence data
   manager.load();
 
-  // generate stats
-  generateStats( steps_t() );
+  // update stats
+  manager.getStats();
+
+  // generate lists
+  generateLists();
 
   // check and minimize programs
   auto num_changed = checkAndMinimizePrograms();
 
-  // generate stats again if there was a change
+  // generate lists again if there was a change
   if ( num_changed > 0 )
   {
-    generateStats( steps_t() );
+    generateLists();
   }
   Log::get().info( "Finished maintenance of programs" );
 }
 
-void OeisMaintenance::generateStats( const steps_t& steps )
+void OeisMaintenance::generateLists()
 {
   manager.load();
-  Log::get().info( "Generating program stats" );
+  Log::get().info( "Generating program lists" );
   const size_t list_file_size = 50000;
   std::vector<std::stringstream> list_files( 1000000 / list_file_size );
-  Stats stats;
   size_t num_processed = 0;
   Parser parser;
   Program program;
   std::string file_name;
-  bool has_b_file, has_program;
 
   for ( auto &s : manager.sequences )
   {
@@ -63,15 +64,11 @@ void OeisMaintenance::generateStats( const steps_t& steps )
     }
     file_name = s.getProgramPath();
     std::ifstream program_file( file_name );
-    std::ifstream b_file( s.getBFilePath() );
-    has_b_file = b_file.good();
-    has_program = false;
     if ( program_file.good() )
     {
       try
       {
         program = parser.parse( program_file );
-        has_program = true;
       }
       catch ( const std::exception &exc )
       {
@@ -79,12 +76,7 @@ void OeisMaintenance::generateStats( const steps_t& steps )
         continue;
       }
 
-      ProgramUtil::removeOps( program, Operation::Type::NOP );
-
-      // collect stats
-      stats.updateProgramStats( s.id, program );
-
-      // write list file
+      // update program list
       size_t list_index = s.id / list_file_size;
       size_t num_ops = ProgramUtil::numOps( program, false );
       list_files.at( list_index ) << "* [" << s.id_str() << "](http://oeis.org/" << s.id_str() << ") ([L"
@@ -96,12 +88,7 @@ void OeisMaintenance::generateStats( const steps_t& steps )
         Log::get().info( "Processed " + std::to_string( num_processed ) + " programs" );
       }
     }
-    stats.updateSequenceStats( s.id, has_program, has_b_file );
   }
-
-  // write stats
-  Log::get().info( "Updating stats and program lists" );
-  stats.save( "stats" );
 
   // write lists
   for ( size_t i = 0; i < list_files.size(); i++ )
@@ -120,7 +107,7 @@ void OeisMaintenance::generateStats( const steps_t& steps )
       list_file << buf;
     }
   }
-  Log::get().info( "Finished generation of stats for " + std::to_string( num_processed ) + " programs" );
+  Log::get().info( "Finished generation of lists for " + std::to_string( num_processed ) + " programs" );
 
 }
 

@@ -48,6 +48,8 @@ private:
 
   void update();
 
+  void generateStats( int64_t age_in_days );
+
   void addCalComments( Program& p ) const;
 
   void dumpProgram( size_t id, Program p, const std::string &file ) const;

@@ -214,6 +214,11 @@ void Stats::save( const std::string &path )
   }
 }
 
+std::string Stats::getMainStatsFile( const std::string &path ) const
+{
+  return path + "/constant_counts.csv";
+}
+
 void Stats::updateProgramStats( size_t id, const Program &program )
 {
   num_programs++;

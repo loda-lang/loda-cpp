@@ -79,7 +79,7 @@ function push_updates {
     if [ "$branch" = "master" ]; then
       git add stats
     fi
-    num_progs=$(cat stats/summary.csv | tail -n 1 | cut -d , -f 1)
+    num_progs=$(cat $HOME/.loda/stats/summary.csv | tail -n 1 | cut -d , -f 1)
     git commit -m "updated ${num_changes}/${num_progs} programs"
     git pull -r
     if [ "$branch" != "master" ]; then
