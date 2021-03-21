@@ -83,7 +83,7 @@ void Miner::mine()
   auto &finder = manager.getFinder();
 
   std::random_device rand;
-  MultiGenerator multi_generator( settings, rand() );
+  MultiGenerator multi_generator( settings, manager.getStats(), rand() );
   Mutator mutator( rand() );
   std::stack<Program> progs;
   Sequence norm_seq;

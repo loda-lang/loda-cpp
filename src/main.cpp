@@ -114,9 +114,9 @@ int main( int argc, char *argv[] )
     }
     else if ( cmd == "generate" || cmd == "gen" )
     {
-      Optimizer optimizer( settings );
+      OeisManager manager( settings );
       std::random_device rand;
-      MultiGenerator multi_generator( settings, rand() );
+      MultiGenerator multi_generator( settings, manager.getStats(), rand() );
       auto program = multi_generator.getGenerator()->generateProgram();
       ProgramUtil::print( program, std::cout );
     }

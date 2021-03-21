@@ -15,11 +15,8 @@
 #include <limits>
 #include <fstream>
 #include <sstream>
-#include <sys/stat.h>
 #include <stdlib.h>
-#include <sys/file.h>
 #include <time.h>
-#include <unistd.h>
 
 void throwParseError( const std::string &line )
 {
@@ -32,14 +29,15 @@ OeisManager::OeisManager( const Settings &settings )
       finder( settings ),
       minimizer( settings ),
       optimizer( settings ),
-      total_count_( 0 )
+      total_count( 0 ),
+      stats_loaded( false )
 {
 }
 
 void OeisManager::load()
 {
   // check if already loaded
-  if ( total_count_ > 0 )
+  if ( total_count > 0 )
   {
     return;
   }
@@ -47,19 +45,7 @@ void OeisManager::load()
 
   {
     // obtain lock
-    ensureDir( OeisSequence::getHome() );
-    std::string lockfile = OeisSequence::getHome() + "lock";
-    int fd = 0;
-    while ( true )
-    {
-      fd = open( lockfile.c_str(), O_CREAT, 0644 );
-      flock( fd, LOCK_EX );
-      struct stat st0, st1;
-      fstat( fd, &st0 );
-      stat( lockfile.c_str(), &st1 );
-      if ( st0.st_ino == st1.st_ino ) break;
-      close( fd );
-    }
+    FolderLock lock( OeisSequence::getHome() );
 
     // update index if needed
     update();
@@ -70,9 +56,7 @@ void OeisManager::load()
     loadNames();
     loadDenylist();
 
-    // remove lock
-    unlink( lockfile.c_str() );
-    flock( fd, LOCK_UN );
+    // lock released at the end of this block
   }
 
   // collect known / linear sequences if they should be ignored
@@ -136,7 +120,7 @@ void OeisManager::load()
 
   // print summary
   Log::get().info(
-      "Loaded " + std::to_string( loaded_count ) + "/" + std::to_string( total_count_ ) + " sequences (ignored "
+      "Loaded " + std::to_string( loaded_count ) + "/" + std::to_string( total_count ) + " sequences (ignored "
           + std::to_string( seqs_to_remove.size() ) + ")" );
   std::stringstream buf;
   buf << "Matcher compaction ratios: ";
@@ -176,7 +160,7 @@ size_t OeisManager::loadData()
     {
       throwParseError( line );
     }
-    ++total_count_;
+    ++total_count;
     pos = 1;
     id = 0;
     for ( pos = 1; pos < line.length() && line[pos] >= '0' && line[pos] <= '9'; ++pos )
@@ -410,6 +394,16 @@ void OeisManager::migrate()
 const std::vector<OeisSequence>& OeisManager::getSequences() const
 {
   return sequences;
+}
+
+const Stats& OeisManager::getStats()
+{
+  if ( !stats_loaded )
+  {
+    stats.load( "stats" );
+    stats_loaded = true;
+  }
+  return stats;
 }
 
 void OeisManager::removeSequenceFromFinder( size_t id )

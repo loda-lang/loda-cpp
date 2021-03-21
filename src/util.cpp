@@ -7,9 +7,10 @@
 #include <sstream>
 #include <stdexcept>
 #include <stdlib.h>
-#include <unistd.h>
+#include <sys/file.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 #if __MACH__
 #include <mach/mach.h>
@@ -482,4 +483,35 @@ size_t getMemUsage()
   }
 #endif
   return mem_usage;
+}
+
+FolderLock::FolderLock( std::string folder )
+{
+  // obtain lock
+  ensureDir( folder );
+  if ( folder[folder.size() - 1] != '/' )
+  {
+    folder += '/';
+  }
+  lockfile = folder + "lock";
+  fd = 0;
+  while ( true )
+  {
+    fd = open( lockfile.c_str(), O_CREAT, 0644 );
+    flock( fd, LOCK_EX );
+    struct stat st0, st1;
+    fstat( fd, &st0 );
+    stat( lockfile.c_str(), &st1 );
+    if ( st0.st_ino == st1.st_ino ) break;
+    close( fd );
+  }
+  Log::get().debug( "Obtained lock " + lockfile );
+}
+
+FolderLock::~FolderLock()
+{
+  // release lock
+  Log::get().debug( "Releasing lock " + lockfile );
+  unlink( lockfile.c_str() );
+  flock( fd, LOCK_UN );
 }
