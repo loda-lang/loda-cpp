@@ -488,11 +488,11 @@ size_t getMemUsage()
 FolderLock::FolderLock( std::string folder )
 {
   // obtain lock
-  ensureDir( folder );
   if ( folder[folder.size() - 1] != '/' )
   {
     folder += '/';
   }
+  ensureDir( folder );
   lockfile = folder + "lock";
   fd = 0;
   while ( true )
