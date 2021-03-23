@@ -213,6 +213,37 @@ void ProgramUtil::print( const Program &p, std::ostream &out, std::string newlin
   }
 }
 
+void ProgramUtil::exportToDot( Program p, std::ostream &out )
+{
+  removeOps( p, Operation::Type::NOP );
+  out << "digraph G {" << std::endl;
+  // nodes
+  for ( size_t i = 0; i < p.ops.size(); i++ )
+  {
+    out << "  o" << i << " [label=\"" << operationToString( p.ops[i] ) << "\"];" << std::endl;
+  }
+  // edges
+  std::stack<size_t> lpbs;
+  for ( size_t i = 1; i < p.ops.size(); i++ )
+  {
+    out << "  o" << (i - 1) << " -> ";
+    if ( p.ops[i - 1].type == Operation::Type::LPE )
+    {
+      out << "{ o" << i << " o" << lpbs.top() << " }" << std::endl;
+      lpbs.pop();
+    }
+    else
+    {
+      out << "o" << i << std::endl;
+    }
+    if ( p.ops[i - 1].type == Operation::Type::LPB )
+    {
+      lpbs.push( i - 1 );
+    }
+  }
+  out << "}" << std::endl;
+}
+
 size_t ProgramUtil::hash( const Program &p )
 {
   size_t h = 0;
