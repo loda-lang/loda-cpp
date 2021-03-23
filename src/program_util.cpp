@@ -253,25 +253,36 @@ void ProgramUtil::exportToDot( Program p, std::ostream &out )
   // nodes
   for ( size_t i = 0; i < p.ops.size(); i++ )
   {
+    p.ops[i].comment.clear();
     out << "  o" << i << " [label=\"" << operationToString( p.ops[i] ) << "\"];" << std::endl;
   }
   // edges
   std::stack<size_t> lpbs;
-  for ( size_t i = 1; i < p.ops.size(); i++ )
+  std::vector<size_t> targets;
+  for ( size_t i = 0; i < p.ops.size(); i++ )
   {
-    out << "  o" << (i - 1) << " -> ";
-    if ( p.ops[i - 1].type == Operation::Type::LPE )
+    targets.clear();
+    if ( i + 1 < p.ops.size() )
     {
-      out << "{ o" << i << " o" << lpbs.top() << " }" << std::endl;
+      targets.push_back( i + 1 );
+    }
+    if ( p.ops[i].type == Operation::Type::LPE )
+    {
+      targets.push_back( lpbs.top() );
       lpbs.pop();
     }
-    else
+    if ( !targets.empty() )
     {
-      out << "o" << i << std::endl;
+      out << "  o" << i << " -> {";
+      for ( auto t : targets )
+      {
+        out << " o" << t;
+      }
+      out << " }" << std::endl;
     }
-    if ( p.ops[i - 1].type == Operation::Type::LPB )
+    if ( p.ops[i].type == Operation::Type::LPB )
     {
-      lpbs.push( i - 1 );
+      lpbs.push( i );
     }
   }
   out << "}" << std::endl;
