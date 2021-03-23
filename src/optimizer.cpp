@@ -448,13 +448,6 @@ bool Optimizer::reduceMemoryCells( Program &p, size_t num_reserved_cells ) const
   return false;
 }
 
-bool hasIndirectOperand( const Operation &op )
-{
-  const auto num_ops = Operation::Metadata::get( op.type ).num_operands;
-  return (num_ops > 0 && op.target.type == Operand::Type::INDIRECT)
-      || (num_ops > 1 && op.source.type == Operand::Type::INDIRECT);
-}
-
 bool Optimizer::swapMemoryCells( Program &p, size_t num_reserved_cells ) const
 {
   if ( num_reserved_cells < 2 )
@@ -465,7 +458,7 @@ bool Optimizer::swapMemoryCells( Program &p, size_t num_reserved_cells ) const
   int64_t mov_target = -1;
   for ( int64_t i = p.ops.size() - 1; i >= 0; i-- )
   {
-    if ( hasIndirectOperand( p.ops[i] ) )
+    if ( ProgramUtil::hasIndirectOperand( p.ops[i] ) )
     {
       return false;
     }
@@ -528,7 +521,7 @@ bool doPartialEval( Operation &op, std::map<number_t, Operand> &values )
 {
   // make sure there is not indirect memory access
   const auto num_ops = Operation::Metadata::get( op.type ).num_operands;
-  if ( hasIndirectOperand( op ) )
+  if ( ProgramUtil::hasIndirectOperand( op ) )
   {
     values.clear();
     return false;
@@ -656,32 +649,10 @@ bool Optimizer::partialEval( Program &p, size_t num_initialized_cells ) const
   return changed;
 }
 
-bool isArithmetic( Operation::Type t )
-{
-  return !(t == Operation::Type::NOP || t == Operation::Type::DBG || t == Operation::Type::LPB
-      || t == Operation::Type::LPE || t == Operation::Type::CLR || t == Operation::Type::CAL);
-}
-
 bool Optimizer::shouldSwapOperations( const Operation &first, const Operation &second ) const
 {
   // check if we can swap
-  if ( !isArithmetic( first.type ) || !isArithmetic( second.type ) )
-  {
-    return false;
-  }
-  if ( hasIndirectOperand( first ) || hasIndirectOperand( second ) )
-  {
-    return false;
-  }
-  if ( first.target.value == second.target.value )
-  {
-    return false;
-  }
-  if ( first.source.type == Operand::Type::DIRECT && second.target.value == first.source.value )
-  {
-    return false;
-  }
-  if ( second.source.type == Operand::Type::DIRECT && first.target.value == second.source.value )
+  if ( !ProgramUtil::areIndependent( first, second ) )
   {
     return false;
   }
@@ -694,7 +665,6 @@ bool Optimizer::shouldSwapOperations( const Operation &first, const Operation &s
   {
     return true;
   }
-  // TODO: additional checks
   return false;
 }
 

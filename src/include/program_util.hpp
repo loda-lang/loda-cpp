@@ -22,6 +22,10 @@ public:
 
   static bool isArithmetic( Operation::Type t );
 
+  static bool hasIndirectOperand( const Operation &op );
+
+  static bool areIndependent( const Operation& op1, const Operation& op2 );
+
   static bool getUsedMemoryCells( const Program &p, std::unordered_set<number_t> &used_cells, number_t &larged_used,
       size_t max_memory );
 

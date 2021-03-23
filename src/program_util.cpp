@@ -5,6 +5,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <stack>
 
 void ProgramUtil::removeOps( Program &p, Operation::Type type )
 {
@@ -89,9 +90,41 @@ size_t ProgramUtil::numOps( const Program &p, Operand::Type type )
 
 bool ProgramUtil::isArithmetic( Operation::Type t )
 {
-  // TODO: model this as metadata
+  // TODO: model this as metadata?
   return (t != Operation::Type::NOP && t != Operation::Type::DBG && t != Operation::Type::LPB
       && t != Operation::Type::LPE && t != Operation::Type::CLR && t != Operation::Type::CAL);
+}
+
+bool ProgramUtil::hasIndirectOperand( const Operation &op )
+{
+  const auto num_ops = Operation::Metadata::get( op.type ).num_operands;
+  return (num_ops > 0 && op.target.type == Operand::Type::INDIRECT)
+      || (num_ops > 1 && op.source.type == Operand::Type::INDIRECT);
+}
+
+bool ProgramUtil::areIndependent( const Operation& op1, const Operation& op2 )
+{
+  if ( !isArithmetic( op1.type ) || !isArithmetic( op2.type ) )
+  {
+    return false;
+  }
+  if ( hasIndirectOperand( op1 ) || hasIndirectOperand( op2 ) )
+  {
+    return false;
+  }
+  if ( op1.target.value == op2.target.value )
+  {
+    return false;
+  }
+  if ( op1.source.type == Operand::Type::DIRECT && op2.target.value == op1.source.value )
+  {
+    return false;
+  }
+  if ( op2.source.type == Operand::Type::DIRECT && op1.target.value == op2.source.value )
+  {
+    return false;
+  }
+  return true;
 }
 
 bool ProgramUtil::getUsedMemoryCells( const Program &p, std::unordered_set<number_t> &used_cells,
