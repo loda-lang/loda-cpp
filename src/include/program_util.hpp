@@ -22,6 +22,10 @@ public:
 
   static bool isArithmetic( Operation::Type t );
 
+  static bool hasIndirectOperand( const Operation &op );
+
+  static bool areIndependent( const Operation& op1, const Operation& op2 );
+
   static bool getUsedMemoryCells( const Program &p, std::unordered_set<number_t> &used_cells, number_t &larged_used,
       size_t max_memory );
 
@@ -32,6 +36,8 @@ public:
   static void print( const Program &p, std::ostream &out, std::string newline = std::string( "\n" ) );
 
   static void print( const Operation &op, std::ostream &out, int indent = 0 );
+
+  static void exportToDot( Program p, std::ostream &out );
 
   static size_t hash( const Program &p );
 

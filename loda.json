@@ -3,15 +3,17 @@
     "new": [
       {
         "version": 1,
-        "length": 60,
-        "maxConstant": 6,
-        "maxCell": 6,
+        "length": 50,
+        "maxConstant": 5,
+        "maxCell": 5,
         "loops": false,
         "calls": false,
         "indirectAccess": false,
         "template": [
           "programs/templates/call.asm",
+          "programs/templates/call2.asm",
           "programs/templates/loop.asm",
+          "programs/templates/loop2.asm",
           "programs/templates/loop_call.asm"
         ]
       },

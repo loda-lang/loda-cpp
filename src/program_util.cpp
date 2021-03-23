@@ -5,6 +5,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <stack>
 
 void ProgramUtil::removeOps( Program &p, Operation::Type type )
 {
@@ -89,9 +90,41 @@ size_t ProgramUtil::numOps( const Program &p, Operand::Type type )
 
 bool ProgramUtil::isArithmetic( Operation::Type t )
 {
-  // TODO: model this as metadata
+  // TODO: model this as metadata?
   return (t != Operation::Type::NOP && t != Operation::Type::DBG && t != Operation::Type::LPB
       && t != Operation::Type::LPE && t != Operation::Type::CLR && t != Operation::Type::CAL);
+}
+
+bool ProgramUtil::hasIndirectOperand( const Operation &op )
+{
+  const auto num_ops = Operation::Metadata::get( op.type ).num_operands;
+  return (num_ops > 0 && op.target.type == Operand::Type::INDIRECT)
+      || (num_ops > 1 && op.source.type == Operand::Type::INDIRECT);
+}
+
+bool ProgramUtil::areIndependent( const Operation& op1, const Operation& op2 )
+{
+  if ( !isArithmetic( op1.type ) || !isArithmetic( op2.type ) )
+  {
+    return false;
+  }
+  if ( hasIndirectOperand( op1 ) || hasIndirectOperand( op2 ) )
+  {
+    return false;
+  }
+  if ( op1.target.value == op2.target.value )
+  {
+    return false;
+  }
+  if ( op1.source.type == Operand::Type::DIRECT && op2.target.value == op1.source.value )
+  {
+    return false;
+  }
+  if ( op2.source.type == Operand::Type::DIRECT && op1.target.value == op2.source.value )
+  {
+    return false;
+  }
+  return true;
 }
 
 bool ProgramUtil::getUsedMemoryCells( const Program &p, std::unordered_set<number_t> &used_cells,
@@ -211,6 +244,48 @@ void ProgramUtil::print( const Program &p, std::ostream &out, std::string newlin
       indent += 2;
     }
   }
+}
+
+void ProgramUtil::exportToDot( Program p, std::ostream &out )
+{
+  removeOps( p, Operation::Type::NOP );
+  out << "digraph G {" << std::endl;
+  // nodes
+  for ( size_t i = 0; i < p.ops.size(); i++ )
+  {
+    p.ops[i].comment.clear();
+    out << "  o" << i << " [label=\"" << operationToString( p.ops[i] ) << "\"];" << std::endl;
+  }
+  // edges
+  std::stack<size_t> lpbs;
+  std::vector<size_t> targets;
+  for ( size_t i = 0; i < p.ops.size(); i++ )
+  {
+    targets.clear();
+    if ( i + 1 < p.ops.size() )
+    {
+      targets.push_back( i + 1 );
+    }
+    if ( p.ops[i].type == Operation::Type::LPE )
+    {
+      targets.push_back( lpbs.top() );
+      lpbs.pop();
+    }
+    if ( !targets.empty() )
+    {
+      out << "  o" << i << " -> {";
+      for ( auto t : targets )
+      {
+        out << " o" << t;
+      }
+      out << " }" << std::endl;
+    }
+    if ( p.ops[i].type == Operation::Type::LPB )
+    {
+      lpbs.push( i );
+    }
+  }
+  out << "}" << std::endl;
 }
 
 size_t ProgramUtil::hash( const Program &p )
