@@ -37,7 +37,7 @@ public:
 
   static void print( const Operation &op, std::ostream &out, int indent = 0 );
 
-  static void exportToDot( Program p, std::ostream &out );
+  static void exportToDot( const Program& p, std::ostream &out );
 
   static size_t hash( const Program &p );
 
