@@ -415,10 +415,8 @@ void Generator::ensureMeaningfulLoops( Program &p )
   }
 }
 
-MultiGenerator::MultiGenerator( const Settings &settings, int64_t seed )
+MultiGenerator::MultiGenerator( const Settings &settings, const Stats& stats, int64_t seed )
 {
-  Stats stats;
-  stats.load( "stats" );
   std::mt19937 gen( seed );
   std::ifstream loda_conf( settings.loda_config );
   configs = Generator::Config::load( loda_conf, settings.optimize_existing_programs );

@@ -22,6 +22,7 @@ void help()
   std::cout << "  evaluate <file>  Evaluate a program to a sequence" << std::endl;
   std::cout << "  optimize <file>  Optimize a program and print it" << std::endl;
   std::cout << "  minimize <file>  Minimize a program and print it (use -t to set the number of terms)" << std::endl;
+  std::cout << "  dot      <file>  Export a program as dot (Graphviz) format" << std::endl;
   std::cout << "  generate         Generate a random program and print it" << std::endl;
   std::cout << "  test             Run test suite" << std::endl;
   std::cout << "OEIS commands:" << std::endl;
@@ -114,11 +115,17 @@ int main( int argc, char *argv[] )
     }
     else if ( cmd == "generate" || cmd == "gen" )
     {
-      Optimizer optimizer( settings );
+      OeisManager manager( settings );
       std::random_device rand;
-      MultiGenerator multi_generator( settings, rand() );
+      MultiGenerator multi_generator( settings, manager.getStats(), rand() );
       auto program = multi_generator.getGenerator()->generateProgram();
       ProgramUtil::print( program, std::cout );
+    }
+    else if ( cmd == "dot" )
+    {
+      Parser parser;
+      Program program = parser.parse( get_program_path( args.at( 1 ) ) );
+      ProgramUtil::exportToDot( program, std::cout );
     }
     else if ( cmd == "mine" )
     {

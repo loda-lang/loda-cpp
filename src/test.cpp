@@ -225,9 +225,12 @@ void Test::stats()
 {
   Log::get().info( "Testing stats loading and saving" );
 
+  Settings settings;
+  OeisManager manager( settings );
+
   // load stats
   Stats s, t;
-  s.load( "stats" );
+  s = manager.getStats();
 
   // sanity check for loaded stats
   if ( s.num_constants.at( 1 ) == 0 )
@@ -257,7 +260,7 @@ void Test::stats()
   {
     Log::get().error( "Error loading operation position counts from stats" );
   }
-  if ( !s.found_programs.at( 4 ) || !s.cached_b_files.at( 4 ) )
+  if ( !s.found_programs.at( 4 ) )
   {
     Log::get().error( "Error loading program summary from stats" );
   }
@@ -391,8 +394,9 @@ void Test::minimizer( size_t tests )
   Settings settings;
   Interpreter interpreter( settings );
   Minimizer minimizer( settings );
+  OeisManager manager( settings );
   std::random_device rand;
-  MultiGenerator multi_generator( settings, rand() );
+  MultiGenerator multi_generator( settings, manager.getStats(), rand() );
   Sequence s1, s2, s3;
   Program program, minimized;
   for ( size_t i = 0; i < tests; i++ )

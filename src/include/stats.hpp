@@ -43,6 +43,8 @@ public:
 
   void save( const std::string &path );
 
+  std::string getMainStatsFile( const std::string &path ) const;
+
   void updateProgramStats( size_t id, const Program &program );
 
   void updateSequenceStats( size_t id, bool program_found, bool has_b_file );

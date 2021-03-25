@@ -15,15 +15,18 @@
 #include <limits>
 #include <fstream>
 #include <sstream>
-#include <sys/stat.h>
 #include <stdlib.h>
-#include <sys/file.h>
 #include <time.h>
-#include <unistd.h>
 
 void throwParseError( const std::string &line )
 {
   Log::get().error( "error parsing OEIS line: " + line, true );
+}
+
+std::string getStatsHome()
+{
+  // no trailing / here
+  return getLodaHome() + "stats";
 }
 
 OeisManager::OeisManager( const Settings &settings )
@@ -32,14 +35,15 @@ OeisManager::OeisManager( const Settings &settings )
       finder( settings ),
       minimizer( settings ),
       optimizer( settings ),
-      total_count_( 0 )
+      total_count( 0 ),
+      stats_loaded( false )
 {
 }
 
 void OeisManager::load()
 {
   // check if already loaded
-  if ( total_count_ > 0 )
+  if ( total_count > 0 )
   {
     return;
   }
@@ -47,19 +51,7 @@ void OeisManager::load()
 
   {
     // obtain lock
-    ensureDir( OeisSequence::getHome() );
-    std::string lockfile = OeisSequence::getHome() + "lock";
-    int fd = 0;
-    while ( true )
-    {
-      fd = open( lockfile.c_str(), O_CREAT, 0644 );
-      flock( fd, LOCK_EX );
-      struct stat st0, st1;
-      fstat( fd, &st0 );
-      stat( lockfile.c_str(), &st1 );
-      if ( st0.st_ino == st1.st_ino ) break;
-      close( fd );
-    }
+    FolderLock lock( OeisSequence::getHome() );
 
     // update index if needed
     update();
@@ -70,9 +62,7 @@ void OeisManager::load()
     loadNames();
     loadDenylist();
 
-    // remove lock
-    unlink( lockfile.c_str() );
-    flock( fd, LOCK_UN );
+    // lock released at the end of this block
   }
 
   // collect known / linear sequences if they should be ignored
@@ -136,7 +126,7 @@ void OeisManager::load()
 
   // print summary
   Log::get().info(
-      "Loaded " + std::to_string( loaded_count ) + "/" + std::to_string( total_count_ ) + " sequences (ignored "
+      "Loaded " + std::to_string( loaded_count ) + "/" + std::to_string( total_count ) + " sequences (ignored "
           + std::to_string( seqs_to_remove.size() ) + ")" );
   std::stringstream buf;
   buf << "Matcher compaction ratios: ";
@@ -176,7 +166,7 @@ size_t OeisManager::loadData()
     {
       throwParseError( line );
     }
-    ++total_count_;
+    ++total_count;
     pos = 1;
     id = 0;
     for ( pos = 1; pos < line.length() && line[pos] >= '0' && line[pos] <= '9'; ++pos )
@@ -335,7 +325,7 @@ void OeisManager::update()
   {
     auto path = OeisSequence::getHome() + *it;
     age_in_days = getFileAgeInDays( path );
-    if ( age_in_days >= 0 && age_in_days < 1 ) // one day
+    if ( age_in_days >= 0 && age_in_days < 3 ) // three days
     {
       // no need to update this file
       it = files.erase( it );
@@ -378,6 +368,70 @@ void OeisManager::update()
   }
 }
 
+void OeisManager::generateStats( int64_t age_in_days )
+{
+  load();
+  std::string msg;
+  if ( age_in_days < 0 )
+  {
+    msg = "Generating program statistics";
+  }
+  else
+  {
+    msg = "Regenerating program statistics (last update " + std::to_string( age_in_days ) + " days ago)";
+  }
+  Log::get().info( msg );
+  stats = Stats();
+
+  size_t num_processed = 0;
+  Parser parser;
+  Program program;
+  std::string file_name;
+  bool has_b_file, has_program;
+
+  for ( auto &s : sequences )
+  {
+    if ( s.id == 0 )
+    {
+      continue;
+    }
+    file_name = s.getProgramPath();
+    std::ifstream program_file( file_name );
+    std::ifstream b_file( s.getBFilePath() );
+    has_b_file = b_file.good();
+    has_program = false;
+    if ( program_file.good() )
+    {
+      try
+      {
+        program = parser.parse( program_file );
+        has_program = true;
+      }
+      catch ( const std::exception &exc )
+      {
+        Log::get().error( "Error parsing " + file_name + ": " + std::string( exc.what() ), false );
+        continue;
+      }
+
+      ProgramUtil::removeOps( program, Operation::Type::NOP );
+
+      // update stats
+      stats.updateProgramStats( s.id, program );
+
+      if ( ++num_processed % 1000 == 0 )
+      {
+        Log::get().info( "Processed " + std::to_string( num_processed ) + " programs" );
+      }
+    }
+    stats.updateSequenceStats( s.id, has_program, has_b_file );
+  }
+
+  // write stats
+  stats.save( getStatsHome() );
+
+  Log::get().info( "Finished generation of statistics for " + std::to_string( num_processed ) + " programs" );
+}
+
 void migrateFile( const std::string &from, const std::string &to )
 {
   std::ifstream f( from );
@@ -410,6 +464,29 @@ void OeisManager::migrate()
 const std::vector<OeisSequence>& OeisManager::getSequences() const
 {
   return sequences;
+}
+
+const Stats& OeisManager::getStats()
+{
+  if ( !stats_loaded )
+  {
+    auto home = getStatsHome();
+
+    // obtain lock
+    FolderLock lock( home );
+
+    // check age of stats
+    auto age_in_days = getFileAgeInDays( stats.getMainStatsFile( home ) );
+    if ( age_in_days < 0 || age_in_days >= 3 ) // three days
+    {
+      generateStats( age_in_days );
+    }
+    stats.load( home );
+    stats_loaded = true;
+
+    // lock released at the end of this block
+  }
+  return stats;
 }
 
 void OeisManager::removeSequenceFromFinder( size_t id )

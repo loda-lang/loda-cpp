@@ -12,7 +12,7 @@ public:
 
 private:
 
-  void generateStats( const steps_t& steps );
+  void generateLists();
 
   size_t checkAndMinimizePrograms();
 

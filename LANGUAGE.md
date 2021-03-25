@@ -2,6 +2,32 @@
 
 The LODA language is an assembly language with instructions for common integer operations. It supports an unbounded set of memory cells storing integer, arithmetic operations and a loop based on a lexicographical order descent on memory regions.
 
+Here is a basic example of a LODA program:
+
+```asm
+; A000045: Fibonacci numbers: F(n) = F(n-1) + F(n-2) with F(0) = 0 and F(1) = 1.
+
+; argument is stored in $0
+
+mov $3,1      ; assign $3:=1
+lpb $0        ; loop as long as $0 decreases in absolute values
+  sub $0,1    ; decrement $0
+  mov $2,$1   ; assign $2:=$1
+  add $1,$3   ; add $1:=$1+$3
+  mov $3,$2   ; assign $3:=$2
+lpe           ; end of loop
+
+; result is stored in $1
+```
+
+To run this program, you can run:
+```bash
+./loda eval A45
+0,1,1,2,3,5,8,13,21,34,55,89,144,233,377,610,987,1597,2584,4181
+```
+
+The details of the language are explained in the following sections.
+
 ### Memory
 
 Programs operate on memory consisting of an unbounded sequence of memory cells `$0`,`$1`,`$2`,... each storing an integer. There are three types of operands supported:

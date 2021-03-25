@@ -10,7 +10,7 @@ done
 
 # common settings
 log_level=error
-check_interval=86400
+check_interval=43200
 min_changes=50
 min_cpus=4
 max_mine_cycles=10000000
@@ -79,7 +79,7 @@ function push_updates {
     if [ "$branch" = "master" ]; then
       git add stats
     fi
-    num_progs=$(cat stats/summary.csv | tail -n 1 | cut -d , -f 1)
+    num_progs=$(cat $HOME/.loda/stats/summary.csv | tail -n 1 | cut -d , -f 1)
     git commit -m "updated ${num_changes}/${num_progs} programs"
     git pull -r
     if [ "$branch" != "master" ]; then

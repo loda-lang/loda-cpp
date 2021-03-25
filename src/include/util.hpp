@@ -98,3 +98,15 @@ void ensureDir( const std::string &path );
 int64_t getFileAgeInDays( const std::string &path );
 
 size_t getMemUsage();
+
+class FolderLock
+{
+public:
+  FolderLock( std::string folder );
+
+  ~FolderLock();
+
+private:
+  std::string lockfile;
+  int fd;
+};
