@@ -1,6 +1,7 @@
 #include "interpreter.hpp"
 #include "miner.hpp"
 #include "minimizer.hpp"
+#include "mutator.hpp"
 #include "oeis_manager.hpp"
 #include "oeis_maintenance.hpp"
 #include "optimizer.hpp"
@@ -9,6 +10,7 @@
 #include "test.hpp"
 #include "util.hpp"
 
+#include <stack>
 #include <sstream>
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,9 +28,10 @@ void help()
   std::cout << "  generate         Generate a random program and print it" << std::endl;
   std::cout << "  test             Run test suite" << std::endl;
   std::cout << "OEIS commands:" << std::endl;
-  std::cout << "  check   <seqID>  Check program for an OEIS sequence" << std::endl;
-  std::cout << "  mine             Mine programs for OEIS sequences" << std::endl;
-  std::cout << "  maintain         Maintain programs for OEIS sequences" << std::endl;
+  std::cout << "  mine             Mine programs for OEIS sequences (use -x to overwrite)" << std::endl;
+  std::cout << "  match    <file>  Match a program to OEIS sequences (use -x to overwrite)" << std::endl;
+  std::cout << "  check   <seqID>  Check a program for an OEIS sequence" << std::endl;
+  std::cout << "  maintain         Maintain all programs for OEIS sequences" << std::endl;
   std::cout << "Options:" << std::endl;
   std::cout << "  -l <string>      Log level (values:debug,info,warn,error,alert)" << std::endl;
   std::cout << "  -k <string>      Configuration file (default:loda.json)" << std::endl;
@@ -42,7 +45,7 @@ void help()
   std::cout << "  -b <number>      Print evaluation result in b-file format starting from a given offset" << std::endl;
   std::cout << "  -s               Evaluate to number of execution steps" << std::endl;
   std::cout << "  -r               Search for programs of linear sequences (slow)" << std::endl;
-  std::cout << "  -x               Optimize and overwrite existing programs" << std::endl;
+  std::cout << "  -x               Minimize and overwrite existing programs" << std::endl;
 }
 
 std::string get_program_path( std::string arg )
@@ -62,6 +65,7 @@ std::string get_program_path( std::string arg )
 int main( int argc, char *argv[] )
 {
   Settings settings;
+  Parser parser;
   auto args = settings.parseArgs( argc, argv );
   if ( !args.empty() )
   {
@@ -85,7 +89,6 @@ int main( int argc, char *argv[] )
     }
     else if ( cmd == "evaluate" || cmd == "eval" )
     {
-      Parser parser;
       Program program = parser.parse( get_program_path( args.at( 1 ) ) );
       Interpreter interpreter( settings );
       Sequence seq;
@@ -98,7 +101,6 @@ int main( int argc, char *argv[] )
     else if ( cmd == "check" )
     {
       OeisSequence seq( args.at( 1 ) );
-      Parser parser;
       Program program = parser.parse( seq.getProgramPath() );
       Interpreter interpreter( settings );
       seq.fetchBFile();
@@ -115,7 +117,6 @@ int main( int argc, char *argv[] )
     }
     else if ( cmd == "optimize" || cmd == "opt" )
     {
-      Parser parser;
       Program program = parser.parse( get_program_path( args.at( 1 ) ) );
       Optimizer optimizer( settings );
       optimizer.optimize( program, 2, 1 );
@@ -123,7 +124,6 @@ int main( int argc, char *argv[] )
     }
     else if ( cmd == "minimize" || cmd == "min" )
     {
-      Parser parser;
       Program program = parser.parse( get_program_path( args.at( 1 ) ) );
       Minimizer minimizer( settings );
       minimizer.optimizeAndMinimize( program, 2, 1, settings.num_terms );
@@ -139,7 +139,6 @@ int main( int argc, char *argv[] )
     }
     else if ( cmd == "dot" )
     {
-      Parser parser;
       Program program = parser.parse( get_program_path( args.at( 1 ) ) );
       ProgramUtil::exportToDot( program, std::cout );
     }
@@ -147,6 +146,46 @@ int main( int argc, char *argv[] )
     {
       Miner miner( settings );
       miner.mine();
+    }
+    else if ( cmd == "match" )
+    {
+      Program program = parser.parse( get_program_path( args.at( 1 ) ) );
+      OeisManager manager( settings );
+      std::random_device rand;
+      Mutator mutator( rand() );
+      manager.load();
+      Sequence norm_seq;
+      std::stack<Program> progs;
+      progs.push( program );
+      size_t new_ = 0, updated = 0;
+      // TODO: unify this code with Miner?
+      while ( !progs.empty() )
+      {
+        program = progs.top();
+        progs.pop();
+        auto seq_programs = manager.getFinder().findSequence( program, norm_seq, manager.getSequences() );
+        for ( auto s : seq_programs )
+        {
+          auto r = manager.updateProgram( s.first, s.second );
+          if ( r.first )
+          {
+            if ( r.second )
+            {
+              new_++;
+            }
+            else
+            {
+              updated++;
+            }
+            if ( progs.size() < 1000 || settings.hasMemory() )
+            {
+              mutator.mutateConstants( s.second, 10, progs );
+            }
+          }
+        }
+      }
+      Log::get().info(
+          "Match result: " + std::to_string( new_ ) + " new programs, " + std::to_string( updated ) + " updated" );
     }
     else if ( cmd == "maintain" )
     {
@@ -162,7 +201,6 @@ int main( int argc, char *argv[] )
     }
     else if ( cmd == "collatz" )
     {
-      Parser parser;
       Program program = parser.parse( std::string( args.at( 1 ) ) );
       Interpreter interpreter( settings );
       Sequence seq;
