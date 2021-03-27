@@ -433,15 +433,28 @@ std::pair<bool, steps_t> Interpreter::check( const Program &p, const Sequence &e
     {
       result.second.add( run( p, mem ) );
     }
-    catch ( std::exception& )
+    catch ( std::exception& e )
     {
+      if ( settings.print_as_b_file )
+      {
+        std::cout << std::string( e.what() ) << std::endl;
+      }
       result.first = (int64_t) i >= num_terminating_terms;
       return result;
     }
     if ( mem.get( Program::OUTPUT_CELL ) != expected_seq[i] )
     {
+      if ( settings.print_as_b_file )
+      {
+        std::cout << (settings.print_as_b_file_offset + i) << " " << mem.get( Program::OUTPUT_CELL ) << " -> expected "
+            << expected_seq[i] << std::endl;
+      }
       result.first = false;
       return result;
+    }
+    if ( settings.print_as_b_file )
+    {
+      std::cout << (settings.print_as_b_file_offset + i) << " " << expected_seq[i] << std::endl;
     }
   }
   result.first = true;
