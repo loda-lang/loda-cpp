@@ -26,6 +26,7 @@ void help()
   std::cout << "  generate         Generate a random program and print it" << std::endl;
   std::cout << "  test             Run test suite" << std::endl;
   std::cout << "OEIS commands:" << std::endl;
+  std::cout << "  check   <seqID>  Check program for an OEIS sequence" << std::endl;
   std::cout << "  mine             Mine programs for OEIS sequences" << std::endl;
   std::cout << "  maintain         Maintain programs for OEIS sequences" << std::endl;
   std::cout << "Options:" << std::endl;
@@ -65,16 +66,13 @@ int main( int argc, char *argv[] )
   if ( !args.empty() )
   {
     std::string cmd = args.front();
-    if ( cmd != "evaluate" && cmd != "eval" )
+    if ( settings.use_steps && cmd != "evaluate" && cmd != "eval" )
     {
-      if ( settings.use_steps )
-      {
-        Log::get().error( "Option -s only allowed in evaluate command", true );
-      }
-      if ( settings.print_as_b_file )
-      {
-        Log::get().error( "Option -b only allowed in evaluate command", true );
-      }
+      Log::get().error( "Option -s only allowed in evaluate command", true );
+    }
+    if ( settings.print_as_b_file && cmd != "evaluate" && cmd != "eval" && cmd != "check" )
+    {
+      Log::get().error( "Option -b only allowed in evaluate command", true );
     }
     if ( cmd == "help" )
     {
@@ -95,6 +93,24 @@ int main( int argc, char *argv[] )
       if ( !settings.print_as_b_file )
       {
         std::cout << seq << std::endl;
+      }
+    }
+    else if ( cmd == "check" )
+    {
+      OeisSequence seq( args.at( 1 ) );
+      Parser parser;
+      Program program = parser.parse( seq.getProgramPath() );
+      Interpreter interpreter( settings );
+      seq.fetchBFile();
+      auto terms = seq.getTerms( -1 );
+      auto result = interpreter.check( program, terms );
+      if ( result.first )
+      {
+        std::cout << "ok" << std::endl;
+      }
+      else
+      {
+        std::cout << "error" << std::endl;
       }
     }
     else if ( cmd == "optimize" || cmd == "opt" )

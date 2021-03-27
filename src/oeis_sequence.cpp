@@ -147,57 +147,13 @@ bool loadBFile( size_t id, const Sequence& seq_full, Sequence& seq_big )
           "Read b-file for " + oeis_seq.id_str() + " with " + std::to_string( seq_big.size() ) + " terms" );
     }
   }
-  else
-  {
-    // if b-file not found, try to parse comment from existing program
-    std::ifstream program_file( oeis_seq.getProgramPath() );
-    if ( program_file.good() )
-    {
-      try
-      {
-        Parser parser;
-        auto p = parser.parse( oeis_seq.getProgramPath() );
-        if ( p.ops.size() > 1 && p.ops[1].type == Operation::Type::NOP && !p.ops[1].comment.empty() )
-        {
-          std::stringstream ss( p.ops[1].comment );
-          parser.in = &ss;
-          while ( true )
-          {
-            ss >> std::ws;
-            auto c = ss.peek();
-            if ( c == EOF )
-            {
-              break;
-            }
-            seq_big.push_back( parser.readValue() );
-            c = ss.peek();
-            if ( c == EOF )
-            {
-              break;
-            }
-            parser.readSeparator( ',' );
-          }
-        }
-        else if ( Log::get().level == Log::Level::DEBUG )
-        {
-          Log::get().debug(
-              "Read sequence from program for " + oeis_seq.id_str() + " with " + std::to_string( seq_big.size() )
-                  + " terms" );
-        }
-      }
-      catch ( const std::exception& e )
-      {
-        Log::get().warn( "Failed to extract terms from " + oeis_seq.getProgramPath() + "; falling back to b-file" );
-      }
-    }
-  }
 
   // not found?
   if ( seq_big.empty() && !has_b_file )
   {
     if ( Log::get().level == Log::Level::DEBUG )
     {
-      Log::get().debug( "Neither b-file nor program found: " + oeis_seq.id_str() );
+      Log::get().debug( "b-file not found: " + oeis_seq.id_str() );
     }
     return false;
   }
