@@ -179,8 +179,8 @@ bool Optimizer::mergeOps( Program &p ) const
         }
 
         // first mul, second div?
-        else if ( o1.type == Operation::Type::MUL && o2.type == Operation::Type::DIV && o1.source.value > 0
-            && o2.source.value > 0 && o1.source.value % o2.source.value == 0 )
+        else if ( o1.type == Operation::Type::MUL && o2.type == Operation::Type::DIV && o1.source.value != 0
+            && o2.source.value != 0 && o1.source.value % o2.source.value == 0 )
         {
           o1.source.value = o1.source.value / o2.source.value;
           do_merge = true;

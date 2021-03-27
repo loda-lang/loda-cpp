@@ -384,7 +384,7 @@ void Test::optimizer()
     if ( optimized != pout )
     {
       ProgramUtil::print( optimized, std::cerr );
-      Log::get().error( "Unexpected optimized output" );
+      Log::get().error( "Unexpected optimized output", true );
     }
   }
 }
