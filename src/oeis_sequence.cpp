@@ -9,7 +9,7 @@
 
 const size_t OeisSequence::LONG_SEQ_LENGTH = 250;
 
-const size_t OeisSequence::VERY_LONG_SEQ_LENGTH = 10000;
+const size_t OeisSequence::VERY_LONG_SEQ_LENGTH = 2000;
 
 std::string OeisSequence::getHome()
 {
@@ -94,7 +94,7 @@ std::string OeisSequence::getBFilePath() const
   return getHome() + "b/" + dir_str() + "/" + id_str( "b" ) + ".txt";
 }
 
-bool loadBFile( size_t id, const Sequence& seq_full, Sequence& seq_big )
+bool loadBFile( size_t id, const Sequence& seq_full, Sequence& seq_big, size_t num_terms )
 {
   const OeisSequence oeis_seq( id );
   bool has_b_file = false;
@@ -197,10 +197,9 @@ bool loadBFile( size_t id, const Sequence& seq_full, Sequence& seq_big )
   }
 
   // shrink big sequence to maximum number of terms
-  if ( seq_big.size() > OeisSequence::VERY_LONG_SEQ_LENGTH )
+  if ( seq_big.size() > num_terms )
   {
-    seq_big = Sequence(
-        std::vector<number_t>( seq_big.begin(), seq_big.begin() + OeisSequence::VERY_LONG_SEQ_LENGTH ) );
+    seq_big = Sequence( std::vector<number_t>( seq_big.begin(), seq_big.begin() + num_terms ) );
   }
 
   if ( Log::get().level == Log::Level::DEBUG )
@@ -214,14 +213,14 @@ bool loadBFile( size_t id, const Sequence& seq_full, Sequence& seq_big )
 
 Sequence OeisSequence::getTerms( int64_t max_num_terms ) const
 {
-  size_t real_max_terms = (max_num_terms >= 0) ? max_num_terms : 10000; // magic number
+  size_t real_max_terms = (max_num_terms >= 0) ? max_num_terms : VERY_LONG_SEQ_LENGTH;
   if ( real_max_terms > full.size() && !attempted_bfile )
   {
     attempted_bfile = true;
     if ( id != 0 )
     {
       Sequence big;
-      if ( loadBFile( id, full, big ) )
+      if ( loadBFile( id, full, big, real_max_terms ) )
       {
         // use data from big sequence from now on
         loaded_bfile = true;
@@ -240,11 +239,11 @@ Sequence OeisSequence::getTerms( int64_t max_num_terms ) const
   }
 }
 
-void OeisSequence::fetchBFile() const
+void OeisSequence::fetchBFile( int64_t max_num_terms ) const
 {
   if ( !attempted_bfile )
   {
-    getTerms( -1 );
+    getTerms( max_num_terms );
   }
   if ( !loaded_bfile )
   {

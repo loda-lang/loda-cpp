@@ -148,7 +148,7 @@ size_t OeisMaintenance::checkAndMinimizePrograms()
       try
       {
         program = parser.parse( program_file );
-        s.fetchBFile(); // ensure b-file is loaded
+        s.fetchBFile( OeisSequence::VERY_LONG_SEQ_LENGTH ); // ensure b-file is loaded
         auto very_long_seq = s.getTerms( OeisSequence::VERY_LONG_SEQ_LENGTH );
 
         // check its correctness

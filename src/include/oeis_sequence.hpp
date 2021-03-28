@@ -30,7 +30,7 @@ public:
 
   Sequence getTerms( int64_t max_num_terms ) const;
 
-  void fetchBFile() const;
+  void fetchBFile( int64_t max_num_terms ) const;
 
   size_t id;
   std::string name;

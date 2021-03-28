@@ -530,7 +530,7 @@ void OeisManager::dumpProgram( size_t id, Program p, const std::string &file ) c
   out << std::endl;
   ProgramUtil::print( p, out );
   out.close();
-  seq.fetchBFile(); // ensure b-file gets downloaded for the next run
+  seq.fetchBFile( -1 ); // ensure b-file gets downloaded for the next run
 }
 
 std::pair<bool, Program> OeisManager::minimizeAndCheck( const Program &p, const OeisSequence &seq, bool minimize )
@@ -540,7 +540,7 @@ std::pair<bool, Program> OeisManager::minimizeAndCheck( const Program &p, const 
   result.second = p;
 
   // ensure b-file gets fetched before checking
-  seq.fetchBFile();
+  seq.fetchBFile( OeisSequence::VERY_LONG_SEQ_LENGTH );
   auto very_long_seq = seq.getTerms( OeisSequence::VERY_LONG_SEQ_LENGTH );
 
   if ( minimize )
@@ -638,7 +638,7 @@ std::string OeisManager::isOptimizedBetter( Program existing, Program optimized,
     return "";
   }
 
-  seq.fetchBFile(); // ensure b-file is fetched
+  seq.fetchBFile( -1 ); // ensure b-file is fetched
   auto terms = seq.getTerms( -1 );
   if ( terms.empty() )
   {
@@ -650,7 +650,7 @@ std::string OeisManager::isOptimizedBetter( Program existing, Program optimized,
   auto existing_check = interpreter.check( existing, terms, OeisSequence::LONG_SEQ_LENGTH );
   if ( optimized_check.second.runs > existing_check.second.runs )
   {
-    return "More robust";
+    return "Better";
   }
   else if ( optimized_check.second.runs < existing_check.second.runs )
   {
