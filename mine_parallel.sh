@@ -76,9 +76,6 @@ function push_updates {
     stop_miners
     echo "Pushing updates"
     git add programs/oeis
-    if [ "$branch" = "master" ]; then
-      git add stats
-    fi
     num_progs=$(cat $HOME/.loda/stats/summary.csv | tail -n 1 | cut -d , -f 1)
     git commit -m "updated ${num_changes}/${num_progs} programs"
     git pull -r
