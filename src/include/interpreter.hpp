@@ -29,9 +29,9 @@ struct pair_hasher
 
 enum class status_t
 {
-  OK = 0,
-  WARNING = 1,
-  ERROR = 2
+  OK,
+  WARNING,
+  ERROR
 };
 
 class Interpreter
