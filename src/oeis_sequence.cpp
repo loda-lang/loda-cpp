@@ -9,7 +9,7 @@
 
 const size_t OeisSequence::LONG_SEQ_LENGTH = 250;
 
-const size_t OeisSequence::VERY_LONG_SEQ_LENGTH = 2000;
+const size_t OeisSequence::VERY_LONG_SEQ_LENGTH = 10000;
 
 std::string OeisSequence::getHome()
 {
