@@ -535,7 +535,7 @@ void OeisManager::dumpProgram( size_t id, Program p, const std::string &file ) c
 
 std::pair<bool, Program> OeisManager::minimizeAndCheck( const Program &p, const OeisSequence &seq, bool minimize )
 {
-  std::pair<bool, steps_t> check;
+  std::pair<status_t, steps_t> check;
   std::pair<bool, Program> result;
   result.second = p;
 
@@ -548,7 +548,7 @@ std::pair<bool, Program> OeisManager::minimizeAndCheck( const Program &p, const 
     // minimize for default number of terms
     minimizer.optimizeAndMinimize( result.second, 2, 1, OeisSequence::LONG_SEQ_LENGTH ); // default length
     check = interpreter.check( result.second, very_long_seq, OeisSequence::LONG_SEQ_LENGTH );
-    result.first = check.first;
+    result.first = (check.first != status_t::ERROR); // we allow warnings
     if ( result.first )
     {
       return result;
@@ -558,7 +558,7 @@ std::pair<bool, Program> OeisManager::minimizeAndCheck( const Program &p, const 
     result.second = p;
     minimizer.optimizeAndMinimize( result.second, 2, 1, OeisSequence::VERY_LONG_SEQ_LENGTH ); // extended length
     check = interpreter.check( result.second, very_long_seq, OeisSequence::LONG_SEQ_LENGTH );
-    result.first = check.first;
+    result.first = (check.first != status_t::ERROR); // we allow warnings
     if ( result.first )
     {
       return result;
@@ -568,7 +568,7 @@ std::pair<bool, Program> OeisManager::minimizeAndCheck( const Program &p, const 
   // check w/o minimization
   result.second = p;
   check = interpreter.check( p, very_long_seq, OeisSequence::LONG_SEQ_LENGTH );
-  result.first = check.first;
+  result.first = (check.first != status_t::ERROR); // we allow warnings
 
   // log error in case minimization did not yield correct result
   if ( result.first && minimize )
@@ -583,32 +583,6 @@ std::pair<bool, Program> OeisManager::minimizeAndCheck( const Program &p, const 
   }
 
   return result;
-}
-
-int OeisManager::getNumCycles( const Program &p )
-{
-  Memory mem;
-  const number_t input = settings.num_terms - 1;
-  mem.set( 0, input );
-  try
-  {
-    return interpreter.run( p, mem );
-  }
-  catch ( const std::exception &e )
-  {
-    auto timestamp =
-        std::to_string(
-            std::chrono::duration_cast<std::chrono::milliseconds>( std::chrono::system_clock::now().time_since_epoch() ).count()
-                % 1000000 );
-    std::string f = getLodaHome() + "debug/interpreter/" + timestamp + ".asm";
-    ensureDir( f );
-    std::ofstream o( f );
-    ProgramUtil::print( p, o );
-    o.close();
-    Log::get().error( "Error evaluating program for n=" + std::to_string( input ) + ": " + std::string( e.what() ),
-        true );
-  }
-  return -1;
 }
 
 size_t getBadOpsCount( const Program& p )
@@ -640,18 +614,31 @@ size_t getBadOpsCount( const Program& p )
   return num_ops;
 }
 
-std::string OeisManager::isOptimizedBetter( Program existing, Program optimized, size_t id )
+std::string OeisManager::isOptimizedBetter( Program existing, Program optimized, const OeisSequence &seq )
 {
   // check if there are illegal recursions
   for ( auto &op : optimized.ops )
   {
     if ( op.type == Operation::Type::CAL )
     {
-      if ( op.source.type != Operand::Type::CONSTANT || op.source.value == static_cast<number_t>( id ) )
+      if ( op.source.type != Operand::Type::CONSTANT || op.source.value == static_cast<number_t>( seq.id ) )
       {
         return "";
       }
     }
+  }
+
+  // compare warnings states
+  auto terms = seq.getTerms( -1 );
+  auto optimized_check = interpreter.check( optimized, terms, OeisSequence::LONG_SEQ_LENGTH );
+  auto existing_check = interpreter.check( existing, terms, OeisSequence::LONG_SEQ_LENGTH );
+  if ( static_cast<int64_t>( optimized_check.first ) < static_cast<int64_t>( existing_check.first ) )
+  {
+    return "More robust";
+  }
+  else if ( static_cast<int64_t>( optimized_check.first ) > static_cast<int64_t>( existing_check.first ) )
+  {
+    return ""; // optimized is worse
   }
 
   // compare number of "bad" operations
@@ -677,8 +664,8 @@ std::string OeisManager::isOptimizedBetter( Program existing, Program optimized,
   }
 
   // ...and compare number of execution cycles
-  auto existing_cycles = getNumCycles( existing );
-  auto optimized_cycles = getNumCycles( optimized );
+  auto existing_cycles = existing_check.second.total;
+  auto optimized_cycles = optimized_check.second.total;
   if ( existing_cycles >= 0 && optimized_cycles >= 0 )
   {
     if ( optimized_cycles < existing_cycles )

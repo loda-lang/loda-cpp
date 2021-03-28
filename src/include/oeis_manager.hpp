@@ -56,9 +56,7 @@ private:
 
   std::pair<bool, Program> minimizeAndCheck( const Program &p, const OeisSequence &seq, bool minimize );
 
-  int getNumCycles( const Program &p );
-
-  std::string isOptimizedBetter( Program existing, Program optimized, size_t id );
+  std::string isOptimizedBetter( Program existing, Program optimized, const OeisSequence &seq );
 
   friend class OeisMaintenance;
 

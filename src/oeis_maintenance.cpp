@@ -153,7 +153,7 @@ size_t OeisMaintenance::checkAndMinimizePrograms()
 
         // check its correctness
         auto check = interpreter.check( program, very_long_seq, OeisSequence::LONG_SEQ_LENGTH );
-        is_okay = check.first;
+        is_okay = (check.first != status_t::ERROR); // we allow warnings
 
         // check if it is on the deny list
         if ( manager.denylist.find( s.id ) != manager.denylist.end() )
