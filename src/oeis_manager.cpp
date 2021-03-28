@@ -638,8 +638,14 @@ std::string OeisManager::isOptimizedBetter( Program existing, Program optimized,
     return "";
   }
 
-  // compare number of successfully computed terms
+  seq.fetchBFile(); // ensure b-file is fetched
   auto terms = seq.getTerms( -1 );
+  if ( terms.empty() )
+  {
+    Log::get().error( "Error fetching b-file for " + seq.id_str(), true );
+  }
+
+  // compare number of successfully computed terms
   auto optimized_check = interpreter.check( optimized, terms, OeisSequence::LONG_SEQ_LENGTH );
   auto existing_check = interpreter.check( existing, terms, OeisSequence::LONG_SEQ_LENGTH );
   if ( optimized_check.second.runs > existing_check.second.runs )
@@ -664,28 +670,20 @@ std::string OeisManager::isOptimizedBetter( Program existing, Program optimized,
   }
 
   // ...and compare number of execution cycles
-  if ( optimized_check.second.runs == existing_check.second.runs )
+  auto existing_cycles = existing_check.second.total;
+  auto optimized_cycles = optimized_check.second.total;
+  if ( existing_cycles >= 0 && optimized_cycles >= 0 )
   {
-    auto existing_cycles = existing_check.second.total;
-    auto optimized_cycles = optimized_check.second.total;
-    if ( existing_cycles >= 0 && optimized_cycles >= 0 )
+    if ( optimized_cycles < existing_cycles )
     {
-      if ( optimized_cycles < existing_cycles )
-      {
-        return "Faster";
-      }
-      else if ( optimized_cycles > existing_cycles )
-      {
-        return "";
-      }
+      return "Faster";
+    }
+    else if ( optimized_cycles > existing_cycles )
+    {
+      return "";
     }
   }
 
-  // shorter programs are better (nops have been removed already at this point)
-  if ( ProgramUtil::numOps( optimized, true ) < ProgramUtil::numOps( existing, true ) )
-  {
-    return "Shorter";
-  }
   return "";
 }
 

@@ -170,9 +170,9 @@ bool loadBFile( size_t id, const Sequence& seq_full, Sequence& seq_big )
     seq_big = seq_full;
   }
 
-  if ( seq_big.size() < OeisSequence::LONG_SEQ_LENGTH && !has_overflow )
+  if ( seq_big.empty() )
   {
-    error_state = "too short";
+    error_state = "empty";
   }
   else
   {
@@ -190,11 +190,9 @@ bool loadBFile( size_t id, const Sequence& seq_full, Sequence& seq_big )
   // remove b-files if they are issues (we use a heuristic to avoid massive amount of downloads at the same time)
   if ( !error_state.empty() )
   {
-    if ( rand() % 10 == 0 && getFileAgeInDays( oeis_seq.getBFilePath() ) >= 60 )
-    {
-      Log::get().debug( "Removing " + error_state + " b-file " + oeis_seq.getBFilePath() );
-      std::remove( oeis_seq.getBFilePath().c_str() );
-    }
+    // TODO: also refetch old files, see getFileAgeInDays( oeis_seq.getBFilePath() )
+    Log::get().warn( "Removing " + error_state + " b-file " + oeis_seq.getBFilePath() );
+    std::remove( oeis_seq.getBFilePath().c_str() );
     return false;
   }
 
