@@ -103,8 +103,8 @@ int main( int argc, char *argv[] )
       OeisSequence seq( args.at( 1 ) );
       Program program = parser.parse( seq.getProgramPath() );
       Interpreter interpreter( settings );
-      seq.fetchBFile();
-      auto terms = seq.getTerms( -1 );
+      seq.fetchBFile( 100000 ); // magic number
+      auto terms = seq.getTerms( 100000 ); // magic number
       auto result = interpreter.check( program, terms, OeisSequence::LONG_SEQ_LENGTH );
       switch ( result.first )
       {
