@@ -105,14 +105,18 @@ int main( int argc, char *argv[] )
       Interpreter interpreter( settings );
       seq.fetchBFile();
       auto terms = seq.getTerms( -1 );
-      auto result = interpreter.check( program, terms );
-      if ( result.first )
+      auto result = interpreter.check( program, terms, OeisSequence::LONG_SEQ_LENGTH );
+      switch ( result.first )
       {
+      case status_t::OK:
         std::cout << "ok" << std::endl;
-      }
-      else
-      {
+        break;
+      case status_t::WARNING:
+        std::cout << "warning" << std::endl;
+        break;
+      case status_t::ERROR:
         std::cout << "error" << std::endl;
+        break;
       }
     }
     else if ( cmd == "optimize" || cmd == "opt" )
