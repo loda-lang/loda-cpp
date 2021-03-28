@@ -628,15 +628,25 @@ std::string OeisManager::isOptimizedBetter( Program existing, Program optimized,
     }
   }
 
-  // compare warnings states
+  // remove nops...
+  optimizer.removeNops( existing );
+  optimizer.removeNops( optimized );
+
+  // we want at least one operation (avoid empty program for A000004
+  if ( optimized.ops.empty() )
+  {
+    return "";
+  }
+
+  // compare number of successfully computed terms
   auto terms = seq.getTerms( -1 );
   auto optimized_check = interpreter.check( optimized, terms, OeisSequence::LONG_SEQ_LENGTH );
   auto existing_check = interpreter.check( existing, terms, OeisSequence::LONG_SEQ_LENGTH );
-  if ( static_cast<int64_t>( optimized_check.first ) < static_cast<int64_t>( existing_check.first ) )
+  if ( optimized_check.second.runs > existing_check.second.runs )
   {
     return "More robust";
   }
-  else if ( static_cast<int64_t>( optimized_check.first ) > static_cast<int64_t>( existing_check.first ) )
+  else if ( optimized_check.second.runs < existing_check.second.runs )
   {
     return ""; // optimized is worse
   }
@@ -653,28 +663,21 @@ std::string OeisManager::isOptimizedBetter( Program existing, Program optimized,
     return ""; // optimized is worse
   }
 
-  // now remove nops...
-  optimizer.removeNops( existing );
-  optimizer.removeNops( optimized );
-
-  // we want at least one operation (avoid empty program for A000004
-  if ( optimized.ops.empty() )
-  {
-    return "";
-  }
-
   // ...and compare number of execution cycles
-  auto existing_cycles = existing_check.second.total;
-  auto optimized_cycles = optimized_check.second.total;
-  if ( existing_cycles >= 0 && optimized_cycles >= 0 )
+  if ( optimized_check.second.runs == existing_check.second.runs )
   {
-    if ( optimized_cycles < existing_cycles )
+    auto existing_cycles = existing_check.second.total;
+    auto optimized_cycles = optimized_check.second.total;
+    if ( existing_cycles >= 0 && optimized_cycles >= 0 )
     {
-      return "Faster";
-    }
-    else if ( optimized_cycles > existing_cycles )
-    {
-      return "";
+      if ( optimized_cycles < existing_cycles )
+      {
+        return "Faster";
+      }
+      else if ( optimized_cycles > existing_cycles )
+      {
+        return "";
+      }
     }
   }
 
