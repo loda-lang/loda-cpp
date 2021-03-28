@@ -3,7 +3,7 @@
     "new": [
       {
         "version": 1,
-        "length": 50,
+        "length": 30,
         "maxConstant": 5,
         "maxCell": 5,
         "loops": false,
@@ -19,27 +19,27 @@
       },
       {
         "version": 1,
-        "length": 60,
-        "maxConstant": 6,
-        "maxCell": 6,
+        "length": 40,
+        "maxConstant": 4,
+        "maxCell": 4,
         "loops": true,
         "calls": false,
         "indirectAccess": false
       },
       {
         "version": 1,
-        "length": 60,
-        "maxConstant": 6,
-        "maxCell": 6,
+        "length": 40,
+        "maxConstant": 4,
+        "maxCell": 4,
         "loops": false,
         "calls": true,
         "indirectAccess": false
       },
       {
         "version": 1,
-        "length": 60,
-        "maxConstant": 6,
-        "maxCell": 6,
+        "length": 40,
+        "maxConstant": 4,
+        "maxCell": 4,
         "loops": true,
         "calls": true,
         "indirectAccess": false
