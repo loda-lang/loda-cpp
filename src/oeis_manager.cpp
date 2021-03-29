@@ -60,13 +60,26 @@ void OeisManager::load()
     Log::get().info( "Loading sequences from the OEIS index" );
     loaded_count = loadData();
     loadNames();
-    loadDenylist();
 
     // lock released at the end of this block
   }
 
+  // the deny list needs no lock
+  loadDenylist();
+
+  // try to load stats to speed up the removal of existing programs
+  if ( !settings.optimize_existing_programs )
+  {
+    std::ifstream stats_file( stats.getMainStatsFile( getStatsHome() ) );
+    if ( stats_file.good() )
+    {
+      getStats();
+    }
+  }
+
   // collect known / linear sequences if they should be ignored
   std::vector<number_t> seqs_to_remove;
+  bool prog_exists;
   for ( auto &seq : sequences )
   {
     if ( seq.id == 0 )
@@ -74,7 +87,7 @@ void OeisManager::load()
       continue;
     }
 
-    // sequence on the denylist?
+    // sequence on the deny list?
     if ( denylist.find( seq.id ) != denylist.end() )
     {
       seqs_to_remove.push_back( seq.id );
@@ -92,11 +105,18 @@ void OeisManager::load()
         continue;
       }
       // already exists?
-      std::ifstream in( seq.getProgramPath() );
-      if ( in.good() )
+      if ( stats_loaded )
+      {
+        prog_exists = (seq.id < stats.found_programs.size()) && stats.found_programs[seq.id];
+      }
+      else
+      {
+        std::ifstream in( seq.getProgramPath() );
+        prog_exists = in.good();
+      }
+      if ( prog_exists )
       {
         seqs_to_remove.push_back( seq.id );
-        in.close();
       }
     }
   }
