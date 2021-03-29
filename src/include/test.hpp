@@ -20,6 +20,8 @@ public:
 
   void knownPrograms();
 
+  void oeisSeq();
+
   void steps();
 
   void ackermann();

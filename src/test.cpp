@@ -26,6 +26,7 @@ void Test::all()
   stats();
   knownPrograms();
   steps();
+  oeisSeq();
   ackermann();
   collatz();
   linearMatcher();
@@ -185,6 +186,35 @@ void Test::steps()
   {
     Log::get().error( "unexpected number of steps: " + std::to_string( steps ), true );
   }
+}
+
+void checkSeq( const Sequence& s, size_t expected_size, size_t index, number_t expected_value )
+{
+  if ( s.size() != expected_size )
+  {
+    Log::get().error(
+        "Unexpected number of terms: " + std::to_string( s.size() ) + " (expected " + std::to_string( expected_size )
+            + ")", true );
+  }
+  if ( s[index] != expected_value )
+  {
+    Log::get().error( "Unexpected terms: " + s.to_string(), true );
+  }
+}
+
+void Test::oeisSeq()
+{
+  OeisSequence s( 6 );
+  std::remove( s.getBFilePath().c_str() );
+  checkSeq( s.getTerms( 20 ), 20, 18, 8 ); // this should fetch the b-file
+  checkSeq( s.getTerms( 250 ), 250, 235, 38 );
+  checkSeq( s.getTerms( 2000 ), 2000, 1240, 100 );
+  checkSeq( s.getTerms( 10000 ), 10000, 9840, 320 );
+  checkSeq( s.getTerms( 100000 ), 10000, 9840, 320 ); // only 10000 terms available
+  checkSeq( s.getTerms( 10000 ), 10000, 9840, 320 ); // from here on, the b-file should not get re-loaded
+  checkSeq( s.getTerms( 2000 ), 2000, 1240, 100 );
+  checkSeq( s.getTerms( 250 ), 250, 235, 38 );
+  checkSeq( s.getTerms( 20 ), 20, 18, 8 );
 }
 
 void Test::ackermann()
