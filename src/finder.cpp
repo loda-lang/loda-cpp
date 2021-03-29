@@ -123,7 +123,8 @@ void Finder::findAll( const Program &p, const Sequence &norm_seq, const std::vec
     for ( auto t : tmp_result )
     {
       matcher_stats[i].candidates++;
-      auto expected_full_seq = sequences.at( t.first ).getTerms( OeisSequence::DEFAULT_SEQ_LENGTH );
+      auto& s = sequences.at( t.first );
+      auto expected_full_seq = s.getTerms( s.existingNumTerms() );
       try
       {
         tmp_full_seq.clear();

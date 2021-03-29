@@ -30,6 +30,11 @@ public:
 
   Sequence getTerms( int64_t max_num_terms = EXTENDED_SEQ_LENGTH ) const;
 
+  size_t existingNumTerms() const
+  {
+    return terms.size();
+  }
+
   size_t id;
   std::string name;
 
