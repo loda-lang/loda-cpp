@@ -282,8 +282,14 @@ size_t Interpreter::run( const Program &p, Memory &mem )
       Log::get().debug( buf.str() );
     }
 
+    // count execution steps (we don't want to count NOPs)
+    if ( op.type != Operation::Type::NOP )
+    {
+      ++cycles;
+    }
+
     // check resource constraints
-    if ( ++cycles >= settings.max_cycles )
+    if ( cycles >= settings.max_cycles )
     {
       throw std::runtime_error(
           "Program did not terminate after " + std::to_string( cycles ) + " cycles; last operation: "
