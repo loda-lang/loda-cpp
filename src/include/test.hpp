@@ -20,6 +20,8 @@ public:
 
   void knownPrograms();
 
+  void steps();
+
   void ackermann();
 
   void collatz();
