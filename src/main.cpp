@@ -43,7 +43,7 @@ void help()
   std::cout << "  -m <number>      Maximum number of used memory cells (default:" << settings.max_memory << ")"
       << std::endl;
   std::cout << "  -b <number>      Print evaluation result in b-file format starting from a given offset" << std::endl;
-  std::cout << "  -s               Evaluate to number of execution steps" << std::endl;
+  std::cout << "  -s               Evaluate the number of execution steps" << std::endl;
   std::cout << "  -r               Search for programs of linear sequences (slow)" << std::endl;
   std::cout << "  -x               Minimize and overwrite existing programs" << std::endl;
 }
