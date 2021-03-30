@@ -148,11 +148,10 @@ size_t OeisMaintenance::checkAndMinimizePrograms()
       try
       {
         program = parser.parse( program_file );
-        s.fetchBFile( OeisSequence::VERY_LONG_SEQ_LENGTH ); // ensure b-file is loaded
-        auto very_long_seq = s.getTerms( OeisSequence::VERY_LONG_SEQ_LENGTH );
+        auto extended_seq = s.getTerms( OeisSequence::EXTENDED_SEQ_LENGTH );
 
         // check its correctness
-        auto check = interpreter.check( program, very_long_seq, OeisSequence::LONG_SEQ_LENGTH );
+        auto check = interpreter.check( program, extended_seq, OeisSequence::DEFAULT_SEQ_LENGTH );
         is_okay = (check.first != status_t::ERROR); // we allow warnings
 
         // check if it is on the deny list
@@ -190,7 +189,7 @@ size_t OeisMaintenance::checkAndMinimizePrograms()
         {
           ProgramUtil::removeOps( program, Operation::Type::NOP );
           minimized = program;
-          manager.minimizer.optimizeAndMinimize( minimized, 2, 1, OeisSequence::LONG_SEQ_LENGTH );
+          manager.minimizer.optimizeAndMinimize( minimized, 2, 1, OeisSequence::DEFAULT_SEQ_LENGTH );
           if ( program != minimized )
           {
             Log::get().info( "Updating program because it is not minimal: " + file_name );

@@ -25,6 +25,8 @@ void Test::all()
   config();
   stats();
   knownPrograms();
+  steps();
+  oeisSeq();
   ackermann();
   collatz();
   linearMatcher();
@@ -167,6 +169,52 @@ void Test::knownPrograms()
   testSeq( 45, Sequence( { 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181 } ) );
   testSeq( 79, Sequence( { 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536 } ) );
   testSeq( 1489, Sequence( { 0, -1, -2, -3, -4, -5, -6, -7, -8, -9, -10, -11, -12, -13, -14, -15, -16, -17 } ) );
+}
+
+void Test::steps()
+{
+  auto file = OeisSequence( 12 ).getProgramPath();
+  Log::get().info( "Testing steps for " + file );
+  Parser parser;
+  Settings settings;
+  Interpreter interpreter( settings );
+  auto p = parser.parse( file );
+  Memory mem;
+  mem.set( Program::INPUT_CELL, 26 );
+  auto steps = interpreter.run( p, mem );
+  if ( steps != 1 )
+  {
+    Log::get().error( "unexpected number of steps: " + std::to_string( steps ), true );
+  }
+}
+
+void checkSeq( const Sequence& s, size_t expected_size, size_t index, number_t expected_value )
+{
+  if ( s.size() != expected_size )
+  {
+    Log::get().error(
+        "Unexpected number of terms: " + std::to_string( s.size() ) + " (expected " + std::to_string( expected_size )
+            + ")", true );
+  }
+  if ( s[index] != expected_value )
+  {
+    Log::get().error( "Unexpected terms: " + s.to_string(), true );
+  }
+}
+
+void Test::oeisSeq()
+{
+  OeisSequence s( 6 );
+  std::remove( s.getBFilePath().c_str() );
+  checkSeq( s.getTerms( 20 ), 20, 18, 8 ); // this should fetch the b-file
+  checkSeq( s.getTerms( 250 ), 250, 235, 38 );
+  checkSeq( s.getTerms( 2000 ), 2000, 1240, 100 );
+  checkSeq( s.getTerms( 10000 ), 10000, 9840, 320 );
+  checkSeq( s.getTerms( 100000 ), 10000, 9840, 320 ); // only 10000 terms available
+  checkSeq( s.getTerms( 10000 ), 10000, 9840, 320 ); // from here on, the b-file should not get re-loaded
+  checkSeq( s.getTerms( 2000 ), 2000, 1240, 100 );
+  checkSeq( s.getTerms( 250 ), 250, 235, 38 );
+  checkSeq( s.getTerms( 20 ), 20, 18, 8 );
 }
 
 void Test::ackermann()
