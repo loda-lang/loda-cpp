@@ -27,6 +27,13 @@ struct pair_hasher
   }
 };
 
+enum class status_t
+{
+  OK,
+  WARNING,
+  ERROR
+};
+
 class Interpreter
 {
 public:
@@ -41,7 +48,8 @@ public:
 
   steps_t eval( const Program &p, std::vector<Sequence> &seqs, int64_t num_terms = -1 );
 
-  std::pair<bool, steps_t> check( const Program &p, const Sequence &expected_seq, int64_t num_terminating_terms = -1 );
+  std::pair<status_t, steps_t> check( const Program &p, const Sequence &expected_seq,
+      int64_t num_terminating_terms = -1 );
 
 private:
 

@@ -60,13 +60,26 @@ void OeisManager::load()
     Log::get().info( "Loading sequences from the OEIS index" );
     loaded_count = loadData();
     loadNames();
-    loadDenylist();
 
     // lock released at the end of this block
   }
 
+  // the deny list needs no lock
+  loadDenylist();
+
+  // try to load stats to speed up the removal of existing programs
+  if ( !settings.optimize_existing_programs )
+  {
+    std::ifstream stats_file( stats.getMainStatsFile( getStatsHome() ) );
+    if ( stats_file.good() )
+    {
+      getStats();
+    }
+  }
+
   // collect known / linear sequences if they should be ignored
   std::vector<number_t> seqs_to_remove;
+  bool prog_exists;
   for ( auto &seq : sequences )
   {
     if ( seq.id == 0 )
@@ -74,7 +87,7 @@ void OeisManager::load()
       continue;
     }
 
-    // sequence on the denylist?
+    // sequence on the deny list?
     if ( denylist.find( seq.id ) != denylist.end() )
     {
       seqs_to_remove.push_back( seq.id );
@@ -92,11 +105,18 @@ void OeisManager::load()
         continue;
       }
       // already exists?
-      std::ifstream in( seq.getProgramPath() );
-      if ( in.good() )
+      if ( stats_loaded )
+      {
+        prog_exists = (seq.id < stats.found_programs.size()) && stats.found_programs[seq.id];
+      }
+      else
+      {
+        std::ifstream in( seq.getProgramPath() );
+        prog_exists = in.good();
+      }
+      if ( prog_exists )
       {
         seqs_to_remove.push_back( seq.id );
-        in.close();
       }
     }
   }
@@ -526,29 +546,26 @@ void OeisManager::dumpProgram( size_t id, Program p, const std::string &file ) c
   std::ofstream out( file );
   auto &seq = sequences.at( id );
   out << "; " << seq << std::endl;
-  out << "; " << seq.getTerms( OeisSequence::LONG_SEQ_LENGTH ) << std::endl;
+  out << "; " << seq.getTerms( OeisSequence::DEFAULT_SEQ_LENGTH ) << std::endl;
   out << std::endl;
   ProgramUtil::print( p, out );
   out.close();
-  seq.fetchBFile(); // ensure b-file gets downloaded for the next run
 }
 
 std::pair<bool, Program> OeisManager::minimizeAndCheck( const Program &p, const OeisSequence &seq, bool minimize )
 {
-  std::pair<bool, steps_t> check;
+  std::pair<status_t, steps_t> check;
   std::pair<bool, Program> result;
   result.second = p;
 
-  // ensure b-file gets fetched before checking
-  seq.fetchBFile();
-  auto very_long_seq = seq.getTerms( OeisSequence::VERY_LONG_SEQ_LENGTH );
+  auto extended_seq = seq.getTerms( OeisSequence::EXTENDED_SEQ_LENGTH );
 
   if ( minimize )
   {
     // minimize for default number of terms
-    minimizer.optimizeAndMinimize( result.second, 2, 1, OeisSequence::LONG_SEQ_LENGTH ); // default length
-    check = interpreter.check( result.second, very_long_seq, OeisSequence::LONG_SEQ_LENGTH );
-    result.first = check.first;
+    minimizer.optimizeAndMinimize( result.second, 2, 1, OeisSequence::DEFAULT_SEQ_LENGTH ); // default length
+    check = interpreter.check( result.second, extended_seq, OeisSequence::DEFAULT_SEQ_LENGTH );
+    result.first = (check.first != status_t::ERROR); // we allow warnings
     if ( result.first )
     {
       return result;
@@ -556,9 +573,9 @@ std::pair<bool, Program> OeisManager::minimizeAndCheck( const Program &p, const 
 
     // minimize for extended number of terms
     result.second = p;
-    minimizer.optimizeAndMinimize( result.second, 2, 1, OeisSequence::VERY_LONG_SEQ_LENGTH ); // extended length
-    check = interpreter.check( result.second, very_long_seq, OeisSequence::LONG_SEQ_LENGTH );
-    result.first = check.first;
+    minimizer.optimizeAndMinimize( result.second, 2, 1, OeisSequence::EXTENDED_SEQ_LENGTH ); // extended length
+    check = interpreter.check( result.second, extended_seq, OeisSequence::DEFAULT_SEQ_LENGTH );
+    result.first = (check.first != status_t::ERROR); // we allow warnings
     if ( result.first )
     {
       return result;
@@ -567,15 +584,15 @@ std::pair<bool, Program> OeisManager::minimizeAndCheck( const Program &p, const 
 
   // check w/o minimization
   result.second = p;
-  check = interpreter.check( p, very_long_seq, OeisSequence::LONG_SEQ_LENGTH );
-  result.first = check.first;
+  check = interpreter.check( p, extended_seq, OeisSequence::DEFAULT_SEQ_LENGTH );
+  result.first = (check.first != status_t::ERROR); // we allow warnings
 
   // log error in case minimization did not yield correct result
   if ( result.first && minimize )
   {
     Log::get().warn(
         "Program for " + seq.id_str() + " generates wrong result after minimization with "
-            + std::to_string( OeisSequence::LONG_SEQ_LENGTH ) + " terms" );
+            + std::to_string( OeisSequence::DEFAULT_SEQ_LENGTH ) + " terms" );
     std::string f = getLodaHome() + "debug/optimizer/" + seq.id_str() + ".asm";
     ensureDir( f );
     std::ofstream out( f );
@@ -583,32 +600,6 @@ std::pair<bool, Program> OeisManager::minimizeAndCheck( const Program &p, const 
   }
 
   return result;
-}
-
-int OeisManager::getNumCycles( const Program &p )
-{
-  Memory mem;
-  const number_t input = settings.num_terms - 1;
-  mem.set( 0, input );
-  try
-  {
-    return interpreter.run( p, mem );
-  }
-  catch ( const std::exception &e )
-  {
-    auto timestamp =
-        std::to_string(
-            std::chrono::duration_cast<std::chrono::milliseconds>( std::chrono::system_clock::now().time_since_epoch() ).count()
-                % 1000000 );
-    std::string f = getLodaHome() + "debug/interpreter/" + timestamp + ".asm";
-    ensureDir( f );
-    std::ofstream o( f );
-    ProgramUtil::print( p, o );
-    o.close();
-    Log::get().error( "Error evaluating program for n=" + std::to_string( input ) + ": " + std::string( e.what() ),
-        true );
-  }
-  return -1;
 }
 
 size_t getBadOpsCount( const Program& p )
@@ -640,18 +631,46 @@ size_t getBadOpsCount( const Program& p )
   return num_ops;
 }
 
-std::string OeisManager::isOptimizedBetter( Program existing, Program optimized, size_t id )
+std::string OeisManager::isOptimizedBetter( Program existing, Program optimized, const OeisSequence &seq )
 {
   // check if there are illegal recursions
   for ( auto &op : optimized.ops )
   {
     if ( op.type == Operation::Type::CAL )
     {
-      if ( op.source.type != Operand::Type::CONSTANT || op.source.value == static_cast<number_t>( id ) )
+      if ( op.source.type != Operand::Type::CONSTANT || op.source.value == static_cast<number_t>( seq.id ) )
       {
         return "";
       }
     }
+  }
+
+  // remove nops...
+  optimizer.removeNops( existing );
+  optimizer.removeNops( optimized );
+
+  // we want at least one operation (avoid empty program for A000004
+  if ( optimized.ops.empty() )
+  {
+    return "";
+  }
+
+  auto terms = seq.getTerms( OeisSequence::EXTENDED_SEQ_LENGTH );
+  if ( terms.empty() )
+  {
+    Log::get().error( "Error fetching b-file for " + seq.id_str(), true );
+  }
+
+  // compare number of successfully computed terms
+  auto optimized_check = interpreter.check( optimized, terms, OeisSequence::DEFAULT_SEQ_LENGTH );
+  auto existing_check = interpreter.check( existing, terms, OeisSequence::DEFAULT_SEQ_LENGTH );
+  if ( optimized_check.second.runs > existing_check.second.runs )
+  {
+    return "Better";
+  }
+  else if ( optimized_check.second.runs < existing_check.second.runs )
+  {
+    return ""; // optimized is worse
   }
 
   // compare number of "bad" operations
@@ -666,19 +685,9 @@ std::string OeisManager::isOptimizedBetter( Program existing, Program optimized,
     return ""; // optimized is worse
   }
 
-  // now remove nops...
-  optimizer.removeNops( existing );
-  optimizer.removeNops( optimized );
-
-  // we want at least one operation (avoid empty program for A000004
-  if ( optimized.ops.empty() )
-  {
-    return "";
-  }
-
   // ...and compare number of execution cycles
-  auto existing_cycles = getNumCycles( existing );
-  auto optimized_cycles = getNumCycles( optimized );
+  auto existing_cycles = existing_check.second.total;
+  auto optimized_cycles = optimized_check.second.total;
   if ( existing_cycles >= 0 && optimized_cycles >= 0 )
   {
     if ( optimized_cycles < existing_cycles )
@@ -691,11 +700,6 @@ std::string OeisManager::isOptimizedBetter( Program existing, Program optimized,
     }
   }
 
-  // shorter programs are better (nops have been removed already at this point)
-  if ( ProgramUtil::numOps( optimized, true ) < ProgramUtil::numOps( existing, true ) )
-  {
-    return "Shorter";
-  }
   return "";
 }
 

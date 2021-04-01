@@ -39,7 +39,7 @@ bool Minimizer::minimize( Program &p, size_t num_terms ) const
       try
       {
         auto res = interpreter.check( p, target_sequence );
-        can_replace = res.first && (res.second.total <= target_steps.total);
+        can_replace = (res.first == status_t::OK) && (res.second.total <= target_steps.total);
       }
       catch ( const std::exception& )
       {
@@ -64,7 +64,7 @@ bool Minimizer::minimize( Program &p, size_t num_terms ) const
         try
         {
           auto res = interpreter.check( p, target_sequence );
-          can_reset = res.first && (res.second.total <= target_steps.total);
+          can_reset = (res.first == status_t::OK) && (res.second.total <= target_steps.total);
         }
         catch ( const std::exception& )
         {
@@ -88,7 +88,7 @@ bool Minimizer::minimize( Program &p, size_t num_terms ) const
       try
       {
         auto res = interpreter.check( p, target_sequence );
-        can_remove = res.first && (res.second.total <= target_steps.total);
+        can_remove = (res.first == status_t::OK) && (res.second.total <= target_steps.total);
       }
       catch ( const std::exception& )
       {
@@ -156,7 +156,7 @@ bool Minimizer::minimize( Program &p, size_t num_terms ) const
             try
             {
               auto res = interpreter.check( p, target_sequence );
-              can_rewrite = res.first; // we don't check the number of steps here!
+              can_rewrite = (res.first == status_t::OK); // we don't check the number of steps here!
             }
             catch ( const std::exception& )
             {

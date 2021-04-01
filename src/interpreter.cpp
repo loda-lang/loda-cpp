@@ -282,8 +282,14 @@ size_t Interpreter::run( const Program &p, Memory &mem )
       Log::get().debug( buf.str() );
     }
 
+    // count execution steps (we don't want to count NOPs)
+    if ( op.type != Operation::Type::NOP )
+    {
+      ++cycles;
+    }
+
     // check resource constraints
-    if ( ++cycles >= settings.max_cycles )
+    if ( cycles >= settings.max_cycles )
     {
       throw std::runtime_error(
           "Program did not terminate after " + std::to_string( cycles ) + " cycles; last operation: "
@@ -416,14 +422,14 @@ steps_t Interpreter::eval( const Program &p, std::vector<Sequence> &seqs, int64_
   return steps;
 }
 
-std::pair<bool, steps_t> Interpreter::check( const Program &p, const Sequence &expected_seq,
+std::pair<status_t, steps_t> Interpreter::check( const Program &p, const Sequence &expected_seq,
     int64_t num_terminating_terms )
 {
   if ( num_terminating_terms < 0 )
   {
     num_terminating_terms = expected_seq.size();
   }
-  std::pair<bool, steps_t> result;
+  std::pair<status_t, steps_t> result;
   Memory mem;
   for ( size_t i = 0; i < expected_seq.size(); i++ )
   {
@@ -433,18 +439,31 @@ std::pair<bool, steps_t> Interpreter::check( const Program &p, const Sequence &e
     {
       result.second.add( run( p, mem ) );
     }
-    catch ( std::exception& )
+    catch ( std::exception& e )
     {
-      result.first = (int64_t) i >= num_terminating_terms;
+      if ( settings.print_as_b_file )
+      {
+        std::cout << std::string( e.what() ) << std::endl;
+      }
+      result.first = ((int64_t) i >= num_terminating_terms) ? status_t::WARNING : status_t::ERROR;
       return result;
     }
     if ( mem.get( Program::OUTPUT_CELL ) != expected_seq[i] )
     {
-      result.first = false;
+      if ( settings.print_as_b_file )
+      {
+        std::cout << (settings.print_as_b_file_offset + i) << " " << mem.get( Program::OUTPUT_CELL ) << " -> expected "
+            << expected_seq[i] << std::endl;
+      }
+      result.first = status_t::ERROR;
       return result;
     }
+    if ( settings.print_as_b_file )
+    {
+      std::cout << (settings.print_as_b_file_offset + i) << " " << expected_seq[i] << std::endl;
+    }
   }
-  result.first = true;
+  result.first = status_t::OK;
   return result;
 }
 

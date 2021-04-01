@@ -6,9 +6,9 @@ class OeisSequence
 {
 public:
 
-  static const size_t LONG_SEQ_LENGTH;
+  static const size_t DEFAULT_SEQ_LENGTH;
 
-  static const size_t VERY_LONG_SEQ_LENGTH;
+  static const size_t EXTENDED_SEQ_LENGTH;
 
   static std::string getHome();
 
@@ -28,9 +28,12 @@ public:
 
   std::string getBFilePath() const;
 
-  Sequence getTerms( int64_t max_num_terms ) const;
+  Sequence getTerms( int64_t max_num_terms = EXTENDED_SEQ_LENGTH ) const;
 
-  void fetchBFile() const;
+  size_t existingNumTerms() const
+  {
+    return terms.size();
+  }
 
   size_t id;
   std::string name;
@@ -41,8 +44,7 @@ public:
 
 private:
 
-  mutable Sequence full;
-  mutable bool attempted_bfile;
-  mutable bool loaded_bfile;
+  mutable Sequence terms;
+  mutable size_t num_bfile_terms;
 
 };

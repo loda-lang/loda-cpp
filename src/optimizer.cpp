@@ -179,8 +179,8 @@ bool Optimizer::mergeOps( Program &p ) const
         }
 
         // first mul, second div?
-        else if ( o1.type == Operation::Type::MUL && o2.type == Operation::Type::DIV && o1.source.value > 0
-            && o2.source.value > 0 && o1.source.value % o2.source.value == 0 )
+        else if ( o1.type == Operation::Type::MUL && o2.type == Operation::Type::DIV && o1.source.value != 0
+            && o2.source.value != 0 && o1.source.value % o2.source.value == 0 )
         {
           o1.source.value = o1.source.value / o2.source.value;
           do_merge = true;
@@ -725,6 +725,27 @@ bool Optimizer::mergeLoops( Program &p ) const
   return false;
 }
 
+/*
+ * Returns true if mergeOps() can merge these two operation types.
+ */
+bool canMerge( Operation::Type a, Operation::Type b )
+{
+  if ( (a == Operation::Type::ADD || a == Operation::Type::SUB)
+      && (b == Operation::Type::ADD || b == Operation::Type::SUB) )
+  {
+    return true;
+  }
+  if ( a == b && (a == Operation::Type::MUL || a == Operation::Type::DIV) )
+  {
+    return true;
+  }
+  if ( a == Operation::Type::MUL && b == Operation::Type::DIV )
+  {
+    return true;
+  }
+  return false;
+}
+
 bool Optimizer::pullUpMov( Program &p ) const
 {
   // see tests E014 and E015
@@ -735,8 +756,7 @@ bool Optimizer::pullUpMov( Program &p ) const
     auto& b = p.ops[i + 1];
     auto& c = p.ops[i + 2];
     // check operation types
-    if ( !((a.type == Operation::Type::ADD && c.type == Operation::Type::SUB)
-        || (a.type == Operation::Type::MUL && c.type == Operation::Type::DIV)) )
+    if ( !canMerge( a.type, c.type ) )
     {
       continue;
     }
@@ -752,13 +772,15 @@ bool Optimizer::pullUpMov( Program &p ) const
       continue;
     }
     // check operand values
-    if ( a.target.value != b.source.value || a.source.value != c.source.value || b.target.value != c.target.value )
+    if ( a.target.value != b.source.value || b.target.value != c.target.value )
     {
       continue;
     }
     // okay, we are ready to optimize!
+    Operation d = a;
+    d.target.value = b.target.value;
     std::swap( a, b );
-    p.ops.erase( p.ops.begin() + i + 2, p.ops.begin() + i + 3 ); // remove c
+    p.ops.insert( p.ops.begin() + i + 1, d );
     changed = true;
   }
   return changed;
