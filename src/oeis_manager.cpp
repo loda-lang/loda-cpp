@@ -709,19 +709,22 @@ std::pair<bool, bool> OeisManager::updateProgram( size_t id, const Program &p )
   std::string file_name = seq.getProgramPath();
   bool is_new = true;
   std::string change;
-  std::pair<bool, Program> optimized;
+
+  // minimize and check the program
+  auto minimized = minimizeAndCheck( p, seq, true );
+  if ( !minimized.first )
+  {
+    return
+    { false,false};
+  }
+
+  // check if there is an existing program already
   {
     std::ifstream in( file_name );
     if ( in.good() )
     {
       if ( settings.optimize_existing_programs )
       {
-        optimized = minimizeAndCheck( p, seq, true );
-        if ( !optimized.first )
-        {
-          return
-          { false,false};
-        }
         is_new = false;
         Parser parser;
         Program existing;
@@ -735,7 +738,7 @@ std::pair<bool, bool> OeisManager::updateProgram( size_t id, const Program &p )
           return
           { false,false};
         }
-        change = isOptimizedBetter( existing, optimized.second, id );
+        change = isOptimizedBetter( existing, minimized.second, id );
         if ( change.empty() )
         {
           return
@@ -749,27 +752,9 @@ std::pair<bool, bool> OeisManager::updateProgram( size_t id, const Program &p )
       }
     }
   }
-  if ( is_new )
-  {
-    // first check if it is still correct when using the full sequence
-    optimized = minimizeAndCheck( p, seq, false );
-    if ( !optimized.first )
-    {
-      return
-      { false,false};
-    }
-    // now we minimize the newly found program
-    optimized = minimizeAndCheck( p, seq, true );
-    if ( !optimized.first )
-    {
-      // if there is a program during minimization, we still want
-      // to keep the original new file
-      optimized.second = p;
-    }
-  }
 
   // write new or optimized program version
-  dumpProgram( id, optimized.second, file_name );
+  dumpProgram( id, minimized.second, file_name );
 
   // send alert
   std::stringstream buf;
@@ -782,7 +767,7 @@ std::pair<bool, bool> OeisManager::updateProgram( size_t id, const Program &p )
   details.title_link = seq.url_str();
   details.color = is_new ? "good" : "warning";
   buf << "\\n\\`\\`\\`\\n";
-  Program o = optimized.second;
+  Program o = minimized.second;
   addCalComments( o );
   ProgramUtil::print( o, buf, "\\n" );
   buf << "\\`\\`\\`";
