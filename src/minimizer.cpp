@@ -81,6 +81,44 @@ bool Minimizer::minimize( Program &p, size_t num_terms ) const
         }
       }
     }
+    else if ( op.type == Operation::Type::LOG )
+    {
+      std::unordered_set<number_t> used_cells;
+      number_t largest_used = 0;
+      if ( ProgramUtil::getUsedMemoryCells( p, used_cells, largest_used, settings.max_memory ) )
+      {
+        // try to replace log by a loop
+        auto tmp = Operand( Operand::Type::DIRECT, largest_used + 1 );
+        p.ops[i] = Operation( Operation::Type::MOV, tmp, Operand( Operand::Type::CONSTANT, -1 ) );
+        p.ops.insert( p.ops.begin() + i + 1,
+            Operation( Operation::Type::LPB, op.target, Operand( Operand::Type::CONSTANT, 1 ) ) );
+        p.ops.insert( p.ops.begin() + i + 2,
+            Operation( Operation::Type::ADD, tmp, Operand( Operand::Type::CONSTANT, 1 ) ) );
+        p.ops.insert( p.ops.begin() + i + 3, Operation( Operation::Type::DIV, op.target, op.source ) );
+        p.ops.insert( p.ops.begin() + i + 4, Operation( Operation::Type::LPE ) );
+        p.ops.insert( p.ops.begin() + i + 5, Operation( Operation::Type::MOV, op.target, tmp ) );
+        bool can_rewrite;
+        try
+        {
+          auto res = interpreter.check( p, target_sequence );
+          can_rewrite = (res.first == status_t::OK); // we don't check the number of steps here!
+        }
+        catch ( const std::exception& )
+        {
+          can_rewrite = false;
+        }
+        if ( can_rewrite )
+        {
+          local_change = true;
+        }
+        else
+        {
+          // revert change
+          p.ops[i] = op;
+          p.ops.erase( p.ops.begin() + i + 1, p.ops.begin() + i + 6 );
+        }
+      }
+    }
     else if ( p.ops.size() > 1 ) // try to remove the current operation (if there is at least one operation, see A000004)
     {
       p.ops.erase( p.ops.begin() + i, p.ops.begin() + i + 1 );
