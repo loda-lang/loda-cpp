@@ -54,7 +54,7 @@ private:
 
   void dumpProgram( size_t id, Program p, const std::string &file ) const;
 
-  std::pair<bool, Program> minimizeAndCheck( const Program &p, const OeisSequence &seq, bool minimize );
+  std::pair<bool, Program> checkAndMinimize( const Program &p, const OeisSequence &seq, bool minimize );
 
   std::string isOptimizedBetter( Program existing, Program optimized, const OeisSequence &seq );
 
