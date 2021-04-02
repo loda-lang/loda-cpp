@@ -48,11 +48,11 @@ enum TwitterClient
 
 TwitterClient findTwitterClient()
 {
-  if ( system( "twidge lsfollowers > /dev/null" ) == 0 )
+  if ( system( "twidge lsfollowers > /dev/null 2> /dev/null" ) == 0 )
   {
     return TW_TWIDGE;
   }
-  if ( system( "rainbowstream -h > /dev/null" ) == 0 )
+  if ( system( "rainbowstream -h > /dev/null 2> /dev/null" ) == 0 )
   {
     return TW_RAINBOWSTREAM;
   }
