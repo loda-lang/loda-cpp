@@ -552,13 +552,22 @@ void OeisManager::dumpProgram( size_t id, Program p, const std::string &file ) c
   out.close();
 }
 
-std::pair<bool, Program> OeisManager::minimizeAndCheck( const Program &p, const OeisSequence &seq, bool minimize )
+std::pair<bool, Program> OeisManager::checkAndMinimize( const Program &p, const OeisSequence &seq, bool minimize )
 {
   std::pair<status_t, steps_t> check;
   std::pair<bool, Program> result;
   result.second = p;
 
+  // get the extended sequence
   auto extended_seq = seq.getTerms( OeisSequence::EXTENDED_SEQ_LENGTH );
+
+  // check the program w/o minimization
+  check = interpreter.check( p, extended_seq, OeisSequence::DEFAULT_SEQ_LENGTH );
+  result.first = (check.first != status_t::ERROR); // we allow warnings
+  if ( !result.first )
+  {
+    return result; // not correct
+  }
 
   if ( minimize )
   {
@@ -580,19 +589,11 @@ std::pair<bool, Program> OeisManager::minimizeAndCheck( const Program &p, const 
     {
       return result;
     }
-  }
 
-  // check w/o minimization
-  result.second = p;
-  check = interpreter.check( p, extended_seq, OeisSequence::DEFAULT_SEQ_LENGTH );
-  result.first = (check.first != status_t::ERROR); // we allow warnings
-
-  // log error in case minimization did not yield correct result
-  if ( result.first && minimize )
-  {
-    Log::get().warn(
+    // if we got here, there was an error in the minimization
+    Log::get().error(
         "Program for " + seq.id_str() + " generates wrong result after minimization with "
-            + std::to_string( OeisSequence::DEFAULT_SEQ_LENGTH ) + " terms" );
+            + std::to_string( OeisSequence::DEFAULT_SEQ_LENGTH ) + " terms", false );
     std::string f = getLodaHome() + "debug/optimizer/" + seq.id_str() + ".asm";
     ensureDir( f );
     std::ofstream out( f );
@@ -711,7 +712,7 @@ std::pair<bool, bool> OeisManager::updateProgram( size_t id, const Program &p )
   std::string change;
 
   // minimize and check the program
-  auto minimized = minimizeAndCheck( p, seq, true );
+  auto minimized = checkAndMinimize( p, seq, true );
   if ( !minimized.first )
   {
     return
