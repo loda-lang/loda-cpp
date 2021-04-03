@@ -552,13 +552,22 @@ void OeisManager::dumpProgram( size_t id, Program p, const std::string &file ) c
   out.close();
 }
 
-std::pair<bool, Program> OeisManager::minimizeAndCheck( const Program &p, const OeisSequence &seq, bool minimize )
+std::pair<bool, Program> OeisManager::checkAndMinimize( const Program &p, const OeisSequence &seq, bool minimize )
 {
   std::pair<status_t, steps_t> check;
   std::pair<bool, Program> result;
   result.second = p;
 
+  // get the extended sequence
   auto extended_seq = seq.getTerms( OeisSequence::EXTENDED_SEQ_LENGTH );
+
+  // check the program w/o minimization
+  check = interpreter.check( p, extended_seq, OeisSequence::DEFAULT_SEQ_LENGTH );
+  result.first = (check.first != status_t::ERROR); // we allow warnings
+  if ( !result.first )
+  {
+    return result; // not correct
+  }
 
   if ( minimize )
   {
@@ -580,19 +589,11 @@ std::pair<bool, Program> OeisManager::minimizeAndCheck( const Program &p, const 
     {
       return result;
     }
-  }
 
-  // check w/o minimization
-  result.second = p;
-  check = interpreter.check( p, extended_seq, OeisSequence::DEFAULT_SEQ_LENGTH );
-  result.first = (check.first != status_t::ERROR); // we allow warnings
-
-  // log error in case minimization did not yield correct result
-  if ( result.first && minimize )
-  {
-    Log::get().warn(
+    // if we got here, there was an error in the minimization
+    Log::get().error(
         "Program for " + seq.id_str() + " generates wrong result after minimization with "
-            + std::to_string( OeisSequence::DEFAULT_SEQ_LENGTH ) + " terms" );
+            + std::to_string( OeisSequence::DEFAULT_SEQ_LENGTH ) + " terms", false );
     std::string f = getLodaHome() + "debug/optimizer/" + seq.id_str() + ".asm";
     ensureDir( f );
     std::ofstream out( f );
@@ -709,19 +710,22 @@ std::pair<bool, bool> OeisManager::updateProgram( size_t id, const Program &p )
   std::string file_name = seq.getProgramPath();
   bool is_new = true;
   std::string change;
-  std::pair<bool, Program> optimized;
+
+  // minimize and check the program
+  auto minimized = checkAndMinimize( p, seq, true );
+  if ( !minimized.first )
+  {
+    return
+    { false,false};
+  }
+
+  // check if there is an existing program already
   {
     std::ifstream in( file_name );
     if ( in.good() )
     {
       if ( settings.optimize_existing_programs )
       {
-        optimized = minimizeAndCheck( p, seq, true );
-        if ( !optimized.first )
-        {
-          return
-          { false,false};
-        }
         is_new = false;
         Parser parser;
         Program existing;
@@ -735,7 +739,7 @@ std::pair<bool, bool> OeisManager::updateProgram( size_t id, const Program &p )
           return
           { false,false};
         }
-        change = isOptimizedBetter( existing, optimized.second, id );
+        change = isOptimizedBetter( existing, minimized.second, id );
         if ( change.empty() )
         {
           return
@@ -749,27 +753,9 @@ std::pair<bool, bool> OeisManager::updateProgram( size_t id, const Program &p )
       }
     }
   }
-  if ( is_new )
-  {
-    // first check if it is still correct when using the full sequence
-    optimized = minimizeAndCheck( p, seq, false );
-    if ( !optimized.first )
-    {
-      return
-      { false,false};
-    }
-    // now we minimize the newly found program
-    optimized = minimizeAndCheck( p, seq, true );
-    if ( !optimized.first )
-    {
-      // if there is a program during minimization, we still want
-      // to keep the original new file
-      optimized.second = p;
-    }
-  }
 
   // write new or optimized program version
-  dumpProgram( id, optimized.second, file_name );
+  dumpProgram( id, minimized.second, file_name );
 
   // send alert
   std::stringstream buf;
@@ -782,7 +768,7 @@ std::pair<bool, bool> OeisManager::updateProgram( size_t id, const Program &p )
   details.title_link = seq.url_str();
   details.color = is_new ? "good" : "warning";
   buf << "\\n\\`\\`\\`\\n";
-  Program o = optimized.second;
+  Program o = minimized.second;
   addCalComments( o );
   ProgramUtil::print( o, buf, "\\n" );
   buf << "\\`\\`\\`";
