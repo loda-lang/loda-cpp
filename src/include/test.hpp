@@ -18,6 +18,8 @@ public:
 
   void memory();
 
+  void iterator();
+
   void knownPrograms();
 
   void oeisSeq();

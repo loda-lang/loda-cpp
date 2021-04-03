@@ -122,3 +122,27 @@ bool Program::operator!=( const Program &p ) const
 {
   return !(*this == p);
 }
+
+bool Program::operator<( const Program &p ) const
+{
+  if ( ops.size() < p.ops.size() )
+  {
+    return true;
+  }
+  else if ( ops.size() > p.ops.size() )
+  {
+    return false;
+  }
+  for ( size_t i = 0; i < ops.size(); i++ )
+  {
+    if ( ops[i] < p.ops[i] )
+    {
+      return true;
+    }
+    else if ( p.ops[i] < ops[i] )
+    {
+      return false;
+    }
+  }
+  return false; // equal
+}
