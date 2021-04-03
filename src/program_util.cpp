@@ -37,6 +37,31 @@ bool ProgramUtil::replaceOps( Program &p, Operation::Type oldType, Operation::Ty
   return result;
 }
 
+bool ProgramUtil::isNop( const Operation& op )
+{
+  if ( op.type == Operation::Type::NOP || op.type == Operation::Type::DBG )
+  {
+    return true;
+  }
+  else if ( op.source == op.target
+      && (op.type == Operation::Type::MOV || op.type == Operation::Type::MIN || op.type == Operation::Type::MAX) )
+  {
+    return true;
+  }
+  else if ( op.source.type == Operand::Type::CONSTANT && op.source.value == 0
+      && (op.type == Operation::Type::ADD || op.type == Operation::Type::SUB || op.type == Operation::Type::LPB) )
+  {
+    return true;
+  }
+  else if ( op.source.type == Operand::Type::CONSTANT && op.source.value == 1
+      && ((op.type == Operation::Type::MUL || op.type == Operation::Type::DIV || op.type == Operation::Type::DIF
+          || op.type == Operation::Type::POW || op.type == Operation::Type::BIN)) )
+  {
+    return true;
+  }
+  return false;
+}
+
 size_t ProgramUtil::numOps( const Program &p, bool withNops )
 {
   if ( withNops )

@@ -75,29 +75,7 @@ bool Optimizer::removeNops( Program &p ) const
   auto it = p.ops.begin();
   while ( it != p.ops.end() )
   {
-    auto t = it->type;
-    bool is_nop = false;
-    if ( t == Operation::Type::NOP || t == Operation::Type::DBG )
-    {
-      is_nop = true;
-    }
-    else if ( it->source == it->target
-        && (t == Operation::Type::MOV || t == Operation::Type::MIN || t == Operation::Type::MAX) )
-    {
-      is_nop = true;
-    }
-    else if ( it->source.type == Operand::Type::CONSTANT && it->source.value == 0
-        && (t == Operation::Type::ADD || t == Operation::Type::SUB) )
-    {
-      is_nop = true;
-    }
-    else if ( it->source.type == Operand::Type::CONSTANT && it->source.value == 1
-        && ((t == Operation::Type::MUL || t == Operation::Type::DIV || t == Operation::Type::DIF
-            || t == Operation::Type::POW || t == Operation::Type::BIN)) )
-    {
-      is_nop = true;
-    }
-    if ( is_nop )
+    if ( ProgramUtil::isNop( *it ) )
     {
       if ( Log::get().level == Log::Level::DEBUG )
       {
