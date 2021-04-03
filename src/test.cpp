@@ -1,6 +1,7 @@
 #include "test.hpp"
 
 #include "interpreter.hpp"
+#include "iterator.hpp"
 #include "matcher.hpp"
 #include "miner.hpp"
 #include "minimizer.hpp"
@@ -159,6 +160,17 @@ void Test::memory()
       checkMemory( frag, length, 0 );
       checkMemory( frag, length + 1, 0 );
     }
+  }
+}
+
+void Test::iterator()
+{
+  Log::get().info( "Testing iterator" );
+  Iterator it;
+  for ( int i = 0; i < 100000; i++ )
+  {
+    it.next();
+    // TODO: compare with previous program
   }
 }
 

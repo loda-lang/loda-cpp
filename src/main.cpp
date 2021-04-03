@@ -1,4 +1,5 @@
 #include "interpreter.hpp"
+#include "iterator.hpp"
 #include "miner.hpp"
 #include "minimizer.hpp"
 #include "mutator.hpp"
@@ -197,12 +198,24 @@ int main( int argc, char *argv[] )
       OeisMaintenance maintenance( settings );
       maintenance.maintain();
     }
-    else if ( cmd == "migrate" )
+    else if ( cmd == "migrate" ) // hidden command
     {
       OeisManager manager( settings );
       manager.migrate();
     }
-    else if ( cmd == "collatz" )
+    else if ( cmd == "iterate" ) // hidden command
+    {
+      Iterator it;
+      Program p;
+      while ( true )
+      {
+        p = it.next();
+        std::cout << "\x1B[2J\x1B[H";
+        ProgramUtil::print( p, std::cout );
+        std::cin.ignore();
+      }
+    }
+    else if ( cmd == "collatz" ) // hidden command
     {
       Program program = parser.parse( std::string( args.at( 1 ) ) );
       Interpreter interpreter( settings );
