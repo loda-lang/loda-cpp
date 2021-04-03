@@ -212,7 +212,8 @@ int main( int argc, char *argv[] )
         p = it.next();
         std::cout << "\x1B[2J\x1B[H";
         ProgramUtil::print( p, std::cout );
-        std::cin.ignore();
+//        std::cout << std::endl;
+//        std::cin.ignore();
       }
     }
     else if ( cmd == "collatz" ) // hidden command
