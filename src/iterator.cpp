@@ -34,6 +34,7 @@ bool Iterator::inc( Operand &o )
 
 bool Iterator::inc( Operation &op )
 {
+  // cannot increase anymore?
   if ( op.type == Operation::Type::LPE )
   {
     return false;
@@ -113,13 +114,22 @@ bool Iterator::inc( Operation &op )
     return true;
 
   case Operation::Type::LPB:
-    op = Operation( Operation::Type::LPE );
-    return true;
-
-  case Operation::Type::LPE:
+  case Operation::Type::LPE: // handled separately
     return false;
   }
   return false;
+}
+
+bool Iterator::incWithSkip( Operation &op )
+{
+  do
+  {
+    if ( !inc( op ) )
+    {
+      return false;
+    }
+  } while ( shouldSkip( op ) );
+  return true;
 }
 
 bool Iterator::shouldSkip( const Operation& op )
@@ -156,55 +166,24 @@ bool Iterator::shouldSkip( const Operation& op )
 
 Program Iterator::next()
 {
-  for ( auto op = p_.ops.rbegin(); op != p_.ops.rend(); ++op )
+  int64_t i = p_.ops.size();
+  bool increased = false;
+  while ( --i >= 0 )
   {
-    if ( inc( *op ) )
+    if ( incWithSkip( p_.ops[i] ) )
     {
-      while ( shouldSkip( *op ) )
-      {
-        inc( *op );
-      }
-      return getFixed();
+      increased = true;
+      break;
     }
     else
     {
-      *op = SMALLEST_OPERATION;
+      p_.ops[i] = SMALLEST_OPERATION;
     }
   }
-  p_.ops.insert( p_.ops.begin(), SMALLEST_OPERATION );
-  size_ = p_.ops.size();
-  return getFixed();
-}
-
-Program Iterator::getFixed() const
-{
-  int64_t open_loops = 0;
-  Program p = p_;
-  auto it = p.ops.begin();
-  while ( it != p.ops.end() )
+  if ( !increased )
   {
-    if ( it->type == Operation::Type::LPB )
-    {
-      open_loops++;
-    }
-    else if ( it->type == Operation::Type::LPE )
-    {
-      if ( open_loops > 0 )
-      {
-        open_loops--;
-      }
-      else
-      {
-        it = p.ops.erase( it );
-        continue;
-      }
-    }
-    it++;
+    p_.ops.insert( p_.ops.begin(), SMALLEST_OPERATION );
+    size_ = p_.ops.size();
   }
-  while ( open_loops > 0 )
-  {
-    p.ops.push_back( Operation( Operation::Type::LPE ) );
-    open_loops--;
-  }
-  return p;
+  return p_;
 }

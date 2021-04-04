@@ -495,6 +495,7 @@ FolderLock::FolderLock( std::string folder )
   ensureDir( folder );
   lockfile = folder + "lock";
   fd = 0;
+  Log::get().debug( "Acquiring lock " + lockfile );
   while ( true )
   {
     fd = open( lockfile.c_str(), O_CREAT, 0644 );
@@ -510,8 +511,16 @@ FolderLock::FolderLock( std::string folder )
 
 FolderLock::~FolderLock()
 {
-  // release lock
-  Log::get().debug( "Releasing lock " + lockfile );
-  unlink( lockfile.c_str() );
-  flock( fd, LOCK_UN );
+  release();
+}
+
+void FolderLock::release()
+{
+  if ( fd )
+  {
+    Log::get().debug( "Releasing lock " + lockfile );
+    unlink( lockfile.c_str() );
+    flock( fd, LOCK_UN );
+    fd = 0;
+  }
 }

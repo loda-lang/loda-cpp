@@ -28,11 +28,11 @@ private:
   static const Operand SMALLEST_TARGET;
   static const Operation SMALLEST_OPERATION;
 
-  bool inc( Operation &op );
-
   bool inc( Operand &o );
 
-  Program getFixed() const;
+  bool inc( Operation &op );
+
+  bool incWithSkip( Operation &op );
 
   static bool shouldSkip( const Operation& op );
 

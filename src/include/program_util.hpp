@@ -47,4 +47,6 @@ public:
 
   static size_t hash( const Operand &op );
 
+  static void validate( const Program& p );
+
 };
