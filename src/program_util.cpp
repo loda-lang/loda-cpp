@@ -409,3 +409,35 @@ size_t ProgramUtil::hash( const Operand &op )
 {
   return (11 * static_cast<size_t>( op.type )) + op.value;
 }
+
+void throwInvalidLoop( const Program& p )
+{
+  throw std::runtime_error( "invalid loop" );
+}
+
+void ProgramUtil::validate( const Program& p )
+{
+  // validate number of open/closing loops
+  int64_t open_loops = 0;
+  auto it = p.ops.begin();
+  while ( it != p.ops.end() )
+  {
+    if ( it->type == Operation::Type::LPB )
+    {
+      open_loops++;
+    }
+    else if ( it->type == Operation::Type::LPE )
+    {
+      if ( open_loops == 0 )
+      {
+        throwInvalidLoop( p );
+      }
+      open_loops--;
+    }
+    it++;
+  }
+  if ( open_loops != 0 )
+  {
+    throwInvalidLoop( p );
+  }
+}

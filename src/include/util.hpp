@@ -106,6 +106,8 @@ public:
 
   ~FolderLock();
 
+  void release();
+
 private:
   std::string lockfile;
   int fd;

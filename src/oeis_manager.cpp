@@ -68,14 +68,15 @@ void OeisManager::load()
   loadDenylist();
 
   // try to load stats to speed up the removal of existing programs
-  if ( !settings.optimize_existing_programs )
-  {
-    std::ifstream stats_file( stats.getMainStatsFile( getStatsHome() ) );
-    if ( stats_file.good() )
-    {
-      getStats();
-    }
-  }
+  // DISABLED BECAUSE IT CAN LEAD TO DEADLOCKS
+  //if ( !settings.optimize_existing_programs )
+  //{
+  //  std::ifstream stats_file( stats.getMainStatsFile( getStatsHome() ) );
+  //  if ( stats_file.good() )
+  //  {
+  //    getStats();
+  //  }
+  //}
 
   // collect known / linear sequences if they should be ignored
   std::vector<number_t> seqs_to_remove;

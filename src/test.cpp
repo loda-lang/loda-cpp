@@ -23,6 +23,7 @@ void Test::all()
 {
   semantics();
   memory();
+  // iterator();
   config();
   stats();
   knownPrograms();
@@ -167,10 +168,18 @@ void Test::iterator()
 {
   Log::get().info( "Testing iterator" );
   Iterator it;
+  Program p, q;
   for ( int i = 0; i < 100000; i++ )
   {
-    it.next();
-    // TODO: compare with previous program
+    p = it.next();
+    ProgramUtil::print( p, std::cerr );
+    std::cerr << std::endl;
+    ProgramUtil::validate( p );
+    if ( i > 0 && (p < q || !(q < p) || p == q) )
+    {
+      Log::get().error( "Iterator violates program order", true );
+    }
+    q = p;
   }
 }
 
