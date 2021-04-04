@@ -15,7 +15,7 @@ const Operation Iterator::SMALLEST_OPERATION( Operation::Type::MOV, DIRECT_ONE, 
 
 bool Iterator::inc( Operand &o )
 {
-  if ( o.value * 4 < size_ )
+  if ( o.value * 4 < static_cast<number_t>( size_ ) )
   {
     o.value++;
     return true;
@@ -172,13 +172,24 @@ Program Iterator::next()
   {
     if ( incWithSkip( p_.ops[i] ) )
     {
-      increased = true;
+      if ( p_.ops[i].type == Operation::Type::LPB )
+      {
+        if ( i + 2 < static_cast<int64_t>( p_.ops.size() ) )
+        {
+          p_.ops.back() = Operation( Operation::Type::LPE );
+          increased = true;
+        }
+      }
+      else
+      {
+        increased = true;
+      }
+    }
+    if ( increased )
+    {
       break;
     }
-    else
-    {
-      p_.ops[i] = SMALLEST_OPERATION;
-    }
+    p_.ops[i] = SMALLEST_OPERATION;
   }
   if ( !increased )
   {
