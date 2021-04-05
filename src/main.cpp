@@ -205,14 +205,15 @@ int main( int argc, char *argv[] )
     }
     else if ( cmd == "iterate" ) // hidden command
     {
+      int64_t count = stoll( args.at( 1 ) );
       Iterator it;
       Program p;
-      while ( true )
+      while ( count-- > 0 )
       {
         p = it.next();
-        std::cout << "\x1B[2J\x1B[H";
+//        std::cout << "\x1B[2J\x1B[H";
         ProgramUtil::print( p, std::cout );
-//        std::cout << std::endl;
+        std::cout << std::endl;
 //        std::cin.ignore();
       }
     }

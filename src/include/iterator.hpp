@@ -5,17 +5,24 @@ class Iterator
 public:
 
   Iterator()
-      : size_( 0 )
+      : size( 0 ),
+        skipped( 0 )
   {
   }
 
   Iterator( const Program &p )
-      : p_( p ),
-        size_( p.ops.size() )
+      : program( p ),
+        size( p.ops.size() ),
+        skipped( 0 )
   {
   }
 
   Program next();
+
+  size_t getSkipped() const
+  {
+    return skipped;
+  }
 
 private:
 
@@ -28,15 +35,18 @@ private:
   static const Operand SMALLEST_TARGET;
   static const Operation SMALLEST_OPERATION;
 
-  bool inc( Operand &o );
+  bool inc( Operand &o, bool direct );
 
   bool inc( Operation &op );
 
   bool incWithSkip( Operation &op );
 
+  void doNext();
+
   static bool shouldSkip( const Operation& op );
 
-  Program p_;
-  size_t size_;
+  Program program;
+  size_t size;
+  size_t skipped;
 
 };

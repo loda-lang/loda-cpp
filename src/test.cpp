@@ -23,7 +23,7 @@ void Test::all()
 {
   semantics();
   memory();
-  // iterator();
+  iterator();
   config();
   stats();
   knownPrograms();
@@ -169,17 +169,24 @@ void Test::iterator()
   Log::get().info( "Testing iterator" );
   Iterator it;
   Program p, q;
-  for ( int i = 0; i < 100000; i++ )
+  int64_t count = 1000000;
+  for ( int64_t i = 0; i < count; i++ )
   {
     p = it.next();
-    ProgramUtil::print( p, std::cerr );
-    std::cerr << std::endl;
-    ProgramUtil::validate( p );
+//    ProgramUtil::print( p, std::cout );
+//    std::cout << std::endl;
+//    ProgramUtil::validate( p );
     if ( i > 0 && (p < q || !(q < p) || p == q) )
     {
       Log::get().error( "Iterator violates program order", true );
     }
     q = p;
+  }
+  if ( it.getSkipped() > 0 )
+  {
+    Log::get().warn(
+        "Skipped " + std::to_string( it.getSkipped() ) + " invalid programs to generate " + std::to_string( count )
+            + " programs" );
   }
 }
 

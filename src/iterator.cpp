@@ -13,9 +13,9 @@ const Operand Iterator::SMALLEST_SOURCE = CONSTANT_ZERO;
 const Operand Iterator::SMALLEST_TARGET = DIRECT_ZERO;
 const Operation Iterator::SMALLEST_OPERATION( Operation::Type::MOV, DIRECT_ONE, CONSTANT_ZERO ); // never override $0
 
-bool Iterator::inc( Operand &o )
+bool Iterator::inc( Operand &o, bool direct )
 {
-  if ( o.value * 4 < static_cast<number_t>( size_ ) )
+  if ( o.value * 4 < static_cast<number_t>( size ) )
   {
     o.value++;
     return true;
@@ -23,8 +23,15 @@ bool Iterator::inc( Operand &o )
   switch ( o.type )
   {
   case Operand::Type::CONSTANT:
-    o = Operand( Operand::Type::DIRECT, 0 );
-    return true;
+    if ( direct )
+    {
+      o = Operand( Operand::Type::DIRECT, 0 );
+      return true;
+    }
+    else
+    {
+      return false;
+    }
   case Operand::Type::DIRECT:
   case Operand::Type::INDIRECT: // we exclude indirect memory access
     return false;
@@ -41,14 +48,14 @@ bool Iterator::inc( Operation &op )
   }
 
   // try to increase source operand
-  if ( inc( op.source ) )
+  if ( inc( op.source, op.type != Operation::Type::LPB ) )
   {
     return true;
   }
   op.source = SMALLEST_SOURCE;
 
   // try to increase target operand
-  if ( inc( op.target ) )
+  if ( inc( op.target, true ) )
   {
     return true;
   }
@@ -114,7 +121,10 @@ bool Iterator::inc( Operation &op )
     return true;
 
   case Operation::Type::LPB:
-  case Operation::Type::LPE: // handled separately
+    op.type = Operation::Type::LPE;
+    return true;
+
+  case Operation::Type::LPE:
     return false;
   }
   return false;
@@ -166,35 +176,39 @@ bool Iterator::shouldSkip( const Operation& op )
 
 Program Iterator::next()
 {
-  int64_t i = p_.ops.size();
+  while ( true )
+  {
+    doNext();
+    try
+    {
+      ProgramUtil::validate( program );
+      break;
+    }
+    catch ( const std::exception& )
+    {
+      // ignore invalid programs
+      skipped++;
+    }
+  }
+  return program;
+}
+
+void Iterator::doNext()
+{
+  int64_t i = size;
   bool increased = false;
   while ( --i >= 0 )
   {
-    if ( incWithSkip( p_.ops[i] ) )
+    if ( incWithSkip( program.ops[i] ) )
     {
-      if ( p_.ops[i].type == Operation::Type::LPB )
-      {
-        if ( i + 2 < static_cast<int64_t>( p_.ops.size() ) )
-        {
-          p_.ops.back() = Operation( Operation::Type::LPE );
-          increased = true;
-        }
-      }
-      else
-      {
-        increased = true;
-      }
-    }
-    if ( increased )
-    {
+      increased = true;
       break;
     }
-    p_.ops[i] = SMALLEST_OPERATION;
+    program.ops[i] = SMALLEST_OPERATION;
   }
   if ( !increased )
   {
-    p_.ops.insert( p_.ops.begin(), SMALLEST_OPERATION );
-    size_ = p_.ops.size();
+    program.ops.insert( program.ops.begin(), SMALLEST_OPERATION );
+    size = program.ops.size();
   }
-  return p_;
 }
