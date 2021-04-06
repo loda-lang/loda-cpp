@@ -164,34 +164,57 @@ void Test::memory()
   }
 }
 
+void validateIterated( const Program& p )
+{
+  ProgramUtil::validate( p );
+  if ( ProgramUtil::numOps( p, Operand::Type::INDIRECT ) > 0 )
+  {
+    Log::get().error( "Iterator generated indirect memory access", true );
+  }
+  for ( size_t i = 0; i < p.ops.size(); i++ )
+  {
+    if ( p.ops[i].type == Operation::Type::LPB
+        && (p.ops[i].source.type != Operand::Type::CONSTANT || p.ops[i].source.value <= 0) )
+    {
+      Log::get().error( "Iterator generated wrong loop", true );
+    }
+  }
+  for ( size_t i = 1; i < p.ops.size(); i++ )
+  {
+    if ( p.ops[i - 1].type == Operation::Type::LPB && p.ops[i].type == Operation::Type::LPE )
+    {
+      Log::get().error( "Iterator generated empty loop", true );
+    }
+  }
+}
+
 void Test::iterator()
 {
-  Log::get().info( "Testing iterator" );
+  int64_t count = 1000000;
+  Log::get().info( "Testing iterator for " + std::to_string( count ) + " programs" );
   Iterator it;
   Program p, q;
-  int64_t count = 1000000;
   for ( int64_t i = 0; i < count; i++ )
   {
     p = it.next();
-    ProgramUtil::validate( p );
-    if ( i > 0 && (p < q || !(q < p) || p == q) )
+    try
     {
-      Log::get().error( "Iterator violates program order", true );
-    }
-    for ( size_t i = 1; i < p.ops.size(); i++ )
-    {
-      if ( p.ops[i - 1].type == Operation::Type::LPB && p.ops[i].type == Operation::Type::LPE )
+      validateIterated( p );
+      if ( i > 0 && (p < q || !(q < p) || p == q) )
       {
-        Log::get().error( "Iterator generated empty loop", true );
+        Log::get().error( "Iterator violates program order", true );
       }
+    }
+    catch ( std::exception& e )
+    {
+      ProgramUtil::print( p, std::cerr );
+      throw e;
     }
     q = p;
   }
   if ( it.getSkipped() > 0 )
   {
-    Log::get().warn(
-        "Skipped " + std::to_string( it.getSkipped() ) + " invalid programs to generate " + std::to_string( count )
-            + " programs" );
+    Log::get().warn( "Skipped " + std::to_string( it.getSkipped() ) + " invalid programs" );
   }
 }
 
