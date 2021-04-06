@@ -186,6 +186,10 @@ Program Iterator::next()
     }
     catch ( const std::exception& )
     {
+//      std::cout << "BEGIN IGNORE" << std::endl;
+//      ProgramUtil::print( program, std::cout );
+//      std::cout << "END IGNORE\n" << std::endl;
+
       // ignore invalid programs
       skipped++;
     }
@@ -202,6 +206,20 @@ void Iterator::doNext()
     if ( incWithSkip( program.ops[i] ) )
     {
       increased = true;
+
+      // begin avoid empty loops
+      if ( program.ops[i].type == Operation::Type::LPB && i + 3 > size )
+      {
+        program.ops[i] = Operation( Operation::Type::LPE );
+      }
+      if ( program.ops[i].type == Operation::Type::LPE && i > 0 && program.ops[i - 1].type == Operation::Type::LPB )
+      {
+        increased = false;
+      }
+      // end avoid empty loops
+    }
+    if ( increased )
+    {
       break;
     }
     program.ops[i] = SMALLEST_OPERATION;

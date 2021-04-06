@@ -173,12 +173,17 @@ void Test::iterator()
   for ( int64_t i = 0; i < count; i++ )
   {
     p = it.next();
-//    ProgramUtil::print( p, std::cout );
-//    std::cout << std::endl;
-//    ProgramUtil::validate( p );
+    ProgramUtil::validate( p );
     if ( i > 0 && (p < q || !(q < p) || p == q) )
     {
       Log::get().error( "Iterator violates program order", true );
+    }
+    for ( size_t i = 1; i < p.ops.size(); i++ )
+    {
+      if ( p.ops[i - 1].type == Operation::Type::LPB && p.ops[i].type == Operation::Type::LPE )
+      {
+        Log::get().error( "Iterator generated empty loop", true );
+      }
     }
     q = p;
   }

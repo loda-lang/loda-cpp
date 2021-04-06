@@ -19,7 +19,7 @@ public:
 
   Program next();
 
-  size_t getSkipped() const
+  int64_t getSkipped() const
   {
     return skipped;
   }
@@ -46,7 +46,7 @@ private:
   static bool shouldSkip( const Operation& op );
 
   Program program;
-  size_t size;
-  size_t skipped;
+  int64_t size;
+  int64_t skipped;
 
 };
