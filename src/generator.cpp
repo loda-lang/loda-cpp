@@ -3,6 +3,7 @@
 #include "generator_v1.hpp"
 #include "generator_v2.hpp"
 #include "generator_v3.hpp"
+#include "generator_v4.hpp"
 #include "util.hpp"
 #include "jute.h"
 
@@ -24,6 +25,11 @@ Generator::UPtr Generator::Factory::createGenerator( const Config &config, const
   case 3:
   {
     generator.reset( new GeneratorV3( config, stats, seed ) );
+    break;
+  }
+  case 4:
+  {
+    generator.reset( new GeneratorV4( config, stats, seed ) );
     break;
   }
   default:
