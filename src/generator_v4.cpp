@@ -1,4 +1,5 @@
 #include "generator_v4.hpp"
+#include "generator_v1.hpp"
 #include "generator.hpp"
 
 #include "parser.hpp"
@@ -9,6 +10,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <math.h>
 
 std::string getGenV4Home()
 {
@@ -21,9 +23,13 @@ std::string getNumFilesPath()
   return getGenV4Home() + "/numfiles.txt";
 }
 
-ProgramState::ProgramState( int64_t index )
-    : index( index ),
+ProgramState::ProgramState()
+    : index( 0 ),
       generated( 0 )
+{
+}
+
+void ProgramState::validate() const
 {
   if ( index < 1 || index >= 10000 )
   {
@@ -40,6 +46,7 @@ std::string ProgramState::getPath() const
 
 void ProgramState::load()
 {
+  validate();
   Parser parser;
   Program p = parser.parse( getPath() );
   size_t step = 0;
@@ -58,7 +65,6 @@ void ProgramState::load()
       {
         step = 2;
         auto sub = op.comment.substr( 9 );
-        std::cout << sub << std::endl;
         generated = stoll( sub );
       }
       else if ( op.comment == "end" )
@@ -90,6 +96,7 @@ void ProgramState::load()
 
 void ProgramState::save() const
 {
+  validate();
   Program p;
   Operation nop( Operation::Type::NOP );
   nop.comment = "start";
@@ -109,24 +116,106 @@ void ProgramState::save() const
 GeneratorV4::GeneratorV4( const Config &config, const Stats &stats, int64_t seed )
     : Generator( config, stats, seed )
 {
-  init();
+  // obtain lock
+  FolderLock lock( getGenV4Home() );
+  std::ifstream nf( getNumFilesPath() );
+  if ( !nf.good() )
+  {
+    init( stats, seed );
+  }
+  load();
+}
+
+void GeneratorV4::init( const Stats &stats, int64_t seed )
+{
+  Log::get().info( "Initializing state of generator v4 in " + getGenV4Home() );
+
+  Generator::Config config;
+  config.version = 1;
+  config.replicas = 1;
+  config.loops = true;
+  config.calls = false;
+  config.indirect_access = false;
+
+  std::vector<Program> programs;
+  for ( int64_t length = 3; length <= 20; length++ )
+  {
+    int64_t count = pow( 1.25, length );
+    config.length = length;
+    config.max_constant = std::min<int64_t>( length / 4, 2 );
+    config.max_index = std::min<int64_t>( length / 4, 2 );
+    GeneratorV1 gen_v1( config, stats, seed );
+    for ( int64_t c = 0; c < count; c++ )
+    {
+      programs.push_back( gen_v1.generateProgram() );
+    }
+  }
+
+  std::sort( programs.begin(), programs.end() );
+
+  ensureDir( getGenV4Home() );
+
+  ProgramState s;
+  s.index = 1;
+  s.generated = 0;
+  s.start.push_back( Operation::Type::MOV, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::CONSTANT, 0 );
+  for ( auto& p : programs )
+  {
+    if ( p == s.start )
+    {
+      continue;
+    }
+    s.current = s.start;
+    s.end = p;
+    s.save();
+    s.start = p;
+    s.index++;
+  }
+
+  std::ofstream nf( getNumFilesPath() );
+  nf << (s.index - 1) << std::endl;
+  nf.close();
+}
+
+void GeneratorV4::load()
+{
+  std::ifstream nf( getNumFilesPath() );
+  if ( !nf.good() )
+  {
+    Log::get().error( "File not found: " + getNumFilesPath(), true );
+  }
+  int64_t num_files;
+  nf >> num_files;
+  if ( num_files < 1 || num_files >= 10000 )
+  {
+    Log::get().error( "Invalid number of files: " + std::to_string( num_files ), true );
+  }
+  int64_t attempts = num_files * 100;
+  do
+  {
+    state = ProgramState();
+    state.index = (gen() % num_files) + 1;
+    state.load();
+    iterator = Iterator( state.current );
+  } while ( state.end < state.current && --attempts );
+  if ( !attempts )
+  {
+    Log::get().error( "Looks like we already generated all programs!", true );
+  }
+  Log::get().info( "Working on file " + std::to_string( state.index ) );
 }
 
 Program GeneratorV4::generateProgram()
 {
-  Program p = iterator.next();
-  return p;
-}
-
-void GeneratorV4::init()
-{
-  // obtain lock
-//  FolderLock lock( getGenV4Home() );
-
-//  static const size_t num_files = 200;
-//  std::ofstream nf_out( getNumFilesPath() );
-//  nf_out << num_files << std::endl;
-//  nf_out.close();
+  state.current = iterator.next();
+  state.generated++;
+  if ( state.generated % 10000 == 0 )
+  {
+    FolderLock lock( getGenV4Home() );
+    state.save();
+    load();
+  }
+  return state.current;
 }
 
 std::pair<Operation, double> GeneratorV4::generateOperation()

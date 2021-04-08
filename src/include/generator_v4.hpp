@@ -7,7 +7,9 @@ class ProgramState
 {
 public:
 
-  ProgramState( int64_t index );
+  ProgramState();
+
+  void validate() const;
 
   std::string getPath() const;
 
@@ -15,7 +17,7 @@ public:
 
   void save() const;
 
-  const int64_t index;
+  int64_t index;
   int64_t generated;
   Program start;
   Program current;
@@ -34,10 +36,12 @@ public:
 
 private:
 
-  void init();
+  void init( const Stats &stats, int64_t seed );
 
   void load();
 
   Iterator iterator;
+
+  ProgramState state;
 
 };
