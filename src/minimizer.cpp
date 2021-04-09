@@ -5,6 +5,8 @@
 #include "program_util.hpp"
 #include "util.hpp"
 
+#include <fstream>
+
 bool Minimizer::minimize( Program &p, size_t num_terms ) const
 {
   Log::get().debug( "Minimizing program" );
@@ -222,13 +224,28 @@ bool Minimizer::minimize( Program &p, size_t num_terms ) const
 bool Minimizer::optimizeAndMinimize( Program &p, size_t num_reserved_cells, size_t num_initialized_cells,
     size_t num_terms ) const
 {
-  Optimizer optimizer( settings );
-  bool optimized = false, minimized = false, result = false;
-  do
+  Program backup = p;
+  try
   {
-    optimized = optimizer.optimize( p, num_reserved_cells, num_initialized_cells );
-    minimized = minimize( p, num_terms );
-    result = result || optimized || minimized;
-  } while ( optimized || minimized );
-  return result;
+    bool optimized = false, minimized = false, result = false;
+    do
+    {
+      optimized = optimizer.optimize( p, num_reserved_cells, num_initialized_cells );
+      minimized = minimize( p, num_terms );
+      result = result || optimized || minimized;
+    } while ( optimized || minimized );
+    return result;
+  }
+  catch ( std::exception& e )
+  {
+    // revert change
+    p = backup;
+    // log error and dump program for later analysis
+    Log::get().error( "Exception during minimization: " + std::string( e.what() ), false );
+    std::string f = getLodaHome() + "debug/minimizer/" + std::to_string( ProgramUtil::hash( p ) % 100000 ) + ".asm";
+    ensureDir( f );
+    std::ofstream out( f );
+    ProgramUtil::print( p, out );
+  }
+  return false;
 }

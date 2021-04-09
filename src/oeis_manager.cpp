@@ -595,7 +595,7 @@ std::pair<bool, Program> OeisManager::checkAndMinimize( const Program &p, const 
     Log::get().error(
         "Program for " + seq.id_str() + " generates wrong result after minimization with "
             + std::to_string( OeisSequence::DEFAULT_SEQ_LENGTH ) + " terms", false );
-    std::string f = getLodaHome() + "debug/optimizer/" + seq.id_str() + ".asm";
+    std::string f = getLodaHome() + "debug/minimizer/" + seq.id_str() + ".asm";
     ensureDir( f );
     std::ofstream out( f );
     ProgramUtil::print( p, out );
