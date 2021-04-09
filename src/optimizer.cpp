@@ -680,7 +680,8 @@ bool Optimizer::mergeLoops( Program &p ) const
     {
       if ( loop_begins.empty() )
       {
-        throw std::runtime_error( "invalid loop" );
+        ProgramUtil::print( p, std::cerr );
+        throw std::runtime_error( "invalid loop detected during optimization" );
       }
       auto lpb2 = loop_begins.top();
       loop_begins.pop();
@@ -688,7 +689,8 @@ bool Optimizer::mergeLoops( Program &p ) const
       {
         if ( loop_begins.empty() )
         {
-          throw std::runtime_error( "invalid loop" );
+          ProgramUtil::print( p, std::cerr );
+          throw std::runtime_error( "invalid loop detected during optimization" );
         }
         auto lpb1 = loop_begins.top();
         if ( lpb1 + 1 == lpb2 && p.ops[lpb1] == p.ops[lpb2] )
