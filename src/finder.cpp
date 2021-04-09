@@ -21,12 +21,12 @@ Finder::Finder( const Settings &settings )
   }
   else
   {
-    matchers.resize( 5 );
+    matchers.resize( 4 );
     matchers[0].reset( new DirectMatcher( true ) );
     matchers[1].reset( new LinearMatcher( true ) );
     matchers[2].reset( new LinearMatcher2( true ) );
-    matchers[3].reset( new PolynomialMatcher( true ) );
-    matchers[4].reset( new DeltaMatcher( true ) );
+    matchers[3].reset( new DeltaMatcher( true ) );
+    // matchers[4].reset( new PolynomialMatcher( true ) );
   }
   matcher_stats.resize( matchers.size() );
   for ( auto &s : matcher_stats )

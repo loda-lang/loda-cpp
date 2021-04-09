@@ -144,7 +144,7 @@ size_t OeisMaintenance::checkAndMinimizePrograms()
     std::ifstream program_file( file_name );
     if ( program_file.good() )
     {
-      Log::get().info( "Checking program for " + s.to_string() );
+      Log::get().debug( "Checking program for " + s.to_string() );
       try
       {
         program = parser.parse( program_file );
