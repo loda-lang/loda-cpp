@@ -160,7 +160,7 @@ bool Iterator::shouldSkip( const Operation& op )
   if ( op.source == CONSTANT_ZERO
       && (op.type == Operation::Type::MUL || op.type == Operation::Type::DIV || op.type == Operation::Type::DIF
           || op.type == Operation::Type::MOD || op.type == Operation::Type::POW || op.type == Operation::Type::GCD
-          || op.type == Operation::Type::BIN) )
+          || op.type == Operation::Type::BIN || op.type == Operation::Type::LPB) )
   {
     return true;
   }

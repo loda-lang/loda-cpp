@@ -49,7 +49,7 @@ bool ProgramUtil::isNop( const Operation& op )
     return true;
   }
   else if ( op.source.type == Operand::Type::CONSTANT && op.source.value == 0
-      && (op.type == Operation::Type::ADD || op.type == Operation::Type::SUB || op.type == Operation::Type::LPB) )
+      && (op.type == Operation::Type::ADD || op.type == Operation::Type::SUB) )
   {
     return true;
   }
