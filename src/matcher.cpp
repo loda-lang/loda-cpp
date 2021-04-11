@@ -55,14 +55,17 @@ void AbstractMatcher<T>::match( const Program &p, const Sequence &norm_seq, seq_
 template<class T>
 bool AbstractMatcher<T>::shouldMatchSequence( const Sequence &seq ) const
 {
-  if ( backoff && match_attempts.find( seq ) != match_attempts.end() )
+  if ( backoff )
   {
-    // Log::get().debug( "Back off matching of already matched sequence " + seq.to_string() );
-    return false;
-  }
-  if ( has_memory )
-  {
-    match_attempts.insert( seq );
+    if ( match_attempts.find( seq ) != match_attempts.end() )
+    {
+      // Log::get().debug( "Back off matching of already matched sequence " + seq.to_string() );
+      return false;
+    }
+    if ( has_memory )
+    {
+      match_attempts.insert( seq );
+    }
   }
   return true;
 }
