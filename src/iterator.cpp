@@ -64,14 +64,6 @@ bool Iterator::inc( Operation &op )
   // try to increase type
   switch ( op.type )
   {
-  case Operation::Type::NOP: // excluded
-  case Operation::Type::DBG: // excluded
-  case Operation::Type::CLR: // excluded
-  case Operation::Type::CAL: // excluded
-  case Operation::Type::LOG: // excluded
-  case Operation::Type::MIN: // excluded
-  case Operation::Type::MAX: // excluded
-
   case Operation::Type::MOV:
     op.type = Operation::Type::ADD;
     return true;
@@ -119,6 +111,14 @@ bool Iterator::inc( Operation &op )
   case Operation::Type::CMP:
     op.type = Operation::Type::LPB;
     return true;
+
+  case Operation::Type::NOP: // excluded
+  case Operation::Type::DBG: // excluded
+  case Operation::Type::CLR: // excluded
+  case Operation::Type::CAL: // excluded
+  case Operation::Type::LOG: // excluded
+  case Operation::Type::MIN: // excluded
+  case Operation::Type::MAX: // excluded
 
   case Operation::Type::LPB:
     op.type = Operation::Type::LPE;
@@ -217,6 +217,28 @@ void Iterator::doNext()
         increased = false;
       }
       // end avoid empty loops
+
+      // begin avoid lpe if there is no open loop
+      if ( program.ops[i].type == Operation::Type::LPE )
+      {
+        int64_t open_loops = 0;
+        for ( int64_t j = 0; j < i; j++ )
+        {
+          if ( program.ops[j].type == Operation::Type::LPB )
+          {
+            open_loops++;
+          }
+          if ( program.ops[j].type == Operation::Type::LPE )
+          {
+            open_loops--;
+          }
+        }
+        if ( open_loops <= 0 )
+        {
+          increased = false;
+        }
+      }
+      // end avoid lpe if there is no open loop
     }
     if ( increased )
     {
@@ -229,4 +251,36 @@ void Iterator::doNext()
     program.ops.insert( program.ops.begin(), SMALLEST_OPERATION );
     size = program.ops.size();
   }
+
+  // begin avoid open loops
+  int64_t open_loops = 0;
+  for ( auto& op : program.ops )
+  {
+    if ( op.type == Operation::Type::LPB )
+    {
+      open_loops++;
+    }
+    if ( op.type == Operation::Type::LPE )
+    {
+      open_loops--;
+    }
+  }
+  i = size;
+  while ( open_loops > 0 && --i >= 0 )
+  {
+    if ( program.ops[i].type != Operation::Type::LPE )
+    {
+      if ( program.ops[i].type == Operation::Type::LPB )
+      {
+        open_loops--;
+      }
+      program.ops[i] = Operation( Operation::Type::LPE );
+      open_loops--;
+    }
+  }
+  while ( --i >= 0 && program.ops[i].type == Operation::Type::LPB )
+  {
+    program.ops[i] = Operation( Operation::Type::LPE );
+  }
+  // end avoid open loops
 }

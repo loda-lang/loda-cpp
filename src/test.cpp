@@ -30,7 +30,7 @@ void Test::all()
   size_t tests = 100;
   semantics();
   memory();
-//  iterator( tests );
+  iterator( tests );
   config();
   stats();
   knownPrograms();
@@ -175,21 +175,21 @@ void validateIterated( const Program& p )
   ProgramUtil::validate( p );
   if ( ProgramUtil::numOps( p, Operand::Type::INDIRECT ) > 0 )
   {
-    Log::get().error( "Iterator generated indirect memory access", true );
+    throw std::runtime_error( "Iterator generated indirect memory access" );
   }
   for ( size_t i = 0; i < p.ops.size(); i++ )
   {
     if ( p.ops[i].type == Operation::Type::LPB
         && (p.ops[i].source.type != Operand::Type::CONSTANT || p.ops[i].source.value <= 0) )
     {
-      Log::get().error( "Iterator generated wrong loop", true );
+      throw std::runtime_error( "Iterator generated wrong loop" );
     }
   }
   for ( size_t i = 1; i < p.ops.size(); i++ )
   {
     if ( p.ops[i - 1].type == Operation::Type::LPB && p.ops[i].type == Operation::Type::LPE )
     {
-      Log::get().error( "Iterator generated empty loop", true );
+      throw std::runtime_error( "Iterator generated empty loop" );
     }
   }
 }
@@ -217,11 +217,22 @@ void Test::iterator( size_t tests )
     config.max_constant = std::min<int64_t>( test / 4, 2 );
     config.max_index = std::min<int64_t>( test / 4, 2 );
     GeneratorV1 gen_v1( config, manager.getStats(), rand() );
-    Program start = gen_v1.generateProgram();
-
+    Program start, p, q;
+    while ( true )
+    {
+      try
+      {
+        start = gen_v1.generateProgram();
+        validateIterated( start );
+        break;
+      }
+      catch ( const std::exception& )
+      {
+        //ignore
+      }
+    }
     // iterate and check
     Iterator it( start );
-    Program p, q;
     for ( int64_t i = 0; i < count; i++ )
     {
       p = it.next();
@@ -230,17 +241,19 @@ void Test::iterator( size_t tests )
         validateIterated( p );
         if ( i > 0 && (p < q || !(q < p) || p == q) )
         {
-          Log::get().error( "Iterator violates program order", true );
+          throw std::runtime_error( "Iterator violates program order" );
         }
       }
       catch ( std::exception& e )
       {
+        ProgramUtil::print( q, std::cerr );
+        std::cerr << std::endl;
         ProgramUtil::print( p, std::cerr );
-        throw e;
+        Log::get().error( e.what(), true );
       }
       q = p;
     }
-    if ( it.getSkipped() > 0.2 * count )
+    if ( it.getSkipped() > 0.01 * count )
     {
       Log::get().error( "Too many skipped invalid programs: " + std::to_string( it.getSkipped() ), true );
     }
