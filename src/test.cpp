@@ -1,5 +1,6 @@
 #include "test.hpp"
 
+#include "generator_v1.hpp"
 #include "interpreter.hpp"
 #include "iterator.hpp"
 #include "matcher.hpp"
@@ -19,11 +20,17 @@
 #include <sstream>
 #include <stdexcept>
 
+Test::Test()
+    : manager( Settings() )
+{
+}
+
 void Test::all()
 {
+  size_t tests = 100;
   semantics();
   memory();
-  iterator();
+//  iterator( tests );
   config();
   stats();
   knownPrograms();
@@ -33,7 +40,6 @@ void Test::all()
   collatz();
   linearMatcher();
   deltaMatcher();
-  size_t tests = 100;
   for ( size_t degree = 0; degree <= (size_t) PolynomialMatcher::DEGREE; degree++ )
   {
     polynomialMatcher( tests, degree );
@@ -188,33 +194,56 @@ void validateIterated( const Program& p )
   }
 }
 
-void Test::iterator()
+void Test::iterator( size_t tests )
 {
-  int64_t count = 1000000;
-  Log::get().info( "Testing iterator for " + std::to_string( count ) + " programs" );
-  Iterator it;
-  Program p, q;
-  for ( int64_t i = 0; i < count; i++ )
+  const int64_t count = 100000;
+  std::random_device rand;
+  for ( int64_t test = 0; test < tests; test++ )
   {
-    p = it.next();
-    try
+    if ( test % 10 == 0 )
     {
-      validateIterated( p );
-      if ( i > 0 && (p < q || !(q < p) || p == q) )
+      Log::get().info( "Testing iterator " + std::to_string( test ) );
+    }
+
+    // generate a random start program
+    Generator::Config config;
+    config.version = 1;
+    config.replicas = 1;
+    config.loops = true;
+    config.calls = false;
+    config.indirect_access = false;
+
+    config.length = std::max<int64_t>( test / 4, 2 );
+    config.max_constant = std::min<int64_t>( test / 4, 2 );
+    config.max_index = std::min<int64_t>( test / 4, 2 );
+    GeneratorV1 gen_v1( config, manager.getStats(), rand() );
+    Program start = gen_v1.generateProgram();
+
+    // iterate and check
+    Iterator it( start );
+    Program p, q;
+    for ( int64_t i = 0; i < count; i++ )
+    {
+      p = it.next();
+      try
       {
-        Log::get().error( "Iterator violates program order", true );
+        validateIterated( p );
+        if ( i > 0 && (p < q || !(q < p) || p == q) )
+        {
+          Log::get().error( "Iterator violates program order", true );
+        }
       }
+      catch ( std::exception& e )
+      {
+        ProgramUtil::print( p, std::cerr );
+        throw e;
+      }
+      q = p;
     }
-    catch ( std::exception& e )
+    if ( it.getSkipped() > 0.2 * count )
     {
-      ProgramUtil::print( p, std::cerr );
-      throw e;
+      Log::get().error( "Too many skipped invalid programs: " + std::to_string( it.getSkipped() ), true );
     }
-    q = p;
-  }
-  if ( it.getSkipped() > 0 )
-  {
-    Log::get().warn( "Skipped " + std::to_string( it.getSkipped() ) + " invalid programs" );
   }
 }
 
@@ -328,9 +357,6 @@ void Test::config()
 void Test::stats()
 {
   Log::get().info( "Testing stats loading and saving" );
-
-  Settings settings;
-  OeisManager manager( settings );
 
   // load stats
   Stats s, t;
@@ -498,7 +524,6 @@ void Test::minimizer( size_t tests )
   Settings settings;
   Interpreter interpreter( settings );
   Minimizer minimizer( settings );
-  OeisManager manager( settings );
   std::random_device rand;
   MultiGenerator multi_generator( settings, manager.getStats(), rand() );
   Sequence s1, s2, s3;
