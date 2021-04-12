@@ -1,5 +1,6 @@
 #include "test.hpp"
 
+#include "config.hpp"
 #include "generator_v1.hpp"
 #include "interpreter.hpp"
 #include "iterator.hpp"
@@ -349,10 +350,10 @@ void check_int( const std::string &s, int64_t min, int64_t max, int64_t value )
 void Test::config()
 {
   Log::get().info( "Testing config" );
-  std::ifstream in( "loda.json" );
-  auto configs = Generator::Config::load( in, false );
-  check_int( "numGenerators", 2, 20, configs.size() );
-  for ( auto &c : configs )
+  Settings settings;
+  LODAConfig config( settings );
+  check_int( "numGenerators", 2, 20, config.generator_configs.size() );
+  for ( auto &c : config.generator_configs )
   {
     check_int( "version", 1, 3, c.version );
     check_int( "replicas", 1, 3, c.replicas );

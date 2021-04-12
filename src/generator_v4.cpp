@@ -123,6 +123,7 @@ GeneratorV4::GeneratorV4( const Config &config, const Stats &stats, int64_t seed
   {
     init( stats, seed );
   }
+  nf.close();
   load();
 }
 
@@ -186,6 +187,7 @@ void GeneratorV4::load()
   }
   int64_t num_files;
   nf >> num_files;
+  nf.close();
   if ( num_files < 1 || num_files >= 10000 )
   {
     Log::get().error( "Invalid number of files: " + std::to_string( num_files ), true );
@@ -202,7 +204,9 @@ void GeneratorV4::load()
   {
     Log::get().error( "Looks like we already generated all programs!", true );
   }
-  Log::get().info( "Working on file " + std::to_string( state.index ) );
+  Log::get().info(
+      "Working on gen_v4 block " + std::to_string( state.index ) + " (" + std::to_string( state.generated )
+          + " generated programs)" );
 }
 
 Program GeneratorV4::generateProgram()
