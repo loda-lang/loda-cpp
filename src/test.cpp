@@ -31,7 +31,7 @@ void Test::all()
   size_t tests = 100;
   semantics();
   memory();
-  iterator( tests );
+//  iterator( tests );
   config();
   stats();
   knownPrograms();
@@ -199,7 +199,7 @@ void Test::iterator( size_t tests )
 {
   const int64_t count = 100000;
   std::random_device rand;
-  for ( int64_t test = 0; test < tests; test++ )
+  for ( size_t test = 0; test < tests; test++ )
   {
     if ( test % 10 == 0 )
     {
