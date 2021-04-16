@@ -29,13 +29,15 @@ void help()
   std::cout << "  generate         Generate a random program and print it" << std::endl;
   std::cout << "  test             Run test suite" << std::endl;
   std::cout << "OEIS commands:" << std::endl;
-  std::cout << "  mine             Mine programs for OEIS sequences (use -x to overwrite)" << std::endl;
-  std::cout << "  match    <file>  Match a program to OEIS sequences (use -x to overwrite)" << std::endl;
+  std::cout << "  mine             Mine programs for OEIS sequences (use -i to use a non-default matcher)" << std::endl;
+  std::cout << "  match    <file>  Match a program to OEIS sequences (use -i to use a non-default matcher)"
+      << std::endl;
   std::cout << "  check   <seqID>  Check a program for an OEIS sequence" << std::endl;
   std::cout << "  maintain         Maintain all programs for OEIS sequences" << std::endl;
   std::cout << "Options:" << std::endl;
   std::cout << "  -l <string>      Log level (values:debug,info,warn,error,alert)" << std::endl;
   std::cout << "  -k <string>      Configuration file (default:loda.json)" << std::endl;
+  std::cout << "  -i <string>      Miner to be used (default:default)" << std::endl;
   std::cout << "  -t <number>      Number of sequence terms (default:" << settings.num_terms << ")" << std::endl;
   std::cout << "  -p <number>      Maximum physical memory in MB (default:"
       << settings.max_physical_memory / (1024 * 1024) << ")" << std::endl;
@@ -46,7 +48,6 @@ void help()
   std::cout << "  -b <number>      Print evaluation result in b-file format starting from a given offset" << std::endl;
   std::cout << "  -s               Evaluate the number of execution steps" << std::endl;
   std::cout << "  -r               Search for programs of linear sequences (slow)" << std::endl;
-  std::cout << "  -x               Minimize and overwrite existing programs" << std::endl;
 }
 
 std::string get_program_path( std::string arg )
@@ -193,8 +194,6 @@ int main( int argc, char *argv[] )
     }
     else if ( cmd == "maintain" )
     {
-      // need to set the override flag!
-      settings.optimize_existing_programs = true;
       OeisMaintenance maintenance( settings );
       maintenance.maintain();
     }

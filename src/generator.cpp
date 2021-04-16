@@ -347,8 +347,8 @@ void Generator::ensureMeaningfulLoops( Program &p )
 MultiGenerator::MultiGenerator( const Settings &settings, const Stats& stats, int64_t seed )
 {
   std::mt19937 gen( seed );
-  LODAConfig config( settings );
-  configs = config.generator_configs;
+  auto config = ConfigLoader::load( settings );
+  configs = config.generators;
   if ( configs.empty() )
   {
     Log::get().error( "No generators configurations found", true );
@@ -360,6 +360,9 @@ MultiGenerator::MultiGenerator( const Settings &settings, const Stats& stats, in
   }
   generator_index = gen() % configs.size();
   replica_index = gen() % configs.at( gen() % configs.size() ).replicas;
+  Log::get().info(
+      "Initialized " + std::to_string( generators.size() ) + " generators from '" + config.name
+          + "' config; overwrite: " + (config.overwrite ? "true" : "false") );
 }
 
 Generator* MultiGenerator::getGenerator()

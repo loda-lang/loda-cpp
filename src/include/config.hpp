@@ -1,12 +1,10 @@
-#include "generator.hpp"
+#include "miner.hpp"
 #include "util.hpp"
 
-class LODAConfig
+class ConfigLoader
 {
 public:
 
-  LODAConfig( const Settings& settings );
-
-  std::vector<Generator::Config> generator_configs;
+  static Miner::Config load( const Settings& settings );
 
 };

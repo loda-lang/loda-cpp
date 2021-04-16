@@ -48,7 +48,6 @@ function start_miners() {
   if [ "$num_cpus" -ge 32 ]; then
     num_use_cpus=$(( $num_cpus - 8 ))
   fi
-  num_inst=$(( $num_cpus / 2 ))
 
   # maintenance
   if [ "$remote_origin" = "git@github.com:ckrause/loda.git" ] && [ "$branch" = "master" ]; then
@@ -58,10 +57,11 @@ function start_miners() {
   fi
 
   # start miners
+  i=0
   echo "Start mining using ${num_use_cpus} instances"
-  for n in $(seq ${num_inst}); do
-    ./loda mine -l ${log_level} $@ &
-    ./loda mine -l ${log_level} -x $@ &
+  for n in $(seq ${num_use_cpus}); do
+    ./loda mine -l ${log_level} -i ${i} $@ &
+    ((i=i+1))
   done
 }
 

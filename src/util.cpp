@@ -258,11 +258,11 @@ Settings::Settings()
       max_stack_size( getEnvInt( "LODA_MAX_STACK_SIZE", 100 ) ),
       max_physical_memory( getEnvInt( "LODA_MAX_PHYSICAL_MEMORY", 1024 ) * 1024 * 1024 ),
       linear_prefix( 1 ),
-      optimize_existing_programs( false ),
       search_linear( false ),
       throw_on_overflow( true ),
       use_steps( false ),
       loda_config( "loda.json" ),
+      miner( "default" ),
       print_as_b_file( false ),
       print_as_b_file_offset( 0 )
 {
@@ -277,6 +277,7 @@ enum class Option
   MAX_PHYSICAL_MEMORY,
   B_FILE_OFFSET,
   LODA_CONFIG,
+  MINER,
   LOG_LEVEL
 };
 
@@ -317,6 +318,7 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
         break;
       case Option::LOG_LEVEL:
       case Option::LODA_CONFIG:
+      case Option::MINER:
       case Option::NONE:
         break;
       }
@@ -325,6 +327,11 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
     else if ( option == Option::LODA_CONFIG )
     {
       loda_config = arg;
+      option = Option::NONE;
+    }
+    else if ( option == Option::MINER )
+    {
+      miner = arg;
       option = Option::NONE;
     }
     else if ( option == Option::LOG_LEVEL )
@@ -374,9 +381,9 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
       {
         option = Option::MAX_PHYSICAL_MEMORY;
       }
-      else if ( opt == "x" )
+      else if ( opt == "i" )
       {
-        optimize_existing_programs = true;
+        option = Option::MINER;
       }
       else if ( opt == "r" )
       {

@@ -4,6 +4,38 @@
 #include "reducer.hpp"
 #include "semantics.hpp"
 
+// --- Factory --------------------------------------------------------
+
+Matcher::UPtr Matcher::Factory::create( const Matcher::Config config )
+{
+  Matcher::UPtr result;
+  if ( config.type == "direct" )
+  {
+    result.reset( new DirectMatcher( config.backoff ) );
+  }
+  else if ( config.type == "linear1" )
+  {
+    result.reset( new LinearMatcher( config.backoff ) );
+  }
+  else if ( config.type == "linear2" )
+  {
+    result.reset( new LinearMatcher2( config.backoff ) );
+  }
+  else if ( config.type == "delta" )
+  {
+    result.reset( new DeltaMatcher( config.backoff ) );
+  }
+  else if ( config.type == "polynomial" )
+  {
+    result.reset( new PolynomialMatcher( config.backoff ) );
+  }
+  else
+  {
+    Log::get().error( "Unknown matcher type: " + config.type, true );
+  }
+  return result;
+}
+
 // --- AbstractMatcher --------------------------------------------------------
 
 template<class T>

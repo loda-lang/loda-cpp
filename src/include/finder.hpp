@@ -43,6 +43,8 @@ public:
     return matcher_stats;
   }
 
+  void logSummary( size_t loaded_count );
+
   void publishMetrics();
 
 private:

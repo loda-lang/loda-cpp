@@ -12,19 +12,13 @@
 #include <sstream>
 
 OeisMaintenance::OeisMaintenance( const Settings &settings )
-    : settings( settings ),
-      interpreter( settings ),
-      manager( settings )
+    : interpreter( settings ),
+      manager( settings, true ) // need to set the overwrite-flag!
 {
 }
 
 void OeisMaintenance::maintain()
 {
-  if ( !settings.optimize_existing_programs )
-  {
-    Log::get().error( "Option -x required to run maintenance", true );
-  }
-
   // load sequence data
   manager.load();
 

@@ -31,7 +31,6 @@ void Test::all()
   size_t tests = 100;
   semantics();
   memory();
-//  iterator( tests );
   config();
   stats();
   knownPrograms();
@@ -39,6 +38,7 @@ void Test::all()
   oeisSeq();
   ackermann();
   collatz();
+  //  iterator( tests );
   linearMatcher();
   deltaMatcher();
   for ( size_t degree = 0; degree <= (size_t) PolynomialMatcher::DEGREE; degree++ )
@@ -336,35 +336,89 @@ void Test::collatz()
   }
 }
 
-void check_int( const std::string &s, int64_t min, int64_t max, int64_t value )
+void check_int( const std::string &s, int64_t expected, int64_t value )
 {
-  if ( value < min || value > max )
+  if ( value != expected )
   {
-    Log::get().error(
-        "Expected '" + s + "' min: " + std::to_string( min ) + ", max: " + std::to_string( max ) + ", got: "
-            + std::to_string( value ), true );
+    Log::get().error( "expected " + s + ": " + std::to_string( expected ) + ", got: " + std::to_string( value ), true );
+  }
+}
+
+void check_str( const std::string &s, const std::string& expected, const std::string& value )
+{
+  if ( value != expected )
+  {
+    Log::get().error( "expected " + s + ": " + expected + ", got: " + value, true );
   }
 }
 
 void Test::config()
 {
   Log::get().info( "Testing config" );
+
   Settings settings;
-  LODAConfig config( settings );
-  check_int( "numGenerators", 2, 20, config.generator_configs.size() );
-  for ( auto &c : config.generator_configs )
-  {
-    check_int( "version", 1, 3, c.version );
-    check_int( "replicas", 1, 3, c.replicas );
-    if ( c.version == 1 )
-    {
-      check_int( "length", 20, 120, c.length );
-      check_int( "max_constant", 4, 10, c.max_constant );
-      check_int( "max_index", 4, 10, c.max_index );
-      check_int( "loops", 0, 1, c.loops );
-      check_int( "indirectAccess", 0, 1, c.indirect_access );
-    }
-  }
+  settings.loda_config = "tests/config/test_loda.json";
+  settings.miner = "default";
+  auto config = ConfigLoader::load( settings );
+  check_int( "overwrite", 0, config.overwrite );
+
+  check_int( "generators.size", 3, config.generators.size() );
+  check_int( "generators[0].version", 1, config.generators[0].version );
+  check_int( "generators[0].length", 30, config.generators[0].length );
+  check_int( "generators[0].maxConstant", 3, config.generators[0].max_constant );
+  check_int( "generators[0].maxIndex", 4, config.generators[0].max_index );
+  check_int( "generators[0].replicas", 2, config.generators[0].replicas );
+  check_int( "generators[0].loops", 0, config.generators[0].loops );
+  check_int( "generators[0].calls", 1, config.generators[0].calls );
+  check_int( "generators[0].indirectAccess", 0, config.generators[0].indirect_access );
+  check_str( "generators[0].template", "tmp1", config.generators[0].program_template );
+  check_int( "generators[1].version", 1, config.generators[1].version );
+  check_int( "generators[1].length", 30, config.generators[1].length );
+  check_int( "generators[1].maxConstant", 3, config.generators[1].max_constant );
+  check_int( "generators[1].maxIndex", 4, config.generators[1].max_index );
+  check_int( "generators[1].replicas", 2, config.generators[1].replicas );
+  check_int( "generators[1].loops", 0, config.generators[1].loops );
+  check_int( "generators[1].calls", 1, config.generators[1].calls );
+  check_int( "generators[1].indirectAccess", 0, config.generators[1].indirect_access );
+  check_str( "generators[1].template", "tmp2", config.generators[1].program_template );
+  check_int( "generators[2].version", 1, config.generators[2].version );
+  check_int( "generators[2].length", 40, config.generators[2].length );
+  check_int( "generators[2].maxConstant", 4, config.generators[2].max_constant );
+  check_int( "generators[2].maxIndex", 5, config.generators[2].max_index );
+  check_int( "generators[2].replicas", 1, config.generators[2].replicas );
+  check_int( "generators[2].loops", 1, config.generators[2].loops );
+  check_int( "generators[2].calls", 0, config.generators[2].calls );
+  check_int( "generators[2].indirectAccess", 1, config.generators[2].indirect_access );
+  check_str( "generators[2].template", "", config.generators[2].program_template );
+
+  check_int( "matchers.size", 2, config.matchers.size() );
+  check_str( "matchers[0].type", "direct", config.matchers[0].type );
+  check_int( "matchers[0].backoff", 1, config.matchers[0].backoff );
+  check_str( "matchers[1].type", "linear1", config.matchers[1].type );
+  check_int( "matchers[1].backoff", 1, config.matchers[1].backoff );
+
+  settings.miner = "update";
+  config = ConfigLoader::load( settings );
+  check_int( "overwrite", 1, config.overwrite );
+
+  check_int( "generators.size", 2, config.generators.size() );
+  check_int( "generators[0].version", 2, config.generators[0].version );
+  check_int( "generators[1].version", 3, config.generators[1].version );
+
+  check_int( "matchers.size", 2, config.matchers.size() );
+  check_str( "matchers[0].type", "linear2", config.matchers[0].type );
+  check_int( "matchers[0].backoff", 0, config.matchers[0].backoff );
+  check_str( "matchers[1].type", "delta", config.matchers[1].type );
+  check_int( "matchers[1].backoff", 0, config.matchers[1].backoff );
+
+  settings.miner = "0";
+  config = ConfigLoader::load( settings );
+  check_int( "generators.size", 3, config.generators.size() );
+
+  settings.miner = "1";
+  config = ConfigLoader::load( settings );
+  check_int( "generators.size", 2, config.generators.size() );
+
 }
 
 void Test::stats()
