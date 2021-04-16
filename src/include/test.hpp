@@ -54,6 +54,7 @@ private:
 
   void testMatcherPair( Matcher &matcher, size_t id1, size_t id2 );
 
+  Settings settings;
   OeisManager manager;
 
 };
