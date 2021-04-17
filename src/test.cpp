@@ -41,10 +41,6 @@ void Test::all()
   //  iterator( tests );
   linearMatcher();
   deltaMatcher();
-  for ( size_t degree = 0; degree <= (size_t) PolynomialMatcher::DEGREE; degree++ )
-  {
-    polynomialMatcher( tests, degree );
-  }
   optimizer();
   minimizer( tests );
 }
@@ -634,80 +630,6 @@ void Test::deltaMatcher()
   testMatcherSet( matcher, { 7, 12, 27 } );
   testMatcherSet( matcher, { 4273, 290, 330 } );
   testMatcherSet( matcher, { 168380, 193356 } );
-}
-
-void Test::polynomialMatcher( size_t tests, size_t degree )
-{
-  Parser parser;
-  Interpreter interpreter( settings );
-  Optimizer optimizer( settings );
-  std::random_device rand_dev;
-  PolynomialMatcher matcher( false );
-  Log::get().info( "Testing polynomial matcher for degree " + std::to_string( degree ) );
-
-// load test program
-  std::vector<size_t> program_ids = { 4, 35, 2262 };
-  std::vector<Program> programs;
-  for ( auto id : program_ids )
-  {
-    auto program = parser.parse( OeisSequence( id ).getProgramPath() );
-    optimizer.removeNops( program );
-    programs.push_back( program );
-  }
-
-// run matcher tests
-  for ( size_t i = 0; i < tests; i++ )
-  {
-    // evaluate test program
-    auto program = programs[i % program_ids.size()];
-    Sequence norm_seq;
-    interpreter.eval( program, norm_seq );
-
-    // test polynomial matcher
-    Polynomial pol( degree );
-    for ( size_t d = 0; d < pol.size(); d++ )
-    {
-      pol[d] = rand_dev() % 100;
-    }
-
-    Log::get().debug( "Checking (" + norm_seq.to_string() + ") + " + pol.to_string() );
-    auto target_seq = norm_seq;
-    for ( size_t n = 0; n < target_seq.size(); n++ )
-    {
-      for ( size_t d = 0; d < pol.size(); d++ )
-      {
-        target_seq[n] += pol[d] * Semantics::pow( n, d );
-      }
-    }
-    Matcher::seq_programs_t results;
-    matcher.insert( target_seq, i );
-    matcher.match( program, norm_seq, results );
-    if ( results.size() != 1 )
-    {
-      ProgramUtil::print( program, std::cout );
-      Log::get().error( "Error: no program found", true );
-    }
-    Sequence result_seq;
-    try
-    {
-      interpreter.eval( results[0].second, result_seq );
-    }
-    catch ( const std::exception& )
-    {
-      Log::get().error( "Error evaluating generated program", true );
-    }
-    if ( result_seq != target_seq )
-    {
-      std::cout << "# Input program: " << std::endl;
-      ProgramUtil::print( program, std::cout );
-      std::cout << std::endl << "# Output program: " << std::endl;
-      ProgramUtil::print( results[0].second, std::cout );
-      std::cout << "# Target sequence: " + target_seq.to_string() << std::endl;
-      std::cout << "# Output sequence: " + result_seq.to_string() << std::endl;
-      Log::get().error( "Error: matched program yields wrong unexpected result", true );
-    }
-    matcher.remove( target_seq, i );
-  }
 }
 
 void Test::testBinary( const std::string &func, const std::string &file,

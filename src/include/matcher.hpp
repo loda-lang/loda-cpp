@@ -161,38 +161,11 @@ protected:
 
 };
 
-class PolynomialMatcher: public AbstractMatcher<Polynomial>
-{
-public:
-
-  static const int DEGREE;
-
-  PolynomialMatcher( bool backoff )
-      : AbstractMatcher( "polynomial", backoff )
-  {
-  }
-
-  virtual ~PolynomialMatcher()
-  {
-  }
-
-protected:
-
-  virtual std::pair<Sequence, Polynomial> reduce( const Sequence &seq ) const override;
-
-  virtual bool extend( Program &p, Polynomial base, Polynomial gen ) const override;
-
-private:
-
-  Polynomial reduce( Sequence &seq, int64_t exp ) const;
-
-};
-
 class DeltaMatcher: public AbstractMatcher<delta_t>
 {
 public:
 
-  static const int MAX_DELTA;
+  static const int64_t MAX_DELTA;
 
   DeltaMatcher( bool backoff )
       : AbstractMatcher( "delta", backoff )

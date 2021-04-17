@@ -14,8 +14,7 @@ public:
   Sequence( const Sequence &s ) = default;
 
   Sequence( const std::vector<number_t> &s )
-      :
-      std::vector<number_t>( s )
+      : std::vector<number_t>( s )
   {
   }
 
@@ -66,33 +65,4 @@ class SequenceToIdsMap: public std::unordered_map<Sequence, std::vector<size_t>,
 {
 public:
   void remove( Sequence seq, size_t id );
-};
-
-class Polynomial: public std::vector<int64_t>
-{
-public:
-
-  Polynomial() = default;
-
-  Polynomial( const Polynomial &s ) = default;
-
-  Polynomial( size_t degree )
-      :
-      std::vector<int64_t>( degree + 1 )
-  {
-  }
-
-  Polynomial( const std::vector<int64_t> &p )
-      :
-      std::vector<int64_t>( p )
-  {
-  }
-
-  Sequence eval( number_t length ) const;
-
-  std::string to_string() const;
-
-  friend Polynomial operator+( const Polynomial &a, const Polynomial &b );
-  friend Polynomial operator-( const Polynomial &a, const Polynomial &b );
-
 };

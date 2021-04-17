@@ -25,10 +25,6 @@ Matcher::UPtr Matcher::Factory::create( const Matcher::Config config )
   {
     result.reset( new DeltaMatcher( config.backoff ) );
   }
-  else if ( config.type == "polynomial" )
-  {
-    result.reset( new PolynomialMatcher( config.backoff ) );
-  }
   else
   {
     Log::get().error( "Unknown matcher type: " + config.type, true );
@@ -147,27 +143,9 @@ bool LinearMatcher2::extend( Program &p, line_t base, line_t gen ) const
   return Extender::linear2( p, gen, base );
 }
 
-// --- Polynomial Matcher -----------------------------------------------------
-
-const int PolynomialMatcher::DEGREE = 3; // magic number
-
-std::pair<Sequence, Polynomial> PolynomialMatcher::reduce( const Sequence &seq ) const
-{
-  std::pair<Sequence, Polynomial> result;
-  result.first = seq;
-  result.second = Reducer::polynomial( result.first, DEGREE );
-  return result;
-}
-
-bool PolynomialMatcher::extend( Program &p, Polynomial base, Polynomial gen ) const
-{
-  auto diff = base - gen;
-  return Extender::polynomial( p, diff );
-}
-
 // --- Delta Matcher ----------------------------------------------------------
 
-const int DeltaMatcher::MAX_DELTA = 4; // magic number
+const int64_t DeltaMatcher::MAX_DELTA = 4; // magic number
 
 std::pair<Sequence, delta_t> DeltaMatcher::reduce( const Sequence &seq ) const
 {
