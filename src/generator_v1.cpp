@@ -207,6 +207,10 @@ std::pair<Operation, double> GeneratorV1::generateOperation()
   if ( op.source.type == Operand::Type::CONSTANT )
   {
     op.source.value = constants.at( constants_dist( gen ) );
+    if ( op.type == Operation::Type::LPB )
+    {
+      op.source.value = std::max<number_t>( op.source.value, 1 ) % 10;
+    }
   }
 
   // avoid meaningless zeros or singularities
