@@ -58,10 +58,6 @@ void AbstractMatcher<T>::match( const Program &p, const Sequence &norm_seq, seq_
     return;
   }
   auto reduced = reduce( norm_seq );
-  if ( !shouldMatchSequence( reduced.first ) && norm_seq != reduced.first )
-  {
-    return;
-  }
   auto it = ids.find( reduced.first );
   if ( it != ids.end() )
   {

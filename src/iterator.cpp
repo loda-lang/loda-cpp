@@ -15,7 +15,7 @@ const Operation Iterator::SMALLEST_OPERATION( Operation::Type::MOV, DIRECT_ONE, 
 
 bool Iterator::inc( Operand &o, bool direct )
 {
-  if ( o.value * 4 < static_cast<number_t>( size ) )
+  if ( o.value < 2 || o.value * 4 < static_cast<number_t>( size ) )
   {
     o.value++;
     return true;
