@@ -33,7 +33,8 @@ std::string get_file_as_string( const std::string& filename )
   return str;
 }
 
-std::vector<Generator::Config> loadGeneratorConfigs( jute::jValue &gens, const std::unordered_set<std::string>& names )
+std::vector<Generator::Config> loadGeneratorConfigs( const std::string& miner, jute::jValue &gens,
+    const std::unordered_set<std::string>& names )
 {
   std::vector<Generator::Config> generators;
   for ( int i = 0; i < gens.size(); i++ )
@@ -47,6 +48,7 @@ std::vector<Generator::Config> loadGeneratorConfigs( jute::jValue &gens, const s
     Generator::Config c;
     c.version = get_jint( g, "version", 1 );
     c.replicas = get_jint( g, "replicas", 1 );
+    c.miner = miner;
     if ( c.version == 1 )
     {
       c.length = get_jint( g, "length", 20 );
@@ -133,7 +135,7 @@ Miner::Config ConfigLoader::load( const Settings& settings )
         names.insert( gen_names[j].as_string() );
       }
       auto gens = spec["generators"];
-      config.generators = loadGeneratorConfigs( gens, names );
+      config.generators = loadGeneratorConfigs( name, gens, names );
 
       // done
       found = true;

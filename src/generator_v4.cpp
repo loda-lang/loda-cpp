@@ -12,17 +12,6 @@
 #include <sstream>
 #include <math.h>
 
-std::string getGenV4Home()
-{
-  // no trailing / here
-  return getLodaHome() + "gen_v4";
-}
-
-std::string getNumFilesPath()
-{
-  return getGenV4Home() + "/numfiles.txt";
-}
-
 ProgramState::ProgramState()
     : index( 0 ),
       generated( 0 )
@@ -37,18 +26,11 @@ void ProgramState::validate() const
   }
 }
 
-std::string ProgramState::getPath() const
-{
-  std::stringstream s;
-  s << getGenV4Home() << "/S" << std::setw( 4 ) << std::setfill( '0' ) << index << ".txt";
-  return s.str();
-}
-
-void ProgramState::load()
+void ProgramState::load( const std::string& path )
 {
   validate();
   Parser parser;
-  Program p = parser.parse( getPath() );
+  Program p = parser.parse( path );
   size_t step = 0;
   start.ops.clear();
   current.ops.clear();
@@ -94,7 +76,7 @@ void ProgramState::load()
   }
 }
 
-void ProgramState::save() const
+void ProgramState::save( const std::string& path ) const
 {
   validate();
   Program p;
@@ -108,7 +90,7 @@ void ProgramState::save() const
   nop.comment = "end";
   p.ops.push_back( nop );
   p.ops.insert( p.ops.end(), end.ops.begin(), end.ops.end() );
-  std::ofstream f( getPath() );
+  std::ofstream f( path );
   ProgramUtil::print( p, f );
   f.close();
 }
@@ -116,9 +98,18 @@ void ProgramState::save() const
 GeneratorV4::GeneratorV4( const Config &config, const Stats &stats, int64_t seed )
     : Generator( config, stats, seed )
 {
+  if ( config.miner.empty() || config.miner == "default" )
+  {
+    Log::get().error( "Invalid or empty miner for generator v4: " + config.miner, true );
+  }
+
+  // no trailing / here
+  home = getLodaHome() + "gen_v4/" + config.miner;
+  numfiles_path = home + "/numfiles.txt";
+
   // obtain lock
-  FolderLock lock( getGenV4Home() );
-  std::ifstream nf( getNumFilesPath() );
+  FolderLock lock( home );
+  std::ifstream nf( numfiles_path );
   if ( !nf.good() )
   {
     init( stats, seed );
@@ -127,9 +118,16 @@ GeneratorV4::GeneratorV4( const Config &config, const Stats &stats, int64_t seed
   load();
 }
 
+std::string GeneratorV4::getPath( int64_t index ) const
+{
+  std::stringstream s;
+  s << home << "/S" << std::setw( 4 ) << std::setfill( '0' ) << index << ".txt";
+  return s.str();
+}
+
 void GeneratorV4::init( const Stats &stats, int64_t seed )
 {
-  Log::get().info( "Initializing state of generator v4 in " + getGenV4Home() );
+  Log::get().info( "Initializing state of generator v4 in " + home );
 
   Generator::Config config;
   config.version = 1;
@@ -154,7 +152,7 @@ void GeneratorV4::init( const Stats &stats, int64_t seed )
 
   std::sort( programs.begin(), programs.end() );
 
-  ensureDir( getGenV4Home() );
+  ensureDir( home );
 
   ProgramState s;
   s.index = 1;
@@ -168,22 +166,22 @@ void GeneratorV4::init( const Stats &stats, int64_t seed )
     }
     s.current = s.start;
     s.end = p;
-    s.save();
+    s.save( getPath( s.index ) );
     s.start = p;
     s.index++;
   }
 
-  std::ofstream nf( getNumFilesPath() );
+  std::ofstream nf( numfiles_path );
   nf << (s.index - 1) << std::endl;
   nf.close();
 }
 
 void GeneratorV4::load()
 {
-  std::ifstream nf( getNumFilesPath() );
+  std::ifstream nf( numfiles_path );
   if ( !nf.good() )
   {
-    Log::get().error( "File not found: " + getNumFilesPath(), true );
+    Log::get().error( "File not found: " + numfiles_path, true );
   }
   int64_t num_files;
   nf >> num_files;
@@ -197,14 +195,14 @@ void GeneratorV4::load()
   {
     state = ProgramState();
     state.index = (gen() % num_files) + 1;
-    state.load();
+    state.load( getPath( state.index ) );
     iterator = Iterator( state.current );
   } while ( state.end < state.current && --attempts );
   if ( !attempts )
   {
     Log::get().error( "Looks like we already generated all programs!", true );
   }
-  Log::get().info(
+  Log::get().debug(
       "Working on gen_v4 block " + std::to_string( state.index ) + " (" + std::to_string( state.generated )
           + " generated programs)" );
 }
@@ -215,8 +213,8 @@ Program GeneratorV4::generateProgram()
   state.generated++;
   if ( state.generated % 10000 == 0 )
   {
-    FolderLock lock( getGenV4Home() );
-    state.save();
+    FolderLock lock( home );
+    state.save( getPath( state.index ) );
     load();
   }
   return state.current;
