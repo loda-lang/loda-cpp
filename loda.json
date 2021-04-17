@@ -1,63 +1,93 @@
 {
-  "generators": {
-    "new": [
-      {
-        "version": 1,
-        "length": 30,
-        "maxConstant": 5,
-        "maxCell": 5,
-        "loops": false,
-        "calls": false,
-        "indirectAccess": false,
-        "template": [
-          "programs/templates/call.asm",
-          "programs/templates/call2.asm",
-          "programs/templates/loop.asm",
-          "programs/templates/loop2.asm",
-          "programs/templates/loop_call.asm"
-        ]
-      },
-      {
-        "version": 1,
-        "length": 40,
-        "maxConstant": 4,
-        "maxCell": 4,
-        "loops": true,
-        "calls": false,
-        "indirectAccess": false
-      },
-      {
-        "version": 1,
-        "length": 40,
-        "maxConstant": 4,
-        "maxCell": 4,
-        "loops": false,
-        "calls": true,
-        "indirectAccess": false
-      },
-      {
-        "version": 1,
-        "length": 40,
-        "maxConstant": 4,
-        "maxCell": 4,
-        "loops": true,
-        "calls": true,
-        "indirectAccess": false
-      },
-      {
-        "version": 2
-      },
-      {
-        "version": 3
-      }
-    ],
-    "update": [
-      {
-        "version": 2
-      },
-      {
-        "version": 3
-      }
-    ]
-  }
+  "miners": [
+    {
+      "name": "default",
+      "overwrite": false,
+      "backoff": true,
+      "generators": [
+        "v1_1",
+        "v1_2",
+        "v1_3",
+        "v1_4"
+      ],
+      "matchers": [
+        "direct",
+        "linear1",
+        "linear2",
+        "delta"
+      ]
+    },
+    {
+      "name": "update",
+      "overwrite": true,
+      "backoff": false,
+      "generators": [
+        "v1_1",
+        "v2",
+        "v3"
+      ],
+      "matchers": [
+        "direct",
+        "linear1",
+        "linear2"
+      ]
+    }
+  ],
+  "generators": [
+    {
+      "name": "v1_1",
+      "version": 1,
+      "length": 30,
+      "maxConstant": 4,
+      "maxIndex": 4,
+      "loops": false,
+      "calls": false,
+      "indirectAccess": false,
+      "template": [
+        "programs/templates/call.asm",
+        "programs/templates/call2.asm",
+        "programs/templates/loop.asm",
+        "programs/templates/loop2.asm",
+        "programs/templates/loop_call.asm"
+      ]
+    },
+    {
+      "name": "v1_2",
+      "version": 1,
+      "length": 40,
+      "maxConstant": 4,
+      "maxIndex": 4,
+      "loops": true,
+      "calls": false,
+      "indirectAccess": false
+    },
+    {
+      "name": "v1_3",
+      "version": 1,
+      "length": 40,
+      "maxConstant": 4,
+      "maxIndex": 4,
+      "loops": false,
+      "calls": true,
+      "indirectAccess": false
+    },
+    {
+      "name": "v1_4",
+      "version": 1,
+      "length": 40,
+      "maxConstant": 4,
+      "maxIndex": 4,
+      "loops": true,
+      "calls": true,
+      "indirectAccess": false
+    },
+    {
+      "name": "v2",
+      "version": 2
+    },
+    {
+      "name": "v3",
+      "version": 3
+    }
+  ]
 }

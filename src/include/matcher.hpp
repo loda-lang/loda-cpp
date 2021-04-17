@@ -5,6 +5,7 @@
 #include "reducer.hpp"
 #include "extender.hpp"
 
+#include <memory>
 #include <unordered_set>
 
 class Matcher
@@ -12,6 +13,21 @@ class Matcher
 public:
 
   using seq_programs_t = std::vector<std::pair<size_t,Program>>;
+
+  using UPtr = std::unique_ptr<Matcher>;
+
+  class Config
+  {
+  public:
+    std::string type;
+    bool backoff;
+  };
+
+  class Factory
+  {
+  public:
+    static Matcher::UPtr create( const Matcher::Config config );
+  };
 
   virtual ~Matcher()
   {
@@ -39,9 +55,8 @@ public:
   static constexpr size_t MAX_NUM_MATCHES = 10; // magic number
 
   AbstractMatcher( const std::string &name, bool backoff )
-      :
-      name( name ),
-      backoff( backoff )
+      : name( name ),
+        backoff( backoff )
   {
   }
 
@@ -88,8 +103,7 @@ class DirectMatcher: public AbstractMatcher<int>
 public:
 
   DirectMatcher( bool backoff )
-      :
-      AbstractMatcher( "direct", backoff )
+      : AbstractMatcher( "direct", backoff )
   {
   }
 
@@ -110,8 +124,7 @@ class LinearMatcher: public AbstractMatcher<line_t>
 public:
 
   LinearMatcher( bool backoff )
-      :
-      AbstractMatcher( "linear1", backoff )
+      : AbstractMatcher( "linear1", backoff )
   {
   }
 
@@ -132,8 +145,7 @@ class LinearMatcher2: public AbstractMatcher<line_t>
 public:
 
   LinearMatcher2( bool backoff )
-      :
-      AbstractMatcher( "linear2", backoff )
+      : AbstractMatcher( "linear2", backoff )
   {
   }
 
@@ -156,8 +168,7 @@ public:
   static const int DEGREE;
 
   PolynomialMatcher( bool backoff )
-      :
-      AbstractMatcher( "polynomial", backoff )
+      : AbstractMatcher( "polynomial", backoff )
   {
   }
 
@@ -184,8 +195,7 @@ public:
   static const int MAX_DELTA;
 
   DeltaMatcher( bool backoff )
-      :
-      AbstractMatcher( "delta", backoff )
+      : AbstractMatcher( "delta", backoff )
   {
   }
 

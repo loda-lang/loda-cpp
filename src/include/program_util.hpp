@@ -14,6 +14,8 @@ public:
 
   static bool replaceOps( Program &p, Operation::Type oldType, Operation::Type newType );
 
+  static bool isNop( const Operation& op );
+
   static size_t numOps( const Program &p, bool withNops );
 
   static size_t numOps( const Program &p, Operation::Type type );
@@ -44,5 +46,7 @@ public:
   static size_t hash( const Operation &op );
 
   static size_t hash( const Operand &op );
+
+  static void validate( const Program& p );
 
 };

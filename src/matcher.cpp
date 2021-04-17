@@ -4,6 +4,38 @@
 #include "reducer.hpp"
 #include "semantics.hpp"
 
+// --- Factory --------------------------------------------------------
+
+Matcher::UPtr Matcher::Factory::create( const Matcher::Config config )
+{
+  Matcher::UPtr result;
+  if ( config.type == "direct" )
+  {
+    result.reset( new DirectMatcher( config.backoff ) );
+  }
+  else if ( config.type == "linear1" )
+  {
+    result.reset( new LinearMatcher( config.backoff ) );
+  }
+  else if ( config.type == "linear2" )
+  {
+    result.reset( new LinearMatcher2( config.backoff ) );
+  }
+  else if ( config.type == "delta" )
+  {
+    result.reset( new DeltaMatcher( config.backoff ) );
+  }
+  else if ( config.type == "polynomial" )
+  {
+    result.reset( new PolynomialMatcher( config.backoff ) );
+  }
+  else
+  {
+    Log::get().error( "Unknown matcher type: " + config.type, true );
+  }
+  return result;
+}
+
 // --- AbstractMatcher --------------------------------------------------------
 
 template<class T>
@@ -55,14 +87,17 @@ void AbstractMatcher<T>::match( const Program &p, const Sequence &norm_seq, seq_
 template<class T>
 bool AbstractMatcher<T>::shouldMatchSequence( const Sequence &seq ) const
 {
-  if ( backoff && match_attempts.find( seq ) != match_attempts.end() )
+  if ( backoff )
   {
-    // Log::get().debug( "Back off matching of already matched sequence " + seq.to_string() );
-    return false;
-  }
-  if ( has_memory )
-  {
-    match_attempts.insert( seq );
+    if ( match_attempts.find( seq ) != match_attempts.end() )
+    {
+      // Log::get().debug( "Back off matching of already matched sequence " + seq.to_string() );
+      return false;
+    }
+    if ( has_memory )
+    {
+      match_attempts.insert( seq );
+    }
   }
   return true;
 }

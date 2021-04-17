@@ -73,11 +73,11 @@ public:
   size_t max_stack_size;
   size_t max_physical_memory;
   size_t linear_prefix;
-  bool optimize_existing_programs;
   bool search_linear;
   bool throw_on_overflow;
   bool use_steps;
   std::string loda_config;
+  std::string miner;
 
   // flag and offset for printing evaluation results in b-file format
   bool print_as_b_file;
@@ -105,6 +105,8 @@ public:
   FolderLock( std::string folder );
 
   ~FolderLock();
+
+  void release();
 
 private:
   std::string lockfile;

@@ -1,33 +1,34 @@
 #include "finder.hpp"
 
+#include "config.hpp"
 #include "number.hpp"
 #include "oeis_sequence.hpp"
 #include "program_util.hpp"
 #include "util.hpp"
 
+#include <iomanip>
 #include <fstream>
+#include <sstream>
 
 Finder::Finder( const Settings &settings )
     : settings( settings ),
       interpreter( settings ),
       num_find_attempts( 0 )
 {
-  if ( settings.optimize_existing_programs )
+  auto config = ConfigLoader::load( settings );
+  if ( config.matchers.empty() )
   {
-    matchers.resize( 3 );
-    matchers[0].reset( new DirectMatcher( false ) );
-    matchers[1].reset( new LinearMatcher( false ) );
-    matchers[2].reset( new LinearMatcher2( false ) );
+    Log::get().error( "No matchers defined", true );
   }
-  else
+
+  // create matchers
+  matchers.resize( config.matchers.size() );
+  for ( size_t i = 0; i < config.matchers.size(); i++ )
   {
-    matchers.resize( 5 );
-    matchers[0].reset( new DirectMatcher( true ) );
-    matchers[1].reset( new LinearMatcher( true ) );
-    matchers[2].reset( new LinearMatcher2( true ) );
-    matchers[3].reset( new PolynomialMatcher( true ) );
-    matchers[4].reset( new DeltaMatcher( true ) );
+    matchers[i] = Matcher::Factory::create( config.matchers[i] );
   }
+
+  // reset matcher stats
   matcher_stats.resize( matchers.size() );
   for ( auto &s : matcher_stats )
   {
@@ -166,6 +167,20 @@ void Finder::findAll( const Program &p, const Sequence &norm_seq, const std::vec
       j++;
     }
   }
+}
+
+void Finder::logSummary( size_t loaded_count )
+{
+  std::stringstream buf;
+  buf << "Matcher compaction ratios: ";
+  for ( size_t i = 0; i < matchers.size(); i++ )
+  {
+    if ( i > 0 ) buf << ", ";
+    double ratio = 100.0 * (double) matchers[i]->getReducedSequences().size()
+        / (double) std::max<size_t>( loaded_count, 1 );
+    buf << matchers[i]->getName() << ": " << std::setprecision( 4 ) << ratio << "%";
+  }
+  Log::get().info( buf.str() );
 }
 
 void Finder::publishMetrics()

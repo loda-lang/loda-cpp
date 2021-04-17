@@ -14,7 +14,7 @@ class OeisManager
 {
 public:
 
-  OeisManager( const Settings &settings );
+  OeisManager( const Settings &settings, bool force_overwrite = false );
 
   void load();
 
@@ -61,6 +61,7 @@ private:
   friend class OeisMaintenance;
 
   const Settings &settings;
+  const bool overwrite;
   Interpreter interpreter;
   Finder finder;
   Minimizer minimizer;

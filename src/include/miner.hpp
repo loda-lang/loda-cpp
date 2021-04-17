@@ -2,6 +2,7 @@
 
 #include "generator.hpp"
 #include "interpreter.hpp"
+#include "matcher.hpp"
 #include "number.hpp"
 #include "oeis_manager.hpp"
 #include "optimizer.hpp"
@@ -11,6 +12,15 @@
 class Miner
 {
 public:
+
+  class Config
+  {
+  public:
+    std::string name;
+    bool overwrite;
+    std::vector<Generator::Config> generators;
+    std::vector<Matcher::Config> matchers;
+  };
 
   Miner( const Settings &settings );
 

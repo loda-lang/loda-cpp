@@ -1,6 +1,7 @@
 #pragma once
 
 #include "program.hpp"
+#include "optimizer.hpp"
 #include "util.hpp"
 
 class Minimizer
@@ -8,7 +9,8 @@ class Minimizer
 public:
 
   Minimizer( const Settings &settings )
-      : settings( settings )
+      : settings( settings ),
+        optimizer( settings )
   {
   }
 
@@ -20,5 +22,6 @@ public:
 private:
 
   Settings settings;
+  Optimizer optimizer;
 
 };

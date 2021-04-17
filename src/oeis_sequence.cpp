@@ -234,7 +234,7 @@ Sequence OeisSequence::getTerms( int64_t max_num_terms ) const
     }
     if ( big.empty() )
     {
-      Log::get().error( "Error loading b-file for " + id_str(), true );
+      Log::get().error( "Error loading b-file " + getBFilePath(), true );
     }
     num_bfile_terms = big.size();
 

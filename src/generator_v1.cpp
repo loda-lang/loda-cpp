@@ -49,9 +49,11 @@ std::discrete_distribution<> constantsDist( const std::vector<number_t> &constan
 }
 
 GeneratorV1::GeneratorV1( const Config &config, const Stats &stats, int64_t seed )
-    : Generator( config, stats, seed ),
-      num_operations( config.length )
+    : Generator( config, stats, seed )
 {
+  // the post processing adds operations, so we reduce the target length here
+  num_operations = std::max<int64_t>( config.length / 2, 1 );
+
   std::string operation_types = "^"; // negate operation types (exclusion pattern)
   if ( !config.loops )
   {

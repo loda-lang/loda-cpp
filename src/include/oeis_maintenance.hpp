@@ -16,7 +16,6 @@ private:
 
   size_t checkAndMinimizePrograms();
 
-  const Settings &settings;
   Interpreter interpreter;
   OeisManager manager;
 

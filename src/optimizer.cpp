@@ -75,29 +75,7 @@ bool Optimizer::removeNops( Program &p ) const
   auto it = p.ops.begin();
   while ( it != p.ops.end() )
   {
-    auto t = it->type;
-    bool is_nop = false;
-    if ( t == Operation::Type::NOP || t == Operation::Type::DBG )
-    {
-      is_nop = true;
-    }
-    else if ( it->source == it->target
-        && (t == Operation::Type::MOV || t == Operation::Type::MIN || t == Operation::Type::MAX) )
-    {
-      is_nop = true;
-    }
-    else if ( it->source.type == Operand::Type::CONSTANT && it->source.value == 0
-        && (t == Operation::Type::ADD || t == Operation::Type::SUB) )
-    {
-      is_nop = true;
-    }
-    else if ( it->source.type == Operand::Type::CONSTANT && it->source.value == 1
-        && ((t == Operation::Type::MUL || t == Operation::Type::DIV || t == Operation::Type::DIF
-            || t == Operation::Type::POW || t == Operation::Type::BIN)) )
-    {
-      is_nop = true;
-    }
-    if ( is_nop )
+    if ( ProgramUtil::isNop( *it ) )
     {
       if ( Log::get().level == Log::Level::DEBUG )
       {
@@ -689,6 +667,11 @@ bool Optimizer::sortOperations( Program &p ) const
   return changed;
 }
 
+void throwInvalidLoop()
+{
+  throw std::runtime_error( "invalid loop detected during optimization" );
+}
+
 bool Optimizer::mergeLoops( Program &p ) const
 {
   std::stack<size_t> loop_begins;
@@ -702,7 +685,7 @@ bool Optimizer::mergeLoops( Program &p ) const
     {
       if ( loop_begins.empty() )
       {
-        throw std::runtime_error( "invalid loop" );
+        throwInvalidLoop();
       }
       auto lpb2 = loop_begins.top();
       loop_begins.pop();
@@ -710,7 +693,7 @@ bool Optimizer::mergeLoops( Program &p ) const
       {
         if ( loop_begins.empty() )
         {
-          throw std::runtime_error( "invalid loop" );
+          throwInvalidLoop();
         }
         auto lpb1 = loop_begins.top();
         if ( lpb1 + 1 == lpb2 && p.ops[lpb1] == p.ops[lpb2] )

@@ -13,7 +13,6 @@ log_level=error
 check_interval=43200
 min_changes=50
 min_cpus=4
-max_mine_cycles=10000000
 branch=$(git rev-parse --abbrev-ref HEAD)
 remote_origin=$(git config --get remote.origin.url)
 
@@ -49,7 +48,6 @@ function start_miners() {
   if [ "$num_cpus" -ge 32 ]; then
     num_use_cpus=$(( $num_cpus - 8 ))
   fi
-  num_inst=$(( $num_cpus / 2 ))
 
   # maintenance
   if [ "$remote_origin" = "git@github.com:ckrause/loda.git" ] && [ "$branch" = "master" ]; then
@@ -59,10 +57,11 @@ function start_miners() {
   fi
 
   # start miners
+  i=0
   echo "Start mining using ${num_use_cpus} instances"
-  for n in $(seq ${num_inst}); do
-    ./loda mine -l ${log_level} -c ${max_mine_cycles} $@ &
-    ./loda mine -l ${log_level} -c ${max_mine_cycles} -x $@ &
+  for n in $(seq ${num_use_cpus}); do
+    ./loda mine -l ${log_level} -i ${i} $@ &
+    ((i=i+1))
   done
 }
 

@@ -2,21 +2,22 @@
 
 #include "matcher.hpp"
 #include "number.hpp"
+#include "oeis_manager.hpp"
 #include "util.hpp"
 
 class Test
 {
 public:
 
-  Test()
-  {
-  }
+  Test();
 
   void all();
 
   void semantics();
 
   void memory();
+
+  void iterator( size_t tests );
 
   void knownPrograms();
 
@@ -52,5 +53,8 @@ private:
   void testMatcherSet( Matcher &matcher, const std::vector<size_t> &ids );
 
   void testMatcherPair( Matcher &matcher, size_t id1, size_t id2 );
+
+  Settings settings;
+  OeisManager manager;
 
 };

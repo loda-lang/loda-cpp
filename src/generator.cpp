@@ -1,10 +1,11 @@
 #include "generator.hpp"
 
+#include "config.hpp"
 #include "generator_v1.hpp"
 #include "generator_v2.hpp"
 #include "generator_v3.hpp"
+#include "generator_v4.hpp"
 #include "util.hpp"
-#include "jute.h"
 
 Generator::UPtr Generator::Factory::createGenerator( const Config &config, const Stats &stats, int64_t seed )
 {
@@ -26,6 +27,11 @@ Generator::UPtr Generator::Factory::createGenerator( const Config &config, const
     generator.reset( new GeneratorV3( config, stats, seed ) );
     break;
   }
+  case 4:
+  {
+    generator.reset( new GeneratorV4( config, stats, seed ) );
+    break;
+  }
   default:
   {
     Log::get().error( "Invalid generator version: " + std::to_string( config.version ), true );
@@ -33,83 +39,6 @@ Generator::UPtr Generator::Factory::createGenerator( const Config &config, const
   }
   }
   return generator;
-}
-
-int64_t get_jint( jute::jValue &v, const std::string &key, int64_t def )
-{
-  if ( v[key].get_type() == jute::jType::JNUMBER )
-  {
-    return v[key].as_int();
-  }
-  return def;
-}
-
-bool get_jbool( jute::jValue &v, const std::string &key, bool def )
-{
-  if ( v[key].get_type() == jute::jType::JBOOLEAN )
-  {
-    return v[key].as_bool();
-  }
-  return def;
-}
-
-std::vector<Generator::Config> Generator::Config::load( std::istream &in, bool optimize_existing_programs )
-{
-  std::vector<Generator::Config> configs;
-  std::string str = "";
-  std::string tmp;
-  while ( getline( in, tmp ) )
-  {
-    str += tmp;
-  }
-  auto spec = jute::parser::parse( str );
-  auto generators = spec["generators"];
-  auto gens = optimize_existing_programs ? generators["update"] : generators["new"];
-  for ( int i = 0; i < gens.size(); i++ )
-  {
-    auto g = gens[i];
-    Generator::Config c;
-    c.version = get_jint( g, "version", 1 );
-    c.replicas = get_jint( g, "replicas", 1 );
-    if ( c.version == 1 )
-    {
-      c.length = get_jint( g, "length", 20 );
-      c.max_constant = get_jint( g, "maxConstant", 4 );
-      c.max_index = get_jint( g, "maxIndex", 4 );
-      c.loops = get_jbool( g, "loops", true );
-      c.calls = get_jbool( g, "calls", true );
-      c.indirect_access = get_jbool( g, "indirectAccess", false );
-    }
-    switch ( g["template"].get_type() )
-    {
-    case jute::jType::JSTRING:
-    {
-      c.program_template = g["template"].as_string();
-      configs.push_back( c );
-      break;
-    }
-    case jute::jType::JARRAY:
-    {
-      auto a = g["template"];
-      for ( int i = 0; i < a.size(); i++ )
-      {
-        if ( a[i].get_type() == jute::jType::JSTRING )
-        {
-          c.program_template = a[i].as_string();
-          configs.push_back( c );
-        }
-      }
-      break;
-    }
-    default:
-    {
-      configs.push_back( c );
-      break;
-    }
-    }
-  }
-  Log::get().debug( "Loaded " + std::to_string( configs.size() ) + " generator configurations" );
-  return configs;
 }
 
 Generator::Generator( const Config &config, const Stats &stats, int64_t seed )
@@ -418,8 +347,8 @@ void Generator::ensureMeaningfulLoops( Program &p )
 MultiGenerator::MultiGenerator( const Settings &settings, const Stats& stats, int64_t seed )
 {
   std::mt19937 gen( seed );
-  std::ifstream loda_conf( settings.loda_config );
-  configs = Generator::Config::load( loda_conf, settings.optimize_existing_programs );
+  auto config = ConfigLoader::load( settings );
+  configs = config.generators;
   if ( configs.empty() )
   {
     Log::get().error( "No generators configurations found", true );
@@ -431,6 +360,9 @@ MultiGenerator::MultiGenerator( const Settings &settings, const Stats& stats, in
   }
   generator_index = gen() % configs.size();
   replica_index = gen() % configs.at( gen() % configs.size() ).replicas;
+  Log::get().info(
+      "Initialized " + std::to_string( generators.size() ) + " generators from '" + config.name
+          + "' config; overwrite: " + (config.overwrite ? "true" : "false") );
 }
 
 Generator* MultiGenerator::getGenerator()

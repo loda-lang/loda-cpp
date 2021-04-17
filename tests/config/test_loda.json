@@ -1,0 +1,65 @@
+{
+  "miners": [
+    {
+      "name": "default",
+      "overwrite": false,
+      "backoff": true,
+      "generators": [
+        "v1_1",
+        "v1_2"
+      ],
+      "matchers": [
+        "direct",
+        "linear1"
+      ]
+    },
+    {
+      "name": "update",
+      "overwrite": true,
+      "backoff": false,
+      "generators": [
+        "v2",
+        "v3"
+      ],
+      "matchers": [
+        "linear2",
+        "delta"
+      ]
+    }
+  ],
+  "generators": [
+    {
+      "name": "v1_1",
+      "version": 1,
+      "length": 30,
+      "maxConstant": 3,
+      "maxIndex": 4,
+      "replicas": 2,
+      "loops": false,
+      "calls": true,
+      "indirectAccess": false,
+      "template": [
+        "tmp1",
+        "tmp2"
+      ]
+    },
+    {
+      "name": "v1_2",
+      "version": 1,
+      "length": 40,
+      "maxConstant": 4,
+      "maxIndex": 5,
+      "loops": true,
+      "calls": false,
+      "indirectAccess": true
+    },
+    {
+      "name": "v2",
+      "version": 2
+    },
+    {
+      "name": "v3",
+      "version": 3
+    }
+  ]
+}

@@ -469,6 +469,11 @@ std::pair<status_t, steps_t> Interpreter::check( const Program &p, const Sequenc
 
 std::pair<number_t, number_t> Interpreter::call( number_t id, number_t arg )
 {
+  if ( arg < 0 )
+  {
+    throw std::runtime_error( "cal using negative argument" );
+  }
+
   // check if already cached
   std::pair<number_t, number_t> key( id, arg );
   auto it = terms_cache.find( key );

@@ -78,7 +78,6 @@ bool Miner::isCollatzValuation( const Sequence &seq )
 void Miner::mine()
 {
   manager.load();
-  Log::get().info( "Mining programs for OEIS sequences" );
 
   auto &finder = manager.getFinder();
 
@@ -89,6 +88,7 @@ void Miner::mine()
   Sequence norm_seq;
   auto time = std::chrono::steady_clock::now();
 
+  Log::get().info( "Mining programs for OEIS sequences" );
   Generator *generator = multi_generator.getGenerator();
   while ( true )
   {

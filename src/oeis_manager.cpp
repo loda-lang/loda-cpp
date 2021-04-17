@@ -1,5 +1,6 @@
 #include "oeis_manager.hpp"
 
+#include "config.hpp"
 #include "interpreter.hpp"
 #include "number.hpp"
 #include "optimizer.hpp"
@@ -29,8 +30,9 @@ std::string getStatsHome()
   return getLodaHome() + "stats";
 }
 
-OeisManager::OeisManager( const Settings &settings )
+OeisManager::OeisManager( const Settings &settings, bool force_overwrite )
     : settings( settings ),
+      overwrite( force_overwrite || ConfigLoader::load( settings ).overwrite ),
       interpreter( settings ),
       finder( settings ),
       minimizer( settings ),
@@ -68,14 +70,15 @@ void OeisManager::load()
   loadDenylist();
 
   // try to load stats to speed up the removal of existing programs
-  if ( !settings.optimize_existing_programs )
-  {
-    std::ifstream stats_file( stats.getMainStatsFile( getStatsHome() ) );
-    if ( stats_file.good() )
-    {
-      getStats();
-    }
-  }
+  // DISABLED BECAUSE IT CAN LEAD TO DEADLOCKS
+  //if ( !overwrite )
+  //{
+  //  std::ifstream stats_file( stats.getMainStatsFile( getStatsHome() ) );
+  //  if ( stats_file.good() )
+  //  {
+  //    getStats();
+  //  }
+  //}
 
   // collect known / linear sequences if they should be ignored
   std::vector<number_t> seqs_to_remove;
@@ -95,7 +98,7 @@ void OeisManager::load()
     }
 
     // if not overwriting existing programs...
-    if ( !settings.optimize_existing_programs )
+    if ( !overwrite )
     {
       // linear sequence?
       auto terms = seq.getTerms( settings.num_terms );
@@ -146,19 +149,9 @@ void OeisManager::load()
 
   // print summary
   Log::get().info(
-      "Loaded " + std::to_string( loaded_count ) + "/" + std::to_string( total_count ) + " sequences (ignored "
-          + std::to_string( seqs_to_remove.size() ) + ")" );
-  std::stringstream buf;
-  buf << "Matcher compaction ratios: ";
-  for ( size_t i = 0; i < finder.getMatchers().size(); i++ )
-  {
-    if ( i > 0 ) buf << ", ";
-    double ratio = 100.0 * (double) finder.getMatchers()[i]->getReducedSequences().size()
-        / (double) std::max<size_t>( loaded_count, 1 );
-    buf << finder.getMatchers()[i]->getName() << ": " << std::setprecision( 4 ) << ratio << "%";
-  }
-  Log::get().info( buf.str() );
-
+      "Loaded " + std::to_string( loaded_count ) + "/" + std::to_string( total_count ) + " sequences (ignoring "
+          + std::to_string( seqs_to_remove.size() ) + " during matching)" );
+  finder.logSummary( loaded_count );
 }
 
 size_t OeisManager::loadData()
@@ -594,7 +587,7 @@ std::pair<bool, Program> OeisManager::checkAndMinimize( const Program &p, const 
     Log::get().error(
         "Program for " + seq.id_str() + " generates wrong result after minimization with "
             + std::to_string( OeisSequence::DEFAULT_SEQ_LENGTH ) + " terms", false );
-    std::string f = getLodaHome() + "debug/optimizer/" + seq.id_str() + ".asm";
+    std::string f = getLodaHome() + "debug/minimizer/" + seq.id_str() + ".asm";
     ensureDir( f );
     std::ofstream out( f );
     ProgramUtil::print( p, out );
@@ -724,7 +717,7 @@ std::pair<bool, bool> OeisManager::updateProgram( size_t id, const Program &p )
     std::ifstream in( file_name );
     if ( in.good() )
     {
-      if ( settings.optimize_existing_programs )
+      if ( overwrite )
       {
         is_new = false;
         Parser parser;

@@ -1,6 +1,9 @@
 #include "test.hpp"
 
+#include "config.hpp"
+#include "generator_v1.hpp"
 #include "interpreter.hpp"
+#include "iterator.hpp"
 #include "matcher.hpp"
 #include "miner.hpp"
 #include "minimizer.hpp"
@@ -18,8 +21,14 @@
 #include <sstream>
 #include <stdexcept>
 
+Test::Test()
+    : manager( settings )
+{
+}
+
 void Test::all()
 {
+  size_t tests = 100;
   semantics();
   memory();
   config();
@@ -29,9 +38,9 @@ void Test::all()
   oeisSeq();
   ackermann();
   collatz();
+  //  iterator( tests );
   linearMatcher();
   deltaMatcher();
-  size_t tests = 100;
   for ( size_t degree = 0; degree <= (size_t) PolynomialMatcher::DEGREE; degree++ )
   {
     polynomialMatcher( tests, degree );
@@ -162,6 +171,96 @@ void Test::memory()
   }
 }
 
+void validateIterated( const Program& p )
+{
+  ProgramUtil::validate( p );
+  if ( ProgramUtil::numOps( p, Operand::Type::INDIRECT ) > 0 )
+  {
+    throw std::runtime_error( "Iterator generated indirect memory access" );
+  }
+  for ( size_t i = 0; i < p.ops.size(); i++ )
+  {
+    if ( p.ops[i].type == Operation::Type::LPB
+        && (p.ops[i].source.type != Operand::Type::CONSTANT || p.ops[i].source.value <= 0) )
+    {
+      throw std::runtime_error( "Iterator generated wrong loop" );
+    }
+  }
+  for ( size_t i = 1; i < p.ops.size(); i++ )
+  {
+    if ( p.ops[i - 1].type == Operation::Type::LPB && p.ops[i].type == Operation::Type::LPE )
+    {
+      throw std::runtime_error( "Iterator generated empty loop" );
+    }
+  }
+}
+
+void Test::iterator( size_t tests )
+{
+  const int64_t count = 100000;
+  std::random_device rand;
+  for ( size_t test = 0; test < tests; test++ )
+  {
+    if ( test % 10 == 0 )
+    {
+      Log::get().info( "Testing iterator " + std::to_string( test ) );
+    }
+
+    // generate a random start program
+    Generator::Config config;
+    config.version = 1;
+    config.replicas = 1;
+    config.loops = true;
+    config.calls = false;
+    config.indirect_access = false;
+
+    config.length = std::max<int64_t>( test / 4, 2 );
+    config.max_constant = std::min<int64_t>( test / 4, 2 );
+    config.max_index = std::min<int64_t>( test / 4, 2 );
+    GeneratorV1 gen_v1( config, manager.getStats(), rand() );
+    Program start, p, q;
+    while ( true )
+    {
+      try
+      {
+        start = gen_v1.generateProgram();
+        validateIterated( start );
+        break;
+      }
+      catch ( const std::exception& )
+      {
+        //ignore
+      }
+    }
+    // iterate and check
+    Iterator it( start );
+    for ( int64_t i = 0; i < count; i++ )
+    {
+      p = it.next();
+      try
+      {
+        validateIterated( p );
+        if ( i > 0 && (p < q || !(q < p) || p == q) )
+        {
+          throw std::runtime_error( "Iterator violates program order" );
+        }
+      }
+      catch ( std::exception& e )
+      {
+        ProgramUtil::print( q, std::cerr );
+        std::cerr << std::endl;
+        ProgramUtil::print( p, std::cerr );
+        Log::get().error( e.what(), true );
+      }
+      q = p;
+    }
+    if ( it.getSkipped() > 0.01 * count )
+    {
+      Log::get().error( "Too many skipped invalid programs: " + std::to_string( it.getSkipped() ), true );
+    }
+  }
+}
+
 void Test::knownPrograms()
 {
   testSeq( 5, Sequence( { 1, 2, 2, 3, 2, 4, 2, 4, 3, 4, 2, 6, 2, 4, 4, 5, 2, 6, 2, 6 } ) );
@@ -176,7 +275,6 @@ void Test::steps()
   auto file = OeisSequence( 12 ).getProgramPath();
   Log::get().info( "Testing steps for " + file );
   Parser parser;
-  Settings settings;
   Interpreter interpreter( settings );
   auto p = parser.parse( file );
   Memory mem;
@@ -238,43 +336,94 @@ void Test::collatz()
   }
 }
 
-void check_int( const std::string &s, int64_t min, int64_t max, int64_t value )
+void check_int( const std::string &s, int64_t expected, int64_t value )
 {
-  if ( value < min || value > max )
+  if ( value != expected )
   {
-    Log::get().error(
-        "Expected '" + s + "' min: " + std::to_string( min ) + ", max: " + std::to_string( max ) + ", got: "
-            + std::to_string( value ), true );
+    Log::get().error( "expected " + s + ": " + std::to_string( expected ) + ", got: " + std::to_string( value ), true );
+  }
+}
+
+void check_str( const std::string &s, const std::string& expected, const std::string& value )
+{
+  if ( value != expected )
+  {
+    Log::get().error( "expected " + s + ": " + expected + ", got: " + value, true );
   }
 }
 
 void Test::config()
 {
   Log::get().info( "Testing config" );
-  std::ifstream in( "loda.json" );
-  auto configs = Generator::Config::load( in, false );
-  check_int( "numGenerators", 2, 20, configs.size() );
-  for ( auto &c : configs )
-  {
-    check_int( "version", 1, 3, c.version );
-    check_int( "replicas", 1, 3, c.replicas );
-    if ( c.version == 1 )
-    {
-      check_int( "length", 20, 120, c.length );
-      check_int( "max_constant", 4, 10, c.max_constant );
-      check_int( "max_index", 4, 10, c.max_index );
-      check_int( "loops", 0, 1, c.loops );
-      check_int( "indirectAccess", 0, 1, c.indirect_access );
-    }
-  }
+
+  Settings settings;
+  settings.loda_config = "tests/config/test_loda.json";
+  settings.miner = "default";
+  auto config = ConfigLoader::load( settings );
+  check_int( "overwrite", 0, config.overwrite );
+
+  check_int( "generators.size", 3, config.generators.size() );
+  check_int( "generators[0].version", 1, config.generators[0].version );
+  check_int( "generators[0].length", 30, config.generators[0].length );
+  check_int( "generators[0].maxConstant", 3, config.generators[0].max_constant );
+  check_int( "generators[0].maxIndex", 4, config.generators[0].max_index );
+  check_int( "generators[0].replicas", 2, config.generators[0].replicas );
+  check_int( "generators[0].loops", 0, config.generators[0].loops );
+  check_int( "generators[0].calls", 1, config.generators[0].calls );
+  check_int( "generators[0].indirectAccess", 0, config.generators[0].indirect_access );
+  check_str( "generators[0].template", "tmp1", config.generators[0].program_template );
+  check_int( "generators[1].version", 1, config.generators[1].version );
+  check_int( "generators[1].length", 30, config.generators[1].length );
+  check_int( "generators[1].maxConstant", 3, config.generators[1].max_constant );
+  check_int( "generators[1].maxIndex", 4, config.generators[1].max_index );
+  check_int( "generators[1].replicas", 2, config.generators[1].replicas );
+  check_int( "generators[1].loops", 0, config.generators[1].loops );
+  check_int( "generators[1].calls", 1, config.generators[1].calls );
+  check_int( "generators[1].indirectAccess", 0, config.generators[1].indirect_access );
+  check_str( "generators[1].template", "tmp2", config.generators[1].program_template );
+  check_int( "generators[2].version", 1, config.generators[2].version );
+  check_int( "generators[2].length", 40, config.generators[2].length );
+  check_int( "generators[2].maxConstant", 4, config.generators[2].max_constant );
+  check_int( "generators[2].maxIndex", 5, config.generators[2].max_index );
+  check_int( "generators[2].replicas", 1, config.generators[2].replicas );
+  check_int( "generators[2].loops", 1, config.generators[2].loops );
+  check_int( "generators[2].calls", 0, config.generators[2].calls );
+  check_int( "generators[2].indirectAccess", 1, config.generators[2].indirect_access );
+  check_str( "generators[2].template", "", config.generators[2].program_template );
+
+  check_int( "matchers.size", 2, config.matchers.size() );
+  check_str( "matchers[0].type", "direct", config.matchers[0].type );
+  check_int( "matchers[0].backoff", 1, config.matchers[0].backoff );
+  check_str( "matchers[1].type", "linear1", config.matchers[1].type );
+  check_int( "matchers[1].backoff", 1, config.matchers[1].backoff );
+
+  settings.miner = "update";
+  config = ConfigLoader::load( settings );
+  check_int( "overwrite", 1, config.overwrite );
+
+  check_int( "generators.size", 2, config.generators.size() );
+  check_int( "generators[0].version", 2, config.generators[0].version );
+  check_int( "generators[1].version", 3, config.generators[1].version );
+
+  check_int( "matchers.size", 2, config.matchers.size() );
+  check_str( "matchers[0].type", "linear2", config.matchers[0].type );
+  check_int( "matchers[0].backoff", 0, config.matchers[0].backoff );
+  check_str( "matchers[1].type", "delta", config.matchers[1].type );
+  check_int( "matchers[1].backoff", 0, config.matchers[1].backoff );
+
+  settings.miner = "0";
+  config = ConfigLoader::load( settings );
+  check_int( "generators.size", 3, config.generators.size() );
+
+  settings.miner = "1";
+  config = ConfigLoader::load( settings );
+  check_int( "generators.size", 2, config.generators.size() );
+
 }
 
 void Test::stats()
 {
   Log::get().info( "Testing stats loading and saving" );
-
-  Settings settings;
-  OeisManager manager( settings );
 
   // load stats
   Stats s, t;
@@ -439,10 +588,8 @@ void Test::optimizer()
 
 void Test::minimizer( size_t tests )
 {
-  Settings settings;
   Interpreter interpreter( settings );
   Minimizer minimizer( settings );
-  OeisManager manager( settings );
   std::random_device rand;
   MultiGenerator multi_generator( settings, manager.getStats(), rand() );
   Sequence s1, s2, s3;
@@ -491,7 +638,6 @@ void Test::deltaMatcher()
 
 void Test::polynomialMatcher( size_t tests, size_t degree )
 {
-  Settings settings;
   Parser parser;
   Interpreter interpreter( settings );
   Optimizer optimizer( settings );
@@ -569,7 +715,7 @@ void Test::testBinary( const std::string &func, const std::string &file,
 {
   Log::get().info( "Testing " + file );
   Parser parser;
-  Settings settings;
+  Settings settings; // need special settings here
 // settings needed for ackermann
   settings.max_memory = 100000;
   settings.max_cycles = 10000000;
@@ -596,7 +742,7 @@ void Test::testSeq( size_t id, const Sequence &expected )
   auto file = OeisSequence( id ).getProgramPath();
   Log::get().info( "Testing " + file );
   Parser parser;
-  Settings settings;
+  Settings settings; // special settings
   settings.num_terms = expected.size();
   Interpreter interpreter( settings );
   auto p = parser.parse( file );
@@ -625,7 +771,6 @@ void Test::testMatcherPair( Matcher &matcher, size_t id1, size_t id2 )
       "Testing " + matcher.getName() + " matcher for " + OeisSequence( id1 ).id_str() + " -> "
           + OeisSequence( id2 ).id_str() );
   Parser parser;
-  Settings settings;
   Interpreter interpreter( settings );
   auto p1 = parser.parse( OeisSequence( id1 ).getProgramPath() );
   auto p2 = parser.parse( OeisSequence( id2 ).getProgramPath() );
