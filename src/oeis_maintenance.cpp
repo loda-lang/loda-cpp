@@ -163,12 +163,8 @@ size_t OeisMaintenance::checkAndMinimizePrograms()
 
       if ( !is_okay )
       {
-        Log::AlertDetails details;
-        details.title = s.id_str();
-        details.title_link = s.url_str();
-        details.color = "danger";
-        details.text = "Removing invalid program for " + s.to_string();
-        Log::get().alert( details.text, details );
+        // send alert
+        manager.alert( program, id, "Removed invalid", "danger" );
         program_file.close();
         remove( file_name.c_str() );
       }
@@ -186,7 +182,7 @@ size_t OeisMaintenance::checkAndMinimizePrograms()
           manager.minimizer.optimizeAndMinimize( minimized, 2, 1, OeisSequence::DEFAULT_SEQ_LENGTH );
           if ( program != minimized )
           {
-            Log::get().info( "Updating program because it is not minimal: " + file_name );
+            manager.alert( minimized, id, "Minimized", "warning" );
             num_minimized++;
           }
           manager.dumpProgram( s.id, minimized, file_name );
@@ -202,11 +198,11 @@ size_t OeisMaintenance::checkAndMinimizePrograms()
 
   if ( num_removed > 0 )
   {
-    Log::get().alert( "Removed " + std::to_string( num_removed ) + " invalid programs" );
+    Log::get().info( "Removed " + std::to_string( num_removed ) + " invalid programs" );
   }
   if ( num_minimized > 0 )
   {
-    Log::get().alert(
+    Log::get().info(
         "Minimized " + std::to_string( num_minimized ) + "/" + std::to_string( num_processed ) + " programs" );
   }
 
