@@ -522,6 +522,24 @@ void OeisManager::dumpProgram( size_t id, Program p, const std::string &file ) c
   out.close();
 }
 
+void OeisManager::alert( Program p, size_t id, const std::string& prefix, const std::string& color ) const
+{
+  auto& seq = sequences.at( id );
+  std::stringstream buf;
+  buf << prefix << " program for " << seq << " Terms: " << seq.getTerms( settings.num_terms );
+  auto msg = buf.str();
+  Log::AlertDetails details;
+  details.title = seq.id_str();
+  details.title_link = seq.url_str();
+  details.color = color;
+  buf << "\\n\\`\\`\\`\\n";
+  addCalComments( p );
+  ProgramUtil::print( p, buf, "\\n" );
+  buf << "\\`\\`\\`";
+  details.text = buf.str();
+  Log::get().alert( msg, details );
+}
+
 std::pair<bool, Program> OeisManager::checkAndMinimize( const Program &p, const OeisSequence &seq )
 {
   std::pair<status_t, steps_t> check;
@@ -725,22 +743,9 @@ std::pair<bool, bool> OeisManager::updateProgram( size_t id, const Program &p )
   dumpProgram( id, minimized.second, file_name );
 
   // send alert
-  std::stringstream buf;
-  if ( is_new ) buf << "First";
-  else buf << change;
-  buf << " program for " << seq << " Terms: " << seq.getTerms( settings.num_terms );
-  auto msg = buf.str();
-  Log::AlertDetails details;
-  details.title = seq.id_str();
-  details.title_link = seq.url_str();
-  details.color = is_new ? "good" : "warning";
-  buf << "\\n\\`\\`\\`\\n";
-  Program o = minimized.second;
-  addCalComments( o );
-  ProgramUtil::print( o, buf, "\\n" );
-  buf << "\\`\\`\\`";
-  details.text = buf.str();
-  Log::get().alert( msg, details );
+  std::string prefix = is_new ? "First" : change;
+  std::string color = is_new ? "good" : "warning";
+  alert( minimized.second, id, prefix, color );
 
   return
   { true,is_new};
