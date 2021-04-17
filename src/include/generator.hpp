@@ -25,6 +25,7 @@ public:
     bool calls = true;
     bool indirect_access = false;
     std::string program_template;
+    std::string miner;
   };
 
   class GStats

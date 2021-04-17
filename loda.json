@@ -31,6 +31,32 @@
         "linear1",
         "linear2"
       ]
+    },
+    {
+      "name": "new-v4",
+      "overwrite": false,
+      "backoff": false,
+      "generators": [
+        "v4"
+      ],
+      "matchers": [
+        "direct",
+        "linear1",
+        "linear2"
+      ]
+    },
+    {
+      "name": "update-v4",
+      "overwrite": true,
+      "backoff": false,
+      "generators": [
+        "v4"
+      ],
+      "matchers": [
+        "direct",
+        "linear1",
+        "linear2"
+      ]
     }
   ],
   "generators": [
@@ -88,6 +114,10 @@
     {
       "name": "v3",
       "version": 3
+    },
+    {
+      "name": "v4",
+      "version": 4
     }
   ]
 }

@@ -11,11 +11,9 @@ public:
 
   void validate() const;
 
-  std::string getPath() const;
+  void load( const std::string& path );
 
-  void load();
-
-  void save() const;
+  void save( const std::string& path ) const;
 
   int64_t index;
   int64_t generated;
@@ -40,8 +38,13 @@ private:
 
   void load();
 
+  std::string getPath( int64_t index ) const;
+
   Iterator iterator;
 
   ProgramState state;
+
+  std::string home;
+  std::string numfiles_path;
 
 };
