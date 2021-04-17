@@ -38,7 +38,7 @@ void Test::all()
   oeisSeq();
   ackermann();
   collatz();
-  //  iterator( tests );
+  iterator( tests );
   linearMatcher();
   deltaMatcher();
   optimizer();
@@ -176,10 +176,15 @@ void validateIterated( const Program& p )
   }
   for ( size_t i = 0; i < p.ops.size(); i++ )
   {
-    if ( p.ops[i].type == Operation::Type::LPB
-        && (p.ops[i].source.type != Operand::Type::CONSTANT || p.ops[i].source.value <= 0) )
+    auto& op = p.ops[i];
+    if ( op.type == Operation::Type::LPB && (op.source.type != Operand::Type::CONSTANT || op.source.value <= 0) )
     {
       throw std::runtime_error( "Iterator generated wrong loop" );
+    }
+    if ( op.type == Operation::Type::CLR || op.type == Operation::Type::CAL || op.type == Operation::Type::LOG
+        || op.type == Operation::Type::MIN || op.type == Operation::Type::MAX )
+    {
+      throw std::runtime_error( "Unsupported operation type" );
     }
   }
   for ( size_t i = 1; i < p.ops.size(); i++ )
@@ -211,8 +216,8 @@ void Test::iterator( size_t tests )
     config.indirect_access = false;
 
     config.length = std::max<int64_t>( test / 4, 2 );
-    config.max_constant = std::min<int64_t>( test / 4, 2 );
-    config.max_index = std::min<int64_t>( test / 4, 2 );
+    config.max_constant = std::max<int64_t>( test / 4, 2 );
+    config.max_index = std::max<int64_t>( test / 4, 2 );
     GeneratorV1 gen_v1( config, manager.getStats(), rand() );
     Program start, p, q;
     while ( true )
