@@ -37,8 +37,6 @@ public:
 
   void deltaMatcher();
 
-  void polynomialMatcher( size_t tests, size_t degree );
-
   void stats();
 
   void config();

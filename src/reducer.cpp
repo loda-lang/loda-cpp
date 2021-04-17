@@ -59,63 +59,17 @@ Sequence subPoly( const Sequence &s, number_t factor, int64_t exp )
   return t;
 }
 
-Polynomial Reducer::polynomial( Sequence &seq, int degree )
-{
-  // recursion end
-  if ( degree < 0 )
-  {
-    return Polynomial();
-  }
-
-  // calculate maximum factor for current degree
-  number_t max_factor = NUM_INF;
-  for ( size_t x = 0; x < seq.size(); x++ )
-  {
-    auto x_exp = Semantics::pow( x, degree );
-    number_t new_factor = (x_exp == 0) ? NUM_INF : seq[x] / x_exp;
-    max_factor = (max_factor == NUM_INF) ? new_factor : (new_factor < max_factor ? new_factor : max_factor);
-    if ( max_factor == 0 ) break;
-  }
-
-  number_t factor = max_factor;
-  Sequence reduced = subPoly( seq, factor, degree );
-  auto poly = polynomial( reduced, degree - 1 );
-  auto cost = reduced.sum();
-
-  number_t min_factor = std::max( (number_t) 0, factor - 8 ); // magic number
-  while ( factor > min_factor )
-  {
-    Sequence reduced_new = subPoly( seq, factor - 1, degree );
-    auto poly_new = polynomial( reduced_new, degree - 1 );
-    auto cost_new = reduced_new.sum();
-    if ( cost_new < cost )
-    {
-      factor--;
-      reduced = reduced_new;
-      poly = poly_new;
-      cost = cost_new;
-    }
-    else
-    {
-      break;
-    }
-  }
-  poly.push_back( factor );
-  seq = reduced;
-  return poly;
-}
-
-delta_t Reducer::delta( Sequence &seq, int max_delta )
+delta_t Reducer::delta( Sequence &seq, int64_t max_delta )
 {
   delta_t result;
   result.delta = 0;
   result.offset = 0;
   result.factor = 1;
   const size_t size = seq.size();
-  for ( int i = 0; i < max_delta; i++ )
+  Sequence next;
+  next.resize( size );
+  for ( int64_t i = 0; i < max_delta; i++ )
   {
-    Sequence next;
-    next.resize( size );
     bool ok = true;
     bool same = true;
     for ( size_t j = 0; j < size; j++ )

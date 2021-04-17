@@ -62,65 +62,6 @@ bool Extender::linear2( Program &p, line_t inverse, line_t target )
   return true;
 }
 
-bool Extender::polynomial( Program &p, const Polynomial &diff )
-{
-  Settings settings;
-
-  // constant term
-  if ( diff.size() > 0 )
-  {
-    add_or_sub( p, diff[0] );
-  }
-
-  // non-constant terms
-  if ( diff.size() > 1 )
-  {
-    std::unordered_set<number_t> used_cells;
-    number_t max_cell = 0;
-    if ( !ProgramUtil::getUsedMemoryCells( p, used_cells, max_cell, settings.max_memory ) )
-    {
-      return false;
-    }
-    max_cell = std::max( max_cell, (number_t) Program::OUTPUT_CELL );
-    const number_t saved_arg_cell = max_cell + 1;
-    const number_t x_cell = max_cell + 2;
-    const number_t term_cell = max_cell + 3;
-
-    // save argument
-    p.push_front( Operation::Type::MOV, Operand::Type::DIRECT, saved_arg_cell, Operand::Type::DIRECT,
-        Program::INPUT_CELL );
-
-    // polynomial evaluation code
-    for ( size_t exp = 1; exp < diff.size(); exp++ )
-    {
-      // update x^exp
-      if ( exp == 1 )
-      {
-        p.push_back( Operation::Type::MOV, Operand::Type::DIRECT, x_cell, Operand::Type::DIRECT, saved_arg_cell );
-      }
-      else
-      {
-        p.push_back( Operation::Type::MUL, Operand::Type::DIRECT, x_cell, Operand::Type::DIRECT, saved_arg_cell );
-      }
-
-      // update result
-      const auto factor = diff[exp];
-      if ( factor > 0 )
-      {
-        p.push_back( Operation::Type::MOV, Operand::Type::DIRECT, term_cell, Operand::Type::DIRECT, x_cell );
-        p.push_back( Operation::Type::MUL, Operand::Type::DIRECT, term_cell, Operand::Type::CONSTANT, factor );
-        p.push_back( Operation::Type::ADD, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::DIRECT,
-            term_cell );
-      }
-      else if ( factor < 0 )
-      {
-        return false;
-      }
-    }
-  }
-  return true;
-}
-
 bool Extender::delta_one( Program &p, const bool sum )
 {
   Settings settings;
