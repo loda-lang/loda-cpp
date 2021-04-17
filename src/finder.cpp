@@ -47,14 +47,6 @@ void Finder::insert( const Sequence &norm_seq, size_t id )
   }
 }
 
-void Finder::remove( const Sequence &norm_seq, size_t id )
-{
-  for ( auto &matcher : matchers )
-  {
-    matcher->remove( norm_seq, id );
-  }
-}
-
 Matcher::seq_programs_t Finder::findSequence( const Program &p, Sequence &norm_seq,
     const std::vector<OeisSequence> &sequences )
 {
