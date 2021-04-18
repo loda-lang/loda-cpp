@@ -345,6 +345,7 @@ void Generator::ensureMeaningfulLoops( Program &p )
 }
 
 MultiGenerator::MultiGenerator( const Settings &settings, const Stats& stats, int64_t seed )
+    : scheduler( 60 ) // 1 minute
 {
   std::mt19937 gen( seed );
   auto config = ConfigLoader::load( settings );
@@ -359,7 +360,6 @@ MultiGenerator::MultiGenerator( const Settings &settings, const Stats& stats, in
     generators[i] = Generator::Factory::createGenerator( configs[i], stats, gen() );
   }
   generator_index = gen() % configs.size();
-  replica_index = gen() % configs.at( gen() % configs.size() ).replicas;
   Log::get().info(
       "Initialized " + std::to_string( generators.size() ) + " generators from '" + config.name
           + "' config; overwrite: " + (config.overwrite ? "true" : "false") );
@@ -372,13 +372,10 @@ Generator* MultiGenerator::getGenerator()
 
 void MultiGenerator::next()
 {
-  if ( replica_index >= configs[generator_index].replicas )
+  if ( generators.size() > 1 && scheduler.isTargetReached() )
   {
     generator_index = (generator_index + 1) % configs.size();
-    replica_index = 0;
-  }
-  else
-  {
-    replica_index++;
+    // Log::get().debug( "Using generator " + std::to_string( generator_index ) );
+    scheduler.reset();
   }
 }

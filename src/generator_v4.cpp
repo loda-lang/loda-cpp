@@ -96,7 +96,8 @@ void ProgramState::save( const std::string& path ) const
 }
 
 GeneratorV4::GeneratorV4( const Config &config, const Stats &stats, int64_t seed )
-    : Generator( config, stats, seed )
+    : Generator( config, stats, seed ),
+      scheduler( 60 ) // 1 minute
 {
   if ( config.miner.empty() || config.miner == "default" )
   {
@@ -131,7 +132,6 @@ void GeneratorV4::init( const Stats &stats, int64_t seed )
 
   Generator::Config config;
   config.version = 1;
-  config.replicas = 1;
   config.loops = true;
   config.calls = false;
   config.indirect_access = false;
@@ -211,11 +211,12 @@ Program GeneratorV4::generateProgram()
 {
   state.current = iterator.next();
   state.generated++;
-  if ( state.generated % 10000 == 0 )
+  if ( scheduler.isTargetReached() )
   {
     FolderLock lock( home );
     state.save( getPath( state.index ) );
     load();
+    scheduler.reset();
   }
   return state.current;
 }

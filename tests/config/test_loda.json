@@ -34,7 +34,6 @@
       "length": 30,
       "maxConstant": 3,
       "maxIndex": 4,
-      "replicas": 2,
       "loops": false,
       "calls": true,
       "indirectAccess": false,

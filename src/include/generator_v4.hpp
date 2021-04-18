@@ -2,6 +2,7 @@
 
 #include "generator.hpp"
 #include "iterator.hpp"
+#include "util.hpp"
 
 class ProgramState
 {
@@ -40,11 +41,11 @@ private:
 
   std::string getPath( int64_t index ) const;
 
-  Iterator iterator;
-
-  ProgramState state;
-
   std::string home;
   std::string numfiles_path;
+
+  Iterator iterator;
+  ProgramState state;
+  AdaptiveScheduler scheduler;
 
 };

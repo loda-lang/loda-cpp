@@ -17,7 +17,6 @@ public:
   {
   public:
     int64_t version = 1;
-    int64_t replicas = 1;
     int64_t length = 0;
     int64_t max_constant = 0;
     int64_t max_index = 0;
@@ -101,7 +100,7 @@ public:
 
   std::vector<Generator::Config> configs;
   std::vector<Generator::UPtr> generators;
+  AdaptiveScheduler scheduler;
   int64_t generator_index;
-  int64_t replica_index;
 
 };

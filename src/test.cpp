@@ -210,7 +210,6 @@ void Test::iterator( size_t tests )
     // generate a random start program
     Generator::Config config;
     config.version = 1;
-    config.replicas = 1;
     config.loops = true;
     config.calls = false;
     config.indirect_access = false;
@@ -368,7 +367,6 @@ void Test::config()
   check_int( "generators[0].length", 30, config.generators[0].length );
   check_int( "generators[0].maxConstant", 3, config.generators[0].max_constant );
   check_int( "generators[0].maxIndex", 4, config.generators[0].max_index );
-  check_int( "generators[0].replicas", 2, config.generators[0].replicas );
   check_int( "generators[0].loops", 0, config.generators[0].loops );
   check_int( "generators[0].calls", 1, config.generators[0].calls );
   check_int( "generators[0].indirectAccess", 0, config.generators[0].indirect_access );
@@ -377,7 +375,6 @@ void Test::config()
   check_int( "generators[1].length", 30, config.generators[1].length );
   check_int( "generators[1].maxConstant", 3, config.generators[1].max_constant );
   check_int( "generators[1].maxIndex", 4, config.generators[1].max_index );
-  check_int( "generators[1].replicas", 2, config.generators[1].replicas );
   check_int( "generators[1].loops", 0, config.generators[1].loops );
   check_int( "generators[1].calls", 1, config.generators[1].calls );
   check_int( "generators[1].indirectAccess", 0, config.generators[1].indirect_access );
@@ -386,7 +383,6 @@ void Test::config()
   check_int( "generators[2].length", 40, config.generators[2].length );
   check_int( "generators[2].maxConstant", 4, config.generators[2].max_constant );
   check_int( "generators[2].maxIndex", 5, config.generators[2].max_index );
-  check_int( "generators[2].replicas", 1, config.generators[2].replicas );
   check_int( "generators[2].loops", 1, config.generators[2].loops );
   check_int( "generators[2].calls", 0, config.generators[2].calls );
   check_int( "generators[2].indirectAccess", 1, config.generators[2].indirect_access );
