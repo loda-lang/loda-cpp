@@ -47,14 +47,12 @@ std::vector<Generator::Config> loadGeneratorConfigs( const std::string& miner, j
     }
     Generator::Config c;
     c.version = get_jint( g, "version", 1 );
-    c.replicas = get_jint( g, "replicas", 1 );
     c.miner = miner;
     if ( c.version == 1 )
     {
       c.length = get_jint( g, "length", 20 );
       c.max_constant = get_jint( g, "maxConstant", 4 );
       c.max_index = get_jint( g, "maxIndex", 4 );
-      c.replicas = get_jint( g, "replicas", 1 );
       c.loops = get_jbool( g, "loops", true );
       c.calls = get_jbool( g, "calls", true );
       c.indirect_access = get_jbool( g, "indirectAccess", false );

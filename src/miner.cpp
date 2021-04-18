@@ -8,13 +8,10 @@
 #include "parser.hpp"
 #include "program_util.hpp"
 
-#include <chrono>
 #include <fstream>
 #include <random>
 #include <sstream>
 #include <unordered_set>
-
-#define METRIC_PUBLISH_INTERVAL 120
 
 Miner::Miner( const Settings &settings )
     : settings( settings ),
@@ -86,7 +83,7 @@ void Miner::mine()
   Mutator mutator( rand() );
   std::stack<Program> progs;
   Sequence norm_seq;
-  auto time = std::chrono::steady_clock::now();
+  AdaptiveScheduler scheduler( 60 ); // 1 minute
 
   Log::get().info( "Mining programs for OEIS sequences" );
   Generator *generator = multi_generator.getGenerator();
@@ -115,9 +112,6 @@ void Miner::mine()
         {
           generator->stats.updated++;
         }
-        auto replicas = multi_generator.configs[multi_generator.generator_index].replicas;
-        replicas = replicas + 20; // magic number
-        multi_generator.configs[multi_generator.generator_index].replicas = replicas;
 
         // mutate successful program
         if ( progs.size() < 1000 || settings.hasMemory() )
@@ -131,11 +125,9 @@ void Miner::mine()
       generator->stats.fresh++;
     }
     generator->stats.generated++;
-    auto time2 = std::chrono::steady_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::seconds>( time2 - time );
-    if ( duration.count() >= METRIC_PUBLISH_INTERVAL )
+    if ( scheduler.isTargetReached() )
     {
-      time = time2;
+      scheduler.reset();
       int64_t total_generated = 0;
       for ( size_t i = 0; i < multi_generator.generators.size(); i++ )
       {
