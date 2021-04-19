@@ -112,7 +112,7 @@ size_t OeisMaintenance::checkAndMinimizePrograms()
   Parser parser;
   Program program, minimized;
   std::string file_name;
-  bool is_okay, is_manual;
+  bool is_okay, is_protected, is_manual;
 
   // generate random order of sequences
   std::vector<size_t> ids;
@@ -170,12 +170,17 @@ size_t OeisMaintenance::checkAndMinimizePrograms()
       }
       else
       {
+        is_protected = false;
         is_manual = false;
+        if ( manager.protect_list.find( s.id ) != manager.protect_list.end() )
+        {
+          is_protected = true;
+        }
         if ( program.ops.size() > 1 && program.ops[1].type == Operation::Type::NOP )
         {
           is_manual = program.ops[1].comment.find( "Coded manually" ) != std::string::npos;
         }
-        if ( !is_manual )
+        if ( !is_protected && !is_manual )
         {
           ProgramUtil::removeOps( program, Operation::Type::NOP );
           minimized = program;
