@@ -148,8 +148,8 @@ size_t OeisMaintenance::checkAndMinimizePrograms()
         auto check = interpreter.check( program, extended_seq, OeisSequence::DEFAULT_SEQ_LENGTH );
         is_okay = (check.first != status_t::ERROR); // we allow warnings
 
-        // check if it is on the ignore list
-        if ( manager.ignore_list.find( s.id ) != manager.ignore_list.end() )
+        // check if it is on the deny list
+        if ( manager.denylist.find( s.id ) != manager.denylist.end() )
         {
           is_okay = false;
         }
