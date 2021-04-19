@@ -88,6 +88,9 @@ void OeisManager::load()
     sequences.resize( i + 1 );
   }
 
+  // initialize matchers
+  initMatchers();
+
   // print summary
   Log::get().info(
       "Loaded " + std::to_string( loaded_count ) + "/" + std::to_string( total_count ) + " sequences (ignoring "
@@ -110,7 +113,6 @@ void OeisManager::loadData()
   Sequence seq_full, seq_big;
 
   loaded_count = 0;
-  ignored_count = 0;
   total_count = 0;
 
   while ( std::getline( stripped, line ) )
@@ -182,18 +184,6 @@ void OeisManager::loadData()
       sequences.resize( 2 * id );
     }
     sequences[id] = OeisSequence( id, "", seq_full );
-
-    // add sequence to matchers
-    if ( shouldMatch( sequences[id] ) )
-    {
-      auto seq_norm = sequences[id].getTerms( settings.num_terms );
-      finder.insert( seq_norm, id );
-    }
-    else
-    {
-      ignored_count++;
-    }
-
     loaded_count++;
   }
 }
@@ -275,7 +265,28 @@ void OeisManager::loadList( const std::string& name, std::unordered_set<size_t>&
     }
     list.insert( OeisSequence( id ).id );
   }
-  Log::get().info( "Finished loading of " + name + " list with " + std::to_string( list.size() ) + " entries" );
+  Log::get().debug( "Finished loading of " + name + " list with " + std::to_string( list.size() ) + " entries" );
+}
+
+void OeisManager::initMatchers()
+{
+  ignored_count = 0;
+  for ( auto& seq : sequences )
+  {
+    if ( seq.id == 0 )
+    {
+      continue;
+    }
+    if ( shouldMatch( seq ) )
+    {
+      auto seq_norm = seq.getTerms( settings.num_terms );
+      finder.insert( seq_norm, seq.id );
+    }
+    else
+    {
+      ignored_count++;
+    }
+  }
 }
 
 bool OeisManager::shouldMatch( const OeisSequence& seq ) const
