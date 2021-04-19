@@ -52,8 +52,8 @@ void OeisManager::load()
     return;
   }
 
-  // first load the deny list (needs no lock)
-  loadDenylist();
+  // first load the ignore list (needs no lock)
+  loadIgnorelist();
 
   // TODO: if stats exist at this point already, it would help
   // to load them in advance. But be careful with deadlocks!
@@ -65,7 +65,7 @@ void OeisManager::load()
     // update index if needed
     update();
 
-    // load sequence data, names and deny list
+    // load sequence data and names
     Log::get().info( "Loading sequences from the OEIS index" );
     loadData();
     loadNames();
@@ -243,14 +243,14 @@ void OeisManager::loadNames()
   }
 }
 
-void OeisManager::loadDenylist()
+void OeisManager::loadIgnorelist()
 {
-  Log::get().debug( "Loading denylist" );
-  std::string path = "programs/oeis/denylist.txt";
+  Log::get().debug( "Loading ignore list" );
+  std::string path = "programs/oeis/ignore.txt";
   std::ifstream names( path );
   if ( !names.good() )
   {
-    Log::get().error( "Denylist data not found: " + path, true );
+    Log::get().error( "Ignore list not found: " + path, true );
   }
   std::string line, id;
   while ( std::getline( names, line ) )
@@ -272,7 +272,7 @@ void OeisManager::loadDenylist()
       }
       id += ch;
     }
-    denylist.insert( OeisSequence( id ).id );
+    ignore_list.insert( OeisSequence( id ).id );
   }
 }
 
@@ -283,8 +283,8 @@ bool OeisManager::shouldMatch( const OeisSequence& seq ) const
     return false;
   }
 
-  // sequence on the deny list?
-  if ( denylist.find( seq.id ) != denylist.end() )
+  // sequence on the ignore list?
+  if ( ignore_list.find( seq.id ) != ignore_list.end() )
   {
     return false;
   }
