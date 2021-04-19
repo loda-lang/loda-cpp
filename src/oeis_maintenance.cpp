@@ -149,7 +149,7 @@ size_t OeisMaintenance::checkAndMinimizePrograms()
         is_okay = (check.first != status_t::ERROR); // we allow warnings
 
         // check if it is on the deny list
-        if ( manager.denylist.find( s.id ) != manager.denylist.end() )
+        if ( manager.deny_list.find( s.id ) != manager.deny_list.end() )
         {
           is_okay = false;
         }
