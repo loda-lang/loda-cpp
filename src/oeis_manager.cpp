@@ -53,7 +53,7 @@ void OeisManager::load()
   }
 
   // first load the deny list (needs no lock)
-  loadDenylist();
+  loadDenyList();
 
   // TODO: if stats exist at this point already, it would help
   // to load them in advance. But be careful with deadlocks!
@@ -243,14 +243,14 @@ void OeisManager::loadNames()
   }
 }
 
-void OeisManager::loadDenylist()
+void OeisManager::loadDenyList()
 {
-  Log::get().debug( "Loading denylist" );
-  std::string path = "programs/oeis/denylist.txt";
+  Log::get().debug( "Loading deny list" );
+  std::string path = "programs/oeis/deny.txt";
   std::ifstream names( path );
   if ( !names.good() )
   {
-    Log::get().error( "Denylist data not found: " + path, true );
+    Log::get().error( "Deny list data not found: " + path, true );
   }
   std::string line, id;
   while ( std::getline( names, line ) )
@@ -272,7 +272,7 @@ void OeisManager::loadDenylist()
       }
       id += ch;
     }
-    denylist.insert( OeisSequence( id ).id );
+    deny_list.insert( OeisSequence( id ).id );
   }
 }
 
@@ -284,7 +284,7 @@ bool OeisManager::shouldMatch( const OeisSequence& seq ) const
   }
 
   // sequence on the deny list?
-  if ( denylist.find( seq.id ) != denylist.end() )
+  if ( deny_list.find( seq.id ) != deny_list.end() )
   {
     return false;
   }
