@@ -42,7 +42,7 @@ private:
 
   void loadNames();
 
-  void loadDenyList();
+  static void loadList( const std::string& name, std::unordered_set<size_t>& list );
 
   bool shouldMatch( const OeisSequence& seq ) const;
 
@@ -70,6 +70,7 @@ private:
   Optimizer optimizer;
   std::vector<OeisSequence> sequences;
   std::unordered_set<size_t> deny_list;
+  std::unordered_set<size_t> protect_list;
 
   size_t loaded_count;
   size_t ignored_count;
