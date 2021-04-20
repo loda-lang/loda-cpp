@@ -550,6 +550,7 @@ void OeisManager::alert( Program p, size_t id, const std::string& prefix, const 
   details.title_link = seq.url_str();
   details.color = color;
   buf << "\\n\\`\\`\\`\\n";
+  ProgramUtil::removeOps( p, Operation::Type::NOP );
   addCalComments( p );
   ProgramUtil::print( p, buf, "\\n" );
   buf << "\\`\\`\\`";
