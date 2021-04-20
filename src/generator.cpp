@@ -306,7 +306,7 @@ void Generator::ensureMeaningfulLoops( Program &p )
         switch ( gen() % 4 )
         {
         case 0:
-          dec.type = Operation::Type::SUB;
+          dec.type = Operation::Type::TRN;
           break;
         case 1:
           dec.type = Operation::Type::DIV;
