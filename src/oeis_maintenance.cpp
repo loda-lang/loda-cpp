@@ -77,10 +77,12 @@ void OeisMaintenance::generateLists()
           << std::setw( 2 ) << std::setfill( '0' ) << num_ops << " program](" << s.dir_str() << "/" << s.id_str()
           << ".asm)): " << s.name << "\n";
 
-      if ( ++num_processed % 1000 == 0 )
-      {
-        Log::get().info( "Processed " + std::to_string( num_processed ) + " programs" );
-      }
+      num_processed++;
+
+      //if ( num_processed % 1000 == 0 )
+      //{
+      //  Log::get().info( "Processed " + std::to_string( num_processed ) + " programs" );
+      //}
     }
   }
 

@@ -35,6 +35,7 @@ OeisManager::OeisManager( const Settings &settings, bool force_overwrite )
       overwrite( force_overwrite || ConfigLoader::load( settings ).overwrite ),
       interpreter( settings ),
       finder( settings ),
+      finder_initialized( false ),
       minimizer( settings ),
       optimizer( settings ),
       loaded_count( 0 ),
@@ -55,9 +56,6 @@ void OeisManager::load()
   // first load the deny and protect lists (needs no lock)
   loadList( "deny", deny_list );
   loadList( "protect", protect_list );
-
-  // TODO: if stats exist at this point already, it would help
-  // to load them in advance. But be careful with deadlocks!
 
   {
     // obtain lock
@@ -88,14 +86,8 @@ void OeisManager::load()
     sequences.resize( i + 1 );
   }
 
-  // initialize matchers
-  initMatchers();
-
   // print summary
-  Log::get().info(
-      "Loaded " + std::to_string( loaded_count ) + "/" + std::to_string( total_count ) + " sequences (ignoring "
-          + std::to_string( ignored_count ) + " during matching)" );
-  finder.logSummary( loaded_count );
+  Log::get().info( "Loaded " + std::to_string( loaded_count ) + "/" + std::to_string( total_count ) + " sequences" );
 }
 
 void OeisManager::loadData()
@@ -268,25 +260,39 @@ void OeisManager::loadList( const std::string& name, std::unordered_set<size_t>&
   Log::get().debug( "Finished loading of " + name + " list with " + std::to_string( list.size() ) + " entries" );
 }
 
-void OeisManager::initMatchers()
+Finder& OeisManager::getFinder()
 {
-  ignored_count = 0;
-  for ( auto& seq : sequences )
+  if ( !finder_initialized )
   {
-    if ( seq.id == 0 )
+    // generate stats is needed
+    getStats();
+
+    ignored_count = 0;
+    for ( auto& seq : sequences )
     {
-      continue;
+      if ( seq.id == 0 )
+      {
+        continue;
+      }
+      if ( shouldMatch( seq ) )
+      {
+        auto seq_norm = seq.getTerms( settings.num_terms );
+        finder.insert( seq_norm, seq.id );
+      }
+      else
+      {
+        ignored_count++;
+      }
     }
-    if ( shouldMatch( seq ) )
-    {
-      auto seq_norm = seq.getTerms( settings.num_terms );
-      finder.insert( seq_norm, seq.id );
-    }
-    else
-    {
-      ignored_count++;
-    }
+    finder_initialized = true;
+
+    // print summary
+    Log::get().info(
+        "Initialized " + std::to_string( finder.getMatchers().size() ) + " matchers (ignoring "
+            + std::to_string( ignored_count ) + " sequences)" );
+    finder.logSummary( loaded_count );
   }
+  return finder;
 }
 
 bool OeisManager::shouldMatch( const OeisSequence& seq ) const
@@ -438,11 +444,12 @@ void OeisManager::generateStats( int64_t age_in_days )
 
       // update stats
       stats.updateProgramStats( s.id, program );
+      num_processed++;
 
-      if ( ++num_processed % 1000 == 0 )
-      {
-        Log::get().info( "Processed " + std::to_string( num_processed ) + " programs" );
-      }
+      //if ( num_processed % 1000 == 0 )
+      //{
+      //  Log::get().info( "Processed " + std::to_string( num_processed ) + " programs" );
+      //}
     }
     stats.updateSequenceStats( s.id, has_program, has_b_file );
   }
