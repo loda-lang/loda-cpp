@@ -34,7 +34,7 @@ number_t Reducer::shrink( Sequence &seq )
       }
     }
   }
-  if ( factor == NUM_INF )
+  if ( factor == NUM_INF || factor == 0 )
   {
     factor = 1;
   }
@@ -46,17 +46,6 @@ number_t Reducer::shrink( Sequence &seq )
     }
   }
   return factor;
-}
-
-Sequence subPoly( const Sequence &s, number_t factor, int64_t exp )
-{
-  Sequence t;
-  t.resize( s.size() );
-  for ( size_t x = 0; x < s.size(); x++ )
-  {
-    t[x] = s[x] - (factor * Semantics::pow( x, exp ));
-  }
-  return t;
 }
 
 delta_t Reducer::delta( Sequence &seq, int64_t max_delta )
