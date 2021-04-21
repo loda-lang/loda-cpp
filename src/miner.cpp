@@ -76,13 +76,12 @@ void Miner::mine()
 {
   manager.load();
 
-  auto &finder = manager.getFinder();
-
   std::random_device rand;
   MultiGenerator multi_generator( settings, manager.getStats(), rand() );
   Mutator mutator( rand() );
   std::stack<Program> progs;
   Sequence norm_seq;
+  auto &finder = manager.getFinder();
   AdaptiveScheduler scheduler( 60 ); // 1 minute
 
   Log::get().info( "Mining programs for OEIS sequences" );

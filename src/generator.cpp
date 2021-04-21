@@ -362,7 +362,7 @@ MultiGenerator::MultiGenerator( const Settings &settings, const Stats& stats, in
   generator_index = gen() % configs.size();
   Log::get().info(
       "Initialized " + std::to_string( generators.size() ) + " generators from '" + config.name
-          + "' config; overwrite: " + (config.overwrite ? "true" : "false") );
+          + "' profile (overwrite: " + (config.overwrite ? "true" : "false") + ")" );
 }
 
 Generator* MultiGenerator::getGenerator()

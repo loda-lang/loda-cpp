@@ -24,10 +24,7 @@ public:
 
   const Stats& getStats();
 
-  Finder& getFinder()
-  {
-    return finder;
-  }
+  Finder& getFinder();
 
   size_t getTotalCount() const
   {
@@ -43,8 +40,6 @@ private:
   void loadNames();
 
   static void loadList( const std::string& name, std::unordered_set<size_t>& list );
-
-  void initMatchers();
 
   bool shouldMatch( const OeisSequence& seq ) const;
 
@@ -67,7 +62,10 @@ private:
   const Settings &settings;
   const bool overwrite;
   Interpreter interpreter;
+
   Finder finder;
+  bool finder_initialized;
+
   Minimizer minimizer;
   Optimizer optimizer;
   std::vector<OeisSequence> sequences;
