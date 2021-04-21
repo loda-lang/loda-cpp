@@ -63,7 +63,7 @@
     {
       "name": "v1_1",
       "version": 1,
-      "length": 30,
+      "length": 20,
       "maxConstant": 4,
       "maxIndex": 4,
       "loops": false,
@@ -80,7 +80,7 @@
     {
       "name": "v1_2",
       "version": 1,
-      "length": 40,
+      "length": 30,
       "maxConstant": 4,
       "maxIndex": 4,
       "loops": true,
@@ -90,7 +90,7 @@
     {
       "name": "v1_3",
       "version": 1,
-      "length": 40,
+      "length": 30,
       "maxConstant": 4,
       "maxIndex": 4,
       "loops": false,
@@ -100,7 +100,7 @@
     {
       "name": "v1_4",
       "version": 1,
-      "length": 40,
+      "length": 30,
       "maxConstant": 4,
       "maxIndex": 4,
       "loops": true,
