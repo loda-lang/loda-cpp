@@ -5,16 +5,31 @@
 
 number_t Reducer::truncate( Sequence &seq )
 {
-  auto offset = seq.min( false );
-  if ( offset == 0 || offset == NUM_INF )
+  if ( seq.empty() )
   {
     return 0;
   }
-  for ( size_t i = 0; i < seq.size(); i++ )
+  // get minimum positive value; no negative values are allowed
+  auto min = NUM_INF;
+  for ( auto v : seq )
   {
-    seq[i] = seq[i] - offset;
+    if ( v < 0 )
+    {
+      return 0;
+    }
+    else if ( min == NUM_INF || v < min )
+    {
+      min = v;
+    }
   }
-  return offset;
+  if ( min > 0 && min != NUM_INF )
+  {
+    for ( size_t i = 0; i < seq.size(); i++ )
+    {
+      seq[i] = seq[i] - min;
+    }
+  }
+  return min;
 }
 
 number_t Reducer::shrink( Sequence &seq )
