@@ -58,6 +58,7 @@ public:
   std::multimap<number_t, number_t> cal_graph;
   std::vector<int64_t> num_programs_per_length;
   std::vector<int64_t> num_ops_per_type;
+  std::vector<int64_t> program_lengths;
   std::vector<bool> found_programs;
   std::vector<bool> cached_b_files;
 };

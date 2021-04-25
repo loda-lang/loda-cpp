@@ -509,7 +509,16 @@ const Stats& OeisManager::getStats()
     {
       generateStats( age_in_days );
     }
-    stats.load( home );
+    try
+    {
+      stats.load( home );
+    }
+    catch ( const std::exception& e )
+    {
+      Log::get().warn( "Exception during stats loading, regenerating..." );
+      generateStats( age_in_days );
+      stats.load( home ); // reload
+    }
     stats_loaded = true;
 
     // lock released at the end of this block
