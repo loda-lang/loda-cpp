@@ -461,6 +461,10 @@ void Test::stats()
   {
     Log::get().error( "Error loading program summary from stats" );
   }
+  if ( s.program_lengths.at( 7 ) != 1 )
+  {
+    Log::get().error( "Error loading program lengths from stats" );
+  }
 
   // save & reload stats
   s.save( "/tmp" );
