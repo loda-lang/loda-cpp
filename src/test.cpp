@@ -28,20 +28,23 @@ Test::Test()
 
 void Test::all()
 {
-  size_t tests = 100;
+  // fast tests
   semantics();
   memory();
   config();
-  stats();
-  knownPrograms();
   steps();
-  oeisSeq();
-  ackermann();
   collatz();
-  iterator( tests );
   linearMatcher();
   deltaMatcher();
   optimizer();
+  knownPrograms();
+
+  // slow tests
+  size_t tests = 100;
+  ackermann();
+  stats();
+  oeisSeq();
+  iterator( tests );
   minimizer( tests );
 }
 
@@ -629,8 +632,10 @@ void Test::deltaMatcher()
 {
   DeltaMatcher matcher( false );
   testMatcherSet( matcher, { 7, 12, 27 } );
+  testMatcherSet( matcher, { 108, 14137 } );
   testMatcherSet( matcher, { 4273, 290, 330 } );
   testMatcherSet( matcher, { 168380, 193356 } );
+  testMatcherSet( matcher, { 243980, 244050 } );
 }
 
 void Test::testBinary( const std::string &func, const std::string &file,
@@ -719,6 +724,6 @@ void Test::testMatcherPair( Matcher &matcher, size_t id1, size_t id2 )
   {
     ProgramUtil::print( result[0].second, std::cout );
     Log::get().error( matcher.getName() + " matcher generated wrong program for " + OeisSequence( id2 ).id_str(),
-        false );
+        true );
   }
 }
