@@ -5,6 +5,7 @@
 #include "program.hpp"
 
 #include <map>
+#include <set>
 
 class OpPos
 {
@@ -48,6 +49,8 @@ public:
   void updateProgramStats( size_t id, const Program &program );
 
   void updateSequenceStats( size_t id, bool program_found, bool has_b_file );
+
+  int64_t getTransitiveLength( size_t id, std::set<size_t>& visited ) const;
 
   int64_t num_programs;
   int64_t num_sequences;

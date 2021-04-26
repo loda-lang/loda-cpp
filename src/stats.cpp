@@ -328,3 +328,19 @@ void Stats::updateSequenceStats( size_t id, bool program_found, bool has_b_file 
   found_programs[id] = program_found;
   cached_b_files[id] = has_b_file;
 }
+
+int64_t Stats::getTransitiveLength( size_t id, std::set<size_t>& visited ) const
+{
+  if ( visited.find( id ) != visited.end() )
+  {
+    throw std::runtime_error( "Recursion detected in " + OeisSequence( id ).getProgramPath() );
+  }
+  visited.insert( id );
+  int64_t length = program_lengths.at( id );
+  for ( auto& it : cal_graph )
+  {
+    length += getTransitiveLength( it.second, visited );
+  }
+  visited.erase( id );
+  return length;
+}
