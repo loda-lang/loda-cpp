@@ -289,7 +289,7 @@ size_t Interpreter::run( const Program &p, Memory &mem )
     }
 
     // check resource constraints
-    if ( cycles >= settings.max_cycles )
+    if ( cycles >= settings.max_cycles && settings.max_cycles >= 0 )
     {
       throw std::runtime_error(
           "Program did not terminate after " + std::to_string( cycles ) + " cycles; last operation: "
