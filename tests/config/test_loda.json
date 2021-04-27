@@ -2,7 +2,7 @@
   "miners": [
     {
       "name": "default",
-      "overwrite": false,
+      "overwrite": "none",
       "backoff": true,
       "generators": [
         "v1_1",
@@ -15,7 +15,7 @@
     },
     {
       "name": "update",
-      "overwrite": true,
+      "overwrite": "all",
       "backoff": false,
       "generators": [
         "v2",

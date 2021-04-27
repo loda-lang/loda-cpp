@@ -32,14 +32,13 @@ std::string getStatsHome()
 
 OeisManager::OeisManager( const Settings &settings, bool force_overwrite )
     : settings( settings ),
-      overwrite( force_overwrite || ConfigLoader::load( settings ).overwrite ),
+      overwrite_mode( force_overwrite ? OverwriteMode::ALL : ConfigLoader::load( settings ).overwrite_mode ),
       interpreter( settings ),
       finder( settings ),
       finder_initialized( false ),
       minimizer( settings ),
       optimizer( settings ),
       loaded_count( 0 ),
-      ignored_count( 0 ),
       total_count( 0 ),
       stats_loaded( false )
 {
@@ -267,7 +266,7 @@ Finder& OeisManager::getFinder()
     // generate stats is needed
     getStats();
 
-    ignored_count = 0;
+    ignore_list.clear();
     for ( auto& seq : sequences )
     {
       if ( seq.id == 0 )
@@ -281,7 +280,7 @@ Finder& OeisManager::getFinder()
       }
       else
       {
-        ignored_count++;
+        ignore_list.insert( seq.id );
       }
     }
     finder_initialized = true;
@@ -289,7 +288,7 @@ Finder& OeisManager::getFinder()
     // print summary
     Log::get().info(
         "Initialized " + std::to_string( finder.getMatchers().size() ) + " matchers (ignoring "
-            + std::to_string( ignored_count ) + " sequences)" );
+            + std::to_string( ignore_list.size() ) + " sequences)" );
     finder.logSummary( loaded_count );
   }
   return finder;
@@ -319,24 +318,20 @@ bool OeisManager::shouldMatch( const OeisSequence& seq ) const
     return false;
   }
 
-  // if not overwriting existing programs...
-  if ( !overwrite )
+  // check if program exists
+  const bool prog_exists = (seq.id < stats.found_programs.size()) && stats.found_programs[seq.id];
+
+  // decide based on overwrite mode
+  switch ( overwrite_mode )
   {
-    // already exists?
-    bool prog_exists;
-    if ( stats_loaded )
-    {
-      prog_exists = (seq.id < stats.found_programs.size()) && stats.found_programs[seq.id];
-    }
-    else
-    {
-      std::ifstream in( seq.getProgramPath() );
-      prog_exists = in.good();
-    }
-    if ( prog_exists )
-    {
-      return false;
-    }
+  case OverwriteMode::NONE:
+    return !prog_exists;
+
+  case OverwriteMode::ALL:
+    return true;
+
+  case OverwriteMode::AUTO:
+    return !prog_exists || stats.getTransitiveLength( seq.id, false ) > 10; // magic number
   }
   return true;
 }
@@ -743,7 +738,7 @@ std::pair<bool, bool> OeisManager::updateProgram( size_t id, const Program &p )
     std::ifstream in( file_name );
     if ( in.good() )
     {
-      if ( overwrite )
+      if ( ignore_list.find( id ) == ignore_list.end() )
       {
         is_new = false;
         Parser parser;

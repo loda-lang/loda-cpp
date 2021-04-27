@@ -363,7 +363,7 @@ void Test::config()
   settings.loda_config = "tests/config/test_loda.json";
   settings.miner = "default";
   auto config = ConfigLoader::load( settings );
-  check_int( "overwrite", 0, config.overwrite );
+  check_int( "overwrite", 1, config.overwrite_mode == OverwriteMode::NONE );
 
   check_int( "generators.size", 3, config.generators.size() );
   check_int( "generators[0].version", 1, config.generators[0].version );
@@ -399,7 +399,7 @@ void Test::config()
 
   settings.miner = "update";
   config = ConfigLoader::load( settings );
-  check_int( "overwrite", 1, config.overwrite );
+  check_int( "overwrite", 1, config.overwrite_mode == OverwriteMode::ALL );
 
   check_int( "generators.size", 2, config.generators.size() );
   check_int( "generators[0].version", 2, config.generators[0].version );
@@ -432,20 +432,20 @@ void Test::stats()
   // sanity check for loaded stats
   if ( s.num_constants.at( 1 ) == 0 )
   {
-    Log::get().error( "Error loading constants counts from stats" );
+    Log::get().error( "Error loading constants counts from stats", true );
   }
   if ( s.num_ops_per_type.at( static_cast<size_t>( Operation::Type::MOV ) ) == 0 )
   {
-    Log::get().error( "Error loading operation type counts from stats" );
+    Log::get().error( "Error loading operation type counts from stats", true );
   }
   Operation op( Operation::Type::ADD, Operand( Operand::Type::DIRECT, 0 ), Operand( Operand::Type::CONSTANT, 1 ) );
   if ( s.num_operations.at( op ) == 0 )
   {
-    Log::get().error( "Error loading operation counts from stats" );
+    Log::get().error( "Error loading operation counts from stats", true );
   }
   if ( s.num_operation_positions.size() < 100000 )
   {
-    Log::get().error( "Unexpected number of operation position counts in stats" );
+    Log::get().error( "Unexpected number of operation position counts in stats", true );
   }
   OpPos op_pos;
   op_pos.pos = 0;
@@ -455,15 +455,23 @@ void Test::stats()
   op_pos.op.source = Operand( Operand::Type::DIRECT, 0 );
   if ( s.num_operation_positions.at( op_pos ) == 0 )
   {
-    Log::get().error( "Error loading operation position counts from stats" );
+    Log::get().error( "Error loading operation position counts from stats", true );
   }
   if ( !s.found_programs.at( 4 ) )
   {
-    Log::get().error( "Error loading program summary from stats" );
+    Log::get().error( "Error loading program summary from stats", true );
   }
   if ( s.program_lengths.at( 7 ) != 1 )
   {
-    Log::get().error( "Error loading program lengths from stats" );
+    Log::get().error( "Error loading program lengths from stats", true );
+  }
+  if ( s.cal_graph.count( 40 ) != 1 || s.cal_graph.find( 40 )->second != 10051 )
+  {
+    Log::get().error( "Unexpected cal in A000040", true );
+  }
+  if ( s.getTransitiveLength( 40, true ) != 38 )
+  {
+    Log::get().error( "Unexpected transitive length of A000040", true );
   }
 
   // save & reload stats

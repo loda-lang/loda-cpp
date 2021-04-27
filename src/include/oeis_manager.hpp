@@ -10,6 +10,13 @@
 #include "stats.hpp"
 #include "util.hpp"
 
+enum class OverwriteMode
+{
+  NONE,
+  ALL,
+  AUTO
+};
+
 class OeisManager
 {
 public:
@@ -60,7 +67,7 @@ private:
   friend class OeisMaintenance;
 
   const Settings &settings;
-  const bool overwrite;
+  const OverwriteMode overwrite_mode;
   Interpreter interpreter;
 
   Finder finder;
@@ -71,9 +78,9 @@ private:
   std::vector<OeisSequence> sequences;
   std::unordered_set<size_t> deny_list;
   std::unordered_set<size_t> protect_list;
+  std::unordered_set<size_t> ignore_list;
 
   size_t loaded_count;
-  size_t ignored_count;
   size_t total_count;
 
   Stats stats;

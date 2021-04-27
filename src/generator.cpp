@@ -367,9 +367,24 @@ MultiGenerator::MultiGenerator( const Settings &settings, const Stats& stats, in
     generators[i] = Generator::Factory::createGenerator( configs[i], stats, gen() );
   }
   generator_index = gen() % configs.size();
+
+  // print info
+  std::string overwrite;
+  switch ( config.overwrite_mode )
+  {
+  case OverwriteMode::NONE:
+    overwrite = "none";
+    break;
+  case OverwriteMode::ALL:
+    overwrite = "all";
+    break;
+  case OverwriteMode::AUTO:
+    overwrite = "auto";
+    break;
+  }
   Log::get().info(
       "Initialized " + std::to_string( generators.size() ) + " generators from '" + config.name
-          + "' profile (overwrite: " + (config.overwrite ? "true" : "false") + ")" );
+          + "' profile (overwrite: " + overwrite + ")" );
 }
 
 Generator* MultiGenerator::getGenerator()

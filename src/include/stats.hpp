@@ -50,7 +50,7 @@ public:
 
   void updateSequenceStats( size_t id, bool program_found, bool has_b_file );
 
-  int64_t getTransitiveLength( size_t id, std::set<size_t>& visited ) const;
+  int64_t getTransitiveLength( size_t id, bool throw_on_recursion ) const;
 
   int64_t num_programs;
   int64_t num_sequences;
@@ -64,4 +64,8 @@ public:
   std::vector<int64_t> program_lengths;
   std::vector<bool> found_programs;
   std::vector<bool> cached_b_files;
+
+private:
+  mutable std::set<size_t> visited_programs; // used for getTransitiveLength()
+
 };
