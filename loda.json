@@ -20,7 +20,7 @@
     {
       "name": "update",
       "overwrite": "auto",
-      "backoff": false,
+      "backoff": true,
       "generators": [
         "v1_1",
         "v2",
