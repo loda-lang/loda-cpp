@@ -106,7 +106,7 @@ int main( int argc, char *argv[] )
       Program program = parser.parse( seq.getProgramPath() );
       Interpreter interpreter( settings );
       auto terms = seq.getTerms( 100000 ); // magic number
-      auto result = interpreter.check( program, terms, OeisSequence::DEFAULT_SEQ_LENGTH );
+      auto result = interpreter.check( program, terms, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id );
       switch ( result.first )
       {
       case status_t::OK:

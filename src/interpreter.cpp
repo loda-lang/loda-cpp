@@ -424,7 +424,7 @@ steps_t Interpreter::eval( const Program &p, std::vector<Sequence> &seqs, int64_
 }
 
 std::pair<status_t, steps_t> Interpreter::check( const Program &p, const Sequence &expected_seq,
-    int64_t num_terminating_terms )
+    int64_t num_terminating_terms, int64_t id )
 {
   if ( num_terminating_terms < 0 )
   {
@@ -438,10 +438,22 @@ std::pair<status_t, steps_t> Interpreter::check( const Program &p, const Sequenc
     mem.set( Program::INPUT_CELL, i );
     try
     {
+      if ( id >= 0 )
+      {
+        running_programs.insert( id );
+      }
       result.second.add( run( p, mem ) );
+      if ( id >= 0 )
+      {
+        running_programs.erase( id );
+      }
     }
     catch ( std::exception& e )
     {
+      if ( id >= 0 )
+      {
+        running_programs.erase( id );
+      }
       if ( settings.print_as_b_file )
       {
         std::cout << std::string( e.what() ) << std::endl;

@@ -579,7 +579,7 @@ std::pair<bool, Program> OeisManager::checkAndMinimize( const Program &p, const 
   auto extended_seq = seq.getTerms( OeisSequence::EXTENDED_SEQ_LENGTH );
 
   // check the program w/o minimization
-  check = interpreter.check( p, extended_seq, OeisSequence::DEFAULT_SEQ_LENGTH );
+  check = interpreter.check( p, extended_seq, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id );
   result.first = (check.first != status_t::ERROR); // we allow warnings
   if ( !result.first )
   {
@@ -588,7 +588,7 @@ std::pair<bool, Program> OeisManager::checkAndMinimize( const Program &p, const 
 
   // minimize for default number of terms
   minimizer.optimizeAndMinimize( result.second, 2, 1, OeisSequence::DEFAULT_SEQ_LENGTH ); // default length
-  check = interpreter.check( result.second, extended_seq, OeisSequence::DEFAULT_SEQ_LENGTH );
+  check = interpreter.check( result.second, extended_seq, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id );
   result.first = (check.first != status_t::ERROR); // we allow warnings
   if ( result.first )
   {
@@ -596,9 +596,10 @@ std::pair<bool, Program> OeisManager::checkAndMinimize( const Program &p, const 
   }
 
   // minimize for extended number of terms
+  Log::get().warn( "Need to check for extended number of terms for " + seq.id_str() );
   result.second = p;
   minimizer.optimizeAndMinimize( result.second, 2, 1, OeisSequence::EXTENDED_SEQ_LENGTH ); // extended length
-  check = interpreter.check( result.second, extended_seq, OeisSequence::DEFAULT_SEQ_LENGTH );
+  check = interpreter.check( result.second, extended_seq, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id );
   result.first = (check.first != status_t::ERROR); // we allow warnings
   if ( result.first )
   {
@@ -677,8 +678,8 @@ std::string OeisManager::isOptimizedBetter( Program existing, Program optimized,
   }
 
   // compare number of successfully computed terms
-  auto optimized_check = interpreter.check( optimized, terms, OeisSequence::DEFAULT_SEQ_LENGTH );
-  auto existing_check = interpreter.check( existing, terms, OeisSequence::DEFAULT_SEQ_LENGTH );
+  auto optimized_check = interpreter.check( optimized, terms, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id );
+  auto existing_check = interpreter.check( existing, terms, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id );
   if ( optimized_check.second.runs > existing_check.second.runs )
   {
     return "Better";
