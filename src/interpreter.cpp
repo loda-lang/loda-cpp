@@ -146,6 +146,7 @@ size_t Interpreter::run( const Program &p, Memory &mem )
   pc_stack.push( 0 );
 
   size_t cycles = 0;
+  const size_t max_cycles = (settings.max_cycles >= 0) ? settings.max_cycles : std::numeric_limits<size_t>::max();
   Memory old_mem, frag, frag_prev, prev;
   size_t pc, pc_next, ps_begin;
   number_t source = 0, target = 0;
@@ -289,7 +290,7 @@ size_t Interpreter::run( const Program &p, Memory &mem )
     }
 
     // check resource constraints
-    if ( cycles >= settings.max_cycles && settings.max_cycles >= 0 )
+    if ( cycles > max_cycles )
     {
       throw std::runtime_error(
           "Program did not terminate after " + std::to_string( cycles ) + " cycles; last operation: "

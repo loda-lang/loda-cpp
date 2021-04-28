@@ -705,6 +705,19 @@ void Test::testMatcherSet( Matcher &matcher, const std::vector<size_t> &ids )
   }
 }
 
+void eval( const Program& p, Interpreter& interpreter, Sequence& s )
+{
+  try
+  {
+    interpreter.eval( p, s );
+  }
+  catch ( const std::exception& e )
+  {
+    ProgramUtil::print( p, std::cerr );
+    Log::get().error( "Error evaluating program: " + std::string( e.what() ), true );
+  }
+}
+
 void Test::testMatcherPair( Matcher &matcher, size_t id1, size_t id2 )
 {
   Log::get().info(
@@ -717,8 +730,8 @@ void Test::testMatcherPair( Matcher &matcher, size_t id1, size_t id2 )
   ProgramUtil::removeOps( p1, Operation::Type::NOP );
   ProgramUtil::removeOps( p2, Operation::Type::NOP );
   Sequence s1, s2, s3;
-  interpreter.eval( p1, s1 );
-  interpreter.eval( p2, s2 );
+  eval( p1, interpreter, s1 );
+  eval( p2, interpreter, s2 );
   matcher.insert( s2, id2 );
   Matcher::seq_programs_t result;
   matcher.match( p1, s1, result );
@@ -731,7 +744,7 @@ void Test::testMatcherPair( Matcher &matcher, size_t id1, size_t id2 )
   {
     Log::get().error( matcher.getName() + " matcher returned unexpected sequence ID", true );
   }
-  interpreter.eval( result[0].second, s3 );
+  eval( result[0].second, interpreter, s3 );
   if ( s2.size() != s3.size() || s2 != s3 )
   {
     ProgramUtil::print( result[0].second, std::cout );

@@ -105,7 +105,7 @@ bool Extender::delta_one( Program &p, const bool sum )
   {
     prefix.push_back( Operation::Type::ADD, Operand::Type::DIRECT, Program::INPUT_CELL, Operand::Type::DIRECT,
         loop_counter_cell );
-    prefix.push_back( Operation::Type::SUB, Operand::Type::DIRECT, Program::INPUT_CELL, Operand::Type::CONSTANT, 1 );
+    prefix.push_back( Operation::Type::TRN, Operand::Type::DIRECT, Program::INPUT_CELL, Operand::Type::CONSTANT, 1 );
   }
   p.ops.insert( p.ops.begin(), prefix.ops.begin(), prefix.ops.end() );
 
