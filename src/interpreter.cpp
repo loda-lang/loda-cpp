@@ -146,6 +146,7 @@ size_t Interpreter::run( const Program &p, Memory &mem )
   pc_stack.push( 0 );
 
   size_t cycles = 0;
+  const size_t max_cycles = (settings.max_cycles >= 0) ? settings.max_cycles : std::numeric_limits<size_t>::max();
   Memory old_mem, frag, frag_prev, prev;
   size_t pc, pc_next, ps_begin;
   number_t source = 0, target = 0;
@@ -289,7 +290,7 @@ size_t Interpreter::run( const Program &p, Memory &mem )
     }
 
     // check resource constraints
-    if ( cycles >= settings.max_cycles )
+    if ( cycles > max_cycles )
     {
       throw std::runtime_error(
           "Program did not terminate after " + std::to_string( cycles ) + " cycles; last operation: "
@@ -423,7 +424,7 @@ steps_t Interpreter::eval( const Program &p, std::vector<Sequence> &seqs, int64_
 }
 
 std::pair<status_t, steps_t> Interpreter::check( const Program &p, const Sequence &expected_seq,
-    int64_t num_terminating_terms )
+    int64_t num_terminating_terms, int64_t id )
 {
   if ( num_terminating_terms < 0 )
   {
@@ -437,10 +438,22 @@ std::pair<status_t, steps_t> Interpreter::check( const Program &p, const Sequenc
     mem.set( Program::INPUT_CELL, i );
     try
     {
+      if ( id >= 0 )
+      {
+        running_programs.insert( id );
+      }
       result.second.add( run( p, mem ) );
+      if ( id >= 0 )
+      {
+        running_programs.erase( id );
+      }
     }
     catch ( std::exception& e )
     {
+      if ( id >= 0 )
+      {
+        running_programs.erase( id );
+      }
       if ( settings.print_as_b_file )
       {
         std::cout << std::string( e.what() ) << std::endl;

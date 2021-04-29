@@ -5,6 +5,7 @@
 #include "program.hpp"
 
 #include <map>
+#include <set>
 
 class OpPos
 {
@@ -49,6 +50,8 @@ public:
 
   void updateSequenceStats( size_t id, bool program_found, bool has_b_file );
 
+  int64_t getTransitiveLength( size_t id, bool throw_on_recursion ) const;
+
   int64_t num_programs;
   int64_t num_sequences;
   steps_t steps;
@@ -58,6 +61,11 @@ public:
   std::multimap<number_t, number_t> cal_graph;
   std::vector<int64_t> num_programs_per_length;
   std::vector<int64_t> num_ops_per_type;
+  std::vector<int64_t> program_lengths;
   std::vector<bool> found_programs;
   std::vector<bool> cached_b_files;
+
+private:
+  mutable std::set<size_t> visited_programs; // used for getTransitiveLength()
+
 };

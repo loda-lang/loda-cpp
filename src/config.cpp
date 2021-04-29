@@ -112,7 +112,23 @@ Miner::Config ConfigLoader::load( const Settings& settings )
     if ( name == settings.miner || i == index )
     {
       config.name = name;
-      config.overwrite = get_jbool( m, "overwrite", false );
+      auto overwrite_mode = m["overwrite"].as_string();
+      if ( overwrite_mode == "none" )
+      {
+        config.overwrite_mode = OverwriteMode::NONE;
+      }
+      else if ( overwrite_mode == "all" )
+      {
+        config.overwrite_mode = OverwriteMode::ALL;
+      }
+      else if ( overwrite_mode == "auto" )
+      {
+        config.overwrite_mode = OverwriteMode::AUTO;
+      }
+      else
+      {
+        throw std::runtime_error( "Unknown overwrite mode: " + overwrite_mode );
+      }
 
       // load matcher configs
       bool backoff = get_jbool( m, "backoff", true );

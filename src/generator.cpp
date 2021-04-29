@@ -157,7 +157,7 @@ void Generator::fixSingularities( Program &p )
       p.ops.insert( p.ops.begin() + i + 2, Operation( Operation::Type::ADD, divisor, tmp ) );
       i += 3;
     }
-    if ( p.ops[i].type == Operation::Type::LOG )
+    else if ( p.ops[i].type == Operation::Type::LOG )
     {
       auto target = p.ops[i].target;
       p.ops.insert( p.ops.begin() + i, Operation( Operation::Type::MOV, tmp, target ) );
@@ -166,7 +166,7 @@ void Generator::fixSingularities( Program &p )
       p.ops.insert( p.ops.begin() + i + 2, Operation( Operation::Type::ADD, target, tmp ) );
       i += 3;
     }
-    if ( p.ops[i].type == Operation::Type::POW )
+    else if ( p.ops[i].type == Operation::Type::POW )
     {
       if ( p.ops[i].source.type == Operand::Type::CONSTANT
           && (p.ops[i].source.value < 2 || p.ops[i].source.value > max_exponent) )
@@ -177,6 +177,13 @@ void Generator::fixSingularities( Program &p )
       {
         p.ops[i].source.type = Operand::Type::CONSTANT;
       }
+    }
+    else if ( p.ops[i].type == Operation::Type::CAL )
+    {
+      auto target = p.ops[i].target;
+      p.ops.insert( p.ops.begin() + i,
+          Operation( Operation::Type::MAX, target, Operand( Operand::Type::CONSTANT, 0 ) ) );
+      i++;
     }
   }
 }
@@ -360,9 +367,24 @@ MultiGenerator::MultiGenerator( const Settings &settings, const Stats& stats, in
     generators[i] = Generator::Factory::createGenerator( configs[i], stats, gen() );
   }
   generator_index = gen() % configs.size();
+
+  // print info
+  std::string overwrite;
+  switch ( config.overwrite_mode )
+  {
+  case OverwriteMode::NONE:
+    overwrite = "none";
+    break;
+  case OverwriteMode::ALL:
+    overwrite = "all";
+    break;
+  case OverwriteMode::AUTO:
+    overwrite = "auto";
+    break;
+  }
   Log::get().info(
       "Initialized " + std::to_string( generators.size() ) + " generators from '" + config.name
-          + "' profile (overwrite: " + (config.overwrite ? "true" : "false") + ")" );
+          + "' profile (overwrite: " + overwrite + ")" );
 }
 
 Generator* MultiGenerator::getGenerator()

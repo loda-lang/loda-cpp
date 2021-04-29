@@ -294,7 +294,7 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
       std::stringstream s( arg );
       int64_t val;
       s >> val;
-      if ( option != Option::B_FILE_OFFSET && val < 1 )
+      if ( option != Option::MAX_CYCLES && option != Option::B_FILE_OFFSET && val < 1 )
       {
         Log::get().error( "Invalid value for option: " + std::to_string( val ), true );
       }

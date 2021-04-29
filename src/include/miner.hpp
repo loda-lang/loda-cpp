@@ -16,8 +16,9 @@ public:
   class Config
   {
   public:
+
     std::string name;
-    bool overwrite;
+    OverwriteMode overwrite_mode;
     std::vector<Generator::Config> generators;
     std::vector<Matcher::Config> matchers;
   };

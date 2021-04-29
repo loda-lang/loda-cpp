@@ -41,8 +41,8 @@ void help()
   std::cout << "  -t <number>      Number of sequence terms (default:" << settings.num_terms << ")" << std::endl;
   std::cout << "  -p <number>      Maximum physical memory in MB (default:"
       << settings.max_physical_memory / (1024 * 1024) << ")" << std::endl;
-  std::cout << "  -c <number>      Maximum number of interpreter cycles (default:" << settings.max_cycles << ")"
-      << std::endl;
+  std::cout << "  -c <number>      Maximum number of interpreter cycles (default:" << settings.max_cycles
+      << "; no limit:-1)" << std::endl;
   std::cout << "  -m <number>      Maximum number of used memory cells (default:" << settings.max_memory << ")"
       << std::endl;
   std::cout << "  -b <number>      Print evaluation result in b-file format starting from a given offset" << std::endl;
@@ -106,7 +106,7 @@ int main( int argc, char *argv[] )
       Program program = parser.parse( seq.getProgramPath() );
       Interpreter interpreter( settings );
       auto terms = seq.getTerms( 100000 ); // magic number
-      auto result = interpreter.check( program, terms, OeisSequence::DEFAULT_SEQ_LENGTH );
+      auto result = interpreter.check( program, terms, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id );
       switch ( result.first )
       {
       case status_t::OK:

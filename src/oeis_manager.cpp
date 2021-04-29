@@ -32,14 +32,13 @@ std::string getStatsHome()
 
 OeisManager::OeisManager( const Settings &settings, bool force_overwrite )
     : settings( settings ),
-      overwrite( force_overwrite || ConfigLoader::load( settings ).overwrite ),
+      overwrite_mode( force_overwrite ? OverwriteMode::ALL : ConfigLoader::load( settings ).overwrite_mode ),
       interpreter( settings ),
       finder( settings ),
       finder_initialized( false ),
       minimizer( settings ),
       optimizer( settings ),
       loaded_count( 0 ),
-      ignored_count( 0 ),
       total_count( 0 ),
       stats_loaded( false )
 {
@@ -267,7 +266,7 @@ Finder& OeisManager::getFinder()
     // generate stats is needed
     getStats();
 
-    ignored_count = 0;
+    ignore_list.clear();
     for ( auto& seq : sequences )
     {
       if ( seq.id == 0 )
@@ -281,7 +280,7 @@ Finder& OeisManager::getFinder()
       }
       else
       {
-        ignored_count++;
+        ignore_list.insert( seq.id );
       }
     }
     finder_initialized = true;
@@ -289,7 +288,7 @@ Finder& OeisManager::getFinder()
     // print summary
     Log::get().info(
         "Initialized " + std::to_string( finder.getMatchers().size() ) + " matchers (ignoring "
-            + std::to_string( ignored_count ) + " sequences)" );
+            + std::to_string( ignore_list.size() ) + " sequences)" );
     finder.logSummary( loaded_count );
   }
   return finder;
@@ -319,24 +318,20 @@ bool OeisManager::shouldMatch( const OeisSequence& seq ) const
     return false;
   }
 
-  // if not overwriting existing programs...
-  if ( !overwrite )
+  // check if program exists
+  const bool prog_exists = (seq.id < stats.found_programs.size()) && stats.found_programs[seq.id];
+
+  // decide based on overwrite mode
+  switch ( overwrite_mode )
   {
-    // already exists?
-    bool prog_exists;
-    if ( stats_loaded )
-    {
-      prog_exists = (seq.id < stats.found_programs.size()) && stats.found_programs[seq.id];
-    }
-    else
-    {
-      std::ifstream in( seq.getProgramPath() );
-      prog_exists = in.good();
-    }
-    if ( prog_exists )
-    {
-      return false;
-    }
+  case OverwriteMode::NONE:
+    return !prog_exists;
+
+  case OverwriteMode::ALL:
+    return true;
+
+  case OverwriteMode::AUTO:
+    return !prog_exists || stats.getTransitiveLength( seq.id, false ) > 10; // magic number
   }
   return true;
 }
@@ -509,7 +504,16 @@ const Stats& OeisManager::getStats()
     {
       generateStats( age_in_days );
     }
-    stats.load( home );
+    try
+    {
+      stats.load( home );
+    }
+    catch ( const std::exception& e )
+    {
+      Log::get().warn( "Exception during stats loading, regenerating..." );
+      generateStats( age_in_days );
+      stats.load( home ); // reload
+    }
     stats_loaded = true;
 
     // lock released at the end of this block
@@ -575,7 +579,7 @@ std::pair<bool, Program> OeisManager::checkAndMinimize( const Program &p, const 
   auto extended_seq = seq.getTerms( OeisSequence::EXTENDED_SEQ_LENGTH );
 
   // check the program w/o minimization
-  check = interpreter.check( p, extended_seq, OeisSequence::DEFAULT_SEQ_LENGTH );
+  check = interpreter.check( p, extended_seq, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id );
   result.first = (check.first != status_t::ERROR); // we allow warnings
   if ( !result.first )
   {
@@ -584,7 +588,7 @@ std::pair<bool, Program> OeisManager::checkAndMinimize( const Program &p, const 
 
   // minimize for default number of terms
   minimizer.optimizeAndMinimize( result.second, 2, 1, OeisSequence::DEFAULT_SEQ_LENGTH ); // default length
-  check = interpreter.check( result.second, extended_seq, OeisSequence::DEFAULT_SEQ_LENGTH );
+  check = interpreter.check( result.second, extended_seq, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id );
   result.first = (check.first != status_t::ERROR); // we allow warnings
   if ( result.first )
   {
@@ -592,9 +596,10 @@ std::pair<bool, Program> OeisManager::checkAndMinimize( const Program &p, const 
   }
 
   // minimize for extended number of terms
+  Log::get().warn( "Need to check for extended number of terms for " + seq.id_str() );
   result.second = p;
   minimizer.optimizeAndMinimize( result.second, 2, 1, OeisSequence::EXTENDED_SEQ_LENGTH ); // extended length
-  check = interpreter.check( result.second, extended_seq, OeisSequence::DEFAULT_SEQ_LENGTH );
+  check = interpreter.check( result.second, extended_seq, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id );
   result.first = (check.first != status_t::ERROR); // we allow warnings
   if ( result.first )
   {
@@ -673,8 +678,8 @@ std::string OeisManager::isOptimizedBetter( Program existing, Program optimized,
   }
 
   // compare number of successfully computed terms
-  auto optimized_check = interpreter.check( optimized, terms, OeisSequence::DEFAULT_SEQ_LENGTH );
-  auto existing_check = interpreter.check( existing, terms, OeisSequence::DEFAULT_SEQ_LENGTH );
+  auto optimized_check = interpreter.check( optimized, terms, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id );
+  auto existing_check = interpreter.check( existing, terms, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id );
   if ( optimized_check.second.runs > existing_check.second.runs )
   {
     return "Better";
@@ -734,7 +739,7 @@ std::pair<bool, bool> OeisManager::updateProgram( size_t id, const Program &p )
     std::ifstream in( file_name );
     if ( in.good() )
     {
-      if ( overwrite )
+      if ( ignore_list.find( id ) == ignore_list.end() )
       {
         is_new = false;
         Parser parser;

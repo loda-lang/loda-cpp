@@ -105,7 +105,7 @@ bool Extender::delta_one( Program &p, const bool sum )
   {
     prefix.push_back( Operation::Type::ADD, Operand::Type::DIRECT, Program::INPUT_CELL, Operand::Type::DIRECT,
         loop_counter_cell );
-    prefix.push_back( Operation::Type::SUB, Operand::Type::DIRECT, Program::INPUT_CELL, Operand::Type::CONSTANT, 1 );
+    prefix.push_back( Operation::Type::TRN, Operand::Type::DIRECT, Program::INPUT_CELL, Operand::Type::CONSTANT, 1 );
   }
   p.ops.insert( p.ops.begin(), prefix.ops.begin(), prefix.ops.end() );
 
@@ -118,11 +118,11 @@ bool Extender::delta_one( Program &p, const bool sum )
   {
     p.push_back( Operation::Type::MOV, Operand::Type::DIRECT, tmp_counter_cell, Operand::Type::DIRECT,
         loop_counter_cell );
-    p.push_back( Operation::Type::LPB, Operand::Type::DIRECT, tmp_counter_cell, Operand::Type::CONSTANT, 1 );
-    p.push_back( Operation::Type::MOV, Operand::Type::DIRECT, saved_result_cell, Operand::Type::DIRECT,
+    p.push_back( Operation::Type::CMP, Operand::Type::DIRECT, tmp_counter_cell, Operand::Type::CONSTANT, 1 );
+    p.push_back( Operation::Type::MUL, Operand::Type::DIRECT, tmp_counter_cell, Operand::Type::DIRECT,
         Program::OUTPUT_CELL );
-    p.push_back( Operation::Type::SUB, Operand::Type::DIRECT, tmp_counter_cell, Operand::Type::CONSTANT, 1 );
-    p.push_back( Operation::Type::LPE, Operand::Type::CONSTANT, 0, Operand::Type::CONSTANT, 0 );
+    p.push_back( Operation::Type::ADD, Operand::Type::DIRECT, saved_result_cell, Operand::Type::DIRECT,
+        tmp_counter_cell );
   }
   p.push_back( Operation::Type::LPE, Operand::Type::CONSTANT, 0, Operand::Type::CONSTANT, 0 );
 
@@ -133,13 +133,13 @@ bool Extender::delta_one( Program &p, const bool sum )
   }
   else
   {
-    p.push_back( Operation::Type::LPB, Operand::Type::DIRECT, saved_arg_cell, Operand::Type::CONSTANT, 1 );
-    p.push_back( Operation::Type::SUB, Operand::Type::DIRECT, saved_result_cell, Operand::Type::DIRECT,
+    p.push_back( Operation::Type::MIN, Operand::Type::DIRECT, saved_arg_cell, Operand::Type::CONSTANT, 1 );
+    p.push_back( Operation::Type::MUL, Operand::Type::DIRECT, saved_arg_cell, Operand::Type::DIRECT,
         Program::OUTPUT_CELL );
-    p.push_back( Operation::Type::MOV, Operand::Type::DIRECT, saved_arg_cell, Operand::Type::CONSTANT, 0 );
-    p.push_back( Operation::Type::LPE, Operand::Type::CONSTANT, 0, Operand::Type::CONSTANT, 0 );
     p.push_back( Operation::Type::MOV, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::DIRECT,
         saved_result_cell );
+    p.push_back( Operation::Type::SUB, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::DIRECT,
+        saved_arg_cell );
   }
   return true;
 }
