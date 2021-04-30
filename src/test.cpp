@@ -184,8 +184,8 @@ void validateIterated( const Program& p )
     {
       throw std::runtime_error( "Iterator generated wrong loop" );
     }
-    if ( op.type == Operation::Type::CLR || op.type == Operation::Type::CAL || op.type == Operation::Type::LOG
-        || op.type == Operation::Type::MIN || op.type == Operation::Type::MAX )
+    if ( op.type == Operation::Type::CLR || op.type == Operation::Type::CAL || op.type == Operation::Type::MIN
+        || op.type == Operation::Type::MAX )
     {
       throw std::runtime_error( "Unsupported operation type" );
     }

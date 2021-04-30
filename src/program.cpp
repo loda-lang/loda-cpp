@@ -2,11 +2,11 @@
 
 #include "number.hpp"
 
-const std::array<Operation::Type, 21> Operation::Types = { Operation::Type::NOP, Operation::Type::MOV,
+const std::array<Operation::Type, 20> Operation::Types = { Operation::Type::NOP, Operation::Type::MOV,
     Operation::Type::ADD, Operation::Type::SUB, Operation::Type::TRN, Operation::Type::MUL, Operation::Type::DIV,
-    Operation::Type::DIF, Operation::Type::MOD, Operation::Type::POW, Operation::Type::LOG, Operation::Type::GCD,
-    Operation::Type::BIN, Operation::Type::CMP, Operation::Type::MIN, Operation::Type::MAX, Operation::Type::LPB,
-    Operation::Type::LPE, Operation::Type::CLR, Operation::Type::CAL, Operation::Type::DBG, };
+    Operation::Type::DIF, Operation::Type::MOD, Operation::Type::POW, Operation::Type::GCD, Operation::Type::BIN,
+    Operation::Type::CMP, Operation::Type::MIN, Operation::Type::MAX, Operation::Type::LPB, Operation::Type::LPE,
+    Operation::Type::CLR, Operation::Type::CAL, Operation::Type::DBG, };
 
 const Operation::Metadata& Operation::Metadata::get( Type t )
 {
@@ -20,7 +20,6 @@ const Operation::Metadata& Operation::Metadata::get( Type t )
   static Operation::Metadata dif { Operation::Type::DIF, "dif", 'i', 2, true, true, true };
   static Operation::Metadata mod { Operation::Type::MOD, "mod", 'o', 2, true, true, true };
   static Operation::Metadata pow { Operation::Type::POW, "pow", 'p', 2, true, true, true };
-  static Operation::Metadata log { Operation::Type::LOG, "log", 'k', 2, true, true, true };
   static Operation::Metadata gcd { Operation::Type::GCD, "gcd", 'g', 2, true, true, true };
   static Operation::Metadata bin { Operation::Type::BIN, "bin", 'b', 2, true, true, true };
   static Operation::Metadata cmp { Operation::Type::CMP, "cmp", 'f', 2, true, true, true };
@@ -53,8 +52,6 @@ const Operation::Metadata& Operation::Metadata::get( Type t )
     return mod;
   case Operation::Type::POW:
     return pow;
-  case Operation::Type::LOG:
-    return log;
   case Operation::Type::GCD:
     return gcd;
   case Operation::Type::BIN:
