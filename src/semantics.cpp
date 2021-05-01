@@ -111,43 +111,6 @@ number_t Semantics::pow( number_t base, number_t exp )
   }
 }
 
-number_t Semantics::log( number_t n, number_t base )
-{
-  CHECK_INF2( n, base );
-  if ( n <= 0 )
-  {
-    return NUM_INF;
-  }
-  if ( n == 1 )
-  {
-    return 0;
-  }
-  if ( base < 2 )
-  {
-    return NUM_INF;
-  }
-  number_t m = 1;
-  number_t res = 0;
-  while ( m < n )
-  {
-    m = mul( m, base );
-    res++;
-  }
-  return (m == n) ? res : res - 1;
-}
-
-number_t Semantics::fac( number_t a )
-{
-  CHECK_INF1( a );
-  number_t res = 1;
-  while ( a != 0 && res != NUM_INF )
-  {
-    res = mul( res, a );
-    a = (a > 0) ? (a - 1) : (a + 1);
-  }
-  return res;
-}
-
 number_t Semantics::gcd( number_t a, number_t b )
 {
   CHECK_INF2( a, b );

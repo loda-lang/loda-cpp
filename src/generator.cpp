@@ -157,15 +157,6 @@ void Generator::fixSingularities( Program &p )
       p.ops.insert( p.ops.begin() + i + 2, Operation( Operation::Type::ADD, divisor, tmp ) );
       i += 3;
     }
-    else if ( p.ops[i].type == Operation::Type::LOG )
-    {
-      auto target = p.ops[i].target;
-      p.ops.insert( p.ops.begin() + i, Operation( Operation::Type::MOV, tmp, target ) );
-      p.ops.insert( p.ops.begin() + i + 1,
-          Operation( Operation::Type::CMP, tmp, Operand( Operand::Type::CONSTANT, 0 ) ) );
-      p.ops.insert( p.ops.begin() + i + 2, Operation( Operation::Type::ADD, target, tmp ) );
-      i += 3;
-    }
     else if ( p.ops[i].type == Operation::Type::POW )
     {
       if ( p.ops[i].source.type == Operand::Type::CONSTANT
@@ -289,7 +280,6 @@ void Generator::ensureMeaningfulLoops( Program &p )
       num_ops++;
       break;
     case Operation::Type::SUB:
-    case Operation::Type::LOG:
     case Operation::Type::MOV:
     case Operation::Type::DIV:
     case Operation::Type::DIF:

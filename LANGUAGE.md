@@ -51,10 +51,11 @@ The table below summarizes the operations currently supported by LODA. We use th
 | `dif a,b` | Divide-If-Divides | Divide the target by the source value if the source is a divisor: `a:=(a%b=0)?a/b:a `  |
 | `mod a,b` | Modulus        | Remainder of division of target by source: `a:=a%b` |
 | `pow a,b` | Power          | Raise source to the power of target: `a:=a^b` |
-| `log a,b` | Logarithm      | Logarithm of target with source as base: `a:=floor(log_b(a))` |
 | `gcd a,b` | Greatest Common Divisor | Greatest common divisor or target and source: `a:=gcd(a,b)`. Undefined for 0,0. Otherwise always positive. |
 | `bin a,b` | Binomial Coefficient | Target over source: `a:=a!/(b!(a-b)!)`|
-| `cmp a,b` | Comparison | Compare target with source value: `a:=(a=b)?1:0` |
+| `cmp a,b` | Comparison     | Compare target with source: `a:=(a=b)?1:0` |
+| `min a,b` | Minimum        | Minimum of target and source: `a:=min(a,b)` |
+| `max a,b` | Maximum        | Maximum of target and source: `a:=max(a,b)` |
 
 ### Loops and Conditionals
 

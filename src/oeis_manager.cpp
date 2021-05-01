@@ -623,11 +623,9 @@ size_t getBadOpsCount( const Program& p )
   // we prefer programs the following programs:
   // - w/o indirect memory access
   // - w/o cal operations
-  // - w/o log operations
   // - w/o loops that have non-constant args
   // - w/o gcd with powers of 2
-  size_t num_ops = ProgramUtil::numOps( p, Operand::Type::INDIRECT ) + ProgramUtil::numOps( p, Operation::Type::CAL )
-      + ProgramUtil::numOps( p, Operation::Type::LOG );
+  size_t num_ops = ProgramUtil::numOps( p, Operand::Type::INDIRECT ) + ProgramUtil::numOps( p, Operation::Type::CAL );
   for ( auto &op : p.ops )
   {
     if ( op.type == Operation::Type::LPB && op.source.type != Operand::Type::CONSTANT )
