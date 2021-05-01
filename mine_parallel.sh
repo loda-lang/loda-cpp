@@ -11,7 +11,6 @@ done
 # common settings
 log_level=error
 check_interval=43200
-min_changes=50
 min_cpus=4
 branch=$(git rev-parse --abbrev-ref HEAD)
 remote_origin=$(git config --get remote.origin.url)
@@ -29,6 +28,18 @@ if [ "$num_cpus" -lt "$min_cpus" ]; then
   exit 1
 fi
 
+# determine how many cpus to use
+num_use_cpus=$num_cpus
+if [ "$num_cpus" -ge 16 ]; then
+  num_use_cpus=$(( $num_cpus - 4 ))
+fi
+if [ "$num_cpus" -ge 32 ]; then
+  num_use_cpus=$(( $num_cpus - 8 ))
+fi
+
+# calculate minimum number of changes before commit
+min_changes=$(( $num_cpus * 2 ))
+
 function stop_miners() {
   echo "Stopping miners"
   killall loda > /dev/null
@@ -40,14 +51,6 @@ function abort_miners() {
 }
 
 function start_miners() {
-
-  num_use_cpus=$num_cpus
-  if [ "$num_cpus" -ge 16 ]; then
-    num_use_cpus=$(( $num_cpus - 4 ))
-  fi
-  if [ "$num_cpus" -ge 32 ]; then
-    num_use_cpus=$(( $num_cpus - 8 ))
-  fi
 
   # maintenance
   if [ "$remote_origin" = "git@github.com:ckrause/loda.git" ] && [ "$branch" = "master" ]; then
