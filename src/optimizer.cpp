@@ -176,6 +176,16 @@ bool Optimizer::mergeOps( Program &p ) const
         }
 
       }
+      else if ( o1.source.type == Operand::Type::DIRECT && o2.source == o1.source ) // sources the same direct access?
+      {
+        // add / sub combination?
+        if ( (o1.type == Operation::Type::ADD && o2.type == Operation::Type::SUB)
+            || (o1.type == Operation::Type::SUB && o2.type == Operation::Type::ADD) )
+        {
+          o1.source = Operand( Operand::Type::CONSTANT, 0 );
+          do_merge = true;
+        }
+      }
 
       // second operation mov with constant?
       if ( o2.type == Operation::Type::MOV && o2.source.type == Operand::Type::CONSTANT )
