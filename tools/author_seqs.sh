@@ -14,8 +14,6 @@ for cmd in cat git grep wget; do
 done
 
 lodaroot=$(git rev-parse --show-toplevel)
-pushd $lodaroot > /dev/null
-
 
 asinfo=$HOME/.loda/oeis/asinfo.txt
 if [ ! -f $asinfo ]; then
@@ -25,12 +23,9 @@ fi
 
 seqs=$(cat $asinfo | grep "_${author}_" | cut -f1)
 
-echo $seqs
-
 for s in $seqs; do
-  if ./loda eval $s > /dev/null 2> /dev/null; then
-    echo $s
+  p=${lodaroot}/programs/oeis/${s:1:3}/${s}.asm
+  if [ -f $p ]; then
+    head -n 1 $p
   fi
 done
-
-popd > /dev/null
