@@ -13,7 +13,7 @@
 
 OeisMaintenance::OeisMaintenance( const Settings &settings )
     : interpreter( settings ),
-      manager( settings, true ) // need to set the overwrite-flag!
+      manager( settings, 1, true ) // magic number; need to set the overwrite-flag!
 {
 }
 
