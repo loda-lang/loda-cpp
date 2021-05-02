@@ -1,10 +1,17 @@
 #!/bin/bash
 
-if [ "$#" -ne 1 ]; then
-  echo "Usage: $0 <author>"
+if [ "$#" -eq 0 ]; then
+  echo "Usage: $0 <author> <options>"
+  echo "Options:"
+  echo "  -l   Print program links (html format)"
   exit 1
 fi
 author=$1
+
+links=false
+if [ "$2" = "-l" ]; then
+  links=true
+fi
 
 for cmd in cat git grep wget; do
   if ! [ -x "$(command -v $cmd)" ]; then
@@ -24,8 +31,13 @@ fi
 seqs=$(cat $asinfo | grep "_${author}_" | cut -f1)
 
 for s in $seqs; do
-  p=${lodaroot}/programs/oeis/${s:1:3}/${s}.asm
-  if [ -f $p ]; then
-    head -n 1 $p
+  p=programs/oeis/${s:1:3}/${s}.asm
+  if [ -f ${lodaroot}/$p ]; then
+    d=$(head -n 1 ${lodaroot}/$p | cut -f2 -d':')
+    if [ $links = true ]; then
+      echo "<a href=\"https://oeis.org/$s\">$s</a> (<a href=\"https://github.com/ckrause/loda/blob/master/$p\">program</a>): $d<br>"
+    else
+      echo "$s:$d"
+    fi
   fi
 done
