@@ -1,10 +1,17 @@
 #!/bin/bash
 
-if [ "$#" -ne 1 ]; then
-  echo "Usage: $0 <author>"
+if [ "$#" -eq 0 ]; then
+  echo "Usage: $0 <author> <options>"
+  echo "Options:"
+  echo "  -l   Print program links (html format)"
   exit 1
 fi
 author=$1
+
+links=false
+if [ "$2" = "-l" ]; then
+  links=true
+fi
 
 for cmd in cat git grep wget; do
   if ! [ -x "$(command -v $cmd)" ]; then
@@ -14,8 +21,6 @@ for cmd in cat git grep wget; do
 done
 
 lodaroot=$(git rev-parse --show-toplevel)
-pushd $lodaroot > /dev/null
-
 
 asinfo=$HOME/.loda/oeis/asinfo.txt
 if [ ! -f $asinfo ]; then
@@ -25,12 +30,14 @@ fi
 
 seqs=$(cat $asinfo | grep "_${author}_" | cut -f1)
 
-echo $seqs
-
 for s in $seqs; do
-  if ./loda eval $s > /dev/null 2> /dev/null; then
-    echo $s
+  p=programs/oeis/${s:1:3}/${s}.asm
+  if [ -f ${lodaroot}/$p ]; then
+    d=$(head -n 1 ${lodaroot}/$p | cut -f2 -d':')
+    if [ $links = true ]; then
+      echo "<a href=\"https://oeis.org/$s\">$s</a> (<a href=\"https://github.com/ckrause/loda/blob/master/$p\">program</a>): $d<br>"
+    else
+      echo "$s:$d"
+    fi
   fi
 done
-
-popd > /dev/null

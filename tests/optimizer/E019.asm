@@ -1,0 +1,10 @@
+; in
+mov $1,$0
+mov $2,$0
+pow $2,2
+add $1,$2
+sub $1,$2
+; out
+mov $1,$0
+mov $2,$0
+pow $2,2

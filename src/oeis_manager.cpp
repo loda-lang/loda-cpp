@@ -30,9 +30,10 @@ std::string getStatsHome()
   return getLodaHome() + "stats";
 }
 
-OeisManager::OeisManager( const Settings &settings, bool force_overwrite )
+OeisManager::OeisManager( const Settings &settings, int64_t max_age_in_days, bool force_overwrite ) // magic number
     : settings( settings ),
       overwrite_mode( force_overwrite ? OverwriteMode::ALL : ConfigLoader::load( settings ).overwrite_mode ),
+      max_age_in_days( max_age_in_days ),
       interpreter( settings ),
       finder( settings ),
       finder_initialized( false ),
@@ -347,7 +348,7 @@ void OeisManager::update()
   {
     auto path = OeisSequence::getHome() + *it;
     age_in_days = getFileAgeInDays( path );
-    if ( age_in_days >= 0 && age_in_days < 3 ) // three days
+    if ( age_in_days >= 0 && age_in_days < max_age_in_days )
     {
       // no need to update this file
       it = files.erase( it );
@@ -500,7 +501,7 @@ const Stats& OeisManager::getStats()
 
     // check age of stats
     auto age_in_days = getFileAgeInDays( stats.getMainStatsFile( home ) );
-    if ( age_in_days < 0 || age_in_days >= 3 ) // three days
+    if ( age_in_days < 0 || age_in_days >= max_age_in_days )
     {
       generateStats( age_in_days );
     }
