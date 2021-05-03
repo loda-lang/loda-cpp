@@ -623,10 +623,9 @@ size_t getBadOpsCount( const Program& p )
 {
   // we prefer programs the following programs:
   // - w/o indirect memory access
-  // - w/o cal operations
   // - w/o loops that have non-constant args
   // - w/o gcd with powers of 2
-  size_t num_ops = ProgramUtil::numOps( p, Operand::Type::INDIRECT ) + ProgramUtil::numOps( p, Operation::Type::CAL );
+  size_t num_ops = ProgramUtil::numOps( p, Operand::Type::INDIRECT );
   for ( auto &op : p.ops )
   {
     if ( op.type == Operation::Type::LPB && op.source.type != Operand::Type::CONSTANT )
@@ -648,7 +647,7 @@ size_t getBadOpsCount( const Program& p )
 
 std::string OeisManager::isOptimizedBetter( Program existing, Program optimized, const OeisSequence &seq )
 {
-  // check if there are illegal recursions
+  // check if there are illegal recursions; do we really need this?!
   for ( auto &op : optimized.ops )
   {
     if ( op.type == Operation::Type::CAL )
