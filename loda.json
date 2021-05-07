@@ -35,7 +35,7 @@
     {
       "name": "new-v4",
       "overwrite": "none",
-      "backoff": false,
+      "backoff": true,
       "generators": [
         "v4"
       ],
@@ -47,8 +47,8 @@
     },
     {
       "name": "update-v4",
-      "overwrite": "all",
-      "backoff": false,
+      "overwrite": "auto",
+      "backoff": true,
       "generators": [
         "v4"
       ],
@@ -63,9 +63,9 @@
     {
       "name": "v1_1",
       "version": 1,
-      "length": 20,
-      "maxConstant": 4,
-      "maxIndex": 4,
+      "length": 30,
+      "maxConstant": 5,
+      "maxIndex": 5,
       "loops": false,
       "calls": false,
       "indirectAccess": false,
@@ -80,9 +80,9 @@
     {
       "name": "v1_2",
       "version": 1,
-      "length": 30,
-      "maxConstant": 4,
-      "maxIndex": 4,
+      "length": 40,
+      "maxConstant": 5,
+      "maxIndex": 5,
       "loops": true,
       "calls": false,
       "indirectAccess": false
@@ -90,9 +90,9 @@
     {
       "name": "v1_3",
       "version": 1,
-      "length": 30,
-      "maxConstant": 4,
-      "maxIndex": 4,
+      "length": 40,
+      "maxConstant": 5,
+      "maxIndex": 5,
       "loops": false,
       "calls": true,
       "indirectAccess": false
@@ -100,9 +100,9 @@
     {
       "name": "v1_4",
       "version": 1,
-      "length": 30,
-      "maxConstant": 4,
-      "maxIndex": 4,
+      "length": 40,
+      "maxConstant": 5,
+      "maxIndex": 5,
       "loops": true,
       "calls": true,
       "indirectAccess": false
