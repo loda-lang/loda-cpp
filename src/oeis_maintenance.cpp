@@ -45,6 +45,7 @@ void OeisMaintenance::generateLists()
   Log::get().info( "Generating program lists" );
   const size_t list_file_size = 50000;
   std::vector<std::stringstream> list_files( 1000000 / list_file_size );
+  std::stringstream no_loda;
   size_t num_processed = 0;
   Parser parser;
   Program program;
@@ -84,6 +85,10 @@ void OeisMaintenance::generateLists()
       //  Log::get().info( "Processed " + std::to_string( num_processed ) + " programs" );
       //}
     }
+    else
+    {
+      no_loda << s.id_str() << ": " << s.name << "\n";
+    }
   }
 
   // write lists
@@ -103,6 +108,10 @@ void OeisMaintenance::generateLists()
       list_file << buf;
     }
   }
+  std::ofstream no_loda_file( OeisSequence::getHome() + "no_loda.txt" );
+  no_loda_file << no_loda.str();
+  no_loda_file.close();
+
   Log::get().info( "Finished generation of lists for " + std::to_string( num_processed ) + " programs" );
 
 }
