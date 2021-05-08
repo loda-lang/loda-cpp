@@ -152,11 +152,16 @@ GeneratorV1::GeneratorV1( const Config &config, const Stats &stats, int64_t seed
     Log::get().error( "No target operation types", true );
   }
 
-  // program template
+  // load program template
   if ( !config.program_template.empty() )
   {
     Parser parser;
     this->program_template = parser.parse( config.program_template );
+    ProgramUtil::removeOps( this->program_template, Operation::Type::NOP );
+    for ( auto& op : this->program_template.ops )
+    {
+      op.comment.clear();
+    }
   }
 
   // initialize distributions
