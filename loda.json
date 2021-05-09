@@ -33,6 +33,19 @@
       ]
     },
     {
+      "name": "hard",
+      "overwrite": "none",
+      "backoff": true,
+      "generators": [
+        "v1_5"
+      ],
+      "matchers": [
+        "direct",
+        "linear1",
+        "linear2"
+      ]
+    },
+    {
       "name": "new-v4",
       "overwrite": "none",
       "backoff": true,
@@ -106,6 +119,23 @@
       "loops": true,
       "calls": true,
       "indirectAccess": false
+    },
+    {
+      "name": "v1_5",
+      "version": 1,
+      "length": 70,
+      "maxConstant": 15,
+      "maxIndex": 15,
+      "loops": true,
+      "calls": false,
+      "indirectAccess": false,
+      "template": [
+        "programs/oeis/000/A000005.asm",
+        "programs/oeis/000/A000203.asm",
+        "programs/oeis/010/A010051.asm",
+        "programs/oeis/052/A052126.asm",
+        "programs/oeis/293/A293810.asm"
+      ]
     },
     {
       "name": "v2",
