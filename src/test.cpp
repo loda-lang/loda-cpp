@@ -469,9 +469,10 @@ void Test::stats()
   {
     Log::get().error( "Unexpected cal in A000040", true );
   }
-  if ( s.getTransitiveLength( 40, true ) != 38 )
+  auto l = s.getTransitiveLength( 40, true );
+  if ( l != 33 )
   {
-    Log::get().error( "Unexpected transitive length of A000040", true );
+    Log::get().error( "Unexpected transitive length of A000040: " + std::to_string( l ), true );
   }
 
   // save & reload stats
