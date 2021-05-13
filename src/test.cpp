@@ -155,7 +155,7 @@ void Test::memory()
   {
     for ( size_t length = 0; length < max_frag_length; length++ )
     {
-      auto frag = base.fragment( start, length, true );
+      auto frag = base.fragment( start, length );
       for ( number_t i = 0; i < (number_t) length; i++ )
       {
         number_t j = start + i; // old index

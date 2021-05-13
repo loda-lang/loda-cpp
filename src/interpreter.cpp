@@ -184,7 +184,7 @@ size_t Interpreter::run( const Program &p, Memory &mem )
       {
         throw std::runtime_error( "Maximum stack size exceeded: " + std::to_string( loop_stack.size() ) );
       }
-      frag = mem.fragment( start, length, true );
+      frag = mem.fragment( start, length );
       loop_stack.push( pc );
       mem_stack.push( mem );
       frag_stack.push( frag );
@@ -209,9 +209,9 @@ size_t Interpreter::run( const Program &p, Memory &mem )
 
       length = std::min( length, length2 );
 
-      frag = mem.fragment( start, length, true );
+      frag = mem.fragment( start, length );
 
-      if ( frag.is_less( frag_prev, length ) )
+      if ( frag.is_less( frag_prev, length, true ) )
       {
         pc_next = ps_begin + 1;
         mem_stack.push( mem );

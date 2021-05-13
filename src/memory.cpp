@@ -84,7 +84,7 @@ void Memory::clear( number_t start, int64_t length )
   }
 }
 
-Memory Memory::fragment( number_t start, int64_t length, bool normalize ) const
+Memory Memory::fragment( number_t start, int64_t length ) const
 {
   Memory frag;
   if ( start == NUM_INF || length <= 0 )
@@ -95,7 +95,7 @@ Memory Memory::fragment( number_t start, int64_t length, bool normalize ) const
   {
     for ( number_t i = 0; i < (number_t) length; ++i )
     {
-      frag.set( i, normalize ? std::abs( get( start + i ) ) : get( start + i ) );
+      frag.set( i, get( start + i ) );
     }
   }
   else
@@ -105,7 +105,7 @@ Memory Memory::fragment( number_t start, int64_t length, bool normalize ) const
     {
       if ( i >= start && i < end )
       {
-        frag.set( i - start, normalize ? std::abs( cache[i] ) : cache[i] );
+        frag.set( i - start, cache[i] );
       }
     }
     auto i = full.begin();
@@ -113,7 +113,7 @@ Memory Memory::fragment( number_t start, int64_t length, bool normalize ) const
     {
       if ( i->first >= start && i->first < end )
       {
-        frag.set( i->first - start, normalize ? std::abs( i->second ) : i->second );
+        frag.set( i->first - start, i->second );
       }
       i++;
     }
@@ -126,7 +126,7 @@ size_t Memory::approximate_size() const
   return full.size() + MEMORY_CACHE_SIZE;
 }
 
-bool Memory::is_less( const Memory &m, int64_t length ) const
+bool Memory::is_less( const Memory &m, int64_t length, bool check_nonn ) const
 {
   if ( length <= 0 )
   {
@@ -136,6 +136,10 @@ bool Memory::is_less( const Memory &m, int64_t length ) const
   for ( number_t i = 0; i < (number_t) length; ++i )
   {
     auto lhs = get( i );
+    if ( check_nonn && lhs < 0 )
+    {
+      return false;
+    }
     auto rhs = m.get( i );
     if ( lhs < rhs )
     {

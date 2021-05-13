@@ -22,11 +22,11 @@ public:
 
   void clear( number_t start, int64_t length );
 
-  Memory fragment( number_t start, int64_t length, bool normalize ) const;
+  Memory fragment( number_t start, int64_t length ) const;
 
   size_t approximate_size() const;
 
-  bool is_less( const Memory &m, int64_t length ) const;
+  bool is_less( const Memory &m, int64_t length, bool check_nonn ) const;
 
   bool operator==( const Memory &m ) const;
 
