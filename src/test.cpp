@@ -470,7 +470,7 @@ void Test::stats()
     Log::get().error( "Unexpected cal in A000040", true );
   }
   auto l = s.getTransitiveLength( 40, true );
-  if ( l != 33 )
+  if ( l != 36 )
   {
     Log::get().error( "Unexpected transitive length of A000040: " + std::to_string( l ), true );
   }
