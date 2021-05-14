@@ -295,6 +295,17 @@ bool Optimizer::simplifyOperations( Program &p, size_t num_initialized_cells ) c
         }
       }
 
+      // simplify operation: source is zero (cell content doesn't matter)
+      if ( op.source.type == Operand::Type::CONSTANT && op.source.value == 0 )
+      {
+        // trn $n,0 => max $n,0
+        if ( op.type == Operation::Type::TRN )
+        {
+          op.type = Operation::Type::MAX;
+          simplified = true;
+        }
+      }
+
       // simplify operation: source is negative constant (cell content doesn't matter)
       if ( op.source.type == Operand::Type::CONSTANT && op.source.value < 0 )
       {
@@ -322,6 +333,13 @@ bool Optimizer::simplifyOperations( Program &p, size_t num_initialized_cells ) c
         {
           op.type = Operation::Type::MUL;
           op.source = Operand( Operand::Type::CONSTANT, 2 );
+          simplified = true;
+        }
+        // sub $n,$n => mov $n,0
+        else if ( op.type == Operation::Type::SUB )
+        {
+          op.type = Operation::Type::MOV;
+          op.source = Operand( Operand::Type::CONSTANT, 0 );
           simplified = true;
         }
         // mul $n,$n => pow $n,2
