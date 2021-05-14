@@ -44,7 +44,7 @@ public:
 
   size_t run( const Program &p, Memory &mem );
 
-  steps_t eval( const Program &p, Sequence &seq, int64_t num_terms = -1 );
+  steps_t eval( const Program &p, Sequence &seq, int64_t num_terms = -1, bool throw_on_error = true );
 
   steps_t eval( const Program &p, std::vector<Sequence> &seqs, int64_t num_terms = -1 );
 

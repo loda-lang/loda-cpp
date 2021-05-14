@@ -14,13 +14,11 @@ bool Minimizer::minimize( Program &p, size_t num_terms ) const
 
   // calculate target sequence
   Sequence target_sequence;
-  steps_t target_steps;
-  try
+  steps_t target_steps = interpreter.eval( p, target_sequence, num_terms, false );
+  if ( target_sequence.size() < settings.num_terms )
   {
-    target_steps = interpreter.eval( p, target_sequence, num_terms );
-  }
-  catch ( const std::exception& )
-  {
+    Log::get().error(
+        "Cannot minimize program because there are too few terms: " + std::to_string( target_sequence.size() ), false );
     return false;
   }
 

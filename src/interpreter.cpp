@@ -363,7 +363,7 @@ void Interpreter::set( Operand a, number_t v, Memory &mem, const Operation &last
   mem.set( index, v );
 }
 
-steps_t Interpreter::eval( const Program &p, Sequence &seq, int64_t num_terms )
+steps_t Interpreter::eval( const Program &p, Sequence &seq, int64_t num_terms, bool throw_on_error )
 {
   if ( num_terms < 0 )
   {
@@ -377,7 +377,22 @@ steps_t Interpreter::eval( const Program &p, Sequence &seq, int64_t num_terms )
   {
     mem.clear();
     mem.set( Program::INPUT_CELL, i );
-    s = run( p, mem );
+    try
+    {
+      s = run( p, mem );
+    }
+    catch ( const std::exception& e )
+    {
+      seq.resize( i );
+      if ( throw_on_error )
+      {
+        throw e;
+      }
+      else
+      {
+        return steps;
+      }
+    }
     steps.add( s );
     seq[i] = settings.use_steps ? s : mem.get( Program::OUTPUT_CELL );
     if ( settings.print_as_b_file )
