@@ -131,7 +131,7 @@ int main( int argc, char *argv[] )
     {
       Program program = parser.parse( get_program_path( args.at( 1 ) ) );
       Minimizer minimizer( settings );
-      minimizer.optimizeAndMinimize( program, 2, 1, settings.num_terms );
+      minimizer.optimizeAndMinimize( program, 2, 1, OeisSequence::DEFAULT_SEQ_LENGTH );
       ProgramUtil::print( program, std::cout );
     }
     else if ( cmd == "generate" || cmd == "gen" )
