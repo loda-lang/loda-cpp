@@ -131,6 +131,7 @@
       "indirectAccess": false,
       "template": [
         "programs/oeis/000/A000005.asm",
+        "programs/oeis/000/A000040.asm",
         "programs/oeis/000/A000203.asm",
         "programs/oeis/010/A010051.asm",
         "programs/oeis/020/A020639.asm",

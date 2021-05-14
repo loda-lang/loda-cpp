@@ -10,7 +10,7 @@ done
 
 # common settings
 log_level=error
-check_interval=43200
+check_interval=21600
 min_cpus=4
 branch=$(git rev-parse --abbrev-ref HEAD)
 remote_origin=$(git config --get remote.origin.url)
