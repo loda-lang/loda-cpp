@@ -397,11 +397,11 @@ void OeisManager::generateStats( int64_t age_in_days )
   std::string msg;
   if ( age_in_days < 0 )
   {
-    msg = "Generating program statistics";
+    msg = "Generating program stats";
   }
   else
   {
-    msg = "Regenerating program statistics (last update " + std::to_string( age_in_days ) + " days ago)";
+    msg = "Regenerating program stats (last update " + std::to_string( age_in_days ) + " days ago)";
   }
   Log::get().info( msg );
   stats = Stats();
@@ -453,7 +453,7 @@ void OeisManager::generateStats( int64_t age_in_days )
   // write stats
   stats.save( getStatsHome() );
 
-  Log::get().info( "Finished generation of statistics for " + std::to_string( num_processed ) + " programs" );
+  Log::get().info( "Finished stats generation for " + std::to_string( num_processed ) + " programs" );
 }
 
 void migrateFile( const std::string &from, const std::string &to )

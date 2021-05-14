@@ -443,9 +443,11 @@ void Test::stats()
   {
     Log::get().error( "Error loading operation counts from stats", true );
   }
-  if ( s.num_operation_positions.size() < 100000 )
+  if ( s.num_operation_positions.size() < 10000 )
   {
-    Log::get().error( "Unexpected number of operation position counts in stats", true );
+    Log::get().error(
+        "Unexpected number of operation position counts in stats: "
+            + std::to_string( s.num_operation_positions.size() ), true );
   }
   OpPos op_pos;
   op_pos.pos = 0;
