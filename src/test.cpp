@@ -155,7 +155,7 @@ void Test::memory()
   {
     for ( size_t length = 0; length < max_frag_length; length++ )
     {
-      auto frag = base.fragment( start, length, true );
+      auto frag = base.fragment( start, length );
       for ( number_t i = 0; i < (number_t) length; i++ )
       {
         number_t j = start + i; // old index
@@ -470,7 +470,7 @@ void Test::stats()
     Log::get().error( "Unexpected cal in A000040", true );
   }
   auto l = s.getTransitiveLength( 40, true );
-  if ( l != 33 )
+  if ( l != 36 )
   {
     Log::get().error( "Unexpected transitive length of A000040: " + std::to_string( l ), true );
   }

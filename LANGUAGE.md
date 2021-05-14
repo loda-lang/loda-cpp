@@ -10,7 +10,7 @@ Here is a basic example of a LODA program:
 ; argument is stored in $0
 
 mov $3,1      ; assign $3:=1
-lpb $0        ; loop as long as $0 decreases in absolute values
+lpb $0        ; loop as long as $0 decreases and is non-negative
   sub $0,1    ; decrement $0
   mov $2,$1   ; assign $2:=$1
   add $1,$3   ; add $1:=$1+$3
@@ -78,7 +78,7 @@ lpb $0
 lpe
 ```
 
-The `lpb` can also have a second (optional) argument. In that case, the loop counter is not a single variable, but a finite memory region, which must strictly decreases in every iteration of the loop. The loop counter cell marks the start of that memory region, whereas the second argument is interpreted as a number and defines the length of this region. For example, `lpb $4,3` ... `lpe` is executed as long as the vector (or polynomial) `$4`,`$5`,`$6` is strictly decreasing in every iteration according to the lexicographical ordering. Since we allow negative integers, we consider the absolute values. If `y` is not a constant and evaluates to different values in subsequent iterations, the minimum length is used to compare the memory regions.
+The `lpb` can also have a second (optional) argument. In that case, the loop counter is not a single variable, but a finite memory region, which must strictly decreases in every iteration of the loop. The loop counter cell marks the start of that memory region, whereas the second argument is interpreted as a number and defines the length of this region. For example, `lpb $4,3` ... `lpe` is executed as long as the vector (or polynomial) `$4`,`$5`,`$6` is non-negative and strictly decreasing in every iteration according to the lexicographical ordering. If `y` is not a constant and evaluates to different values in subsequent iterations, the minimum length is used to compare the memory regions.
 
 ### Calls
 
