@@ -55,6 +55,7 @@ void OeisManager::load()
 
   // first load the deny and protect lists (needs no lock)
   loadList( "deny", deny_list );
+  loadList( "overwrite", overwrite_list );
   loadList( "protect", protect_list );
 
   {
@@ -236,6 +237,7 @@ void OeisManager::loadList( const std::string& name, std::unordered_set<size_t>&
     Log::get().error( name + " list data not found: " + path, true );
   }
   std::string line, id;
+  list.clear();
   while ( std::getline( names, line ) )
   {
     if ( line.empty() || line[0] == '#' )
@@ -332,9 +334,17 @@ bool OeisManager::shouldMatch( const OeisSequence& seq ) const
     return true;
 
   case OverwriteMode::AUTO:
-    return !prog_exists || stats.getTransitiveLength( seq.id, false ) > 10; // magic number
+  {
+    if ( !prog_exists )
+    {
+      return true;
+    }
+    const bool should_overwrite = overwrite_list.find( seq.id ) != overwrite_list.end();
+    const bool is_complex = stats.getTransitiveLength( seq.id, false ) > 10; // magic number
+    return is_complex || should_overwrite;
   }
-  return true;
+  }
+  return true; // unreachable
 }
 
 void OeisManager::update()

@@ -78,6 +78,7 @@ private:
   Optimizer optimizer;
   std::vector<OeisSequence> sequences;
   std::unordered_set<size_t> deny_list;
+  std::unordered_set<size_t> overwrite_list;
   std::unordered_set<size_t> protect_list;
   std::unordered_set<size_t> ignore_list;
 
