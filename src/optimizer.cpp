@@ -176,7 +176,9 @@ bool Optimizer::mergeOps( Program &p ) const
         }
 
       }
-      else if ( o1.source.type == Operand::Type::DIRECT && o2.source == o1.source ) // sources the same direct access?
+
+      // sources the same direct access?
+      else if ( o1.source.type == Operand::Type::DIRECT && o2.source == o1.source )
       {
         // add / sub combination?
         if ( (o1.type == Operation::Type::ADD && o2.type == Operation::Type::SUB)
@@ -187,8 +189,21 @@ bool Optimizer::mergeOps( Program &p ) const
         }
       }
 
+      // first operation mov with constant?
+      if ( !do_merge && o1.type == Operation::Type::MOV && o1.source.type == Operand::Type::CONSTANT )
+      {
+        // mov to 0, then add another cell => mov directly
+        // mov to 1, then mul another cell => mov directly
+        if ( (o1.source.value == 0 && o2.type == Operation::Type::ADD)
+            || (o1.source.value == 1 && o2.type == Operation::Type::MUL) )
+        {
+          o1.source = o2.source;
+          do_merge = true;
+        }
+      }
+
       // second operation mov with constant?
-      if ( o2.type == Operation::Type::MOV && o2.source.type == Operand::Type::CONSTANT )
+      if ( !do_merge && o2.type == Operation::Type::MOV && o2.source.type == Operand::Type::CONSTANT )
       {
         // first operation writing target?
         if ( Operation::Metadata::get( o1.type ).is_writing_target && o1.type != Operation::Type::CLR )
