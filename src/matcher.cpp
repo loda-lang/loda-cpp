@@ -37,17 +37,23 @@ Matcher::UPtr Matcher::Factory::create( const Matcher::Config config )
 template<class T>
 void AbstractMatcher<T>::insert( const Sequence &norm_seq, size_t id )
 {
-  auto reduced = reduce( norm_seq );
-  data[id] = reduced.second;
-  ids[reduced.first].push_back( id );
+  auto reduced = reduce( norm_seq, false );
+  if ( !reduced.first.empty() )
+  {
+    data[id] = reduced.second;
+    ids[reduced.first].push_back( id );
+  }
 }
 
 template<class T>
 void AbstractMatcher<T>::remove( const Sequence &norm_seq, size_t id )
 {
-  auto reduced = reduce( norm_seq );
-  ids.remove( reduced.first, id );
-  data.erase( id );
+  auto reduced = reduce( norm_seq, false );
+  if ( !reduced.first.empty() )
+  {
+    ids.remove( reduced.first, id );
+    data.erase( id );
+  }
 }
 
 template<class T>
@@ -57,7 +63,7 @@ void AbstractMatcher<T>::match( const Program &p, const Sequence &norm_seq, seq_
   {
     return;
   }
-  auto reduced = reduce( norm_seq );
+  auto reduced = reduce( norm_seq, true );
   if ( !shouldMatchSequence( reduced.first ) && norm_seq != reduced.first )
   {
     return;
@@ -100,7 +106,7 @@ bool AbstractMatcher<T>::shouldMatchSequence( const Sequence &seq ) const
 
 // --- Direct Matcher ---------------------------------------------------------
 
-std::pair<Sequence, int> DirectMatcher::reduce( const Sequence &seq ) const
+std::pair<Sequence, int> DirectMatcher::reduce( const Sequence &seq, bool match ) const
 {
   std::pair<Sequence, int> result;
   result.first = seq;
@@ -115,7 +121,7 @@ bool DirectMatcher::extend( Program &p, int base, int gen ) const
 
 // --- Linear Matcher ---------------------------------------------------------
 
-std::pair<Sequence, line_t> LinearMatcher::reduce( const Sequence &seq ) const
+std::pair<Sequence, line_t> LinearMatcher::reduce( const Sequence &seq, bool match ) const
 {
   std::pair<Sequence, line_t> result;
   result.first = seq;
@@ -129,7 +135,7 @@ bool LinearMatcher::extend( Program &p, line_t base, line_t gen ) const
   return Extender::linear1( p, gen, base );
 }
 
-std::pair<Sequence, line_t> LinearMatcher2::reduce( const Sequence &seq ) const
+std::pair<Sequence, line_t> LinearMatcher2::reduce( const Sequence &seq, bool match ) const
 {
   std::pair<Sequence, line_t> result;
   result.first = seq;
@@ -147,7 +153,7 @@ bool LinearMatcher2::extend( Program &p, line_t base, line_t gen ) const
 
 const int64_t DeltaMatcher::MAX_DELTA = 4; // magic number
 
-std::pair<Sequence, delta_t> DeltaMatcher::reduce( const Sequence &seq ) const
+std::pair<Sequence, delta_t> DeltaMatcher::reduce( const Sequence &seq, bool match ) const
 {
   std::pair<Sequence, delta_t> result;
   result.first = seq;

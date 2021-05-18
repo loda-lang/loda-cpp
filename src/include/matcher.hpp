@@ -82,7 +82,7 @@ public:
 
 protected:
 
-  virtual std::pair<Sequence, T> reduce( const Sequence &seq ) const = 0;
+  virtual std::pair<Sequence, T> reduce( const Sequence &seq, bool match ) const = 0;
 
   virtual bool extend( Program &p, T base, T gen ) const = 0;
 
@@ -113,7 +113,7 @@ public:
 
 protected:
 
-  virtual std::pair<Sequence, int> reduce( const Sequence &seq ) const override;
+  virtual std::pair<Sequence, int> reduce( const Sequence &seq, bool match ) const override;
 
   virtual bool extend( Program &p, int base, int gen ) const override;
 
@@ -134,7 +134,7 @@ public:
 
 protected:
 
-  virtual std::pair<Sequence, line_t> reduce( const Sequence &seq ) const override;
+  virtual std::pair<Sequence, line_t> reduce( const Sequence &seq, bool match ) const override;
 
   virtual bool extend( Program &p, line_t base, line_t gen ) const override;
 
@@ -155,7 +155,7 @@ public:
 
 protected:
 
-  virtual std::pair<Sequence, line_t> reduce( const Sequence &seq ) const override;
+  virtual std::pair<Sequence, line_t> reduce( const Sequence &seq, bool match ) const override;
 
   virtual bool extend( Program &p, line_t base, line_t gen ) const override;
 
@@ -178,7 +178,7 @@ public:
 
 protected:
 
-  virtual std::pair<Sequence, delta_t> reduce( const Sequence &seq ) const override;
+  virtual std::pair<Sequence, delta_t> reduce( const Sequence &seq, bool match ) const override;
 
   virtual bool extend( Program &p, delta_t base, delta_t gen ) const override;
 
