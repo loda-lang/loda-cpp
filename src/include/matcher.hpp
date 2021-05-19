@@ -183,3 +183,29 @@ protected:
   virtual bool extend( Program &p, delta_t base, delta_t gen ) const override;
 
 };
+
+class DigitMatcher: public AbstractMatcher<int64_t>
+{
+public:
+
+  DigitMatcher( const std::string& name, int64_t num_digits, bool backoff )
+      : AbstractMatcher( name, backoff ),
+        num_digits( num_digits )
+  {
+  }
+
+  virtual ~DigitMatcher()
+  {
+  }
+
+protected:
+
+  virtual std::pair<Sequence, int64_t> reduce( const Sequence &seq, bool match ) const override;
+
+  virtual bool extend( Program &p, int64_t base, int64_t gen ) const override;
+
+private:
+
+  const int64_t num_digits;
+
+};

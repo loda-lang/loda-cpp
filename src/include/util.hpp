@@ -90,6 +90,10 @@ public:
 
   bool hasMemory() const;
 
+private:
+
+  mutable bool printed_memory_warning;
+
 };
 
 std::string getLodaHome();

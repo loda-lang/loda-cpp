@@ -25,6 +25,14 @@ Matcher::UPtr Matcher::Factory::create( const Matcher::Config config )
   {
     result.reset( new DeltaMatcher( config.backoff ) );
   }
+  else if ( config.type == "binary" )
+  {
+    result.reset( new DigitMatcher( "binary", 2, config.backoff ) );
+  }
+  else if ( config.type == "decimal" )
+  {
+    result.reset( new DigitMatcher( "decimal", 10, config.backoff ) );
+  }
   else
   {
     Log::get().error( "Unknown matcher type: " + config.type, true );
@@ -189,4 +197,30 @@ bool DeltaMatcher::extend( Program &p, delta_t base, delta_t gen ) const
     }
   }
   return true;
+}
+
+// --- Digit Matcher ----------------------------------------------------------
+
+std::pair<Sequence, int64_t> DigitMatcher::reduce( const Sequence &seq, bool match ) const
+{
+  std::pair<Sequence, int64_t> result;
+  result.first = seq;
+  result.second = Reducer::digit( result.first, num_digits );
+  if ( !match )
+  {
+    for ( auto n : seq )
+    {
+      if ( n < 0 || n >= num_digits )
+      {
+        result.first.clear();
+        break;
+      }
+    }
+  }
+  return result;
+}
+
+bool DigitMatcher::extend( Program &p, int64_t base, int64_t gen ) const
+{
+  return Extender::digit( p, num_digits, base - gen );
 }

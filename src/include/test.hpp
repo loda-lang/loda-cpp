@@ -37,6 +37,8 @@ public:
 
   void deltaMatcher();
 
+  void digitMatcher();
+
   void stats();
 
   void config();

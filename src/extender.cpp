@@ -164,3 +164,15 @@ bool Extender::delta_it( Program &p, int64_t delta )
   }
   return true;
 }
+
+bool Extender::digit( Program &p, int64_t num_digits, int64_t offset )
+{
+  if ( offset != 0 )
+  {
+    add_or_sub( p, offset );
+  }
+  p.push_back( Operation::Type::MOD, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::CONSTANT, num_digits );
+  p.push_back( Operation::Type::ADD, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::CONSTANT, num_digits );
+  p.push_back( Operation::Type::MOD, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::CONSTANT, num_digits );
+  return true;
+}

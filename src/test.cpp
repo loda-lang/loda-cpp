@@ -36,6 +36,7 @@ void Test::all()
   collatz();
   linearMatcher();
   deltaMatcher();
+  digitMatcher();
   optimizer();
   knownPrograms();
 
@@ -651,6 +652,16 @@ void Test::deltaMatcher()
   testMatcherSet( matcher, { 4273, 290, 330 } );
   testMatcherSet( matcher, { 168380, 193356 } );
   testMatcherSet( matcher, { 243980, 244050 } );
+}
+
+void Test::digitMatcher()
+{
+  DigitMatcher binary( "binary", 2, false );
+  testMatcherPair( binary, 1477, 35 );
+  testMatcherPair( binary, 16789, 35 );
+  DigitMatcher decimal( "decimal", 10, false );
+  testMatcherPair( decimal, 8593, 10879 );
+  // testMatcherPair( decimal, 11557, 7 );
 }
 
 void Test::testBinary( const std::string &func, const std::string &file,

@@ -19,4 +19,6 @@ public:
 
   static delta_t delta( Sequence &seq, int64_t max_delta );
 
+  static int64_t digit( Sequence &seq, int64_t num_digits );
+
 };

@@ -21,4 +21,6 @@ public:
 
   static bool delta_it( Program &p, int64_t delta );
 
+  static bool digit( Program &p, int64_t num_digits, int64_t offset );
+
 };

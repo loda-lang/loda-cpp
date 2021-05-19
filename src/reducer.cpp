@@ -110,3 +110,31 @@ delta_t Reducer::delta( Sequence &seq, int64_t max_delta )
 //          + std::to_string( result.offset ) + ", factor=" + std::to_string( result.factor ) );
   return result;
 }
+
+int64_t Reducer::digit( Sequence &seq, int64_t num_digits )
+{
+  Sequence count;
+  count.resize( num_digits, 0 );
+  for ( auto n : seq )
+  {
+    count[((n % num_digits) + num_digits) % num_digits]++;
+  }
+  int64_t index = 0;
+  number_t max = 0;
+  for ( int64_t i = 0; i < num_digits; i++ )
+  {
+    if ( count[i] > max )
+    {
+      index = i;
+      max = count[i];
+    }
+  }
+  for ( int64_t i = 0; i < static_cast<int64_t>( seq.size() ); i++ )
+  {
+    seq[i] = (((seq[i] - index) % num_digits) + num_digits) % num_digits;
+  }
+//  Log::get().info(
+//      "Reduced sequence to " + seq.to_string() + " using num_digits=" + std::to_string( num_digits ) + ", offset="
+//          + std::to_string( index ) );
+  return index;
+}

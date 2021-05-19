@@ -264,7 +264,8 @@ Settings::Settings()
       loda_config( "loda.json" ),
       miner( "default" ),
       print_as_b_file( false ),
-      print_as_b_file_offset( 0 )
+      print_as_b_file_offset( 0 ),
+      printed_memory_warning( false )
 {
 }
 
@@ -421,10 +422,11 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
 bool Settings::hasMemory() const
 {
   bool has_memory = getMemUsage() <= (size_t) (0.95 * max_physical_memory);
-  if ( !has_memory )
+  if ( !has_memory && !printed_memory_warning )
   {
     Log::get().warn(
         "Reached maximum physical memory limit of " + std::to_string( max_physical_memory / (1024 * 1024) ) + "MB" );
+    printed_memory_warning = true;
   }
   return has_memory;
 }
