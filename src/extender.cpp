@@ -25,6 +25,11 @@ bool Extender::linear1( Program &p, line_t inverse, line_t target )
   {
     add_or_sub( p, -inverse.offset );
   }
+  if ( inverse.factor > 1 && target.factor > 1 && (target.factor % inverse.factor) == 0 )
+  {
+    target.factor = target.factor / inverse.factor;
+    inverse.factor = 1; // order is important!!
+  }
   if ( inverse.factor != 1 )
   {
     p.push_back( Operation::Type::DIV, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::CONSTANT,
