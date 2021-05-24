@@ -164,6 +164,7 @@
         "programs/oeis/010/A010051.asm",
         "programs/oeis/020/A020639.asm",
         "programs/oeis/063/A063918.asm",
+        "programs/oeis/080/A080339.asm",
         "programs/oeis/293/A293810.asm"
       ]
     },
