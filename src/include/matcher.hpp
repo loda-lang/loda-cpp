@@ -41,7 +41,7 @@ public:
 
   virtual const std::string& getName() const = 0;
 
-  virtual const SequenceToIdsMap& getReducedSequences() const = 0;
+  virtual double getCompationRatio() const = 0;
 
   bool has_memory = true;
 
@@ -75,9 +75,9 @@ public:
     return name;
   }
 
-  virtual const SequenceToIdsMap& getReducedSequences() const override
+  virtual double getCompationRatio() const override
   {
-    return ids;
+    return 100.0 - (100.0 * ids.size() / std::max<size_t>( data.size(), 1 ));
   }
 
 protected:

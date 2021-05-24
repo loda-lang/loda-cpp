@@ -168,9 +168,7 @@ void Finder::logSummary( size_t loaded_count )
   for ( size_t i = 0; i < matchers.size(); i++ )
   {
     if ( i > 0 ) buf << ", ";
-    double ratio = 100.0 * (double) matchers[i]->getReducedSequences().size()
-        / (double) std::max<size_t>( loaded_count, 1 );
-    buf << matchers[i]->getName() << ": " << std::setprecision( 4 ) << ratio << "%";
+    buf << matchers[i]->getName() << ": " << std::setprecision( 3 ) << matchers[i]->getCompationRatio() << "%";
   }
   Log::get().info( buf.str() );
 }
