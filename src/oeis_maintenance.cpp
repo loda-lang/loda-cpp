@@ -167,6 +167,11 @@ size_t OeisMaintenance::checkAndMinimizePrograms()
       }
       catch ( const std::exception &exc )
       {
+        std::string what( exc.what() );
+        if ( what.rfind( "Error fetching b-file", 0 ) == 0 ) // user probably hit ctrl-c => exit
+        {
+          break;
+        }
         Log::get().error( "Error checking " + file_name + ": " + std::string( exc.what() ), false );
         is_okay = false;
         continue;
