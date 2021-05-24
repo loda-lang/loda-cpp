@@ -582,6 +582,8 @@ void OeisManager::alert( Program p, size_t id, const std::string& prefix, const 
 
 std::pair<bool, Program> OeisManager::checkAndMinimize( const Program &p, const OeisSequence &seq )
 {
+  Log::get().debug( "Checking and minimizing program for " + seq.id_str() );
+
   std::pair<status_t, steps_t> check;
   std::pair<bool, Program> result;
   result.second = p;
@@ -596,6 +598,7 @@ std::pair<bool, Program> OeisManager::checkAndMinimize( const Program &p, const 
   {
     return result; // not correct
   }
+  const auto basic_check_result = check.first;
 
   // minimize for default number of terms
   minimizer.optimizeAndMinimize( result.second, 2, 1, OeisSequence::DEFAULT_SEQ_LENGTH ); // default length
@@ -606,25 +609,17 @@ std::pair<bool, Program> OeisManager::checkAndMinimize( const Program &p, const 
     return result;
   }
 
-  // minimize for extended number of terms
-  Log::get().warn( "Need to check for extended number of terms for " + seq.id_str() );
-  result.second = p;
-  minimizer.optimizeAndMinimize( result.second, 2, 1, OeisSequence::EXTENDED_SEQ_LENGTH ); // extended length
-  check = interpreter.check( result.second, extended_seq, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id );
-  result.first = (check.first != status_t::ERROR); // we allow warnings
-  if ( result.first )
+  if ( basic_check_result == status_t::OK )
   {
-    return result;
+    // if we got here, there was an error in the minimization
+    Log::get().error(
+        "Program for " + seq.id_str() + " generates wrong result after minimization with "
+            + std::to_string( OeisSequence::DEFAULT_SEQ_LENGTH ) + " terms", false );
+    std::string f = getLodaHome() + "debug/minimizer/" + seq.id_str() + ".asm";
+    ensureDir( f );
+    std::ofstream out( f );
+    ProgramUtil::print( p, out );
   }
-
-  // if we got here, there was an error in the minimization
-  Log::get().error(
-      "Program for " + seq.id_str() + " generates wrong result after minimization with "
-          + std::to_string( OeisSequence::DEFAULT_SEQ_LENGTH ) + " terms", false );
-  std::string f = getLodaHome() + "debug/minimizer/" + seq.id_str() + ".asm";
-  ensureDir( f );
-  std::ofstream out( f );
-  ProgramUtil::print( p, out );
 
   return result;
 }
