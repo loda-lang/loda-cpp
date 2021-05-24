@@ -381,12 +381,12 @@ steps_t Interpreter::eval( const Program &p, Sequence &seq, int64_t num_terms, b
     {
       s = run( p, mem );
     }
-    catch ( const std::exception& e )
+    catch ( const std::exception& )
     {
       seq.resize( i );
       if ( throw_on_error )
       {
-        throw e;
+        throw;
       }
       else
       {
