@@ -33,9 +33,6 @@ num_use_cpus=$num_cpus
 if [ "$num_cpus" -ge 16 ]; then
   num_use_cpus=$(( $num_cpus - 4 ))
 fi
-if [ "$num_cpus" -ge 32 ]; then
-  num_use_cpus=$(( $num_cpus - 8 ))
-fi
 
 # calculate minimum number of changes before commit
 min_changes=$(( $num_cpus * 2 ))
@@ -56,7 +53,7 @@ function start_miners() {
   if [ "$remote_origin" = "git@github.com:ckrause/loda.git" ] && [ "$branch" = "master" ]; then
     echo "Start maintenance"
     ./loda maintain &
-    sleep 60
+    sleep 90
   fi
 
   # start miners
