@@ -551,54 +551,21 @@ void Test::stats()
 
 void Test::optimizer()
 {
-  Log::get().info( "Testing optimizer" );
   Settings settings;
   Interpreter interpreter( settings );
   Optimizer optimizer( settings );
-  Parser parser;
+  auto tests = loadInOutTests( "tests/optimizer/E" );
   size_t i = 1;
-  while ( true )
+  for ( auto& t : tests )
   {
-    std::stringstream s;
-    s << "tests/optimizer/E" << std::setw( 3 ) << std::setfill( '0' ) << i << ".asm";
-    std::ifstream file( s.str() );
-    if ( !file.good() )
+    Log::get().info( "Testing optimizer " + std::to_string( i ) );
+    optimizer.optimize( t.first, 2, 1 );
+    if ( t.first != t.second )
     {
-      break;
-    }
-    Log::get().info( "Testing " + s.str() );
-    auto p = parser.parse( file );
-    int in = -1, out = -1;
-    for ( size_t i = 0; i < p.ops.size(); i++ )
-    {
-      if ( p.ops[i].type == Operation::Type::NOP )
-      {
-        if ( p.ops[i].comment == "in" )
-        {
-          in = i;
-        }
-        else if ( p.ops[i].comment == "out" )
-        {
-          out = i;
-        }
-      }
-    }
-    if ( in < 0 || out < 0 || in >= out )
-    {
-      Log::get().error( "Error parsing test", true );
-    }
-    Program pin;
-    pin.ops.insert( pin.ops.begin(), p.ops.begin() + in + 1, p.ops.begin() + out );
-    Program pout;
-    pout.ops.insert( pout.ops.begin(), p.ops.begin() + out + 1, p.ops.end() );
-    i++;
-    Program optimized = pin;
-    optimizer.optimize( optimized, 2, 1 );
-    if ( optimized != pout )
-    {
-      ProgramUtil::print( optimized, std::cerr );
+      ProgramUtil::print( t.first, std::cerr );
       Log::get().error( "Unexpected optimized output", true );
     }
+    i++;
   }
 }
 
@@ -689,6 +656,49 @@ void Test::testBinary( const std::string &func, const std::string &file,
       }
     }
   }
+}
+
+std::vector<std::pair<Program, Program>> Test::loadInOutTests( const std::string& prefix )
+{
+  Parser parser;
+  size_t i = 1;
+  std::vector<std::pair<Program, Program>> result;
+  while ( true )
+  {
+    std::stringstream s;
+    s << prefix << std::setw( 3 ) << std::setfill( '0' ) << i << ".asm";
+    std::ifstream file( s.str() );
+    if ( !file.good() )
+    {
+      break;
+    }
+    auto p = parser.parse( file );
+    int in = -1, out = -1;
+    for ( size_t i = 0; i < p.ops.size(); i++ )
+    {
+      if ( p.ops[i].type == Operation::Type::NOP )
+      {
+        if ( in == -1 && p.ops[i].comment == "in" )
+        {
+          in = i;
+        }
+        if ( out == -1 && p.ops[i].comment == "out" )
+        {
+          out = i;
+        }
+      }
+    }
+    if ( in < 0 || out < 0 || in >= out )
+    {
+      Log::get().error( "Error parsing test", true );
+    }
+    std::pair<Program, Program> inout;
+    inout.first.ops.insert( inout.first.ops.begin(), p.ops.begin() + in + 1, p.ops.begin() + out );
+    inout.second.ops.insert( inout.second.ops.begin(), p.ops.begin() + out + 1, p.ops.end() );
+    result.emplace_back( std::move( inout ) );
+    i++;
+  }
+  return result;
 }
 
 void Test::testSeq( size_t id, const Sequence &expected )

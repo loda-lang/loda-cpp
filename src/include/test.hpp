@@ -45,6 +45,8 @@ public:
 
 private:
 
+  std::vector<std::pair<Program, Program>> loadInOutTests( const std::string& prefix );
+
   void testSeq( size_t id, const Sequence &values );
 
   void testBinary( const std::string &func, const std::string &file,
