@@ -461,6 +461,7 @@ void OeisManager::generateStats( int64_t age_in_days )
   }
 
   // write stats
+  stats.finalize();
   stats.save( getStatsHome() );
 
   Log::get().info( "Finished stats generation for " + std::to_string( num_processed ) + " programs" );

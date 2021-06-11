@@ -182,6 +182,10 @@ void Stats::load( const std::string &path )
     cal.close();
   }
 
+  {
+    blocks.load( path + "/blocks.asm" );
+  }
+
   // TODO: remaining stats
 
   Log::get().debug( "Finished loading program stats" );
@@ -269,6 +273,10 @@ void Stats::save( const std::string &path )
     steps_out.close();
   }
 
+  {
+    blocks.save( path + "/blocks.asm" );
+  }
+
   Log::get().debug( "Finished saving program stats" );
 }
 
@@ -332,6 +340,7 @@ void Stats::updateProgramStats( size_t id, const Program &program )
     }
     o.pos++;
   }
+  blocks_collector.add( program );
 }
 
 void Stats::updateSequenceStats( size_t id, bool program_found, bool has_b_file )
@@ -346,6 +355,18 @@ void Stats::updateSequenceStats( size_t id, bool program_found, bool has_b_file 
   }
   found_programs[id] = program_found;
   cached_b_files[id] = has_b_file;
+}
+
+void Stats::finalize()
+{
+  if ( !blocks_collector.empty() )
+  {
+    if ( !blocks.getBlocksList().ops.empty() )
+    {
+      Log::get().error( "Attempted overwrite of blocks stats", true );
+    }
+    blocks = blocks_collector.finalize();
+  }
 }
 
 int64_t Stats::getTransitiveLength( size_t id, bool throw_on_recursion ) const

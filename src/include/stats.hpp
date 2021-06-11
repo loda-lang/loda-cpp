@@ -1,5 +1,6 @@
 #pragma once
 
+#include "blocks.hpp"
 #include "interpreter.hpp"
 #include "number.hpp"
 #include "program.hpp"
@@ -50,6 +51,8 @@ public:
 
   void updateSequenceStats( size_t id, bool program_found, bool has_b_file );
 
+  void finalize();
+
   int64_t getTransitiveLength( size_t id, bool throw_on_recursion ) const;
 
   int64_t num_programs;
@@ -64,8 +67,10 @@ public:
   std::vector<int64_t> program_lengths;
   std::vector<bool> found_programs;
   std::vector<bool> cached_b_files;
+  Blocks blocks;
 
 private:
   mutable std::set<size_t> visited_programs; // used for getTransitiveLength()
+  Blocks::Collector blocks_collector;
 
 };

@@ -1,5 +1,6 @@
 #include "test.hpp"
 
+#include "blocks.hpp"
 #include "config.hpp"
 #include "generator_v1.hpp"
 #include "interpreter.hpp"
@@ -33,6 +34,7 @@ void Test::all()
   memory();
   config();
   steps();
+  blocks();
   collatz();
   linearMatcher();
   deltaMatcher();
@@ -287,6 +289,25 @@ void Test::steps()
   if ( steps != 1 )
   {
     Log::get().error( "unexpected number of steps: " + std::to_string( steps ), true );
+  }
+}
+
+void Test::blocks()
+{
+  auto tests = loadInOutTests( "tests/blocks/B" );
+  size_t i = 1;
+  Blocks::Collector collector;
+  for ( auto& t : tests )
+  {
+    Log::get().info( "Testing blocks " + std::to_string( i ) );
+    collector.add( t.first );
+    auto blocks = collector.finalize();
+    if ( blocks.getBlocksList() != t.second )
+    {
+      ProgramUtil::print( blocks.getBlocksList(), std::cerr );
+      Log::get().error( "Unexpected blocks output", true );
+    }
+    i++;
   }
 }
 

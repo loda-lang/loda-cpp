@@ -243,7 +243,11 @@ std::string ProgramUtil::operationToString( const Operation &op )
   }
   if ( !op.comment.empty() )
   {
-    str = str + " ; " + op.comment;
+    if ( !str.empty() )
+    {
+      str = str + " ";
+    }
+    str = str + "; " + op.comment;
   }
   return str;
 }

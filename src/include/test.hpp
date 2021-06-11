@@ -25,6 +25,8 @@ public:
 
   void steps();
 
+  void blocks();
+
   void ackermann();
 
   void collatz();

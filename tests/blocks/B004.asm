@@ -1,0 +1,41 @@
+; in
+mov $3,2
+mov $8,$0
+lpb $3
+  mov $0,$8
+  sub $3,1
+  add $0,$3
+  sub $0,1
+  mov $4,$0
+  mov $6,2
+  lpb $6
+    mov $0,$4
+    sub $6,1
+    add $0,$6
+    trn $0,1
+  lpe
+  mov $2,$3
+  add $2,$5
+lpe
+; out
+; 1
+mov $2,$3
+add $2,$5
+; 1
+mov $3,2
+mov $8,$0
+; 1
+mov $4,$0
+mov $6,2
+; 1
+mov $0,$8
+sub $3,1
+add $0,$3
+sub $0,1
+; 1
+lpb $6
+  mov $0,$4
+  sub $6,1
+  add $0,$6
+  trn $0,1
+lpe
