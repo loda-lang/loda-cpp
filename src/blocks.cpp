@@ -5,6 +5,18 @@
 
 #include <fstream>
 
+Blocks::Interface::Interface()
+{
+}
+
+Blocks::Interface::Interface( const Program& p )
+{
+  for ( auto& op : p.ops )
+  {
+    extend( op );
+  }
+}
+
 void Blocks::Interface::extend( const Operation& op )
 {
   auto& meta = Operation::Metadata::get( op.type );

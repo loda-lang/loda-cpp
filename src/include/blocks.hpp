@@ -13,6 +13,10 @@ public:
   {
   public:
 
+    Interface();
+
+    Interface( const Program& p );
+
     void extend( const Operation& op );
 
     void clear();
