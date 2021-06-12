@@ -44,17 +44,16 @@ public:
 
   void save( const std::string &path );
 
-  const Program& getBlocksList() const;
+  Program getBlock( size_t index ) const;
+
+  Program list;
+  std::vector<size_t> offsets;
+  std::vector<double> rates;
 
 private:
 
   friend class Collector;
 
   void initRatesAndOffsets();
-
-  Program blocks_list;
-
-  std::vector<size_t> offsets;
-  std::vector<size_t> rates;
 
 };

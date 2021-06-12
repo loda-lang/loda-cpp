@@ -302,10 +302,24 @@ void Test::blocks()
     Log::get().info( "Testing blocks " + std::to_string( i ) );
     collector.add( t.first );
     auto blocks = collector.finalize();
-    if ( blocks.getBlocksList() != t.second )
+    if ( blocks.list != t.second )
     {
-      ProgramUtil::print( blocks.getBlocksList(), std::cerr );
+      ProgramUtil::print( blocks.list, std::cerr );
       Log::get().error( "Unexpected blocks output", true );
+    }
+    Program list;
+    for ( size_t i = 0; i < blocks.offsets.size(); i++ )
+    {
+      auto b = blocks.getBlock( i );
+      Operation nop( Operation::Type::NOP );
+      nop.comment = std::to_string( static_cast<int64_t>( blocks.rates.at( i ) ) );
+      list.ops.push_back( nop );
+      list.ops.insert( list.ops.end(), b.ops.begin(), b.ops.end() );
+    }
+    if ( blocks.list != list )
+    {
+      ProgramUtil::print( blocks.list, std::cerr );
+      Log::get().error( "Unexpected blocks list", true );
     }
     i++;
   }

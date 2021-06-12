@@ -361,7 +361,7 @@ void Stats::finalize()
 {
   if ( !blocks_collector.empty() )
   {
-    if ( !blocks.getBlocksList().ops.empty() )
+    if ( !blocks.list.ops.empty() )
     {
       Log::get().error( "Attempted overwrite of blocks stats", true );
     }

@@ -111,8 +111,8 @@ Blocks Blocks::Collector::finalize()
   {
     Operation nop( Operation::Type::NOP );
     nop.comment = std::to_string( it.second );
-    result.blocks_list.ops.push_back( nop );
-    result.blocks_list.ops.insert( result.blocks_list.ops.end(), it.first.ops.begin(), it.first.ops.end() );
+    result.list.ops.push_back( nop );
+    result.list.ops.insert( result.list.ops.end(), it.first.ops.begin(), it.first.ops.end() );
   }
   blocks.clear();
   result.initRatesAndOffsets();
@@ -127,22 +127,37 @@ bool Blocks::Collector::empty() const
 void Blocks::load( const std::string &path )
 {
   Parser parser;
-  blocks_list = parser.parse( path );
+  list = parser.parse( path );
   initRatesAndOffsets();
 }
 
 void Blocks::save( const std::string &path )
 {
   std::ofstream out( path );
-  ProgramUtil::print( blocks_list, out );
+  ProgramUtil::print( list, out );
 }
 
-const Program& Blocks::getBlocksList() const
+Program Blocks::getBlock( size_t index ) const
 {
-  return blocks_list;
+  Program block;
+  size_t offset = offsets.at( index ) + 1; // skip rate comment
+  while ( offset < list.ops.size() && list.ops[offset].type != Operation::Type::NOP )
+  {
+    block.ops.push_back( list.ops[offset++] );
+  }
+  return block;
 }
 
 void Blocks::initRatesAndOffsets()
 {
-  // TODO
+  offsets.clear();
+  rates.clear();
+  for ( size_t i = 0; i < list.ops.size(); i++ )
+  {
+    if ( list.ops[i].type == Operation::Type::NOP && !list.ops[i].comment.empty() )
+    {
+      offsets.push_back( i );
+      rates.push_back( std::stoll( list.ops[i].comment ) );
+    }
+  }
 }
