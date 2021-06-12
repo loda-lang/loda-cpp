@@ -156,6 +156,14 @@ bool Optimizer::mergeOps( Program &p ) const
           do_merge = true;
         }
 
+        // first sub, the other max?
+        else if ( o1.type == Operation::Type::SUB && o2.type == Operation::Type::MAX
+            && o2.source.type == Operand::Type::CONSTANT && o2.source.value == 0 )
+        {
+          o1.type = Operation::Type::TRN;
+          do_merge = true;
+        }
+
         // first mul, second div?
         else if ( o1.type == Operation::Type::MUL && o2.type == Operation::Type::DIV && o1.source.value != 0
             && o2.source.value != 0 && o1.source.value % o2.source.value == 0 )
