@@ -30,6 +30,11 @@ bool Extender::linear1( Program &p, line_t inverse, line_t target )
     target.factor = target.factor / inverse.factor;
     inverse.factor = 1; // order is important!!
   }
+  if ( inverse.factor > 1 && target.factor > 1 && (inverse.factor % target.factor) == 0 )
+  {
+    inverse.factor = inverse.factor / target.factor;
+    target.factor = 1; // order is important!!
+  }
   if ( inverse.factor != 1 )
   {
     p.push_back( Operation::Type::DIV, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::CONSTANT,
