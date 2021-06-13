@@ -129,7 +129,11 @@ bool ProgramUtil::hasIndirectOperand( const Operation &op )
 
 bool ProgramUtil::areIndependent( const Operation& op1, const Operation& op2 )
 {
-  if ( !isArithmetic( op1.type ) || !isArithmetic( op2.type ) )
+  if ( !isArithmetic( op1.type ) && op1.type != Operation::Type::CAL )
+  {
+    return false;
+  }
+  if ( !isArithmetic( op2.type ) && op2.type != Operation::Type::CAL )
   {
     return false;
   }
