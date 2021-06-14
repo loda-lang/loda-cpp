@@ -57,9 +57,11 @@ The table below summarizes the operations currently supported by LODA. We use th
 | `min a,b` | Minimum        | Minimum of target and source: `a:=min(a,b)` |
 | `max a,b` | Maximum        | Maximum of target and source: `a:=max(a,b)` |
 
+There is an additional (non-arithmetic) operation called `clr` ("clear"). It sets a memory region to zero. The target operand marks the start of the memory region. The second argument is interpreter as length of the memory region. For example `clr $2,3` sets the memory cells `$2`,`$3``$4` to zero.
+
 ### Loops and Conditionals
 
-Loops are implemented as code blocks between `lpb` and `lpe` operations. The block is executed as long as a variable is decreasing (in absolute value). For example, consider the following program:
+Loops are implemented as code blocks between `lpb` and `lpe` operations. The block is executed as long as a variable is decreasing and non-negative. For example, consider the following program:
 
 ```asm
 mov $1,1
@@ -69,7 +71,7 @@ lpb $0
 lpe
 ```
 
-It first assigns 1 to the output cell `$1`. Inside the loop, the input cell `$0` is counted down to zero and in every step `$1` is multiplied by 5. Note that this could be also achieved without loops using the `pow` operation. Note that if the loop counter is not decreasing, the side effects of this iteration are undone. This also enables the usage of this concept as conditional. For example, the following code multiplies `$1` by 5 if `$0` is greater than `17`.
+It first assigns 1 to the output cell `$1`. Inside the loop, the input cell `$0` is counted down to zero and in every step `$1` is multiplied by 5. Note that this could be also achieved without loops using the `pow` operation. Note that if the loop counter is not decreasing or becomes negative, the side effects of this last iteration are undone. This also enables the usage of this concept as conditional. For example, the following code multiplies `$1` by 5 if `$0` is greater than `17`.
 
 ```asm
 lpb $0
@@ -82,7 +84,7 @@ The `lpb` can also have a second (optional) argument. In that case, the loop cou
 
 ### Calls
 
-Calling another LODA program is supported using the `cal` operation. This assumes you are evaluating the program as a sequence (see below). It takes two arguments. The first one is the parameter of the called program. The second argument is the number of the OEIS program to be called (see below). The result is stored in the first argument. For example, the operation `cal $2,45` evaluates the program A000045 (Fibonacci numbers) using the argument value in `$2` and overrides it with the result.
+Calling another LODA program is supported using the `cal` operation. This assumes you are evaluating the program as a sequence (see below). This operation takes two arguments. The first one is the parameter of the called program. The second argument is the number of the OEIS program to be called (see below). The result is stored in the first argument. For example, the operation `cal $2,45` evaluates the program A000045 (Fibonacci numbers) using the argument value in `$2` and overrides it with the result.
 
 ### Termination
 
