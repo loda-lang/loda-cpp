@@ -21,6 +21,8 @@ public:
 
 private:
 
+  bool removeClr( Program &p ) const;
+
   Settings settings;
   Optimizer optimizer;
 

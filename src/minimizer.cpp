@@ -22,8 +22,11 @@ bool Minimizer::minimize( Program &p, size_t num_terms ) const
     return false;
   }
 
+  // remove "clr" operations
+  bool global_change = removeClr( p );
+
   // remove or replace operations
-  bool global_change = false, local_change;
+  bool local_change;
   for ( int64_t i = 0; i < (int64_t) p.ops.size(); ++i )
   {
     local_change = false;
@@ -179,6 +182,35 @@ bool Minimizer::minimize( Program &p, size_t num_terms ) const
     global_change = global_change || local_change;
   }
   return global_change;
+}
+
+bool Minimizer::removeClr( Program &p ) const
+{
+  bool replaced = false;
+  for ( size_t i = 0; i < p.ops.size(); i++ )
+  {
+    if ( p.ops[i].type == Operation::Type::CLR && p.ops[i].source.type == Operand::Type::CONSTANT )
+    {
+      const auto length = p.ops[i].source.value;
+      if ( length <= 0 )
+      {
+        p.ops.erase( p.ops.begin() + i );
+      }
+      else
+      {
+        p.ops[i].type = Operation::Type::MOV;
+        p.ops[i].source.value = 0;
+        auto mov = p.ops[i];
+        for ( int64_t j = 1; j < length; j++ )
+        {
+          mov.target.value++;
+          p.ops.insert( p.ops.begin() + i + j, mov );
+        }
+      }
+      replaced = true;
+    }
+  }
+  return replaced;
 }
 
 bool Minimizer::optimizeAndMinimize( Program &p, size_t num_reserved_cells, size_t num_initialized_cells,
