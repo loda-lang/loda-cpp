@@ -231,24 +231,28 @@ Metrics& Metrics::get()
   return metrics;
 }
 
-void Metrics::write( const std::string &field, const std::map<std::string, std::string> &labels, double value ) const
+void Metrics::write( const std::vector<Entry> entries ) const
 {
   if ( Metrics::host.empty() )
   {
     return;
   }
-  std::stringstream buf;
-  buf << "curl -i -s -XPOST '" << host << "/write?db=loda' --data-binary '" << field;
-  for ( auto &l : labels )
+  // TODO: use single request to publish metrics
+  for ( auto& entry : entries )
   {
-    buf << "," << l.first << "=" << l.second;
-  }
-  buf << " value=" << value << "' > /dev/null";
-  auto cmd = buf.str();
-  auto exit_code = system( cmd.c_str() );
-  if ( exit_code != 0 )
-  {
-    Log::get().error( "Error publishing metrics; error code " + std::to_string( exit_code ), false );
+    std::stringstream buf;
+    buf << "curl -i -s -XPOST '" << host << "/write?db=loda' --data-binary '" << entry.field;
+    for ( auto &l : entry.labels )
+    {
+      buf << "," << l.first << "=" << l.second;
+    }
+    buf << " value=" << entry.value << "' > /dev/null";
+    auto cmd = buf.str();
+    auto exit_code = system( cmd.c_str() );
+    if ( exit_code != 0 )
+    {
+      Log::get().error( "Error publishing metrics; error code " + std::to_string( exit_code ), false );
+    }
   }
 }
 

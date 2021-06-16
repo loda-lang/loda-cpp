@@ -54,11 +54,18 @@ class Metrics
 {
 public:
 
+  struct Entry
+  {
+    std::string field;
+    std::map<std::string, std::string> labels;
+    double value;
+  };
+
   Metrics();
 
   static Metrics& get();
 
-  void write( const std::string &field, const std::map<std::string, std::string> &labels, double value ) const;
+  void write( const std::vector<Entry> entries ) const;
 
   const int64_t publish_interval;
 

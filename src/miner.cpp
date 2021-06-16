@@ -130,17 +130,20 @@ void Miner::mine()
     {
       scheduler.reset();
       int64_t total_generated = 0;
+      std::vector<Metrics::Entry> entries;
       for ( size_t i = 0; i < multi_generator.generators.size(); i++ )
       {
         auto gen = multi_generator.generators[i].get();
-        Metrics::get().write( "generated", gen->metric_labels, gen->stats.generated );
-        Metrics::get().write( "fresh", gen->metric_labels, gen->stats.fresh );
-        Metrics::get().write( "updated", gen->metric_labels, gen->stats.updated );
+        entries.push_back( { "generated", gen->metric_labels, (double) gen->stats.generated } );
+        entries.push_back( { "generated", gen->metric_labels, (double) gen->stats.generated } );
+        entries.push_back( { "fresh", gen->metric_labels, (double) gen->stats.fresh } );
+        entries.push_back( { "updated", gen->metric_labels, (double) gen->stats.updated } );
         total_generated += gen->stats.generated;
         gen->stats = Generator::GStats();
       }
       Log::get().info( "Generated " + std::to_string( total_generated ) + " programs" );
-      finder.publishMetrics();
+      finder.publishMetrics( entries );
+      Metrics::get().write( entries );
     }
   }
 }

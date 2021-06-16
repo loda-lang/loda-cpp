@@ -173,19 +173,24 @@ void Finder::logSummary( size_t loaded_count )
   Log::get().info( buf.str() );
 }
 
-void Finder::publishMetrics()
+void Finder::publishMetrics( std::vector<Metrics::Entry>& entries )
 {
   for ( size_t i = 0; i < matchers.size(); i++ )
   {
     tmp_matcher_labels["matcher"] = matchers[i]->getName();
+
     tmp_matcher_labels["type"] = "candidate";
-    Metrics::get().write( "matches", tmp_matcher_labels, matcher_stats[i].candidates );
+    entries.push_back( { "matches", tmp_matcher_labels, (double) matcher_stats[i].candidates } );
+
     tmp_matcher_labels["type"] = "success";
-    Metrics::get().write( "matches", tmp_matcher_labels, matcher_stats[i].successes );
+    entries.push_back( { "matches", tmp_matcher_labels, (double) matcher_stats[i].successes } );
+
     tmp_matcher_labels["type"] = "false_positive";
-    Metrics::get().write( "matches", tmp_matcher_labels, matcher_stats[i].false_positives );
+    entries.push_back( { "matches", tmp_matcher_labels, (double) matcher_stats[i].false_positives } );
+
     tmp_matcher_labels["type"] = "error";
-    Metrics::get().write( "matches", tmp_matcher_labels, matcher_stats[i].errors );
+    entries.push_back( { "matches", tmp_matcher_labels, (double) matcher_stats[i].errors } );
+
     matcher_stats[i].candidates = 0;
     matcher_stats[i].successes = 0;
     matcher_stats[i].false_positives = 0;

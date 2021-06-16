@@ -43,7 +43,7 @@ public:
 
   void logSummary( size_t loaded_count );
 
-  void publishMetrics();
+  void publishMetrics( std::vector<Metrics::Entry>& entries );
 
 private:
 
