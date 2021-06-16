@@ -71,6 +71,7 @@ public:
 
 private:
   std::string host;
+  int64_t tmp_file_id;
 
 };
 

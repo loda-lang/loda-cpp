@@ -3,7 +3,9 @@
 #include <algorithm>
 #include <cstdlib>
 #include <ctime>
+#include <fstream>
 #include <iostream>
+#include <random>
 #include <sstream>
 #include <stdexcept>
 #include <stdlib.h>
@@ -223,6 +225,8 @@ Metrics::Metrics()
     host = std::string( h );
     Log::get().info( "Publishing metrics every " + std::to_string( publish_interval ) + "s to InfluxDB at " + host );
   }
+  std::random_device rand;
+  tmp_file_id = rand() % 1000;
 }
 
 Metrics& Metrics::get()
@@ -237,23 +241,25 @@ void Metrics::write( const std::vector<Entry> entries ) const
   {
     return;
   }
-  // TODO: use single request to publish metrics
+  const std::string file_name = "/tmp/loda_metrics_" + std::to_string( tmp_file_id ) + ".txt";
+  std::ofstream out( file_name );
   for ( auto& entry : entries )
   {
-    std::stringstream buf;
-    buf << "curl -i -s -XPOST '" << host << "/write?db=loda' --data-binary '" << entry.field;
+    out << entry.field;
     for ( auto &l : entry.labels )
     {
-      buf << "," << l.first << "=" << l.second;
+      out << "," << l.first << "=" << l.second;
     }
-    buf << " value=" << entry.value << "' > /dev/null";
-    auto cmd = buf.str();
-    auto exit_code = system( cmd.c_str() );
-    if ( exit_code != 0 )
-    {
-      Log::get().error( "Error publishing metrics; error code " + std::to_string( exit_code ), false );
-    }
+    out << " value=" << entry.value << "\n";
   }
+  out.close();
+  const std::string cmd = "curl -i -s -XPOST '" + host + "/write?db=loda' --data-binary @" + file_name;
+  auto exit_code = system( cmd.c_str() );
+  if ( exit_code != 0 )
+  {
+    Log::get().error( "Error publishing metrics; error code " + std::to_string( exit_code ), false );
+  }
+  std::remove( file_name.c_str() );
 }
 
 Settings::Settings()
