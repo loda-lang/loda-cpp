@@ -183,6 +183,20 @@ void Stats::load( const std::string &path )
   }
 
   {
+    full = path + "/summary.csv";
+    Log::get().debug( "Loading " + full );
+    std::ifstream summary( full );
+    if ( !std::getline( summary, line ) || line != "num_programs,num_sequences" )
+    {
+      throw std::runtime_error( "Unexpected first line in " + full );
+    }
+    std::getline( summary, k, ',' );
+    std::getline( summary, v );
+    num_programs = std::stoll( k );
+    num_sequences = std::stoll( v );
+  }
+
+  {
     blocks.load( path + "/blocks.asm" );
   }
 
