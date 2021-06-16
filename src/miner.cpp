@@ -135,7 +135,6 @@ void Miner::mine()
       {
         auto gen = multi_generator.generators[i].get();
         entries.push_back( { "generated", gen->metric_labels, (double) gen->stats.generated } );
-        entries.push_back( { "generated", gen->metric_labels, (double) gen->stats.generated } );
         entries.push_back( { "fresh", gen->metric_labels, (double) gen->stats.fresh } );
         entries.push_back( { "updated", gen->metric_labels, (double) gen->stats.updated } );
         total_generated += gen->stats.generated;
