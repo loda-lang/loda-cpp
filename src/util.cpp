@@ -215,12 +215,13 @@ void Log::log( Level level, const std::string &msg )
 }
 
 Metrics::Metrics()
+    : publish_interval( getEnvInt( "LODA_METRICS_PUBLISH_INTERVAL", 60 ) )
 {
   auto h = std::getenv( "LODA_INFLUXDB_HOST" );
   if ( h )
   {
     host = std::string( h );
-    Log::get().info( "Publishing metrics to InfluxDB at " + host );
+    Log::get().info( "Publishing metrics every " + std::to_string( publish_interval ) + "s to InfluxDB at " + host );
   }
 }
 

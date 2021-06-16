@@ -82,7 +82,7 @@ void Miner::mine()
   std::stack<Program> progs;
   Sequence norm_seq;
   auto &finder = manager.getFinder();
-  AdaptiveScheduler scheduler( 60 ); // 1 minute
+  AdaptiveScheduler scheduler( Metrics::get().publish_interval );
 
   Log::get().info( "Mining programs for OEIS sequences" );
   Generator *generator = multi_generator.getGenerator();
@@ -124,6 +124,8 @@ void Miner::mine()
       generator->stats.fresh++;
     }
     generator->stats.generated++;
+
+    // log info and publish metrics
     if ( scheduler.isTargetReached() )
     {
       scheduler.reset();

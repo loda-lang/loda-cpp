@@ -60,6 +60,8 @@ public:
 
   void write( const std::string &field, const std::map<std::string, std::string> &labels, double value ) const;
 
+  const int64_t publish_interval;
+
 private:
   std::string host;
 
