@@ -3,6 +3,7 @@
 #include "parser.hpp"
 #include "program_util.hpp"
 #include "stats.hpp"
+#include "util.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -112,8 +113,23 @@ void OeisMaintenance::generateLists()
   no_loda_file << no_loda.str();
   no_loda_file.close();
 
-  Log::get().info( "Finished generation of lists for " + std::to_string( num_processed ) + " programs" );
+  // publish metrics
+  auto& stats = manager.getStats();
+  std::vector<Metrics::Entry> entries;
+  entries.push_back( { "programs_count", { }, (double) stats.num_programs } );
+  entries.push_back( { "seqs_count", { }, (double) stats.num_sequences } );
+  std::map<std::string, std::string> labels;
+  for ( size_t i = 0; i < stats.num_ops_per_type.size(); i++ )
+  {
+    if ( stats.num_ops_per_type[i] > 0 )
+    {
+      labels["op_type"] = Operation::Metadata::get( static_cast<Operation::Type>( i ) ).name;
+      entries.push_back( { "op_type_count", labels, (double) stats.num_ops_per_type[i] } );
+    }
+  }
+  Metrics::get().write( entries );
 
+  Log::get().info( "Finished generation of lists for " + std::to_string( num_processed ) + " programs" );
 }
 
 size_t OeisMaintenance::checkAndMinimizePrograms()

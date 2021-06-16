@@ -253,7 +253,7 @@ void Metrics::write( const std::vector<Entry> entries ) const
     out << " value=" << entry.value << "\n";
   }
   out.close();
-  const std::string cmd = "curl -i -s -XPOST '" + host + "/write?db=loda' --data-binary @" + file_name;
+  const std::string cmd = "curl -i -s -XPOST '" + host + "/write?db=loda' --data-binary @" + file_name + " > /dev/null";
   auto exit_code = system( cmd.c_str() );
   if ( exit_code != 0 )
   {
