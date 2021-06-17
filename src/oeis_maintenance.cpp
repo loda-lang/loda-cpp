@@ -116,15 +116,22 @@ void OeisMaintenance::generateLists()
   // publish metrics
   auto& stats = manager.getStats();
   std::vector<Metrics::Entry> entries;
-  entries.push_back( { "programs_count", { }, (double) stats.num_programs } );
-  entries.push_back( { "seqs_count", { }, (double) stats.num_sequences } );
-  std::map<std::string, std::string> labels;
+  std::map < std::string, std::string > labels;
+
+  labels["kind"] = "total";
+  entries.push_back( { "programs", labels, (double) stats.num_programs } );
+  entries.push_back( { "sequences", labels, (double) manager.getTotalCount() } );
+
+  labels["kind"] = "used";
+  entries.push_back( { "sequences", labels, (double) stats.num_sequences } );
+
+  labels.clear();
   for ( size_t i = 0; i < stats.num_ops_per_type.size(); i++ )
   {
     if ( stats.num_ops_per_type[i] > 0 )
     {
-      labels["op_type"] = Operation::Metadata::get( static_cast<Operation::Type>( i ) ).name;
-      entries.push_back( { "op_type_count", labels, (double) stats.num_ops_per_type[i] } );
+      labels["type"] = Operation::Metadata::get( static_cast<Operation::Type>( i ) ).name;
+      entries.push_back( { "operation_types", labels, (double) stats.num_ops_per_type[i] } );
     }
   }
   Metrics::get().write( entries );
@@ -219,7 +226,7 @@ size_t OeisMaintenance::checkAndMinimizePrograms()
           manager.minimizer.optimizeAndMinimize( minimized, 2, 1, OeisSequence::DEFAULT_SEQ_LENGTH );
           if ( program != minimized )
           {
-            manager.alert( minimized, id, "Minimized", "warning" );
+            // manager.alert( minimized, id, "Minimized", "warning" );
             num_minimized++;
           }
           manager.dumpProgram( s.id, minimized, file_name );

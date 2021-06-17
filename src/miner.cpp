@@ -134,9 +134,17 @@ void Miner::mine()
       for ( size_t i = 0; i < multi_generator.generators.size(); i++ )
       {
         auto gen = multi_generator.generators[i].get();
-        entries.push_back( { "generated", gen->metric_labels, (double) gen->stats.generated } );
-        entries.push_back( { "fresh", gen->metric_labels, (double) gen->stats.fresh } );
-        entries.push_back( { "updated", gen->metric_labels, (double) gen->stats.updated } );
+        auto labels = gen->metric_labels;
+
+        labels["kind"] = "generated";
+        entries.push_back( { "programs", labels, (double) gen->stats.generated } );
+
+        labels["kind"] = "new";
+        entries.push_back( { "programs", labels, (double) gen->stats.fresh } );
+
+        labels["kind"] = "updated";
+        entries.push_back( { "programs", labels, (double) gen->stats.updated } );
+
         total_generated += gen->stats.generated;
         gen->stats = Generator::GStats();
       }

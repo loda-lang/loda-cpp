@@ -178,18 +178,8 @@ void Finder::publishMetrics( std::vector<Metrics::Entry>& entries )
   for ( size_t i = 0; i < matchers.size(); i++ )
   {
     tmp_matcher_labels["matcher"] = matchers[i]->getName();
-
-    tmp_matcher_labels["type"] = "candidate";
-    entries.push_back( { "matches", tmp_matcher_labels, (double) matcher_stats[i].candidates } );
-
-    tmp_matcher_labels["type"] = "success";
+    tmp_matcher_labels["kind"] = "success";
     entries.push_back( { "matches", tmp_matcher_labels, (double) matcher_stats[i].successes } );
-
-    tmp_matcher_labels["type"] = "false_positive";
-    entries.push_back( { "matches", tmp_matcher_labels, (double) matcher_stats[i].false_positives } );
-
-    tmp_matcher_labels["type"] = "error";
-    entries.push_back( { "matches", tmp_matcher_labels, (double) matcher_stats[i].errors } );
 
     matcher_stats[i].candidates = 0;
     matcher_stats[i].successes = 0;

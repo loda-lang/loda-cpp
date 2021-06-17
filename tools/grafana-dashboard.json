@@ -54,7 +54,7 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 3,
+        "w": 4,
         "x": 0,
         "y": 1
       },
@@ -94,7 +94,7 @@
           "measurement": "programs_count",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"programs_count\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "query": "SELECT last(\"value\") FROM \"programs\" WHERE $timeFilter AND \"kind\" = 'total'",
           "queryType": "randomWalk",
           "rawQuery": true,
           "refId": "A",
@@ -122,7 +122,7 @@
           ]
         }
       ],
-      "title": "Programs",
+      "title": "Total Programs",
       "type": "stat"
     },
     {
@@ -149,8 +149,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 3,
-        "x": 3,
+        "w": 4,
+        "x": 4,
         "y": 1
       },
       "id": 20,
@@ -189,7 +189,7 @@
           "measurement": "fresh",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT sum(\"value\") FROM \"fresh\" WHERE $timeFilter",
+          "query": "SELECT sum(\"value\") FROM \"programs\" WHERE $timeFilter AND \"kind\"='new'",
           "queryType": "randomWalk",
           "rawQuery": true,
           "refId": "A",
@@ -211,7 +211,7 @@
           "tags": []
         }
       ],
-      "title": "New",
+      "title": "New Programs",
       "type": "stat"
     },
     {
@@ -238,8 +238,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 3,
-        "x": 6,
+        "w": 4,
+        "x": 8,
         "y": 1
       },
       "id": 21,
@@ -278,7 +278,7 @@
           "measurement": "fresh",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT sum(\"value\") FROM \"updated\" WHERE $timeFilter",
+          "query": "SELECT sum(\"value\") FROM \"programs\" WHERE $timeFilter AND \"kind\"='updated'",
           "queryType": "randomWalk",
           "rawQuery": true,
           "refId": "A",
@@ -300,7 +300,7 @@
           "tags": []
         }
       ],
-      "title": "Updated",
+      "title": "Updated Programs",
       "type": "stat"
     },
     {
@@ -316,7 +316,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "purple",
+                "color": "light-red",
                 "value": null
               }
             ]
@@ -327,8 +327,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 3,
-        "x": 9,
+        "w": 4,
+        "x": 12,
         "y": 1
       },
       "id": 22,
@@ -367,7 +367,7 @@
           "measurement": "fresh",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT sum(\"value\") FROM \"generated\" WHERE $timeFilter",
+          "query": "SELECT sum(\"value\") FROM \"programs\" WHERE $timeFilter AND \"kind\"='generated'",
           "queryType": "randomWalk",
           "rawQuery": true,
           "refId": "A",
@@ -389,7 +389,7 @@
           "tags": []
         }
       ],
-      "title": "Generated",
+      "title": "Generated Programs",
       "type": "stat"
     },
     {
@@ -405,7 +405,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "red",
+                "color": "light-purple",
                 "value": null
               }
             ]
@@ -416,8 +416,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 3,
-        "x": 12,
+        "w": 4,
+        "x": 16,
         "y": 1
       },
       "id": 17,
@@ -456,9 +456,9 @@
           "measurement": "seqs_count",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT \"value\" FROM \"seqs_count\"",
+          "query": "SELECT last(\"value\") FROM \"sequences\" WHERE $timeFilter AND \"kind\"='used'",
           "queryType": "randomWalk",
-          "rawQuery": false,
+          "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -478,12 +478,12 @@
           "tags": []
         }
       ],
-      "title": "Sequences",
+      "title": "Used Sequences",
       "type": "stat"
     },
     {
       "datasource": "InfluxDB",
-      "description": "",
+      "description": "Total number of OEIS sequences",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -494,23 +494,26 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "light-purple",
                 "value": null
               }
             ]
-          }
+          },
+          "unit": "short"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 4,
-        "w": 9,
-        "x": 15,
+        "w": 4,
+        "x": 20,
         "y": 1
       },
-      "id": 19,
+      "id": 23,
       "options": {
-        "displayMode": "basic",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
@@ -519,13 +522,12 @@
           "fields": "",
           "values": false
         },
-        "showUnfilled": true,
-        "text": {}
+        "text": {},
+        "textMode": "auto"
       },
       "pluginVersion": "7.5.3",
       "targets": [
         {
-          "alias": "$tag_op_type",
           "groupBy": [
             {
               "params": [
@@ -540,10 +542,10 @@
               "type": "fill"
             }
           ],
-          "measurement": "op_type_count",
+          "measurement": "seqs_count",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"value\") FROM \"op_type_count\" WHERE $timeFilter GROUP BY time($__interval), \"op_type\" fill(null)",
+          "query": "SELECT last(\"value\") FROM \"sequences\" WHERE $timeFilter AND \"kind\"='total'",
           "queryType": "randomWalk",
           "rawQuery": true,
           "refId": "A",
@@ -558,15 +560,15 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "last"
               }
             ]
           ],
           "tags": []
         }
       ],
-      "title": "Operation Types",
-      "type": "bargauge"
+      "title": "Total Sequences",
+      "type": "stat"
     },
     {
       "collapsed": false,
@@ -579,7 +581,7 @@
       },
       "id": 10,
       "panels": [],
-      "title": "Miners",
+      "title": "Mining",
       "type": "row"
     },
     {
@@ -588,6 +590,7 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "InfluxDB",
+      "description": "Number of new Programs per Miner",
       "fieldConfig": {
         "defaults": {
           "links": []
@@ -654,7 +657,7 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT sum(\"value\") FROM \"fresh\" WHERE $timeFilter GROUP BY time($__interval), \"version\", \"length\", \"max_constant\", \"loops\", \"indirect\", \"template\" fill(none)",
+          "query": "SELECT sum(\"value\") FROM \"programs\" WHERE $timeFilter AND \"kind\"='new' GROUP BY time($__interval), \"version\", \"length\", \"max_constant\", \"loops\", \"indirect\", \"template\" fill(none)",
           "rawQuery": true,
           "refId": "B",
           "resultFormat": "time_series",
@@ -679,7 +682,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "New Programs per Miner",
+      "title": "New Programs",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -724,6 +727,7 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "InfluxDB",
+      "description": "Number of updated programs per miner",
       "fieldConfig": {
         "defaults": {
           "links": []
@@ -789,7 +793,7 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT sum(\"value\") FROM \"updated\" WHERE $timeFilter GROUP BY time($__interval), \"version\", \"length\", \"max_constant\", \"loops\", \"indirect\", \"template\" fill(none)",
+          "query": "SELECT sum(\"value\") FROM \"programs\" WHERE $timeFilter AND \"kind\"='updated' GROUP BY time($__interval), \"version\", \"length\", \"max_constant\", \"loops\", \"indirect\", \"template\" fill(none)",
           "rawQuery": true,
           "refId": "B",
           "resultFormat": "time_series",
@@ -814,7 +818,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Updated Programs per Miner",
+      "title": "Updated Programs",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -859,6 +863,7 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "InfluxDB",
+      "description": "Number of generated programs per miner",
       "fieldConfig": {
         "defaults": {
           "links": []
@@ -930,7 +935,7 @@
           "measurement": "generated",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT sum(\"value\") FROM \"generated\" WHERE $timeFilter GROUP BY time($__interval), \"version\", \"length\", \"max_constant\", \"loops\", \"indirect\", \"template\" fill(none)",
+          "query": "SELECT sum(\"value\") FROM \"programs\" WHERE $timeFilter AND \"kind\"='generated' GROUP BY time($__interval), \"version\", \"length\", \"max_constant\", \"loops\", \"indirect\", \"template\" fill(none)",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
@@ -955,7 +960,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Generated Programs per Miner",
+      "title": "Generated Programs",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -995,543 +1000,241 @@
       }
     },
     {
-      "collapsed": true,
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "InfluxDB",
+      "description": "Number of successful matches per matcher type",
+      "fieldConfig": {
+        "defaults": {
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 24
+      },
+      "hiddenSeries": false,
+      "id": 8,
+      "interval": "15m",
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": false,
+        "hideZero": true,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "sort": "avg",
+        "sortDesc": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.5.3",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "$tag_matcher",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT sum(\"value\") FROM \"matches\" WHERE \"kind\"='success' AND $timeFilter GROUP BY time($__interval), \"matcher\" fill(none)",
+          "rawQuery": true,
+          "refId": "B",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Matches",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:78",
+          "format": "short",
+          "label": null,
+          "logBase": 10,
+          "max": null,
+          "min": "0",
+          "show": true
+        },
+        {
+          "$$hashKey": "object:79",
+          "format": "short",
+          "label": null,
+          "logBase": 10,
+          "max": null,
+          "min": "0",
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "collapsed": false,
       "datasource": null,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 24
+        "y": 30
       },
       "id": 12,
-      "panels": [
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": "InfluxDB",
-          "fieldConfig": {
-            "defaults": {
-              "links": []
-            },
-            "overrides": []
+      "panels": [],
+      "title": "Stats",
+      "type": "row"
+    },
+    {
+      "datasource": "InfluxDB",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
           },
-          "fill": 1,
-          "fillGradient": 0,
-          "gridPos": {
-            "h": 6,
-            "w": 12,
-            "x": 0,
-            "y": 25
-          },
-          "hiddenSeries": false,
-          "id": 5,
-          "interval": "15m",
-          "legend": {
-            "alignAsTable": true,
-            "avg": true,
-            "current": false,
-            "hideZero": true,
-            "max": false,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "total": false,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 1,
-          "nullPointMode": "null",
-          "options": {
-            "alertThreshold": true
-          },
-          "percentage": false,
-          "pluginVersion": "7.5.3",
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "alias": "$tag_matcher",
-              "groupBy": [
-                {
-                  "params": [
-                    "$__interval"
-                  ],
-                  "type": "time"
-                },
-                {
-                  "params": [
-                    "null"
-                  ],
-                  "type": "fill"
-                }
-              ],
-              "orderByTime": "ASC",
-              "policy": "default",
-              "query": "SELECT sum(\"value\") FROM \"matches\" WHERE \"type\"='candidate' AND $timeFilter GROUP BY time($__interval), \"matcher\" fill(none)",
-              "rawQuery": true,
-              "refId": "B",
-              "resultFormat": "time_series",
-              "select": [
-                [
-                  {
-                    "params": [
-                      "value"
-                    ],
-                    "type": "field"
-                  },
-                  {
-                    "params": [],
-                    "type": "mean"
-                  }
-                ]
-              ],
-              "tags": []
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeRegions": [],
-          "timeShift": null,
-          "title": "Candidates",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 10,
-              "max": null,
-              "min": "0",
-              "show": true
-            },
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 10,
-              "max": null,
-              "min": "0",
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
           }
         },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": "InfluxDB",
-          "fieldConfig": {
-            "defaults": {
-              "links": []
-            },
-            "overrides": []
-          },
-          "fill": 1,
-          "fillGradient": 0,
-          "gridPos": {
-            "h": 6,
-            "w": 12,
-            "x": 12,
-            "y": 25
-          },
-          "hiddenSeries": false,
-          "id": 8,
-          "interval": "15m",
-          "legend": {
-            "alignAsTable": true,
-            "avg": true,
-            "current": false,
-            "hideZero": true,
-            "max": false,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "total": false,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 1,
-          "nullPointMode": "null",
-          "options": {
-            "alertThreshold": true
-          },
-          "percentage": false,
-          "pluginVersion": "7.5.3",
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "alias": "$tag_matcher",
-              "groupBy": [
-                {
-                  "params": [
-                    "$__interval"
-                  ],
-                  "type": "time"
-                },
-                {
-                  "params": [
-                    "null"
-                  ],
-                  "type": "fill"
-                }
-              ],
-              "orderByTime": "ASC",
-              "policy": "default",
-              "query": "SELECT sum(\"value\") FROM \"matches\" WHERE \"type\"='success' AND $timeFilter GROUP BY time($__interval), \"matcher\" fill(none)",
-              "rawQuery": true,
-              "refId": "B",
-              "resultFormat": "time_series",
-              "select": [
-                [
-                  {
-                    "params": [
-                      "value"
-                    ],
-                    "type": "field"
-                  },
-                  {
-                    "params": [],
-                    "type": "mean"
-                  }
-                ]
-              ],
-              "tags": []
-            }
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 11,
+        "x": 0,
+        "y": 31
+      },
+      "id": 19,
+      "options": {
+        "displayMode": "basic",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
           ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeRegions": [],
-          "timeShift": null,
-          "title": "Successes",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 10,
-              "max": null,
-              "min": "0",
-              "show": true
-            },
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 10,
-              "max": null,
-              "min": "0",
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
+          "fields": "",
+          "values": false
         },
+        "showUnfilled": true,
+        "text": {}
+      },
+      "pluginVersion": "7.5.3",
+      "targets": [
         {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": "InfluxDB",
-          "fieldConfig": {
-            "defaults": {
-              "links": []
-            },
-            "overrides": []
-          },
-          "fill": 1,
-          "fillGradient": 0,
-          "gridPos": {
-            "h": 6,
-            "w": 12,
-            "x": 0,
-            "y": 31
-          },
-          "hiddenSeries": false,
-          "id": 6,
-          "interval": "15m",
-          "legend": {
-            "alignAsTable": true,
-            "avg": true,
-            "current": false,
-            "hideZero": true,
-            "max": false,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "total": false,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 1,
-          "nullPointMode": "null",
-          "options": {
-            "alertThreshold": true
-          },
-          "percentage": false,
-          "pluginVersion": "7.5.3",
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
+          "alias": "$tag_type",
+          "groupBy": [
             {
-              "alias": "$tag_matcher",
-              "groupBy": [
-                {
-                  "params": [
-                    "$__interval"
-                  ],
-                  "type": "time"
-                },
-                {
-                  "params": [
-                    "null"
-                  ],
-                  "type": "fill"
-                }
+              "params": [
+                "$__interval"
               ],
-              "orderByTime": "ASC",
-              "policy": "default",
-              "query": "SELECT sum(\"value\") FROM \"matches\" WHERE \"type\"='false_positive' AND $timeFilter GROUP BY time($__interval), \"matcher\" fill(none)",
-              "rawQuery": true,
-              "refId": "B",
-              "resultFormat": "time_series",
-              "select": [
-                [
-                  {
-                    "params": [
-                      "value"
-                    ],
-                    "type": "field"
-                  },
-                  {
-                    "params": [],
-                    "type": "mean"
-                  }
-                ]
-              ],
-              "tags": []
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeRegions": [],
-          "timeShift": null,
-          "title": "False Positives",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 10,
-              "max": null,
-              "min": "0",
-              "show": true
+              "type": "time"
             },
             {
-              "format": "short",
-              "label": null,
-              "logBase": 10,
-              "max": null,
-              "min": "0",
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": "InfluxDB",
-          "fieldConfig": {
-            "defaults": {
-              "links": []
-            },
-            "overrides": []
-          },
-          "fill": 1,
-          "fillGradient": 0,
-          "gridPos": {
-            "h": 6,
-            "w": 12,
-            "x": 12,
-            "y": 31
-          },
-          "hiddenSeries": false,
-          "id": 7,
-          "interval": "15m",
-          "legend": {
-            "alignAsTable": true,
-            "avg": true,
-            "current": false,
-            "hideZero": true,
-            "max": false,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "total": false,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 1,
-          "nullPointMode": "null",
-          "options": {
-            "alertThreshold": true
-          },
-          "percentage": false,
-          "pluginVersion": "7.5.3",
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "alias": "$tag_matcher",
-              "groupBy": [
-                {
-                  "params": [
-                    "$__interval"
-                  ],
-                  "type": "time"
-                },
-                {
-                  "params": [
-                    "null"
-                  ],
-                  "type": "fill"
-                }
+              "params": [
+                "null"
               ],
-              "orderByTime": "ASC",
-              "policy": "default",
-              "query": "SELECT sum(\"value\") FROM \"matches\" WHERE \"type\"='error' AND $timeFilter GROUP BY time($__interval), \"matcher\" fill(none)",
-              "rawQuery": true,
-              "refId": "B",
-              "resultFormat": "time_series",
-              "select": [
-                [
-                  {
-                    "params": [
-                      "value"
-                    ],
-                    "type": "field"
-                  },
-                  {
-                    "params": [],
-                    "type": "mean"
-                  }
-                ]
-              ],
-              "tags": []
+              "type": "fill"
             }
           ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeRegions": [],
-          "timeShift": null,
-          "title": "Errors",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 10,
-              "max": null,
-              "min": "0",
-              "show": true
-            },
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 10,
-              "max": null,
-              "min": "0",
-              "show": true
-            }
+          "measurement": "op_type_count",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT last(\"value\") FROM \"operation_types\" WHERE $timeFilter GROUP BY time($__interval), \"type\" fill(null)",
+          "queryType": "randomWalk",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
           ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
+          "tags": []
         }
       ],
-      "title": "Matchers",
-      "type": "row"
+      "title": "Operation Types",
+      "type": "bargauge"
     }
   ],
   "refresh": "1m",
@@ -1542,12 +1245,12 @@
     "list": []
   },
   "time": {
-    "from": "now-1d",
+    "from": "now-24h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "LODA",
   "uid": "loda",
-  "version": 16
+  "version": 23
 }
