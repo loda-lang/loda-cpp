@@ -36,6 +36,10 @@ fi
 
 # calculate minimum number of changes before commit
 min_changes=$(( $num_cpus * 2 ))
+min_changes=1000
+
+# increase metric publishing interval because we run multiple instances in parallel
+export LODA_METRICS_PUBLISH_INTERVAL=600
 
 function stop_miners() {
   echo "Stopping miners"
