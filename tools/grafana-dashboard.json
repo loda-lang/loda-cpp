@@ -48,7 +48,7 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "none"
         },
         "overrides": []
       },
@@ -1172,7 +1172,7 @@
       },
       "gridPos": {
         "h": 6,
-        "w": 11,
+        "w": 12,
         "x": 0,
         "y": 31
       },
@@ -1252,5 +1252,5 @@
   "timezone": "",
   "title": "LODA",
   "uid": "loda",
-  "version": 23
+  "version": 24
 }

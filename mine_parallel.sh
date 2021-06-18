@@ -38,7 +38,7 @@ fi
 min_changes=$(( $num_cpus * 2 ))
 
 # increase metric publishing interval because we run multiple instances in parallel
-export LODA_METRICS_PUBLISH_INTERVAL=1800
+export LODA_METRICS_PUBLISH_INTERVAL=600
 
 function stop_miners() {
   echo "Stopping miners"

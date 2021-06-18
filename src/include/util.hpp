@@ -83,6 +83,7 @@ public:
   int64_t max_cycles;
   size_t max_stack_size;
   size_t max_physical_memory;
+  int64_t update_interval_in_days;
   size_t linear_prefix;
   bool search_linear;
   bool throw_on_overflow;

@@ -21,7 +21,7 @@ class OeisManager
 {
 public:
 
-  OeisManager( const Settings &settings, int64_t max_age_in_days = 3, bool force_overwrite = false );
+  OeisManager( const Settings &settings, bool force_overwrite = false );
 
   void load();
 
@@ -68,7 +68,6 @@ private:
 
   const Settings &settings;
   const OverwriteMode overwrite_mode;
-  const int64_t max_age_in_days;
   Interpreter interpreter;
 
   Finder finder;
