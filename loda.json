@@ -7,7 +7,8 @@
       "generators": [
         "v1_1",
         "v2",
-        "v3"
+        "v3",
+        "v5"
       ],
       "matchers": [
         "direct",
@@ -180,6 +181,7 @@
         "programs/oeis/063/A063918.asm",
         "programs/oeis/080/A080339.asm",
         "programs/oeis/098/A098090.asm",
+        "programs/oeis/132/A132106.asm",
         "programs/oeis/293/A293810.asm"
       ]
     },
