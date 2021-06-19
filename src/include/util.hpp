@@ -71,7 +71,9 @@ public:
 
 private:
   std::string host;
+  std::string auth;
   int64_t tmp_file_id;
+  mutable bool notified;
 
 };
 

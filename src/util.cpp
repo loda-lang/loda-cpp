@@ -217,13 +217,18 @@ void Log::log( Level level, const std::string &msg )
 }
 
 Metrics::Metrics()
-    : publish_interval( getEnvInt( "LODA_METRICS_PUBLISH_INTERVAL", 60 ) )
+    : publish_interval( getEnvInt( "LODA_METRICS_PUBLISH_INTERVAL", 60 ) ),
+      notified( false )
 {
   auto h = std::getenv( "LODA_INFLUXDB_HOST" );
   if ( h )
   {
     host = std::string( h );
-    Log::get().info( "Publishing metrics every " + std::to_string( publish_interval ) + "s to InfluxDB at " + host );
+    h = std::getenv( "LODA_INFLUXDB_AUTH" );
+    if ( h )
+    {
+      auth = std::string( h );
+    }
   }
   std::random_device rand;
   tmp_file_id = rand() % 1000;
@@ -241,6 +246,16 @@ void Metrics::write( const std::vector<Entry> entries ) const
   {
     return;
   }
+  if ( !notified )
+  {
+    std::string msg = "Publishing metrics to InfluxDB at " + host;
+    if ( !auth.empty() )
+    {
+      msg += " (authenticated)";
+    }
+    Log::get().info( msg );
+    notified = true;
+  }
   const std::string file_name = "/tmp/loda_metrics_" + std::to_string( tmp_file_id ) + ".txt";
   std::ofstream out( file_name );
   for ( auto& entry : entries )
@@ -253,7 +268,12 @@ void Metrics::write( const std::vector<Entry> entries ) const
     out << " value=" << entry.value << "\n";
   }
   out.close();
-  const std::string cmd = "curl -i -s -XPOST '" + host + "/write?db=loda' --data-binary @" + file_name + " > /dev/null";
+  std::string cmd = "curl -i -s";
+  if ( !auth.empty() )
+  {
+    cmd += " -u " + auth;
+  }
+  cmd += " -XPOST '" + host + "/write?db=loda' --data-binary @" + file_name + " > /dev/null";
   auto exit_code = system( cmd.c_str() );
   if ( exit_code != 0 )
   {
