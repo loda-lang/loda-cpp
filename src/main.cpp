@@ -22,17 +22,15 @@ void help()
   Settings settings;
   std::cout << "Usage:             loda <command> <options>" << std::endl;
   std::cout << "Core commands:" << std::endl;
-  std::cout << "  evaluate <file>  Evaluate a program to a sequence" << std::endl;
-  std::cout << "  optimize <file>  Optimize a program and print it" << std::endl;
+  std::cout << "  evaluate <file>  Evaluate a program to a sequence (use -t to set the number of terms)" << std::endl;
   std::cout << "  minimize <file>  Minimize a program and print it (use -t to set the number of terms)" << std::endl;
-  std::cout << "  dot      <file>  Export a program as dot (Graphviz) format" << std::endl;
+  std::cout << "  optimize <file>  Optimize a program and print it" << std::endl;
   std::cout << "  generate         Generate a random program and print it" << std::endl;
-  std::cout << "  test             Run test suite" << std::endl;
   std::cout << "OEIS commands:" << std::endl;
   std::cout << "  mine             Mine programs for OEIS sequences (use -i to use a non-default matcher)" << std::endl;
   std::cout << "  match    <file>  Match a program to OEIS sequences (use -i to use a non-default matcher)"
       << std::endl;
-  std::cout << "  check   <seqID>  Check a program for an OEIS sequence" << std::endl;
+  std::cout << "  check  <seq-id>  Check a program for an OEIS sequence" << std::endl;
   std::cout << "  maintain         Maintain all programs for OEIS sequences" << std::endl;
   std::cout << "Options:" << std::endl;
   std::cout << "  -l <string>      Log level (values:debug,info,warn,error,alert)" << std::endl;
