@@ -120,7 +120,7 @@
     {
       "name": "v1_1",
       "version": 1,
-      "length": 40,
+      "length": 30,
       "maxConstant": 5,
       "maxIndex": 5,
       "loops": false,
@@ -137,7 +137,7 @@
     {
       "name": "v1_2",
       "version": 1,
-      "length": 50,
+      "length": 40,
       "maxConstant": 5,
       "maxIndex": 5,
       "loops": true,
@@ -147,7 +147,7 @@
     {
       "name": "v1_3",
       "version": 1,
-      "length": 50,
+      "length": 40,
       "maxConstant": 5,
       "maxIndex": 5,
       "loops": false,
@@ -157,7 +157,7 @@
     {
       "name": "v1_4",
       "version": 1,
-      "length": 50,
+      "length": 40,
       "maxConstant": 5,
       "maxIndex": 5,
       "loops": true,
@@ -167,9 +167,9 @@
     {
       "name": "v1_5",
       "version": 1,
-      "length": 60,
-      "maxConstant": 10,
-      "maxIndex": 10,
+      "length": 50,
+      "maxConstant": 8,
+      "maxIndex": 8,
       "loops": true,
       "calls": false,
       "indirectAccess": false,
@@ -178,9 +178,6 @@
         "programs/oeis/000/A000040.asm",
         "programs/oeis/000/A000203.asm",
         "programs/oeis/020/A020639.asm",
-        "programs/oeis/063/A063918.asm",
-        "programs/oeis/080/A080339.asm",
-        "programs/oeis/098/A098090.asm",
         "programs/oeis/132/A132106.asm",
         "programs/oeis/293/A293810.asm"
       ]
@@ -200,7 +197,7 @@
     {
       "name": "v5",
       "version": 5,
-      "length": 20
+      "length": 30
     }
   ]
 }
