@@ -74,9 +74,8 @@ void OeisMaintenance::generateLists()
 
       // update program list
       size_t list_index = s.id / list_file_size;
-      size_t num_ops = ProgramUtil::numOps( program, false );
-      list_files.at( list_index ) << "* [" << s.id_str() << "](http://oeis.org/" << s.id_str() << ") ([L"
-          << std::setw( 2 ) << std::setfill( '0' ) << num_ops << " program](" << s.dir_str() << "/" << s.id_str()
+      list_files.at( list_index ) << "* [" << s.id_str() << "](http://oeis.org/" << s.id_str() << ") ([program]("
+          << s.dir_str() << "/" << s.id_str()
           << ".asm)): " << s.name << "\n";
 
       num_processed++;
