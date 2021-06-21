@@ -380,11 +380,7 @@ void OeisManager::update()
     for ( auto &file : files )
     {
       path = OeisSequence::getHome() + file;
-      cmd = "wget -nv --no-use-server-timestamps -O " + path + ".gz https://oeis.org/" + file + ".gz";
-      if ( system( cmd.c_str() ) != 0 )
-      {
-        Log::get().error( "Error fetching " + file + " file", true );
-      }
+      Http::get( "https://oeis.org/" + file + ".gz", path + ".gz" );
       std::ifstream f( OeisSequence::getHome() + file );
       if ( f.good() )
       {

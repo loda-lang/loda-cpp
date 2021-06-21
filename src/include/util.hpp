@@ -50,6 +50,14 @@ private:
 
 };
 
+class Http
+{
+public:
+
+  static void get( const std::string& url, const std::string& local_path );
+
+};
+
 class Metrics
 {
 public:

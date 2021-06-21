@@ -223,12 +223,7 @@ Sequence OeisSequence::getTerms( int64_t max_num_terms ) const
       if ( !big_file.good() )
       {
         ensureDir( getBFilePath() );
-        std::string cmd = "wget -nv --no-use-server-timestamps -O " + getBFilePath() + " " + url_str() + "/"
-            + id_str( "b" ) + ".txt";
-        if ( system( cmd.c_str() ) != 0 )
-        {
-          Log::get().error( "Error fetching b-file for " + id_str(), true ); // need to exit here to be able to cancel
-        }
+        Http::get( url_str() + "/" + id_str( "b" ) + ".txt", getBFilePath() );
         big = loadBFile( id, terms );
       }
     }

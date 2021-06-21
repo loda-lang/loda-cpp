@@ -216,6 +216,15 @@ void Log::log( Level level, const std::string &msg )
   std::cerr << std::string( buffer ) << "|" << lev << "|" << msg << std::endl;
 }
 
+void Http::get( const std::string& url, const std::string& local_path )
+{
+  const std::string cmd = "wget -nv --no-use-server-timestamps -O " + local_path + " " + url;
+  if ( system( cmd.c_str() ) != 0 )
+  {
+    Log::get().error( "Error fetching " + url, true );
+  }
+}
+
 Metrics::Metrics()
     : publish_interval( getEnvInt( "LODA_METRICS_PUBLISH_INTERVAL", 60 ) ),
       notified( false )
