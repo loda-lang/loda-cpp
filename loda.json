@@ -25,7 +25,6 @@
       "generators": [
         "v1_2",
         "v1_3",
-        "v1_4",
         "v2",
         "v3"
       ],
@@ -60,7 +59,7 @@
       "overwrite": "none",
       "backoff": true,
       "generators": [
-        "v1_5"
+        "v1_4"
       ],
       "matchers": [
         "direct",
@@ -157,31 +156,19 @@
     {
       "name": "v1_4",
       "version": 1,
-      "length": 40,
-      "maxConstant": 5,
-      "maxIndex": 5,
-      "loops": true,
-      "calls": true,
-      "indirectAccess": false
-    },
-    {
-      "name": "v1_5",
-      "version": 1,
       "length": 50,
-      "maxConstant": 8,
-      "maxIndex": 8,
+      "maxConstant": 9,
+      "maxIndex": 9,
       "loops": true,
       "calls": false,
       "indirectAccess": false,
       "template": [
-        "programs/oeis/000/A000005.asm",
         "programs/oeis/000/A000040.asm",
         "programs/oeis/000/A000203.asm",
         "programs/oeis/004/A004086.asm",
         "programs/oeis/020/A020639.asm",
         "programs/oeis/132/A132106.asm",
-        "programs/oeis/166/A166260.asm",
-        "programs/oeis/293/A293810.asm"
+        "programs/oeis/166/A166260.asm"
       ]
     },
     {
