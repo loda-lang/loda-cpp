@@ -100,10 +100,10 @@ void Generator::applyPostprocessing( Program &p )
   ensureMeaningfulLoops( p );
 }
 
-std::vector<number_t> Generator::fixCausality( Program &p )
+std::vector<int64_t> Generator::fixCausality( Program &p )
 {
   // fix causality of read operations
-  std::vector<number_t> written_cells;
+  std::vector<int64_t> written_cells;
   written_cells.push_back( 0 );
   int64_t new_cell;
   for ( size_t position = 0; position < p.ops.size(); position++ )
@@ -192,10 +192,10 @@ void Generator::fixCalls( Program &p )
     if ( op.type == Operation::Type::CAL )
     {
       if ( op.source.type != Operand::Type::CONSTANT
-          || (op.source.value < 0 || op.source.value >= static_cast<number_t>( found_programs.size() )
+          || (op.source.value < 0 || op.source.value >= static_cast<int64_t>( found_programs.size() )
               || !found_programs[op.source.value]) )
       {
-        number_t id;
+        int64_t id;
         do
         {
           id = gen() % found_programs.size();
@@ -237,7 +237,7 @@ void Generator::ensureSourceNotOverwritten( Program &p )
   }
 }
 
-void Generator::ensureTargetWritten( Program &p, const std::vector<number_t> &written_cells )
+void Generator::ensureTargetWritten( Program &p, const std::vector<int64_t> &written_cells )
 {
   // make sure that the target value gets written
   bool written = false;
@@ -252,7 +252,7 @@ void Generator::ensureTargetWritten( Program &p, const std::vector<number_t> &wr
   }
   if ( !written )
   {
-    number_t source = Program::INPUT_CELL;
+    int64_t source = Program::INPUT_CELL;
     if ( !written_cells.empty() )
     {
       source = written_cells.at( gen() % written_cells.size() );

@@ -72,7 +72,7 @@ protected:
 
   void applyPostprocessing( Program &p );
 
-  std::vector<number_t> fixCausality( Program &p );
+  std::vector<int64_t> fixCausality( Program &p );
 
   void fixSingularities( Program &p );
 
@@ -80,7 +80,7 @@ protected:
 
   void ensureSourceNotOverwritten( Program &p );
 
-  void ensureTargetWritten( Program &p, const std::vector<number_t> &written_cells );
+  void ensureTargetWritten( Program &p, const std::vector<int64_t> &written_cells );
 
   void ensureMeaningfulLoops( Program &p );
 

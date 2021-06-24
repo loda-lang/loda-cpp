@@ -51,8 +51,7 @@ private:
 
   void testSeq( size_t id, const Sequence &values );
 
-  void testBinary( const std::string &func, const std::string &file,
-      const std::vector<std::vector<number_t> > &values );
+  void testBinary( const std::string &func, const std::string &file, const std::vector<std::vector<int64_t> > &values );
 
   void testMatcherSet( Matcher &matcher, const std::vector<size_t> &ids );
 

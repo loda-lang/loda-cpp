@@ -57,7 +57,7 @@ private:
   mutable size_t num_find_attempts;
 
   // temporary containers (cached as members)
-  mutable std::unordered_set<number_t> tmp_used_cells;
+  mutable std::unordered_set<int64_t> tmp_used_cells;
   mutable Sequence tmp_full_seq;
   mutable std::vector<Sequence> tmp_seqs;
   mutable Matcher::seq_programs_t tmp_result;

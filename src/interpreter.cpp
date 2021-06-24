@@ -491,7 +491,7 @@ std::pair<status_t, steps_t> Interpreter::check( const Program &p, const Sequenc
   return result;
 }
 
-std::pair<number_t, number_t> Interpreter::call( number_t id, number_t arg )
+std::pair<number_t, size_t> Interpreter::call( int64_t id, number_t arg )
 {
   if ( arg < 0 )
   {
@@ -499,7 +499,7 @@ std::pair<number_t, number_t> Interpreter::call( number_t id, number_t arg )
   }
 
   // check if already cached
-  std::pair<number_t, number_t> key( id, arg );
+  std::pair<int64_t, number_t> key( id, arg );
   auto it = terms_cache.find( key );
   if ( it != terms_cache.end() )
   {
@@ -516,7 +516,7 @@ std::pair<number_t, number_t> Interpreter::call( number_t id, number_t arg )
   }
 
   // evaluate program
-  std::pair<number_t, number_t> result;
+  std::pair<number_t, size_t> result;
   running_programs.insert( id );
   Memory tmp;
   tmp.set( Program::INPUT_CELL, arg );
@@ -544,7 +544,7 @@ std::pair<number_t, number_t> Interpreter::call( number_t id, number_t arg )
   return result;
 }
 
-const Program& Interpreter::getProgram( number_t id )
+const Program& Interpreter::getProgram( int64_t id )
 {
   if ( missing_programs.find( id ) != missing_programs.end() )
   {

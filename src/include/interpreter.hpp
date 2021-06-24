@@ -57,9 +57,9 @@ private:
 
   void set( Operand a, number_t v, Memory &mem, const Operation &last_op ) const;
 
-  std::pair<number_t, number_t> call( number_t id, number_t arg );
+  std::pair<number_t, size_t> call( int64_t id, number_t arg );
 
-  const Program& getProgram( number_t id );
+  const Program& getProgram( int64_t id );
 
   const Settings &settings;
 
@@ -67,10 +67,10 @@ private:
   bool has_memory;
   size_t num_memory_checks;
 
-  std::unordered_map<number_t, Program> program_cache;
-  std::unordered_set<number_t> missing_programs;
-  std::unordered_set<number_t> running_programs;
+  std::unordered_map<int64_t, Program> program_cache;
+  std::unordered_set<int64_t> missing_programs;
+  std::unordered_set<int64_t> running_programs;
 
-  std::unordered_map<std::pair<number_t, number_t>, std::pair<number_t, number_t>, pair_hasher> terms_cache;
+  std::unordered_map<std::pair<int64_t, number_t>, std::pair<number_t, number_t>, pair_hasher> terms_cache;
 
 };

@@ -61,7 +61,7 @@ public:
   std::map<number_t, int64_t> num_constants;
   std::map<Operation, int64_t> num_operations;
   std::map<OpPos, int64_t> num_operation_positions;
-  std::multimap<number_t, number_t> cal_graph;
+  std::multimap<int64_t, int64_t> cal_graph;
   std::vector<int64_t> num_programs_per_length;
   std::vector<int64_t> num_ops_per_type;
   std::vector<int64_t> program_lengths;
