@@ -426,8 +426,8 @@ bool Optimizer::canChangeVariableOrder( const Program &p ) const
 
 bool Optimizer::reduceMemoryCells( Program &p, size_t num_reserved_cells ) const
 {
-  std::unordered_set<number_t> used_cells;
-  number_t largest_used = 0;
+  std::unordered_set<int64_t> used_cells;
+  int64_t largest_used = 0;
   if ( !canChangeVariableOrder( p ) )
   {
     return false;
@@ -443,7 +443,7 @@ bool Optimizer::reduceMemoryCells( Program &p, size_t num_reserved_cells ) const
     {
       free = false;
     }
-    for ( number_t used : used_cells )
+    for ( int64_t used : used_cells )
     {
       if ( used == candidate )
       {
@@ -656,14 +656,14 @@ bool doPartialEval( Operation &op, std::map<number_t, Operand> &values )
 
 bool Optimizer::partialEval( Program &p, size_t num_initialized_cells ) const
 {
-  std::unordered_set<number_t> used_cells;
-  number_t largest_used = 0;
+  std::unordered_set<int64_t> used_cells;
+  int64_t largest_used = 0;
   if ( !ProgramUtil::getUsedMemoryCells( p, used_cells, largest_used, settings.max_memory ) )
   {
     return false;
   }
   std::map<number_t, Operand> values;
-  for ( number_t i = num_initialized_cells; i <= largest_used; i++ )
+  for ( int64_t i = num_initialized_cells; i <= largest_used; i++ )
   {
     values[i] = Operand( Operand::Type::CONSTANT, 0 );
   }

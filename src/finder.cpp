@@ -62,7 +62,7 @@ Matcher::seq_programs_t Finder::findSequence( const Program &p, Sequence &norm_s
 
   // determine largest memory cell to check
   int64_t max_index = 20; // magic number
-  number_t largest_used_cell;
+  int64_t largest_used_cell;
   tmp_used_cells.clear();
   if ( ProgramUtil::getUsedMemoryCells( p, tmp_used_cells, largest_used_cell, settings.max_memory )
       && largest_used_cell <= 100 )

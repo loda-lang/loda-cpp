@@ -177,7 +177,7 @@ void Stats::load( const std::string &path )
       std::stringstream s( line );
       std::getline( s, k, ',' );
       std::getline( s, v );
-      cal_graph.insert( std::pair<number_t, number_t>( OeisSequence( k ).id, OeisSequence( v ).id ) );
+      cal_graph.insert( std::pair<int64_t, int64_t>( OeisSequence( k ).id, OeisSequence( v ).id ) );
     }
     cal.close();
   }
@@ -350,7 +350,7 @@ void Stats::updateProgramStats( size_t id, const Program &program )
     }
     if ( op.type == Operation::Type::CAL && op.source.type == Operand::Type::CONSTANT )
     {
-      cal_graph.insert( std::pair<number_t, number_t>( id, op.source.value ) );
+      cal_graph.insert( std::pair<int64_t, int64_t>( id, op.source.value ) );
     }
     o.pos++;
   }

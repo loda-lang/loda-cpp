@@ -139,8 +139,8 @@ bool Minimizer::minimize( Program &p, size_t num_terms ) const
         }
         if ( base != 0 )
         {
-          std::unordered_set<number_t> used_cells;
-          number_t largest_used = 0;
+          std::unordered_set<int64_t> used_cells;
+          int64_t largest_used = 0;
           if ( ProgramUtil::getUsedMemoryCells( p, used_cells, largest_used, settings.max_memory ) )
           {
             // try to replace gcd by a loop
