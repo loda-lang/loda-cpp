@@ -7,7 +7,7 @@ Memory::Memory()
   cache.fill( 0 );
 }
 
-number_t Memory::get( number_t index ) const
+number_t Memory::get( int64_t index ) const
 {
   if ( index >= 0 && index < MEMORY_CACHE_SIZE )
   {
@@ -21,7 +21,7 @@ number_t Memory::get( number_t index ) const
   return 0;
 }
 
-void Memory::set( number_t index, number_t value )
+void Memory::set( int64_t index, number_t value )
 {
   if ( index >= 0 && index < MEMORY_CACHE_SIZE )
   {
@@ -46,23 +46,23 @@ void Memory::clear()
   full.clear();
 }
 
-void Memory::clear( number_t start, int64_t length )
+void Memory::clear( int64_t start, int64_t length )
 {
   if ( start == NUM_INF || length <= 0 )
   {
     return;
   }
-  number_t end = start + length;
+  auto end = start + length;
   if ( length < MEMORY_CACHE_SIZE )
   {
-    for ( number_t i = start; i < end; i++ )
+    for ( int64_t i = start; i < end; i++ )
     {
       set( i, 0 );
     }
   }
   else
   {
-    for ( number_t i = 0; i < (number_t) MEMORY_CACHE_SIZE; ++i )
+    for ( int64_t i = 0; i < (int64_t) MEMORY_CACHE_SIZE; ++i )
     {
       if ( i >= start && i < end )
       {
@@ -84,7 +84,7 @@ void Memory::clear( number_t start, int64_t length )
   }
 }
 
-Memory Memory::fragment( number_t start, int64_t length ) const
+Memory Memory::fragment( int64_t start, int64_t length ) const
 {
   Memory frag;
   if ( start == NUM_INF || length <= 0 )
@@ -93,15 +93,15 @@ Memory Memory::fragment( number_t start, int64_t length ) const
   }
   if ( length < MEMORY_CACHE_SIZE )
   {
-    for ( number_t i = 0; i < (number_t) length; ++i )
+    for ( int64_t i = 0; i < (int64_t) length; ++i )
     {
       frag.set( i, get( start + i ) );
     }
   }
   else
   {
-    number_t end = start + length;
-    for ( number_t i = 0; i < MEMORY_CACHE_SIZE; i++ )
+    auto end = start + length;
+    for ( int64_t i = 0; i < MEMORY_CACHE_SIZE; i++ )
     {
       if ( i >= start && i < end )
       {
@@ -133,7 +133,7 @@ bool Memory::is_less( const Memory &m, int64_t length, bool check_nonn ) const
     return false;
   }
   // TODO: this is slow for large lengths
-  for ( number_t i = 0; i < (number_t) length; ++i )
+  for ( int64_t i = 0; i < (int64_t) length; ++i )
   {
     auto lhs = get( i );
     if ( check_nonn && lhs < 0 )

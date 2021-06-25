@@ -14,15 +14,15 @@ public:
 
   Memory();
 
-  number_t get( number_t i ) const;
+  number_t get( int64_t index ) const;
 
-  void set( number_t i, number_t v );
+  void set( int64_t index, number_t value );
 
   void clear();
 
-  void clear( number_t start, int64_t length );
+  void clear( int64_t start, int64_t length );
 
-  Memory fragment( number_t start, int64_t length ) const;
+  Memory fragment( int64_t start, int64_t length ) const;
 
   size_t approximate_size() const;
 
@@ -37,6 +37,6 @@ public:
 private:
 
   std::array<number_t, MEMORY_CACHE_SIZE> cache;
-  std::unordered_map<number_t, number_t> full;
+  std::unordered_map<int64_t, number_t> full;
 
 };

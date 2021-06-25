@@ -21,7 +21,7 @@ public:
 
 struct pair_hasher
 {
-  std::size_t operator()( const std::pair<number_t, number_t> &p ) const
+  std::size_t operator()( const std::pair<int64_t, number_t> &p ) const
   {
     return (p.first << 32) ^ p.second;
   }
@@ -71,6 +71,6 @@ private:
   std::unordered_set<int64_t> missing_programs;
   std::unordered_set<int64_t> running_programs;
 
-  std::unordered_map<std::pair<int64_t, number_t>, std::pair<number_t, number_t>, pair_hasher> terms_cache;
+  std::unordered_map<std::pair<int64_t, number_t>, std::pair<number_t, size_t>, pair_hasher> terms_cache;
 
 };
