@@ -2,6 +2,8 @@
 
 #include "number.hpp"
 
+#include <stdexcept>
+
 #define CHECK_IS_BIG(a,b) if (a.is_big || b.is_big) throw std::runtime_error("Bigint not supported for this operation");
 #define CHECK_INF1(a) if ( a.value == NUM_INF ) return Number::INF;
 #define CHECK_INF2(a,b) if ( a.value == NUM_INF || b.value == NUM_INF ) return Number::INF;

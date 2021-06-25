@@ -294,7 +294,7 @@ void Metrics::write( const std::vector<Entry> entries ) const
 Settings::Settings()
     : num_terms( 20 ),
       max_memory( getEnvInt( "LODA_MAX_MEMORY", 100000 ) ),
-      max_cycles( getEnvInt( "LODA_MAX_CYCLES", 50000000 ) ),
+      max_cycles( getEnvInt( "LODA_MAX_CYCLES", 10000000 ) ),
       max_stack_size( getEnvInt( "LODA_MAX_STACK_SIZE", 100 ) ),
       max_physical_memory( getEnvInt( "LODA_MAX_PHYSICAL_MEMORY", 1024 ) * 1024 * 1024 ),
       update_interval_in_days( getEnvInt( "LODA_UPDATE_INTERVAL", 1 ) ),

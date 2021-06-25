@@ -1,5 +1,7 @@
 #include "number.hpp"
 
+#include <stdexcept>
+
 const Number Number::ZERO( 0 );
 const Number Number::ONE( 1 );
 const Number Number::INF( NUM_INF );

@@ -7,7 +7,7 @@
 #include <fstream>
 #include <sstream>
 
-const size_t OeisSequence::DEFAULT_SEQ_LENGTH = 250;
+const size_t OeisSequence::DEFAULT_SEQ_LENGTH = 200;
 
 const size_t OeisSequence::EXTENDED_SEQ_LENGTH = 2000;
 
