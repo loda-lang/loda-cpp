@@ -6,30 +6,32 @@ class Semantics
 {
 public:
 
-  static number_t add( number_t a, number_t b );
+  static Number add( const Number& a, const Number& b );
 
-  static number_t sub( number_t a, number_t b );
+  static Number sub( const Number& a, const Number& b );
 
-  static number_t trn( number_t a, number_t b );
+  static Number trn( const Number& a, const Number& b );
 
-  static number_t mul( number_t a, number_t b );
+  static Number mul( const Number& a, const Number& b );
 
-  static number_t div( number_t a, number_t b );
+  static Number div( const Number& a, const Number& b );
 
-  static number_t dif( number_t a, number_t b );
+  static Number dif( const Number& a, const Number& b );
 
-  static number_t mod( number_t a, number_t b );
+  static Number mod( const Number& a, const Number& b );
 
-  static number_t pow( number_t base, number_t exp );
+  static Number pow( const Number& base, const Number& exp );
 
-  static number_t gcd( number_t a, number_t b );
+  static Number gcd( const Number& a, const Number& b );
 
-  static number_t bin( number_t n, number_t k );
+  static Number bin( const Number& n, const Number& k );
 
-  static number_t cmp( number_t a, number_t b );
+  static Number cmp( const Number& a, const Number& b );
 
-  static number_t min( number_t a, number_t b );
+  static Number min( const Number& a, const Number& b );
 
-  static number_t max( number_t a, number_t b );
+  static Number max( const Number& a, const Number& b );
+
+  static Number abs( const Number& a );
 
 };

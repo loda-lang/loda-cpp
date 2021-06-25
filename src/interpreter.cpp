@@ -53,6 +53,8 @@ Interpreter::Interpreter( const Settings &settings )
 
 number_t Interpreter::calc( const Operation::Type type, number_t target, number_t source )
 {
+  const Number t( target );
+  const Number s( source );
   switch ( type )
   {
   case Operation::Type::MOV:
@@ -61,55 +63,55 @@ number_t Interpreter::calc( const Operation::Type type, number_t target, number_
   }
   case Operation::Type::ADD:
   {
-    return Semantics::add( target, source );
+    return Semantics::add( t, s ).asInt();
   }
   case Operation::Type::SUB:
   {
-    return Semantics::sub( target, source );
+    return Semantics::sub( t, s ).asInt();
   }
   case Operation::Type::TRN:
   {
-    return Semantics::trn( target, source );
+    return Semantics::trn( t, s ).asInt();
   }
   case Operation::Type::MUL:
   {
-    return Semantics::mul( target, source );
+    return Semantics::mul( t, s ).asInt();
   }
   case Operation::Type::DIV:
   {
-    return Semantics::div( target, source );
+    return Semantics::div( t, s ).asInt();
   }
   case Operation::Type::DIF:
   {
-    return Semantics::dif( target, source );
+    return Semantics::dif( t, s ).asInt();
   }
   case Operation::Type::MOD:
   {
-    return Semantics::mod( target, source );
+    return Semantics::mod( t, s ).asInt();
   }
   case Operation::Type::POW:
   {
-    return Semantics::pow( target, source );
+    return Semantics::pow( t, s ).asInt();
   }
   case Operation::Type::GCD:
   {
-    return Semantics::gcd( target, source );
+    return Semantics::gcd( t, s ).asInt();
   }
   case Operation::Type::BIN:
   {
-    return Semantics::bin( target, source );
+    return Semantics::bin( t, s ).asInt();
   }
   case Operation::Type::CMP:
   {
-    return Semantics::cmp( target, source );
+    return Semantics::cmp( t, s ).asInt();
   }
   case Operation::Type::MIN:
   {
-    return Semantics::min( target, source );
+    return Semantics::min( t, s ).asInt();
   }
   case Operation::Type::MAX:
   {
-    return Semantics::max( target, source );
+    return Semantics::max( t, s ).asInt();
   }
   case Operation::Type::NOP:
   case Operation::Type::DBG:

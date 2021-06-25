@@ -1,17 +1,41 @@
 #include "number.hpp"
 
+const Number Number::ZERO( 0 );
+const Number Number::ONE( 1 );
+const Number Number::INF( NUM_INF );
+
 Number::Number()
-    : value( 0 )
+    : value( 0 ),
+      is_big( false )
 {
 }
 
 Number::Number( int64_t value )
-    : value( value )
+    : value( value ),
+      is_big( false )
 {
+}
+
+bool Number::operator==( const Number&n ) const
+{
+  if ( is_big )
+  {
+    throw std::runtime_error( "Bigint not supported yet" );
+  }
+  return value == n.value;
+}
+
+bool Number::operator!=( const Number&n ) const
+{
+  return !(*this == n);
 }
 
 int64_t Number::asInt() const
 {
+  if ( is_big )
+  {
+    throw std::runtime_error( "Bigint not supported yet" );
+  }
   // TODO: throw an exception if the value is out of range
   return value;
 }

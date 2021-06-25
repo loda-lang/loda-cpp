@@ -11,9 +11,17 @@ class Number
 {
 public:
 
+  static const Number ZERO;
+  static const Number ONE;
+  static const Number INF;
+
   Number();
 
   Number( int64_t value );
+
+  bool operator==( const Number&n ) const;
+
+  bool operator!=( const Number&n ) const;
 
   int64_t asInt() const;
 
@@ -22,6 +30,7 @@ private:
   friend class Semantics;
 
   int64_t value;
+  bool is_big;
 
 };
 

@@ -2,150 +2,162 @@
 
 #include "number.hpp"
 
-#define CHECK_INF1(a) if ( a == NUM_INF ) return NUM_INF;
-#define CHECK_INF2(a,b) if ( a == NUM_INF || b == NUM_INF ) return NUM_INF;
-#define CHECK_ZERO1(a) if ( a == 0 ) return NUM_INF;
+#define CHECK_IS_BIG(a,b) if (a.is_big || b.is_big) throw std::runtime_error("Bigint not supported for this operation");
+#define CHECK_INF1(a) if ( a.value == NUM_INF ) return Number::INF;
+#define CHECK_INF2(a,b) if ( a.value == NUM_INF || b.value == NUM_INF ) return Number::INF;
+#define CHECK_ZERO1(a) if ( a.value == 0 ) return Number::INF;
 
-number_t Semantics::add( number_t a, number_t b )
+Number Semantics::add( const Number& a, const Number& b )
 {
+  CHECK_IS_BIG( a, b );
   CHECK_INF2( a, b );
-  if ( (a > 0 && b >= NUM_INF - a) || (a < 0 && -b >= NUM_INF + a) )
+  if ( (a.value > 0 && b.value >= NUM_INF - a.value) || (a.value < 0 && -b.value >= NUM_INF + a.value) )
   {
-    return NUM_INF;
+    return Number::INF;
   }
-  return a + b;
+  return Number( a.value + b.value );
 }
 
-number_t Semantics::sub( number_t a, number_t b )
+Number Semantics::sub( const Number& a, const Number& b )
 {
+  CHECK_IS_BIG( a, b );
   CHECK_INF2( a, b );
-  return add( a, -b );
+  return add( a, Number( -b.value ) );
 }
 
-number_t Semantics::trn( number_t a, number_t b )
+Number Semantics::trn( const Number& a, const Number& b )
 {
+  CHECK_IS_BIG( a, b );
   CHECK_INF2( a, b );
-  return std::max<number_t>( add( a, -b ), 0 );
+  return max( sub( a, b ), Number::ZERO );
 }
 
-number_t Semantics::mul( number_t a, number_t b )
+Number Semantics::mul( const Number& a, const Number& b )
 {
+  CHECK_IS_BIG( a, b );
   CHECK_INF2( a, b );
-  if ( b != 0 && (NUM_INF / std::abs( b ) < std::abs( a )) )
+  if ( b.value != 0 && (NUM_INF / std::abs( b.value ) < std::abs( a.value )) )
   {
-    return NUM_INF;
+    return Number::INF;
   }
-  return a * b;
+  return Number( a.value * b.value );
 }
 
-number_t Semantics::div( number_t a, number_t b )
+Number Semantics::div( const Number& a, const Number& b )
 {
+  CHECK_IS_BIG( a, b );
   CHECK_INF2( a, b );
   CHECK_ZERO1( b );
-  return a / b;
+  return Number( a.value / b.value );
 }
 
-number_t Semantics::dif( number_t a, number_t b )
+Number Semantics::dif( const Number& a, const Number& b )
 {
-  number_t d = div( a, b );
-  if ( d == NUM_INF )
-  {
-    return NUM_INF;
-  }
-  return (a == b * d) ? d : a;
+  CHECK_IS_BIG( a, b );
+  auto d = div( a, b );
+  CHECK_INF1( d );
+  return (a.value == b.value * d.value) ? d : a;
 }
 
-number_t Semantics::mod( number_t a, number_t b )
+Number Semantics::mod( const Number& a, const Number& b )
 {
+  CHECK_IS_BIG( a, b );
   CHECK_INF2( a, b );
   CHECK_ZERO1( b );
-  return a % b;
+  return Number( a.value % b.value );
 }
 
-number_t Semantics::pow( number_t base, number_t exp )
+Number Semantics::pow( const Number& base, const Number& exp )
 {
+  CHECK_IS_BIG( base, exp );
   CHECK_INF2( base, exp );
-  if ( base == 0 )
+  if ( base.value == 0 )
   {
-    if ( exp > 0 )
+    if ( exp.value > 0 )
     {
       return 0; // 0^(positive number)
     }
-    else if ( exp == 0 )
+    else if ( exp.value == 0 )
     {
       return 1; // 0^0
     }
     else
     {
-      return NUM_INF; // 0^(negative number)
+      return Number::INF; // 0^(negative number)
     }
   }
-  else if ( base == 1 )
+  else if ( base.value == 1 )
   {
     return 1; // 1^x is always 1
   }
-  else if ( base == -1 )
+  else if ( base.value == -1 )
   {
-    return (exp % 2 == 0) ? 1 : -1; // (-1)^x
+    return (exp.value % 2 == 0) ? 1 : -1; // (-1)^x
   }
   else
   {
-    if ( exp < 0 )
+    if ( exp.value < 0 )
     {
       return 0;
     }
     else
     {
-      number_t res = 1;
-      while ( res != NUM_INF && exp > 0 )
+      Number res = 1;
+      Number b = base;
+      auto e = exp.value;
+      while ( res != Number::INF && e > 0 )
       {
-        if ( exp & 1 )
+        if ( e & 1 )
         {
-          res = mul( res, base );
+          res = mul( res, b );
         }
-        exp >>= 1;
-        base = mul( base, base );
+        e >>= 1;
+        b = mul( b, b );
       }
       return res;
     }
   }
 }
 
-number_t Semantics::gcd( number_t a, number_t b )
+Number Semantics::gcd( const Number& a, const Number& b )
 {
+  CHECK_IS_BIG( a, b );
   CHECK_INF2( a, b );
-  if ( a == 0 && b == 0 )
+  if ( a == Number::ZERO && b == Number::ZERO )
   {
-    return NUM_INF;
+    return Number::INF;
   }
-  a = std::abs( a );
-  b = std::abs( b );
-  number_t r;
-  while ( b != 0 )
+  auto aa = abs( a );
+  auto bb = abs( b );
+  Number r;
+  while ( bb != Number::ZERO )
   {
-    r = a % b;
-    a = b;
-    b = r;
+    r = mod( aa, bb );
+    aa = bb;
+    bb = r;
   }
-  return a;
+  return aa;
 }
 
-number_t Semantics::bin( number_t n, number_t k )
+Number Semantics::bin( const Number& nn, const Number& kk )
 {
-  CHECK_INF2( n, k );
+  CHECK_IS_BIG( nn, kk );
+  CHECK_INF2( nn, kk );
+  auto n = nn.value;
+  auto k = kk.value;
 
   // check for negative arguments: https://arxiv.org/pdf/1105.3689.pdf
-  number_t sign = 1;
+  Number sign( 1 );
   if ( n < 0 ) // Theorem 2.1
   {
     if ( k >= 0 )
     {
-      sign = (k % 2 == 0) ? 1 : -1;
+      sign = Number( (k % 2 == 0) ? 1 : -1 );
       n = -n + k - 1;
     }
     else if ( k <= n )
     {
-      sign = ((n - k) % 2 == 0) ? 1 : -1;
+      sign = Number( ((n - k) % 2 == 0) ? 1 : -1 );
       auto n_old = n;
       n = -k - 1;
       k = n_old - k;
@@ -159,37 +171,47 @@ number_t Semantics::bin( number_t n, number_t k )
   {
     return 0;
   }
-  number_t r = 1;
+  Number r( 1 );
   if ( 2 * k > n )
   {
     k = n - k;
   }
   for ( number_t i = 0; i < k; i++ )
   {
-    r = mul( r, n - i );
-    r = div( r, i + 1 );
-    if ( r == NUM_INF )
+    r = mul( r, Number( n - i ) );
+    r = div( r, Number( i + 1 ) );
+    if ( r == Number::INF )
     {
       break;
     }
   }
-  return sign * r;
+  return mul( sign, r );
 }
 
-number_t Semantics::cmp( number_t a, number_t b )
+Number Semantics::cmp( const Number& a, const Number& b )
 {
+  CHECK_IS_BIG( a, b );
   CHECK_INF2( a, b );
-  return (a == b) ? 1 : 0;
+  return (a == b) ? Number::ONE : Number::ZERO;
 }
 
-number_t Semantics::min( number_t a, number_t b )
+Number Semantics::min( const Number& a, const Number& b )
 {
+  CHECK_IS_BIG( a, b );
   CHECK_INF2( a, b );
-  return std::min<number_t>( a, b );
+  return Number( std::min<number_t>( a.value, b.value ) );
 }
 
-number_t Semantics::max( number_t a, number_t b )
+Number Semantics::max( const Number& a, const Number& b )
 {
+  CHECK_IS_BIG( a, b );
   CHECK_INF2( a, b );
-  return std::max<number_t>( a, b );
+  return Number( std::max<number_t>( a.value, b.value ) );
+}
+
+Number Semantics::abs( const Number& a )
+{
+  CHECK_IS_BIG( a, a );
+  CHECK_INF1( a );
+  return Number( std::abs( a.value ) );
 }

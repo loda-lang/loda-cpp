@@ -34,33 +34,33 @@ number_t Reducer::truncate( Sequence &seq )
 
 number_t Reducer::shrink( Sequence &seq )
 {
-  number_t factor = NUM_INF;
+  Number factor = Number::INF;
   for ( size_t i = 0; i < seq.size(); i++ )
   {
     if ( seq[i] != 0 )
     {
-      if ( factor == NUM_INF )
+      if ( factor == Number::INF )
       {
-        factor = std::abs( seq[i] );
+        factor = Semantics::abs( Number( seq[i] ) );
       }
       else
       {
-        factor = Semantics::gcd( factor, std::abs( seq[i] ) );
+        factor = Semantics::gcd( factor, Semantics::abs( Number( seq[i] ) ) );
       }
     }
   }
-  if ( factor == NUM_INF || factor == 0 )
+  if ( factor == Number::INF || factor == Number::ZERO )
   {
-    factor = 1;
+    factor = Number::ONE;
   }
-  if ( factor != 1 )
+  if ( factor != Number::ONE )
   {
     for ( size_t i = 0; i < seq.size(); i++ )
     {
-      seq[i] = seq[i] / factor;
+      seq[i] = Semantics::div( Number( seq[i] ), factor ).asInt();
     }
   }
-  return factor;
+  return factor.asInt();
 }
 
 delta_t Reducer::delta( Sequence &seq, int64_t max_delta )
