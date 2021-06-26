@@ -168,7 +168,7 @@ Sequence loadBFile( size_t id, const Sequence& seq_full )
   else
   {
     // check that the sequences agree on prefix
-    Sequence seq_test( std::vector<number_t>( result.begin(), result.begin() + seq_full.size() ) );
+    auto seq_test = result.subsequence( 0, seq_full.size() );
     if ( seq_test != seq_full )
     {
       Log::get().warn( "Unexpected terms in b-file or program for " + oeis_seq.id_str() );
@@ -204,7 +204,7 @@ Sequence OeisSequence::getTerms( int64_t max_num_terms ) const
   // already have enough terms?
   if ( real_max_terms <= terms.size() )
   {
-    return Sequence( std::vector<number_t>( terms.begin(), terms.begin() + real_max_terms ) );
+    return terms.subsequence( 0, real_max_terms );
   }
 
   if ( id == 0 )
@@ -236,7 +236,7 @@ Sequence OeisSequence::getTerms( int64_t max_num_terms ) const
     // shrink big sequence to maximum number of terms
     if ( big.size() > real_max_terms )
     {
-      big = Sequence( std::vector<number_t>( big.begin(), big.begin() + real_max_terms ) );
+      big = big.subsequence( 0, real_max_terms );
     }
 
     // replace terms

@@ -30,8 +30,10 @@ Test::Test()
 void Test::all()
 {
   // fast tests
-  semantics();
+  number();
+  sequence();
   memory();
+  semantics();
   config();
   steps();
   blocks();
@@ -61,6 +63,23 @@ void check_inf( number_t n )
   if ( n != NUM_INF )
   {
     Log::get().error( "Expected infinity instead of " + std::to_string( n ), true );
+  }
+}
+
+void check_num( const Number& m, const Number& n )
+{
+  if ( m != n )
+  {
+    Log::get().error( "Expected " + m.to_string() + " to be " + n.to_string(), true );
+  }
+}
+
+void Test::number()
+{
+  Log::get().info( "Testing number" );
+  if ( !(Number::ZERO < Number::ONE) )
+  {
+    Log::get().error( "Basic number check failed", true );
   }
 }
 
@@ -124,6 +143,23 @@ void Test::semantics()
       check_inf( Interpreter::calc( type, 1, NUM_INF ) );
       check_inf( Interpreter::calc( type, -1, NUM_INF ) );
     }
+  }
+}
+
+void Test::sequence()
+{
+  Log::get().info( "Testing sequence" );
+
+  Sequence s( { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 } );
+  Sequence t( { 2, 3, 4, 5, 6, 7, 8, 9 } );
+  auto u = s.subsequence( 1, 8 );
+  if ( t != u )
+  {
+    Log::get().error( "Error comparing subsequence" );
+  }
+  if ( t.to_string() != "2,3,4,5,6,7,8,9" )
+  {
+    Log::get().error( "Error printing sequence" );
   }
 }
 

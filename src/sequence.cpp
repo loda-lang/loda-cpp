@@ -1,11 +1,33 @@
 #include "sequence.hpp"
 
+#include "semantics.hpp"
+
 #include <sstream>
 #include <unordered_set>
 
+Sequence::Sequence( const std::vector<int64_t> &s )
+{
+  const auto t = s.size();
+  resize( t );
+  for ( size_t i = 0; i < t; i++ )
+  {
+    (*this)[i] = Number( s[i] );
+  }
+}
+
 Sequence Sequence::subsequence( size_t start, size_t length ) const
 {
-  return Sequence( std::vector<number_t>( begin() + start, begin() + start + length ) );
+  Sequence s;
+  if ( start < size() && length > 0 )
+  {
+    const auto new_size = std::min( length, size() - start );
+    s.resize( new_size );
+    for ( size_t i = 0; i < new_size; i++ )
+    {
+      s[i] = (*this)[start + i];
+    }
+  }
+  return s;
 }
 
 bool Sequence::is_linear( size_t start ) const
@@ -14,10 +36,10 @@ bool Sequence::is_linear( size_t start ) const
   {
     return false;
   }
-  int64_t d = (*this)[start + 1] - (*this)[start];
+  auto d = Semantics::sub( (*this)[start + 1], (*this)[start] );
   for ( size_t i = start + 2; i < size(); ++i )
   {
-    if ( (*this)[i - 1] + d != (*this)[i] )
+    if ( Semantics::add( (*this)[i - 1], d ) != (*this)[i] )
     {
       return false;
     }
@@ -119,9 +141,9 @@ std::string Sequence::to_string() const
 std::size_t SequenceHasher::operator()( const Sequence &s ) const
 {
   auto seed = s.size();
-  for ( auto &i : s )
+  for ( auto &n : s )
   {
-    seed ^= i + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    seed ^= n.hash() + 0x9e3779b9 + (seed << 6) + (seed >> 2);
   }
   return seed;
 }

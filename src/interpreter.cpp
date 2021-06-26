@@ -474,7 +474,8 @@ std::pair<status_t, steps_t> Interpreter::check( const Program &p, const Sequenc
       result.first = ((int64_t) i >= num_terminating_terms) ? status_t::WARNING : status_t::ERROR;
       return result;
     }
-    if ( mem.get( Program::OUTPUT_CELL ) != expected_seq[i] )
+    // TODO: don't convert to int here!
+    if ( mem.get( Program::OUTPUT_CELL ) != expected_seq[i].asInt() )
     {
       if ( settings.print_as_b_file )
       {

@@ -190,7 +190,8 @@ public:
 
   DigitMatcher( const std::string& name, int64_t num_digits, bool backoff )
       : AbstractMatcher( name, backoff ),
-        num_digits( num_digits )
+        num_digits( num_digits ),
+        num_digits_big( num_digits )
   {
   }
 
@@ -207,5 +208,6 @@ protected:
 private:
 
   const int64_t num_digits;
+  const Number num_digits_big;
 
 };

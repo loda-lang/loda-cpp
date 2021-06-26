@@ -13,7 +13,11 @@ public:
 
   void all();
 
+  void number();
+
   void semantics();
+
+  void sequence();
 
   void memory();
 

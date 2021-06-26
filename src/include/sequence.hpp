@@ -5,7 +5,7 @@
 #include <unordered_map>
 #include <vector>
 
-class Sequence: public std::vector<number_t>
+class Sequence: public std::vector<Number>
 {
 public:
 
@@ -13,10 +13,7 @@ public:
 
   Sequence( const Sequence &s ) = default;
 
-  Sequence( const std::vector<number_t> &s )
-      : std::vector<number_t>( s )
-  {
-  }
+  Sequence( const std::vector<int64_t> &s );
 
   Sequence subsequence( size_t start, size_t length ) const;
 

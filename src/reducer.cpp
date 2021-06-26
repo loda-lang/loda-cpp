@@ -3,6 +3,8 @@
 #include "semantics.hpp"
 #include "util.hpp"
 
+// TODO: use Number instead of number_t
+
 number_t Reducer::truncate( Sequence &seq )
 {
   if ( seq.empty() )
@@ -10,26 +12,26 @@ number_t Reducer::truncate( Sequence &seq )
     return 0;
   }
   // get minimum positive value; no negative values are allowed
-  auto min = NUM_INF;
-  for ( auto v : seq )
+  Number min = Number::INF;
+  for ( auto& v : seq )
   {
     if ( v < 0 )
     {
       return 0;
     }
-    else if ( min == NUM_INF || v < min )
+    else if ( min == Number::INF || v < min )
     {
       min = v;
     }
   }
-  if ( min > 0 && min != NUM_INF )
+  if ( Number::ZERO < min && min != Number::INF )
   {
     for ( size_t i = 0; i < seq.size(); i++ )
     {
-      seq[i] = seq[i] - min;
+      seq[i] = Semantics::sub( seq[i], min );
     }
   }
-  return min;
+  return min.asInt();
 }
 
 number_t Reducer::shrink( Sequence &seq )
@@ -37,7 +39,7 @@ number_t Reducer::shrink( Sequence &seq )
   Number factor = Number::INF;
   for ( size_t i = 0; i < seq.size(); i++ )
   {
-    if ( seq[i] != 0 )
+    if ( seq[i] != Number::ZERO )
     {
       if ( factor == Number::INF )
       {
@@ -78,10 +80,10 @@ delta_t Reducer::delta( Sequence &seq, int64_t max_delta )
     bool same = true;
     for ( size_t j = 0; j < size; j++ )
     {
-      number_t p = (j == 0) ? 0 : seq[j - 1];
-      if ( p <= seq[j] )
+      Number p = (j == 0) ? Number::ZERO : seq[j - 1];
+      if ( !(seq[j] < p) )
       {
-        next[j] = seq[j] - p;
+        next[j] = Semantics::sub( seq[j], p );
         if ( p != 0 )
         {
           same = false;
@@ -113,28 +115,29 @@ delta_t Reducer::delta( Sequence &seq, int64_t max_delta )
 
 int64_t Reducer::digit( Sequence &seq, int64_t num_digits )
 {
-  Sequence count;
+  std::vector<size_t> count;
   count.resize( num_digits, 0 );
-  for ( auto n : seq )
+  for ( auto& n : seq )
   {
-    count[((n % num_digits) + num_digits) % num_digits]++;
+    count[((n.asInt() % num_digits) + num_digits) % num_digits]++;
   }
-  int64_t index = 0;
-  number_t max = 0;
+  Number index;
+  size_t max = 0;
   for ( int64_t i = 0; i < num_digits; i++ )
   {
     if ( count[i] > max )
     {
-      index = i;
+      index = Number( i );
       max = count[i];
     }
   }
+  const Number d( num_digits );
   for ( int64_t i = 0; i < static_cast<int64_t>( seq.size() ); i++ )
   {
-    seq[i] = (((seq[i] - index) % num_digits) + num_digits) % num_digits;
+    seq[i] = Semantics::mod( Semantics::add( Semantics::mod( Semantics::sub( seq[i], index ), d ), d ), d );
   }
 //  Log::get().info(
 //      "Reduced sequence to " + seq.to_string() + " using num_digits=" + std::to_string( num_digits ) + ", offset="
 //          + std::to_string( index ) );
-  return index;
+  return index.asInt();
 }

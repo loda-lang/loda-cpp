@@ -208,9 +208,9 @@ std::pair<Sequence, int64_t> DigitMatcher::reduce( const Sequence &seq, bool mat
   result.second = Reducer::digit( result.first, num_digits );
   if ( !match )
   {
-    for ( auto n : seq )
+    for ( auto& n : seq )
     {
-      if ( n < 0 || n >= num_digits )
+      if ( n < Number::ZERO || !(n < num_digits_big) )
       {
         result.first.clear();
         break;
