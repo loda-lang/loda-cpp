@@ -7,7 +7,7 @@ Memory::Memory()
   cache.fill( 0 );
 }
 
-number_t Memory::get( int64_t index ) const
+Number Memory::get( int64_t index ) const
 {
   if ( index >= 0 && index < MEMORY_CACHE_SIZE )
   {
@@ -18,10 +18,10 @@ number_t Memory::get( int64_t index ) const
   {
     return it->second;
   }
-  return 0;
+  return Number::ZERO;
 }
 
-void Memory::set( int64_t index, number_t value )
+void Memory::set( int64_t index, const Number& value )
 {
   if ( index >= 0 && index < MEMORY_CACHE_SIZE )
   {
@@ -29,7 +29,7 @@ void Memory::set( int64_t index, number_t value )
   }
   else
   {
-    if ( value == 0 )
+    if ( value == Number::ZERO )
     {
       full.erase( index );
     }
@@ -57,16 +57,16 @@ void Memory::clear( int64_t start, int64_t length )
   {
     for ( int64_t i = start; i < end; i++ )
     {
-      set( i, 0 );
+      set( i, Number::ZERO );
     }
   }
   else
   {
-    for ( int64_t i = 0; i < (int64_t) MEMORY_CACHE_SIZE; ++i )
+    for ( int64_t i = 0; i < (int64_t) MEMORY_CACHE_SIZE; i++ )
     {
       if ( i >= start && i < end )
       {
-        cache[i] = 0;
+        cache[i] = Number::ZERO;
       }
     }
     auto i = full.begin();
@@ -93,7 +93,7 @@ Memory Memory::fragment( int64_t start, int64_t length ) const
   }
   if ( length < MEMORY_CACHE_SIZE )
   {
-    for ( int64_t i = 0; i < (int64_t) length; ++i )
+    for ( int64_t i = 0; i < (int64_t) length; i++ )
     {
       frag.set( i, get( start + i ) );
     }
@@ -145,7 +145,7 @@ bool Memory::is_less( const Memory &m, int64_t length, bool check_nonn ) const
     {
       return true; // less
     }
-    else if ( lhs > rhs )
+    else if ( rhs < lhs )
     {
       return false; // greater
     }
@@ -162,7 +162,7 @@ bool Memory::operator==( const Memory &m ) const
       return false;
     }
   }
-  for ( auto i : full )
+  for ( auto& i : full )
   {
     if ( i.second != 0 )
     {
@@ -173,7 +173,7 @@ bool Memory::operator==( const Memory &m ) const
       }
     }
   }
-  for ( auto i : m.full )
+  for ( auto& i : m.full )
   {
     if ( i.second != 0 )
     {

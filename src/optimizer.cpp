@@ -601,7 +601,8 @@ bool doPartialEval( Operation &op, std::map<number_t, Operand> &values )
   {
     if ( target.type == Operand::Type::CONSTANT && (num_ops == 1 || source.type == Operand::Type::CONSTANT) )
     {
-      target.value = Interpreter::calc( op.type, target.value, source.value );
+      // TODO: use Number as operand value
+      target.value = Interpreter::calc( op.type, target.value, source.value ).asInt();
       has_result = true;
     }
     break;

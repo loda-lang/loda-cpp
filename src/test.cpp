@@ -58,11 +58,11 @@ number_t read_num( const std::string &s )
   return (s == "NI") ? NUM_INF : std::stoll( s );
 }
 
-void check_inf( number_t n )
+void check_inf( const Number& n )
 {
-  if ( n != NUM_INF )
+  if ( n != Number::INF )
   {
-    Log::get().error( "Expected infinity instead of " + std::to_string( n ), true );
+    Log::get().error( "Expected infinity instead of " + n.to_string(), true );
   }
 }
 
@@ -102,7 +102,7 @@ void Test::semantics()
     }
     Log::get().info( "Testing " + test_path );
     std::string line, s, t, r;
-    number_t op1 = 0, op2 = 0, expected_op, result_op;
+    Number op1, op2, expected_op, result_op;
     std::getline( test_file, line ); // skip header
     while ( std::getline( test_file, line ) )
     {
@@ -127,21 +127,21 @@ void Test::semantics()
       if ( result_op != expected_op )
       {
         Log::get().error(
-            "Unexpected value for " + meta.name + "(" + std::to_string( op1 ) + "," + std::to_string( op2 )
-                + "); expected " + std::to_string( expected_op ) + "; got " + std::to_string( result_op ), true );
+            "Unexpected value for " + meta.name + "(" + op1.to_string() + "," + op2.to_string() + "); expected "
+                + expected_op.to_string() + "; got " + result_op.to_string(), true );
       }
     }
     if ( type != Operation::Type::MOV )
     {
-      check_inf( Interpreter::calc( type, NUM_INF, 0 ) );
-      check_inf( Interpreter::calc( type, NUM_INF, 1 ) );
-      check_inf( Interpreter::calc( type, NUM_INF, -1 ) );
+      check_inf( Interpreter::calc( type, Number::INF, 0 ) );
+      check_inf( Interpreter::calc( type, Number::INF, 1 ) );
+      check_inf( Interpreter::calc( type, Number::INF, -1 ) );
     }
     if ( meta.num_operands == 2 )
     {
-      check_inf( Interpreter::calc( type, 0, NUM_INF ) );
-      check_inf( Interpreter::calc( type, 1, NUM_INF ) );
-      check_inf( Interpreter::calc( type, -1, NUM_INF ) );
+      check_inf( Interpreter::calc( type, 0, Number::INF ) );
+      check_inf( Interpreter::calc( type, 1, Number::INF ) );
+      check_inf( Interpreter::calc( type, -1, Number::INF ) );
     }
   }
 }
@@ -169,7 +169,7 @@ void checkMemory( const Memory &mem, number_t index, number_t value )
   {
     Log::get().error(
         "Unexpected memory value at index " + std::to_string( index ) + "; expected: " + std::to_string( value )
-            + "; found: " + std::to_string( mem.get( index ) ), true );
+            + "; found: " + mem.get( index ).to_string(), true );
   }
 }
 
@@ -723,7 +723,7 @@ void Test::testBinary( const std::string &func, const std::string &file,
       interpreter.run( program, mem );
       if ( mem.get( 2 ) != values[i][j] )
       {
-        Log::get().error( "unexpected result: " + std::to_string( mem.get( 2 ) ), true );
+        Log::get().error( "unexpected result: " + mem.get( 2 ).to_string(), true );
       }
     }
   }

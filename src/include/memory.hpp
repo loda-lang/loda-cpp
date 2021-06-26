@@ -14,9 +14,9 @@ public:
 
   Memory();
 
-  number_t get( int64_t index ) const;
+  Number get( int64_t index ) const;
 
-  void set( int64_t index, number_t value );
+  void set( int64_t index, const Number& value );
 
   void clear();
 
@@ -36,7 +36,7 @@ public:
 
 private:
 
-  std::array<number_t, MEMORY_CACHE_SIZE> cache;
-  std::unordered_map<int64_t, number_t> full;
+  std::array<Number, MEMORY_CACHE_SIZE> cache;
+  std::unordered_map<int64_t, Number> full;
 
 };
