@@ -4,18 +4,18 @@
 
 struct delta_t
 {
-  number_t delta;
-  number_t offset;
-  number_t factor;
+  int64_t delta;
+  Number offset;
+  Number factor;
 };
 
 class Reducer
 {
 public:
 
-  static number_t truncate( Sequence &seq );
+  static Number truncate( Sequence &seq );
 
-  static number_t shrink( Sequence &seq );
+  static Number shrink( Sequence &seq );
 
   static delta_t delta( Sequence &seq, int64_t max_delta );
 

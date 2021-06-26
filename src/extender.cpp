@@ -1,17 +1,21 @@
 #include "extender.hpp"
 
 #include "program_util.hpp"
+#include "semantics.hpp"
 #include "util.hpp"
 
-void add_or_sub( Program &p, number_t c )
+void add_or_sub( Program &p, const Number& c )
 {
-  if ( c > 0 )
+  // TODO: don't convert to int here
+  if ( Number::ZERO < c )
   {
-    p.push_back( Operation::Type::ADD, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::CONSTANT, c );
+    p.push_back( Operation::Type::ADD, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::CONSTANT,
+        c.asInt() );
   }
-  else if ( c < 0 )
+  else if ( c < Number::ZERO )
   {
-    p.push_back( Operation::Type::SUB, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::CONSTANT, -c );
+    p.push_back( Operation::Type::SUB, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::CONSTANT,
+        -c.asInt() );
   }
 }
 
@@ -21,31 +25,35 @@ bool Extender::linear1( Program &p, line_t inverse, line_t target )
   {
     return true;
   }
-  if ( inverse.offset != 0 )
+  if ( inverse.offset != Number::ZERO )
   {
-    add_or_sub( p, -inverse.offset );
+    add_or_sub( p, Semantics::sub( Number::ZERO, inverse.offset ) );
   }
-  if ( inverse.factor > 1 && target.factor > 1 && (target.factor % inverse.factor) == 0 )
+  if ( Number::ONE < inverse.factor && Number::ONE < target.factor
+      && Semantics::mod( target.factor, inverse.factor ) == Number::ZERO )
   {
-    target.factor = target.factor / inverse.factor;
-    inverse.factor = 1; // order is important!!
+    target.factor = Semantics::div( target.factor, inverse.factor );
+    inverse.factor = Number::ONE; // order is important!!
   }
-  if ( inverse.factor > 1 && target.factor > 1 && (inverse.factor % target.factor) == 0 )
+  if ( Number::ONE < inverse.factor && Number::ONE < target.factor
+      && Semantics::mod( inverse.factor, target.factor ) == Number::ZERO )
   {
-    inverse.factor = inverse.factor / target.factor;
-    target.factor = 1; // order is important!!
+    inverse.factor = Semantics::div( inverse.factor, target.factor );
+    target.factor = Number::ONE; // order is important!!
   }
-  if ( inverse.factor != 1 )
+  if ( inverse.factor != Number::ONE )
   {
+    // TODO: don't convert to int here
     p.push_back( Operation::Type::DIV, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::CONSTANT,
-        inverse.factor );
+        inverse.factor.asInt() );
   }
-  if ( target.factor != 1 )
+  if ( target.factor != Number::ONE )
   {
+    // TODO: don't convert to int here
     p.push_back( Operation::Type::MUL, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::CONSTANT,
-        target.factor );
+        target.factor.asInt() );
   }
-  if ( target.offset != 0 )
+  if ( target.offset != Number::ZERO )
   {
     add_or_sub( p, target.offset );
   }
@@ -58,16 +66,18 @@ bool Extender::linear2( Program &p, line_t inverse, line_t target )
   {
     return true;
   }
-  if ( inverse.factor != 1 )
+  if ( inverse.factor != Number::ONE )
   {
+    // TODO: don't convert to int here
     p.push_back( Operation::Type::DIV, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::CONSTANT,
-        inverse.factor );
+        inverse.factor.asInt() );
   }
-  add_or_sub( p, target.offset - inverse.offset );
-  if ( target.factor != 1 )
+  add_or_sub( p, Semantics::sub( target.offset, inverse.offset ) );
+  if ( target.factor != Number::ONE )
   {
+    // TODO: don't convert to int here
     p.push_back( Operation::Type::MUL, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::CONSTANT,
-        target.factor );
+        target.factor.asInt() );
   }
   return true;
 }

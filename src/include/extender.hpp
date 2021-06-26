@@ -5,8 +5,8 @@
 
 struct line_t
 {
-  number_t offset;
-  number_t factor;
+  Number offset;
+  Number factor;
 };
 
 class Extender

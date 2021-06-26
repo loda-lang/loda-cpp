@@ -3,21 +3,19 @@
 #include "semantics.hpp"
 #include "util.hpp"
 
-// TODO: use Number instead of number_t
-
-number_t Reducer::truncate( Sequence &seq )
+Number Reducer::truncate( Sequence &seq )
 {
   if ( seq.empty() )
   {
-    return 0;
+    return Number::ZERO;
   }
   // get minimum positive value; no negative values are allowed
   Number min = Number::INF;
   for ( auto& v : seq )
   {
-    if ( v < 0 )
+    if ( v < Number::ZERO )
     {
-      return 0;
+      return Number::ZERO;
     }
     else if ( min == Number::INF || v < min )
     {
@@ -31,10 +29,10 @@ number_t Reducer::truncate( Sequence &seq )
       seq[i] = Semantics::sub( seq[i], min );
     }
   }
-  return min.asInt();
+  return min;
 }
 
-number_t Reducer::shrink( Sequence &seq )
+Number Reducer::shrink( Sequence &seq )
 {
   Number factor = Number::INF;
   for ( size_t i = 0; i < seq.size(); i++ )
@@ -59,18 +57,18 @@ number_t Reducer::shrink( Sequence &seq )
   {
     for ( size_t i = 0; i < seq.size(); i++ )
     {
-      seq[i] = Semantics::div( Number( seq[i] ), factor ).asInt();
+      seq[i] = Semantics::div( Number( seq[i] ), factor );
     }
   }
-  return factor.asInt();
+  return factor;
 }
 
 delta_t Reducer::delta( Sequence &seq, int64_t max_delta )
 {
   delta_t result;
   result.delta = 0;
-  result.offset = 0;
-  result.factor = 1;
+  result.offset = Number::ZERO;
+  result.factor = Number::ONE;
   const size_t size = seq.size();
   Sequence next;
   next.resize( size );
