@@ -24,19 +24,19 @@ void Blocks::Interface::extend( const Operation& op )
   {
     if ( meta.is_reading_target )
     {
-      inputs.insert( op.target.value );
-      all.insert( op.target.value );
+      inputs.insert( op.target.value.asInt() );
+      all.insert( op.target.value.asInt() );
     }
     if ( meta.is_writing_target )
     {
-      outputs.insert( op.target.value );
-      all.insert( op.target.value );
+      outputs.insert( op.target.value.asInt() );
+      all.insert( op.target.value.asInt() );
     }
   }
   if ( meta.num_operands > 1 && op.source.type == Operand::Type::DIRECT )
   {
-    inputs.insert( op.source.value );
-    all.insert( op.source.value );
+    inputs.insert( op.source.value.asInt() );
+    all.insert( op.source.value.asInt() );
   }
 }
 

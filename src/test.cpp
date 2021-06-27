@@ -219,7 +219,8 @@ void validateIterated( const Program& p )
   for ( size_t i = 0; i < p.ops.size(); i++ )
   {
     auto& op = p.ops[i];
-    if ( op.type == Operation::Type::LPB && (op.source.type != Operand::Type::CONSTANT || op.source.value <= 0) )
+    if ( op.type == Operation::Type::LPB
+        && (op.source.type != Operand::Type::CONSTANT || !(Number::ZERO < op.source.value)) )
     {
       throw std::runtime_error( "Iterator generated wrong loop" );
     }

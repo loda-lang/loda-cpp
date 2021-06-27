@@ -307,7 +307,7 @@ size_t Interpreter::run( const Program &p, Memory &mem )
   return cycles;
 }
 
-Number Interpreter::get( Operand a, const Memory &mem, bool get_address ) const
+Number Interpreter::get( const Operand& a, const Memory &mem, bool get_address ) const
 {
   switch ( a.type )
   {
@@ -321,19 +321,18 @@ Number Interpreter::get( Operand a, const Memory &mem, bool get_address ) const
   }
   case Operand::Type::DIRECT:
   {
-    // TODO: use Number as operand value
-    return get_address ? Number( a.value ) : mem.get( a.value );
+    return get_address ? a.value : mem.get( a.value.asInt() );
   }
   case Operand::Type::INDIRECT:
   {
-    return get_address ? mem.get( a.value ) : mem.get( mem.get( a.value ).asInt() );
+    return get_address ? mem.get( a.value.asInt() ) : mem.get( mem.get( a.value.asInt() ).asInt() );
   }
   }
   return
   {};
 }
 
-void Interpreter::set( Operand a, const Number& v, Memory &mem, const Operation &last_op ) const
+void Interpreter::set( const Operand& a, const Number& v, Memory &mem, const Operation &last_op ) const
 {
   int64_t index = 0;
   switch ( a.type )
@@ -343,13 +342,13 @@ void Interpreter::set( Operand a, const Number& v, Memory &mem, const Operation 
     index = 0; // we don't get here
     break;
   case Operand::Type::DIRECT:
-    index = a.value;
+    index = a.value.asInt();
     break;
   case Operand::Type::INDIRECT:
-    index = mem.get( a.value ).asInt();
+    index = mem.get( a.value.asInt() ).asInt();
     break;
   }
-  if ( index > (int64_t) settings.max_memory )
+  if ( index > static_cast<int64_t>( settings.max_memory ) )
   {
     throw std::runtime_error(
         "Maximum memory exceeded: " + std::to_string( index ) + "; last operation: "

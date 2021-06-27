@@ -92,7 +92,7 @@ void Stats::load( const std::string &path )
       op.source = parser.readOperand();
       parser.readSeparator( ',' );
       count = parser.readOperand();
-      num_operations[op] = count.value;
+      num_operations[op] = count.value.asInt();
     }
     op_counts.close();
   }
@@ -112,10 +112,10 @@ void Stats::load( const std::string &path )
         break;
       }
       pos = parser.readOperand();
-      opPos.pos = pos.value;
+      opPos.pos = pos.value.asInt();
       parser.readSeparator( ',' );
       length = parser.readOperand();
-      opPos.len = length.value;
+      opPos.len = length.value.asInt();
       parser.readSeparator( ',' );
       opPos.op.type = parser.readOperationType();
       parser.readSeparator( ',' );
@@ -124,7 +124,7 @@ void Stats::load( const std::string &path )
       opPos.op.source = parser.readOperand();
       parser.readSeparator( ',' );
       count = parser.readOperand();
-      num_operation_positions[opPos] = count.value;
+      num_operation_positions[opPos] = count.value.asInt();
     }
     op_pos_counts.close();
   }
@@ -350,7 +350,7 @@ void Stats::updateProgramStats( size_t id, const Program &program )
     }
     if ( op.type == Operation::Type::CAL && op.source.type == Operand::Type::CONSTANT )
     {
-      cal_graph.insert( std::pair<int64_t, int64_t>( id, op.source.value ) );
+      cal_graph.insert( std::pair<int64_t, int64_t>( id, op.source.value.asInt() ) );
     }
     o.pos++;
   }

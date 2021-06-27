@@ -131,7 +131,7 @@ bool Optimizer::mergeOps( Program &p ) const
         // both add or sub operation?
         if ( o1.type == o2.type && (o1.type == Operation::Type::ADD || o1.type == Operation::Type::SUB) )
         {
-          o1.source.value += o2.source.value;
+          o1.source.value = Semantics::add( o1.source.value, o2.source.value );
           do_merge = true;
         }
 
@@ -139,7 +139,7 @@ bool Optimizer::mergeOps( Program &p ) const
         else if ( o1.type == o2.type
             && (o1.type == Operation::Type::MUL || o1.type == Operation::Type::DIV || o1.type == Operation::Type::POW) )
         {
-          o1.source.value *= o2.source.value;
+          o1.source.value = Semantics::mul( o1.source.value, o2.source.value );
           do_merge = true;
         }
 
@@ -147,10 +147,10 @@ bool Optimizer::mergeOps( Program &p ) const
         else if ( (o1.type == Operation::Type::ADD && o2.type == Operation::Type::SUB)
             || (o1.type == Operation::Type::SUB && o2.type == Operation::Type::ADD) )
         {
-          o1.source.value = o1.source.value - o2.source.value;
-          if ( o1.source.value < 0 )
+          o1.source.value = Semantics::sub( o1.source.value, o2.source.value );
+          if ( o1.source.value < Number::ZERO )
           {
-            o1.source.value = -o1.source.value;
+            o1.source.value = Semantics::sub( Number::ZERO, o1.source.value );
             o1.type = (o1.type == Operation::Type::ADD) ? Operation::Type::SUB : Operation::Type::ADD;
           }
           do_merge = true;
@@ -165,10 +165,10 @@ bool Optimizer::mergeOps( Program &p ) const
         }
 
         // first mul, second div?
-        else if ( o1.type == Operation::Type::MUL && o2.type == Operation::Type::DIV && o1.source.value != 0
-            && o2.source.value != 0 && o1.source.value % o2.source.value == 0 )
+        else if ( o1.type == Operation::Type::MUL && o2.type == Operation::Type::DIV && o1.source.value != Number::ZERO
+            && o2.source.value != Number::ZERO && Semantics::mod( o1.source.value, o2.source.value ) == Number::ZERO )
         {
-          o1.source.value = o1.source.value / o2.source.value;
+          o1.source.value = Semantics::div( o1.source.value, o2.source.value );
           do_merge = true;
         }
 
@@ -247,7 +247,7 @@ inline bool simplifyOperand( Operand &op, std::unordered_set<number_t> &initiali
   case Operand::Type::CONSTANT:
     break;
   case Operand::Type::DIRECT:
-    if ( initialized_cells.find( op.value ) == initialized_cells.end() && is_source )
+    if ( initialized_cells.find( op.value.asInt() ) == initialized_cells.end() && is_source )
     {
       op.type = Operand::Type::CONSTANT;
       op.value = 0;
@@ -255,7 +255,7 @@ inline bool simplifyOperand( Operand &op, std::unordered_set<number_t> &initiali
     }
     break;
   case Operand::Type::INDIRECT:
-    if ( initialized_cells.find( op.value ) == initialized_cells.end() )
+    if ( initialized_cells.find( op.value.asInt() ) == initialized_cells.end() )
     {
       op.type = Operand::Type::DIRECT;
       op.value = 0;
@@ -307,7 +307,7 @@ bool Optimizer::simplifyOperations( Program &p, size_t num_initialized_cells ) c
 
         // simplify operation: target uninitialized (cell content matters!)
         if ( op.target.type == Operand::Type::DIRECT
-            && initialized_cells.find( op.target.value ) == initialized_cells.end() )
+            && initialized_cells.find( op.target.value.asInt() ) == initialized_cells.end() )
         {
           // add $n,X => mov $n,X (where $n is uninitialized)
           if ( op.type == Operation::Type::ADD )
@@ -336,14 +336,14 @@ bool Optimizer::simplifyOperations( Program &p, size_t num_initialized_cells ) c
         if ( op.type == Operation::Type::ADD )
         {
           op.type = Operation::Type::SUB;
-          op.source.value = -op.source.value;
+          op.source.value = Semantics::sub( Number::ZERO, op.source.value );
           simplified = true;
         }
         // sub $n,-k => add $n,k
         else if ( op.type == Operation::Type::SUB )
         {
           op.type = Operation::Type::ADD;
-          op.source.value = -op.source.value;
+          op.source.value = Semantics::sub( Number::ZERO, op.source.value );
           simplified = true;
         }
       }
@@ -385,7 +385,7 @@ bool Optimizer::simplifyOperations( Program &p, size_t num_initialized_cells ) c
       switch ( op.target.type )
       {
       case Operand::Type::DIRECT:
-        initialized_cells.insert( op.target.value );
+        initialized_cells.insert( op.target.value.asInt() );
         break;
       case Operand::Type::INDIRECT:
         can_simplify = false; // don't know at this point which cell is written to
@@ -518,7 +518,7 @@ bool Optimizer::swapMemoryCells( Program &p, size_t num_reserved_cells ) const
   }
   auto s = p.ops[mov_target].source;
   auto t = p.ops[mov_target].target;
-  if ( s.type != Operand::Type::DIRECT || s.value <= t.value )
+  if ( s.type != Operand::Type::DIRECT || !(t.value < s.value) )
   {
     return false;
   }
@@ -558,16 +558,16 @@ bool doPartialEval( Operation &op, std::map<number_t, Operand> &values )
 
   // deduce source value
   auto source = op.source;
-  if ( op.source.type == Operand::Type::DIRECT && values.find( op.source.value ) != values.end() )
+  if ( op.source.type == Operand::Type::DIRECT && values.find( op.source.value.asInt() ) != values.end() )
   {
-    source = values[op.source.value];
+    source = values[op.source.value.asInt()];
   }
 
   // deduce target value
   auto target = op.target;
-  if ( op.target.type == Operand::Type::DIRECT && values.find( op.target.value ) != values.end() )
+  if ( op.target.type == Operand::Type::DIRECT && values.find( op.target.value.asInt() ) != values.end() )
   {
-    target = values[op.target.value];
+    target = values[op.target.value.asInt()];
   }
 
   // calculate new value
@@ -624,7 +624,7 @@ bool doPartialEval( Operation &op, std::map<number_t, Operand> &values )
     // update target value
     if ( has_result )
     {
-      values[op.target.value] = target;
+      values[op.target.value.asInt()] = target;
       if ( op.type != Operation::Type::MOV )
       {
         op.type = Operation::Type::MOV;
@@ -634,7 +634,7 @@ bool doPartialEval( Operation &op, std::map<number_t, Operand> &values )
     }
     else
     {
-      values.erase( op.target.value );
+      values.erase( op.target.value.asInt() );
     }
 
     // remove references to target because they are out-dated now
@@ -691,7 +691,7 @@ bool Optimizer::shouldSwapOperations( const Operation &first, const Operation &s
   {
     return false;
   }
-  if ( first.target.value > second.target.value )
+  if ( second.target.value < first.target.value )
   {
     return true;
   }

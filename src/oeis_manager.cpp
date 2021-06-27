@@ -534,8 +534,8 @@ void OeisManager::addCalComments( Program& p ) const
   {
     if ( op.type == Operation::Type::CAL && op.source.type == Operand::Type::CONSTANT )
     {
-      auto id = op.source.value;
-      if ( id >= 0 && id < (int64_t) sequences.size() && sequences[id].id )
+      auto id = op.source.value.asInt();
+      if ( id >= 0 && id < static_cast<int64_t>( sequences.size() ) && sequences[id].id )
       {
         op.comment = sequences[id].name;
       }
@@ -635,7 +635,7 @@ size_t getBadOpsCount( const Program& p )
     }
     if ( op.type == Operation::Type::GCD && op.source.type == Operand::Type::CONSTANT )
     {
-      auto v = op.source.value;
+      auto v = op.source.value.asInt();
       if ( getPowerOf( v, 2 ) >= 10 || getPowerOf( v, 3 ) >= 6 || getPowerOf( v, 5 ) >= 5 || getPowerOf( v, 7 ) >= 4
           || getPowerOf( v, 10 ) >= 3 )
       {

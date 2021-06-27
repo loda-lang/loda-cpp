@@ -5,6 +5,7 @@
 #include "optimizer.hpp"
 #include "parser.hpp"
 #include "program_util.hpp"
+#include "semantics.hpp"
 #include "stats.hpp"
 
 #include <algorithm>
@@ -33,7 +34,7 @@ std::discrete_distribution<> operationDist( const Stats &stats, const std::vecto
   return std::discrete_distribution<>( p.begin(), p.end() );
 }
 
-std::discrete_distribution<> constantsDist( const std::vector<number_t> &constants, const Stats &stats )
+std::discrete_distribution<> constantsDist( const std::vector<Number> &constants, const Stats &stats )
 {
   std::vector<double> p( constants.size() );
   for ( size_t i = 0; i < constants.size(); i++ )
@@ -41,7 +42,7 @@ std::discrete_distribution<> constantsDist( const std::vector<number_t> &constan
     int64_t rate = stats.num_constants.at( constants[i] );
     if ( rate <= 0 )
     {
-      Log::get().error( "Unexpected stats for constant: " + std::to_string( constants[i] ), true );
+      Log::get().error( "Unexpected stats for constant: " + constants[i].to_string(), true );
     }
     p[i] = rate;
   }
@@ -214,7 +215,7 @@ std::pair<Operation, double> GeneratorV1::generateOperation()
     op.source.value = constants.at( constants_dist( gen ) );
     if ( op.type == Operation::Type::LPB )
     {
-      op.source.value = std::max<number_t>( op.source.value, 1 ) % 10;
+      op.source.value = Semantics::mod( Semantics::max( op.source.value, Number::ONE ), 10 );
     }
   }
 
@@ -240,7 +241,7 @@ std::pair<Operation, double> GeneratorV1::generateOperation()
         && (op.type == Operation::Type::MOV || op.type == Operation::Type::DIV || op.type == Operation::Type::DIF
             || op.type == Operation::Type::MOD || op.type == Operation::Type::GCD || op.type == Operation::Type::BIN) )
     {
-      op.target.value++;
+      op.target.value = Semantics::add( op.target.value, Number::ONE );
     }
   }
 

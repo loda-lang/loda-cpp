@@ -24,14 +24,14 @@ void Mutator::mutateConstants( const Program &program, size_t num_results, std::
   int64_t var = std::max<int64_t>( 1, num_results / indices.size() );
   for ( size_t i : indices )
   {
-    number_t b = program.ops[i].source.value;
-    number_t s = b - std::min<number_t>( var / 2, b );
-    for ( number_t v = s; v <= s + var; v++ )
+    int64_t b = program.ops[i].source.value.asInt();
+    int64_t s = b - std::min<number_t>( var / 2, b );
+    for ( int64_t v = s; v <= s + var; v++ )
     {
       if ( v != b )
       {
         auto p = program;
-        p.ops[i].source.value = v;
+        p.ops[i].source.value = Number( v );
         result.push( p );
       }
     }

@@ -20,7 +20,7 @@ public:
   {
   }
 
-  Operand( Type t, number_t v )
+  Operand( Type t, const Number& v )
       : type( t ),
         value( v )
   {
@@ -44,7 +44,7 @@ public:
   }
 
   Type type;
-  number_t value;
+  Number value;
 
 };
 
@@ -142,9 +142,9 @@ public:
   static constexpr int64_t INPUT_CELL = 0;
   static constexpr int64_t OUTPUT_CELL = 1;
 
-  void push_front( Operation::Type t, Operand::Type tt, number_t tv, Operand::Type st, number_t sv );
+  void push_front( Operation::Type t, Operand::Type tt, const Number& tv, Operand::Type st, const Number& sv );
 
-  void push_back( Operation::Type t, Operand::Type tt, number_t tv, Operand::Type st, number_t sv );
+  void push_back( Operation::Type t, Operand::Type tt, const Number& tv, Operand::Type st, const Number& sv );
 
   bool operator==( const Program &p ) const;
 

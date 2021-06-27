@@ -89,12 +89,12 @@ const Operation::Metadata& Operation::Metadata::get( const std::string &name )
   throw std::runtime_error( "invalid operation: " + name );
 }
 
-void Program::push_front( Operation::Type t, Operand::Type tt, number_t tv, Operand::Type st, number_t sv )
+void Program::push_front( Operation::Type t, Operand::Type tt, const Number& tv, Operand::Type st, const Number& sv )
 {
   ops.insert( ops.begin(), Operation( t, Operand( tt, tv ), Operand( st, sv ) ) );
 }
 
-void Program::push_back( Operation::Type t, Operand::Type tt, number_t tv, Operand::Type st, number_t sv )
+void Program::push_back( Operation::Type t, Operand::Type tt, const Number& tv, Operand::Type st, const Number& sv )
 {
   ops.insert( ops.end(), Operation( t, Operand( tt, tv ), Operand( st, sv ) ) );
 }

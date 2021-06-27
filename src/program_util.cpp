@@ -161,7 +161,7 @@ bool ProgramUtil::getUsedMemoryCells( const Program &p, std::unordered_set<int64
 {
   for ( auto &op : p.ops )
   {
-    size_t region_length = 1;
+    int64_t region_length = 1;
     if ( op.source.type == Operand::Type::INDIRECT || op.target.type == Operand::Type::INDIRECT )
     {
       return false;
@@ -170,29 +170,29 @@ bool ProgramUtil::getUsedMemoryCells( const Program &p, std::unordered_set<int64
     {
       if ( op.source.type == Operand::Type::CONSTANT )
       {
-        region_length = op.source.value;
+        region_length = op.source.value.asInt();
       }
       else
       {
         return false;
       }
     }
-    if ( region_length > max_memory )
+    if ( region_length > static_cast<int64_t>( max_memory ) )
     {
       return false;
     }
     if ( op.source.type == Operand::Type::DIRECT )
     {
-      for ( size_t i = 0; i < region_length; i++ )
+      for ( int64_t i = 0; i < region_length; i++ )
       {
-        used_cells.insert( op.source.value + i );
+        used_cells.insert( op.source.value.asInt() + i );
       }
     }
     if ( op.target.type == Operand::Type::DIRECT )
     {
-      for ( size_t i = 0; i < region_length; i++ )
+      for ( int64_t i = 0; i < region_length; i++ )
       {
-        used_cells.insert( op.target.value + i );
+        used_cells.insert( op.target.value.asInt() + i );
       }
     }
   }
@@ -219,11 +219,11 @@ std::string ProgramUtil::operandToString( const Operand &op )
   switch ( op.type )
   {
   case Operand::Type::CONSTANT:
-    return std::to_string( op.value );
+    return op.value.to_string();
   case Operand::Type::DIRECT:
-    return "$" + std::to_string( op.value );
+    return "$" + op.value.to_string();
   case Operand::Type::INDIRECT:
-    return "$$" + std::to_string( op.value );
+    return "$$" + op.value.to_string();
   }
   return "";
 }
@@ -415,7 +415,7 @@ size_t ProgramUtil::hash( const Operation &op )
 
 size_t ProgramUtil::hash( const Operand &op )
 {
-  return (11 * static_cast<size_t>( op.type )) + op.value;
+  return (11 * static_cast<size_t>( op.type )) + op.value.hash();
 }
 
 void throwInvalidLoop( const Program& p )

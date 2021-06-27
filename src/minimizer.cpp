@@ -3,6 +3,7 @@
 #include "interpreter.hpp"
 #include "optimizer.hpp"
 #include "program_util.hpp"
+#include "semantics.hpp"
 #include "util.hpp"
 
 #include <fstream>
@@ -115,8 +116,8 @@ bool Minimizer::minimize( Program &p, size_t num_terms ) const
       if ( op.type == Operation::Type::GCD && op.target.type == Operand::Type::DIRECT
           && op.source.type == Operand::Type::CONSTANT )
       {
-        number_t base = 0;
-        number_t v = op.source.value;
+        int64_t base = 0;
+        int64_t v = op.source.value.asInt();
         if ( getPowerOf( v, 2 ) >= 10 )
         {
           base = 2;
@@ -191,7 +192,7 @@ bool Minimizer::removeClr( Program &p ) const
   {
     if ( p.ops[i].type == Operation::Type::CLR && p.ops[i].source.type == Operand::Type::CONSTANT )
     {
-      const auto length = p.ops[i].source.value;
+      const int64_t length = p.ops[i].source.value.asInt();
       if ( length <= 0 )
       {
         p.ops.erase( p.ops.begin() + i );
@@ -203,7 +204,7 @@ bool Minimizer::removeClr( Program &p ) const
         auto mov = p.ops[i];
         for ( int64_t j = 1; j < length; j++ )
         {
-          mov.target.value++;
+          mov.target.value = Semantics::add( mov.target.value, Number::ONE );
           p.ops.insert( p.ops.begin() + i + j, mov );
         }
       }

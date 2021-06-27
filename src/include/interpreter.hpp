@@ -53,9 +53,9 @@ public:
 
 private:
 
-  Number get( Operand a, const Memory &mem, bool get_address = false ) const;
+  Number get( const Operand& a, const Memory &mem, bool get_address = false ) const;
 
-  void set( Operand a, const Number& v, Memory &mem, const Operation &last_op ) const;
+  void set( const Operand& a, const Number& v, Memory &mem, const Operation &last_op ) const;
 
   std::pair<Number, size_t> call( int64_t id, const Number& arg );
 

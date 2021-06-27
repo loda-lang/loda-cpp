@@ -1,6 +1,7 @@
 #include "iterator.hpp"
 
 #include "program_util.hpp"
+#include "semantics.hpp"
 
 #include <iostream>
 
@@ -15,9 +16,10 @@ const Operation Iterator::SMALLEST_OPERATION( Operation::Type::MOV, DIRECT_ONE, 
 
 bool Iterator::inc( Operand &o, bool direct )
 {
-  if ( o.value < 2 || o.value * 4 < static_cast<number_t>( size ) )
+  const int64_t v = o.value.asInt();
+  if ( v < 2 || v * 4 < static_cast<int64_t>( size ) )
   {
-    o.value++;
+    o.value = Semantics::add( o.value, Number::ONE );
     return true;
   }
   switch ( o.type )

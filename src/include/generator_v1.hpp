@@ -26,7 +26,7 @@ private:
   std::vector<Operation::Type> operation_types;
   std::vector<Operand::Type> source_operand_types;
   std::vector<Operand::Type> target_operand_types;
-  std::vector<number_t> constants;
+  std::vector<Number> constants;
   Program program_template;
 
 };

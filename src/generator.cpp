@@ -6,6 +6,7 @@
 #include "generator_v3.hpp"
 #include "generator_v4.hpp"
 #include "generator_v5.hpp"
+#include "semantics.hpp"
 #include "util.hpp"
 
 Generator::UPtr Generator::Factory::createGenerator( const Config &config, const Stats &stats, int64_t seed )
@@ -113,35 +114,35 @@ std::vector<int64_t> Generator::fixCausality( Program &p )
 
     // fix source operand in new operation
     if ( meta.num_operands == 2 && op.source.type == Operand::Type::DIRECT
-        && std::find( written_cells.begin(), written_cells.end(), op.source.value ) == written_cells.end() )
+        && std::find( written_cells.begin(), written_cells.end(), op.source.value.asInt() ) == written_cells.end() )
     {
-      new_cell = op.source.value % written_cells.size(); // size of written_cells is >=1
-      if ( new_cell == op.target.value )
+      new_cell = op.source.value.asInt() % written_cells.size(); // size of written_cells is >=1
+      if ( new_cell == op.target.value.asInt() )
       {
         new_cell = (new_cell + 1) % written_cells.size();
       }
-      op.source.value = written_cells[new_cell];
+      op.source.value = Number( written_cells[new_cell] );
     }
 
     // fix target operand in new operation
     if ( meta.num_operands > 0 && meta.is_reading_target && op.type != Operation::Type::ADD
         && op.target.type == Operand::Type::DIRECT
-        && std::find( written_cells.begin(), written_cells.end(), op.target.value ) == written_cells.end() )
+        && std::find( written_cells.begin(), written_cells.end(), op.target.value.asInt() ) == written_cells.end() )
     {
-      new_cell = op.target.value % written_cells.size();
-      if ( new_cell == op.source.value )
+      new_cell = op.target.value.asInt() % written_cells.size();
+      if ( new_cell == op.source.value.asInt() )
       {
         new_cell = (new_cell + 1) % written_cells.size();
       }
-      op.target.value = written_cells[new_cell];
+      op.target.value = Number( written_cells[new_cell] );
     }
 
     // check if target cell not written yet
     if ( meta.is_writing_target && op.target.type == Operand::Type::DIRECT
-        && std::find( written_cells.begin(), written_cells.end(), op.target.value ) == written_cells.end() )
+        && std::find( written_cells.begin(), written_cells.end(), op.target.value.asInt() ) == written_cells.end() )
     {
       // update written cells
-      written_cells.push_back( op.target.value );
+      written_cells.push_back( op.target.value.asInt() );
     }
   }
   return written_cells;
@@ -150,7 +151,7 @@ std::vector<int64_t> Generator::fixCausality( Program &p )
 void Generator::fixSingularities( Program &p )
 {
   static const Operand tmp( Operand::Type::DIRECT, 26 ); // magic number
-  static const number_t max_exponent = 5; // magic number
+  static const int64_t max_exponent = 5; // magic number
   for ( size_t i = 0; i < p.ops.size(); i++ )
   {
     if ( (p.ops[i].type == Operation::Type::DIV || p.ops[i].type == Operation::Type::DIF
@@ -166,7 +167,7 @@ void Generator::fixSingularities( Program &p )
     else if ( p.ops[i].type == Operation::Type::POW )
     {
       if ( p.ops[i].source.type == Operand::Type::CONSTANT
-          && (p.ops[i].source.value < 2 || p.ops[i].source.value > max_exponent) )
+          && (p.ops[i].source.value < Number( 2 ) || Number( max_exponent ) < p.ops[i].source.value) )
       {
         p.ops[i].source.value = (gen() % (max_exponent - 2)) + 2;
       }
@@ -179,7 +180,7 @@ void Generator::fixSingularities( Program &p )
     {
       auto target = p.ops[i].target;
       p.ops.insert( p.ops.begin() + i,
-          Operation( Operation::Type::MAX, target, Operand( Operand::Type::CONSTANT, 0 ) ) );
+          Operation( Operation::Type::MAX, target, Operand( Operand::Type::CONSTANT, Number::ZERO ) ) );
       i++;
     }
   }
@@ -192,15 +193,15 @@ void Generator::fixCalls( Program &p )
     if ( op.type == Operation::Type::CAL )
     {
       if ( op.source.type != Operand::Type::CONSTANT
-          || (op.source.value < 0 || op.source.value >= static_cast<int64_t>( found_programs.size() )
-              || !found_programs[op.source.value]) )
+          || (op.source.value < Number::ZERO || !(op.source.value < Number( found_programs.size() ))
+              || !found_programs[op.source.value.asInt()]) )
       {
         int64_t id;
         do
         {
           id = gen() % found_programs.size();
         } while ( !found_programs[id] );
-        op.source = Operand( Operand::Type::CONSTANT, id );
+        op.source = Operand( Operand::Type::CONSTANT, Number( id ) );
       }
     }
   }
@@ -266,7 +267,7 @@ void Generator::ensureTargetWritten( Program &p, const std::vector<int64_t> &wri
 void Generator::ensureMeaningfulLoops( Program &p )
 {
   // make sure loops do something
-  number_t mem = 0;
+  Operand mem;
   number_t num_ops = 0;
   bool can_descent = false;
   for ( size_t i = 0; i < p.ops.size(); i++ )
@@ -275,7 +276,7 @@ void Generator::ensureMeaningfulLoops( Program &p )
     {
     case Operation::Type::LPB:
     {
-      mem = p.ops[i].target.value;
+      mem = p.ops[i].target;
       can_descent = false;
       num_ops = 0;
       break;
@@ -294,7 +295,7 @@ void Generator::ensureMeaningfulLoops( Program &p )
     case Operation::Type::BIN:
     case Operation::Type::CMP:
       num_ops++;
-      if ( p.ops[i].target.value == mem )
+      if ( p.ops[i].target == mem )
       {
         can_descent = true;
       }
@@ -304,7 +305,7 @@ void Generator::ensureMeaningfulLoops( Program &p )
       if ( !can_descent )
       {
         Operation dec;
-        dec.target = Operand( Operand::Type::DIRECT, mem );
+        dec.target = mem;
         dec.source = Operand( Operand::Type::CONSTANT, (gen() % 9) + 1 );
         switch ( gen() % 4 )
         {
@@ -313,15 +314,15 @@ void Generator::ensureMeaningfulLoops( Program &p )
           break;
         case 1:
           dec.type = Operation::Type::DIV;
-          dec.source.value++;
+          dec.source.value = Semantics::add( dec.source.value, 1 );
           break;
         case 2:
           dec.type = Operation::Type::DIF;
-          dec.source.value++;
+          dec.source.value = Semantics::add( dec.source.value, 1 );
           break;
         case 3:
           dec.type = Operation::Type::MOD;
-          dec.source.value++;
+          dec.source.value = Semantics::add( dec.source.value, 1 );
           break;
         }
         p.ops.insert( p.ops.begin() + i, dec );
