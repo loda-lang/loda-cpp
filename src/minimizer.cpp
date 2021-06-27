@@ -1,6 +1,6 @@
 #include "minimizer.hpp"
 
-#include "interpreter.hpp"
+#include "evaluator.hpp"
 #include "optimizer.hpp"
 #include "program_util.hpp"
 #include "semantics.hpp"
@@ -11,11 +11,11 @@
 bool Minimizer::minimize( Program &p, size_t num_terms ) const
 {
   Log::get().debug( "Minimizing program" );
-  Interpreter interpreter( settings );
+  Evaluator evaluator( settings );
 
   // calculate target sequence
   Sequence target_sequence;
-  steps_t target_steps = interpreter.eval( p, target_sequence, num_terms, false );
+  steps_t target_steps = evaluator.eval( p, target_sequence, num_terms, false );
   if ( target_sequence.size() < settings.num_terms )
   {
     Log::get().error(
@@ -42,7 +42,7 @@ bool Minimizer::minimize( Program &p, size_t num_terms ) const
       bool can_replace;
       try
       {
-        auto res = interpreter.check( p, target_sequence );
+        auto res = evaluator.check( p, target_sequence );
         can_replace = (res.first == status_t::OK) && (res.second.total <= target_steps.total);
       }
       catch ( const std::exception& )
@@ -67,7 +67,7 @@ bool Minimizer::minimize( Program &p, size_t num_terms ) const
         bool can_reset;
         try
         {
-          auto res = interpreter.check( p, target_sequence );
+          auto res = evaluator.check( p, target_sequence );
           can_reset = (res.first == status_t::OK) && (res.second.total <= target_steps.total);
         }
         catch ( const std::exception& )
@@ -91,7 +91,7 @@ bool Minimizer::minimize( Program &p, size_t num_terms ) const
       bool can_remove;
       try
       {
-        auto res = interpreter.check( p, target_sequence );
+        auto res = evaluator.check( p, target_sequence );
         can_remove = (res.first == status_t::OK) && (res.second.total <= target_steps.total);
       }
       catch ( const std::exception& )
@@ -159,7 +159,7 @@ bool Minimizer::minimize( Program &p, size_t num_terms ) const
             bool can_rewrite;
             try
             {
-              auto res = interpreter.check( p, target_sequence );
+              auto res = evaluator.check( p, target_sequence );
               can_rewrite = (res.first == status_t::OK); // we don't check the number of steps here!
             }
             catch ( const std::exception& )

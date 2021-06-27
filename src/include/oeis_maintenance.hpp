@@ -16,7 +16,7 @@ private:
 
   size_t checkAndMinimizePrograms();
 
-  Interpreter interpreter;
+  Evaluator evaluator;
   OeisManager manager;
 
 };

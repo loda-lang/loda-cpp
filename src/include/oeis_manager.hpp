@@ -1,7 +1,7 @@
 #pragma once
 
+#include "evaluator.hpp"
 #include "finder.hpp"
-#include "interpreter.hpp"
 #include "minimizer.hpp"
 #include "number.hpp"
 #include "oeis_sequence.hpp"
@@ -68,7 +68,7 @@ private:
 
   const Settings &settings;
   const OverwriteMode overwrite_mode;
-  Interpreter interpreter;
+  Evaluator evaluator;
 
   Finder finder;
   bool finder_initialized;

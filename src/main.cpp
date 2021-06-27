@@ -1,4 +1,4 @@
-#include "interpreter.hpp"
+#include "evaluator.hpp"
 #include "iterator.hpp"
 #include "miner.hpp"
 #include "minimizer.hpp"
@@ -90,9 +90,9 @@ int main( int argc, char *argv[] )
     else if ( cmd == "evaluate" || cmd == "eval" )
     {
       Program program = parser.parse( get_program_path( args.at( 1 ) ) );
-      Interpreter interpreter( settings );
+      Evaluator evaluator( settings );
       Sequence seq;
-      interpreter.eval( program, seq );
+      evaluator.eval( program, seq );
       if ( !settings.print_as_b_file )
       {
         std::cout << seq << std::endl;
@@ -102,9 +102,9 @@ int main( int argc, char *argv[] )
     {
       OeisSequence seq( args.at( 1 ) );
       Program program = parser.parse( seq.getProgramPath() );
-      Interpreter interpreter( settings );
+      Evaluator evaluator( settings );
       auto terms = seq.getTerms( 100000 ); // magic number
-      auto result = interpreter.check( program, terms, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id );
+      auto result = evaluator.check( program, terms, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id );
       switch ( result.first )
       {
       case status_t::OK:
@@ -217,9 +217,9 @@ int main( int argc, char *argv[] )
     else if ( cmd == "collatz" ) // hidden command
     {
       Program program = parser.parse( std::string( args.at( 1 ) ) );
-      Interpreter interpreter( settings );
+      Evaluator evaluator( settings );
       Sequence seq;
-      interpreter.eval( program, seq );
+      evaluator.eval( program, seq );
       bool is_collatz = Miner::isCollatzValuation( seq );
       std::cout << (is_collatz ? "true" : "false") << std::endl;
     }

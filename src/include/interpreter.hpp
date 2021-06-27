@@ -2,22 +2,10 @@
 
 #include "memory.hpp"
 #include "program.hpp"
-#include "sequence.hpp"
 #include "util.hpp"
 
+#include <unordered_map>
 #include <unordered_set>
-
-class steps_t
-{
-public:
-  steps_t();
-  size_t min;
-  size_t max;
-  size_t total;
-  size_t runs;
-  void add( size_t s );
-  void add( const steps_t& s );
-};
 
 struct pair_hasher
 {
@@ -25,13 +13,6 @@ struct pair_hasher
   {
     return (p.first << 32) ^ p.second.hash();
   }
-};
-
-enum class status_t
-{
-  OK,
-  WARNING,
-  ERROR
 };
 
 class Interpreter
@@ -43,13 +24,6 @@ public:
   static Number calc( const Operation::Type type, const Number& target, const Number& source );
 
   size_t run( const Program &p, Memory &mem );
-
-  steps_t eval( const Program &p, Sequence &seq, int64_t num_terms = -1, bool throw_on_error = true );
-
-  steps_t eval( const Program &p, std::vector<Sequence> &seqs, int64_t num_terms = -1 );
-
-  std::pair<status_t, steps_t> check( const Program &p, const Sequence &expected_seq,
-      int64_t num_terminating_terms = -1, int64_t id = -1 );
 
 private:
 
@@ -72,5 +46,8 @@ private:
   std::unordered_set<int64_t> running_programs;
 
   std::unordered_map<std::pair<int64_t, Number>, std::pair<Number, size_t>, pair_hasher> terms_cache;
+
+  // TODO: avoid this friend class
+  friend class Evaluator;
 
 };

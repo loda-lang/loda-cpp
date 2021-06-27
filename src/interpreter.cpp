@@ -6,7 +6,6 @@
 #include "program.hpp"
 #include "program_util.hpp"
 #include "semantics.hpp"
-#include "sequence.hpp"
 
 #include <array>
 #include <exception>
@@ -18,30 +17,6 @@
 
 using MemStack = std::stack<Memory>;
 using SizeStack = std::stack<size_t>;
-
-steps_t::steps_t()
-    : min( 0 ),
-      max( 0 ),
-      total( 0 ),
-      runs( 0 )
-{
-}
-
-void steps_t::add( size_t s )
-{
-  min = std::min( min, s );
-  max = std::max( max, s );
-  total += s;
-  runs++;
-}
-
-void steps_t::add( const steps_t& s )
-{
-  min = std::min( min, s.min );
-  max = std::max( max, s.max );
-  total += s.total;
-  runs += s.runs;
-}
 
 Interpreter::Interpreter( const Settings &settings )
     : settings( settings ),
@@ -361,134 +336,6 @@ void Interpreter::set( const Operand& a, const Number& v, Memory &mem, const Ope
             + ProgramUtil::operationToString( last_op ) );
   }
   mem.set( index, v );
-}
-
-steps_t Interpreter::eval( const Program &p, Sequence &seq, int64_t num_terms, bool throw_on_error )
-{
-  if ( num_terms < 0 )
-  {
-    num_terms = settings.num_terms;
-  }
-  seq.resize( num_terms );
-  Memory mem;
-  steps_t steps;
-  size_t s;
-  for ( int64_t i = 0; i < num_terms; i++ )
-  {
-    mem.clear();
-    mem.set( Program::INPUT_CELL, i );
-    try
-    {
-      s = run( p, mem );
-    }
-    catch ( const std::exception& )
-    {
-      seq.resize( i );
-      if ( throw_on_error )
-      {
-        throw;
-      }
-      else
-      {
-        return steps;
-      }
-    }
-    steps.add( s );
-    seq[i] = settings.use_steps ? s : mem.get( Program::OUTPUT_CELL );
-    if ( settings.print_as_b_file )
-    {
-      std::cout << (settings.print_as_b_file_offset + i) << " " << seq[i] << std::endl;
-    }
-  }
-  if ( is_debug )
-  {
-    std::stringstream buf;
-    buf << "Evaluated program to sequence " << seq;
-    Log::get().debug( buf.str() );
-  }
-  return steps;
-}
-
-steps_t Interpreter::eval( const Program &p, std::vector<Sequence> &seqs, int64_t num_terms )
-{
-  if ( num_terms < 0 )
-  {
-    num_terms = settings.num_terms;
-  }
-  for ( size_t s = 0; s < seqs.size(); s++ )
-  {
-    seqs[s].resize( num_terms );
-  }
-  Memory mem;
-  steps_t steps;
-  for ( int64_t i = 0; i < num_terms; i++ )
-  {
-    mem.clear();
-    mem.set( Program::INPUT_CELL, i );
-    steps.add( run( p, mem ) );
-    for ( size_t s = 0; s < seqs.size(); s++ )
-    {
-      seqs[s][i] = mem.get( s );
-    }
-  }
-  return steps;
-}
-
-std::pair<status_t, steps_t> Interpreter::check( const Program &p, const Sequence &expected_seq,
-    int64_t num_terminating_terms, int64_t id )
-{
-  if ( num_terminating_terms < 0 )
-  {
-    num_terminating_terms = expected_seq.size();
-  }
-  std::pair<status_t, steps_t> result;
-  Memory mem;
-  for ( size_t i = 0; i < expected_seq.size(); i++ )
-  {
-    mem.clear();
-    mem.set( Program::INPUT_CELL, i );
-    try
-    {
-      if ( id >= 0 )
-      {
-        running_programs.insert( id );
-      }
-      result.second.add( run( p, mem ) );
-      if ( id >= 0 )
-      {
-        running_programs.erase( id );
-      }
-    }
-    catch ( std::exception& e )
-    {
-      if ( id >= 0 )
-      {
-        running_programs.erase( id );
-      }
-      if ( settings.print_as_b_file )
-      {
-        std::cout << std::string( e.what() ) << std::endl;
-      }
-      result.first = ((int64_t) i >= num_terminating_terms) ? status_t::WARNING : status_t::ERROR;
-      return result;
-    }
-    if ( mem.get( Program::OUTPUT_CELL ) != expected_seq[i] )
-    {
-      if ( settings.print_as_b_file )
-      {
-        std::cout << (settings.print_as_b_file_offset + i) << " " << mem.get( Program::OUTPUT_CELL ) << " -> expected "
-            << expected_seq[i] << std::endl;
-      }
-      result.first = status_t::ERROR;
-      return result;
-    }
-    if ( settings.print_as_b_file )
-    {
-      std::cout << (settings.print_as_b_file_offset + i) << " " << expected_seq[i] << std::endl;
-    }
-  }
-  result.first = status_t::OK;
-  return result;
 }
 
 std::pair<Number, size_t> Interpreter::call( int64_t id, const Number& arg )

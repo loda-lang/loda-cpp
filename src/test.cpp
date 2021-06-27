@@ -2,6 +2,7 @@
 
 #include "blocks.hpp"
 #include "config.hpp"
+#include "evaluator.hpp"
 #include "generator_v1.hpp"
 #include "interpreter.hpp"
 #include "iterator.hpp"
@@ -643,7 +644,7 @@ void Test::optimizer()
 
 void Test::minimizer( size_t tests )
 {
-  Interpreter interpreter( settings );
+  Evaluator evaluator( settings );
   Minimizer minimizer( settings );
   std::random_device rand;
   MultiGenerator multi_generator( settings, manager.getStats(), rand() );
@@ -659,7 +660,7 @@ void Test::minimizer( size_t tests )
     multi_generator.next();
     try
     {
-      interpreter.eval( program, s1 );
+      evaluator.eval( program, s1 );
     }
     catch ( const std::exception &e )
     {
@@ -667,7 +668,7 @@ void Test::minimizer( size_t tests )
     }
     minimized = program;
     minimizer.optimizeAndMinimize( minimized, 2, 1, s1.size() );
-    interpreter.eval( minimized, s2 );
+    evaluator.eval( minimized, s2 );
     if ( s1.size() != s2.size() || (s1 != s2) )
     {
       ProgramUtil::print( program, std::cout );
@@ -780,10 +781,10 @@ void Test::testSeq( size_t id, const Sequence &expected )
   Parser parser;
   Settings settings; // special settings
   settings.num_terms = expected.size();
-  Interpreter interpreter( settings );
+  Evaluator evaluator( settings );
   auto p = parser.parse( file );
   Sequence result;
-  interpreter.eval( p, result );
+  evaluator.eval( p, result );
   if ( result != expected )
   {
     Log::get().error( "unexpected result: " + result.to_string(), true );
@@ -801,11 +802,11 @@ void Test::testMatcherSet( Matcher &matcher, const std::vector<size_t> &ids )
   }
 }
 
-void eval( const Program& p, Interpreter& interpreter, Sequence& s )
+void eval( const Program& p, Evaluator& evaluator, Sequence& s )
 {
   try
   {
-    interpreter.eval( p, s );
+    evaluator.eval( p, s );
   }
   catch ( const std::exception& e )
   {
@@ -820,14 +821,14 @@ void Test::testMatcherPair( Matcher &matcher, size_t id1, size_t id2 )
       "Testing " + matcher.getName() + " matcher for " + OeisSequence( id1 ).id_str() + " -> "
           + OeisSequence( id2 ).id_str() );
   Parser parser;
-  Interpreter interpreter( settings );
+  Evaluator evaluator( settings );
   auto p1 = parser.parse( OeisSequence( id1 ).getProgramPath() );
   auto p2 = parser.parse( OeisSequence( id2 ).getProgramPath() );
   ProgramUtil::removeOps( p1, Operation::Type::NOP );
   ProgramUtil::removeOps( p2, Operation::Type::NOP );
   Sequence s1, s2, s3;
-  eval( p1, interpreter, s1 );
-  eval( p2, interpreter, s2 );
+  eval( p1, evaluator, s1 );
+  eval( p2, evaluator, s2 );
   matcher.insert( s2, id2 );
   Matcher::seq_programs_t result;
   matcher.match( p1, s1, result );
@@ -840,7 +841,7 @@ void Test::testMatcherPair( Matcher &matcher, size_t id1, size_t id2 )
   {
     Log::get().error( matcher.getName() + " matcher returned unexpected sequence ID", true );
   }
-  eval( result[0].second, interpreter, s3 );
+  eval( result[0].second, evaluator, s3 );
   if ( s2.size() != s3.size() || s2 != s3 )
   {
     ProgramUtil::print( result[0].second, std::cout );

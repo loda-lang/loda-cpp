@@ -1,6 +1,6 @@
 #pragma once
 
-#include "interpreter.hpp"
+#include "evaluator.hpp"
 #include "matcher.hpp"
 #include "number.hpp"
 
@@ -51,7 +51,7 @@ private:
       Matcher::seq_programs_t &result );
 
   const Settings &settings;
-  Interpreter interpreter;
+  Evaluator evaluator;
   std::vector<std::unique_ptr<Matcher>> matchers;
   mutable std::vector<MatcherStats> matcher_stats;
   mutable size_t num_find_attempts;

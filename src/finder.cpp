@@ -12,7 +12,7 @@
 
 Finder::Finder( const Settings &settings )
     : settings( settings ),
-      interpreter( settings ),
+      evaluator( settings ),
       num_find_attempts( 0 )
 {
   auto config = ConfigLoader::load( settings );
@@ -75,7 +75,7 @@ Matcher::seq_programs_t Finder::findSequence( const Program &p, Sequence &norm_s
   Matcher::seq_programs_t result;
   try
   {
-    interpreter.eval( p, tmp_seqs );
+    evaluator.eval( p, tmp_seqs );
     norm_seq = tmp_seqs[1];
   }
   catch ( const std::exception& )
@@ -121,7 +121,7 @@ void Finder::findAll( const Program &p, const Sequence &norm_seq, const std::vec
       try
       {
         tmp_full_seq.clear();
-        interpreter.eval( t.second, tmp_full_seq, expected_full_seq.size() );
+        evaluator.eval( t.second, tmp_full_seq, expected_full_seq.size() );
         if ( tmp_full_seq.size() != expected_full_seq.size() || tmp_full_seq != expected_full_seq )
         {
           matcher_stats[i].false_positives++;
