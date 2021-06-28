@@ -40,6 +40,10 @@ void Number::load( std::istream& in, bool is_big )
   else
   {
     in >> value;
+    if ( value == std::numeric_limits<int64_t>::max() || value == std::numeric_limits<int64_t>::min() )
+    {
+      (*this) = Number::INF;
+    }
   }
 }
 
