@@ -1,13 +1,12 @@
 #include "parser.hpp"
 
+#include "number.hpp"
 #include "program.hpp"
 #include "util.hpp"
 
 #include <algorithm>
 #include <fstream>
 #include <iostream>
-#include "number.hpp"
-
 #include <stdexcept>
 
 Program Parser::parse( const std::string &file )
@@ -44,12 +43,12 @@ Program Parser::parse( std::istream &in_ )
       switch ( Operation::Metadata::get( o.type ).num_operands )
       {
       case 0:
-        o.target = Operand( Operand::Type::CONSTANT, 0 );
-        o.source = Operand( Operand::Type::CONSTANT, 0 );
+        o.target = Operand( Operand::Type::CONSTANT, Number::ZERO );
+        o.source = Operand( Operand::Type::CONSTANT, Number::ZERO );
         break;
       case 1:
         o.target = readOperand();
-        o.source = Operand( Operand::Type::CONSTANT, 0 );
+        o.source = Operand( Operand::Type::CONSTANT, Number::ZERO );
         break;
       case 2:
         o.target = readOperand();
@@ -68,7 +67,7 @@ Program Parser::parse( std::istream &in_ )
           }
           else
           {
-            o.source = Operand( Operand::Type::CONSTANT, 1 ); // default second argument is 1 for lpb
+            o.source = Operand( Operand::Type::CONSTANT, Number::ONE ); // default second argument is 1 for lpb
           }
         }
         else
@@ -120,18 +119,9 @@ void Parser::readSeparator( char separator )
   }
 }
 
-number_t Parser::readValue()
+Number Parser::readValue()
 {
-  number_t v;
-  int c;
-  *in >> std::ws;
-  c = in->peek();
-  if ( !std::isdigit( c ) && c != '-' )
-  {
-    throw std::runtime_error( "invalid value" );
-  }
-  *in >> v;
-  return v;
+  return Number( *in, false );
 }
 
 std::string Parser::readIdentifier()

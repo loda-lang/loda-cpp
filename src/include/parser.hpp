@@ -9,8 +9,7 @@ class Parser
 public:
 
   Parser()
-      :
-      in( nullptr )
+      : in( nullptr )
   {
   }
 
@@ -20,7 +19,7 @@ public:
 
   void readSeparator( char separator );
 
-  number_t readValue();
+  Number readValue();
 
   std::string readIdentifier();
 
