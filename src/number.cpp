@@ -106,11 +106,6 @@ std::string Number::to_string() const
   return ss.str();
 }
 
-bool isCloseToOverflow( number_t n )
-{
-  return (n > (NUM_INF / 1000)) || (n < (NUM_INF / -1000));
-}
-
 number_t getPowerOf( number_t value, number_t base )
 {
   number_t result = 0;

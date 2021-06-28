@@ -17,6 +17,12 @@ std::string OeisSequence::getHome()
   return getLodaHome() + "oeis/";
 }
 
+// TODO: replace this function by a "bit-counting" function in Number
+bool OeisSequence::isCloseToInf( const Number& n )
+{
+  return (n.value > (NUM_INF / 1000)) || (n.value < (NUM_INF / -1000));
+}
+
 OeisSequence::OeisSequence( size_t id )
     : id( id ),
       num_bfile_terms( 0 )
@@ -25,7 +31,6 @@ OeisSequence::OeisSequence( size_t id )
 
 OeisSequence::OeisSequence( std::string id_str )
     : num_bfile_terms( 0 )
-
 {
   if ( id_str.empty() || id_str[0] != 'A' )
   {
@@ -102,7 +107,7 @@ Sequence loadBFile( size_t id, const Sequence& seq_full )
   if ( big_file.good() )
   {
     std::string l;
-    int64_t expected_index = -1, index = 0, value = 0;
+    int64_t expected_index = -1, index = 0;
     while ( std::getline( big_file, l ) )
     {
       l.erase( l.begin(), std::find_if( l.begin(), l.end(), []( int ch )
@@ -114,7 +119,7 @@ Sequence loadBFile( size_t id, const Sequence& seq_full )
         continue;
       }
       std::stringstream ss( l );
-      ss >> index >> value;
+      ss >> index;
       if ( expected_index == -1 )
       {
         expected_index = index;
@@ -125,7 +130,8 @@ Sequence loadBFile( size_t id, const Sequence& seq_full )
         result.clear();
         return result;
       }
-      if ( !ss || isCloseToOverflow( value ) )
+      Number value( ss, false );
+      if ( !ss || OeisSequence::isCloseToInf( value ) )
       {
         break;
       }

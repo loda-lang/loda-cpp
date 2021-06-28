@@ -12,6 +12,8 @@ public:
 
   static std::string getHome();
 
+  static bool isCloseToInf( const Number& n );
+
   OeisSequence( size_t id = 0 );
 
   OeisSequence( std::string id_str );

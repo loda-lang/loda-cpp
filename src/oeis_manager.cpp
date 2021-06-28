@@ -147,7 +147,7 @@ void OeisManager::loadData()
       }
       else if ( line[pos] >= '0' && line[pos] <= '9' )
       {
-        if ( isCloseToOverflow( num ) )
+        if ( OeisSequence::isCloseToInf( num ) )
         {
           break;
         }
