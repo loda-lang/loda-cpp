@@ -19,6 +19,10 @@ public:
 
   Number( int64_t value );
 
+  Number( std::istream& in, bool is_big );
+
+  Number( const std::string& s, bool is_big );
+
   bool operator==( const Number&n ) const;
 
   bool operator!=( const Number&n ) const;
@@ -36,6 +40,8 @@ public:
 private:
 
   friend class Semantics;
+
+  void load( std::istream& in, bool is_big );
 
   int64_t value;
   bool is_big;

@@ -19,6 +19,30 @@ Number::Number( int64_t value )
 {
 }
 
+Number::Number( std::istream& in, bool is_big )
+{
+  load( in, is_big );
+}
+
+Number::Number( const std::string& s, bool is_big )
+{
+  std::stringstream buf( s );
+  load( buf, is_big );
+}
+
+void Number::load( std::istream& in, bool is_big )
+{
+  this->is_big = is_big;
+  if ( is_big )
+  {
+    throw std::runtime_error( "Bigint not supported yet" );
+  }
+  else
+  {
+    in >> value;
+  }
+}
+
 bool Number::operator==( const Number&n ) const
 {
   if ( is_big )

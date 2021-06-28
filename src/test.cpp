@@ -67,21 +67,48 @@ void check_inf( const Number& n )
   }
 }
 
-void check_num( const Number& m, const Number& n )
+void check_num( const Number& m, const std::string& s )
 {
-  if ( m != n )
+  if ( m.to_string() != s )
   {
-    Log::get().error( "Expected " + m.to_string() + " to be " + n.to_string(), true );
+    Log::get().error( "Expected " + m.to_string() + " to be " + s, true );
+  }
+}
+
+void testNumberDigits( int64_t num_digits, bool is_big )
+{
+  std::string nines;
+  std::string one = "1";
+  for ( int64_t i = 0; i < num_digits + 1; i++ )
+  {
+    nines += '9';
+    one += '0';
+    Number n( nines, is_big );
+    Number o( one, is_big );
+    auto m = Semantics::add( n, Number::ONE );
+    if ( i < num_digits )
+    {
+      check_num( n, nines );
+      check_num( o, one );
+      check_num( m, one );
+    }
+    else
+    {
+      check_inf( n );
+      check_inf( o );
+      check_inf( m );
+    }
   }
 }
 
 void Test::number()
 {
   Log::get().info( "Testing number" );
-  if ( !(Number::ZERO < Number::ONE) )
+  if ( Number::ONE < Number::ZERO || !(Number::ZERO < Number::ONE) )
   {
     Log::get().error( "Basic number check failed", true );
   }
+  testNumberDigits( 18, false );
 }
 
 void Test::semantics()
