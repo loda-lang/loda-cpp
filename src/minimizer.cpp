@@ -196,8 +196,9 @@ bool Minimizer::removeClr( Program &p ) const
       if ( length <= 0 )
       {
         p.ops.erase( p.ops.begin() + i );
+        replaced = true;
       }
-      else
+      else if ( length <= 100 ) // magic number
       {
         p.ops[i].type = Operation::Type::MOV;
         p.ops[i].source.value = 0;
@@ -207,8 +208,8 @@ bool Minimizer::removeClr( Program &p ) const
           mov.target.value = Semantics::add( mov.target.value, Number::ONE );
           p.ops.insert( p.ops.begin() + i + j, mov );
         }
+        replaced = true;
       }
-      replaced = true;
     }
   }
   return replaced;
