@@ -138,6 +138,14 @@ std::string Sequence::to_string() const
   return ss.str();
 }
 
+void Sequence::to_b_file( std::ostream &out, int64_t offset ) const
+{
+  for ( size_t i = 0; i < size(); i++ )
+  {
+    out << (offset + i) << " " << (*this)[i] << "\n";
+  }
+}
+
 std::size_t SequenceHasher::operator()( const Sequence &s ) const
 {
   auto seed = s.size();

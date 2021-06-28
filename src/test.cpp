@@ -150,17 +150,26 @@ void Test::semantics()
 void Test::sequence()
 {
   Log::get().info( "Testing sequence" );
-
   Sequence s( { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 } );
   Sequence t( { 2, 3, 4, 5, 6, 7, 8, 9 } );
   auto u = s.subsequence( 1, 8 );
   if ( t != u )
   {
-    Log::get().error( "Error comparing subsequence" );
+    Log::get().error( "Error comparing subsequence", true );
   }
   if ( t.to_string() != "2,3,4,5,6,7,8,9" )
   {
-    Log::get().error( "Error printing sequence" );
+    Log::get().error( "Error printing sequence", true );
+  }
+  if ( !s.is_linear( 0 ) )
+  {
+    Log::get().error( "Sequence should be linear", true );
+  }
+  Sequence v = s;
+  v.push_back( 42 );
+  if ( v.is_linear( 0 ) )
+  {
+    Log::get().error( "Sequence should not be linear", true );
   }
 }
 
@@ -377,10 +386,35 @@ void checkSeq( const Sequence& s, size_t expected_size, size_t index, number_t e
   }
 }
 
+void checkSeqAgainstTestBFile( int64_t seq_id, int64_t offset, int64_t max_num_terms )
+{
+  OeisSequence t( seq_id );
+  std::stringstream buf;
+  t.getTerms( max_num_terms ).to_b_file( buf, offset );
+  std::ifstream bfile( "tests/sequence/" + t.id_str( "b" ) + ".txt" );
+  std::string x, y;
+  while ( std::getline( bfile, x ) )
+  {
+    if ( !std::getline( buf, y ) )
+    {
+      Log::get().error( "Expected line in sequence: " + x, true );
+    }
+    if ( x != y )
+    {
+      Log::get().error( "Unexpected line in sequence: " + y + " (expected " + x + ")", true );
+    }
+  }
+  if ( std::getline( buf, y ) )
+  {
+    Log::get().error( "Unexpected line in sequence: " + y, true );
+  }
+  bfile.close();
+}
+
 void Test::oeisSeq()
 {
   OeisSequence s( 6 );
-  std::remove( s.getBFilePath().c_str() );
+//  std::remove( s.getBFilePath().c_str() );
   checkSeq( s.getTerms( 20 ), 20, 18, 8 ); // this should fetch the b-file
   checkSeq( s.getTerms( 250 ), 250, 235, 38 );
   checkSeq( s.getTerms( 2000 ), 2000, 1240, 100 );
@@ -390,6 +424,8 @@ void Test::oeisSeq()
   checkSeq( s.getTerms( 2000 ), 2000, 1240, 100 );
   checkSeq( s.getTerms( 250 ), 250, 235, 38 );
   checkSeq( s.getTerms( 20 ), 20, 18, 8 );
+
+  checkSeqAgainstTestBFile( 45, 0, 2000 );
 }
 
 void Test::ackermann()

@@ -27,6 +27,8 @@ public:
 
   friend std::ostream& operator<<( std::ostream &out, const Sequence &s );
 
+  void to_b_file( std::ostream &out, int64_t offset ) const;
+
   std::string to_string() const;
 
 };
