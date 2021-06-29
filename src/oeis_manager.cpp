@@ -99,9 +99,9 @@ void OeisManager::loadData()
     Log::get().error( "OEIS data not found: " + path, true );
   }
   std::string line;
+  std::stringstream buf;
   size_t pos;
   size_t id;
-  int64_t num, sign;
   Sequence seq_full, seq_big;
 
   loaded_count = 0;
@@ -134,28 +134,23 @@ void OeisManager::loadData()
       throwParseError( line );
     }
     ++pos;
-    num = 0;
-    sign = 1;
+    buf.clear();
     seq_full.clear();
     while ( pos < line.length() )
     {
       if ( line[pos] == ',' )
       {
-        seq_full.push_back( sign * num );
-        num = 0;
-        sign = 1;
-      }
-      else if ( line[pos] >= '0' && line[pos] <= '9' )
-      {
+        Number num( buf, false );
         if ( OeisSequence::isCloseToInf( num ) )
         {
           break;
         }
-        num = (10 * num) + (line[pos] - '0');
+        seq_full.push_back( num );
+        buf.clear();
       }
-      else if ( line[pos] == '-' )
+      else if ( (line[pos] >= '0' && line[pos] <= '9') || line[pos] == '-' )
       {
-        sign = -1;
+        buf << line[pos];
       }
       else
       {

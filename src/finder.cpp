@@ -170,7 +170,7 @@ void Finder::logSummary( size_t loaded_count )
     if ( i > 0 ) buf << ", ";
     buf << matchers[i]->getName() << ": " << std::setprecision( 3 ) << matchers[i]->getCompationRatio() << "%";
   }
-  Log::get().info( buf.str() );
+  Log::get().debug( buf.str() );
 }
 
 void Finder::publishMetrics( std::vector<Metrics::Entry>& entries )
