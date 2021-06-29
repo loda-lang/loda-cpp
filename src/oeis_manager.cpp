@@ -607,10 +607,10 @@ std::pair<bool, Program> OeisManager::checkAndMinimize( const Program &p, const 
 
   if ( basic_check_result == status_t::OK )
   {
-    // if we got here, there was an error in the minimization
-    Log::get().error(
+    // if we got here, the minimization changed the semantics of the program
+    Log::get().warn(
         "Program for " + seq.id_str() + " generates wrong result after minimization with "
-            + std::to_string( OeisSequence::DEFAULT_SEQ_LENGTH ) + " terms", false );
+            + std::to_string( OeisSequence::DEFAULT_SEQ_LENGTH ) + " terms" );
     std::string f = getLodaHome() + "debug/minimizer/" + seq.id_str() + ".asm";
     ensureDir( f );
     std::ofstream out( f );

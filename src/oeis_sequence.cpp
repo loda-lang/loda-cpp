@@ -118,6 +118,7 @@ Sequence loadBFile( size_t id, const Sequence& seq_full )
       {
         continue;
       }
+      // TODO: avoid extra buffer
       std::stringstream ss( l );
       ss >> index;
       if ( expected_index == -1 )
@@ -130,6 +131,7 @@ Sequence loadBFile( size_t id, const Sequence& seq_full )
         result.clear();
         return result;
       }
+      ss >> std::ws;
       Number value( ss, false );
       if ( !ss || OeisSequence::isCloseToInf( value ) )
       {

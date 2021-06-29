@@ -39,6 +39,13 @@ void Number::load( std::istream& in, bool is_big )
   }
   else
   {
+    const auto c = in.peek();
+    if ( !std::isdigit( c ) && c != '-' )
+    {
+      std::string tmp;
+      std::getline( in, tmp );
+      throw std::runtime_error( "Error parsing number: '" + tmp + "'" );
+    }
     in >> value;
     if ( value == std::numeric_limits<int64_t>::max() || value == std::numeric_limits<int64_t>::min() )
     {
