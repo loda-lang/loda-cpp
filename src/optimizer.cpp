@@ -240,7 +240,7 @@ bool Optimizer::mergeOps( Program &p ) const
   return merged;
 }
 
-inline bool simplifyOperand( Operand &op, std::unordered_set<number_t> &initialized_cells, bool is_source )
+inline bool simplifyOperand( Operand &op, std::unordered_set<int64_t> &initialized_cells, bool is_source )
 {
   switch ( op.type )
   {
@@ -268,7 +268,7 @@ inline bool simplifyOperand( Operand &op, std::unordered_set<number_t> &initiali
 
 bool Optimizer::simplifyOperations( Program &p, size_t num_initialized_cells ) const
 {
-  std::unordered_set<number_t> initialized_cells;
+  std::unordered_set<int64_t> initialized_cells;
   for ( size_t i = 0; i < num_initialized_cells; ++i )
   {
     initialized_cells.insert( i );
@@ -436,10 +436,10 @@ bool Optimizer::reduceMemoryCells( Program &p, size_t num_reserved_cells ) const
   {
     return false;
   }
-  for ( number_t candidate = 0; candidate < largest_used; ++candidate )
+  for ( int64_t candidate = 0; candidate < largest_used; ++candidate )
   {
     bool free = true;
-    if ( (size_t) candidate < num_reserved_cells )
+    if ( candidate < static_cast<int64_t>( num_reserved_cells ) )
     {
       free = false;
     }
@@ -483,7 +483,7 @@ bool Optimizer::swapMemoryCells( Program &p, size_t num_reserved_cells ) const
   {
     return false;
   }
-  const number_t target_cell = num_reserved_cells - 1;
+  const int64_t target_cell = num_reserved_cells - 1;
   int64_t mov_target = -1;
   for ( int64_t i = p.ops.size() - 1; i >= 0; i-- )
   {
@@ -546,7 +546,7 @@ bool Optimizer::swapMemoryCells( Program &p, size_t num_reserved_cells ) const
   return true;
 }
 
-bool doPartialEval( Operation &op, std::map<number_t, Operand> &values )
+bool doPartialEval( Operation &op, std::map<int64_t, Operand> &values )
 {
   // make sure there is not indirect memory access
   const auto num_ops = Operation::Metadata::get( op.type ).num_operands;
@@ -663,7 +663,7 @@ bool Optimizer::partialEval( Program &p, size_t num_initialized_cells ) const
   {
     return false;
   }
-  std::map<number_t, Operand> values;
+  std::map<int64_t, Operand> values;
   for ( int64_t i = num_initialized_cells; i <= largest_used; i++ )
   {
     values[i] = Operand( Operand::Type::CONSTANT, 0 );

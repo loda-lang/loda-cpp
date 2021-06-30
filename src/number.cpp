@@ -3,9 +3,11 @@
 #include <sstream>
 #include <stdexcept>
 
+#define NUM_INF std::numeric_limits<int64_t>::max()
+
 const Number Number::ZERO( 0 );
 const Number Number::ONE( 1 );
-const Number Number::INF( NUM_INF );
+const Number Number::INF( NUM_INF);
 
 Number::Number()
     : value( 0 ),
@@ -83,6 +85,10 @@ int64_t Number::asInt() const
   {
     throw std::runtime_error( "Bigint not supported yet" );
   }
+  if ( (*this) == Number::INF )
+  {
+    throw std::runtime_error( "Infinity error" );
+  }
   // TODO: throw an exception if the value is out of range
   return value;
 }
@@ -111,15 +117,4 @@ std::string Number::to_string() const
   std::stringstream ss;
   ss << (*this);
   return ss.str();
-}
-
-number_t getPowerOf( number_t value, number_t base )
-{
-  number_t result = 0;
-  while ( value % base == 0 )
-  {
-    result++;
-    value /= base;
-  }
-  return (value == 1) ? result : 0;
 }

@@ -116,28 +116,7 @@ bool Minimizer::minimize( Program &p, size_t num_terms ) const
       if ( op.type == Operation::Type::GCD && op.target.type == Operand::Type::DIRECT
           && op.source.type == Operand::Type::CONSTANT )
       {
-        int64_t base = 0;
-        int64_t v = op.source.value.asInt();
-        if ( getPowerOf( v, 2 ) >= 10 )
-        {
-          base = 2;
-        }
-        else if ( getPowerOf( v, 3 ) >= 6 )
-        {
-          base = 3;
-        }
-        else if ( getPowerOf( v, 5 ) >= 5 )
-        {
-          base = 5;
-        }
-        else if ( getPowerOf( v, 7 ) >= 4 )
-        {
-          base = 7;
-        }
-        else if ( getPowerOf( v, 10 ) >= 3 )
-        {
-          base = 10;
-        }
+        int64_t base = getPowerOf( op.source.value );
         if ( base != 0 )
         {
           std::unordered_set<int64_t> used_cells;
@@ -183,6 +162,31 @@ bool Minimizer::minimize( Program &p, size_t num_terms ) const
     global_change = global_change || local_change;
   }
   return global_change;
+}
+
+int64_t Minimizer::getPowerOf( const Number& v )
+{
+  if ( Number( 9 ) < Semantics::getPowerOf( v, 2 ) )
+  {
+    return 2;
+  }
+  else if ( Number( 5 ) < Semantics::getPowerOf( v, 3 ) )
+  {
+    return 3;
+  }
+  else if ( Number( 4 ) < Semantics::getPowerOf( v, 5 ) )
+  {
+    return 5;
+  }
+  else if ( Number( 3 ) < Semantics::getPowerOf( v, 7 ) )
+  {
+    return 7;
+  }
+  else if ( Number( 2 ) < Semantics::getPowerOf( v, 10 ) )
+  {
+    return 10;
+  }
+  return 0;
 }
 
 bool Minimizer::removeClr( Program &p ) const

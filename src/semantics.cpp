@@ -5,9 +5,12 @@
 #include <stdexcept>
 
 #define CHECK_IS_BIG(a,b) if (a.is_big || b.is_big) throw std::runtime_error("Bigint not supported for this operation");
-#define CHECK_INF1(a) if ( a.value == NUM_INF ) return Number::INF;
-#define CHECK_INF2(a,b) if ( a.value == NUM_INF || b.value == NUM_INF ) return Number::INF;
-#define CHECK_ZERO1(a) if ( a.value == 0 ) return Number::INF;
+#define CHECK_INF1(a) if ( a == Number::INF ) return Number::INF;
+#define CHECK_INF2(a,b) if ( a == Number::INF || b == Number::INF ) return Number::INF;
+#define CHECK_ZERO1(a) if ( a == Number::ZERO ) return Number::INF;
+
+// TODO: remove this once we switched to bigint
+const int64_t Semantics::NUM_INF = std::numeric_limits<int64_t>::max();
 
 Number Semantics::add( const Number& a, const Number& b )
 {
@@ -178,7 +181,7 @@ Number Semantics::bin( const Number& nn, const Number& kk )
   {
     k = n - k;
   }
-  for ( number_t i = 0; i < k; i++ )
+  for ( int64_t i = 0; i < k; i++ )
   {
     r = mul( r, Number( n - i ) );
     r = div( r, Number( i + 1 ) );
@@ -201,14 +204,14 @@ Number Semantics::min( const Number& a, const Number& b )
 {
   CHECK_IS_BIG( a, b );
   CHECK_INF2( a, b );
-  return Number( std::min<number_t>( a.value, b.value ) );
+  return Number( std::min<int64_t>( a.value, b.value ) );
 }
 
 Number Semantics::max( const Number& a, const Number& b )
 {
   CHECK_IS_BIG( a, b );
   CHECK_INF2( a, b );
-  return Number( std::max<number_t>( a.value, b.value ) );
+  return Number( std::max<int64_t>( a.value, b.value ) );
 }
 
 Number Semantics::abs( const Number& a )
@@ -216,4 +219,16 @@ Number Semantics::abs( const Number& a )
   CHECK_IS_BIG( a, a );
   CHECK_INF1( a );
   return Number( std::abs( a.value ) );
+}
+
+Number Semantics::getPowerOf( Number value, const Number& base )
+{
+  CHECK_IS_BIG( value, base );
+  int64_t result = 0;
+  while ( mod( value, base ) == Number::ZERO )
+  {
+    result++;
+    value = div( value, base );
+  }
+  return (value == Number::ONE) ? Number( result ) : Number::ZERO;
 }

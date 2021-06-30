@@ -268,7 +268,7 @@ void Generator::ensureMeaningfulLoops( Program &p )
 {
   // make sure loops do something
   Operand mem;
-  number_t num_ops = 0;
+  int64_t num_ops = 0;
   bool can_descent = false;
   for ( size_t i = 0; i < p.ops.size(); i++ )
   {
@@ -380,8 +380,8 @@ MultiGenerator::MultiGenerator( const Settings &settings, const Stats& stats, in
     break;
   }
   Log::get().info(
-      "Initialized " + std::to_string( generators.size() ) + " generators from '" + config.name
-          + "' profile (overwrite: " + overwrite + ")" );
+      "Initialized " + std::to_string( generators.size() ) + " generators (profile: '" + config.name + "', overwrite: "
+          + overwrite + ")" );
 }
 
 Generator* MultiGenerator::getGenerator()

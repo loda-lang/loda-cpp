@@ -5,8 +5,6 @@
 #include <random>
 #include <stdlib.h>
 
-using number_t = int64_t;
-
 class Number
 {
 public:
@@ -50,7 +48,3 @@ private:
   bool is_big;
 
 };
-
-static constexpr number_t NUM_INF = std::numeric_limits<number_t>::max();
-
-number_t getPowerOf( number_t value, number_t base );

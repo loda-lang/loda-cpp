@@ -57,6 +57,7 @@ void OeisManager::load()
   loadList( "overwrite", overwrite_list );
   loadList( "protect", protect_list );
 
+  std::chrono::steady_clock::time_point start_time;
   {
     // obtain lock
     FolderLock lock( OeisSequence::getHome() );
@@ -66,6 +67,7 @@ void OeisManager::load()
 
     // load sequence data, names and deny list
     Log::get().info( "Loading sequences from the OEIS index" );
+    start_time = std::chrono::steady_clock::now();
     loadData();
     loadNames();
 
@@ -87,7 +89,15 @@ void OeisManager::load()
   }
 
   // print summary
-  Log::get().info( "Loaded " + std::to_string( loaded_count ) + "/" + std::to_string( total_count ) + " sequences" );
+  auto cur_time = std::chrono::steady_clock::now();
+  double duration = std::chrono::duration_cast<std::chrono::milliseconds>( cur_time - start_time ).count() / 1000.0;
+  std::stringstream buf;
+  buf.setf( std::ios::fixed );
+  buf.precision( 2 );
+  buf << duration;
+  Log::get().info(
+      "Loaded " + std::to_string( loaded_count ) + "/" + std::to_string( total_count ) + " sequences in " + buf.str()
+          + "s" );
 }
 
 void OeisManager::loadData()
@@ -620,7 +630,7 @@ size_t getBadOpsCount( const Program& p )
   // we prefer programs the following programs:
   // - w/o indirect memory access
   // - w/o loops that have non-constant args
-  // - w/o gcd with powers of 2
+  // - w/o gcd with powers of a small constant
   size_t num_ops = ProgramUtil::numOps( p, Operand::Type::INDIRECT );
   for ( auto &op : p.ops )
   {
@@ -628,14 +638,10 @@ size_t getBadOpsCount( const Program& p )
     {
       num_ops++;
     }
-    if ( op.type == Operation::Type::GCD && op.source.type == Operand::Type::CONSTANT )
+    if ( op.type == Operation::Type::GCD && op.source.type == Operand::Type::CONSTANT
+        && Minimizer::getPowerOf( op.source.value ) != 0 )
     {
-      auto v = op.source.value.asInt();
-      if ( getPowerOf( v, 2 ) >= 10 || getPowerOf( v, 3 ) >= 6 || getPowerOf( v, 5 ) >= 5 || getPowerOf( v, 7 ) >= 4
-          || getPowerOf( v, 10 ) >= 3 )
-      {
-        num_ops++;
-      }
+      num_ops++;
     }
   }
   return num_ops;
@@ -648,7 +654,7 @@ std::string OeisManager::isOptimizedBetter( Program existing, Program optimized,
   {
     if ( op.type == Operation::Type::CAL )
     {
-      if ( op.source.type != Operand::Type::CONSTANT || op.source.value == static_cast<number_t>( seq.id ) )
+      if ( op.source.type != Operand::Type::CONSTANT || op.source.value == Number( seq.id ) )
       {
         return "";
       }

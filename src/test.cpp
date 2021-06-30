@@ -54,9 +54,9 @@ void Test::all()
   minimizer( tests );
 }
 
-number_t read_num( const std::string &s )
+Number read_num( const std::string &s )
 {
-  return (s == "NI") ? NUM_INF : std::stoll( s );
+  return (s == "NI") ? Number::INF : Number( s, false );
 }
 
 void check_inf( const Number& n )
@@ -201,13 +201,13 @@ void Test::sequence()
   }
 }
 
-void checkMemory( const Memory &mem, number_t index, number_t value )
+void checkMemory( const Memory &mem, int64_t index, const Number& value )
 {
   if ( mem.get( index ) != value )
   {
     Log::get().error(
-        "Unexpected memory value at index " + std::to_string( index ) + "; expected: " + std::to_string( value )
-            + "; found: " + mem.get( index ).to_string(), true );
+        "Unexpected memory value at index " + std::to_string( index ) + "; expected: " + value.to_string() + "; found: "
+            + mem.get( index ).to_string(), true );
   }
 }
 
@@ -217,8 +217,8 @@ void Test::memory()
 
   // get and set
   Memory base;
-  number_t size = 100;
-  for ( number_t i = 0; i < size; i++ )
+  int64_t size = 100;
+  for ( int64_t i = 0; i < size; i++ )
   {
     base.set( i, i );
     checkMemory( base, i, i );
@@ -227,16 +227,16 @@ void Test::memory()
   checkMemory( base, size + 1, 0 );
 
   // fragments
-  size_t max_frag_length = 50;
-  for ( number_t start = -10; start < size + 10; start++ )
+  int64_t max_frag_length = 50;
+  for ( int64_t start = -10; start < size + 10; start++ )
   {
-    for ( size_t length = 0; length < max_frag_length; length++ )
+    for ( int64_t length = 0; length < max_frag_length; length++ )
     {
       auto frag = base.fragment( start, length );
-      for ( number_t i = 0; i < (number_t) length; i++ )
+      for ( int64_t i = 0; i < length; i++ )
       {
-        number_t j = start + i; // old index
-        number_t v = (j < 0 || j >= size) ? 0 : j;
+        int64_t j = start + i; // old index
+        int64_t v = (j < 0 || j >= size) ? 0 : j;
         checkMemory( frag, i, v );
       }
       checkMemory( frag, -1, 0 );
@@ -400,7 +400,7 @@ void Test::blocks()
   }
 }
 
-void checkSeq( const Sequence& s, size_t expected_size, size_t index, number_t expected_value )
+void checkSeq( const Sequence& s, size_t expected_size, size_t index, const Number& expected_value )
 {
   if ( s.size() != expected_size )
   {
@@ -466,9 +466,9 @@ void Test::ackermann()
 void Test::collatz()
 {
   Log::get().info( "Testing collatz validator using A006577" );
-  std::vector<number_t> values = { 0, 1, 7, 2, 5, 8, 16, 3, 19, 6, 14, 9, 9, 17, 17, 4, 12, 20, 20, 7, 7, 15, 15, 10,
-      23, 10, 111, 18, 18, 18, 106, 5, 26, 13, 13, 21, 21, 21, 34, 8, 109, 8, 29, 16, 16, 16, 104, 11, 24, 24, 24, 11,
-      11, 112, 112, 19, 32, 19, 32, 19, 19, 107, 107, 6, 27, 27, 27, 14, 14, 14, 102, 22 };
+  std::vector<int64_t> values = { 0, 1, 7, 2, 5, 8, 16, 3, 19, 6, 14, 9, 9, 17, 17, 4, 12, 20, 20, 7, 7, 15, 15, 10, 23,
+      10, 111, 18, 18, 18, 106, 5, 26, 13, 13, 21, 21, 21, 34, 8, 109, 8, 29, 16, 16, 16, 104, 11, 24, 24, 24, 11, 11,
+      112, 112, 19, 32, 19, 32, 19, 19, 107, 107, 6, 27, 27, 27, 14, 14, 14, 102, 22 };
   Sequence s( values );
 
   if ( !Miner::isCollatzValuation( s ) )

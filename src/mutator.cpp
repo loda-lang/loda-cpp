@@ -25,7 +25,7 @@ void Mutator::mutateConstants( const Program &program, size_t num_results, std::
   for ( size_t i : indices )
   {
     int64_t b = program.ops[i].source.value.asInt();
-    int64_t s = b - std::min<number_t>( var / 2, b );
+    int64_t s = b - std::min<int64_t>( var / 2, b );
     for ( int64_t v = s; v <= s + var; v++ )
     {
       if ( v != b )

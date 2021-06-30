@@ -48,7 +48,7 @@ void Memory::clear()
 
 void Memory::clear( int64_t start, int64_t length )
 {
-  if ( start == NUM_INF || length <= 0 )
+  if ( length <= 0 )
   {
     return;
   }
@@ -87,7 +87,7 @@ void Memory::clear( int64_t start, int64_t length )
 Memory Memory::fragment( int64_t start, int64_t length ) const
 {
   Memory frag;
-  if ( start == NUM_INF || length <= 0 )
+  if ( length <= 0 )
   {
     return frag;
   }

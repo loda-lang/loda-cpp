@@ -147,11 +147,7 @@ size_t Interpreter::run( const Program &p, Memory &mem )
     {
       length = get( op.source, mem ).asInt();
       start = get( op.target, mem, true ).asInt();
-      if ( start == NUM_INF || length == NUM_INF )
-      {
-        throw std::runtime_error( "Infinite loop" );
-      }
-      if ( length > (int64_t) settings.max_memory )
+      if ( length > static_cast<int64_t>( settings.max_memory ) )
       {
         throw std::runtime_error( "Maximum memory exceeded: " + std::to_string( length ) );
       }
@@ -213,11 +209,7 @@ size_t Interpreter::run( const Program &p, Memory &mem )
     {
       length = get( op.source, mem ).asInt();
       start = get( op.target, mem, true ).asInt();
-      if ( length == NUM_INF )
-      {
-        mem.clear();
-      }
-      else if ( length > 0 )
+      if ( length > 0 )
       {
         mem.clear( start, length );
       }
@@ -329,7 +321,7 @@ void Interpreter::set( const Operand& a, const Number& v, Memory &mem, const Ope
         "Maximum memory exceeded: " + std::to_string( index ) + "; last operation: "
             + ProgramUtil::operationToString( last_op ) );
   }
-  if ( settings.throw_on_overflow && v == NUM_INF )
+  if ( settings.throw_on_overflow && v == Number::INF )
   {
     throw std::runtime_error(
         "Overflow in cell $" + std::to_string( index ) + "; last operation: "

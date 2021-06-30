@@ -197,7 +197,7 @@ bool ProgramUtil::getUsedMemoryCells( const Program &p, std::unordered_set<int64
     }
   }
   largest_used = used_cells.empty() ? 0 : *used_cells.begin();
-  for ( number_t used : used_cells )
+  for ( int64_t used : used_cells )
   {
     largest_used = std::max( largest_used, used );
   }

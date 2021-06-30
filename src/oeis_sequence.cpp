@@ -20,6 +20,7 @@ std::string OeisSequence::getHome()
 // TODO: replace this function by a "bit-counting" function in Number
 bool OeisSequence::isCloseToInf( const Number& n )
 {
+  static const int64_t NUM_INF = std::numeric_limits<int64_t>::max();
   return (n.value > (NUM_INF / 1000)) || (n.value < (NUM_INF / -1000));
 }
 

@@ -34,4 +34,10 @@ public:
 
   static Number abs( const Number& a );
 
+  static Number getPowerOf( Number value, const Number& base );
+
+private:
+
+  static const int64_t NUM_INF;
+
 };
