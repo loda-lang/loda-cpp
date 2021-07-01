@@ -109,7 +109,7 @@ void OeisManager::loadData()
     Log::get().error( "OEIS data not found: " + path, true );
   }
   std::string line;
-  std::stringstream buf;
+  std::string buf;
   size_t pos;
   size_t id;
   Sequence seq_full, seq_big;
@@ -160,7 +160,7 @@ void OeisManager::loadData()
       }
       else if ( (line[pos] >= '0' && line[pos] <= '9') || line[pos] == '-' )
       {
-        buf << line[pos];
+        buf += line[pos];
       }
       else
       {

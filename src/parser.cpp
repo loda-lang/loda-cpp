@@ -121,7 +121,9 @@ void Parser::readSeparator( char separator )
 
 Number Parser::readValue()
 {
-  return Number( *in, false );
+  std::string buf;
+  Number::readIntString( *in, buf );
+  return Number( buf, false );
 }
 
 std::string Parser::readIdentifier()

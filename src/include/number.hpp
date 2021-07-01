@@ -17,8 +17,6 @@ public:
 
   Number( int64_t value );
 
-  Number( std::istream& in, bool is_big );
-
   Number( const std::string& s, bool is_big );
 
   bool operator==( const Number&n ) const;
@@ -35,14 +33,14 @@ public:
 
   std::string to_string() const;
 
+  static void readIntString( std::istream& in, std::string& out );
+
 private:
 
   friend class Semantics;
 
   // TODO: avoid this friend class
   friend class OeisSequence;
-
-  void load( std::istream& in, bool is_big );
 
   int64_t value;
   bool is_big;

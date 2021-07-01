@@ -105,6 +105,7 @@ Sequence loadBFile( size_t id, const Sequence& seq_full )
 
   // try to read b-file
   std::ifstream big_file( oeis_seq.getBFilePath() );
+  std::string buf;
   if ( big_file.good() )
   {
     std::string l;
@@ -133,7 +134,8 @@ Sequence loadBFile( size_t id, const Sequence& seq_full )
         return result;
       }
       ss >> std::ws;
-      Number value( ss, false );
+      Number::readIntString( ss, buf );
+      Number value( buf, false );
       if ( !ss || OeisSequence::isCloseToInf( value ) )
       {
         break;

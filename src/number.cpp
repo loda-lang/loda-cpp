@@ -21,35 +21,29 @@ Number::Number( int64_t value )
 {
 }
 
-Number::Number( std::istream& in, bool is_big )
-{
-  load( in, is_big );
-}
-
 Number::Number( const std::string& s, bool is_big )
+    : is_big( is_big )
 {
-  std::stringstream buf( s );
-  load( buf, is_big );
-}
-
-void Number::load( std::istream& in, bool is_big )
-{
-  this->is_big = is_big;
   if ( is_big )
   {
     throw std::runtime_error( "Bigint not supported yet" );
   }
   else
   {
-    const auto c = in.peek();
-    if ( !std::isdigit( c ) && c != '-' )
+    bool is_inf = false;
+    try
     {
-      std::string tmp;
-      std::getline( in, tmp );
-      throw std::runtime_error( "Error parsing number: '" + tmp + "'" );
+      value = std::stoll( s );
     }
-    in >> value;
+    catch ( const std::out_of_range& )
+    {
+      is_inf = true;
+    }
     if ( value == std::numeric_limits<int64_t>::max() || value == std::numeric_limits<int64_t>::min() )
+    {
+      is_inf = true;
+    }
+    if ( is_inf )
     {
       (*this) = Number::INF;
     }
@@ -117,4 +111,33 @@ std::string Number::to_string() const
   std::stringstream ss;
   ss << (*this);
   return ss.str();
+}
+
+void throwParseError( std::istream& in )
+{
+  std::string tmp;
+  std::getline( in, tmp );
+  throw std::runtime_error( "Error parsing number: '" + tmp + "'" );
+}
+
+void Number::readIntString( std::istream& in, std::string& out )
+{
+  out.clear();
+  auto ch = in.peek();
+  if ( !std::isdigit( ch ) && ch != '-' )
+  {
+    throwParseError( in );
+  }
+  out += (char) ch;
+  in.get();
+  while ( true )
+  {
+    auto ch = in.peek();
+    if ( !std::isdigit( ch ) )
+    {
+      break;
+    }
+    out += (char) ch;
+    in.get();
+  }
 }
