@@ -143,9 +143,22 @@ Number::Number( const std::string& s, bool is_big )
   }
 }
 
-bool Number::operator==( const Number&n ) const
+Number Number::negate() const
 {
   if ( big )
+  {
+    throw std::runtime_error( "Bigint not supported for negate" );
+  }
+  if ( value == NUM_INF)
+  {
+    return *this;
+  }
+  return Number( -value );
+}
+
+bool Number::operator==( const Number&n ) const
+{
+  if ( big || n.big )
   {
     throw std::runtime_error( "Bigint not supported for ==" );
   }
@@ -159,11 +172,87 @@ bool Number::operator!=( const Number&n ) const
 
 bool Number::operator<( const Number&n ) const
 {
-  if ( big )
+  if ( big || n.big )
   {
     throw std::runtime_error( "Bigint not supported for <" );
   }
   return value < n.value;
+}
+
+Number& Number::operator+=( const Number& n )
+{
+  if ( big || n.big )
+  {
+    throw std::runtime_error( "Bigint not supported for +=" );
+  }
+  if ( value == NUM_INF|| n.value == NUM_INF )
+  {
+    value = NUM_INF;
+  }
+  else if ( (value > 0 && n.value >= NUM_INF - value) || (value < 0 && -n.value >= NUM_INF + value) )
+  {
+    value = NUM_INF;
+  }
+  else
+  {
+    value += n.value;
+  }
+  return *this;
+}
+
+Number& Number::operator*=( const Number& n )
+{
+  if ( big || n.big )
+  {
+    throw std::runtime_error( "Bigint not supported for *=" );
+  }
+  if ( value == NUM_INF|| n.value == NUM_INF )
+  {
+    value = NUM_INF;
+  }
+  else if ( n.value != 0 && (NUM_INF / std::abs( n.value ) < std::abs( value )) )
+  {
+    value = NUM_INF;
+  }
+  else
+  {
+    value *= n.value;
+  }
+  return *this;
+}
+
+Number& Number::operator/=( const Number& n )
+{
+  if ( big || n.big )
+  {
+    throw std::runtime_error( "Bigint not supported for /=" );
+  }
+  if ( value == NUM_INF|| n.value == NUM_INF || n.value == 0 )
+  {
+    value = NUM_INF;
+  }
+  else
+  {
+    value /= n.value;
+  }
+  return *this;
+}
+
+Number& Number::operator%=( const Number& n )
+{
+  if ( big || n.big )
+  {
+    throw std::runtime_error( "Bigint not supported for %=" );
+  }
+  if ( value == NUM_INF|| n.value == NUM_INF || n.value == 0 )
+  {
+    value = NUM_INF;
+  }
+  else
+  {
+    value %= n.value;
+  }
+  return *this;
 }
 
 int64_t Number::asInt() const

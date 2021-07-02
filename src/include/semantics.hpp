@@ -36,8 +36,4 @@ public:
 
   static Number getPowerOf( Number value, const Number& base );
 
-private:
-
-  static const int64_t NUM_INF;
-
 };

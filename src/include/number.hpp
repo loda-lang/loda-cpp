@@ -24,11 +24,21 @@ public:
 
   Number( const std::string& s, bool is_big );
 
-  bool operator==( const Number&n ) const;
+  Number negate() const;
 
-  bool operator!=( const Number&n ) const;
+  bool operator==( const Number& n ) const;
 
-  bool operator<( const Number&n ) const;
+  bool operator!=( const Number& n ) const;
+
+  bool operator<( const Number& n ) const;
+
+  Number& operator+=( const Number& n );
+
+  Number& operator*=( const Number& n );
+
+  Number& operator/=( const Number& n );
+
+  Number& operator%=( const Number& n );
 
   int64_t asInt() const;
 
@@ -41,8 +51,6 @@ public:
   static void readIntString( std::istream& in, std::string& out );
 
 private:
-
-  friend class Semantics;
 
   // TODO: avoid this friend class
   friend class OeisSequence;
