@@ -466,7 +466,7 @@ bool Settings::hasMemory() const
   if ( !has_memory && !printed_memory_warning )
   {
     Log::get().warn(
-        "Reached maximum physical memory limit of " + std::to_string( max_physical_memory / (1024 * 1024) ) + "MB" );
+        "Reaching maximum physical memory limit of " + std::to_string( max_physical_memory / (1024 * 1024) ) + "MB" );
     printed_memory_warning = true;
   }
   return has_memory;

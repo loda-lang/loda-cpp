@@ -1,9 +1,12 @@
 #pragma once
 
 #include <algorithm>
+#include <array>
 #include <limits>
 #include <random>
 #include <stdlib.h>
+
+class BigNumber;
 
 class Number
 {
@@ -14,6 +17,8 @@ public:
   static const Number INF;
 
   Number();
+
+  ~Number();
 
   Number( int64_t value );
 
@@ -43,6 +48,6 @@ private:
   friend class OeisSequence;
 
   int64_t value;
-  bool is_big;
+  BigNumber* big;
 
 };

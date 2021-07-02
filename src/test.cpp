@@ -75,7 +75,7 @@ void check_num( const Number& m, const std::string& s )
   }
 }
 
-void testNumberDigits( int64_t num_digits, bool test_negative, bool is_big )
+void testNumberDigitsSmall( int64_t num_digits, bool test_negative )
 {
   std::string nines = test_negative ? "-" : "";
   std::string one = test_negative ? "-1" : "1";
@@ -83,8 +83,8 @@ void testNumberDigits( int64_t num_digits, bool test_negative, bool is_big )
   {
     nines += '9';
     one += '0';
-    Number n( nines, is_big );
-    Number o( one, is_big );
+    Number n( nines, false );
+    Number o( one, false );
     auto m = test_negative ? Semantics::sub( n, Number::ONE ) : Semantics::add( n, Number::ONE );
     if ( i < num_digits )
     {
@@ -101,6 +101,29 @@ void testNumberDigits( int64_t num_digits, bool test_negative, bool is_big )
   }
 }
 
+void testNumberDigitsBig( int64_t num_digits, bool test_negative )
+{
+  std::string nines = test_negative ? "-" : "";
+  std::string one = test_negative ? "-1" : "1";
+  for ( int64_t i = 0; i < num_digits + 1; i++ )
+  {
+    nines += '9';
+    one += '0';
+    Number n( nines, true );
+    Number o( one, true );
+    if ( i < num_digits )
+    {
+      check_num( n, nines );
+      check_num( o, one );
+    }
+    /*    else
+     {
+     check_inf( n );
+     check_inf( o );
+     }
+     */}
+}
+
 void Test::number()
 {
   Log::get().info( "Testing number" );
@@ -108,8 +131,9 @@ void Test::number()
   {
     Log::get().error( "Basic number check failed", true );
   }
-  testNumberDigits( 18, false, false );
-  testNumberDigits( 18, true, false );
+  testNumberDigitsSmall( 18, false );
+  testNumberDigitsSmall( 18, true );
+  testNumberDigitsBig( 70, false );
 }
 
 void Test::semantics()

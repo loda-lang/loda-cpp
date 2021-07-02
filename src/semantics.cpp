@@ -4,7 +4,7 @@
 
 #include <stdexcept>
 
-#define CHECK_IS_BIG(a,b) if (a.is_big || b.is_big) throw std::runtime_error("Bigint not supported for this operation");
+#define CHECK_IS_BIG(a,b) if (a.big || b.big) throw std::runtime_error("Bigint not supported for this operation");
 #define CHECK_INF1(a) if ( a == Number::INF ) return Number::INF;
 #define CHECK_INF2(a,b) if ( a == Number::INF || b == Number::INF ) return Number::INF;
 #define CHECK_ZERO1(a) if ( a == Number::ZERO ) return Number::INF;
