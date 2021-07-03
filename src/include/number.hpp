@@ -17,11 +17,13 @@ public:
 
   Number();
 
-  ~Number();
+  Number( const Number& n );
 
   Number( int64_t value );
 
   Number( const std::string& s, bool is_big );
+
+  ~Number();
 
   Number negate() const;
 

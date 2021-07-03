@@ -18,12 +18,10 @@ Number::Number()
 {
 }
 
-Number::~Number()
+Number::Number( const Number& n )
+    : value( n.value ),
+      big( n.big ? new BigNumber( *n.big ) : nullptr )
 {
-  if ( big )
-  {
-    delete big;
-  }
 }
 
 Number::Number( int64_t value )
@@ -67,11 +65,21 @@ Number::Number( const std::string& s, bool is_big )
   }
 }
 
+Number::~Number()
+{
+  if ( big )
+  {
+    delete big;
+  }
+}
+
 Number Number::negate() const
 {
   if ( big )
   {
-    throw std::runtime_error( "Bigint not supported for negate" );
+    Number n( *this );
+    n.big->is_negative = !big->is_negative;
+    return n;
   }
   if ( value == NUM_INF)
   {
