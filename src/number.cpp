@@ -6,11 +6,11 @@
 #include <sstream>
 #include <stdexcept>
 
-#define NUM_INF std::numeric_limits<int64_t>::max()
+constexpr int64_t NUM_INF = std::numeric_limits<int64_t>::max();
 
 const Number Number::ZERO( 0 );
 const Number Number::ONE( 1 );
-const Number Number::INF( NUM_INF);
+const Number Number::INF( NUM_INF );
 
 Number::Number()
     : value( 0 ),
@@ -98,7 +98,7 @@ Number& Number::negate()
   {
     big->negate();
   }
-  if ( value != NUM_INF)
+  else if ( value != NUM_INF )
   {
     value = -value;
   }
@@ -111,7 +111,7 @@ Number& Number::operator+=( const Number& n )
   {
     throw std::runtime_error( "Bigint not supported for +=" );
   }
-  if ( value == NUM_INF|| n.value == NUM_INF )
+  if ( value == NUM_INF || n.value == NUM_INF )
   {
     value = NUM_INF;
   }
@@ -132,7 +132,7 @@ Number& Number::operator*=( const Number& n )
   {
     throw std::runtime_error( "Bigint not supported for *=" );
   }
-  if ( value == NUM_INF|| n.value == NUM_INF )
+  if ( value == NUM_INF || n.value == NUM_INF )
   {
     value = NUM_INF;
   }
@@ -153,7 +153,7 @@ Number& Number::operator/=( const Number& n )
   {
     throw std::runtime_error( "Bigint not supported for /=" );
   }
-  if ( value == NUM_INF|| n.value == NUM_INF || n.value == 0 )
+  if ( value == NUM_INF || n.value == NUM_INF || n.value == 0 )
   {
     value = NUM_INF;
   }
@@ -170,7 +170,7 @@ Number& Number::operator%=( const Number& n )
   {
     throw std::runtime_error( "Bigint not supported for %=" );
   }
-  if ( value == NUM_INF|| n.value == NUM_INF || n.value == 0 )
+  if ( value == NUM_INF || n.value == NUM_INF || n.value == 0 )
   {
     value = NUM_INF;
   }
@@ -212,7 +212,7 @@ std::ostream& operator<<( std::ostream &out, const Number &n )
   }
   else
   {
-    if ( n.value == NUM_INF)
+    if ( n.value == NUM_INF )
     {
       out << "inf";
     }

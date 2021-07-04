@@ -15,6 +15,8 @@ public:
 
   BigNumber();
 
+  BigNumber( int64_t value );
+
   BigNumber( const std::string& s );
 
   BigNumber& negate();

@@ -7,6 +7,12 @@ BigNumber::BigNumber()
   words.fill( 0 );
 }
 
+// TODO: avoid print and parsing here
+BigNumber::BigNumber( int64_t value )
+    : BigNumber( std::to_string( value ) )
+{
+}
+
 BigNumber::BigNumber( const std::string& s )
 {
   int64_t size = s.length();
