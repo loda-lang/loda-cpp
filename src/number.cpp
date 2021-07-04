@@ -73,21 +73,6 @@ Number::~Number()
   }
 }
 
-Number Number::negate() const
-{
-  if ( big )
-  {
-    Number n( *this );
-    n.big->is_negative = !big->is_negative;
-    return n;
-  }
-  if ( value == NUM_INF)
-  {
-    return *this;
-  }
-  return Number( -value );
-}
-
 bool Number::operator==( const Number&n ) const
 {
   if ( big || n.big )
@@ -109,6 +94,19 @@ bool Number::operator<( const Number&n ) const
     throw std::runtime_error( "Bigint not supported for <" );
   }
   return value < n.value;
+}
+
+Number& Number::negate()
+{
+  if ( big )
+  {
+    big->negate();
+  }
+  if ( value != NUM_INF)
+  {
+    value = -value;
+  }
+  return *this;
 }
 
 Number& Number::operator+=( const Number& n )
@@ -218,7 +216,14 @@ std::ostream& operator<<( std::ostream &out, const Number &n )
   }
   else
   {
-    out << n.value;
+    if ( n.value == NUM_INF)
+    {
+      out << "inf";
+    }
+    else
+    {
+      out << n.value;
+    }
   }
   return out;
 }

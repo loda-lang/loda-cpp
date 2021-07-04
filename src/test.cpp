@@ -1,5 +1,6 @@
 #include "test.hpp"
 
+#include "big_number.hpp"
 #include "blocks.hpp"
 #include "config.hpp"
 #include "evaluator.hpp"
@@ -61,7 +62,7 @@ Number read_num( const std::string &s )
 
 void check_inf( const Number& n )
 {
-  if ( n != Number::INF )
+  if ( n.to_string() != "inf" || n != Number::INF )
   {
     Log::get().error( "Expected infinity instead of " + n.to_string(), true );
   }
@@ -75,53 +76,22 @@ void check_num( const Number& m, const std::string& s )
   }
 }
 
-void testNumberDigitsSmall( int64_t num_digits, bool test_negative )
+void testNumberDigits( int64_t num_digits, bool test_negative, bool is_big )
 {
-  std::string nines = test_negative ? "-" : "";
   std::string one = test_negative ? "-1" : "1";
   for ( int64_t i = 0; i < num_digits + 1; i++ )
   {
-    nines += '9';
     one += '0';
-    Number n( nines, false );
-    Number o( one, false );
-    auto m = test_negative ? Semantics::sub( n, Number::ONE ) : Semantics::add( n, Number::ONE );
+    Number o( one, is_big );
     if ( i < num_digits )
     {
-      check_num( n, nines );
       check_num( o, one );
-      check_num( m, one );
     }
     else
     {
-      check_inf( n );
       check_inf( o );
-      check_inf( m );
     }
   }
-}
-
-void testNumberDigitsBig( int64_t num_digits, bool test_negative )
-{
-  std::string nines = test_negative ? "-" : "";
-  std::string one = test_negative ? "-1" : "1";
-  for ( int64_t i = 0; i < num_digits + 1; i++ )
-  {
-    nines += '9';
-    one += '0';
-    Number n( nines, true );
-    Number o( one, true );
-    if ( i < num_digits )
-    {
-      check_num( n, nines );
-      check_num( o, one );
-    }
-    /*    else
-     {
-     check_inf( n );
-     check_inf( o );
-     }
-     */}
 }
 
 void Test::number()
@@ -131,9 +101,10 @@ void Test::number()
   {
     Log::get().error( "Basic number check failed", true );
   }
-  testNumberDigitsSmall( 18, false );
-  testNumberDigitsSmall( 18, true );
-  testNumberDigitsBig( 70, false );
+  testNumberDigits( BigNumber::NUM_WORD_DIGITS, false, false );
+  testNumberDigits( BigNumber::NUM_WORD_DIGITS, true, false );
+  testNumberDigits( (BigNumber::NUM_WORDS * BigNumber::NUM_WORD_DIGITS) - 1, false, true );
+  testNumberDigits( (BigNumber::NUM_WORDS * BigNumber::NUM_WORD_DIGITS) - 1, true, true );
 }
 
 void Test::semantics()

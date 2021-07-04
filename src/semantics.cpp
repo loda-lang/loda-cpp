@@ -11,7 +11,9 @@ Number Semantics::add( const Number& a, const Number& b )
 
 Number Semantics::sub( const Number& a, const Number& b )
 {
-  return add( a, b.negate() );
+  auto c = b;
+  c.negate();
+  return add( a, c );
 }
 
 Number Semantics::trn( const Number& a, const Number& b )
@@ -137,13 +139,13 @@ Number Semantics::bin( const Number& nn, const Number& kk )
     if ( !(k < Number::ZERO) )
     {
       sign = (mod( k, 2 ) == Number::ZERO) ? 1 : -1;
-      n = sub( add( n.negate(), k ), Number::ONE );
+      n = sub( k, add( n, Number::ONE ) );
     }
     else if ( !(n < k) )
     {
       sign = (mod( sub( n, k ), 2 ) == Number::ZERO) ? 1 : -1;
       auto n_old = n;
-      n = sub( k.negate(), Number::ONE );
+      n = sub( Number::ZERO, add( k, Number::ONE ) );
       k = sub( n_old, k );
     }
     else

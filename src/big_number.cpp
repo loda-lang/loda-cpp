@@ -1,5 +1,11 @@
 #include "big_number.hpp"
 
+BigNumber& BigNumber::negate()
+{
+  is_negative = !is_negative;
+  return *this;
+}
+
 bool BigNumber::parse( const std::string& s )
 {
   int64_t size = s.length();
