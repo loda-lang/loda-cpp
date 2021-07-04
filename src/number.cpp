@@ -10,6 +10,8 @@ constexpr int64_t NUM_INF = std::numeric_limits<int64_t>::max();
 
 const Number Number::ZERO( 0 );
 const Number Number::ONE( 1 );
+
+// TODO: this could lead to problems when using big ints
 const Number Number::INF( NUM_INF );
 
 Number::Number()

@@ -15,6 +15,13 @@ BigNumber::BigNumber( int64_t value )
 
 BigNumber::BigNumber( const std::string& s )
 {
+  if ( s == "inf" )
+  {
+    is_negative = false;
+    is_infinite = true;
+    words.fill( 0 );
+    return;
+  }
   int64_t size = s.length();
   is_negative = (s[0] == '-');
   is_infinite = false;
