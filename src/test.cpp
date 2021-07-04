@@ -24,15 +24,20 @@
 #include <sstream>
 #include <stdexcept>
 
-Test::Test()
+Test::Test( int64_t seed )
     : manager( settings )
 {
+  Log::get().info( "Initializing tests using random seed " + std::to_string( seed ) );
+  gen.seed( seed );
 }
 
 void Test::all()
 {
+  size_t tests = 100;
+
   // fast tests
   number();
+  randomNumber( tests );
   sequence();
   memory();
   semantics();
@@ -47,7 +52,6 @@ void Test::all()
   knownPrograms();
 
   // slow tests
-  size_t tests = 100;
   ackermann();
   stats();
   oeisSeq();
@@ -78,18 +82,18 @@ void check_num( const Number& m, const std::string& s )
 
 void testNumberDigits( int64_t num_digits, bool test_negative, bool is_big )
 {
-  std::string one = test_negative ? "-1" : "1";
-  for ( int64_t i = 0; i < num_digits + 1; i++ )
+  std::string nines = test_negative ? "-9" : "9";
+  for ( int64_t i = 0; i < num_digits; i++ )
   {
-    one += '0';
-    Number o( one, is_big );
-    if ( i < num_digits )
+    nines += '9';
+    Number n( nines, is_big );
+    if ( i + 1 < num_digits )
     {
-      check_num( o, one );
+      check_num( n, nines );
     }
     else
     {
-      check_inf( o );
+      check_inf( n );
     }
   }
 }
@@ -101,10 +105,32 @@ void Test::number()
   {
     Log::get().error( "Basic number check failed", true );
   }
-  testNumberDigits( BigNumber::NUM_WORD_DIGITS, false, false );
-  testNumberDigits( BigNumber::NUM_WORD_DIGITS, true, false );
-  testNumberDigits( (BigNumber::NUM_WORDS * BigNumber::NUM_WORD_DIGITS) - 1, false, true );
-  testNumberDigits( (BigNumber::NUM_WORDS * BigNumber::NUM_WORD_DIGITS) - 1, true, true );
+  testNumberDigits( 18, false, false );
+  testNumberDigits( 18, true, false );
+  testNumberDigits( BigNumber::NUM_DIGITS, false, true );
+  testNumberDigits( BigNumber::NUM_DIGITS, true, true );
+}
+
+void Test::randomNumber( size_t tests )
+{
+  Log::get().info( "Testing random number" );
+  std::string str;
+  for ( int64_t i = 0; i < tests; i++ )
+  {
+    const int64_t num_digits = (gen() % BigNumber::NUM_DIGITS) + 1;
+    str.clear();
+    if ( gen() % 2 )
+    {
+      str += '-';
+    }
+    str += '1' + static_cast<char>( (gen() % 9) );
+    for ( int64_t j = 1; j < num_digits; j++ )
+    {
+      str += '0' + static_cast<char>( (gen() % 10) );
+    }
+    Number n( str, true );
+    check_num( n, str );
+  }
 }
 
 void Test::semantics()
@@ -275,7 +301,6 @@ void validateIterated( const Program& p )
 void Test::iterator( size_t tests )
 {
   const int64_t count = 100000;
-  std::random_device rand;
   for ( size_t test = 0; test < tests; test++ )
   {
     if ( test % 10 == 0 )
@@ -293,7 +318,7 @@ void Test::iterator( size_t tests )
     config.length = std::max<int64_t>( test / 4, 2 );
     config.max_constant = std::max<int64_t>( test / 4, 2 );
     config.max_index = std::max<int64_t>( test / 4, 2 );
-    GeneratorV1 gen_v1( config, manager.getStats(), rand() );
+    GeneratorV1 gen_v1( config, manager.getStats(), gen() );
     Program start, p, q;
     while ( true )
     {
@@ -705,8 +730,7 @@ void Test::minimizer( size_t tests )
 {
   Evaluator evaluator( settings );
   Minimizer minimizer( settings );
-  std::random_device rand;
-  MultiGenerator multi_generator( settings, manager.getStats(), rand() );
+  MultiGenerator multi_generator( settings, manager.getStats(), gen() );
   Sequence s1, s2, s3;
   Program program, minimized;
   for ( size_t i = 0; i < tests; i++ )

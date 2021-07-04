@@ -84,7 +84,8 @@ int main( int argc, char *argv[] )
     }
     else if ( cmd == "test" )
     {
-      Test test;
+      std::random_device rand;
+      Test test( rand() );
       test.all();
     }
     else if ( cmd == "evaluate" || cmd == "eval" )

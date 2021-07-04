@@ -5,15 +5,19 @@
 #include "oeis_manager.hpp"
 #include "util.hpp"
 
+#include <random>
+
 class Test
 {
 public:
 
-  Test();
+  Test( int64_t seed );
 
   void all();
 
   void number();
+
+  void randomNumber( size_t tests );
 
   void semantics();
 
@@ -63,5 +67,6 @@ private:
 
   Settings settings;
   OeisManager manager;
+  std::mt19937 gen;
 
 };
