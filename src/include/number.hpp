@@ -56,6 +56,8 @@ private:
   // TODO: avoid this friend class
   friend class OeisSequence;
 
+  void checkInfinite();
+
   int64_t value;
   BigNumber* big;
 

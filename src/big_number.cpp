@@ -1,15 +1,17 @@
 #include "big_number.hpp"
 
-BigNumber& BigNumber::negate()
+BigNumber::BigNumber()
+    : is_negative( false ),
+      is_infinite( false )
 {
-  is_negative = !is_negative;
-  return *this;
+  words.fill( 0 );
 }
 
-bool BigNumber::parse( const std::string& s )
+BigNumber::BigNumber( const std::string& s )
 {
   int64_t size = s.length();
   is_negative = (s[0] == '-');
+  is_infinite = false;
   size_t w = 0;
   while ( true )
   {
@@ -19,7 +21,9 @@ bool BigNumber::parse( const std::string& s )
     }
     if ( w >= BigNumber::NUM_WORDS )
     {
-      return false;
+      is_infinite = true;
+      words.fill( 0 );
+      return;
     }
     int64_t length = 0;
     uint64_t num = 0;
@@ -41,12 +45,22 @@ bool BigNumber::parse( const std::string& s )
   {
     words[w++] = 0;
   }
-  return true;
 }
 
-void BigNumber::print( std::ostream & out )
+BigNumber& BigNumber::negate()
 {
-  if ( is_negative )
+  is_negative = !is_negative;
+  return *this;
+}
+
+std::ostream& operator<<( std::ostream &out, const BigNumber &n )
+{
+  if ( n.is_infinite )
+  {
+    out << "inf";
+    return out;
+  }
+  if ( n.is_negative )
   {
     out << '-';
   }
@@ -54,7 +68,7 @@ void BigNumber::print( std::ostream & out )
   char ch;
   for ( size_t w = 0; w < BigNumber::NUM_WORDS; w++ )
   {
-    const auto word = words[BigNumber::NUM_WORDS - w - 1];
+    const auto word = n.words[BigNumber::NUM_WORDS - w - 1];
     auto base = BigNumber::WORD_BASE / 10;
     while ( base )
     {
@@ -71,4 +85,5 @@ void BigNumber::print( std::ostream & out )
   {
     out << '0';
   }
+  return out;
 }

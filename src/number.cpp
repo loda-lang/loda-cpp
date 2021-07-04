@@ -50,18 +50,14 @@ Number::Number( const std::string& s, bool is_big )
     }
     if ( is_inf )
     {
-      (*this) = Number::INF;
+      value = NUM_INF;
     }
   }
   if ( is_big )
   {
     value = 0;
-    big = new BigNumber();
-    if ( !big->parse( s ) )
-    {
-      delete big;
-      (*this) = Number::INF;
-    }
+    big = new BigNumber( s );
+    checkInfinite();
   }
 }
 
@@ -212,7 +208,7 @@ std::ostream& operator<<( std::ostream &out, const Number &n )
 {
   if ( n.big )
   {
-    n.big->print( out );
+    out << *n.big;
   }
   else
   {
@@ -261,5 +257,15 @@ void Number::readIntString( std::istream& in, std::string& out )
     }
     out += (char) ch;
     in.get();
+  }
+}
+
+void Number::checkInfinite()
+{
+  if ( big && big->isInfinite() )
+  {
+    delete big;
+    big = nullptr;
+    value = NUM_INF;
   }
 }

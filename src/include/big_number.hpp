@@ -13,15 +13,28 @@ public:
   static constexpr size_t NUM_DIGITS = NUM_WORDS * NUM_WORD_DIGITS;
   static constexpr uint64_t WORD_BASE = 1000000000000000000;
 
+  BigNumber();
+
+  BigNumber( const std::string& s );
+
   BigNumber& negate();
 
-  bool parse( const std::string& s );
+  friend std::ostream& operator<<( std::ostream &out, const BigNumber &n );
 
-  void print( std::ostream & out );
+  inline bool isNegative() const
+  {
+    return is_negative;
+  }
+
+  inline bool isInfinite() const
+  {
+    return is_infinite;
+  }
 
 private:
 
   std::array<uint64_t, NUM_WORDS> words;
   bool is_negative;
+  bool is_infinite;
 
 };
