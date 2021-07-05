@@ -115,7 +115,7 @@ void Test::randomNumber( size_t tests )
 {
   Log::get().info( "Testing random number" );
   std::string str;
-  for ( int64_t i = 0; i < tests; i++ )
+  for ( size_t i = 0; i < tests; i++ )
   {
     const int64_t num_digits = (gen() % BigNumber::NUM_DIGITS) + 1;
     str.clear();
