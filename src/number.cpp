@@ -30,9 +30,9 @@ Number::Number( const Number& n )
 {
 }
 
-Number::Number( int64_t value )
-    : value( value ),
-      big( nullptr )
+Number::Number( int64_t value, bool is_big )
+    : value( is_big ? 0 : value ),
+      big( is_big ? new BigNumber( value ) : nullptr )
 {
 }
 
@@ -82,11 +82,25 @@ bool Number::operator==( const Number&n ) const
   {
     return false;
   }
-  if ( big || n.big )
+  if ( big )
   {
-    throw std::runtime_error( "Bigint not supported for ==" );
+    if ( n.big )
+    {
+      return (*big) == (*n.big);
+    }
+    else
+    {
+      return (*big) == BigNumber( n.value );
+    }
   }
-  return (value == n.value);
+  else if ( n.big )
+  {
+    return BigNumber( value ) == (*n.big);
+  }
+  else
+  {
+    return (value == n.value);
+  }
 }
 
 bool Number::operator!=( const Number&n ) const
@@ -254,7 +268,7 @@ std::size_t Number::hash() const
   }
   if ( big )
   {
-    throw std::runtime_error( "Bigint not supported for hash" );
+    return big->hash();
   }
   return value;
 }

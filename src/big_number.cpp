@@ -7,13 +7,27 @@ BigNumber::BigNumber()
   words.fill( 0 );
 }
 
-// TODO: avoid print and parsing here
 BigNumber::BigNumber( int64_t value )
-    : BigNumber( std::to_string( value ) )
 {
+  if ( value >= 0 && value < WORD_BASE )
+  {
+    is_negative = false;
+    is_infinite = false;
+    words.fill( 0 );
+    words[0] = value;
+  }
+  else
+  {
+    load( std::to_string( value ) );
+  }
 }
 
 BigNumber::BigNumber( const std::string& s )
+{
+  load( s );
+}
+
+void BigNumber::load( const std::string& s )
 {
   if ( s == "inf" )
   {
@@ -60,10 +74,74 @@ BigNumber::BigNumber( const std::string& s )
   }
 }
 
+bool BigNumber::isZero() const
+{
+  if ( is_infinite )
+  {
+    return false;
+  }
+  for ( auto& word : words )
+  {
+    if ( word != 0 )
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool BigNumber::operator==( const BigNumber&n ) const
+{
+  if ( is_infinite != n.is_infinite )
+  {
+    return false;
+  }
+  if ( words != n.words )
+  {
+    return false;
+  }
+  return ((is_negative == n.is_negative) || isZero());
+}
+
+bool BigNumber::operator!=( const BigNumber&n ) const
+{
+  return !(*this == n);
+}
+
+bool BigNumber::operator<( const BigNumber&n ) const
+{
+  throw std::runtime_error( "Bigint not supported for <" );
+}
+
 BigNumber& BigNumber::negate()
 {
   is_negative = !is_negative;
   return *this;
+}
+
+BigNumber& BigNumber::operator+=( const BigNumber& n )
+{
+  throw std::runtime_error( "Bigint not supported for +=" );
+}
+
+BigNumber& BigNumber::operator*=( const BigNumber& n )
+{
+  throw std::runtime_error( "Bigint not supported for *=" );
+}
+
+BigNumber& BigNumber::operator/=( const BigNumber& n )
+{
+  throw std::runtime_error( "Bigint not supported for /=" );
+}
+
+BigNumber& BigNumber::operator%=( const BigNumber& n )
+{
+  throw std::runtime_error( "Bigint not supported for %=" );
+}
+
+std::size_t BigNumber::hash() const
+{
+  throw std::runtime_error( "Bigint not supported for hash" );
 }
 
 std::ostream& operator<<( std::ostream &out, const BigNumber &n )
@@ -73,7 +151,7 @@ std::ostream& operator<<( std::ostream &out, const BigNumber &n )
     out << "inf";
     return out;
   }
-  if ( n.is_negative )
+  if ( n.is_negative && !n.isZero() )
   {
     out << '-';
   }

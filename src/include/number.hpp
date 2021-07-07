@@ -19,9 +19,9 @@ public:
 
   Number( const Number& n );
 
-  Number( int64_t value );
+  Number( int64_t value, bool is_big = false );
 
-  Number( const std::string& s, bool is_big );
+  Number( const std::string& s, bool is_big = false );
 
   ~Number();
 

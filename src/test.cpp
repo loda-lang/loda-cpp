@@ -67,7 +67,7 @@ Number read_num( const std::string &s )
 
 void check_num( const Number& m, const std::string& s )
 {
-  if ( m.to_string() != s )
+  if ( m.to_string() != s || m != Number( s, true ) )
   {
     Log::get().error( "Expected " + m.to_string() + " to be " + s, true );
   }
@@ -120,6 +120,11 @@ void Test::randomNumber( size_t tests )
   std::string str;
   for ( size_t i = 0; i < tests; i++ )
   {
+    // small number test
+    const int64_t v = gen();
+    check_num( Number( v, true ), std::to_string( v ) );
+
+    // big number test
     const int64_t num_digits = (gen() % BigNumber::NUM_DIGITS) + 1;
     str.clear();
     if ( gen() % 2 )

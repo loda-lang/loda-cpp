@@ -19,7 +19,23 @@ public:
 
   BigNumber( const std::string& s );
 
+  bool operator==( const BigNumber& n ) const;
+
+  bool operator!=( const BigNumber& n ) const;
+
+  bool operator<( const BigNumber& n ) const;
+
   BigNumber& negate();
+
+  BigNumber& operator+=( const BigNumber& n );
+
+  BigNumber& operator*=( const BigNumber& n );
+
+  BigNumber& operator/=( const BigNumber& n );
+
+  BigNumber& operator%=( const BigNumber& n );
+
+  std::size_t hash() const;
 
   friend std::ostream& operator<<( std::ostream &out, const BigNumber &n );
 
@@ -34,6 +50,10 @@ public:
   }
 
 private:
+
+  void load( const std::string& s );
+
+  bool isZero() const;
 
   std::array<uint64_t, NUM_WORDS> words;
   bool is_negative;
