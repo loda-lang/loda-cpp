@@ -6,13 +6,17 @@
 #include <sstream>
 #include <stdexcept>
 
-constexpr int64_t NUM_INF = std::numeric_limits<int64_t>::max();
-
 const Number Number::ZERO( 0 );
 const Number Number::ONE( 1 );
+const Number Number::INF = Number::infinity();
 
-// TODO: this could lead to problems when using big ints
-const Number Number::INF( NUM_INF );
+constexpr int64_t MIN_INT = std::numeric_limits<int64_t>::min();
+constexpr int64_t MAX_INT = std::numeric_limits<int64_t>::max();
+constexpr size_t MAX_SIZE = std::numeric_limits<size_t>::max();
+
+BigNumber* INF_PTR = reinterpret_cast<BigNumber*>( 1 );
+
+#define CONVERT_TO_BIG 0
 
 Number::Number()
     : value( 0 ),
@@ -22,7 +26,7 @@ Number::Number()
 
 Number::Number( const Number& n )
     : value( n.value ),
-      big( n.big ? new BigNumber( *n.big ) : nullptr )
+      big( (n.big && n.big != INF_PTR) ? new BigNumber( *n.big ) : n.big )
 {
 }
 
@@ -46,26 +50,23 @@ Number::Number( const std::string& s, bool is_big )
     {
       is_inf = true;
     }
-    if ( value == std::numeric_limits<int64_t>::max() || value == std::numeric_limits<int64_t>::min() )
-    {
-      is_inf = true;
-    }
     if ( is_inf )
     {
-      value = NUM_INF;
+      value = 0;
+      big = INF_PTR;
     }
   }
   if ( is_big )
   {
     value = 0;
     big = new BigNumber( s );
-    checkInfinite();
+    checkInfBig();
   }
 }
 
 Number::~Number()
 {
-  if ( big )
+  if ( big && big != INF_PTR )
   {
     delete big;
   }
@@ -73,11 +74,19 @@ Number::~Number()
 
 bool Number::operator==( const Number&n ) const
 {
+  if ( big == INF_PTR )
+  {
+    return (n.big == INF_PTR);
+  }
+  if ( n.big == INF_PTR )
+  {
+    return false;
+  }
   if ( big || n.big )
   {
     throw std::runtime_error( "Bigint not supported for ==" );
   }
-  return value == n.value;
+  return (value == n.value);
 }
 
 bool Number::operator!=( const Number&n ) const
@@ -87,6 +96,14 @@ bool Number::operator!=( const Number&n ) const
 
 bool Number::operator<( const Number&n ) const
 {
+  if ( n.big == INF_PTR )
+  {
+    return (big != INF_PTR);
+  }
+  if ( big == INF_PTR )
+  {
+    return false;
+  }
   if ( big || n.big )
   {
     throw std::runtime_error( "Bigint not supported for <" );
@@ -96,11 +113,31 @@ bool Number::operator<( const Number&n ) const
 
 Number& Number::negate()
 {
+  if ( big == INF_PTR )
+  {
+    return *this;
+  }
   if ( big )
   {
     big->negate();
+    checkInfBig();
   }
-  else if ( value != NUM_INF )
+  else if ( value == MIN_INT )
+  {
+    if ( CONVERT_TO_BIG )
+    {
+      value = 0;
+      big = new BigNumber( value );
+      big->negate();
+      checkInfBig();
+    }
+    else
+    {
+      value = 0;
+      big = INF_PTR;
+    }
+  }
+  else
   {
     value = -value;
   }
@@ -109,17 +146,18 @@ Number& Number::negate()
 
 Number& Number::operator+=( const Number& n )
 {
+  if ( checkInfArgs( n ) )
+  {
+    return *this;
+  }
   if ( big || n.big )
   {
     throw std::runtime_error( "Bigint not supported for +=" );
   }
-  if ( value == NUM_INF || n.value == NUM_INF )
+  else if ( (value > 0 && n.value > MAX_INT - value) || (value < 0 && n.value < MIN_INT - value) )
   {
-    value = NUM_INF;
-  }
-  else if ( (value > 0 && n.value >= NUM_INF - value) || (value < 0 && -n.value >= NUM_INF + value) )
-  {
-    value = NUM_INF;
+    value = 0;
+    big = INF_PTR;
   }
   else
   {
@@ -130,17 +168,18 @@ Number& Number::operator+=( const Number& n )
 
 Number& Number::operator*=( const Number& n )
 {
+  if ( checkInfArgs( n ) )
+  {
+    return *this;
+  }
   if ( big || n.big )
   {
     throw std::runtime_error( "Bigint not supported for *=" );
   }
-  if ( value == NUM_INF || n.value == NUM_INF )
+  else if ( n.value != 0 && (MAX_INT / std::abs( n.value ) < std::abs( value )) )
   {
-    value = NUM_INF;
-  }
-  else if ( n.value != 0 && (NUM_INF / std::abs( n.value ) < std::abs( value )) )
-  {
-    value = NUM_INF;
+    value = 0;
+    big = INF_PTR;
   }
   else
   {
@@ -151,13 +190,18 @@ Number& Number::operator*=( const Number& n )
 
 Number& Number::operator/=( const Number& n )
 {
+  if ( checkInfArgs( n ) )
+  {
+    return *this;
+  }
   if ( big || n.big )
   {
     throw std::runtime_error( "Bigint not supported for /=" );
   }
-  if ( value == NUM_INF || n.value == NUM_INF || n.value == 0 )
+  if ( n.value == 0 )
   {
-    value = NUM_INF;
+    value = 0;
+    big = INF_PTR;
   }
   else
   {
@@ -168,13 +212,18 @@ Number& Number::operator/=( const Number& n )
 
 Number& Number::operator%=( const Number& n )
 {
+  if ( checkInfArgs( n ) )
+  {
+    return *this;
+  }
   if ( big || n.big )
   {
     throw std::runtime_error( "Bigint not supported for %=" );
   }
-  if ( value == NUM_INF || n.value == NUM_INF || n.value == 0 )
+  if ( n.value == 0 )
   {
-    value = NUM_INF;
+    value = 0;
+    big = INF_PTR;
   }
   else
   {
@@ -185,13 +234,13 @@ Number& Number::operator%=( const Number& n )
 
 int64_t Number::asInt() const
 {
+  if ( big == INF_PTR )
+  {
+    throw std::runtime_error( "Infinity error" );
+  }
   if ( big )
   {
     throw std::runtime_error( "Bigint not supported for asInt" );
-  }
-  if ( (*this) == Number::INF )
-  {
-    throw std::runtime_error( "Infinity error" );
   }
   // TODO: throw an exception if the value is out of range
   return value;
@@ -199,6 +248,10 @@ int64_t Number::asInt() const
 
 std::size_t Number::hash() const
 {
+  if ( big == INF_PTR )
+  {
+    return MAX_SIZE;
+  }
   if ( big )
   {
     throw std::runtime_error( "Bigint not supported for hash" );
@@ -208,20 +261,17 @@ std::size_t Number::hash() const
 
 std::ostream& operator<<( std::ostream &out, const Number &n )
 {
-  if ( n.big )
+  if ( n.big == INF_PTR )
+  {
+    out << "inf";
+  }
+  else if ( n.big )
   {
     out << *n.big;
   }
   else
   {
-    if ( n.value == NUM_INF )
-    {
-      out << "inf";
-    }
-    else
-    {
-      out << n.value;
-    }
+    out << n.value;
   }
   return out;
 }
@@ -262,12 +312,37 @@ void Number::readIntString( std::istream& in, std::string& out )
   }
 }
 
-void Number::checkInfinite()
+Number Number::infinity()
 {
-  if ( big && big->isInfinite() )
+  Number inf( 0 );
+  inf.big = INF_PTR;
+  return inf;
+}
+
+bool Number::checkInfArgs( const Number& n )
+{
+  if ( big == INF_PTR )
+  {
+    return true;
+  }
+  if ( n.big == INF_PTR )
+  {
+    if ( big )
+    {
+      delete big;
+    }
+    big = INF_PTR;
+    return true;
+  }
+  return false;
+}
+
+void Number::checkInfBig()
+{
+  if ( big && big != INF_PTR && big->isInfinite() )
   {
     delete big;
-    big = nullptr;
-    value = NUM_INF;
+    value = 0;
+    big = INF_PTR;
   }
 }
