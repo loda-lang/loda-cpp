@@ -136,7 +136,7 @@ Sequence loadBFile( size_t id, const Sequence& seq_full )
       ss >> std::ws;
       Number::readIntString( ss, buf );
       Number value( buf, false );
-      if ( !ss || OeisSequence::isCloseToInf( value ) )
+      if ( !ss || value == Number::INF || OeisSequence::isCloseToInf( value ) )
       {
         break;
       }

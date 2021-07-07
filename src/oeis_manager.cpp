@@ -151,7 +151,7 @@ void OeisManager::loadData()
       if ( line[pos] == ',' )
       {
         Number num( buf, false );
-        if ( OeisSequence::isCloseToInf( num ) )
+        if ( num == Number::INF || OeisSequence::isCloseToInf( num ) )
         {
           break;
         }

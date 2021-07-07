@@ -56,7 +56,11 @@ private:
   // TODO: avoid this friend class
   friend class OeisSequence;
 
-  void checkInfinite();
+  static Number infinity();
+
+  bool checkInfArgs( const Number& n );
+
+  void checkInfBig();
 
   int64_t value;
   BigNumber* big;

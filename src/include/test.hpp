@@ -43,6 +43,8 @@ public:
 
   void minimizer( size_t tests );
 
+  void miner();
+
   void linearMatcher();
 
   void deltaMatcher();
