@@ -64,17 +64,20 @@ Number read_num( const std::string &s )
   return (s == "NI") ? Number::INF : Number( s, false );
 }
 
+void check_inf( const Number& n )
+{
+  if ( n.to_string() != "inf" || n != Number::INF )
+  {
+    Log::get().error( "Expected infinity instead of " + n.to_string(), true );
+  }
+}
+
 void check_num( const Number& m, const std::string& s )
 {
   if ( m.to_string() != s )
   {
     Log::get().error( "Expected " + m.to_string() + " to be " + s, true );
   }
-}
-
-void check_inf( const Number& n )
-{
-  check_num( n, "inf" );
 }
 
 void testNumberDigits( int64_t num_digits, bool test_negative, bool is_big )
@@ -98,15 +101,10 @@ void testNumberDigits( int64_t num_digits, bool test_negative, bool is_big )
 void Test::number()
 {
   Log::get().info( "Testing number" );
-  check_num( Number::ZERO, "0" );
-  check_num( Number::ONE, "1" );
-  check_inf( Number::INF );
-  if ( Number::ONE < Number::ZERO || !(Number::ZERO < Number::ONE) || !(Number::ONE < Number::INF) )
+  if ( Number::ONE < Number::ZERO || !(Number::ZERO < Number::ONE) )
   {
-    Log::get().error( "Basic number comparison check failed", true );
+    Log::get().error( "Basic number check failed", true );
   }
-  check_num( std::numeric_limits<int64_t>::max(), std::to_string( std::numeric_limits<int64_t>::max() ) );
-  check_num( std::numeric_limits<int64_t>::min(), std::to_string( std::numeric_limits<int64_t>::min() ) );
   testNumberDigits( 18, false, false );
   testNumberDigits( 18, true, false );
   testNumberDigits( BigNumber::NUM_DIGITS, false, true );
