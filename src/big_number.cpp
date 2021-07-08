@@ -31,9 +31,7 @@ void BigNumber::load( const std::string& s )
 {
   if ( s == "inf" )
   {
-    is_negative = false;
-    is_infinite = true;
-    words.fill( 0 );
+    makeInfinite();
     return;
   }
   int64_t size = s.length();
@@ -48,8 +46,7 @@ void BigNumber::load( const std::string& s )
     }
     if ( w >= BigNumber::NUM_WORDS )
     {
-      is_infinite = true;
-      words.fill( 0 );
+      makeInfinite();
       return;
     }
     int64_t length = 0;
@@ -90,6 +87,13 @@ bool BigNumber::isZero() const
   return true;
 }
 
+void BigNumber::makeInfinite()
+{
+  is_negative = false;
+  is_infinite = true;
+  words.fill( 0 );
+}
+
 bool BigNumber::operator==( const BigNumber&n ) const
 {
   if ( is_infinite != n.is_infinite )
@@ -126,13 +130,109 @@ bool BigNumber::operator<( const BigNumber&n ) const
 
 BigNumber& BigNumber::negate()
 {
+  // note that this can lead to -0 (therefore we don't expose is_negative)
   is_negative = !is_negative;
   return *this;
 }
 
 BigNumber& BigNumber::operator+=( const BigNumber& n )
 {
-  throw std::runtime_error( "Bigint not supported for +=" );
+  // check if one of the operands is negative
+  if ( !is_negative && n.is_negative )
+  {
+    BigNumber m( n );
+    m.is_negative = false;
+    if ( *this < m )
+    {
+      m.sub( *this );
+      (*this) = m;
+      is_negative = true;
+    }
+    else
+    {
+      sub( m );
+    }
+    return *this;
+  }
+  if ( is_negative && !n.is_negative )
+  {
+    BigNumber m( n );
+    is_negative = false;
+    if ( *this < m )
+    {
+      m.sub( *this );
+      (*this) = m;
+    }
+    else
+    {
+      sub( m );
+      is_negative = true;
+    }
+    return *this;
+  }
+  // do normal addition
+  auto it1 = words.begin();
+  auto it2 = n.words.begin();
+  uint64_t sum = 0;
+  while ( it1 != words.end() || it2 != n.words.end() )
+  {
+    if ( it1 != words.end() )
+    {
+      sum += *it1;
+    }
+    else
+    {
+      makeInfinite();
+      return *this;
+    }
+    if ( it2 != n.words.end() )
+    {
+      sum += *it2;
+      ++it2;
+    }
+    *it1 = sum % WORD_BASE;
+    ++it1;
+    sum /= WORD_BASE;
+  }
+  if ( sum )
+  {
+    makeInfinite();
+  }
+  return *this;
+}
+
+void BigNumber::sub( const BigNumber& n )
+{
+  auto it1 = words.begin();
+  auto it2 = n.words.begin();
+  int64_t d = 0;
+  while ( it1 != words.end() || it2 != n.words.end() )
+  {
+    if ( it1 != words.end() )
+    {
+      d += *it1;
+      ++it1;
+    }
+    if ( it2 != n.words.end() )
+    {
+      d -= *it2;
+      ++it2;
+    }
+    if ( d < 0 )
+    {
+      *(it1 - 1) = d + WORD_BASE;
+      d = -1;
+    }
+    else
+    {
+      *(it1 - 1) = d % WORD_BASE;
+      d /= WORD_BASE;
+    }
+  }
+  if ( d < 0 )
+  {
+    is_negative = true;
+  }
 }
 
 BigNumber& BigNumber::operator*=( const BigNumber& n )

@@ -118,6 +118,9 @@ void Test::number()
   testNumberDigits( 18, true, false );
   testNumberDigits( BigNumber::NUM_DIGITS, false, true );
   testNumberDigits( BigNumber::NUM_DIGITS, true, true );
+  Number o( 1, true );
+  o += Number( 2, true );
+  check_num( o, "3" );
 }
 
 void Test::randomNumber( size_t tests )
@@ -127,18 +130,22 @@ void Test::randomNumber( size_t tests )
   for ( size_t i = 0; i < tests; i++ )
   {
     // small number test
-    int64_t v = gen(), w = gen();
+    int64_t v = gen() / 2, w = gen() / 2;
     if ( gen() % 2 ) v *= -1;
     if ( gen() % 2 ) w *= -1;
     check_num( Number( v, true ), std::to_string( v ) );
+    Number vv( v, true );
+    Number ww( w, true );
     if ( v < w )
     {
-      check_less( Number( v, true ), Number( w, true ) );
+      check_less( vv, ww );
     }
     else if ( w < v )
     {
-      check_less( Number( w, true ), Number( v, true ) );
+      check_less( ww, vv );
     }
+    vv += ww;
+    check_num( vv, std::to_string( v + w ) );
 
     // big number test
     const int64_t num_digits = (gen() % BigNumber::NUM_DIGITS) + 1;
