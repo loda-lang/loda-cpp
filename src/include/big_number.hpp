@@ -39,11 +39,6 @@ public:
 
   friend std::ostream& operator<<( std::ostream &out, const BigNumber &n );
 
-  inline bool isNegative() const
-  {
-    return is_negative;
-  }
-
   inline bool isInfinite() const
   {
     return is_infinite;
@@ -56,7 +51,7 @@ private:
   bool isZero() const;
 
   std::array<uint64_t, NUM_WORDS> words;
-  bool is_negative;
+  bool is_negative; // we don't want to expose this
   bool is_infinite;
 
 };

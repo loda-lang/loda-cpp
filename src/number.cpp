@@ -118,11 +118,25 @@ bool Number::operator<( const Number&n ) const
   {
     return false;
   }
-  if ( big || n.big )
+  if ( big )
   {
-    throw std::runtime_error( "Bigint not supported for <" );
+    if ( n.big )
+    {
+      return (*big) < (*n.big);
+    }
+    else
+    {
+      return (*big) < BigNumber( n.value );
+    }
   }
-  return value < n.value;
+  else if ( n.big )
+  {
+    return BigNumber( value ) < (*n.big);
+  }
+  else
+  {
+    return (value < n.value);
+  }
 }
 
 Number& Number::negate()

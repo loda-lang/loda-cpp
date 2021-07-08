@@ -78,6 +78,14 @@ void check_inf( const Number& n )
   check_num( n, "inf" );
 }
 
+void check_less( const Number& m, const Number& n )
+{
+  if ( !(m < n) )
+  {
+    Log::get().error( "Expected " + m.to_string() + " to be less than " + n.to_string(), true );
+  }
+}
+
 void testNumberDigits( int64_t num_digits, bool test_negative, bool is_big )
 {
   std::string nines = test_negative ? "-9" : "9";
@@ -102,10 +110,8 @@ void Test::number()
   check_num( Number::ZERO, "0" );
   check_num( Number::ONE, "1" );
   check_inf( Number::INF );
-  if ( Number::ONE < Number::ZERO || !(Number::ZERO < Number::ONE) || !(Number::ONE < Number::INF) )
-  {
-    Log::get().error( "Basic number comparison check failed", true );
-  }
+  check_less( Number::ZERO, Number::ONE );
+  check_less( Number::ONE, Number::INF );
   check_num( std::numeric_limits<int64_t>::max(), std::to_string( std::numeric_limits<int64_t>::max() ) );
   check_num( std::numeric_limits<int64_t>::min(), std::to_string( std::numeric_limits<int64_t>::min() ) );
   testNumberDigits( 18, false, false );
@@ -121,8 +127,18 @@ void Test::randomNumber( size_t tests )
   for ( size_t i = 0; i < tests; i++ )
   {
     // small number test
-    const int64_t v = gen();
+    int64_t v = gen(), w = gen();
+    if ( gen() % 2 ) v *= -1;
+    if ( gen() % 2 ) w *= -1;
     check_num( Number( v, true ), std::to_string( v ) );
+    if ( v < w )
+    {
+      check_less( Number( v, true ), Number( w, true ) );
+    }
+    else if ( w < v )
+    {
+      check_less( Number( w, true ), Number( v, true ) );
+    }
 
     // big number test
     const int64_t num_digits = (gen() % BigNumber::NUM_DIGITS) + 1;
@@ -138,6 +154,19 @@ void Test::randomNumber( size_t tests )
     }
     Number n( str, true );
     check_num( n, str );
+    if ( str.size() > 1 )
+    {
+      auto smaller = str.substr( 0, str.size() - 1 );
+      Number m( smaller, true );
+      if ( str[0] == '-' )
+      {
+        check_less( n, m );
+      }
+      else
+      {
+        check_less( m, n );
+      }
+    }
   }
 }
 

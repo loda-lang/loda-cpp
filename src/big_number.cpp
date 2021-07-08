@@ -9,7 +9,7 @@ BigNumber::BigNumber()
 
 BigNumber::BigNumber( int64_t value )
 {
-  if ( value >= 0 && value < WORD_BASE )
+  if ( value >= 0 && static_cast<uint64_t>( value ) < WORD_BASE )
   {
     is_negative = false;
     is_infinite = false;
@@ -110,7 +110,18 @@ bool BigNumber::operator!=( const BigNumber&n ) const
 
 bool BigNumber::operator<( const BigNumber&n ) const
 {
-  throw std::runtime_error( "Bigint not supported for <" );
+  for ( int64_t i = NUM_WORDS - 1; i >= 0; i-- )
+  {
+    if ( words[i] < n.words[i] )
+    {
+      return !n.is_negative;
+    }
+    else if ( words[i] > n.words[i] )
+    {
+      return is_negative;
+    }
+  }
+  return false;
 }
 
 BigNumber& BigNumber::negate()
