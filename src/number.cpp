@@ -8,6 +8,8 @@
 
 const Number Number::ZERO( 0 );
 const Number Number::ONE( 1 );
+const Number Number::MIN = Number::minMax( false );
+const Number Number::MAX = Number::minMax( true );
 const Number Number::INF = Number::infinity();
 
 constexpr int64_t MIN_INT = std::numeric_limits<int64_t>::min();
@@ -38,6 +40,12 @@ Number::Number( int64_t value, bool is_big )
 
 Number::Number( const std::string& s, bool is_big )
 {
+  if ( s == "inf" )
+  {
+    value = 0;
+    big = INF_PTR;
+    return;
+  }
   if ( !is_big )
   {
     big = nullptr;
@@ -70,6 +78,20 @@ Number::~Number()
   {
     delete big;
   }
+}
+
+Number& Number::operator=( const Number& n )
+{
+  if ( this != &n )
+  {
+    value = n.value;
+    if ( big && big != INF_PTR )
+    {
+      delete big;
+    }
+    big = (n.big && n.big != INF_PTR) ? new BigNumber( *n.big ) : n.big;
+  }
+  return *this;
 }
 
 bool Number::operator==( const Number&n ) const
@@ -379,6 +401,14 @@ Number Number::infinity()
   Number inf( 0 );
   inf.big = INF_PTR;
   return inf;
+}
+
+Number Number::minMax( bool is_max )
+{
+  Number m;
+  m.value = 0;
+  m.big = new BigNumber( BigNumber::minMax( is_max ) );
+  return m;
 }
 
 bool Number::checkInfArgs( const Number& n )

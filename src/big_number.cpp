@@ -94,6 +94,18 @@ void BigNumber::makeInfinite()
   words.fill( 0 );
 }
 
+BigNumber BigNumber::minMax( bool is_max )
+{
+  BigNumber m;
+  m.is_infinite = false;
+  m.is_negative = !is_max;
+  for ( auto& word : m.words )
+  {
+    word = WORD_BASE - 1;
+  }
+  return m;
+}
+
 bool BigNumber::operator==( const BigNumber&n ) const
 {
   if ( is_infinite != n.is_infinite )
@@ -152,9 +164,8 @@ BigNumber& BigNumber::operator+=( const BigNumber& n )
     {
       sub( m );
     }
-    return *this;
   }
-  if ( is_negative && !n.is_negative )
+  else if ( is_negative && !n.is_negative )
   {
     BigNumber m( n );
     is_negative = false;
@@ -168,12 +179,19 @@ BigNumber& BigNumber::operator+=( const BigNumber& n )
       sub( m );
       is_negative = true;
     }
-    return *this;
   }
-  // do normal addition
+  else
+  {
+    add( n );
+  }
+  return *this;
+}
+
+void BigNumber::add( const BigNumber& n )
+{
   auto it1 = words.begin();
   auto it2 = n.words.begin();
-  uint64_t sum = 0;
+  int64_t sum = 0;
   while ( it1 != words.end() || it2 != n.words.end() )
   {
     if ( it1 != words.end() )
@@ -183,7 +201,7 @@ BigNumber& BigNumber::operator+=( const BigNumber& n )
     else
     {
       makeInfinite();
-      return *this;
+      return;
     }
     if ( it2 != n.words.end() )
     {
@@ -198,7 +216,6 @@ BigNumber& BigNumber::operator+=( const BigNumber& n )
   {
     makeInfinite();
   }
-  return *this;
 }
 
 void BigNumber::sub( const BigNumber& n )
