@@ -60,11 +60,6 @@ void Test::all()
   miner();
 }
 
-Number read_num( const std::string &s )
-{
-  return Number( s, false );
-}
-
 void check_num( const Number& m, const std::string& s )
 {
   if ( m.to_string() != s || m != Number( s, true ) )
@@ -84,6 +79,13 @@ void check_less( const Number& m, const Number& n )
   {
     Log::get().error( "Expected " + m.to_string() + " to be less than " + n.to_string(), true );
   }
+}
+
+Number read_num( const std::string &s )
+{
+  auto n = Number( s, false );
+  check_num( n, s );
+  return n;
 }
 
 void testNumberDigits( int64_t num_digits, bool test_negative, bool is_big )
@@ -127,6 +129,10 @@ void Test::number()
   check_num( o, "3" );
   o += Number( -5, true );
   check_num( o, "-2" );
+  o *= Number( 5, true );
+  check_num( o, "-10" );
+  o *= Number( -10, true );
+  check_num( o, "100" );
   std::string nines( BigNumber::NUM_DIGITS, '9' );
   check_num( Number::MAX, nines );
   check_num( Number::MIN, "-" + nines );

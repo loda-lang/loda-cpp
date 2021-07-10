@@ -256,14 +256,48 @@ Number& Number::operator*=( const Number& n )
   {
     return *this;
   }
-  if ( big || n.big )
+  if ( big )
   {
-    throw std::runtime_error( "Bigint not supported for *=" );
+    if ( n.big )
+    {
+      (*big) *= (*n.big);
+      checkInfBig();
+    }
+    else
+    {
+      (*big) *= BigNumber( n.value );
+      checkInfBig();
+    }
+  }
+  else if ( n.big )
+  {
+    if ( CONVERT_TO_BIG )
+    {
+      value = 0;
+      big = new BigNumber( value );
+      (*big) *= (*n.big);
+      checkInfBig();
+    }
+    else
+    {
+      value = 0;
+      big = INF_PTR;
+    }
   }
   else if ( n.value != 0 && (MAX_INT / std::abs( n.value ) < std::abs( value )) )
   {
-    value = 0;
-    big = INF_PTR;
+    if ( CONVERT_TO_BIG )
+    {
+      value = 0;
+      big = new BigNumber( value );
+      (*big) *= BigNumber( n.value );
+      checkInfBig();
+    }
+    else
+    {
+      value = 0;
+      big = INF_PTR;
+    }
   }
   else
   {

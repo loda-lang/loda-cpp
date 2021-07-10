@@ -286,7 +286,20 @@ void BigNumber::sub( const BigNumber& n )
 
 BigNumber& BigNumber::operator*=( const BigNumber& n )
 {
-  throw std::runtime_error( "Bigint not supported for *=" );
+  // std::cout << *this << " * " << n << std::endl;
+  BigNumber result;
+  for ( auto it1 = words.begin(); it1 != words.end(); ++it1 )
+  {
+    for ( auto it2 = n.words.begin(); it2 != n.words.end(); ++it2 )
+    {
+      // c.skip = (unsigned int) (it1 - number.begin()) + (it2 - b.number.begin()); //TODO
+      result += BigNumber( (*it1) * (*it2) );
+    }
+  }
+  // c.skip = 0;
+  result.is_negative = (is_negative != n.is_negative);
+  (*this) = result;
+  return (*this);
 }
 
 BigNumber& BigNumber::operator/=( const BigNumber& n )
