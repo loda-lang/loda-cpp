@@ -62,7 +62,7 @@ void Test::all()
 
 Number read_num( const std::string &s )
 {
-  return (s == "NI") ? Number::INF : Number( s, false );
+  return Number( s, false );
 }
 
 void check_num( const Number& m, const std::string& s )
@@ -109,6 +109,10 @@ void Test::number()
   Log::get().info( "Testing number" );
   check_num( Number::ZERO, "0" );
   check_num( Number::ONE, "1" );
+  check_num( Number( "1", true ), "1" );
+//  check_num( Number( "2 ", true ), "2" );
+//  check_num( Number( " 3", true ), "3" );
+//  check_num( Number( "-4 ", true ), "-4" );
   check_inf( Number::INF );
   check_less( Number::ZERO, Number::ONE );
   check_less( Number::ONE, Number::INF );
@@ -121,12 +125,23 @@ void Test::number()
   Number o( 1, true );
   o += Number( 2, true );
   check_num( o, "3" );
+  o += Number( -5, true );
+  check_num( o, "-2" );
+  std::string nines( BigNumber::NUM_DIGITS, '9' );
+  check_num( Number::MAX, nines );
+  check_num( Number::MIN, "-" + nines );
+  auto m = Number::MAX;
+  m += 1;
+  check_inf( m );
+  m = Number::MIN;
+  m += -1;
+  check_inf( m );
 }
 
 void Test::randomNumber( size_t tests )
 {
   Log::get().info( "Testing random number" );
-  std::string str;
+  std::string str, inv, nines;
   for ( size_t i = 0; i < tests; i++ )
   {
     // small number test
@@ -149,18 +164,31 @@ void Test::randomNumber( size_t tests )
 
     // big number test
     const int64_t num_digits = (gen() % BigNumber::NUM_DIGITS) + 1;
+    char ch;
     str.clear();
+    inv.clear();
+    nines.clear();
     if ( gen() % 2 )
     {
       str += '-';
+      inv += '-';
+      nines += '-';
     }
-    str += '1' + static_cast<char>( (gen() % 9) );
+    ch = static_cast<char>( (gen() % 9) );
+    str += '1' + ch;
+    inv += '8' - ch;
+    nines += '9';
     for ( int64_t j = 1; j < num_digits; j++ )
     {
-      str += '0' + static_cast<char>( (gen() % 10) );
+      ch = static_cast<char>( (gen() % 10) );
+      str += '0' + ch;
+      inv += '9' - ch;
+      nines += '9';
     }
     Number n( str, true );
+    Number t( n );
     check_num( n, str );
+    check_num( t, str );
     if ( str.size() > 1 )
     {
       auto smaller = str.substr( 0, str.size() - 1 );
@@ -174,6 +202,9 @@ void Test::randomNumber( size_t tests )
         check_less( m, n );
       }
     }
+    Number o( inv, true );
+    o += n;
+    check_num( o, nines );
   }
 }
 

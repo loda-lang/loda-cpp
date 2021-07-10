@@ -44,6 +44,8 @@ public:
     return is_infinite;
   }
 
+  static BigNumber minMax( bool is_max );
+
 private:
 
   void load( const std::string& s );
@@ -51,6 +53,8 @@ private:
   bool isZero() const;
 
   void makeInfinite();
+
+  void add( const BigNumber& n );
 
   void sub( const BigNumber& n );
 

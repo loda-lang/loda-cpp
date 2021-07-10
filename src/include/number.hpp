@@ -13,6 +13,8 @@ public:
 
   static const Number ZERO;
   static const Number ONE;
+  static const Number MIN;
+  static const Number MAX;
   static const Number INF;
 
   Number();
@@ -24,6 +26,8 @@ public:
   Number( const std::string& s, bool is_big = false );
 
   ~Number();
+
+  Number& operator=( const Number& n );
 
   bool operator==( const Number& n ) const;
 
@@ -57,6 +61,8 @@ private:
   friend class OeisSequence;
 
   static Number infinity();
+
+  static Number minMax( bool is_max );
 
   bool checkInfArgs( const Number& n );
 
