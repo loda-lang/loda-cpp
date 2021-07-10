@@ -74,19 +74,22 @@ function push_updates {
     exit 1
   fi
   num_changes=$(git status programs -s | wc -l)
+  dow=$(date +%u)
   if [ "$num_changes" -ge "$min_changes" ]; then
     stop_miners
-    echo "Pushing updates"
-    git add programs/oeis
-    num_progs=$(cat $HOME/.loda/stats/summary.csv | tail -n 1 | cut -d , -f 1)
-    git commit -m "updated ${num_changes}/${num_progs} programs"
-    git pull -r
-    if [ "$branch" != "master" ]; then
-      git merge -X theirs -m "merge master into $branch" origin/master
+    if [ "$dow" -ge 6 ]; then
+      echo "Pushing updates"
+      git add programs/oeis
+      num_progs=$(cat $HOME/.loda/stats/summary.csv | tail -n 1 | cut -d , -f 1)
+      git commit -m "updated ${num_changes}/${num_progs} programs"
+      git pull -r -X theirs
+      if [ "$branch" != "master" ]; then
+        git merge -X theirs -m "merge master into $branch" origin/master
+      fi
+      git push
+      echo "Rebuilding loda"
+      pushd src && make clean && make && popd
     fi
-    git push
-    echo "Rebuilding loda"
-    pushd src && make clean && make && popd
   fi
   ps -A > /tmp/loda-ps.txt
   if ! grep loda /tmp/loda-ps.txt; then
