@@ -110,9 +110,9 @@ void Test::number()
   check_num( Number::ZERO, "0" );
   check_num( Number::ONE, "1" );
   check_num( Number( "1", true ), "1" );
-//  check_num( Number( "2 ", true ), "2" );
-//  check_num( Number( " 3", true ), "3" );
-//  check_num( Number( "-4 ", true ), "-4" );
+  check_num( Number( "2 ", true ), "2" );
+  check_num( Number( " 3", true ), "3" );
+  check_num( Number( "-4 ", true ), "-4" );
   check_inf( Number::INF );
   check_less( Number::ZERO, Number::ONE );
   check_less( Number::ONE, Number::INF );
@@ -189,7 +189,7 @@ void Test::randomNumber( size_t tests )
     Number t( n );
     check_num( n, str );
     check_num( t, str );
-    if ( str.size() > 1 )
+    if ( str.size() > 2 )
     {
       auto smaller = str.substr( 0, str.size() - 1 );
       Number m( smaller, true );

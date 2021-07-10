@@ -27,6 +27,11 @@ BigNumber::BigNumber( const std::string& s )
   load( s );
 }
 
+void throwNumberParseError( const std::string& s )
+{
+  throw std::invalid_argument( "error reading number: '" + s + "'" );
+}
+
 void BigNumber::load( const std::string& s )
 {
   if ( s == "inf" )
@@ -34,31 +39,58 @@ void BigNumber::load( const std::string& s )
     makeInfinite();
     return;
   }
-  int64_t size = s.length();
-  is_negative = (s[0] == '-');
   is_infinite = false;
-  size_t w = 0;
-  while ( true )
+  int64_t size = s.length();
+  int64_t start = 0;
+  while ( start < size && s[start] == ' ' )
   {
-    if ( (size <= 0) || (is_negative && size <= 1) )
+    start++;
+  }
+  if ( start == size )
+  {
+    throwNumberParseError( s );
+  }
+  if ( s[start] == '-' )
+  {
+    is_negative = true;
+    if ( ++start == size )
     {
-      break;
+      throwNumberParseError( s );
     }
+  }
+  else
+  {
+    is_negative = false;
+  }
+  size -= start;
+  while ( size > 0 && s[start + size - 1] == ' ' )
+  {
+    size--;
+  }
+  if ( size == 0 )
+  {
+    throwNumberParseError( s );
+  }
+  size_t w = 0;
+  while ( size > 0 )
+  {
     if ( w >= BigNumber::NUM_WORDS )
     {
       makeInfinite();
       return;
     }
     int64_t length = 0;
-    uint64_t num = 0;
-    uint64_t prefix = 1;
+    int64_t num = 0;
+    int64_t prefix = 1;
+    char ch;
     for ( int64_t i = size - 1; i >= 0 && i >= size - static_cast<int64_t>( BigNumber::NUM_WORD_DIGITS ); --i )
     {
-      if ( s[i] < '0' || s[i] > '9' )
+      ch = s[start + i];
+      if ( ch < '0' || ch > '9' )
       {
-        break;
+        throwNumberParseError( s );
       }
-      num += (s[i] - '0') * prefix;
+      num += (ch - '0') * prefix;
       prefix *= 10;
       ++length;
     }
