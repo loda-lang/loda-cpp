@@ -10,7 +10,7 @@ done
 
 # common settings
 log_level=error
-check_interval=43200
+restart_interval=21600
 min_cpus=4
 branch=$(git rev-parse --abbrev-ref HEAD)
 remote_origin=$(git config --get remote.origin.url)
@@ -33,6 +33,9 @@ num_use_cpus=$num_cpus
 if [ "$num_cpus" -ge 16 ]; then
   num_use_cpus=$(( $num_cpus - 4 ))
 fi
+if [ "$num_cpus" -ge 24 ]; then
+  num_use_cpus=$(( $num_cpus - 8 ))
+fi
 
 # calculate minimum number of changes before commit
 min_changes=$(( $num_cpus * 2 ))
@@ -42,7 +45,7 @@ export LODA_METRICS_PUBLISH_INTERVAL=600
 
 function stop_miners() {
   echo "Stopping miners"
-  killall loda > /dev/null
+  killall loda > /dev/null 2> /dev/null
 }
 
 function abort_miners() {
@@ -66,30 +69,29 @@ function start_miners() {
     ./loda mine -l ${log_level} -i ${i} $@ &
     ((i=i+1))
   done
+  ./loda mine -l ${log_level} -i blocks -c 100000 $@ &
 }
 
-function push_updates {
+function restart_miners {
   if [ ! -d "programs" ]; then
     echo "programs folder not found; aborting"
     exit 1
   fi
+  stop_miners
   num_changes=$(git status programs -s | wc -l)
   dow=$(date +%u)
-  if [ "$num_changes" -ge "$min_changes" ]; then
-    stop_miners
-    if [ "$dow" -ge 6 ]; then
-      echo "Pushing updates"
-      git add programs/oeis
-      num_progs=$(cat $HOME/.loda/stats/summary.csv | tail -n 1 | cut -d , -f 1)
-      git commit -m "updated ${num_changes}/${num_progs} programs"
-      git pull -r -X theirs
-      if [ "$branch" != "master" ]; then
-        git merge -X theirs -m "merge master into $branch" origin/master
-      fi
-      git push
-      echo "Rebuilding loda"
-      pushd src && make clean && make && popd
+  if [ "$num_changes" -ge "$min_changes" ] && [ "$dow" -ge 6 ]; then
+    echo "Pushing updates"
+    git add programs/oeis
+    num_progs=$(cat $HOME/.loda/stats/summary.csv | tail -n 1 | cut -d , -f 1)
+    git commit -m "updated ${num_changes}/${num_progs} programs"
+    git pull -r -X theirs
+    if [ "$branch" != "master" ]; then
+      git merge -X theirs -m "merge master into $branch" origin/master
     fi
+    git push
+    echo "Rebuilding loda"
+    pushd src && make clean && make && popd
   fi
   ps -A > /tmp/loda-ps.txt
   if ! grep loda /tmp/loda-ps.txt; then
@@ -100,11 +102,11 @@ function push_updates {
 
 trap abort_miners INT
 
-push_updates
+restart_miners
 SECONDS=0
 while [ true ]; do
-  if (( SECONDS >= check_interval )); then
-  	push_updates
+  if (( SECONDS >= restart_interval )); then
+  	restart_miners
     SECONDS=0
   fi
   sleep 600
