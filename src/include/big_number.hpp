@@ -11,7 +11,8 @@ public:
   static constexpr size_t NUM_WORDS = 10;
   static constexpr size_t NUM_WORD_DIGITS = 18;
   static constexpr size_t NUM_DIGITS = NUM_WORDS * NUM_WORD_DIGITS;
-  static constexpr int64_t WORD_BASE = 1000000000000000000;
+  static constexpr int64_t WORD_BASE_ROOT = 1000000000;
+  static constexpr int64_t WORD_BASE = WORD_BASE_ROOT * WORD_BASE_ROOT;
 
   BigNumber();
 
@@ -57,6 +58,10 @@ private:
   void add( const BigNumber& n );
 
   void sub( const BigNumber& n );
+
+  void mulShort( int64_t n );
+
+  void shift( int64_t n );
 
   std::array<int64_t, NUM_WORDS> words;
   bool is_negative; // we don't want to expose this

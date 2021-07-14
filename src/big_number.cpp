@@ -286,20 +286,68 @@ void BigNumber::sub( const BigNumber& n )
 
 BigNumber& BigNumber::operator*=( const BigNumber& n )
 {
-  // std::cout << *this << " * " << n << std::endl;
-  BigNumber result;
-  for ( auto it1 = words.begin(); it1 != words.end(); ++it1 )
+  BigNumber result( 0 );
+  int64_t shift = 0;
+  for ( auto& w : n.words )
   {
-    for ( auto it2 = n.words.begin(); it2 != n.words.end(); ++it2 )
+    auto copy = *this;
+    copy.mulShort( w % WORD_BASE_ROOT ); // low bits
+    copy.shift( shift );
+    shift += 1;
+    result += copy;
+    copy = *this;
+    copy.mulShort( w / WORD_BASE_ROOT ); // high bits
+    copy.shift( shift );
+    shift += 1;
+    result += copy;
+    if ( result.is_infinite )
     {
-      // c.skip = (unsigned int) (it1 - number.begin()) + (it2 - b.number.begin()); //TODO
-      result += BigNumber( (*it1) * (*it2) );
+      break;
     }
   }
-  // c.skip = 0;
-  result.is_negative = (is_negative != n.is_negative);
+  if ( !result.is_infinite )
+  {
+    result.is_negative = (is_negative != n.is_negative);
+  }
   (*this) = result;
   return (*this);
+}
+
+void BigNumber::mulShort( int64_t n )
+{
+  int64_t carry = 0;
+  for ( auto& w : words )
+  {
+    int64_t h = n * (w / WORD_BASE_ROOT);
+    int64_t l = n * (w % WORD_BASE_ROOT);
+    int64_t t = (h % WORD_BASE_ROOT) * WORD_BASE_ROOT;
+    w = l + t + carry;
+    carry = h / WORD_BASE_ROOT;
+  }
+  if ( carry )
+  {
+    makeInfinite();
+  }
+}
+
+void BigNumber::shift( int64_t n )
+{
+  for ( ; n > 0; n-- )
+  {
+    int64_t next = 0;
+    for ( size_t i = 0; i < NUM_WORDS; i++ )
+    {
+      int64_t h = words[i] / WORD_BASE_ROOT;
+      int64_t l = words[i] % WORD_BASE_ROOT;
+      words[i] = (l * WORD_BASE_ROOT) + next;
+      next = h;
+    }
+    if ( next )
+    {
+      makeInfinite();
+      break;
+    }
+  }
 }
 
 BigNumber& BigNumber::operator/=( const BigNumber& n )
