@@ -393,7 +393,21 @@ void BigNumber::div( const BigNumber& n )
 
 BigNumber& BigNumber::operator%=( const BigNumber& n )
 {
-  throw std::runtime_error( "Bigint not supported for %=" );
+  if ( n.isZero() )
+  {
+    makeInfinite();
+    return *this;
+  }
+  auto m = n;
+  const bool new_is_negative = is_negative;
+  m.is_negative = false;
+  is_negative = false;
+  auto q = *this;
+  q.div( m );
+  q *= m;
+  sub( q );
+  is_negative = new_is_negative;
+  return *this;
 }
 
 std::size_t BigNumber::hash() const

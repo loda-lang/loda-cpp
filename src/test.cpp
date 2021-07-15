@@ -172,6 +172,9 @@ void Test::randomNumber( size_t tests )
     xx *= ww;
     xx /= vv;
     check_num( xx, std::to_string( w ) );
+    xx = vv;
+    xx %= ww;
+    check_num( xx, std::to_string( v % w ) );
 
     // big number test
     const int64_t num_digits = (gen() % BigNumber::NUM_DIGITS) + 1;

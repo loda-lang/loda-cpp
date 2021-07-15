@@ -41,7 +41,8 @@ Number Semantics::dif( const Number& a, const Number& b )
   {
     return Number::INF;
   }
-  return (mod( a, b ) == Number::ZERO) ? div( a, b ) : a;
+  const auto d = div( a, b );
+  return (a == mul( b, d )) ? d : a;
 }
 
 Number Semantics::mod( const Number& a, const Number& b )
