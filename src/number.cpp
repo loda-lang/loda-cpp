@@ -176,8 +176,7 @@ Number& Number::negate()
   {
     if ( CONVERT_TO_BIG )
     {
-      value = 0;
-      big = new BigNumber( value );
+      convertToBig();
       big->negate();
       checkInfBig();
     }
@@ -217,8 +216,7 @@ Number& Number::operator+=( const Number& n )
   {
     if ( CONVERT_TO_BIG )
     {
-      value = 0;
-      big = new BigNumber( value );
+      convertToBig();
       (*big) += (*n.big);
       checkInfBig();
     }
@@ -232,8 +230,7 @@ Number& Number::operator+=( const Number& n )
   {
     if ( CONVERT_TO_BIG )
     {
-      value = 0;
-      big = new BigNumber( value );
+      convertToBig();
       (*big) += BigNumber( n.value );
       checkInfBig();
     }
@@ -273,8 +270,7 @@ Number& Number::operator*=( const Number& n )
   {
     if ( CONVERT_TO_BIG )
     {
-      value = 0;
-      big = new BigNumber( value );
+      convertToBig();
       (*big) *= (*n.big);
       checkInfBig();
     }
@@ -288,8 +284,7 @@ Number& Number::operator*=( const Number& n )
   {
     if ( CONVERT_TO_BIG )
     {
-      value = 0;
-      big = new BigNumber( value );
+      convertToBig();
       (*big) *= BigNumber( n.value );
       checkInfBig();
     }
@@ -329,8 +324,7 @@ Number& Number::operator/=( const Number& n )
   {
     if ( CONVERT_TO_BIG )
     {
-      value = 0;
-      big = new BigNumber( value );
+      convertToBig();
       (*big) /= (*n.big);
       checkInfBig();
     }
@@ -375,8 +369,7 @@ Number& Number::operator%=( const Number& n )
   {
     if ( CONVERT_TO_BIG )
     {
-      value = 0;
-      big = new BigNumber( value );
+      convertToBig();
       (*big) %= (*n.big);
       checkInfBig();
     }
@@ -519,4 +512,18 @@ void Number::checkInfBig()
     value = 0;
     big = INF_PTR;
   }
+}
+
+void Number::convertToBig()
+{
+  if ( big == INF_PTR )
+  {
+    big = new BigNumber();
+    big->makeInfinite();
+  }
+  else if ( !big )
+  {
+    big = new BigNumber( value );
+  }
+  value = 0;
 }

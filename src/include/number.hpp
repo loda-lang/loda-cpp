@@ -68,6 +68,8 @@ private:
 
   void checkInfBig();
 
+  void convertToBig();
+
   int64_t value;
   BigNumber* big;
 
