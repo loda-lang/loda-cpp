@@ -399,9 +399,8 @@ int64_t Number::asInt() const
   }
   if ( big )
   {
-    throw std::runtime_error( "Bigint not supported for asInt" );
+    return big->asInt();
   }
-  // TODO: throw an exception if the value is out of range
   return value;
 }
 

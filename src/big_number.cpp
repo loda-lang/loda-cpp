@@ -128,6 +128,22 @@ void BigNumber::makeInfinite()
   words.fill( 0 );
 }
 
+int64_t BigNumber::asInt() const
+{
+  if ( is_infinite )
+  {
+    throw std::runtime_error( "Infinity error" );
+  }
+  for ( size_t i = 1; i < NUM_WORDS; i++ )
+  {
+    if ( words[i] != 0 )
+    {
+      throw std::runtime_error( "Integer overflow" );
+    }
+  }
+  return is_negative ? -words[0] : words[0];
+}
+
 BigNumber BigNumber::minMax( bool is_max )
 {
   BigNumber m;
@@ -160,6 +176,7 @@ bool BigNumber::operator!=( const BigNumber&n ) const
 
 bool BigNumber::operator<( const BigNumber&n ) const
 {
+  bool is_zero = true;
   for ( int64_t i = NUM_WORDS - 1; i >= 0; i-- )
   {
     if ( words[i] < n.words[i] )
@@ -170,8 +187,9 @@ bool BigNumber::operator<( const BigNumber&n ) const
     {
       return is_negative;
     }
+    is_zero = is_zero && (words[i] != 0);
   }
-  return false;
+  return !is_zero && is_negative && !n.is_negative;
 }
 
 BigNumber& BigNumber::negate()

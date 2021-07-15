@@ -47,6 +47,8 @@ public:
 
   void makeInfinite();
 
+  int64_t asInt() const;
+
   static BigNumber minMax( bool is_max );
 
 private:
