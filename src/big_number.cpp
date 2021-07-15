@@ -1,5 +1,7 @@
 #include "big_number.hpp"
 
+#include <vector>
+
 BigNumber::BigNumber()
     : is_negative( false ),
       is_infinite( false )
@@ -352,7 +354,41 @@ void BigNumber::shift( int64_t n )
 
 BigNumber& BigNumber::operator/=( const BigNumber& n )
 {
-  throw std::runtime_error( "Bigint not supported for /=" );
+  if ( n.isZero() )
+  {
+    makeInfinite();
+    return *this;
+  }
+  auto m = n;
+  bool new_is_negative = (m.is_negative != is_negative);
+  m.is_negative = false;
+  is_negative = false;
+  div( m );
+  is_negative = new_is_negative;
+  return *this;
+}
+
+void BigNumber::div( const BigNumber& n )
+{
+  std::vector<std::pair<BigNumber, BigNumber>> d;
+  BigNumber f( n );
+  BigNumber g( 1 );
+  while ( f < *this || f == *this )
+  {
+    d.push_back( std::pair<BigNumber, BigNumber>( f, g ) );
+    f *= 2;
+    g *= 2;
+  }
+  BigNumber r( 0 );
+  for ( auto it = d.rbegin(); it != d.rend(); it++ )
+  {
+    while ( it->first < *this || it->first == *this )
+    {
+      sub( it->first );
+      r.add( it->second );
+    }
+  }
+  *this = r;
 }
 
 BigNumber& BigNumber::operator%=( const BigNumber& n )

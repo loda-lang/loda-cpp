@@ -312,11 +312,35 @@ Number& Number::operator/=( const Number& n )
   {
     return *this;
   }
-  if ( big || n.big )
+  if ( big )
   {
-    throw std::runtime_error( "Bigint not supported for /=" );
+    if ( n.big )
+    {
+      (*big) /= (*n.big);
+      checkInfBig();
+    }
+    else
+    {
+      (*big) /= BigNumber( n.value );
+      checkInfBig();
+    }
   }
-  if ( n.value == 0 )
+  else if ( n.big )
+  {
+    if ( CONVERT_TO_BIG )
+    {
+      value = 0;
+      big = new BigNumber( value );
+      (*big) /= (*n.big);
+      checkInfBig();
+    }
+    else
+    {
+      value = 0;
+      big = INF_PTR;
+    }
+  }
+  else if ( n.value == 0 )
   {
     value = 0;
     big = INF_PTR;

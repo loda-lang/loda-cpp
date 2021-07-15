@@ -63,6 +63,8 @@ private:
 
   void shift( int64_t n );
 
+  void div( const BigNumber& n );
+
   std::array<int64_t, NUM_WORDS> words;
   bool is_negative; // we don't want to expose this
   bool is_infinite;
