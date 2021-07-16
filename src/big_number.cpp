@@ -1,5 +1,6 @@
 #include "big_number.hpp"
 
+#include <limits>
 #include <vector>
 
 BigNumber::BigNumber()
@@ -441,14 +442,18 @@ BigNumber& BigNumber::operator%=( const BigNumber& n )
   is_negative = false;
   auto q = *this;
   q.div( m );
-  if ( !q.is_infinite )
+  if ( q.is_infinite )
   {
-    q *= m;
+    makeInfinite();
+    return *this;
   }
-  if ( !q.is_infinite )
+  q *= m;
+  if ( q.is_infinite )
   {
-    sub( q );
+    makeInfinite();
+    return *this;
   }
+  sub( q );
   is_negative = new_is_negative;
   return *this;
 }
