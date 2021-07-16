@@ -95,6 +95,8 @@ void Miner::mine()
       progs.push( generator->generateProgram() );
     }
     Program program = progs.top();
+    // Log::get().info( "Matching program with " + std::to_string( program.ops.size() ) + " operations" );
+    // ProgramUtil::print( program, std::cout );
     progs.pop();
     auto seq_programs = finder.findSequence( program, norm_seq, manager.getSequences() );
     for ( auto s : seq_programs )

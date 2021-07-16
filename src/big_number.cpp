@@ -201,6 +201,11 @@ BigNumber& BigNumber::negate()
 
 BigNumber& BigNumber::operator+=( const BigNumber& n )
 {
+  if ( is_infinite || n.is_infinite )
+  {
+    makeInfinite();
+    return *this;
+  }
   // check if one of the operands is negative
   if ( !is_negative && n.is_negative )
   {
@@ -306,6 +311,11 @@ void BigNumber::sub( const BigNumber& n )
 
 BigNumber& BigNumber::operator*=( const BigNumber& n )
 {
+  if ( is_infinite || n.is_infinite )
+  {
+    makeInfinite();
+    return *this;
+  }
   BigNumber result( 0 );
   int64_t shift = 0;
   for ( auto& w : n.words )
@@ -372,7 +382,7 @@ void BigNumber::shift( int64_t n )
 
 BigNumber& BigNumber::operator/=( const BigNumber& n )
 {
-  if ( n.isZero() )
+  if ( is_infinite || n.is_infinite || n.isZero() )
   {
     makeInfinite();
     return *this;
@@ -396,6 +406,11 @@ void BigNumber::div( const BigNumber& n )
     d.push_back( std::pair<BigNumber, BigNumber>( f, g ) );
     f *= 2;
     g *= 2;
+    if ( f.is_infinite || g.is_infinite )
+    {
+      makeInfinite();
+      return;
+    }
   }
   BigNumber r( 0 );
   for ( auto it = d.rbegin(); it != d.rend(); it++ )
@@ -404,6 +419,10 @@ void BigNumber::div( const BigNumber& n )
     {
       sub( it->first );
       r.add( it->second );
+      if ( r.is_infinite )
+      {
+        break;
+      }
     }
   }
   *this = r;
@@ -411,7 +430,7 @@ void BigNumber::div( const BigNumber& n )
 
 BigNumber& BigNumber::operator%=( const BigNumber& n )
 {
-  if ( n.isZero() )
+  if ( is_infinite || n.is_infinite || n.isZero() )
   {
     makeInfinite();
     return *this;
@@ -422,15 +441,36 @@ BigNumber& BigNumber::operator%=( const BigNumber& n )
   is_negative = false;
   auto q = *this;
   q.div( m );
-  q *= m;
-  sub( q );
+  if ( !q.is_infinite )
+  {
+    q *= m;
+  }
+  if ( !q.is_infinite )
+  {
+    sub( q );
+  }
   is_negative = new_is_negative;
   return *this;
 }
 
 std::size_t BigNumber::hash() const
 {
-  throw std::runtime_error( "Bigint not supported for hash" );
+  if ( is_infinite )
+  {
+    return std::numeric_limits<std::size_t>::max();
+  }
+  std::size_t seed = 0;
+  bool is_zero = true;
+  for ( auto &w : words )
+  {
+    seed ^= w + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    is_zero = is_zero && (w != 0);
+  }
+  if ( !is_zero && is_negative )
+  {
+    seed ^= 0x9e3779b9 + (seed << 6) + (seed >> 2);
+  }
+  return seed;
 }
 
 std::ostream& operator<<( std::ostream &out, const BigNumber &n )

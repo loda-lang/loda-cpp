@@ -117,7 +117,7 @@ int64_t Reducer::digit( Sequence &seq, int64_t num_digits )
   count.resize( num_digits, 0 );
   for ( auto& n : seq )
   {
-    count[((n.asInt() % num_digits) + num_digits) % num_digits]++;
+    count[((Semantics::mod( n, num_digits )).asInt() + num_digits) % num_digits]++;
   }
   Number index;
   size_t max = 0;

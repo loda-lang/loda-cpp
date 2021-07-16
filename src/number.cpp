@@ -49,19 +49,21 @@ Number::Number( const std::string& s, bool is_big )
   if ( !is_big )
   {
     big = nullptr;
-    bool is_inf = false;
     try
     {
       value = std::stoll( s );
     }
     catch ( const std::out_of_range& )
     {
-      is_inf = true;
-    }
-    if ( is_inf )
-    {
-      value = 0;
-      big = INF_PTR;
+      if ( CONVERT_TO_BIG )
+      {
+        is_big = true;
+      }
+      else
+      {
+        value = 0;
+        big = INF_PTR;
+      }
     }
   }
   if ( is_big )

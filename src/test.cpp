@@ -120,8 +120,8 @@ void Test::number()
   check_less( Number::ONE, Number::INF );
   check_num( std::numeric_limits<int64_t>::max(), std::to_string( std::numeric_limits<int64_t>::max() ) );
   check_num( std::numeric_limits<int64_t>::min(), std::to_string( std::numeric_limits<int64_t>::min() ) );
-  testNumberDigits( 18, false, false );
-  testNumberDigits( 18, true, false );
+  // testNumberDigits( 18, false, false );
+  // testNumberDigits( 18, true, false );
   testNumberDigits( BigNumber::NUM_DIGITS, false, true );
   testNumberDigits( BigNumber::NUM_DIGITS, true, true );
   Number o( 1, true );
