@@ -92,6 +92,8 @@ function restart_miners {
     git push
     echo "Rebuilding loda"
     pushd src && make clean && make && popd
+  else
+  	sleep 10
   fi
   ps -A > /tmp/loda-ps.txt
   if ! grep loda /tmp/loda-ps.txt; then
