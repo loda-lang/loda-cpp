@@ -123,7 +123,7 @@ Number Parser::readValue()
 {
   std::string buf;
   Number::readIntString( *in, buf );
-  return Number( buf, false );
+  return Number( buf );
 }
 
 std::string Parser::readIdentifier()

@@ -62,7 +62,7 @@ void Test::all()
 
 void check_num( const Number& m, const std::string& s )
 {
-  if ( m.to_string() != s || m != Number( s, true ) )
+  if ( m.to_string() != s )
   {
     Log::get().error( "Expected " + m.to_string() + " to be " + s, true );
   }
@@ -83,18 +83,18 @@ void check_less( const Number& m, const Number& n )
 
 Number read_num( const std::string &s )
 {
-  auto n = Number( s, false );
+  auto n = Number( s );
   check_num( n, s );
   return n;
 }
 
-void testNumberDigits( int64_t num_digits, bool test_negative, bool is_big )
+void testNumberDigits( int64_t num_digits, bool test_negative )
 {
   std::string nines = test_negative ? "-9" : "9";
   for ( int64_t i = 0; i < num_digits; i++ )
   {
     nines += '9';
-    Number n( nines, is_big );
+    Number n( nines );
     if ( i + 1 < num_digits )
     {
       check_num( n, nines );
@@ -111,27 +111,25 @@ void Test::number()
   Log::get().info( "Testing number" );
   check_num( Number::ZERO, "0" );
   check_num( Number::ONE, "1" );
-  check_num( Number( "1", true ), "1" );
-  check_num( Number( "2 ", true ), "2" );
-  check_num( Number( " 3", true ), "3" );
-  check_num( Number( "-4 ", true ), "-4" );
+  check_num( Number( "1" ), "1" );
+  check_num( Number( "2 " ), "2" );
+  check_num( Number( " 3" ), "3" );
+  check_num( Number( "-4 " ), "-4" );
   check_inf( Number::INF );
   check_less( Number::ZERO, Number::ONE );
   check_less( Number::ONE, Number::INF );
   check_num( std::numeric_limits<int64_t>::max(), std::to_string( std::numeric_limits<int64_t>::max() ) );
   check_num( std::numeric_limits<int64_t>::min(), std::to_string( std::numeric_limits<int64_t>::min() ) );
-  // testNumberDigits( 18, false, false );
-  // testNumberDigits( 18, true, false );
-  testNumberDigits( BigNumber::NUM_DIGITS, false, true );
-  testNumberDigits( BigNumber::NUM_DIGITS, true, true );
-  Number o( 1, true );
-  o += Number( 2, true );
+  testNumberDigits( USE_BIG_NUMBER ? BigNumber::NUM_DIGITS : 18, false );
+  testNumberDigits( USE_BIG_NUMBER ? BigNumber::NUM_DIGITS : 18, true );
+  Number o( 1 );
+  o += Number( 2 );
   check_num( o, "3" );
-  o += Number( -5, true );
+  o += Number( -5 );
   check_num( o, "-2" );
-  o *= Number( 5, true );
+  o *= Number( 5 );
   check_num( o, "-10" );
-  o *= Number( -10, true );
+  o *= Number( -10 );
   check_num( o, "100" );
   std::string nines( BigNumber::NUM_DIGITS, '9' );
   check_num( Number::MAX, nines );
@@ -154,9 +152,9 @@ void Test::randomNumber( size_t tests )
     int64_t v = gen() / 2, w = gen() / 2;
     if ( gen() % 2 ) v *= -1;
     if ( gen() % 2 ) w *= -1;
-    check_num( Number( v, true ), std::to_string( v ) );
-    Number vv( v, true );
-    Number ww( w, true );
+    check_num( Number( v ), std::to_string( v ) );
+    Number vv( v );
+    Number ww( w );
     if ( v < w )
     {
       check_less( vv, ww );
@@ -177,48 +175,51 @@ void Test::randomNumber( size_t tests )
     check_num( xx, std::to_string( v % w ) );
 
     // big number test
-    const int64_t num_digits = (gen() % BigNumber::NUM_DIGITS) + 1;
-    char ch;
-    str.clear();
-    inv.clear();
-    nines.clear();
-    if ( gen() % 2 )
+    if ( USE_BIG_NUMBER )
     {
-      str += '-';
-      inv += '-';
-      nines += '-';
-    }
-    ch = static_cast<char>( (gen() % 9) );
-    str += '1' + ch;
-    inv += '8' - ch;
-    nines += '9';
-    for ( int64_t j = 1; j < num_digits; j++ )
-    {
-      ch = static_cast<char>( (gen() % 10) );
-      str += '0' + ch;
-      inv += '9' - ch;
+      const int64_t num_digits = (gen() % BigNumber::NUM_DIGITS) + 1;
+      char ch;
+      str.clear();
+      inv.clear();
+      nines.clear();
+      if ( gen() % 2 )
+      {
+        str += '-';
+        inv += '-';
+        nines += '-';
+      }
+      ch = static_cast<char>( (gen() % 9) );
+      str += '1' + ch;
+      inv += '8' - ch;
       nines += '9';
-    }
-    Number n( str, true );
-    Number t( n );
-    check_num( n, str );
-    check_num( t, str );
-    if ( str.size() > 2 )
-    {
-      auto smaller = str.substr( 0, str.size() - 1 );
-      Number m( smaller, true );
-      if ( str[0] == '-' )
+      for ( int64_t j = 1; j < num_digits; j++ )
       {
-        check_less( n, m );
+        ch = static_cast<char>( (gen() % 10) );
+        str += '0' + ch;
+        inv += '9' - ch;
+        nines += '9';
       }
-      else
+      Number n( str );
+      Number t( n );
+      check_num( n, str );
+      check_num( t, str );
+      if ( str.size() > 2 )
       {
-        check_less( m, n );
+        auto smaller = str.substr( 0, str.size() - 1 );
+        Number m( smaller );
+        if ( str[0] == '-' )
+        {
+          check_less( n, m );
+        }
+        else
+        {
+          check_less( m, n );
+        }
       }
+      Number o( inv );
+      o += n;
+      check_num( o, nines );
     }
-    Number o( inv, true );
-    o += n;
-    check_num( o, nines );
   }
 }
 

@@ -49,6 +49,8 @@ public:
 
   int64_t asInt() const;
 
+  int64_t getNumUsedWords() const;
+
   static BigNumber minMax( bool is_max );
 
 private:

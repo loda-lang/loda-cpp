@@ -18,11 +18,9 @@ constexpr size_t MAX_SIZE = std::numeric_limits<size_t>::max();
 
 BigNumber* INF_PTR = reinterpret_cast<BigNumber*>( 1 );
 
-#define CONVERT_TO_BIG 0
-
 Number::Number()
     : value( 0 ),
-      big( nullptr )
+      big( FORCE_BIG_NUMBER ? new BigNumber( 0 ) : nullptr )
 {
 }
 
@@ -32,13 +30,13 @@ Number::Number( const Number& n )
 {
 }
 
-Number::Number( int64_t value, bool is_big )
-    : value( is_big ? 0 : value ),
-      big( is_big ? new BigNumber( value ) : nullptr )
+Number::Number( int64_t value )
+    : value( FORCE_BIG_NUMBER ? 0 : value ),
+      big( FORCE_BIG_NUMBER ? new BigNumber( value ) : nullptr )
 {
 }
 
-Number::Number( const std::string& s, bool is_big )
+Number::Number( const std::string& s )
 {
   if ( s == "inf" )
   {
@@ -46,6 +44,7 @@ Number::Number( const std::string& s, bool is_big )
     big = INF_PTR;
     return;
   }
+  bool is_big = FORCE_BIG_NUMBER;
   if ( !is_big )
   {
     big = nullptr;
@@ -55,7 +54,7 @@ Number::Number( const std::string& s, bool is_big )
     }
     catch ( const std::out_of_range& )
     {
-      if ( CONVERT_TO_BIG )
+      if ( USE_BIG_NUMBER )
       {
         is_big = true;
       }
@@ -176,7 +175,7 @@ Number& Number::negate()
   }
   else if ( value == MIN_INT )
   {
-    if ( CONVERT_TO_BIG )
+    if ( USE_BIG_NUMBER )
     {
       convertToBig();
       big->negate();
@@ -216,7 +215,7 @@ Number& Number::operator+=( const Number& n )
   }
   else if ( n.big )
   {
-    if ( CONVERT_TO_BIG )
+    if ( USE_BIG_NUMBER )
     {
       convertToBig();
       (*big) += (*n.big);
@@ -230,7 +229,7 @@ Number& Number::operator+=( const Number& n )
   }
   else if ( (value > 0 && n.value > MAX_INT - value) || (value < 0 && n.value < MIN_INT - value) )
   {
-    if ( CONVERT_TO_BIG )
+    if ( USE_BIG_NUMBER )
     {
       convertToBig();
       (*big) += BigNumber( n.value );
@@ -270,7 +269,7 @@ Number& Number::operator*=( const Number& n )
   }
   else if ( n.big )
   {
-    if ( CONVERT_TO_BIG )
+    if ( USE_BIG_NUMBER )
     {
       convertToBig();
       (*big) *= (*n.big);
@@ -284,7 +283,7 @@ Number& Number::operator*=( const Number& n )
   }
   else if ( n.value != 0 && (MAX_INT / std::abs( n.value ) < std::abs( value )) )
   {
-    if ( CONVERT_TO_BIG )
+    if ( USE_BIG_NUMBER )
     {
       convertToBig();
       (*big) *= BigNumber( n.value );
@@ -324,7 +323,7 @@ Number& Number::operator/=( const Number& n )
   }
   else if ( n.big )
   {
-    if ( CONVERT_TO_BIG )
+    if ( USE_BIG_NUMBER )
     {
       convertToBig();
       (*big) /= (*n.big);
@@ -369,7 +368,7 @@ Number& Number::operator%=( const Number& n )
   }
   else if ( n.big )
   {
-    if ( CONVERT_TO_BIG )
+    if ( USE_BIG_NUMBER )
     {
       convertToBig();
       (*big) %= (*n.big);
@@ -404,6 +403,15 @@ int64_t Number::asInt() const
     return big->asInt();
   }
   return value;
+}
+
+int64_t Number::getNumUsedWords() const
+{
+  if ( big && big != INF_PTR )
+  {
+    return big->getNumUsedWords();
+  }
+  return 1;
 }
 
 std::size_t Number::hash() const

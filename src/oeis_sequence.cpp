@@ -17,11 +17,21 @@ std::string OeisSequence::getHome()
   return getLodaHome() + "oeis/";
 }
 
-// TODO: replace this function by a "bit-counting" function in Number
-bool OeisSequence::isCloseToInf( const Number& n )
+bool OeisSequence::isTooBig( const Number& n )
 {
-  static const int64_t NUM_INF = std::numeric_limits<int64_t>::max();
-  return (n.value > (NUM_INF / 1000)) || (n.value < (NUM_INF / -1000));
+  if ( n == Number::INF )
+  {
+    return true;
+  }
+  if ( USE_BIG_NUMBER )
+  {
+    return n.getNumUsedWords() > 2;
+  }
+  else
+  {
+    static const int64_t NUM_INF = std::numeric_limits<int64_t>::max();
+    return (n.value > (NUM_INF / 1000)) || (n.value < (NUM_INF / -1000));
+  }
 }
 
 OeisSequence::OeisSequence( size_t id )
@@ -135,8 +145,8 @@ Sequence loadBFile( size_t id, const Sequence& seq_full )
       }
       ss >> std::ws;
       Number::readIntString( ss, buf );
-      Number value( buf, false );
-      if ( !ss || value == Number::INF || OeisSequence::isCloseToInf( value ) )
+      Number value( buf );
+      if ( !ss || OeisSequence::isTooBig( value ) )
       {
         break;
       }

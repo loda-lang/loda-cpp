@@ -12,7 +12,7 @@ public:
 
   static std::string getHome();
 
-  static bool isCloseToInf( const Number& n );
+  static bool isTooBig( const Number& n );
 
   OeisSequence( size_t id = 0 );
 

@@ -5,6 +5,9 @@
 #include <random>
 #include <stdlib.h>
 
+#define USE_BIG_NUMBER false
+#define FORCE_BIG_NUMBER false
+
 class BigNumber;
 
 class Number
@@ -21,9 +24,9 @@ public:
 
   Number( const Number& n );
 
-  Number( int64_t value, bool is_big = false );
+  Number( int64_t value );
 
-  Number( const std::string& s, bool is_big = false );
+  Number( const std::string& s );
 
   ~Number();
 
@@ -46,6 +49,8 @@ public:
   Number& operator%=( const Number& n );
 
   int64_t asInt() const;
+
+  int64_t getNumUsedWords() const;
 
   std::size_t hash() const;
 

@@ -145,6 +145,22 @@ int64_t BigNumber::asInt() const
   return is_negative ? -words[0] : words[0];
 }
 
+int64_t BigNumber::getNumUsedWords() const
+{
+  if ( is_infinite )
+  {
+    return 1;
+  }
+  for ( int64_t i = NUM_WORDS - 1; i >= 0; i-- )
+  {
+    if ( words[i] != 0 )
+    {
+      return i + 1;
+    }
+  }
+  return 1;
+}
+
 BigNumber BigNumber::minMax( bool is_max )
 {
   BigNumber m;
