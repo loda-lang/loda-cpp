@@ -5,7 +5,7 @@
 #include <random>
 #include <stdlib.h>
 
-#define USE_BIG_NUMBER false
+#define USE_BIG_NUMBER true
 #define FORCE_BIG_NUMBER false
 
 class BigNumber;

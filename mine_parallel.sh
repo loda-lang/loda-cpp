@@ -10,7 +10,7 @@ done
 
 # common settings
 log_level=error
-restart_interval=21600
+restart_interval=43200
 min_cpus=4
 branch=$(git rev-parse --abbrev-ref HEAD)
 remote_origin=$(git config --get remote.origin.url)
@@ -35,6 +35,9 @@ if [ "$num_cpus" -ge 16 ]; then
 fi
 if [ "$num_cpus" -ge 24 ]; then
   num_use_cpus=$(( $num_cpus - 8 ))
+fi
+if [ -n "$LODA_MAX_PROCESSES" ];
+  num_use_cpus=$LODA_MAX_PROCESSES
 fi
 
 # calculate minimum number of changes before commit
