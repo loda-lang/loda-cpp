@@ -36,7 +36,7 @@ fi
 if [ "$num_cpus" -ge 24 ]; then
   num_use_cpus=$(( $num_cpus - 8 ))
 fi
-if [ -n "$LODA_MAX_PROCESSES" ];
+if [ -n "$LODA_MAX_PROCESSES" ]; then
   num_use_cpus=$LODA_MAX_PROCESSES
 fi
 
