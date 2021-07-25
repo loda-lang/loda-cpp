@@ -25,7 +25,7 @@ bool OeisSequence::isTooBig( const Number& n )
   }
   if ( USE_BIG_NUMBER )
   {
-    return n.getNumUsedWords() > 2;
+    return n.getNumUsedWords() > 4;
   }
   else
   {

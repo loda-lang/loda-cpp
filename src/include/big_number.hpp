@@ -8,7 +8,7 @@ class BigNumber
 {
 public:
 
-  static constexpr size_t NUM_WORDS = 10;
+  static constexpr size_t NUM_WORDS = 16;
   static constexpr size_t NUM_WORD_DIGITS = 18;
   static constexpr size_t NUM_DIGITS = NUM_WORDS * NUM_WORD_DIGITS;
   static constexpr int64_t WORD_BASE_ROOT = 1000000000;
