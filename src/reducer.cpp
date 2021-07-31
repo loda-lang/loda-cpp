@@ -41,11 +41,11 @@ Number Reducer::shrink( Sequence &seq )
     {
       if ( factor == Number::INF )
       {
-        factor = Semantics::abs( Number( seq[i] ) );
+        factor = Semantics::abs( seq[i] );
       }
-      else
+      else if ( factor != Number::ONE )
       {
-        factor = Semantics::gcd( factor, Semantics::abs( Number( seq[i] ) ) );
+        factor = Semantics::gcd( factor, Semantics::abs( seq[i] ) );
       }
     }
   }
@@ -57,7 +57,7 @@ Number Reducer::shrink( Sequence &seq )
   {
     for ( size_t i = 0; i < seq.size(); i++ )
     {
-      seq[i] = Semantics::div( Number( seq[i] ), factor );
+      seq[i] = Semantics::div( seq[i], factor );
     }
   }
   return factor;

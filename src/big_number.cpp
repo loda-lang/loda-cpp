@@ -12,7 +12,7 @@ BigNumber::BigNumber()
 
 BigNumber::BigNumber( int64_t value )
 {
-  if ( value >= 0 && static_cast<uint64_t>( value ) < WORD_BASE )
+  if ( value >= 0 && value < WORD_BASE )
   {
     is_negative = false;
     is_infinite = false;
@@ -415,6 +415,7 @@ BigNumber& BigNumber::operator/=( const BigNumber& n )
 
 void BigNumber::div( const BigNumber& n )
 {
+  // TODO: avoid vector if possible
   std::vector<std::pair<BigNumber, BigNumber>> d;
   BigNumber f( n );
   BigNumber g( 1 );
