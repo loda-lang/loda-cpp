@@ -422,8 +422,8 @@ void BigNumber::div( const BigNumber& n )
   while ( f < *this || f == *this )
   {
     d.push_back( std::pair<BigNumber, BigNumber>( f, g ) );
-    f *= 2;
-    g *= 2;
+    f += f;
+    g += g;
     if ( f.is_infinite || g.is_infinite )
     {
       makeInfinite();
