@@ -171,6 +171,10 @@ Number Semantics::bin( const Number& nn, const Number& kk )
   {
     k = sub( n, k );
   }
+  if ( k.getNumUsedWords() > 1 )
+  {
+    return Number::INF;
+  }
   auto l = k.asInt();
   for ( int64_t i = 0; i < l; i++ )
   {

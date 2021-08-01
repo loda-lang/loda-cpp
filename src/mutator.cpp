@@ -24,6 +24,10 @@ void Mutator::mutateConstants( const Program &program, size_t num_results, std::
   int64_t var = std::max<int64_t>( 1, num_results / indices.size() );
   for ( size_t i : indices )
   {
+    if ( program.ops[i].source.value.getNumUsedWords() > 1 )
+    {
+      continue;
+    }
     int64_t b = program.ops[i].source.value.asInt();
     int64_t s = b - std::min<int64_t>( var / 2, b );
     for ( int64_t v = s; v <= s + var; v++ )

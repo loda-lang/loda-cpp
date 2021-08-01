@@ -6,16 +6,15 @@
 
 void add_or_sub( Program &p, const Number& c )
 {
-  // TODO: don't convert to int here
   if ( Number::ZERO < c )
   {
-    p.push_back( Operation::Type::ADD, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::CONSTANT,
-        c.asInt() );
+    p.push_back( Operation::Type::ADD, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::CONSTANT, c );
   }
   else if ( c < Number::ZERO )
   {
-    p.push_back( Operation::Type::SUB, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::CONSTANT,
-        -c.asInt() );
+    auto d = c;
+    d.negate();
+    p.push_back( Operation::Type::SUB, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::CONSTANT, d );
   }
 }
 
@@ -43,15 +42,13 @@ bool Extender::linear1( Program &p, line_t inverse, line_t target )
   }
   if ( inverse.factor != Number::ONE )
   {
-    // TODO: don't convert to int here
     p.push_back( Operation::Type::DIV, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::CONSTANT,
-        inverse.factor.asInt() );
+        inverse.factor );
   }
   if ( target.factor != Number::ONE )
   {
-    // TODO: don't convert to int here
     p.push_back( Operation::Type::MUL, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::CONSTANT,
-        target.factor.asInt() );
+        target.factor );
   }
   if ( target.offset != Number::ZERO )
   {
@@ -68,16 +65,14 @@ bool Extender::linear2( Program &p, line_t inverse, line_t target )
   }
   if ( inverse.factor != Number::ONE )
   {
-    // TODO: don't convert to int here
     p.push_back( Operation::Type::DIV, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::CONSTANT,
-        inverse.factor.asInt() );
+        inverse.factor );
   }
   add_or_sub( p, Semantics::sub( target.offset, inverse.offset ) );
   if ( target.factor != Number::ONE )
   {
-    // TODO: don't convert to int here
     p.push_back( Operation::Type::MUL, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::CONSTANT,
-        target.factor.asInt() );
+        target.factor );
   }
   return true;
 }
