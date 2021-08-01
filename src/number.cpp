@@ -14,7 +14,7 @@ const Number Number::INF = Number::infinity();
 
 constexpr int64_t MIN_INT = std::numeric_limits<int64_t>::min();
 constexpr int64_t MAX_INT = std::numeric_limits<int64_t>::max();
-constexpr size_t MAX_SIZE = std::numeric_limits<size_t>::max();
+constexpr std::size_t MAX_SIZE = std::numeric_limits<std::size_t>::max();
 
 BigNumber* INF_PTR = reinterpret_cast<BigNumber*>( 1 );
 
@@ -418,13 +418,17 @@ std::size_t Number::hash() const
 {
   if ( big == INF_PTR )
   {
-    return MAX_SIZE;
+    return MAX_SIZE; // must be the same as in BigNumber!
   }
   if ( big )
   {
     return big->hash();
   }
-  return value;
+  else
+  {
+    // we must use the same hash values as in BigNumber!
+    return BigNumber( value ).hash();
+  }
 }
 
 std::ostream& operator<<( std::ostream &out, const Number &n )
