@@ -100,6 +100,10 @@ Number Semantics::pow( const Number& base, const Number& exp )
         }
         e = div( e, 2 );
         b = mul( b, b );
+        if ( b == Number::INF )
+        {
+          res = Number::INF;
+        }
       }
       return res;
     }
@@ -118,6 +122,10 @@ Number Semantics::gcd( const Number& a, const Number& b )
   while ( bb != Number::ZERO )
   {
     r = mod( aa, bb );
+    if ( r == Number::INF )
+    {
+      return Number::INF;
+    }
     aa = bb;
     bb = r;
   }

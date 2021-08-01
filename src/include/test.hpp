@@ -5,6 +5,7 @@
 #include "oeis_manager.hpp"
 #include "util.hpp"
 
+#include <chrono>
 #include <random>
 
 class Test
@@ -20,6 +21,8 @@ public:
   void randomNumber( size_t tests );
 
   void semantics();
+
+  void benchmark();
 
   void sequence();
 
