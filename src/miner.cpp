@@ -121,10 +121,11 @@ void Miner::mine()
         }
       }
     }
-    if ( updateSpecialSequences( program, norm_seq ) )
-    {
-      generator->stats.fresh++;
-    }
+    // TODO: need to ensure we have at least 20 terms
+    //if ( updateSpecialSequences( program, norm_seq ) )
+    //{
+    //  generator->stats.fresh++;
+    //}
     generator->stats.generated++;
 
     // log info and publish metrics
