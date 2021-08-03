@@ -96,7 +96,7 @@ void OeisMaintenance::generateLists()
     auto buf = list_files[i].str();
     if ( !buf.empty() )
     {
-      std::string list_path = "programs/oeis/list" + std::to_string( i ) + ".md";
+      std::string list_path = OeisSequence::getProgramsHome() + "list" + std::to_string( i ) + ".md";
       OeisSequence start( (i * list_file_size) + 1 );
       OeisSequence end( (i + 1) * list_file_size );
       std::ofstream list_file( list_path );
@@ -107,7 +107,7 @@ void OeisMaintenance::generateLists()
       list_file << buf;
     }
   }
-  std::ofstream no_loda_file( OeisSequence::getHome() + "no_loda.txt" );
+  std::ofstream no_loda_file( OeisSequence::getOeisHome() + "no_loda.txt" );
   no_loda_file << no_loda.str();
   no_loda_file.close();
 

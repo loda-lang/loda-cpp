@@ -117,7 +117,9 @@ private:
 
 };
 
-std::string getLodaHome();
+const std::string& getLodaHome();
+
+bool isDir( const std::string& path );
 
 void ensureDir( const std::string &path );
 

@@ -10,7 +10,9 @@ public:
 
   static const size_t EXTENDED_SEQ_LENGTH;
 
-  static std::string getHome();
+  static const std::string& getOeisHome();
+
+  static const std::string& getProgramsHome();
 
   static bool isTooBig( const Number& n );
 

@@ -472,10 +472,17 @@ bool Settings::hasMemory() const
   return has_memory;
 }
 
-std::string getLodaHome()
+const std::string& getLodaHome()
 {
   // don't remove the trailing /
-  return std::string( std::getenv( "HOME" ) ) + "/.loda/";
+  static std::string home = std::string( std::getenv( "HOME" ) ) + "/.loda/";
+  return home;
+}
+
+bool isDir( const std::string& path )
+{
+  struct stat st;
+  return (stat( path.c_str(), &st ) == 0 && (st.st_mode & S_IFDIR));
 }
 
 void ensureDir( const std::string &path )
