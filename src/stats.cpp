@@ -34,7 +34,7 @@ void Stats::load( const std::string &path )
       std::stringstream s( line );
       std::getline( s, k, ',' );
       std::getline( s, v );
-      num_constants[std::stoll( k )] = std::stoll( v );
+      num_constants[Number( k )] = std::stoll( v );
     }
     constants.close();
   }
