@@ -29,7 +29,7 @@ void help()
   std::cout << std::endl << "=== OEIS commands ===" << std::endl;
   std::cout << "  mine                   Mine programs for OEIS sequences (see also -i)" << std::endl;
   std::cout << "  match <file>           Match a program to OEIS sequences (see also -i)" << std::endl;
-  std::cout << "  check <seq-id>         Check a program for an OEIS sequence" << std::endl;
+  std::cout << "  check <seq-id>         Check a program for an OEIS sequence (see also -b)" << std::endl;
   std::cout << "  maintain               Maintain all programs for OEIS sequences" << std::endl;
   std::cout << std::endl << "=== Command-line options ===" << std::endl;
   std::cout << "  -l <string>            Log level (values:debug,info,warn,error,alert)" << std::endl;
