@@ -91,7 +91,7 @@ Number Interpreter::calc( const Operation::Type type, const Number& target, cons
   case Operation::Type::LPB:
   case Operation::Type::LPE:
   case Operation::Type::CLR:
-  case Operation::Type::CAL:
+  case Operation::Type::SEQ:
     Log::get().error( "non-arithmetic operation: " + Operation::Metadata::get( type ).name, true );
     break;
   }
@@ -196,7 +196,7 @@ size_t Interpreter::run( const Program &p, Memory &mem )
       }
       break;
     }
-    case Operation::Type::CAL:
+    case Operation::Type::SEQ:
     {
       target = get( op.target, mem );
       source = get( op.source, mem );
@@ -334,7 +334,7 @@ std::pair<Number, size_t> Interpreter::call( int64_t id, const Number& arg )
 {
   if ( arg < 0 )
   {
-    throw std::runtime_error( "cal using negative argument" );
+    throw std::runtime_error( "seq using negative argument" );
   }
 
   // check if already cached

@@ -62,7 +62,7 @@ GeneratorV1::GeneratorV1( const Config &config, const Stats &stats, int64_t seed
   }
   if ( !config.calls )
   {
-    operation_types += "c";
+    operation_types += "q";
   }
   std::string operand_types = config.indirect_access ? "cdi" : "cd";
 

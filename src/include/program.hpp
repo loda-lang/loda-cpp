@@ -71,7 +71,7 @@ public:
     LPB,
     LPE,
     CLR,
-    CAL,
+    SEQ,
     DBG,
   };
 

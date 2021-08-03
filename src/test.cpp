@@ -423,7 +423,7 @@ void validateIterated( const Program& p )
     {
       throw std::runtime_error( "Iterator generated wrong loop" );
     }
-    if ( op.type == Operation::Type::CLR || op.type == Operation::Type::CAL || op.type == Operation::Type::MIN
+    if ( op.type == Operation::Type::CLR || op.type == Operation::Type::SEQ || op.type == Operation::Type::MIN
         || op.type == Operation::Type::MAX )
     {
       throw std::runtime_error( "Unsupported operation type" );
@@ -765,9 +765,9 @@ void Test::stats()
   {
     Log::get().error( "Error loading program lengths from stats", true );
   }
-//  if ( s.cal_graph.count( 40 ) != 1 || s.cal_graph.find( 40 )->second != 10051 )
+//  if ( s.call_graph.count( 40 ) != 1 || s.call_graph.find( 40 )->second != 10051 )
 //  {
-//    Log::get().error( "Unexpected cal in A000040", true );
+//    Log::get().error( "Unexpected seq in A000040", true );
 //  }
   auto l = s.getTransitiveLength( 40, true );
   if ( l < 30 )

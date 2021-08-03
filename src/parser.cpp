@@ -184,5 +184,9 @@ Operand Parser::readOperand()
 Operation::Type Parser::readOperationType()
 {
   auto name = readIdentifier();
+  if ( name == "cal" ) // backward-compatibility: cal -> seq
+  {
+    return Operation::Type::SEQ;
+  }
   return Operation::Metadata::get( name ).type;
 }

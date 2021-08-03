@@ -117,7 +117,7 @@ bool ProgramUtil::isArithmetic( Operation::Type t )
 {
   // TODO: model this as metadata?
   return (t != Operation::Type::NOP && t != Operation::Type::DBG && t != Operation::Type::LPB
-      && t != Operation::Type::LPE && t != Operation::Type::CLR && t != Operation::Type::CAL);
+      && t != Operation::Type::LPE && t != Operation::Type::CLR && t != Operation::Type::SEQ);
 }
 
 bool ProgramUtil::hasIndirectOperand( const Operation &op )
@@ -129,11 +129,11 @@ bool ProgramUtil::hasIndirectOperand( const Operation &op )
 
 bool ProgramUtil::areIndependent( const Operation& op1, const Operation& op2 )
 {
-  if ( !isArithmetic( op1.type ) && op1.type != Operation::Type::CAL )
+  if ( !isArithmetic( op1.type ) && op1.type != Operation::Type::SEQ )
   {
     return false;
   }
-  if ( !isArithmetic( op2.type ) && op2.type != Operation::Type::CAL )
+  if ( !isArithmetic( op2.type ) && op2.type != Operation::Type::SEQ )
   {
     return false;
   }

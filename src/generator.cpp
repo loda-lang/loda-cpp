@@ -176,7 +176,7 @@ void Generator::fixSingularities( Program &p )
         p.ops[i].source.type = Operand::Type::CONSTANT;
       }
     }
-    else if ( p.ops[i].type == Operation::Type::CAL )
+    else if ( p.ops[i].type == Operation::Type::SEQ )
     {
       auto target = p.ops[i].target;
       p.ops.insert( p.ops.begin() + i,
@@ -190,7 +190,7 @@ void Generator::fixCalls( Program &p )
 {
   for ( auto &op : p.ops )
   {
-    if ( op.type == Operation::Type::CAL )
+    if ( op.type == Operation::Type::SEQ )
     {
       if ( op.source.type != Operand::Type::CONSTANT
           || (op.source.value < Number::ZERO || !(op.source.value < Number( found_programs.size() ))

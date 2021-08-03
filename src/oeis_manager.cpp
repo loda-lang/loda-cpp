@@ -533,11 +533,11 @@ const Stats& OeisManager::getStats()
   return stats;
 }
 
-void OeisManager::addCalComments( Program& p ) const
+void OeisManager::addSeqComments( Program& p ) const
 {
   for ( auto &op : p.ops )
   {
-    if ( op.type == Operation::Type::CAL && op.source.type == Operand::Type::CONSTANT )
+    if ( op.type == Operation::Type::SEQ && op.source.type == Operand::Type::CONSTANT )
     {
       auto id = op.source.value.asInt();
       if ( id >= 0 && id < static_cast<int64_t>( sequences.size() ) && sequences[id].id )
@@ -551,7 +551,7 @@ void OeisManager::addCalComments( Program& p ) const
 void OeisManager::dumpProgram( size_t id, Program p, const std::string &file ) const
 {
   ProgramUtil::removeOps( p, Operation::Type::NOP );
-  addCalComments( p );
+  addSeqComments( p );
   ensureDir( file );
   std::ofstream out( file );
   auto &seq = sequences.at( id );
@@ -574,7 +574,7 @@ void OeisManager::alert( Program p, size_t id, const std::string& prefix, const 
   details.color = color;
   buf << "\\n\\`\\`\\`\\n";
   ProgramUtil::removeOps( p, Operation::Type::NOP );
-  addCalComments( p );
+  addSeqComments( p );
   ProgramUtil::print( p, buf, "\\n" );
   buf << "\\`\\`\\`";
   details.text = buf.str();
@@ -652,7 +652,7 @@ std::string OeisManager::isOptimizedBetter( Program existing, Program optimized,
   // check if there are illegal recursions; do we really need this?!
   for ( auto &op : optimized.ops )
   {
-    if ( op.type == Operation::Type::CAL )
+    if ( op.type == Operation::Type::SEQ )
     {
       if ( op.source.type != Operand::Type::CONSTANT || op.source.value == Number( seq.id ) )
       {

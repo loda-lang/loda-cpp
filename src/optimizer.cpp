@@ -286,7 +286,7 @@ bool Optimizer::simplifyOperations( Program &p, size_t num_initialized_cells ) c
     case Operation::Type::LPB:
     case Operation::Type::LPE:
     case Operation::Type::CLR:
-    case Operation::Type::CAL:
+    case Operation::Type::SEQ:
       can_simplify = false;
       break;
 
@@ -577,7 +577,7 @@ bool doPartialEval( Operation &op, std::map<int64_t, Operand> &values )
   {
   case Operation::Type::NOP:
   case Operation::Type::DBG:
-  case Operation::Type::CAL:
+  case Operation::Type::SEQ:
   {
     break;
   }

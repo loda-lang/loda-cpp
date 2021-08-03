@@ -6,7 +6,7 @@ const std::array<Operation::Type, 20> Operation::Types = { Operation::Type::NOP,
     Operation::Type::ADD, Operation::Type::SUB, Operation::Type::TRN, Operation::Type::MUL, Operation::Type::DIV,
     Operation::Type::DIF, Operation::Type::MOD, Operation::Type::POW, Operation::Type::GCD, Operation::Type::BIN,
     Operation::Type::CMP, Operation::Type::MIN, Operation::Type::MAX, Operation::Type::LPB, Operation::Type::LPE,
-    Operation::Type::CLR, Operation::Type::CAL, Operation::Type::DBG, };
+    Operation::Type::CLR, Operation::Type::SEQ, Operation::Type::DBG, };
 
 const Operation::Metadata& Operation::Metadata::get( Type t )
 {
@@ -28,7 +28,7 @@ const Operation::Metadata& Operation::Metadata::get( Type t )
   static Operation::Metadata lpb { Operation::Type::LPB, "lpb", 'l', 2, true, true, false };
   static Operation::Metadata lpe { Operation::Type::LPE, "lpe", 'e', 0, true, false, false };
   static Operation::Metadata clr { Operation::Type::CLR, "clr", 'r', 2, true, false, true };
-  static Operation::Metadata cal { Operation::Type::CAL, "cal", 'c', 2, true, true, true };
+  static Operation::Metadata seq { Operation::Type::SEQ, "seq", 'q', 2, true, true, true };
   static Operation::Metadata dbg { Operation::Type::DBG, "dbg", 'x', 0, false, false, false };
   switch ( t )
   {
@@ -68,8 +68,8 @@ const Operation::Metadata& Operation::Metadata::get( Type t )
     return lpe;
   case Operation::Type::CLR:
     return clr;
-  case Operation::Type::CAL:
-    return cal;
+  case Operation::Type::SEQ:
+    return seq;
   case Operation::Type::DBG:
     return dbg;
   }

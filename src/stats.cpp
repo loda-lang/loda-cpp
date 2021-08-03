@@ -164,22 +164,22 @@ void Stats::load( const std::string &path )
   }
 
   {
-    full = path + "/cal_graph.csv";
+    full = path + "/call_graph.csv";
     Log::get().debug( "Loading " + full );
-    std::ifstream cal( full );
-    if ( !std::getline( cal, line ) || line != "caller,callee" )
+    std::ifstream call( full );
+    if ( !std::getline( call, line ) || line != "caller,callee" )
     {
       throw std::runtime_error( "Unexpected first line in " + full );
     }
-    cal_graph.clear();
-    while ( std::getline( cal, line ) )
+    call_graph.clear();
+    while ( std::getline( call, line ) )
     {
       std::stringstream s( line );
       std::getline( s, k, ',' );
       std::getline( s, v );
-      cal_graph.insert( std::pair<int64_t, int64_t>( OeisSequence( k ).id, OeisSequence( v ).id ) );
+      call_graph.insert( std::pair<int64_t, int64_t>( OeisSequence( k ).id, OeisSequence( v ).id ) );
     }
-    cal.close();
+    call.close();
   }
 
   {
@@ -271,9 +271,9 @@ void Stats::save( const std::string &path )
   summary << num_programs << sep << num_sequences << "\n";
   summary.close();
 
-  std::ofstream cal( path + "/cal_graph.csv" );
+  std::ofstream cal( path + "/call_graph.csv" );
   cal << "caller,callee\n";
-  for ( auto it : cal_graph )
+  for ( auto it : call_graph )
   {
     cal << OeisSequence( it.first ).id_str() << sep << OeisSequence( it.second ).id_str() << "\n";
   }
@@ -348,9 +348,9 @@ void Stats::updateProgramStats( size_t id, const Program &program )
         num_operation_positions[o]++;
       }
     }
-    if ( op.type == Operation::Type::CAL && op.source.type == Operand::Type::CONSTANT )
+    if ( op.type == Operation::Type::SEQ && op.source.type == Operand::Type::CONSTANT )
     {
-      cal_graph.insert( std::pair<int64_t, int64_t>( id, op.source.value.asInt() ) );
+      call_graph.insert( std::pair<int64_t, int64_t>( id, op.source.value.asInt() ) );
     }
     o.pos++;
   }
@@ -401,7 +401,7 @@ int64_t Stats::getTransitiveLength( size_t id, bool throw_on_recursion ) const
   }
   visited_programs.insert( id );
   int64_t length = program_lengths.at( id );
-  auto range = cal_graph.equal_range( id );
+  auto range = call_graph.equal_range( id );
   for ( auto& it = range.first; it != range.second; it++ )
   {
     length += getTransitiveLength( it->second, throw_on_recursion );
