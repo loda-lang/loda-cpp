@@ -264,21 +264,23 @@ Sequence OeisSequence::getTerms( int64_t max_num_terms ) const
   // try to (re-)load b-file if not loaded yet or if there are more terms available
   if ( num_bfile_terms == 0 || num_bfile_terms > terms.size() )
   {
+    const auto path = getBFilePath();
     auto big = loadBFile( id, terms );
     if ( big.empty() )
     {
       // fetch b-file
-      std::ifstream big_file( getBFilePath() );
+      std::ifstream big_file( path );
       if ( !big_file.good() )
       {
-        ensureDir( getBFilePath() );
-        Http::get( url_str() + "/" + id_str( "b" ) + ".txt", getBFilePath() );
+        ensureDir( path );
+        std::remove( path.c_str() );
+        Http::get( url_str() + "/" + id_str( "b" ) + ".txt", path );
         big = loadBFile( id, terms );
       }
     }
     if ( big.empty() )
     {
-      Log::get().error( "Error loading b-file " + getBFilePath(), true );
+      Log::get().error( "Error loading b-file " + path, true );
     }
     num_bfile_terms = big.size();
 
