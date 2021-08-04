@@ -52,8 +52,6 @@ class AbstractMatcher: public Matcher
 {
 public:
 
-  static constexpr size_t MAX_NUM_MATCHES = 10; // magic number
-
   AbstractMatcher( const std::string &name, bool backoff )
       : name( name ),
         backoff( backoff )

@@ -25,7 +25,14 @@ bool Miner::updateSpecialSequences( const Program &p, const Sequence &seq ) cons
   std::string kind;
   if ( isCollatzValuation( seq ) )
   {
-    kind = "collatz";
+    // check again for longer sequence to avoid false alerts
+    Evaluator evaluator( settings );
+    Sequence seq2;
+    evaluator.eval( p, seq2, OeisSequence::DEFAULT_SEQ_LENGTH, false );
+    if ( isCollatzValuation( seq ) )
+    {
+      kind = "collatz";
+    }
   }
   if ( !kind.empty() )
   {
@@ -121,11 +128,10 @@ void Miner::mine()
         }
       }
     }
-    // TODO: need to ensure we have at least 20 terms
-    //if ( updateSpecialSequences( program, norm_seq ) )
-    //{
-    //  generator->stats.fresh++;
-    //}
+    if ( updateSpecialSequences( program, norm_seq ) )
+    {
+      generator->stats.fresh++;
+    }
     generator->stats.generated++;
 
     // log info and publish metrics
