@@ -46,8 +46,12 @@ min_changes=$(( $num_cpus * 2 ))
 # increase metric publishing interval because we run multiple instances in parallel
 export LODA_METRICS_PUBLISH_INTERVAL=600
 
+function log_info {
+  echo "$(date +"%Y-%m-%d %H:%M:%S")|INFO |$@"
+}
+
 function stop_miners() {
-  echo "Stopping miners"
+  log_info "Stopping loda"
   killall loda > /dev/null 2> /dev/null
 }
 
@@ -60,14 +64,15 @@ function start_miners() {
 
   # maintenance
   if [ "$remote_origin" = "git@github.com:ckrause/loda.git" ] && [ "$branch" = "master" ]; then
-    echo "Start maintenance"
+    log_info "Starting maintenance"
     ./loda maintain &
     sleep 90
   fi
 
   # start miners
-  i=0
-  echo "Start mining using ${num_use_cpus} instances"
+  # i=0
+  i=1
+  log_info "Starting ${num_use_cpus} miner instances"
   for n in $(seq ${num_use_cpus}); do
     ./loda mine -l ${log_level} -i ${i} $@ &
     ((i=i+1))
@@ -76,15 +81,20 @@ function start_miners() {
 }
 
 function restart_miners {
-  if [ ! -d "programs" ]; then
-    echo "programs folder not found; aborting"
-    exit 1
+
+  # check if loda is running and stop if so
+  ps -A > /tmp/loda-ps.txt
+  if grep loda /tmp/loda-ps.txt; then
+    stop_miners
+  	sleep 10
   fi
-  stop_miners
+  rm /tmp/loda-ps.txt
+
+  # check whether we should push the changes
   num_changes=$(git status programs -s | wc -l)
   dow=$(date +%u)
   if [ "$num_changes" -ge "$min_changes" ] && [ "$dow" -ge 6 ]; then
-    echo "Pushing updates"
+    log_info "Pushing updates"
     git add programs/oeis
     num_progs=$(cat $HOME/.loda/stats/summary.csv | tail -n 1 | cut -d , -f 1)
     git commit -m "updated ${num_changes}/${num_progs} programs"
@@ -93,16 +103,13 @@ function restart_miners {
       git merge -X theirs -m "merge master into $branch" origin/master
     fi
     git push
-    echo "Rebuilding loda"
+    log_info "Rebuilding loda"
     pushd src && make clean && make && popd
-  else
-  	sleep 10
   fi
-  ps -A > /tmp/loda-ps.txt
-  if ! grep loda /tmp/loda-ps.txt; then
-    start_miners $@
-  fi
-  rm /tmp/loda-ps.txt
+
+  # restart miners
+  start_miners $@
+
 }
 
 trap abort_miners INT
