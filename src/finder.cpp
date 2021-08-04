@@ -109,51 +109,22 @@ void Finder::findAll( const Program &p, const Sequence &norm_seq, const std::vec
     matchers[i]->match( p, norm_seq, tmp_result );
 
     // validate the found matches
-    size_t j = 0;
     for ( auto t : tmp_result )
     {
       matcher_stats[i].candidates++;
       auto& s = sequences.at( t.first );
-      auto expected_full_seq = s.getTerms( s.existingNumTerms() );
-      try
+      auto expected_seq = s.getTerms( s.existingNumTerms() );
+      auto res = evaluator.check( t.second, expected_seq, -1, t.first );
+      if ( res.first == status_t::OK )
       {
-        tmp_full_seq.clear();
-        evaluator.eval( t.second, tmp_full_seq, expected_full_seq.size() );
-        if ( tmp_full_seq.size() != expected_full_seq.size() || tmp_full_seq != expected_full_seq )
-        {
-          matcher_stats[i].false_positives++;
-          auto match_length = norm_seq.size();
-          auto got = tmp_full_seq.subsequence( 0, match_length );
-          auto exp = expected_full_seq.subsequence( 0, match_length );
-          if ( got != exp )
-          {
-            auto id = sequences.at( t.first ).id_str();
-            std::string f = getLodaHome() + "debug/matcher/" + id + ".asm";
-            ensureDir( f );
-            std::ofstream o1( f );
-            ProgramUtil::print( p, o1 );
-            std::ofstream o2(
-                getLodaHome() + "debug/matcher/" + id + "-" + matchers[i]->getName() + "-" + std::to_string( j )
-                    + ".asm" );
-            ProgramUtil::print( t.second, o2 );
-            Log::get().error( matchers[i]->getName() + " matcher generates wrong program for " + id );
-            Log::get().error( " -  expected: " + exp.to_string() );
-            Log::get().error( " -       got: " + got.to_string() );
-            Log::get().error( " - generated: " + norm_seq.to_string(), true );
-          }
-        }
-        else
-        {
-          // successful match!
-          result.push_back( t );
-          matcher_stats[i].successes++;
-        }
+        // successful match!
+        result.push_back( t );
+        matcher_stats[i].successes++;
       }
-      catch ( const std::exception& )
+      else
       {
         matcher_stats[i].errors++;
       }
-      j++;
     }
   }
 }
