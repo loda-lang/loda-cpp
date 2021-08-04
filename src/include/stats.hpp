@@ -53,7 +53,7 @@ public:
 
   void finalize();
 
-  int64_t getTransitiveLength( size_t id, bool throw_on_recursion ) const;
+  int64_t getTransitiveLength( size_t id ) const;
 
   int64_t num_programs;
   int64_t num_sequences;
@@ -71,6 +71,7 @@ public:
 
 private:
   mutable std::set<size_t> visited_programs; // used for getTransitiveLength()
+  mutable std::set<size_t> printed_recursion_warning; // used for getTransitiveLength()
   Blocks::Collector blocks_collector;
 
 };

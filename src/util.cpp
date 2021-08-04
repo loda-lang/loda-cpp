@@ -257,12 +257,7 @@ void Metrics::write( const std::vector<Entry> entries ) const
   }
   if ( !notified )
   {
-    std::string msg = "Publishing metrics to InfluxDB at " + host;
-    if ( !auth.empty() )
-    {
-      msg += " (authenticated)";
-    }
-    Log::get().info( msg );
+    Log::get().info( "Publishing metrics to InfluxDB" );
     notified = true;
   }
   const std::string file_name = "/tmp/loda_metrics_" + std::to_string( tmp_file_id ) + ".txt";
@@ -462,14 +457,24 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
 
 bool Settings::hasMemory() const
 {
-  bool has_memory = getMemUsage() <= (size_t) (0.95 * max_physical_memory);
-  if ( !has_memory && !printed_memory_warning )
+  const auto usage = getMemUsage();
+  if ( usage > (size_t) (0.95 * max_physical_memory) )
   {
-    Log::get().warn(
-        "Reaching maximum physical memory limit of " + std::to_string( max_physical_memory / (1024 * 1024) ) + "MB" );
-    printed_memory_warning = true;
+    if ( usage > (size_t) (1.5 * max_physical_memory) )
+    {
+      Log::get().error(
+          "Exceeded maximum physical memory limit of " + std::to_string( max_physical_memory / (1024 * 1024) ) + "MB",
+          true );
+    }
+    if ( !printed_memory_warning )
+    {
+      Log::get().warn(
+          "Reaching maximum physical memory limit of " + std::to_string( max_physical_memory / (1024 * 1024) ) + "MB" );
+      printed_memory_warning = true;
+    }
+    return false;
   }
-  return has_memory;
+  return true;
 }
 
 const std::string& getLodaHome()

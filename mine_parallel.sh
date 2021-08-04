@@ -64,7 +64,7 @@ function start_miners() {
 
   # maintenance
   if [ "$remote_origin" = "git@github.com:ckrause/loda.git" ] && [ "$branch" = "master" ]; then
-    log_info "Starting maintenance"
+    log_info "Starting program maintenance"
     ./loda maintain &
     sleep 90
   fi
@@ -78,6 +78,14 @@ function start_miners() {
     ((i=i+1))
   done
   ./loda mine -l ${log_level} -i blocks -c 100000 $@ &
+}
+
+function rebuild_loda {
+  log_info "Rebuilding loda"
+  pushd src > /dev/null
+  make clean
+  make || exit 1
+  popd > /dev/null
 }
 
 function restart_miners {
@@ -103,14 +111,17 @@ function restart_miners {
       git merge -X theirs -m "merge master into $branch" origin/master
     fi
     git push
-    log_info "Rebuilding loda"
-    pushd src && make clean && make && popd
+    rebuild_loda
   fi
 
   # restart miners
   start_miners $@
 
 }
+
+if [ ! -f ./loda ]; then
+  rebuild_loda
+fi
 
 trap abort_miners INT
 

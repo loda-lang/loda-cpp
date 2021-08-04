@@ -344,7 +344,7 @@ bool OeisManager::shouldMatch( const OeisSequence& seq ) const
       return true;
     }
     const bool should_overwrite = overwrite_list.find( seq.id ) != overwrite_list.end();
-    const bool is_complex = stats.getTransitiveLength( seq.id, false ) > 10; // magic number
+    const bool is_complex = stats.getTransitiveLength( seq.id ) > 10; // magic number
     return is_complex || should_overwrite;
   }
   }

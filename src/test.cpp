@@ -769,7 +769,7 @@ void Test::stats()
 //  {
 //    Log::get().error( "Unexpected seq in A000040", true );
 //  }
-  auto l = s.getTransitiveLength( 40, true );
+  auto l = s.getTransitiveLength( 40 );
   if ( l < 30 )
   {
     Log::get().error( "Unexpected transitive length of A000040: " + std::to_string( l ), true );
