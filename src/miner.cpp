@@ -29,9 +29,9 @@ bool Miner::updateSpecialSequences( const Program &p, const Sequence &seq ) cons
     Evaluator evaluator( settings );
     Sequence seq2;
     evaluator.eval( p, seq2, OeisSequence::DEFAULT_SEQ_LENGTH, false );
-    if ( isCollatzValuation( seq ) )
+    if ( isCollatzValuation( seq2 ) )
     {
-      kind = "collatz";
+      kind = "Collatz";
     }
   }
   if ( !kind.empty() )

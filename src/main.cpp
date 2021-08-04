@@ -82,7 +82,7 @@ int main( int argc, char *argv[] )
     {
       Log::get().error( "Option -s only allowed in evaluate command", true );
     }
-    if ( settings.print_as_b_file && cmd != "evaluate" && cmd != "eval" && cmd != "check" )
+    if ( settings.print_as_b_file && cmd != "evaluate" && cmd != "eval" && cmd != "check" && cmd != "collatz" )
     {
       Log::get().error( "Option -b only allowed in evaluate command", true );
     }
