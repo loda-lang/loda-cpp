@@ -270,7 +270,7 @@ Sequence OeisSequence::getTerms( int64_t max_num_terms ) const
     {
       // fetch b-file
       std::ifstream big_file( path );
-      if ( !big_file.good() )
+      if ( !big_file.good() || big_file.peek() == std::ifstream::traits_type::eof() )
       {
         ensureDir( path );
         std::remove( path.c_str() );
