@@ -23,13 +23,20 @@ bool get_jbool( jute::jValue &v, const std::string &key, bool def )
 std::string get_file_as_string( const std::string& filename )
 {
   std::ifstream in( filename );
-  std::string str = "";
-  std::string tmp;
-  while ( getline( in, tmp ) )
+  std::string str;
+  if ( in.good() )
   {
-    str += tmp;
+    std::string tmp;
+    while ( getline( in, tmp ) )
+    {
+      str += tmp;
+    }
+    in.close();
   }
-  in.close();
+  if ( str.empty() )
+  {
+    Log::get().error( "Error loading " + filename, true );
+  }
   return str;
 }
 

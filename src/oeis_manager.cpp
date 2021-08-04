@@ -697,16 +697,13 @@ std::string OeisManager::isOptimizedBetter( Program existing, Program optimized,
   // ...and compare number of execution cycles
   auto existing_cycles = existing_check.second.total;
   auto optimized_cycles = optimized_check.second.total;
-  if ( existing_cycles >= 0 && optimized_cycles >= 0 )
+  if ( optimized_cycles < existing_cycles )
   {
-    if ( optimized_cycles < existing_cycles )
-    {
-      return "Faster";
-    }
-    else if ( optimized_cycles > existing_cycles )
-    {
-      return "";
-    }
+    return "Faster";
+  }
+  else if ( optimized_cycles > existing_cycles )
+  {
+    return "";
   }
 
   return "";

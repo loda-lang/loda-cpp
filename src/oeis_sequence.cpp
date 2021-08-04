@@ -39,7 +39,7 @@ const std::string& OeisSequence::getProgramsHome()
     }
     if ( !isDir( home ) )
     {
-      Log::get().error( "OEIS programs home directory not found: " + home, true );
+      Log::get().error( "Directory for mined programs not found: " + home, true );
     }
   }
   return home;
