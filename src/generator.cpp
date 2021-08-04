@@ -348,7 +348,7 @@ void Generator::ensureMeaningfulLoops( Program &p )
   }
 }
 
-MultiGenerator::MultiGenerator( const Settings &settings, const Stats& stats, int64_t seed )
+MultiGenerator::MultiGenerator( const Settings &settings, const Stats& stats, bool print_info, int64_t seed )
     : scheduler( 60 ) // 1 minute
 {
   std::mt19937 gen( seed );
@@ -366,22 +366,25 @@ MultiGenerator::MultiGenerator( const Settings &settings, const Stats& stats, in
   generator_index = gen() % configs.size();
 
   // print info
-  std::string overwrite;
-  switch ( config.overwrite_mode )
+  if ( print_info )
   {
-  case OverwriteMode::NONE:
-    overwrite = "none";
-    break;
-  case OverwriteMode::ALL:
-    overwrite = "all";
-    break;
-  case OverwriteMode::AUTO:
-    overwrite = "auto";
-    break;
+    std::string overwrite;
+    switch ( config.overwrite_mode )
+    {
+    case OverwriteMode::NONE:
+      overwrite = "none";
+      break;
+    case OverwriteMode::ALL:
+      overwrite = "all";
+      break;
+    case OverwriteMode::AUTO:
+      overwrite = "auto";
+      break;
+    }
+    Log::get().info(
+        "Initialized " + std::to_string( generators.size() ) + " generators (profile: '" + config.name
+            + "', overwrite: " + overwrite + ")" );
   }
-  Log::get().info(
-      "Initialized " + std::to_string( generators.size() ) + " generators (profile: '" + config.name + "', overwrite: "
-          + overwrite + ")" );
 }
 
 Generator* MultiGenerator::getGenerator()

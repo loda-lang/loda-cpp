@@ -293,8 +293,6 @@ Settings::Settings()
       max_stack_size( getEnvInt( "LODA_MAX_STACK_SIZE", 100 ) ),
       max_physical_memory( getEnvInt( "LODA_MAX_PHYSICAL_MEMORY", 1024 ) * 1024 * 1024 ),
       update_interval_in_days( getEnvInt( "LODA_UPDATE_INTERVAL", 1 ) ),
-      linear_prefix( 1 ),
-      search_linear( false ),
       throw_on_overflow( true ),
       use_steps( false ),
       loda_config( "loda.json" ),
@@ -421,10 +419,6 @@ std::vector<std::string> Settings::parseArgs( int argc, char *argv[] )
       else if ( opt == "i" )
       {
         option = Option::MINER;
-      }
-      else if ( opt == "r" )
-      {
-        search_linear = true;
       }
       else if ( opt == "s" )
       {

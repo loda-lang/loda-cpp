@@ -147,7 +147,7 @@ size_t Interpreter::run( const Program &p, Memory &mem )
     {
       length = get( op.source, mem ).asInt();
       start = get( op.target, mem, true ).asInt();
-      if ( length > static_cast<int64_t>( settings.max_memory ) )
+      if ( length > settings.max_memory && settings.max_memory >= 0 )
       {
         throw std::runtime_error( "Maximum memory exceeded: " + std::to_string( length ) );
       }
@@ -259,7 +259,7 @@ size_t Interpreter::run( const Program &p, Memory &mem )
           "Program did not terminate after " + std::to_string( cycles ) + " cycles; last operation: "
               + ProgramUtil::operationToString( op ) );
     }
-    if ( mem.approximate_size() > settings.max_memory )
+    if ( static_cast<int64_t>( mem.approximate_size() ) > settings.max_memory && settings.max_memory >= 0 )
     {
       throw std::runtime_error(
           "Maximum memory exceeded: " + std::to_string( mem.approximate_size() ) + "; last operation: "
@@ -315,7 +315,7 @@ void Interpreter::set( const Operand& a, const Number& v, Memory &mem, const Ope
     index = mem.get( a.value.asInt() ).asInt();
     break;
   }
-  if ( index > static_cast<int64_t>( settings.max_memory ) )
+  if ( index > settings.max_memory && settings.max_memory >= 0 )
   {
     throw std::runtime_error(
         "Maximum memory exceeded: " + std::to_string( index ) + "; last operation: "

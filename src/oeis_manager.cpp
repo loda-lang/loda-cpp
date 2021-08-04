@@ -318,13 +318,6 @@ bool OeisManager::shouldMatch( const OeisSequence& seq ) const
     return false;
   }
 
-  // linear sequence?
-  auto terms = seq.getTerms( settings.num_terms );
-  if ( !settings.search_linear && terms.is_linear( settings.linear_prefix ) )
-  {
-    return false;
-  }
-
   // check if program exists
   const bool prog_exists = (seq.id < stats.found_programs.size()) && stats.found_programs[seq.id];
 

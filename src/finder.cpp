@@ -86,17 +86,14 @@ Matcher::seq_programs_t Finder::findSequence( const Program &p, Sequence &norm_s
   p2.push_back( Operation::Type::MOV, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::DIRECT, 0 );
   for ( size_t i = 0; i < tmp_seqs.size(); i++ )
   {
-    if ( settings.search_linear || !tmp_seqs[i].is_linear( settings.linear_prefix ) )
+    if ( i == Program::OUTPUT_CELL )
     {
-      if ( i == Program::OUTPUT_CELL )
-      {
-        findAll( p, tmp_seqs[i], sequences, result );
-      }
-      else
-      {
-        p2.ops.back().source.value = i;
-        findAll( p2, tmp_seqs[i], sequences, result );
-      }
+      findAll( p, tmp_seqs[i], sequences, result );
+    }
+    else
+    {
+      p2.ops.back().source.value = i;
+      findAll( p2, tmp_seqs[i], sequences, result );
     }
   }
   return result;

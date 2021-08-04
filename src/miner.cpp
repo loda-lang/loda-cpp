@@ -77,7 +77,7 @@ void Miner::mine()
   manager.load();
 
   std::random_device rand;
-  MultiGenerator multi_generator( settings, manager.getStats(), rand() );
+  MultiGenerator multi_generator( settings, manager.getStats(), true, rand() );
   Mutator mutator( rand() );
   std::stack<Program> progs;
   Sequence norm_seq;

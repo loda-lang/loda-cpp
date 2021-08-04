@@ -29,7 +29,7 @@ public:
   static bool areIndependent( const Operation& op1, const Operation& op2 );
 
   static bool getUsedMemoryCells( const Program &p, std::unordered_set<int64_t> &used_cells, int64_t &larged_used,
-      size_t max_memory );
+      int64_t max_memory );
 
   static std::string operandToString( const Operand &op );
 

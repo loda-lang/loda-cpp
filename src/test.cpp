@@ -870,7 +870,7 @@ void Test::minimizer( size_t tests )
 {
   Evaluator evaluator( settings );
   Minimizer minimizer( settings );
-  MultiGenerator multi_generator( settings, manager.getStats(), gen() );
+  MultiGenerator multi_generator( settings, manager.getStats(), false, gen() );
   Sequence s1, s2, s3;
   Program program, minimized;
   for ( size_t i = 0; i < tests; i++ )
@@ -905,7 +905,7 @@ void Test::miner()
   Log::get().info( "Testing miner" );
   manager.load();
   manager.getFinder();
-  MultiGenerator multi_generator( settings, manager.getStats(), 26 );
+  MultiGenerator multi_generator( settings, manager.getStats(), true, gen() );
 }
 
 void Test::linearMatcher()

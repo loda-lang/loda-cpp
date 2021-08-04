@@ -157,7 +157,7 @@ bool ProgramUtil::areIndependent( const Operation& op1, const Operation& op2 )
 }
 
 bool ProgramUtil::getUsedMemoryCells( const Program &p, std::unordered_set<int64_t> &used_cells, int64_t &largest_used,
-    size_t max_memory )
+    int64_t max_memory )
 {
   for ( auto &op : p.ops )
   {
@@ -177,7 +177,7 @@ bool ProgramUtil::getUsedMemoryCells( const Program &p, std::unordered_set<int64
         return false;
       }
     }
-    if ( region_length > static_cast<int64_t>( max_memory ) )
+    if ( region_length > max_memory && max_memory >= 0 )
     {
       return false;
     }
