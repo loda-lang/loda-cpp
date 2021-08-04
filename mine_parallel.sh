@@ -9,7 +9,7 @@ for cmd in git make; do
 done
 
 # common settings
-log_level=error
+log_level=warn
 restart_interval=43200
 min_cpus=4
 branch=$(git rev-parse --abbrev-ref HEAD)

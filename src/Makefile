@@ -6,15 +6,16 @@ LIBS=
 
 TARGET=../loda
 
-$(TARGET): init $(OBJS)
+$(TARGET): external/jute.h external/jute.cpp $(OBJS)
 	$(CXX) -o $(TARGET) $(OBJS) $(LIBS)
 
 all: $(TARGET)
 
-init:
-	mkdir -p external
-	[ -f external/jute.h ] || curl -sS -o external/jute.h https://raw.githubusercontent.com/amir-s/jute/master/jute.h
-	[ -f external/jute.cpp ] || curl -sS -o external/jute.cpp https://raw.githubusercontent.com/amir-s/jute/master/jute.cpp
+external/jute.h:
+	mkdir -p external && curl -sS -o external/jute.h https://raw.githubusercontent.com/amir-s/jute/master/jute.h
+
+external/jute.cpp:
+	mkdir -p external && curl -sS -o external/jute.cpp https://raw.githubusercontent.com/amir-s/jute/master/jute.cpp
 
 clean:
 	rm -R -f $(OBJS) $(TARGET) external
