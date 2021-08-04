@@ -113,6 +113,10 @@ std::pair<status_t, steps_t> Evaluator::check( const Program &p, const Sequence 
   }
   std::pair<status_t, steps_t> result;
   Memory mem;
+  // clear cache to correctly detect recursion errors
+  interpreter.missing_programs.clear();
+  interpreter.program_cache.clear();
+  interpreter.terms_cache.clear();
   for ( size_t i = 0; i < expected_seq.size(); i++ )
   {
     mem.clear();
