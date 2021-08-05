@@ -164,12 +164,11 @@
       "indirectAccess": false,
       "template": [
         "programs/oeis/000/A000040.asm",
+        "programs/oeis/000/A000149.asm",
         "programs/oeis/000/A000203.asm",
         "programs/oeis/004/A004086.asm",
         "programs/oeis/014/A014682.asm",
-        "programs/oeis/020/A020639.asm",
-        "programs/oeis/132/A132106.asm",
-        "programs/oeis/166/A166260.asm"
+        "programs/oeis/132/A132106.asm"
       ]
     },
     {
