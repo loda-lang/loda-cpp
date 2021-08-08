@@ -289,7 +289,7 @@ void Test::semantics()
 void Test::benchmark()
 {
   Log::get().info( "Starting operations benchmark" );
-  std::vector<Number> ops( 2000 );
+  std::vector<Number> ops( 10000 );
   int64_t num_digits;
   std::string str;
   for ( Number& n : ops )

@@ -335,15 +335,16 @@ BigNumber& BigNumber::operator*=( const BigNumber& n )
   }
   BigNumber result( 0 );
   int64_t shift = 0;
-  for ( auto& w : n.words )
+  const int64_t s = n.getNumUsedWords(); // <= NUM_WORDS
+  for ( int64_t i = 0; i < s; i++ )
   {
     auto copy = *this;
-    copy.mulShort( w % WORD_BASE_ROOT ); // low bits
+    copy.mulShort( n.words[i] % WORD_BASE_ROOT ); // low bits
     copy.shift( shift );
     shift += 1;
     result += copy;
     copy = *this;
-    copy.mulShort( w / WORD_BASE_ROOT ); // high bits
+    copy.mulShort( n.words[i] / WORD_BASE_ROOT ); // high bits
     copy.shift( shift );
     shift += 1;
     result += copy;
@@ -363,11 +364,13 @@ BigNumber& BigNumber::operator*=( const BigNumber& n )
 void BigNumber::mulShort( int64_t n )
 {
   int64_t carry = 0;
-  for ( auto& w : words )
+  const int64_t s = std::min<int64_t>( getNumUsedWords() + 1, NUM_WORDS );
+  for ( int64_t i = 0; i < s; i++ )
   {
-    int64_t h = n * (w / WORD_BASE_ROOT);
-    int64_t l = n * (w % WORD_BASE_ROOT);
-    int64_t t = (h % WORD_BASE_ROOT) * WORD_BASE_ROOT;
+    auto& w = words[i];
+    const int64_t h = n * (w / WORD_BASE_ROOT);
+    const int64_t l = n * (w % WORD_BASE_ROOT);
+    const int64_t t = (h % WORD_BASE_ROOT) * WORD_BASE_ROOT;
     w = l + t + carry;
     carry = h / WORD_BASE_ROOT;
   }
@@ -415,7 +418,7 @@ BigNumber& BigNumber::operator/=( const BigNumber& n )
 
 void BigNumber::div( const BigNumber& n )
 {
-  // TODO: avoid vector if possible
+// TODO: avoid vector if possible
   std::vector<std::pair<BigNumber, BigNumber>> d;
   BigNumber f( n );
   BigNumber g( 1 );
