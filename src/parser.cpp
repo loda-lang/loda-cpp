@@ -98,6 +98,10 @@ Program Parser::parse( std::istream &in_ )
         c = in->peek();
       }
       std::getline( *in, l );
+      while ( !l.empty() && l[0] == ';' )
+      {
+        l = l.substr( 1 );
+      }
       o.comment = l;
     }
 

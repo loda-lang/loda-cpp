@@ -460,32 +460,32 @@ void OeisManager::generateStats( int64_t age_in_days )
   Log::get().info( "Finished stats generation for " + std::to_string( num_processed ) + " programs" );
 }
 
-void migrateFile( const std::string &from, const std::string &to )
-{
-  std::ifstream f( from );
-  if ( f.good() )
-  {
-    Log::get().warn( "Migrating " + from + " -> " + to );
-    f.close();
-    ensureDir( to );
-    auto cmd = "mv " + from + " " + to;
-    auto exit_code = system( cmd.c_str() );
-    if ( exit_code != 0 )
-    {
-      Log::get().error( "Error moving file " + from, true );
-    }
-  }
-}
-
 void OeisManager::migrate()
 {
-  for ( size_t id = 1; id <= 400000; id++ )
+  for ( size_t id = 1; id < 100; id++ )
   {
     OeisSequence s( id );
-    auto old_program_path = OeisSequence::getProgramsHome() + s.id_str() + ".asm";
-    migrateFile( old_program_path, s.getProgramPath() );
-    auto old_b_file_path = OeisSequence::getOeisHome() + "b/" + s.id_str( "b" ) + ".txt";
-    migrateFile( old_b_file_path, s.getBFilePath() );
+    std::ifstream f( s.getProgramPath() );
+    Parser parser;
+    Program p, out;
+    if ( f.good() )
+    {
+      Log::get().warn( "Migrating " + s.getProgramPath() );
+      p = parser.parse( f );
+      f.close();
+      ProgramUtil::migrateOutputCell( p, 1, 0 );
+      for ( size_t i = 0; i < p.ops.size(); i++ )
+      {
+        if ( p.ops[i].type != Operation::Type::NOP )
+        {
+          p.ops.insert( p.ops.begin() + i, Operation() );
+          break;
+        }
+      }
+      std::ofstream out( s.getProgramPath() );
+      ProgramUtil::print( p, out );
+      out.close();
+    }
   }
 }
 

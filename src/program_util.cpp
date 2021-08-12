@@ -449,3 +449,71 @@ void ProgramUtil::validate( const Program& p )
     throwInvalidLoop( p );
   }
 }
+
+void swapCells( Operand& o, int64_t old_cell, int64_t new_cell )
+{
+  if ( o == Operand( Operand::Type::DIRECT, old_cell ) )
+  {
+    o.value = new_cell;
+  }
+  else if ( o == Operand( Operand::Type::DIRECT, new_cell ) )
+  {
+    o.value = old_cell;
+  }
+}
+
+void ProgramUtil::migrateOutputCell( Program& p, int64_t old_out, int64_t new_out )
+{
+  int64_t found_mov_to_old = -1;
+  bool can_switch_old_new = false;
+  bool can_replace_target = true;
+  for ( int64_t i = p.ops.size() - 1; i >= 0; i-- )
+  {
+    auto& op = p.ops[i];
+    if ( op.type == Operation::Type::MOV && op.target.value == old_out )
+    {
+      found_mov_to_old = i;
+      can_switch_old_new = (op.source == Operand( Operand::Type::DIRECT, new_out ));
+      break;
+    }
+    if ( op.type == Operation::Type::LPB || op.type == Operation::Type::LPE )
+    {
+      can_replace_target = false;
+    }
+    if ( op.target.value != old_out || op.source.type != Operand::Type::CONSTANT )
+    {
+      can_replace_target = false;
+    }
+  }
+  if ( found_mov_to_old >= 0 && can_switch_old_new )
+  {
+    for ( size_t i = found_mov_to_old + 1; i < p.ops.size(); i++ )
+    {
+      swapCells( p.ops[i].target, old_out, new_out );
+      swapCells( p.ops[i].source, old_out, new_out );
+    }
+  }
+  else if ( found_mov_to_old >= 0 && can_replace_target )
+  {
+    if ( p.ops[found_mov_to_old].source == Operand( Operand::Type::DIRECT, new_out ) )
+    {
+      p.ops.erase( p.ops.begin() + found_mov_to_old, p.ops.begin() + found_mov_to_old + 1 );
+      found_mov_to_old--;
+    }
+    else
+    {
+      p.ops[found_mov_to_old].target = Operand( Operand::Type::DIRECT, new_out );
+    }
+    for ( size_t i = found_mov_to_old + 1; i < p.ops.size(); i++ )
+    {
+      if ( p.ops[i].target.value == old_out )
+      {
+        p.ops[i].target.value = new_out;
+      }
+    }
+  }
+  else
+  {
+    p.push_back( Operation::Type::MOV, Operand::Type::DIRECT, new_out, Operand::Type::DIRECT, old_out );
+  }
+}

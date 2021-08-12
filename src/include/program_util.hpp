@@ -49,4 +49,6 @@ public:
 
   static void validate( const Program& p );
 
+  static void migrateOutputCell( Program& p, int64_t old_out, int64_t new_out );
+
 };
