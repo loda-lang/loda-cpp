@@ -462,7 +462,7 @@ void OeisManager::generateStats( int64_t age_in_days )
 
 void OeisManager::migrate()
 {
-  for ( size_t id = 1; id < 100; id++ )
+  for ( size_t id = 0; id < 400000; id++ )
   {
     OeisSequence s( id );
     std::ifstream f( s.getProgramPath() );

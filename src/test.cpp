@@ -761,14 +761,14 @@ void Test::stats()
   {
     Log::get().error( "Error loading program summary from stats", true );
   }
-  if ( s.program_lengths.at( 7 ) != 1 )
+  if ( !s.program_lengths.at( 7 ) )
   {
     Log::get().error( "Error loading program lengths from stats", true );
   }
-//  if ( s.call_graph.count( 40 ) != 1 || s.call_graph.find( 40 )->second != 10051 )
-//  {
-//    Log::get().error( "Unexpected seq in A000040", true );
-//  }
+  if ( !s.call_graph.count( 40 ) )
+  {
+    Log::get().error( "Unexpected call graph for A000040", true );
+  }
   auto l = s.getTransitiveLength( 40 );
   if ( l < 30 )
   {

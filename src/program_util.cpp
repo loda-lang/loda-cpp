@@ -467,17 +467,28 @@ void ProgramUtil::migrateOutputCell( Program& p, int64_t old_out, int64_t new_ou
   int64_t found_mov_to_old = -1;
   bool can_switch_old_new = false;
   bool can_replace_target = true;
-  for ( int64_t i = p.ops.size() - 1; i >= 0; i-- )
+  int64_t open_loops = 0;
+  for ( size_t i = 0; i < p.ops.size(); i++ )
   {
     auto& op = p.ops[i];
     if ( op.type == Operation::Type::MOV && op.target.value == old_out )
     {
       found_mov_to_old = i;
-      can_switch_old_new = (op.source == Operand( Operand::Type::DIRECT, new_out ));
-      break;
+      can_replace_target = true;
+      can_switch_old_new = !open_loops && (op.source == Operand( Operand::Type::DIRECT, new_out ));
+      if ( can_switch_old_new )
+      {
+        break;
+      }
     }
-    if ( op.type == Operation::Type::LPB || op.type == Operation::Type::LPE )
+    if ( op.type == Operation::Type::LPB )
     {
+      open_loops++;
+      can_replace_target = false;
+    }
+    else if ( op.type == Operation::Type::LPE )
+    {
+      open_loops--;
       can_replace_target = false;
     }
     if ( op.target.value != old_out || op.source.type != Operand::Type::CONSTANT )
