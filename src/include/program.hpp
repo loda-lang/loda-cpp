@@ -140,7 +140,7 @@ class Program
 public:
 
   static constexpr int64_t INPUT_CELL = 0;
-  static constexpr int64_t OUTPUT_CELL = 1;
+  static constexpr int64_t OUTPUT_CELL = 0;
 
   void push_front( Operation::Type t, Operand::Type tt, const Number& tv, Operand::Type st, const Number& sv );
 
