@@ -749,10 +749,10 @@ void Test::stats()
   }
   OpPos op_pos;
   op_pos.pos = 0;
-  op_pos.len = 2;
+  op_pos.len = 1;
   op_pos.op.type = Operation::Type::MOV;
-  op_pos.op.target = Operand( Operand::Type::DIRECT, 1 );
-  op_pos.op.source = Operand( Operand::Type::DIRECT, 0 );
+  op_pos.op.target = Operand( Operand::Type::DIRECT, 0 );
+  op_pos.op.source = Operand( Operand::Type::CONSTANT, 1 );
   if ( s.num_operation_positions.at( op_pos ) == 0 )
   {
     Log::get().error( "Error loading operation position counts from stats", true );
