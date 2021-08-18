@@ -5,26 +5,16 @@ The LODA language is an assembly language with instructions for common integer o
 Here is a basic example of a LODA program:
 
 ```asm
-; A000045: Fibonacci numbers: F(n) = F(n-1) + F(n-2) with F(0) = 0 and F(1) = 1.
+; A002994: Initial digit of cubes: 0,1,8,2,6,1,2,3,5,7,1,1,1,2,2,3,...
 
-; argument is stored in $0
+; Memory cell $0 is used to pass the argument and store the result. 
 
-mov $3,1      ; assign $3:=1
-lpb $0        ; loop as long as $0 decreases and is non-negative
-  sub $0,1    ; decrement $0
-  mov $2,$1   ; assign $2:=$1
-  add $1,$3   ; add $1:=$1+$3
-  mov $3,$2   ; assign $3:=$2
-lpe           ; end of loop
-mov $0,$1     ; store result in $0
-
-; result is stored in $0
-```
-
-To run this program, you can run:
-```bash
-./loda eval A45
-0,1,1,2,3,5,8,13,21,34,55,89,144,233,377,610,987,1597,2584,4181
+pow $0,3     ; take cube of $0
+lpb $0       ; loop as long as $0 decreases
+  mov $1,$0  ; assign $1 := $0
+  div $0,10  ; divide $0 by 10
+lpe          ; end of loop
+mov $0,$1    ; store result in $0
 ```
 
 The details of the language are explained in the following sections.
@@ -49,7 +39,7 @@ The table below summarizes the operations currently supported by LODA. We use th
 | `trn a,b` | Truncation     | Subtract and ensure non-negative result: `a:=max(a-b,0)` |
 | `mul a,b` | Multiplication | Multiply the target with the source value: `a:=a*b` |
 | `div a,b` | Division       | Divide the target by the source value: `a:=floor(a/b)`  |
-| `dif a,b` | Divide-If-Divides | Divide the target by the source value if the source is a divisor: `a:=(a%b=0)?a/b:a `  |
+| `dif a,b` | Divide If Divides | Divide the target by the source value if the source is a divisor: `a:=(a%b=0)?a/b:a `  |
 | `mod a,b` | Modulus        | Remainder of division of target by source: `a:=a%b` |
 | `pow a,b` | Power          | Raise source to the power of target: `a:=a^b` |
 | `gcd a,b` | Greatest Common Divisor | Greatest common divisor or target and source: `a:=gcd(a,b)`. Undefined for 0,0. Otherwise always positive. |
@@ -83,7 +73,7 @@ lpe
 
 The `lpb` can also have a second (optional) argument. In that case, the loop counter is not a single variable, but a finite memory region, which must strictly decreases in every iteration of the loop. The loop counter cell marks the start of that memory region, whereas the second argument is interpreted as a number and defines the length of this region. For example, `lpb $4,3` ... `lpe` is executed as long as the vector (or polynomial) `$4`,`$5`,`$6` is non-negative and strictly decreasing in every iteration according to the lexicographical ordering. If `y` is not a constant and evaluates to different values in subsequent iterations, the minimum length is used to compare the memory regions.
 
-### Calls to OEIS programs
+### Calling programs for OEIS sequences
 
 Calling another LODA program for an OEIS sequence is supported using the `seq` operation. This assumes you are evaluating the program as a sequence (see below). This operation takes two arguments. The first one is the parameter of the called program. The second argument is the number of the OEIS program to be called (see below). The result is stored in the first argument. For example, the operation `seq $2,45` evaluates the program A000045 (Fibonacci numbers) using the argument value in `$2` and overrides it with the result.
 
