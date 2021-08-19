@@ -84,9 +84,11 @@ void AbstractMatcher<T>::match( const Program &p, const Sequence &norm_seq, seq_
       Program copy = p;
       if ( extend( copy, data.at( id ), reduced.second ) )
       {
+        // Log::get().info( "Potential match for sequence " + std::to_string( id ) );
         result.push_back( std::pair<size_t, Program>( id, copy ) );
         if ( result.size() >= MAX_NUM_MATCHES )
         {
+          // Log::get().warn( "Skipping potential matches for " + norm_seq.to_string() );
           break;
         }
       }
