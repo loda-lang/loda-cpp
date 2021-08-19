@@ -114,16 +114,17 @@ void Finder::findAll( const Program &p, const Sequence &norm_seq, const std::vec
       matcher_stats[i].candidates++;
       auto& s = sequences.at( t.first );
       auto expected_seq = s.getTerms( s.existingNumTerms() );
-      auto res = evaluator.check( t.second, expected_seq, -1, t.first );
-      if ( res.first == status_t::OK )
+      auto res = evaluator.check( t.second, expected_seq, OeisSequence::DEFAULT_SEQ_LENGTH, t.first );
+      if ( res.first == status_t::ERROR )
       {
-        // successful match!
-        result.push_back( t );
-        matcher_stats[i].successes++;
+        matcher_stats[i].errors++;
+        // Log::get().warn( "Ignoring invalid match for " + s.id_str() );
       }
       else
       {
-        matcher_stats[i].errors++;
+        result.push_back( t );
+        matcher_stats[i].successes++;
+        // Log::get().info( "Found potential match for " + s.id_str() );
       }
     }
   }
