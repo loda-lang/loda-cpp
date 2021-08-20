@@ -8,7 +8,7 @@ class BigNumber
 {
 public:
 
-  static constexpr size_t NUM_WORDS = 20;
+  static constexpr size_t NUM_WORDS = 40;
   static constexpr size_t NUM_WORD_DIGITS = 18;
   static constexpr size_t NUM_DIGITS = NUM_WORDS * NUM_WORD_DIGITS;
   static constexpr int64_t WORD_BASE_ROOT = 1000000000;
@@ -68,6 +68,10 @@ private:
   void shift( int64_t n );
 
   void div( const BigNumber& n );
+
+  void divShort( const int64_t n );
+
+  void divBig( const BigNumber& n );
 
   std::array<int64_t, NUM_WORDS> words;
   bool is_negative; // we don't want to expose this

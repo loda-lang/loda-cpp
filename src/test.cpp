@@ -294,7 +294,14 @@ void Test::benchmark()
   std::string str;
   for ( Number& n : ops )
   {
-    num_digits = (gen() % BigNumber::NUM_DIGITS) + 1;
+    if ( gen() % 2 )
+    {
+      num_digits = (gen() % BigNumber::NUM_DIGITS) + 1;
+    }
+    else
+    {
+      num_digits = (gen() % BigNumber::NUM_WORD_DIGITS) + 1;
+    }
     str.clear();
     if ( gen() % 2 )
     {
@@ -940,8 +947,7 @@ void Test::testBinary( const std::string &func, const std::string &file,
 {
   Log::get().info( "Testing " + file );
   Parser parser;
-  Settings settings; // need special settings here
-// settings needed for ackermann
+  Settings settings; // settings needed for ackermann function
   settings.max_memory = 100000;
   settings.max_cycles = 10000000;
   Interpreter interpreter( settings );

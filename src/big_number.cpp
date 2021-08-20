@@ -407,7 +407,7 @@ BigNumber& BigNumber::operator/=( const BigNumber& n )
     makeInfinite();
     return *this;
   }
-  auto m = n;
+  auto m = n; // TODO: avoid this copy is possible
   bool new_is_negative = (m.is_negative != is_negative);
   m.is_negative = false;
   is_negative = false;
@@ -418,7 +418,36 @@ BigNumber& BigNumber::operator/=( const BigNumber& n )
 
 void BigNumber::div( const BigNumber& n )
 {
-// TODO: avoid vector if possible
+  if ( n.getNumUsedWords() == 1 && n.words[0] < WORD_BASE_ROOT )
+  {
+    divShort( n.words[0] );
+  }
+  else
+  {
+    divBig( n );
+  }
+}
+
+void BigNumber::divShort( const int64_t n )
+{
+  int64_t carry = 0;
+  for ( int64_t i = NUM_WORDS - 1; i >= 0; i-- )
+  {
+    auto& w = words[i];
+    const int64_t h = w / WORD_BASE_ROOT;
+    const int64_t l = w % WORD_BASE_ROOT;
+    const int64_t t = (carry * WORD_BASE_ROOT) + h;
+    const int64_t h2 = t / n;
+    carry = t % n;
+    const int64_t u = (carry * WORD_BASE_ROOT) + l;
+    const int64_t l2 = u / n;
+    carry = u % n;
+    w = (h2 * WORD_BASE_ROOT) + l2;
+  }
+}
+
+void BigNumber::divBig( const BigNumber& n )
+{
   std::vector<std::pair<BigNumber, BigNumber>> d;
   BigNumber f( n );
   BigNumber g( 1 );
