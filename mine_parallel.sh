@@ -10,7 +10,8 @@ done
 
 # common settings
 log_level=warn
-restart_interval=43200
+restart_interval=21600
+min_changes=40
 min_cpus=4
 branch=$(git rev-parse --abbrev-ref HEAD)
 remote_origin=$(git config --get remote.origin.url)
@@ -39,9 +40,6 @@ fi
 if [ -n "$LODA_MAX_PROCESSES" ]; then
   num_use_cpus=$LODA_MAX_PROCESSES
 fi
-
-# calculate minimum number of changes before commit
-min_changes=$(( $num_cpus * 2 ))
 
 # increase metric publishing interval because we run multiple instances in parallel
 export LODA_METRICS_PUBLISH_INTERVAL=600
