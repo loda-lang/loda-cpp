@@ -40,7 +40,7 @@ You can try it out using the [interactive web interface](https://neoneye.github.
 
 The language is not limited to sequences -- it supports an arbitrary number of input and outputs. It is more powerful than primitive recursion (see, e.g., [program for the Ackermann function](programs/general/ackermann.asm)), but termination is nevertheless guaranteed.
 
-For a detailed description of the language features, please take a look the [language documentation](https://github.com/loda-lang/loda-lang). For more details on the available commands of the `loda` tool, plese see below.
+For a detailed description of the language features, please take a look the [language documentation](https://github.com/loda-lang/loda-lang). For more details on the available commands of the `loda` tool, please see below.
 
 ## Command-Line Tool (C++)
 
@@ -77,7 +77,7 @@ Usage:                   loda <command> <options>
   -i <string>            Name of miner configuration from loda.json
 
 === Environment variables ===
-LODA_OEIS_PROGRAMS_HOME  Directory for mined programs (default: programs/oeis)
+LODA_PROGRAMS_HOME       Directory for mined programs (default: programs)
 LODA_UPDATE_INTERVAL     Update interval for OEIS metadata in days (default: 1)
 LODA_MAX_CYCLES          Maximum number of interpreter cycles (same as -c)
 LODA_MAX_MEMORY          Maximum number of used memory cells (same as -m)
