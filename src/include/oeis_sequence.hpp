@@ -14,6 +14,8 @@ public:
 
   static const std::string& getProgramsHome();
 
+  static void setProgramsHome( const std::string& home );
+
   static bool isTooBig( const Number& n );
 
   OeisSequence( size_t id = 0 );
@@ -47,6 +49,8 @@ public:
   std::string to_string() const;
 
 private:
+
+  static std::string PROGRAMS_HOME;
 
   mutable Sequence terms;
   mutable size_t num_bfile_terms;

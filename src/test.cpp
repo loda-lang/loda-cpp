@@ -25,10 +25,11 @@
 #include <stdexcept>
 
 Test::Test( int64_t seed )
-    : manager( settings )
+    : manager( settings, false, "/tmp/stats" )
 {
   Log::get().info( "Initializing tests using random seed " + std::to_string( seed ) );
   gen.seed( seed );
+  OeisSequence::setProgramsHome( "tests/programs" );
 }
 
 void Test::all()
@@ -627,7 +628,7 @@ void Test::ackermann()
 {
   std::vector<std::vector<int64_t> > values = { { 1, 2, 3, 4, 5 }, { 2, 3, 4, 5, 6 }, { 3, 5, 7, 9, 11 }, { 5, 13, 29,
       61, 125 }, { 13, 65533 } };
-  testBinary( "ack", "programs/general/ackermann.asm", values );
+  testBinary( "ack", "tests/programs/general/ackermann.asm", values );
 }
 
 void Test::collatz()
@@ -748,7 +749,7 @@ void Test::stats()
   {
     Log::get().error( "Error loading operation counts from stats", true );
   }
-  if ( s.num_operation_positions.size() < 10000 )
+  if ( s.num_operation_positions.size() < 100 )
   {
     Log::get().error(
         "Unexpected number of operation position counts in stats: "
@@ -764,7 +765,7 @@ void Test::stats()
   {
     Log::get().error( "Error loading operation position counts from stats", true );
   }
-  if ( !s.found_programs.at( 4 ) )
+  if ( !s.found_programs.at( 5 ) )
   {
     Log::get().error( "Error loading program summary from stats", true );
   }
@@ -772,19 +773,20 @@ void Test::stats()
   {
     Log::get().error( "Error loading program lengths from stats", true );
   }
-  if ( !s.call_graph.count( 40 ) )
+  if ( !s.call_graph.count( 168380 ) )
   {
-    Log::get().error( "Unexpected call graph for A000040", true );
+    Log::get().error( "Unexpected call graph for A168380", true );
   }
-  auto l = s.getTransitiveLength( 40 );
-  if ( l < 30 )
+  auto l = s.getTransitiveLength( 168380 );
+  if ( l != 13 )
   {
-    Log::get().error( "Unexpected transitive length of A000040: " + std::to_string( l ), true );
+    Log::get().error( "Unexpected transitive length of A168380: " + std::to_string( l ), true );
   }
 
   // save & reload stats
-  s.save( "/tmp" );
-  t.load( "/tmp" );
+  ensureDir( "/tmp/stats2/" );
+  s.save( "/tmp/stats2" );
+  t.load( "/tmp/stats2" );
 
   // compare loaded to original
   for ( auto &e : s.num_constants )

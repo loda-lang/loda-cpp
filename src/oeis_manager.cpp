@@ -24,13 +24,7 @@ void throwParseError( const std::string &line )
   Log::get().error( "error parsing OEIS line: " + line, true );
 }
 
-std::string getStatsHome()
-{
-  // no trailing / here
-  return getLodaHome() + "stats";
-}
-
-OeisManager::OeisManager( const Settings &settings, bool force_overwrite ) // magic number
+OeisManager::OeisManager( const Settings &settings, bool force_overwrite, const std::string& stats_home )
     : settings( settings ),
       overwrite_mode( force_overwrite ? OverwriteMode::ALL : ConfigLoader::load( settings ).overwrite_mode ),
       evaluator( settings ),
@@ -40,7 +34,8 @@ OeisManager::OeisManager( const Settings &settings, bool force_overwrite ) // ma
       optimizer( settings ),
       loaded_count( 0 ),
       total_count( 0 ),
-      stats_loaded( false )
+      stats_loaded( false ),
+      stats_home( stats_home.empty() ? (getLodaHome() + "stats") : stats_home ) // no trailing / here
 {
 }
 
@@ -400,7 +395,7 @@ void OeisManager::generateStats( int64_t age_in_days )
   std::string msg;
   if ( age_in_days < 0 )
   {
-    msg = "Generating program stats";
+    msg = "Generating program stats at " + stats_home;
   }
   else
   {
@@ -455,7 +450,7 @@ void OeisManager::generateStats( int64_t age_in_days )
 
   // write stats
   stats.finalize();
-  stats.save( getStatsHome() );
+  stats.save( stats_home );
 
   Log::get().info( "Finished stats generation for " + std::to_string( num_processed ) + " programs" );
 }
@@ -498,26 +493,24 @@ const Stats& OeisManager::getStats()
 {
   if ( !stats_loaded )
   {
-    auto home = getStatsHome();
-
     // obtain lock
-    FolderLock lock( home );
+    FolderLock lock( stats_home );
 
     // check age of stats
-    auto age_in_days = getFileAgeInDays( stats.getMainStatsFile( home ) );
+    auto age_in_days = getFileAgeInDays( stats.getMainStatsFile( stats_home ) );
     if ( age_in_days < 0 || age_in_days >= settings.update_interval_in_days )
     {
       generateStats( age_in_days );
     }
     try
     {
-      stats.load( home );
+      stats.load( stats_home );
     }
     catch ( const std::exception& e )
     {
       Log::get().warn( "Exception during stats loading, regenerating..." );
       generateStats( age_in_days );
-      stats.load( home ); // reload
+      stats.load( stats_home ); // reload
     }
     stats_loaded = true;
 

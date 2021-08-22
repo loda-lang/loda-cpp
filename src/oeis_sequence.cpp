@@ -11,6 +11,8 @@ const size_t OeisSequence::DEFAULT_SEQ_LENGTH = 100;
 
 const size_t OeisSequence::EXTENDED_SEQ_LENGTH = 2000;
 
+std::string OeisSequence::PROGRAMS_HOME;
+
 const std::string& OeisSequence::getOeisHome()
 {
   // don't remove the trailing /
@@ -21,29 +23,33 @@ const std::string& OeisSequence::getOeisHome()
 const std::string& OeisSequence::getProgramsHome()
 {
   // don't remove the trailing /
-  static std::string home;
-  if ( home.empty() )
+  if ( PROGRAMS_HOME.empty() )
   {
     auto env = std::getenv( "LODA_PROGRAMS_HOME" );
     if ( env )
     {
-      home = std::string( env );
-      if ( !home.empty() && home.back() != '/' )
-      {
-        home += '/';
-      }
+      setProgramsHome( std::string( env ) );
     }
     else
     {
-      home = "programs/";
+      setProgramsHome( "programs" );
     }
-    if ( !isDir( home ) )
-    {
-      Log::get().error( "Directory for mined programs not found: " + home, true );
-    }
-    home += "oeis/";
   }
-  return home;
+  return PROGRAMS_HOME;
+}
+
+void OeisSequence::setProgramsHome( const std::string& home )
+{
+  if ( home.empty() || !isDir( home ) )
+  {
+    Log::get().error( "Programs home not found: " + home, true );
+  }
+  PROGRAMS_HOME = home;
+  if ( PROGRAMS_HOME.back() != '/' )
+  {
+    PROGRAMS_HOME += '/';
+  }
+  PROGRAMS_HOME += "oeis/";
 }
 
 bool OeisSequence::isTooBig( const Number& n )

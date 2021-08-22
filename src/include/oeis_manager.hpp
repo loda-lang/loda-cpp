@@ -21,7 +21,7 @@ class OeisManager
 {
 public:
 
-  OeisManager( const Settings &settings, bool force_overwrite = false );
+  OeisManager( const Settings &settings, bool force_overwrite = false, const std::string& stats_home = "" );
 
   void load();
 
@@ -30,6 +30,8 @@ public:
   const std::vector<OeisSequence>& getSequences() const;
 
   const Stats& getStats();
+
+  void setStatsHome( const std::string& home );
 
   Finder& getFinder();
 
@@ -86,5 +88,6 @@ private:
 
   Stats stats;
   bool stats_loaded;
+  std::string stats_home;
 
 };
