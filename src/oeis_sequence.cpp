@@ -32,7 +32,7 @@ const std::string& OeisSequence::getProgramsHome()
     }
     else
     {
-      setProgramsHome( "programs" );
+      setProgramsHome( std::string() );
     }
   }
   return PROGRAMS_HOME;
@@ -40,7 +40,11 @@ const std::string& OeisSequence::getProgramsHome()
 
 void OeisSequence::setProgramsHome( const std::string& home )
 {
-  if ( home.empty() || !isDir( home ) )
+  if ( home.empty() )
+  {
+    Log::get().error( "Programs home not set (set LODA_PROGRAMS_HOME environment variable to fix)", true );
+  }
+  if ( !isDir( home ) )
   {
     Log::get().error( "Programs home not found: " + home, true );
   }

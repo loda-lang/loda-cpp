@@ -42,7 +42,7 @@ std::string get_file_as_string( const std::string& filename )
 
 std::string get_template( std::string t )
 {
-  static const std::string h( "$LODA_PROGRAMS_HOME" );
+  static const std::string h( "$LODA_PROGRAMS_HOME/oeis/" ); // TODO: use proper variable replacing
   if ( t.rfind( h, 0 ) == 0 )
   {
     t = t.substr( h.size() );
