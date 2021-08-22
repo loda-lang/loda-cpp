@@ -11,10 +11,7 @@ done
 # common settings
 log_level=warn
 restart_interval=21600
-min_changes=40
 min_cpus=4
-branch=$(git rev-parse --abbrev-ref HEAD)
-remote_origin=$(git config --get remote.origin.url)
 
 # get the number of cpus
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -61,7 +58,7 @@ function abort_miners() {
 function start_miners() {
 
   # maintenance
-  if [ "$remote_origin" = "git@github.com:ckrause/loda.git" ] && [ "$branch" = "master" ]; then
+  if [ "$remote_origin" = "git@github.com:lodalang/loda-cpp.git" ] && [ "$branch" = "master" ]; then
     log_info "Starting program maintenance"
     ./loda maintain &
     sleep 90
@@ -95,22 +92,6 @@ function restart_miners {
   	sleep 10
   fi
   rm /tmp/loda-ps.txt
-
-  # check whether we should push the changes
-  num_changes=$(git status programs -s | wc -l)
-  dow=$(date +%u)
-  if [ "$num_changes" -ge "$min_changes" ] && [ "$dow" -ge 6 ]; then
-    log_info "Pushing updates"
-    git add programs/oeis
-    num_progs=$(cat $HOME/.loda/stats/summary.csv | tail -n 1 | cut -d , -f 1)
-    git commit -m "updated ${num_changes}/${num_progs} programs"
-    git pull -r -X theirs
-    if [ "$branch" != "master" ]; then
-      git merge -X theirs -m "merge master into $branch" origin/master
-    fi
-    git push
-    rebuild_loda
-  fi
 
   # restart miners
   start_miners $@
