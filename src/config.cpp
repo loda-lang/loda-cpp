@@ -40,6 +40,17 @@ std::string get_file_as_string( const std::string& filename )
   return str;
 }
 
+std::string get_template( std::string t )
+{
+  static const std::string h( "$LODA_PROGRAMS_HOME" );
+  if ( t.rfind( h, 0 ) == 0 )
+  {
+    t = t.substr( h.size() );
+    t = OeisSequence::getProgramsHome() + t;
+  }
+  return t;
+}
+
 std::vector<Generator::Config> loadGeneratorConfigs( const std::string& miner, jute::jValue &gens,
     const std::unordered_set<std::string>& names )
 {
@@ -65,7 +76,7 @@ std::vector<Generator::Config> loadGeneratorConfigs( const std::string& miner, j
     {
     case jute::jType::JSTRING:
     {
-      c.program_template = g["template"].as_string();
+      c.program_template = get_template( g["template"].as_string() );
       generators.push_back( c );
       break;
     }
@@ -76,7 +87,7 @@ std::vector<Generator::Config> loadGeneratorConfigs( const std::string& miner, j
       {
         if ( a[i].get_type() == jute::jType::JSTRING )
         {
-          c.program_template = a[i].as_string();
+          c.program_template = get_template( a[i].as_string() );
           generators.push_back( c );
         }
       }
