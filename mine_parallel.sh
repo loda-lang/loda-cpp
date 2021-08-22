@@ -13,6 +13,10 @@ log_level=warn
 restart_interval=21600
 min_cpus=4
 
+# git info
+branch=$(git rev-parse --abbrev-ref HEAD)
+remote_origin=$(git config --get remote.origin.url)
+
 # get the number of cpus
 if [[ "$OSTYPE" == "darwin"* ]]; then
   num_cpus=$(sysctl -n hw.ncpu)
@@ -58,7 +62,7 @@ function abort_miners() {
 function start_miners() {
 
   # maintenance
-  if [ "$remote_origin" = "git@github.com:lodalang/loda-cpp.git" ] && [ "$branch" = "master" ]; then
+  if [ "$remote_origin" = "git@github.com:loda-lang/loda-cpp.git" ] && [ "$branch" = "main" ]; then
     log_info "Starting program maintenance"
     ./loda maintain &
     sleep 90
