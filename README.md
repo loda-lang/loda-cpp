@@ -7,7 +7,7 @@ The [programs/oeis](programs/oeis) folder contains programs that generate intege
 * [A000001-A050000](programs/oeis/list0.md), [A050001-A100000](programs/oeis/list1.md), [A100001-A150000](programs/oeis/list2.md), [A150001-A200000](programs/oeis/list3.md), 
 * [A200001-A250000](programs/oeis/list4.md), [A250001-A300000](programs/oeis/list5.md), [A300001-A350000](programs/oeis/list6.md), [A350001-A400000](programs/oeis/list7.md)
 
-If you would like to receive updates on the miner findings, you can check the [changes on the master branch](https://github.com/ckrause/loda/commits/master) for new and updated programs or get real-time updates from [@lodaminer](https://twitter.com/lodaminer) on Twitter.
+If you would get updates on the miner findings, you can check the commits in the [loda-programs](https://github.com/loda-lang/loda-programs/commits/main) repository for new and updated programs or get real-time updates from [@lodaminer](https://twitter.com/lodaminer) on Twitter.
 
 :woman_teacher: You can try out the LODA language using the [interactive web interface](https://neoneye.github.io/lodalab/?id=2994) of [LODA Lab](https://github.com/neoneye/loda-lab) written by Simon Strandgaard, or use one of the command-line tools (see below).
 
@@ -40,7 +40,7 @@ You can try it out using the [interactive web interface](https://neoneye.github.
 
 The language is not limited to sequences -- it supports an arbitrary number of input and outputs. It is more powerful than primitive recursion (see, e.g., [program for the Ackermann function](programs/general/ackermann.asm)), but termination is nevertheless guaranteed.
 
-For a detailed description of the language features, please take a look the [language documentation](LANGUAGE.md). For more details on the available commands of the `loda` tool, plese see below.
+For a detailed description of the language features, please take a look the [language documentation](https://github.com/loda-lang/loda-lang). For more details on the available commands of the `loda` tool, plese see below.
 
 ## Command-Line Tool (C++)
 

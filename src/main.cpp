@@ -43,7 +43,7 @@ void help()
   std::cout << "  -k <string>            Configuration file (default: loda.json)" << std::endl;
   std::cout << "  -i <string>            Name of miner configuration from loda.json" << std::endl;
   std::cout << std::endl << "=== Environment variables ===" << std::endl;
-  std::cout << "LODA_OEIS_PROGRAMS_HOME  Directory for mined programs (default: programs/oeis)" << std::endl;
+  std::cout << "LODA_PROGRAMS_HOME       Directory for mined programs (default: programs)" << std::endl;
   std::cout
       << "LODA_UPDATE_INTERVAL     Update interval for OEIS metadata in days (default: "
           + std::to_string( settings.update_interval_in_days ) + ")" << std::endl;

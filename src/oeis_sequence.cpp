@@ -24,7 +24,7 @@ const std::string& OeisSequence::getProgramsHome()
   static std::string home;
   if ( home.empty() )
   {
-    auto env = std::getenv( "LODA_OEIS_PROGRAMS_HOME" );
+    auto env = std::getenv( "LODA_PROGRAMS_HOME" );
     if ( env )
     {
       home = std::string( env );
@@ -35,12 +35,13 @@ const std::string& OeisSequence::getProgramsHome()
     }
     else
     {
-      home = "programs/oeis/";
+      home = "programs/";
     }
     if ( !isDir( home ) )
     {
       Log::get().error( "Directory for mined programs not found: " + home, true );
     }
+    home += "oeis/";
   }
   return home;
 }
