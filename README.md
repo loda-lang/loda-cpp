@@ -107,3 +107,13 @@ Run a maintenance for all programs. This checks the correctness of all programs 
 * [loda-programs](https://github.com/loda-lang/loda-programs): Mined LODA programs for OEIS sequences
 * [loda-rust](https://github.com/loda-lang/loda-rust): Interpreter and web interface written in Rust
 * [loda-lang](https://github.com/loda-lang/loda-lang): LODA language specification
+
+## Development
+
+If you want to contribute to `loda-cpp`, the best starting point for reading the code is probably [program.hpp](/src/include/program.hpp). It contains the model classes for programs including operands, operations and programs. You can find the implementation of all arithmetics operations in [semantics.cpp](/src/semantics.cpp). Apart from container classes for sequences and memory, the main part of the operational semantics of programs is implemented in [interpreter.cpp](/src/interpreter.cpp). The evaluation of programs to sequences is coded in [evaluator.cpp](/src/evaluator.cpp).
+
+For mining, there are multiple generator implementations, which are used to create random programs. They are configured via [loda.json](/loda.json) and use statistics from the existing programs stored in `$HOME/.loda/stats`. To reduce and index the target sequences, we use [Matcher](/src/include/matcher.hpp) classes. They allow matching of sequences modulo additional operations such as linear transformations.
+
+To reduce and normalize the programs we use the [Optimizer](/src/include/optimizer.hpp) and the [Minimizer](/src/include/minimizer.hpp) class.
+
+There is a test suite in [test.cpp](/src/test.cpp) which can be executed using `./loda test`. This is also automatically executed as an action in the GitHub workflow.
