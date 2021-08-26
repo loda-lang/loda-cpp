@@ -14,6 +14,7 @@
 
 OeisMaintenance::OeisMaintenance( const Settings &settings )
     : evaluator( settings ),
+      minimizer( settings ),
       manager( settings, true ) // we need to set the overwrite-flag here!
 {
 }
@@ -213,15 +214,19 @@ size_t OeisMaintenance::checkAndMinimizePrograms()
         {
           is_protected = true;
         }
-        if ( program.ops.size() > 1 && program.ops[1].type == Operation::Type::NOP )
+        for ( const auto& op : program.ops )
         {
-          is_manual = program.ops[1].comment.find( "Coded manually" ) != std::string::npos;
+          if ( op.type == Operation::Type::NOP && op.comment.find( "Coded manually" ) != std::string::npos )
+          {
+            is_manual = true;
+            break;
+          }
         }
         if ( !is_protected && !is_manual )
         {
           ProgramUtil::removeOps( program, Operation::Type::NOP );
           minimized = program;
-          manager.minimizer.optimizeAndMinimize( minimized, 2, 1, OeisSequence::DEFAULT_SEQ_LENGTH );
+          minimizer.optimizeAndMinimize( minimized, 2, 1, OeisSequence::DEFAULT_SEQ_LENGTH );
           if ( program != minimized )
           {
             // manager.alert( minimized, id, "Minimized", "warning" );

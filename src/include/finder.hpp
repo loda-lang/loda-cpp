@@ -2,6 +2,7 @@
 
 #include "evaluator.hpp"
 #include "matcher.hpp"
+#include "minimizer.hpp"
 #include "number.hpp"
 
 #include <memory>
@@ -31,6 +32,8 @@ public:
   Matcher::seq_programs_t findSequence( const Program &p, Sequence &norm_seq,
       const std::vector<OeisSequence> &sequences );
 
+  std::pair<bool, Program> checkAndMinimize( const Program &p, const OeisSequence &seq );
+
   std::vector<std::unique_ptr<Matcher>>& getMatchers()
   {
     return matchers;
@@ -50,8 +53,11 @@ private:
   void findAll( const Program &p, const Sequence &norm_seq, const std::vector<OeisSequence> &sequences,
       Matcher::seq_programs_t &result );
 
+  void notifyInvalidMatch( size_t id );
+
   const Settings &settings;
   Evaluator evaluator;
+  Minimizer minimizer;
   std::vector<std::unique_ptr<Matcher>> matchers;
   mutable std::vector<MatcherStats> matcher_stats;
   mutable size_t num_find_attempts;

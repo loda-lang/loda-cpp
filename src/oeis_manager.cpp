@@ -30,7 +30,6 @@ OeisManager::OeisManager( const Settings &settings, bool force_overwrite, const 
       evaluator( settings ),
       finder( settings ),
       finder_initialized( false ),
-      minimizer( settings ),
       optimizer( settings ),
       loaded_count( 0 ),
       total_count( 0 ),
@@ -48,9 +47,9 @@ void OeisManager::load()
   }
 
   // first load the deny and protect lists (needs no lock)
-  loadList( "deny", deny_list );
-  loadList( "overwrite", overwrite_list );
-  loadList( "protect", protect_list );
+  OeisSequence::loadList( OeisSequence::getProgramsHome() + "deny.txt", deny_list );
+  OeisSequence::loadList( OeisSequence::getProgramsHome() + "overwrite.txt", overwrite_list );
+  OeisSequence::loadList( OeisSequence::getProgramsHome() + "protect.txt", protect_list );
 
   std::chrono::steady_clock::time_point start_time;
   {
@@ -224,41 +223,6 @@ void OeisManager::loadNames()
       }
     }
   }
-}
-
-void OeisManager::loadList( const std::string& name, std::unordered_set<size_t>& list )
-{
-  Log::get().debug( "Loading " + name + " list" );
-  std::string path = OeisSequence::getProgramsHome() + name + ".txt";
-  std::ifstream names( path );
-  if ( !names.good() )
-  {
-    Log::get().warn( "Sequence list not found: " + path );
-  }
-  std::string line, id;
-  list.clear();
-  while ( std::getline( names, line ) )
-  {
-    if ( line.empty() || line[0] == '#' )
-    {
-      continue;
-    }
-    if ( line[0] != 'A' )
-    {
-      throwParseError( line );
-    }
-    id = "";
-    for ( char ch : line )
-    {
-      if ( ch == ':' || ch == ';' || ch == ' ' || ch == '\t' || ch == '\n' )
-      {
-        break;
-      }
-      id += ch;
-    }
-    list.insert( OeisSequence( id ).id );
-  }
-  Log::get().debug( "Finished loading of " + name + " list with " + std::to_string( list.size() ) + " entries" );
 }
 
 Finder& OeisManager::getFinder()
@@ -567,50 +531,6 @@ void OeisManager::alert( Program p, size_t id, const std::string& prefix, const 
   Log::get().alert( msg, details );
 }
 
-std::pair<bool, Program> OeisManager::checkAndMinimize( const Program &p, const OeisSequence &seq )
-{
-  Log::get().debug( "Checking and minimizing program for " + seq.id_str() );
-
-  std::pair<status_t, steps_t> check;
-  std::pair<bool, Program> result;
-  result.second = p;
-
-  // get the extended sequence
-  auto extended_seq = seq.getTerms( OeisSequence::EXTENDED_SEQ_LENGTH );
-
-  // check the program w/o minimization
-  check = evaluator.check( p, extended_seq, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id );
-  result.first = (check.first != status_t::ERROR); // we allow warnings
-  if ( !result.first )
-  {
-    return result; // not correct
-  }
-  const auto basic_check_result = check.first;
-
-  // minimize for default number of terms
-  minimizer.optimizeAndMinimize( result.second, 2, 1, OeisSequence::DEFAULT_SEQ_LENGTH ); // default length
-  check = evaluator.check( result.second, extended_seq, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id );
-  result.first = (check.first != status_t::ERROR); // we allow warnings
-  if ( result.first )
-  {
-    return result;
-  }
-
-  if ( basic_check_result == status_t::OK )
-  {
-    // if we got here, the minimization changed the semantics of the program
-    Log::get().warn(
-        "Program for " + seq.id_str() + " generates wrong result after minimization with "
-            + std::to_string( OeisSequence::DEFAULT_SEQ_LENGTH ) + " terms" );
-    std::string f = getLodaHome() + "debug/minimizer/" + seq.id_str() + ".asm";
-    ensureDir( f );
-    std::ofstream out( f );
-    ProgramUtil::print( p, out );
-  }
-
-  return result;
-}
-
 size_t getBadOpsCount( const Program& p )
 {
   // we prefer programs the following programs:
@@ -710,7 +630,7 @@ std::pair<bool, bool> OeisManager::updateProgram( size_t id, const Program &p )
   std::string change;
 
   // minimize and check the program
-  auto minimized = checkAndMinimize( p, seq );
+  auto minimized = finder.checkAndMinimize( p, seq );
   if ( !minimized.first )
   {
     return

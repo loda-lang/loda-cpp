@@ -48,8 +48,6 @@ private:
 
   void loadNames();
 
-  static void loadList( const std::string& name, std::unordered_set<size_t>& list );
-
   bool shouldMatch( const OeisSequence& seq ) const;
 
   void update();
@@ -62,8 +60,6 @@ private:
 
   void alert( Program p, size_t id, const std::string& prefix, const std::string& color ) const;
 
-  std::pair<bool, Program> checkAndMinimize( const Program &p, const OeisSequence &seq );
-
   std::string isOptimizedBetter( Program existing, Program optimized, const OeisSequence &seq );
 
   friend class OeisMaintenance;
@@ -75,7 +71,6 @@ private:
   Finder finder;
   bool finder_initialized;
 
-  Minimizer minimizer;
   Optimizer optimizer;
   std::vector<OeisSequence> sequences;
   std::unordered_set<size_t> deny_list;

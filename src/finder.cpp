@@ -13,6 +13,7 @@
 Finder::Finder( const Settings &settings )
     : settings( settings ),
       evaluator( settings ),
+      minimizer( settings ),
       num_find_attempts( 0 )
 {
   auto config = ConfigLoader::load( settings );
@@ -117,6 +118,7 @@ void Finder::findAll( const Program &p, const Sequence &norm_seq, const std::vec
       auto res = evaluator.check( t.second, expected_seq, OeisSequence::DEFAULT_SEQ_LENGTH, t.first );
       if ( res.first == status_t::ERROR )
       {
+        notifyInvalidMatch( t.first );
         matcher_stats[i].errors++;
         // Log::get().warn( "Ignoring invalid match for " + s.id_str() );
       }
@@ -128,6 +130,56 @@ void Finder::findAll( const Program &p, const Sequence &norm_seq, const std::vec
       }
     }
   }
+}
+
+std::pair<bool, Program> Finder::checkAndMinimize( const Program &p, const OeisSequence &seq )
+{
+  // Log::get().info( "Checking and minimizing program for " + seq.id_str() );
+
+  std::pair<status_t, steps_t> check;
+  std::pair<bool, Program> result;
+  result.second = p;
+
+  // get the extended sequence
+  auto extended_seq = seq.getTerms( OeisSequence::EXTENDED_SEQ_LENGTH );
+
+  // check the program w/o minimization
+  check = evaluator.check( p, extended_seq, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id );
+  result.first = (check.first != status_t::ERROR); // we allow warnings
+  if ( !result.first )
+  {
+    notifyInvalidMatch( seq.id );
+    return result; // not correct
+  }
+  const auto basic_check_result = check.first;
+
+  // minimize for default number of terms
+  minimizer.optimizeAndMinimize( result.second, 2, 1, OeisSequence::DEFAULT_SEQ_LENGTH ); // default length
+  check = evaluator.check( result.second, extended_seq, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id );
+  result.first = (check.first != status_t::ERROR); // we allow warnings
+  if ( result.first )
+  {
+    return result;
+  }
+
+  if ( basic_check_result == status_t::OK )
+  {
+    // if we got here, the minimization changed the semantics of the program
+    Log::get().warn(
+        "Program for " + seq.id_str() + " generates wrong result after minimization with "
+            + std::to_string( OeisSequence::DEFAULT_SEQ_LENGTH ) + " terms" );
+    std::string f = getLodaHome() + "debug/minimizer/" + seq.id_str() + ".asm";
+    ensureDir( f );
+    std::ofstream out( f );
+    ProgramUtil::print( p, out );
+  }
+
+  return result;
+}
+
+void Finder::notifyInvalidMatch( size_t id )
+{
+  // Log::get().info( "Invalid match for " + std::to_string( id ) );
 }
 
 void Finder::logSummary( size_t loaded_count )

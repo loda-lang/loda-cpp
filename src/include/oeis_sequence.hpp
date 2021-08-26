@@ -2,6 +2,8 @@
 
 #include "sequence.hpp"
 
+#include <unordered_set>
+
 class OeisSequence
 {
 public:
@@ -47,6 +49,8 @@ public:
   friend std::ostream& operator<<( std::ostream &out, const OeisSequence &s );
 
   std::string to_string() const;
+
+  static void loadList( const std::string& path, std::unordered_set<size_t>& list );
 
 private:
 

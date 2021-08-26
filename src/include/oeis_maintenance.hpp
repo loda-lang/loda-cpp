@@ -1,5 +1,6 @@
 #pragma once
 
+#include "minimizer.hpp"
 #include "oeis_manager.hpp"
 
 class OeisMaintenance
@@ -17,6 +18,7 @@ private:
   size_t checkAndMinimizePrograms();
 
   Evaluator evaluator;
+  Minimizer minimizer;
   OeisManager manager;
 
 };
