@@ -1,5 +1,6 @@
 #include "oeis_maintenance.hpp"
 
+#include "oeis_list.hpp"
 #include "parser.hpp"
 #include "program_util.hpp"
 #include "stats.hpp"
@@ -108,7 +109,7 @@ void OeisMaintenance::generateLists()
       list_file << buf;
     }
   }
-  std::ofstream no_loda_file( OeisSequence::getOeisHome() + "no_loda.txt" );
+  std::ofstream no_loda_file( OeisList::getListsHome() + "no_loda.txt" );
   no_loda_file << no_loda.str();
   no_loda_file.close();
 

@@ -5,6 +5,19 @@
 
 #include <fstream>
 
+std::string OeisList::LISTS_HOME;
+
+const std::string& OeisList::getListsHome()
+{
+  if ( LISTS_HOME.empty() )
+  {
+    // don't remove the trailing /
+    LISTS_HOME = getLodaHome() + "lists/";
+    ensureDir( LISTS_HOME );
+  }
+  return LISTS_HOME;
+}
+
 void OeisList::loadList( const std::string& path, std::unordered_set<size_t>& list )
 {
   Log::get().debug( "Loading list " + path );
