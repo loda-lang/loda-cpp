@@ -11,6 +11,7 @@
 #include "miner.hpp"
 #include "minimizer.hpp"
 #include "number.hpp"
+#include "oeis_list.hpp"
 #include "oeis_manager.hpp"
 #include "optimizer.hpp"
 #include "parser.hpp"
@@ -55,6 +56,7 @@ void Test::all()
   // slow tests
   ackermann();
   stats();
+  oeisList();
   oeisSeq();
   iterator( tests );
   minimizer( tests );
@@ -607,10 +609,47 @@ void checkSeqAgainstTestBFile( int64_t seq_id, int64_t offset, int64_t max_num_t
   bfile.close();
 }
 
+void Test::oeisList()
+{
+  Log::get().info( "Testing OEIS lists" );
+  std::map<size_t, int64_t> map;
+  std::string path = OeisList::getListsHome() + "test.txt";
+  OeisList::loadMap( path, map );
+  if ( !map.empty() )
+  {
+    Log::get().error( "unexpected map content", true );
+  }
+  map[3] = 5;
+  map[7] = 9;
+  map[8] = 4;
+  auto copy = map;
+  OeisList::mergeMap( "test.txt", map );
+  if ( !map.empty() )
+  {
+    Log::get().error( "unexpected map content", true );
+  }
+  OeisList::loadMap( path, map );
+  if ( map != copy )
+  {
+    Log::get().error( "unexpected map content", true );
+  }
+  std::map<size_t, int64_t> delta;
+  delta[7] = 6;
+  OeisList::mergeMap( "test.txt", delta );
+  OeisList::loadMap( path, map );
+  copy[7] = 15;
+  if ( map != copy )
+  {
+    Log::get().error( "unexpected map content", true );
+  }
+  std::remove( path.c_str() );
+}
+
 void Test::oeisSeq()
 {
+  Log::get().info( "Testing OEIS sequences" );
   OeisSequence s( 6 );
-//  std::remove( s.getBFilePath().c_str() );
+  // std::remove( s.getBFilePath().c_str() );
   checkSeq( s.getTerms( 20 ), 20, 18, 8 ); // this should fetch the b-file
   checkSeq( s.getTerms( 250 ), 250, 235, 38 );
   checkSeq( s.getTerms( 2000 ), 2000, 1240, 100 );
@@ -620,7 +659,6 @@ void Test::oeisSeq()
   checkSeq( s.getTerms( 2000 ), 2000, 1240, 100 );
   checkSeq( s.getTerms( 250 ), 250, 235, 38 );
   checkSeq( s.getTerms( 20 ), 20, 18, 8 );
-
   checkSeqAgainstTestBFile( 45, 0, 2000 );
 }
 
@@ -638,7 +676,6 @@ void Test::collatz()
       10, 111, 18, 18, 18, 106, 5, 26, 13, 13, 21, 21, 21, 34, 8, 109, 8, 29, 16, 16, 16, 104, 11, 24, 24, 24, 11, 11,
       112, 112, 19, 32, 19, 32, 19, 19, 107, 107, 6, 27, 27, 27, 14, 14, 14, 102, 22 };
   Sequence s( values );
-
   if ( !Miner::isCollatzValuation( s ) )
   {
     Log::get().error( "A006577 is not a Collatz valuation", true );

@@ -32,6 +32,8 @@ public:
 
   void knownPrograms();
 
+  void oeisList();
+
   void oeisSeq();
 
   void steps();

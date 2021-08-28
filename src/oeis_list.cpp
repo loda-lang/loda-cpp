@@ -52,18 +52,30 @@ void OeisList::loadList( const std::string& path, std::unordered_set<size_t>& li
   Log::get().debug( "Finished loading of list " + path + " with " + std::to_string( list.size() ) + " entries" );
 }
 
-void OeisList::loadMap( const std::string& path, std::unordered_map<size_t, size_t>& map )
+bool OeisList::loadMap( const std::string& path, std::map<size_t, int64_t>& map )
 {
-  Log::get().debug( "Loading map " + path );
-  std::ifstream names( path );
-  if ( !names.good() )
+  std::ifstream in( path );
+  if ( in.good() )
   {
-    Log::get().warn( "Sequence list not found: " + path );
+    Log::get().debug( "Loading map " + path );
+    map.clear();
+    addToMap( in, map );
+    Log::get().debug( "Finished loading of map " + path + " with " + std::to_string( map.size() ) + " entries" );
+    return true;
   }
+  else
+  {
+    return false;
+  }
+}
+
+void OeisList::addToMap( std::istream& in, std::map<size_t, int64_t>& map )
+{
   std::string line, id, value;
+  OeisSequence seq;
   bool is_value;
-  map.clear();
-  while ( std::getline( names, line ) )
+  int64_t v;
+  while ( std::getline( in, line ) )
   {
     if ( line.empty() || line[0] == '#' )
     {
@@ -96,7 +108,37 @@ void OeisList::loadMap( const std::string& path, std::unordered_map<size_t, size
     {
       Log::get().error( "Error parsing line: " + line, true );
     }
-    map[OeisSequence( id ).id] = std::stoll( value );
+    seq = OeisSequence( id );
+    v = std::stoll( value );
+    if ( map.find( seq.id ) == map.end() )
+    {
+      map[seq.id] = v;
+    }
+    else
+    {
+      map[seq.id] += v;
+    }
   }
-  Log::get().debug( "Finished loading of map " + path + " with " + std::to_string( map.size() ) + " entries" );
+}
+
+void OeisList::mergeMap( const std::string& file_name, std::map<size_t, int64_t>& map )
+{
+  if ( file_name.find( '/' ) != std::string::npos )
+  {
+    Log::get().error( "Invalid file name for merging map: " + file_name, true );
+  }
+  FolderLock lock( getListsHome() );
+  std::ifstream in( getListsHome() + file_name );
+  if ( in.good() )
+  {
+    addToMap( in, map );
+    in.close();
+  }
+  std::ofstream out( getListsHome() + file_name );
+  for ( auto it : map )
+  {
+    out << OeisSequence( it.first ).id_str() << ": " << it.second << "\n";
+  }
+  out.close();
+  map.clear();
 }
