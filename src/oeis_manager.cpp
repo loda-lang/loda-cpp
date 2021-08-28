@@ -3,6 +3,7 @@
 #include "config.hpp"
 #include "interpreter.hpp"
 #include "number.hpp"
+#include "oeis_list.hpp"
 #include "optimizer.hpp"
 #include "parser.hpp"
 #include "program_util.hpp"
@@ -47,9 +48,9 @@ void OeisManager::load()
   }
 
   // first load the deny and protect lists (needs no lock)
-  OeisSequence::loadList( OeisSequence::getProgramsHome() + "deny.txt", deny_list );
-  OeisSequence::loadList( OeisSequence::getProgramsHome() + "overwrite.txt", overwrite_list );
-  OeisSequence::loadList( OeisSequence::getProgramsHome() + "protect.txt", protect_list );
+  OeisList::loadList( OeisSequence::getProgramsHome() + "deny.txt", deny_list );
+  OeisList::loadList( OeisSequence::getProgramsHome() + "overwrite.txt", overwrite_list );
+  OeisList::loadList( OeisSequence::getProgramsHome() + "protect.txt", protect_list );
 
   std::chrono::steady_clock::time_point start_time;
   {

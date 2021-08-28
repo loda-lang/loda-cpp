@@ -50,8 +50,6 @@ public:
 
   std::string to_string() const;
 
-  static void loadList( const std::string& path, std::unordered_set<size_t>& list );
-
 private:
 
   static std::string PROGRAMS_HOME;

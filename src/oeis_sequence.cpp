@@ -307,37 +307,3 @@ Sequence OeisSequence::getTerms( int64_t max_num_terms ) const
 
   return terms;
 }
-
-void OeisSequence::loadList( const std::string& path, std::unordered_set<size_t>& list )
-{
-  Log::get().debug( "Loading list " + path );
-  std::ifstream names( path );
-  if ( !names.good() )
-  {
-    Log::get().warn( "Sequence list not found: " + path );
-  }
-  std::string line, id;
-  list.clear();
-  while ( std::getline( names, line ) )
-  {
-    if ( line.empty() || line[0] == '#' )
-    {
-      continue;
-    }
-    if ( line[0] != 'A' )
-    {
-      Log::get().error( "error parsing OEIS line: " + line, true );
-    }
-    id = "";
-    for ( char ch : line )
-    {
-      if ( ch == ':' || ch == ';' || ch == ' ' || ch == '\t' || ch == '\n' )
-      {
-        break;
-      }
-      id += ch;
-    }
-    list.insert( OeisSequence( id ).id );
-  }
-  Log::get().debug( "Finished loading of " + path + " with " + std::to_string( list.size() ) + " entries" );
-}
