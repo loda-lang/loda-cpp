@@ -63,6 +63,7 @@ TwitterClient findTwitterClient()
 
 Log::Log()
     : level( Level::INFO ),
+      silent( false ),
       slack_alerts( getEnvFlag( "LODA_SLACK_ALERTS" ) ),
       tweet_alerts( getEnvFlag( "LODA_TWEET_ALERTS" ) ),
       twitter_client( TW_UNKNOWN )
@@ -185,7 +186,7 @@ void Log::alert( const std::string &msg, AlertDetails details )
 
 void Log::log( Level level, const std::string &msg )
 {
-  if ( level < this->level )
+  if ( level < this->level || silent )
   {
     return;
   }
@@ -628,6 +629,6 @@ Random::Random()
 {
   std::random_device dev;
   auto seed = dev();
-  Log::get().info( "Initializing random generator using seed " + std::to_string( seed ) );
   gen.seed( seed );
+  Log::get().info( "Initialized random number generator using seed " + std::to_string( seed ) );
 }

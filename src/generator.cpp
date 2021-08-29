@@ -380,8 +380,8 @@ MultiGenerator::MultiGenerator( const Settings &settings, const Stats& stats, bo
       break;
     }
     Log::get().info(
-        "Initialized " + std::to_string( generators.size() ) + " generators (profile: '" + config.name
-            + "', overwrite: " + overwrite + ")" );
+        "Initialized " + std::to_string( generators.size() ) + " generators (profile: " + config.name + ", overwrite: "
+            + overwrite + ")" );
   }
 }
 

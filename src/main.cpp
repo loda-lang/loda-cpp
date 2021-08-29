@@ -143,6 +143,7 @@ int main( int argc, char *argv[] )
     }
     else if ( cmd == "generate" || cmd == "gen" )
     {
+      Log::get().silent = true;
       OeisManager manager( settings );
       MultiGenerator multi_generator( settings, manager.getStats(), false );
       auto program = multi_generator.getGenerator()->generateProgram();

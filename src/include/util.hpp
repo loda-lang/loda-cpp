@@ -40,6 +40,7 @@ public:
   void alert( const std::string &msg, AlertDetails details = AlertDetails() );
 
   Level level;
+  bool silent;
   bool slack_alerts;
   bool tweet_alerts;
 
