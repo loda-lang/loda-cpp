@@ -37,6 +37,8 @@ OeisManager::OeisManager( const Settings &settings, bool force_overwrite, const 
       stats_loaded( false ),
       stats_home( stats_home.empty() ? (getLodaHome() + "stats") : stats_home ) // no trailing / here
 {
+  std::random_device rand;
+  gen.seed( rand() );
 }
 
 void OeisManager::load()
@@ -51,6 +53,7 @@ void OeisManager::load()
   OeisList::loadList( OeisSequence::getProgramsHome() + "deny.txt", deny_list );
   OeisList::loadList( OeisSequence::getProgramsHome() + "overwrite.txt", overwrite_list );
   OeisList::loadList( OeisSequence::getProgramsHome() + "protect.txt", protect_list );
+  OeisList::loadMap( OeisList::getListsHome() + "invalid_matches.txt", invalid_matches_map );
 
   std::chrono::steady_clock::time_point start_time;
   {
@@ -274,6 +277,13 @@ bool OeisManager::shouldMatch( const OeisSequence& seq ) const
     return false;
   }
   if ( protect_list.find( seq.id ) != protect_list.end() )
+  {
+    return false;
+  }
+
+  // too many invalid matches already?
+  auto it = invalid_matches_map.find( seq.id );
+  if ( it != invalid_matches_map.end() && it->second > 0 && (gen() % it->second) >= 100 ) // magic number
   {
     return false;
   }

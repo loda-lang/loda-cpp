@@ -73,10 +73,12 @@ private:
 
   Optimizer optimizer;
   std::vector<OeisSequence> sequences;
+
   std::unordered_set<size_t> deny_list;
   std::unordered_set<size_t> overwrite_list;
   std::unordered_set<size_t> protect_list;
   std::unordered_set<size_t> ignore_list;
+  std::map<size_t, int64_t> invalid_matches_map;
 
   size_t loaded_count;
   size_t total_count;
@@ -84,5 +86,7 @@ private:
   Stats stats;
   bool stats_loaded;
   std::string stats_home;
+
+  mutable std::mt19937 gen;
 
 };
