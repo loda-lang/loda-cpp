@@ -45,10 +45,10 @@ public:
   class Factory
   {
   public:
-    static Generator::UPtr createGenerator( const Config &config, const Stats &stats, int64_t seed );
+    static Generator::UPtr createGenerator( const Config &config, const Stats &stats );
   };
 
-  Generator( const Config &config, const Stats &stats, int64_t seed );
+  Generator( const Config &config, const Stats &stats );
 
   virtual ~Generator()
   {
@@ -84,15 +84,13 @@ protected:
 
   void ensureMeaningfulLoops( Program &p );
 
-  std::mt19937 gen;
-
 };
 
 class MultiGenerator
 {
 public:
 
-  MultiGenerator( const Settings &settings, const Stats& stats, bool print_info, int64_t seed );
+  MultiGenerator( const Settings &settings, const Stats& stats, bool print_info );
 
   Generator* getGenerator();
 

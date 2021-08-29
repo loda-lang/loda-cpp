@@ -5,9 +5,6 @@
 #include "oeis_manager.hpp"
 #include "util.hpp"
 
-#include <chrono>
-#include <random>
-
 class Test
 {
 public:
@@ -74,6 +71,5 @@ private:
 
   Settings settings;
   OeisManager manager;
-  std::mt19937 gen;
 
 };

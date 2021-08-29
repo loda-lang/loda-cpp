@@ -87,6 +87,4 @@ private:
   bool stats_loaded;
   std::string stats_home;
 
-  mutable std::mt19937 gen;
-
 };

@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <csignal>
+#include <random>
 #include <map>
 #include <string>
 #include <vector>
@@ -154,5 +155,19 @@ private:
   const int64_t target_seconds;
   size_t total_checks;
   size_t next_check;
+
+};
+
+class Random
+{
+public:
+
+  static Random& get();
+
+  std::mt19937 gen;
+
+private:
+
+  Random();
 
 };

@@ -144,8 +144,7 @@ int main( int argc, char *argv[] )
     else if ( cmd == "generate" || cmd == "gen" )
     {
       OeisManager manager( settings );
-      std::random_device rand;
-      MultiGenerator multi_generator( settings, manager.getStats(), false, rand() );
+      MultiGenerator multi_generator( settings, manager.getStats(), false );
       auto program = multi_generator.getGenerator()->generateProgram();
       ProgramUtil::print( program, std::cout );
     }
@@ -163,8 +162,7 @@ int main( int argc, char *argv[] )
     {
       Program program = parser.parse( get_program_path( args.at( 1 ) ) );
       OeisManager manager( settings );
-      std::random_device rand;
-      Mutator mutator( rand() );
+      Mutator mutator;
       manager.load();
       Sequence norm_seq;
       std::stack<Program> progs;

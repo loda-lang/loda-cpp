@@ -84,11 +84,10 @@ void AbstractMatcher<T>::match( const Program &p, const Sequence &norm_seq, seq_
       Program copy = p;
       if ( extend( copy, data.at( id ), reduced.second ) )
       {
-        // Log::get().info( "Potential match for sequence " + std::to_string( id ) );
         result.push_back( std::pair<size_t, Program>( id, copy ) );
-        if ( result.size() >= MAX_NUM_MATCHES )
+        if ( (Random::get().gen() % 10) == 0 ) // magic number
         {
-          // Log::get().warn( "Skipping potential matches for " + norm_seq.to_string() );
+          // avoid to many matches for the same sequence
           break;
         }
       }
@@ -106,7 +105,7 @@ bool AbstractMatcher<T>::shouldMatchSequence( const Sequence &seq ) const
       // Log::get().debug( "Back off matching of already matched sequence " + seq.to_string() );
       return false;
     }
-    if ( has_memory )
+    if ( has_memory && (Random::get().gen() % 10) == 0 ) // magic number
     {
       match_attempts.insert( seq );
     }

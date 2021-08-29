@@ -9,34 +9,34 @@
 #include "semantics.hpp"
 #include "util.hpp"
 
-Generator::UPtr Generator::Factory::createGenerator( const Config &config, const Stats &stats, int64_t seed )
+Generator::UPtr Generator::Factory::createGenerator( const Config &config, const Stats &stats )
 {
   Generator::UPtr generator;
   switch ( config.version )
   {
   case 1:
   {
-    generator.reset( new GeneratorV1( config, stats, seed ) );
+    generator.reset( new GeneratorV1( config, stats ) );
     break;
   }
   case 2:
   {
-    generator.reset( new GeneratorV2( config, stats, seed ) );
+    generator.reset( new GeneratorV2( config, stats ) );
     break;
   }
   case 3:
   {
-    generator.reset( new GeneratorV3( config, stats, seed ) );
+    generator.reset( new GeneratorV3( config, stats ) );
     break;
   }
   case 4:
   {
-    generator.reset( new GeneratorV4( config, stats, seed ) );
+    generator.reset( new GeneratorV4( config, stats ) );
     break;
   }
   case 5:
   {
-    generator.reset( new GeneratorV5( config, stats, seed ) );
+    generator.reset( new GeneratorV5( config, stats ) );
     break;
   }
   default:
@@ -48,11 +48,10 @@ Generator::UPtr Generator::Factory::createGenerator( const Config &config, const
   return generator;
 }
 
-Generator::Generator( const Config &config, const Stats &stats, int64_t seed )
+Generator::Generator( const Config &config, const Stats &stats )
     : config( config ),
       found_programs( stats.found_programs )
 {
-  gen.seed( seed );
   metric_labels =
   {
     { "version", std::to_string( config.version )},
@@ -169,9 +168,9 @@ void Generator::fixSingularities( Program &p )
       if ( p.ops[i].source.type == Operand::Type::CONSTANT
           && (p.ops[i].source.value < Number( 2 ) || Number( max_exponent ) < p.ops[i].source.value) )
       {
-        p.ops[i].source.value = (gen() % (max_exponent - 2)) + 2;
+        p.ops[i].source.value = (Random::get().gen() % (max_exponent - 2)) + 2;
       }
-      else if ( p.ops[i].source.type == Operand::Type::DIRECT && gen() % 5 > 0 ) // magic number
+      else if ( p.ops[i].source.type == Operand::Type::DIRECT && Random::get().gen() % 5 > 0 ) // magic number
       {
         p.ops[i].source.type = Operand::Type::CONSTANT;
       }
@@ -199,7 +198,7 @@ void Generator::fixCalls( Program &p )
         int64_t id;
         do
         {
-          id = gen() % found_programs.size();
+          id = Random::get().gen() % found_programs.size();
         } while ( !found_programs[id] );
         op.source = Operand( Operand::Type::CONSTANT, Number( id ) );
       }
@@ -228,7 +227,7 @@ void Generator::ensureSourceNotOverwritten( Program &p )
       }
       if ( resets )
       {
-        op.target.value = (gen() % 4) + 1;
+        op.target.value = (Random::get().gen() % 4) + 1;
       }
     }
     else if ( op.source.type == Operand::Type::DIRECT && op.source.value == Program::INPUT_CELL )
@@ -256,7 +255,7 @@ void Generator::ensureTargetWritten( Program &p, const std::vector<int64_t> &wri
     int64_t source = Program::INPUT_CELL;
     if ( !written_cells.empty() )
     {
-      source = written_cells.at( gen() % written_cells.size() );
+      source = written_cells.at( Random::get().gen() % written_cells.size() );
     }
     p.ops.push_back(
         Operation( Operation::Type::MOV, Operand( Operand::Type::DIRECT, Program::OUTPUT_CELL ),
@@ -306,8 +305,8 @@ void Generator::ensureMeaningfulLoops( Program &p )
       {
         Operation dec;
         dec.target = mem;
-        dec.source = Operand( Operand::Type::CONSTANT, (gen() % 9) + 1 );
-        switch ( gen() % 4 )
+        dec.source = Operand( Operand::Type::CONSTANT, (Random::get().gen() % 9) + 1 );
+        switch ( Random::get().gen() % 4 )
         {
         case 0:
           dec.type = Operation::Type::TRN;
@@ -330,7 +329,7 @@ void Generator::ensureMeaningfulLoops( Program &p )
       }
       if ( num_ops < 2 )
       {
-        for ( int64_t j = (gen() % 3) + 3; j > 0; j-- )
+        for ( int64_t j = (Random::get().gen() % 3) + 3; j > 0; j-- )
         {
           auto op = generateOperation();
           if ( op.first.type != Operation::Type::LPB && op.first.type != Operation::Type::LPE )
@@ -348,10 +347,9 @@ void Generator::ensureMeaningfulLoops( Program &p )
   }
 }
 
-MultiGenerator::MultiGenerator( const Settings &settings, const Stats& stats, bool print_info, int64_t seed )
+MultiGenerator::MultiGenerator( const Settings &settings, const Stats& stats, bool print_info )
     : scheduler( 60 ) // 1 minute
 {
-  std::mt19937 gen( seed );
   auto config = ConfigLoader::load( settings );
   configs = config.generators;
   if ( configs.empty() )
@@ -361,9 +359,9 @@ MultiGenerator::MultiGenerator( const Settings &settings, const Stats& stats, bo
   generators.resize( configs.size() );
   for ( size_t i = 0; i < configs.size(); i++ )
   {
-    generators[i] = Generator::Factory::createGenerator( configs[i], stats, gen() );
+    generators[i] = Generator::Factory::createGenerator( configs[i], stats );
   }
-  generator_index = gen() % configs.size();
+  generator_index = Random::get().gen() % configs.size();
 
   // print info
   if ( print_info )

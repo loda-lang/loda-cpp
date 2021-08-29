@@ -37,8 +37,6 @@ OeisManager::OeisManager( const Settings &settings, bool force_overwrite, const 
       stats_loaded( false ),
       stats_home( stats_home.empty() ? (getLodaHome() + "stats") : stats_home ) // no trailing / here
 {
-  std::random_device rand;
-  gen.seed( rand() );
 }
 
 void OeisManager::load()
@@ -283,7 +281,7 @@ bool OeisManager::shouldMatch( const OeisSequence& seq ) const
 
   // too many invalid matches already?
   auto it = invalid_matches_map.find( seq.id );
-  if ( it != invalid_matches_map.end() && it->second > 0 && (gen() % it->second) >= 100 ) // magic number
+  if ( it != invalid_matches_map.end() && it->second > 0 && (Random::get().gen() % it->second) >= 100 ) // magic number
   {
     return false;
   }

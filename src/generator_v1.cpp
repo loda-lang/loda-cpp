@@ -49,8 +49,8 @@ std::discrete_distribution<> constantsDist( const std::vector<Number> &constants
   return std::discrete_distribution<>( p.begin(), p.end() );
 }
 
-GeneratorV1::GeneratorV1( const Config &config, const Stats &stats, int64_t seed )
-    : Generator( config, stats, seed )
+GeneratorV1::GeneratorV1( const Config &config, const Stats &stats )
+    : Generator( config, stats )
 {
   // the post processing adds operations, so we reduce the target length here
   num_operations = std::max<int64_t>( config.length / 2, 1 );
@@ -185,11 +185,11 @@ GeneratorV1::GeneratorV1( const Config &config, const Stats &stats, int64_t seed
 std::pair<Operation, double> GeneratorV1::generateOperation()
 {
   Operation op;
-  op.type = operation_types.at( operation_dist( gen ) );
-  op.target.type = target_operand_types.at( target_type_dist( gen ) );
-  op.target.value = target_value_dist( gen );
-  op.source.type = source_operand_types.at( source_type_dist( gen ) );
-  op.source.value = source_value_dist( gen );
+  op.type = operation_types.at( operation_dist( Random::get().gen ) );
+  op.target.type = target_operand_types.at( target_type_dist( Random::get().gen ) );
+  op.target.value = target_value_dist( Random::get().gen );
+  op.source.type = source_operand_types.at( source_type_dist( Random::get().gen ) );
+  op.source.value = source_value_dist( Random::get().gen );
 
   // check number of operands
   if ( Operation::Metadata::get( op.type ).num_operands < 2 )
@@ -204,7 +204,8 @@ std::pair<Operation, double> GeneratorV1::generateOperation()
   }
 
   // bias for constant loop fragment length
-  if ( op.type == Operation::Type::LPB && op.source.type != Operand::Type::CONSTANT && position_dist( gen ) % 10 > 0 )
+  if ( op.type == Operation::Type::LPB && op.source.type != Operand::Type::CONSTANT
+      && position_dist( Random::get().gen ) % 10 > 0 )
   {
     op.source.type = Operand::Type::CONSTANT;
   }
@@ -212,7 +213,7 @@ std::pair<Operation, double> GeneratorV1::generateOperation()
   // use constants distribution from stats
   if ( op.source.type == Operand::Type::CONSTANT )
   {
-    op.source.value = constants.at( constants_dist( gen ) );
+    op.source.value = constants.at( constants_dist( Random::get().gen ) );
     if ( op.type == Operation::Type::LPB || op.type == Operation::Type::CLR )
     {
       op.source.value = Semantics::mod( Semantics::max( op.source.value, Number::ONE ), 10 ); // magic number
@@ -247,7 +248,7 @@ std::pair<Operation, double> GeneratorV1::generateOperation()
 
   std::pair<Operation, double> next_op;
   next_op.first = op;
-  next_op.second = static_cast<double>( position_dist( gen ) ) / POSITION_RANGE;
+  next_op.second = static_cast<double>( position_dist( Random::get().gen ) ) / POSITION_RANGE;
   return next_op;
 }
 

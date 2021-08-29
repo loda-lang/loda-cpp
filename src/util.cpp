@@ -617,3 +617,17 @@ void AdaptiveScheduler::reset()
   next_check = 1;
   start_time = std::chrono::steady_clock::now();
 }
+
+Random& Random::get()
+{
+  static Random rand;
+  return rand;
+}
+
+Random::Random()
+{
+  std::random_device dev;
+  auto seed = dev();
+  Log::get().info( "Initializing random generator using seed " + std::to_string( seed ) );
+  gen.seed( seed );
+}

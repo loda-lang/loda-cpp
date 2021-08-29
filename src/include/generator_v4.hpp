@@ -27,7 +27,7 @@ class GeneratorV4: public Generator
 {
 public:
 
-  GeneratorV4( const Config &config, const Stats &stats, int64_t seed );
+  GeneratorV4( const Config &config, const Stats &stats );
 
   virtual Program generateProgram() override;
 
@@ -35,7 +35,7 @@ public:
 
 private:
 
-  void init( const Stats &stats, int64_t seed );
+  void init( const Stats &stats );
 
   void load();
 

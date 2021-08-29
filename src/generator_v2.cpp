@@ -3,9 +3,8 @@
 
 #include "stats.hpp"
 
-GeneratorV2::GeneratorV2( const Config &config, const Stats &stats, int64_t seed )
-    :
-    Generator( config, stats, seed )
+GeneratorV2::GeneratorV2( const Config &config, const Stats &stats )
+    : Generator( config, stats )
 {
   size_t i;
   std::vector<double> probs;
@@ -34,15 +33,15 @@ GeneratorV2::GeneratorV2( const Config &config, const Stats &stats, int64_t seed
 std::pair<Operation, double> GeneratorV2::generateOperation()
 {
   std::pair<Operation, double> next_op;
-  next_op.first = operations.at( operation_dist( gen ) );
-  next_op.second = (double) (gen() % 100) / 100.0;
+  next_op.first = operations.at( operation_dist( Random::get().gen ) );
+  next_op.second = (double) (Random::get().gen() % 100) / 100.0;
   return next_op;
 }
 
 Program GeneratorV2::generateProgram()
 {
   Program p;
-  int64_t length = length_dist( gen );
+  int64_t length = length_dist( Random::get().gen );
   generateStateless( p, length );
   applyPostprocessing( p );
   return p;

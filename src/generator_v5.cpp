@@ -6,8 +6,8 @@
 
 #include <algorithm>
 
-GeneratorV5::GeneratorV5( const Config &config, const Stats &stats, int64_t seed )
-    : Generator( config, stats, seed ),
+GeneratorV5::GeneratorV5( const Config &config, const Stats &stats )
+    : Generator( config, stats ),
       blocks( stats.blocks ),
       dist( blocks.rates.begin(), blocks.rates.end() ),
       length( config.length )
@@ -27,9 +27,9 @@ Program GeneratorV5::generateProgram()
   while ( true )
   {
     // randomly inject lpb
-    if ( gen() % 5 == 0 )
+    if ( Random::get().gen() % 5 == 0 ) // magic number
     {
-      int64_t r = gen() % int1.all.size();
+      int64_t r = Random::get().gen() % int1.all.size();
       for ( auto it : int1.all )
       {
         if ( r-- == 0 )
@@ -44,7 +44,7 @@ Program GeneratorV5::generateProgram()
     // choose block
     for ( size_t i = 0; i < 1000; i++ )
     {
-      block = blocks.getBlock( dist( gen ) );
+      block = blocks.getBlock( dist( Random::get().gen ) );
       int2 = Blocks::Interface( block );
       if ( std::includes( int1.all.begin(), int1.all.end(), int2.inputs.begin(), int2.inputs.end() ) )
       {
@@ -60,14 +60,14 @@ Program GeneratorV5::generateProgram()
     }
 
     // randomly inject lpe
-    if ( depth > 0 && gen() % 2 == 0 )
+    if ( depth > 0 && Random::get().gen() % 2 == 0 )
     {
       result.push_back( Operation::Type::LPE, Operand::Type::CONSTANT, 0, Operand::Type::CONSTANT, 0 );
       depth--;
     }
 
     // enough?
-    if ( result.ops.size() >= length && gen() % 2 == 0 )
+    if ( result.ops.size() >= length && Random::get().gen() % 2 == 0 )
     {
       break;
     }

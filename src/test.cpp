@@ -28,8 +28,6 @@
 Test::Test( int64_t seed )
     : manager( settings, false, "/tmp/stats" )
 {
-  Log::get().info( "Initializing tests using random seed " + std::to_string( seed ) );
-  gen.seed( seed );
   OeisSequence::setProgramsHome( "tests/programs" );
 }
 
@@ -153,9 +151,9 @@ void Test::randomNumber( size_t tests )
   for ( size_t i = 0; i < tests; i++ )
   {
     // small number test
-    int64_t v = gen() / 2, w = gen() / 2;
-    if ( gen() % 2 ) v *= -1;
-    if ( gen() % 2 ) w *= -1;
+    int64_t v = Random::get().gen() / 2, w = Random::get().gen() / 2;
+    if ( Random::get().gen() % 2 ) v *= -1;
+    if ( Random::get().gen() % 2 ) w *= -1;
     check_num( Number( v ), std::to_string( v ) );
     Number vv( v );
     Number ww( w );
@@ -181,24 +179,24 @@ void Test::randomNumber( size_t tests )
     // big number test
     if ( USE_BIG_NUMBER )
     {
-      const int64_t num_digits = (gen() % BigNumber::NUM_DIGITS) + 1;
+      const int64_t num_digits = (Random::get().gen() % BigNumber::NUM_DIGITS) + 1;
       char ch;
       str.clear();
       inv.clear();
       nines.clear();
-      if ( gen() % 2 )
+      if ( Random::get().gen() % 2 )
       {
         str += '-';
         inv += '-';
         nines += '-';
       }
-      ch = static_cast<char>( (gen() % 9) );
+      ch = static_cast<char>( (Random::get().gen() % 9) );
       str += '1' + ch;
       inv += '8' - ch;
       nines += '9';
       for ( int64_t j = 1; j < num_digits; j++ )
       {
-        ch = static_cast<char>( (gen() % 10) );
+        ch = static_cast<char>( (Random::get().gen() % 10) );
         str += '0' + ch;
         inv += '9' - ch;
         nines += '9';
@@ -297,23 +295,23 @@ void Test::benchmark()
   std::string str;
   for ( Number& n : ops )
   {
-    if ( gen() % 2 )
+    if ( Random::get().gen() % 2 )
     {
-      num_digits = (gen() % BigNumber::NUM_DIGITS) + 1;
+      num_digits = (Random::get().gen() % BigNumber::NUM_DIGITS) + 1;
     }
     else
     {
-      num_digits = (gen() % BigNumber::NUM_WORD_DIGITS) + 1;
+      num_digits = (Random::get().gen() % BigNumber::NUM_WORD_DIGITS) + 1;
     }
     str.clear();
-    if ( gen() % 2 )
+    if ( Random::get().gen() % 2 )
     {
       str += '-';
     }
-    str += '1' + static_cast<char>( (gen() % 9) );
+    str += '1' + static_cast<char>( (Random::get().gen() % 9) );
     for ( int64_t j = 1; j < num_digits; j++ )
     {
-      str += '0' + static_cast<char>( (gen() % 10) );
+      str += '0' + static_cast<char>( (Random::get().gen() % 10) );
     }
     n = Number( str );
   }
@@ -468,7 +466,7 @@ void Test::iterator( size_t tests )
     config.length = std::max<int64_t>( test / 4, 2 );
     config.max_constant = std::max<int64_t>( test / 4, 2 );
     config.max_index = std::max<int64_t>( test / 4, 2 );
-    GeneratorV1 gen_v1( config, manager.getStats(), gen() );
+    GeneratorV1 gen_v1( config, manager.getStats() );
     Program start, p, q;
     while ( true )
     {
@@ -916,7 +914,7 @@ void Test::minimizer( size_t tests )
 {
   Evaluator evaluator( settings );
   Minimizer minimizer( settings );
-  MultiGenerator multi_generator( settings, manager.getStats(), false, gen() );
+  MultiGenerator multi_generator( settings, manager.getStats(), false );
   Sequence s1, s2, s3;
   Program program, minimized;
   for ( size_t i = 0; i < tests; i++ )
@@ -951,7 +949,7 @@ void Test::miner()
   Log::get().info( "Testing miner" );
   manager.load();
   manager.getFinder();
-  MultiGenerator multi_generator( settings, manager.getStats(), true, gen() );
+  MultiGenerator multi_generator( settings, manager.getStats(), true );
 }
 
 void Test::linearMatcher()

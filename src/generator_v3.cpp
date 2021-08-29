@@ -11,9 +11,8 @@ inline size_t getIndex( size_t pos, size_t len )
   return (((len - 1) * len) / 2) + pos;
 }
 
-GeneratorV3::GeneratorV3( const Config &config, const Stats &stats, int64_t seed )
-    :
-    Generator( config, stats, seed )
+GeneratorV3::GeneratorV3( const Config &config, const Stats &stats )
+    : Generator( config, stats )
 {
   size_t i;
   std::vector<double> probs;
@@ -60,7 +59,7 @@ GeneratorV3::GeneratorV3( const Config &config, const Stats &stats, int64_t seed
 Program GeneratorV3::generateProgram()
 {
   Program p;
-  const size_t len = length_dist( gen );
+  const size_t len = length_dist( Random::get().gen );
   size_t sample, left, right, mid;
   size_t num_loops = 0;
   Operation::Type op_type;
@@ -72,7 +71,7 @@ Program GeneratorV3::generateProgram()
       Log::get().error(
           "Invalid operation distribution at position " + std::to_string( pos ) + "," + std::to_string( len ), true );
     }
-    sample = gen() % op_dist.back().partial_sum;
+    sample = Random::get().gen() % op_dist.back().partial_sum;
     left = 0;
     right = op_dist.size() - 1;
     while ( right - left > 1 )
@@ -115,11 +114,11 @@ std::pair<Operation, double> GeneratorV3::generateOperation()
   std::pair<Operation, double> next_op;
   while ( true )
   {
-    auto &op_dist = operation_dists.at( gen() % operation_dists.size() );
+    auto &op_dist = operation_dists.at( Random::get().gen() % operation_dists.size() );
     if ( !op_dist.empty() )
     {
-      next_op.first = op_dist.at( gen() % op_dist.size() ).operation;
-      next_op.second = (double) (gen() % 100) / 100.0;
+      next_op.first = op_dist.at( Random::get().gen() % op_dist.size() ).operation;
+      next_op.second = (double) (Random::get().gen() % 100) / 100.0;
       return next_op;
     }
   }

@@ -95,8 +95,8 @@ void ProgramState::save( const std::string& path ) const
   f.close();
 }
 
-GeneratorV4::GeneratorV4( const Config &config, const Stats &stats, int64_t seed )
-    : Generator( config, stats, seed ),
+GeneratorV4::GeneratorV4( const Config &config, const Stats &stats )
+    : Generator( config, stats ),
       scheduler( 60 ) // 1 minute
 {
   if ( config.miner.empty() || config.miner == "default" )
@@ -113,7 +113,7 @@ GeneratorV4::GeneratorV4( const Config &config, const Stats &stats, int64_t seed
   std::ifstream nf( numfiles_path );
   if ( !nf.good() )
   {
-    init( stats, seed );
+    init( stats );
   }
   nf.close();
   load();
@@ -126,7 +126,7 @@ std::string GeneratorV4::getPath( int64_t index ) const
   return s.str();
 }
 
-void GeneratorV4::init( const Stats &stats, int64_t seed )
+void GeneratorV4::init( const Stats &stats )
 {
   Log::get().info( "Initializing state of generator v4 in " + home );
 
@@ -143,7 +143,7 @@ void GeneratorV4::init( const Stats &stats, int64_t seed )
     config.length = length;
     config.max_constant = std::min<int64_t>( length / 4, 2 );
     config.max_index = std::min<int64_t>( length / 4, 2 );
-    GeneratorV1 gen_v1( config, stats, seed );
+    GeneratorV1 gen_v1( config, stats );
     for ( int64_t c = 0; c < count; c++ )
     {
       programs.push_back( gen_v1.generateProgram() );
@@ -194,7 +194,7 @@ void GeneratorV4::load()
   do
   {
     state = ProgramState();
-    state.index = (gen() % num_files) + 1;
+    state.index = (Random::get().gen() % num_files) + 1;
     state.load( getPath( state.index ) );
     iterator = Iterator( state.current );
   } while ( state.end < state.current && --attempts );

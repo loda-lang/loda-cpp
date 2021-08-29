@@ -1,10 +1,5 @@
 #include "mutator.hpp"
 
-Mutator::Mutator( int64_t seed )
-{
-  gen.seed( seed );
-}
-
 void Mutator::mutateConstants( const Program &program, size_t num_results, std::stack<Program> &result )
 {
   std::vector<size_t> indices;

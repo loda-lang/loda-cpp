@@ -9,7 +9,6 @@
 #include "program_util.hpp"
 
 #include <fstream>
-#include <random>
 #include <sstream>
 #include <unordered_set>
 
@@ -83,9 +82,8 @@ void Miner::mine()
 {
   manager.load();
 
-  std::random_device rand;
-  MultiGenerator multi_generator( settings, manager.getStats(), true, rand() );
-  Mutator mutator( rand() );
+  MultiGenerator multi_generator( settings, manager.getStats(), true );
+  Mutator mutator;
   std::stack<Program> progs;
   Sequence norm_seq;
   auto &finder = manager.getFinder();
