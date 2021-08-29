@@ -62,6 +62,9 @@ private:
   mutable std::vector<MatcherStats> matcher_stats;
   mutable size_t num_find_attempts;
 
+  std::map<size_t, int64_t> invalid_matches;
+  AdaptiveScheduler scheduler;
+
   // temporary containers (cached as members)
   mutable std::unordered_set<int64_t> tmp_used_cells;
   mutable std::vector<Sequence> tmp_seqs;

@@ -2,6 +2,7 @@
 
 #include "config.hpp"
 #include "number.hpp"
+#include "oeis_list.hpp"
 #include "oeis_sequence.hpp"
 #include "program_util.hpp"
 #include "util.hpp"
@@ -14,7 +15,8 @@ Finder::Finder( const Settings &settings )
     : settings( settings ),
       evaluator( settings ),
       minimizer( settings ),
-      num_find_attempts( 0 )
+      num_find_attempts( 0 ),
+      scheduler( 600 ) // 10 minutes
 {
   auto config = ConfigLoader::load( settings );
   if ( config.matchers.empty() )
@@ -179,7 +181,20 @@ std::pair<bool, Program> Finder::checkAndMinimize( const Program &p, const OeisS
 
 void Finder::notifyInvalidMatch( size_t id )
 {
-  // Log::get().info( "Invalid match for " + std::to_string( id ) );
+  if ( invalid_matches.find( id ) == invalid_matches.end() )
+  {
+    invalid_matches[id] = 1;
+  }
+  else
+  {
+    invalid_matches[id]++;
+  }
+  if ( scheduler.isTargetReached() )
+  {
+    scheduler.reset();
+    Log::get().debug( "Saving " + std::to_string( invalid_matches.size() ) + " invalid matches" );
+    OeisList::mergeMap( "invalid_matches.txt", invalid_matches );
+  }
 }
 
 void Finder::logSummary( size_t loaded_count )
