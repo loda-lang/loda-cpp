@@ -114,7 +114,7 @@ bool Minimizer::minimize( Program &p, size_t num_terms ) const
     {
       // gcd with larger power of small constant? => replace with a loop
       if ( op.type == Operation::Type::GCD && op.target.type == Operand::Type::DIRECT
-          && op.source.type == Operand::Type::CONSTANT )
+          && op.source.type == Operand::Type::CONSTANT && op.source.value != Number::ZERO )
       {
         int64_t base = getPowerOf( op.source.value );
         if ( base != 0 )

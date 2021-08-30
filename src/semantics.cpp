@@ -79,7 +79,7 @@ Number Semantics::pow( const Number& base, const Number& exp )
   }
   else if ( base == -1 )
   {
-    return (mod( exp, 2 ) == Number::ZERO) ? 1 : -1; // (-1)^x
+    return exp.odd() ? -1 : 1; // (-1)^x
   }
   else
   {
@@ -94,7 +94,7 @@ Number Semantics::pow( const Number& base, const Number& exp )
       Number e = exp;
       while ( res != Number::INF && Number::ZERO < e )
       {
-        if ( mod( e, 2 ) == Number::ONE )
+        if ( e.odd() )
         {
           res = mul( res, b );
         }
@@ -147,12 +147,12 @@ Number Semantics::bin( const Number& nn, const Number& kk )
   {
     if ( !(k < Number::ZERO) )
     {
-      sign = (mod( k, 2 ) == Number::ZERO) ? 1 : -1;
+      sign = k.odd() ? -1 : 1;
       n = sub( k, add( n, Number::ONE ) );
     }
     else if ( !(n < k) )
     {
-      sign = (mod( sub( n, k ), 2 ) == Number::ZERO) ? 1 : -1;
+      sign = sub( n, k ).odd() ? -1 : 1;
       auto n_old = n;
       n = sub( Number::ZERO, add( k, Number::ONE ) );
       k = sub( n_old, k );
@@ -226,7 +226,7 @@ Number Semantics::abs( const Number& a )
 
 Number Semantics::getPowerOf( Number value, const Number& base )
 {
-  if ( value == Number::INF || base == Number::INF )
+  if ( value == Number::INF || base == Number::INF || base == Number::ZERO )
   {
     return Number::INF;
   }

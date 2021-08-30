@@ -161,6 +161,15 @@ int64_t BigNumber::getNumUsedWords() const
   return 1;
 }
 
+bool BigNumber::odd() const
+{
+  if ( is_infinite )
+  {
+    return false; // by convention
+  }
+  return (words[0] & 1);
+}
+
 BigNumber BigNumber::minMax( bool is_max )
 {
   BigNumber m;

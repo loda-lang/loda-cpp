@@ -52,6 +52,8 @@ public:
 
   int64_t getNumUsedWords() const;
 
+  bool odd() const;
+
   std::size_t hash() const;
 
   friend std::ostream& operator<<( std::ostream &out, const Number &n );

@@ -414,6 +414,19 @@ int64_t Number::getNumUsedWords() const
   return 1;
 }
 
+bool Number::odd() const
+{
+  if ( big == INF_PTR )
+  {
+    return false; // by convention
+  }
+  if ( big )
+  {
+    return big->odd();
+  }
+  return (value & 1);
+}
+
 std::size_t Number::hash() const
 {
   if ( big == INF_PTR )

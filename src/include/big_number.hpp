@@ -51,6 +51,8 @@ public:
 
   int64_t getNumUsedWords() const;
 
+  bool odd() const;
+
   static BigNumber minMax( bool is_max );
 
 private:
