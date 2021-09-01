@@ -21,11 +21,11 @@ Number Memory::get( int64_t index ) const
   return Number::ZERO;
 }
 
-void Memory::set( int64_t index, const Number& value )
+void Memory::set( int64_t index, Number&& value )
 {
   if ( index >= 0 && index < MEMORY_CACHE_SIZE )
   {
-    cache[index] = value;
+    cache[index] = std::move( value );
   }
   else
   {
@@ -35,7 +35,7 @@ void Memory::set( int64_t index, const Number& value )
     }
     else
     {
-      full[index] = value;
+      full[index] = std::move( value );
     }
   }
 }
@@ -57,7 +57,7 @@ void Memory::clear( int64_t start, int64_t length )
   {
     for ( int64_t i = start; i < end; i++ )
     {
-      set( i, Number::ZERO );
+      set( i, 0 );
     }
   }
   else
@@ -105,7 +105,7 @@ Memory Memory::fragment( int64_t start, int64_t length ) const
     {
       if ( i >= start && i < end )
       {
-        frag.set( i - start, cache[i] );
+        frag.set( i - start, Number( cache[i] ) );
       }
     }
     auto i = full.begin();
@@ -113,7 +113,7 @@ Memory Memory::fragment( int64_t start, int64_t length ) const
     {
       if ( i->first >= start && i->first < end )
       {
-        frag.set( i->first - start, i->second );
+        frag.set( i->first - start, Number( i->second ) );
       }
       i++;
     }

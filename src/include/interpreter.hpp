@@ -21,7 +21,7 @@ public:
 
   Interpreter( const Settings &settings );
 
-  static Number calc( const Operation::Type type, const Number& target, const Number& source );
+  static void calc( const Operation::Type type, Number& target, const Number& source );
 
   size_t run( const Program &p, Memory &mem );
 
@@ -29,7 +29,7 @@ private:
 
   Number get( const Operand& a, const Memory &mem, bool get_address = false ) const;
 
-  void set( const Operand& a, const Number& v, Memory &mem, const Operation &last_op ) const;
+  void set( const Operand& a, Number&& v, Memory &mem, const Operation &last_op ) const;
 
   std::pair<Number, size_t> call( int64_t id, const Number& arg );
 

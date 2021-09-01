@@ -133,6 +133,12 @@ void Test::number()
   check_num( o, "-10" );
   o *= Number( -10 );
   check_num( o, "100" );
+  o = Number( 7 );
+  o += o;
+  check_num( o, "14" );
+  o = Number( 7 );
+  o *= o;
+  check_num( o, "49" );
   std::string nines( BigNumber::NUM_DIGITS, '9' );
   check_num( Number::MAX, nines );
   check_num( Number::MIN, "-" + nines );
@@ -264,7 +270,8 @@ void Test::semantics()
         op2 = read_num( t );
       }
       expected_op = read_num( r );
-      result_op = Interpreter::calc( type, op1, op2 );
+      result_op = op1;
+      Interpreter::calc( type, result_op, op2 );
       if ( result_op != expected_op )
       {
         Log::get().error(
@@ -274,15 +281,27 @@ void Test::semantics()
     }
     if ( type != Operation::Type::MOV )
     {
-      check_inf( Interpreter::calc( type, Number::INF, 0 ) );
-      check_inf( Interpreter::calc( type, Number::INF, 1 ) );
-      check_inf( Interpreter::calc( type, Number::INF, -1 ) );
+      result_op = Number::INF;
+      Interpreter::calc( type, result_op, 0 );
+      check_inf( result_op );
+      result_op = Number::INF;
+      Interpreter::calc( type, result_op, 1 );
+      check_inf( result_op );
+      result_op = Number::INF;
+      Interpreter::calc( type, result_op, -1 );
+      check_inf( result_op );
     }
     if ( meta.num_operands == 2 )
     {
-      check_inf( Interpreter::calc( type, 0, Number::INF ) );
-      check_inf( Interpreter::calc( type, 1, Number::INF ) );
-      check_inf( Interpreter::calc( type, -1, Number::INF ) );
+      result_op = 0;
+      Interpreter::calc( type, result_op, Number::INF );
+      check_inf( result_op );
+      result_op = 1;
+      Interpreter::calc( type, result_op, Number::INF );
+      check_inf( result_op );
+      result_op = -1;
+      Interpreter::calc( type, result_op, Number::INF );
+      check_inf( result_op );
     }
   }
 }

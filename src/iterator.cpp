@@ -19,7 +19,7 @@ bool Iterator::inc( Operand &o, bool direct )
   const int64_t v = o.value.asInt();
   if ( v < 2 || v * 4 < static_cast<int64_t>( size ) )
   {
-    o.value = Semantics::add( o.value, Number::ONE );
+    Semantics::add( o.value, Number::ONE );
     return true;
   }
   switch ( o.type )

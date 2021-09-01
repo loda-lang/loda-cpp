@@ -216,7 +216,8 @@ std::pair<Operation, double> GeneratorV1::generateOperation()
     op.source.value = constants.at( constants_dist( Random::get().gen ) );
     if ( op.type == Operation::Type::LPB || op.type == Operation::Type::CLR )
     {
-      op.source.value = Semantics::mod( Semantics::max( op.source.value, Number::ONE ), 10 ); // magic number
+      Semantics::max( op.source.value, Number::ONE );
+      Semantics::mod( op.source.value, 10 ); // magic number
     }
   }
 
@@ -242,7 +243,7 @@ std::pair<Operation, double> GeneratorV1::generateOperation()
         && (op.type == Operation::Type::MOV || op.type == Operation::Type::DIV || op.type == Operation::Type::DIF
             || op.type == Operation::Type::MOD || op.type == Operation::Type::GCD || op.type == Operation::Type::BIN) )
     {
-      op.target.value = Semantics::add( op.target.value, Number::ONE );
+      Semantics::add( op.target.value, Number::ONE );
     }
   }
 

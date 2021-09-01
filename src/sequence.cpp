@@ -36,10 +36,14 @@ bool Sequence::is_linear( size_t start ) const
   {
     return false;
   }
-  auto d = Semantics::sub( (*this)[start + 1], (*this)[start] );
+  Number d = (*this)[start + 1];
+  Semantics::sub( d, (*this)[start] );
+  Number e;
   for ( size_t i = start + 2; i < size(); ++i )
   {
-    if ( Semantics::add( (*this)[i - 1], d ) != (*this)[i] )
+    e = (*this)[i - 1];
+    Semantics::add( e, d );
+    if ( e != (*this)[i] )
     {
       return false;
     }

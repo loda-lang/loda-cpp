@@ -16,7 +16,7 @@ public:
 
   Number get( int64_t index ) const;
 
-  void set( int64_t index, const Number& value );
+  void set( int64_t index, Number&& value );
 
   void clear();
 

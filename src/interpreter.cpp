@@ -26,65 +26,79 @@ Interpreter::Interpreter( const Settings &settings )
 {
 }
 
-Number Interpreter::calc( const Operation::Type type, const Number& target, const Number& source )
+void Interpreter::calc( const Operation::Type type, Number& target, const Number& source )
 {
   switch ( type )
   {
   case Operation::Type::MOV:
   {
-    return source;
+    target = source;
+    break;
   }
   case Operation::Type::ADD:
   {
-    return Semantics::add( target, source );
+    Semantics::add( target, source );
+    break;
   }
   case Operation::Type::SUB:
   {
-    return Semantics::sub( target, source );
+    Semantics::sub( target, source );
+    break;
   }
   case Operation::Type::TRN:
   {
-    return Semantics::trn( target, source );
+    Semantics::trn( target, source );
+    break;
   }
   case Operation::Type::MUL:
   {
-    return Semantics::mul( target, source );
+    Semantics::mul( target, source );
+    break;
   }
   case Operation::Type::DIV:
   {
-    return Semantics::div( target, source );
+    Semantics::div( target, source );
+    break;
   }
   case Operation::Type::DIF:
   {
-    return Semantics::dif( target, source );
+    Semantics::dif( target, source );
+    break;
   }
   case Operation::Type::MOD:
   {
-    return Semantics::mod( target, source );
+    Semantics::mod( target, source );
+    break;
   }
   case Operation::Type::POW:
   {
-    return Semantics::pow( target, source );
+    Semantics::pow( target, source );
+    break;
   }
   case Operation::Type::GCD:
   {
-    return Semantics::gcd( target, source );
+    Semantics::gcd( target, source );
+    break;
   }
   case Operation::Type::BIN:
   {
-    return Semantics::bin( target, source );
+    Semantics::bin( target, source );
+    break;
   }
   case Operation::Type::CMP:
   {
-    return Semantics::cmp( target, source );
+    Semantics::cmp( target, source );
+    break;
   }
   case Operation::Type::MIN:
   {
-    return Semantics::min( target, source );
+    Semantics::min( target, source );
+    break;
   }
   case Operation::Type::MAX:
   {
-    return Semantics::max( target, source );
+    Semantics::max( target, source );
+    break;
   }
   case Operation::Type::NOP:
   case Operation::Type::DBG:
@@ -95,7 +109,6 @@ Number Interpreter::calc( const Operation::Type type, const Number& target, cons
     Log::get().error( "non-arithmetic operation: " + Operation::Metadata::get( type ).name, true );
     break;
   }
-  return 0;
 }
 
 size_t Interpreter::run( const Program &p, Memory &mem )
@@ -201,7 +214,7 @@ size_t Interpreter::run( const Program &p, Memory &mem )
       target = get( op.target, mem );
       source = get( op.source, mem );
       auto result = call( source.asInt(), target );
-      set( op.target, result.first, mem, op );
+      set( op.target, std::move( result.first ), mem, op );
       cycles += result.second;
       break;
     }
@@ -227,7 +240,8 @@ size_t Interpreter::run( const Program &p, Memory &mem )
       {
         source = get( op.source, mem );
       }
-      set( op.target, calc( op.type, target, source ), mem, op );
+      calc( op.type, target, source );
+      set( op.target, std::move( target ), mem, op );
       break;
     }
     }
@@ -299,7 +313,7 @@ Number Interpreter::get( const Operand& a, const Memory &mem, bool get_address )
   {};
 }
 
-void Interpreter::set( const Operand& a, const Number& v, Memory &mem, const Operation &last_op ) const
+void Interpreter::set( const Operand& a, Number&& v, Memory &mem, const Operation &last_op ) const
 {
   int64_t index = 0;
   switch ( a.type )
@@ -327,7 +341,7 @@ void Interpreter::set( const Operand& a, const Number& v, Memory &mem, const Ope
         "Overflow in cell $" + std::to_string( index ) + "; last operation: "
             + ProgramUtil::operationToString( last_op ) );
   }
-  mem.set( index, v );
+  mem.set( index, std::move( v ) );
 }
 
 std::pair<Number, size_t> Interpreter::call( int64_t id, const Number& arg )
@@ -358,7 +372,7 @@ std::pair<Number, size_t> Interpreter::call( int64_t id, const Number& arg )
   std::pair<Number, size_t> result;
   running_programs.insert( id );
   Memory tmp;
-  tmp.set( Program::INPUT_CELL, arg );
+  tmp.set( Program::INPUT_CELL, Number( arg ) );
   try
   {
     result.second = run( call_program, tmp );

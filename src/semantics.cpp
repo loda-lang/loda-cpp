@@ -2,226 +2,269 @@
 
 #include "number.hpp"
 
-Number Semantics::add( const Number& a, const Number& b )
+#include <iostream>
+
+void Semantics::add( Number& a, const Number& b )
 {
-  auto r = a;
-  r += b;
-  return r;
+  a += b;
 }
 
-Number Semantics::sub( const Number& a, const Number& b )
+void Semantics::sub( Number& a, const Number& b )
 {
-  auto c = b;
-  c.negate();
-  return add( a, c );
+  a.negate();
+  a += b;
+  a.negate();
 }
 
-Number Semantics::trn( const Number& a, const Number& b )
+void Semantics::trn( Number& a, const Number& b )
 {
-  return max( sub( a, b ), Number::ZERO );
+  sub( a, b );
+  max( a, Number::ZERO );
 }
 
-Number Semantics::mul( const Number& a, const Number& b )
+void Semantics::mul( Number& a, const Number& b )
 {
-  auto r = a;
-  r *= b;
-  return r;
+  a *= b;
 }
 
-Number Semantics::div( const Number& a, const Number& b )
+void Semantics::div( Number& a, const Number& b )
 {
-  auto r = a;
-  r /= b;
-  return r;
+  a /= b;
 }
 
-Number Semantics::dif( const Number& a, const Number& b )
+void Semantics::dif( Number& a, const Number& b )
 {
   if ( a == Number::INF || b == Number::INF || b == Number::ZERO )
   {
-    return Number::INF;
-  }
-  const auto d = div( a, b );
-  return (a == mul( b, d )) ? d : a;
-}
-
-Number Semantics::mod( const Number& a, const Number& b )
-{
-  auto r = a;
-  r %= b;
-  return r;
-}
-
-Number Semantics::pow( const Number& base, const Number& exp )
-{
-  if ( base == Number::INF || exp == Number::INF )
-  {
-    return Number::INF;
-  }
-  if ( base == Number::ZERO )
-  {
-    if ( Number::ZERO < exp )
-    {
-      return 0; // 0^(positive number)
-    }
-    else if ( exp == Number::ZERO )
-    {
-      return 1; // 0^0
-    }
-    else
-    {
-      return Number::INF; // 0^(negative number)
-    }
-  }
-  else if ( base == Number::ONE )
-  {
-    return 1; // 1^x is always 1
-  }
-  else if ( base == -1 )
-  {
-    return exp.odd() ? -1 : 1; // (-1)^x
+    a = Number::INF;
   }
   else
   {
-    if ( exp < Number::ZERO )
+    auto e = a;
+    div( e, b );
+    auto f = b;
+    mul( f, e );
+    if ( a == f )
     {
-      return 0;
+      a = e;
+    }
+  }
+}
+
+void Semantics::mod( Number& a, const Number& b )
+{
+  a %= b;
+}
+
+void Semantics::pow( Number& base, const Number& exp )
+{
+  // base is also used to store the result!
+  if ( base == Number::INF || exp == Number::INF )
+  {
+    base = Number::INF;
+  }
+  else if ( base == Number::ZERO )
+  {
+    if ( Number::ZERO < exp )
+    {
+      base = 0; // 0^(positive number)
+    }
+    else if ( exp == Number::ZERO )
+    {
+      base = 1; // 0^0
     }
     else
     {
-      Number res = 1;
+      base = Number::INF; // 0^(negative number)
+    }
+  }
+  else if ( base == -1 )
+  {
+    base = exp.odd() ? -1 : 1; // (-1)^x
+  }
+  else if ( base != Number::ONE ) // 1^x is always 1
+  {
+    if ( exp < Number::ZERO )
+    {
+      base = 0;
+    }
+    else
+    {
       Number b = base;
       Number e = exp;
-      while ( res != Number::INF && Number::ZERO < e )
+      base = 1;
+      while ( base != Number::INF && Number::ZERO < e )
       {
         if ( e.odd() )
         {
-          res = mul( res, b );
+          mul( base, b );
         }
-        e = div( e, 2 );
-        b = mul( b, b );
+        div( e, 2 );
+        mul( b, b );
         if ( b == Number::INF )
         {
-          res = Number::INF;
+          base = Number::INF;
         }
       }
-      return res;
     }
   }
 }
 
-Number Semantics::gcd( const Number& a, const Number& b )
+void Semantics::gcd( Number& a, const Number& b )
 {
   if ( a == Number::INF || b == Number::INF || (a == Number::ZERO && b == Number::ZERO) )
   {
-    return Number::INF;
+    a = Number::INF;
   }
-  auto aa = abs( a );
-  auto bb = abs( b );
-  Number r;
-  while ( bb != Number::ZERO )
+  else
   {
-    r = mod( aa, bb );
-    if ( r == Number::INF )
+    auto c = b;
+    abs( a );
+    abs( c );
+    Number r;
+    while ( c != Number::ZERO )
     {
-      return Number::INF;
+      r = a;
+      mod( r, c );
+      if ( r == Number::INF )
+      {
+        a = Number::INF;
+        return;
+      }
+      a = c;
+      c = r;
     }
-    aa = bb;
-    bb = r;
   }
-  return aa;
 }
 
-Number Semantics::bin( const Number& nn, const Number& kk )
+void Semantics::bin( Number& nn, const Number& kk )
 {
   if ( nn == Number::INF || kk == Number::INF )
   {
-    return Number::INF;
+    nn = Number::INF;
+    return;
   }
   auto n = nn;
   auto k = kk;
 
   // check for negative arguments: https://arxiv.org/pdf/1105.3689.pdf
   Number sign( 1 );
+  Number m;
   if ( n < Number::ZERO ) // Theorem 2.1
   {
     if ( !(k < Number::ZERO) )
     {
       sign = k.odd() ? -1 : 1;
-      n = sub( k, add( n, Number::ONE ) );
+      n += Number::ONE;
+      m = k;
+      Semantics::sub( m, n );
+      n = m;
     }
     else if ( !(n < k) )
     {
-      sign = sub( n, k ).odd() ? -1 : 1;
-      auto n_old = n;
-      n = sub( Number::ZERO, add( k, Number::ONE ) );
-      k = sub( n_old, k );
+      m = n;
+      Semantics::sub( m, k );
+      sign = m.odd() ? -1 : 1;
+      m = n;
+      n = k;
+      n += Number::ONE;
+      n.negate();
+      k = m;
+      // k = sub( n_old, k );
     }
     else
     {
-      return 0;
+      nn = 0;
+      return;
     }
   }
   if ( k < Number::ZERO || n < k ) // 1.2
   {
-    return 0;
+    nn = 0;
+    return;
   }
   Number r( 1 );
-  if ( n < mul( k, 2 ) )
+  auto x = k;
+  mul( x, 2 );
+  if ( n < x )
   {
-    k = sub( n, k );
+    x = n;
+    sub( x, k );
+    k = x;
   }
   if ( k.getNumUsedWords() > 1 )
   {
-    return Number::INF;
+    nn = Number::INF;
+    return;
   }
   auto l = k.asInt();
   for ( int64_t i = 0; i < l; i++ )
   {
-    r = mul( r, sub( n, i ) );
-    r = div( r, add( i, 1 ) );
+    x = n;
+    sub( x, i );
+    r *= x;
+    x = i;
+    x += Number::ONE;
+    r /= x;
     if ( r == Number::INF )
     {
       break;
     }
   }
-  return mul( sign, r );
+  mul( r, sign );
+  nn = r;
 }
 
-Number Semantics::cmp( const Number& a, const Number& b )
+void Semantics::cmp( Number& a, const Number& b )
 {
   if ( a == Number::INF || b == Number::INF )
   {
-    return Number::INF;
+    a = Number::INF;
   }
-  return (a == b) ? 1 : 0;
+  else if ( a == b )
+  {
+    a = 1;
+  }
+  else
+  {
+    a = 0;
+  }
 }
 
-Number Semantics::min( const Number& a, const Number& b )
+void Semantics::min( Number& a, const Number& b )
 {
   if ( a == Number::INF || b == Number::INF )
   {
-    return Number::INF;
+    a = Number::INF;
   }
-  return (a < b) ? a : b;
+  else if ( b < a )
+  {
+    a = b;
+  }
 }
 
-Number Semantics::max( const Number& a, const Number& b )
+void Semantics::max( Number& a, const Number& b )
 {
   if ( a == Number::INF || b == Number::INF )
   {
-    return Number::INF;
+    a = Number::INF;
   }
-  return (a < b) ? b : a;
+  else if ( a < b )
+  {
+    a = b;
+  }
 }
 
-Number Semantics::abs( const Number& a )
+void Semantics::abs( Number& a )
 {
   if ( a == Number::INF )
   {
-    return Number::INF;
+    a = Number::INF;
   }
-  return (a < Number::ZERO) ? mul( a, -1 ) : a;
+  else if ( a < Number::ZERO )
+  {
+    a.negate();
+  }
 }
 
 Number Semantics::getPowerOf( Number value, const Number& base )
@@ -230,11 +273,18 @@ Number Semantics::getPowerOf( Number value, const Number& base )
   {
     return Number::INF;
   }
+  Number x;
   int64_t result = 0;
-  while ( mod( value, base ) == Number::ZERO )
+  while ( true )
   {
+    x = value;
+    mod( x, base );
+    if ( x == Number::ZERO )
+    {
+      break;
+    }
     result++;
-    value = div( value, base );
+    div( value, base );
   }
   return (value == Number::ONE) ? result : 0;
 }

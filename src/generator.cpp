@@ -313,15 +313,15 @@ void Generator::ensureMeaningfulLoops( Program &p )
           break;
         case 1:
           dec.type = Operation::Type::DIV;
-          dec.source.value = Semantics::add( dec.source.value, 1 );
+          Semantics::add( dec.source.value, 1 );
           break;
         case 2:
           dec.type = Operation::Type::DIF;
-          dec.source.value = Semantics::add( dec.source.value, 1 );
+          Semantics::add( dec.source.value, 1 );
           break;
         case 3:
           dec.type = Operation::Type::MOD;
-          dec.source.value = Semantics::add( dec.source.value, 1 );
+          Semantics::add( dec.source.value, 1 );
           break;
         }
         p.ops.insert( p.ops.begin() + i, dec );

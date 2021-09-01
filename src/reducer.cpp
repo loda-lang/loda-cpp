@@ -26,7 +26,7 @@ Number Reducer::truncate( Sequence &seq )
   {
     for ( size_t i = 0; i < seq.size(); i++ )
     {
-      seq[i] = Semantics::sub( seq[i], min );
+      Semantics::sub( seq[i], min );
     }
   }
   return min;
@@ -41,11 +41,12 @@ Number Reducer::shrink( Sequence &seq )
     {
       if ( factor == Number::INF )
       {
-        factor = Semantics::abs( seq[i] );
+        factor = seq[i];
+        Semantics::abs( factor );
       }
       else if ( factor != Number::ONE )
       {
-        factor = Semantics::gcd( factor, Semantics::abs( seq[i] ) );
+        Semantics::gcd( factor, seq[i] );
       }
     }
   }
@@ -57,7 +58,7 @@ Number Reducer::shrink( Sequence &seq )
   {
     for ( size_t i = 0; i < seq.size(); i++ )
     {
-      seq[i] = Semantics::div( seq[i], factor );
+      Semantics::div( seq[i], factor );
     }
   }
   return factor;
@@ -81,7 +82,8 @@ delta_t Reducer::delta( Sequence &seq, int64_t max_delta )
       Number p = (j == 0) ? Number::ZERO : seq[j - 1];
       if ( !(seq[j] < p) )
       {
-        next[j] = Semantics::sub( seq[j], p );
+        next[j] = seq[j];
+        Semantics::sub( next[j], p );
         if ( p != 0 )
         {
           same = false;
@@ -115,9 +117,12 @@ int64_t Reducer::digit( Sequence &seq, int64_t num_digits )
 {
   std::vector<size_t> count;
   count.resize( num_digits, 0 );
+  Number tmp;
   for ( auto& n : seq )
   {
-    count[((Semantics::mod( n, num_digits )).asInt() + num_digits) % num_digits]++;
+    tmp = n;
+    Semantics::mod( tmp, num_digits );
+    count[(tmp.asInt() + num_digits) % num_digits]++;
   }
   Number index;
   size_t max = 0;
@@ -132,7 +137,10 @@ int64_t Reducer::digit( Sequence &seq, int64_t num_digits )
   const Number d( num_digits );
   for ( int64_t i = 0; i < static_cast<int64_t>( seq.size() ); i++ )
   {
-    seq[i] = Semantics::mod( Semantics::add( Semantics::mod( Semantics::sub( seq[i], index ), d ), d ), d );
+    Semantics::sub( seq[i], index );
+    Semantics::mod( seq[i], d );
+    Semantics::add( seq[i], d );
+    Semantics::mod( seq[i], d );
   }
 //  Log::get().info(
 //      "Reduced sequence to " + seq.to_string() + " using num_digits=" + std::to_string( num_digits ) + ", offset="

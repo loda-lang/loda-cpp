@@ -26,18 +26,22 @@ bool Extender::linear1( Program &p, line_t inverse, line_t target )
   }
   if ( inverse.offset != Number::ZERO )
   {
-    add_or_sub( p, Semantics::sub( Number::ZERO, inverse.offset ) );
+    auto o = inverse.offset;
+    o.negate();
+    add_or_sub( p, o );
   }
-  if ( Number::ONE < inverse.factor && Number::ONE < target.factor
-      && Semantics::mod( target.factor, inverse.factor ) == Number::ZERO )
+  auto m = target.factor;
+  Semantics::mod( m, inverse.factor );
+  if ( Number::ONE < inverse.factor && Number::ONE < target.factor && m == Number::ZERO )
   {
-    target.factor = Semantics::div( target.factor, inverse.factor );
+    Semantics::div( target.factor, inverse.factor );
     inverse.factor = Number::ONE; // order is important!!
   }
-  if ( Number::ONE < inverse.factor && Number::ONE < target.factor
-      && Semantics::mod( inverse.factor, target.factor ) == Number::ZERO )
+  m = inverse.factor;
+  Semantics::mod( m, target.factor );
+  if ( Number::ONE < inverse.factor && Number::ONE < target.factor && m == Number::ZERO )
   {
-    inverse.factor = Semantics::div( inverse.factor, target.factor );
+    Semantics::div( inverse.factor, target.factor );
     target.factor = Number::ONE; // order is important!!
   }
   if ( inverse.factor != Number::ONE )
@@ -68,7 +72,9 @@ bool Extender::linear2( Program &p, line_t inverse, line_t target )
     p.push_back( Operation::Type::DIV, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::CONSTANT,
         inverse.factor );
   }
-  add_or_sub( p, Semantics::sub( target.offset, inverse.offset ) );
+  auto m = target.offset;
+  Semantics::sub( m, inverse.offset );
+  add_or_sub( p, m );
   if ( target.factor != Number::ONE )
   {
     p.push_back( Operation::Type::MUL, Operand::Type::DIRECT, Program::OUTPUT_CELL, Operand::Type::CONSTANT,

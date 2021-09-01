@@ -337,6 +337,7 @@ void BigNumber::sub( const BigNumber& n )
 
 BigNumber& BigNumber::operator*=( const BigNumber& n )
 {
+
   if ( is_infinite || n.is_infinite )
   {
     makeInfinite();
@@ -367,6 +368,7 @@ BigNumber& BigNumber::operator*=( const BigNumber& n )
     result.is_negative = (is_negative != n.is_negative);
   }
   (*this) = result;
+
   return (*this);
 }
 

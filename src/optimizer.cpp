@@ -112,6 +112,13 @@ bool Optimizer::removeEmptyLoops( Program &p ) const
   return removed;
 }
 
+Number inlineMod( const Number& a, const Number& b )
+{
+  auto c = a;
+  Semantics::mod( c, b );
+  return c;
+}
+
 bool Optimizer::mergeOps( Program &p ) const
 {
   bool merged = false;
@@ -131,7 +138,7 @@ bool Optimizer::mergeOps( Program &p ) const
         // both add or sub operation?
         if ( o1.type == o2.type && (o1.type == Operation::Type::ADD || o1.type == Operation::Type::SUB) )
         {
-          o1.source.value = Semantics::add( o1.source.value, o2.source.value );
+          Semantics::add( o1.source.value, o2.source.value );
           do_merge = true;
         }
 
@@ -139,7 +146,7 @@ bool Optimizer::mergeOps( Program &p ) const
         else if ( o1.type == o2.type
             && (o1.type == Operation::Type::MUL || o1.type == Operation::Type::DIV || o1.type == Operation::Type::POW) )
         {
-          o1.source.value = Semantics::mul( o1.source.value, o2.source.value );
+          Semantics::mul( o1.source.value, o2.source.value );
           do_merge = true;
         }
 
@@ -147,10 +154,10 @@ bool Optimizer::mergeOps( Program &p ) const
         else if ( (o1.type == Operation::Type::ADD && o2.type == Operation::Type::SUB)
             || (o1.type == Operation::Type::SUB && o2.type == Operation::Type::ADD) )
         {
-          o1.source.value = Semantics::sub( o1.source.value, o2.source.value );
+          Semantics::sub( o1.source.value, o2.source.value );
           if ( o1.source.value < Number::ZERO )
           {
-            o1.source.value = Semantics::sub( Number::ZERO, o1.source.value );
+            o1.source.value.negate();
             o1.type = (o1.type == Operation::Type::ADD) ? Operation::Type::SUB : Operation::Type::ADD;
           }
           do_merge = true;
@@ -166,9 +173,9 @@ bool Optimizer::mergeOps( Program &p ) const
 
         // first mul, second div?
         else if ( o1.type == Operation::Type::MUL && o2.type == Operation::Type::DIV && o1.source.value != Number::ZERO
-            && o2.source.value != Number::ZERO && Semantics::mod( o1.source.value, o2.source.value ) == Number::ZERO )
+            && o2.source.value != Number::ZERO && inlineMod( o1.source.value, o2.source.value ) == Number::ZERO )
         {
-          o1.source.value = Semantics::div( o1.source.value, o2.source.value );
+          Semantics::div( o1.source.value, o2.source.value );
           do_merge = true;
         }
 
@@ -336,14 +343,14 @@ bool Optimizer::simplifyOperations( Program &p, size_t num_initialized_cells ) c
         if ( op.type == Operation::Type::ADD )
         {
           op.type = Operation::Type::SUB;
-          op.source.value = Semantics::sub( Number::ZERO, op.source.value );
+          op.source.value.negate();
           simplified = true;
         }
         // sub $n,-k => add $n,k
         else if ( op.type == Operation::Type::SUB )
         {
           op.type = Operation::Type::ADD;
-          op.source.value = Semantics::sub( Number::ZERO, op.source.value );
+          op.source.value.negate();
           simplified = true;
         }
       }
@@ -601,7 +608,7 @@ bool doPartialEval( Operation &op, std::map<int64_t, Operand> &values )
   {
     if ( target.type == Operand::Type::CONSTANT && (num_ops == 1 || source.type == Operand::Type::CONSTANT) )
     {
-      target.value = Interpreter::calc( op.type, target.value, source.value );
+      Interpreter::calc( op.type, target.value, source.value );
       has_result = true;
     }
     break;

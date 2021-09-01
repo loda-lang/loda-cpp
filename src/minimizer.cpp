@@ -209,7 +209,7 @@ bool Minimizer::removeClr( Program &p ) const
         auto mov = p.ops[i];
         for ( int64_t j = 1; j < length; j++ )
         {
-          mov.target.value = Semantics::add( mov.target.value, Number::ONE );
+          Semantics::add( mov.target.value, Number::ONE );
           p.ops.insert( p.ops.begin() + i + j, mov );
         }
         replaced = true;
