@@ -165,12 +165,15 @@ void Semantics::bin( Number& nn, const Number& kk )
       m = n;
       Semantics::sub( m, k );
       sign = m.odd() ? -1 : 1;
-      m = n;
+
+      auto n_old = n;
       n = k;
       n += Number::ONE;
       n.negate();
+
+      m = n_old;
+      sub( m, k );
       k = m;
-      // k = sub( n_old, k );
     }
     else
     {

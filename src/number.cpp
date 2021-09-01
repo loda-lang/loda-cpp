@@ -152,7 +152,7 @@ bool Number::operator<( const Number&n ) const
       return (*big) < BigNumber( n.value );
     }
   }
-  else if ( n.big )
+  if ( n.big )
   {
     return BigNumber( value ) < (*n.big);
   }
@@ -200,6 +200,7 @@ Number& Number::operator+=( const Number& n )
   {
     return *this;
   }
+  // One of the operands big?
   if ( big )
   {
     if ( n.big )
@@ -212,8 +213,9 @@ Number& Number::operator+=( const Number& n )
       (*big) += BigNumber( n.value );
       checkInfBig();
     }
+    return *this;
   }
-  else if ( n.big )
+  if ( n.big )
   {
     if ( USE_BIG_NUMBER )
     {
@@ -226,13 +228,23 @@ Number& Number::operator+=( const Number& n )
       value = 0;
       big = INF_PTR;
     }
+    return *this;
   }
-  else if ( (value > 0 && n.value > MAX_INT - value) || (value < 0 && n.value < MIN_INT - value) )
+  // None of the operands is big
+  if ( (value > 0 && n.value > MAX_INT - value) || (value < 0 && n.value < MIN_INT - value) )
   {
     if ( USE_BIG_NUMBER )
     {
       convertToBig();
-      (*big) += BigNumber( n.value );
+      // It could be that *this == n. In that case, we just converted n to big as well!
+      if ( n.big )
+      {
+        (*big) += (*n.big);
+      }
+      else
+      {
+        (*big) += BigNumber( n.value );
+      }
       checkInfBig();
     }
     else
@@ -254,7 +266,7 @@ Number& Number::operator*=( const Number& n )
   {
     return *this;
   }
-  // one of the operands big?
+  // One of the operands big?
   if ( big )
   {
     if ( n.big )
@@ -284,7 +296,7 @@ Number& Number::operator*=( const Number& n )
     }
     return *this;
   }
-  // none of the operands is big
+  // None of the operands is big
   if ( n.value != 0 && (MAX_INT / std::abs( n.value ) < std::abs( value )) )
   {
     if ( USE_BIG_NUMBER )
@@ -320,6 +332,7 @@ Number& Number::operator/=( const Number& n )
   {
     return *this;
   }
+  // One of the operands big?
   if ( big )
   {
     if ( n.big )
@@ -332,8 +345,9 @@ Number& Number::operator/=( const Number& n )
       (*big) /= BigNumber( n.value );
       checkInfBig();
     }
+    return *this;
   }
-  else if ( n.big )
+  if ( n.big )
   {
     if ( USE_BIG_NUMBER )
     {
@@ -346,8 +360,10 @@ Number& Number::operator/=( const Number& n )
       value = 0;
       big = INF_PTR;
     }
+    return *this;
   }
-  else if ( n.value == 0 )
+  // None of the operands is big
+  if ( n.value == 0 )
   {
     value = 0;
     big = INF_PTR;
@@ -365,6 +381,7 @@ Number& Number::operator%=( const Number& n )
   {
     return *this;
   }
+  // One of the operands big?
   if ( big )
   {
     if ( n.big )
@@ -377,8 +394,9 @@ Number& Number::operator%=( const Number& n )
       (*big) %= BigNumber( n.value );
       checkInfBig();
     }
+    return *this;
   }
-  else if ( n.big )
+  if ( n.big )
   {
     if ( USE_BIG_NUMBER )
     {
@@ -391,8 +409,10 @@ Number& Number::operator%=( const Number& n )
       value = 0;
       big = INF_PTR;
     }
+    return *this;
   }
-  else if ( n.value == 0 )
+  // None of the operands is big
+  if ( n.value == 0 )
   {
     value = 0;
     big = INF_PTR;
