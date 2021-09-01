@@ -33,6 +33,9 @@ Test::Test( int64_t seed )
 
 void Test::all()
 {
+  benchmark();
+  return;
+
   size_t tests = 100;
 
   // fast tests
@@ -341,15 +344,17 @@ void Test::benchmark()
       continue;
     }
     auto start_time = std::chrono::steady_clock::now();
+    Number tmp;
     for ( size_t i = 0; i + 1 < ops.size(); i++ )
     {
       try
       {
-        Interpreter::calc( type, ops[i], ops[i + 1] );
+        tmp = ops[i];
+        Interpreter::calc( type, tmp, ops[i + 1] );
       }
       catch ( const std::exception& e )
       {
-        // Log::get().warn( std::string( e.what() ) );
+        Log::get().warn( std::string( e.what() ) );
       }
     }
     auto cur_time = std::chrono::steady_clock::now();
