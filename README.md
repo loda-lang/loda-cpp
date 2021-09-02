@@ -2,7 +2,7 @@
 
 LODA is an assembly language, a computational model and a tool for mining integer sequences. You can use it to search programs that calculate integer sequences from the [On-Line Encyclopedia of Integer Sequences®](http://oeis.org/) (OEIS®).
 
-This repository ([loda-cpp](https://github.com/loda-lang/loda-cpp)) contains an implementation of the [LODA language](https://github.com/loda-lang/loda-lang) in C++ including an interpreter, an optimizer and a miner. The miner is used to generate LODA programs for integer sequences from the OEIS which are stored in [loda-programs](https://github.com/loda-lang/loda-programs).
+This repository ([loda-cpp](https://github.com/loda-lang/loda-cpp)) contains an implementation of the [LODA language](https://loda-lang.github.io/spec) in C++ including an interpreter, an optimizer and a miner. The miner is used to generate LODA programs for integer sequences from the OEIS which are stored in [loda-programs](https://github.com/loda-lang/loda-programs).
 
 ## Installation
 
@@ -102,11 +102,11 @@ Check if a program for an OEIS sequence is correct. For interactive output, use 
 
 Run a maintenance for all programs. This checks the correctness of all programs in a random order. The programs must generate the first 100 terms of the sequence. In addition, up to the first 2000 terms are taken into account if the program is correct. Incorrect programs are removed and correct programs are minimized (see the `minimize` command). In addition, the description of the sequence in the comment of the program is updated to the latest version of the OEIS database. The program statistics and program lists are regenerated. 
 
-## Related Repositories
+## Additional Resources
 
-* [loda-programs](https://github.com/loda-lang/loda-programs): Mined LODA programs for OEIS sequences
-* [loda-rust](https://github.com/loda-lang/loda-rust): Interpreter and web interface written in Rust
-* [loda-lang](https://github.com/loda-lang/loda-lang): LODA language specification
+* [loda-lang.github.io](https://loda-lang.github.io): Main home page of LODA.
+* [loda-programs](https://github.com/loda-lang/loda-programs): Repository of mined LODA programs for OEIS sequences.
+* [loda-rust](https://github.com/loda-lang/loda-rust): Interpreter and web interface written in Rust.
 
 ## Development
 
