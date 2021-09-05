@@ -53,6 +53,7 @@ void OeisMaintenance::generateLists()
   Parser parser;
   Program program;
   std::string file_name;
+  std::string buf;
 
   for ( auto &s : manager.sequences )
   {
@@ -75,9 +76,12 @@ void OeisMaintenance::generateLists()
       }
 
       // update program list
-      size_t list_index = (s.id + 1) / list_file_size;
+      const size_t list_index = (s.id + 1) / list_file_size;
+      buf = s.name;
+      std::replace( buf.begin(), buf.end(), '{', ' ' );
+      std::replace( buf.begin(), buf.end(), '}', ' ' );
       list_files.at( list_index ) << "* [" << s.id_str() << "](https://oeis.org/" << s.id_str()
-          << ") ([program](/edit/?oeis=" << s.id << ")): " << s.name << "\n";
+          << ") ([program](/edit/?oeis=" << s.id << ")): " << buf << "\n";
 
       num_processed++;
 
@@ -106,10 +110,9 @@ void OeisMaintenance::generateLists()
       std::ofstream list_file( list_path );
       list_file << "---\n";
       list_file << "layout: page\n";
-      list_file << "title: List " << i << "\n";
-      list_file << "permalink: /list " << i << "/\n";
+      list_file << "title: Programs for " << start.id_str() << "-" << end.id_str() << "\n";
+      list_file << "permalink: /list" << i << "/\n";
       list_file << "---\n";
-      list_file << "# Programs for " << start.id_str() << "-" << end.id_str() << "\n\n";
       list_file
           << "List of integer sequences with links to LODA programs."
           << "\n\n";
