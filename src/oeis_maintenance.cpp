@@ -75,9 +75,9 @@ void OeisMaintenance::generateLists()
       }
 
       // update program list
-      size_t list_index = s.id / list_file_size;
-      list_files.at( list_index ) << "* [" << s.id_str() << "](http://oeis.org/" << s.id_str() << ") ([program]("
-          << s.dir_str() << "/" << s.id_str() << ".asm)): " << s.name << "\n";
+      size_t list_index = (s.id + 1) / list_file_size;
+      list_files.at( list_index ) << "* [" << s.id_str() << "](https://oeis.org/" << s.id_str()
+          << ") ([program](/edit/?oeis=" << s.id << ")): " << s.name << "\n";
 
       num_processed++;
 
@@ -93,18 +93,25 @@ void OeisMaintenance::generateLists()
   }
 
   // write lists
+  const std::string lists_home = "../loda-lang.github.io/";
+  ensureDir( lists_home );
   for ( size_t i = 0; i < list_files.size(); i++ )
   {
     auto buf = list_files[i].str();
     if ( !buf.empty() )
     {
-      std::string list_path = OeisSequence::getProgramsHome() + "list" + std::to_string( i ) + ".md";
-      OeisSequence start( (i * list_file_size) + 1 );
-      OeisSequence end( (i + 1) * list_file_size );
+      const std::string list_path = lists_home + "list" + std::to_string( i ) + ".markdown";
+      OeisSequence start( std::max<int64_t>( i * list_file_size, 1 ) );
+      OeisSequence end( ((i + 1) * list_file_size) - 1 );
       std::ofstream list_file( list_path );
+      list_file << "---\n";
+      list_file << "layout: page\n";
+      list_file << "title: List " << i << "\n";
+      list_file << "permalink: /list " << i << "/\n";
+      list_file << "---\n";
       list_file << "# Programs for " << start.id_str() << "-" << end.id_str() << "\n\n";
       list_file
-          << "List of integer sequences with links to LODA programs. An _Ln_ program is a LODA program of length _n_."
+          << "List of integer sequences with links to LODA programs."
           << "\n\n";
       list_file << buf;
     }
