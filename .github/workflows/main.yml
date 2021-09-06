@@ -29,6 +29,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build
-        run: cd src && make info && make && cd ..
+        run: cd src && cl /version && make info && make && cd ..
       - name: Test
         run: ./loda test
