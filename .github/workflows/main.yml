@@ -24,3 +24,11 @@ jobs:
         run: cd src && make && cd ..
       - name: Test
         run: ./loda test
+  build-windows:
+    runs-on: windows-2019
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        run: cd src && make && cd ..
+      - name: Test
+        run: ./loda test
