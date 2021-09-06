@@ -28,6 +28,7 @@ jobs:
     runs-on: windows-2019
     steps:
       - uses: actions/checkout@v2
+      - uses: ilammy/msvc-dev-cmd@v1
       - name: Build
         run: cd src && cl /version && make info && make && cd ..
       - name: Test
