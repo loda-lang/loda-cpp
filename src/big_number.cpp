@@ -1,6 +1,7 @@
 #include "big_number.hpp"
 
 #include <limits>
+#include <string>
 #include <vector>
 
 BigNumber::BigNumber()

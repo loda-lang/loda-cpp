@@ -2,6 +2,8 @@
 
 #include "number.hpp"
 
+#include <stdexcept>
+
 const std::array<Operation::Type, 20> Operation::Types = { Operation::Type::NOP, Operation::Type::MOV,
     Operation::Type::ADD, Operation::Type::SUB, Operation::Type::TRN, Operation::Type::MUL, Operation::Type::DIV,
     Operation::Type::DIF, Operation::Type::MOD, Operation::Type::POW, Operation::Type::GCD, Operation::Type::BIN,

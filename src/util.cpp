@@ -9,10 +9,15 @@
 #include <sstream>
 #include <stdexcept>
 #include <stdlib.h>
+
+#ifdef _WIN64
+#include <io.h>
+#else
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#endif
 
 #if __MACH__
 #include <mach/mach.h>
@@ -261,7 +266,12 @@ void Metrics::write( const std::vector<Entry> entries ) const
     Log::get().info( "Publishing metrics to InfluxDB" );
     notified = true;
   }
+
+#ifdef _WIN64
+  const std::string file_name = "loda_metrics_" + std::to_string( tmp_file_id ) + ".txt";
+#else
   const std::string file_name = "/tmp/loda_metrics_" + std::to_string( tmp_file_id ) + ".txt";
+#endif
   std::ofstream out( file_name );
   for ( auto& entry : entries )
   {
@@ -485,15 +495,24 @@ bool isDir( const std::string& path )
   return (stat( path.c_str(), &st ) == 0 && (st.st_mode & S_IFDIR));
 }
 
+// need to do this here because of name conflict with Log
+#ifdef _WIN64
+#include <windows.h>
+#endif
+
 void ensureDir( const std::string &path )
 {
   auto index = path.find_last_of( "/" );
   if ( index != std::string::npos )
   {
     auto dir = path.substr( 0, index );
+#ifdef _WIN64
+    std::replace( dir.begin(), dir.end(), '/', '\\');
+    if ( !CreateDirectory( dir.c_str(), nullptr ) && ERROR_ALREADY_EXISTS != GetLastError() )
+#else
     auto cmd = "mkdir -p " + dir;
-    auto exit_code = system( cmd.c_str() );
-    if ( exit_code != 0 )
+    if ( system( cmd.c_str() ) != 0 )
+#endif
     {
       Log::get().error( "Error creating directory " + dir, true );
     }
@@ -539,6 +558,7 @@ size_t getMemUsage()
     mem_usage = info.resident_size;
   }
 #endif
+  // TODO: memory usage on windows
   return mem_usage;
 }
 
@@ -552,6 +572,7 @@ FolderLock::FolderLock( std::string folder )
   ensureDir( folder );
   lockfile = folder + "lock";
   fd = 0;
+#ifndef _WIN64
   Log::get().debug( "Acquiring lock " + lockfile );
   while ( true )
   {
@@ -564,6 +585,8 @@ FolderLock::FolderLock( std::string folder )
     close( fd );
   }
   Log::get().debug( "Obtained lock " + lockfile );
+#endif
+  // TODO: locks on windows
 }
 
 FolderLock::~FolderLock()
@@ -573,6 +596,7 @@ FolderLock::~FolderLock()
 
 void FolderLock::release()
 {
+#ifndef _WIN64
   if ( fd )
   {
     Log::get().debug( "Releasing lock " + lockfile );
@@ -580,6 +604,8 @@ void FolderLock::release()
     flock( fd, LOCK_UN );
     fd = 0;
   }
+#endif
+  // TODO: locks on windows
 }
 
 AdaptiveScheduler::AdaptiveScheduler( int64_t target_seconds )
