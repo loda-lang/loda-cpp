@@ -586,6 +586,7 @@ FolderLock::~FolderLock()
 
 void FolderLock::release()
 {
+#ifndef _WIN64
   if ( fd )
   {
     Log::get().debug( "Releasing lock " + lockfile );
@@ -593,6 +594,8 @@ void FolderLock::release()
     flock( fd, LOCK_UN );
     fd = 0;
   }
+#endif
+  // TODO: locks on windows
 }
 
 AdaptiveScheduler::AdaptiveScheduler( int64_t target_seconds )
