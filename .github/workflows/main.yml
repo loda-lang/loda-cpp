@@ -30,6 +30,6 @@ jobs:
       - uses: actions/checkout@v2
       - uses: ilammy/msvc-dev-cmd@v1
       - name: Build
-        run: cd src && make info && make && cd ..
+        run: cd src && nmake.exe /F Makefile.windows && cd ..
       - name: Test
         run: ./loda test

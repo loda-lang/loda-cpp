@@ -1,0 +1,27 @@
+CXXFLAGS=/Iinclude /Iexternal
+
+SRC_DIR=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+OBJS=big_number.o blocks.o config.o evaluator.o extender.o external/jute.o finder.o generator.o generator_v1.o generator_v2.o generator_v3.o generator_v4.o generator_v5.o interpreter.o iterator.o main.o matcher.o memory.o miner.o minimizer.o mutator.o number.o oeis_list.o oeis_manager.o oeis_maintenance.o oeis_sequence.o optimizer.o parser.o program.o program_util.o reducer.o semantics.o sequence.o stats.o test.o util.o
+LIBS=
+
+loda: external/jute.h external/jute.cpp $(OBJS)
+	$(CXX) /out:loda.exe $(OBJS) $(LIBS)
+	cp loda.exe ../loda.exe
+
+external/jute.h:
+	mkdir -p external && curl -sS -o external/jute.h https://raw.githubusercontent.com/amir-s/jute/master/jute.h
+
+external/jute.cpp:
+	mkdir -p external && curl -sS -o external/jute.cpp https://raw.githubusercontent.com/amir-s/jute/master/jute.cpp
+
+clean:
+	del $(OBJS) loda ../loda external
+
+test: loda
+	cd .. && ./loda test
+
+info:
+	pwd
+	$(CXX) --version
+
+all: test
