@@ -4,7 +4,7 @@ SRCS=big_number.cpp blocks.cpp config.cpp evaluator.cpp extender.cpp external/ju
 
 loda: external/jute.h external/jute.cpp $(SRCS)
 	cl /EHsc /Feloda.exe $(CXXFLAGS) $(SRCS)
-	cp loda.exe ../loda.exe
+	copy loda.exe ..
 
 external/jute.h:
 	@if not exist external mkdir external
