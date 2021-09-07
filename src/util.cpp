@@ -12,7 +12,6 @@
 
 #ifdef _WIN64
 #include <io.h>
-#include <windows.h>
 #else
 #include <sys/file.h>
 #include <sys/stat.h>
@@ -495,6 +494,10 @@ bool isDir( const std::string& path )
   struct stat st;
   return (stat( path.c_str(), &st ) == 0 && (st.st_mode & S_IFDIR));
 }
+
+#ifdef _WIN64
+#include <windows.h>
+#endif
 
 void ensureDir( const std::string &path )
 {
