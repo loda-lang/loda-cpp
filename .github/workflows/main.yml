@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build
-        run: cd src && make info && make info && cd ..
+        run: cd src && make && cd ..
       - name: Test
         run: ./loda test
   build-macos:
@@ -21,7 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build
-        run: cd src && make info && make info && cd ..
+        run: cd src && make && cd ..
       - name: Test
         run: ./loda test
   build-windows:
@@ -32,4 +32,4 @@ jobs:
       - name: Build
         run: cd src && nmake.exe /F Makefile.windows && cd ..
       - name: Test
-        run: ./loda test
+        run: loda.exe test

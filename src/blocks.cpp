@@ -4,6 +4,7 @@
 #include "program_util.hpp"
 
 #include <fstream>
+#include <string>
 
 Blocks::Interface::Interface()
 {

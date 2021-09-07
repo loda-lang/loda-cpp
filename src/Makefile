@@ -18,8 +18,4 @@ clean:
 test: loda
 	cd .. && ./loda test
 
-info:
-	pwd
-	$(CXX) --version
-
 all: test

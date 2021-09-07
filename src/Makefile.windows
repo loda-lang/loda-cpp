@@ -7,21 +7,9 @@ loda: external/jute.h external/jute.cpp $(SRCS)
 	cp loda.exe ../loda.exe
 
 external/jute.h:
-	if not exist external mkdir external
+	@if not exist external mkdir external
 	curl -sS -o external/jute.h https://raw.githubusercontent.com/amir-s/jute/master/jute.h
 
 external/jute.cpp:
-	if not exist external mkdir external
+	@if not exist external mkdir external
 	curl -sS -o external/jute.cpp https://raw.githubusercontent.com/amir-s/jute/master/jute.cpp
-
-clean:
-	del $(OBJS) loda.exe ../loda.exe external
-
-test: loda
-	cd .. && ./loda test
-
-info:
-	pwd
-	$(CXX) --version
-
-all: test

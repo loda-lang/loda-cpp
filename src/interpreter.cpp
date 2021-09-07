@@ -13,7 +13,12 @@
 #include <iostream>
 #include <sstream>
 #include <stack>
+
+#ifdef _WIN64
+#include <io.h>
+#else
 #include <unistd.h>
+#endif
 
 using MemStack = std::stack<Memory>;
 using SizeStack = std::stack<size_t>;
