@@ -1,9 +1,9 @@
 CXXFLAGS=/Iinclude /Iexternal
 
-OBJS=big_number.obj blocks.obj config.obj evaluator.obj extender.obj external/jute.obj finder.obj generator.obj generator_v1.obj generator_v2.obj generator_v3.obj generator_v4.obj generator_v5.obj interpreter.obj iterator.obj main.obj matcher.obj memory.obj miner.obj minimizer.obj mutator.obj number.obj oeis_list.obj oeis_manager.obj oeis_maintenance.obj oeis_sequence.obj optimizer.obj parser.obj program.obj program_util.obj reducer.obj semantics.obj sequence.obj stats.obj test.obj util.obj
+SRCS=big_number.cpp blocks.cpp config.cpp evaluator.cpp extender.cpp external/jute.cpp finder.cpp generator.cpp generator_v1.cpp generator_v2.cpp generator_v3.cpp generator_v4.cpp generator_v5.cpp interpreter.cpp iterator.cpp main.cpp matcher.cpp memory.cpp miner.cpp minimizer.cpp mutator.cpp number.cpp oeis_list.cpp oeis_manager.cpp oeis_maintenance.cpp oeis_sequence.cpp optimizer.cpp parser.cpp program.cpp program_util.cpp reducer.cpp semantics.cpp sequence.cpp stats.cpp test.cpp util.cpp
 
-loda: external/jute.h external/jute.cpp $(OBJS)
-	$(CXX) /out:loda.exe $(OBJS) $(LIBS)
+loda: external/jute.h external/jute.cpp $(SRCS)
+	cl /EHsc /Feloda.exe $(CXXFLAGS) $(SRCS)
 	cp loda.exe ../loda.exe
 
 external/jute.h:
@@ -15,7 +15,7 @@ external/jute.cpp:
 	curl -sS -o external/jute.cpp https://raw.githubusercontent.com/amir-s/jute/master/jute.cpp
 
 clean:
-	del $(OBJS) loda ../loda external
+	del $(OBJS) loda.exe ../loda.exe external
 
 test: loda
 	cd .. && ./loda test
