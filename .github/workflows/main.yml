@@ -31,7 +31,5 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
       - name: Build
         run: cd src && nmake.exe /F Makefile.windows
-      - name: Check
-        run: dir
       - name: Test
-        run: loda test
+        run: .\loda.exe test
