@@ -43,6 +43,8 @@ jobs:
         run: cd src && nmake.exe /F Makefile.windows
       - name: Test
         run: .\loda.exe test
+      - name: Archive
+        uses: actions/upload-artifact@v2
         with:
           name: loda-windows
           path: loda.exe
