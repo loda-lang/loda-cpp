@@ -63,8 +63,8 @@ void Test::all()
   oeisList();
   oeisSeq();
   miner();
-#endif
   iterator( tests );
+#endif
   minimizer( tests );
   benchmark();
 }
