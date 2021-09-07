@@ -1,7 +1,6 @@
 CXXFLAGS=/Iinclude /Iexternal
 
-OBJS=big_number.o blocks.o config.o evaluator.o extender.o external/jute.o finder.o generator.o generator_v1.o generator_v2.o generator_v3.o generator_v4.o generator_v5.o interpreter.o iterator.o main.o matcher.o memory.o miner.o minimizer.o mutator.o number.o oeis_list.o oeis_manager.o oeis_maintenance.o oeis_sequence.o optimizer.o parser.o program.o program_util.o reducer.o semantics.o sequence.o stats.o test.o util.o
-LIBS=
+OBJS=big_number.obj blocks.obj config.obj evaluator.obj extender.obj external/jute.obj finder.obj generator.obj generator_v1.obj generator_v2.obj generator_v3.obj generator_v4.obj generator_v5.obj interpreter.obj iterator.obj main.obj matcher.obj memory.obj miner.obj minimizer.obj mutator.obj number.obj oeis_list.obj oeis_manager.obj oeis_maintenance.obj oeis_sequence.obj optimizer.obj parser.obj program.obj program_util.obj reducer.obj semantics.obj sequence.obj stats.obj test.obj util.obj
 
 loda: external/jute.h external/jute.cpp $(OBJS)
 	$(CXX) /out:loda.exe $(OBJS) $(LIBS)
