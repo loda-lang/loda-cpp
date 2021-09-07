@@ -34,4 +34,4 @@ jobs:
       - name: Check
         run: dir
       - name: Test
-        run: loda.exe test
+        run: loda test
