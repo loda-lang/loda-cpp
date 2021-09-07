@@ -56,17 +56,17 @@ void Test::all()
   knownPrograms();
 
   // slow tests
-  ackermann();
 #ifndef _WIN64
   // TODO: fix tests on windows
+  ackermann();
   stats();
   oeisList();
   oeisSeq();
-  miner();
   iterator( tests );
-#endif
   minimizer( tests );
+  miner();
   benchmark();
+#endif
 }
 
 void check_num( const Number& m, const std::string& s )
