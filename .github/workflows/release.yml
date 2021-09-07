@@ -4,15 +4,27 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-linux:
+  create-release:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
       - name: version
         run: echo "::set-output name=version::$(date +"%-y.%-m.%-d")"
         id: version
-      - name: test
-        run: echo ${{ steps.version.outputs.version }}
+      - name: release
+        uses: actions/create-release@v1
+        id: create-release
+        with:
+          draft: false
+          prerelease: false
+          release_name: v${{ steps.version.outputs.version }}
+          tag_name: ${{ github.ref }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+  build-linux:
+    needs: create-release
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
       - name: Build
         run: cd src && make
       - name: Archive
@@ -21,6 +33,7 @@ jobs:
           name: loda-linux
           path: loda
   build-macos:
+    needs: create-release
     runs-on: macos-11
     steps:
       - uses: actions/checkout@v2
@@ -37,6 +50,7 @@ jobs:
           name: loda-macos
           path: loda
   build-windows:
+    needs: create-release
     runs-on: windows-2019
     steps:
       - uses: actions/checkout@v2
