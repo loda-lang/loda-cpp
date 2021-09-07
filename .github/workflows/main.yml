@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build
-        run: cd src && make info && make && cd ..
+        run: cd src && make info && make info && cd ..
       - name: Test
         run: ./loda test
   build-macos:
@@ -21,7 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build
-        run: cd src && make info && make && cd ..
+        run: cd src && make info && make info && cd ..
       - name: Test
         run: ./loda test
   build-windows:
