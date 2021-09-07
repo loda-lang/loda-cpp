@@ -17,7 +17,7 @@ jobs:
           draft: false
           prerelease: false
           release_name: v${{ steps.version.outputs.version }}
-          tag_name: ${{ github.ref }}
+          tag_name: v${{ steps.version.outputs.version }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
   build-linux:
@@ -25,6 +25,8 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
+      - name: check
+        run: echo ${{ needs.create-release.outputs.version }}
       - name: Build
         run: cd src && make
       - name: Archive
