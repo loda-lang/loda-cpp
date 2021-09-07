@@ -9,10 +9,15 @@
 #include <sstream>
 #include <stdexcept>
 #include <stdlib.h>
+
+#ifdef _WIN64
+#include <io.h>
+#else
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#endif
 
 #if __MACH__
 #include <mach/mach.h>

@@ -15,7 +15,12 @@
 #include <sstream>
 #include <stdio.h>
 #include <stdlib.h>
+
+#ifdef _WIN64
+#include <io.h>
+#else
 #include <unistd.h>
+#endif
 
 void help()
 {
