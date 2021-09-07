@@ -496,7 +496,11 @@ void ensureDir( const std::string &path )
   if ( index != std::string::npos )
   {
     auto dir = path.substr( 0, index );
+#ifdef _WIN64
+    auto cmd = "@if not exist \"" + dir + "\" mkdir \"" + dir + "\"";
+#else
     auto cmd = "mkdir -p " + dir;
+#endif
     auto exit_code = system( cmd.c_str() );
     if ( exit_code != 0 )
     {
@@ -544,6 +548,7 @@ size_t getMemUsage()
     mem_usage = info.resident_size;
   }
 #endif
+  // TODO: memory usage on windows
   return mem_usage;
 }
 
@@ -557,6 +562,7 @@ FolderLock::FolderLock( std::string folder )
   ensureDir( folder );
   lockfile = folder + "lock";
   fd = 0;
+#ifndef _WIN64
   Log::get().debug( "Acquiring lock " + lockfile );
   while ( true )
   {
@@ -569,6 +575,8 @@ FolderLock::FolderLock( std::string folder )
     close( fd );
   }
   Log::get().debug( "Obtained lock " + lockfile );
+#endif
+  // TODO: locks on windows
 }
 
 FolderLock::~FolderLock()
