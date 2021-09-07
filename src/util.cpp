@@ -504,7 +504,7 @@ void ensureDir( const std::string &path )
     auto dir = path.substr( 0, index );
 #ifdef _WIN64
     std::replace( dir.begin(), dir.end(), '/', '\\');
-    if ( !CreateDirectory(OutputFolder.c_str(), nullptr) && ERROR_ALREADY_EXISTS != GetLastError() )
+    if ( !CreateDirectory( dir.c_str(), nullptr ) && ERROR_ALREADY_EXISTS != GetLastError() )
 #else
     auto cmd = "mkdir -p " + dir;
     if ( system( cmd.c_str() ) != 0 )
