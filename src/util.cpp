@@ -12,6 +12,7 @@
 
 #ifdef _WIN64
 #include <io.h>
+#include <windows.h>
 #else
 #include <sys/file.h>
 #include <sys/stat.h>
@@ -266,7 +267,12 @@ void Metrics::write( const std::vector<Entry> entries ) const
     Log::get().info( "Publishing metrics to InfluxDB" );
     notified = true;
   }
+
+#ifdef _WIN64
+  const std::string file_name = "loda_metrics_" + std::to_string( tmp_file_id ) + ".txt";
+#else
   const std::string file_name = "/tmp/loda_metrics_" + std::to_string( tmp_file_id ) + ".txt";
+#endif
   std::ofstream out( file_name );
   for ( auto& entry : entries )
   {
@@ -497,12 +503,12 @@ void ensureDir( const std::string &path )
   {
     auto dir = path.substr( 0, index );
 #ifdef _WIN64
-    auto cmd = "@if not exist \"" + dir + "\" mkdir \"" + dir + "\"";
+    std::replace( dir.begin(), dir.end(), '/', '\\');
+    if ( !CreateDirectory(OutputFolder.c_str(), nullptr) && ERROR_ALREADY_EXISTS != GetLastError() )
 #else
     auto cmd = "mkdir -p " + dir;
+    if ( system( cmd.c_str() ) != 0 )
 #endif
-    auto exit_code = system( cmd.c_str() );
-    if ( exit_code != 0 )
     {
       Log::get().error( "Error creating directory " + dir, true );
     }
