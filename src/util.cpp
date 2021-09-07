@@ -495,6 +495,7 @@ bool isDir( const std::string& path )
   return (stat( path.c_str(), &st ) == 0 && (st.st_mode & S_IFDIR));
 }
 
+// need to do this here because of name conflict with Log
 #ifdef _WIN64
 #include <windows.h>
 #endif
