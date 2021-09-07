@@ -14,10 +14,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: version
-        run: date +"%y.%m.%d"
+        run: echo "::set-output name=version::$(date +"%-y.%-m.%-d")"
         id: version
       - name: test
-        run: echo "${{ steps.version.outputs.version }}"
+        run: echo ${{ steps.version.outputs.version }}
       - name: Build
         run: cd src && make
       - name: Archive
@@ -30,10 +30,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: version
-        run: date +"%y.%m.%d"
+        run: echo "::set-output name=version::$(date +"%-y.%-m.%-d")"
         id: version
       - name: test
-        run: echo "${{ steps.version.outputs.version }}"
+        run: echo ${{ steps.version.outputs.version }}
       - name: Build
         run: cd src && make
       - name: Archive
@@ -46,7 +46,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: version
-        run: date +"%y.%m.%d"
+        run: echo "::set-output name=version::$(date +"%-y.%-m.%-d")"
         id: version
       - name: test
         run: echo "${{ steps.version.outputs.version }}"
