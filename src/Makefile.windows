@@ -8,10 +8,12 @@ loda: external/jute.h external/jute.cpp $(OBJS)
 	cp loda.exe ../loda.exe
 
 external/jute.h:
-	mkdir external && curl -sS -o external/jute.h https://raw.githubusercontent.com/amir-s/jute/master/jute.h
+	if not exist external mkdir external
+	curl -sS -o external/jute.h https://raw.githubusercontent.com/amir-s/jute/master/jute.h
 
 external/jute.cpp:
-	mkdir external && curl -sS -o external/jute.cpp https://raw.githubusercontent.com/amir-s/jute/master/jute.cpp
+	if not exist external mkdir external
+	curl -sS -o external/jute.cpp https://raw.githubusercontent.com/amir-s/jute/master/jute.cpp
 
 clean:
 	del $(OBJS) loda ../loda external
