@@ -94,8 +94,14 @@ int main( int argc, char *argv[] )
     if ( cmd == "help" )
     {
       help();
+      return 0;
     }
-    else if ( cmd == "test" )
+
+#ifdef LODA_VERSION
+    Log::get().info( "LODA v" + std::string( xstr(LODA_VERSION) ) );
+#endif
+
+    if ( cmd == "test" )
     {
       std::random_device rand;
       Test test( rand() );

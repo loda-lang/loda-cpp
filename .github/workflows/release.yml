@@ -27,10 +27,8 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-      - name: CheckVersion
-        run: echo ${{ needs.create-release.outputs.version }}
       - name: Build
-        run: cd src && make
+        run: cd src && make loda LODA_VERSION={{ needs.create-release.outputs.version }}
       - name: Archive
         uses: actions/upload-artifact@v2
         with:
@@ -41,10 +39,8 @@ jobs:
     runs-on: macos-11
     steps:
       - uses: actions/checkout@v2
-      - name: CheckVersion
-        run: echo ${{ needs.create-release.outputs.version }}
       - name: Build
-        run: cd src && make
+        run: cd src && make loda LODA_VERSION={{ needs.create-release.outputs.version }}
       - name: Archive
         uses: actions/upload-artifact@v2
         with:
@@ -55,11 +51,9 @@ jobs:
     runs-on: windows-2019
     steps:
       - uses: actions/checkout@v2
-      - name: CheckVersion
-        run: echo ${{ needs.create-release.outputs.version }}
       - uses: ilammy/msvc-dev-cmd@v1
       - name: Build
-        run: cd src && nmake.exe /F Makefile.windows
+        run: cd src && nmake.exe /F Makefile.windows loda LODA_VERSION={{ needs.create-release.outputs.version }}
       - name: Archive
         uses: actions/upload-artifact@v2
         with:

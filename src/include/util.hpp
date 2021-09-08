@@ -7,6 +7,9 @@
 #include <string>
 #include <vector>
 
+#define xstr(a) ystr(a)
+#define ystr(a) #a
+
 class Log
 {
 public:
@@ -56,7 +59,7 @@ class Http
 {
 public:
 
-  static void get( const std::string& url, const std::string& local_path );
+  static void get( const std::string &url, const std::string &local_path );
 
 };
 
@@ -119,7 +122,7 @@ private:
 
 const std::string& getLodaHome();
 
-bool isDir( const std::string& path );
+bool isDir( const std::string &path );
 
 void ensureDir( const std::string &path );
 
