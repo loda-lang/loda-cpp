@@ -36,6 +36,7 @@ jobs:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
           asset_path: ./loda
           asset_name: loda-linux
+          asset_content_type: application/octet-stream
         env:
           GITHUB_TOKEN: ${{ github.token }}
   build-macos:
@@ -51,6 +52,7 @@ jobs:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
           asset_path: ./loda
           asset_name: loda-macos
+          asset_content_type: application/octet-stream
         env:
           GITHUB_TOKEN: ${{ github.token }}
   build-windows:
@@ -67,5 +69,6 @@ jobs:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
           asset_path: ./loda.exe
           asset_name: loda-windows.exe
+          asset_content_type: application/octet-stream
         env:
           GITHUB_TOKEN: ${{ github.token }}
