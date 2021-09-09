@@ -1,6 +1,10 @@
-CXXFLAGS=/Iinclude /Iexternal /DLODA_VERSION=$(LODA_VERSION)
+CXXFLAGS = /Iinclude /Iexternal
 
-SRCS=big_number.cpp blocks.cpp config.cpp evaluator.cpp extender.cpp external/jute.cpp finder.cpp generator.cpp generator_v1.cpp generator_v2.cpp generator_v3.cpp generator_v4.cpp generator_v5.cpp interpreter.cpp iterator.cpp main.cpp matcher.cpp memory.cpp miner.cpp minimizer.cpp mutator.cpp number.cpp oeis_list.cpp oeis_manager.cpp oeis_maintenance.cpp oeis_sequence.cpp optimizer.cpp parser.cpp program.cpp program_util.cpp reducer.cpp semantics.cpp sequence.cpp stats.cpp test.cpp util.cpp
+ifdef LODA_VERSION
+CXXFLAGS += /DLODA_VERSION=$(LODA_VERSION)
+endif
+
+SRCS = big_number.cpp blocks.cpp config.cpp evaluator.cpp extender.cpp external/jute.cpp finder.cpp generator.cpp generator_v1.cpp generator_v2.cpp generator_v3.cpp generator_v4.cpp generator_v5.cpp interpreter.cpp iterator.cpp main.cpp matcher.cpp memory.cpp miner.cpp minimizer.cpp mutator.cpp number.cpp oeis_list.cpp oeis_manager.cpp oeis_maintenance.cpp oeis_sequence.cpp optimizer.cpp parser.cpp program.cpp program_util.cpp reducer.cpp semantics.cpp sequence.cpp stats.cpp test.cpp util.cpp
 
 loda: external/jute.h external/jute.cpp $(SRCS)
 	cl /EHsc /Feloda.exe $(CXXFLAGS) $(SRCS)

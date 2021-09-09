@@ -29,11 +29,14 @@ jobs:
       - uses: actions/checkout@v2
       - name: Build
         run: cd src && make loda LODA_VERSION=${{ needs.create-release.outputs.version }}
-      - name: Archive
-        uses: actions/upload-artifact@v2
+      - name: Upload
+        uses: actions/upload-release-asset@v1
         with:
-          name: loda-linux
-          path: loda
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./loda
+          asset_name: loda-linux
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
   build-macos:
     needs: create-release
     runs-on: macos-11
@@ -41,11 +44,14 @@ jobs:
       - uses: actions/checkout@v2
       - name: Build
         run: cd src && make loda LODA_VERSION=${{ needs.create-release.outputs.version }}
-      - name: Archive
-        uses: actions/upload-artifact@v2
+      - name: Upload
+        uses: actions/upload-release-asset@v1
         with:
-          name: loda-macos
-          path: loda
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./loda
+          asset_name: loda-macos
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
   build-windows:
     needs: create-release
     runs-on: windows-2019
@@ -54,8 +60,11 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
       - name: Build
         run: cd src && nmake.exe /F Makefile.windows loda LODA_VERSION=${{ needs.create-release.outputs.version }}
-      - name: Archive
-        uses: actions/upload-artifact@v2
+      - name: Upload
+        uses: actions/upload-release-asset@v1
         with:
-          name: loda-windows
-          path: loda.exe
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./loda.exe
+          asset_name: loda-windows.exe
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
