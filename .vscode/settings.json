@@ -1,0 +1,9 @@
+{
+    "C_Cpp.clang_format_style": "Google",
+    "editor.formatOnSave": true,
+    "makefile.makeDirectory": "${workspaceFolder}/src",
+    "makefile.makefilePath": "${workspaceFolder}/src/Makefile",
+    "makefile.configureAfterCommand": false,
+    "makefile.configureOnEdit": false,
+    "makefile.configureOnOpen": false
+}

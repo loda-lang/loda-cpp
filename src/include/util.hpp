@@ -2,30 +2,20 @@
 
 #include <chrono>
 #include <csignal>
-#include <random>
 #include <map>
+#include <random>
 #include <string>
 #include <vector>
 
 #define xstr(a) ystr(a)
 #define ystr(a) #a
 
-class Log
-{
-public:
+class Log {
+ public:
+  enum Level { DEBUG, INFO, WARN, ERROR, ALERT };
 
-  enum Level
-  {
-    DEBUG,
-    INFO,
-    WARN,
-    ERROR,
-    ALERT
-  };
-
-  class AlertDetails
-  {
-  public:
+  class AlertDetails {
+   public:
     std::string text;
     std::string title;
     std::string title_link;
@@ -34,41 +24,33 @@ public:
 
   Log();
 
-  static Log& get();
+  static Log &get();
 
-  void debug( const std::string &msg );
-  void info( const std::string &msg );
-  void warn( const std::string &msg );
-  void error( const std::string &msg, bool throw_ = false );
-  void alert( const std::string &msg, AlertDetails details = AlertDetails() );
+  void debug(const std::string &msg);
+  void info(const std::string &msg);
+  void warn(const std::string &msg);
+  void error(const std::string &msg, bool throw_ = false);
+  void alert(const std::string &msg, AlertDetails details = AlertDetails());
 
   Level level;
   bool silent;
   bool slack_alerts;
   bool tweet_alerts;
 
-private:
-
+ private:
   int twitter_client;
 
-  void log( Level level, const std::string &msg );
-
+  void log(Level level, const std::string &msg);
 };
 
-class Http
-{
-public:
-
-  static void get( const std::string &url, const std::string &local_path );
-
+class Http {
+ public:
+  static void get(const std::string &url, const std::string &local_path);
 };
 
-class Metrics
-{
-public:
-
-  struct Entry
-  {
+class Metrics {
+ public:
+  struct Entry {
     std::string field;
     std::map<std::string, std::string> labels;
     double value;
@@ -76,23 +58,21 @@ public:
 
   Metrics();
 
-  static Metrics& get();
+  static Metrics &get();
 
-  void write( const std::vector<Entry> entries ) const;
+  void write(const std::vector<Entry> entries) const;
 
   const int64_t publish_interval;
 
-private:
+ private:
   std::string host;
   std::string auth;
   int64_t tmp_file_id;
   mutable bool notified;
-
 };
 
-class Settings
-{
-public:
+class Settings {
+ public:
   size_t num_terms;
   int64_t max_memory;
   int64_t max_cycles;
@@ -110,68 +90,58 @@ public:
 
   Settings();
 
-  std::vector<std::string> parseArgs( int argc, char *argv[] );
+  std::vector<std::string> parseArgs(int argc, char *argv[]);
 
   bool hasMemory() const;
 
-private:
-
+ private:
   mutable bool printed_memory_warning;
-
 };
 
-const std::string& getLodaHome();
+const std::string &getLodaHome();
 
-bool isDir( const std::string &path );
+bool isDir(const std::string &path);
 
-void ensureDir( const std::string &path );
+void ensureDir(const std::string &path);
 
-int64_t getFileAgeInDays( const std::string &path );
+int64_t getFileAgeInDays(const std::string &path);
 
 size_t getMemUsage();
 
-class FolderLock
-{
-public:
-  FolderLock( std::string folder );
+class FolderLock {
+ public:
+  FolderLock(std::string folder);
 
   ~FolderLock();
 
   void release();
 
-private:
+ private:
   std::string lockfile;
   int fd;
 };
 
-class AdaptiveScheduler
-{
-public:
-
-  AdaptiveScheduler( int64_t target_seconds );
+class AdaptiveScheduler {
+ public:
+  AdaptiveScheduler(int64_t target_seconds);
 
   bool isTargetReached();
 
   void reset();
 
-private:
+ private:
   std::chrono::time_point<std::chrono::steady_clock> start_time;
   const int64_t target_seconds;
   size_t total_checks;
   size_t next_check;
-
 };
 
-class Random
-{
-public:
-
-  static Random& get();
+class Random {
+ public:
+  static Random &get();
 
   std::mt19937 gen;
 
-private:
-
+ private:
   Random();
-
 };

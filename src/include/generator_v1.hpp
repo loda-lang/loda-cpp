@@ -2,18 +2,15 @@
 
 #include "generator.hpp"
 
-class GeneratorV1: public Generator
-{
-public:
-
-  GeneratorV1( const Config &config, const Stats &stats );
+class GeneratorV1 : public Generator {
+ public:
+  GeneratorV1(const Config &config, const Stats &stats);
 
   virtual Program generateProgram() override;
 
   virtual std::pair<Operation, double> generateOperation() override;
 
-private:
-
+ private:
   int64_t num_operations;
   std::discrete_distribution<> operation_dist;
   std::discrete_distribution<> target_type_dist;
@@ -28,5 +25,4 @@ private:
   std::vector<Operand::Type> target_operand_types;
   std::vector<Number> constants;
   Program program_template;
-
 };

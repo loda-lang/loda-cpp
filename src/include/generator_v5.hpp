@@ -2,20 +2,16 @@
 
 #include "generator.hpp"
 
-class GeneratorV5: public Generator
-{
-public:
-
-  GeneratorV5( const Config &config, const Stats &stats );
+class GeneratorV5 : public Generator {
+ public:
+  GeneratorV5(const Config &config, const Stats &stats);
 
   virtual Program generateProgram() override;
 
   virtual std::pair<Operation, double> generateOperation() override;
 
-private:
-
+ private:
   Blocks blocks;
   std::discrete_distribution<> dist;
   const size_t length;
-
 };
