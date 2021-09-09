@@ -1,8 +1,8 @@
+*.log
 *.o
+/src/external
 /src/loda
-/src/build
 /loda
 /completer.hist
 /.DS_Store
 /.settings
-/.vscode

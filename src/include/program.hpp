@@ -1,58 +1,37 @@
 #pragma once
 
-#include "number.hpp"
-
 #include <array>
 #include <vector>
 
-class Operand
-{
-public:
-  enum class Type
-  {
-    CONSTANT,
-    DIRECT,
-    INDIRECT
-  };
+#include "number.hpp"
 
-  Operand()
-      : Operand( Type::CONSTANT, 0 )
-  {
-  }
+class Operand {
+ public:
+  enum class Type { CONSTANT, DIRECT, INDIRECT };
 
-  Operand( Type t, const Number& v )
-      : type( t ),
-        value( v )
-  {
-  }
+  Operand() : Operand(Type::CONSTANT, 0) {}
 
-  inline bool operator==( const Operand &o ) const
-  {
+  Operand(Type t, const Number &v) : type(t), value(v) {}
+
+  inline bool operator==(const Operand &o) const {
     return (type == o.type) && (value == o.value);
   }
 
-  inline bool operator!=( const Operand &o ) const
-  {
-    return !((*this) == o);
-  }
+  inline bool operator!=(const Operand &o) const { return !((*this) == o); }
 
-  inline bool operator<( const Operand &o ) const
-  {
-    if ( type != o.type ) return type < o.type;
-    if ( value != o.value ) return value < o.value;
-    return false; // equal
+  inline bool operator<(const Operand &o) const {
+    if (type != o.type) return type < o.type;
+    if (value != o.value) return value < o.value;
+    return false;  // equal
   }
 
   Type type;
   Number value;
-
 };
 
-class Operation
-{
-public:
-  enum class Type
-  {
+class Operation {
+ public:
+  enum class Type {
     NOP,
     MOV,
     ADD,
@@ -77,12 +56,11 @@ public:
 
   static const std::array<Type, 20> Types;
 
-  class Metadata
-  {
-  public:
-    static const Metadata& get( Type t );
+  class Metadata {
+   public:
+    static const Metadata &get(Type t);
 
-    static const Metadata& get( const std::string &name );
+    static const Metadata &get(const std::string &name);
 
     Type type;
     std::string name;
@@ -93,40 +71,26 @@ public:
     bool is_writing_target;
   };
 
-  Operation()
-      : Operation( Type::NOP )
-  {
+  Operation() : Operation(Type::NOP) {}
+
+  Operation(Type y)
+      : Operation(y, {Operand::Type::DIRECT, 0}, {Operand::Type::CONSTANT, 0}) {
   }
 
-  Operation( Type y )
-      : Operation( y, { Operand::Type::DIRECT, 0 }, { Operand::Type::CONSTANT, 0 } )
-  {
-  }
+  Operation(Type y, Operand t, Operand s, const std::string &c = "")
+      : type(y), target(t), source(s), comment(c) {}
 
-  Operation( Type y, Operand t, Operand s, const std::string &c = "" )
-      : type( y ),
-        target( t ),
-        source( s ),
-        comment( c )
-  {
-  }
-
-  inline bool operator==( const Operation &op ) const
-  {
+  inline bool operator==(const Operation &op) const {
     return (type == op.type) && (source == op.source) && (target == op.target);
   }
 
-  inline bool operator!=( const Operation &op ) const
-  {
-    return !((*this) == op);
-  }
+  inline bool operator!=(const Operation &op) const { return !((*this) == op); }
 
-  inline bool operator<( const Operation &op ) const
-  {
-    if ( type != op.type ) return type < op.type;
-    if ( target != op.target ) return target < op.target;
-    if ( source != op.source ) return source < op.source;
-    return false; // equal
+  inline bool operator<(const Operation &op) const {
+    if (type != op.type) return type < op.type;
+    if (target != op.target) return target < op.target;
+    if (source != op.source) return source < op.source;
+    return false;  // equal
   }
 
   Type type;
@@ -135,22 +99,22 @@ public:
   std::string comment;
 };
 
-class Program
-{
-public:
-
+class Program {
+ public:
   static constexpr int64_t INPUT_CELL = 0;
   static constexpr int64_t OUTPUT_CELL = 0;
 
-  void push_front( Operation::Type t, Operand::Type tt, const Number& tv, Operand::Type st, const Number& sv );
+  void push_front(Operation::Type t, Operand::Type tt, const Number &tv,
+                  Operand::Type st, const Number &sv);
 
-  void push_back( Operation::Type t, Operand::Type tt, const Number& tv, Operand::Type st, const Number& sv );
+  void push_back(Operation::Type t, Operand::Type tt, const Number &tv,
+                 Operand::Type st, const Number &sv);
 
-  bool operator==( const Program &p ) const;
+  bool operator==(const Program &p) const;
 
-  bool operator!=( const Program &p ) const;
+  bool operator!=(const Program &p) const;
 
-  bool operator<( const Program &p ) const;
+  bool operator<(const Program &p) const;
 
   std::vector<Operation> ops;
 };

@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "name": "Mac",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/loda",
+            "args": [ "test" ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [
+                {
+                    "name": "PATH",
+                    "value": "/bin:/usr/bin:/opt/homebrew/bin"
+                }
+            ],
+            "externalConsole": false,
+            "MIMode": "lldb"
+        }
+    ],
+    "version": "0.2.0"
+}

@@ -1,196 +1,162 @@
 #include "parser.hpp"
 
-#include "number.hpp"
-#include "program.hpp"
-#include "util.hpp"
-
 #include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
 
-Program Parser::parse( const std::string &file )
-{
-  file_in.reset( new std::ifstream( file ) );
-  if ( !file_in->good() )
-  {
-    throw std::runtime_error( "Error opening file: " + file );
+#include "number.hpp"
+#include "program.hpp"
+#include "util.hpp"
+
+Program Parser::parse(const std::string &file) {
+  file_in.reset(new std::ifstream(file));
+  if (!file_in->good()) {
+    throw std::runtime_error("Error opening file: " + file);
   }
-  auto p = parse( *file_in );
+  auto p = parse(*file_in);
   file_in->close();
   return p;
 }
 
-Program Parser::parse( std::istream &in_ )
-{
+Program Parser::parse(std::istream &in_) {
   in = &in_;
   Program p;
   Operation o;
   std::string l;
-  while ( true )
-  {
+  while (true) {
     *in >> std::ws;
     auto c = in->peek();
-    if ( c == EOF )
-    {
+    if (c == EOF) {
       break;
     }
     o = Operation();
-    if ( c != ';' )
-    {
+    if (c != ';') {
       // read normal operation
       o.type = readOperationType();
-      switch ( Operation::Metadata::get( o.type ).num_operands )
-      {
-      case 0:
-        o.target = Operand( Operand::Type::CONSTANT, Number::ZERO );
-        o.source = Operand( Operand::Type::CONSTANT, Number::ZERO );
-        break;
-      case 1:
-        o.target = readOperand();
-        o.source = Operand( Operand::Type::CONSTANT, Number::ZERO );
-        break;
-      case 2:
-        o.target = readOperand();
-        if ( o.type == Operation::Type::LPB ) // lpb has an optional second argument
-        {
-          c = in->peek();
-          while ( c == ' ' || c == '\t' )
+      switch (Operation::Metadata::get(o.type).num_operands) {
+        case 0:
+          o.target = Operand(Operand::Type::CONSTANT, Number::ZERO);
+          o.source = Operand(Operand::Type::CONSTANT, Number::ZERO);
+          break;
+        case 1:
+          o.target = readOperand();
+          o.source = Operand(Operand::Type::CONSTANT, Number::ZERO);
+          break;
+        case 2:
+          o.target = readOperand();
+          if (o.type ==
+              Operation::Type::LPB)  // lpb has an optional second argument
           {
-            in->get();
             c = in->peek();
-          }
-          if ( c == ',' )
-          {
-            readSeparator( ',' );
+            while (c == ' ' || c == '\t') {
+              in->get();
+              c = in->peek();
+            }
+            if (c == ',') {
+              readSeparator(',');
+              o.source = readOperand();
+            } else {
+              o.source =
+                  Operand(Operand::Type::CONSTANT,
+                          Number::ONE);  // default second argument is 1 for lpb
+            }
+          } else {
+            readSeparator(',');
             o.source = readOperand();
           }
-          else
-          {
-            o.source = Operand( Operand::Type::CONSTANT, Number::ONE ); // default second argument is 1 for lpb
-          }
-        }
-        else
-        {
-          readSeparator( ',' );
-          o.source = readOperand();
-        }
-        break;
-      default:
-        throw std::runtime_error( "invalid number of operands" );
+          break;
+        default:
+          throw std::runtime_error("invalid number of operands");
       }
     }
 
     // read comment
     c = in->peek();
-    while ( c == ' ' || c == '\t' )
-    {
+    while (c == ' ' || c == '\t') {
       in->get();
       c = in->peek();
     }
-    if ( c == ';' )
-    {
+    if (c == ';') {
       in->get();
       c = in->peek();
-      while ( c == ' ' || c == '\t' )
-      {
+      while (c == ' ' || c == '\t') {
         in->get();
         c = in->peek();
       }
-      std::getline( *in, l );
-      while ( !l.empty() && l[0] == ';' )
-      {
-        l = l.substr( 1 );
+      std::getline(*in, l);
+      while (!l.empty() && l[0] == ';') {
+        l = l.substr(1);
       }
       o.comment = l;
     }
 
     // add operation to program
-    if ( o.type != Operation::Type::NOP || !o.comment.empty() )
-    {
-      p.ops.push_back( o );
+    if (o.type != Operation::Type::NOP || !o.comment.empty()) {
+      p.ops.push_back(o);
     }
   }
   return p;
 }
 
-void Parser::readSeparator( char separator )
-{
+void Parser::readSeparator(char separator) {
   *in >> std::ws;
-  if ( in->get() != separator )
-  {
-    throw std::runtime_error( "expected separator" );
+  if (in->get() != separator) {
+    throw std::runtime_error("expected separator");
   }
 }
 
-Number Parser::readValue()
-{
+Number Parser::readValue() {
   std::string buf;
-  Number::readIntString( *in, buf );
-  return Number( buf );
+  Number::readIntString(*in, buf);
+  return Number(buf);
 }
 
-std::string Parser::readIdentifier()
-{
+std::string Parser::readIdentifier() {
   std::string s;
   int c;
   *in >> std::ws;
   c = in->get();
-  if ( c == '_' || std::isalpha( c ) )
-  {
-    s += (char) c;
-    while ( true )
-    {
+  if (c == '_' || std::isalpha(c)) {
+    s += (char)c;
+    while (true) {
       c = in->peek();
-      if ( c == '_' || std::isalnum( c ) )
-      {
-        s += (char) c;
+      if (c == '_' || std::isalnum(c)) {
+        s += (char)c;
         in->get();
-      }
-      else
-      {
+      } else {
         break;
       }
     }
-    std::transform( s.begin(), s.end(), s.begin(), ::tolower );
+    std::transform(s.begin(), s.end(), s.begin(), ::tolower);
     return s;
-  }
-  else
-  {
-    throw std::runtime_error( "invalid identifier" );
+  } else {
+    throw std::runtime_error("invalid identifier");
   }
 }
 
-Operand Parser::readOperand()
-{
+Operand Parser::readOperand() {
   *in >> std::ws;
   int c = in->peek();
-  if ( c == '$' )
-  {
+  if (c == '$') {
     in->get();
     c = in->peek();
-    if ( c == '$' )
-    {
+    if (c == '$') {
       in->get();
-      return Operand( Operand::Type::INDIRECT, readValue() );
+      return Operand(Operand::Type::INDIRECT, readValue());
+    } else {
+      return Operand(Operand::Type::DIRECT, readValue());
     }
-    else
-    {
-      return Operand( Operand::Type::DIRECT, readValue() );
-    }
-  }
-  else
-  {
-    return Operand( Operand::Type::CONSTANT, readValue() );
+  } else {
+    return Operand(Operand::Type::CONSTANT, readValue());
   }
 }
 
-Operation::Type Parser::readOperationType()
-{
+Operation::Type Parser::readOperationType() {
   auto name = readIdentifier();
-  if ( name == "cal" ) // backward-compatibility: cal -> seq
+  if (name == "cal")  // backward-compatibility: cal -> seq
   {
     return Operation::Type::SEQ;
   }
-  return Operation::Metadata::get( name ).type;
+  return Operation::Metadata::get(name).type;
 }

@@ -1,23 +1,18 @@
 #pragma once
 
-#include "program.hpp"
-
 #include <memory>
 
-class Parser
-{
-public:
+#include "program.hpp"
 
-  Parser()
-      : in( nullptr )
-  {
-  }
+class Parser {
+ public:
+  Parser() : in(nullptr) {}
 
-  Program parse( const std::string &file );
+  Program parse(const std::string &file);
 
-  Program parse( std::istream &in );
+  Program parse(std::istream &in);
 
-  void readSeparator( char separator );
+  void readSeparator(char separator);
 
   Number readValue();
 
@@ -29,5 +24,4 @@ public:
 
   std::istream *in;
   std::shared_ptr<std::ifstream> file_in;
-
 };

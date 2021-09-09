@@ -10,18 +10,12 @@
 #include "stats.hpp"
 #include "util.hpp"
 
-enum class OverwriteMode
-{
-  NONE,
-  ALL,
-  AUTO
-};
+enum class OverwriteMode { NONE, ALL, AUTO };
 
-class OeisManager
-{
-public:
-
-  OeisManager( const Settings &settings, bool force_overwrite = false, const std::string& stats_home = "" );
+class OeisManager {
+ public:
+  OeisManager(const Settings& settings, bool force_overwrite = false,
+              const std::string& stats_home = "");
 
   void load();
 
@@ -31,40 +25,38 @@ public:
 
   const Stats& getStats();
 
-  void setStatsHome( const std::string& home );
+  void setStatsHome(const std::string& home);
 
   Finder& getFinder();
 
-  size_t getTotalCount() const
-  {
-    return total_count;
-  }
+  size_t getTotalCount() const { return total_count; }
 
-  std::pair<bool, bool> updateProgram( size_t id, const Program &p );
+  std::pair<bool, bool> updateProgram(size_t id, const Program& p);
 
-private:
-
+ private:
   void loadData();
 
   void loadNames();
 
-  bool shouldMatch( const OeisSequence& seq ) const;
+  bool shouldMatch(const OeisSequence& seq) const;
 
   void update();
 
-  void generateStats( int64_t age_in_days );
+  void generateStats(int64_t age_in_days);
 
-  void addSeqComments( Program& p ) const;
+  void addSeqComments(Program& p) const;
 
-  void dumpProgram( size_t id, Program p, const std::string &file ) const;
+  void dumpProgram(size_t id, Program p, const std::string& file) const;
 
-  void alert( Program p, size_t id, const std::string& prefix, const std::string& color ) const;
+  void alert(Program p, size_t id, const std::string& prefix,
+             const std::string& color) const;
 
-  std::string isOptimizedBetter( Program existing, Program optimized, const OeisSequence &seq );
+  std::string isOptimizedBetter(Program existing, Program optimized,
+                                const OeisSequence& seq);
 
   friend class OeisMaintenance;
 
-  const Settings &settings;
+  const Settings& settings;
   const OverwriteMode overwrite_mode;
   Evaluator evaluator;
 
@@ -86,5 +78,4 @@ private:
   Stats stats;
   bool stats_loaded;
   std::string stats_home;
-
 };

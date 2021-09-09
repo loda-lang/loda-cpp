@@ -1,21 +1,18 @@
 #pragma once
 
+#include <memory>
+
 #include "number.hpp"
 #include "program.hpp"
 #include "stats.hpp"
 #include "util.hpp"
 
-#include <memory>
-
-class Generator
-{
-public:
-
+class Generator {
+ public:
   using UPtr = std::unique_ptr<Generator>;
 
-  class Config
-  {
-  public:
+  class Config {
+   public:
     int64_t version = 1;
     int64_t length = 0;
     int64_t max_constant = 0;
@@ -27,32 +24,24 @@ public:
     std::string miner;
   };
 
-  class GStats
-  {
-  public:
-    GStats()
-        : generated( 0 ),
-          fresh( 0 ),
-          updated( 0 )
-    {
-    }
+  class GStats {
+   public:
+    GStats() : generated(0), fresh(0), updated(0) {}
 
     int64_t generated;
     int64_t fresh;
     int64_t updated;
   };
 
-  class Factory
-  {
-  public:
-    static Generator::UPtr createGenerator( const Config &config, const Stats &stats );
+  class Factory {
+   public:
+    static Generator::UPtr createGenerator(const Config &config,
+                                           const Stats &stats);
   };
 
-  Generator( const Config &config, const Stats &stats );
+  Generator(const Config &config, const Stats &stats);
 
-  virtual ~Generator()
-  {
-  }
+  virtual ~Generator() {}
 
   virtual Program generateProgram() = 0;
 
@@ -66,33 +55,30 @@ public:
 
   GStats stats;
 
-protected:
+ protected:
+  void generateStateless(Program &p, size_t num_operations);
 
-  void generateStateless( Program &p, size_t num_operations );
+  void applyPostprocessing(Program &p);
 
-  void applyPostprocessing( Program &p );
+  std::vector<int64_t> fixCausality(Program &p);
 
-  std::vector<int64_t> fixCausality( Program &p );
+  void fixSingularities(Program &p);
 
-  void fixSingularities( Program &p );
+  void fixCalls(Program &p);
 
-  void fixCalls( Program &p );
+  void ensureSourceNotOverwritten(Program &p);
 
-  void ensureSourceNotOverwritten( Program &p );
+  void ensureTargetWritten(Program &p,
+                           const std::vector<int64_t> &written_cells);
 
-  void ensureTargetWritten( Program &p, const std::vector<int64_t> &written_cells );
-
-  void ensureMeaningfulLoops( Program &p );
-
+  void ensureMeaningfulLoops(Program &p);
 };
 
-class MultiGenerator
-{
-public:
+class MultiGenerator {
+ public:
+  MultiGenerator(const Settings &settings, const Stats &stats, bool print_info);
 
-  MultiGenerator( const Settings &settings, const Stats& stats, bool print_info );
-
-  Generator* getGenerator();
+  Generator *getGenerator();
 
   void next();
 
@@ -100,5 +86,4 @@ public:
   std::vector<Generator::UPtr> generators;
   AdaptiveScheduler scheduler;
   int64_t generator_index;
-
 };
