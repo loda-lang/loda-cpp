@@ -7,7 +7,7 @@
 
 class Test {
  public:
-  Test(int64_t seed);
+  Test();
 
   void all();
 

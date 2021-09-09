@@ -3,7 +3,7 @@
         {
             "name": "Mac",
             "includePath": [
-                "src/include"
+                "${workspaceFolder}/src/include"
             ],
             "cppStandard": "c++11",
             "configurationProvider": "ms-vscode.makefile-tools"

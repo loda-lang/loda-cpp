@@ -25,7 +25,7 @@
 #include "semantics.hpp"
 #include "stats.hpp"
 
-Test::Test(int64_t seed)
+Test::Test()
 #ifdef _WIN64
     : manager(settings, false, "stats")
 #else
