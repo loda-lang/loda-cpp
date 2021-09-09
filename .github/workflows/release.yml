@@ -22,6 +22,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
     outputs:
       version: ${{ steps.generate-version.outputs.version }}
+      upload_url: ${{ steps.create-release.outputs.upload_url }}
   build-linux:
     needs: create-release
     runs-on: ubuntu-20.04
