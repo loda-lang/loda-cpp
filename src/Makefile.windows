@@ -1,7 +1,7 @@
 CXXFLAGS = /Iinclude /Iexternal
 
 !IFDEF LODA_VERSION
-CXXFLAGS += /DLODA_VERSION=$(LODA_VERSION)
+CXXFLAGS = $(CXXFLAGS) /DLODA_VERSION=$(LODA_VERSION)
 !ENDIF
 
 SRCS = big_number.cpp blocks.cpp config.cpp evaluator.cpp extender.cpp external/jute.cpp finder.cpp generator.cpp generator_v1.cpp generator_v2.cpp generator_v3.cpp generator_v4.cpp generator_v5.cpp interpreter.cpp iterator.cpp main.cpp matcher.cpp memory.cpp miner.cpp minimizer.cpp mutator.cpp number.cpp oeis_list.cpp oeis_manager.cpp oeis_maintenance.cpp oeis_sequence.cpp optimizer.cpp parser.cpp program.cpp program_util.cpp reducer.cpp semantics.cpp sequence.cpp stats.cpp test.cpp util.cpp
