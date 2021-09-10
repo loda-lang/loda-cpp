@@ -102,12 +102,13 @@ size_t getMemUsage() {
     mem_usage = (size_t)(rss) * (size_t)(sysconf(_SC_PAGE_SIZE));
   }
 #elif __MACH__
-  mach_msg_type_number_t cnt = MACH_TASK_BASIC_INFO_COUNT;
-  mach_task_basic_info info;
-  if (task_info(mach_task_self(), MACH_TASK_BASIC_INFO,
-                reinterpret_cast<task_info_t>(&info), &cnt) == KERN_SUCCESS) {
-    mem_usage = info.resident_size;
-  }
+  // TODO: this does not return the "private" memory usage which we want
+  // mach_msg_type_number_t cnt = MACH_TASK_BASIC_INFO_COUNT;
+  // mach_task_basic_info info;
+  // if (task_info(mach_task_self(), MACH_TASK_BASIC_INFO,
+  //              reinterpret_cast<task_info_t>(&info), &cnt) == KERN_SUCCESS) {
+  //  mem_usage = info.resident_size;
+  //}
 #endif
   // TODO: memory usage on windows
   return mem_usage;

@@ -18,9 +18,9 @@
 std::string Commands::getVersionInfo() {
 #ifdef LODA_VERSION
   return "LODA v" + std::string(xstr(LODA_VERSION)) +
-         " (see https://loda-lang.org)";
+         ", see https://loda-lang.org";
 #else
-  return "LODA development version (see https://loda-lang.org)";
+  return "LODA development version, see https://loda-lang.org";
 #endif
 }
 
