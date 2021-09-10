@@ -4,7 +4,9 @@
 #include <iomanip>
 #include <sstream>
 
+#include "file.hpp"
 #include "parser.hpp"
+#include "setup.hpp"
 #include "util.hpp"
 
 const size_t OeisSequence::DEFAULT_SEQ_LENGTH = 100;
@@ -15,7 +17,7 @@ std::string OeisSequence::PROGRAMS_HOME;
 
 const std::string& OeisSequence::getOeisHome() {
   // don't remove the trailing /
-  static std::string home = getLodaHome() + "oeis/";
+  static std::string home = Setup::getLodaHome() + "oeis/";
   return home;
 }
 

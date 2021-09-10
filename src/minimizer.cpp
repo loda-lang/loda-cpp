@@ -3,9 +3,11 @@
 #include <fstream>
 
 #include "evaluator.hpp"
+#include "file.hpp"
 #include "optimizer.hpp"
 #include "program_util.hpp"
 #include "semantics.hpp"
+#include "setup.hpp"
 #include "util.hpp"
 
 bool Minimizer::minimize(Program& p, size_t num_terms) const {
@@ -203,7 +205,7 @@ bool Minimizer::optimizeAndMinimize(Program& p, size_t num_reserved_cells,
     // log error and dump program for later analysis
     Log::get().error("Exception during minimization: " + std::string(e.what()),
                      false);
-    std::string f = getLodaHome() + "debug/minimizer/" +
+    std::string f = Setup::getLodaHome() + "debug/minimizer/" +
                     std::to_string(ProgramUtil::hash(p) % 100000) + ".asm";
     ensureDir(f);
     std::ofstream out(f);

@@ -7,10 +7,12 @@
 #include <iostream>
 #include <sstream>
 
+#include "file.hpp"
 #include "generator.hpp"
 #include "generator_v1.hpp"
 #include "parser.hpp"
 #include "program_util.hpp"
+#include "setup.hpp"
 #include "util.hpp"
 
 ProgramState::ProgramState() : index(0), generated(0) {}
@@ -89,7 +91,7 @@ GeneratorV4::GeneratorV4(const Config& config, const Stats& stats)
   }
 
   // no trailing / here
-  home = getLodaHome() + "gen_v4/" + config.miner;
+  home = Setup::getLodaHome() + "gen_v4/" + config.miner;
   numfiles_path = home + "/numfiles.txt";
 
   // obtain lock

@@ -12,12 +12,14 @@
 #include <sstream>
 
 #include "config.hpp"
+#include "file.hpp"
 #include "interpreter.hpp"
 #include "number.hpp"
 #include "oeis_list.hpp"
 #include "optimizer.hpp"
 #include "parser.hpp"
 #include "program_util.hpp"
+#include "setup.hpp"
 #include "stats.hpp"
 #include "util.hpp"
 
@@ -38,7 +40,7 @@ OeisManager::OeisManager(const Settings &settings, bool force_overwrite,
       loaded_count(0),
       total_count(0),
       stats_loaded(false),
-      stats_home(stats_home.empty() ? (getLodaHome() + "stats")
+      stats_home(stats_home.empty() ? (Setup::getLodaHome() + "stats")
                                     : stats_home)  // no trailing / here
 {}
 

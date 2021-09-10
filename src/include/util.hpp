@@ -43,11 +43,6 @@ class Log {
   void log(Level level, const std::string &msg);
 };
 
-class Http {
- public:
-  static void get(const std::string &url, const std::string &local_path);
-};
-
 class Metrics {
  public:
   struct Entry {
@@ -96,29 +91,6 @@ class Settings {
 
  private:
   mutable bool printed_memory_warning;
-};
-
-const std::string &getLodaHome();
-
-bool isDir(const std::string &path);
-
-void ensureDir(const std::string &path);
-
-int64_t getFileAgeInDays(const std::string &path);
-
-size_t getMemUsage();
-
-class FolderLock {
- public:
-  FolderLock(std::string folder);
-
-  ~FolderLock();
-
-  void release();
-
- private:
-  std::string lockfile;
-  int fd;
 };
 
 class AdaptiveScheduler {
