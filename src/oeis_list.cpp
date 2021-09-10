@@ -2,7 +2,9 @@
 
 #include <fstream>
 
+#include "file.hpp"
 #include "oeis_sequence.hpp"
+#include "setup.hpp"
 #include "util.hpp"
 
 std::string OeisList::LISTS_HOME;
@@ -10,7 +12,7 @@ std::string OeisList::LISTS_HOME;
 const std::string& OeisList::getListsHome() {
   if (LISTS_HOME.empty()) {
     // don't remove the trailing /
-    LISTS_HOME = getLodaHome() + "lists/";
+    LISTS_HOME = Setup::getLodaHome() + "lists/";
     ensureDir(LISTS_HOME);
   }
   return LISTS_HOME;

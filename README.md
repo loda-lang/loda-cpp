@@ -33,7 +33,6 @@ Usage:                   loda <command> <options>
   evaluate <file/seq-id> Evaluate a program to a sequence (cf. -t,-b,-s)
   optimize <file>        Optimize a program and print it
   minimize <file>        Minimize a program and print it (cf. -t)
-  generate               Generate a random program and print it
 
 === OEIS commands ===
   mine                   Mine programs for OEIS sequences (cf. -i)
@@ -73,10 +72,6 @@ Optimize a LODA program and print the optimized version. The optimization is bas
 #### minimize (min)
 
 Minimize a LODA program and print the minimized version. The minimization includes an optimization and additionally a brute-force removal of operations based on trial and error. It guarantees that the generated integer sequence is preserved, but only up to the number of terms specified using `-t`. In contrast to optimization, minimization is not guaranteed to be semantics preserving for the entire sequences. In practice, it yields much shorter programs than optimization and we usually apply it with a larger number of terms to increase the probability of correctness.
-
-#### generate (gen)
-
-Generate a random LODA program and print it. Multiple generators are supported and configured in [loda.json](loda.json). The generators use statistics from the existing programs stored. This operation is mainly used for testing the generators and should not be used to generate large amounts of programs.
 
 ### OEIS Commands
 

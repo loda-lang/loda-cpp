@@ -5,10 +5,12 @@
 #include <sstream>
 
 #include "config.hpp"
+#include "file.hpp"
 #include "number.hpp"
 #include "oeis_list.hpp"
 #include "oeis_sequence.hpp"
 #include "program_util.hpp"
+#include "setup.hpp"
 #include "util.hpp"
 
 Finder::Finder(const Settings &settings)
@@ -154,7 +156,8 @@ std::pair<bool, Program> Finder::checkAndMinimize(const Program &p,
                     " generates wrong result after minimization with " +
                     std::to_string(OeisSequence::DEFAULT_SEQ_LENGTH) +
                     " terms");
-    std::string f = getLodaHome() + "debug/minimizer/" + seq.id_str() + ".asm";
+    std::string f =
+        Setup::getLodaHome() + "debug/minimizer/" + seq.id_str() + ".asm";
     ensureDir(f);
     std::ofstream out(f);
     ProgramUtil::print(p, out);

@@ -4,6 +4,7 @@
 #include <sstream>
 #include <unordered_set>
 
+#include "file.hpp"
 #include "generator.hpp"
 #include "interpreter.hpp"
 #include "mutator.hpp"

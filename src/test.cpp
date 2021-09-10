@@ -10,6 +10,7 @@
 #include "blocks.hpp"
 #include "config.hpp"
 #include "evaluator.hpp"
+#include "file.hpp"
 #include "generator_v1.hpp"
 #include "interpreter.hpp"
 #include "iterator.hpp"

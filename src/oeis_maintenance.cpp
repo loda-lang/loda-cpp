@@ -7,6 +7,7 @@
 #include <random>
 #include <sstream>
 
+#include "file.hpp"
 #include "oeis_list.hpp"
 #include "parser.hpp"
 #include "program_util.hpp"
