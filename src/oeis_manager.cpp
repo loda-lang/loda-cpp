@@ -51,18 +51,17 @@ void OeisManager::load() {
   }
 
   // first load the deny and protect lists (needs no lock)
-  OeisList::loadList(OeisSequence::getProgramsHome() + "deny.txt", deny_list);
-  OeisList::loadList(OeisSequence::getProgramsHome() + "overwrite.txt",
+  OeisList::loadList(Setup::getProgramsHome() + "deny.txt", deny_list);
+  OeisList::loadList(Setup::getProgramsHome() + "overwrite.txt",
                      overwrite_list);
-  OeisList::loadList(OeisSequence::getProgramsHome() + "protect.txt",
-                     protect_list);
+  OeisList::loadList(Setup::getProgramsHome() + "protect.txt", protect_list);
   OeisList::loadMap(OeisList::getListsHome() + "invalid_matches.txt",
                     invalid_matches_map);
 
   std::chrono::steady_clock::time_point start_time;
   {
     // obtain lock
-    FolderLock lock(OeisSequence::getOeisHome());
+    FolderLock lock(Setup::getOeisHome());
 
     // update index if needed
     update();
@@ -103,7 +102,7 @@ void OeisManager::load() {
 }
 
 void OeisManager::loadData() {
-  std::string path = OeisSequence::getOeisHome() + "stripped";
+  std::string path = Setup::getOeisHome() + "stripped";
   std::ifstream stripped(path);
   if (!stripped.good()) {
     Log::get().error("OEIS data not found: " + path, true);
@@ -173,7 +172,7 @@ void OeisManager::loadData() {
 
 void OeisManager::loadNames() {
   Log::get().debug("Loading sequence names from the OEIS index");
-  std::string path = OeisSequence::getOeisHome() + "names";
+  std::string path = Setup::getOeisHome() + "names";
   std::ifstream names(path);
   if (!names.good()) {
     Log::get().error("OEIS data not found: " + path, true);
@@ -292,7 +291,7 @@ void OeisManager::update() {
   auto it = files.begin();
   int64_t age_in_days = -1;
   while (it != files.end()) {
-    auto path = OeisSequence::getOeisHome() + *it;
+    auto path = Setup::getOeisHome() + *it;
     age_in_days = getFileAgeInDays(path);
     if (age_in_days >= 0 && age_in_days < settings.update_interval_in_days) {
       // no need to update this file
@@ -303,17 +302,17 @@ void OeisManager::update() {
   }
   if (!files.empty()) {
     if (age_in_days == -1) {
-      Log::get().info("Creating OEIS index at " + OeisSequence::getOeisHome());
-      ensureDir(OeisSequence::getOeisHome());
+      Log::get().info("Creating OEIS index at " + Setup::getOeisHome());
+      ensureDir(Setup::getOeisHome());
     } else {
       Log::get().info("Updating OEIS index (last update " +
                       std::to_string(age_in_days) + " days ago)");
     }
     std::string cmd, path;
     for (auto &file : files) {
-      path = OeisSequence::getOeisHome() + file;
+      path = Setup::getOeisHome() + file;
       Http::get("https://oeis.org/" + file + ".gz", path + ".gz");
-      std::ifstream f(OeisSequence::getOeisHome() + file);
+      std::ifstream f(Setup::getOeisHome() + file);
       if (f.good()) {
         f.close();
         std::remove(path.c_str());

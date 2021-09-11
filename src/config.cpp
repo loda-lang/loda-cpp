@@ -1,6 +1,7 @@
 #include "config.hpp"
 
 #include "jute.h"
+#include "setup.hpp"
 
 int64_t get_jint(jute::jValue &v, const std::string &key, int64_t def) {
   if (v[key].get_type() == jute::jType::JNUMBER) {
@@ -37,7 +38,7 @@ std::string get_template(std::string t) {
       "$LODA_PROGRAMS_HOME/oeis/");  // TODO: use proper variable replacing
   if (t.rfind(h, 0) == 0) {
     t = t.substr(h.size());
-    t = OeisSequence::getProgramsHome() + t;
+    t = Setup::getProgramsHome() + t;
   }
   return t;
 }

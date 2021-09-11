@@ -24,6 +24,7 @@
 #include "parser.hpp"
 #include "program_util.hpp"
 #include "semantics.hpp"
+#include "setup.hpp"
 #include "stats.hpp"
 
 Test::Test()
@@ -33,7 +34,7 @@ Test::Test()
     : manager(settings, false, "/tmp/stats")
 #endif
 {
-  OeisSequence::setProgramsHome("tests/programs");
+  Setup::setProgramsHome("tests/programs");
 }
 
 void Test::all() {

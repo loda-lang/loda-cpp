@@ -13,44 +13,6 @@ const size_t OeisSequence::DEFAULT_SEQ_LENGTH = 100;
 
 const size_t OeisSequence::EXTENDED_SEQ_LENGTH = 2000;
 
-std::string OeisSequence::PROGRAMS_HOME;
-
-const std::string& OeisSequence::getOeisHome() {
-  // don't remove the trailing /
-  static std::string home = Setup::getLodaHome() + "oeis/";
-  return home;
-}
-
-const std::string& OeisSequence::getProgramsHome() {
-  // don't remove the trailing /
-  if (PROGRAMS_HOME.empty()) {
-    auto env = std::getenv("LODA_PROGRAMS_HOME");
-    if (env) {
-      setProgramsHome(std::string(env));
-    } else {
-      setProgramsHome(std::string());
-    }
-  }
-  return PROGRAMS_HOME;
-}
-
-void OeisSequence::setProgramsHome(const std::string& home) {
-  if (home.empty()) {
-    Log::get().error(
-        "Programs home not set (set LODA_PROGRAMS_HOME environment variable to "
-        "fix)",
-        true);
-  }
-  if (!isDir(home)) {
-    Log::get().error("Programs home not found: " + home, true);
-  }
-  PROGRAMS_HOME = home;
-  if (PROGRAMS_HOME.back() != '/') {
-    PROGRAMS_HOME += '/';
-  }
-  PROGRAMS_HOME += "oeis/";
-}
-
 bool OeisSequence::isTooBig(const Number& n) {
   if (n == Number::INF) {
     return true;
@@ -110,11 +72,11 @@ std::string OeisSequence::url_str() const {
 }
 
 std::string OeisSequence::getProgramPath() const {
-  return getProgramsHome() + dir_str() + "/" + id_str() + ".asm";
+  return Setup::getProgramsHome() + dir_str() + "/" + id_str() + ".asm";
 }
 
 std::string OeisSequence::getBFilePath() const {
-  return getOeisHome() + "b/" + dir_str() + "/" + id_str("b") + ".txt";
+  return Setup::getOeisHome() + "b/" + dir_str() + "/" + id_str("b") + ".txt";
 }
 
 Sequence loadBFile(size_t id, const Sequence& seq_full) {
