@@ -4,7 +4,11 @@
 
 class Setup {
  public:
+  static std::string getVersionInfo();
+
   static const std::string& getLodaHome();
+
+  static void setLodaHome(const std::string& home);
 
   static const std::string& getOeisHome();
 
@@ -22,4 +26,6 @@ class Setup {
   static void checkDir(const std::string& home);
   static void ensureTrailingSlash(std::string& dir);
   static void moveDir(const std::string& from, const std::string& to);
+  static void ensureEnvVar(const std::string& key, const std::string& value,
+                           bool must);
 };

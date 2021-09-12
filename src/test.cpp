@@ -34,6 +34,10 @@ Test::Test()
     : manager(settings, false, "/tmp/stats")
 #endif
 {
+#ifndef _WIN64
+  ensureDir("/tmp/loda/");
+  Setup::setLodaHome("/tmp/loda/");
+#endif
   Setup::setProgramsHome("tests/programs");
 }
 

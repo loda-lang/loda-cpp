@@ -16,28 +16,21 @@
 #include "test.hpp"
 #include "util.hpp"
 
-std::string Commands::getVersionInfo() {
-#ifdef LODA_VERSION
-  return "LODA v" + std::string(xstr(LODA_VERSION)) +
-         ", see https://loda-lang.org";
-#else
-  return "LODA development version, see https://loda-lang.org";
-#endif
-}
-
 void Commands::initLog(bool silent) {
   if (silent) {
     Log::get().silent = true;
   } else {
     Log::get().silent = false;
-    Log::get().info("Starting " + getVersionInfo());
+    Log::get().info("Starting " + Setup::getVersionInfo() +
+                    "; see https://loda-lang.org");
   }
 }
 
 void Commands::help() {
   initLog(true);
   Settings settings;
-  std::cout << getVersionInfo() << std::endl << std::endl;
+  std::cout << Setup::getVersionInfo() << "; see https://loda-lang.org"
+            << std::endl;
   std::cout << "Usage:                   loda <command> <options>" << std::endl;
   std::cout << std::endl << "=== Core commands ===" << std::endl;
   std::cout << "  evaluate <file/seq-id> Evaluate a program to a sequence (cf. "

@@ -45,7 +45,5 @@ class Commands {
  private:
   const Settings& settings;
 
-  static std::string getVersionInfo();
-
   static void initLog(bool silent);
 };

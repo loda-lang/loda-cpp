@@ -50,6 +50,11 @@ int64_t getEnvInt(const std::string &var, int64_t default_value) {
   return default_value;
 }
 
+bool isFile(const std::string &path) {
+  std::ifstream f(path.c_str());
+  return f.good();
+}
+
 bool isDir(const std::string &path) {
   struct stat st;
   return (stat(path.c_str(), &st) == 0 && (st.st_mode & S_IFDIR));
