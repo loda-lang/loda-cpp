@@ -149,7 +149,7 @@ void Setup::runWizard() {
   exe = ".exe";
 #endif
   if (!isFile(loda_home + "bin/loda" + exe)) {
-    std::cout << "Please copy the executable \"loda" << exe << "\" to "
+    std::cout << "Please copy the 'loda" << exe << "' executable to "
               << loda_home << "bin" << std::endl;
     std::getline(std::cin, line);
   }
@@ -167,8 +167,42 @@ void Setup::runWizard() {
     std::getline(std::cin, line);
   }
 
+  // initialize programs directory
+  if (!isDir(loda_home + "programs/oeis")) {
+    std::cout << "You need to install a local copy of the loda-programs "
+                 "repository."
+              << std::endl;
+    std::cout << "This is required for mining and evaluating integer sequence "
+                 "programs."
+              << std::endl;
+    std::string git_test = "git --version > /dev/null";
+    if (system(git_test.c_str()) != 0) {
+      std::cout << "The setup requires the git tool to download the programs."
+                << std::endl;
+      std::cout
+          << "Please install it: "
+             "https://git-scm.com/book/en/v2/Getting-Started-Installing-Git"
+          << std::endl;
+      std::getline(std::cin, line);
+    }
+    std::string git_url = "https://github.com/loda-lang/loda-programs.git";
+    std::cout << "Enter the git URL for the loda-programs repository (enter "
+                 "for default):"
+              << std::endl;
+    std::cout << "[" << git_url << "] ";
+    std::getline(std::cin, line);
+    if (!line.empty()) {
+      git_url = line;
+    }
+    std::string git_clone = "git clone " + git_url;
+    if (system(git_clone.c_str()) != 0) {
+      std::cout << "Error cloning repository. Aborting setup.";
+      return;
+    }
+  }
+
   // good bye
-  std::cout << "Setup completed. Thanks!" << std::endl;
+  std::cout << "Setup complete. Thanks!" << std::endl;
 }
 
 void Setup::ensureEnvVar(const std::string& key, const std::string& value,
