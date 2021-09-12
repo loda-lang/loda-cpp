@@ -29,6 +29,7 @@ void Http::get(const std::string &url, const std::string &local_path) {
       "wget -nv --no-use-server-timestamps -O " + local_path + " " + url;
   if (system(cmd.c_str()) != 0) {
     Log::get().error("Error fetching " + url, true);
+    std::remove(local_path.c_str());
   }
 }
 

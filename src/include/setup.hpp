@@ -10,6 +10,10 @@ class Setup {
 
   static void setLodaHome(const std::string& home);
 
+  static const std::string& getLodaConfig();
+
+  static void setLodaConfig(const std::string& loda_config);
+
   static const std::string& getOeisHome();
 
   static const std::string& getProgramsHome();
@@ -20,6 +24,7 @@ class Setup {
 
  private:
   static std::string LODA_HOME;
+  static std::string LODA_CONFIG;
   static std::string OEIS_HOME;
   static std::string PROGRAMS_HOME;
 

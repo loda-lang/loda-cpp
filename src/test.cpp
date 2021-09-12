@@ -38,6 +38,7 @@ Test::Test()
   ensureDir("/tmp/loda/");
   Setup::setLodaHome("/tmp/loda/");
 #endif
+  Setup::setLodaConfig("tests/config/test_loda.json");
   Setup::setProgramsHome("tests/programs");
 }
 
@@ -638,7 +639,6 @@ void Test::config() {
   Log::get().info("Testing config");
 
   Settings settings;
-  settings.loda_config = "tests/config/test_loda.json";
   settings.miner = "default";
   auto config = ConfigLoader::load(settings);
   check_int("overwrite", 1, config.overwrite_mode == OverwriteMode::NONE);

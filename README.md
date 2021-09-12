@@ -46,7 +46,6 @@ Usage:                   loda <command> <options>
   -m <number>            Maximum number of used memory cells (no limit: -1)
   -p <number>            Maximum physical memory in MB (default: 1024)
   -l <string>            Log level (values: debug,info,warn,error,alert)
-  -k <string>            Configuration file (default: loda.json)
   -i <string>            Name of miner configuration from loda.json
 
 === Environment variables ===
@@ -79,7 +78,7 @@ Run the interactive configuration wizard.
 
 #### mine
 
-Mine programs for OEIS integer sequences. It generates programs in a loop and tries to match them to sequences. If a match was found, an alert is printed and the program is automatically saved to the `loda-programs` folder. The miner configurations are defined in [loda.json](loda.json). Depending on the configuration, programs overwritten if they are faster. This refers to the number of execution steps needed to calculate the sequence. 
+Mine programs for OEIS integer sequences. It generates programs in a loop and tries to match them to sequences. If a match was found, an alert is printed and the program is automatically saved to the `loda-programs` folder. The miner configurations are defined in [loda.json](loda.default.json). Depending on the configuration, programs overwritten if they are faster. This refers to the number of execution steps needed to calculate the sequence. 
 
 The `loda` tool is single-threaded and therefore uses one CPU during mining. It supports multiple process instances for parallel mining. You can try the [mine_parallel.sh](mine_parallel.sh) script for this.
 
@@ -110,7 +109,7 @@ Run a maintenance for all programs. This checks the correctness of all programs 
 
 If you want to contribute to `loda-cpp`, the best starting point for reading the code is probably [program.hpp](/src/include/program.hpp). It contains the model classes for programs including operands, operations and programs. You can find the implementation of all arithmetics operations in [semantics.cpp](/src/semantics.cpp). Apart from container classes for sequences and memory, the main part of the operational semantics of programs is implemented in [interpreter.cpp](/src/interpreter.cpp). The evaluation of programs to sequences is coded in [evaluator.cpp](/src/evaluator.cpp).
 
-For mining, there are multiple generator implementations, which are used to create random programs. They are configured via [loda.json](/loda.json) and use statistics from the existing programs stored in `$HOME/.loda/stats`. To reduce and index the target sequences, we use [Matcher](/src/include/matcher.hpp) classes. They allow matching of sequences modulo additional operations such as linear transformations.
+For mining, there are multiple generator implementations, which are used to create random programs. They are configured via [loda.json](/loda.default.json) and use statistics from the existing programs stored in `$HOME/.loda/stats`. To reduce and index the target sequences, we use [Matcher](/src/include/matcher.hpp) classes. They allow matching of sequences modulo additional operations such as linear transformations.
 
 To reduce and normalize the programs we use the [Optimizer](/src/include/optimizer.hpp) and the [Minimizer](/src/include/minimizer.hpp) class.
 

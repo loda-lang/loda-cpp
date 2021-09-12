@@ -7,6 +7,7 @@
 #include "util.hpp"
 
 std::string Setup::LODA_HOME;
+std::string Setup::LODA_CONFIG;
 std::string Setup::OEIS_HOME;
 std::string Setup::PROGRAMS_HOME;
 
@@ -35,6 +36,17 @@ void Setup::setLodaHome(const std::string& home) {
   LODA_HOME = home;
   ensureTrailingSlash(LODA_HOME);
   checkDir(LODA_HOME);
+}
+
+const std::string& Setup::getLodaConfig() {
+  if (LODA_CONFIG.empty()) {
+    setLodaConfig(getLodaHome() + "loda.default.json");
+  }
+  return LODA_CONFIG;
+}
+
+void Setup::setLodaConfig(const std::string& loda_config) {
+  LODA_CONFIG = loda_config;
 }
 
 const std::string& Setup::getOeisHome() {
@@ -163,6 +175,24 @@ void Setup::runWizard() {
     std::getline(std::cin, line);
   }
 
+  // check loda config
+  const std::string default_loda_config = loda_home + "loda.default.json";
+  if (!isFile(default_loda_config)) {
+    // TODO: check version here and get the right version!
+    std::string url =
+        "https://raw.githubusercontent.com/loda-lang/loda-cpp/main/"
+        "loda.default.json";
+    std::cout << "You should install the default miner configuration file:"
+              << std::endl
+              << url << std::endl
+              << "Download it now ? (Y/n) ";
+    std::getline(std::cin, line);
+    if (line.empty() || line == "y" || line == "Y") {
+      Http::get(url, default_loda_config);
+    }
+    std::cout << std::endl;
+  }
+
   // initialize programs directory
   if (!isDir(loda_home + "programs/oeis")) {
     std::cout << "You need to install a local copy of the loda-programs "
@@ -193,13 +223,16 @@ void Setup::runWizard() {
     std::string git_clone =
         "git clone " + git_url + " " + loda_home + "programs";
     if (system(git_clone.c_str()) != 0) {
-      std::cout << "Error cloning repository. Aborting setup.";
+      std::cout << std::endl
+                << "Error cloning repository. Aborting setup." << std::endl;
       return;
     }
+    std::cout << std::endl;
   }
 
   // good bye
-  std::cout << "Setup complete. Thanks!" << std::endl;
+  std::cout << "Setup complete. Thanks for using LODA!" << std::endl
+            << "To start mining, run the 'loda mine' command." << std::endl;
 }
 
 void Setup::ensureEnvVar(const std::string& key, const std::string& value,

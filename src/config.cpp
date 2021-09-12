@@ -88,11 +88,12 @@ std::vector<Generator::Config> loadGeneratorConfigs(
 }
 
 Miner::Config ConfigLoader::load(const Settings &settings) {
+  const std::string loda_config = Setup::getLodaConfig();
   Log::get().debug("Loading miner config \"" + settings.miner + "\" from " +
-                   settings.loda_config);
+                   loda_config);
   Miner::Config config;
 
-  auto str = get_file_as_string(settings.loda_config);
+  auto str = get_file_as_string(loda_config);
   auto spec = jute::parser::parse(str);
   auto miners = spec["miners"];
 
@@ -149,7 +150,7 @@ Miner::Config ConfigLoader::load(const Settings &settings) {
     Log::get().error("Miner config not found: " + settings.miner, true);
   }
   Log::get().debug("Finished loading miner config \"" + settings.miner +
-                   "\" from " + settings.loda_config + " with " +
+                   "\" from " + loda_config + " with " +
                    std::to_string(config.generators.size()) + " generators");
   return config;
 }
