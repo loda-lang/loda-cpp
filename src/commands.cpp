@@ -41,7 +41,7 @@ void Commands::help() {
       << std::endl;
   std::cout << "  optimize <file>        Optimize a program and print it"
             << std::endl;
-  std::cout << "  setup            Run interactive setup" << std::endl;
+  std::cout << "  setup                  Run interactive setup" << std::endl;
   std::cout << std::endl << "=== OEIS commands ===" << std::endl;
   std::cout
       << "  mine                   Mine programs for OEIS sequences (cf. -i)"

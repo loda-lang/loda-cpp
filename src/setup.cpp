@@ -159,6 +159,13 @@ void Setup::runWizard() {
     ensureEnvVar("LODA_HOME", loda_home, true);
   }
   ensureEnvVar("PATH", "$PATH:" + loda_home + "bin", false);
+  auto env = std::getenv("LODA_PROGRAMS_HOME");
+  if (env) {
+    std::cout << "The LODA_PROGRAMS_HOME environment variable is deprecated."
+              << std::endl
+              << "Please remove it from your shell configuration." << std::endl;
+    std::getline(std::cin, line);
+  }
 
   // good bye
   std::cout << "Setup completed. Thanks!" << std::endl;
