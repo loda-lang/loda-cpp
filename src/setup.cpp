@@ -194,7 +194,8 @@ void Setup::runWizard() {
     if (!line.empty()) {
       git_url = line;
     }
-    std::string git_clone = "git clone " + git_url;
+    std::string git_clone =
+        "git clone " + git_url + " " + loda_home + "programs";
     if (system(git_clone.c_str()) != 0) {
       std::cout << "Error cloning repository. Aborting setup.";
       return;
