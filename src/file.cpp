@@ -32,6 +32,17 @@ void Http::get(const std::string &url, const std::string &local_path) {
   }
 }
 
+bool Http::postFile(const std::string &url, const std::string &file_path,
+                    const std::string &auth) {
+  std::string cmd = "curl -i -s";
+  if (!auth.empty()) {
+    cmd += " -u " + auth;
+  }
+  cmd += " -XPOST '" + url + "' --data-binary @" + file_path + " > /dev/null";
+  auto exit_code = system(cmd.c_str());
+  return (exit_code == 0);
+}
+
 bool getEnvFlag(const std::string &var) {
   auto t = std::getenv(var.c_str());
   if (t) {

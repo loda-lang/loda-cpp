@@ -194,17 +194,8 @@ void Metrics::write(const std::vector<Entry> entries) const {
     out << " value=" << entry.value << "\n";
   }
   out.close();
-  std::string cmd = "curl -i -s";
-  if (!auth.empty()) {
-    cmd += " -u " + auth;
-  }
-  cmd += " -XPOST '" + host + "/write?db=loda' --data-binary @" + file_name +
-         " > /dev/null";
-  auto exit_code = system(cmd.c_str());
-  if (exit_code != 0) {
-    Log::get().error(
-        "Error publishing metrics; error code " + std::to_string(exit_code),
-        false);
+  if (!Http::postFile(host + "/write?db=loda", file_name, auth)) {
+    Log::get().error("Error publishing metrics", false);
   }
   std::remove(file_name.c_str());
 }

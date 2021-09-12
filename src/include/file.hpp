@@ -5,6 +5,9 @@
 class Http {
  public:
   static void get(const std::string &url, const std::string &local_path);
+
+  static bool postFile(const std::string &url, const std::string &file_path,
+                       const std::string &auth);
 };
 
 bool getEnvFlag(const std::string &var);
