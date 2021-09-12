@@ -12,6 +12,7 @@
 #include "optimizer.hpp"
 #include "parser.hpp"
 #include "program_util.hpp"
+#include "setup.hpp"
 #include "test.hpp"
 #include "util.hpp"
 
@@ -47,6 +48,7 @@ void Commands::help() {
       << std::endl;
   std::cout << "  optimize <file>        Optimize a program and print it"
             << std::endl;
+  std::cout << "  setup            Run interactive setup" << std::endl;
   std::cout << std::endl << "=== OEIS commands ===" << std::endl;
   std::cout
       << "  mine                   Mine programs for OEIS sequences (cf. -i)"
@@ -129,6 +131,8 @@ std::string get_program_path(std::string arg) {
 }
 
 // official commands
+
+void Commands::setup() { Setup::runWizard(); }
 
 void Commands::evaluate(const std::string& path) {
   initLog(true);

@@ -1,5 +1,7 @@
 #include "setup.hpp"
 
+#include <iostream>
+
 #include "file.hpp"
 #include "util.hpp"
 
@@ -17,13 +19,6 @@ const std::string& Setup::getLodaHome() {
       return LODA_HOME;
     }
     auto user_home = std::string(std::getenv("HOME"));
-    if (isDir(user_home + "/.loda") && !isDir(user_home + "/loda")) {
-      moveDir(user_home + "/.loda", user_home + "/loda");
-      auto programs_home = std::getenv("LODA_PROGRAMS_HOME");
-      if (programs_home && isDir(std::string(programs_home))) {
-        moveDir(programs_home, user_home + "/loda/programs");
-      }
-    }
     LODA_HOME = user_home + "/loda/";
     ensureTrailingSlash(LODA_HOME);
     checkDir(LODA_HOME);
@@ -75,9 +70,51 @@ void Setup::ensureTrailingSlash(std::string& dir) {
 }
 
 void Setup::moveDir(const std::string& from, const std::string& to) {
-  Log::get().warn("Moving directory: " + from + " -> " + to);
+  // Log::get().warn("Moving directory: " + from + " -> " + to);
   std::string cmd = "mv " + from + " " + to;
   if (system(cmd.c_str()) != 0) {
     Log::get().error("Error executing command: " + cmd, true);
+  }
+}
+
+void Setup::runWizard() {
+  std::string line;
+
+  // migrate old folders
+  bool migrated = false;
+  auto user_home = std::string(std::getenv("HOME"));
+  if (isDir(user_home + "/.loda") && !isDir(user_home + "/loda")) {
+    std::cout << "You still have LODA data stored in " << user_home << "/.loda"
+              << std::endl;
+    std::cout << "The new default LODA home directory is " << user_home
+              << "/loda" << std::endl;
+    std::cout << "Do you want to move it to the new default location? (Y/n) ";
+    std::getline(std::cin, line);
+    if (line.empty() || line == "y" || line == "Y") {
+      migrated = true;
+      moveDir(user_home + "/.loda", user_home + "/loda");
+    }
+  }
+  auto programs_home = std::getenv("LODA_PROGRAMS_HOME");
+  if (programs_home && isDir(std::string(programs_home)) &&
+      std::string(programs_home) != user_home + "/loda/programs") {
+    std::cout << "Your current location for LODA programs is "
+              << std::string(programs_home) << std::endl;
+    std::cout << "The new default location for LODA programs is " << user_home
+              << "/loda" << std::endl;
+    std::cout << "Do you want to move it to the new default location? (Y/n) ";
+    std::getline(std::cin, line);
+    if (line.empty() || line == "y" || line == "Y") {
+      moveDir(std::string(programs_home), user_home + "/loda/programs");
+    }
+  }
+
+  if (!migrated) {
+    std::cout << "Enter the directory where LODA should store its local files."
+              << std::endl;
+    std::cout << "Press enter for the default location in your home directory."
+              << std::endl;
+    std::cout << "[" << user_home << "/loda] ";
+    std::getline(std::cin, line);
   }
 }

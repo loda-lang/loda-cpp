@@ -12,6 +12,8 @@ class Setup {
 
   static void setProgramsHome(const std::string& home);
 
+  static void runWizard();
+
  private:
   static std::string LODA_HOME;
   static std::string OEIS_HOME;

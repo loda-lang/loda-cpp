@@ -12,6 +12,8 @@ class Commands {
 
   // official commands
 
+  void setup();
+
   void evaluate(const std::string& path);
 
   void check(const std::string& id);
