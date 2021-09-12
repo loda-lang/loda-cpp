@@ -7,7 +7,8 @@ This repository ([loda-cpp](https://github.com/loda-lang/loda-cpp)) contains an 
 
 ## Installation
 
-There are currently no binaries available. You need to build it using the `make` tool and a standard C++ compiler. It has been tested on Linux and MacOS and does not require any external libraries, but only the `wget`, `gzip` command-line tools. To build it, you need to run the following commands:
+To install LODA using binaries, please follow the official [installation instructions](http://loda-lang.org/install/).
+Alternatively, you can also build it from sources. You need the `make` tool and a standard C++ compiler. It has been tested on Linux and MacOS and does not require any external libraries, but only the `wget`, `gzip` command-line tools. To build it, you need to run the following commands:
 
 ```bash
 git clone git@github.com:loda-lang/loda-cpp.git
@@ -16,11 +17,7 @@ cd loda-cpp/src && make && cd ..
 
 To do a simple test, you can run `./loda eval A000045` to calculate the first terms of the Fibonacci sequence. You can also add the binary to your system path to be able to call it from any directory.
 
-To mine programs for OEIS sequences, you should create a fork of the [loda-programs](https://github.com/loda-lang/loda-programs) repository, clone it and let the `loda` tool know where you installed it:
-
-1. Create a fork of [loda-programs](https://github.com/loda-lang/loda-programs) repository
-2. Clone your fork: `git clone git@github.com:<YOUR-FORK>/loda-programs.git`
-3. Add this environment variable to your shell configuration: `export LODA_PROGRAMS_HOME=<loda-programs-path>`
+To mine programs for OEIS sequences, please use the installation wizard by calling `loda setup`.
 
 ## Usage
 
@@ -33,6 +30,7 @@ Usage:                   loda <command> <options>
   evaluate <file/seq-id> Evaluate a program to a sequence (cf. -t,-b,-s)
   optimize <file>        Optimize a program and print it
   minimize <file>        Minimize a program and print it (cf. -t)
+  setup                  Run interactive setup
 
 === OEIS commands ===
   mine                   Mine programs for OEIS sequences (cf. -i)
@@ -72,6 +70,10 @@ Optimize a LODA program and print the optimized version. The optimization is bas
 #### minimize (min)
 
 Minimize a LODA program and print the minimized version. The minimization includes an optimization and additionally a brute-force removal of operations based on trial and error. It guarantees that the generated integer sequence is preserved, but only up to the number of terms specified using `-t`. In contrast to optimization, minimization is not guaranteed to be semantics preserving for the entire sequences. In practice, it yields much shorter programs than optimization and we usually apply it with a larger number of terms to increase the probability of correctness.
+
+#### setup
+
+Run the interactive configuration wizard.
 
 ### OEIS Commands
 

@@ -22,15 +22,11 @@ const std::string& Setup::getLodaHome() {
   if (LODA_HOME.empty()) {
     auto loda_home = std::getenv("LODA_HOME");
     if (loda_home) {
-      LODA_HOME = std::string(loda_home);
-      ensureTrailingSlash(LODA_HOME);
-      checkDir(LODA_HOME);
-      return LODA_HOME;
+      setLodaHome(std::string(loda_home));
+    } else {
+      auto user_home = std::string(std::getenv("HOME"));
+      setLodaHome(user_home + "/loda/");
     }
-    auto user_home = std::string(std::getenv("HOME"));
-    LODA_HOME = user_home + "/loda/";
-    ensureTrailingSlash(LODA_HOME);
-    checkDir(LODA_HOME);
   }
   return LODA_HOME;
 }
@@ -74,7 +70,7 @@ void Setup::setProgramsHome(const std::string& home) {
 void Setup::checkDir(const std::string& home) {
   if (!isDir(home)) {
     Log::get().error(
-        "Directory not found: " + home + " - please run \"loda setup\"", true);
+        "Directory not found: " + home + " - please run 'loda setup'", true);
   }
 }
 
