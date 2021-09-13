@@ -7,8 +7,7 @@ This repository ([loda-cpp](https://github.com/loda-lang/loda-cpp)) contains an 
 
 ## Installation
 
-To install LODA using binaries, please follow the official [installation instructions](http://loda-lang.org/install/).
-Alternatively, you can also build it from sources. You need the `make` tool and a standard C++ compiler. It has been tested on Linux and MacOS and does not require any external libraries, but only the `wget`, `gzip` command-line tools. To build it, you need to run the following commands:
+To install LODA using binaries, please follow the official [installation instructions](http://loda-lang.org/install/). Alternatively, you can also build it from sources. You need the `make` tool and a standard C++ compiler. It has been tested on Linux and MacOS and does not require any external libraries, but only the `wget`, `gzip` command-line tools. To build it, you need to run the following commands:
 
 ```bash
 git clone git@github.com:loda-lang/loda-cpp.git
@@ -24,36 +23,36 @@ To mine programs for OEIS sequences, please use the installation wizard by calli
 The `loda` command-line tool provides the following commands and options:
 
 ```
-Usage:                   loda <command> <options>
+Welcome to LODA developer version. More information at https://loda-lang.org
 
-=== Core commands ===
-  evaluate <file/seq-id> Evaluate a program to a sequence (cf. -t,-b,-s)
-  optimize <file>        Optimize a program and print it
-  minimize <file>        Minimize a program and print it (cf. -t)
-  setup                  Run interactive setup
+Usage: loda <command> <options>
 
-=== OEIS commands ===
-  mine                   Mine programs for OEIS sequences (cf. -i)
-  match <file>           Match a program to OEIS sequences (cf. -i)
-  check <seq-id>         Check a program for an OEIS sequence (cf. -b)
-  maintain               Maintain all programs for OEIS sequences
+Core Commands:
+  evaluate <program>  Evaluate a program to an integer sequence (see -t,-b,-s)
+  optimize <program>  Optimize a program and print it
+  minimize <program>  Minimize a program and print it (see -t)
+  setup               Run interactive setup to configure LODA
 
-=== Command-line options ===
-  -t <number>            Number of sequence terms (default: 10)
-  -b <number>            Print result in b-file format from a given offset
-  -s                     Evaluate program to number of execution steps
-  -c <number>            Maximum number of interpreter cycles (no limit: -1)
-  -m <number>            Maximum number of used memory cells (no limit: -1)
-  -p <number>            Maximum physical memory in MB (default: 1024)
-  -l <string>            Log level (values: debug,info,warn,error,alert)
-  -i <string>            Name of miner configuration from loda.json
+OEIS Commands:
+  mine                Mine programs for OEIS sequences (see -i)
+  match <asm-file>    Match a program to OEIS sequences (see -i)
+  check <seq-id>      Check a program for an OEIS sequence (see -b)
+  maintain            Maintain all programs for OEIS sequences
 
-=== Environment variables ===
-LODA_PROGRAMS_HOME       Directory for mined programs (default: programs)
-LODA_UPDATE_INTERVAL     Update interval for OEIS metadata in days (default: 1)
-LODA_MAX_CYCLES          Maximum number of interpreter cycles (same as -c)
-LODA_MAX_MEMORY          Maximum number of used memory cells (same as -m)
-LODA_MAX_PHYSICAL_MEMORY Maximum physical memory in MB (same as -p)
+Targets:
+  <asm-file>          Path to a LODA file (file extension: *.asm)
+  <seq-id>            ID of an OEIS integer sequence (example: A000045)
+  <program>           Either an <asm-file> or a <seq-id>
+
+Options:
+  -t <number>         Number of sequence terms (default: 10)
+  -b <number>         Print result in b-file format from a given offset
+  -s                  Evaluate program to number of execution steps
+  -c <number>         Maximum number of interpreter cycles (no limit: -1)
+  -m <number>         Maximum number of used memory cells (no limit: -1)
+  -p <number>         Maximum physical memory in MB (default: 1024)
+  -l <string>         Log level (values: debug,info,warn,error,alert)
+  -i <string>         Name of miner configuration from loda.json
 ```
 
 ### Core Commands

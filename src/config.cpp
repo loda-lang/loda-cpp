@@ -35,10 +35,10 @@ std::string get_file_as_string(const std::string &filename) {
 
 std::string get_template(std::string t) {
   static const std::string h(
-      "$LODA_PROGRAMS_HOME/oeis/");  // TODO: use proper variable replacing
+      "$LODA_HOME/");  // TODO: use proper variable replacing
   if (t.rfind(h, 0) == 0) {
     t = t.substr(h.size());
-    t = Setup::getProgramsHome() + t;
+    t = Setup::getLodaHome() + t;
   }
   return t;
 }
@@ -154,3 +154,34 @@ Miner::Config ConfigLoader::load(const Settings &settings) {
                    std::to_string(config.generators.size()) + " generators");
   return config;
 }
+
+/*
+TODO: handle these settings via setup
+
+  std::cout << std::endl << "=== Environment variables ===" << std::endl;
+  std::cout << "LODA_UPDATE_INTERVAL     Update interval for OEIS metadata in "
+               "days (default: " +
+                   std::to_string(settings.update_interval_in_days) + ")"
+            << std::endl;
+  std::cout << "LODA_MAX_CYCLES          Maximum number of interpreter cycles "
+               "(same as -c)"
+            << std::endl;
+  std::cout << "LODA_MAX_MEMORY          Maximum number of used memory cells "
+               "(same as -m)"
+            << std::endl;
+  std::cout
+      << "LODA_MAX_PHYSICAL_MEMORY Maximum physical memory in MB (same as -p)"
+      << std::endl;
+  std::cout
+      << "LODA_SLACK_ALERTS        Enable alerts on Slack (default: false)"
+      << std::endl;
+  std::cout
+      << "LODA_TWEET_ALERTS        Enable alerts on Twitter (default: false)"
+      << std::endl;
+  std::cout << "LODA_INFLUXDB_HOST       InfluxDB host name (URL) for "
+               "publishing metrics"
+            << std::endl;
+  std::cout << "LODA_INFLUXDB_AUTH       InfluxDB authentication info "
+               "('user:password' format)"
+            << std::endl;
+*/
