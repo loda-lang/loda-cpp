@@ -42,7 +42,8 @@ void OeisMaintenance::maintain() {
 
 void OeisMaintenance::generateLists() {
   manager.load();
-  Log::get().info("Generating program lists");
+  const std::string lists_home = OeisList::getListsHome();
+  Log::get().info("Generating program lists at " + lists_home);
   const size_t list_file_size = 50000;
   std::vector<std::stringstream> list_files(1000000 / list_file_size);
   std::stringstream no_loda;
@@ -90,7 +91,6 @@ void OeisMaintenance::generateLists() {
   }
 
   // write lists
-  const std::string lists_home = "../loda-lang.github.io/";
   ensureDir(lists_home);
   for (size_t i = 0; i < list_files.size(); i++) {
     auto buf = list_files[i].str();
@@ -111,7 +111,7 @@ void OeisMaintenance::generateLists() {
       list_file << buf;
     }
   }
-  std::ofstream no_loda_file(OeisList::getListsHome() + "no_loda.txt");
+  std::ofstream no_loda_file(lists_home + "no_loda.txt");
   no_loda_file << no_loda.str();
   no_loda_file.close();
 

@@ -105,34 +105,8 @@ void Setup::runWizard() {
             << "This command will guide you through its setup." << std::endl
             << std::endl;
 
-  // migrate old folders
-  auto user_home = std::string(std::getenv("HOME"));
-  if (isDir(user_home + "/.loda") && !isDir(user_home + "/loda")) {
-    std::cout << "You still have LODA data stored in " << user_home << "/.loda"
-              << std::endl;
-    std::cout << "The new default LODA home directory is " << user_home
-              << "/loda" << std::endl;
-    std::cout << "Do you want to move it to the new default location? (Y/n) ";
-    std::getline(std::cin, line);
-    if (line.empty() || line == "y" || line == "Y") {
-      moveDir(user_home + "/.loda", user_home + "/loda");
-    }
-  }
-  auto programs_home = std::getenv("LODA_PROGRAMS_HOME");
-  if (programs_home && isDir(std::string(programs_home)) &&
-      std::string(programs_home) != user_home + "/loda/programs") {
-    std::cout << "Your current location for LODA programs is "
-              << std::string(programs_home) << std::endl;
-    std::cout << "The new default location for LODA programs is " << user_home
-              << "/loda" << std::endl;
-    std::cout << "Do you want to move it to the new default location? (Y/n) ";
-    std::getline(std::cin, line);
-    if (line.empty() || line == "y" || line == "Y") {
-      moveDir(std::string(programs_home), user_home + "/loda/programs");
-    }
-  }
-
   // configure home directory
+  auto user_home = std::string(std::getenv("HOME"));
   auto loda_home = user_home + "/loda";
   if (std::getenv("LODA_HOME")) {
     loda_home = std::string(std::getenv("LODA_HOME"));
@@ -149,6 +123,71 @@ void Setup::runWizard() {
   ensureTrailingSlash(loda_home);
   ensureDir(loda_home);
   ensureDir(loda_home + "bin/");
+
+  // migrate old programs directory
+  auto programs_home = std::getenv("LODA_PROGRAMS_HOME");
+  if (programs_home && isDir(std::string(programs_home)) &&
+      std::string(programs_home) != user_home + "/loda/programs") {
+    std::cout << "Your current location for LODA programs is "
+              << std::string(programs_home) << std::endl;
+    std::cout << "The new default location for LODA programs is " << user_home
+              << "/loda/programs" << std::endl;
+    std::cout << "Do you want to move it to the new default location? (Y/n) ";
+    std::getline(std::cin, line);
+    if (line.empty() || line == "y" || line == "Y") {
+      moveDir(std::string(programs_home), user_home + "/loda/programs");
+    }
+  }
+
+  // initialize programs directory
+  if (!isDir(loda_home + "programs/oeis")) {
+    std::cout << "You need to install a local copy of the loda-programs "
+                 "repository."
+              << std::endl;
+    std::cout << "This is required for mining and evaluating integer sequence "
+                 "programs."
+              << std::endl;
+    std::string git_test = "git --version > /dev/null";
+    if (system(git_test.c_str()) != 0) {
+      std::cout << "The setup requires the git tool to download the programs."
+                << std::endl;
+      std::cout
+          << "Please install it: "
+             "https://git-scm.com/book/en/v2/Getting-Started-Installing-Git"
+          << std::endl;
+      std::getline(std::cin, line);
+    }
+    std::string git_url = "https://github.com/loda-lang/loda-programs.git";
+    std::cout << "Enter the git URL for the loda-programs repository (enter "
+                 "for default):"
+              << std::endl;
+    std::cout << "[" << git_url << "] ";
+    std::getline(std::cin, line);
+    if (!line.empty()) {
+      git_url = line;
+    }
+    std::string git_clone =
+        "git clone " + git_url + " " + loda_home + "programs";
+    if (system(git_clone.c_str()) != 0) {
+      std::cout << std::endl
+                << "Error cloning repository. Aborting setup." << std::endl;
+      return;
+    }
+    std::cout << std::endl;
+  }
+
+  // migrate old oeis directory
+  if (isDir(user_home + "/.loda/oeis") && !isDir(loda_home + "/oeis")) {
+    std::cout << "You still have an OEIS index stored in " << user_home
+              << "/.loda/oeis" << std::endl;
+    std::cout << "The new location of this folder is " << loda_home << "oeis"
+              << std::endl;
+    std::cout << "Do you want to move it to the new location? (Y/n) ";
+    std::getline(std::cin, line);
+    if (line.empty() || line == "y" || line == "Y") {
+      moveDir(user_home + "/.loda/oeis", loda_home + "/oeis");
+    }
+  }
 
   // check binary
   std::string exe;
@@ -189,43 +228,6 @@ void Setup::runWizard() {
     std::getline(std::cin, line);
     if (line.empty() || line == "y" || line == "Y") {
       Http::get(url, default_miners_config);
-    }
-    std::cout << std::endl;
-  }
-
-  // initialize programs directory
-  if (!isDir(loda_home + "programs/oeis")) {
-    std::cout << "You need to install a local copy of the loda-programs "
-                 "repository."
-              << std::endl;
-    std::cout << "This is required for mining and evaluating integer sequence "
-                 "programs."
-              << std::endl;
-    std::string git_test = "git --version > /dev/null";
-    if (system(git_test.c_str()) != 0) {
-      std::cout << "The setup requires the git tool to download the programs."
-                << std::endl;
-      std::cout
-          << "Please install it: "
-             "https://git-scm.com/book/en/v2/Getting-Started-Installing-Git"
-          << std::endl;
-      std::getline(std::cin, line);
-    }
-    std::string git_url = "https://github.com/loda-lang/loda-programs.git";
-    std::cout << "Enter the git URL for the loda-programs repository (enter "
-                 "for default):"
-              << std::endl;
-    std::cout << "[" << git_url << "] ";
-    std::getline(std::cin, line);
-    if (!line.empty()) {
-      git_url = line;
-    }
-    std::string git_clone =
-        "git clone " + git_url + " " + loda_home + "programs";
-    if (system(git_clone.c_str()) != 0) {
-      std::cout << std::endl
-                << "Error cloning repository. Aborting setup." << std::endl;
-      return;
     }
     std::cout << std::endl;
   }
