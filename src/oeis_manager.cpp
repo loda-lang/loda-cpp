@@ -51,10 +51,10 @@ void OeisManager::load() {
   }
 
   // first load the deny and protect lists (needs no lock)
-  OeisList::loadList(Setup::getProgramsHome() + "deny.txt", deny_list);
-  OeisList::loadList(Setup::getProgramsHome() + "overwrite.txt",
-                     overwrite_list);
-  OeisList::loadList(Setup::getProgramsHome() + "protect.txt", protect_list);
+  const std::string oeis_dir = Setup::getProgramsHome() + "oeis/";
+  OeisList::loadList(oeis_dir + "deny.txt", deny_list);
+  OeisList::loadList(oeis_dir + "overwrite.txt", overwrite_list);
+  OeisList::loadList(oeis_dir + "protect.txt", protect_list);
   OeisList::loadMap(OeisList::getListsHome() + "invalid_matches.txt",
                     invalid_matches_map);
 

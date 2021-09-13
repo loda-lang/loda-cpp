@@ -10,9 +10,9 @@ class Setup {
 
   static void setLodaHome(const std::string& home);
 
-  static const std::string& getLodaConfig();
+  static const std::string& getMinersConfig();
 
-  static void setLodaConfig(const std::string& loda_config);
+  static void setMinersConfig(const std::string& loda_config);
 
   static const std::string& getOeisHome();
 

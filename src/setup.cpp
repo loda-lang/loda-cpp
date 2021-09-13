@@ -38,14 +38,14 @@ void Setup::setLodaHome(const std::string& home) {
   checkDir(LODA_HOME);
 }
 
-const std::string& Setup::getLodaConfig() {
+const std::string& Setup::getMinersConfig() {
   if (LODA_CONFIG.empty()) {
-    setLodaConfig(getLodaHome() + "loda.default.json");
+    setMinersConfig(getLodaHome() + "miners.default.json");
   }
   return LODA_CONFIG;
 }
 
-void Setup::setLodaConfig(const std::string& loda_config) {
+void Setup::setMinersConfig(const std::string& loda_config) {
   LODA_CONFIG = loda_config;
 }
 
@@ -75,7 +75,6 @@ void Setup::setProgramsHome(const std::string& home) {
   PROGRAMS_HOME = home;
   checkDir(PROGRAMS_HOME);
   ensureTrailingSlash(PROGRAMS_HOME);
-  PROGRAMS_HOME += "oeis/";
   checkDir(PROGRAMS_HOME);
 }
 
@@ -176,19 +175,20 @@ void Setup::runWizard() {
   }
 
   // check loda config
-  const std::string default_loda_config = loda_home + "loda.default.json";
-  if (!isFile(default_loda_config)) {
+  const std::string default_miners_config = loda_home + "miners.default.json";
+  if (!isFile(default_miners_config)) {
     // TODO: check version here and get the right version!
     std::string url =
         "https://raw.githubusercontent.com/loda-lang/loda-cpp/main/"
-        "loda.default.json";
-    std::cout << "You should install the default miner configuration file:"
+        "miners.default.json";
+    std::cout << "To mine programs, you should install the default miner "
+                 "configuration file:"
               << std::endl
               << url << std::endl
               << "Download it now ? (Y/n) ";
     std::getline(std::cin, line);
     if (line.empty() || line == "y" || line == "Y") {
-      Http::get(url, default_loda_config);
+      Http::get(url, default_miners_config);
     }
     std::cout << std::endl;
   }

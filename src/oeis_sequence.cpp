@@ -72,7 +72,8 @@ std::string OeisSequence::url_str() const {
 }
 
 std::string OeisSequence::getProgramPath() const {
-  return Setup::getProgramsHome() + dir_str() + "/" + id_str() + ".asm";
+  return Setup::getProgramsHome() + "oeis/" + dir_str() + "/" + id_str() +
+         ".asm";
 }
 
 std::string OeisSequence::getBFilePath() const {

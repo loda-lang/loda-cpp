@@ -87,7 +87,7 @@ void Commands::help() {
                "debug,info,warn,error,alert)"
             << std::endl;
   std::cout
-      << "  -i <string>         Name of miner configuration from loda.json"
+      << "  -i <string>         Name of miner configuration from miners.json"
       << std::endl;
 }
 

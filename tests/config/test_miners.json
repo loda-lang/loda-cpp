@@ -38,8 +38,8 @@
       "calls": true,
       "indirectAccess": false,
       "template": [
-        "tmp1",
-        "tmp2"
+        "$LODA_HOME/programs/templates/call.asm",
+        "$LODA_HOME/programs/templates/loop.asm"
       ]
     },
     {

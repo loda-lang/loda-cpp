@@ -35,10 +35,10 @@ std::string get_file_as_string(const std::string &filename) {
 
 std::string get_template(std::string t) {
   static const std::string h(
-      "$LODA_HOME/");  // TODO: use proper variable replacing
+      "$LODA_HOME/programs/");  // TODO: use proper variable replacing
   if (t.rfind(h, 0) == 0) {
     t = t.substr(h.size());
-    t = Setup::getLodaHome() + t;
+    t = Setup::getProgramsHome() + t;
   }
   return t;
 }
@@ -88,7 +88,7 @@ std::vector<Generator::Config> loadGeneratorConfigs(
 }
 
 Miner::Config ConfigLoader::load(const Settings &settings) {
-  const std::string loda_config = Setup::getLodaConfig();
+  const std::string loda_config = Setup::getMinersConfig();
   Log::get().debug("Loading miner config \"" + settings.miner + "\" from " +
                    loda_config);
   Miner::Config config;
