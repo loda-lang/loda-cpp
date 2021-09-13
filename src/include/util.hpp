@@ -76,7 +76,6 @@ class Settings {
   int64_t update_interval_in_days;
   bool throw_on_overflow;
   bool use_steps;
-  std::string loda_config;
   std::string miner;
 
   // flag and offset for printing evaluation results in b-file format

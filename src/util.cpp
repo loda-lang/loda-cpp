@@ -210,7 +210,6 @@ Settings::Settings()
       update_interval_in_days(getEnvInt("LODA_UPDATE_INTERVAL", 1)),
       throw_on_overflow(true),
       use_steps(false),
-      loda_config("loda.json"),
       miner("default"),
       print_as_b_file(false),
       print_as_b_file_offset(0),
@@ -223,7 +222,6 @@ enum class Option {
   MAX_CYCLES,
   MAX_PHYSICAL_MEMORY,
   B_FILE_OFFSET,
-  LODA_CONFIG,
   MINER,
   LOG_LEVEL
 };
@@ -262,14 +260,10 @@ std::vector<std::string> Settings::parseArgs(int argc, char *argv[]) {
           max_physical_memory = val * 1024 * 1024;
           break;
         case Option::LOG_LEVEL:
-        case Option::LODA_CONFIG:
         case Option::MINER:
         case Option::NONE:
           break;
       }
-      option = Option::NONE;
-    } else if (option == Option::LODA_CONFIG) {
-      loda_config = arg;
       option = Option::NONE;
     } else if (option == Option::MINER) {
       miner = arg;
@@ -305,8 +299,6 @@ std::vector<std::string> Settings::parseArgs(int argc, char *argv[]) {
         use_steps = true;
       } else if (opt == "b") {
         option = Option::B_FILE_OFFSET;
-      } else if (opt == "k") {
-        option = Option::LODA_CONFIG;
       } else if (opt == "l") {
         option = Option::LOG_LEVEL;
       } else {

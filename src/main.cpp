@@ -27,7 +27,9 @@ int main(int argc, char *argv[]) {
   Commands commands(settings);
 
   // official commands
-  if (cmd == "evaluate" || cmd == "eval") {
+  if (cmd == "setup") {
+    commands.setup();
+  } else if (cmd == "evaluate" || cmd == "eval") {
     commands.evaluate(args.at(1));
   } else if (cmd == "check") {
     commands.check(args.at(1));

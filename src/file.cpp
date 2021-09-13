@@ -29,6 +29,7 @@ void Http::get(const std::string &url, const std::string &local_path) {
       "wget -nv --no-use-server-timestamps -O " + local_path + " " + url;
   if (system(cmd.c_str()) != 0) {
     Log::get().error("Error fetching " + url, true);
+    std::remove(local_path.c_str());
   }
 }
 
@@ -59,6 +60,11 @@ int64_t getEnvInt(const std::string &var, int64_t default_value) {
     return std::stoll(s);
   }
   return default_value;
+}
+
+bool isFile(const std::string &path) {
+  std::ifstream f(path.c_str());
+  return f.good();
 }
 
 bool isDir(const std::string &path) {

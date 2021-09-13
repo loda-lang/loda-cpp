@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "matcher.hpp"
 #include "number.hpp"
 #include "oeis_manager.hpp"
@@ -68,6 +70,8 @@ class Test {
 
   void testMatcherPair(Matcher &matcher, size_t id1, size_t id2);
 
+  OeisManager &getManager();
+
   Settings settings;
-  OeisManager manager;
+  std::unique_ptr<OeisManager> manager_ptr;
 };

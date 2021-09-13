@@ -7,7 +7,7 @@ This repository ([loda-cpp](https://github.com/loda-lang/loda-cpp)) contains an 
 
 ## Installation
 
-There are currently no binaries available. You need to build it using the `make` tool and a standard C++ compiler. It has been tested on Linux and MacOS and does not require any external libraries, but only the `wget`, `gzip` command-line tools. To build it, you need to run the following commands:
+To install LODA using binaries, please follow the [official installation instructions](http://loda-lang.org/install/). Alternatively, you can also build it from sources. You need the `make` tool and a standard C++ compiler. It has been tested on Linux and MacOS and does not require any external libraries, but only the `wget`, `gzip` command-line tools. To build it, you need to run the following commands:
 
 ```bash
 git clone git@github.com:loda-lang/loda-cpp.git
@@ -16,47 +16,43 @@ cd loda-cpp/src && make && cd ..
 
 To do a simple test, you can run `./loda eval A000045` to calculate the first terms of the Fibonacci sequence. You can also add the binary to your system path to be able to call it from any directory.
 
-To mine programs for OEIS sequences, you should create a fork of the [loda-programs](https://github.com/loda-lang/loda-programs) repository, clone it and let the `loda` tool know where you installed it:
-
-1. Create a fork of [loda-programs](https://github.com/loda-lang/loda-programs) repository
-2. Clone your fork: `git clone git@github.com:<YOUR-FORK>/loda-programs.git`
-3. Add this environment variable to your shell configuration: `export LODA_PROGRAMS_HOME=<loda-programs-path>`
+To mine programs for OEIS sequences, please use the installation wizard by calling `loda setup`.
 
 ## Usage
 
 The `loda` command-line tool provides the following commands and options:
 
 ```
-Usage:                   loda <command> <options>
+Welcome to LODA developer version. More information at https://loda-lang.org
 
-=== Core commands ===
-  evaluate <file/seq-id> Evaluate a program to a sequence (cf. -t,-b,-s)
-  optimize <file>        Optimize a program and print it
-  minimize <file>        Minimize a program and print it (cf. -t)
+Usage: loda <command> <options>
 
-=== OEIS commands ===
-  mine                   Mine programs for OEIS sequences (cf. -i)
-  match <file>           Match a program to OEIS sequences (cf. -i)
-  check <seq-id>         Check a program for an OEIS sequence (cf. -b)
-  maintain               Maintain all programs for OEIS sequences
+Core Commands:
+  evaluate <program>  Evaluate a program to an integer sequence (see -t,-b,-s)
+  optimize <program>  Optimize a program and print it
+  minimize <program>  Minimize a program and print it (see -t)
+  setup               Run interactive setup to configure LODA
 
-=== Command-line options ===
-  -t <number>            Number of sequence terms (default: 10)
-  -b <number>            Print result in b-file format from a given offset
-  -s                     Evaluate program to number of execution steps
-  -c <number>            Maximum number of interpreter cycles (no limit: -1)
-  -m <number>            Maximum number of used memory cells (no limit: -1)
-  -p <number>            Maximum physical memory in MB (default: 1024)
-  -l <string>            Log level (values: debug,info,warn,error,alert)
-  -k <string>            Configuration file (default: loda.json)
-  -i <string>            Name of miner configuration from loda.json
+OEIS Commands:
+  mine                Mine programs for OEIS sequences (see -i)
+  match <asm-file>    Match a program to OEIS sequences (see -i)
+  check <seq-id>      Check a program for an OEIS sequence (see -b)
+  maintain            Maintain all programs for OEIS sequences
 
-=== Environment variables ===
-LODA_PROGRAMS_HOME       Directory for mined programs (default: programs)
-LODA_UPDATE_INTERVAL     Update interval for OEIS metadata in days (default: 1)
-LODA_MAX_CYCLES          Maximum number of interpreter cycles (same as -c)
-LODA_MAX_MEMORY          Maximum number of used memory cells (same as -m)
-LODA_MAX_PHYSICAL_MEMORY Maximum physical memory in MB (same as -p)
+Targets:
+  <asm-file>          Path to a LODA file (file extension: *.asm)
+  <seq-id>            ID of an OEIS integer sequence (example: A000045)
+  <program>           Either an <asm-file> or a <seq-id>
+
+Options:
+  -t <number>         Number of sequence terms (default: 10)
+  -b <number>         Print result in b-file format from a given offset
+  -s                  Evaluate program to number of execution steps
+  -c <number>         Maximum number of interpreter cycles (no limit: -1)
+  -m <number>         Maximum number of used memory cells (no limit: -1)
+  -p <number>         Maximum physical memory in MB (default: 1024)
+  -l <string>         Log level (values: debug,info,warn,error,alert)
+  -i <string>         Name of miner configuration from loda.json
 ```
 
 ### Core Commands
@@ -73,11 +69,15 @@ Optimize a LODA program and print the optimized version. The optimization is bas
 
 Minimize a LODA program and print the minimized version. The minimization includes an optimization and additionally a brute-force removal of operations based on trial and error. It guarantees that the generated integer sequence is preserved, but only up to the number of terms specified using `-t`. In contrast to optimization, minimization is not guaranteed to be semantics preserving for the entire sequences. In practice, it yields much shorter programs than optimization and we usually apply it with a larger number of terms to increase the probability of correctness.
 
+#### setup
+
+Run the interactive configuration wizard.
+
 ### OEIS Commands
 
 #### mine
 
-Mine programs for OEIS integer sequences. It generates programs in a loop and tries to match them to sequences. If a match was found, an alert is printed and the program is automatically saved to the `loda-programs` folder. The miner configurations are defined in [loda.json](loda.json). Depending on the configuration, programs overwritten if they are faster. This refers to the number of execution steps needed to calculate the sequence. 
+Mine programs for OEIS integer sequences. It generates programs in a loop and tries to match them to sequences. If a match was found, an alert is printed and the program is automatically saved to the `loda-programs` folder. The miner configurations are defined in [loda.json](loda.default.json). Depending on the configuration, programs overwritten if they are faster. This refers to the number of execution steps needed to calculate the sequence. 
 
 The `loda` tool is single-threaded and therefore uses one CPU during mining. It supports multiple process instances for parallel mining. You can try the [mine_parallel.sh](mine_parallel.sh) script for this.
 
@@ -100,7 +100,7 @@ Run a maintenance for all programs. This checks the correctness of all programs 
 
 ## Additional Resources
 
-* [loda-lang.github.io](https://loda-lang.github.io): Main home page of LODA.
+* [loda-lang.org](https://loda-lang.org): Main home page of LODA.
 * [loda-programs](https://github.com/loda-lang/loda-programs): Repository of mined LODA programs for OEIS sequences.
 * [loda-rust](https://github.com/loda-lang/loda-rust): Interpreter and web interface written in Rust.
 
@@ -108,7 +108,7 @@ Run a maintenance for all programs. This checks the correctness of all programs 
 
 If you want to contribute to `loda-cpp`, the best starting point for reading the code is probably [program.hpp](/src/include/program.hpp). It contains the model classes for programs including operands, operations and programs. You can find the implementation of all arithmetics operations in [semantics.cpp](/src/semantics.cpp). Apart from container classes for sequences and memory, the main part of the operational semantics of programs is implemented in [interpreter.cpp](/src/interpreter.cpp). The evaluation of programs to sequences is coded in [evaluator.cpp](/src/evaluator.cpp).
 
-For mining, there are multiple generator implementations, which are used to create random programs. They are configured via [loda.json](/loda.json) and use statistics from the existing programs stored in `$HOME/.loda/stats`. To reduce and index the target sequences, we use [Matcher](/src/include/matcher.hpp) classes. They allow matching of sequences modulo additional operations such as linear transformations.
+For mining, there are multiple generator implementations, which are used to create random programs. They are configured via [loda.json](/loda.default.json) and use statistics from the existing programs stored in `$HOME/.loda/stats`. To reduce and index the target sequences, we use [Matcher](/src/include/matcher.hpp) classes. They allow matching of sequences modulo additional operations such as linear transformations.
 
 To reduce and normalize the programs we use the [Optimizer](/src/include/optimizer.hpp) and the [Minimizer](/src/include/minimizer.hpp) class.
 

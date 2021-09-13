@@ -12,110 +12,83 @@
 #include "optimizer.hpp"
 #include "parser.hpp"
 #include "program_util.hpp"
+#include "setup.hpp"
 #include "test.hpp"
 #include "util.hpp"
-
-std::string Commands::getVersionInfo() {
-#ifdef LODA_VERSION
-  return "LODA v" + std::string(xstr(LODA_VERSION)) +
-         ", see https://loda-lang.org";
-#else
-  return "LODA development version, see https://loda-lang.org";
-#endif
-}
 
 void Commands::initLog(bool silent) {
   if (silent) {
     Log::get().silent = true;
   } else {
     Log::get().silent = false;
-    Log::get().info("Starting " + getVersionInfo());
+    Log::get().info("Starting " + Setup::getVersionInfo() +
+                    "; see https://loda-lang.org");
   }
 }
 
 void Commands::help() {
   initLog(true);
   Settings settings;
-  std::cout << getVersionInfo() << std::endl << std::endl;
-  std::cout << "Usage:                   loda <command> <options>" << std::endl;
-  std::cout << std::endl << "=== Core commands ===" << std::endl;
-  std::cout << "  evaluate <file/seq-id> Evaluate a program to a sequence (cf. "
-               "-t,-b,-s)"
+  std::cout << "Welcome to " << Setup::getVersionInfo()
+            << ". More information at https://loda-lang.org" << std::endl
+            << std::endl;
+  std::cout << "Usage: loda <command> <options>" << std::endl << std::endl;
+  std::cout << "Core Commands:" << std::endl;
+  std::cout
+      << "  evaluate <program>  Evaluate a program to an integer sequence (see "
+         "-t,-b,-s)"
+      << std::endl;
+  std::cout << "  optimize <program>  Optimize a program and print it"
+            << std::endl;
+  std::cout << "  minimize <program>  Minimize a program and print it (see -t)"
+            << std::endl;
+  std::cout << "  setup               Run interactive setup to configure LODA"
+            << std::endl;
+
+  std::cout << std::endl << "OEIS Commands:" << std::endl;
+  std::cout << "  mine                Mine programs for OEIS sequences (see -i)"
             << std::endl;
   std::cout
-      << "  minimize <file>        Minimize a program and print it (cf. -t)"
+      << "  match <asm-file>    Match a program to OEIS sequences (see -i)"
       << std::endl;
-  std::cout << "  optimize <file>        Optimize a program and print it"
+  std::cout << "  check <seq-id>      Check a program for an OEIS sequence "
+               "(see -b)"
             << std::endl;
-  std::cout << std::endl << "=== OEIS commands ===" << std::endl;
-  std::cout
-      << "  mine                   Mine programs for OEIS sequences (cf. -i)"
-      << std::endl;
-  std::cout
-      << "  match <file>           Match a program to OEIS sequences (cf. -i)"
-      << std::endl;
-  std::cout << "  check <seq-id>         Check a program for an OEIS sequence "
-               "(cf. -b)"
+  std::cout << "  maintain            Maintain all programs for OEIS sequences"
             << std::endl;
+  std::cout << std::endl << "Targets:" << std::endl;
   std::cout
-      << "  maintain               Maintain all programs for OEIS sequences"
+      << "  <asm-file>          Path to a LODA file (file extension: *.asm)"
       << std::endl;
-  std::cout << std::endl << "=== Command-line options ===" << std::endl;
-  std::cout << "  -t <number>            Number of sequence terms (default: "
+  std::cout << "  <seq-id>            ID of an OEIS integer sequence "
+               "(example: A000045)"
+            << std::endl;
+  std::cout << "  <program>           Either an <asm-file> or a <seq-id>"
+            << std::endl;
+
+  std::cout << std::endl << "Options:" << std::endl;
+  std::cout << "  -t <number>         Number of sequence terms (default: "
             << settings.num_terms << ")" << std::endl;
-  std::cout << "  -b <number>            Print result in b-file format from a "
+  std::cout << "  -b <number>         Print result in b-file format from a "
                "given offset"
             << std::endl;
-  std::cout << "  -s                     Evaluate program to number of "
+  std::cout << "  -s                  Evaluate program to number of "
                "execution steps"
             << std::endl;
-  std::cout << "  -c <number>            Maximum number of interpreter cycles "
+  std::cout << "  -c <number>         Maximum number of interpreter cycles "
                "(no limit: -1)"
             << std::endl;
-  std::cout << "  -m <number>            Maximum number of used memory cells "
+  std::cout << "  -m <number>         Maximum number of used memory cells "
                "(no limit: -1)"
             << std::endl;
-  std::cout
-      << "  -p <number>            Maximum physical memory in MB (default: "
-      << settings.max_physical_memory / (1024 * 1024) << ")" << std::endl;
-  std::cout << "  -l <string>            Log level (values: "
+  std::cout << "  -p <number>         Maximum physical memory in MB (default: "
+            << settings.max_physical_memory / (1024 * 1024) << ")" << std::endl;
+  std::cout << "  -l <string>         Log level (values: "
                "debug,info,warn,error,alert)"
             << std::endl;
   std::cout
-      << "  -k <string>            Configuration file (default: loda.json)"
+      << "  -i <string>         Name of miner configuration from miners.json"
       << std::endl;
-  std::cout
-      << "  -i <string>            Name of miner configuration from loda.json"
-      << std::endl;
-  std::cout << std::endl << "=== Environment variables ===" << std::endl;
-  std::cout << "LODA_PROGRAMS_HOME       Directory for mined programs "
-               "(default: programs)"
-            << std::endl;
-  std::cout << "LODA_UPDATE_INTERVAL     Update interval for OEIS metadata in "
-               "days (default: " +
-                   std::to_string(settings.update_interval_in_days) + ")"
-            << std::endl;
-  std::cout << "LODA_MAX_CYCLES          Maximum number of interpreter cycles "
-               "(same as -c)"
-            << std::endl;
-  std::cout << "LODA_MAX_MEMORY          Maximum number of used memory cells "
-               "(same as -m)"
-            << std::endl;
-  std::cout
-      << "LODA_MAX_PHYSICAL_MEMORY Maximum physical memory in MB (same as -p)"
-      << std::endl;
-  std::cout
-      << "LODA_SLACK_ALERTS        Enable alerts on Slack (default: false)"
-      << std::endl;
-  std::cout
-      << "LODA_TWEET_ALERTS        Enable alerts on Twitter (default: false)"
-      << std::endl;
-  std::cout << "LODA_INFLUXDB_HOST       InfluxDB host name (URL) for "
-               "publishing metrics"
-            << std::endl;
-  std::cout << "LODA_INFLUXDB_AUTH       InfluxDB authentication info "
-               "('user:password' format)"
-            << std::endl;
 }
 
 std::string get_program_path(std::string arg) {
@@ -129,6 +102,8 @@ std::string get_program_path(std::string arg) {
 }
 
 // official commands
+
+void Commands::setup() { Setup::runWizard(); }
 
 void Commands::evaluate(const std::string& path) {
   initLog(true);

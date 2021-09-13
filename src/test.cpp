@@ -24,16 +24,16 @@
 #include "parser.hpp"
 #include "program_util.hpp"
 #include "semantics.hpp"
+#include "setup.hpp"
 #include "stats.hpp"
 
-Test::Test()
-#ifdef _WIN64
-    : manager(settings, false, "stats")
-#else
-    : manager(settings, false, "/tmp/stats")
+Test::Test() {
+#ifndef _WIN64
+  ensureDir("/tmp/loda/");
+  Setup::setLodaHome("/tmp/loda/");
 #endif
-{
-  OeisSequence::setProgramsHome("tests/programs");
+  Setup::setMinersConfig("tests/config/test_miners.json");
+  Setup::setProgramsHome("tests/programs");
 }
 
 void Test::all() {
@@ -67,6 +67,17 @@ void Test::all() {
   miner();
   benchmark();
 #endif
+}
+
+OeisManager& Test::getManager() {
+  if (!manager_ptr) {
+#ifdef _WIN64
+    manager_ptr.reset(new OeisManager(settings, false, "stats"));
+#else
+    manager_ptr.reset(new OeisManager(settings, false, "/tmp/stats"));
+#endif
+  }
+  return *manager_ptr;
 }
 
 void check_num(const Number& m, const std::string& s) {
@@ -416,7 +427,7 @@ void Test::iterator(size_t tests) {
     config.length = std::max<int64_t>(test / 4, 2);
     config.max_constant = std::max<int64_t>(test / 4, 2);
     config.max_index = std::max<int64_t>(test / 4, 2);
-    GeneratorV1 gen_v1(config, manager.getStats());
+    GeneratorV1 gen_v1(config, getManager().getStats());
     Program start, p, q;
     while (true) {
       try {
@@ -633,7 +644,6 @@ void Test::config() {
   Log::get().info("Testing config");
 
   Settings settings;
-  settings.loda_config = "tests/config/test_loda.json";
   settings.miner = "default";
   auto config = ConfigLoader::load(settings);
   check_int("overwrite", 1, config.overwrite_mode == OverwriteMode::NONE);
@@ -647,7 +657,7 @@ void Test::config() {
   check_int("generators[0].calls", 1, config.generators[0].calls);
   check_int("generators[0].indirectAccess", 0,
             config.generators[0].indirect_access);
-  check_str("generators[0].template", "tmp1",
+  check_str("generators[0].template", "tests/programs/templates/call.asm",
             config.generators[0].program_template);
   check_int("generators[1].version", 1, config.generators[1].version);
   check_int("generators[1].length", 30, config.generators[1].length);
@@ -657,7 +667,7 @@ void Test::config() {
   check_int("generators[1].calls", 1, config.generators[1].calls);
   check_int("generators[1].indirectAccess", 0,
             config.generators[1].indirect_access);
-  check_str("generators[1].template", "tmp2",
+  check_str("generators[1].template", "tests/programs/templates/loop.asm",
             config.generators[1].program_template);
   check_int("generators[2].version", 1, config.generators[2].version);
   check_int("generators[2].length", 40, config.generators[2].length);
@@ -704,7 +714,7 @@ void Test::stats() {
 
   // load stats
   Stats s, t;
-  s = manager.getStats();
+  s = getManager().getStats();
 
   // sanity check for loaded stats
   if (s.num_constants.at(1) == 0) {
@@ -838,7 +848,7 @@ void Test::optimizer() {
 void Test::minimizer(size_t tests) {
   Evaluator evaluator(settings);
   Minimizer minimizer(settings);
-  MultiGenerator multi_generator(settings, manager.getStats(), false);
+  MultiGenerator multi_generator(settings, getManager().getStats(), false);
   Sequence s1, s2, s3;
   Program program, minimized;
   for (size_t i = 0; i < tests; i++) {
@@ -865,9 +875,9 @@ void Test::minimizer(size_t tests) {
 
 void Test::miner() {
   Log::get().info("Testing miner");
-  manager.load();
-  manager.getFinder();
-  MultiGenerator multi_generator(settings, manager.getStats(), true);
+  getManager().load();
+  getManager().getFinder();
+  MultiGenerator multi_generator(settings, getManager().getStats(), true);
 }
 
 void Test::linearMatcher() {

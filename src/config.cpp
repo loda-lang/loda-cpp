@@ -1,6 +1,7 @@
 #include "config.hpp"
 
 #include "jute.h"
+#include "setup.hpp"
 
 int64_t get_jint(jute::jValue &v, const std::string &key, int64_t def) {
   if (v[key].get_type() == jute::jType::JNUMBER) {
@@ -34,10 +35,10 @@ std::string get_file_as_string(const std::string &filename) {
 
 std::string get_template(std::string t) {
   static const std::string h(
-      "$LODA_PROGRAMS_HOME/oeis/");  // TODO: use proper variable replacing
+      "$LODA_HOME/programs/");  // TODO: use proper variable replacing
   if (t.rfind(h, 0) == 0) {
     t = t.substr(h.size());
-    t = OeisSequence::getProgramsHome() + t;
+    t = Setup::getProgramsHome() + t;
   }
   return t;
 }
@@ -87,11 +88,12 @@ std::vector<Generator::Config> loadGeneratorConfigs(
 }
 
 Miner::Config ConfigLoader::load(const Settings &settings) {
+  const std::string loda_config = Setup::getMinersConfig();
   Log::get().debug("Loading miner config \"" + settings.miner + "\" from " +
-                   settings.loda_config);
+                   loda_config);
   Miner::Config config;
 
-  auto str = get_file_as_string(settings.loda_config);
+  auto str = get_file_as_string(loda_config);
   auto spec = jute::parser::parse(str);
   auto miners = spec["miners"];
 
@@ -148,7 +150,38 @@ Miner::Config ConfigLoader::load(const Settings &settings) {
     Log::get().error("Miner config not found: " + settings.miner, true);
   }
   Log::get().debug("Finished loading miner config \"" + settings.miner +
-                   "\" from " + settings.loda_config + " with " +
+                   "\" from " + loda_config + " with " +
                    std::to_string(config.generators.size()) + " generators");
   return config;
 }
+
+/*
+TODO: handle these settings via setup
+
+  std::cout << std::endl << "=== Environment variables ===" << std::endl;
+  std::cout << "LODA_UPDATE_INTERVAL     Update interval for OEIS metadata in "
+               "days (default: " +
+                   std::to_string(settings.update_interval_in_days) + ")"
+            << std::endl;
+  std::cout << "LODA_MAX_CYCLES          Maximum number of interpreter cycles "
+               "(same as -c)"
+            << std::endl;
+  std::cout << "LODA_MAX_MEMORY          Maximum number of used memory cells "
+               "(same as -m)"
+            << std::endl;
+  std::cout
+      << "LODA_MAX_PHYSICAL_MEMORY Maximum physical memory in MB (same as -p)"
+      << std::endl;
+  std::cout
+      << "LODA_SLACK_ALERTS        Enable alerts on Slack (default: false)"
+      << std::endl;
+  std::cout
+      << "LODA_TWEET_ALERTS        Enable alerts on Twitter (default: false)"
+      << std::endl;
+  std::cout << "LODA_INFLUXDB_HOST       InfluxDB host name (URL) for "
+               "publishing metrics"
+            << std::endl;
+  std::cout << "LODA_INFLUXDB_AUTH       InfluxDB authentication info "
+               "('user:password' format)"
+            << std::endl;
+*/

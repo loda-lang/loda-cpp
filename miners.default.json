@@ -126,11 +126,11 @@
       "calls": false,
       "indirectAccess": false,
       "template": [
-        "templates/call.asm",
-        "templates/call2.asm",
-        "templates/loop.asm",
-        "templates/loop2.asm",
-        "templates/loop_call.asm"
+        "$LODA_HOME/programs/templates/call.asm",
+        "$LODA_HOME/programs/templates/call2.asm",
+        "$LODA_HOME/programs/templates/loop.asm",
+        "$LODA_HOME/programs/templates/loop2.asm",
+        "$LODA_HOME/programs/templates/loop_call.asm"
       ]
     },
     {
@@ -163,14 +163,14 @@
       "calls": false,
       "indirectAccess": false,
       "template": [
-        "$LODA_PROGRAMS_HOME/oeis/000/A000040.asm",
-        "$LODA_PROGRAMS_HOME/oeis/000/A000149.asm",
-        "$LODA_PROGRAMS_HOME/oeis/000/A000203.asm",
-        "$LODA_PROGRAMS_HOME/oeis/000/A000796.asm",
-        "$LODA_PROGRAMS_HOME/oeis/001/A001113.asm",
-        "$LODA_PROGRAMS_HOME/oeis/004/A004086.asm",
-        "$LODA_PROGRAMS_HOME/oeis/014/A014682.asm",
-        "$LODA_PROGRAMS_HOME/oeis/132/A132106.asm"
+        "$LODA_HOME/programs/oeis/000/A000040.asm",
+        "$LODA_HOME/programs/oeis/000/A000149.asm",
+        "$LODA_HOME/programs/oeis/000/A000203.asm",
+        "$LODA_HOME/programs/oeis/000/A000796.asm",
+        "$LODA_HOME/programs/oeis/001/A001113.asm",
+        "$LODA_HOME/programs/oeis/004/A004086.asm",
+        "$LODA_HOME/programs/oeis/014/A014682.asm",
+        "$LODA_HOME/programs/oeis/132/A132106.asm"
       ]
     },
     {

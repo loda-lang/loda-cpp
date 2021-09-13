@@ -12,6 +12,8 @@ class Commands {
 
   // official commands
 
+  void setup();
+
   void evaluate(const std::string& path);
 
   void check(const std::string& id);
@@ -42,8 +44,6 @@ class Commands {
 
  private:
   const Settings& settings;
-
-  static std::string getVersionInfo();
 
   static void initLog(bool silent);
 };

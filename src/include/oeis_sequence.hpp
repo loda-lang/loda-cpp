@@ -10,12 +10,6 @@ class OeisSequence {
 
   static const size_t EXTENDED_SEQ_LENGTH;
 
-  static const std::string& getOeisHome();
-
-  static const std::string& getProgramsHome();
-
-  static void setProgramsHome(const std::string& home);
-
   static bool isTooBig(const Number& n);
 
   OeisSequence(size_t id = 0);
@@ -46,8 +40,6 @@ class OeisSequence {
   std::string to_string() const;
 
  private:
-  static std::string PROGRAMS_HOME;
-
   mutable Sequence terms;
   mutable size_t num_bfile_terms;
 };
