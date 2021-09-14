@@ -7,7 +7,7 @@ This repository ([loda-cpp](https://github.com/loda-lang/loda-cpp)) contains an 
 
 ## Installation
 
-To install LODA using binaries, please follow the [official installation instructions](http://loda-lang.org/install/). Alternatively, you can also build it from sources. You need the `make` tool and a standard C++ compiler. It has been tested on Linux and MacOS and does not require any external libraries, but only the `wget`, `gzip` command-line tools. To build it, you need to run the following commands:
+To install LODA using binaries, please follow the [official installation instructions](http://loda-lang.org/install/). Alternatively, you can also build it from sources. You need the `make` tool and a standard C++ compiler. It has been tested on Linux and MacOS and does not require any external libraries, but only the `curl`, `gzip` command-line tools. To build it, you need to run the following commands:
 
 ```bash
 git clone git@github.com:loda-lang/loda-cpp.git
