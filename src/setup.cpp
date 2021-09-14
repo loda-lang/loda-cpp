@@ -1,15 +1,19 @@
 #include "setup.hpp"
 
+#include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 
 #include "file.hpp"
 #include "util.hpp"
 
 std::string Setup::LODA_HOME;
-std::string Setup::LODA_CONFIG;
 std::string Setup::OEIS_HOME;
 std::string Setup::PROGRAMS_HOME;
+std::string Setup::MINERS_CONFIG;
+std::map<std::string, std::string> Setup::ADVANCED_CONFIG;
+bool Setup::LOADED_ADVANCED_CONFIG = false;
 
 std::string Setup::getVersionInfo() {
 #ifdef LODA_VERSION
@@ -39,14 +43,14 @@ void Setup::setLodaHome(const std::string& home) {
 }
 
 const std::string& Setup::getMinersConfig() {
-  if (LODA_CONFIG.empty()) {
+  if (MINERS_CONFIG.empty()) {
     setMinersConfig(getLodaHome() + "miners.default.json");
   }
-  return LODA_CONFIG;
+  return MINERS_CONFIG;
 }
 
 void Setup::setMinersConfig(const std::string& loda_config) {
-  LODA_CONFIG = loda_config;
+  MINERS_CONFIG = loda_config;
 }
 
 const std::string& Setup::getOeisHome() {
@@ -96,6 +100,64 @@ void Setup::moveDir(const std::string& from, const std::string& to) {
   std::string cmd = "mv " + from + " " + to;
   if (system(cmd.c_str()) != 0) {
     Log::get().error("Error executing command: " + cmd, true);
+  }
+}
+
+std::string Setup::getAdvancedConfig(const std::string& key) {
+  if (!LOADED_ADVANCED_CONFIG) {
+    loadAdvancedConfig();
+    LOADED_ADVANCED_CONFIG = true;
+  }
+  auto it = ADVANCED_CONFIG.find(key);
+  if (it != ADVANCED_CONFIG.end()) {
+    return it->second;
+  }
+  return std::string();
+}
+
+void trimString(std::string& str) {
+  std::stringstream trimmer;
+  trimmer << str;
+  str.clear();
+  trimmer >> str;
+}
+
+void throwSetupParseError(const std::string& line) {
+  Log::get().error("Error parsing line from setup.txt: " + line, true);
+}
+
+void Setup::loadAdvancedConfig() {
+  std::ifstream in(getLodaHome() + "setup.txt");
+  if (in.good()) {
+    std::string line;
+    while (std::getline(in, line)) {
+      if (line.empty() || line[0] == '#') {
+        continue;
+      }
+      auto pos = line.find('=');
+      if (pos == std::string::npos) {
+        throwSetupParseError(line);
+      }
+      auto key = line.substr(0, pos);
+      auto value = line.substr(pos + 1);
+      trimString(key);
+      trimString(value);
+      std::transform(key.begin(), key.end(), key.begin(), ::toupper);
+      if (key.empty() || value.empty()) {
+        throwSetupParseError(line);
+      }
+      ADVANCED_CONFIG[key] = value;
+    }
+  }
+}
+
+void Setup::saveAdvancedConfig() {
+  std::ofstream out(getLodaHome() + "setup.txt");
+  if (out.bad()) {
+    Log::get().error("Error saving configuration to setup.txt", true);
+  }
+  for (auto it : ADVANCED_CONFIG) {
+    out << it.first << "=" << it.second << std::endl;
   }
 }
 
@@ -213,7 +275,7 @@ void Setup::runWizard() {
     std::getline(std::cin, line);
   }
 
-  // check loda config
+  // check miners config
   const std::string default_miners_config = loda_home + "miners.default.json";
   if (!isFile(default_miners_config)) {
     // TODO: check version here and get the right version!

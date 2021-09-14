@@ -2,5 +2,8 @@
     "C_Cpp.clang_format_style": "Google",
     "editor.formatOnSave": true,
     "makefile.makeDirectory": "${workspaceFolder}/src",
-    "makefile.makefilePath": "${workspaceFolder}/src/Makefile"
+    "makefile.makefilePath": "${workspaceFolder}/src/Makefile",
+    "files.associations": {
+        "map": "cpp"
+    }
 }
