@@ -8,6 +8,10 @@ class Http {
 
   static bool postFile(const std::string &url, const std::string &file_path,
                        const std::string &auth);
+
+ private:
+  static int64_t WWW_CLIENT;
+  static void initWWWClient();
 };
 
 bool getEnvFlag(const std::string &var);

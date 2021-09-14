@@ -24,22 +24,70 @@
 #include <mach/mach.h>
 #endif
 
+enum WWWClient { WC_UNKNOWN = 0, WC_CURL = 1, WC_WGET = 2 };
+
+int64_t Http::WWW_CLIENT = WC_UNKNOWN;
+
+void Http::initWWWClient() {
+  if (WWW_CLIENT == WC_UNKNOWN) {
+    if (system("curl --version > /dev/null 2> /dev/null") == 0) {
+      WWW_CLIENT = WC_CURL;
+    } else if (system("wget --version > /dev/null 2> /dev/null") == 0) {
+      WWW_CLIENT = WC_WGET;
+    } else {
+      Log::get().error("No web client found. Please install curl or wget.",
+                       true);
+    }
+  }
+}
+
 void Http::get(const std::string &url, const std::string &local_path) {
-  const std::string cmd =
-      "wget -nv --no-use-server-timestamps -O " + local_path + " " + url;
+  initWWWClient();
+  std::string cmd;
+  switch (WWW_CLIENT) {
+    case WC_CURL:
+      cmd = "curl -fsSLo " + local_path + " " + url;
+      break;
+    case WC_WGET:
+      cmd = "wget -q --no-use-server-timestamps -O " + local_path + " " + url;
+      break;
+    default:
+      Log::get().error("Unsupported web client for GET request", true);
+  }
   if (system(cmd.c_str()) != 0) {
     Log::get().error("Error fetching " + url, true);
     std::remove(local_path.c_str());
   }
+  Log::get().info("Fetched " + url);
 }
 
 bool Http::postFile(const std::string &url, const std::string &file_path,
                     const std::string &auth) {
-  std::string cmd = "curl -i -s";
-  if (!auth.empty()) {
-    cmd += " -u " + auth;
+  initWWWClient();
+  std::string cmd;
+  switch (WWW_CLIENT) {
+    case WC_CURL: {
+      cmd = "curl -fsSL";
+      if (!auth.empty()) {
+        cmd += " -u " + auth;
+      }
+      cmd +=
+          " -X POST '" + url + "' --data-binary @" + file_path + " > /dev/null";
+      break;
+    }
+    case WC_WGET: {
+      cmd = "wget -q";
+      if (!auth.empty()) {
+        auto colon = auth.find(':');
+        cmd += " --user '" + auth.substr(0, colon) + "' --password '" +
+               auth.substr(colon + 1) + "'";
+      }
+      cmd += " --post-file " + file_path + " " + url + " > /dev/null";
+      break;
+    }
+    default:
+      Log::get().error("Unsupported web client for POST request", true);
   }
-  cmd += " -XPOST '" + url + "' --data-binary @" + file_path + " > /dev/null";
   auto exit_code = system(cmd.c_str());
   return (exit_code == 0);
 }
