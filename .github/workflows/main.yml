@@ -32,4 +32,4 @@ jobs:
       - name: Build
         run: cd src && nmake.exe /F Makefile.windows
       - name: Test
-        run: .\loda.exe -l debug test
+        run: .\loda.exe test

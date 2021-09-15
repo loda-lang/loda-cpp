@@ -29,8 +29,21 @@ std::string Setup::getLodaHomeNoCheck() {
   if (loda_home) {
     result = std::string(loda_home);
   } else {
-    auto user_home = std::string(std::getenv("HOME"));
-    result = user_home + "/loda/";
+    auto user_home = std::getenv("HOME");
+    if (user_home) {
+      result = std::string(user_home) + "/loda/";
+    } else {
+      // on windows...
+      auto homedrive = std::getenv("HOMEDRIVE");
+      auto homepath = std::getenv("HOMEPATH");
+      if (homedrive && homepath) {
+        result = std::string(homedrive) + std::string(homepath) + "\\loda/";
+      } else {
+        throw std::runtime_error(
+            "Error determining LODA home directory. Please set the LODA_HOME "
+            "environment variable.");
+      }
+    }
   }
   ensureTrailingSlash(result);
   return result;
@@ -148,8 +161,6 @@ void throwSetupParseError(const std::string& line) {
 }
 
 void Setup::loadAdvancedConfig() {
-  std::cout << "Try loading config from " << getLodaHomeNoCheck() << "setup.txt"
-            << std::endl;
   std::ifstream in(getLodaHomeNoCheck() + "setup.txt");
   if (in.good()) {
     std::string line;
