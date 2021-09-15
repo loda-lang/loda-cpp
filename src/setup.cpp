@@ -148,6 +148,8 @@ void throwSetupParseError(const std::string& line) {
 }
 
 void Setup::loadAdvancedConfig() {
+  std::cout << "Try loading config from " << getLodaHomeNoCheck() << "setup.txt"
+            << std::endl;
   std::ifstream in(getLodaHomeNoCheck() + "setup.txt");
   if (in.good()) {
     std::string line;
