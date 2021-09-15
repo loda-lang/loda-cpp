@@ -7,6 +7,8 @@ class Setup {
  public:
   static std::string getVersionInfo();
 
+  static std::string getLodaHomeNoCheck();
+
   static const std::string& getLodaHome();
 
   static void setLodaHome(const std::string& home);
@@ -22,6 +24,11 @@ class Setup {
   static void setProgramsHome(const std::string& home);
 
   static std::string getAdvancedConfig(const std::string& key);
+
+  static bool getAdvancedConfigFlag(const std::string& key);
+
+  static int64_t getAdvancedConfigInt(const std::string& key,
+                                      int64_t default_value);
 
   static void runWizard();
 

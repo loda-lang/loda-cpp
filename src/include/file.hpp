@@ -14,10 +14,6 @@ class Http {
   static void initWWWClient();
 };
 
-bool getEnvFlag(const std::string &var);
-
-int64_t getEnvInt(const std::string &var, int64_t default_value);
-
 bool isFile(const std::string &path);
 
 bool isDir(const std::string &path);

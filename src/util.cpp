@@ -6,6 +6,7 @@
 #include <sstream>
 
 #include "file.hpp"
+#include "setup.hpp"
 
 enum TwitterClient {
   TW_UNKNOWN = 0,
@@ -27,8 +28,8 @@ TwitterClient findTwitterClient() {
 Log::Log()
     : level(Level::INFO),
       silent(false),
-      slack_alerts(getEnvFlag("LODA_SLACK_ALERTS")),
-      tweet_alerts(getEnvFlag("LODA_TWEET_ALERTS")),
+      slack_alerts(Setup::getAdvancedConfigFlag("LODA_SLACK_ALERTS")),
+      tweet_alerts(Setup::getAdvancedConfigFlag("LODA_TWEET_ALERTS")),
       twitter_client(TW_UNKNOWN) {}
 
 Log &Log::get() {
@@ -150,15 +151,12 @@ void Log::log(Level level, const std::string &msg) {
 }
 
 Metrics::Metrics()
-    : publish_interval(getEnvInt("LODA_METRICS_PUBLISH_INTERVAL", 60)),
+    : publish_interval(
+          Setup::getAdvancedConfigInt("LODA_METRICS_PUBLISH_INTERVAL", 60)),
       notified(false) {
-  auto h = std::getenv("LODA_INFLUXDB_HOST");
-  if (h) {
-    host = std::string(h);
-    h = std::getenv("LODA_INFLUXDB_AUTH");
-    if (h) {
-      auth = std::string(h);
-    }
+  host = Setup::getAdvancedConfig("LODA_INFLUXDB_HOST");
+  if (!host.empty()) {
+    auth = Setup::getAdvancedConfig("LODA_INFLUXDB_AUTH");
   }
   std::random_device rand;
   tmp_file_id = rand() % 1000;
@@ -202,12 +200,14 @@ void Metrics::write(const std::vector<Entry> entries) const {
 
 Settings::Settings()
     : num_terms(10),
-      max_memory(getEnvInt("LODA_MAX_MEMORY", 100)),
-      max_cycles(getEnvInt("LODA_MAX_CYCLES", 5000000)),
-      max_stack_size(getEnvInt("LODA_MAX_STACK_SIZE", 100)),
-      max_physical_memory(getEnvInt("LODA_MAX_PHYSICAL_MEMORY", 1024) * 1024 *
-                          1024),
-      update_interval_in_days(getEnvInt("LODA_UPDATE_INTERVAL", 1)),
+      max_memory(Setup::getAdvancedConfigInt("LODA_MAX_MEMORY", 100)),
+      max_cycles(Setup::getAdvancedConfigInt("LODA_MAX_CYCLES", 5000000)),
+      max_stack_size(Setup::getAdvancedConfigInt("LODA_MAX_STACK_SIZE", 100)),
+      max_physical_memory(
+          Setup::getAdvancedConfigInt("LODA_MAX_PHYSICAL_MEMORY", 1024) * 1024 *
+          1024),
+      update_interval_in_days(
+          Setup::getAdvancedConfigInt("LODA_UPDATE_INTERVAL", 1)),
       throw_on_overflow(true),
       use_steps(false),
       miner("default"),

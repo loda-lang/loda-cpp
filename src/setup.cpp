@@ -23,15 +23,22 @@ std::string Setup::getVersionInfo() {
 #endif
 }
 
+std::string Setup::getLodaHomeNoCheck() {
+  auto loda_home = std::getenv("LODA_HOME");
+  std::string result;
+  if (loda_home) {
+    result = std::string(loda_home);
+  } else {
+    auto user_home = std::string(std::getenv("HOME"));
+    result = user_home + "/loda/";
+  }
+  ensureTrailingSlash(result);
+  return result;
+}
+
 const std::string& Setup::getLodaHome() {
   if (LODA_HOME.empty()) {
-    auto loda_home = std::getenv("LODA_HOME");
-    if (loda_home) {
-      setLodaHome(std::string(loda_home));
-    } else {
-      auto user_home = std::string(std::getenv("HOME"));
-      setLodaHome(user_home + "/loda/");
-    }
+    setLodaHome(getLodaHomeNoCheck());
   }
   return LODA_HOME;
 }
@@ -115,6 +122,20 @@ std::string Setup::getAdvancedConfig(const std::string& key) {
   return std::string();
 }
 
+bool Setup::getAdvancedConfigFlag(const std::string& key) {
+  auto s = getAdvancedConfig(key);
+  return (s == "yes" || s == "true");
+}
+
+int64_t Setup::getAdvancedConfigInt(const std::string& key,
+                                    int64_t default_value) {
+  auto s = getAdvancedConfig(key);
+  if (!s.empty()) {
+    return std::stoll(s);
+  }
+  return default_value;
+}
+
 void trimString(std::string& str) {
   std::stringstream trimmer;
   trimmer << str;
@@ -127,7 +148,7 @@ void throwSetupParseError(const std::string& line) {
 }
 
 void Setup::loadAdvancedConfig() {
-  std::ifstream in(getLodaHome() + "setup.txt");
+  std::ifstream in(getLodaHomeNoCheck() + "setup.txt");
   if (in.good()) {
     std::string line;
     while (std::getline(in, line)) {

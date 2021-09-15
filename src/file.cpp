@@ -92,24 +92,6 @@ bool Http::postFile(const std::string &url, const std::string &file_path,
   return (exit_code == 0);
 }
 
-bool getEnvFlag(const std::string &var) {
-  auto t = std::getenv(var.c_str());
-  if (t) {
-    std::string s(t);
-    return (s == "yes" || s == "true");
-  }
-  return false;
-}
-
-int64_t getEnvInt(const std::string &var, int64_t default_value) {
-  auto t = std::getenv(var.c_str());
-  if (t) {
-    std::string s(t);
-    return std::stoll(s);
-  }
-  return default_value;
-}
-
 bool isFile(const std::string &path) {
   std::ifstream f(path.c_str());
   return f.good();
