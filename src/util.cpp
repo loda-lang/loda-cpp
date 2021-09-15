@@ -200,27 +200,20 @@ void Metrics::write(const std::vector<Entry> entries) const {
 
 Settings::Settings()
     : num_terms(10),
-      max_memory(Setup::getAdvancedConfigInt("LODA_MAX_MEMORY", 100)),
-      max_cycles(Setup::getAdvancedConfigInt("LODA_MAX_CYCLES", 5000000)),
-      max_stack_size(Setup::getAdvancedConfigInt("LODA_MAX_STACK_SIZE", 100)),
-      max_physical_memory(
-          Setup::getAdvancedConfigInt("LODA_MAX_PHYSICAL_MEMORY", 1024) * 1024 *
-          1024),
-      update_interval_in_days(
-          Setup::getAdvancedConfigInt("LODA_UPDATE_INTERVAL", 1)),
+      max_memory(100),
+      max_cycles(5000000),
+      max_stack_size(100),
       throw_on_overflow(true),
       use_steps(false),
       miner("default"),
       print_as_b_file(false),
-      print_as_b_file_offset(0),
-      printed_memory_warning(false) {}
+      print_as_b_file_offset(0) {}
 
 enum class Option {
   NONE,
   NUM_TERMS,
   MAX_MEMORY,
   MAX_CYCLES,
-  MAX_PHYSICAL_MEMORY,
   B_FILE_OFFSET,
   MINER,
   LOG_LEVEL
@@ -232,8 +225,7 @@ std::vector<std::string> Settings::parseArgs(int argc, char *argv[]) {
   for (int i = 1; i < argc; ++i) {
     std::string arg(argv[i]);
     if (option == Option::NUM_TERMS || option == Option::MAX_MEMORY ||
-        option == Option::MAX_CYCLES || option == Option::MAX_PHYSICAL_MEMORY ||
-        option == Option::B_FILE_OFFSET) {
+        option == Option::MAX_CYCLES || option == Option::B_FILE_OFFSET) {
       std::stringstream s(arg);
       int64_t val;
       s >> val;
@@ -255,9 +247,6 @@ std::vector<std::string> Settings::parseArgs(int argc, char *argv[]) {
           break;
         case Option::MAX_CYCLES:
           max_cycles = val;
-          break;
-        case Option::MAX_PHYSICAL_MEMORY:
-          max_physical_memory = val * 1024 * 1024;
           break;
         case Option::LOG_LEVEL:
         case Option::MINER:
@@ -291,8 +280,6 @@ std::vector<std::string> Settings::parseArgs(int argc, char *argv[]) {
         option = Option::MAX_MEMORY;
       } else if (opt == "c") {
         option = Option::MAX_CYCLES;
-      } else if (opt == "p") {
-        option = Option::MAX_PHYSICAL_MEMORY;
       } else if (opt == "i") {
         option = Option::MINER;
       } else if (opt == "s") {
@@ -309,26 +296,6 @@ std::vector<std::string> Settings::parseArgs(int argc, char *argv[]) {
     }
   }
   return unparsed;
-}
-
-bool Settings::hasMemory() const {
-  const auto usage = getMemUsage();
-  if (usage > (size_t)(0.95 * max_physical_memory)) {
-    if (usage > (size_t)(1.5 * max_physical_memory)) {
-      Log::get().error("Exceeded maximum physical memory limit of " +
-                           std::to_string(max_physical_memory / (1024 * 1024)) +
-                           "MB",
-                       true);
-    }
-    if (!printed_memory_warning) {
-      Log::get().warn("Reaching maximum physical memory limit of " +
-                      std::to_string(max_physical_memory / (1024 * 1024)) +
-                      "MB");
-      printed_memory_warning = true;
-    }
-    return false;
-  }
-  return true;
 }
 
 AdaptiveScheduler::AdaptiveScheduler(int64_t target_seconds)

@@ -30,6 +30,12 @@ class Setup {
   static int64_t getAdvancedConfigInt(const std::string& key,
                                       int64_t default_value);
 
+  static int64_t getMaxMemory();
+
+  static int64_t getUpdateIntervalInDays();
+
+  static bool hasMemory();
+
   static void runWizard();
 
  private:
@@ -39,6 +45,7 @@ class Setup {
   static std::string MINERS_CONFIG;
   static std::map<std::string, std::string> ADVANCED_CONFIG;
   static bool LOADED_ADVANCED_CONFIG;
+  static bool PRINTED_MEMORY_WARNING;
 
   static void checkDir(const std::string& home);
   static void ensureTrailingSlash(std::string& dir);

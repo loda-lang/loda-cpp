@@ -14,6 +14,7 @@ std::string Setup::PROGRAMS_HOME;
 std::string Setup::MINERS_CONFIG;
 std::map<std::string, std::string> Setup::ADVANCED_CONFIG;
 bool Setup::LOADED_ADVANCED_CONFIG = false;
+bool Setup::PRINTED_MEMORY_WARNING = false;
 
 std::string Setup::getVersionInfo() {
 #ifdef LODA_VERSION
@@ -147,6 +148,35 @@ int64_t Setup::getAdvancedConfigInt(const std::string& key,
     return std::stoll(s);
   }
   return default_value;
+}
+
+int64_t Setup::getMaxMemory() {
+  return getAdvancedConfigInt("LODA_MAX_PHYSICAL_MEMORY", 1024) * 1024 * 1024;
+}
+
+int64_t Setup::getUpdateIntervalInDays() {
+  return getAdvancedConfigInt("LODA_UPDATE_INTERVAL", 1);
+}
+
+bool Setup::hasMemory() {
+  const auto max_physical_memory = getMaxMemory();
+  const auto usage = getMemUsage();
+  if (usage > (size_t)(0.95 * max_physical_memory)) {
+    if (usage > (size_t)(1.5 * max_physical_memory)) {
+      Log::get().error("Exceeded maximum physical memory limit of " +
+                           std::to_string(max_physical_memory / (1024 * 1024)) +
+                           "MB",
+                       true);
+    }
+    if (!PRINTED_MEMORY_WARNING) {
+      Log::get().warn("Reaching maximum physical memory limit of " +
+                      std::to_string(max_physical_memory / (1024 * 1024)) +
+                      "MB");
+      PRINTED_MEMORY_WARNING = true;
+    }
+    return false;
+  }
+  return true;
 }
 
 void trimString(std::string& str) {

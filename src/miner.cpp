@@ -12,6 +12,7 @@
 #include "optimizer.hpp"
 #include "parser.hpp"
 #include "program_util.hpp"
+#include "setup.hpp"
 
 Miner::Miner(const Settings &settings)
     : settings(settings), manager(settings), interpreter(settings) {}
@@ -106,7 +107,7 @@ void Miner::mine() {
         }
 
         // mutate successful program
-        if (progs.size() < 1000 || settings.hasMemory()) {
+        if (progs.size() < 1000 || Setup::hasMemory()) {
           mutator.mutateConstants(s.second, 100, progs);
         }
       }

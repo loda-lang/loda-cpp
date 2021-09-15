@@ -293,7 +293,7 @@ void OeisManager::update() {
   while (it != files.end()) {
     auto path = Setup::getOeisHome() + *it;
     age_in_days = getFileAgeInDays(path);
-    if (age_in_days >= 0 && age_in_days < settings.update_interval_in_days) {
+    if (age_in_days >= 0 && age_in_days < Setup::getUpdateIntervalInDays()) {
       // no need to update this file
       it = files.erase(it);
       continue;
@@ -421,7 +421,7 @@ const Stats &OeisManager::getStats() {
 
     // check age of stats
     auto age_in_days = getFileAgeInDays(stats.getMainStatsFile(stats_home));
-    if (age_in_days < 0 || age_in_days >= settings.update_interval_in_days) {
+    if (age_in_days < 0 || age_in_days >= Setup::getUpdateIntervalInDays()) {
       generateStats(age_in_days);
     }
     try {
