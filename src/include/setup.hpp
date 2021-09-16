@@ -46,6 +46,8 @@ class Setup {
   static std::map<std::string, std::string> ADVANCED_CONFIG;
   static bool LOADED_ADVANCED_CONFIG;
   static bool PRINTED_MEMORY_WARNING;
+  static int64_t MAX_MEMORY;
+  static int64_t UPDATE_INTERVAL;
 
   static void checkDir(const std::string& home);
   static void ensureTrailingSlash(std::string& dir);

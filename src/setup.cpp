@@ -15,6 +15,8 @@ std::string Setup::MINERS_CONFIG;
 std::map<std::string, std::string> Setup::ADVANCED_CONFIG;
 bool Setup::LOADED_ADVANCED_CONFIG = false;
 bool Setup::PRINTED_MEMORY_WARNING = false;
+int64_t Setup::MAX_MEMORY = -1;
+int64_t Setup::UPDATE_INTERVAL = -1;
 
 std::string Setup::getVersionInfo() {
 #ifdef LODA_VERSION
@@ -152,11 +154,18 @@ int64_t Setup::getAdvancedConfigInt(const std::string& key,
 }
 
 int64_t Setup::getMaxMemory() {
-  return getAdvancedConfigInt("LODA_MAX_PHYSICAL_MEMORY", 1024) * 1024 * 1024;
+  if (MAX_MEMORY == -1) {
+    MAX_MEMORY =
+        getAdvancedConfigInt("LODA_MAX_PHYSICAL_MEMORY", 1024) * 1024 * 1024;
+  }
+  return MAX_MEMORY;
 }
 
 int64_t Setup::getUpdateIntervalInDays() {
-  return getAdvancedConfigInt("LODA_UPDATE_INTERVAL", 1);
+  if (UPDATE_INTERVAL == -1) {
+    UPDATE_INTERVAL = getAdvancedConfigInt("LODA_UPDATE_INTERVAL", 1);
+  }
+  return UPDATE_INTERVAL;
 }
 
 bool Setup::hasMemory() {

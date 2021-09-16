@@ -50,7 +50,6 @@ Options:
   -s                  Evaluate program to number of execution steps
   -c <number>         Maximum number of interpreter cycles (no limit: -1)
   -m <number>         Maximum number of used memory cells (no limit: -1)
-  -p <number>         Maximum physical memory in MB (default: 1024)
   -l <string>         Log level (values: debug,info,warn,error,alert)
   -i <string>         Name of miner configuration from loda.json
 ```
