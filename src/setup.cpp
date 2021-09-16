@@ -61,6 +61,7 @@ void Setup::setLodaHome(const std::string& home) {
   LODA_HOME = home;
   ensureTrailingSlash(LODA_HOME);
   checkDir(LODA_HOME);
+  Log::get().info("Using LODA home directory " + LODA_HOME);
 }
 
 const std::string& Setup::getMinersConfig() {

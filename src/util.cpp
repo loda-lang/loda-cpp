@@ -28,8 +28,9 @@ TwitterClient findTwitterClient() {
 Log::Log()
     : level(Level::INFO),
       silent(false),
-      slack_alerts(Setup::getAdvancedConfigFlag("LODA_SLACK_ALERTS")),
-      tweet_alerts(Setup::getAdvancedConfigFlag("LODA_TWEET_ALERTS")),
+      loaded_alerts_config(false),
+      slack_alerts(false),
+      tweet_alerts(false),
       twitter_client(TW_UNKNOWN) {}
 
 Log &Log::get() {
@@ -52,18 +53,25 @@ void Log::error(const std::string &msg, bool throw_) {
 
 void Log::alert(const std::string &msg, AlertDetails details) {
   log(Log::Level::ALERT, msg);
+  if (!loaded_alerts_config) {
+    slack_alerts = Setup::getAdvancedConfigFlag("LODA_SLACK_ALERTS");
+    tweet_alerts = Setup::getAdvancedConfigFlag("LODA_TWEET_ALERTS");
+    loaded_alerts_config = true;
+  }
   std::string copy = msg;
-  std::replace(copy.begin(), copy.end(), '"', ' ');
-  std::replace(copy.begin(), copy.end(), '\'', ' ');
-  if (copy.length() > 140) {
-    copy = copy.substr(0, 137);
-    while (!copy.empty()) {
-      char ch = copy.at(copy.size() - 1);
-      copy = copy.substr(0, copy.length() - 1);
-      if (ch == ' ' || ch == '.' || ch == ',') break;
-    }
-    if (!copy.empty()) {
-      copy = copy + "...";
+  if (slack_alerts || tweet_alerts) {
+    std::replace(copy.begin(), copy.end(), '"', ' ');
+    std::replace(copy.begin(), copy.end(), '\'', ' ');
+    if (copy.length() > 140) {
+      copy = copy.substr(0, 137);
+      while (!copy.empty()) {
+        char ch = copy.at(copy.size() - 1);
+        copy = copy.substr(0, copy.length() - 1);
+        if (ch == ' ' || ch == '.' || ch == ',') break;
+      }
+      if (!copy.empty()) {
+        copy = copy + "...";
+      }
     }
   }
   if (!copy.empty()) {

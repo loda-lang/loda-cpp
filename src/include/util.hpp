@@ -34,6 +34,7 @@ class Log {
 
   Level level;
   bool silent;
+  bool loaded_alerts_config;
   bool slack_alerts;
   bool tweet_alerts;
 
