@@ -13,6 +13,7 @@
 #include "program.hpp"
 #include "program_util.hpp"
 #include "semantics.hpp"
+#include "setup.hpp"
 
 #ifdef _WIN64
 #include <io.h>
@@ -328,7 +329,7 @@ std::pair<Number, size_t> Interpreter::call(int64_t id, const Number& arg) {
 
   // add to cache if there is memory available
   if (++num_memory_checks % 10000 == 0 && has_memory) {
-    has_memory = settings.hasMemory();
+    has_memory = Setup::hasMemory();
   }
   if (has_memory) {
     terms_cache[key] = result;

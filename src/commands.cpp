@@ -81,8 +81,6 @@ void Commands::help() {
   std::cout << "  -m <number>         Maximum number of used memory cells "
                "(no limit: -1)"
             << std::endl;
-  std::cout << "  -p <number>         Maximum physical memory in MB (default: "
-            << settings.max_physical_memory / (1024 * 1024) << ")" << std::endl;
   std::cout << "  -l <string>         Log level (values: "
                "debug,info,warn,error,alert)"
             << std::endl;
@@ -183,7 +181,7 @@ void Commands::match(const std::string& path) {
         } else {
           updated++;
         }
-        if (progs.size() < 1000 || settings.hasMemory()) {
+        if (progs.size() < 1000 || Setup::hasMemory()) {
           mutator.mutateConstants(s.second, 10, progs);
         }
       }

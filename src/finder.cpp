@@ -52,7 +52,7 @@ Matcher::seq_programs_t Finder::findSequence(
     const std::vector<OeisSequence> &sequences) {
   // update memory usage info
   if (num_find_attempts++ % 1000 == 0) {
-    bool has_memory = settings.hasMemory();
+    bool has_memory = Setup::hasMemory();
     for (auto &matcher : matchers) {
       matcher->has_memory = has_memory;
     }

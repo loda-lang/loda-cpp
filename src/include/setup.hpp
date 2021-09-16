@@ -7,6 +7,8 @@ class Setup {
  public:
   static std::string getVersionInfo();
 
+  static std::string getLodaHomeNoCheck();
+
   static const std::string& getLodaHome();
 
   static void setLodaHome(const std::string& home);
@@ -23,6 +25,17 @@ class Setup {
 
   static std::string getAdvancedConfig(const std::string& key);
 
+  static bool getAdvancedConfigFlag(const std::string& key);
+
+  static int64_t getAdvancedConfigInt(const std::string& key,
+                                      int64_t default_value);
+
+  static int64_t getMaxMemory();
+
+  static int64_t getUpdateIntervalInDays();
+
+  static bool hasMemory();
+
   static void runWizard();
 
  private:
@@ -32,6 +45,9 @@ class Setup {
   static std::string MINERS_CONFIG;
   static std::map<std::string, std::string> ADVANCED_CONFIG;
   static bool LOADED_ADVANCED_CONFIG;
+  static bool PRINTED_MEMORY_WARNING;
+  static int64_t MAX_MEMORY;
+  static int64_t UPDATE_INTERVAL;
 
   static void checkDir(const std::string& home);
   static void ensureTrailingSlash(std::string& dir);

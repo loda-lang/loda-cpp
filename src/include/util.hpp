@@ -34,6 +34,7 @@ class Log {
 
   Level level;
   bool silent;
+  bool loaded_alerts_config;
   bool slack_alerts;
   bool tweet_alerts;
 
@@ -72,8 +73,6 @@ class Settings {
   int64_t max_memory;
   int64_t max_cycles;
   size_t max_stack_size;
-  size_t max_physical_memory;
-  int64_t update_interval_in_days;
   bool throw_on_overflow;
   bool use_steps;
   std::string miner;
@@ -85,11 +84,6 @@ class Settings {
   Settings();
 
   std::vector<std::string> parseArgs(int argc, char *argv[]);
-
-  bool hasMemory() const;
-
- private:
-  mutable bool printed_memory_warning;
 };
 
 class AdaptiveScheduler {

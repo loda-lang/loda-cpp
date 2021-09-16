@@ -14,6 +14,9 @@ std::string Setup::PROGRAMS_HOME;
 std::string Setup::MINERS_CONFIG;
 std::map<std::string, std::string> Setup::ADVANCED_CONFIG;
 bool Setup::LOADED_ADVANCED_CONFIG = false;
+bool Setup::PRINTED_MEMORY_WARNING = false;
+int64_t Setup::MAX_MEMORY = -1;
+int64_t Setup::UPDATE_INTERVAL = -1;
 
 std::string Setup::getVersionInfo() {
 #ifdef LODA_VERSION
@@ -23,15 +26,35 @@ std::string Setup::getVersionInfo() {
 #endif
 }
 
+std::string Setup::getLodaHomeNoCheck() {
+  auto loda_home = std::getenv("LODA_HOME");
+  std::string result;
+  if (loda_home) {
+    result = std::string(loda_home);
+  } else {
+    auto user_home = std::getenv("HOME");
+    if (user_home) {
+      result = std::string(user_home) + "/loda/";
+    } else {
+      // on windows...
+      auto homedrive = std::getenv("HOMEDRIVE");
+      auto homepath = std::getenv("HOMEPATH");
+      if (homedrive && homepath) {
+        result = std::string(homedrive) + std::string(homepath) + "\\loda/";
+      } else {
+        throw std::runtime_error(
+            "Error determining LODA home directory. Please set the LODA_HOME "
+            "environment variable.");
+      }
+    }
+  }
+  ensureTrailingSlash(result);
+  return result;
+}
+
 const std::string& Setup::getLodaHome() {
   if (LODA_HOME.empty()) {
-    auto loda_home = std::getenv("LODA_HOME");
-    if (loda_home) {
-      setLodaHome(std::string(loda_home));
-    } else {
-      auto user_home = std::string(std::getenv("HOME"));
-      setLodaHome(user_home + "/loda/");
-    }
+    setLodaHome(getLodaHomeNoCheck());
   }
   return LODA_HOME;
 }
@@ -40,6 +63,7 @@ void Setup::setLodaHome(const std::string& home) {
   LODA_HOME = home;
   ensureTrailingSlash(LODA_HOME);
   checkDir(LODA_HOME);
+  Log::get().info("Using LODA home directory " + LODA_HOME);
 }
 
 const std::string& Setup::getMinersConfig() {
@@ -115,6 +139,56 @@ std::string Setup::getAdvancedConfig(const std::string& key) {
   return std::string();
 }
 
+bool Setup::getAdvancedConfigFlag(const std::string& key) {
+  auto s = getAdvancedConfig(key);
+  return (s == "yes" || s == "true");
+}
+
+int64_t Setup::getAdvancedConfigInt(const std::string& key,
+                                    int64_t default_value) {
+  auto s = getAdvancedConfig(key);
+  if (!s.empty()) {
+    return std::stoll(s);
+  }
+  return default_value;
+}
+
+int64_t Setup::getMaxMemory() {
+  if (MAX_MEMORY == -1) {
+    MAX_MEMORY =
+        getAdvancedConfigInt("LODA_MAX_PHYSICAL_MEMORY", 1024) * 1024 * 1024;
+  }
+  return MAX_MEMORY;
+}
+
+int64_t Setup::getUpdateIntervalInDays() {
+  if (UPDATE_INTERVAL == -1) {
+    UPDATE_INTERVAL = getAdvancedConfigInt("LODA_UPDATE_INTERVAL", 1);
+  }
+  return UPDATE_INTERVAL;
+}
+
+bool Setup::hasMemory() {
+  const auto max_physical_memory = getMaxMemory();
+  const auto usage = getMemUsage();
+  if (usage > (size_t)(0.95 * max_physical_memory)) {
+    if (usage > (size_t)(1.5 * max_physical_memory)) {
+      Log::get().error("Exceeded maximum physical memory limit of " +
+                           std::to_string(max_physical_memory / (1024 * 1024)) +
+                           "MB",
+                       true);
+    }
+    if (!PRINTED_MEMORY_WARNING) {
+      Log::get().warn("Reaching maximum physical memory limit of " +
+                      std::to_string(max_physical_memory / (1024 * 1024)) +
+                      "MB");
+      PRINTED_MEMORY_WARNING = true;
+    }
+    return false;
+  }
+  return true;
+}
+
 void trimString(std::string& str) {
   std::stringstream trimmer;
   trimmer << str;
@@ -127,7 +201,7 @@ void throwSetupParseError(const std::string& line) {
 }
 
 void Setup::loadAdvancedConfig() {
-  std::ifstream in(getLodaHome() + "setup.txt");
+  std::ifstream in(getLodaHomeNoCheck() + "setup.txt");
   if (in.good()) {
     std::string line;
     while (std::getline(in, line)) {
