@@ -362,11 +362,10 @@ void Setup::runWizard() {
     std::string url =
         "https://raw.githubusercontent.com/loda-lang/loda-cpp/main/"
         "miners.default.json";
-    std::cout << "To mine programs, you should install the default miner "
-                 "configuration file:"
-              << std::endl
-              << url << std::endl
-              << "Download it now ? (Y/n) ";
+    std::cout << "The LODA miner requires a configuration file." << std::endl;
+    std::cout << "Press return to download the default miner configuration:"
+              << std::endl;
+    std::cout << "[" + url + "] ";
     std::getline(std::cin, line);
     if (line.empty() || line == "y" || line == "Y") {
       Http::get(url, default_miners_config);
