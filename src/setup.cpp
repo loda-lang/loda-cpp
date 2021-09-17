@@ -259,7 +259,10 @@ void Setup::runWizard() {
   }
   ensureTrailingSlash(loda_home);
   ensureDir(loda_home);
-  ensureDir(loda_home + "bin/");
+
+  // load setup configuration
+  LODA_HOME = loda_home;
+  loadAdvancedConfig();
 
   // migrate old programs directory
   auto programs_home = std::getenv("LODA_PROGRAMS_HOME");
@@ -332,6 +335,7 @@ void Setup::runWizard() {
   }
 
   // check binary
+  ensureDir(loda_home + "bin/");
   std::string exe;
 #ifdef _WIN64
   exe = ".exe";
@@ -339,7 +343,8 @@ void Setup::runWizard() {
   if (!isFile(loda_home + "bin/loda" + exe)) {
     std::cout << "Please copy the 'loda" << exe << "' executable to "
               << loda_home << "bin" << std::endl;
-    std::getline(std::cin, line);
+    std::cout << "and restart the setup." << std::endl;
+    return;
   }
 
   // environment variables
@@ -354,6 +359,8 @@ void Setup::runWizard() {
               << "Please remove it from your shell configuration." << std::endl;
     std::getline(std::cin, line);
   }
+
+  // mining mode
 
   // check miners config
   const std::string default_miners_config = loda_home + "miners.default.json";
