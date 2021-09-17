@@ -29,6 +29,8 @@ class Test {
 
   void knownPrograms();
 
+  void apiClient();
+
   void oeisList();
 
   void oeisSeq();

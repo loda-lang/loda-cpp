@@ -6,6 +6,7 @@
 #include <sstream>
 #include <stdexcept>
 
+#include "api_client.hpp"
 #include "big_number.hpp"
 #include "blocks.hpp"
 #include "config.hpp"
@@ -58,6 +59,7 @@ void Test::all() {
   // slow tests
 #ifndef _WIN64
   // TODO: fix tests on windows
+  apiClient();
   ackermann();
   stats();
   oeisList();
@@ -474,6 +476,16 @@ void Test::knownPrograms() {
                         8192, 16384, 32768, 65536}));
   testSeq(1489, Sequence({0, -1, -2, -3, -4, -5, -6, -7, -8, -9, -10, -11, -12,
                           -13, -14, -15, -16, -17}));
+}
+
+void Test::apiClient() {
+  Log::get().info("Testing API client");
+  ApiClient client;
+  client.postProgram("tests/programs/oeis/000/A000005.asm");
+  auto program = client.getNextProgram();
+  if (program.ops.empty()) {
+    Log::get().error("Expected non-empty program from API server");
+  }
 }
 
 void Test::steps() {

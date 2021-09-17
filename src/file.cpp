@@ -41,7 +41,8 @@ void Http::initWWWClient() {
   }
 }
 
-void Http::get(const std::string &url, const std::string &local_path) {
+bool Http::get(const std::string &url, const std::string &local_path,
+               bool fail_on_error) {
   initWWWClient();
   std::string cmd;
   switch (WWW_CLIENT) {
@@ -55,10 +56,15 @@ void Http::get(const std::string &url, const std::string &local_path) {
       Log::get().error("Unsupported web client for GET request", true);
   }
   if (system(cmd.c_str()) != 0) {
-    Log::get().error("Error fetching " + url, true);
     std::remove(local_path.c_str());
+    if (fail_on_error) {
+      Log::get().error("Error fetching " + url, true);
+    } else {
+      return false;
+    }
   }
   Log::get().info("Fetched " + url);
+  return true;
 }
 
 bool Http::postFile(const std::string &url, const std::string &file_path,
