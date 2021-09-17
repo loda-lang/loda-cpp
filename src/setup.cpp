@@ -249,7 +249,8 @@ void Setup::runWizard() {
   }
   std::cout << "Enter the directory where LODA should store its files."
             << std::endl;
-  std::cout << "Press enter for the default location (see below)." << std::endl;
+  std::cout << "Press return for the default location (see below)."
+            << std::endl;
   std::cout << "[" << loda_home << "] ";
   std::getline(std::cin, line);
   std::cout << std::endl;
@@ -277,25 +278,30 @@ void Setup::runWizard() {
 
   // initialize programs directory
   if (!isDir(loda_home + "programs/oeis")) {
-    std::cout << "You need to install a local copy of the loda-programs "
-                 "repository."
+    std::cout << "LODA needs to download its programs repository from GitHub."
               << std::endl;
-    std::cout << "This is required for mining and evaluating integer sequence "
-                 "programs."
+    std::cout << "It contains programs for more than 35,000 integer sequences."
+              << std::endl;
+    std::cout << "It is needed to evaluate known integer sequence programs and "
+              << std::endl;
+    std::cout << "for mining new programs using the 'loda mine' command."
+              << std::endl;
+    std::cout << "The repository requires around 350 MB of disk space."
+              << std::endl
               << std::endl;
     std::string git_test = "git --version > /dev/null";
     if (system(git_test.c_str()) != 0) {
-      std::cout << "The setup requires the git tool to download the programs."
+      std::cout << std::endl
+                << "The setup requires the git tool to download the programs."
                 << std::endl;
       std::cout
-          << "Please install it: "
+          << "Please install git and restart the setup: "
              "https://git-scm.com/book/en/v2/Getting-Started-Installing-Git"
           << std::endl;
-      std::getline(std::cin, line);
+      return;
     }
     std::string git_url = "https://github.com/loda-lang/loda-programs.git";
-    std::cout << "Enter the git URL for the loda-programs repository (enter "
-                 "for default):"
+    std::cout << "Press return to download the programs repository:"
               << std::endl;
     std::cout << "[" << git_url << "] ";
     std::getline(std::cin, line);
@@ -369,8 +375,10 @@ void Setup::runWizard() {
   }
 
   // good bye
-  std::cout << "Setup complete. Thanks for using LODA!" << std::endl
-            << "To start mining, run the 'loda mine' command." << std::endl;
+  std::cout << "===== Setup complete. Thanks for using LODA! =====" << std::endl
+            << "To run a Hello World example, try 'loda eval A000045'."
+            << std::endl
+            << "To start mining, use the 'loda mine' command." << std::endl;
 }
 
 void Setup::ensureEnvVar(const std::string& key, const std::string& value,
