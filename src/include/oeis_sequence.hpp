@@ -24,7 +24,7 @@ class OeisSequence {
 
   std::string url_str() const;
 
-  std::string getProgramPath() const;
+  std::string getProgramPath(bool local = false) const;
 
   std::string getBFilePath() const;
 

@@ -71,9 +71,13 @@ std::string OeisSequence::url_str() const {
   return "https://oeis.org/" + id_str();
 }
 
-std::string OeisSequence::getProgramPath() const {
-  return Setup::getProgramsHome() + "oeis/" + dir_str() + "/" + id_str() +
-         ".asm";
+std::string OeisSequence::getProgramPath(bool local) const {
+  if (local) {
+    return Setup::getProgramsHome() + "local/" + id_str() + ".asm";
+  } else {
+    return Setup::getProgramsHome() + "oeis/" + dir_str() + "/" + id_str() +
+           ".asm";
+  }
 }
 
 std::string OeisSequence::getBFilePath() const {

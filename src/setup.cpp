@@ -15,6 +15,7 @@ std::string Setup::MINERS_CONFIG;
 std::map<std::string, std::string> Setup::ADVANCED_CONFIG;
 bool Setup::LOADED_ADVANCED_CONFIG = false;
 bool Setup::PRINTED_MEMORY_WARNING = false;
+int64_t Setup::MINING_MODE = -1;
 int64_t Setup::MAX_MEMORY = -1;
 int64_t Setup::UPDATE_INTERVAL = -1;
 
@@ -151,6 +152,20 @@ int64_t Setup::getAdvancedConfigInt(const std::string& key,
     return std::stoll(s);
   }
   return default_value;
+}
+
+MiningMode Setup::getMiningMode() {
+  if (MINING_MODE == -1) {
+    auto mode = getAdvancedConfig("LODA_MINING_MODE");
+    if (mode == "local") {
+      MINING_MODE = static_cast<int64_t>(MINING_MODE_LOCAL);
+    } else if (mode == "server") {
+      MINING_MODE = static_cast<int64_t>(MINING_MODE_SERVER);
+    } else {
+      MINING_MODE = static_cast<int64_t>(MINING_MODE_CLIENT);
+    }
+  }
+  return static_cast<MiningMode>(MINING_MODE);
 }
 
 int64_t Setup::getMaxMemory() {
@@ -304,7 +319,7 @@ void Setup::runWizard() {
       return;
     }
     std::string git_url = "https://github.com/loda-lang/loda-programs.git";
-    std::cout << "Press return to download the programs repository:"
+    std::cout << "Press return to download the default programs repository:"
               << std::endl;
     std::cout << "[" << git_url << "] ";
     std::getline(std::cin, line);
@@ -361,6 +376,52 @@ void Setup::runWizard() {
   }
 
   // mining mode
+  std::cout << "LODA supports the following modes for mining programs:"
+            << std::endl
+            << std::endl;
+  std::cout << "1. Local Mode: mined programs are stored in your local"
+            << std::endl
+            << "   programs folder only." << std::endl
+            << std::endl;
+  std::cout << "2. Client Mode (default): mined programs are stored in"
+            << std::endl
+            << "   your local programs folder and also submitted to the"
+            << std::endl
+            << "   central API server at https://loda-lang.org." << std::endl
+            << std::endl;
+  std::cout << "3. Server Mode: process submissions from the central API"
+            << std::endl
+            << "   server and integrate them into the global programs"
+            << std::endl
+            << "   repository." << std::endl
+            << std::endl;
+  auto mode = getMiningMode();
+  std::cout << "Choose your mining mode: [" + std::to_string(mode) + "] ";
+  std::getline(std::cin, line);
+  if (line == "1") {
+    mode = MINING_MODE_LOCAL;
+  } else if (line == "2") {
+    mode = MINING_MODE_CLIENT;
+  } else if (line == "3") {
+    mode = MINING_MODE_SERVER;
+  } else if (!line.empty()) {
+    std::cout << "Invalid choice. Please restart the setup." << std::endl;
+    return;
+  }
+  std::string mode_str;
+  switch (mode) {
+    case MINING_MODE_LOCAL:
+      mode_str = "local";
+      break;
+    case MINING_MODE_CLIENT:
+      mode_str = "client";
+      break;
+    case MINING_MODE_SERVER:
+      mode_str = "server";
+      break;
+  }
+  ADVANCED_CONFIG["LODA_MINING_MODE"] = mode_str;
+  std::cout << std::endl;
 
   // check miners config
   const std::string default_miners_config = loda_home + "miners.default.json";
@@ -379,6 +440,9 @@ void Setup::runWizard() {
     }
     std::cout << std::endl;
   }
+
+  // save configuration
+  saveAdvancedConfig();
 
   // good bye
   std::cout << "===== Setup complete. Thanks for using LODA! =====" << std::endl

@@ -42,7 +42,7 @@ void Http::initWWWClient() {
 }
 
 bool Http::get(const std::string &url, const std::string &local_path,
-               bool fail_on_error) {
+               bool silent, bool fail_on_error) {
   initWWWClient();
   std::string cmd;
   switch (WWW_CLIENT) {
@@ -63,7 +63,9 @@ bool Http::get(const std::string &url, const std::string &local_path,
       return false;
     }
   }
-  Log::get().info("Fetched " + url);
+  if (!silent) {
+    Log::get().info("Fetched " + url);
+  }
   return true;
 }
 

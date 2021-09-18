@@ -3,6 +3,12 @@
 #include <map>
 #include <string>
 
+enum MiningMode {
+  MINING_MODE_LOCAL = 1,
+  MINING_MODE_CLIENT = 2,
+  MINING_MODE_SERVER = 3
+};
+
 class Setup {
  public:
   static std::string getVersionInfo();
@@ -12,6 +18,8 @@ class Setup {
   static const std::string& getLodaHome();
 
   static void setLodaHome(const std::string& home);
+
+  static MiningMode getMiningMode();
 
   static const std::string& getMinersConfig();
 
@@ -46,6 +54,7 @@ class Setup {
   static std::map<std::string, std::string> ADVANCED_CONFIG;
   static bool LOADED_ADVANCED_CONFIG;
   static bool PRINTED_MEMORY_WARNING;
+  static int64_t MINING_MODE;
   static int64_t MAX_MEMORY;
   static int64_t UPDATE_INTERVAL;
 

@@ -430,3 +430,27 @@ void ProgramUtil::migrateOutputCell(Program &p, int64_t old_out,
                 Operand::Type::DIRECT, old_out);
   }
 }
+
+bool ProgramUtil::isCodedManually(const Program &p) {
+  static const std::string coded_manually = "Coded manually";
+  for (const auto &op : p.ops) {
+    if (op.type == Operation::Type::NOP &&
+        op.comment.find(coded_manually) != std::string::npos) {
+      return true;
+    }
+  }
+  return false;
+}
+
+std::string getMinedBy(const Program &p) {
+  static const std::string mined_by = "Mined by";
+  for (const auto &op : p.ops) {
+    if (op.type == Operation::Type::NOP) {
+      auto pos = op.comment.find(mined_by);
+      if (pos != std::string::npos) {
+        return op.comment.substr(pos + mined_by.size() + 1);
+      }
+    }
+  }
+  return std::string();
+}

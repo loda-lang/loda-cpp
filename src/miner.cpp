@@ -4,6 +4,7 @@
 #include <sstream>
 #include <unordered_set>
 
+#include "api_client.hpp"
 #include "file.hpp"
 #include "generator.hpp"
 #include "interpreter.hpp"
@@ -78,17 +79,38 @@ void Miner::mine() {
   std::stack<Program> progs;
   Sequence norm_seq;
   auto &finder = manager.getFinder();
-  AdaptiveScheduler scheduler(Metrics::get().publish_interval);
+  AdaptiveScheduler metrics_scheduler(Metrics::get().publish_interval);
+  AdaptiveScheduler api_scheduler(60);  // 1 minute (magic number)
+  ApiClient api_client;
 
-  Log::get().info("Mining programs for OEIS sequences");
+  // get mining mode
+  const auto mode = Setup::getMiningMode();
+  std::string mode_str;
+  switch (mode) {
+    case MINING_MODE_LOCAL:
+      mode_str = "local";
+      break;
+    case MINING_MODE_CLIENT:
+      mode_str = "client";
+      break;
+    case MINING_MODE_SERVER:
+      mode_str = "server";
+      break;
+  }
+
+  Log::get().info("Mining programs for OEIS sequences in " + mode_str +
+                  " mode");
   Generator *generator = multi_generator.getGenerator();
   while (true) {
+    // generate new program if needed
     if (progs.empty()) {
       multi_generator
           .next();  // need to call "next" *before* generating the programs
       generator = multi_generator.getGenerator();
       progs.push(generator->generateProgram());
     }
+
+    // get next program and match sequences
     Program program = progs.top();
     // Log::get().info( "Matching program with " + std::to_string(
     // program.ops.size() ) + " operations" ); ProgramUtil::print( program,
@@ -105,7 +127,10 @@ void Miner::mine() {
         } else {
           generator->stats.updated++;
         }
-
+        // in client mode: submit the program to the API server
+        if (mode == MINING_MODE_CLIENT) {
+          api_client.postProgram(s.second);
+        }
         // mutate successful program
         if (progs.size() < 1000 || Setup::hasMemory()) {
           mutator.mutateConstants(s.second, 100, progs);
@@ -117,9 +142,21 @@ void Miner::mine() {
     }
     generator->stats.generated++;
 
-    // log info and publish metrics
-    if (scheduler.isTargetReached()) {
-      scheduler.reset();
+    // regular task: fetch programs from API server
+    if (mode == MINING_MODE_SERVER && api_scheduler.isTargetReached()) {
+      api_scheduler.reset();
+      for (size_t i = 0; i < 10; i++) {  // magic number
+        Program p = api_client.getNextProgram();
+        if (p.ops.empty()) {
+          break;
+        }
+        progs.push(p);
+      }
+    }
+
+    // regular task: log info and publish metrics
+    if (metrics_scheduler.isTargetReached()) {
+      metrics_scheduler.reset();
       int64_t total_generated = 0;
       std::vector<Metrics::Entry> entries;
       for (size_t i = 0; i < multi_generator.generators.size(); i++) {

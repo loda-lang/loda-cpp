@@ -8,6 +8,8 @@ class ApiClient {
 
   ApiClient();
 
+  void postProgram(const Program& program);
+
   void postProgram(const std::string& path);
 
   Program getNextProgram();

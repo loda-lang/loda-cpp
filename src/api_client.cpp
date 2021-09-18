@@ -4,11 +4,22 @@
 
 #include "file.hpp"
 #include "parser.hpp"
+#include "program_util.hpp"
 #include "util.hpp"
 
 const std::string ApiClient::BASE_URL("http://api.loda-lang.org/miner/v1/");
 
 ApiClient::ApiClient() : session_id(0) {}
+
+void ApiClient::postProgram(const Program& program) {
+  // TODO: store in tmp folder
+  const std::string tmp = "tmp_program.asm";
+  std::ofstream out(tmp);
+  ProgramUtil::print(program, out);
+  out.close();
+  postProgram(tmp);
+  std::remove(tmp.c_str());
+}
 
 void ApiClient::postProgram(const std::string& path) {
   if (!isFile(path)) {
@@ -21,7 +32,8 @@ void ApiClient::postProgram(const std::string& path) {
 
 bool ApiClient::getProgram(int64_t index, const std::string& path) {
   std::remove(path.c_str());
-  return Http::get(BASE_URL + "programs/" + std::to_string(index), path, false);
+  return Http::get(BASE_URL + "programs/" + std::to_string(index), path, false,
+                   false);
 }
 
 Program ApiClient::getNextProgram() {
@@ -36,6 +48,7 @@ Program ApiClient::getNextProgram() {
     // TODO: store in tmp folder
     const std::string tmp = "tmp_program.asm";
     if (!getProgram(index, tmp)) {
+      Log::get().debug("Invalid session, resetting.");
       resetSession();
       return program;
     }
@@ -77,7 +90,7 @@ void ApiClient::resetSession() {
 int64_t ApiClient::fetchInt(const std::string& endpoint) {
   // TODO: store in tmp folder
   const std::string tmp = "tmp_int.txt";
-  Http::get(BASE_URL + endpoint, tmp, true);
+  Http::get(BASE_URL + endpoint, tmp, true, true);
   std::ifstream in(tmp);
   if (in.bad()) {
     Log::get().error("Error fetching data from API server", true);
