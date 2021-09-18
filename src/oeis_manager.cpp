@@ -565,7 +565,10 @@ std::string OeisManager::isOptimizedBetter(Program existing, Program optimized,
 
 std::pair<bool, bool> OeisManager::updateProgram(size_t id, const Program &p) {
   auto &seq = sequences.at(id);
-  const std::string file_name = seq.getProgramPath();
+  const std::string global_file = seq.getProgramPath(false);
+  const std::string local_file = seq.getProgramPath(true);
+  const bool has_global = isFile(global_file);
+  const bool has_local = isFile(local_file);
   bool is_new = true;
   std::string change;
 
@@ -576,34 +579,33 @@ std::pair<bool, bool> OeisManager::updateProgram(size_t id, const Program &p) {
   }
 
   // check if there is an existing program already
-  {
+  if (has_global || has_local) {
+    std::string file_name = has_local ? local_file : global_file;
     std::ifstream in(file_name);
-    if (in.good()) {
-      if (ignore_list.find(id) == ignore_list.end()) {
-        is_new = false;
-        Parser parser;
-        Program existing;
-        try {
-          existing = parser.parse(in);
-        } catch (const std::exception &exc) {
-          Log::get().error("Error parsing " + file_name, false);
-          return {false, false};
-        }
-        change = isOptimizedBetter(existing, minimized.second, id);
-        if (change.empty()) {
-          return {false, false};
-        }
-      } else {
+    if (ignore_list.find(id) == ignore_list.end()) {
+      is_new = false;
+      Parser parser;
+      Program existing;
+      try {
+        existing = parser.parse(in);
+      } catch (const std::exception &) {
+        Log::get().error("Error parsing " + file_name, false);
         return {false, false};
       }
+      change = isOptimizedBetter(existing, minimized.second, id);
+      if (change.empty()) {
+        return {false, false};
+      }
+    } else {
+      return {false, false};
     }
   }
 
   // write new or optimized program version
   if (Setup::getMiningMode() == MINING_MODE_SERVER) {
-    dumpProgram(id, minimized.second, file_name);
+    dumpProgram(id, minimized.second, global_file);
   } else {
-    dumpProgram(id, minimized.second, seq.getProgramPath(true));  // local path
+    dumpProgram(id, minimized.second, local_file);
   }
 
   // send alert
