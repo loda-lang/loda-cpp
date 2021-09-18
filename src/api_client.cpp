@@ -21,7 +21,8 @@ void ApiClient::postProgram(const std::string& path) {
 
 bool ApiClient::getProgram(int64_t index, const std::string& path) {
   std::remove(path.c_str());
-  return Http::get(BASE_URL + "programs/" + std::to_string(index), path, false);
+  return Http::get(BASE_URL + "programs/" + std::to_string(index), path, false,
+                   false);
 }
 
 Program ApiClient::getNextProgram() {
@@ -36,6 +37,7 @@ Program ApiClient::getNextProgram() {
     // TODO: store in tmp folder
     const std::string tmp = "tmp_program.asm";
     if (!getProgram(index, tmp)) {
+      Log::get().debug("Invalid session, resetting.");
       resetSession();
       return program;
     }
@@ -77,7 +79,7 @@ void ApiClient::resetSession() {
 int64_t ApiClient::fetchInt(const std::string& endpoint) {
   // TODO: store in tmp folder
   const std::string tmp = "tmp_int.txt";
-  Http::get(BASE_URL + endpoint, tmp, true);
+  Http::get(BASE_URL + endpoint, tmp, true, true);
   std::ifstream in(tmp);
   if (in.bad()) {
     Log::get().error("Error fetching data from API server", true);
