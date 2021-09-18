@@ -565,7 +565,7 @@ std::string OeisManager::isOptimizedBetter(Program existing, Program optimized,
 
 std::pair<bool, bool> OeisManager::updateProgram(size_t id, const Program &p) {
   auto &seq = sequences.at(id);
-  std::string file_name = seq.getProgramPath();
+  const std::string file_name = seq.getProgramPath();
   bool is_new = true;
   std::string change;
 
@@ -600,7 +600,11 @@ std::pair<bool, bool> OeisManager::updateProgram(size_t id, const Program &p) {
   }
 
   // write new or optimized program version
-  dumpProgram(id, minimized.second, file_name);
+  if (Setup::getMiningMode() == MINING_MODE_SERVER) {
+    dumpProgram(id, minimized.second, file_name);
+  } else {
+    dumpProgram(id, minimized.second, seq.getProgramPath(true));  // local path
+  }
 
   // send alert
   std::string prefix = is_new ? "First" : change;

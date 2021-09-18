@@ -319,7 +319,7 @@ void Setup::runWizard() {
       return;
     }
     std::string git_url = "https://github.com/loda-lang/loda-programs.git";
-    std::cout << "Press return to download the programs repository:"
+    std::cout << "Press return to download the default programs repository:"
               << std::endl;
     std::cout << "[" << git_url << "] ";
     std::getline(std::cin, line);

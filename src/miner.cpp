@@ -127,6 +127,10 @@ void Miner::mine() {
         } else {
           generator->stats.updated++;
         }
+        // in client mode: submit the program to the API server
+        if (mode == MINING_MODE_CLIENT) {
+          api_client.postProgram(s.second);
+        }
         // mutate successful program
         if (progs.size() < 1000 || Setup::hasMemory()) {
           mutator.mutateConstants(s.second, 100, progs);

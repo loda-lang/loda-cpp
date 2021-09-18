@@ -4,11 +4,22 @@
 
 #include "file.hpp"
 #include "parser.hpp"
+#include "program_util.hpp"
 #include "util.hpp"
 
 const std::string ApiClient::BASE_URL("http://api.loda-lang.org/miner/v1/");
 
 ApiClient::ApiClient() : session_id(0) {}
+
+void ApiClient::postProgram(const Program& program) {
+  // TODO: store in tmp folder
+  const std::string tmp = "tmp_program.asm";
+  std::ofstream out(tmp);
+  ProgramUtil::print(program, out);
+  out.close();
+  postProgram(tmp);
+  std::remove(tmp.c_str());
+}
 
 void ApiClient::postProgram(const std::string& path) {
   if (!isFile(path)) {

@@ -11,6 +11,7 @@
 #include "oeis_list.hpp"
 #include "parser.hpp"
 #include "program_util.hpp"
+#include "setup.hpp"
 #include "stats.hpp"
 #include "util.hpp"
 
@@ -143,12 +144,18 @@ void OeisMaintenance::generateLists() {
 }
 
 size_t OeisMaintenance::checkAndMinimizePrograms() {
+  // only in server mode
+  if (Setup::getMiningMode() != MINING_MODE_SERVER) {
+    Log::get().warn("Skipping program maintenance because not in server mode");
+    return 0;
+  }
+
   Log::get().info("Checking and minimizing programs");
   size_t num_processed = 0, num_removed = 0, num_minimized = 0;
   Parser parser;
   Program program, minimized;
   std::string file_name;
-  bool is_okay, is_protected, is_manual;
+  bool is_okay, is_protected;
 
   // generate random order of sequences
   std::vector<size_t> ids;
@@ -205,18 +212,10 @@ size_t OeisMaintenance::checkAndMinimizePrograms() {
         remove(file_name.c_str());
       } else {
         is_protected = false;
-        is_manual = false;
         if (manager.protect_list.find(s.id) != manager.protect_list.end()) {
           is_protected = true;
         }
-        for (const auto &op : program.ops) {
-          if (op.type == Operation::Type::NOP &&
-              op.comment.find("Coded manually") != std::string::npos) {
-            is_manual = true;
-            break;
-          }
-        }
-        if (!is_protected && !is_manual) {
+        if (!is_protected && !ProgramUtil::isCodedManually(program)) {
           ProgramUtil::removeOps(program, Operation::Type::NOP);
           minimized = program;
           minimizer.optimizeAndMinimize(minimized, 2, 1,
@@ -229,11 +228,11 @@ size_t OeisMaintenance::checkAndMinimizePrograms() {
         }
       }
 
-      //      if ( ++num_processed % 100 == 0 )
-      //      {
-      //        Log::get().info( "Processed " + std::to_string( num_processed )
+      // if ( ++num_processed % 100 == 0 )
+      // {
+      //    Log::get().info( "Processed " + std::to_string( num_processed )
       //        + " programs" );
-      //      }
+      // }
     }
   }
 
