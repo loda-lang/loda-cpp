@@ -170,6 +170,7 @@ MiningMode Setup::getMiningMode() {
 
 int64_t Setup::getMaxMemory() {
   if (MAX_MEMORY == -1) {
+    // 1 GB default
     MAX_MEMORY =
         getAdvancedConfigInt("LODA_MAX_PHYSICAL_MEMORY", 1024) * 1024 * 1024;
   }
@@ -178,7 +179,8 @@ int64_t Setup::getMaxMemory() {
 
 int64_t Setup::getUpdateIntervalInDays() {
   if (UPDATE_INTERVAL == -1) {
-    UPDATE_INTERVAL = getAdvancedConfigInt("LODA_UPDATE_INTERVAL", 1);
+    // 3 days default
+    UPDATE_INTERVAL = getAdvancedConfigInt("LODA_UPDATE_INTERVAL", 3);
   }
   return UPDATE_INTERVAL;
 }
@@ -264,7 +266,7 @@ void Setup::runWizard() {
   }
   std::cout << "Enter the directory where LODA should store its files."
             << std::endl;
-  std::cout << "Press return for the default location (see below)."
+  std::cout << "Press return for your default location (see below)."
             << std::endl;
   std::cout << "[" << loda_home << "] ";
   std::getline(std::cin, line);
@@ -396,7 +398,8 @@ void Setup::runWizard() {
             << "   repository." << std::endl
             << std::endl;
   auto mode = getMiningMode();
-  std::cout << "Choose your mining mode: [" + std::to_string(mode) + "] ";
+  std::cout << "Choose your mining mode:" << std::endl
+            << "[" + std::to_string(mode) + "] ";
   std::getline(std::cin, line);
   if (line == "1") {
     mode = MINING_MODE_LOCAL;
@@ -440,6 +443,22 @@ void Setup::runWizard() {
     }
     std::cout << std::endl;
   }
+
+  // max memory usage
+  std::cout << "Enter the maximum memory usage of the miner in MB:"
+            << std::endl;
+  int64_t max_memory = getMaxMemory() / (1024 * 1024);
+  std::cout << "[" << max_memory << "] ";
+  std::getline(std::cin, line);
+  if (!line.empty()) {
+    max_memory = std::stoll(line);
+  }
+  if (max_memory < 512) {
+    std::cout << "Invalid value. Please restart the setup." << std::endl;
+    return;
+  }
+  ADVANCED_CONFIG["LODA_MAX_PHYSICAL_MEMORY"] = std::to_string(max_memory);
+  std::cout << std::endl;
 
   // save configuration
   saveAdvancedConfig();
