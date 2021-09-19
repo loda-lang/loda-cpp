@@ -59,14 +59,15 @@ void Test::all() {
   // slow tests
 #ifndef _WIN64
   // TODO: fix tests on windows
-  apiClient();
   ackermann();
   stats();
+  apiClient();
   oeisList();
   oeisSeq();
   iterator(tests);
   minimizer(tests);
   miner();
+  memUsage();
   benchmark();
 #endif
 }
@@ -719,6 +720,11 @@ void Test::config() {
   settings.miner = "1";
   config = ConfigLoader::load(settings);
   check_int("generators.size", 2, config.generators.size());
+}
+
+void Test::memUsage() {
+  Log::get().info("Testing memory usage: " +
+                  std::to_string(getMemUsage() / (1024 * 1024)) + " MB");
 }
 
 void Test::stats() {

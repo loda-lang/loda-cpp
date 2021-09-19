@@ -59,6 +59,8 @@ class Test {
 
   void config();
 
+  void memUsage();
+
  private:
   std::vector<std::pair<Program, Program>> loadInOutTests(
       const std::string &prefix);
