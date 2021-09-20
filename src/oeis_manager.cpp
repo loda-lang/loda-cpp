@@ -454,6 +454,7 @@ void OeisManager::addSeqComments(Program &p) const {
 void OeisManager::dumpProgram(size_t id, Program p,
                               const std::string &file) const {
   ProgramUtil::removeOps(p, Operation::Type::NOP);
+  ProgramUtil::removeComments(p);
   addSeqComments(p);
   ensureDir(file);
   std::ofstream out(file);

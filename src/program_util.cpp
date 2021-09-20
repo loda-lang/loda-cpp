@@ -18,6 +18,12 @@ void ProgramUtil::removeOps(Program &p, Operation::Type type) {
   }
 }
 
+void ProgramUtil::removeComments(Program &p) {
+  for (auto &op : p.ops) {
+    op.comment.clear();
+  }
+}
+
 bool ProgramUtil::replaceOps(Program &p, Operation::Type oldType,
                              Operation::Type newType) {
   bool result = false;

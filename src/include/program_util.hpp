@@ -10,6 +10,8 @@ class ProgramUtil {
  public:
   static void removeOps(Program &p, Operation::Type type);
 
+  static void removeComments(Program &p);
+
   static bool replaceOps(Program &p, Operation::Type oldType,
                          Operation::Type newType);
 
