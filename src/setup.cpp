@@ -27,6 +27,14 @@ std::string Setup::getVersionInfo() {
 #endif
 }
 
+std::string getVersionBranch() {
+#ifdef LODA_VERSION
+  return "v" + std::string(xstr(LODA_VERSION));
+#else
+  return "main";
+#endif
+}
+
 std::string Setup::getLodaHomeNoCheck() {
   auto loda_home = std::getenv("LODA_HOME");
   std::string result;
@@ -428,11 +436,10 @@ void Setup::runWizard() {
 
   // check miners config
   const std::string default_miners_config = loda_home + "miners.default.json";
+  // TODO: also check if outdated
   if (!isFile(default_miners_config)) {
-    // TODO: check version here and get the right version!
-    std::string url =
-        "https://raw.githubusercontent.com/loda-lang/loda-cpp/main/"
-        "miners.default.json";
+    std::string url = "https://raw.githubusercontent.com/loda-lang/loda-cpp/" +
+                      getVersionBranch() + "/miners.default.json";
     std::cout << "The LODA miner requires a configuration file." << std::endl;
     std::cout << "Press return to download the default miner configuration:"
               << std::endl;
@@ -440,6 +447,7 @@ void Setup::runWizard() {
     std::getline(std::cin, line);
     if (line.empty() || line == "y" || line == "Y") {
       Http::get(url, default_miners_config);
+      // TODO: inject version number
     }
     std::cout << std::endl;
   }
