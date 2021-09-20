@@ -37,10 +37,12 @@ int main(int argc, char *argv[]) {
     commands.optimize(args.at(1));
   } else if (cmd == "minimize" || cmd == "min") {
     commands.minimize(args.at(1));
-  } else if (cmd == "match") {
-    commands.match(args.at(1));
   } else if (cmd == "mine") {
-    commands.mine();
+    std::vector<std::string> initial_progs;
+    for (size_t i = 1; i < args.size(); i++) {
+      initial_progs.push_back(args.at(i));
+    }
+    commands.mine(initial_progs);
   } else if (cmd == "maintain") {
     commands.maintain();
   }

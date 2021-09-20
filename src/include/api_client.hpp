@@ -16,6 +16,7 @@ class ApiClient {
 
  private:
   int64_t session_id;
+  std::string local_programs_path;
   std::vector<int64_t> queue;
 
   bool getProgram(int64_t index, const std::string& path);

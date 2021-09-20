@@ -71,7 +71,7 @@ bool Miner::isCollatzValuation(const Sequence &seq) {
   return true;
 }
 
-void Miner::mine() {
+void Miner::mine(const std::vector<std::string> &initial_progs) {
   manager.load();
 
   MultiGenerator multi_generator(settings, manager.getStats(), true);
@@ -82,6 +82,14 @@ void Miner::mine() {
   AdaptiveScheduler metrics_scheduler(Metrics::get().publish_interval);
   AdaptiveScheduler api_scheduler(60);  // 1 minute (magic number)
   ApiClient api_client;
+
+  // load initial programs
+  Parser parser;
+  for (auto &path : initial_progs) {
+    auto p = parser.parse(path);
+    progs.push(p);
+    mutator.mutateConstants(p, 1000, progs);
+  }
 
   // get mining mode
   const auto mode = Setup::getMiningMode();

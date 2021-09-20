@@ -21,7 +21,7 @@ class Miner {
 
   Miner(const Settings &settings);
 
-  void mine();
+  void mine(const std::vector<std::string> &initial_progs);
 
   static bool isCollatzValuation(const Sequence &seq);
 

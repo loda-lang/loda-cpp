@@ -46,11 +46,10 @@ void Commands::help() {
             << std::endl;
 
   std::cout << std::endl << "OEIS Commands:" << std::endl;
-  std::cout << "  mine                Mine programs for OEIS sequences (see -i)"
+  std::cout << "  mine [asm-file]     Mine programs for OEIS sequences (see -i)"
             << std::endl;
-  std::cout
-      << "  match <asm-file>    Match a program to OEIS sequences (see -i)"
-      << std::endl;
+  std::cout << "                      (optional argument is an initial program)"
+            << std::endl;
   std::cout << "  check <seq-id>      Check a program for an OEIS sequence "
                "(see -b)"
             << std::endl;
@@ -156,45 +155,10 @@ void Commands::minimize(const std::string& path) {
   ProgramUtil::print(program, std::cout);
 }
 
-void Commands::match(const std::string& path) {
-  initLog(false);
-  Parser parser;
-  Program program = parser.parse(get_program_path(path));
-  OeisManager manager(settings);
-  Mutator mutator;
-  manager.load();
-  Sequence norm_seq;
-  std::stack<Program> progs;
-  progs.push(program);
-  size_t new_ = 0, updated = 0;
-  // TODO: unify this code with Miner?
-  while (!progs.empty()) {
-    program = progs.top();
-    progs.pop();
-    auto seq_programs = manager.getFinder().findSequence(
-        program, norm_seq, manager.getSequences());
-    for (auto s : seq_programs) {
-      auto r = manager.updateProgram(s.first, s.second);
-      if (r.first) {
-        if (r.second) {
-          new_++;
-        } else {
-          updated++;
-        }
-        if (progs.size() < 1000 || Setup::hasMemory()) {
-          mutator.mutateConstants(s.second, 10, progs);
-        }
-      }
-    }
-  }
-  Log::get().info("Match result: " + std::to_string(new_) + " new programs, " +
-                  std::to_string(updated) + " updated");
-}
-
-void Commands::mine() {
+void Commands::mine(const std::vector<std::string>& initial_progs) {
   initLog(false);
   Miner miner(settings);
-  miner.mine();
+  miner.mine(initial_progs);
 }
 
 void Commands::maintain() {

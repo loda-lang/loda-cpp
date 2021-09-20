@@ -34,7 +34,8 @@ Core Commands:
   setup               Run interactive setup to configure LODA
 
 OEIS Commands:
-  mine                Mine programs for OEIS sequences (see -i)
+  mine [asm-file]     Mine programs for OEIS sequences (see -i)
+                      (optional argument is an initial program)
   match <asm-file>    Match a program to OEIS sequences (see -i)
   check <seq-id>      Check a program for an OEIS sequence (see -b)
   maintain            Maintain all programs for OEIS sequences

@@ -5,6 +5,7 @@
 #include "file.hpp"
 #include "parser.hpp"
 #include "program_util.hpp"
+#include "setup.hpp"
 #include "util.hpp"
 
 const std::string ApiClient::BASE_URL("http://api.loda-lang.org/miner/v1/");
@@ -45,8 +46,12 @@ Program ApiClient::getNextProgram() {
   if (!queue.empty()) {
     const int64_t index = queue.back();
     queue.pop_back();
-    // TODO: store in tmp folder
-    const std::string tmp = "tmp_program.asm";
+    if (local_programs_path.empty()) {
+      local_programs_path = Setup::getProgramsHome() + "local/";
+      ensureDir(local_programs_path);
+    }
+    const std::string tmp =
+        local_programs_path + "api-" + std::to_string(index) + ".asm";
     if (!getProgram(index, tmp)) {
       Log::get().debug("Invalid session, resetting.");
       resetSession();
@@ -58,7 +63,7 @@ Program ApiClient::getNextProgram() {
     } catch (const std::exception&) {
       program.ops.clear();
     }
-    std::remove(tmp.c_str());
+    // std::remove(tmp.c_str());
     if (program.ops.empty()) {
       Log::get().warn("Invalid program on API server: " + BASE_URL +
                       "programs/" + std::to_string(index));
