@@ -285,24 +285,11 @@ void Setup::runWizard() {
   ensureTrailingSlash(loda_home);
   ensureDir(loda_home);
 
+  // TODO: check for updates
+
   // load setup configuration
   LODA_HOME = loda_home;
   loadAdvancedConfig();
-
-  // migrate old programs directory
-  auto programs_home = std::getenv("LODA_PROGRAMS_HOME");
-  if (programs_home && isDir(std::string(programs_home)) &&
-      std::string(programs_home) != user_home + "/loda/programs") {
-    std::cout << "Your current location for LODA programs is "
-              << std::string(programs_home) << std::endl;
-    std::cout << "The new default location for LODA programs is " << user_home
-              << "/loda/programs" << std::endl;
-    std::cout << "Do you want to move it to the new default location? (Y/n) ";
-    std::getline(std::cin, line);
-    if (line.empty() || line == "y" || line == "Y") {
-      moveDir(std::string(programs_home), user_home + "/loda/programs");
-    }
-  }
 
   // initialize programs directory
   if (!isDir(loda_home + "programs/oeis")) {
@@ -346,19 +333,6 @@ void Setup::runWizard() {
     std::cout << std::endl;
   }
 
-  // migrate old oeis directory
-  if (isDir(user_home + "/.loda/oeis") && !isDir(loda_home + "/oeis")) {
-    std::cout << "You still have an OEIS index stored in " << user_home
-              << "/.loda/oeis" << std::endl;
-    std::cout << "The new location of this folder is " << loda_home << "oeis"
-              << std::endl;
-    std::cout << "Do you want to move it to the new location? (Y/n) ";
-    std::getline(std::cin, line);
-    if (line.empty() || line == "y" || line == "Y") {
-      moveDir(user_home + "/.loda/oeis", loda_home + "/oeis");
-    }
-  }
-
   // check binary
   ensureDir(loda_home + "bin/");
   std::string exe;
@@ -377,13 +351,6 @@ void Setup::runWizard() {
     ensureEnvVar("LODA_HOME", loda_home, true);
   }
   ensureEnvVar("PATH", "$PATH:" + loda_home + "bin", false);
-  auto env = std::getenv("LODA_PROGRAMS_HOME");
-  if (env) {
-    std::cout << "The LODA_PROGRAMS_HOME environment variable is deprecated."
-              << std::endl
-              << "Please remove it from your shell configuration." << std::endl;
-    std::getline(std::cin, line);
-  }
 
   // mining mode
   std::cout << "LODA supports the following modes for mining programs:"
