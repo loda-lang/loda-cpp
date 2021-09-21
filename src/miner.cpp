@@ -80,7 +80,7 @@ void Miner::mine(const std::vector<std::string> &initial_progs) {
   Sequence norm_seq;
   auto &finder = manager.getFinder();
   AdaptiveScheduler metrics_scheduler(Metrics::get().publish_interval);
-  AdaptiveScheduler api_scheduler(3600);  // 1 hour (magic number)
+  AdaptiveScheduler api_scheduler(600);  // 10 minutes (magic number)
   ApiClient api_client;
 
   // load initial programs

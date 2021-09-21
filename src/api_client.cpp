@@ -10,7 +10,7 @@
 
 const std::string ApiClient::BASE_URL("http://api.loda-lang.org/miner/v1/");
 
-ApiClient::ApiClient() : session_id(0) {}
+ApiClient::ApiClient() : session_id(0), start(0), count(0) {}
 
 void ApiClient::postProgram(const Program& program) {
   // TODO: store in tmp folder
@@ -38,55 +38,58 @@ bool ApiClient::getProgram(int64_t index, const std::string& path) {
 }
 
 Program ApiClient::getNextProgram() {
-  if (session_id == 0 ||
-      (queue.empty() && Random::get().gen() % 10 == 0)) {  // magic number
-    resetSession();
+  if (session_id == 0 || queue.empty()) {
+    updateSession();
   }
   Program program;
-  if (!queue.empty()) {
-    const int64_t index = queue.back();
-    queue.pop_back();
-    if (local_programs_path.empty()) {
-      local_programs_path = Setup::getProgramsHome() + "local/";
-      ensureDir(local_programs_path);
-    }
-    const std::string tmp =
-        local_programs_path + "api-" + std::to_string(index) + ".asm";
-    if (!getProgram(index, tmp)) {
-      Log::get().debug("Invalid session, resetting.");
-      resetSession();
-      return program;
-    }
-    Parser parser;
-    try {
-      program = parser.parse(tmp);
-    } catch (const std::exception&) {
-      program.ops.clear();
-    }
-    // std::remove(tmp.c_str());
-    if (program.ops.empty()) {
-      Log::get().warn("Invalid program on API server: " + BASE_URL +
-                      "programs/" + std::to_string(index));
-    }
+  if (queue.empty()) {
+    return program;
+  }
+  const int64_t index = queue.back();
+  queue.pop_back();
+  if (local_programs_path.empty()) {
+    local_programs_path = Setup::getProgramsHome() + "local/";
+    ensureDir(local_programs_path);
+  }
+  const std::string tmp =
+      local_programs_path + "api-" + std::to_string(index) + ".asm";
+  if (!getProgram(index, tmp)) {
+    Log::get().debug("Invalid session, resetting.");
+    session_id = 0;  // resetting session
+    return program;
+  }
+  Parser parser;
+  try {
+    program = parser.parse(tmp);
+  } catch (const std::exception&) {
+    program.ops.clear();
+  }
+  // std::remove(tmp.c_str());
+  if (program.ops.empty()) {
+    Log::get().warn("Invalid program on API server: " + BASE_URL + "programs/" +
+                    std::to_string(index));
   }
   return program;
 }
 
-void ApiClient::resetSession() {
-  session_id = fetchInt("session");
-  if (session_id == 0) {
+void ApiClient::updateSession() {
+  auto new_session_id = fetchInt("session");
+  if (new_session_id == 0) {
     Log::get().error("Received invalid session ID from API server: " +
-                         std::to_string(session_id),
+                         std::to_string(new_session_id),
                      true);
   }
-  int64_t count = fetchInt("count");
-  if (count < 0 || count > 100000) {  // magic number
+  auto new_count = fetchInt("count");
+  if (new_count < 0 || new_count > 100000) {  // magic number
     Log::get().error("Received invalid program count from API server" +
-                         std::to_string(count),
+                         std::to_string(new_count),
                      true);
   }
+  start = (new_session_id == session_id) ? count : 0;
+  count = new_count - start;
+  session_id = new_session_id;
   queue.resize(count);
-  for (int64_t i = 0; i < count; i++) {
+  for (int64_t i = start; i < count; i++) {
     queue[i] = i;
   }
   std::shuffle(queue.begin(), queue.end(), Random::get().gen);
