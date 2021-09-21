@@ -1,3 +1,5 @@
+To install or update LODA, please follow the [installation instructions](https://loda-lang.org/install/). Here the release notes:
+
 ## [Unreleased]
 
 ## v21.9.21

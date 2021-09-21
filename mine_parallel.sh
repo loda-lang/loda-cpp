@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # check required commands
-for cmd in git make; do
+for cmd in loda; do
   if ! [ -x "$(command -v $cmd)" ]; then
     echo "Error: $cmd is not installed" >&2
     exit 1
@@ -9,13 +9,9 @@ for cmd in git make; do
 done
 
 # common settings
-log_level=warn
+log_level=info
 restart_interval=21600
 min_cpus=4
-
-# git info
-branch=$(git rev-parse --abbrev-ref HEAD)
-remote_origin=$(git config --get remote.origin.url)
 
 # get the number of cpus
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -42,9 +38,6 @@ if [ -n "$LODA_MAX_PROCESSES" ]; then
   num_use_cpus=$LODA_MAX_PROCESSES
 fi
 
-# increase metric publishing interval because we run multiple instances in parallel
-export LODA_METRICS_PUBLISH_INTERVAL=600
-
 function log_info {
   echo "$(date +"%Y-%m-%d %H:%M:%S")|INFO |$@"
 }
@@ -61,30 +54,15 @@ function abort_miners() {
 
 function start_miners() {
 
-  # maintenance
-  if [ "$remote_origin" = "git@github.com:loda-lang/loda-cpp.git" ] && [ "$branch" = "main" ]; then
-    log_info "Starting program maintenance"
-    ./loda maintain &
-    sleep 90
-  fi
-
   # start miners
   # i=0
   i=1
   log_info "Starting ${num_use_cpus} miner instances"
   for n in $(seq ${num_use_cpus}); do
-    ./loda mine -l ${log_level} -i ${i} $@ &
+    loda mine -l ${log_level} -i ${i} $@ &
     ((i=i+1))
   done
-  ./loda mine -l ${log_level} -i blocks -c 100000 $@ &
-}
-
-function rebuild_loda {
-  log_info "Rebuilding loda"
-  pushd src > /dev/null
-  make clean
-  make || exit 1
-  popd > /dev/null
+  loda mine -l ${log_level} -i blocks -c 100000 $@ &
 }
 
 function restart_miners {
@@ -101,10 +79,6 @@ function restart_miners {
   start_miners $@
 
 }
-
-if [ ! -f ./loda ]; then
-  rebuild_loda
-fi
 
 trap abort_miners INT
 
