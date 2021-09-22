@@ -73,6 +73,7 @@ Program ApiClient::getNextProgram() {
 }
 
 void ApiClient::updateSession() {
+  Log::get().debug("Updating API client session");
   auto new_session_id = fetchInt("session");
   if (new_session_id == 0) {
     Log::get().error("Received invalid session ID from API server: " +
@@ -85,13 +86,17 @@ void ApiClient::updateSession() {
                          std::to_string(new_count),
                      true);
   }
+  // Log::get().debug("old session:" + std::to_string(session_id) + ", old start:" + std::to_string(start) + ", old count:" +std::to_string(count) );
+  // Log::get().debug("new session:" + std::to_string(new_session_id) + ", new count:" +std::to_string(new_count) );
   start = (new_session_id == session_id) ? count : 0;
-  count = new_count - start;
+  count = new_count;
   session_id = new_session_id;
-  queue.resize(count);
-  for (int64_t i = start; i < count; i++) {
-    queue[i] = i;
+  auto delta_count = count - start;
+  queue.resize(delta_count);
+  for (int64_t i = 0; i < delta_count; i++) {
+    queue[i] = start + i;
   }
+  // Log::get().debug("updated session:" + std::to_string(session_id) + ", updated start:" + std::to_string(start) + ", updated count:" +std::to_string(count) + " queue: " + std::to_string(queue.size()));
   std::shuffle(queue.begin(), queue.end(), Random::get().gen);
 }
 

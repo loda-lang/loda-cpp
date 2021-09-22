@@ -153,7 +153,7 @@ void Miner::mine(const std::vector<std::string> &initial_progs) {
     // regular task: fetch programs from API server
     if (mode == MINING_MODE_SERVER && api_scheduler.isTargetReached()) {
       api_scheduler.reset();
-      for (size_t i = 0; i < 10; i++) {  // magic number
+      for (size_t i = 0; i < 50; i++) {  // magic number
         Program p = api_client.getNextProgram();
         if (p.ops.empty()) {
           break;

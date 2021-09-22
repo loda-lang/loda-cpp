@@ -122,7 +122,7 @@ void OeisMaintenance::generateLists() {
   std::map<std::string, std::string> labels;
 
   labels["kind"] = "total";
-  entries.push_back({"programs", labels, (double)stats.num_programs});
+  entries.push_back({"programs", labels, (double)num_processed});
   entries.push_back({"sequences", labels, (double)manager.getTotalCount()});
 
   labels["kind"] = "used";
