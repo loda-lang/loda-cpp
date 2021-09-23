@@ -187,8 +187,8 @@ int64_t Setup::getMaxMemory() {
 
 int64_t Setup::getUpdateIntervalInDays() {
   if (UPDATE_INTERVAL == -1) {
-    // 3 days default
-    UPDATE_INTERVAL = getAdvancedConfigInt("LODA_UPDATE_INTERVAL", 3);
+    // 1 day default
+    UPDATE_INTERVAL = getAdvancedConfigInt("LODA_UPDATE_INTERVAL", 1);
   }
   return UPDATE_INTERVAL;
 }

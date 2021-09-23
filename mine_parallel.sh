@@ -1,17 +1,18 @@
 #!/bin/bash
 
-# check required commands
-for cmd in loda; do
-  if ! [ -x "$(command -v $cmd)" ]; then
-    echo "Error: $cmd is not installed" >&2
-    exit 1
-  fi
-done
-
 # common settings
 log_level=info
-restart_interval=21600
 min_cpus=4
+
+loda_cmd=
+if [ -x "./loda" ]; then
+  loda_cmd="./loda"
+elif [ -x "$(command -v $cmd)" ]; then
+  loda_cmd="loda"
+else
+  echo "Error: loda executable not found"
+  exit 1
+fi
 
 # get the number of cpus
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -42,52 +43,27 @@ function log_info {
   echo "$(date +"%Y-%m-%d %H:%M:%S")|INFO |$@"
 }
 
-function stop_miners() {
-  log_info "Stopping loda"
-  killall loda > /dev/null 2> /dev/null
-}
-
-function abort_miners() {
-  stop_miners
-  exit 1
-}
-
 function start_miners() {
-
-  # start miners
   # i=0
   i=1
   log_info "Starting ${num_use_cpus} miner instances"
   for n in $(seq ${num_use_cpus}); do
-    loda mine -l ${log_level} -i ${i} $@ &
+    ${loda_cmd} mine -l ${log_level} -i ${i} $@ &
+    sleep 1
     ((i=i+1))
   done
-  loda mine -l ${log_level} -i blocks -c 100000 $@ &
+  ${loda_cmd} mine -l ${log_level} -i blocks -c 100000 $@ &
 }
 
-function restart_miners {
-
-  # check if loda is running and stop if so
-  ps -A > /tmp/loda-ps.txt
-  if grep loda /tmp/loda-ps.txt; then
-    stop_miners
-  	sleep 10
-  fi
-  rm /tmp/loda-ps.txt
-
-  # restart miners
-  start_miners $@
-
+function stop_miners() {
+  log_info "Stopping loda"
+  killall loda > /dev/null 2> /dev/null
+  exit 1
 }
 
-trap abort_miners INT
+trap stop_miners INT
 
-restart_miners
-SECONDS=0
+start_miners $@
 while [ true ]; do
-  if (( SECONDS >= restart_interval )); then
-  	restart_miners
-    SECONDS=0
-  fi
   sleep 600
 done
