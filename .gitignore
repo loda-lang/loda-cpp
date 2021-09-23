@@ -1,8 +1,9 @@
 *.log
 *.o
-/src/external
+/src/external/
 /src/loda
+/tests/programs/local/
 /loda
 /completer.hist
 /.DS_Store
-/.settings
+/.settings/

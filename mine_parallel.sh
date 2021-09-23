@@ -49,6 +49,7 @@ function start_miners() {
   log_info "Starting ${num_use_cpus} miner instances"
   for n in $(seq ${num_use_cpus}); do
     ${loda_cmd} mine -l ${log_level} -i ${i} $@ &
+    sleep 1
     ((i=i+1))
   done
   ${loda_cmd} mine -l ${log_level} -i blocks -c 100000 $@ &
