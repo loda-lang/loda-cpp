@@ -15,8 +15,7 @@
 #include "program_util.hpp"
 #include "setup.hpp"
 
-Miner::Miner(const Settings &settings)
-    : settings(settings), manager(settings), interpreter(settings) {}
+Miner::Miner(const Settings &settings) : settings(settings) {}
 
 bool Miner::updateSpecialSequences(const Program &p,
                                    const Sequence &seq) const {
@@ -71,17 +70,24 @@ bool Miner::isCollatzValuation(const Sequence &seq) {
   return true;
 }
 
-void Miner::mine(const std::vector<std::string> &initial_progs) {
-  manager.load();
+void Miner::reload() {
+  manager.reset(new OeisManager(settings));
+  manager->load();
+  multi_generator.reset(
+      new MultiGenerator(settings, manager->getStats(), true));
+}
 
-  MultiGenerator multi_generator(settings, manager.getStats(), true);
+void Miner::mine(const std::vector<std::string> &initial_progs) {
+  if (!manager) {
+    reload();
+  }
+  ApiClient api_client;
   Mutator mutator;
   std::stack<Program> progs;
   Sequence norm_seq;
-  auto &finder = manager.getFinder();
   AdaptiveScheduler metrics_scheduler(Metrics::get().publish_interval);
-  AdaptiveScheduler api_scheduler(600);  // 10 minutes (magic number)
-  ApiClient api_client;
+  AdaptiveScheduler api_scheduler(600);       // 10 minutes (magic number)
+  AdaptiveScheduler reload_scheduler(43200);  // 12 hours (magic number)
 
   // load initial programs
   Parser parser;
@@ -108,13 +114,13 @@ void Miner::mine(const std::vector<std::string> &initial_progs) {
 
   Log::get().info("Mining programs for OEIS sequences in " + mode_str +
                   " mode");
-  Generator *generator = multi_generator.getGenerator();
+  Generator *generator = multi_generator->getGenerator();
   while (true) {
     // generate new program if needed
     if (progs.empty()) {
       multi_generator
-          .next();  // need to call "next" *before* generating the programs
-      generator = multi_generator.getGenerator();
+          ->next();  // need to call "next" *before* generating the programs
+      generator = multi_generator->getGenerator();
       progs.push(generator->generateProgram());
     }
 
@@ -124,10 +130,10 @@ void Miner::mine(const std::vector<std::string> &initial_progs) {
     // program.ops.size() ) + " operations" ); ProgramUtil::print( program,
     // std::cout );
     progs.pop();
-    auto seq_programs =
-        finder.findSequence(program, norm_seq, manager.getSequences());
+    auto seq_programs = manager->getFinder().findSequence(
+        program, norm_seq, manager->getSequences());
     for (auto s : seq_programs) {
-      auto r = manager.updateProgram(s.first, s.second);
+      auto r = manager->updateProgram(s.first, s.second);
       if (r.first) {
         // update stats and increase priority of successful generator
         if (r.second) {
@@ -167,8 +173,8 @@ void Miner::mine(const std::vector<std::string> &initial_progs) {
       metrics_scheduler.reset();
       int64_t total_generated = 0;
       std::vector<Metrics::Entry> entries;
-      for (size_t i = 0; i < multi_generator.generators.size(); i++) {
-        auto gen = multi_generator.generators[i].get();
+      for (size_t i = 0; i < multi_generator->generators.size(); i++) {
+        auto gen = multi_generator->generators[i].get();
         auto labels = gen->metric_labels;
 
         labels["kind"] = "generated";
@@ -185,8 +191,15 @@ void Miner::mine(const std::vector<std::string> &initial_progs) {
       }
       Log::get().info("Generated " + std::to_string(total_generated) +
                       " programs");
-      finder.publishMetrics(entries);
+      manager->getFinder().publishMetrics(entries);
       Metrics::get().write(entries);
+    }
+
+    // regular task: reload oeis manager and generators
+    if (reload_scheduler.isTargetReached()) {
+      reload_scheduler.reset();
+      reload();
+      generator = multi_generator->getGenerator();
     }
   }
 }

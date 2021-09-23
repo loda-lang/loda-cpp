@@ -1,7 +1,8 @@
 #pragma once
 
+#include <memory>
+
 #include "generator.hpp"
-#include "interpreter.hpp"
 #include "matcher.hpp"
 #include "number.hpp"
 #include "oeis_manager.hpp"
@@ -26,9 +27,11 @@ class Miner {
   static bool isCollatzValuation(const Sequence &seq);
 
  private:
+  void reload();
+
   bool updateSpecialSequences(const Program &p, const Sequence &seq) const;
 
   const Settings &settings;
-  OeisManager manager;
-  Interpreter interpreter;
+  std::unique_ptr<OeisManager> manager;
+  std::unique_ptr<MultiGenerator> multi_generator;
 };
