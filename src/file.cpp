@@ -185,7 +185,7 @@ size_t getMemUsage() {
 
 bool hasGit() {
   const std::string git_test("git --version > /dev/null 2> /dev/null");
-  return system(git_test.c_str()) != 0;
+  return system(git_test.c_str()) == 0;
 }
 
 FolderLock::FolderLock(std::string folder) {
