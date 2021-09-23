@@ -135,6 +135,20 @@ void ensureDir(const std::string &path) {
   }
 }
 
+void moveDir(const std::string &from, const std::string &to) {
+  // Log::get().warn("Moving directory: " + from + " -> " + to);
+  std::string cmd = "mv " + from + " " + to;
+  if (system(cmd.c_str()) != 0) {
+    Log::get().error("Error executing command: " + cmd, true);
+  }
+}
+
+void ensureTrailingSlash(std::string &dir) {
+  if (dir.back() != '/') {
+    dir += '/';
+  }
+}
+
 int64_t getFileAgeInDays(const std::string &path) {
   struct stat st;
   if (stat(path.c_str(), &st) == 0) {
@@ -167,6 +181,11 @@ size_t getMemUsage() {
 #endif
   // TODO: memory usage on windows
   return mem_usage;
+}
+
+bool hasGit() {
+  const std::string git_test("git --version > /dev/null 2> /dev/null");
+  return system(git_test.c_str()) != 0;
 }
 
 FolderLock::FolderLock(std::string folder) {

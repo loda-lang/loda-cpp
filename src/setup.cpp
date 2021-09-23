@@ -122,20 +122,6 @@ void Setup::checkDir(const std::string& home) {
   }
 }
 
-void Setup::ensureTrailingSlash(std::string& dir) {
-  if (dir.back() != '/') {
-    dir += '/';
-  }
-}
-
-void Setup::moveDir(const std::string& from, const std::string& to) {
-  // Log::get().warn("Moving directory: " + from + " -> " + to);
-  std::string cmd = "mv " + from + " " + to;
-  if (system(cmd.c_str()) != 0) {
-    Log::get().error("Error executing command: " + cmd, true);
-  }
-}
-
 std::string Setup::getAdvancedConfig(const std::string& key) {
   if (!LOADED_ADVANCED_CONFIG) {
     loadAdvancedConfig();
@@ -304,8 +290,7 @@ void Setup::runWizard() {
     std::cout << "The repository requires around 350 MB of disk space."
               << std::endl
               << std::endl;
-    std::string git_test = "git --version > /dev/null";
-    if (system(git_test.c_str()) != 0) {
+    if (!hasGit()) {
       std::cout << std::endl
                 << "The setup requires the git tool to download the programs."
                 << std::endl;

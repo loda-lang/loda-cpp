@@ -59,8 +59,6 @@ class Setup {
   static int64_t UPDATE_INTERVAL;
 
   static void checkDir(const std::string& home);
-  static void ensureTrailingSlash(std::string& dir);
-  static void moveDir(const std::string& from, const std::string& to);
   static void ensureEnvVar(const std::string& key, const std::string& value,
                            bool must);
   static void loadAdvancedConfig();
