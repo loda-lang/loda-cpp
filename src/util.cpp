@@ -180,7 +180,7 @@ void Metrics::write(const std::vector<Entry> entries) const {
     return;
   }
   if (!notified) {
-    Log::get().info("Publishing metrics to InfluxDB");
+    Log::get().debug("Publishing metrics to InfluxDB");
     notified = true;
   }
 

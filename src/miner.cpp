@@ -73,6 +73,7 @@ bool Miner::isCollatzValuation(const Sequence &seq) {
 void Miner::reload() {
   manager.reset(new OeisManager(settings));
   manager->load();
+  manager->getFinder();  // initializes matchers
   multi_generator.reset(
       new MultiGenerator(settings, manager->getStats(), true));
 }
