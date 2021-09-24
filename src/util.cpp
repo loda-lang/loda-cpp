@@ -298,8 +298,6 @@ Random &Random::get() {
 
 Random::Random() {
   std::random_device dev;
-  auto seed = dev();
+  seed = dev();
   gen.seed(seed);
-  Log::get().info("Initialized random number generator using seed " +
-                  std::to_string(seed));
 }

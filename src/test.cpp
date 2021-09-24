@@ -29,6 +29,8 @@
 #include "stats.hpp"
 
 Test::Test() {
+  Log::get().info("Initialized random number generator using seed " +
+                  std::to_string(Random::get().seed));
 #ifndef _WIN64
   ensureDir("/tmp/loda/");
   Setup::setLodaHome("/tmp/loda/");

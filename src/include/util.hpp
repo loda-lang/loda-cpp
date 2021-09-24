@@ -82,6 +82,7 @@ class Random {
  public:
   static Random &get();
 
+  uint64_t seed;
   std::mt19937 gen;
 
  private:
