@@ -4,6 +4,7 @@
 
 #include "evaluator.hpp"
 #include "matcher.hpp"
+#include "metrics.hpp"
 #include "minimizer.hpp"
 #include "number.hpp"
 

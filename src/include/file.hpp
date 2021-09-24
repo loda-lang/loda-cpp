@@ -21,9 +21,15 @@ bool isDir(const std::string &path);
 
 void ensureDir(const std::string &path);
 
+void moveDir(const std::string &from, const std::string &to);
+
+void ensureTrailingSlash(std::string &dir);
+
 int64_t getFileAgeInDays(const std::string &path);
 
 size_t getMemUsage();
+
+bool hasGit();
 
 class FolderLock {
  public:
