@@ -5,7 +5,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Enhancements
 
 * Optimized server-side processing of submitted programs.
-* The `loda mine` command regularly checks for OEIS updates and regenerates stats. The `mine_parallel.sh` no longer restarts the miners.
+* Regularly update OEIS files and programs folder, and regenerate stats.
 
 ## v21.9.21
 

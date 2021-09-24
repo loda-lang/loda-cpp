@@ -83,7 +83,7 @@ void ProgramState::save(const std::string& path) const {
 
 GeneratorV4::GeneratorV4(const Config& config, const Stats& stats)
     : Generator(config, stats),
-      scheduler(60)  // 1 minute
+      scheduler(300)  // 5 minutes (magic number)
 {
   if (config.miner.empty() || config.miner == "default") {
     Log::get().error("Invalid or empty miner for generator v4: " + config.miner,
@@ -187,10 +187,10 @@ Program GeneratorV4::generateProgram() {
   state.current = iterator.next();
   state.generated++;
   if (scheduler.isTargetReached()) {
+    scheduler.reset();
     FolderLock lock(home);
     state.save(getPath(state.index));
     load();
-    scheduler.reset();
   }
   return state.current;
 }

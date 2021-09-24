@@ -322,6 +322,18 @@ void OeisManager::update() {
         Log::get().error("Error unzipping " + path + ".gz", true);
       }
     }
+    // update programs repository using git pull
+    auto mode = Setup::getMiningMode();
+    auto progs_dir = Setup::getProgramsHome();
+    if (mode != MINING_MODE_SERVER && hasGit() && isDir(progs_dir + ".git")) {
+      Log::get().info("Updating programs repository");
+      std::string git_cmd =
+          "cd " + progs_dir + "&& git pull origin main -q --ff-only";
+      if (system(git_cmd.c_str()) != 0) {
+        Log::get().warn(
+            "Update of programs repository failed; please update it manually.");
+      }
+    }
   }
 }
 
