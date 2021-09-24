@@ -333,9 +333,10 @@ void Setup::runWizard() {
 
   // environment variables
   if (loda_home != user_home + "/loda/") {
-    ensureEnvVar("LODA_HOME", loda_home, true);
+    ensureEnvVar("LODA_HOME", loda_home, "Set LODA home directory", true);
   }
-  ensureEnvVar("PATH", "$PATH:" + loda_home + "bin", false);
+  ensureEnvVar("PATH", "$PATH:" + loda_home + "bin",
+               "Add LODA command-line tool to path", false);
 
   // mining mode
   std::cout << "LODA supports the following modes for mining programs:"
@@ -431,7 +432,7 @@ void Setup::runWizard() {
 }
 
 void Setup::ensureEnvVar(const std::string& key, const std::string& value,
-                         bool must) {
+                         const std::string& comment, bool must_have) {
   std::string line;
   auto shell = std::getenv("SHELL");
   if (shell) {
@@ -451,7 +452,7 @@ void Setup::ensureEnvVar(const std::string& key, const std::string& value,
           }
         }
       }
-      if (must) {
+      if (must_have) {
         std::cout
             << "The following line must be added to your shell configuration:"
             << std::endl;
@@ -466,15 +467,21 @@ void Setup::ensureEnvVar(const std::string& key, const std::string& value,
       std::cout << std::endl;
       if (line.empty() || line == "y" || line == "Y") {
         std::ofstream out(bashrc, std::ios_base::app);
+        out << std::endl;
+        out << "# " << comment << std::endl;
         out << kv << std::endl;
-        std::cout << "Ok, please run 'source " << bashrc
+        out.close();
+        std::cout << "Done. Please run 'source " << bashrc
                   << "' after this setup." << std::endl;
+        std::cout << "Press enter to continue the setup." << std::endl;
+        std::getline(std::cin, line);
+        std::cout << std::endl;
       }
       return;
     }
   }
 
-  if (must) {
+  if (must_have) {
     std::cout << "Please add the following environment variable to your shell "
                  "configuration:"
               << std::endl;

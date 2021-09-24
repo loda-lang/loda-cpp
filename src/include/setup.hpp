@@ -60,7 +60,7 @@ class Setup {
 
   static void checkDir(const std::string& home);
   static void ensureEnvVar(const std::string& key, const std::string& value,
-                           bool must);
+                           const std::string& comment, bool must_have);
   static void loadAdvancedConfig();
   static void saveAdvancedConfig();
 };
