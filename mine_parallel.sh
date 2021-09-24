@@ -43,16 +43,26 @@ function log_info {
   echo "$(date +"%Y-%m-%d %H:%M:%S")|INFO |$@"
 }
 
-function start_miners() {
-  # i=0
-  i=1
-  log_info "Starting ${num_use_cpus} miner instances"
-  for n in $(seq ${num_use_cpus}); do
-    ${loda_cmd} mine -l ${log_level} -i ${i} $@ &
-    sleep 1
-    ((i=i+1))
-  done
-  ${loda_cmd} mine -l ${log_level} -i blocks -c 100000 $@ &
+function ensure_miners() {
+
+  # check how many loda processes are running
+  ps -A > .loda-ps.txt
+  num_proc=$(grep loda .loda-ps.txt | wc -l)
+  rm .loda-ps.txt
+
+  # number of processes to be started
+  ((num_delta=num_use_cpus-num_proc))
+
+  if [ "$num_delta" -gt 0 ]; then  
+    i="$(date +"%S")"
+    ((i=i % 8))
+    log_info "Starting ${num_delta}/${num_use_cpus} miner instances"
+    for n in $(seq ${num_delta}); do
+      ${loda_cmd} mine -l ${log_level} -i ${i} $@ &
+      sleep 1
+      ((i=i+1))
+    done
+  fi
 }
 
 function stop_miners() {
@@ -63,7 +73,7 @@ function stop_miners() {
 
 trap stop_miners INT
 
-start_miners $@
 while [ true ]; do
+  ensure_miners $@
   sleep 600
 done
