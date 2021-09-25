@@ -253,10 +253,10 @@ void Setup::runWizard() {
   ensureEnvVar("PATH", "$PATH:" + LODA_HOME + "bin",
                "Add LODA command-line tool to path", false);
 
-  if (!checkMiningMode()) {
+  if (!checkMinersConfig()) {
     return;
   }
-  if (!checkMinersConfig()) {
+  if (!checkMiningMode()) {
     return;
   }
   if (!checkMaxMemory()) {
@@ -406,28 +406,47 @@ bool Setup::checkMiningMode() {
 
 bool Setup::checkMinersConfig() {
   std::string line;
+  const std::string version_marker =
+      "  \"version\": \"" + Version::VERSION + "\",";
   const std::string default_miners_config = LODA_HOME + "miners.default.json";
-  // TODO: also check if outdated
-  if (!isFile(default_miners_config)) {
-    std::string url = "https://raw.githubusercontent.com/loda-lang/loda-cpp/" +
-                      Version::BRANCH + "/miners.default.json";
-    std::cout << "The LODA miner requires a configuration file." << std::endl;
-    std::cout << "Press return to download the default miner configuration:"
-              << std::endl;
-    std::cout << "[" + url + "] ";
-    std::getline(std::cin, line);
-    if (line.empty() || line == "y" || line == "Y") {
-      Http::get(url, default_miners_config);
-      // TODO: inject version number
-      std::ifstream in(default_miners_config);
+  std::string action = "Installing";
+  std::ifstream in(default_miners_config);
+  if (in.good()) {
+    std::getline(in, line);
+    std::getline(in, line);
+    if (line == version_marker) {
+      action.clear();
+    } else {
+      action = "Updating";
+    }
+  }
+  in.close();
+  if (!action.empty()) {
+    std::cout << action << " default miner configuration file:" << std::endl;
+    const std::string url =
+        "https://raw.githubusercontent.com/loda-lang/loda-cpp/" +
+        Version::BRANCH + "/miners.default.json";
+    std::remove(default_miners_config.c_str());
+    Http::get(url, default_miners_config);
+    if (Version::IS_RELEASE) {
+      // inject release version number
+      std::ifstream in2(default_miners_config);
       std::stringstream buf;
-      std::getline(in, line);
+      std::getline(in2, line);
       if (line != "{") {
         std::cout << "Unexpected content in " << default_miners_config
                   << std::endl;
         return false;
       }
       buf << line << std::endl;
+      buf << version_marker << std::endl;
+      while (std::getline(in2, line)) {
+        buf << line << std::endl;
+      }
+      in2.close();
+      std::ofstream out(default_miners_config);
+      out << buf.str();
+      out.close();
     }
     std::cout << std::endl;
   }

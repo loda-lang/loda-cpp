@@ -5,7 +5,12 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Enhancements
 
 * Optimized server-side processing of submitted programs.
-* Regularly update OEIS files and programs folder, and regenerate stats.
+* Regularly update OEIS index and programs folder, and regenerate stats.
+* Setup automatically updates default miner configuration.
+
+### Bugfixes
+
+* Fix start-up error `Error parsing line...` (#36)
 
 ## v21.9.21
 
