@@ -65,9 +65,9 @@ class Setup {
   static void saveSetup();
 
   static void checkLodaHome();
-  static void checkProgramsHome();
-  static void checkExecutable();
-  static void checkMiningMode();
-  static void checkMinersConfig();
-  static void checkMaxMemory();
+  static bool checkProgramsHome();
+  static bool checkExecutable();
+  static bool checkMiningMode();
+  static bool checkMinersConfig();
+  static bool checkMaxMemory();
 };

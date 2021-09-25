@@ -255,8 +255,12 @@ void Setup::runWizard() {
 
   loadSetup();
 
-  checkProgramsHome();
-  checkExecutable();
+  if (!checkProgramsHome()) {
+    return;
+  }
+  if (!checkExecutable()) {
+    return;
+  }
 
   // environment variables
   if (LODA_HOME != USER_HOME + "/loda/") {
@@ -265,9 +269,15 @@ void Setup::runWizard() {
   ensureEnvVar("PATH", "$PATH:" + LODA_HOME + "bin",
                "Add LODA command-line tool to path", false);
 
-  checkMiningMode();
-  checkMinersConfig();
-  checkMaxMemory();
+  if (!checkMiningMode()) {
+    return;
+  }
+  if (!checkMinersConfig()) {
+    return;
+  }
+  if (!checkMaxMemory()) {
+    return;
+  }
 
   saveSetup();
 
@@ -299,7 +309,7 @@ void Setup::checkLodaHome() {
   ensureDir(LODA_HOME);
 }
 
-void Setup::checkProgramsHome() {
+bool Setup::checkProgramsHome() {
   std::string line;
   if (!isDir(LODA_HOME + "programs/oeis")) {
     std::cout << "LODA needs to download its programs repository from GitHub."
@@ -321,7 +331,7 @@ void Setup::checkProgramsHome() {
           << "Please install git and restart the setup: "
              "https://git-scm.com/book/en/v2/Getting-Started-Installing-Git"
           << std::endl;
-      return;
+      return false;
     }
     std::string git_url = "https://github.com/loda-lang/loda-programs.git";
     std::cout << "Press return to download the default programs repository:"
@@ -336,13 +346,14 @@ void Setup::checkProgramsHome() {
     if (system(git_clone.c_str()) != 0) {
       std::cout << std::endl
                 << "Error cloning repository. Aborting setup." << std::endl;
-      return;
+      return false;
     }
     std::cout << std::endl;
   }
+  return true;
 }
 
-void Setup::checkExecutable() {
+bool Setup::checkExecutable() {
   ensureDir(LODA_HOME + "bin/");
   std::string exe;
 #ifdef _WIN64
@@ -352,11 +363,12 @@ void Setup::checkExecutable() {
     std::cout << "Please copy the 'loda" << exe << "' executable to "
               << LODA_HOME << "bin" << std::endl;
     std::cout << "and restart the setup." << std::endl;
-    return;
+    return false;
   }
+  return true;
 }
 
-void Setup::checkMiningMode() {
+bool Setup::checkMiningMode() {
   std::string line;
   std::cout << "LODA supports the following modes for mining programs:"
             << std::endl
@@ -389,7 +401,7 @@ void Setup::checkMiningMode() {
     mode = MINING_MODE_SERVER;
   } else if (!line.empty()) {
     std::cout << "Invalid choice. Please restart the setup." << std::endl;
-    return;
+    return false;
   }
   std::string mode_str;
   switch (mode) {
@@ -405,9 +417,10 @@ void Setup::checkMiningMode() {
   }
   SETUP["LODA_MINING_MODE"] = mode_str;
   std::cout << std::endl;
+  return true;
 }
 
-void Setup::checkMinersConfig() {
+bool Setup::checkMinersConfig() {
   std::string line;
   const std::string default_miners_config = LODA_HOME + "miners.default.json";
   // TODO: also check if outdated
@@ -422,12 +435,22 @@ void Setup::checkMinersConfig() {
     if (line.empty() || line == "y" || line == "Y") {
       Http::get(url, default_miners_config);
       // TODO: inject version number
+      std::ifstream in(default_miners_config);
+      std::stringstream buf;
+      std::getline(in, line);
+      if (line != "{") {
+        std::cout << "Unexpected content in " << default_miners_config
+                  << std::endl;
+        return false;
+      }
+      buf << line << std::endl;
     }
     std::cout << std::endl;
   }
+  return true;
 }
 
-void Setup::checkMaxMemory() {
+bool Setup::checkMaxMemory() {
   std::string line;
   std::cout << "Enter the maximum memory usage of the miner in MB:"
             << std::endl;
@@ -439,10 +462,11 @@ void Setup::checkMaxMemory() {
   }
   if (max_memory < 512) {
     std::cout << "Invalid value. Please restart the setup." << std::endl;
-    return;
+    return false;
   }
   SETUP["LODA_MAX_PHYSICAL_MEMORY"] = std::to_string(max_memory);
   std::cout << std::endl;
+  return true;
 }
 
 void Setup::ensureEnvVar(const std::string& key, const std::string& value,
