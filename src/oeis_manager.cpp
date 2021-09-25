@@ -55,8 +55,17 @@ void OeisManager::load() {
   OeisList::loadList(oeis_dir + "deny.txt", deny_list);
   OeisList::loadList(oeis_dir + "overwrite.txt", overwrite_list);
   OeisList::loadList(oeis_dir + "protect.txt", protect_list);
-  OeisList::loadMap(OeisList::getListsHome() + "invalid_matches.txt",
-                    invalid_matches_map);
+
+  // load invalid matches map
+  const std::string invalid_matches_file =
+      OeisList::getListsHome() + "invalid_matches.txt";
+  try {
+    OeisList::loadMap(invalid_matches_file, invalid_matches_map);
+  } catch (const std::exception &) {
+    Log::get().warn("Resetting corrupt file " + invalid_matches_file);
+    invalid_matches_map.clear();
+    std::remove(invalid_matches_file.c_str());
+  }
 
   std::chrono::steady_clock::time_point start_time;
   {
