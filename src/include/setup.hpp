@@ -67,5 +67,10 @@ class Setup {
   static bool checkExecutable();
   static bool checkMiningMode();
   static bool checkMinersConfig();
+  static bool checkMineParallelScript();
   static bool checkMaxMemory();
+
+  static bool updateFile(const std::string& local_file, const std::string& url,
+                         const std::string& header, const std::string& marker,
+                         bool executable);
 };

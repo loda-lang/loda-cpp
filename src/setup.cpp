@@ -232,6 +232,7 @@ void Setup::saveSetup() {
 void Setup::runWizard() {
   std::string line;
   std::cout << "===== Welcome to " << Version::INFO << "! =====" << std::endl
+            << std::endl
             << "This command will guide you through its setup." << std::endl
             << std::endl;
   checkLodaHome();
@@ -256,6 +257,9 @@ void Setup::runWizard() {
   if (!checkMinersConfig()) {
     return;
   }
+  if (!checkMineParallelScript()) {
+    return;
+  }
   if (!checkMiningMode()) {
     return;
   }
@@ -267,9 +271,13 @@ void Setup::runWizard() {
 
   // good bye
   std::cout << "===== Setup complete. Thanks for using LODA! =====" << std::endl
-            << "To run a Hello World example, try 'loda eval A000045'."
             << std::endl
-            << "To start mining, use the 'loda mine' command." << std::endl;
+            << "To run a Hello World example (Fibonacci numbers):" << std::endl
+            << "  loda eval A000045" << std::endl
+            << "To mine programs for OEIS sequences (single core):" << std::endl
+            << "  loda mine" << std::endl
+            << "To mine programs for OEIS sequences (multi core):" << std::endl
+            << "  mine_parallel.sh" << std::endl;
 }
 
 void Setup::checkLodaHome() {
@@ -404,17 +412,16 @@ bool Setup::checkMiningMode() {
   return true;
 }
 
-bool Setup::checkMinersConfig() {
-  std::string line;
-  const std::string version_marker =
-      "  \"version\": \"" + Version::VERSION + "\",";
-  const std::string default_miners_config = LODA_HOME + "miners.default.json";
+bool Setup::updateFile(const std::string& local_file, const std::string& url,
+                       const std::string& header, const std::string& marker,
+                       bool executable) {
+  std::string line1, line2;
   std::string action = "Installing";
-  std::ifstream in(default_miners_config);
+  std::ifstream in(local_file);
   if (in.good()) {
-    std::getline(in, line);
-    std::getline(in, line);
-    if (line == version_marker) {
+    std::getline(in, line1);
+    std::getline(in, line2);
+    if (line1 == header && line2 == marker) {
       action.clear();
     } else {
       action = "Updating";
@@ -422,35 +429,59 @@ bool Setup::checkMinersConfig() {
   }
   in.close();
   if (!action.empty()) {
-    std::cout << action << " default miner configuration file:" << std::endl;
-    const std::string url =
-        "https://raw.githubusercontent.com/loda-lang/loda-cpp/" +
-        Version::BRANCH + "/miners.default.json";
-    std::remove(default_miners_config.c_str());
-    Http::get(url, default_miners_config);
+    std::cout << action << " " << local_file << std::endl;
+    std::remove(local_file.c_str());
+    Http::get(url, local_file, true, true);
     if (Version::IS_RELEASE) {
-      // inject release version number
-      std::ifstream in2(default_miners_config);
+      // inject marker
+      std::ifstream in2(local_file);
       std::stringstream buf;
-      std::getline(in2, line);
-      if (line != "{") {
-        std::cout << "Unexpected content in " << default_miners_config
+      std::getline(in2, line1);
+      if (line1 != header) {
+        std::cout << "Unexpected content in " << local_file << std::endl;
+        return false;
+      }
+      buf << line1 << std::endl;
+      buf << marker << std::endl;
+      while (std::getline(in2, line1)) {
+        buf << line1 << std::endl;
+      }
+      in2.close();
+      std::ofstream out(local_file);
+      out << buf.str();
+      out.close();
+    }
+    if (executable) {
+      const std::string chmod = "chmod u+x " + local_file;
+      if (system(chmod.c_str()) != 0) {
+        std::cout << "Error making file executable: " << local_file
                   << std::endl;
         return false;
       }
-      buf << line << std::endl;
-      buf << version_marker << std::endl;
-      while (std::getline(in2, line)) {
-        buf << line << std::endl;
-      }
-      in2.close();
-      std::ofstream out(default_miners_config);
-      out << buf.str();
-      out.close();
     }
     std::cout << std::endl;
   }
   return true;
+}
+
+bool Setup::checkMinersConfig() {
+  const std::string local_file = LODA_HOME + "miners.default.json";
+  const std::string url =
+      "https://raw.githubusercontent.com/loda-lang/loda-cpp/" +
+      Version::BRANCH + "/miners.default.json";
+  const std::string header = "{";
+  const std::string marker = "  \"version\": \"" + Version::VERSION + "\",";
+  return updateFile(local_file, url, header, marker, false);
+}
+
+bool Setup::checkMineParallelScript() {
+  const std::string local_file = LODA_HOME + "bin/mine_parallel.sh";
+  const std::string url =
+      "https://raw.githubusercontent.com/loda-lang/loda-cpp/" +
+      Version::BRANCH + "/mine_parallel.sh";
+  const std::string header = "#!/bin/bash";
+  const std::string marker = "loda_version=" + Version::VERSION;
+  return updateFile(local_file, url, header, marker, true);
 }
 
 bool Setup::checkMaxMemory() {
