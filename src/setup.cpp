@@ -20,22 +20,6 @@ int64_t Setup::MINING_MODE = -1;
 int64_t Setup::MAX_MEMORY = -1;
 int64_t Setup::UPDATE_INTERVAL = -1;
 
-std::string Setup::getVersionInfo() {
-#ifdef LODA_VERSION
-  return "LODA v" + std::string(xstr(LODA_VERSION));
-#else
-  return "LODA developer version";
-#endif
-}
-
-std::string getVersionBranch() {
-#ifdef LODA_VERSION
-  return "v" + std::string(xstr(LODA_VERSION));
-#else
-  return "main";
-#endif
-}
-
 std::string Setup::getLodaHomeNoCheck() {
   auto loda_home = std::getenv("LODA_HOME");
   std::string result;
@@ -247,7 +231,7 @@ void Setup::saveSetup() {
 
 void Setup::runWizard() {
   std::string line;
-  std::cout << "===== Welcome to " << getVersionInfo() << "! =====" << std::endl
+  std::cout << "===== Welcome to " << Version::INFO << "! =====" << std::endl
             << "This command will guide you through its setup." << std::endl
             << std::endl;
   checkLodaHome();
@@ -426,7 +410,7 @@ bool Setup::checkMinersConfig() {
   // TODO: also check if outdated
   if (!isFile(default_miners_config)) {
     std::string url = "https://raw.githubusercontent.com/loda-lang/loda-cpp/" +
-                      getVersionBranch() + "/miners.default.json";
+                      Version::BRANCH + "/miners.default.json";
     std::cout << "The LODA miner requires a configuration file." << std::endl;
     std::cout << "Press return to download the default miner configuration:"
               << std::endl;

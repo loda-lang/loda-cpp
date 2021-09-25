@@ -21,7 +21,7 @@ void Commands::initLog(bool silent) {
     Log::get().silent = true;
   } else {
     Log::get().silent = false;
-    Log::get().info("Starting " + Setup::getVersionInfo() +
+    Log::get().info("Starting " + Version::INFO +
                     ". See https://loda-lang.org");
   }
 }
@@ -29,7 +29,7 @@ void Commands::initLog(bool silent) {
 void Commands::help() {
   initLog(true);
   Settings settings;
-  std::cout << "Welcome to " << Setup::getVersionInfo()
+  std::cout << "Welcome to " << Version::INFO
             << ". More information at https://loda-lang.org" << std::endl
             << std::endl;
   std::cout << "Usage: loda <command> <options>" << std::endl << std::endl;

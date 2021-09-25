@@ -8,6 +8,21 @@
 #include "file.hpp"
 #include "setup.hpp"
 
+#define xstr(a) ystr(a)
+#define ystr(a) #a
+
+#ifdef LODA_VERSION
+const std::string Version::VERSION = std::string(xstr(LODA_VERSION));
+const std::string Version::BRANCH = "v" + std::string(xstr(LODA_VERSION));
+const std::string Version::INFO = "LODA v" + std::string(xstr(LODA_VERSION));
+const bool Version::IS_RELEASE = true;
+#else
+const std::string Version::VERSION = "dev";
+const std::string Version::BRANCH = "main";
+const std::string Version::INFO = "LODA developer version";
+const bool Version::IS_RELEASE = false;
+#endif
+
 enum TwitterClient {
   TW_UNKNOWN = 0,
   TW_NONE = 1,

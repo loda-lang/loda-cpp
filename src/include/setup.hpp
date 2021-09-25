@@ -11,8 +11,6 @@ enum MiningMode {
 
 class Setup {
  public:
-  static std::string getVersionInfo();
-
   static std::string getLodaHomeNoCheck();
 
   static const std::string& getLodaHome();

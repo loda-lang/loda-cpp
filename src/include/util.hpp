@@ -7,8 +7,13 @@
 #include <string>
 #include <vector>
 
-#define xstr(a) ystr(a)
-#define ystr(a) #a
+class Version {
+ public:
+  static const std::string VERSION;
+  static const std::string BRANCH;
+  static const std::string INFO;
+  static const bool IS_RELEASE;
+};
 
 class Log {
  public:
