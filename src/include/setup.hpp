@@ -47,6 +47,7 @@ class Setup {
   static void runWizard();
 
  private:
+  static std::string USER_HOME;
   static std::string LODA_HOME;
   static std::string OEIS_HOME;
   static std::string PROGRAMS_HOME;
@@ -63,4 +64,11 @@ class Setup {
                            const std::string& comment, bool must_have);
   static void loadAdvancedConfig();
   static void saveAdvancedConfig();
+
+  static void checkLodaHome();
+  static void checkProgramsHome();
+  static void checkExecutable();
+  static void checkMiningMode();
+  static void checkMinersConfig();
+  static void checkMaxMemory();
 };

@@ -8,6 +8,7 @@
 #include "file.hpp"
 #include "util.hpp"
 
+std::string Setup::USER_HOME;
 std::string Setup::LODA_HOME;
 std::string Setup::OEIS_HOME;
 std::string Setup::PROGRAMS_HOME;
@@ -251,34 +252,58 @@ void Setup::runWizard() {
   std::cout << "===== Welcome to " << getVersionInfo() << "! =====" << std::endl
             << "This command will guide you through its setup." << std::endl
             << std::endl;
+  checkLodaHome();
+  // TODO: check for updates
 
-  // configure home directory
-  auto user_home = std::string(std::getenv("HOME"));
-  auto loda_home = user_home + "/loda";
+  loadAdvancedConfig();
+
+  checkProgramsHome();
+  checkExecutable();
+
+  // environment variables
+  if (LODA_HOME != USER_HOME + "/loda/") {
+    ensureEnvVar("LODA_HOME", LODA_HOME, "Set LODA home directory", true);
+  }
+  ensureEnvVar("PATH", "$PATH:" + LODA_HOME + "bin",
+               "Add LODA command-line tool to path", false);
+
+  checkMiningMode();
+  checkMinersConfig();
+  checkMaxMemory();
+
+  saveAdvancedConfig();
+
+  // good bye
+  std::cout << "===== Setup complete. Thanks for using LODA! =====" << std::endl
+            << "To run a Hello World example, try 'loda eval A000045'."
+            << std::endl
+            << "To start mining, use the 'loda mine' command." << std::endl;
+}
+
+void Setup::checkLodaHome() {
+  std::string line;
+  USER_HOME = std::string(std::getenv("HOME"));
+  LODA_HOME = USER_HOME + "/loda";
   if (std::getenv("LODA_HOME")) {
-    loda_home = std::string(std::getenv("LODA_HOME"));
+    LODA_HOME = std::string(std::getenv("LODA_HOME"));
   }
   std::cout << "Enter the directory where LODA should store its files."
             << std::endl;
   std::cout << "Press return for your default location (see below)."
             << std::endl;
-  std::cout << "[" << loda_home << "] ";
+  std::cout << "[" << LODA_HOME << "] ";
   std::getline(std::cin, line);
   std::cout << std::endl;
   if (!line.empty()) {
-    loda_home = line;
+    LODA_HOME = line;
   }
-  ensureTrailingSlash(loda_home);
-  ensureDir(loda_home);
+  ensureTrailingSlash(LODA_HOME);
+  ensureDir(LODA_HOME);
+}
 
-  // TODO: check for updates
-
-  // load setup configuration
-  LODA_HOME = loda_home;
-  loadAdvancedConfig();
-
-  // initialize programs directory
-  if (!isDir(loda_home + "programs/oeis")) {
+void Setup::checkProgramsHome() {
+  std::string line;
+  if (!isDir(LODA_HOME + "programs/oeis")) {
     std::cout << "LODA needs to download its programs repository from GitHub."
               << std::endl;
     std::cout << "It contains programs for more than 35,000 integer sequences."
@@ -309,7 +334,7 @@ void Setup::runWizard() {
       git_url = line;
     }
     std::string git_clone =
-        "git clone " + git_url + " " + loda_home + "programs";
+        "git clone " + git_url + " " + LODA_HOME + "programs";
     if (system(git_clone.c_str()) != 0) {
       std::cout << std::endl
                 << "Error cloning repository. Aborting setup." << std::endl;
@@ -317,28 +342,24 @@ void Setup::runWizard() {
     }
     std::cout << std::endl;
   }
+}
 
-  // check binary
-  ensureDir(loda_home + "bin/");
+void Setup::checkExecutable() {
+  ensureDir(LODA_HOME + "bin/");
   std::string exe;
 #ifdef _WIN64
   exe = ".exe";
 #endif
-  if (!isFile(loda_home + "bin/loda" + exe)) {
+  if (!isFile(LODA_HOME + "bin/loda" + exe)) {
     std::cout << "Please copy the 'loda" << exe << "' executable to "
-              << loda_home << "bin" << std::endl;
+              << LODA_HOME << "bin" << std::endl;
     std::cout << "and restart the setup." << std::endl;
     return;
   }
+}
 
-  // environment variables
-  if (loda_home != user_home + "/loda/") {
-    ensureEnvVar("LODA_HOME", loda_home, "Set LODA home directory", true);
-  }
-  ensureEnvVar("PATH", "$PATH:" + loda_home + "bin",
-               "Add LODA command-line tool to path", false);
-
-  // mining mode
+void Setup::checkMiningMode() {
+  std::string line;
   std::cout << "LODA supports the following modes for mining programs:"
             << std::endl
             << std::endl;
@@ -386,9 +407,11 @@ void Setup::runWizard() {
   }
   ADVANCED_CONFIG["LODA_MINING_MODE"] = mode_str;
   std::cout << std::endl;
+}
 
-  // check miners config
-  const std::string default_miners_config = loda_home + "miners.default.json";
+void Setup::checkMinersConfig() {
+  std::string line;
+  const std::string default_miners_config = LODA_HOME + "miners.default.json";
   // TODO: also check if outdated
   if (!isFile(default_miners_config)) {
     std::string url = "https://raw.githubusercontent.com/loda-lang/loda-cpp/" +
@@ -404,8 +427,10 @@ void Setup::runWizard() {
     }
     std::cout << std::endl;
   }
+}
 
-  // max memory usage
+void Setup::checkMaxMemory() {
+  std::string line;
   std::cout << "Enter the maximum memory usage of the miner in MB:"
             << std::endl;
   int64_t max_memory = getMaxMemory() / (1024 * 1024);
@@ -420,15 +445,6 @@ void Setup::runWizard() {
   }
   ADVANCED_CONFIG["LODA_MAX_PHYSICAL_MEMORY"] = std::to_string(max_memory);
   std::cout << std::endl;
-
-  // save configuration
-  saveAdvancedConfig();
-
-  // good bye
-  std::cout << "===== Setup complete. Thanks for using LODA! =====" << std::endl
-            << "To run a Hello World example, try 'loda eval A000045'."
-            << std::endl
-            << "To start mining, use the 'loda mine' command." << std::endl;
 }
 
 void Setup::ensureEnvVar(const std::string& key, const std::string& value,
