@@ -24,9 +24,9 @@
       "backoff": true,
       "generators": [
         "v1_2",
-        "v1_3",
         "v2",
-        "v3"
+        "v3",
+        "v5"
       ],
       "matchers": [
         "direct",
@@ -43,7 +43,8 @@
       "generators": [
         "v1_1",
         "v2",
-        "v3"
+        "v3",
+        "v5"
       ],
       "matchers": [
         "direct",
@@ -59,7 +60,7 @@
       "overwrite": "none",
       "backoff": true,
       "generators": [
-        "v1_4"
+        "v1_3"
       ],
       "matchers": [
         "direct",
@@ -119,7 +120,7 @@
     {
       "name": "v1_1",
       "version": 1,
-      "length": 30,
+      "length": 40,
       "maxConstant": 5,
       "maxIndex": 5,
       "loops": false,
@@ -136,25 +137,15 @@
     {
       "name": "v1_2",
       "version": 1,
-      "length": 40,
+      "length": 50,
       "maxConstant": 5,
       "maxIndex": 5,
       "loops": true,
-      "calls": false,
-      "indirectAccess": false
-    },
-    {
-      "name": "v1_3",
-      "version": 1,
-      "length": 40,
-      "maxConstant": 5,
-      "maxIndex": 5,
-      "loops": false,
       "calls": true,
       "indirectAccess": false
     },
     {
-      "name": "v1_4",
+      "name": "v1_3",
       "version": 1,
       "length": 50,
       "maxConstant": 9,

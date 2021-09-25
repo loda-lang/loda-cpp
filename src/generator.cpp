@@ -51,7 +51,12 @@ Generator::Generator(const Config &config, const Stats &stats)
                    {"indirect", std::to_string(config.indirect_access)}};
   // label values must not be empty
   if (!config.program_template.empty()) {
-    metric_labels.emplace("template", config.program_template);
+    auto temp = config.program_template;
+    auto n = temp.find_last_of("/");
+    if (n != std::string::npos) {
+      temp = temp.substr(n + 1);
+    }
+    metric_labels.emplace("template", temp);
   }
 }
 
