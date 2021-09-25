@@ -18,7 +18,7 @@ Finder::Finder(const Settings &settings)
       evaluator(settings),
       minimizer(settings),
       num_find_attempts(0),
-      scheduler(600)  // 10 minutes
+      scheduler(1800)  // 30 minutes
 {
   auto config = ConfigLoader::load(settings);
   if (config.matchers.empty()) {
