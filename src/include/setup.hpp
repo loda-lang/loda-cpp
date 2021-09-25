@@ -31,12 +31,11 @@ class Setup {
 
   static void setProgramsHome(const std::string& home);
 
-  static std::string getAdvancedConfig(const std::string& key);
+  static std::string getSetupValue(const std::string& key);
 
-  static bool getAdvancedConfigFlag(const std::string& key);
+  static bool getSetupFlag(const std::string& key);
 
-  static int64_t getAdvancedConfigInt(const std::string& key,
-                                      int64_t default_value);
+  static int64_t getSetupInt(const std::string& key, int64_t default_value);
 
   static int64_t getMaxMemory();
 
@@ -52,8 +51,8 @@ class Setup {
   static std::string OEIS_HOME;
   static std::string PROGRAMS_HOME;
   static std::string MINERS_CONFIG;
-  static std::map<std::string, std::string> ADVANCED_CONFIG;
-  static bool LOADED_ADVANCED_CONFIG;
+  static std::map<std::string, std::string> SETUP;
+  static bool LOADED_SETUP;
   static bool PRINTED_MEMORY_WARNING;
   static int64_t MINING_MODE;
   static int64_t MAX_MEMORY;
@@ -62,8 +61,8 @@ class Setup {
   static void checkDir(const std::string& home);
   static void ensureEnvVar(const std::string& key, const std::string& value,
                            const std::string& comment, bool must_have);
-  static void loadAdvancedConfig();
-  static void saveAdvancedConfig();
+  static void loadSetup();
+  static void saveSetup();
 
   static void checkLodaHome();
   static void checkProgramsHome();

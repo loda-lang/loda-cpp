@@ -13,8 +13,8 @@ std::string Setup::LODA_HOME;
 std::string Setup::OEIS_HOME;
 std::string Setup::PROGRAMS_HOME;
 std::string Setup::MINERS_CONFIG;
-std::map<std::string, std::string> Setup::ADVANCED_CONFIG;
-bool Setup::LOADED_ADVANCED_CONFIG = false;
+std::map<std::string, std::string> Setup::SETUP;
+bool Setup::LOADED_SETUP = false;
 bool Setup::PRINTED_MEMORY_WARNING = false;
 int64_t Setup::MINING_MODE = -1;
 int64_t Setup::MAX_MEMORY = -1;
@@ -123,26 +123,25 @@ void Setup::checkDir(const std::string& home) {
   }
 }
 
-std::string Setup::getAdvancedConfig(const std::string& key) {
-  if (!LOADED_ADVANCED_CONFIG) {
-    loadAdvancedConfig();
-    LOADED_ADVANCED_CONFIG = true;
+std::string Setup::getSetupValue(const std::string& key) {
+  if (!LOADED_SETUP) {
+    loadSetup();
+    LOADED_SETUP = true;
   }
-  auto it = ADVANCED_CONFIG.find(key);
-  if (it != ADVANCED_CONFIG.end()) {
+  auto it = SETUP.find(key);
+  if (it != SETUP.end()) {
     return it->second;
   }
   return std::string();
 }
 
-bool Setup::getAdvancedConfigFlag(const std::string& key) {
-  auto s = getAdvancedConfig(key);
+bool Setup::getSetupFlag(const std::string& key) {
+  auto s = getSetupValue(key);
   return (s == "yes" || s == "true");
 }
 
-int64_t Setup::getAdvancedConfigInt(const std::string& key,
-                                    int64_t default_value) {
-  auto s = getAdvancedConfig(key);
+int64_t Setup::getSetupInt(const std::string& key, int64_t default_value) {
+  auto s = getSetupValue(key);
   if (!s.empty()) {
     return std::stoll(s);
   }
@@ -151,7 +150,7 @@ int64_t Setup::getAdvancedConfigInt(const std::string& key,
 
 MiningMode Setup::getMiningMode() {
   if (MINING_MODE == -1) {
-    auto mode = getAdvancedConfig("LODA_MINING_MODE");
+    auto mode = getSetupValue("LODA_MINING_MODE");
     if (mode == "local") {
       MINING_MODE = static_cast<int64_t>(MINING_MODE_LOCAL);
     } else if (mode == "server") {
@@ -166,8 +165,7 @@ MiningMode Setup::getMiningMode() {
 int64_t Setup::getMaxMemory() {
   if (MAX_MEMORY == -1) {
     // 1 GB default
-    MAX_MEMORY =
-        getAdvancedConfigInt("LODA_MAX_PHYSICAL_MEMORY", 1024) * 1024 * 1024;
+    MAX_MEMORY = getSetupInt("LODA_MAX_PHYSICAL_MEMORY", 1024) * 1024 * 1024;
   }
   return MAX_MEMORY;
 }
@@ -175,7 +173,7 @@ int64_t Setup::getMaxMemory() {
 int64_t Setup::getUpdateIntervalInDays() {
   if (UPDATE_INTERVAL == -1) {
     // 1 day default
-    UPDATE_INTERVAL = getAdvancedConfigInt("LODA_UPDATE_INTERVAL", 1);
+    UPDATE_INTERVAL = getSetupInt("LODA_UPDATE_INTERVAL", 1);
   }
   return UPDATE_INTERVAL;
 }
@@ -212,7 +210,7 @@ void throwSetupParseError(const std::string& line) {
   Log::get().error("Error parsing line from setup.txt: " + line, true);
 }
 
-void Setup::loadAdvancedConfig() {
+void Setup::loadSetup() {
   std::ifstream in(getLodaHomeNoCheck() + "setup.txt");
   if (in.good()) {
     std::string line;
@@ -232,17 +230,17 @@ void Setup::loadAdvancedConfig() {
       if (key.empty() || value.empty()) {
         throwSetupParseError(line);
       }
-      ADVANCED_CONFIG[key] = value;
+      SETUP[key] = value;
     }
   }
 }
 
-void Setup::saveAdvancedConfig() {
+void Setup::saveSetup() {
   std::ofstream out(getLodaHome() + "setup.txt");
   if (out.bad()) {
     Log::get().error("Error saving configuration to setup.txt", true);
   }
-  for (auto it : ADVANCED_CONFIG) {
+  for (auto it : SETUP) {
     out << it.first << "=" << it.second << std::endl;
   }
 }
@@ -255,7 +253,7 @@ void Setup::runWizard() {
   checkLodaHome();
   // TODO: check for updates
 
-  loadAdvancedConfig();
+  loadSetup();
 
   checkProgramsHome();
   checkExecutable();
@@ -271,7 +269,7 @@ void Setup::runWizard() {
   checkMinersConfig();
   checkMaxMemory();
 
-  saveAdvancedConfig();
+  saveSetup();
 
   // good bye
   std::cout << "===== Setup complete. Thanks for using LODA! =====" << std::endl
@@ -405,7 +403,7 @@ void Setup::checkMiningMode() {
       mode_str = "server";
       break;
   }
-  ADVANCED_CONFIG["LODA_MINING_MODE"] = mode_str;
+  SETUP["LODA_MINING_MODE"] = mode_str;
   std::cout << std::endl;
 }
 
@@ -443,7 +441,7 @@ void Setup::checkMaxMemory() {
     std::cout << "Invalid value. Please restart the setup." << std::endl;
     return;
   }
-  ADVANCED_CONFIG["LODA_MAX_PHYSICAL_MEMORY"] = std::to_string(max_memory);
+  SETUP["LODA_MAX_PHYSICAL_MEMORY"] = std::to_string(max_memory);
   std::cout << std::endl;
 }
 

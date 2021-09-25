@@ -8,12 +8,12 @@
 #include "util.hpp"
 
 Metrics::Metrics()
-    : publish_interval(Setup::getAdvancedConfigInt(
-          "LODA_METRICS_PUBLISH_INTERVAL", 60)),  // magic number
+    : publish_interval(Setup::getSetupInt("LODA_METRICS_PUBLISH_INTERVAL",
+                                          60)),  // magic number
       notified(false) {
-  host = Setup::getAdvancedConfig("LODA_INFLUXDB_HOST");
+  host = Setup::getSetupValue("LODA_INFLUXDB_HOST");
   if (!host.empty()) {
-    auth = Setup::getAdvancedConfig("LODA_INFLUXDB_AUTH");
+    auth = Setup::getSetupValue("LODA_INFLUXDB_AUTH");
   }
   std::random_device rand;
   tmp_file_id = rand() % 1000;

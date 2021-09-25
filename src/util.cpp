@@ -54,8 +54,8 @@ void Log::error(const std::string &msg, bool throw_) {
 void Log::alert(const std::string &msg, AlertDetails details) {
   log(Log::Level::ALERT, msg);
   if (!loaded_alerts_config) {
-    slack_alerts = Setup::getAdvancedConfigFlag("LODA_SLACK_ALERTS");
-    tweet_alerts = Setup::getAdvancedConfigFlag("LODA_TWEET_ALERTS");
+    slack_alerts = Setup::getSetupFlag("LODA_SLACK_ALERTS");
+    tweet_alerts = Setup::getSetupFlag("LODA_TWEET_ALERTS");
     loaded_alerts_config = true;
   }
   std::string copy = msg;
