@@ -6,7 +6,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Optimized server-side processing of submitted programs.
 * Regularly update OEIS index and programs folder, and regenerate stats.
-* Setup automatically updates default miner configuration.
+* Setup automatically installs and updates `mine_parallel.sh` script and default miner configuration.
 
 ### Bugfixes
 
