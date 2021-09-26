@@ -448,7 +448,7 @@ bool ProgramUtil::isCodedManually(const Program &p) {
   return false;
 }
 
-std::string getMinedBy(const Program &p) {
+std::string ProgramUtil::getMinedBy(const Program &p) {
   static const std::string mined_by = "Mined by";
   for (const auto &op : p.ops) {
     if (op.type == Operation::Type::NOP) {

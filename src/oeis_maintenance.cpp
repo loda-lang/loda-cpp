@@ -154,7 +154,7 @@ size_t OeisMaintenance::checkAndMinimizePrograms() {
   size_t num_processed = 0, num_removed = 0, num_minimized = 0;
   Parser parser;
   Program program, minimized;
-  std::string file_name;
+  std::string file_name, mined_by;
   bool is_okay, is_protected;
 
   // generate random order of sequences
@@ -180,6 +180,7 @@ size_t OeisMaintenance::checkAndMinimizePrograms() {
       Log::get().debug("Checking program for " + s.to_string());
       try {
         program = parser.parse(program_file);
+        mined_by = ProgramUtil::getMinedBy(program);
         auto extended_seq = s.getTerms(OeisSequence::EXTENDED_SEQ_LENGTH);
 
         // check its correctness
@@ -207,7 +208,7 @@ size_t OeisMaintenance::checkAndMinimizePrograms() {
 
       if (!is_okay) {
         // send alert
-        manager.alert(program, id, "Removed invalid", "danger");
+        manager.alert(program, id, "Removed invalid", "danger", "");
         program_file.close();
         remove(file_name.c_str());
       } else {
@@ -224,7 +225,7 @@ size_t OeisMaintenance::checkAndMinimizePrograms() {
             // manager.alert( minimized, id, "Minimized", "warning" );
             num_minimized++;
           }
-          manager.dumpProgram(s.id, minimized, file_name);
+          manager.dumpProgram(s.id, minimized, file_name, mined_by);
         }
       }
 

@@ -46,10 +46,11 @@ class OeisManager {
 
   void addSeqComments(Program& p) const;
 
-  void dumpProgram(size_t id, Program p, const std::string& file) const;
+  void dumpProgram(size_t id, Program p, const std::string& file,
+                   const std::string& mined_by) const;
 
   void alert(Program p, size_t id, const std::string& prefix,
-             const std::string& color) const;
+             const std::string& color, const std::string& mined_by) const;
 
   std::string isOptimizedBetter(Program existing, Program optimized,
                                 const OeisSequence& seq);
