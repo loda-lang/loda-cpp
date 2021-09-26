@@ -118,7 +118,7 @@ void Miner::mine(const std::vector<std::string> &initial_progs) {
   Log::get().info("Mining programs for OEIS sequences in " + mode_str +
                   " mode");
   Generator *generator = multi_generator->getGenerator();
-  std::string mined_by;
+  std::string submitted_by;
   while (true) {
     // generate new program if needed
     if (progs.empty()) {
@@ -139,16 +139,16 @@ void Miner::mine(const std::vector<std::string> &initial_progs) {
     for (auto s : seq_programs) {
       program = s.second;
 
-      // update "mined by" comment
-      mined_by = ProgramUtil::getMinedBy(program);
-      if (mined_by.empty()) {
-        mined_by = Setup::getMinedBy();
-        if (!mined_by.empty()) {
+      // update "submitted by" comment
+      submitted_by = ProgramUtil::getSubmittedBy(program);
+      if (submitted_by.empty()) {
+        submitted_by = Setup::getSubmittedBy();
+        if (!submitted_by.empty()) {
           Operation nop(Operation::Type::NOP);
-          nop.comment = "Mined by " + mined_by;
+          nop.comment = ProgramUtil::SUBMITTED_BY_PREFIX + " " + submitted_by;
           program.ops.push_back(nop);
         }
-      } else if (mined_by == anonymous) {
+      } else if (submitted_by == anonymous) {
         ProgramUtil::removeOps(program, Operation::Type::NOP);
       }
 
@@ -183,11 +183,11 @@ void Miner::mine(const std::vector<std::string> &initial_progs) {
         if (program.ops.empty()) {
           break;
         }
-        // update "mined by" comment
-        mined_by = ProgramUtil::getMinedBy(program);
-        if (mined_by.empty()) {
+        // update "submitted by" comment
+        submitted_by = ProgramUtil::getSubmittedBy(program);
+        if (submitted_by.empty()) {
           Operation nop(Operation::Type::NOP);
-          nop.comment = "Mined by " + anonymous;
+          nop.comment = ProgramUtil::SUBMITTED_BY_PREFIX + " " + anonymous;
           program.ops.push_back(nop);
         }
         progs.push(program);

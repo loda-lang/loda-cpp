@@ -56,5 +56,7 @@ class ProgramUtil {
 
   static bool isCodedManually(const Program &p);
 
-  static std::string getMinedBy(const Program &p);
+  static std::string getSubmittedBy(const Program &p);
+
+  static const std::string SUBMITTED_BY_PREFIX;
 };

@@ -448,15 +448,16 @@ bool ProgramUtil::isCodedManually(const Program &p) {
   return false;
 }
 
-std::string ProgramUtil::getMinedBy(const Program &p) {
-  static const std::string mined_by = "Mined by";
+std::string ProgramUtil::getSubmittedBy(const Program &p) {
   for (const auto &op : p.ops) {
     if (op.type == Operation::Type::NOP) {
-      auto pos = op.comment.find(mined_by);
+      auto pos = op.comment.find(SUBMITTED_BY_PREFIX);
       if (pos != std::string::npos) {
-        return op.comment.substr(pos + mined_by.size() + 1);
+        return op.comment.substr(pos + SUBMITTED_BY_PREFIX.size() + 1);
       }
     }
   }
   return std::string();
 }
+
+const std::string ProgramUtil::SUBMITTED_BY_PREFIX = "Submitted by";

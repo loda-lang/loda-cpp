@@ -67,7 +67,9 @@ const std::string& Setup::getMinersConfig() {
   return MINERS_CONFIG;
 }
 
-const std::string Setup::getMinedBy() { return getSetupValue("LODA_MINED_BY"); }
+const std::string Setup::getSubmittedBy() {
+  return getSetupValue("LODA_SUBMITTED_BY");
+}
 
 void Setup::setMinersConfig(const std::string& loda_config) {
   MINERS_CONFIG = loda_config;
@@ -270,7 +272,7 @@ void Setup::runWizard() {
   if (!checkMiningMode()) {
     return;
   }
-  if (!checkMinedBy()) {
+  if (!checkSubmittedBy()) {
     return;
   }
   if (!checkMaxMemory()) {
@@ -494,10 +496,10 @@ bool Setup::checkMineParallelScript() {
   return updateFile(local_file, url, header, marker, true);
 }
 
-bool Setup::checkMinedBy() {
-  std::string mined_by = getMinedBy();
-  if (mined_by.empty()) {
-    mined_by = "none";
+bool Setup::checkSubmittedBy() {
+  std::string submitted_by = getSubmittedBy();
+  if (submitted_by.empty()) {
+    submitted_by = "none";
   }
   std::cout
       << "If you want to mine programs, LODA can automatically add your name"
@@ -512,14 +514,14 @@ bool Setup::checkMinedBy() {
       << std::endl
       << "If you like, enter your name below, or 'none' to not include it:"
       << std::endl;
-  std::cout << "[" << mined_by << "] ";
-  std::getline(std::cin, mined_by);
+  std::cout << "[" << submitted_by << "] ";
+  std::getline(std::cin, submitted_by);
   std::cout << std::endl;
-  if (!mined_by.empty()) {
-    if (mined_by == "none") {
-      SETUP.erase("LODA_MINED_BY");
+  if (!submitted_by.empty()) {
+    if (submitted_by == "none") {
+      SETUP.erase("LODA_SUBMITTED_BY");
     } else {
-      SETUP["LODA_MINED_BY"] = mined_by;
+      SETUP["LODA_SUBMITTED_BY"] = submitted_by;
     }
   }
   return true;

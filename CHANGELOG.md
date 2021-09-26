@@ -8,7 +8,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Features
 
-* Support "Mined by ..." comments in mined programs.
+* Add optional "Submitted by ..." comments in mined programs.
 
 ### Enhancements
 
