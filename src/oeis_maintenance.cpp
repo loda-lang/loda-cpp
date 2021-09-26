@@ -208,7 +208,7 @@ size_t OeisMaintenance::checkAndMinimizePrograms() {
 
       if (!is_okay) {
         // send alert
-        manager.alert(program, id, "Removed invalid", "danger");
+        manager.alert(program, id, "Removed invalid", "danger", "");
         program_file.close();
         remove(file_name.c_str());
       } else {
