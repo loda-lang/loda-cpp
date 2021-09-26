@@ -589,8 +589,6 @@ std::pair<bool, bool> OeisManager::updateProgram(size_t id, const Program &p) {
   auto &seq = sequences.at(id);
   const std::string global_file = seq.getProgramPath(false);
   const std::string local_file = seq.getProgramPath(true);
-  const bool has_global = isFile(global_file);
-  const bool has_local = isFile(local_file);
   bool is_new = true;
   std::string change;
 
@@ -601,6 +599,8 @@ std::pair<bool, bool> OeisManager::updateProgram(size_t id, const Program &p) {
   }
 
   // check if there is an existing program already
+  const bool has_global = isFile(global_file);
+  const bool has_local = isFile(local_file);
   if (has_global || has_local) {
     std::string file_name = has_local ? local_file : global_file;
     std::ifstream in(file_name);
