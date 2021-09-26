@@ -141,7 +141,7 @@ void Miner::mine(const std::vector<std::string> &initial_progs) {
       mined_by = ProgramUtil::getMinedBy(program);
       if (mined_by.empty()) {
         Operation nop(Operation::Type::NOP);
-        nop.comment = Setup::getMinedBy();
+        nop.comment = "Mined by " + Setup::getMinedBy();
         if (!nop.comment.empty()) {
           program.ops.push_back(nop);
         }
