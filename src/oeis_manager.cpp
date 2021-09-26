@@ -491,11 +491,15 @@ void OeisManager::dumpProgram(size_t id, Program p, const std::string &file,
 }
 
 void OeisManager::alert(Program p, size_t id, const std::string &prefix,
-                        const std::string &color) const {
+                        const std::string &color,
+                        const std::string &mined_by) const {
   auto &seq = sequences.at(id);
   std::stringstream buf;
   buf << prefix << " program for " << seq
       << " Terms: " << seq.getTerms(settings.num_terms);
+  if (!mined_by.empty()) {
+    buf << ". Mined by " << mined_by << ".";
+  }
   auto msg = buf.str();
   Log::AlertDetails details;
   details.title = seq.id_str();
@@ -637,7 +641,7 @@ std::pair<bool, bool> OeisManager::updateProgram(size_t id, const Program &p) {
   // send alert
   std::string prefix = is_new ? "First" : change;
   std::string color = is_new ? "good" : "warning";
-  alert(minimized.second, id, prefix, color);
+  alert(minimized.second, id, prefix, color, mined_by);
 
   return {true, is_new};
 }
