@@ -142,9 +142,12 @@ void Miner::mine(const std::vector<std::string> &initial_progs) {
       // update "mined by" comment
       mined_by = ProgramUtil::getMinedBy(program);
       if (mined_by.empty()) {
-        Operation nop(Operation::Type::NOP);
-        nop.comment = "Mined by " + Setup::getMinedBy();
-        program.ops.push_back(nop);
+        mined_by = Setup::getMinedBy();
+        if (!mined_by.empty()) {
+          Operation nop(Operation::Type::NOP);
+          nop.comment = "Mined by " + mined_by;
+          program.ops.push_back(nop);
+        }
       } else if (mined_by == anonymous) {
         ProgramUtil::removeOps(program, Operation::Type::NOP);
       }
