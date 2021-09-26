@@ -84,18 +84,20 @@ void Miner::mine(const std::vector<std::string> &initial_progs) {
   }
   ApiClient api_client;
   Mutator mutator;
+  Parser parser;
   std::stack<Program> progs;
   Sequence norm_seq;
+  Program program;
   AdaptiveScheduler metrics_scheduler(Metrics::get().publish_interval);
   AdaptiveScheduler api_scheduler(600);       // 10 minutes (magic number)
   AdaptiveScheduler reload_scheduler(43200);  // 12 hours (magic number)
+  static const std::string anonymous("anonymous");
 
   // load initial programs
-  Parser parser;
   for (auto &path : initial_progs) {
-    auto p = parser.parse(path);
-    progs.push(p);
-    mutator.mutateConstants(p, 1000, progs);
+    program = parser.parse(path);
+    progs.push(program);
+    mutator.mutateConstants(program, 1000, progs);
   }
 
   // get mining mode
@@ -127,7 +129,7 @@ void Miner::mine(const std::vector<std::string> &initial_progs) {
     }
 
     // get next program and match sequences
-    Program program = progs.top();
+    program = progs.top();
     // Log::get().info( "Matching program with " + std::to_string(
     // program.ops.size() ) + " operations" ); ProgramUtil::print( program,
     // std::cout );
@@ -142,9 +144,9 @@ void Miner::mine(const std::vector<std::string> &initial_progs) {
       if (mined_by.empty()) {
         Operation nop(Operation::Type::NOP);
         nop.comment = "Mined by " + Setup::getMinedBy();
-        if (!nop.comment.empty()) {
-          program.ops.push_back(nop);
-        }
+        program.ops.push_back(nop);
+      } else if (mined_by == anonymous) {
+        ProgramUtil::removeOps(program, Operation::Type::NOP);
       }
 
       auto r = manager->updateProgram(s.first, program);
@@ -174,11 +176,18 @@ void Miner::mine(const std::vector<std::string> &initial_progs) {
     if (mode == MINING_MODE_SERVER && api_scheduler.isTargetReached()) {
       api_scheduler.reset();
       for (size_t i = 0; i < 50; i++) {  // magic number
-        Program p = api_client.getNextProgram();
-        if (p.ops.empty()) {
+        program = api_client.getNextProgram();
+        if (program.ops.empty()) {
           break;
         }
-        progs.push(p);
+        // update "mined by" comment
+        mined_by = ProgramUtil::getMinedBy(program);
+        if (mined_by.empty()) {
+          Operation nop(Operation::Type::NOP);
+          nop.comment = "Mined by " + anonymous;
+          program.ops.push_back(nop);
+        }
+        progs.push(program);
       }
     }
 
