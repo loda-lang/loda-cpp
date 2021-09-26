@@ -2,15 +2,19 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Bugfixes
+
+* Fix start-up error `Error parsing line...` (#36)
+
+### Features
+
+* Support "Mined by ..." comments in mined programs.
+
 ### Enhancements
 
 * Optimized server-side processing of submitted programs.
 * Regularly update OEIS index and programs folder, and regenerate stats.
 * Setup automatically installs and updates `mine_parallel.sh` script and default miner configuration.
-
-### Bugfixes
-
-* Fix start-up error `Error parsing line...` (#36)
 
 ## v21.9.21
 
