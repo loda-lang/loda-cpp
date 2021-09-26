@@ -496,9 +496,9 @@ void OeisManager::alert(Program p, size_t id, const std::string &prefix,
   auto &seq = sequences.at(id);
   std::stringstream buf;
   buf << prefix << " program for " << seq
-      << " Terms: " << seq.getTerms(settings.num_terms);
+      << " Terms: " << seq.getTerms(settings.num_terms) << ".";
   if (!mined_by.empty()) {
-    buf << ". Mined by " << mined_by << ".";
+    buf << " Mined by " << mined_by << ".";
   }
   auto msg = buf.str();
   Log::AlertDetails details;
