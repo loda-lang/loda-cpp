@@ -67,6 +67,8 @@ const std::string& Setup::getMinersConfig() {
   return MINERS_CONFIG;
 }
 
+const std::string Setup::getMinedBy() { return getSetupValue("LODA_MINED_BY"); }
+
 void Setup::setMinersConfig(const std::string& loda_config) {
   MINERS_CONFIG = loda_config;
 }
@@ -184,10 +186,15 @@ bool Setup::hasMemory() {
 }
 
 void trimString(std::string& str) {
-  std::stringstream trimmer;
-  trimmer << str;
-  str.clear();
-  trimmer >> str;
+  while (!str.empty()) {
+    if (str.front() == ' ') {
+      str = str.substr(1);
+    } else if (str.back() == ' ') {
+      str = str.substr(0, str.size() - 1);
+    } else {
+      break;
+    }
+  }
 }
 
 void throwSetupParseError(const std::string& line) {
@@ -261,6 +268,9 @@ void Setup::runWizard() {
     return;
   }
   if (!checkMiningMode()) {
+    return;
+  }
+  if (!checkMinedBy()) {
     return;
   }
   if (!checkMaxMemory()) {
@@ -482,6 +492,37 @@ bool Setup::checkMineParallelScript() {
   const std::string header = "#!/bin/bash";
   const std::string marker = "loda_version=" + Version::VERSION;
   return updateFile(local_file, url, header, marker, true);
+}
+
+bool Setup::checkMinedBy() {
+  std::string mined_by = getMinedBy();
+  if (mined_by.empty()) {
+    mined_by = "none";
+  }
+  std::cout
+      << "If you want to mine programs, LODA can automatically add your name"
+      << std::endl
+      << "as a comment in the mined programs. If you specify your name and run"
+      << std::endl
+      << "the miner in client mode, you give consent to submit mined programs"
+      << std::endl
+      << "with your name and to publish them at https://loda-lang.org and the"
+      << std::endl
+      << "programs repository at https://github.com/loda-lang/loda-programs."
+      << std::endl
+      << "If you like, enter your name below, or 'none' to not include it:"
+      << std::endl;
+  std::cout << "[" << mined_by << "] ";
+  std::getline(std::cin, mined_by);
+  std::cout << std::endl;
+  if (!mined_by.empty()) {
+    if (mined_by == "none") {
+      SETUP.erase("LODA_MINED_BY");
+    } else {
+      SETUP["LODA_MINED_BY"] = mined_by;
+    }
+  }
+  return true;
 }
 
 bool Setup::checkMaxMemory() {

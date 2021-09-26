@@ -116,6 +116,7 @@ void Miner::mine(const std::vector<std::string> &initial_progs) {
   Log::get().info("Mining programs for OEIS sequences in " + mode_str +
                   " mode");
   Generator *generator = multi_generator->getGenerator();
+  std::string mined_by;
   while (true) {
     // generate new program if needed
     if (progs.empty()) {
@@ -134,7 +135,19 @@ void Miner::mine(const std::vector<std::string> &initial_progs) {
     auto seq_programs = manager->getFinder().findSequence(
         program, norm_seq, manager->getSequences());
     for (auto s : seq_programs) {
-      auto r = manager->updateProgram(s.first, s.second);
+      program = s.second;
+
+      // update "mined by" comment
+      mined_by = ProgramUtil::getMinedBy(program);
+      if (mined_by.empty()) {
+        Operation nop(Operation::Type::NOP);
+        nop.comment = Setup::getMinedBy();
+        if (!nop.comment.empty()) {
+          program.ops.push_back(nop);
+        }
+      }
+
+      auto r = manager->updateProgram(s.first, program);
       if (r.first) {
         // update stats and increase priority of successful generator
         if (r.second) {
@@ -144,11 +157,11 @@ void Miner::mine(const std::vector<std::string> &initial_progs) {
         }
         // in client mode: submit the program to the API server
         if (mode == MINING_MODE_CLIENT) {
-          api_client.postProgram(s.second);
+          api_client.postProgram(program);
         }
         // mutate successful program
         if (progs.size() < 1000 || Setup::hasMemory()) {
-          mutator.mutateConstants(s.second, 100, progs);
+          mutator.mutateConstants(program, 100, progs);
         }
       }
     }

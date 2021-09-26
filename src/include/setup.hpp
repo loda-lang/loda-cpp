@@ -21,6 +21,8 @@ class Setup {
 
   static const std::string& getMinersConfig();
 
+  static const std::string getMinedBy();
+
   static void setMinersConfig(const std::string& loda_config);
 
   static const std::string& getOeisHome();
@@ -68,6 +70,7 @@ class Setup {
   static bool checkMiningMode();
   static bool checkMinersConfig();
   static bool checkMineParallelScript();
+  static bool checkMinedBy();
   static bool checkMaxMemory();
 
   static bool updateFile(const std::string& local_file, const std::string& url,
