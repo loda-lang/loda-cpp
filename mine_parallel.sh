@@ -54,7 +54,7 @@ function ensure_miners() {
   ((num_delta=num_use_cpus-num_proc))
 
   if [ "$num_delta" -gt 0 ]; then  
-    i="$(date +"%S")"
+    i="$(date +"%-S")"
     ((i=i % 8))
     log_info "Starting ${num_delta}/${num_use_cpus} miner instances"
     for n in $(seq ${num_delta}); do
