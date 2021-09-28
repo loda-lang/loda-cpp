@@ -4,6 +4,10 @@ CXXFLAGS = /Iinclude /Iexternal
 CXXFLAGS = $(CXXFLAGS) /DLODA_VERSION=$(LODA_VERSION)
 !ENDIF
 
+!IFDEF LODA_PLATFORM
+CXXFLAGS = $(CXXFLAGS) /DLODA_PLATFORM=$(LODA_PLATFORM)
+!ENDIF
+
 SRCS = api_client.cpp big_number.cpp blocks.cpp commands.cpp config.cpp evaluator.cpp extender.cpp external/jute.cpp file.cpp finder.cpp generator.cpp generator_v1.cpp generator_v2.cpp generator_v3.cpp generator_v4.cpp generator_v5.cpp interpreter.cpp iterator.cpp main.cpp matcher.cpp memory.cpp metrics.cpp miner.cpp minimizer.cpp mutator.cpp number.cpp oeis_list.cpp oeis_manager.cpp oeis_maintenance.cpp oeis_sequence.cpp optimizer.cpp parser.cpp program.cpp program_util.cpp reducer.cpp semantics.cpp sequence.cpp setup.cpp stats.cpp test.cpp util.cpp
 
 loda: external/jute.h external/jute.cpp $(SRCS)

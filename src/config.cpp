@@ -1,5 +1,6 @@
 #include "config.hpp"
 
+#include "file.hpp"
 #include "jute.h"
 #include "setup.hpp"
 
@@ -15,22 +16,6 @@ bool get_jbool(jute::jValue &v, const std::string &key, bool def) {
     return v[key].as_bool();
   }
   return def;
-}
-
-std::string get_file_as_string(const std::string &filename) {
-  std::ifstream in(filename);
-  std::string str;
-  if (in.good()) {
-    std::string tmp;
-    while (getline(in, tmp)) {
-      str += tmp;
-    }
-    in.close();
-  }
-  if (str.empty()) {
-    Log::get().error("Error loading " + filename, true);
-  }
-  return str;
 }
 
 std::string get_template(std::string t) {
@@ -93,7 +78,7 @@ Miner::Config ConfigLoader::load(const Settings &settings) {
                    loda_config);
   Miner::Config config;
 
-  auto str = get_file_as_string(loda_config);
+  auto str = getFileAsString(loda_config);
   auto spec = jute::parser::parse(str);
   auto miners = spec["miners"];
 
