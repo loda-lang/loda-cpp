@@ -2,6 +2,8 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v21.9.28
+
 ### Bugfixes
 
 * Fix start-up error `Error parsing line...` (#36)
