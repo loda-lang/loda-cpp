@@ -9,12 +9,13 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Features
 
 * Add optional "Submitted by ..." comments in mined programs.
+* Setup automatically installs and updates `mine_parallel.sh` script and default miner configuration.
+* Setup checks for updates and installs them on demand.
 
 ### Enhancements
 
 * Optimized server-side processing of submitted programs.
-* Regularly update OEIS index and programs folder, and regenerate stats.
-* Setup automatically installs and updates `mine_parallel.sh` script and default miner configuration.
+* Regularly update OEIS index and programs folder, and regenerate stats. No more restarts of miner processes needed.
 
 ## v21.9.21
 

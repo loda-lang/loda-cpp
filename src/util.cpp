@@ -15,11 +15,13 @@
 const std::string Version::VERSION = std::string(xstr(LODA_VERSION));
 const std::string Version::BRANCH = "v" + std::string(xstr(LODA_VERSION));
 const std::string Version::INFO = "LODA v" + std::string(xstr(LODA_VERSION));
+const std::string Version::PLATFORM = std::string(xstr(LODA_PLATFORM));
 const bool Version::IS_RELEASE = true;
 #else
 const std::string Version::VERSION = "dev";
 const std::string Version::BRANCH = "main";
 const std::string Version::INFO = "LODA developer version";
+const std::string Version::PLATFORM = "unknown";
 const bool Version::IS_RELEASE = false;
 #endif
 

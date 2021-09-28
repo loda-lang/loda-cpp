@@ -149,6 +149,22 @@ void ensureTrailingSlash(std::string &dir) {
   }
 }
 
+std::string getFileAsString(const std::string &filename) {
+  std::ifstream in(filename);
+  std::string str;
+  if (in.good()) {
+    std::string tmp;
+    while (getline(in, tmp)) {
+      str += tmp;
+    }
+    in.close();
+  }
+  if (str.empty()) {
+    Log::get().error("Error loading " + filename, true);
+  }
+  return str;
+}
+
 int64_t getFileAgeInDays(const std::string &path) {
   struct stat st;
   if (stat(path.c_str(), &st) == 0) {

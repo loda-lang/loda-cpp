@@ -6,6 +6,7 @@
 #include <sstream>
 
 #include "file.hpp"
+#include "jute.h"
 #include "util.hpp"
 
 std::string Setup::USER_HOME;
@@ -252,7 +253,7 @@ void Setup::runWizard() {
   if (!checkProgramsHome()) {
     return;
   }
-  if (!checkExecutable()) {
+  if (!checkUpdate()) {
     return;
   }
 
@@ -357,17 +358,44 @@ bool Setup::checkProgramsHome() {
   return true;
 }
 
-bool Setup::checkExecutable() {
+bool Setup::checkUpdate() {
   ensureDir(LODA_HOME + "bin/");
   std::string exe;
 #ifdef _WIN64
   exe = ".exe";
 #endif
-  if (!isFile(LODA_HOME + "bin/loda" + exe)) {
-    std::cout << "Please copy the 'loda" << exe << "' executable to "
-              << LODA_HOME << "bin" << std::endl;
-    std::cout << "and restart the setup." << std::endl;
-    return false;
+  const std::string exec_local = LODA_HOME + "bin/loda" + exe;
+  const std::string local_release_info(".latest-release.json");
+  const std::string release_info_url(
+      "https://api.github.com/repos/loda-lang/loda-cpp/releases/latest");
+  Http::get(release_info_url, local_release_info, true, true);
+  const std::string content = getFileAsString(local_release_info);
+  std::remove(local_release_info.c_str());
+  auto json = jute::parser::parse(content);
+  auto latest_version = json["tag_name"].as_string();
+  if (!isFile(exec_local) ||
+      (Version::IS_RELEASE && latest_version != Version::BRANCH)) {
+    std::cout << "LODA " << latest_version << " is available!" << std::endl
+              << "Do you want to install the update? (Y/n) ";
+    std::string line;
+    std::getline(std::cin, line);
+    if (line.empty() || line == "y" || line == "Y") {
+      const std::string exec_url =
+          "https://github.com/loda-lang/loda-cpp/releases/download/" +
+          latest_version + "/loda-" + Version::PLATFORM + exe;
+      Http::get(exec_url, exec_local, true, true);
+      std::cout << "Update installed. Restarting setup... " << std::endl
+                << std::endl;
+      std::string new_setup = exec_local + " setup";
+      if (system(new_setup.c_str()) != 0) {
+        std::cout << "Error running setup of LODA " << latest_version
+                  << std::endl;
+      }
+      // in any case, we must stop the current setup here
+      return false;
+    } else {
+      std::cout << std::endl;
+    }
   }
   return true;
 }

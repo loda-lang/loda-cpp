@@ -66,7 +66,7 @@ class Setup {
 
   static void checkLodaHome();
   static bool checkProgramsHome();
-  static bool checkExecutable();
+  static bool checkUpdate();
   static bool checkMiningMode();
   static bool checkMinersConfig();
   static bool checkMineParallelScript();
