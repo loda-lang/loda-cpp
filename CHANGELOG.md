@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Bugfixes
+
+* Fix error in `mine_parallel.sh`: loda executable not found 
+
 ## v21.9.28
 
 ### Bugfixes

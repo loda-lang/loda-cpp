@@ -5,9 +5,9 @@ log_level=info
 min_cpus=4
 
 loda_cmd=
-if [ -x "./loda" ]; then
+if [ -f "./loda" ] && [ -x "./loda" ]; then
   loda_cmd="./loda"
-elif [ -x "$(command -v $cmd)" ]; then
+elif [ -x "$(command -v loda)" ]; then
   loda_cmd="loda"
 else
   echo "Error: loda executable not found"
