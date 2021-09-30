@@ -54,32 +54,18 @@ void BigNumber::load(const std::string &s) {
   if (size == 0) {
     throwNumberParseError(s);
   }
-  size_t w = 0;
-  while (size > 0) {
-    if (w >= BigNumber::NUM_WORDS) {
-      makeInfinite();
-      return;
+  words.fill(0);
+  char ch;
+  for (int64_t i = 0; i < size; i++) {
+    if (is_infinite) {
+      break;
     }
-    int64_t length = 0;
-    int64_t num = 0;
-    int64_t prefix = 1;
-    char ch;
-    for (int64_t i = size - 1;
-         i >= 0 && i >= size - static_cast<int64_t>(BigNumber::NUM_WORD_DIGITS);
-         --i) {
-      ch = s[start + i];
-      if (ch < '0' || ch > '9') {
-        throwNumberParseError(s);
-      }
-      num += (ch - '0') * prefix;
-      prefix *= 10;
-      ++length;
+    ch = s[start + i];
+    if (ch < '0' || ch > '9') {
+      throwNumberParseError(s);
     }
-    words[w++] = num;
-    size -= length;
-  }
-  while (w < BigNumber::NUM_WORDS) {
-    words[w++] = 0;
+    mulShort(10);
+    add(ch - '0');  // TODO: use addShort
   }
 }
 
