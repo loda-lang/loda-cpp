@@ -1,5 +1,6 @@
 #include "big_number.hpp"
 
+#include <algorithm>
 #include <limits>
 #include <string>
 #include <vector>
