@@ -37,6 +37,8 @@ class BigNumber {
 
   std::size_t hash() const;
 
+  std::string toString() const;
+
   friend std::ostream& operator<<(std::ostream& out, const BigNumber& n);
 
   inline bool isInfinite() const { return is_infinite; }

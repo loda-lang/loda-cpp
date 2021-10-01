@@ -408,30 +408,27 @@ std::size_t BigNumber::hash() const {
   return seed;
 }
 
+std::string BigNumber::toString() const {
+  if (is_infinite) {
+    return "inf";
+  }
+  if (isZero()) {
+    return "0";
+  }
+  std::string result;
+  BigNumber n = *this;
+  while (!n.isZero()) {
+    result += ('0' + (n.words[0] % 10));
+    n.divShort(10);
+  }
+  if (is_negative) {
+    result += '-';
+  }
+  std::reverse(result.begin(), result.end());
+  return result;
+}
+
 std::ostream &operator<<(std::ostream &out, const BigNumber &n) {
-  if (n.is_infinite) {
-    out << "inf";
-    return out;
-  }
-  if (n.is_negative && !n.isZero()) {
-    out << '-';
-  }
-  bool print = false;
-  char ch;
-  for (size_t w = 0; w < BigNumber::NUM_WORDS; w++) {
-    const auto word = n.words[BigNumber::NUM_WORDS - w - 1];
-    auto base = BigNumber::WORD_BASE / 10;
-    while (base) {
-      ch = static_cast<char>('0' + ((word / base) % 10));
-      print = print || (ch != '0');
-      if (print) {
-        out << ch;
-      }
-      base /= 10;
-    }
-  }
-  if (!print) {
-    out << '0';
-  }
+  out << n.toString();
   return out;
 }
