@@ -112,11 +112,7 @@ void testNumberDigits(int64_t num_digits, bool test_negative) {
   for (int64_t i = 0; i < num_digits; i++) {
     nines += '9';
     Number n(nines);
-    if (i + 1 < num_digits) {
-      check_num(n, nines);
-    } else {
-      check_inf(n);
-    }
+    check_num(n, nines);
   }
 }
 
@@ -146,9 +142,6 @@ void Test::number() {
   check_num(o, "-10");
   o *= Number(-10);
   check_num(o, "100");
-  std::string nines(BigNumber::NUM_DIGITS, '9');
-  check_num(Number::MAX, nines);
-  check_num(Number::MIN, "-" + nines);
   auto m = Number::MAX;
   m += 1;
   check_inf(m);
