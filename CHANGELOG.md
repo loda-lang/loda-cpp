@@ -4,7 +4,11 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Bugfixes
 
-* Fix error in `mine_parallel.sh`: loda executable not found 
+* Fix error in `mine_parallel.sh`: loda executable not found
+
+### Enhancements
+
+* Internal big number format uses 64-bit words (faster and larger range).
 
 ## v21.9.28
 
