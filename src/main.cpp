@@ -58,8 +58,6 @@ int main(int argc, char *argv[]) {
     commands.migrate();
   } else if (cmd == "iterate") {
     commands.iterate(args.at(1));
-  } else if (cmd == "collatz") {
-    commands.collatz(args.at(1));
   }
 #endif
   // unknown command

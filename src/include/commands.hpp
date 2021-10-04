@@ -38,8 +38,6 @@ class Commands {
 
   void iterate(const std::string& count);
 
-  void collatz(const std::string& path);
-
  private:
   const Settings& settings;
 

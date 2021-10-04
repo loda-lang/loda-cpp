@@ -51,7 +51,6 @@ void Test::all() {
   config();
   steps();
   blocks();
-  collatz();
   linearMatcher();
   deltaMatcher();
   digitMatcher();
@@ -623,20 +622,6 @@ void Test::ackermann() {
                                               {5, 13, 29, 61, 125},
                                               {13, 65533}};
   testBinary("ack", "tests/programs/general/ackermann.asm", values);
-}
-
-void Test::collatz() {
-  Log::get().info("Testing collatz validator using A006577");
-  std::vector<int64_t> values = {
-      0,   1,   7,   2,  5,  8,  16, 3,  19,  6,   14,  9,   9,  17, 17,
-      4,   12,  20,  20, 7,  7,  15, 15, 10,  23,  10,  111, 18, 18, 18,
-      106, 5,   26,  13, 13, 21, 21, 21, 34,  8,   109, 8,   29, 16, 16,
-      16,  104, 11,  24, 24, 24, 11, 11, 112, 112, 19,  32,  19, 32, 19,
-      19,  107, 107, 6,  27, 27, 27, 14, 14,  14,  102, 22};
-  Sequence s(values);
-  if (!Miner::isCollatzValuation(s)) {
-    Log::get().error("A006577 is not a Collatz valuation", true);
-  }
 }
 
 void check_int(const std::string& s, int64_t expected, int64_t value) {

@@ -41,8 +41,6 @@ class Test {
 
   void ackermann();
 
-  void collatz();
-
   void optimizer();
 
   void minimizer(size_t tests);

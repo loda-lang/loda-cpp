@@ -209,14 +209,3 @@ void Commands::iterate(const std::string& count) {
     //        std::cin.ignore();
   }
 }
-
-void Commands::collatz(const std::string& path) {
-  initLog(true);
-  Parser parser;
-  Program program = parser.parse(path);
-  Evaluator evaluator(settings);
-  Sequence seq;
-  evaluator.eval(program, seq);
-  bool is_collatz = Miner::isCollatzValuation(seq);
-  std::cout << (is_collatz ? "true" : "false") << std::endl;
-}
