@@ -8,9 +8,16 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Enhancements
 
-* Internal big number format uses 64-bit words (faster and larger range).
 * Remove hard-coded Collatz checks
-* Enhanced benchmark for comparing releases
+* Internal big number format uses 64-bit words (faster and larger range).
+* Enhanced benchmark for comparing releases:
+
+| Sequence | Max Terms | Time for 100 Terms |
+|----------|-----------|--------------------|
+| A000796  |    316    |      139.2ms       |
+| A001113  |    319    |      123.1ms       |
+| A002110  |    339    |      112.4ms       |
+| A002193  |    119    |      2752.1ms       |
 
 ## v21.9.28
 
@@ -30,7 +37,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 * Regularly update OEIS index and programs folder, and regenerate stats. No more restarts of miner processes needed.
 * Benchmark:
 
-| Sequence | Max Terms | Time for 100 terms |
+| Sequence | Max Terms | Time for 100 Terms |
 |----------|-----------|--------------------|
 | A000796  |    283    |      153.1ms       |
 | A001113  |    286    |      133.9ms       |

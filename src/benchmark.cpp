@@ -73,7 +73,7 @@ void Benchmark::programs() {
   Evaluator evaluator(settings);
   std::vector<size_t> ids{796, 1113, 2110, 2193};
   static const size_t runs = 10, terms = 100;
-  std::cout << "| Sequence | Max Terms | Time for 100 terms |" << std::endl;
+  std::cout << "| Sequence | Max Terms | Time for 100 Terms |" << std::endl;
   std::cout << "|----------|-----------|--------------------|" << std::endl;
   for (auto id : ids) {
     const OeisSequence seq(id);
