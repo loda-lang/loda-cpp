@@ -5,4 +5,6 @@ class Benchmark {
   void all();
 
   void operations();
+
+  void programs();
 };

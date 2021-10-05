@@ -2,11 +2,17 @@
 
 #include <sstream>
 
-#include "interpreter.hpp"
+#include "evaluator.hpp"
+#include "oeis_sequence.hpp"
+#include "parser.hpp"
 #include "program_util.hpp"
+#include "setup.hpp"
 #include "util.hpp"
 
-void Benchmark::all() { operations(); }
+void Benchmark::all() {
+  operations();
+  programs();
+}
 
 void Benchmark::operations() {
   std::cout << "| Operation |  Time   |" << std::endl;
@@ -55,6 +61,44 @@ void Benchmark::operations() {
               << Operation::Metadata::get(type).name + "    | " + buf.str() +
                      "µs |"
               << std::endl;
+  }
+  std::cout << std::endl;
+}
+
+void Benchmark::programs() {
+  Setup::setProgramsHome("tests/programs");
+  Parser parser;
+  Settings settings;
+  Sequence result;
+  Evaluator evaluator(settings);
+  std::vector<size_t> ids{796, 1113, 2193};
+  static const size_t runs = 10, terms = 100;
+  std::cout << "| Sequence | Max Terms | Time for 100 terms |" << std::endl;
+  std::cout << "|----------|-----------|--------------------|" << std::endl;
+  for (auto id : ids) {
+    const OeisSequence seq(id);
+    auto program = parser.parse(seq.getProgramPath());
+    auto start_time = std::chrono::steady_clock::now();
+    for (size_t i = 0; i < runs; i++) {
+      evaluator.eval(program, result, terms);
+      if (result.size() != terms) {
+        Log::get().error(
+            "Unexpected sequence length: " + std::to_string(result.size()),
+            true);
+      }
+    }
+    auto cur_time = std::chrono::steady_clock::now();
+    double speed = std::chrono::duration_cast<std::chrono::milliseconds>(
+                       cur_time - start_time)
+                       .count() /
+                   static_cast<double>(runs);
+    std::stringstream buf;
+    buf.setf(std::ios::fixed);
+    buf.precision(1);
+    buf << speed;
+    evaluator.eval(program, result, 1000000, false);
+    std::cout << "| " << seq.id_str() << "  |    " << result.size()
+              << "    |      " << buf.str() << "ms       |" << std::endl;
   }
   std::cout << std::endl;
 }
