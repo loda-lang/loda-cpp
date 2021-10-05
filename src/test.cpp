@@ -129,8 +129,8 @@ void Test::number() {
             std::to_string(std::numeric_limits<int64_t>::max()));
   check_num(std::numeric_limits<int64_t>::min(),
             std::to_string(std::numeric_limits<int64_t>::min()));
-  testNumberDigits(USE_BIG_NUMBER ? BigNumber::NUM_DIGITS : 18, false);
-  testNumberDigits(USE_BIG_NUMBER ? BigNumber::NUM_DIGITS : 18, true);
+  testNumberDigits(USE_BIG_NUMBER ? (BigNumber::NUM_WORDS * 18) : 18, false);
+  testNumberDigits(USE_BIG_NUMBER ? (BigNumber::NUM_WORDS * 18) : 18, true);
   Number o(1);
   o += Number(2);
   check_num(o, "3");
@@ -178,7 +178,7 @@ void Test::randomNumber(size_t tests) {
     // big number test
     if (USE_BIG_NUMBER) {
       const int64_t num_digits =
-          (Random::get().gen() % BigNumber::NUM_DIGITS) + 1;
+          (Random::get().gen() % (BigNumber::NUM_WORDS * 18)) + 1;
       char ch;
       str.clear();
       inv.clear();
