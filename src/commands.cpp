@@ -2,6 +2,7 @@
 
 #include <iostream>
 
+#include "benchmark.hpp"
 #include "evaluator.hpp"
 #include "iterator.hpp"
 #include "miner.hpp"
@@ -208,4 +209,9 @@ void Commands::iterate(const std::string& count) {
     std::cout << std::endl;
     //        std::cin.ignore();
   }
+}
+
+void Commands::benchmark() {
+  Benchmark benchmark;
+  benchmark.all();
 }

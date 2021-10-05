@@ -16,6 +16,8 @@ jobs:
         run: cd src && make
       - name: Test
         run: ./loda test
+      - name: Benchmark
+        run: ./loda benchmark
   build-macos:
     runs-on: macos-11
     steps:
@@ -24,6 +26,8 @@ jobs:
         run: cd src && make
       - name: Test
         run: ./loda test
+      - name: Benchmark
+        run: ./loda benchmark
   build-windows:
     runs-on: windows-2019
     steps:
@@ -33,3 +37,5 @@ jobs:
         run: cd src && nmake.exe /F Makefile.windows
       - name: Test
         run: .\loda.exe test
+      - name: Benchmark
+        run: .\loda.exe benchmark

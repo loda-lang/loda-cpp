@@ -38,6 +38,8 @@ class Commands {
 
   void iterate(const std::string& count);
 
+  void benchmark();
+
  private:
   const Settings& settings;
 

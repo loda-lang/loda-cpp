@@ -1,9 +1,12 @@
 *.log
 *.o
+*.obj
 /src/external/
 /src/loda
+/src/loda.exe
 /tests/programs/local/
 /loda
+/loda.exe
 /completer.hist
 /.DS_Store
 /.settings/

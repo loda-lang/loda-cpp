@@ -58,6 +58,8 @@ int main(int argc, char *argv[]) {
     commands.migrate();
   } else if (cmd == "iterate") {
     commands.iterate(args.at(1));
+  } else if (cmd == "benchmark") {
+    commands.benchmark();
   }
 #endif
   // unknown command
