@@ -19,8 +19,6 @@ class Test {
 
   void semantics();
 
-  void benchmark();
-
   void sequence();
 
   void memory();
