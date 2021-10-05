@@ -33,6 +33,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 |----------|-----------|--------------------|
 | A000796  |    283    |      153.1ms       |
 | A001113  |    286    |      133.9ms       |
+| A002110  |    309    |      118.5ms       |
 | A002193  |    106    |      3566.6ms      |
 
 ## v21.9.21
