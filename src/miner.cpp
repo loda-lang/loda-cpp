@@ -17,59 +17,6 @@
 
 Miner::Miner(const Settings &settings) : settings(settings) {}
 
-bool Miner::updateSpecialSequences(const Program &p,
-                                   const Sequence &seq) const {
-  std::string kind;
-  if (isCollatzValuation(seq)) {
-    // check again for longer sequence to avoid false alerts
-    Evaluator evaluator(settings);
-    Sequence seq2;
-    evaluator.eval(p, seq2, OeisSequence::DEFAULT_SEQ_LENGTH, false);
-    if (seq2.size() == OeisSequence::DEFAULT_SEQ_LENGTH &&
-        isCollatzValuation(seq2)) {
-      kind = "collatz";
-    }
-  }
-  if (!kind.empty()) {
-    Log::get().alert("Found possible " + kind +
-                     " sequence: " + seq.to_string());
-    std::string file_name = "programs/special/" + kind + "_" +
-                            std::to_string(ProgramUtil::hash(p) % 1000000) +
-                            ".asm";
-    ensureDir(file_name);
-    std::ofstream out(file_name);
-    out << "; " << seq << std::endl;
-    out << std::endl;
-    ProgramUtil::print(p, out);
-    out.close();
-    return true;
-  }
-  return false;
-}
-
-bool Miner::isCollatzValuation(const Sequence &seq) {
-  if (seq.size() < 10) {
-    return false;
-  }
-  for (size_t i = 1; i < seq.size() - 1; i++) {
-    size_t n = i + 1;
-    if (n % 2 == 0)  // even
-    {
-      size_t j = (n / 2) - 1;  // >=0
-      if (!(seq[j] < seq[i])) {
-        return false;
-      }
-    } else  // odd
-    {
-      size_t j = (((3 * n) + 1) / 2) - 1;  // >=0
-      if (j < seq.size() && !(seq[j] < seq[i])) {
-        return false;
-      }
-    }
-  }
-  return true;
-}
-
 void Miner::reload() {
   manager.reset(new OeisManager(settings));
   manager->load();
@@ -169,9 +116,6 @@ void Miner::mine(const std::vector<std::string> &initial_progs) {
           mutator.mutateConstants(program, 100, progs);
         }
       }
-    }
-    if (updateSpecialSequences(program, norm_seq)) {
-      generator->stats.fresh++;
     }
     generator->stats.generated++;
 

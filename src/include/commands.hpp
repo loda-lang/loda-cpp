@@ -38,7 +38,7 @@ class Commands {
 
   void iterate(const std::string& count);
 
-  void collatz(const std::string& path);
+  void benchmark();
 
  private:
   const Settings& settings;

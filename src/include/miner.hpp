@@ -24,12 +24,8 @@ class Miner {
 
   void mine(const std::vector<std::string> &initial_progs);
 
-  static bool isCollatzValuation(const Sequence &seq);
-
  private:
   void reload();
-
-  bool updateSpecialSequences(const Program &p, const Sequence &seq) const;
 
   const Settings &settings;
   std::unique_ptr<OeisManager> manager;

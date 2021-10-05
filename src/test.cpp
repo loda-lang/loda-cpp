@@ -51,7 +51,6 @@ void Test::all() {
   config();
   steps();
   blocks();
-  collatz();
   linearMatcher();
   deltaMatcher();
   digitMatcher();
@@ -70,7 +69,6 @@ void Test::all() {
   minimizer(tests);
   miner();
   memUsage();
-  benchmark();
 #endif
 }
 
@@ -271,53 +269,6 @@ void Test::semantics() {
       check_inf(Interpreter::calc(type, 1, Number::INF));
       check_inf(Interpreter::calc(type, -1, Number::INF));
     }
-  }
-}
-
-void Test::benchmark() {
-  Log::get().info("Starting operations benchmark");
-  std::vector<Number> ops(10000);
-  int64_t num_digits;
-  std::string str;
-  for (Number& n : ops) {
-    if (Random::get().gen() % 2) {
-      num_digits = (Random::get().gen() % BigNumber::NUM_DIGITS) + 1;
-    } else {
-      num_digits = (Random::get().gen() % BigNumber::NUM_WORD_DIGITS) + 1;
-    }
-    str.clear();
-    if (Random::get().gen() % 2) {
-      str += '-';
-    }
-    str += '1' + static_cast<char>((Random::get().gen() % 9));
-    for (int64_t j = 1; j < num_digits; j++) {
-      str += '0' + static_cast<char>((Random::get().gen() % 10));
-    }
-    n = Number(str);
-  }
-  for (auto& type : Operation::Types) {
-    if (!ProgramUtil::isArithmetic(type)) {
-      continue;
-    }
-    auto start_time = std::chrono::steady_clock::now();
-    for (size_t i = 0; i + 1 < ops.size(); i++) {
-      try {
-        Interpreter::calc(type, ops[i], ops[i + 1]);
-      } catch (const std::exception& e) {
-        // Log::get().warn( std::string( e.what() ) );
-      }
-    }
-    auto cur_time = std::chrono::steady_clock::now();
-    double speed = std::chrono::duration_cast<std::chrono::microseconds>(
-                       cur_time - start_time)
-                       .count() /
-                   static_cast<double>(ops.size());
-    std::stringstream buf;
-    buf.setf(std::ios::fixed);
-    buf.precision(3);
-    buf << speed;
-    Log::get().info(Operation::Metadata::get(type).name + ": " + buf.str() +
-                    "µs");
   }
 }
 
@@ -616,20 +567,6 @@ void Test::ackermann() {
                                               {5, 13, 29, 61, 125},
                                               {13, 65533}};
   testBinary("ack", "tests/programs/general/ackermann.asm", values);
-}
-
-void Test::collatz() {
-  Log::get().info("Testing collatz validator using A006577");
-  std::vector<int64_t> values = {
-      0,   1,   7,   2,  5,  8,  16, 3,  19,  6,   14,  9,   9,  17, 17,
-      4,   12,  20,  20, 7,  7,  15, 15, 10,  23,  10,  111, 18, 18, 18,
-      106, 5,   26,  13, 13, 21, 21, 21, 34,  8,   109, 8,   29, 16, 16,
-      16,  104, 11,  24, 24, 24, 11, 11, 112, 112, 19,  32,  19, 32, 19,
-      19,  107, 107, 6,  27, 27, 27, 14, 14,  14,  102, 22};
-  Sequence s(values);
-  if (!Miner::isCollatzValuation(s)) {
-    Log::get().error("A006577 is not a Collatz valuation", true);
-  }
 }
 
 void check_int(const std::string& s, int64_t expected, int64_t value) {

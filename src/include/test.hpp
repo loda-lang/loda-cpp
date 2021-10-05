@@ -19,8 +19,6 @@ class Test {
 
   void semantics();
 
-  void benchmark();
-
   void sequence();
 
   void memory();
@@ -40,8 +38,6 @@ class Test {
   void blocks();
 
   void ackermann();
-
-  void collatz();
 
   void optimizer();
 
