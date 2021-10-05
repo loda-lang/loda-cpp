@@ -9,6 +9,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Enhancements
 
 * Remove hard-coded Collatz checks
+* Enhanced benchmark for comparing releases
 
 ## v21.9.28
 
