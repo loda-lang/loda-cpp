@@ -8,6 +8,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Enhancements
 
+* Publish programs and sequence metrics during stats generation
 * Remove hard-coded Collatz checks
 * Enhanced benchmark for comparing releases
 
