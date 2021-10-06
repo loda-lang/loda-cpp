@@ -40,11 +40,7 @@ Test::Test() {
 }
 
 void Test::all() {
-  size_t tests = 100;
-
   // fast tests
-  number();
-  randomNumber(tests);
   sequence();
   memory();
   semantics();
@@ -58,6 +54,8 @@ void Test::all() {
   knownPrograms();
 
   // slow tests
+  number();
+  randomNumber(1000);
 #ifndef _WIN64
   // TODO: fix tests on windows
   ackermann();
@@ -65,8 +63,8 @@ void Test::all() {
   apiClient();
   oeisList();
   oeisSeq();
-  iterator(tests);
-  minimizer(tests);
+  iterator(100);
+  minimizer(100);
   miner();
   memUsage();
 #endif
@@ -106,11 +104,17 @@ Number read_num(const std::string& s) {
 }
 
 void testNumberDigits(int64_t num_digits, bool test_negative) {
-  std::string nines = test_negative ? "-9" : "9";
-  for (int64_t i = 0; i < num_digits; i++) {
-    nines += '9';
-    Number n(nines);
-    check_num(n, nines);
+  for (char d = '1'; d <= '9'; d++) {
+    std::string str;
+    if (test_negative) {
+      str += '-';
+    }
+    str += d;
+    for (int64_t i = 0; i < num_digits; i++) {
+      str += d;
+      Number n(str);
+      check_num(n, str);
+    }
   }
 }
 
@@ -201,9 +205,28 @@ void Test::randomNumber(size_t tests) {
         nines += '9';
       }
       Number n(str);
-      Number t(n);
       check_num(n, str);
-      check_num(t, str);
+      check_num(Number(n), str);
+      Number triple1 = n;
+      Number triple2 = n;
+      Number triple3(3);
+      triple1 += n;
+      triple1 += n;
+      triple2 *= Number(3);
+      triple3 *= n;
+      check_num(triple1, triple2.to_string());
+      check_num(triple1, triple3.to_string());
+      if (triple1 != Number::INF) {
+        auto t = triple3;
+        auto neg = n;
+        neg.negate();
+        t += neg;
+        t += neg;
+        check_num(t, n.to_string());
+        auto u = triple3;
+        u /= Number(3);
+        check_num(u, n.to_string());
+      }
       if (str.size() > 2) {
         auto smaller = str.substr(0, str.size() - 1);
         Number m(smaller);
@@ -784,13 +807,13 @@ void Test::stats() {
 }
 
 void Test::optimizer() {
+  Log::get().info("Testing optimizer");
   Settings settings;
   Interpreter interpreter(settings);
   Optimizer optimizer(settings);
   auto tests = loadInOutTests("tests/optimizer/E");
   size_t i = 1;
   for (auto& t : tests) {
-    Log::get().info("Testing optimizer " + std::to_string(i));
     optimizer.optimize(t.first, 2, 1);
     if (t.first != t.second) {
       ProgramUtil::print(t.first, std::cerr);
