@@ -261,10 +261,10 @@ void BigNumber::mulShort(uint64_t n) {
   const int64_t s = std::min<int64_t>(getNumUsedWords() + 1, NUM_WORDS);
   for (int64_t i = 0; i < s; i++) {
     auto &w = words[i];
-    high = n * (w >> 32);
-    low = n * (w & LOW_BIT_MASK);
+    high = (w >> 32) * n;
+    low = (w & LOW_BIT_MASK) * n;
     w = low + ((high & LOW_BIT_MASK) << 32) + carry;
-    carry = ((high + (low >> 32)) >> 32);
+    carry = ((high + ((low + carry) >> 32)) >> 32);
   }
   if (carry) {
     makeInfinite();

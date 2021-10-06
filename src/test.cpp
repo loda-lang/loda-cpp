@@ -140,6 +140,8 @@ void Test::number() {
   check_num(o, "-10");
   o *= Number(-10);
   check_num(o, "100");
+  o %= Number(3);
+  check_num(o, "1");
   auto m = Number::MAX;
   m += 1;
   check_inf(m);
