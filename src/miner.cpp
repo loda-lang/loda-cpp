@@ -15,6 +15,8 @@
 #include "program_util.hpp"
 #include "setup.hpp"
 
+const std::string Miner::ANONYMOUS("anonymous");
+
 Miner::Miner(const Settings &settings) : settings(settings) {}
 
 void Miner::reload() {
@@ -38,7 +40,6 @@ void Miner::mine(const std::vector<std::string> &initial_progs) {
   AdaptiveScheduler metrics_scheduler(Metrics::get().publish_interval);
   AdaptiveScheduler api_scheduler(600);       // 10 minutes (magic number)
   AdaptiveScheduler reload_scheduler(43200);  // 12 hours (magic number)
-  static const std::string anonymous("anonymous");
 
   // load initial programs
   for (auto &path : initial_progs) {
@@ -75,30 +76,19 @@ void Miner::mine(const std::vector<std::string> &initial_progs) {
       progs.push(generator->generateProgram());
     }
 
-    // get next program and match sequences
+    // get next program
     program = progs.top();
+    progs.pop();
     // Log::get().info( "Matching program with " + std::to_string(
     // program.ops.size() ) + " operations" ); ProgramUtil::print( program,
     // std::cout );
-    progs.pop();
+
+    // match sequences
     auto seq_programs = manager->getFinder().findSequence(
         program, norm_seq, manager->getSequences());
     for (auto s : seq_programs) {
       program = s.second;
-
-      // update "submitted by" comment
-      submitted_by = ProgramUtil::getSubmittedBy(program);
-      if (submitted_by.empty()) {
-        submitted_by = Setup::getSubmittedBy();
-        if (!submitted_by.empty()) {
-          Operation nop(Operation::Type::NOP);
-          nop.comment = ProgramUtil::SUBMITTED_BY_PREFIX + " " + submitted_by;
-          program.ops.push_back(nop);
-        }
-      } else if (submitted_by == anonymous) {
-        ProgramUtil::removeOps(program, Operation::Type::NOP);
-      }
-
+      setSubmittedBy(program);
       auto r = manager->updateProgram(s.first, program);
       if (r.first) {
         // update stats and increase priority of successful generator
@@ -127,13 +117,7 @@ void Miner::mine(const std::vector<std::string> &initial_progs) {
         if (program.ops.empty()) {
           break;
         }
-        // update "submitted by" comment
-        submitted_by = ProgramUtil::getSubmittedBy(program);
-        if (submitted_by.empty()) {
-          Operation nop(Operation::Type::NOP);
-          nop.comment = ProgramUtil::SUBMITTED_BY_PREFIX + " " + anonymous;
-          program.ops.push_back(nop);
-        }
+        ensureSubmittedBy(program);
         progs.push(program);
       }
     }
@@ -146,16 +130,12 @@ void Miner::mine(const std::vector<std::string> &initial_progs) {
       for (size_t i = 0; i < multi_generator->generators.size(); i++) {
         auto gen = multi_generator->generators[i].get();
         auto labels = gen->metric_labels;
-
         labels["kind"] = "generated";
         entries.push_back({"programs", labels, (double)gen->stats.generated});
-
         labels["kind"] = "new";
         entries.push_back({"programs", labels, (double)gen->stats.fresh});
-
         labels["kind"] = "updated";
         entries.push_back({"programs", labels, (double)gen->stats.updated});
-
         total_generated += gen->stats.generated;
         gen->stats = Generator::GStats();
       }
@@ -171,5 +151,28 @@ void Miner::mine(const std::vector<std::string> &initial_progs) {
       reload();
       generator = multi_generator->getGenerator();
     }
+  }
+}
+
+void Miner::ensureSubmittedBy(Program &program) {
+  auto submitted_by = ProgramUtil::getSubmittedBy(program);
+  if (submitted_by.empty()) {
+    Operation nop(Operation::Type::NOP);
+    nop.comment = ProgramUtil::SUBMITTED_BY_PREFIX + " " + ANONYMOUS;
+    program.ops.push_back(nop);
+  }
+}
+
+void Miner::setSubmittedBy(Program &program) {
+  auto submitted_by = ProgramUtil::getSubmittedBy(program);
+  if (submitted_by.empty()) {
+    submitted_by = Setup::getSubmittedBy();
+    if (!submitted_by.empty()) {
+      Operation nop(Operation::Type::NOP);
+      nop.comment = ProgramUtil::SUBMITTED_BY_PREFIX + " " + submitted_by;
+      program.ops.push_back(nop);
+    }
+  } else if (submitted_by == ANONYMOUS) {
+    ProgramUtil::removeOps(program, Operation::Type::NOP);
   }
 }

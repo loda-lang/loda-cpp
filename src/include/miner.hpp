@@ -27,6 +27,11 @@ class Miner {
  private:
   void reload();
 
+  void ensureSubmittedBy(Program &program);
+
+  void setSubmittedBy(Program &program);
+
+  static const std::string ANONYMOUS;
   const Settings &settings;
   std::unique_ptr<OeisManager> manager;
   std::unique_ptr<MultiGenerator> multi_generator;
