@@ -7,11 +7,7 @@
 
 class BigNumber {
  public:
-  static constexpr size_t NUM_WORDS = 48;
-  static constexpr size_t NUM_WORD_DIGITS = 18;
-  static constexpr size_t NUM_DIGITS = NUM_WORDS * NUM_WORD_DIGITS;
-  static constexpr int64_t WORD_BASE_ROOT = 1000000000;
-  static constexpr int64_t WORD_BASE = WORD_BASE_ROOT * WORD_BASE_ROOT;
+  static constexpr size_t NUM_WORDS = 50;
 
   BigNumber();
 
@@ -37,6 +33,8 @@ class BigNumber {
 
   std::size_t hash() const;
 
+  std::string toString() const;
+
   friend std::ostream& operator<<(std::ostream& out, const BigNumber& n);
 
   inline bool isInfinite() const { return is_infinite; }
@@ -52,6 +50,9 @@ class BigNumber {
   static BigNumber minMax(bool is_max);
 
  private:
+  static constexpr uint64_t HIGH_BIT_MASK = 0xFFFFFFFF00000000ull;
+  static constexpr uint64_t LOW_BIT_MASK = 0x00000000FFFFFFFFull;
+
   void load(const std::string& s);
 
   bool isZero() const;
@@ -60,17 +61,17 @@ class BigNumber {
 
   void sub(const BigNumber& n);
 
-  void mulShort(int64_t n);
+  void mulShort(uint64_t n);
 
   void shift(int64_t n);
 
   void div(const BigNumber& n);
 
-  void divShort(const int64_t n);
+  void divShort(const uint64_t n);
 
   void divBig(const BigNumber& n);
 
-  std::array<int64_t, NUM_WORDS> words;
+  std::array<uint64_t, NUM_WORDS> words;
   bool is_negative;  // we don't want to expose this
   bool is_infinite;
 };

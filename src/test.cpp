@@ -40,11 +40,7 @@ Test::Test() {
 }
 
 void Test::all() {
-  size_t tests = 100;
-
   // fast tests
-  number();
-  randomNumber(tests);
   sequence();
   memory();
   semantics();
@@ -58,6 +54,8 @@ void Test::all() {
   knownPrograms();
 
   // slow tests
+  number();
+  randomNumber(1000);
 #ifndef _WIN64
   // TODO: fix tests on windows
   ackermann();
@@ -65,8 +63,8 @@ void Test::all() {
   apiClient();
   oeisList();
   oeisSeq();
-  iterator(tests);
-  minimizer(tests);
+  iterator(100);
+  minimizer(100);
   miner();
   memUsage();
 #endif
@@ -106,14 +104,16 @@ Number read_num(const std::string& s) {
 }
 
 void testNumberDigits(int64_t num_digits, bool test_negative) {
-  std::string nines = test_negative ? "-9" : "9";
-  for (int64_t i = 0; i < num_digits; i++) {
-    nines += '9';
-    Number n(nines);
-    if (i + 1 < num_digits) {
-      check_num(n, nines);
-    } else {
-      check_inf(n);
+  for (char d = '1'; d <= '9'; d++) {
+    std::string str;
+    if (test_negative) {
+      str += '-';
+    }
+    str += d;
+    for (int64_t i = 0; i < num_digits; i++) {
+      str += d;
+      Number n(str);
+      check_num(n, str);
     }
   }
 }
@@ -133,8 +133,8 @@ void Test::number() {
             std::to_string(std::numeric_limits<int64_t>::max()));
   check_num(std::numeric_limits<int64_t>::min(),
             std::to_string(std::numeric_limits<int64_t>::min()));
-  testNumberDigits(USE_BIG_NUMBER ? BigNumber::NUM_DIGITS : 18, false);
-  testNumberDigits(USE_BIG_NUMBER ? BigNumber::NUM_DIGITS : 18, true);
+  testNumberDigits(USE_BIG_NUMBER ? (BigNumber::NUM_WORDS * 18) : 18, false);
+  testNumberDigits(USE_BIG_NUMBER ? (BigNumber::NUM_WORDS * 18) : 18, true);
   Number o(1);
   o += Number(2);
   check_num(o, "3");
@@ -144,9 +144,8 @@ void Test::number() {
   check_num(o, "-10");
   o *= Number(-10);
   check_num(o, "100");
-  std::string nines(BigNumber::NUM_DIGITS, '9');
-  check_num(Number::MAX, nines);
-  check_num(Number::MIN, "-" + nines);
+  o %= Number(3);
+  check_num(o, "1");
   auto m = Number::MAX;
   m += 1;
   check_inf(m);
@@ -185,7 +184,7 @@ void Test::randomNumber(size_t tests) {
     // big number test
     if (USE_BIG_NUMBER) {
       const int64_t num_digits =
-          (Random::get().gen() % BigNumber::NUM_DIGITS) + 1;
+          (Random::get().gen() % (BigNumber::NUM_WORDS * 18)) + 1;
       char ch;
       str.clear();
       inv.clear();
@@ -206,9 +205,28 @@ void Test::randomNumber(size_t tests) {
         nines += '9';
       }
       Number n(str);
-      Number t(n);
       check_num(n, str);
-      check_num(t, str);
+      check_num(Number(n), str);
+      Number triple1 = n;
+      Number triple2 = n;
+      Number triple3(3);
+      triple1 += n;
+      triple1 += n;
+      triple2 *= Number(3);
+      triple3 *= n;
+      check_num(triple1, triple2.to_string());
+      check_num(triple1, triple3.to_string());
+      if (triple1 != Number::INF) {
+        auto t = triple3;
+        auto neg = n;
+        neg.negate();
+        t += neg;
+        t += neg;
+        check_num(t, n.to_string());
+        auto u = triple3;
+        u /= Number(3);
+        check_num(u, n.to_string());
+      }
       if (str.size() > 2) {
         auto smaller = str.substr(0, str.size() - 1);
         Number m(smaller);
@@ -789,13 +807,13 @@ void Test::stats() {
 }
 
 void Test::optimizer() {
+  Log::get().info("Testing optimizer");
   Settings settings;
   Interpreter interpreter(settings);
   Optimizer optimizer(settings);
   auto tests = loadInOutTests("tests/optimizer/E");
   size_t i = 1;
   for (auto& t : tests) {
-    Log::get().info("Testing optimizer " + std::to_string(i));
     optimizer.optimize(t.first, 2, 1);
     if (t.first != t.second) {
       ProgramUtil::print(t.first, std::cerr);

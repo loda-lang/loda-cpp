@@ -1,5 +1,6 @@
 #include "big_number.hpp"
 
+#include <algorithm>
 #include <limits>
 #include <string>
 #include <vector>
@@ -9,7 +10,7 @@ BigNumber::BigNumber() : is_negative(false), is_infinite(false) {
 }
 
 BigNumber::BigNumber(int64_t value) {
-  if (value >= 0 && value < WORD_BASE) {
+  if (value >= 0) {
     is_negative = false;
     is_infinite = false;
     words.fill(0);
@@ -54,32 +55,18 @@ void BigNumber::load(const std::string &s) {
   if (size == 0) {
     throwNumberParseError(s);
   }
-  size_t w = 0;
-  while (size > 0) {
-    if (w >= BigNumber::NUM_WORDS) {
-      makeInfinite();
-      return;
+  words.fill(0);
+  char ch;
+  for (int64_t i = 0; i < size; i++) {
+    if (is_infinite) {
+      break;
     }
-    int64_t length = 0;
-    int64_t num = 0;
-    int64_t prefix = 1;
-    char ch;
-    for (int64_t i = size - 1;
-         i >= 0 && i >= size - static_cast<int64_t>(BigNumber::NUM_WORD_DIGITS);
-         --i) {
-      ch = s[start + i];
-      if (ch < '0' || ch > '9') {
-        throwNumberParseError(s);
-      }
-      num += (ch - '0') * prefix;
-      prefix *= 10;
-      ++length;
+    ch = s[start + i];
+    if (ch < '0' || ch > '9') {
+      throwNumberParseError(s);
     }
-    words[w++] = num;
-    size -= length;
-  }
-  while (w < BigNumber::NUM_WORDS) {
-    words[w++] = 0;
+    mulShort(10);
+    add(ch - '0');  // TODO: use addShort
   }
 }
 
@@ -104,6 +91,9 @@ void BigNumber::makeInfinite() {
 int64_t BigNumber::asInt() const {
   if (is_infinite) {
     throw std::runtime_error("Infinity error");
+  }
+  if (words[0] > static_cast<uint64_t>(std::numeric_limits<int64_t>::max())) {
+    throw std::runtime_error("Integer overflow");
   }
   for (size_t i = 1; i < NUM_WORDS; i++) {
     if (words[i] != 0) {
@@ -137,7 +127,7 @@ BigNumber BigNumber::minMax(bool is_max) {
   m.is_infinite = false;
   m.is_negative = !is_max;
   for (auto &word : m.words) {
-    word = WORD_BASE - 1;
+    word = std::numeric_limits<uint64_t>::max();
   }
   return m;
 }
@@ -206,51 +196,31 @@ BigNumber &BigNumber::operator+=(const BigNumber &n) {
 }
 
 void BigNumber::add(const BigNumber &n) {
-  auto it1 = words.begin();
-  auto it2 = n.words.begin();
-  int64_t sum = 0;
-  while (it1 != words.end() || it2 != n.words.end()) {
-    if (it1 != words.end()) {
-      sum += *it1;
-    } else {
-      makeInfinite();
-      return;
-    }
-    if (it2 != n.words.end()) {
-      sum += *it2;
-      ++it2;
-    }
-    *it1 = sum % WORD_BASE;
-    ++it1;
-    sum /= WORD_BASE;
+  uint64_t low, high;
+  uint64_t carry = 0;
+  for (size_t i = 0; i < NUM_WORDS; i++) {
+    low = (words[i] & LOW_BIT_MASK) + (n.words[i] & LOW_BIT_MASK) + carry;
+    carry = low >> 32;
+    high = (words[i] >> 32) + (n.words[i] >> 32) + carry;
+    carry = high >> 32;
+    words[i] = ((high & LOW_BIT_MASK) << 32) | (low & LOW_BIT_MASK);
   }
-  if (sum) {
+  if (carry) {
     makeInfinite();
   }
 }
 
 void BigNumber::sub(const BigNumber &n) {
-  auto it1 = words.begin();
-  auto it2 = n.words.begin();
-  int64_t d = 0;
-  while (it1 != words.end() || it2 != n.words.end()) {
-    if (it1 != words.end()) {
-      d += *it1;
-      ++it1;
-    }
-    if (it2 != n.words.end()) {
-      d -= *it2;
-      ++it2;
-    }
-    if (d < 0) {
-      *(it1 - 1) = d + WORD_BASE;
-      d = -1;
-    } else {
-      *(it1 - 1) = d % WORD_BASE;
-      d /= WORD_BASE;
-    }
+  uint64_t low, high;
+  uint64_t carry = 0;
+  for (size_t i = 0; i < NUM_WORDS; i++) {
+    low = (words[i] & LOW_BIT_MASK) - (n.words[i] & LOW_BIT_MASK) - carry;
+    carry = (low >> 32) != 0;
+    high = (words[i] >> 32) - (n.words[i] >> 32) - carry;
+    carry = (high >> 32) != 0;
+    words[i] = ((high & LOW_BIT_MASK) << 32) | (low & LOW_BIT_MASK);
   }
-  if (d < 0) {
+  if (carry) {
     is_negative = true;
   }
 }
@@ -265,12 +235,12 @@ BigNumber &BigNumber::operator*=(const BigNumber &n) {
   const int64_t s = n.getNumUsedWords();  // <= NUM_WORDS
   for (int64_t i = 0; i < s; i++) {
     auto copy = *this;
-    copy.mulShort(n.words[i] % WORD_BASE_ROOT);  // low bits
+    copy.mulShort(n.words[i] & LOW_BIT_MASK);  // low bits
     copy.shift(shift);
     shift += 1;
     result += copy;
     copy = *this;
-    copy.mulShort(n.words[i] / WORD_BASE_ROOT);  // high bits
+    copy.mulShort(n.words[i] >> 32);  // high bits
     copy.shift(shift);
     shift += 1;
     result += copy;
@@ -285,16 +255,16 @@ BigNumber &BigNumber::operator*=(const BigNumber &n) {
   return (*this);
 }
 
-void BigNumber::mulShort(int64_t n) {
-  int64_t carry = 0;
+void BigNumber::mulShort(uint64_t n) {
+  uint64_t carry = 0;
+  uint64_t low, high;
   const int64_t s = std::min<int64_t>(getNumUsedWords() + 1, NUM_WORDS);
   for (int64_t i = 0; i < s; i++) {
     auto &w = words[i];
-    const int64_t h = n * (w / WORD_BASE_ROOT);
-    const int64_t l = n * (w % WORD_BASE_ROOT);
-    const int64_t t = (h % WORD_BASE_ROOT) * WORD_BASE_ROOT;
-    w = l + t + carry;
-    carry = h / WORD_BASE_ROOT;
+    high = (w >> 32) * n;
+    low = (w & LOW_BIT_MASK) * n;
+    w = low + ((high & LOW_BIT_MASK) << 32) + carry;
+    carry = ((high + ((low + carry) >> 32)) >> 32);
   }
   if (carry) {
     makeInfinite();
@@ -303,11 +273,11 @@ void BigNumber::mulShort(int64_t n) {
 
 void BigNumber::shift(int64_t n) {
   for (; n > 0; n--) {
-    int64_t next = 0;
+    uint64_t next = 0;
     for (size_t i = 0; i < NUM_WORDS; i++) {
-      int64_t h = words[i] / WORD_BASE_ROOT;
-      int64_t l = words[i] % WORD_BASE_ROOT;
-      words[i] = (l * WORD_BASE_ROOT) + next;
+      uint64_t h = words[i] >> 32;
+      uint64_t l = words[i] & LOW_BIT_MASK;
+      words[i] = (l << 32) + next;
       next = h;
     }
     if (next) {
@@ -332,26 +302,27 @@ BigNumber &BigNumber::operator/=(const BigNumber &n) {
 }
 
 void BigNumber::div(const BigNumber &n) {
-  if (n.getNumUsedWords() == 1 && n.words[0] < WORD_BASE_ROOT) {
+  if (n.getNumUsedWords() == 1 && !(n.words[0] >> 32)) {
     divShort(n.words[0]);
   } else {
     divBig(n);
   }
 }
 
-void BigNumber::divShort(const int64_t n) {
-  int64_t carry = 0;
+void BigNumber::divShort(const uint64_t n) {
+  uint64_t carry = 0;
+  uint64_t h, l, t, h2, u, l2;
   for (int64_t i = NUM_WORDS - 1; i >= 0; i--) {
     auto &w = words[i];
-    const int64_t h = w / WORD_BASE_ROOT;
-    const int64_t l = w % WORD_BASE_ROOT;
-    const int64_t t = (carry * WORD_BASE_ROOT) + h;
-    const int64_t h2 = t / n;
+    h = w >> 32;
+    l = w & LOW_BIT_MASK;
+    t = (carry << 32) + h;
+    h2 = t / n;
     carry = t % n;
-    const int64_t u = (carry * WORD_BASE_ROOT) + l;
-    const int64_t l2 = u / n;
+    u = (carry << 32) + l;
+    l2 = u / n;
     carry = u % n;
-    w = (h2 * WORD_BASE_ROOT) + l2;
+    w = (h2 << 32) + l2;
   }
 }
 
@@ -422,30 +393,30 @@ std::size_t BigNumber::hash() const {
   return seed;
 }
 
+std::string BigNumber::toString() const {
+  if (is_infinite) {
+    return "inf";
+  }
+  if (isZero()) {
+    return "0";
+  }
+  std::string result;
+  BigNumber m = *this;
+  BigNumber n;
+  while (!m.isZero()) {
+    n = m;
+    n %= BigNumber(10);  // avoid this expensive mod operation
+    result += ('0' + n.words[0]);
+    m.divShort(10);
+  }
+  if (is_negative) {
+    result += '-';
+  }
+  std::reverse(result.begin(), result.end());
+  return result;
+}
+
 std::ostream &operator<<(std::ostream &out, const BigNumber &n) {
-  if (n.is_infinite) {
-    out << "inf";
-    return out;
-  }
-  if (n.is_negative && !n.isZero()) {
-    out << '-';
-  }
-  bool print = false;
-  char ch;
-  for (size_t w = 0; w < BigNumber::NUM_WORDS; w++) {
-    const auto word = n.words[BigNumber::NUM_WORDS - w - 1];
-    auto base = BigNumber::WORD_BASE / 10;
-    while (base) {
-      ch = static_cast<char>('0' + ((word / base) % 10));
-      print = print || (ch != '0');
-      if (print) {
-        out << ch;
-      }
-      base /= 10;
-    }
-  }
-  if (!print) {
-    out << '0';
-  }
+  out << n.toString();
   return out;
 }
