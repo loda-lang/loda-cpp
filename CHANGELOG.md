@@ -2,12 +2,17 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Features
+
+* Added `submit` command to check and transfer hand-written programs.
+
 ### Bugfixes
 
 * Fix error in `mine_parallel.sh`: loda executable not found
 
 ### Enhancements
 
+* Publish programs and sequence metrics during stats generation
 * Remove hard-coded Collatz checks
 * Internal big number format uses 64-bit words (faster and larger range).
 * Enhanced benchmark for comparing releases:

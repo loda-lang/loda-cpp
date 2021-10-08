@@ -38,11 +38,13 @@ int main(int argc, char *argv[]) {
   } else if (cmd == "minimize" || cmd == "min") {
     commands.minimize(args.at(1));
   } else if (cmd == "mine") {
-    std::vector<std::string> initial_progs;
-    for (size_t i = 1; i < args.size(); i++) {
-      initial_progs.push_back(args.at(i));
+    commands.mine();
+  } else if (cmd == "submit") {
+    if (args.size() != 3) {
+      std::cout << "invalid number of arguments" << std::endl;
+      return 1;
     }
-    commands.mine(initial_progs);
+    commands.submit(args.at(1), args.at(2));
   } else if (cmd == "maintain") {
     commands.maintain();
   }

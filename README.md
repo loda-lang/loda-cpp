@@ -37,16 +37,15 @@ Core Commands:
   setup               Run interactive setup to configure LODA
 
 OEIS Commands:
-  mine [asm-file]     Mine programs for OEIS sequences (see -i)
-                      (optional argument is an initial program)
-  match <asm-file>    Match a program to OEIS sequences (see -i)
-  check <seq-id>      Check a program for an OEIS sequence (see -b)
+  mine                Mine programs for OEIS sequences (see -i)
+  submit <id> <file>  Submit a program for an OEIS sequence
+  check <id>          Check a program for an OEIS sequence (see -b)
   maintain            Maintain all programs for OEIS sequences
 
 Targets:
-  <asm-file>          Path to a LODA file (file extension: *.asm)
-  <seq-id>            ID of an OEIS integer sequence (example: A000045)
-  <program>           Either an <asm-file> or a <seq-id>
+  <file>              Path to a LODA file (file extension: *.asm)
+  <id>                ID of an OEIS integer sequence (example: A000045)
+  <program>           Either an <file> or an <id>
 
 Options:
   -t <number>         Number of sequence terms (default: 10)
@@ -55,7 +54,7 @@ Options:
   -c <number>         Maximum number of interpreter cycles (no limit: -1)
   -m <number>         Maximum number of used memory cells (no limit: -1)
   -l <string>         Log level (values: debug,info,warn,error,alert)
-  -i <string>         Name of miner configuration from loda.json
+  -i <string>         Name of miner configuration from miners.json
 ```
 
 ### Core Commands

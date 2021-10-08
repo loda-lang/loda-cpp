@@ -389,12 +389,6 @@ void OeisManager::generateStats(int64_t age_in_days) {
       // update stats
       stats.updateProgramStats(s.id, program);
       num_processed++;
-
-      // if ( num_processed % 1000 == 0 )
-      //{
-      //  Log::get().info( "Processed " + std::to_string( num_processed ) + "
-      //  programs" );
-      //}
     }
     stats.updateSequenceStats(s.id, has_program, has_b_file);
   }
@@ -403,6 +397,26 @@ void OeisManager::generateStats(int64_t age_in_days) {
   stats.finalize();
   stats.save(stats_home);
 
+  // publish metrics
+  std::vector<Metrics::Entry> entries;
+  std::map<std::string, std::string> labels;
+  labels["kind"] = "total";
+  entries.push_back({"programs", labels, (double)num_processed});
+  entries.push_back({"sequences", labels, (double)total_count});
+  labels["kind"] = "used";
+  entries.push_back({"sequences", labels, (double)stats.num_sequences});
+  labels.clear();
+  for (size_t i = 0; i < stats.num_ops_per_type.size(); i++) {
+    if (stats.num_ops_per_type[i] > 0) {
+      labels["type"] =
+          Operation::Metadata::get(static_cast<Operation::Type>(i)).name;
+      entries.push_back(
+          {"operation_types", labels, (double)stats.num_ops_per_type[i]});
+    }
+  }
+  Metrics::get().write(entries);
+
+  // done
   Log::get().info("Finished stats generation for " +
                   std::to_string(num_processed) + " programs");
 }

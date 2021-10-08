@@ -22,11 +22,18 @@ class Miner {
 
   Miner(const Settings &settings);
 
-  void mine(const std::vector<std::string> &initial_progs);
+  void mine();
+
+  void submit(const std::string &id, const std::string &path);
 
  private:
-  void reload();
+  void reload(bool load_generators);
 
+  void ensureSubmittedBy(Program &program);
+
+  void setSubmittedBy(Program &program);
+
+  static const std::string ANONYMOUS;
   const Settings &settings;
   std::unique_ptr<OeisManager> manager;
   std::unique_ptr<MultiGenerator> multi_generator;
