@@ -2,6 +2,8 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v21.10.8
+
 ### Features
 
 * Added `submit` command to check and transfer hand-written programs.
