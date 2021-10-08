@@ -12,9 +12,9 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Enhancements
 
-* Publish programs and sequence metrics during stats generation
-* Remove hard-coded Collatz checks
-* Internal big number format uses 64-bit words (faster and larger range).
+* Publish programs and sequence metrics after stats loading
+* Remove hard-coded checks for special sequences (Collatz)
+* Big number format uses 64-bit words: faster and larger range.
 * Enhanced benchmark for comparing releases:
 
 | Sequence | Max Terms | Time for 100 Terms |
@@ -22,7 +22,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 | A000796  |    316    |      139.2ms       |
 | A001113  |    319    |      123.1ms       |
 | A002110  |    339    |      112.4ms       |
-| A002193  |    119    |      2752.1ms       |
+| A002193  |    119    |      2752.1ms      |
 
 ## v21.9.28
 
