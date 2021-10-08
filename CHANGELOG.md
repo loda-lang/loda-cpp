@@ -13,8 +13,9 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Enhancements
 
 * Publish programs and sequence metrics after stats loading
-* Remove hard-coded checks for special sequences (Collatz)
-* Big number format uses 64-bit words: faster and larger range.
+* Removed hard-coded checks for special sequences (Collatz)
+* Big number format uses 64-bit words: faster and larger range
+* Updated default miner configuration
 * Enhanced benchmark for comparing releases:
 
 | Sequence | Max Terms | Time for 100 Terms |

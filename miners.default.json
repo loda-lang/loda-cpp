@@ -120,9 +120,9 @@
     {
       "name": "v1_1",
       "version": 1,
-      "length": 40,
-      "maxConstant": 5,
-      "maxIndex": 5,
+      "length": 45,
+      "maxConstant": 6,
+      "maxIndex": 6,
       "loops": false,
       "calls": false,
       "indirectAccess": false,
@@ -137,9 +137,9 @@
     {
       "name": "v1_2",
       "version": 1,
-      "length": 50,
-      "maxConstant": 5,
-      "maxIndex": 5,
+      "length": 60,
+      "maxConstant": 6,
+      "maxIndex": 6,
       "loops": true,
       "calls": true,
       "indirectAccess": false
@@ -147,22 +147,19 @@
     {
       "name": "v1_3",
       "version": 1,
-      "length": 50,
-      "maxConstant": 9,
-      "maxIndex": 9,
+      "length": 60,
+      "maxConstant": 10,
+      "maxIndex": 10,
       "loops": true,
       "calls": false,
       "indirectAccess": false,
       "template": [
-        "$LODA_HOME/programs/oeis/000/A000040.asm",
-        "$LODA_HOME/programs/oeis/000/A000149.asm",
-        "$LODA_HOME/programs/oeis/000/A000203.asm",
         "$LODA_HOME/programs/oeis/000/A000796.asm",
         "$LODA_HOME/programs/oeis/001/A001113.asm",
-        "$LODA_HOME/programs/oeis/004/A004086.asm",
-        "$LODA_HOME/programs/oeis/010/A010477.asm",
-        "$LODA_HOME/programs/oeis/014/A014682.asm",
-        "$LODA_HOME/programs/oeis/132/A132106.asm"
+        "$LODA_HOME/programs/oeis/001/A001622.asm",
+        "$LODA_HOME/programs/oeis/002/A002110.asm",
+        "$LODA_HOME/programs/oeis/002/A002193.asm",
+        "$LODA_HOME/programs/oeis/010/A010550.asm"
       ]
     },
     {
@@ -180,7 +177,7 @@
     {
       "name": "v5",
       "version": 5,
-      "length": 20
+      "length": 30
     }
   ]
 }
