@@ -19,17 +19,21 @@ const std::string Miner::ANONYMOUS("anonymous");
 
 Miner::Miner(const Settings &settings) : settings(settings) {}
 
-void Miner::reload() {
+void Miner::reload(bool load_generators) {
   manager.reset(new OeisManager(settings));
   manager->load();
   manager->getFinder();  // initializes matchers
-  multi_generator.reset(
-      new MultiGenerator(settings, manager->getStats(), true));
+  if (load_generators) {
+    multi_generator.reset(
+        new MultiGenerator(settings, manager->getStats(), true));
+  } else {
+    multi_generator.reset();
+  }
 }
 
-void Miner::mine(const std::vector<std::string> &initial_progs) {
+void Miner::mine() {
   if (!manager) {
-    reload();
+    reload(true);
   }
   ApiClient api_client;
   Mutator mutator;
@@ -40,13 +44,6 @@ void Miner::mine(const std::vector<std::string> &initial_progs) {
   AdaptiveScheduler metrics_scheduler(Metrics::get().publish_interval);
   AdaptiveScheduler api_scheduler(600);       // 10 minutes (magic number)
   AdaptiveScheduler reload_scheduler(43200);  // 12 hours (magic number)
-
-  // load initial programs
-  for (auto &path : initial_progs) {
-    program = parser.parse(path);
-    progs.push(program);
-    mutator.mutateConstants(program, 1000, progs);
-  }
 
   // get mining mode
   const auto mode = Setup::getMiningMode();
@@ -148,9 +145,59 @@ void Miner::mine(const std::vector<std::string> &initial_progs) {
     // regular task: reload oeis manager and generators
     if (reload_scheduler.isTargetReached()) {
       reload_scheduler.reset();
-      reload();
+      reload(true);
       generator = multi_generator->getGenerator();
     }
+  }
+}
+
+void Miner::submit(const std::string &id, const std::string &path) {
+  Parser parser;
+  auto program = parser.parse(path);
+  if (!manager) {
+    reload(false);
+  }
+  OeisSequence seq(id);
+  Settings settings(this->settings);
+  settings.print_as_b_file = false;
+  Log::get().info("Validating program for " + seq.id_str());
+  Evaluator evaluator(settings);
+  auto terms = seq.getTerms(100000);  // magic number
+  auto result =
+      evaluator.check(program, terms, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id);
+  if (result.first == status_t::ERROR) {
+    Log::get().error("Validation failed", false);
+    settings.print_as_b_file = true;
+    Evaluator evaluator2(settings);
+    evaluator2.check(program, terms, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id);
+    return;  // error
+  }
+  Log::get().info("Validation successful");
+  // match sequences
+  ApiClient api_client;
+  Sequence norm_seq;
+  const auto mode = Setup::getMiningMode();
+  auto seq_programs = manager->getFinder().findSequence(
+      program, norm_seq, manager->getSequences());
+  size_t matches = 0;
+  for (auto s : seq_programs) {
+    program = s.second;
+    setSubmittedBy(program);
+    auto r = manager->updateProgram(s.first, program);
+    if (r.first) {
+      // in client mode: submit the program to the API server
+      if (mode == MINING_MODE_CLIENT) {
+        api_client.postProgram(program);
+      }
+      matches++;
+    }
+  }
+  if (matches > 0) {
+    Log::get().info("Submitted programs for " + std::to_string(matches) +
+                    " matched sequences");
+  } else {
+    Log::get().info(
+        "Skipped submission because there exists already a (faster) program");
   }
 }
 

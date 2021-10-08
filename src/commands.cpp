@@ -47,24 +47,23 @@ void Commands::help() {
             << std::endl;
 
   std::cout << std::endl << "OEIS Commands:" << std::endl;
-  std::cout << "  mine [asm-file]     Mine programs for OEIS sequences (see -i)"
+  std::cout << "  mine                Mine programs for OEIS sequences (see -i)"
             << std::endl;
-  std::cout << "                      (optional argument is an initial program)"
+  std::cout << "  submit <id> <file>  Submit a program for an OEIS sequence"
             << std::endl;
-  std::cout << "  check <seq-id>      Check a program for an OEIS sequence "
+  std::cout << "  check <id>          Check a program for an OEIS sequence "
                "(see -b)"
             << std::endl;
   std::cout << "  maintain            Maintain all programs for OEIS sequences"
             << std::endl;
   std::cout << std::endl << "Targets:" << std::endl;
   std::cout
-      << "  <asm-file>          Path to a LODA file (file extension: *.asm)"
+      << "  <file>              Path to a LODA file (file extension: *.asm)"
       << std::endl;
-  std::cout << "  <seq-id>            ID of an OEIS integer sequence "
+  std::cout << "  <id>                ID of an OEIS integer sequence "
                "(example: A000045)"
             << std::endl;
-  std::cout << "  <program>           Either an <asm-file> or a <seq-id>"
-            << std::endl;
+  std::cout << "  <program>           Either an <file> or an <id>" << std::endl;
 
   std::cout << std::endl << "Options:" << std::endl;
   std::cout << "  -t <number>         Number of sequence terms (default: "
@@ -156,10 +155,16 @@ void Commands::minimize(const std::string& path) {
   ProgramUtil::print(program, std::cout);
 }
 
-void Commands::mine(const std::vector<std::string>& initial_progs) {
+void Commands::mine() {
   initLog(false);
   Miner miner(settings);
-  miner.mine(initial_progs);
+  miner.mine();
+}
+
+void Commands::submit(const std::string& id, const std::string& path) {
+  initLog(false);
+  Miner miner(settings);
+  miner.submit(id, path);
 }
 
 void Commands::maintain() {

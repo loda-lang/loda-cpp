@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Features
+
+* Added `submit` command to check and transfer hand-written programs.
+
 ### Bugfixes
 
 * Fix error in `mine_parallel.sh`: loda executable not found

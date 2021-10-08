@@ -22,7 +22,9 @@ class Commands {
 
   void minimize(const std::string& path);
 
-  void mine(const std::vector<std::string>& initial_progs);
+  void mine();
+
+  void submit(const std::string& id, const std::string& path);
 
   void maintain();
 
