@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Bugfixes
+
+* Fix crash during update using `setup` command on Ubuntu
+
 ## v21.10.8
 
 ### Features
