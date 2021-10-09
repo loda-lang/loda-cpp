@@ -2,7 +2,7 @@
   "miners": [
     {
       "name": "default",
-      "overwrite": "auto",
+      "overwrite": "none",
       "backoff": true,
       "generators": [
         "v1_1",
