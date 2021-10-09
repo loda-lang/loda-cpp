@@ -246,7 +246,6 @@ void Setup::runWizard() {
             << "This command will guide you through its setup." << std::endl
             << std::endl;
   checkLodaHome();
-  // TODO: check for updates
 
   loadSetup();
 
@@ -380,10 +379,22 @@ bool Setup::checkUpdate() {
     std::string line;
     std::getline(std::cin, line);
     if (line.empty() || line == "y" || line == "Y") {
+      const std::string exec_tmp =
+          LODA_HOME + "bin/loda-" + Version::PLATFORM + exe;
       const std::string exec_url =
           "https://github.com/loda-lang/loda-cpp/releases/download/" +
           latest_version + "/loda-" + Version::PLATFORM + exe;
-      Http::get(exec_url, exec_local, true, true);
+      Http::get(exec_url, exec_tmp, true, true);
+      std::string cmd = "chmod u+x " + exec_tmp;
+      if (system(cmd.c_str()) != 0) {
+        std::cout << "Error making file executable" << std::endl;
+        return false;
+      }
+      cmd = "mv " + exec_tmp + " " + exec_local;
+      if (system(cmd.c_str()) != 0) {
+        std::cout << "Error updating executable" << std::endl;
+        return false;
+      }
       std::cout << "Update installed. Restarting setup... " << std::endl
                 << std::endl;
       std::string new_setup = exec_local + " setup";
