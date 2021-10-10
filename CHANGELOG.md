@@ -7,6 +7,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 * Fix crash during update using `setup` command on Ubuntu
 * Fix `submit` command: overwrite existing programs if faster/better
 
+### Enhancements
+
+* Miner profile `update` uses overwrite mode `all`
+
 ## v21.10.8
 
 ### Features

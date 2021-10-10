@@ -260,11 +260,12 @@ bool OeisManager::shouldMatch(const OeisSequence &seq) const {
   }
 
   // too many invalid matches already?
+  bool too_many_matches = false;
   auto it = invalid_matches_map.find(seq.id);
   if (it != invalid_matches_map.end() && it->second > 0 &&
       (Random::get().gen() % it->second) >= 100)  // magic number
   {
-    return false;
+    too_many_matches = true;
   }
 
   // check if program exists
@@ -274,12 +275,15 @@ bool OeisManager::shouldMatch(const OeisSequence &seq) const {
   // decide based on overwrite mode
   switch (overwrite_mode) {
     case OverwriteMode::NONE:
-      return !prog_exists;
+      return !prog_exists && !too_many_matches;
 
     case OverwriteMode::ALL:
       return true;
 
     case OverwriteMode::AUTO: {
+      if (too_many_matches) {
+        return false;
+      }
       if (!prog_exists) {
         return true;
       }
