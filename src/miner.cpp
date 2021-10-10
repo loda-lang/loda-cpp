@@ -19,8 +19,8 @@ const std::string Miner::ANONYMOUS("anonymous");
 
 Miner::Miner(const Settings &settings) : settings(settings) {}
 
-void Miner::reload(bool load_generators) {
-  manager.reset(new OeisManager(settings));
+void Miner::reload(bool load_generators, bool force_overwrite) {
+  manager.reset(new OeisManager(settings, force_overwrite));
   manager->load();
   manager->getFinder();  // initializes matchers
   if (load_generators) {
@@ -154,9 +154,7 @@ void Miner::mine() {
 void Miner::submit(const std::string &id, const std::string &path) {
   Parser parser;
   auto program = parser.parse(path);
-  if (!manager) {
-    reload(false);
-  }
+  reload(false, true);
   OeisSequence seq(id);
   Settings settings(this->settings);
   settings.print_as_b_file = false;
@@ -193,8 +191,14 @@ void Miner::submit(const std::string &id, const std::string &path) {
     }
   }
   if (matches > 0) {
-    Log::get().info("Submitted programs for " + std::to_string(matches) +
-                    " matched sequences");
+    if (mode == MINING_MODE_LOCAL) {
+      Log::get().info("Stored programs for " + std::to_string(matches) +
+                      " matched sequences in local programs directory");
+      Log::get().warn("Skipping submission to server due to local mode");
+    } else {
+      Log::get().info("Submitted programs for " + std::to_string(matches) +
+                      " matched sequences");
+    }
   } else {
     Log::get().info(
         "Skipped submission because there exists already a (faster) program");

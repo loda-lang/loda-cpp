@@ -27,7 +27,7 @@ class Miner {
   void submit(const std::string &id, const std::string &path);
 
  private:
-  void reload(bool load_generators);
+  void reload(bool load_generators, bool force_overwrite = false);
 
   void ensureSubmittedBy(Program &program);
 
