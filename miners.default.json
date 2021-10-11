@@ -102,7 +102,7 @@
     },
     {
       "name": "update-v4",
-      "overwrite": "auto",
+      "overwrite": "all",
       "backoff": true,
       "generators": [
         "v4"
