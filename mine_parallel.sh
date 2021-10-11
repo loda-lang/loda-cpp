@@ -75,5 +75,5 @@ trap stop_miners INT
 
 while [ true ]; do
   ensure_miners $@
-  sleep 600
+  sleep 21600
 done

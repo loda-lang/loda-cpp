@@ -575,19 +575,14 @@ std::string OeisManager::isOptimizedBetter(Program existing, Program optimized,
     return "";
   }
 
-  auto terms = seq.getTerms(OeisSequence::EXTENDED_SEQ_LENGTH);
-  if (terms.empty()) {
-    Log::get().error("Error fetching b-file for " + seq.id_str(), true);
-  }
-
   // compare number of successfully computed terms
-  auto optimized_check = evaluator.check(
-      optimized, terms, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id);
-  auto existing_check = evaluator.check(
-      existing, terms, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id);
-  if (optimized_check.second.runs > existing_check.second.runs) {
+  static const int64_t num_terms = 10000;  // magic number
+  Sequence tmp;
+  const auto optimized_steps = evaluator.eval(optimized, tmp, num_terms, false);
+  const auto existing_steps = evaluator.eval(existing, tmp, num_terms, false);
+  if (optimized_steps.runs > existing_steps.runs) {
     return "Better";
-  } else if (optimized_check.second.runs < existing_check.second.runs) {
+  } else if (optimized_steps.runs < existing_steps.runs) {
     return "";  // optimized is worse
   }
 
@@ -601,12 +596,10 @@ std::string OeisManager::isOptimizedBetter(Program existing, Program optimized,
   }
 
   // ...and compare number of execution cycles
-  auto existing_cycles = existing_check.second.total;
-  auto optimized_cycles = optimized_check.second.total;
-  if (optimized_cycles < existing_cycles) {
+  if (optimized_steps.total < existing_steps.total) {
     return "Faster";
-  } else if (optimized_cycles > existing_cycles) {
-    return "";
+  } else if (optimized_steps.total > existing_steps.total) {
+    return "";  // optimized is worse
   }
 
   return "";
