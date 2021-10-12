@@ -67,6 +67,9 @@ Number Semantics::pow(const Number& base, const Number& exp) {
       Number res = 1;
       for (int64_t e = exp.asInt(); e > 0; e--) {
         res *= base;
+        if (res == Number::INF) {
+          break;
+        }
       }
       // TODO: fix fast pow
       /*
