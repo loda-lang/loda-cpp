@@ -20,7 +20,7 @@
     },
     {
       "name": "update",
-      "overwrite": "all",
+      "overwrite": "auto",
       "backoff": true,
       "generators": [
         "v1_2",
@@ -102,7 +102,7 @@
     },
     {
       "name": "update-v4",
-      "overwrite": "all",
+      "overwrite": "auto",
       "backoff": true,
       "generators": [
         "v4"
