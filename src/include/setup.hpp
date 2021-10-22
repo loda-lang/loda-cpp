@@ -19,7 +19,7 @@ class Setup {
 
   static MiningMode getMiningMode();
 
-  static const std::string& getMinersConfig();
+  static std::string getMinersConfig();
 
   static const std::string getSubmittedBy();
 
@@ -68,7 +68,6 @@ class Setup {
   static bool checkProgramsHome();
   static bool checkUpdate();
   static bool checkMiningMode();
-  static bool checkMinersConfig();
   static bool checkMineParallelScript();
   static bool checkSubmittedBy();
   static bool checkMaxMemory();

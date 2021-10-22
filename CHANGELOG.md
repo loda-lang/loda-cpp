@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+# Features
+
+* Auto update default miner configuration
+
 ## v21.10.12
 
 ### Bugfixes

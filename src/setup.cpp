@@ -61,11 +61,21 @@ void Setup::setLodaHome(const std::string& home) {
   Log::get().info("Using LODA home directory " + LODA_HOME);
 }
 
-const std::string& Setup::getMinersConfig() {
-  if (MINERS_CONFIG.empty()) {
-    setMinersConfig(getLodaHome() + "miners.default.json");
+std::string Setup::getMinersConfig() {
+  if (!MINERS_CONFIG.empty()) {
+    return MINERS_CONFIG;
   }
-  return MINERS_CONFIG;
+  const std::string default_config = getLodaHome() + "miners.default.json";
+  const auto age_in_days = getFileAgeInDays(default_config);
+  if (age_in_days < 0 || age_in_days >= getUpdateIntervalInDays()) {
+    FolderLock lock(getLodaHome());
+    const std::string url =
+        "https://raw.githubusercontent.com/loda-lang/loda-cpp/main/"
+        "miners.default.json";
+    std::remove(default_config.c_str());
+    Http::get(url, default_config);
+  }
+  return default_config;
 }
 
 const std::string Setup::getSubmittedBy() {
@@ -263,9 +273,6 @@ void Setup::runWizard() {
   ensureEnvVar("PATH", "$PATH:" + LODA_HOME + "bin",
                "Add LODA command-line tool to path", false);
 
-  if (!checkMinersConfig()) {
-    return;
-  }
   if (!checkMineParallelScript()) {
     return;
   }
@@ -513,16 +520,6 @@ bool Setup::updateFile(const std::string& local_file, const std::string& url,
     std::cout << std::endl;
   }
   return true;
-}
-
-bool Setup::checkMinersConfig() {
-  const std::string local_file = LODA_HOME + "miners.default.json";
-  const std::string url =
-      "https://raw.githubusercontent.com/loda-lang/loda-cpp/" +
-      Version::BRANCH + "/miners.default.json";
-  const std::string header = "{";
-  const std::string marker = "  \"version\": \"" + Version::VERSION + "\",";
-  return updateFile(local_file, url, header, marker, false);
 }
 
 bool Setup::checkMineParallelScript() {
