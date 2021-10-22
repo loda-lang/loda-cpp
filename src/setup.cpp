@@ -65,6 +65,10 @@ std::string Setup::getMinersConfig() {
   if (!MINERS_CONFIG.empty()) {
     return MINERS_CONFIG;
   }
+  const std::string custom_config = getLodaHome() + "miners.json";
+  if (isFile(custom_config)) {
+    return custom_config;
+  }
   const std::string default_config = getLodaHome() + "miners.default.json";
   const auto age_in_days = getFileAgeInDays(default_config);
   if (age_in_days < 0 || age_in_days >= getUpdateIntervalInDays()) {

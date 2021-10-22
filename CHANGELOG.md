@@ -4,7 +4,8 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Features
 
-* Auto update default miner configuration
+* Support custom miner configuration file `miners.json`
+* Auto update default miner configuration file `miners.default.json`
 
 ### Enhancements
 
