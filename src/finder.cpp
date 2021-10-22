@@ -26,9 +26,14 @@ Finder::Finder(const Settings &settings)
   }
 
   // create matchers
-  matchers.resize(config.matchers.size());
-  for (size_t i = 0; i < config.matchers.size(); i++) {
-    matchers[i] = Matcher::Factory::create(config.matchers[i]);
+  matchers.clear();
+  for (auto m : config.matchers) {
+    try {
+      auto matcher = Matcher::Factory::create(m);
+      matchers.emplace_back(std::move(matcher));
+    } catch (const std::exception &) {
+      Log::get().warn("Ignoring error while loading " + m.type + " matcher");
+    }
   }
 
   // reset matcher stats

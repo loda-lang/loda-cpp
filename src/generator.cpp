@@ -35,7 +35,7 @@ Generator::UPtr Generator::Factory::createGenerator(const Config &config,
     }
     default: {
       Log::get().error(
-          "Invalid generator version: " + std::to_string(config.version), true);
+          "Unknown generator version: " + std::to_string(config.version), true);
       break;
     }
   }
@@ -319,14 +319,20 @@ MultiGenerator::MultiGenerator(const Settings &settings, const Stats &stats,
                                bool print_info)
     : scheduler(60)  // 1 minute
 {
-  auto config = ConfigLoader::load(settings);
-  configs = config.generators;
-  if (configs.empty()) {
-    Log::get().error("No generators configurations found", true);
+  const auto config = ConfigLoader::load(settings);
+  configs.clear();
+  generators.clear();
+  for (auto c : config.generators) {
+    try {
+      auto gen = Generator::Factory::createGenerator(c, stats);
+      generators.emplace_back(std::move(gen));
+      configs.push_back(c);
+    } catch (std::exception &) {
+      Log::get().warn("Ignoring error while loading generator");
+    }
   }
-  generators.resize(configs.size());
-  for (size_t i = 0; i < configs.size(); i++) {
-    generators[i] = Generator::Factory::createGenerator(configs[i], stats);
+  if (generators.empty()) {
+    Log::get().error("No valid generators configurations found", true);
   }
   generator_index = Random::get().gen() % configs.size();
 

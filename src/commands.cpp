@@ -23,7 +23,7 @@ void Commands::initLog(bool silent) {
   } else {
     Log::get().silent = false;
     Log::get().info("Starting " + Version::INFO +
-                    ". See https://loda-lang.org");
+                    ". See https://loda-lang.org/");
   }
 }
 
