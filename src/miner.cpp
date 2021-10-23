@@ -113,8 +113,8 @@ void Miner::mine() {
           api_client.postProgram(program);
         }
         // mutate successful program
-        if (progs.size() < 1000 || Setup::hasMemory()) {
-          mutator.mutateConstants(program, 100, progs);
+        if (mode != MINING_MODE_SERVER && progs.size() < 1000) {
+          mutator.mutateConstants(program, 100, progs);  // magic number
         }
       }
     }
