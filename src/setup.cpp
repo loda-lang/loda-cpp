@@ -70,14 +70,16 @@ std::string Setup::getMinersConfig() {
     return custom_config;
   }
   const std::string default_config = getLodaHome() + "miners.default.json";
-  const auto age_in_days = getFileAgeInDays(default_config);
-  if (age_in_days < 0 || age_in_days >= getUpdateIntervalInDays()) {
+  {
     FolderLock lock(getLodaHome());
-    const std::string url =
-        "https://raw.githubusercontent.com/loda-lang/loda-cpp/main/"
-        "miners.default.json";
-    std::remove(default_config.c_str());
-    Http::get(url, default_config);
+    const auto age_in_days = getFileAgeInDays(default_config);
+    if (age_in_days < 0 || age_in_days >= getUpdateIntervalInDays()) {
+      const std::string url =
+          "https://raw.githubusercontent.com/loda-lang/loda-cpp/main/"
+          "miners.default.json";
+      std::remove(default_config.c_str());
+      Http::get(url, default_config);
+    }
   }
   return default_config;
 }
