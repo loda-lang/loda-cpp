@@ -8,7 +8,8 @@
         "v1_1",
         "v2",
         "v3",
-        "v5"
+        "v5",
+        "v6"
       ],
       "matchers": [
         "direct",
@@ -26,7 +27,8 @@
         "v1_2",
         "v2",
         "v3",
-        "v5"
+        "v5",
+        "v6"
       ],
       "matchers": [
         "direct",
@@ -180,6 +182,10 @@
       "name": "v5",
       "version": 5,
       "length": 30
+    },
+    {
+      "name": "v6",
+      "version": 6
     }
   ]
 }

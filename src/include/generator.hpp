@@ -72,6 +72,8 @@ class Generator {
                            const std::vector<int64_t> &written_cells);
 
   void ensureMeaningfulLoops(Program &p);
+
+  int64_t getRandomProgramId();
 };
 
 class MultiGenerator {
