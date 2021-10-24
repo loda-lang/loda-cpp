@@ -33,6 +33,8 @@ class ProgramUtil {
                                  std::unordered_set<int64_t> &used_cells,
                                  int64_t &larged_used, int64_t max_memory);
 
+  static int64_t getLargestDirectMemoryCell(const Program &p);
+
   static std::string operandToString(const Operand &op);
 
   static std::string operationToString(const Operation &op);
@@ -59,4 +61,6 @@ class ProgramUtil {
   static std::string getSubmittedBy(const Program &p);
 
   static const std::string SUBMITTED_BY_PREFIX;
+
+  static void avoidNopOrOverflow(Operation &op);
 };

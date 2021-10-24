@@ -13,6 +13,8 @@ class Mutator {
 
   void mutateRandom(Program &program);
 
+  void mutateOperation(Operation &op, int64_t num_cells);
+
   void mutateConstants(const Program &program, size_t num_results,
                        std::stack<Program> &result);
 

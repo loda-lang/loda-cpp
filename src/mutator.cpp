@@ -44,34 +44,46 @@ int64_t Mutator::getRandomProgramId() {
 }
 
 void Mutator::mutateRandom(Program &program) {
-  Log::get().info("Mutating program randomly");
+  // get number of used memory cells
+  const int64_t num_cells =
+      ProgramUtil::getLargestDirectMemoryCell(program) + 1;
 
-  // mutate existing operations
-  if (!program.ops.empty()) {
-    int64_t num_mutations = (program.ops.size() / 5) + 1;
-    num_mutations = (Random::get().gen() % num_mutations) + 1;
-    for (; num_mutations > 0; num_mutations--) {
-      Operation &op = program.ops[getRandomPos(program)];
-      if (ProgramUtil::isArithmetic(op.type)) {
-        op.comment = "mutated from " + ProgramUtil::operationToString(op);
-        op.type = operation_types.at(operation_types_dist(Random::get().gen));
-        if ((Random::get().gen() % 4) != 0) {
-          op.source = Operand(Operand::Type::CONSTANT,
-                              constants.at(constants_dist(Random::get().gen)));
-        } else {
-          // TODO
-        }
-        // TODO
-
-      } else if (op.type == Operation::Type::SEQ) {
-        op.comment = "mutated from " + ProgramUtil::operationToString(op);
-        op.source.value = getRandomProgramId();
-      }
+  // mutate existing operations or add new ones
+  int64_t num_mutations = (program.ops.size() / 3) + 1;
+  num_mutations = (Random::get().gen() % num_mutations) + 1;
+  for (; num_mutations > 0; num_mutations--) {
+    if (Random::get().gen() % 2 == 0 || program.ops.empty()) {
+      // add new operation
+      const int64_t pos = Random::get().gen() % program.ops.size();
+      program.ops.insert(
+          program.ops.begin() + pos,
+          Operation(Operation::Type::MOV, Operand(Operand::Type::DIRECT, 0),
+                    Operand(Operand::Type::CONSTANT, 0)));
+      mutateOperation(program.ops[pos], num_cells);
+    } else {
+      // mutate existin operation
+      mutateOperation(program.ops[getRandomPos(program)], num_cells);
     }
   }
+}
 
-  // add new operations
-  // TODO
+void Mutator::mutateOperation(Operation &op, int64_t num_cells) {
+  if (ProgramUtil::isArithmetic(op.type)) {
+    // op.comment = "mutated from " + ProgramUtil::operationToString(op);
+    op.type = operation_types.at(operation_types_dist(Random::get().gen));
+    if ((Random::get().gen() % 3) != 0) {
+      op.source = Operand(Operand::Type::CONSTANT,
+                          constants.at(constants_dist(Random::get().gen)));
+    } else {
+      op.source =
+          Operand(Operand::Type::DIRECT, Random::get().gen() % num_cells);
+    }
+    op.target = Operand(Operand::Type::DIRECT, Random::get().gen() % num_cells);
+    ProgramUtil::avoidNopOrOverflow(op);
+  } else if (op.type == Operation::Type::SEQ) {
+    // op.comment = "mutated from " + ProgramUtil::operationToString(op);
+    op.source.value = getRandomProgramId();
+  }
 }
 
 void Mutator::mutateConstants(const Program &program, size_t num_results,
