@@ -11,12 +11,8 @@ std::discrete_distribution<> constantsDist(const std::vector<Number> &constants,
                                            const Stats &stats) {
   std::vector<double> p(constants.size());
   for (size_t i = 0; i < constants.size(); i++) {
-    int64_t rate = stats.num_constants.at(constants[i]);
-    if (rate <= 0) {
-      Log::get().error(
-          "Unexpected stats for constant: " + constants[i].to_string(), true);
-    }
-    p[i] = rate;
+    auto it = stats.num_constants.find(constants[i]);
+    p[i] = (it != stats.num_constants.end()) ? it->second : 1.0;
   }
   return std::discrete_distribution<>(p.begin(), p.end());
 }

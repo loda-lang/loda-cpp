@@ -2,7 +2,17 @@
 
 #include "program_util.hpp"
 
+#define CONSTANTS_START -100
+#define CONSTANTS_END 1000
+
 Mutator::Mutator(const Stats &stats) : found_programs(stats.found_programs) {
+  // initialize constants distribution from stats
+  constants.resize(CONSTANTS_END - CONSTANTS_START + 1);
+  for (int64_t i = 0; i <= CONSTANTS_END - CONSTANTS_START; i++) {
+    constants[i] = i + CONSTANTS_START;
+  }
+  constants_dist = constantsDist(constants, stats);
+
   // initialize operation types distribution from stats
   for (auto type : Operation::Types) {
     if (ProgramUtil::isArithmetic(type)) {
@@ -45,6 +55,14 @@ void Mutator::mutateRandom(Program &program) {
       if (ProgramUtil::isArithmetic(op.type)) {
         op.comment = "mutated from " + ProgramUtil::operationToString(op);
         op.type = operation_types.at(operation_types_dist(Random::get().gen));
+        if ((Random::get().gen() % 4) != 0) {
+          op.source = Operand(Operand::Type::CONSTANT,
+                              constants.at(constants_dist(Random::get().gen)));
+        } else {
+          // TODO
+        }
+        // TODO
+
       } else if (op.type == Operation::Type::SEQ) {
         op.comment = "mutated from " + ProgramUtil::operationToString(op);
         op.source.value = getRandomProgramId();
@@ -53,6 +71,7 @@ void Mutator::mutateRandom(Program &program) {
   }
 
   // add new operations
+  // TODO
 }
 
 void Mutator::mutateConstants(const Program &program, size_t num_results,
