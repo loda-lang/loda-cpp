@@ -17,6 +17,9 @@ class Mutator {
                        std::stack<Program> &result);
 
  private:
+  std::vector<bool> found_programs;
   std::vector<Operation::Type> operation_types;
   std::discrete_distribution<> operation_types_dist;
+
+  int64_t getRandomProgramId();
 };

@@ -2,7 +2,7 @@
 
 #include "program_util.hpp"
 
-Mutator::Mutator(const Stats &stats) {
+Mutator::Mutator(const Stats &stats) : found_programs(stats.found_programs) {
   // initialize operation types distribution from stats
   for (auto type : Operation::Types) {
     if (ProgramUtil::isArithmetic(type)) {
@@ -24,6 +24,15 @@ int64_t getRandomPos(const Program &program) {
   return pos;
 }
 
+int64_t Mutator::getRandomProgramId() {
+  // TODO: avoid duplicate function
+  int64_t id;
+  do {
+    id = Random::get().gen() % found_programs.size();
+  } while (!found_programs[id]);
+  return id;
+}
+
 void Mutator::mutateRandom(Program &program) {
   Log::get().info("Mutating program randomly");
 
@@ -37,8 +46,8 @@ void Mutator::mutateRandom(Program &program) {
         op.comment = "mutated from " + ProgramUtil::operationToString(op);
         op.type = operation_types.at(operation_types_dist(Random::get().gen));
       } else if (op.type == Operation::Type::SEQ) {
-        // op.comment = "mutated from " + ProgramUtil::operationToString(op);
-        // op.source.value = get;
+        op.comment = "mutated from " + ProgramUtil::operationToString(op);
+        op.source.value = getRandomProgramId();
       }
     }
   }

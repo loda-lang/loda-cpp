@@ -191,6 +191,7 @@ void Generator::fixCalls(Program &p) {
 }
 
 int64_t Generator::getRandomProgramId() {
+  // TODO: avoid duplicate function
   int64_t id;
   do {
     id = Random::get().gen() % found_programs.size();
