@@ -114,7 +114,7 @@ void Miner::mine() {
         }
         // mutate successful program
         if (mode != MINING_MODE_SERVER && progs.size() < 1000) {
-          mutator.mutateConstants(program, 100, progs);  // magic number
+          mutator.mutateCopies(program, 100, progs);  // magic number
         }
       }
     }

@@ -15,6 +15,9 @@ class Mutator {
 
   void mutateOperation(Operation &op, int64_t num_cells);
 
+  void mutateCopies(const Program &program, size_t num_results,
+                    std::stack<Program> &result);
+
   void mutateConstants(const Program &program, size_t num_results,
                        std::stack<Program> &result);
 

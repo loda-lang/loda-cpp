@@ -11,6 +11,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Enhancements
 
 * Improved program fetching in server mode
+* Generalized mutations of new programs
 
 ## v21.10.12
 
