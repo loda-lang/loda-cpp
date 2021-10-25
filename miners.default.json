@@ -180,6 +180,10 @@
       "name": "v5",
       "version": 5,
       "length": 30
+    },
+    {
+      "name": "v6",
+      "version": 6
     }
   ]
 }

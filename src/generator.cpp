@@ -6,6 +6,7 @@
 #include "generator_v3.hpp"
 #include "generator_v4.hpp"
 #include "generator_v5.hpp"
+#include "generator_v6.hpp"
 #include "semantics.hpp"
 #include "util.hpp"
 
@@ -31,6 +32,10 @@ Generator::UPtr Generator::Factory::createGenerator(const Config &config,
     }
     case 5: {
       generator.reset(new GeneratorV5(config, stats));
+      break;
+    }
+    case 6: {
+      generator.reset(new GeneratorV6(config, stats));
       break;
     }
     default: {
@@ -178,14 +183,20 @@ void Generator::fixCalls(Program &p) {
           (op.source.value < Number::ZERO ||
            !(op.source.value < Number(found_programs.size())) ||
            !found_programs[op.source.value.asInt()])) {
-        int64_t id;
-        do {
-          id = Random::get().gen() % found_programs.size();
-        } while (!found_programs[id]);
-        op.source = Operand(Operand::Type::CONSTANT, Number(id));
+        op.source =
+            Operand(Operand::Type::CONSTANT, Number(getRandomProgramId()));
       }
     }
   }
+}
+
+int64_t Generator::getRandomProgramId() {
+  // TODO: avoid duplicate function
+  int64_t id;
+  do {
+    id = Random::get().gen() % found_programs.size();
+  } while (!found_programs[id]);
+  return id;
 }
 
 void Generator::ensureSourceNotOverwritten(Program &p) {

@@ -173,6 +173,19 @@ bool ProgramUtil::getUsedMemoryCells(const Program &p,
   return true;
 }
 
+int64_t ProgramUtil::getLargestDirectMemoryCell(const Program &p) {
+  int64_t largest = 0;
+  for (auto &op : p.ops) {
+    if (op.source.type == Operand::Type::DIRECT) {
+      largest = std::max<int64_t>(largest, op.source.value.asInt());
+    }
+    if (op.target.type == Operand::Type::DIRECT) {
+      largest = std::max<int64_t>(largest, op.target.value.asInt());
+    }
+  }
+  return largest;
+}
+
 std::string getIndent(int indent) {
   std::string s;
   for (int i = 0; i < indent; i++) {
@@ -461,3 +474,27 @@ std::string ProgramUtil::getSubmittedBy(const Program &p) {
 }
 
 const std::string ProgramUtil::SUBMITTED_BY_PREFIX = "Submitted by";
+
+void ProgramUtil::avoidNopOrOverflow(Operation &op) {
+  if (op.source.type == Operand::Type::CONSTANT) {
+    if (op.source.value == 0 &&
+        (op.type == Operation::Type::ADD || op.type == Operation::Type::SUB ||
+         op.type == Operation::Type::LPB)) {
+      op.source.value = 1;
+    }
+    if ((op.source.value == 0 || op.source.value == 1) &&
+        (op.type == Operation::Type::MUL || op.type == Operation::Type::DIV ||
+         op.type == Operation::Type::DIF || op.type == Operation::Type::MOD ||
+         op.type == Operation::Type::POW || op.type == Operation::Type::GCD ||
+         op.type == Operation::Type::BIN)) {
+      op.source.value = 2;
+    }
+  } else if (op.source.type == Operand::Type::DIRECT) {
+    if ((op.source.value == op.target.value) &&
+        (op.type == Operation::Type::MOV || op.type == Operation::Type::DIV ||
+         op.type == Operation::Type::DIF || op.type == Operation::Type::MOD ||
+         op.type == Operation::Type::GCD || op.type == Operation::Type::BIN)) {
+      op.target.value += Number::ONE;
+    }
+  }
+}

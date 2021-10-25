@@ -36,7 +36,7 @@ void Miner::mine() {
     reload(true);
   }
   ApiClient api_client;
-  Mutator mutator;
+  Mutator mutator(manager->getStats());
   Parser parser;
   std::stack<Program> progs;
   Sequence norm_seq;

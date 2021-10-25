@@ -7,6 +7,7 @@
 #include <set>
 #include <stdexcept>
 
+#include "distribution.hpp"
 #include "interpreter.hpp"
 #include "number.hpp"
 #include "optimizer.hpp"
@@ -16,37 +17,6 @@
 #include "stats.hpp"
 
 #define POSITION_RANGE 100
-
-std::discrete_distribution<> uniformDist(size_t size) {
-  std::vector<double> p(size, 100.0);
-  return std::discrete_distribution<>(p.begin(), p.end());
-}
-
-std::discrete_distribution<> operationDist(
-    const Stats &stats, const std::vector<Operation::Type> &operation_types) {
-  std::vector<double> p(operation_types.size());
-  for (size_t i = 0; i < operation_types.size(); i++) {
-    int64_t rate =
-        stats.num_ops_per_type.at(static_cast<size_t>(operation_types[i]));
-    rate = std::max<int64_t>(rate / 1000, 1);
-    p[i] = rate;
-  }
-  return std::discrete_distribution<>(p.begin(), p.end());
-}
-
-std::discrete_distribution<> constantsDist(const std::vector<Number> &constants,
-                                           const Stats &stats) {
-  std::vector<double> p(constants.size());
-  for (size_t i = 0; i < constants.size(); i++) {
-    int64_t rate = stats.num_constants.at(constants[i]);
-    if (rate <= 0) {
-      Log::get().error(
-          "Unexpected stats for constant: " + constants[i].to_string(), true);
-    }
-    p[i] = rate;
-  }
-  return std::discrete_distribution<>(p.begin(), p.end());
-}
 
 GeneratorV1::GeneratorV1(const Config &config, const Stats &stats)
     : Generator(config, stats) {
@@ -195,27 +165,7 @@ std::pair<Operation, double> GeneratorV1::generateOperation() {
   }
 
   // avoid meaningless zeros or singularities
-  if (op.source.type == Operand::Type::CONSTANT) {
-    if (op.source.value == 0 &&
-        (op.type == Operation::Type::ADD || op.type == Operation::Type::SUB ||
-         op.type == Operation::Type::LPB)) {
-      op.source.value = 1;
-    }
-    if ((op.source.value == 0 || op.source.value == 1) &&
-        (op.type == Operation::Type::MUL || op.type == Operation::Type::DIV ||
-         op.type == Operation::Type::DIF || op.type == Operation::Type::MOD ||
-         op.type == Operation::Type::POW || op.type == Operation::Type::GCD ||
-         op.type == Operation::Type::BIN)) {
-      op.source.value = 2;
-    }
-  } else if (op.source.type == Operand::Type::DIRECT) {
-    if ((op.source.value == op.target.value) &&
-        (op.type == Operation::Type::MOV || op.type == Operation::Type::DIV ||
-         op.type == Operation::Type::DIF || op.type == Operation::Type::MOD ||
-         op.type == Operation::Type::GCD || op.type == Operation::Type::BIN)) {
-      op.target.value = Semantics::add(op.target.value, Number::ONE);
-    }
-  }
+  ProgramUtil::avoidNopOrOverflow(op);
 
   std::pair<Operation, double> next_op;
   next_op.first = op;
