@@ -5,10 +5,11 @@
       "overwrite": "none",
       "backoff": true,
       "generators": [
-        "v1_1",
+        "v1_simple",
         "v2",
         "v3",
-        "v5"
+        "v5",
+        "v6"
       ],
       "matchers": [
         "direct",
@@ -23,34 +24,15 @@
       "overwrite": "auto",
       "backoff": true,
       "generators": [
-        "v1_2",
         "v2",
         "v3",
-        "v5"
+        "v5",
+        "v6"
       ],
       "matchers": [
         "direct",
         "linear1",
         "linear2",
-        "binary",
-        "decimal"
-      ]
-    },
-    {
-      "name": "slow",
-      "overwrite": "auto",
-      "backoff": true,
-      "generators": [
-        "v1_1",
-        "v2",
-        "v3",
-        "v5"
-      ],
-      "matchers": [
-        "direct",
-        "linear1",
-        "linear2",
-        "delta",
         "binary",
         "decimal"
       ]
@@ -60,7 +42,23 @@
       "overwrite": "none",
       "backoff": true,
       "generators": [
-        "v1_3"
+        "v1_hard"
+      ],
+      "matchers": [
+        "direct",
+        "linear1",
+        "linear2",
+        "binary",
+        "decimal",
+        "delta"
+      ]
+    },
+    {
+      "name": "blocks",
+      "overwrite": "auto",
+      "backoff": true,
+      "generators": [
+        "v5"
       ],
       "matchers": [
         "direct",
@@ -71,11 +69,11 @@
       ]
     },
     {
-      "name": "blocks",
+      "name": "mutate",
       "overwrite": "auto",
       "backoff": true,
       "generators": [
-        "v5"
+        "v6"
       ],
       "matchers": [
         "direct",
@@ -99,26 +97,11 @@
         "binary",
         "decimal"
       ]
-    },
-    {
-      "name": "update-v4",
-      "overwrite": "auto",
-      "backoff": true,
-      "generators": [
-        "v4"
-      ],
-      "matchers": [
-        "direct",
-        "linear1",
-        "linear2",
-        "binary",
-        "decimal"
-      ]
     }
   ],
   "generators": [
     {
-      "name": "v1_1",
+      "name": "v1_simple",
       "version": 1,
       "length": 45,
       "maxConstant": 6,
@@ -135,17 +118,7 @@
       ]
     },
     {
-      "name": "v1_2",
-      "version": 1,
-      "length": 60,
-      "maxConstant": 6,
-      "maxIndex": 6,
-      "loops": true,
-      "calls": true,
-      "indirectAccess": false
-    },
-    {
-      "name": "v1_3",
+      "name": "v1_hard",
       "version": 1,
       "length": 60,
       "maxConstant": 10,
