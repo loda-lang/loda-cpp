@@ -30,7 +30,7 @@ void GeneratorV6::nextProgram() {
     try {
       program = parser.parse(path);
       ProgramUtil::removeOps(program, Operation::Type::NOP);
-      Log::get().info("Loaded template: " + path);
+      // Log::get().debug("Loaded template: " + path);
       return;
     } catch (std::exception &) {
       Log::get().warn("Cannot load program " + path);

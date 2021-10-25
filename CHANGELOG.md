@@ -6,6 +6,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Support custom miner configuration file `miners.json`
 * Auto update default miner configuration file `miners.default.json`
+* New program generator (v6) which mutates existing programs
 
 ### Enhancements
 
