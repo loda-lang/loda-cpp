@@ -25,7 +25,7 @@ Mutator::Mutator(const Stats &stats) : found_programs(stats.found_programs) {
 int64_t getRandomPos(const Program &program) {
   int64_t pos = Random::get().gen() % program.ops.size();
   if (program.ops[pos].type == Operation::Type::LPB &&
-      pos + 1 < program.ops.size()) {
+      static_cast<size_t>(pos + 1) < program.ops.size()) {
     pos++;
   }
   if (program.ops[pos].type == Operation::Type::LPE && pos > 0) {
