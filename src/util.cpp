@@ -290,14 +290,8 @@ bool AdaptiveScheduler::isTargetReached() {
     if (seconds >= target_seconds) {
       return true;
     }
-    if (2 * seconds < target_seconds) {
-      next_check *= 2;
-    } else {
-      double speed = static_cast<double>(total_checks) /
-                     static_cast<double>(std::max<int64_t>(seconds, 1));
-      next_check += std::max<int64_t>(
-          static_cast<int64_t>((target_seconds - seconds) * speed), 1);
-    }
+    next_check += std::max<int64_t>(
+        static_cast<int64_t>(static_cast<double>(next_check) * 0.1), 1);
   }
   return false;
 }

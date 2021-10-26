@@ -4,6 +4,7 @@
     "makefile.makeDirectory": "${workspaceFolder}/src",
     "makefile.makefilePath": "${workspaceFolder}/src/Makefile",
     "files.associations": {
-        "map": "cpp"
+        "map": "cpp",
+        "chrono": "cpp"
     }
 }
