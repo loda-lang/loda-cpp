@@ -276,28 +276,38 @@ std::vector<std::string> Settings::parseArgs(int argc, char *argv[]) {
 }
 
 AdaptiveScheduler::AdaptiveScheduler(int64_t target_seconds)
-    : target_seconds(target_seconds) {
+    : setup_time(std::chrono::steady_clock::now()),
+      target_milliseconds(target_seconds * 1000),
+      total_checks(0) {
   reset();
 }
 
 bool AdaptiveScheduler::isTargetReached() {
+  current_checks++;
   total_checks++;
-  if (total_checks >= next_check) {
-    auto cur_time = std::chrono::steady_clock::now();
-    int64_t seconds =
-        std::chrono::duration_cast<std::chrono::seconds>(cur_time - start_time)
-            .count();
-    if (seconds >= target_seconds) {
+  if (current_checks >= next_check) {
+    int64_t milliseconds, speed;
+    const auto current_time = std::chrono::steady_clock::now();
+    milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
+                       current_time - start_time)
+                       .count();
+    if (milliseconds >= target_milliseconds) {
       return true;
     }
-    next_check += std::max<int64_t>(
-        static_cast<int64_t>(static_cast<double>(next_check) * 0.1), 1);
+    milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
+                       current_time - setup_time)
+                       .count();
+    speed = (1000 * total_checks) / std::max<int64_t>(milliseconds, 1);
+    next_check += std::min<int64_t>(std::max<int64_t>(speed, 1), 1000);
+    // Log::get().info("next check " + std::to_string(next_check) + " speed " +
+    //                std::to_string(speed) + " target " +
+    //                std::to_string(target_milliseconds));
   }
   return false;
 }
 
 void AdaptiveScheduler::reset() {
-  total_checks = 0;
+  current_checks = 0;
   next_check = 1;
   start_time = std::chrono::steady_clock::now();
 }

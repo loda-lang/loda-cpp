@@ -78,8 +78,10 @@ class AdaptiveScheduler {
   void reset();
 
  private:
+  const std::chrono::time_point<std::chrono::steady_clock> setup_time;
   std::chrono::time_point<std::chrono::steady_clock> start_time;
-  const int64_t target_seconds;
+  const int64_t target_milliseconds;
+  size_t current_checks;
   size_t total_checks;
   size_t next_check;
 };

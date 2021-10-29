@@ -66,6 +66,7 @@ void Miner::mine() {
   std::string submitted_by;
   const int64_t programs_to_fetch = 50;  // magic number
   int64_t current_fetch = (mode == MINING_MODE_SERVER) ? programs_to_fetch : 0;
+  int64_t processed = 0;
   while (true) {
     // server mode: fetch new program
     if (progs.empty() && current_fetch > 0 && mode == MINING_MODE_SERVER) {
@@ -80,7 +81,7 @@ void Miner::mine() {
     }
 
     // generate new program if needed
-    if (progs.empty()) {
+    if (progs.empty() || (processed % 10) == 0) {
       multi_generator
           ->next();  // need to call "next" *before* generating the programs
       generator = multi_generator->getGenerator();
@@ -119,6 +120,7 @@ void Miner::mine() {
       }
     }
     generator->stats.generated++;
+    processed++;
 
     // regular task: fetch programs from API server
     if (mode == MINING_MODE_SERVER && api_scheduler.isTargetReached()) {
