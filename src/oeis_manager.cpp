@@ -508,6 +508,8 @@ void OeisManager::dumpProgram(size_t id, Program &p, const std::string &file,
   }
   nop.comment = seq.getTerms(OeisSequence::DEFAULT_SEQ_LENGTH).to_string();
   tmp.ops.push_back(nop);
+  nop.comment.clear();
+  tmp.ops.push_back(nop);
   p.ops.insert(p.ops.begin(), tmp.ops.begin(), tmp.ops.end());
   std::ofstream out(file);
   ProgramUtil::print(p, out);
