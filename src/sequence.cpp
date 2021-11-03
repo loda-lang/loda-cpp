@@ -38,6 +38,15 @@ bool Sequence::is_linear(size_t start) const {
   return true;
 }
 
+int64_t Sequence::get_first_non_decreasing_term() const {
+  for (size_t i = 1; i < size(); i++) {
+    if (!((*this)[i - 1] < (*this)[i])) {
+      return i;
+    }
+  }
+  return -1;
+}
+
 bool Sequence::align(const Sequence &s, int64_t max_offset) {
   // check if they agree on prefix already
   size_t min_length = std::min(size(), s.size());

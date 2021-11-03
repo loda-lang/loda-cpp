@@ -35,6 +35,8 @@ class ProgramUtil {
 
   static int64_t getLargestDirectMemoryCell(const Program &p);
 
+  static Number getLargestConstant(const Program &p);
+
   static std::string operandToString(const Operand &op);
 
   static std::string operationToString(const Operation &op);

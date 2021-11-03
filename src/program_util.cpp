@@ -186,6 +186,17 @@ int64_t ProgramUtil::getLargestDirectMemoryCell(const Program &p) {
   return largest;
 }
 
+Number ProgramUtil::getLargestConstant(const Program &p) {
+  Number largest(-1);
+  for (auto &op : p.ops) {
+    if (op.source.type == Operand::Type::CONSTANT &&
+        largest < op.source.value) {
+      largest = op.source.value;
+    }
+  }
+  return largest;
+}
+
 std::string getIndent(int indent) {
   std::string s;
   for (int i = 0; i < indent; i++) {
