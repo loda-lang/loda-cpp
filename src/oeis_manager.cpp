@@ -491,21 +491,25 @@ void OeisManager::addSeqComments(Program &p) const {
   }
 }
 
-void OeisManager::dumpProgram(size_t id, Program p, const std::string &file,
+void OeisManager::dumpProgram(size_t id, Program &p, const std::string &file,
                               const std::string &submitted_by) const {
   ProgramUtil::removeOps(p, Operation::Type::NOP);
   ProgramUtil::removeComments(p);
   addSeqComments(p);
   ensureDir(file);
-  std::ofstream out(file);
   auto &seq = sequences.at(id);
-  out << "; " << seq << std::endl;
+  Program tmp;
+  Operation nop(Operation::Type::NOP);
+  nop.comment = seq.to_string();
+  tmp.ops.push_back(nop);
   if (!submitted_by.empty()) {
-    out << "; " << ProgramUtil::SUBMITTED_BY_PREFIX << " " << submitted_by
-        << std::endl;
+    nop.comment = ProgramUtil::SUBMITTED_BY_PREFIX + " " + submitted_by;
+    tmp.ops.push_back(nop);
   }
-  out << "; " << seq.getTerms(OeisSequence::DEFAULT_SEQ_LENGTH) << std::endl;
-  out << std::endl;
+  nop.comment = seq.getTerms(OeisSequence::DEFAULT_SEQ_LENGTH).to_string();
+  tmp.ops.push_back(nop);
+  p.ops.insert(p.ops.begin(), tmp.ops.begin(), tmp.ops.end());
+  std::ofstream out(file);
   ProgramUtil::print(p, out);
   out.close();
 }
@@ -622,18 +626,22 @@ std::string OeisManager::isOptimizedBetter(Program existing, Program optimized,
   return "";
 }
 
-std::pair<bool, bool> OeisManager::updateProgram(size_t id, const Program &p) {
+update_program_result_t OeisManager::updateProgram(size_t id,
+                                                   const Program &p) {
   auto &seq = sequences.at(id);
   const std::string global_file = seq.getProgramPath(false);
   const std::string local_file = seq.getProgramPath(true);
   const std::string submitted_by = ProgramUtil::getSubmittedBy(p);
   bool is_new = true;
   std::string change;
+  update_program_result_t result;
+  result.updated = false;
+  result.is_new = false;
 
   // minimize and check the program
   auto minimized = finder.checkAndMinimize(p, seq);
   if (!minimized.first) {
-    return {false, false};
+    return result;
   }
 
   // check if there is an existing program already
@@ -650,28 +658,33 @@ std::pair<bool, bool> OeisManager::updateProgram(size_t id, const Program &p) {
         existing = parser.parse(in);
       } catch (const std::exception &) {
         Log::get().error("Error parsing " + file_name, false);
-        return {false, false};
+        return result;
       }
       change = isOptimizedBetter(existing, minimized.second, id);
       if (change.empty()) {
-        return {false, false};
+        return result;
       }
     } else {
-      return {false, false};
+      return result;
     }
   }
 
+  // update result
+  result.updated = true;
+  result.is_new = is_new;
+
   // write new or optimized program version
+  result.program = minimized.second;
   if (Setup::getMiningMode() == MINING_MODE_SERVER) {
-    dumpProgram(id, minimized.second, global_file, submitted_by);
+    dumpProgram(id, result.program, global_file, submitted_by);
   } else {
-    dumpProgram(id, minimized.second, local_file, submitted_by);
+    dumpProgram(id, result.program, local_file, submitted_by);
   }
 
   // send alert
   std::string prefix = is_new ? "First" : change;
   std::string color = is_new ? "good" : "warning";
-  alert(minimized.second, id, prefix, color, submitted_by);
+  alert(result.program, id, prefix, color, submitted_by);
 
-  return {true, is_new};
+  return result;
 }

@@ -102,20 +102,20 @@ void Miner::mine() {
       program = s.second;
       setSubmittedBy(program);
       auto r = manager->updateProgram(s.first, program);
-      if (r.first) {
+      if (r.updated) {
         // update stats and increase priority of successful generator
-        if (r.second) {
+        if (r.is_new) {
           generator->stats.fresh++;
         } else {
           generator->stats.updated++;
         }
         // in client mode: submit the program to the API server
         if (mode == MINING_MODE_CLIENT) {
-          api_client.postProgram(program);
+          api_client.postProgram(r.program);
         }
         // mutate successful program
         if (mode != MINING_MODE_SERVER && progs.size() < 1000) {
-          mutator.mutateCopies(program, 100, progs);  // magic number
+          mutator.mutateCopies(r.program, 100, progs);  // magic number
         }
       }
     }
@@ -191,10 +191,10 @@ void Miner::submit(const std::string &id, const std::string &path) {
     program = s.second;
     setSubmittedBy(program);
     auto r = manager->updateProgram(s.first, program);
-    if (r.first) {
+    if (r.updated) {
       // in client mode: submit the program to the API server
       if (mode == MINING_MODE_CLIENT) {
-        api_client.postProgram(program);
+        api_client.postProgram(r.program);
       }
       matches++;
     }
