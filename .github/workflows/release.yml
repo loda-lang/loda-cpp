@@ -71,6 +71,22 @@ jobs:
           asset_content_type: application/octet-stream
         env:
           GITHUB_TOKEN: ${{ github.token }}
+  build-macos-12:
+    needs: create-release
+    runs-on: macos-12
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        run: cd src && make loda LODA_PLATFORM=macos-12 LODA_VERSION=${{ needs.create-release.outputs.version }}
+      - name: Upload
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./loda
+          asset_name: loda-macos-12
+          asset_content_type: application/octet-stream
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
   build-windows:
     needs: create-release
     runs-on: windows-2019

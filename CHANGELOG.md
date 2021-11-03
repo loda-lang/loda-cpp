@@ -4,6 +4,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Enhancements
 
+* macOS 12 (Monterey) support
 * Improve decision for "better" programs
 * Improve scheduling and event logging
 

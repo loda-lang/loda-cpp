@@ -19,7 +19,7 @@ jobs:
       - name: Benchmark
         run: ./loda benchmark
   build-macos:
-    runs-on: macos-11
+    runs-on: macos-12
     steps:
       - uses: actions/checkout@v2
       - name: Build
