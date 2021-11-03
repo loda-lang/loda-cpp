@@ -70,7 +70,7 @@
     },
     {
       "name": "mutate",
-      "overwrite": "auto",
+      "overwrite": "none",
       "backoff": true,
       "generators": [
         "v6"
