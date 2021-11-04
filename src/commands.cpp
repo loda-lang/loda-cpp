@@ -24,6 +24,12 @@ void Commands::initLog(bool silent) {
     Log::get().silent = false;
     Log::get().info("Starting " + Version::INFO +
                     ". See https://loda-lang.org/");
+    const auto latest_version = Setup::getLatestVersion();
+    if (Version::IS_RELEASE && (Random::get().gen() % 10 == 0) &&
+        latest_version != Version::BRANCH) {
+      Log::get().info("LODA " + latest_version +
+                      " is available; run 'loda setup' to update");
+    }
   }
 }
 

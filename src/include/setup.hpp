@@ -41,6 +41,8 @@ class Setup {
 
   static int64_t getUpdateIntervalInDays();
 
+  static std::string getLatestVersion();
+
   static bool hasMemory();
 
   static void runWizard();

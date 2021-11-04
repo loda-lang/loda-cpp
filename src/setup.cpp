@@ -370,13 +370,7 @@ bool Setup::checkProgramsHome() {
   return true;
 }
 
-bool Setup::checkUpdate() {
-  ensureDir(LODA_HOME + "bin/");
-  std::string exe;
-#ifdef _WIN64
-  exe = ".exe";
-#endif
-  const std::string exec_local = LODA_HOME + "bin/loda" + exe;
+std::string Setup::getLatestVersion() {
   const std::string local_release_info(".latest-release.json");
   const std::string release_info_url(
       "https://api.github.com/repos/loda-lang/loda-cpp/releases/latest");
@@ -384,7 +378,17 @@ bool Setup::checkUpdate() {
   const std::string content = getFileAsString(local_release_info);
   std::remove(local_release_info.c_str());
   auto json = jute::parser::parse(content);
-  auto latest_version = json["tag_name"].as_string();
+  return json["tag_name"].as_string();
+}
+
+bool Setup::checkUpdate() {
+  ensureDir(LODA_HOME + "bin/");
+  std::string exe;
+#ifdef _WIN64
+  exe = ".exe";
+#endif
+  const std::string exec_local = LODA_HOME + "bin/loda" + exe;
+  auto latest_version = getLatestVersion();
   if (!isFile(exec_local) ||
       (Version::IS_RELEASE && latest_version != Version::BRANCH)) {
     std::cout << "LODA " << latest_version << " is available!" << std::endl
