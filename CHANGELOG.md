@@ -6,7 +6,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Check for updates and remind user via log message
 * Submit minimized and formatted programs in client mode
-* Skip server-side processing of unchanged programs
+* Optimize server-side processing of submitted programs
 * Improve decision for "better" programs
 * Improve scheduling and event logging
 

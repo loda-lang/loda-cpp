@@ -4,7 +4,6 @@
 #include <sstream>
 #include <unordered_set>
 
-#include "api_client.hpp"
 #include "file.hpp"
 #include "generator.hpp"
 #include "interpreter.hpp"
@@ -20,6 +19,7 @@ const std::string Miner::ANONYMOUS("anonymous");
 Miner::Miner(const Settings &settings) : settings(settings) {}
 
 void Miner::reload(bool load_generators, bool force_overwrite) {
+  api_client.reset(new ApiClient());
   manager.reset(new OeisManager(settings, force_overwrite));
   manager->load();
   manager->getFinder();  // initializes matchers
@@ -35,7 +35,6 @@ void Miner::mine() {
   if (!manager) {
     reload(true);
   }
-  ApiClient api_client;
   Mutator mutator(manager->getStats());
   Parser parser;
   std::stack<Program> progs;
@@ -70,7 +69,7 @@ void Miner::mine() {
   while (true) {
     // server mode: fetch new program
     if (progs.empty() && current_fetch > 0 && mode == MINING_MODE_SERVER) {
-      program = api_client.getNextProgram();
+      program = api_client->getNextProgram();
       if (program.ops.empty()) {
         current_fetch = 0;
       } else {
@@ -111,7 +110,7 @@ void Miner::mine() {
         }
         // in client mode: submit the program to the API server
         if (mode == MINING_MODE_CLIENT) {
-          api_client.postProgram(r.program);
+          api_client->postProgram(r.program);
         }
         // mutate successful program
         if (mode != MINING_MODE_SERVER && progs.size() < 1000) {
