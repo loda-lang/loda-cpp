@@ -129,14 +129,17 @@
       "template": [
         "$LODA_HOME/programs/oeis/000/A000796.asm",
         "$LODA_HOME/programs/oeis/001/A001113.asm",
+        "$LODA_HOME/programs/oeis/001/A001615.asm",
         "$LODA_HOME/programs/oeis/001/A001622.asm",
         "$LODA_HOME/programs/oeis/002/A002110.asm",
         "$LODA_HOME/programs/oeis/002/A002193.asm",
         "$LODA_HOME/programs/oeis/002/A002487.asm",
         "$LODA_HOME/programs/oeis/003/A003415.asm",
+        "$LODA_HOME/programs/oeis/003/A003968.asm",
         "$LODA_HOME/programs/oeis/005/A005480.asm",
         "$LODA_HOME/programs/oeis/006/A006577.asm",
         "$LODA_HOME/programs/oeis/010/A010550.asm",
+        "$LODA_HOME/programs/oeis/034/A034448.asm",
         "$LODA_HOME/programs/oeis/058/A058265.asm"
       ]
     },
