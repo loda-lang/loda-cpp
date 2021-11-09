@@ -19,7 +19,7 @@ bool OeisSequence::isTooBig(const Number& n) {
     return true;
   }
   if (USE_BIG_NUMBER) {
-    return n.getNumUsedWords() > (BigNumber::NUM_WORDS / 2);
+    return n.getNumUsedWords() > static_cast<int64_t>(BigNumber::NUM_WORDS / 2);
   } else {
     static const int64_t NUM_INF = std::numeric_limits<int64_t>::max();
     return (n.value > (NUM_INF / 1000)) || (n.value < (NUM_INF / -1000));
