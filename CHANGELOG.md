@@ -4,6 +4,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Enhancements
 
+* Define `gcd(0,0) = 0` instead of infinity
 * Check for updates and remind user via log message
 * Submit minimized and formatted programs in client mode
 * Optimize server-side processing of submitted programs
