@@ -9,6 +9,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 * Optimize server-side processing of submitted programs
 * Improve decision for "better" programs
 * Improve scheduling and event logging
+* Extend big number range of b-file sequence terms
 
 ## v21.10.26
 

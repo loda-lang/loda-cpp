@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <sstream>
 
+#include "big_number.hpp"
 #include "file.hpp"
 #include "parser.hpp"
 #include "setup.hpp"
@@ -18,7 +19,7 @@ bool OeisSequence::isTooBig(const Number& n) {
     return true;
   }
   if (USE_BIG_NUMBER) {
-    return n.getNumUsedWords() > 2;
+    return n.getNumUsedWords() > (BigNumber::NUM_WORDS / 2);
   } else {
     static const int64_t NUM_INF = std::numeric_limits<int64_t>::max();
     return (n.value > (NUM_INF / 1000)) || (n.value < (NUM_INF / -1000));
