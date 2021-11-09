@@ -381,6 +381,16 @@ std::string Setup::getLatestVersion() {
   return json["tag_name"].as_string();
 }
 
+void Setup::checkLatestedVersion() {
+  if (Version::IS_RELEASE && (Random::get().gen() % 5 == 0)) {
+    const auto latest_version = Setup::getLatestVersion();
+    if (latest_version != Version::BRANCH) {
+      Log::get().info("LODA " + latest_version +
+                      " is available. Run 'loda setup' to update.");
+    }
+  }
+}
+
 bool Setup::checkUpdate() {
   ensureDir(LODA_HOME + "bin/");
   std::string exe;

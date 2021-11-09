@@ -43,6 +43,8 @@ class Setup {
 
   static std::string getLatestVersion();
 
+  static void checkLatestedVersion();
+
   static bool hasMemory();
 
   static void runWizard();

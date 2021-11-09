@@ -314,6 +314,7 @@ void OeisManager::update() {
     it++;
   }
   if (!files.empty()) {
+    Setup::checkLatestedVersion();
     if (age_in_days == -1) {
       Log::get().info("Creating OEIS index at " + Setup::getOeisHome());
       ensureDir(Setup::getOeisHome());
