@@ -508,6 +508,14 @@ void OeisManager::dumpProgram(size_t id, Program &p, const std::string &file,
     tmp.ops.push_back(nop);
   }
   nop.comment = seq.getTerms(OeisSequence::DEFAULT_SEQ_LENGTH).to_string();
+  static constexpr size_t max_length = 500;
+  if (nop.comment.size() > max_length) {  // magic number
+    nop.comment = nop.comment.substr(0, max_length);
+    auto n = nop.comment.find_last_of(',');
+    if (n != std::string::npos) {
+      nop.comment = nop.comment.substr(0, n);
+    }
+  }
   tmp.ops.push_back(nop);
   nop.comment.clear();
   tmp.ops.push_back(nop);
