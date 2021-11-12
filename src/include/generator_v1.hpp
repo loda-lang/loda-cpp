@@ -1,6 +1,7 @@
 #pragma once
 
 #include "generator.hpp"
+#include "mutator.hpp"
 
 class GeneratorV1 : public Generator {
  public:
@@ -12,6 +13,7 @@ class GeneratorV1 : public Generator {
 
  private:
   int64_t num_operations;
+  int64_t num_generated;
   std::discrete_distribution<> operation_dist;
   std::discrete_distribution<> target_type_dist;
   std::discrete_distribution<> target_value_dist;
@@ -25,4 +27,5 @@ class GeneratorV1 : public Generator {
   std::vector<Operand::Type> target_operand_types;
   std::vector<Number> constants;
   Program program_template;
+  Mutator mutator;
 };
