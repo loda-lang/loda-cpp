@@ -32,14 +32,8 @@ void Metrics::write(const std::vector<Entry> entries) const {
     Log::get().debug("Publishing metrics to InfluxDB");
     notified = true;
   }
-
-#ifdef _WIN64
   const std::string file_name =
-      "loda_metrics_" + std::to_string(tmp_file_id) + ".txt";
-#else
-  const std::string file_name =
-      "/tmp/loda_metrics_" + std::to_string(tmp_file_id) + ".txt";
-#endif
+      getTmpDir() + "loda_metrics_" + std::to_string(tmp_file_id) + ".txt";
   std::ofstream out(file_name);
   for (auto &entry : entries) {
     out << entry.field;

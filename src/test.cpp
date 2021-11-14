@@ -31,10 +31,9 @@
 Test::Test() {
   Log::get().info("Initialized random number generator using seed " +
                   std::to_string(Random::get().seed));
-#ifndef _WIN64
-  ensureDir("/tmp/loda/");
-  Setup::setLodaHome("/tmp/loda/");
-#endif
+  const std::string home = getTmpDir() + "loda/";
+  ensureDir(home);
+  Setup::setLodaHome(home);
   Setup::setMinersConfig("tests/config/test_miners.json");
   Setup::setProgramsHome("tests/programs");
 }
@@ -72,11 +71,7 @@ void Test::all() {
 
 OeisManager& Test::getManager() {
   if (!manager_ptr) {
-#ifdef _WIN64
-    manager_ptr.reset(new OeisManager(settings, false, "stats"));
-#else
-    manager_ptr.reset(new OeisManager(settings, false, "/tmp/stats"));
-#endif
+    manager_ptr.reset(new OeisManager(settings, false, getTmpDir() + "stats"));
   }
   return *manager_ptr;
 }
@@ -738,11 +733,7 @@ void Test::stats() {
   }
 
   // save & reload stats
-#ifdef _WIN64
-  std::string dir = "./stats2";
-#else
-  std::string dir = "/tmp/stats2";
-#endif
+  std::string dir = getTmpDir() + "stats2";
   ensureDir(dir + "/");
   s.save(dir);
   t.load(dir);
