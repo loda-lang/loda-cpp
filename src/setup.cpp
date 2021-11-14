@@ -177,8 +177,8 @@ int64_t Setup::getMaxMemory() {
 
 int64_t Setup::getUpdateIntervalInDays() {
   if (UPDATE_INTERVAL == -1) {
-    // 1 day default
-    UPDATE_INTERVAL = getSetupInt("LODA_UPDATE_INTERVAL", 1);
+    UPDATE_INTERVAL =
+        getSetupInt("LODA_UPDATE_INTERVAL", DEFAULT_UPDATE_INTERVAL);
   }
   return UPDATE_INTERVAL;
 }
@@ -289,6 +289,9 @@ void Setup::runWizard() {
     return;
   }
   if (!checkMaxMemory()) {
+    return;
+  }
+  if (!checkUpdateInterval()) {
     return;
   }
 
@@ -585,8 +588,9 @@ bool Setup::checkSubmittedBy() {
 
 bool Setup::checkMaxMemory() {
   std::string line;
-  std::cout << "Enter the maximum memory usage of the miner in MB:"
-            << std::endl;
+  std::cout
+      << "Enter the maximum memory usage of the miner in MB (default 1024):"
+      << std::endl;
   int64_t max_memory = getMaxMemory() / (1024 * 1024);
   std::cout << "[" << max_memory << "] ";
   std::getline(std::cin, line);
@@ -598,6 +602,30 @@ bool Setup::checkMaxMemory() {
     return false;
   }
   SETUP["LODA_MAX_PHYSICAL_MEMORY"] = std::to_string(max_memory);
+  std::cout << std::endl;
+  return true;
+}
+
+bool Setup::checkUpdateInterval() {
+  std::string line;
+  std::cout << "Enter the update interval for the main OEIS files and the"
+            << std::endl
+            << "programs repository in days (default 1):" << std::endl;
+  int64_t update_interval = getUpdateIntervalInDays();
+  std::cout << "[" << update_interval << "] ";
+  std::getline(std::cin, line);
+  if (!line.empty()) {
+    update_interval = std::stoll(line);
+  }
+  if (update_interval <= 0) {
+    std::cout << "Invalid value. Please restart the setup." << std::endl;
+    return false;
+  }
+  if (update_interval == DEFAULT_UPDATE_INTERVAL) {
+    SETUP.erase("LODA_UPDATE_INTERVAL");
+  } else {
+    SETUP["LODA_UPDATE_INTERVAL"] = std::to_string(update_interval);
+  }
   std::cout << std::endl;
   return true;
 }

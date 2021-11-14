@@ -6,6 +6,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Fix race condition during program submission
 
+### Features
+
+* Setup asks for update interval for OEIS files and programs repository
+
 ### Enhancements
 
 * Limit the length of the terms comment in generated programs
