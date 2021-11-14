@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Bugfixes
+
+* Fix race condition during program submission
+
 ### Enhancements
 
 * Limit the length of the terms comment in generated programs

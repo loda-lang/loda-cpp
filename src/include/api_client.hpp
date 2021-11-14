@@ -15,6 +15,7 @@ class ApiClient {
   Program getNextProgram();
 
  private:
+  int64_t client_id;
   int64_t session_id;
   int64_t start;
   int64_t count;
