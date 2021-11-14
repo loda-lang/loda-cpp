@@ -51,12 +51,8 @@ Program ApiClient::getNextProgram() {
   }
   const int64_t index = queue.back();
   queue.pop_back();
-  if (local_programs_path.empty()) {
-    local_programs_path = Setup::getProgramsHome() + "local/";
-    ensureDir(local_programs_path);
-  }
   const std::string tmp =
-      local_programs_path + "api-" + std::to_string(index) + ".asm";
+      getTmpDir() + "get_program_" + std::to_string(client_id) + ".asm";
   if (!getProgram(index, tmp)) {
     Log::get().debug("Invalid session, resetting.");
     session_id = 0;  // resetting session
@@ -68,7 +64,7 @@ Program ApiClient::getNextProgram() {
   } catch (const std::exception&) {
     program.ops.clear();
   }
-  // std::remove(tmp.c_str());
+  std::remove(tmp.c_str());
   if (program.ops.empty()) {
     Log::get().warn("Invalid program on API server: " + BASE_URL + "programs/" +
                     std::to_string(index));

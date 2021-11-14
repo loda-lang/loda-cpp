@@ -19,7 +19,6 @@ class ApiClient {
   int64_t session_id;
   int64_t start;
   int64_t count;
-  std::string local_programs_path;
   std::vector<int64_t> queue;
 
   bool getProgram(int64_t index, const std::string& path);
