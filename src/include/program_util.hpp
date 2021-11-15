@@ -37,6 +37,8 @@ class ProgramUtil {
 
   static Number getLargestConstant(const Program &p);
 
+  static bool hasLoopWithConstantNumIterations(const Program &p);
+
   static std::string operandToString(const Operand &op);
 
   static std::string operationToString(const Operation &op);

@@ -15,6 +15,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 * Limit the length of the terms comment in generated programs
 * Generator v1 also uses mutator (if templates are defined)
 * Clean up fetched program files in server mode
+* Avoid programs with loops with constant number of iterations
 
 ## v21.11.09
 

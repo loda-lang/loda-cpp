@@ -42,6 +42,7 @@ void Test::all() {
   // fast tests
   sequence();
   memory();
+  programUtil();
   semantics();
   config();
   steps();
@@ -351,6 +352,20 @@ void Test::memory() {
       checkMemory(frag, length, 0);
       checkMemory(frag, length + 1, 0);
     }
+  }
+}
+
+void Test::programUtil() {
+  Log::get().info("Testing program util");
+  Parser parser;
+  Program primes_const_loop, primes_var_loop;
+  primes_const_loop = parser.parse("tests/programs/util/primes_const_loop.asm");
+  primes_var_loop = parser.parse("tests/programs/util/primes_var_loop.asm");
+  if (!ProgramUtil::hasLoopWithConstantNumIterations(primes_const_loop)) {
+    Log::get().error("Expected contant loop in primes_const_loop.asm", true);
+  }
+  if (ProgramUtil::hasLoopWithConstantNumIterations(primes_var_loop)) {
+    Log::get().error("Unexpected contant loop in primes_var_loop.asm", true);
   }
 }
 

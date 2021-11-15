@@ -197,6 +197,34 @@ Number ProgramUtil::getLargestConstant(const Program &p) {
   return largest;
 }
 
+bool ProgramUtil::hasLoopWithConstantNumIterations(const Program &p) {
+  // assumes that the program is optimized already
+  std::map<Number, Number> values;
+  for (auto &op : p.ops) {
+    if (op.target.type != Operand::Type::DIRECT) {
+      values.clear();
+      continue;
+    }
+    if (op.type == Operation::Type::MOV) {
+      if (op.source.type == Operand::Type::CONSTANT) {
+        values[op.target.value] = op.source.value;
+      } else {
+        values.erase(op.target.value);
+      }
+    } else if (op.type == Operation::Type::LPB) {
+      if (values.find(op.target.value) != values.end()) {
+        return true;
+      }
+      values.clear();
+    } else if (op.type == Operation::Type::LPE) {
+      values.clear();
+    } else if (ProgramUtil::isArithmetic(op.type)) {
+      values.erase(op.target.value);
+    }
+  }
+  return false;
+}
+
 std::string getIndent(int indent) {
   std::string s;
   for (int i = 0; i < indent; i++) {

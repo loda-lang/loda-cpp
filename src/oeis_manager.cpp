@@ -595,6 +595,17 @@ std::string OeisManager::isOptimizedBetter(Program existing, Program optimized,
     return "";
   }
 
+  // check if there are loops with contant number of iterations involved
+  const int64_t const_loops_existing =
+      ProgramUtil::hasLoopWithConstantNumIterations(existing);
+  const int64_t const_loops_optimized =
+      ProgramUtil::hasLoopWithConstantNumIterations(optimized);
+  if (const_loops_optimized < const_loops_existing) {
+    return "Better";
+  } else if (const_loops_optimized > const_loops_existing) {
+    return "";  // optimized is worse
+  }
+
   // get extended sequence
   auto terms = seq.getTerms(OeisSequence::EXTENDED_SEQ_LENGTH);
   if (terms.empty()) {
