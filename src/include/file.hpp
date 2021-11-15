@@ -25,6 +25,8 @@ void moveDir(const std::string &from, const std::string &to);
 
 void ensureTrailingSlash(std::string &dir);
 
+std::string getTmpDir();
+
 std::string getFileAsString(const std::string &filename);
 
 int64_t getFileAgeInDays(const std::string &path);

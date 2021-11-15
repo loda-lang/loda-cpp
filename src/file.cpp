@@ -149,6 +149,11 @@ void ensureTrailingSlash(std::string &dir) {
   }
 }
 
+std::string getTmpDir() {
+  // TODO: different path on windows
+  return "/tmp/";
+}
+
 std::string getFileAsString(const std::string &filename) {
   std::ifstream in(filename);
   std::string str;

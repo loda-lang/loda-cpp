@@ -31,10 +31,9 @@
 Test::Test() {
   Log::get().info("Initialized random number generator using seed " +
                   std::to_string(Random::get().seed));
-#ifndef _WIN64
-  ensureDir("/tmp/loda/");
-  Setup::setLodaHome("/tmp/loda/");
-#endif
+  const std::string home = getTmpDir() + "loda/";
+  ensureDir(home);
+  Setup::setLodaHome(home);
   Setup::setMinersConfig("tests/config/test_miners.json");
   Setup::setProgramsHome("tests/programs");
 }
@@ -43,6 +42,7 @@ void Test::all() {
   // fast tests
   sequence();
   memory();
+  programUtil();
   semantics();
   config();
   steps();
@@ -72,11 +72,7 @@ void Test::all() {
 
 OeisManager& Test::getManager() {
   if (!manager_ptr) {
-#ifdef _WIN64
-    manager_ptr.reset(new OeisManager(settings, false, "stats"));
-#else
-    manager_ptr.reset(new OeisManager(settings, false, "/tmp/stats"));
-#endif
+    manager_ptr.reset(new OeisManager(settings, false, getTmpDir() + "stats"));
   }
   return *manager_ptr;
 }
@@ -356,6 +352,20 @@ void Test::memory() {
       checkMemory(frag, length, 0);
       checkMemory(frag, length + 1, 0);
     }
+  }
+}
+
+void Test::programUtil() {
+  Log::get().info("Testing program util");
+  Parser parser;
+  Program primes_const_loop, primes_var_loop;
+  primes_const_loop = parser.parse("tests/programs/util/primes_const_loop.asm");
+  primes_var_loop = parser.parse("tests/programs/util/primes_var_loop.asm");
+  if (!ProgramUtil::hasLoopWithConstantNumIterations(primes_const_loop)) {
+    Log::get().error("Expected contant loop in primes_const_loop.asm", true);
+  }
+  if (ProgramUtil::hasLoopWithConstantNumIterations(primes_var_loop)) {
+    Log::get().error("Unexpected contant loop in primes_var_loop.asm", true);
   }
 }
 
@@ -738,11 +748,7 @@ void Test::stats() {
   }
 
   // save & reload stats
-#ifdef _WIN64
-  std::string dir = "./stats2";
-#else
-  std::string dir = "/tmp/stats2";
-#endif
+  std::string dir = getTmpDir() + "stats2";
   ensureDir(dir + "/");
   s.save(dir);
   t.load(dir);

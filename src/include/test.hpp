@@ -23,6 +23,8 @@ class Test {
 
   void memory();
 
+  void programUtil();
+
   void iterator(size_t tests);
 
   void knownPrograms();

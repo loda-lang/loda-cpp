@@ -50,6 +50,8 @@ class Setup {
   static void runWizard();
 
  private:
+  static constexpr int64_t DEFAULT_UPDATE_INTERVAL = 1;  // 1 day default
+
   static std::string USER_HOME;
   static std::string LODA_HOME;
   static std::string OEIS_HOME;
@@ -75,6 +77,7 @@ class Setup {
   static bool checkMineParallelScript();
   static bool checkSubmittedBy();
   static bool checkMaxMemory();
+  static bool checkUpdateInterval();
 
   static bool updateFile(const std::string& local_file, const std::string& url,
                          const std::string& header, const std::string& marker,
