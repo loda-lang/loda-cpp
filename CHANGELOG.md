@@ -1,6 +1,8 @@
-To install or update LODA, please follow the [installation instructions](https://loda-lang.org/install/). Here the release notes:
+To install or update LODA, please follow the [installation instructions](https://loda-lang.org/install/). Here are the release notes:
 
 ## [Unreleased]
+
+## v21.11.15
 
 ### Bugfixes
 
