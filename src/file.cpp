@@ -150,8 +150,18 @@ void ensureTrailingSlash(std::string &dir) {
 }
 
 std::string getTmpDir() {
-  // TODO: different path on windows
+// TODO: different path on windows
+#ifdef _WIN64
+  char tmp[500];
+  if (GetTempPathA(sizeof(tmp), tmp)) {
+    return std::string(tmp);
+  } else {
+    Log::get().error("Cannot determine temp directory", true);
+    return {};
+  }
+#else
   return "/tmp/";
+#endif
 }
 
 std::string getFileAsString(const std::string &filename) {

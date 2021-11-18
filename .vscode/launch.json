@@ -1,11 +1,25 @@
 {
     "configurations": [
         {
+            "name": "Windows",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/loda.exe",
+            "args": [
+                "test"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": []
+        },
+        {
             "name": "Mac",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/loda",
-            "args": [ "test" ],
+            "args": [
+                "test"
+            ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [
