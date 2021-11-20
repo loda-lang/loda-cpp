@@ -23,6 +23,8 @@ void ensureDir(const std::string &path);
 
 void moveDir(const std::string &from, const std::string &to);
 
+void gunzip(const std::string &path);
+
 void ensureTrailingSlash(std::string &dir);
 
 std::string getTmpDir();

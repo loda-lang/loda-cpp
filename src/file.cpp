@@ -31,12 +31,12 @@ int64_t Http::WWW_CLIENT = WC_UNKNOWN;
 void Http::initWWWClient() {
   if (WWW_CLIENT == WC_UNKNOWN) {
 #ifdef _WIN64
-    std::string curl_cmd = "curl --version > nul 2>&1";
-    std::string wget_cmd = "wget --version > nul 2>&1";
+    const std::string redirect = "> nul 2>&1";
 #else
-    std::string curl_cmd = "curl --version > /dev/null 2> /dev/null";
-    std::string wget_cmd = "wget --version > /dev/null 2> /dev/null";
+    const std::string redirect = "> /dev/null 2> /dev/null";
 #endif
+    const std::string curl_cmd = "curl --version " + redirect;
+    const std::string wget_cmd = "wget --version " + redirect;
     if (system(curl_cmd.c_str()) == 0) {
       WWW_CLIENT = WC_CURL;
     } else if (system(wget_cmd.c_str()) == 0) {
@@ -145,6 +145,18 @@ void ensureDir(const std::string &path) {
 void moveDir(const std::string &from, const std::string &to) {
   // Log::get().warn("Moving directory: " + from + " -> " + to);
   std::string cmd = "mv " + from + " " + to;
+  if (system(cmd.c_str()) != 0) {
+    Log::get().error("Error executing command: " + cmd, true);
+  }
+}
+
+void gunzip(const std::string &path) {
+#ifdef _WIN64
+  const std::string cmd =
+      "\"C:\\Program Files\\Git\\usr\\bin\\gzip.exe\" -d " + path;
+#else
+  const std::string cmd = "gzip -d " + path;
+#endif
   if (system(cmd.c_str()) != 0) {
     Log::get().error("Error executing command: " + cmd, true);
   }

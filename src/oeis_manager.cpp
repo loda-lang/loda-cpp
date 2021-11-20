@@ -331,10 +331,7 @@ void OeisManager::update() {
         f.close();
         std::remove(path.c_str());
       }
-      cmd = "gzip -d " + path + ".gz";
-      if (system(cmd.c_str()) != 0) {
-        Log::get().error("Error unzipping " + path + ".gz", true);
-      }
+      gunzip(path + ".gz");
     }
     // update programs repository using git pull
     auto mode = Setup::getMiningMode();
