@@ -39,7 +39,7 @@ void Http::initWWWClient() {
 #endif
     if (system(curl_cmd.c_str()) == 0) {
       WWW_CLIENT = WC_CURL;
-    } else if (system(curl_cmd.c_str()) == 0) {
+    } else if (system(wget_cmd.c_str()) == 0) {
       WWW_CLIENT = WC_WGET;
     } else {
       Log::get().error("No web client found. Please install curl or wget.",
