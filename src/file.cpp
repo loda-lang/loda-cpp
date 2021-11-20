@@ -150,7 +150,6 @@ void ensureTrailingSlash(std::string &dir) {
 }
 
 std::string getTmpDir() {
-// TODO: different path on windows
 #ifdef _WIN64
   char tmp[500];
   if (GetTempPathA(sizeof(tmp), tmp)) {
