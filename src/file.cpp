@@ -30,9 +30,16 @@ int64_t Http::WWW_CLIENT = WC_UNKNOWN;
 
 void Http::initWWWClient() {
   if (WWW_CLIENT == WC_UNKNOWN) {
-    if (system("curl --version > /dev/null 2> /dev/null") == 0) {
+#ifdef _WIN64
+    std::string curl_cmd = "curl --version > nul 2>&1";
+    std::string wget_cmd = "wget --version > nul 2>&1";
+#else
+    std::string curl_cmd = "curl --version > /dev/null 2> /dev/null";
+    std::string wget_cmd = "wget --version > /dev/null 2> /dev/null";
+#endif
+    if (system(curl_cmd.c_str()) == 0) {
       WWW_CLIENT = WC_CURL;
-    } else if (system("wget --version > /dev/null 2> /dev/null") == 0) {
+    } else if (system(curl_cmd.c_str()) == 0) {
       WWW_CLIENT = WC_WGET;
     } else {
       Log::get().error("No web client found. Please install curl or wget.",
