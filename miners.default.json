@@ -148,6 +148,7 @@
         "$LODA_HOME/programs/oeis/011/A011006.asm",
         "$LODA_HOME/programs/oeis/034/A034448.asm",
         "$LODA_HOME/programs/oeis/058/A058265.asm",
+        "$LODA_HOME/programs/oeis/093/A093602.asm",
         "$LODA_HOME/programs/oeis/098/A098090.asm",
         "$LODA_HOME/programs/oeis/132/A132106.asm",
         "$LODA_HOME/programs/oeis/173/A173919.asm"
