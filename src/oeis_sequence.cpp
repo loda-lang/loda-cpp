@@ -75,15 +75,16 @@ std::string OeisSequence::url_str() const {
 
 std::string OeisSequence::getProgramPath(bool local) const {
   if (local) {
-    return Setup::getProgramsHome() + "local/" + id_str() + ".asm";
+    return Setup::getProgramsHome() + "local" + FILE_SEP + id_str() + ".asm";
   } else {
-    return Setup::getProgramsHome() + "oeis/" + dir_str() + "/" + id_str() +
-           ".asm";
+    return Setup::getProgramsHome() + "oeis" + FILE_SEP + dir_str() + FILE_SEP +
+           id_str() + ".asm";
   }
 }
 
 std::string OeisSequence::getBFilePath() const {
-  return Setup::getOeisHome() + "b/" + dir_str() + "/" + id_str("b") + ".txt";
+  return Setup::getOeisHome() + "b" + FILE_SEP + dir_str() + FILE_SEP +
+         id_str("b") + ".txt";
 }
 
 Sequence loadBFile(size_t id, const Sequence& seq_full) {

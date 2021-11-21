@@ -12,7 +12,7 @@ std::string OeisList::LISTS_HOME;
 const std::string& OeisList::getListsHome() {
   if (LISTS_HOME.empty()) {
     // don't remove the trailing /
-    LISTS_HOME = Setup::getLodaHome() + "lists/";
+    LISTS_HOME = Setup::getLodaHome() + "lists" + FILE_SEP;
     ensureDir(LISTS_HOME);
   }
   return LISTS_HOME;
@@ -103,7 +103,7 @@ void OeisList::addToMap(std::istream& in, std::map<size_t, int64_t>& map) {
 
 void OeisList::mergeMap(const std::string& file_name,
                         std::map<size_t, int64_t>& map) {
-  if (file_name.find('/') != std::string::npos) {
+  if (file_name.find(FILE_SEP) != std::string::npos) {
     Log::get().error("Invalid file name for merging map: " + file_name, true);
   }
   FolderLock lock(getListsHome());

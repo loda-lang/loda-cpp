@@ -28,10 +28,11 @@ bool WebClient::get(const std::string &url, const std::string &local_path,
   std::string cmd;
   switch (WEB_CLIENT_TYPE) {
     case WC_CURL:
-      cmd = "curl -fsSLo " + local_path + " " + url;
+      cmd = "curl -fsSLo \"" + local_path + "\" " + url;
       break;
     case WC_WGET:
-      cmd = "wget -q --no-use-server-timestamps -O " + local_path + " " + url;
+      cmd =
+          "wget -q --no-use-server-timestamps -O \"" + local_path + "\" " + url;
       break;
     default:
       Log::get().error("Unsupported web client for GET request", true);
@@ -60,8 +61,8 @@ bool WebClient::postFile(const std::string &url, const std::string &file_path,
       if (!auth.empty()) {
         cmd += " -u " + auth;
       }
-      cmd +=
-          " -X POST '" + url + "' --data-binary @" + file_path + " > /dev/null";
+      cmd += " -X POST '" + url + "' --data-binary @\"" + file_path + "\" " +
+             getNullRedirect();
       break;
     }
     case WC_WGET: {
@@ -71,7 +72,8 @@ bool WebClient::postFile(const std::string &url, const std::string &file_path,
         cmd += " --user '" + auth.substr(0, colon) + "' --password '" +
                auth.substr(colon + 1) + "'";
       }
-      cmd += " --post-file " + file_path + " " + url + " > /dev/null";
+      cmd +=
+          " --post-file \"" + file_path + "\" " + url + " " + getNullRedirect();
       break;
     }
     default:

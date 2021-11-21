@@ -31,11 +31,12 @@
 Test::Test() {
   Log::get().info("Initialized random number generator using seed " +
                   std::to_string(Random::get().seed));
-  const std::string home = getTmpDir() + "loda/";
+  const std::string home = getTmpDir() + "loda" + FILE_SEP;
   ensureDir(home);
   Setup::setLodaHome(home);
-  Setup::setMinersConfig("tests/config/test_miners.json");
-  Setup::setProgramsHome("tests/programs");
+  Setup::setMinersConfig(std::string("tests") + FILE_SEP + "config" + FILE_SEP +
+                         "test_miners.json");
+  Setup::setProgramsHome(std::string("tests") + FILE_SEP + "programs");
 }
 
 void Test::all() {
@@ -245,8 +246,9 @@ void Test::semantics() {
       continue;
     }
     auto& meta = Operation::Metadata::get(type);
-    std::string test_path =
-        "tests/semantics/" + Operation::Metadata::get(type).name + ".csv";
+    std::string test_path = std::string("tests") + FILE_SEP + "semantics" +
+                            FILE_SEP + Operation::Metadata::get(type).name +
+                            ".csv";
     std::ifstream test_file(test_path);
     if (!test_file.good()) {
       Log::get().error("Test file not found: " + test_path, true);
@@ -359,8 +361,10 @@ void Test::programUtil() {
   Log::get().info("Testing program util");
   Parser parser;
   Program primes_const_loop, primes_var_loop;
-  primes_const_loop = parser.parse("tests/programs/util/primes_const_loop.asm");
-  primes_var_loop = parser.parse("tests/programs/util/primes_var_loop.asm");
+  auto base_path = std::string("tests") + FILE_SEP + "programs" + FILE_SEP +
+                   "util" + FILE_SEP;
+  primes_const_loop = parser.parse(base_path + "primes_const_loop.asm");
+  primes_var_loop = parser.parse(base_path + "primes_var_loop.asm");
   if (!ProgramUtil::hasLoopWithConstantNumIterations(primes_const_loop)) {
     Log::get().error("Expected contant loop in primes_const_loop.asm", true);
   }
@@ -463,7 +467,8 @@ void Test::knownPrograms() {
 void Test::apiClient() {
   Log::get().info("Testing API client");
   ApiClient client;
-  client.postProgram("tests/programs/oeis/000/A000005.asm");
+  client.postProgram(std::string("tests") + FILE_SEP + "programs" + FILE_SEP +
+                     "oeis" + FILE_SEP + "000" + FILE_SEP + "A000005.asm");
   auto program = client.getNextProgram();
   if (program.ops.empty()) {
     Log::get().error("Expected non-empty program from API server");
@@ -486,7 +491,8 @@ void Test::steps() {
 }
 
 void Test::blocks() {
-  auto tests = loadInOutTests("tests/blocks/B");
+  auto tests = loadInOutTests(std::string("tests") + FILE_SEP + "blocks" +
+                              FILE_SEP + "B");
   size_t i = 1;
   Blocks::Collector collector;
   for (auto& t : tests) {
@@ -530,7 +536,8 @@ void checkSeqAgainstTestBFile(int64_t seq_id, int64_t offset,
   OeisSequence t(seq_id);
   std::stringstream buf;
   t.getTerms(max_num_terms).to_b_file(buf, offset);
-  std::ifstream bfile("tests/sequence/" + t.id_str("b") + ".txt");
+  std::ifstream bfile(std::string("tests") + FILE_SEP + "sequence" + FILE_SEP +
+                      t.id_str("b") + ".txt");
   std::string x, y;
   while (std::getline(bfile, x)) {
     if (!std::getline(buf, y)) {
@@ -601,7 +608,10 @@ void Test::ackermann() {
                                               {3, 5, 7, 9, 11},
                                               {5, 13, 29, 61, 125},
                                               {13, 65533}};
-  testBinary("ack", "tests/programs/general/ackermann.asm", values);
+  testBinary("ack",
+             std::string("tests") + FILE_SEP + "programs" + FILE_SEP +
+                 "general" + FILE_SEP + "ackermann.asm",
+             values);
 }
 
 void check_int(const std::string& s, int64_t expected, int64_t value) {
@@ -817,7 +827,8 @@ void Test::optimizer() {
   Settings settings;
   Interpreter interpreter(settings);
   Optimizer optimizer(settings);
-  auto tests = loadInOutTests("tests/optimizer/E");
+  auto tests = loadInOutTests(std::string("tests") + FILE_SEP + "optimizer" +
+                              FILE_SEP + "E");
   size_t i = 1;
   for (auto& t : tests) {
     optimizer.optimize(t.first, 2, 1);
