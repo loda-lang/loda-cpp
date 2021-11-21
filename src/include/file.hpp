@@ -2,6 +2,12 @@
 
 #include <string>
 
+#ifdef _WIN64
+static constexpr char FILE_SEP = '\\';
+#else
+static constexpr char FILE_SEP = '/';
+#endif
+
 bool isFile(const std::string &path);
 
 bool isDir(const std::string &path);

@@ -40,11 +40,10 @@ bool isDir(const std::string &path) {
 #endif
 
 void ensureDir(const std::string &path) {
-  auto index = path.find_last_of("/");
+  auto index = path.find_last_of(FILE_SEP);
   if (index != std::string::npos) {
     auto dir = path.substr(0, index);
 #ifdef _WIN64
-    std::replace(dir.begin(), dir.end(), '/', '\\');
     if (!CreateDirectory(dir.c_str(), nullptr) &&
         ERROR_ALREADY_EXISTS != GetLastError())
 #else
@@ -80,8 +79,8 @@ void gunzip(const std::string &path) {
 }
 
 void ensureTrailingSlash(std::string &dir) {
-  if (dir.back() != '/') {
-    dir += '/';
+  if (dir.back() != FILE_SEP) {
+    dir += FILE_SEP;
   }
 }
 
@@ -186,9 +185,7 @@ bool hasGit() {
 
 FolderLock::FolderLock(std::string folder) {
   // obtain lock
-  if (folder[folder.size() - 1] != '/') {
-    folder += '/';
-  }
+  ensureTrailingSlash(folder);
   ensureDir(folder);
   lockfile = folder + "lock";
   fd = 0;

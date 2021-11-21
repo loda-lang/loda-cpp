@@ -27,7 +27,7 @@ std::string Setup::getLodaHomeNoCheck() {
   if (loda_home) {
     result = std::string(loda_home);
   } else {
-    result = getHomeDir() + "/loda/";
+    result = getHomeDir() + FILE_SEP + "loda" + FILE_SEP;
   }
   ensureTrailingSlash(result);
   return result;
@@ -80,7 +80,7 @@ void Setup::setMinersConfig(const std::string& loda_config) {
 
 const std::string& Setup::getOeisHome() {
   if (OEIS_HOME.empty()) {
-    OEIS_HOME = getLodaHome() + "oeis/";
+    OEIS_HOME = getLodaHome() + "oeis" + FILE_SEP;
     ensureTrailingSlash(OEIS_HOME);
     ensureDir(OEIS_HOME);
   }
@@ -89,7 +89,7 @@ const std::string& Setup::getOeisHome() {
 
 const std::string& Setup::getProgramsHome() {
   if (PROGRAMS_HOME.empty()) {
-    setProgramsHome(getLodaHome() + "programs/");
+    setProgramsHome(getLodaHome() + "programs" + FILE_SEP);
   }
   return PROGRAMS_HOME;
 }
@@ -253,7 +253,7 @@ void Setup::runWizard() {
   }
 
   // environment variables
-  if (LODA_HOME != getHomeDir() + "/loda/") {
+  if (LODA_HOME != getHomeDir() + FILE_SEP + "loda" + FILE_SEP) {
     ensureEnvVar("LODA_HOME", LODA_HOME, "Set LODA home directory", true);
   }
   ensureEnvVar("PATH", "$PATH:" + LODA_HOME + "bin",
@@ -290,7 +290,7 @@ void Setup::runWizard() {
 
 void Setup::checkLodaHome() {
   std::string line;
-  LODA_HOME = getHomeDir() + "/loda";
+  LODA_HOME = getHomeDir() + FILE_SEP + "loda";
   if (std::getenv("LODA_HOME")) {
     LODA_HOME = std::string(std::getenv("LODA_HOME"));
   }
@@ -310,7 +310,7 @@ void Setup::checkLodaHome() {
 
 bool Setup::checkProgramsHome() {
   std::string line;
-  if (!isDir(LODA_HOME + "programs/oeis")) {
+  if (!isDir(LODA_HOME + "programs" + FILE_SEP + "oeis")) {
     std::cout << "LODA needs to download its programs repository from GitHub."
               << std::endl;
     std::cout << "It contains programs for more than 35,000 integer sequences."
@@ -374,12 +374,12 @@ void Setup::checkLatestedVersion() {
 }
 
 bool Setup::checkUpdate() {
-  ensureDir(LODA_HOME + "bin/");
+  ensureDir(LODA_HOME + "bin" + FILE_SEP);
   std::string exe;
 #ifdef _WIN64
   exe = ".exe";
 #endif
-  const std::string exec_local = LODA_HOME + "bin/loda" + exe;
+  const std::string exec_local = LODA_HOME + "bin" + FILE_SEP + "loda" + exe;
   auto latest_version = getLatestVersion();
   if (!isFile(exec_local) ||
       (Version::IS_RELEASE && latest_version != Version::BRANCH)) {
@@ -525,7 +525,8 @@ bool Setup::updateFile(const std::string& local_file, const std::string& url,
 }
 
 bool Setup::checkMineParallelScript() {
-  const std::string local_file = LODA_HOME + "bin/mine_parallel.sh";
+  const std::string local_file =
+      LODA_HOME + "bin" + FILE_SEP + "mine_parallel.sh";
   const std::string url =
       "https://raw.githubusercontent.com/loda-lang/loda-cpp/" +
       Version::BRANCH + "/mine_parallel.sh";
@@ -616,9 +617,9 @@ void Setup::ensureEnvVar(const std::string& key, const std::string& value,
   if (shell) {
     std::string sh(shell);
     if (sh == "/bin/bash") {
-      std::string bashrc = getHomeDir() + "/.bashrc";
+      std::string bashrc = getHomeDir() + FILE_SEP + ".bashrc";
       if (!isFile(bashrc)) {
-        bashrc = getHomeDir() + "/.bash_profile";
+        bashrc = getHomeDir() + FILE_SEP + ".bash_profile";
       }
       std::string kv = "export " + key + "=" + value;
       std::ifstream in(bashrc);
