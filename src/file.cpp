@@ -47,7 +47,7 @@ void ensureDir(const std::string &path) {
     if (!CreateDirectory(dir.c_str(), nullptr) &&
         ERROR_ALREADY_EXISTS != GetLastError())
 #else
-    auto cmd = "mkdir -p " + dir;
+    auto cmd = "mkdir -p \"" + dir + "\"";
     if (system(cmd.c_str()) != 0)
 #endif
     {
@@ -58,32 +58,32 @@ void ensureDir(const std::string &path) {
   }
 }
 
-void moveFile(const std::string &from, const std::string &to) {
-  // Log::get().warn("Moving file/directory: " + from + " -> " + to);
-  std::string cmd = "mv " + from + " " + to;
+void execCmd(const std::string &cmd) {
   if (system(cmd.c_str()) != 0) {
     Log::get().error("Error executing command: " + cmd, true);
   }
 }
 
+void moveFile(const std::string &from, const std::string &to) {
+  // Log::get().warn("Moving file/directory: " + from + " -> " + to);
+  execCmd("mv \"" + from + "\" \"" + to + "\"");
+}
+
 void gunzip(const std::string &path) {
+  static std::string gzip_cmd;
+  if (gzip_cmd.empty()) {
 #ifdef _WIN64
-  const std::string cmd =
-      "\"C:\\Program Files\\Git\\usr\\bin\\gzip.exe\" -d " + path;
+    gzip_cmd = "\"C:\\Program Files\\Git\\usr\\bin\\gzip.exe\"";
 #else
-  const std::string cmd = "gzip -d " + path;
+    gzip_cmd = "gzip";
 #endif
-  if (system(cmd.c_str()) != 0) {
-    Log::get().error("Error executing command: " + cmd, true);
   }
+  execCmd(gzip_cmd + " -d \"" + path + "\"");
 }
 
 void makeExecutable(const std::string &path) {
 #ifndef _WIN64
-  std::string cmd = "chmod u+x " + path;
-  if (system(cmd.c_str()) != 0) {
-    Log::get().error("Error executing command: " + cmd, true);
-  }
+  execCmd("chmod u+x \"" + path + "\"");
 #endif
 }
 
@@ -125,6 +125,14 @@ std::string getTmpDir() {
   }
 #else
   return "/tmp/";
+#endif
+}
+
+std::string getNullRedirect() {
+#ifdef _WIN64
+  return "> nul 2>&1";
+#else
+  return "> /dev/null 2> /dev/null";
 #endif
 }
 
@@ -181,12 +189,7 @@ size_t getMemUsage() {
 bool hasGit() {
   static int64_t git_check = -1;
   if (git_check == -1) {
-#ifdef _WIN64
-    const std::string redirect = "> nul 2>&1";
-#else
-    const std::string redirect = "> /dev/null 2> /dev/null";
-#endif
-    auto git_test = std::string("git --version ") + redirect;
+    auto git_test = std::string("git --version ") + getNullRedirect();
     git_check = system(git_test.c_str());
   }
   return git_check == 0;

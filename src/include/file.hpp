@@ -26,6 +26,8 @@ std::string getHomeDir();
 
 std::string getTmpDir();
 
+std::string getNullRedirect();
+
 std::string getFileAsString(const std::string &filename);
 
 int64_t getFileAgeInDays(const std::string &path);

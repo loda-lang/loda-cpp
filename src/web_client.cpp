@@ -1,5 +1,6 @@
 #include "web_client.hpp"
 
+#include "file.hpp"
 #include "util.hpp"
 
 enum WebClientType { WC_UNKNOWN = 0, WC_CURL = 1, WC_WGET = 2 };
@@ -8,13 +9,8 @@ int64_t WebClient::WEB_CLIENT_TYPE = WC_UNKNOWN;
 
 void WebClient::initWebClient() {
   if (WEB_CLIENT_TYPE == WC_UNKNOWN) {
-#ifdef _WIN64
-    const std::string redirect = "> nul 2>&1";
-#else
-    const std::string redirect = "> /dev/null 2> /dev/null";
-#endif
-    const std::string curl_cmd = "curl --version " + redirect;
-    const std::string wget_cmd = "wget --version " + redirect;
+    const std::string curl_cmd = "curl --version " + getNullRedirect();
+    const std::string wget_cmd = "wget --version " + getNullRedirect();
     if (system(curl_cmd.c_str()) == 0) {
       WEB_CLIENT_TYPE = WC_CURL;
     } else if (system(wget_cmd.c_str()) == 0) {
