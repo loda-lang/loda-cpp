@@ -25,6 +25,9 @@ std::string get_template(std::string t) {
     t = t.substr(h.size());
     t = Setup::getProgramsHome() + t;
   }
+  if (FILE_SEP != '/') {
+    std::replace(t.begin(), t.end(), '/', FILE_SEP);
+  }
   return t;
 }
 

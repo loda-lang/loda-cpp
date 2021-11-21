@@ -43,15 +43,15 @@ void ensureDir(const std::string &path) {
   auto index = path.find_last_of(FILE_SEP);
   if (index != std::string::npos) {
     auto dir = path.substr(0, index);
+    if (!isDir(dir)) {
 #ifdef _WIN64
-    if (!CreateDirectory(dir.c_str(), nullptr) &&
-        ERROR_ALREADY_EXISTS != GetLastError())
+      auto cmd = "md \"" + dir + "\"";
 #else
-    auto cmd = "mkdir -p \"" + dir + "\"";
-    if (system(cmd.c_str()) != 0)
+      auto cmd = "mkdir -p \"" + dir + "\"";
 #endif
-    {
-      Log::get().error("Error creating directory " + dir, true);
+      if (system(cmd.c_str()) != 0) {
+        Log::get().error("Error creating directory " + dir, true);
+      }
     }
   } else {
     Log::get().error("Error determining directory for " + path, true);
@@ -70,15 +70,13 @@ void moveFile(const std::string &from, const std::string &to) {
 }
 
 void gunzip(const std::string &path) {
-  static std::string gzip_cmd;
-  if (gzip_cmd.empty()) {
 #ifdef _WIN64
-    gzip_cmd = "\"C:\\Program Files\\Git\\usr\\bin\\gzip.exe\"";
+  // https://stackoverflow.com/questions/9964865/c-system-not-working-when-there-are-spaces-in-two-different-parameters
+  execCmd("cmd /S /C \"\"C:\\Program Files\\Git\\usr\\bin\\gzip.exe\" -d \"" +
+          path + "\"\"");
 #else
-    gzip_cmd = "gzip";
+  execCmd("gzip -d \"" + path + "\"");
 #endif
-  }
-  execCmd(gzip_cmd + " -d \"" + path + "\"");
 }
 
 void makeExecutable(const std::string &path) {

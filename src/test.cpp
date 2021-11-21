@@ -57,8 +57,6 @@ void Test::all() {
   // slow tests
   number();
   randomNumber(1000);
-#ifndef _WIN64
-  // TODO: fix tests on windows
   ackermann();
   stats();
   apiClient();
@@ -68,7 +66,6 @@ void Test::all() {
   minimizer(100);
   miner();
   memUsage();
-#endif
 }
 
 OeisManager& Test::getManager() {
@@ -638,6 +635,8 @@ void Test::config() {
   auto config = ConfigLoader::load(settings);
   check_int("overwrite", 1, config.overwrite_mode == OverwriteMode::NONE);
 
+  std::string templates = std::string("tests") + FILE_SEP + "programs" +
+                          FILE_SEP + "templates" + FILE_SEP;
   check_int("generators.size", 3, config.generators.size());
   check_int("generators[0].version", 1, config.generators[0].version);
   check_int("generators[0].length", 30, config.generators[0].length);
@@ -647,7 +646,7 @@ void Test::config() {
   check_int("generators[0].calls", 1, config.generators[0].calls);
   check_int("generators[0].indirectAccess", 0,
             config.generators[0].indirect_access);
-  check_str("generators[0].template", "tests/programs/templates/call.asm",
+  check_str("generators[0].template", templates + "call.asm",
             config.generators[0].program_template);
   check_int("generators[1].version", 1, config.generators[1].version);
   check_int("generators[1].length", 30, config.generators[1].length);
@@ -657,7 +656,7 @@ void Test::config() {
   check_int("generators[1].calls", 1, config.generators[1].calls);
   check_int("generators[1].indirectAccess", 0,
             config.generators[1].indirect_access);
-  check_str("generators[1].template", "tests/programs/templates/loop.asm",
+  check_str("generators[1].template", templates + "loop.asm",
             config.generators[1].program_template);
   check_int("generators[2].version", 1, config.generators[2].version);
   check_int("generators[2].length", 40, config.generators[2].length);
