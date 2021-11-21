@@ -14,9 +14,11 @@ bool isDir(const std::string &path);
 
 void ensureDir(const std::string &path);
 
-void moveDir(const std::string &from, const std::string &to);
+void moveFile(const std::string &from, const std::string &to);
 
 void gunzip(const std::string &path);
+
+void makeExecutable(const std::string &path);
 
 void ensureTrailingSlash(std::string &dir);
 

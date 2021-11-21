@@ -58,8 +58,8 @@ void ensureDir(const std::string &path) {
   }
 }
 
-void moveDir(const std::string &from, const std::string &to) {
-  // Log::get().warn("Moving directory: " + from + " -> " + to);
+void moveFile(const std::string &from, const std::string &to) {
+  // Log::get().warn("Moving file/directory: " + from + " -> " + to);
   std::string cmd = "mv " + from + " " + to;
   if (system(cmd.c_str()) != 0) {
     Log::get().error("Error executing command: " + cmd, true);
@@ -76,6 +76,15 @@ void gunzip(const std::string &path) {
   if (system(cmd.c_str()) != 0) {
     Log::get().error("Error executing command: " + cmd, true);
   }
+}
+
+void makeExecutable(const std::string &path) {
+#ifndef _WIN64
+  std::string cmd = "chmod u+x " + path;
+  if (system(cmd.c_str()) != 0) {
+    Log::get().error("Error executing command: " + cmd, true);
+  }
+#endif
 }
 
 void ensureTrailingSlash(std::string &dir) {

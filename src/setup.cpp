@@ -259,9 +259,11 @@ void Setup::runWizard() {
   ensureEnvVar("PATH", "$PATH:" + LODA_HOME + "bin",
                "Add LODA command-line tool to path", false);
 
+#ifndef _WIN64
   if (!checkMineParallelScript()) {
     return;
   }
+#endif
   if (!checkMiningMode()) {
     return;
   }
@@ -283,9 +285,11 @@ void Setup::runWizard() {
             << "To run a Hello World example (Fibonacci numbers):" << std::endl
             << "  loda eval A000045" << std::endl
             << "To mine programs for OEIS sequences (single core):" << std::endl
-            << "  loda mine" << std::endl
-            << "To mine programs for OEIS sequences (multi core):" << std::endl
+            << "  loda mine" << std::endl;
+#ifndef _WIN64
+  std::cout << "To mine programs for OEIS sequences (multi core):" << std::endl
             << "  mine_parallel.sh" << std::endl;
+#endif
 }
 
 void Setup::checkLodaHome() {
@@ -381,29 +385,21 @@ bool Setup::checkUpdate() {
 #endif
   const std::string exec_local = LODA_HOME + "bin" + FILE_SEP + "loda" + exe;
   auto latest_version = getLatestVersion();
-  if (!isFile(exec_local) ||
-      (Version::IS_RELEASE && latest_version != Version::BRANCH)) {
+  if (Version::IS_RELEASE &&
+      (latest_version != Version::BRANCH || !isFile(exec_local))) {
     std::cout << "LODA " << latest_version << " is available!" << std::endl
               << "Do you want to install the update? (Y/n) ";
     std::string line;
     std::getline(std::cin, line);
     if (line.empty() || line == "y" || line == "Y") {
       const std::string exec_tmp =
-          LODA_HOME + "bin/loda-" + Version::PLATFORM + exe;
+          LODA_HOME + "bin" + FILE_SEP + "loda-" + Version::PLATFORM + exe;
       const std::string exec_url =
           "https://github.com/loda-lang/loda-cpp/releases/download/" +
           latest_version + "/loda-" + Version::PLATFORM + exe;
       WebClient::get(exec_url, exec_tmp, true, true);
-      std::string cmd = "chmod u+x " + exec_tmp;
-      if (system(cmd.c_str()) != 0) {
-        std::cout << "Error making file executable" << std::endl;
-        return false;
-      }
-      cmd = "mv " + exec_tmp + " " + exec_local;
-      if (system(cmd.c_str()) != 0) {
-        std::cout << "Error updating executable" << std::endl;
-        return false;
-      }
+      makeExecutable(exec_tmp);
+      moveFile(exec_tmp, exec_local);
       std::cout << "Update installed. Restarting setup... " << std::endl
                 << std::endl;
       std::string new_setup = exec_local + " setup";
