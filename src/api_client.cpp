@@ -7,6 +7,7 @@
 #include "program_util.hpp"
 #include "setup.hpp"
 #include "util.hpp"
+#include "web_client.hpp"
 
 const std::string ApiClient::BASE_URL("http://api.loda-lang.org/miner/v1/");
 
@@ -30,15 +31,15 @@ void ApiClient::postProgram(const std::string& path) {
   if (!isFile(path)) {
     Log::get().error("File not found: " + path, true);
   }
-  if (!Http::postFile(BASE_URL + "programs", path)) {
+  if (!WebClient::postFile(BASE_URL + "programs", path)) {
     Log::get().error("Error submitting program to miner API", true);
   }
 }
 
 bool ApiClient::getProgram(int64_t index, const std::string& path) {
   std::remove(path.c_str());
-  return Http::get(BASE_URL + "programs/" + std::to_string(index), path, false,
-                   false);
+  return WebClient::get(BASE_URL + "programs/" + std::to_string(index), path,
+                        false, false);
 }
 
 Program ApiClient::getNextProgram() {
@@ -107,7 +108,7 @@ void ApiClient::updateSession() {
 int64_t ApiClient::fetchInt(const std::string& endpoint) {
   // TODO: store in tmp folder
   const std::string tmp = "tmp_int.txt";
-  Http::get(BASE_URL + endpoint, tmp, true, true);
+  WebClient::get(BASE_URL + endpoint, tmp, true, true);
   std::ifstream in(tmp);
   if (in.bad()) {
     Log::get().error("Error fetching data from API server", true);

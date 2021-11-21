@@ -8,6 +8,7 @@
 #include "file.hpp"
 #include "jute.h"
 #include "util.hpp"
+#include "web_client.hpp"
 
 std::string Setup::LODA_HOME;
 std::string Setup::OEIS_HOME;
@@ -63,7 +64,7 @@ std::string Setup::getMinersConfig() {
           "https://raw.githubusercontent.com/loda-lang/loda-cpp/main/"
           "miners.default.json";
       std::remove(default_config.c_str());
-      Http::get(url, default_config);
+      WebClient::get(url, default_config);
     }
   }
   return default_config;
@@ -355,7 +356,7 @@ std::string Setup::getLatestVersion() {
   const std::string local_release_info(".latest-release.json");
   const std::string release_info_url(
       "https://api.github.com/repos/loda-lang/loda-cpp/releases/latest");
-  Http::get(release_info_url, local_release_info, true, true);
+  WebClient::get(release_info_url, local_release_info, true, true);
   const std::string content = getFileAsString(local_release_info);
   std::remove(local_release_info.c_str());
   auto json = jute::parser::parse(content);
@@ -392,7 +393,7 @@ bool Setup::checkUpdate() {
       const std::string exec_url =
           "https://github.com/loda-lang/loda-cpp/releases/download/" +
           latest_version + "/loda-" + Version::PLATFORM + exe;
-      Http::get(exec_url, exec_tmp, true, true);
+      WebClient::get(exec_url, exec_tmp, true, true);
       std::string cmd = "chmod u+x " + exec_tmp;
       if (system(cmd.c_str()) != 0) {
         std::cout << "Error making file executable" << std::endl;
@@ -490,7 +491,7 @@ bool Setup::updateFile(const std::string& local_file, const std::string& url,
   if (!action.empty()) {
     std::cout << action << " " << local_file << std::endl;
     std::remove(local_file.c_str());
-    Http::get(url, local_file, true, true);
+    WebClient::get(url, local_file, true, true);
     if (Version::IS_RELEASE) {
       // inject marker
       std::ifstream in2(local_file);

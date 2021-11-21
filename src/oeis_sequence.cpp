@@ -9,6 +9,7 @@
 #include "parser.hpp"
 #include "setup.hpp"
 #include "util.hpp"
+#include "web_client.hpp"
 
 const size_t OeisSequence::DEFAULT_SEQ_LENGTH = 100;
 
@@ -206,7 +207,7 @@ Sequence OeisSequence::getTerms(int64_t max_num_terms) const {
           big_file.peek() == std::ifstream::traits_type::eof()) {
         ensureDir(path);
         std::remove(path.c_str());
-        Http::get(url_str() + "/" + id_str("b") + ".txt", path);
+        WebClient::get(url_str() + "/" + id_str("b") + ".txt", path);
         big = loadBFile(id, terms);
       }
     }

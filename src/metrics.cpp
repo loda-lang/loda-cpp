@@ -6,6 +6,7 @@
 #include "file.hpp"
 #include "setup.hpp"
 #include "util.hpp"
+#include "web_client.hpp"
 
 Metrics::Metrics()
     : publish_interval(Setup::getSetupInt("LODA_METRICS_PUBLISH_INTERVAL",
@@ -43,7 +44,7 @@ void Metrics::write(const std::vector<Entry> entries) const {
     out << " value=" << entry.value << "\n";
   }
   out.close();
-  if (!Http::postFile(host + "/write?db=loda", file_name, auth)) {
+  if (!WebClient::postFile(host + "/write?db=loda", file_name, auth)) {
     Log::get().error("Error publishing metrics", false);
   }
   std::remove(file_name.c_str());

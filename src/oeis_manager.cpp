@@ -22,6 +22,7 @@
 #include "setup.hpp"
 #include "stats.hpp"
 #include "util.hpp"
+#include "web_client.hpp"
 
 void throwParseError(const std::string &line) {
   Log::get().error("error parsing OEIS line: " + line, true);
@@ -325,7 +326,7 @@ void OeisManager::update() {
     std::string cmd, path;
     for (auto &file : files) {
       path = Setup::getOeisHome() + file;
-      Http::get("https://oeis.org/" + file + ".gz", path + ".gz");
+      WebClient::get("https://oeis.org/" + file + ".gz", path + ".gz");
       std::ifstream f(Setup::getOeisHome() + file);
       if (f.good()) {
         f.close();
