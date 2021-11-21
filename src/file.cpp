@@ -168,6 +168,27 @@ void ensureTrailingSlash(std::string &dir) {
   }
 }
 
+std::string getHomeDir() {
+  static std::string home;
+  if (home.empty()) {
+#ifdef _WIN64
+    auto d = std::getenv("HOMEDRIVE");
+    auto p = std::getenv("HOMEPATH");
+    if (!d || !p) {
+      Log::get().error("Cannot determine home directory!", true);
+    }
+    home = std::string(d) + std::string(p);
+#else
+    auto h = std::getenv("HOME");
+    if (!h) {
+      Log::get().error("Cannot determine home directory!", true);
+    }
+    home = std::string(h);
+#endif
+  }
+  return home;
+}
+
 std::string getTmpDir() {
 #ifdef _WIN64
   char tmp[500];

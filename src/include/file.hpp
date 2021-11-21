@@ -27,6 +27,8 @@ void gunzip(const std::string &path);
 
 void ensureTrailingSlash(std::string &dir);
 
+std::string getHomeDir();
+
 std::string getTmpDir();
 
 std::string getFileAsString(const std::string &filename);

@@ -52,7 +52,6 @@ class Setup {
  private:
   static constexpr int64_t DEFAULT_UPDATE_INTERVAL = 1;  // 1 day default
 
-  static std::string USER_HOME;
   static std::string LODA_HOME;
   static std::string OEIS_HOME;
   static std::string PROGRAMS_HOME;

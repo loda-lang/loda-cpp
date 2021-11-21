@@ -9,7 +9,6 @@
 #include "jute.h"
 #include "util.hpp"
 
-std::string Setup::USER_HOME;
 std::string Setup::LODA_HOME;
 std::string Setup::OEIS_HOME;
 std::string Setup::PROGRAMS_HOME;
@@ -27,21 +26,7 @@ std::string Setup::getLodaHomeNoCheck() {
   if (loda_home) {
     result = std::string(loda_home);
   } else {
-    auto user_home = std::getenv("HOME");
-    if (user_home) {
-      result = std::string(user_home) + "/loda/";
-    } else {
-      // on windows...
-      auto homedrive = std::getenv("HOMEDRIVE");
-      auto homepath = std::getenv("HOMEPATH");
-      if (homedrive && homepath) {
-        result = std::string(homedrive) + std::string(homepath) + "\\loda/";
-      } else {
-        throw std::runtime_error(
-            "Error determining LODA home directory. Please set the LODA_HOME "
-            "environment variable.");
-      }
-    }
+    result = getHomeDir() + "/loda/";
   }
   ensureTrailingSlash(result);
   return result;
@@ -103,12 +88,6 @@ const std::string& Setup::getOeisHome() {
 
 const std::string& Setup::getProgramsHome() {
   if (PROGRAMS_HOME.empty()) {
-    auto env = std::getenv("LODA_PROGRAMS_HOME");
-    if (env) {
-      Log::get().warn(
-          "LODA_PROGRAMS_HOME environment variable deprecated, please unset "
-          "it");
-    }
     setProgramsHome(getLodaHome() + "programs/");
   }
   return PROGRAMS_HOME;
@@ -273,7 +252,7 @@ void Setup::runWizard() {
   }
 
   // environment variables
-  if (LODA_HOME != USER_HOME + "/loda/") {
+  if (LODA_HOME != getHomeDir() + "/loda/") {
     ensureEnvVar("LODA_HOME", LODA_HOME, "Set LODA home directory", true);
   }
   ensureEnvVar("PATH", "$PATH:" + LODA_HOME + "bin",
@@ -310,8 +289,7 @@ void Setup::runWizard() {
 
 void Setup::checkLodaHome() {
   std::string line;
-  USER_HOME = std::string(std::getenv("HOME"));
-  LODA_HOME = USER_HOME + "/loda";
+  LODA_HOME = getHomeDir() + "/loda";
   if (std::getenv("LODA_HOME")) {
     LODA_HOME = std::string(std::getenv("LODA_HOME"));
   }
@@ -637,9 +615,9 @@ void Setup::ensureEnvVar(const std::string& key, const std::string& value,
   if (shell) {
     std::string sh(shell);
     if (sh == "/bin/bash") {
-      std::string bashrc = std::string(std::getenv("HOME")) + "/.bashrc";
+      std::string bashrc = getHomeDir() + "/.bashrc";
       if (!isFile(bashrc)) {
-        bashrc = std::string(std::getenv("HOME")) + "/.bash_profile";
+        bashrc = getHomeDir() + "/.bash_profile";
       }
       std::string kv = "export " + key + "=" + value;
       std::ifstream in(bashrc);
