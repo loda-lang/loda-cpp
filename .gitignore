@@ -1,6 +1,8 @@
+*.ilk
 *.log
 *.o
 *.obj
+*.pdb
 /src/external/
 /src/loda
 /src/loda.exe
