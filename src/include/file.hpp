@@ -2,18 +2,11 @@
 
 #include <string>
 
-class Http {
- public:
-  static bool get(const std::string &url, const std::string &local_path,
-                  bool silent = false, bool fail_on_error = true);
-
-  static bool postFile(const std::string &url, const std::string &file_path,
-                       const std::string &auth = std::string());
-
- private:
-  static int64_t WWW_CLIENT;
-  static void initWWWClient();
-};
+#ifdef _WIN64
+static constexpr char FILE_SEP = '\\';
+#else
+static constexpr char FILE_SEP = '/';
+#endif
 
 bool isFile(const std::string &path);
 
@@ -21,9 +14,19 @@ bool isDir(const std::string &path);
 
 void ensureDir(const std::string &path);
 
-void moveDir(const std::string &from, const std::string &to);
+void moveFile(const std::string &from, const std::string &to);
+
+void gunzip(const std::string &path);
+
+void makeExecutable(const std::string &path);
 
 void ensureTrailingSlash(std::string &dir);
+
+std::string getHomeDir();
+
+std::string getTmpDir();
+
+std::string getNullRedirect();
 
 std::string getFileAsString(const std::string &filename);
 

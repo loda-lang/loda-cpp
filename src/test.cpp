@@ -31,18 +31,19 @@
 Test::Test() {
   Log::get().info("Initialized random number generator using seed " +
                   std::to_string(Random::get().seed));
-#ifndef _WIN64
-  ensureDir("/tmp/loda/");
-  Setup::setLodaHome("/tmp/loda/");
-#endif
-  Setup::setMinersConfig("tests/config/test_miners.json");
-  Setup::setProgramsHome("tests/programs");
+  const std::string home = getTmpDir() + "loda" + FILE_SEP;
+  ensureDir(home);
+  Setup::setLodaHome(home);
+  Setup::setMinersConfig(std::string("tests") + FILE_SEP + "config" + FILE_SEP +
+                         "test_miners.json");
+  Setup::setProgramsHome(std::string("tests") + FILE_SEP + "programs");
 }
 
 void Test::all() {
   // fast tests
   sequence();
   memory();
+  programUtil();
   semantics();
   config();
   steps();
@@ -56,8 +57,6 @@ void Test::all() {
   // slow tests
   number();
   randomNumber(1000);
-#ifndef _WIN64
-  // TODO: fix tests on windows
   ackermann();
   stats();
   apiClient();
@@ -67,16 +66,11 @@ void Test::all() {
   minimizer(100);
   miner();
   memUsage();
-#endif
 }
 
 OeisManager& Test::getManager() {
   if (!manager_ptr) {
-#ifdef _WIN64
-    manager_ptr.reset(new OeisManager(settings, false, "stats"));
-#else
-    manager_ptr.reset(new OeisManager(settings, false, "/tmp/stats"));
-#endif
+    manager_ptr.reset(new OeisManager(settings, false, getTmpDir() + "stats"));
   }
   return *manager_ptr;
 }
@@ -249,8 +243,9 @@ void Test::semantics() {
       continue;
     }
     auto& meta = Operation::Metadata::get(type);
-    std::string test_path =
-        "tests/semantics/" + Operation::Metadata::get(type).name + ".csv";
+    std::string test_path = std::string("tests") + FILE_SEP + "semantics" +
+                            FILE_SEP + Operation::Metadata::get(type).name +
+                            ".csv";
     std::ifstream test_file(test_path);
     if (!test_file.good()) {
       Log::get().error("Test file not found: " + test_path, true);
@@ -359,6 +354,22 @@ void Test::memory() {
   }
 }
 
+void Test::programUtil() {
+  Log::get().info("Testing program util");
+  Parser parser;
+  Program primes_const_loop, primes_var_loop;
+  auto base_path = std::string("tests") + FILE_SEP + "programs" + FILE_SEP +
+                   "util" + FILE_SEP;
+  primes_const_loop = parser.parse(base_path + "primes_const_loop.asm");
+  primes_var_loop = parser.parse(base_path + "primes_var_loop.asm");
+  if (!ProgramUtil::hasLoopWithConstantNumIterations(primes_const_loop)) {
+    Log::get().error("Expected contant loop in primes_const_loop.asm", true);
+  }
+  if (ProgramUtil::hasLoopWithConstantNumIterations(primes_var_loop)) {
+    Log::get().error("Unexpected contant loop in primes_var_loop.asm", true);
+  }
+}
+
 void validateIterated(const Program& p) {
   ProgramUtil::validate(p);
   if (ProgramUtil::numOps(p, Operand::Type::INDIRECT) > 0) {
@@ -453,7 +464,8 @@ void Test::knownPrograms() {
 void Test::apiClient() {
   Log::get().info("Testing API client");
   ApiClient client;
-  client.postProgram("tests/programs/oeis/000/A000005.asm");
+  client.postProgram(std::string("tests") + FILE_SEP + "programs" + FILE_SEP +
+                     "oeis" + FILE_SEP + "000" + FILE_SEP + "A000005.asm");
   auto program = client.getNextProgram();
   if (program.ops.empty()) {
     Log::get().error("Expected non-empty program from API server");
@@ -476,7 +488,8 @@ void Test::steps() {
 }
 
 void Test::blocks() {
-  auto tests = loadInOutTests("tests/blocks/B");
+  auto tests = loadInOutTests(std::string("tests") + FILE_SEP + "blocks" +
+                              FILE_SEP + "B");
   size_t i = 1;
   Blocks::Collector collector;
   for (auto& t : tests) {
@@ -520,7 +533,8 @@ void checkSeqAgainstTestBFile(int64_t seq_id, int64_t offset,
   OeisSequence t(seq_id);
   std::stringstream buf;
   t.getTerms(max_num_terms).to_b_file(buf, offset);
-  std::ifstream bfile("tests/sequence/" + t.id_str("b") + ".txt");
+  std::ifstream bfile(std::string("tests") + FILE_SEP + "sequence" + FILE_SEP +
+                      t.id_str("b") + ".txt");
   std::string x, y;
   while (std::getline(bfile, x)) {
     if (!std::getline(buf, y)) {
@@ -591,7 +605,10 @@ void Test::ackermann() {
                                               {3, 5, 7, 9, 11},
                                               {5, 13, 29, 61, 125},
                                               {13, 65533}};
-  testBinary("ack", "tests/programs/general/ackermann.asm", values);
+  testBinary("ack",
+             std::string("tests") + FILE_SEP + "programs" + FILE_SEP +
+                 "general" + FILE_SEP + "ackermann.asm",
+             values);
 }
 
 void check_int(const std::string& s, int64_t expected, int64_t value) {
@@ -618,6 +635,8 @@ void Test::config() {
   auto config = ConfigLoader::load(settings);
   check_int("overwrite", 1, config.overwrite_mode == OverwriteMode::NONE);
 
+  std::string templates = std::string("tests") + FILE_SEP + "programs" +
+                          FILE_SEP + "templates" + FILE_SEP;
   check_int("generators.size", 3, config.generators.size());
   check_int("generators[0].version", 1, config.generators[0].version);
   check_int("generators[0].length", 30, config.generators[0].length);
@@ -627,7 +646,7 @@ void Test::config() {
   check_int("generators[0].calls", 1, config.generators[0].calls);
   check_int("generators[0].indirectAccess", 0,
             config.generators[0].indirect_access);
-  check_str("generators[0].template", "tests/programs/templates/call.asm",
+  check_str("generators[0].template", templates + "call.asm",
             config.generators[0].program_template);
   check_int("generators[1].version", 1, config.generators[1].version);
   check_int("generators[1].length", 30, config.generators[1].length);
@@ -637,7 +656,7 @@ void Test::config() {
   check_int("generators[1].calls", 1, config.generators[1].calls);
   check_int("generators[1].indirectAccess", 0,
             config.generators[1].indirect_access);
-  check_str("generators[1].template", "tests/programs/templates/loop.asm",
+  check_str("generators[1].template", templates + "loop.asm",
             config.generators[1].program_template);
   check_int("generators[2].version", 1, config.generators[2].version);
   check_int("generators[2].length", 40, config.generators[2].length);
@@ -738,11 +757,7 @@ void Test::stats() {
   }
 
   // save & reload stats
-#ifdef _WIN64
-  std::string dir = "./stats2";
-#else
-  std::string dir = "/tmp/stats2";
-#endif
+  std::string dir = getTmpDir() + "stats2";
   ensureDir(dir + "/");
   s.save(dir);
   t.load(dir);
@@ -811,7 +826,8 @@ void Test::optimizer() {
   Settings settings;
   Interpreter interpreter(settings);
   Optimizer optimizer(settings);
-  auto tests = loadInOutTests("tests/optimizer/E");
+  auto tests = loadInOutTests(std::string("tests") + FILE_SEP + "optimizer" +
+                              FILE_SEP + "E");
   size_t i = 1;
   for (auto& t : tests) {
     optimizer.optimize(t.first, 2, 1);

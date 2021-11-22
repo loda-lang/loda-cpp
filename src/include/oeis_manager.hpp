@@ -12,6 +12,12 @@
 
 enum class OverwriteMode { NONE, ALL, AUTO };
 
+struct update_program_result_t {
+  bool updated;
+  bool is_new;
+  Program program;
+};
+
 class OeisManager {
  public:
   OeisManager(const Settings& settings, bool force_overwrite = false,
@@ -31,7 +37,7 @@ class OeisManager {
 
   size_t getTotalCount() const { return total_count; }
 
-  std::pair<bool, bool> updateProgram(size_t id, const Program& p);
+  update_program_result_t updateProgram(size_t id, const Program& p);
 
  private:
   void loadData();
@@ -46,7 +52,7 @@ class OeisManager {
 
   void addSeqComments(Program& p) const;
 
-  void dumpProgram(size_t id, Program p, const std::string& file,
+  void dumpProgram(size_t id, Program& p, const std::string& file,
                    const std::string& submitted_by) const;
 
   void alert(Program p, size_t id, const std::string& prefix,

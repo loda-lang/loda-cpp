@@ -129,12 +129,29 @@
       "template": [
         "$LODA_HOME/programs/oeis/000/A000796.asm",
         "$LODA_HOME/programs/oeis/001/A001113.asm",
+        "$LODA_HOME/programs/oeis/001/A001615.asm",
         "$LODA_HOME/programs/oeis/001/A001622.asm",
         "$LODA_HOME/programs/oeis/002/A002110.asm",
         "$LODA_HOME/programs/oeis/002/A002193.asm",
         "$LODA_HOME/programs/oeis/002/A002487.asm",
+        "$LODA_HOME/programs/oeis/002/A002580.asm",
+        "$LODA_HOME/programs/oeis/002/A002581.asm",
+        "$LODA_HOME/programs/oeis/003/A003415.asm",
+        "$LODA_HOME/programs/oeis/003/A003968.asm",
+        "$LODA_HOME/programs/oeis/005/A005480.asm",
         "$LODA_HOME/programs/oeis/006/A006577.asm",
-        "$LODA_HOME/programs/oeis/010/A010550.asm"
+        "$LODA_HOME/programs/oeis/008/A008507.asm",
+        "$LODA_HOME/programs/oeis/010/A010550.asm",
+        "$LODA_HOME/programs/oeis/010/A010588.asm",
+        "$LODA_HOME/programs/oeis/010/A010603.asm",
+        "$LODA_HOME/programs/oeis/010/A010625.asm",
+        "$LODA_HOME/programs/oeis/011/A011006.asm",
+        "$LODA_HOME/programs/oeis/034/A034448.asm",
+        "$LODA_HOME/programs/oeis/058/A058265.asm",
+        "$LODA_HOME/programs/oeis/093/A093602.asm",
+        "$LODA_HOME/programs/oeis/098/A098090.asm",
+        "$LODA_HOME/programs/oeis/132/A132106.asm",
+        "$LODA_HOME/programs/oeis/173/A173919.asm"
       ]
     },
     {

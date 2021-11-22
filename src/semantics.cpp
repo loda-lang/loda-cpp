@@ -92,8 +92,10 @@ Number Semantics::pow(const Number& base, const Number& exp) {
 }
 
 Number Semantics::gcd(const Number& a, const Number& b) {
-  if (a == Number::INF || b == Number::INF ||
-      (a == Number::ZERO && b == Number::ZERO)) {
+  if (a == Number::ZERO && b == Number::ZERO) {
+    return Number::ZERO;
+  }
+  if (a == Number::INF || b == Number::INF) {
     return Number::INF;
   }
   auto aa = abs(a);

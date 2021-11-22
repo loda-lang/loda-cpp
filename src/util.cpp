@@ -33,10 +33,12 @@ enum TwitterClient {
 };
 
 TwitterClient findTwitterClient() {
-  if (system("twidge lsfollowers > /dev/null 2> /dev/null") == 0) {
+  std::string cmd = "twidge lsfollowers " + getNullRedirect();
+  if (system(cmd.c_str()) == 0) {
     return TW_TWIDGE;
   }
-  if (system("rainbowstream -h > /dev/null 2> /dev/null") == 0) {
+  cmd = "rainbowstream -h " + getNullRedirect();
+  if (system(cmd.c_str()) == 0) {
     return TW_RAINBOWSTREAM;
   }
   return TW_NONE;
@@ -106,9 +108,11 @@ void Log::alert(const std::string &msg, AlertDetails details) {
         }
         cmd = "slack chat send --text \"" + details.text + "\" --title \"" +
               details.title + "\" --title-link " + details.title_link +
-              " --color " + details.color + " --channel \"#miner\" > /dev/null";
+              " --color " + details.color + " --channel \"#miner\" " +
+              getNullRedirect();
       } else {
-        cmd = "slack chat send \"" + copy + "\" \"#miner\" > /dev/null";
+        cmd =
+            "slack chat send \"" + copy + "\" \"#miner\" " + getNullRedirect();
       }
       auto exit_code = system(cmd.c_str());
       if (exit_code != 0) {
@@ -127,11 +131,11 @@ void Log::alert(const std::string &msg, AlertDetails details) {
         case TW_NONE:
           break;
         case TW_TWIDGE:
-          cmd = "twidge update \"" + copy + "\" > /dev/null";
+          cmd = "twidge update \"" + copy + "\" " + getNullRedirect();
           break;
         case TW_RAINBOWSTREAM:
-          cmd = "printf \"t " + copy +
-                "\\nexit()\\n\" | rainbowstream > /dev/null";
+          cmd = "printf \"t " + copy + "\\nexit()\\n\" | rainbowstream " +
+                getNullRedirect();
           break;
       }
       if (!cmd.empty()) {

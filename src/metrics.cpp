@@ -6,6 +6,7 @@
 #include "file.hpp"
 #include "setup.hpp"
 #include "util.hpp"
+#include "web_client.hpp"
 
 Metrics::Metrics()
     : publish_interval(Setup::getSetupInt("LODA_METRICS_PUBLISH_INTERVAL",
@@ -32,14 +33,8 @@ void Metrics::write(const std::vector<Entry> entries) const {
     Log::get().debug("Publishing metrics to InfluxDB");
     notified = true;
   }
-
-#ifdef _WIN64
   const std::string file_name =
-      "loda_metrics_" + std::to_string(tmp_file_id) + ".txt";
-#else
-  const std::string file_name =
-      "/tmp/loda_metrics_" + std::to_string(tmp_file_id) + ".txt";
-#endif
+      getTmpDir() + "loda_metrics_" + std::to_string(tmp_file_id) + ".txt";
   std::ofstream out(file_name);
   for (auto &entry : entries) {
     out << entry.field;
@@ -49,7 +44,7 @@ void Metrics::write(const std::vector<Entry> entries) const {
     out << " value=" << entry.value << "\n";
   }
   out.close();
-  if (!Http::postFile(host + "/write?db=loda", file_name, auth)) {
+  if (!WebClient::postFile(host + "/write?db=loda", file_name, auth)) {
     Log::get().error("Error publishing metrics", false);
   }
   std::remove(file_name.c_str());

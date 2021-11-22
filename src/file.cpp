@@ -24,82 +24,6 @@
 #include <mach/mach.h>
 #endif
 
-enum WWWClient { WC_UNKNOWN = 0, WC_CURL = 1, WC_WGET = 2 };
-
-int64_t Http::WWW_CLIENT = WC_UNKNOWN;
-
-void Http::initWWWClient() {
-  if (WWW_CLIENT == WC_UNKNOWN) {
-    if (system("curl --version > /dev/null 2> /dev/null") == 0) {
-      WWW_CLIENT = WC_CURL;
-    } else if (system("wget --version > /dev/null 2> /dev/null") == 0) {
-      WWW_CLIENT = WC_WGET;
-    } else {
-      Log::get().error("No web client found. Please install curl or wget.",
-                       true);
-    }
-  }
-}
-
-bool Http::get(const std::string &url, const std::string &local_path,
-               bool silent, bool fail_on_error) {
-  initWWWClient();
-  std::string cmd;
-  switch (WWW_CLIENT) {
-    case WC_CURL:
-      cmd = "curl -fsSLo " + local_path + " " + url;
-      break;
-    case WC_WGET:
-      cmd = "wget -q --no-use-server-timestamps -O " + local_path + " " + url;
-      break;
-    default:
-      Log::get().error("Unsupported web client for GET request", true);
-  }
-  if (system(cmd.c_str()) != 0) {
-    std::remove(local_path.c_str());
-    if (fail_on_error) {
-      Log::get().error("Error fetching " + url, true);
-    } else {
-      return false;
-    }
-  }
-  if (!silent) {
-    Log::get().info("Fetched " + url);
-  }
-  return true;
-}
-
-bool Http::postFile(const std::string &url, const std::string &file_path,
-                    const std::string &auth) {
-  initWWWClient();
-  std::string cmd;
-  switch (WWW_CLIENT) {
-    case WC_CURL: {
-      cmd = "curl -fsSL";
-      if (!auth.empty()) {
-        cmd += " -u " + auth;
-      }
-      cmd +=
-          " -X POST '" + url + "' --data-binary @" + file_path + " > /dev/null";
-      break;
-    }
-    case WC_WGET: {
-      cmd = "wget -q";
-      if (!auth.empty()) {
-        auto colon = auth.find(':');
-        cmd += " --user '" + auth.substr(0, colon) + "' --password '" +
-               auth.substr(colon + 1) + "'";
-      }
-      cmd += " --post-file " + file_path + " " + url + " > /dev/null";
-      break;
-    }
-    default:
-      Log::get().error("Unsupported web client for POST request", true);
-  }
-  auto exit_code = system(cmd.c_str());
-  return (exit_code == 0);
-}
-
 bool isFile(const std::string &path) {
   std::ifstream f(path.c_str());
   return f.good();
@@ -116,37 +40,98 @@ bool isDir(const std::string &path) {
 #endif
 
 void ensureDir(const std::string &path) {
-  auto index = path.find_last_of("/");
+  auto index = path.find_last_of(FILE_SEP);
   if (index != std::string::npos) {
     auto dir = path.substr(0, index);
+    if (!isDir(dir)) {
 #ifdef _WIN64
-    std::replace(dir.begin(), dir.end(), '/', '\\');
-    if (!CreateDirectory(dir.c_str(), nullptr) &&
-        ERROR_ALREADY_EXISTS != GetLastError())
+      auto cmd = "md \"" + dir + "\"";
 #else
-    auto cmd = "mkdir -p " + dir;
-    if (system(cmd.c_str()) != 0)
+      auto cmd = "mkdir -p \"" + dir + "\"";
 #endif
-    {
-      Log::get().error("Error creating directory " + dir, true);
+      if (system(cmd.c_str()) != 0) {
+        Log::get().error("Error creating directory " + dir, true);
+      }
     }
   } else {
     Log::get().error("Error determining directory for " + path, true);
   }
 }
 
-void moveDir(const std::string &from, const std::string &to) {
-  // Log::get().warn("Moving directory: " + from + " -> " + to);
-  std::string cmd = "mv " + from + " " + to;
+void execCmd(const std::string &cmd) {
   if (system(cmd.c_str()) != 0) {
     Log::get().error("Error executing command: " + cmd, true);
   }
 }
 
+void moveFile(const std::string &from, const std::string &to) {
+  // Log::get().warn("Moving file/directory: " + from + " -> " + to);
+  execCmd("mv \"" + from + "\" \"" + to + "\"");
+}
+
+void gunzip(const std::string &path) {
+#ifdef _WIN64
+  // https://stackoverflow.com/questions/9964865/c-system-not-working-when-there-are-spaces-in-two-different-parameters
+  execCmd("cmd /S /C \"\"C:\\Program Files\\Git\\usr\\bin\\gzip.exe\" -d \"" +
+          path + "\"\"");
+#else
+  execCmd("gzip -d \"" + path + "\"");
+#endif
+}
+
+void makeExecutable(const std::string &path) {
+#ifndef _WIN64
+  execCmd("chmod u+x \"" + path + "\"");
+#endif
+}
+
 void ensureTrailingSlash(std::string &dir) {
-  if (dir.back() != '/') {
-    dir += '/';
+  if (dir.back() != FILE_SEP) {
+    dir += FILE_SEP;
   }
+}
+
+std::string getHomeDir() {
+  static std::string home;
+  if (home.empty()) {
+#ifdef _WIN64
+    auto d = std::getenv("HOMEDRIVE");
+    auto p = std::getenv("HOMEPATH");
+    if (!d || !p) {
+      Log::get().error("Cannot determine home directory!", true);
+    }
+    home = std::string(d) + std::string(p);
+#else
+    auto h = std::getenv("HOME");
+    if (!h) {
+      Log::get().error("Cannot determine home directory!", true);
+    }
+    home = std::string(h);
+#endif
+  }
+  return home;
+}
+
+std::string getTmpDir() {
+#ifdef _WIN64
+  char tmp[500];
+  if (GetTempPathA(sizeof(tmp), tmp)) {
+    return std::string(tmp);
+  } else {
+    Log::get().error("Cannot determine temp directory", true);
+    return {};
+  }
+#else
+  return "/tmp/";
+#endif
+}
+
+std::string getNullRedirect() {
+#ifdef _WIN64
+  return "> nul 2>&1";
+#else
+  return "> /dev/null 2> /dev/null";
+#endif
 }
 
 std::string getFileAsString(const std::string &filename) {
@@ -200,15 +185,17 @@ size_t getMemUsage() {
 }
 
 bool hasGit() {
-  const std::string git_test("git --version > /dev/null 2> /dev/null");
-  return system(git_test.c_str()) == 0;
+  static int64_t git_check = -1;
+  if (git_check == -1) {
+    auto git_test = std::string("git --version ") + getNullRedirect();
+    git_check = system(git_test.c_str());
+  }
+  return git_check == 0;
 }
 
 FolderLock::FolderLock(std::string folder) {
   // obtain lock
-  if (folder[folder.size() - 1] != '/') {
-    folder += '/';
-  }
+  ensureTrailingSlash(folder);
   ensureDir(folder);
   lockfile = folder + "lock";
   fd = 0;

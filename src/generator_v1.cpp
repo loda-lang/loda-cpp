@@ -19,7 +19,7 @@
 #define POSITION_RANGE 100
 
 GeneratorV1::GeneratorV1(const Config &config, const Stats &stats)
-    : Generator(config, stats) {
+    : Generator(config, stats), num_generated(0), mutator(stats) {
   // the post processing adds operations, so we reduce the target length here
   num_operations = std::max<int64_t>(config.length / 2, 1);
 
@@ -177,7 +177,12 @@ std::pair<Operation, double> GeneratorV1::generateOperation() {
 Program GeneratorV1::generateProgram() {
   // use template for base program
   Program p = program_template;
-  generateStateless(p, num_operations);
-  applyPostprocessing(p);
+  if (p.ops.empty() || (num_generated % 2)) {
+    generateStateless(p, num_operations);
+    applyPostprocessing(p);
+  } else {
+    mutator.mutateRandom(p);
+  }
+  num_generated++;
   return p;
 }

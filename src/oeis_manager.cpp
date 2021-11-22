@@ -22,6 +22,7 @@
 #include "setup.hpp"
 #include "stats.hpp"
 #include "util.hpp"
+#include "web_client.hpp"
 
 void throwParseError(const std::string &line) {
   Log::get().error("error parsing OEIS line: " + line, true);
@@ -51,7 +52,7 @@ void OeisManager::load() {
   }
 
   // first load the deny and protect lists (needs no lock)
-  const std::string oeis_dir = Setup::getProgramsHome() + "oeis/";
+  const std::string oeis_dir = Setup::getProgramsHome() + "oeis" + FILE_SEP;
   OeisList::loadList(oeis_dir + "deny.txt", deny_list);
   OeisList::loadList(oeis_dir + "overwrite.txt", overwrite_list);
   OeisList::loadList(oeis_dir + "protect.txt", protect_list);
@@ -314,6 +315,7 @@ void OeisManager::update() {
     it++;
   }
   if (!files.empty()) {
+    Setup::checkLatestedVersion();
     if (age_in_days == -1) {
       Log::get().info("Creating OEIS index at " + Setup::getOeisHome());
       ensureDir(Setup::getOeisHome());
@@ -324,16 +326,13 @@ void OeisManager::update() {
     std::string cmd, path;
     for (auto &file : files) {
       path = Setup::getOeisHome() + file;
-      Http::get("https://oeis.org/" + file + ".gz", path + ".gz");
+      WebClient::get("https://oeis.org/" + file + ".gz", path + ".gz");
       std::ifstream f(Setup::getOeisHome() + file);
       if (f.good()) {
         f.close();
         std::remove(path.c_str());
       }
-      cmd = "gzip -d " + path + ".gz";
-      if (system(cmd.c_str()) != 0) {
-        Log::get().error("Error unzipping " + path + ".gz", true);
-      }
+      gunzip(path + ".gz");
     }
     // update programs repository using git pull
     auto mode = Setup::getMiningMode();
@@ -491,21 +490,35 @@ void OeisManager::addSeqComments(Program &p) const {
   }
 }
 
-void OeisManager::dumpProgram(size_t id, Program p, const std::string &file,
+void OeisManager::dumpProgram(size_t id, Program &p, const std::string &file,
                               const std::string &submitted_by) const {
   ProgramUtil::removeOps(p, Operation::Type::NOP);
   ProgramUtil::removeComments(p);
   addSeqComments(p);
   ensureDir(file);
-  std::ofstream out(file);
   auto &seq = sequences.at(id);
-  out << "; " << seq << std::endl;
+  Program tmp;
+  Operation nop(Operation::Type::NOP);
+  nop.comment = seq.to_string();
+  tmp.ops.push_back(nop);
   if (!submitted_by.empty()) {
-    out << "; " << ProgramUtil::SUBMITTED_BY_PREFIX << " " << submitted_by
-        << std::endl;
+    nop.comment = ProgramUtil::SUBMITTED_BY_PREFIX + " " + submitted_by;
+    tmp.ops.push_back(nop);
   }
-  out << "; " << seq.getTerms(OeisSequence::DEFAULT_SEQ_LENGTH) << std::endl;
-  out << std::endl;
+  nop.comment = seq.getTerms(OeisSequence::DEFAULT_SEQ_LENGTH).to_string();
+  static constexpr size_t max_length = 500;
+  if (nop.comment.size() > max_length) {  // magic number
+    nop.comment = nop.comment.substr(0, max_length);
+    auto n = nop.comment.find_last_of(',');
+    if (n != std::string::npos) {
+      nop.comment = nop.comment.substr(0, n);
+    }
+  }
+  tmp.ops.push_back(nop);
+  nop.comment.clear();
+  tmp.ops.push_back(nop);
+  p.ops.insert(p.ops.begin(), tmp.ops.begin(), tmp.ops.end());
+  std::ofstream out(file);
   ProgramUtil::print(p, out);
   out.close();
 }
@@ -580,6 +593,17 @@ std::string OeisManager::isOptimizedBetter(Program existing, Program optimized,
     return "";
   }
 
+  // check if there are loops with contant number of iterations involved
+  const int64_t const_loops_existing =
+      ProgramUtil::hasLoopWithConstantNumIterations(existing);
+  const int64_t const_loops_optimized =
+      ProgramUtil::hasLoopWithConstantNumIterations(optimized);
+  if (const_loops_optimized < const_loops_existing) {
+    return "Better";
+  } else if (const_loops_optimized > const_loops_existing) {
+    return "";  // optimized is worse
+  }
+
   // get extended sequence
   auto terms = seq.getTerms(OeisSequence::EXTENDED_SEQ_LENGTH);
   if (terms.empty()) {
@@ -622,18 +646,22 @@ std::string OeisManager::isOptimizedBetter(Program existing, Program optimized,
   return "";
 }
 
-std::pair<bool, bool> OeisManager::updateProgram(size_t id, const Program &p) {
+update_program_result_t OeisManager::updateProgram(size_t id,
+                                                   const Program &p) {
   auto &seq = sequences.at(id);
   const std::string global_file = seq.getProgramPath(false);
   const std::string local_file = seq.getProgramPath(true);
   const std::string submitted_by = ProgramUtil::getSubmittedBy(p);
   bool is_new = true;
   std::string change;
+  update_program_result_t result;
+  result.updated = false;
+  result.is_new = false;
 
   // minimize and check the program
   auto minimized = finder.checkAndMinimize(p, seq);
   if (!minimized.first) {
-    return {false, false};
+    return result;
   }
 
   // check if there is an existing program already
@@ -650,28 +678,33 @@ std::pair<bool, bool> OeisManager::updateProgram(size_t id, const Program &p) {
         existing = parser.parse(in);
       } catch (const std::exception &) {
         Log::get().error("Error parsing " + file_name, false);
-        return {false, false};
+        return result;
       }
       change = isOptimizedBetter(existing, minimized.second, id);
       if (change.empty()) {
-        return {false, false};
+        return result;
       }
     } else {
-      return {false, false};
+      return result;
     }
   }
 
+  // update result
+  result.updated = true;
+  result.is_new = is_new;
+
   // write new or optimized program version
+  result.program = minimized.second;
   if (Setup::getMiningMode() == MINING_MODE_SERVER) {
-    dumpProgram(id, minimized.second, global_file, submitted_by);
+    dumpProgram(id, result.program, global_file, submitted_by);
   } else {
-    dumpProgram(id, minimized.second, local_file, submitted_by);
+    dumpProgram(id, result.program, local_file, submitted_by);
   }
 
   // send alert
   std::string prefix = is_new ? "First" : change;
   std::string color = is_new ? "good" : "warning";
-  alert(minimized.second, id, prefix, color, submitted_by);
+  alert(result.program, id, prefix, color, submitted_by);
 
-  return {true, is_new};
+  return result;
 }

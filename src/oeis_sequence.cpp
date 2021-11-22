@@ -4,10 +4,12 @@
 #include <iomanip>
 #include <sstream>
 
+#include "big_number.hpp"
 #include "file.hpp"
 #include "parser.hpp"
 #include "setup.hpp"
 #include "util.hpp"
+#include "web_client.hpp"
 
 const size_t OeisSequence::DEFAULT_SEQ_LENGTH = 100;
 
@@ -18,7 +20,7 @@ bool OeisSequence::isTooBig(const Number& n) {
     return true;
   }
   if (USE_BIG_NUMBER) {
-    return n.getNumUsedWords() > 2;
+    return n.getNumUsedWords() > static_cast<int64_t>(BigNumber::NUM_WORDS / 2);
   } else {
     static const int64_t NUM_INF = std::numeric_limits<int64_t>::max();
     return (n.value > (NUM_INF / 1000)) || (n.value < (NUM_INF / -1000));
@@ -73,15 +75,16 @@ std::string OeisSequence::url_str() const {
 
 std::string OeisSequence::getProgramPath(bool local) const {
   if (local) {
-    return Setup::getProgramsHome() + "local/" + id_str() + ".asm";
+    return Setup::getProgramsHome() + "local" + FILE_SEP + id_str() + ".asm";
   } else {
-    return Setup::getProgramsHome() + "oeis/" + dir_str() + "/" + id_str() +
-           ".asm";
+    return Setup::getProgramsHome() + "oeis" + FILE_SEP + dir_str() + FILE_SEP +
+           id_str() + ".asm";
   }
 }
 
 std::string OeisSequence::getBFilePath() const {
-  return Setup::getOeisHome() + "b/" + dir_str() + "/" + id_str("b") + ".txt";
+  return Setup::getOeisHome() + "b" + FILE_SEP + dir_str() + FILE_SEP +
+         id_str("b") + ".txt";
 }
 
 Sequence loadBFile(size_t id, const Sequence& seq_full) {
@@ -205,7 +208,7 @@ Sequence OeisSequence::getTerms(int64_t max_num_terms) const {
           big_file.peek() == std::ifstream::traits_type::eof()) {
         ensureDir(path);
         std::remove(path.c_str());
-        Http::get(url_str() + "/" + id_str("b") + ".txt", path);
+        WebClient::get(url_str() + "/" + id_str("b") + ".txt", path);
         big = loadBFile(id, terms);
       }
     }

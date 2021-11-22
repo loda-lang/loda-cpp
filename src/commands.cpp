@@ -31,7 +31,7 @@ void Commands::help() {
   initLog(true);
   Settings settings;
   std::cout << "Welcome to " << Version::INFO
-            << ". More information at https://loda-lang.org" << std::endl
+            << ". More information at https://loda-lang.org/" << std::endl
             << std::endl;
   std::cout << "Usage: loda <command> <options>" << std::endl << std::endl;
   std::cout << "Core Commands:" << std::endl;

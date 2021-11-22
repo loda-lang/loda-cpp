@@ -4,7 +4,6 @@
 #include <sstream>
 #include <unordered_set>
 
-#include "api_client.hpp"
 #include "file.hpp"
 #include "generator.hpp"
 #include "interpreter.hpp"
@@ -20,6 +19,7 @@ const std::string Miner::ANONYMOUS("anonymous");
 Miner::Miner(const Settings &settings) : settings(settings) {}
 
 void Miner::reload(bool load_generators, bool force_overwrite) {
+  api_client.reset(new ApiClient());
   manager.reset(new OeisManager(settings, force_overwrite));
   manager->load();
   manager->getFinder();  // initializes matchers
@@ -35,7 +35,6 @@ void Miner::mine() {
   if (!manager) {
     reload(true);
   }
-  ApiClient api_client;
   Mutator mutator(manager->getStats());
   Parser parser;
   std::stack<Program> progs;
@@ -43,7 +42,7 @@ void Miner::mine() {
   Program program;
   AdaptiveScheduler metrics_scheduler(Metrics::get().publish_interval);
   AdaptiveScheduler api_scheduler(600);       // 10 minutes (magic number)
-  AdaptiveScheduler reload_scheduler(43200);  // 12 hours (magic number)
+  AdaptiveScheduler reload_scheduler(21600);  // 6 hours (magic number)
 
   // get mining mode
   const auto mode = Setup::getMiningMode();
@@ -64,13 +63,13 @@ void Miner::mine() {
                   " mode");
   Generator *generator = multi_generator->getGenerator();
   std::string submitted_by;
-  const int64_t programs_to_fetch = 50;  // magic number
+  const int64_t programs_to_fetch = 200;  // magic number
   int64_t current_fetch = (mode == MINING_MODE_SERVER) ? programs_to_fetch : 0;
   int64_t processed = 0;
   while (true) {
     // server mode: fetch new program
     if (progs.empty() && current_fetch > 0 && mode == MINING_MODE_SERVER) {
-      program = api_client.getNextProgram();
+      program = api_client->getNextProgram();
       if (program.ops.empty()) {
         current_fetch = 0;
       } else {
@@ -102,20 +101,20 @@ void Miner::mine() {
       program = s.second;
       setSubmittedBy(program);
       auto r = manager->updateProgram(s.first, program);
-      if (r.first) {
+      if (r.updated) {
         // update stats and increase priority of successful generator
-        if (r.second) {
+        if (r.is_new) {
           generator->stats.fresh++;
         } else {
           generator->stats.updated++;
         }
         // in client mode: submit the program to the API server
         if (mode == MINING_MODE_CLIENT) {
-          api_client.postProgram(program);
+          api_client->postProgram(r.program);
         }
         // mutate successful program
         if (mode != MINING_MODE_SERVER && progs.size() < 1000) {
-          mutator.mutateCopies(program, 100, progs);  // magic number
+          mutator.mutateCopies(r.program, 100, progs);  // magic number
         }
       }
     }
@@ -191,10 +190,10 @@ void Miner::submit(const std::string &id, const std::string &path) {
     program = s.second;
     setSubmittedBy(program);
     auto r = manager->updateProgram(s.first, program);
-    if (r.first) {
+    if (r.updated) {
       // in client mode: submit the program to the API server
       if (mode == MINING_MODE_CLIENT) {
-        api_client.postProgram(program);
+        api_client.postProgram(r.program);
       }
       matches++;
     }

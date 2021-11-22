@@ -2,6 +2,7 @@
 
 #include <memory>
 
+#include "api_client.hpp"
 #include "generator.hpp"
 #include "matcher.hpp"
 #include "number.hpp"
@@ -35,6 +36,7 @@ class Miner {
 
   static const std::string ANONYMOUS;
   const Settings &settings;
+  std::unique_ptr<ApiClient> api_client;
   std::unique_ptr<OeisManager> manager;
   std::unique_ptr<MultiGenerator> multi_generator;
 };

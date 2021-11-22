@@ -37,16 +37,14 @@ Number::Number(const std::string& s) {
   }
   bool is_big = FORCE_BIG_NUMBER;
   if (!is_big) {
-    big = nullptr;
-    try {
+    if (s.size() <= 18) {
       value = std::stoll(s);
-    } catch (const std::out_of_range&) {
-      if (USE_BIG_NUMBER) {
-        is_big = true;
-      } else {
-        value = 0;
-        big = INF_PTR;
-      }
+      big = nullptr;
+    } else if (USE_BIG_NUMBER) {
+      is_big = true;
+    } else {
+      value = 0;
+      big = INF_PTR;
     }
   }
   if (is_big) {

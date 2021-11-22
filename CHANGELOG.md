@@ -1,12 +1,39 @@
-To install or update LODA, please follow the [installation instructions](https://loda-lang.org/install/). Here the release notes:
+To install or update LODA, please follow the [installation instructions](https://loda-lang.org/install/). Here are the release notes:
 
 ## [Unreleased]
 
 ### Enhancements
 
 * macOS 12 (Monterey) support
+
+## v21.11.15
+
+### Bugfixes
+
+* Fix race condition during program submission
+
+### Features
+
+* Setup asks for update interval for OEIS files and programs repository
+
+### Enhancements
+
+* Limit the length of the terms comment in generated programs
+* Generator v1 also uses mutator (if templates are defined)
+* Clean up fetched program files in server mode
+* Avoid programs with loops with constant number of iterations
+
+## v21.11.09
+
+### Enhancements
+
+* Define `gcd(0,0) = 0` instead of infinity
+* Check for updates and remind user via log message
+* Submit minimized and formatted programs in client mode
+* Optimize server-side processing of submitted programs
 * Improve decision for "better" programs
 * Improve scheduling and event logging
+* Extend big number range of b-file sequence terms
 
 ## v21.10.26
 
