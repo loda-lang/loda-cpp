@@ -61,7 +61,7 @@ bool WebClient::postFile(const std::string &url, const std::string &file_path,
       if (!auth.empty()) {
         cmd += " -u " + auth;
       }
-      cmd += " -X POST '" + url + "' --data-binary @\"" + file_path + "\" " +
+      cmd += " -X POST " + url + " --data-binary @\"" + file_path + "\" " +
              getNullRedirect();
       break;
     }
@@ -79,6 +79,7 @@ bool WebClient::postFile(const std::string &url, const std::string &file_path,
     default:
       Log::get().error("Unsupported web client for POST request", true);
   }
+  Log::get().debug("Executing command: " + cmd);
   auto exit_code = system(cmd.c_str());
   return (exit_code == 0);
 }

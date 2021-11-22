@@ -32,7 +32,7 @@ void ApiClient::postProgram(const std::string& path) {
     Log::get().error("File not found: " + path, true);
   }
   if (!WebClient::postFile(BASE_URL + "programs", path)) {
-    Log::get().error("Error submitting program to miner API", true);
+    Log::get().error("Error submitting program to API server", true);
   }
 }
 
