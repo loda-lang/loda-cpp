@@ -11,6 +11,11 @@
 
 #include "util.hpp"
 
+// must be before <psapi.h>
+#ifdef _WIN64
+#include <windows.h>
+#endif
+
 #ifdef _WIN64
 #include <io.h>
 #include <psapi.h>
