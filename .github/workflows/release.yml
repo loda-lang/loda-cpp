@@ -79,3 +79,12 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
       - name: Build
         run: cd src && nmake.exe /F Makefile.windows loda LODA_PLATFORM=windows-19 LODA_VERSION=${{ needs.create-release.outputs.version }}
+      - name: Upload
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./loda.exe
+          asset_name: loda-windows-19
+          asset_content_type: application/octet-stream
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
