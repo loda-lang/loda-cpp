@@ -38,4 +38,4 @@ jobs:
       - name: Test
         run: ./loda.exe test
       - name: Benchmark
-        run: ./loda benchmark
+        run: ./loda.exe benchmark
