@@ -77,8 +77,8 @@ void moveFile(const std::string &from, const std::string &to) {
 
 void gunzip(const std::string &path) {
 #ifdef _WIN64
-  const std::string curl_test = "curl --version " + getNullRedirect();
-  if (system(curl_cmd.c_str()) == 0) {
+  const std::string gzip_test = "gzip --version " + getNullRedirect();
+  if (system(gzip_test.c_str()) == 0) {
     execCmd("gzip -d \"" + path + "\"");
   } else {
     std::string program_files = "C:\\Program Files";
