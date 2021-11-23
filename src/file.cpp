@@ -218,7 +218,7 @@ FolderLock::FolderLock(std::string folder) {
   }
   OVERLAPPED ol;
   ZeroMemory(&ol, sizeof(ol));
-  if (!LockFileEx(hFileHandle, LOCKFILE_EXCLUSIVE_LOCK, 0, 100, 0, &ol)) {
+  if (!LockFileEx(fd, LOCKFILE_EXCLUSIVE_LOCK, 0, 100, 0, &ol)) {
     Log::get().error("Cannot lock " + lockfile, true);
   }
 #else
@@ -245,7 +245,7 @@ void FolderLock::release() {
 #ifdef _WIN64
   OVERLAPPED ol;
   ZeroMemory(&ol, sizeof(ol));
-  if (!UnlockFileEx(hFileHandle, 0, 100, 0, &ol)) {
+  if (!UnlockFileEx(fd, 0, 100, 0, &ol)) {
     Log::get().error("Cannot unlock " + lockfile);
   }
 #else
