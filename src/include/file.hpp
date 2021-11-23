@@ -46,5 +46,9 @@ class FolderLock {
 
  private:
   std::string lockfile;
+#ifdef _WIN64
+  void *fd;
+#else
   int fd;
+#endif
 };
