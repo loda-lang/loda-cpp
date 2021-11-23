@@ -3,8 +3,10 @@
 #include <string>
 
 #ifdef _WIN64
+#include <windows.h>
 static constexpr char FILE_SEP = '\\';
 #else
+#define HANDLE int
 static constexpr char FILE_SEP = '/';
 #endif
 
@@ -46,5 +48,5 @@ class FolderLock {
 
  private:
   std::string lockfile;
-  int fd;
+  HANDLE fd;
 };

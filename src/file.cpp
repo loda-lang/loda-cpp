@@ -11,11 +11,6 @@
 
 #include "util.hpp"
 
-// must be before <psapi.h>
-#ifdef _WIN64
-#include <windows.h>
-#endif
-
 #ifdef _WIN64
 #include <io.h>
 #include <psapi.h>
@@ -248,9 +243,10 @@ void FolderLock::release() {
   if (!UnlockFileEx(fd, 0, 100, 0, &ol)) {
     Log::get().error("Cannot unlock " + lockfile);
   }
+  CloseHandle(fd);
 #else
   unlink(lockfile.c_str());
   flock(fd, LOCK_UN);
-#endif
   fd = 0;
+#endif
 }
