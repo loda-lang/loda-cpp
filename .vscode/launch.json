@@ -10,7 +10,8 @@
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
-            "environment": []
+            "environment": [],
+            "console": "integratedTerminal"
         },
         {
             "name": "Mac",

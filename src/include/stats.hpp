@@ -32,11 +32,11 @@ class Stats {
  public:
   Stats();
 
-  void load(const std::string &path);
+  void load(std::string path);
 
-  void save(const std::string &path);
+  void save(std::string path);
 
-  std::string getMainStatsFile(const std::string &path) const;
+  std::string getMainStatsFile(std::string path) const;
 
   void updateProgramStats(size_t id, const Program &program);
 

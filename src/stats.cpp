@@ -4,6 +4,7 @@
 #include <iostream>
 #include <sstream>
 
+#include "file.hpp"
 #include "oeis_sequence.hpp"
 #include "parser.hpp"
 #include "program_util.hpp"
@@ -13,7 +14,8 @@ Stats::Stats()
       num_sequences(0),
       num_ops_per_type(Operation::Types.size(), 0) {}
 
-void Stats::load(const std::string &path) {
+void Stats::load(std::string path) {
+  ensureTrailingSlash(path);
   Log::get().debug("Loading program stats from " + path);
 
   const std::string sep(",");
@@ -23,7 +25,7 @@ void Stats::load(const std::string &path) {
   Operand count;
 
   {
-    full = path + "/constant_counts.csv";
+    full = path + "constant_counts.csv";
     Log::get().debug("Loading " + full);
     std::ifstream constants(full);
     while (std::getline(constants, line)) {
@@ -36,7 +38,7 @@ void Stats::load(const std::string &path) {
   }
 
   {
-    full = path + "/program_lengths.csv";
+    full = path + "program_lengths.csv";
     Log::get().debug("Loading " + full);
     std::ifstream program_lengths(full);
     while (std::getline(program_lengths, line)) {
@@ -53,7 +55,7 @@ void Stats::load(const std::string &path) {
   }
 
   {
-    full = path + "/operation_type_counts.csv";
+    full = path + "operation_type_counts.csv";
     Log::get().debug("Loading " + full);
     std::ifstream op_type_counts(full);
     while (std::getline(op_type_counts, line)) {
@@ -67,7 +69,7 @@ void Stats::load(const std::string &path) {
   }
 
   {
-    full = path + "/operation_counts.csv";
+    full = path + "operation_counts.csv";
     Log::get().debug("Loading " + full);
     std::ifstream op_counts(full);
     parser.in = &op_counts;
@@ -89,7 +91,7 @@ void Stats::load(const std::string &path) {
   }
 
   {
-    full = path + "/operation_pos_counts.csv";
+    full = path + "operation_pos_counts.csv";
     Log::get().debug("Loading " + full);
     std::ifstream op_pos_counts(full);
     parser.in = &op_pos_counts;
@@ -119,7 +121,7 @@ void Stats::load(const std::string &path) {
   }
 
   {
-    full = path + "/programs.csv";
+    full = path + "programs.csv";
     Log::get().debug("Loading " + full);
     std::ifstream programs(full);
     found_programs.resize(100000, false);
@@ -151,7 +153,7 @@ void Stats::load(const std::string &path) {
   }
 
   {
-    full = path + "/call_graph.csv";
+    full = path + "call_graph.csv";
     Log::get().debug("Loading " + full);
     std::ifstream call(full);
     if (!std::getline(call, line) || line != "caller,callee") {
@@ -169,7 +171,7 @@ void Stats::load(const std::string &path) {
   }
 
   {
-    full = path + "/summary.csv";
+    full = path + "summary.csv";
     Log::get().debug("Loading " + full);
     std::ifstream summary(full);
     if (!std::getline(summary, line) || line != "num_programs,num_sequences") {
@@ -181,23 +183,24 @@ void Stats::load(const std::string &path) {
     num_sequences = std::stoll(v);
   }
 
-  { blocks.load(path + "/blocks.asm"); }
+  { blocks.load(path + "blocks.asm"); }
 
   // TODO: remaining stats
 
   Log::get().debug("Finished loading program stats");
 }
 
-void Stats::save(const std::string &path) {
+void Stats::save(std::string path) {
+  ensureTrailingSlash(path);
   Log::get().debug("Saving program stats to " + path);
 
   const std::string sep(",");
-  std::ofstream constants(path + "/constant_counts.csv");
+  std::ofstream constants(path + "constant_counts.csv");
   for (auto &e : num_constants) {
     constants << e.first << sep << e.second << "\n";
   }
   constants.close();
-  std::ofstream programs(path + "/programs.csv");
+  std::ofstream programs(path + "programs.csv");
   for (size_t i = 0; i < found_programs.size(); i++) {
     const bool f = found_programs[i];
     const bool b = cached_b_files[i];
@@ -207,14 +210,14 @@ void Stats::save(const std::string &path) {
     }
   }
   programs.close();
-  std::ofstream lengths(path + "/program_lengths.csv");
+  std::ofstream lengths(path + "program_lengths.csv");
   for (size_t i = 0; i < num_programs_per_length.size(); i++) {
     if (num_programs_per_length[i] > 0) {
       lengths << i << sep << num_programs_per_length[i] << "\n";
     }
   }
   lengths.close();
-  std::ofstream op_type_counts(path + "/operation_type_counts.csv");
+  std::ofstream op_type_counts(path + "operation_type_counts.csv");
   for (size_t i = 0; i < num_ops_per_type.size(); i++) {
     if (num_ops_per_type[i] > 0) {
       op_type_counts
@@ -223,7 +226,7 @@ void Stats::save(const std::string &path) {
     }
   }
   op_type_counts.close();
-  std::ofstream op_counts(path + "/operation_counts.csv");
+  std::ofstream op_counts(path + "operation_counts.csv");
   for (auto &op : num_operations) {
     const auto &meta = Operation::Metadata::get(op.first.type);
     op_counts << meta.name << sep
@@ -232,7 +235,7 @@ void Stats::save(const std::string &path) {
               << op.second << "\n";
   }
   op_counts.close();
-  std::ofstream oppos_counts(path + "/operation_pos_counts.csv");
+  std::ofstream oppos_counts(path + "operation_pos_counts.csv");
   for (auto &o : num_operation_positions) {
     const auto &meta = Operation::Metadata::get(o.first.op.type);
     oppos_counts << o.first.pos << sep << o.first.len << sep << meta.name << sep
@@ -242,12 +245,12 @@ void Stats::save(const std::string &path) {
   }
   oppos_counts.close();
 
-  std::ofstream summary(path + "/summary.csv");
+  std::ofstream summary(path + "summary.csv");
   summary << "num_programs,num_sequences\n";
   summary << num_programs << sep << num_sequences << "\n";
   summary.close();
 
-  std::ofstream cal(path + "/call_graph.csv");
+  std::ofstream cal(path + "call_graph.csv");
   cal << "caller,callee\n";
   for (auto it : call_graph) {
     cal << OeisSequence(it.first).id_str() << sep
@@ -257,20 +260,22 @@ void Stats::save(const std::string &path) {
 
   if (steps.total)  // write steps stats only if present
   {
-    std::ofstream steps_out(path + "/steps.csv");
+    std::ofstream steps_out(path + "steps.csv");
     steps_out << "total,min,max,runs\n";
     steps_out << steps.total << sep << steps.min << sep << steps.max << sep
               << steps.runs << "\n";
     steps_out.close();
   }
 
-  { blocks.save(path + "/blocks.asm"); }
+  { blocks.save(path + "blocks.asm"); }
 
   Log::get().debug("Finished saving program stats");
 }
 
-std::string Stats::getMainStatsFile(const std::string &path) const {
-  return path + "/constant_counts.csv";
+std::string Stats::getMainStatsFile(std::string path) const {
+  ensureTrailingSlash(path);
+  path += "constant_counts.csv";
+  return path;
 }
 
 void Stats::updateProgramStats(size_t id, const Program &program) {
