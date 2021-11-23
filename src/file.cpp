@@ -210,8 +210,18 @@ FolderLock::FolderLock(std::string folder) {
   ensureDir(folder);
   lockfile = folder + "lock";
   fd = 0;
-#ifndef _WIN64
   Log::get().debug("Acquiring lock " + lockfile);
+#ifdef _WIN64
+  fd = CreateFile(lockfile.c_str(), GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+  if (fd == INVALID_HANDLE_VALUE) {
+    Log::get().error("Cannot create " + lockfile, true);
+  }
+  OVERLAPPED ol;
+  ZeroMemory(&ol, sizeof(ol));
+  if (!LockFileEx(hFileHandle, LOCKFILE_EXCLUSIVE_LOCK, 0, 100, 0, &ol)) {
+    Log::get().error("Cannot lock " + lockfile, true);
+  }
+#else
   while (true) {
     fd = open(lockfile.c_str(), O_CREAT, 0644);
     flock(fd, LOCK_EX);
@@ -221,21 +231,26 @@ FolderLock::FolderLock(std::string folder) {
     if (st0.st_ino == st1.st_ino) break;
     close(fd);
   }
-  Log::get().debug("Obtained lock " + lockfile);
 #endif
-  // TODO: locks on windows
+  Log::get().debug("Obtained lock " + lockfile);
 }
 
 FolderLock::~FolderLock() { release(); }
 
 void FolderLock::release() {
-#ifndef _WIN64
-  if (fd) {
-    Log::get().debug("Releasing lock " + lockfile);
-    unlink(lockfile.c_str());
-    flock(fd, LOCK_UN);
-    fd = 0;
+  if (!fd) {
+    return;
   }
+  Log::get().debug("Releasing lock " + lockfile);
+#ifdef _WIN64
+  OVERLAPPED ol;
+  ZeroMemory(&ol, sizeof(ol));
+  if (!UnlockFileEx(hFileHandle, 0, 100, 0, &ol)) {
+    Log::get().error("Cannot unlock " + lockfile);
+  }
+#else
+  unlink(lockfile.c_str());
+  flock(fd, LOCK_UN);
 #endif
-  // TODO: locks on windows
+  fd = 0;
 }
