@@ -37,3 +37,5 @@ jobs:
         run: cd src && nmake.exe /F Makefile.windows
       - name: Test
         run: ./loda.exe test
+      - name: Benchmark
+        run: ./loda.exe benchmark
