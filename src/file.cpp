@@ -14,6 +14,9 @@
 // must be before <psapi.h>
 #ifdef _WIN64
 #include <windows.h>
+
+#include <chrono>
+#include <thread>
 #endif
 
 #ifdef _WIN64
@@ -222,14 +225,15 @@ FolderLock::FolderLock(std::string folder) {
   fd = 0;
   Log::get().debug("Acquiring lock " + lockfile);
 #ifdef _WIN64
-  fd = CreateFile(lockfile.c_str(), GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+  for (size_t i = 0; i < 300; i++) {  // magic number
+    fd = CreateFile(lockfile.c_str(), GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+    if (fd != INVALID_HANDLE_VALUE) {
+      break;
+    }
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+  }
   if (fd == INVALID_HANDLE_VALUE) {
     Log::get().error("Cannot create " + lockfile, true);
-  }
-  OVERLAPPED ol;
-  ZeroMemory(&ol, sizeof(ol));
-  if (!LockFileEx(fd, LOCKFILE_EXCLUSIVE_LOCK, 0, 100, 0, &ol)) {
-    Log::get().error("Cannot lock " + lockfile, true);
   }
 #else
   while (true) {
@@ -253,12 +257,8 @@ void FolderLock::release() {
   }
   Log::get().debug("Releasing lock " + lockfile);
 #ifdef _WIN64
-  OVERLAPPED ol;
-  ZeroMemory(&ol, sizeof(ol));
-  if (!UnlockFileEx(fd, 0, 100, 0, &ol)) {
-    Log::get().error("Cannot unlock " + lockfile);
-  }
   CloseHandle(fd);
+  DeleteFile(lockfile.c_str());
   fd = nullptr;
 #else
   unlink(lockfile.c_str());
