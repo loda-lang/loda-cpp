@@ -84,7 +84,7 @@ void gunzip(const std::string &path) {
     std::string program_files = "C:\\Program Files";
     auto p = std::getenv("PROGRAMFILES");
     if (p) {
-      program_files = std::string(p)
+      program_files = std::string(p);
     }
     // https://stackoverflow.com/questions/9964865/c-system-not-working-when-there-are-spaces-in-two-different-parameters
     execCmd("cmd /S /C \"\"" + program_files +
