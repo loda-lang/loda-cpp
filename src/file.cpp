@@ -77,9 +77,19 @@ void moveFile(const std::string &from, const std::string &to) {
 
 void gunzip(const std::string &path) {
 #ifdef _WIN64
-  // https://stackoverflow.com/questions/9964865/c-system-not-working-when-there-are-spaces-in-two-different-parameters
-  execCmd("cmd /S /C \"\"C:\\Program Files\\Git\\usr\\bin\\gzip.exe\" -d \"" +
-          path + "\"\"");
+  const std::string gzip_test = "gzip --version " + getNullRedirect();
+  if (system(gzip_test.c_str()) == 0) {
+    execCmd("gzip -d \"" + path + "\"");
+  } else {
+    std::string program_files = "C:\\Program Files";
+    auto p = std::getenv("PROGRAMFILES");
+    if (p) {
+      program_files = std::string(p);
+    }
+    // https://stackoverflow.com/questions/9964865/c-system-not-working-when-there-are-spaces-in-two-different-parameters
+    execCmd("cmd /S /C \"\"" + program_files +
+            "\\Git\\usr\\bin\\gzip.exe\" -d \"" + path + "\"\"");
+  }
 #else
   execCmd("gzip -d \"" + path + "\"");
 #endif
