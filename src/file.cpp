@@ -13,6 +13,7 @@
 
 #ifdef _WIN64
 #include <io.h>
+#include <psapi.h>
 #else
 #include <sys/file.h>
 #include <sys/stat.h>
@@ -179,8 +180,13 @@ size_t getMemUsage() {
   if (kr == KERN_SUCCESS) {
     mem_usage = info.phys_footprint;
   }
+#elif _WIN64
+  PROCESS_MEMORY_COUNTERS pmc;
+  auto result = GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc));
+  if (result) {
+    mem_usage = pmc.WorkingSetSize;
+  }
 #endif
-  // TODO: memory usage on windows
   return mem_usage;
 }
 
