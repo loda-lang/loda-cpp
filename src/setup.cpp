@@ -317,7 +317,7 @@ bool Setup::checkProgramsHome() {
   if (!isDir(LODA_HOME + "programs" + FILE_SEP + "oeis")) {
     std::cout << "LODA needs to download its programs repository from GitHub."
               << std::endl;
-    std::cout << "It contains programs for more than 35,000 integer sequences."
+    std::cout << "It contains programs for more than 50,000 integer sequences."
               << std::endl;
     std::cout << "It is needed to evaluate known integer sequence programs and "
               << std::endl;
@@ -331,8 +331,8 @@ bool Setup::checkProgramsHome() {
                 << "The setup requires the git tool to download the programs."
                 << std::endl;
       std::cout
-          << "Please install git and restart the setup: "
-             "https://git-scm.com/book/en/v2/Getting-Started-Installing-Git"
+          << "Please install git and restart the setup:" << std::endl
+          << "https://git-scm.com/book/en/v2/Getting-Started-Installing-Git"
           << std::endl;
       return false;
     }
@@ -398,6 +398,14 @@ bool Setup::checkUpdate() {
           "https://github.com/loda-lang/loda-cpp/releases/download/" +
           latest_version + "/loda-" + Version::PLATFORM + exe;
       WebClient::get(exec_url, exec_tmp, true, true);
+#ifdef _WIN64
+      std::cout << "Run the following commands to complete the update:"
+                << std::endl
+                << std::endl;
+      std::cout << "move /Y " << exec_tmp << " " << exec_local << std::endl;
+      std::cout << exec_local << " setup" << std::endl;
+      return false;
+#endif
       makeExecutable(exec_tmp);
       moveFile(exec_tmp, exec_local);
       std::cout << "Update installed. Restarting setup... " << std::endl
@@ -633,11 +641,10 @@ void Setup::ensureEnvVar(const std::string& key, const std::string& value,
             << std::endl;
       } else {
         std::cout << "We recommend to add the following line to your shell "
-                     "configuration:"
-                  << std::endl;
+                  << "configuration:" << std::endl;
       }
-      std::cout << kv << std::endl
-                << "Do you want the setup to add it to " << bashrc << "? (Y/n)";
+      std::cout << kv << std::endl;
+      std::cout << "Do you want the setup to add it to " << bashrc << "? (Y/n)";
       std::getline(std::cin, line);
       std::cout << std::endl;
       if (line.empty() || line == "y" || line == "Y") {
