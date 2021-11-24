@@ -10,7 +10,7 @@
 
 Metrics::Metrics()
     : publish_interval(Setup::getSetupInt("LODA_METRICS_PUBLISH_INTERVAL",
-                                          60)),  // magic number
+                                          600)),  // magic number
       notified(false) {
   host = Setup::getSetupValue("LODA_INFLUXDB_HOST");
   if (!host.empty()) {
