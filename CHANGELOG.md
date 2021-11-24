@@ -2,6 +2,15 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Features
+
+* Windows support (no `mine_parallel.sh` equivalent yet)
+
+### Enhancements
+
+* Reduce metrics publish interval to reduce load on InfluxDB
+* Setup supports configuration in `zsh` environment (macOS)
+
 ## v21.11.15
 
 ### Bugfixes

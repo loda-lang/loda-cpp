@@ -516,12 +516,7 @@ bool Setup::updateFile(const std::string& local_file, const std::string& url,
       out.close();
     }
     if (executable) {
-      const std::string chmod = "chmod u+x " + local_file;
-      if (system(chmod.c_str()) != 0) {
-        std::cout << "Error making file executable: " << local_file
-                  << std::endl;
-        return false;
-      }
+      makeExecutable(local_file);
     }
     std::cout << std::endl;
   }
@@ -617,50 +612,43 @@ bool Setup::checkUpdateInterval() {
 void Setup::ensureEnvVar(const std::string& key, const std::string& value,
                          const std::string& comment, bool must_have) {
   std::string line;
-  auto shell = std::getenv("SHELL");
-  if (shell) {
-    std::string sh(shell);
-    if (sh == "/bin/bash") {
-      std::string bashrc = getHomeDir() + FILE_SEP + ".bashrc";
-      if (!isFile(bashrc)) {
-        bashrc = getHomeDir() + FILE_SEP + ".bash_profile";
-      }
-      std::string kv = "export " + key + "=" + value;
-      std::ifstream in(bashrc);
-      if (in.good()) {
-        std::string line;
-        while (std::getline(in, line)) {
-          if (line == kv) {
-            return;  // found!
-          }
+  std::string bashrc = getBashRc();
+  if (!bashrc.empty()) {
+    std::string kv = "export " + key + "=" + value;
+    std::ifstream in(bashrc);
+    if (in.good()) {
+      std::string line;
+      while (std::getline(in, line)) {
+        if (line == kv) {
+          return;  // found!
         }
       }
-      if (must_have) {
-        std::cout
-            << "The following line must be added to your shell configuration:"
-            << std::endl;
-      } else {
-        std::cout << "We recommend to add the following line to your shell "
-                  << "configuration:" << std::endl;
-      }
-      std::cout << kv << std::endl;
-      std::cout << "Do you want the setup to add it to " << bashrc << "? (Y/n)";
+    }
+    if (must_have) {
+      std::cout
+          << "The following line must be added to your shell configuration:"
+          << std::endl;
+    } else {
+      std::cout << "We recommend to add the following line to your shell "
+                << "configuration:" << std::endl;
+    }
+    std::cout << kv << std::endl;
+    std::cout << "Do you want the setup to add it to " << bashrc << "? (Y/n)";
+    std::getline(std::cin, line);
+    std::cout << std::endl;
+    if (line.empty() || line == "y" || line == "Y") {
+      std::ofstream out(bashrc, std::ios_base::app);
+      out << std::endl;
+      out << "# " << comment << std::endl;
+      out << kv << std::endl;
+      out.close();
+      std::cout << "Done. Please run 'source " << bashrc
+                << "' after this setup." << std::endl;
+      std::cout << "Press enter to continue the setup." << std::endl;
       std::getline(std::cin, line);
       std::cout << std::endl;
-      if (line.empty() || line == "y" || line == "Y") {
-        std::ofstream out(bashrc, std::ios_base::app);
-        out << std::endl;
-        out << "# " << comment << std::endl;
-        out << kv << std::endl;
-        out.close();
-        std::cout << "Done. Please run 'source " << bashrc
-                  << "' after this setup." << std::endl;
-        std::cout << "Press enter to continue the setup." << std::endl;
-        std::getline(std::cin, line);
-        std::cout << std::endl;
-      }
-      return;
     }
+    return;
   }
 
   if (must_have) {

@@ -145,6 +145,32 @@ std::string getTmpDir() {
 #endif
 }
 
+std::string getBashRc() {
+#ifndef _WIN64
+  auto shell = std::getenv("SHELL");
+  if (shell) {
+    std::string sh(shell);
+    std::string bashrc;
+    if (sh == "/bin/bash") {
+      bashrc = getHomeDir() + FILE_SEP + ".bashrc";
+      if (isFile(bashrc)) {
+        return bashrc;
+      }
+      bashrc = getHomeDir() + FILE_SEP + ".bash_profile";
+      if (isFile(bashrc)) {
+        return bashrc;
+      }
+    } else if (sh == "/bin/zsh") {
+      bashrc = getHomeDir() + FILE_SEP + ".zshenv";
+      if (isFile(bashrc)) {
+        return bashrc;
+      }
+    }
+  }
+#endif
+  return std::string();
+}
+
 std::string getNullRedirect() {
 #ifdef _WIN64
   return "> nul 2>&1";

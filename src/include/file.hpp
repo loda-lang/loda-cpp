@@ -26,6 +26,8 @@ std::string getHomeDir();
 
 std::string getTmpDir();
 
+std::string getBashRc();
+
 std::string getNullRedirect();
 
 std::string getFileAsString(const std::string &filename);
