@@ -2,6 +2,8 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v21.11.25
+
 ### Features
 
 * Windows support (no `mine_parallel.sh` equivalent yet)
