@@ -72,6 +72,7 @@ class Setup {
   static void checkLodaHome();
   static bool checkProgramsHome();
   static bool checkUpdate();
+  static bool checkEnvVars();
   static bool checkMiningMode();
   static bool checkMineParallelScript();
   static bool checkSubmittedBy();

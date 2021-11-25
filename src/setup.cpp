@@ -245,20 +245,15 @@ void Setup::runWizard() {
 
   loadSetup();
 
-  if (!checkProgramsHome()) {
-    return;
-  }
   if (!checkUpdate()) {
     return;
   }
-
-  // environment variables
-  if (LODA_HOME != getHomeDir() + FILE_SEP + "loda" + FILE_SEP) {
-    ensureEnvVar("LODA_HOME", LODA_HOME, "Set LODA home directory", true);
+  if (!checkEnvVars()) {
+    return;
   }
-  ensureEnvVar("PATH", "$PATH:" + LODA_HOME + "bin",
-               "Add LODA command-line tool to path", false);
-
+  if (!checkProgramsHome()) {
+    return;
+  }
 #ifndef _WIN64
   if (!checkMineParallelScript()) {
     return;
@@ -295,12 +290,20 @@ void Setup::runWizard() {
 void Setup::checkLodaHome() {
   std::string line;
   LODA_HOME = getHomeDir() + FILE_SEP + "loda";
+  std::string kind = "default";
   if (std::getenv("LODA_HOME")) {
     LODA_HOME = std::string(std::getenv("LODA_HOME"));
+    kind = "currently set";
   }
   std::cout << "Enter the directory where LODA should store its files."
             << std::endl;
-  std::cout << "Press return for your default location (see below)."
+#ifdef _WIN64
+  std::cout << "Note that non-default locations require manually adding"
+            << std::endl
+            << "the LODA_HOME environment variable to your computer."
+            << std::endl;
+#endif
+  std::cout << "Press return for the " << kind << " location (see below)."
             << std::endl;
   std::cout << "[" << LODA_HOME << "] ";
   std::getline(std::cin, line);
@@ -310,6 +313,31 @@ void Setup::checkLodaHome() {
   }
   ensureTrailingSlash(LODA_HOME);
   ensureDir(LODA_HOME);
+}
+
+bool Setup::checkEnvVars() {
+  std::string line;
+  if (LODA_HOME != getHomeDir() + FILE_SEP + "loda" + FILE_SEP) {
+#ifdef _WIN64
+    std::cout << "Please manually set the following environment variable:"
+              << std::endl
+              << std::endl
+              << "LODA_HOME=\"" << LODA_HOME << "\"" << std::endl;
+    std::getline(std::cin, line);
+#else
+    ensureEnvVar("LODA_HOME", LODA_HOME, "Set LODA home directory", true);
+#endif
+  }
+#ifdef _WIN64
+  std::cout << "To run LODA from anywhere on your computer, please" << std::endl
+            << "manually add it to your path variable (optional): " << std::endl
+            << std::endl
+            << "PATH=%PATH%;\"" << LODA_HOME << "bin\"" << std::endl;
+  std::getline(std::cin, line);
+#else
+  ensureEnvVar("PATH", "$PATH:" + LODA_HOME + "bin",
+               "Add LODA command-line tool to path", false);
+#endif
 }
 
 bool Setup::checkProgramsHome() {
