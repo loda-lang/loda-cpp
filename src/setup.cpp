@@ -338,6 +338,7 @@ bool Setup::checkEnvVars() {
   ensureEnvVar("PATH", "$PATH:" + LODA_HOME + "bin",
                "Add LODA command-line tool to path", false);
 #endif
+  return true;
 }
 
 bool Setup::checkProgramsHome() {
