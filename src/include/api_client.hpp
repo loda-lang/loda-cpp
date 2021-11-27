@@ -8,9 +8,9 @@ class ApiClient {
 
   ApiClient();
 
-  void postProgram(const Program& program);
+  void postProgram(const Program& program, size_t max_buffer = 0);
 
-  void postProgram(const std::string& path);
+  bool postProgram(const std::string& path, bool fail_on_error = true);
 
   Program getNextProgram();
 
@@ -19,7 +19,8 @@ class ApiClient {
   int64_t session_id;
   int64_t start;
   int64_t count;
-  std::vector<int64_t> queue;
+  std::vector<int64_t> in_queue;
+  std::vector<Program> out_queue;
 
   bool getProgram(int64_t index, const std::string& path);
 

@@ -110,7 +110,7 @@ void Miner::mine() {
         }
         // in client mode: submit the program to the API server
         if (mode == MINING_MODE_CLIENT) {
-          api_client->postProgram(r.program);
+          api_client->postProgram(r.program, 10);  // magic number
         }
         // mutate successful program
         if (mode != MINING_MODE_SERVER && progs.size() < 1000) {
