@@ -17,23 +17,32 @@ ApiClient::ApiClient()
       start(0),
       count(0) {}
 
-void ApiClient::postProgram(const Program& program) {
+void ApiClient::postProgram(const Program& program, size_t max_buffer) {
   const std::string tmp =
       getTmpDir() + "post_program_" + std::to_string(client_id) + ".asm";
-  std::ofstream out(tmp);
-  ProgramUtil::print(program, out);
-  out.close();
-  postProgram(tmp);
+  out_queue.push_back(program);
+  while (!out_queue.empty()) {
+    std::ofstream out(tmp);
+    ProgramUtil::print(out_queue.back(), out);
+    out.close();
+    if (postProgram(tmp, out_queue.size() > max_buffer)) {
+      out_queue.pop_back();
+    } else {
+      break;
+    }
+  }
   std::remove(tmp.c_str());
 }
 
-void ApiClient::postProgram(const std::string& path) {
+bool ApiClient::postProgram(const std::string& path, bool fail_on_error) {
   if (!isFile(path)) {
     Log::get().error("File not found: " + path, true);
   }
   if (!WebClient::postFile(BASE_URL + "programs", path)) {
-    Log::get().error("Error submitting program to API server", true);
+    Log::get().error("Error submitting program to API server", fail_on_error);
+    return false;
   }
+  return true;
 }
 
 bool ApiClient::getProgram(int64_t index, const std::string& path) {
@@ -43,15 +52,15 @@ bool ApiClient::getProgram(int64_t index, const std::string& path) {
 }
 
 Program ApiClient::getNextProgram() {
-  if (session_id == 0 || queue.empty()) {
+  if (session_id == 0 || in_queue.empty()) {
     updateSession();
   }
   Program program;
-  if (queue.empty()) {
+  if (in_queue.empty()) {
     return program;
   }
-  const int64_t index = queue.back();
-  queue.pop_back();
+  const int64_t index = in_queue.back();
+  in_queue.pop_back();
   const std::string tmp =
       getTmpDir() + "get_program_" + std::to_string(client_id) + ".asm";
   if (!getProgram(index, tmp)) {
@@ -95,14 +104,14 @@ void ApiClient::updateSession() {
   count = new_count;
   session_id = new_session_id;
   auto delta_count = count - start;
-  queue.resize(delta_count);
+  in_queue.resize(delta_count);
   for (int64_t i = 0; i < delta_count; i++) {
-    queue[i] = start + i;
+    in_queue[i] = start + i;
   }
   // Log::get().debug("updated session:" + std::to_string(session_id) + ",
   // updated start:" + std::to_string(start) + ", updated count:"
   // +std::to_string(count) + " queue: " + std::to_string(queue.size()));
-  std::shuffle(queue.begin(), queue.end(), Random::get().gen);
+  std::shuffle(in_queue.begin(), in_queue.end(), Random::get().gen);
 }
 
 int64_t ApiClient::fetchInt(const std::string& endpoint) {
