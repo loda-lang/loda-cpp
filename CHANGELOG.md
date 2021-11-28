@@ -5,7 +5,8 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Enhancements
 
 * Retry program submissions on connection errors
-+ Improve error handling in Slack and Twitter integration
+* Improve Slack and Twitter error handling
+* Remove Windows return characters from comments
 
 ## v21.11.25
 
