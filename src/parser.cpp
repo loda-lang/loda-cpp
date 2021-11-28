@@ -80,13 +80,13 @@ Program Parser::parse(std::istream &in_) {
     if (c == ';') {
       in->get();
       c = in->peek();
-      while (c == ' ' || c == '\t') {
+      while (c == ' ' || c == '\t' || c == ';') {
         in->get();
         c = in->peek();
       }
       std::getline(*in, l);
-      while (!l.empty() && l[0] == ';') {
-        l = l.substr(1);
+      while (!l.empty() && std::isspace(l.back())) {
+        l.pop_back();
       }
       o.comment = l;
     }
