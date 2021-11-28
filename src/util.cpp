@@ -121,14 +121,14 @@ void Log::slack(const std::string &msg, AlertDetails details) {
   } else {
     cmd = "slack chat send \"" + msg + "\" \"#miner\"";
   }
-#ifdef _WIN64
-  cmd += " " + getNullRedirect();
-#else
   static std::string slack_debug;
   if (slack_debug.empty()) {
     slack_debug = Setup::getLodaHome() + "debug" + FILE_SEP + "slack";
     ensureDir(slack_debug);
   }
+#ifdef _WIN64
+  cmd += " " + getNullRedirect();
+#else
   cmd += " > " + slack_debug + ".out 2> " + slack_debug + ".err";
 #endif
   auto exit_code = system(cmd.c_str());
