@@ -47,6 +47,10 @@ class Log {
  private:
   int twitter_client;
 
+  void slack(const std::string &msg, AlertDetails details);
+
+  void tweet(const std::string &msg);
+
   void log(Level level, const std::string &msg);
 };
 

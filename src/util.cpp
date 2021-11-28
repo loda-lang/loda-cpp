@@ -95,56 +95,73 @@ void Log::alert(const std::string &msg, AlertDetails details) {
   }
   if (!copy.empty()) {
     if (slack_alerts) {
-      std::string cmd;
-      if (!details.text.empty()) {
-        std::replace(details.text.begin(), details.text.end(), '"', ' ');
-        std::replace(details.title.begin(), details.title.end(), '"', ' ');
-        size_t index = 0;
-        while (true) {
-          index = details.text.find("$", index);
-          if (index == std::string::npos) break;
-          details.text.replace(index, 1, "\\$");
-          index += 2;
-        }
-        cmd = "slack chat send --text \"" + details.text + "\" --title \"" +
-              details.title + "\" --title-link " + details.title_link +
-              " --color " + details.color + " --channel \"#miner\" " +
-              getNullRedirect();
-      } else {
-        cmd =
-            "slack chat send \"" + copy + "\" \"#miner\" " + getNullRedirect();
-      }
-      auto exit_code = system(cmd.c_str());
-      if (exit_code != 0) {
-        error("Error sending alert to Slack! Failed command: " + cmd, false);
-        slack_alerts = false;
-      }
+      slack(copy, details);
     }
     if (tweet_alerts) {
-      if (twitter_client == TW_UNKNOWN) {
-        twitter_client = findTwitterClient();
-      }
-      std::string cmd;
-      switch (twitter_client) {
-        case TW_UNKNOWN:
-          break;
-        case TW_NONE:
-          break;
-        case TW_TWIDGE:
-          cmd = "twidge update \"" + copy + "\" " + getNullRedirect();
-          break;
-        case TW_RAINBOWSTREAM:
-          cmd = "printf \"t " + copy + "\\nexit()\\n\" | rainbowstream " +
-                getNullRedirect();
-          break;
-      }
-      if (!cmd.empty()) {
-        auto exit_code = system(cmd.c_str());
-        if (exit_code != 0) {
-          error("Error tweeting alert! Failed command: " + cmd, false);
-          twitter_client = TW_NONE;
-        }
-      }
+      tweet(copy);
+    }
+  }
+}
+
+void Log::slack(const std::string &msg, AlertDetails details) {
+  std::string cmd;
+  if (!details.text.empty()) {
+    std::replace(details.text.begin(), details.text.end(), '"', ' ');
+    std::replace(details.title.begin(), details.title.end(), '"', ' ');
+    size_t index = 0;
+    while (true) {
+      index = details.text.find("$", index);
+      if (index == std::string::npos) break;
+      details.text.replace(index, 1, "\\$");
+      index += 2;
+    }
+    cmd = "slack chat send --text \"" + details.text + "\" --title \"" +
+          details.title + "\" --title-link " + details.title_link +
+          " --color " + details.color + " --channel \"#miner\"";
+  } else {
+    cmd = "slack chat send \"" + msg + "\" \"#miner\"";
+  }
+#ifdef _WIN64
+  cmd += " " + getNullRedirect();
+#else
+  static std::string slack_debug;
+  if (slack_debug.empty()) {
+    slack_debug = Setup::getLodaHome() + "debug" + FILE_SEP + "slack";
+    ensureDir(slack_debug);
+  }
+  cmd += " > " + slack_debug + ".out 2> " + slack_debug + ".err";
+#endif
+  auto exit_code = system(cmd.c_str());
+  if (exit_code != 0) {
+    Log::get().error("Error sending alert to Slack!", false);
+    std::ofstream out(slack_debug + ".cmd");
+    out << cmd;
+    out.close();
+  }
+}
+
+void Log::tweet(const std::string &msg) {
+  if (twitter_client == TW_UNKNOWN) {
+    twitter_client = findTwitterClient();
+  }
+  std::string cmd;
+  switch (twitter_client) {
+    case TW_UNKNOWN:
+      break;
+    case TW_NONE:
+      break;
+    case TW_TWIDGE:
+      cmd = "twidge update \"" + msg + "\" " + getNullRedirect();
+      break;
+    case TW_RAINBOWSTREAM:
+      cmd = "printf \"t " + msg + "\\nexit()\\n\" | rainbowstream " +
+            getNullRedirect();
+      break;
+  }
+  if (!cmd.empty()) {
+    auto exit_code = system(cmd.c_str());
+    if (exit_code != 0) {
+      Log::get().error("Error tweeting alert! Failed command: " + cmd, false);
     }
   }
 }
