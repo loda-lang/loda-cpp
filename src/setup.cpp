@@ -374,7 +374,7 @@ bool Setup::checkProgramsHome() {
       git_url = line;
     }
     std::string git_clone =
-        "git clone " + git_url + " " + LODA_HOME + "programs";
+        "git clone " + git_url + " \"" + LODA_HOME + "programs\"";
     if (system(git_clone.c_str()) != 0) {
       std::cout << std::endl
                 << "Error cloning repository. Aborting setup." << std::endl;

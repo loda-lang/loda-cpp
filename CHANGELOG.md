@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Bugfixes
+
+* Fix `git` commands if there are spaces in the path
+
 ### Enhancements
 
 * Retry program submissions on connection errors
