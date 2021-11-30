@@ -317,7 +317,7 @@ void OeisManager::update() {
   if (!files.empty()) {
     Setup::checkLatestedVersion();
     if (age_in_days == -1) {
-      Log::get().info("Creating OEIS index at " + Setup::getOeisHome());
+      Log::get().info("Creating OEIS index at '" + Setup::getOeisHome() + "'");
       ensureDir(Setup::getOeisHome());
     } else {
       Log::get().info("Updating OEIS index (last update " +
@@ -353,7 +353,7 @@ void OeisManager::generateStats(int64_t age_in_days) {
   load();
   std::string msg;
   if (age_in_days < 0) {
-    msg = "Generating program stats at " + stats_home;
+    msg = "Generating program stats at '" + stats_home + "'";
   } else {
     msg = "Regenerating program stats (last update " +
           std::to_string(age_in_days) + " days ago)";
@@ -367,6 +367,7 @@ void OeisManager::generateStats(int64_t age_in_days) {
   std::string file_name;
   bool has_b_file, has_program;
 
+  AdaptiveScheduler notify(20);  // magic number
   for (auto &s : sequences) {
     if (s.id == 0) {
       continue;
@@ -394,6 +395,11 @@ void OeisManager::generateStats(int64_t age_in_days) {
       num_processed++;
     }
     stats.updateSequenceStats(s.id, has_program, has_b_file);
+    if (notify.isTargetReached()) {
+      notify.reset();
+      Log::get().info("Processed " + std::to_string(num_processed) +
+                      " programs");
+    }
   }
 
   // write stats
