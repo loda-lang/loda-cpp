@@ -2,6 +2,8 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v21.12.1
+
 ### Bugfixes
 
 * Fix `git` commands if there are spaces in the path
@@ -45,7 +47,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 * Clean up fetched program files in server mode
 * Avoid programs with loops with constant number of iterations
 
-## v21.11.09
+## v21.11.9
 
 ### Enhancements
 
