@@ -31,8 +31,11 @@ Number Semantics::div(const Number& a, const Number& b) {
 }
 
 Number Semantics::dif(const Number& a, const Number& b) {
-  if (a == Number::INF || b == Number::INF || b == Number::ZERO) {
+  if (a == Number::INF || b == Number::INF) {
     return Number::INF;
+  }
+  if (b == Number::ZERO) {
+    return a;
   }
   const auto d = div(a, b);
   return (a == mul(b, d)) ? d : a;

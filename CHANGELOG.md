@@ -6,6 +6,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Fix `git` commands if there are spaces in the path
 
+### Features
+
+* Adjust semantics of conditional division: `dif(x,0) = x`
+
 ### Enhancements
 
 * Retry program submissions on connection errors
