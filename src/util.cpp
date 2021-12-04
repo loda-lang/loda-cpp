@@ -318,7 +318,8 @@ bool AdaptiveScheduler::isTargetReached() {
     milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
                        current_time - setup_time)
                        .count();
-    speed = (1000 * total_checks) / std::max<int64_t>(milliseconds, 1);
+    // check every 500ms
+    speed = (500 * total_checks) / std::max<int64_t>(milliseconds, 1);
     next_check += std::min<int64_t>(std::max<int64_t>(speed, 1), 1000);
     // Log::get().info("next check " + std::to_string(next_check) + " speed " +
     //                std::to_string(speed) + " target " +

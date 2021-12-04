@@ -12,11 +12,20 @@
 #include "optimizer.hpp"
 #include "parser.hpp"
 #include "program_util.hpp"
-#include "setup.hpp"
 
 const std::string Miner::ANONYMOUS("anonymous");
+const int64_t Miner::PROGRAMS_TO_FETCH = 100;  // magic number
 
-Miner::Miner(const Settings &settings) : settings(settings) {}
+Miner::Miner(const Settings &settings)
+    : settings(settings),
+      mining_mode(Setup::getMiningMode()),
+      generator(nullptr),
+      log_scheduler(120),  // 2 minutes (magic number)
+      metrics_scheduler(Metrics::get().publish_interval),
+      api_scheduler(600),       // 10 minutes (magic number)
+      reload_scheduler(21600),  // 6 hours (magic number)
+      generated_count(0),
+      current_fetch(0) {}
 
 void Miner::reload(bool load_generators, bool force_overwrite) {
   api_client.reset(new ApiClient());
@@ -40,14 +49,10 @@ void Miner::mine() {
   std::stack<Program> progs;
   Sequence norm_seq;
   Program program;
-  AdaptiveScheduler metrics_scheduler(Metrics::get().publish_interval);
-  AdaptiveScheduler api_scheduler(600);       // 10 minutes (magic number)
-  AdaptiveScheduler reload_scheduler(21600);  // 6 hours (magic number)
 
-  // get mining mode
-  const auto mode = Setup::getMiningMode();
+  // print info
   std::string mode_str;
-  switch (mode) {
+  switch (mining_mode) {
     case MINING_MODE_LOCAL:
       mode_str = "local";
       break;
@@ -58,17 +63,17 @@ void Miner::mine() {
       mode_str = "server";
       break;
   }
-
   Log::get().info("Mining programs for OEIS sequences in " + mode_str +
                   " mode");
-  Generator *generator = multi_generator->getGenerator();
+
+  generator = multi_generator->getGenerator();
   std::string submitted_by;
-  const int64_t programs_to_fetch = 200;  // magic number
-  int64_t current_fetch = (mode == MINING_MODE_SERVER) ? programs_to_fetch : 0;
+  current_fetch = (mining_mode == MINING_MODE_SERVER) ? PROGRAMS_TO_FETCH : 0;
   int64_t processed = 0;
   while (true) {
     // server mode: fetch new program
-    if (progs.empty() && current_fetch > 0 && mode == MINING_MODE_SERVER) {
+    if (progs.empty() && current_fetch > 0 &&
+        mining_mode == MINING_MODE_SERVER) {
       program = api_client->getNextProgram();
       if (program.ops.empty()) {
         current_fetch = 0;
@@ -85,6 +90,7 @@ void Miner::mine() {
           ->next();  // need to call "next" *before* generating the programs
       generator = multi_generator->getGenerator();
       progs.push(generator->generateProgram());
+      generated_count++;
     }
 
     // get next program
@@ -98,6 +104,7 @@ void Miner::mine() {
     auto seq_programs = manager->getFinder().findSequence(
         program, norm_seq, manager->getSequences());
     for (auto s : seq_programs) {
+      checkRegularTasks();
       program = s.second;
       setSubmittedBy(program);
       auto r = manager->updateProgram(s.first, program);
@@ -109,53 +116,60 @@ void Miner::mine() {
           generator->stats.updated++;
         }
         // in client mode: submit the program to the API server
-        if (mode == MINING_MODE_CLIENT) {
+        if (mining_mode == MINING_MODE_CLIENT) {
           api_client->postProgram(r.program, 10);  // magic number
         }
         // mutate successful program
-        if (mode != MINING_MODE_SERVER && progs.size() < 1000) {
+        if (mining_mode != MINING_MODE_SERVER && progs.size() < 1000) {
           mutator.mutateCopies(r.program, 100, progs);  // magic number
         }
       }
     }
     generator->stats.generated++;
     processed++;
+    checkRegularTasks();
+  }
+}
 
-    // regular task: fetch programs from API server
-    if (mode == MINING_MODE_SERVER && api_scheduler.isTargetReached()) {
-      api_scheduler.reset();
-      current_fetch += programs_to_fetch;
-    }
+void Miner::checkRegularTasks() {
+  // regular task: log info about generated programs
+  if (log_scheduler.isTargetReached()) {
+    log_scheduler.reset();
+    Log::get().info("Generated " + std::to_string(generated_count) +
+                    " programs");
+    generated_count = 0;
+  }
 
-    // regular task: log info and publish metrics
-    if (metrics_scheduler.isTargetReached()) {
-      metrics_scheduler.reset();
-      int64_t total_generated = 0;
-      std::vector<Metrics::Entry> entries;
-      for (size_t i = 0; i < multi_generator->generators.size(); i++) {
-        auto gen = multi_generator->generators[i].get();
-        auto labels = gen->metric_labels;
-        labels["kind"] = "generated";
-        entries.push_back({"programs", labels, (double)gen->stats.generated});
-        labels["kind"] = "new";
-        entries.push_back({"programs", labels, (double)gen->stats.fresh});
-        labels["kind"] = "updated";
-        entries.push_back({"programs", labels, (double)gen->stats.updated});
-        total_generated += gen->stats.generated;
-        gen->stats = Generator::GStats();
-      }
-      Log::get().info("Generated " + std::to_string(total_generated) +
-                      " programs");
-      manager->getFinder().publishMetrics(entries);
-      Metrics::get().write(entries);
-    }
+  // regular task: fetch programs from API server
+  if (mining_mode == MINING_MODE_SERVER && api_scheduler.isTargetReached()) {
+    api_scheduler.reset();
+    current_fetch += PROGRAMS_TO_FETCH;
+  }
 
-    // regular task: reload oeis manager and generators
-    if (reload_scheduler.isTargetReached()) {
-      reload_scheduler.reset();
-      reload(true);
-      generator = multi_generator->getGenerator();
+  // regular task: log info and publish metrics
+  if (metrics_scheduler.isTargetReached()) {
+    metrics_scheduler.reset();
+    std::vector<Metrics::Entry> entries;
+    for (size_t i = 0; i < multi_generator->generators.size(); i++) {
+      auto gen = multi_generator->generators[i].get();
+      auto labels = gen->metric_labels;
+      labels["kind"] = "generated";
+      entries.push_back({"programs", labels, (double)gen->stats.generated});
+      labels["kind"] = "new";
+      entries.push_back({"programs", labels, (double)gen->stats.fresh});
+      labels["kind"] = "updated";
+      entries.push_back({"programs", labels, (double)gen->stats.updated});
+      gen->stats = Generator::GStats();  // reset counters
     }
+    manager->getFinder().publishMetrics(entries);
+    Metrics::get().write(entries);
+  }
+
+  // regular task: reload oeis manager and generators
+  if (reload_scheduler.isTargetReached()) {
+    reload_scheduler.reset();
+    reload(true);
+    generator = multi_generator->getGenerator();
   }
 }
 

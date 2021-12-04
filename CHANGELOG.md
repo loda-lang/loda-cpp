@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Enhancements
+
+* Improve scheduling and logging
+
 ## v21.12.1
 
 ### Bugfixes
