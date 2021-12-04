@@ -25,7 +25,7 @@ Miner::Miner(const Settings &settings)
       metrics_scheduler(Metrics::get().publish_interval),
       api_scheduler(600),       // 10 minutes (magic number)
       reload_scheduler(21600),  // 6 hours (magic number)
-      generated_count(0),
+      num_processed(0),
       current_fetch(0) {}
 
 void Miner::reload(bool load_generators, bool force_overwrite) {
@@ -70,7 +70,7 @@ void Miner::mine() {
   generator = multi_generator->getGenerator();
   std::string submitted_by;
   current_fetch = (mining_mode == MINING_MODE_SERVER) ? PROGRAMS_TO_FETCH : 0;
-  int64_t processed = 0;
+  num_processed = 0;
   while (true) {
     // server mode: fetch new program
     if (progs.empty() && current_fetch > 0 &&
@@ -86,12 +86,11 @@ void Miner::mine() {
     }
 
     // generate new program if needed
-    if (progs.empty() || (processed % 10) == 0) {
+    if (progs.empty() || (num_processed % 10) == 0) {
       multi_generator
           ->next();  // need to call "next" *before* generating the programs
       generator = multi_generator->getGenerator();
       progs.push(generator->generateProgram());
-      generated_count++;
     }
 
     // get next program
@@ -123,12 +122,11 @@ void Miner::mine() {
         // mutate successful program
         if (mining_mode != MINING_MODE_SERVER && progs.size() < 1000) {
           mutator.mutateCopies(r.program, NUM_MUTATIONS, progs);
-          generated_count += NUM_MUTATIONS;
         }
       }
     }
     generator->stats.generated++;
-    processed++;
+    num_processed++;
     checkRegularTasks();
   }
 }
@@ -137,9 +135,13 @@ void Miner::checkRegularTasks() {
   // regular task: log info about generated programs
   if (log_scheduler.isTargetReached()) {
     log_scheduler.reset();
-    Log::get().info("Generated " + std::to_string(generated_count) +
-                    " programs");
-    generated_count = 0;
+    if (num_processed) {
+      Log::get().info("Processed " + std::to_string(num_processed) +
+                      " programs");
+      num_processed = 0;
+    } else {
+      Log::get().warn("Slow processing of programs");
+    }
   }
 
   // regular task: fetch programs from API server

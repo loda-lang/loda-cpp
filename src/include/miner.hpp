@@ -50,6 +50,6 @@ class Miner {
   AdaptiveScheduler metrics_scheduler;
   AdaptiveScheduler api_scheduler;
   AdaptiveScheduler reload_scheduler;
-  int64_t generated_count;
+  int64_t num_processed;
   int64_t current_fetch;
 };
