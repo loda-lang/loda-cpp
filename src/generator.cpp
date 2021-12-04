@@ -338,8 +338,8 @@ MultiGenerator::MultiGenerator(const Settings &settings, const Stats &stats,
       auto gen = Generator::Factory::createGenerator(c, stats);
       generators.emplace_back(std::move(gen));
       configs.push_back(c);
-    } catch (std::exception &) {
-      Log::get().warn("Ignoring error while loading generator");
+    } catch (std::exception &e) {
+      Log::get().warn(std::string(e.what()));  // treat only as warning
     }
   }
   if (generators.empty()) {

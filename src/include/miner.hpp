@@ -39,6 +39,7 @@ class Miner {
 
   static const std::string ANONYMOUS;
   static const int64_t PROGRAMS_TO_FETCH;
+  static const int64_t NUM_MUTATIONS;
   const Settings &settings;
   const MiningMode mining_mode;
   std::unique_ptr<ApiClient> api_client;
