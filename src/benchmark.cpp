@@ -96,7 +96,7 @@ void Benchmark::programs() {
     buf.setf(std::ios::fixed);
     buf.precision(1);
     buf << speed;
-    evaluator.eval(program, result, 1000000, false);
+    evaluator.eval(program, result, OeisSequence::FULL_SEQ_LENGTH, false);
     std::cout << "| " << seq.id_str() << "  |    " << result.size()
               << "    |      " << buf.str() << "ms       |" << std::endl;
   }

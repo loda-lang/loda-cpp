@@ -10,6 +10,8 @@ class OeisSequence {
 
   static const size_t EXTENDED_SEQ_LENGTH;
 
+  static const size_t FULL_SEQ_LENGTH;
+
   static bool isTooBig(const Number& n);
 
   OeisSequence(size_t id = 0);

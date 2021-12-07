@@ -186,7 +186,7 @@ void Miner::submit(const std::string &id, const std::string &path) {
   settings.print_as_b_file = false;
   Log::get().info("Validating program for " + seq.id_str());
   Evaluator evaluator(settings);
-  auto terms = seq.getTerms(100000);  // magic number
+  auto terms = seq.getTerms(OeisSequence::FULL_SEQ_LENGTH);
   auto result =
       evaluator.check(program, terms, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id);
   if (result.first == status_t::ERROR) {

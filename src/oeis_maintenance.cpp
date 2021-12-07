@@ -158,7 +158,7 @@ size_t OeisMaintenance::checkAndMinimizePrograms() {
       try {
         program = parser.parse(program_file);
         submitted_by = ProgramUtil::getSubmittedBy(program);
-        auto extended_seq = s.getTerms(OeisSequence::EXTENDED_SEQ_LENGTH);
+        auto extended_seq = s.getTerms(OeisSequence::FULL_SEQ_LENGTH);
 
         // check its correctness
         auto check = evaluator.check(program, extended_seq,

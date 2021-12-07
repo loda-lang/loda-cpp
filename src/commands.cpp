@@ -120,7 +120,7 @@ void Commands::check(const std::string& id) {
   Parser parser;
   Program program = parser.parse(seq.getProgramPath());
   Evaluator evaluator(settings);
-  auto terms = seq.getTerms(100000);  // magic number
+  auto terms = seq.getTerms(OeisSequence::FULL_SEQ_LENGTH);
   auto result =
       evaluator.check(program, terms, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id);
   switch (result.first) {
