@@ -13,7 +13,7 @@
 
 const size_t OeisSequence::DEFAULT_SEQ_LENGTH = 100;
 
-const size_t OeisSequence::EXTENDED_SEQ_LENGTH = 5000;
+const size_t OeisSequence::EXTENDED_SEQ_LENGTH = 2000;
 
 bool OeisSequence::isTooBig(const Number& n) {
   if (n == Number::INF) {
