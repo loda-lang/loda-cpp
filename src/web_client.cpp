@@ -52,7 +52,7 @@ bool WebClient::get(const std::string &url, const std::string &local_path,
 }
 
 bool WebClient::postFile(const std::string &url, const std::string &file_path,
-                         const std::string &auth) {
+                         const std::string &auth, bool enable_debug) {
   initWebClient();
   std::string cmd;
   switch (WEB_CLIENT_TYPE) {
@@ -61,8 +61,7 @@ bool WebClient::postFile(const std::string &url, const std::string &file_path,
       if (!auth.empty()) {
         cmd += " -u " + auth;
       }
-      cmd += " -X POST " + url + " --data-binary @\"" + file_path + "\" " +
-             getNullRedirect();
+      cmd += " -X POST " + url + " --data-binary @\"" + file_path + "\"";
       break;
     }
     case WC_WGET: {
@@ -72,14 +71,19 @@ bool WebClient::postFile(const std::string &url, const std::string &file_path,
         cmd += " --user '" + auth.substr(0, colon) + "' --password '" +
                auth.substr(colon + 1) + "'";
       }
-      cmd +=
-          " --post-file \"" + file_path + "\" " + url + " " + getNullRedirect();
+      cmd += " --post-file \"" + file_path + "\" " + url;
       break;
     }
     default:
       Log::get().error("Unsupported web client for POST request", true);
   }
-  Log::get().debug("Executing command: " + cmd);
+  const std::string msg = "Executing command: " + cmd;
+  if (enable_debug) {
+    Log::get().info(msg);
+  } else {
+    Log::get().debug(msg);
+    cmd += " " + getNullRedirect();
+  }
   auto exit_code = system(cmd.c_str());
   return (exit_code == 0);
 }

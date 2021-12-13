@@ -38,8 +38,16 @@ bool ApiClient::postProgram(const std::string& path, bool fail_on_error) {
   if (!isFile(path)) {
     Log::get().error("File not found: " + path, true);
   }
-  if (!WebClient::postFile(BASE_URL + "programs", path)) {
-    Log::get().error("Error submitting program to API server", fail_on_error);
+  const std::string url = BASE_URL + "programs";
+  if (!WebClient::postFile(url, path)) {
+    const std::string msg("Cannot submit program to API server");
+    if (fail_on_error) {
+      if (!WebClient::postFile(url, path, "", true)) {
+        Log::get().error(msg, true);
+      }
+    } else {
+      Log::get().warn(msg);
+    }
     return false;
   }
   return true;

@@ -5,6 +5,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Enhancements
 
 * Improve scheduling and logging
+* Improve error handling on API client errors
 
 ## v21.12.1
 

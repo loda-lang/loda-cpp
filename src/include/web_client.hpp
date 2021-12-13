@@ -8,7 +8,8 @@ class WebClient {
                   bool silent = false, bool fail_on_error = true);
 
   static bool postFile(const std::string &url, const std::string &file_path,
-                       const std::string &auth = std::string());
+                       const std::string &auth = std::string(),
+                       bool enable_debug = false);
 
  private:
   static int64_t WEB_CLIENT_TYPE;
