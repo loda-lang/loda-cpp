@@ -33,8 +33,10 @@ void Metrics::write(const std::vector<Entry> entries) const {
     Log::get().debug("Publishing metrics to InfluxDB");
     notified = true;
   }
+  // attention: curl sometimes has problems with absolute paths.
+  // so we use a relative path here!
   const std::string file_name =
-      getTmpDir() + "loda_metrics_" + std::to_string(tmp_file_id) + ".txt";
+      "loda_metrics_" + std::to_string(tmp_file_id) + ".txt";
   std::ofstream out(file_name);
   for (auto &entry : entries) {
     out << entry.field;

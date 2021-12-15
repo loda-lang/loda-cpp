@@ -18,13 +18,16 @@ ApiClient::ApiClient()
       count(0) {}
 
 void ApiClient::postProgram(const Program& program, size_t max_buffer) {
-  const std::string tmp =
-      getTmpDir() + "post_program_" + std::to_string(client_id) + ".asm";
+  // attention: curl sometimes has problems with absolute paths.
+  // so we use a relative path here!
+  const std::string tmp = "post_program_" + std::to_string(client_id) + ".asm";
   out_queue.push_back(program);
   while (!out_queue.empty()) {
-    std::ofstream out(tmp);
-    ProgramUtil::print(out_queue.back(), out);
-    out.close();
+    {
+      std::ofstream out(tmp);
+      ProgramUtil::print(out_queue.back(), out);
+      out.close();
+    }
     if (postProgram(tmp, out_queue.size() > max_buffer)) {
       out_queue.pop_back();
     } else {
