@@ -5,7 +5,7 @@
             "includePath": [
                 "${workspaceFolder}/src/include"
             ],
-            "cppStandard": "c++11",
+            "cppStandard": "c++17",
             "configurationProvider": "ms-vscode.makefile-tools"
         },
         {
@@ -20,8 +20,8 @@
             ],
             "windowsSdkVersion": "10.0.19041.0",
             "compilerPath": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Tools\\MSVC\\14.30.30705\\bin\\Hostx64\\x64\\cl.exe",
-            "cStandard": "c11",
-            "cppStandard": "c++11",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
             "intelliSenseMode": "windows-msvc-x64"
         }
     ],
