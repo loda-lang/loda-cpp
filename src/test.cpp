@@ -853,15 +853,17 @@ void Test::minimizer(size_t tests) {
     program = multi_generator.getGenerator()->generateProgram();
     multi_generator.next();
     try {
-      evaluator.eval(program, s1);
+      evaluator.eval(program, s1, OeisSequence::DEFAULT_SEQ_LENGTH);
     } catch (const std::exception& e) {
       continue;
     }
     minimized = program;
     minimizer.optimizeAndMinimize(minimized, 2, 1, s1.size());
-    evaluator.eval(minimized, s2);
+    evaluator.eval(minimized, s2, s1.size());
     if (s1.size() != s2.size() || (s1 != s2)) {
       ProgramUtil::print(program, std::cout);
+      std::cout << "before: " << s1 << std::endl;
+      std::cout << "after:  " << s2 << std::endl;
       Log::get().error(
           "Program evaluated to different sequence after optimization", true);
     }
