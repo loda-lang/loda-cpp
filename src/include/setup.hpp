@@ -41,6 +41,8 @@ class Setup {
 
   static int64_t getUpdateIntervalInDays();
 
+  static int64_t getMaxLocalProgramAgeInDays();
+
   static std::string getLatestVersion();
 
   static void checkLatestedVersion();
@@ -50,7 +52,9 @@ class Setup {
   static void runWizard();
 
  private:
-  static constexpr int64_t DEFAULT_UPDATE_INTERVAL = 1;  // 1 day default
+  static constexpr int64_t UNDEFINED_INT = -2;            // cannot use -1
+  static constexpr int64_t DEFAULT_UPDATE_INTERVAL = 1;   // 1 day default
+  static constexpr int64_t DEFAULT_MAX_PROGRAM_AGE = 14;  // 2 weeks default
 
   static std::string LODA_HOME;
   static std::string OEIS_HOME;
@@ -62,6 +66,7 @@ class Setup {
   static int64_t MINING_MODE;
   static int64_t MAX_MEMORY;
   static int64_t UPDATE_INTERVAL;
+  static int64_t MAX_PROGRAM_AGE;
 
   static void checkDir(const std::string& home);
   static void ensureEnvVar(const std::string& key, const std::string& value,
@@ -78,6 +83,7 @@ class Setup {
   static bool checkSubmittedBy();
   static bool checkMaxMemory();
   static bool checkUpdateInterval();
+  static bool checkMaxLocalProgramAge();
 
   static bool updateFile(const std::string& local_file, const std::string& url,
                          const std::string& header, const std::string& marker,

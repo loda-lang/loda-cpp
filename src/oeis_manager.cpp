@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdlib>
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <limits>
@@ -317,7 +318,8 @@ void OeisManager::update() {
   if (!files.empty()) {
     Setup::checkLatestedVersion();
     if (age_in_days == -1) {
-      Log::get().info("Creating OEIS index at '" + Setup::getOeisHome() + "'");
+      Log::get().info("Creating OEIS index at \"" + Setup::getOeisHome() +
+                      "\"");
       ensureDir(Setup::getOeisHome());
     } else {
       Log::get().info("Updating OEIS index (last update " +
@@ -346,6 +348,29 @@ void OeisManager::update() {
             "Update of programs repository failed; please update it manually.");
       }
     }
+    // clean up local programs folder
+    const int64_t max_age = Setup::getMaxLocalProgramAgeInDays();
+    const auto local = Setup::getProgramsHome() + "local";
+    if (max_age >= 0 && isDir(local)) {
+      Log::get().info("Cleaning up local programs directory");
+      for (const auto &it : std::filesystem::directory_iterator(local)) {
+        const auto stem = it.path().filename().stem().string();
+        const auto ext = it.path().filename().extension().string();
+        bool is_program;
+        try {
+          OeisSequence s(stem);
+          is_program = true;
+        } catch (const std::exception &) {
+          is_program = stem.rfind("api-", 0) == 0;
+        }
+        is_program = is_program && (ext == ".asm");
+        const auto p = it.path().string();
+        if (is_program && getFileAgeInDays(p) > max_age) {
+          Log::get().info("Removing \"" + p + "\"");
+          std::filesystem::remove(it.path());
+        }
+      }
+    }
   }
 }
 
@@ -353,7 +378,7 @@ void OeisManager::generateStats(int64_t age_in_days) {
   load();
   std::string msg;
   if (age_in_days < 0) {
-    msg = "Generating program stats at '" + stats_home + "'";
+    msg = "Generating program stats at \"" + stats_home + "\"";
   } else {
     msg = "Regenerating program stats (last update " +
           std::to_string(age_in_days) + " days ago)";
