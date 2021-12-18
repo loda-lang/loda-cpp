@@ -850,15 +850,21 @@ void Test::minimizer(size_t tests) {
   MultiGenerator multi_generator(settings, getManager().getStats(), false);
   Sequence s1, s2, s3;
   Program program, minimized;
-  for (size_t i = 0; i < tests; i++) {
-    if (i % (tests / 10) == 0) {
+  const int64_t num_tests = tests;
+  for (int64_t i = 0; i < num_tests; i++) {
+    if (i % (num_tests / 10) == 0) {
       Log::get().info("Testing minimizer " + std::to_string(i));
     }
     program = multi_generator.getGenerator()->generateProgram();
     multi_generator.next();
     try {
       evaluator.eval(program, s1, OeisSequence::DEFAULT_SEQ_LENGTH);
+      if (s1.size() != OeisSequence::DEFAULT_SEQ_LENGTH) {
+        i--;
+        continue;
+      }
     } catch (const std::exception& e) {
+      i--;
       continue;
     }
     minimized = program;
