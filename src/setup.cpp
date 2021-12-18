@@ -17,9 +17,10 @@ std::string Setup::MINERS_CONFIG;
 std::map<std::string, std::string> Setup::SETUP;
 bool Setup::LOADED_SETUP = false;
 bool Setup::PRINTED_MEMORY_WARNING = false;
-int64_t Setup::MINING_MODE = -1;
-int64_t Setup::MAX_MEMORY = -1;
-int64_t Setup::UPDATE_INTERVAL = -1;
+int64_t Setup::MINING_MODE = UNDEFINED_INT;
+int64_t Setup::MAX_MEMORY = UNDEFINED_INT;
+int64_t Setup::UPDATE_INTERVAL = UNDEFINED_INT;
+int64_t Setup::MAX_PROGRAM_AGE = UNDEFINED_INT;
 
 std::string Setup::getLodaHomeNoCheck() {
   auto loda_home = std::getenv("LODA_HOME");
@@ -44,7 +45,7 @@ void Setup::setLodaHome(const std::string& home) {
   LODA_HOME = home;
   ensureTrailingSlash(LODA_HOME);
   checkDir(LODA_HOME);
-  Log::get().info("Using LODA home directory '" + LODA_HOME + "'");
+  Log::get().info("Using LODA home directory \"" + LODA_HOME + "\"");
 }
 
 std::string Setup::getMinersConfig() {
@@ -104,7 +105,7 @@ void Setup::setProgramsHome(const std::string& home) {
 void Setup::checkDir(const std::string& home) {
   if (!isDir(home)) {
     Log::get().error(
-        "Directory not found: " + home + " - please run 'loda setup'", true);
+        "Directory not found: " + home + " - please run \"loda setup\"", true);
   }
 }
 
@@ -134,7 +135,7 @@ int64_t Setup::getSetupInt(const std::string& key, int64_t default_value) {
 }
 
 MiningMode Setup::getMiningMode() {
-  if (MINING_MODE == -1) {
+  if (MINING_MODE == UNDEFINED_INT) {
     auto mode = getSetupValue("LODA_MINING_MODE");
     if (mode == "local") {
       MINING_MODE = static_cast<int64_t>(MINING_MODE_LOCAL);
@@ -148,7 +149,7 @@ MiningMode Setup::getMiningMode() {
 }
 
 int64_t Setup::getMaxMemory() {
-  if (MAX_MEMORY == -1) {
+  if (MAX_MEMORY == UNDEFINED_INT) {
     // 1 GB default
     MAX_MEMORY = getSetupInt("LODA_MAX_PHYSICAL_MEMORY", 1024) * 1024 * 1024;
   }
@@ -156,11 +157,19 @@ int64_t Setup::getMaxMemory() {
 }
 
 int64_t Setup::getUpdateIntervalInDays() {
-  if (UPDATE_INTERVAL == -1) {
+  if (UPDATE_INTERVAL == UNDEFINED_INT) {
     UPDATE_INTERVAL =
         getSetupInt("LODA_UPDATE_INTERVAL", DEFAULT_UPDATE_INTERVAL);
   }
   return UPDATE_INTERVAL;
+}
+
+int64_t Setup::getMaxLocalProgramAgeInDays() {
+  if (MAX_PROGRAM_AGE == UNDEFINED_INT) {
+    MAX_PROGRAM_AGE =
+        getSetupInt("LODA_MAX_PROGRAM_AGE", DEFAULT_MAX_PROGRAM_AGE);
+  }
+  return MAX_PROGRAM_AGE;
 }
 
 bool Setup::hasMemory() {
@@ -269,6 +278,9 @@ void Setup::runWizard() {
     return;
   }
   if (!checkUpdateInterval()) {
+    return;
+  }
+  if (!checkMaxLocalProgramAge()) {
     return;
   }
 
@@ -568,19 +580,20 @@ bool Setup::checkSubmittedBy() {
   if (submitted_by.empty()) {
     submitted_by = "none";
   }
-  std::cout
-      << "If you want to mine programs, LODA can automatically add your name"
-      << std::endl
-      << "as a comment in the mined programs. If you specify your name and run"
-      << std::endl
-      << "the miner in client mode, you give consent to submit mined programs"
-      << std::endl
-      << "with your name and to publish them at https://loda-lang.org and the"
-      << std::endl
-      << "programs repository at https://github.com/loda-lang/loda-programs."
-      << std::endl
-      << "If you like, enter your name below, or 'none' to not include it:"
-      << std::endl;
+  std::cout << "If you want to mine programs, LODA can automatically add"
+            << std::endl
+            << "your name as a comment in the mined programs. If you specify"
+            << std::endl
+            << "your name and run the miner in client mode, you give consent"
+            << std::endl
+            << "to submit mined programs with your name and to publish them"
+            << std::endl
+            << "at https://loda-lang.org and the programs repository at"
+            << std::endl
+            << "https://github.com/loda-lang/loda-programs. If you like,"
+            << std::endl
+            << "enter your name below, or \"none\" to not include it:"
+            << std::endl;
   std::cout << "[" << submitted_by << "] ";
   std::getline(std::cin, submitted_by);
   std::cout << std::endl;
@@ -633,6 +646,28 @@ bool Setup::checkUpdateInterval() {
     SETUP.erase("LODA_UPDATE_INTERVAL");
   } else {
     SETUP["LODA_UPDATE_INTERVAL"] = std::to_string(update_interval);
+  }
+  std::cout << std::endl;
+  return true;
+}
+
+bool Setup::checkMaxLocalProgramAge() {
+  std::string line;
+  std::cout << "Enter the maximum age of local programs in days (default: 14)."
+            << std::endl
+            << "Older programs are automatically removed. Use -1 to disable "
+            << std::endl
+            << "the automatic clean up:" << std::endl;
+  int64_t max_age = getMaxLocalProgramAgeInDays();
+  std::cout << "[" << max_age << "] ";
+  std::getline(std::cin, line);
+  if (!line.empty()) {
+    max_age = std::stoll(line);
+  }
+  if (max_age == DEFAULT_MAX_PROGRAM_AGE) {
+    SETUP.erase("LODA_MAX_PROGRAM_AGE");
+  } else {
+    SETUP["LODA_MAX_PROGRAM_AGE"] = std::to_string(max_age);
   }
   std::cout << std::endl;
   return true;

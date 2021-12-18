@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Features
+
+* Automatic clean up of local programs directory
+
 ## v21.12.15
 
 ### Bugfixes
