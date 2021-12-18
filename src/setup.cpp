@@ -280,9 +280,11 @@ void Setup::runWizard() {
   if (!checkUpdateInterval()) {
     return;
   }
+#if __GNUC__ > 7
   if (!checkMaxLocalProgramAge()) {
     return;
   }
+#endif
 
   saveSetup();
 
