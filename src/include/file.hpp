@@ -8,6 +8,14 @@ static constexpr char FILE_SEP = '\\';
 static constexpr char FILE_SEP = '/';
 #endif
 
+#define STD_FILESYSTEM 1
+#if !defined(__clang__) && defined(__GNUC__) && __GNUC__ < 8
+#undef STD_FILESYSTEM
+#endif
+#ifdef STD_FILESYSTEM
+#include <filesystem>
+#endif
+
 bool isFile(const std::string &path);
 
 bool isDir(const std::string &path);

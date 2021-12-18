@@ -280,7 +280,7 @@ void Setup::runWizard() {
   if (!checkUpdateInterval()) {
     return;
   }
-#if __GNUC__ > 7
+#ifdef STD_FILESYSTEM
   if (!checkMaxLocalProgramAge()) {
     return;
   }
