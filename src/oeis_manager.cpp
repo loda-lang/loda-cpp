@@ -350,26 +350,24 @@ void OeisManager::update() {
     }
     // clean up local programs folder
     const int64_t max_age = Setup::getMaxLocalProgramAgeInDays();
-    if (max_age >= 0) {
-      const auto local = Setup::getProgramsHome() + "local";
-      if (isDir(local)) {
-        Log::get().info("Cleaning up local programs directory");
-        for (const auto &entry : std::filesystem::directory_iterator(local)) {
-          const auto stem = entry.path().filename().stem().string();
-          const auto ext = entry.path().filename().extension().string();
-          bool is_program;
-          try {
-            OeisSequence s(stem);
-            is_program = true;
-          } catch (const std::exception &) {
-            is_program = stem.rfind("api-", 0) == 0;
-          }
-          is_program = is_program && (ext == ".asm");
-          const auto p = entry.path().string();
-          if (is_program && getFileAgeInDays(p) > max_age) {
-            Log::get().info("Removing \"" + p + "\"");
-            std::filesystem::remove(entry.path());
-          }
+    const auto local = Setup::getProgramsHome() + "local";
+    if (max_age >= 0 && isDir(local)) {
+      Log::get().info("Cleaning up local programs directory");
+      for (const auto &it : std::filesystem::directory_iterator(local)) {
+        const auto stem = it.path().filename().stem().string();
+        const auto ext = it.path().filename().extension().string();
+        bool is_program;
+        try {
+          OeisSequence s(stem);
+          is_program = true;
+        } catch (const std::exception &) {
+          is_program = stem.rfind("api-", 0) == 0;
+        }
+        is_program = is_program && (ext == ".asm");
+        const auto p = it.path().string();
+        if (is_program && getFileAgeInDays(p) > max_age) {
+          Log::get().info("Removing \"" + p + "\"");
+          std::filesystem::remove(it.path());
         }
       }
     }

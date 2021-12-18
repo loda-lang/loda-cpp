@@ -631,7 +631,9 @@ bool Setup::checkUpdateInterval() {
   std::string line;
   std::cout << "Enter the update interval for the main OEIS files and the"
             << std::endl
-            << "programs repository in days (default 1):" << std::endl;
+            << "programs repository in days (default " +
+                   std::to_string(DEFAULT_UPDATE_INTERVAL)
+            << "):" << std::endl;
   int64_t update_interval = getUpdateIntervalInDays();
   std::cout << "[" << update_interval << "] ";
   std::getline(std::cin, line);
@@ -653,9 +655,10 @@ bool Setup::checkUpdateInterval() {
 
 bool Setup::checkMaxLocalProgramAge() {
   std::string line;
-  std::cout << "Enter the maximum age of local programs in days (default: 14)."
+  std::cout << "Enter the maximum age of local programs in days (default: " +
+                   std::to_string(DEFAULT_MAX_PROGRAM_AGE) + ")."
             << std::endl
-            << "Older programs are automatically removed. Use -1 to disable "
+            << "Older programs are automatically removed. Use -1 to disable"
             << std::endl
             << "the automatic clean up:" << std::endl;
   int64_t max_age = getMaxLocalProgramAgeInDays();
