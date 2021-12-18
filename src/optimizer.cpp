@@ -184,7 +184,8 @@ bool Optimizer::mergeOps(Program &p) const {
 
       // first operation mov with constant?
       if (!do_merge && o1.type == Operation::Type::MOV &&
-          o1.source.type == Operand::Type::CONSTANT) {
+          o1.source.type == Operand::Type::CONSTANT &&
+          o2.source.type != Operand::Type::INDIRECT) {
         // mov to 0, then add another cell => mov directly
         // mov to 1, then mul another cell => mov directly
         if ((o1.source.value == 0 && o2.type == Operation::Type::ADD) ||

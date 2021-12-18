@@ -837,7 +837,8 @@ void Test::optimizer() {
     optimizer.optimize(t.first, 2, 1);
     if (t.first != t.second) {
       ProgramUtil::print(t.first, std::cerr);
-      Log::get().error("Unexpected optimized output", true);
+      Log::get().error(
+          "Unexpected optimized output for test " + std::to_string(i), true);
     }
     i++;
   }
