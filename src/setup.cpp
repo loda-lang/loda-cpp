@@ -280,9 +280,11 @@ void Setup::runWizard() {
   if (!checkUpdateInterval()) {
     return;
   }
+#ifdef STD_FILESYSTEM
   if (!checkMaxLocalProgramAge()) {
     return;
   }
+#endif
 
   saveSetup();
 

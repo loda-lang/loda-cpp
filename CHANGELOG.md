@@ -4,7 +4,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Features
 
-* Automatic clean up of local programs directory
+* Automatic clean up of local programs (not on Ubuntu 18)
 
 ## v21.12.15
 

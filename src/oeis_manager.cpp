@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdlib>
-#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <limits>
@@ -348,6 +347,7 @@ void OeisManager::update() {
             "Update of programs repository failed; please update it manually.");
       }
     }
+#ifdef STD_FILESYSTEM
     // clean up local programs folder
     const int64_t max_age = Setup::getMaxLocalProgramAgeInDays();
     const auto local = Setup::getProgramsHome() + "local";
@@ -371,6 +371,7 @@ void OeisManager::update() {
         }
       }
     }
+#endif
   }
 }
 
