@@ -44,7 +44,7 @@ void OeisMaintenance::maintain() {
 void OeisMaintenance::generateLists() {
   manager.load();
   const std::string lists_home = OeisList::getListsHome();
-  Log::get().info("Generating program lists at " + lists_home);
+  Log::get().info("Generating program lists at \"" + lists_home + "\"");
   const size_t list_file_size = 50000;
   std::vector<std::stringstream> list_files(1000000 / list_file_size);
   std::stringstream no_loda;
@@ -128,11 +128,13 @@ size_t OeisMaintenance::checkAndMinimizePrograms() {
   }
 
   Log::get().info("Checking and minimizing programs");
-  size_t num_processed = 0, num_removed = 0, num_minimized = 0;
+  size_t num_processed = 0, last_processed = 0, num_minimized = 0,
+         num_removed = 0, last_removed = 0;
   Parser parser;
   Program program, minimized;
   std::string file_name, submitted_by;
   bool is_okay, is_protected;
+  AdaptiveScheduler log_scheduler(600);  // every 10 minutes; magic number
 
   // generate random order of sequences
   std::vector<size_t> ids;
@@ -184,10 +186,12 @@ size_t OeisMaintenance::checkAndMinimizePrograms() {
       }
 
       if (!is_okay) {
-        // send alert
+        // send alert and remove file
         manager.alert(program, id, "Removed invalid", "danger", "");
         program_file.close();
         remove(file_name.c_str());
+        num_removed++;
+        last_removed++;
       } else {
         is_protected = false;
         if (manager.protect_list.find(s.id) != manager.protect_list.end()) {
@@ -205,22 +209,33 @@ size_t OeisMaintenance::checkAndMinimizePrograms() {
           manager.dumpProgram(s.id, minimized, file_name, submitted_by);
         }
       }
+      num_processed++;
+      last_processed++;
 
-      // if ( ++num_processed % 100 == 0 )
-      // {
-      //    Log::get().info( "Processed " + std::to_string( num_processed )
-      //        + " programs" );
-      // }
+      // regular task: log info and publish metrics
+      if (log_scheduler.isTargetReached()) {
+        log_scheduler.reset();
+        Log::get().info("Processed " + std::to_string(last_processed) +
+                        " programs");
+        std::vector<Metrics::Entry> entries;
+        std::map<std::string, std::string> labels;
+        labels["kind"] = "removed";
+        entries.push_back(
+            {"programs", labels, static_cast<double>(last_removed)});
+        Metrics::get().write(entries);
+        last_processed = 0;
+        last_removed = 0;
+      }
     }
   }
 
   if (num_removed > 0) {
     Log::get().info("Removed " + std::to_string(num_removed) +
-                    " invalid programs");
+                    " invalid programs in total");
   }
   if (num_minimized > 0) {
     Log::get().info("Minimized " + std::to_string(num_minimized) + "/" +
-                    std::to_string(num_processed) + " programs");
+                    std::to_string(num_processed) + " programs in total");
   }
 
   return num_removed + num_minimized;
