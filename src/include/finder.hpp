@@ -38,8 +38,6 @@ class Finder {
 
   void logSummary(size_t loaded_count);
 
-  void publishMetrics(std::vector<Metrics::Entry> &entries);
-
  private:
   void findAll(const Program &p, const Sequence &norm_seq,
                const std::vector<OeisSequence> &sequences,

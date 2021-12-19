@@ -49,19 +49,12 @@ Generator::UPtr Generator::Factory::createGenerator(const Config &config,
 
 Generator::Generator(const Config &config, const Stats &stats)
     : config(config), found_programs(stats.found_programs) {
-  metric_labels = {{"version", std::to_string(config.version)},
-                   {"length", std::to_string(config.length)},
-                   {"max_constant", std::to_string(config.max_constant)},
-                   {"loops", std::to_string(config.loops)},
-                   {"indirect", std::to_string(config.indirect_access)}};
-  // label values must not be empty
   if (!config.program_template.empty()) {
     auto temp = config.program_template;
     auto n = temp.find_last_of("/");
     if (n != std::string::npos) {
       temp = temp.substr(n + 1);
     }
-    metric_labels.emplace("template", temp);
   }
 }
 

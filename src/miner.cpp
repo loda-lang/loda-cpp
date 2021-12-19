@@ -26,6 +26,8 @@ Miner::Miner(const Settings &settings)
       api_scheduler(600),       // 10 minutes (magic number)
       reload_scheduler(21600),  // 6 hours (magic number)
       num_processed(0),
+      last_new(0),
+      last_updated(0),
       current_fetch(0) {}
 
 void Miner::reload(bool load_generators, bool force_overwrite) {
@@ -71,6 +73,8 @@ void Miner::mine() {
   std::string submitted_by;
   current_fetch = (mining_mode == MINING_MODE_SERVER) ? PROGRAMS_TO_FETCH : 0;
   num_processed = 0;
+  last_new = 0;
+  last_updated = 0;
   while (true) {
     // server mode: fetch new program
     if (progs.empty() && current_fetch > 0 &&
@@ -111,9 +115,9 @@ void Miner::mine() {
       if (r.updated) {
         // update stats and increase priority of successful generator
         if (r.is_new) {
-          generator->stats.fresh++;
+          last_new++;
         } else {
-          generator->stats.updated++;
+          last_updated++;
         }
         // in client mode: submit the program to the API server
         if (mining_mode == MINING_MODE_CLIENT) {
@@ -125,7 +129,6 @@ void Miner::mine() {
         }
       }
     }
-    generator->stats.generated++;
     num_processed++;
     checkRegularTasks();
   }
@@ -154,19 +157,14 @@ void Miner::checkRegularTasks() {
   if (metrics_scheduler.isTargetReached()) {
     metrics_scheduler.reset();
     std::vector<Metrics::Entry> entries;
-    for (size_t i = 0; i < multi_generator->generators.size(); i++) {
-      auto gen = multi_generator->generators[i].get();
-      auto labels = gen->metric_labels;
-      labels["kind"] = "generated";
-      entries.push_back({"programs", labels, (double)gen->stats.generated});
-      labels["kind"] = "new";
-      entries.push_back({"programs", labels, (double)gen->stats.fresh});
-      labels["kind"] = "updated";
-      entries.push_back({"programs", labels, (double)gen->stats.updated});
-      gen->stats = Generator::GStats();  // reset counters
-    }
-    manager->getFinder().publishMetrics(entries);
+    std::map<std::string, std::string> labels;
+    labels["kind"] = "new";
+    entries.push_back({"programs", labels, (double)last_new});
+    labels["kind"] = "updated";
+    entries.push_back({"programs", labels, (double)last_updated});
     Metrics::get().write(entries);
+    last_new = 0;
+    last_updated = 0;
   }
 
   // regular task: reload oeis manager and generators

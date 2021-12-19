@@ -195,17 +195,3 @@ void Finder::logSummary(size_t loaded_count) {
   }
   Log::get().debug(buf.str());
 }
-
-void Finder::publishMetrics(std::vector<Metrics::Entry> &entries) {
-  for (size_t i = 0; i < matchers.size(); i++) {
-    tmp_matcher_labels["matcher"] = matchers[i]->getName();
-    tmp_matcher_labels["kind"] = "success";
-    entries.push_back(
-        {"matches", tmp_matcher_labels, (double)matcher_stats[i].successes});
-
-    matcher_stats[i].candidates = 0;
-    matcher_stats[i].successes = 0;
-    matcher_stats[i].false_positives = 0;
-    matcher_stats[i].errors = 0;
-  }
-}
