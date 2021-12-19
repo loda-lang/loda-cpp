@@ -11,6 +11,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 * Automatic clean up of local programs (not on Ubuntu 18)
 * New metric for removed programs
 
+### Enhancements
+
+* Remove broken generator and matcher metrics
+
 ## v21.12.15
 
 ### Bugfixes

@@ -24,15 +24,6 @@ class Generator {
     std::string miner;
   };
 
-  class GStats {
-   public:
-    GStats() : generated(0), fresh(0), updated(0) {}
-
-    int64_t generated;
-    int64_t fresh;
-    int64_t updated;
-  };
-
   class Factory {
    public:
     static Generator::UPtr createGenerator(const Config &config,
@@ -50,10 +41,6 @@ class Generator {
   const Config config;
 
   const std::vector<bool> found_programs;
-
-  std::map<std::string, std::string> metric_labels;
-
-  GStats stats;
 
  protected:
   void generateStateless(Program &p, size_t num_operations);
