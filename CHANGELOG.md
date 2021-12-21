@@ -9,6 +9,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Features
 
 * Automatic clean up of local programs (not on Ubuntu 18)
+* Configurable mutation rate for generator v6
 * New metric for removed programs
 
 ### Enhancements

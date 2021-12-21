@@ -9,7 +9,7 @@
 
 class Mutator {
  public:
-  Mutator(const Stats &stats);
+  Mutator(const Stats &stats, double mutation_rate = 0.3);  // magic number
 
   void mutateRandom(Program &program);
 
@@ -20,6 +20,8 @@ class Mutator {
 
   void mutateConstants(const Program &program, size_t num_results,
                        std::stack<Program> &result);
+
+  double mutation_rate;
 
  private:
   ProgramIds program_ids;

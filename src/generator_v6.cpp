@@ -7,7 +7,7 @@
 GeneratorV6::GeneratorV6(const Config &config, const Stats &stats)
     : Generator(config, stats),
       scheduler(120),  // 2 minutes
-      mutator(stats) {
+      mutator(stats, config.mutation_rate) {
   // get first program template
   nextProgram();
 }
