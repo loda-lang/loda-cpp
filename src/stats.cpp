@@ -372,9 +372,13 @@ bool ProgramIds::exists(int64_t id) const {
 }
 
 int64_t ProgramIds::getRandomProgramId() const {
-  int64_t id;
-  do {
-    id = Random::get().gen() % size();
-  } while (!(*this)[id]);
-  return id;
+  if (!empty()) {
+    for (size_t i = 0; i < 1000; i++) {
+      int64_t id = Random::get().gen() % size();
+      if ((*this)[id]) {
+        return id;
+      }
+    }
+  }
+  return 0;
 }
