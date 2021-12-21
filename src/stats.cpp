@@ -124,7 +124,7 @@ void Stats::load(std::string path) {
     full = path + "programs.csv";
     Log::get().debug("Loading " + full);
     std::ifstream programs(full);
-    found_programs.resize(100000, false);
+    program_ids.resize(100000, false);
     cached_b_files.resize(100000, false);
     program_lengths.resize(100000, false);
     int64_t largest_id = 0;
@@ -136,17 +136,17 @@ void Stats::load(std::string path) {
       std::getline(s, l);
       int64_t id = std::stoll(k);
       largest_id = std::max<int64_t>(largest_id, id);
-      if ((size_t)id >= found_programs.size()) {
-        size_t new_size = std::max<size_t>(found_programs.size() * 2, id + 1);
-        found_programs.resize(new_size);
+      if ((size_t)id >= program_ids.size()) {
+        size_t new_size = std::max<size_t>(program_ids.size() * 2, id + 1);
+        program_ids.resize(new_size);
         cached_b_files.resize(new_size);
         program_lengths.resize(new_size);
       }
-      found_programs[id] = std::stoll(v);
+      program_ids[id] = std::stoll(v);
       cached_b_files[id] = std::stoll(w);
       program_lengths[id] = std::stoll(l);
     }
-    found_programs.resize(largest_id + 1);
+    program_ids.resize(largest_id + 1);
     cached_b_files.resize(largest_id + 1);
     program_lengths.resize(largest_id + 1);
     programs.close();
@@ -201,8 +201,8 @@ void Stats::save(std::string path) {
   }
   constants.close();
   std::ofstream programs(path + "programs.csv");
-  for (size_t i = 0; i < found_programs.size(); i++) {
-    const bool f = found_programs[i];
+  for (size_t i = 0; i < program_ids.size(); i++) {
+    const bool f = program_ids[i];
     const bool b = cached_b_files[i];
     const int64_t l = program_lengths[i];
     if (f || b || l) {
@@ -281,8 +281,8 @@ std::string Stats::getMainStatsFile(std::string path) const {
 void Stats::updateProgramStats(size_t id, const Program &program) {
   num_programs++;
   const size_t num_ops = ProgramUtil::numOps(program, false);
-  if (id >= found_programs.size()) {
-    const size_t new_size = std::max<size_t>(id + 1, 2 * found_programs.size());
+  if (id >= program_ids.size()) {
+    const size_t new_size = std::max<size_t>(id + 1, 2 * program_ids.size());
     program_lengths.resize(new_size);
   }
   program_lengths[id] = num_ops;
@@ -328,13 +328,13 @@ void Stats::updateProgramStats(size_t id, const Program &program) {
 void Stats::updateSequenceStats(size_t id, bool program_found,
                                 bool has_b_file) {
   num_sequences++;
-  if (id >= found_programs.size()) {
-    const size_t new_size = std::max<size_t>(id + 1, 2 * found_programs.size());
-    found_programs.resize(new_size);
+  if (id >= program_ids.size()) {
+    const size_t new_size = std::max<size_t>(id + 1, 2 * program_ids.size());
+    program_ids.resize(new_size);
     cached_b_files.resize(new_size);
     program_lengths.resize(new_size);
   }
-  found_programs[id] = program_found;
+  program_ids[id] = program_found;
   cached_b_files[id] = has_b_file;
 }
 
@@ -365,4 +365,16 @@ int64_t Stats::getTransitiveLength(size_t id) const {
   }
   visited_programs.erase(id);
   return length;
+}
+
+bool ProgramIds::exists(int64_t id) const {
+  return id >= 0 && id < size() && (*this)[id];
+}
+
+int64_t ProgramIds::getRandomProgramId() const {
+  int64_t id;
+  do {
+    id = Random::get().gen() % size();
+  } while (!(*this)[id]);
+  return id;
 }

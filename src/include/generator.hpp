@@ -40,7 +40,7 @@ class Generator {
 
   const Config config;
 
-  const std::vector<bool> found_programs;
+  const ProgramIds program_ids;
 
  protected:
   void generateStateless(Program &p, size_t num_operations);
@@ -59,8 +59,6 @@ class Generator {
                            const std::vector<int64_t> &written_cells);
 
   void ensureMeaningfulLoops(Program &p);
-
-  int64_t getRandomProgramId();
 };
 
 class MultiGenerator {

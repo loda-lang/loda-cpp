@@ -22,12 +22,10 @@ class Mutator {
                        std::stack<Program> &result);
 
  private:
-  std::vector<bool> found_programs;
+  ProgramIds program_ids;
   std::vector<Number> constants;
   std::vector<Operation::Type> operation_types;
 
   std::discrete_distribution<> constants_dist;
   std::discrete_distribution<> operation_types_dist;
-
-  int64_t getRandomProgramId();
 };

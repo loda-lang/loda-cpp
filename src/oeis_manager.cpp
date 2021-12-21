@@ -270,8 +270,7 @@ bool OeisManager::shouldMatch(const OeisSequence &seq) const {
   }
 
   // check if program exists
-  const bool prog_exists =
-      (seq.id < stats.found_programs.size()) && stats.found_programs[seq.id];
+  const bool prog_exists = stats.program_ids.exists(seq.id);
 
   // decide based on overwrite mode
   switch (overwrite_mode) {

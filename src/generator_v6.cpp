@@ -25,7 +25,7 @@ Program GeneratorV6::generateProgram() {
 void GeneratorV6::nextProgram() {
   Parser parser;
   for (int64_t i = 0; i < 10; i++) {
-    const auto id = getRandomProgramId();
+    const auto id = program_ids.getRandomProgramId();
     const std::string path = OeisSequence(id).getProgramPath();
     try {
       program = parser.parse(path);
