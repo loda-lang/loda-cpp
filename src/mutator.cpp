@@ -5,7 +5,8 @@
 #define CONSTANTS_START -100
 #define CONSTANTS_END 1000
 
-Mutator::Mutator(const Stats &stats) : program_ids(stats.program_ids) {
+Mutator::Mutator(const Stats &stats, double mutation_rate)
+    : mutation_rate(mutation_rate), program_ids(stats.program_ids) {
   // initialize constants distribution from stats
   constants.resize(CONSTANTS_END - CONSTANTS_START + 1);
   for (int64_t i = 0; i <= CONSTANTS_END - CONSTANTS_START; i++) {
@@ -39,9 +40,15 @@ void Mutator::mutateRandom(Program &program) {
   const int64_t num_cells =
       ProgramUtil::getLargestDirectMemoryCell(program) + 1;
 
+  // calculate the number of mutations to apply
+  int64_t num_mutations =
+      static_cast<int64_t>(program.ops.size() * mutation_rate) + 1;
+  num_mutations = Random::get().gen() % num_mutations;  // could be zero
+  if (mutation_rate > 0.0) {
+    num_mutations++;  // at least one mutation
+  }
+
   // mutate existing operations or add new ones
-  int64_t num_mutations = (program.ops.size() / 3) + 1;
-  num_mutations = (Random::get().gen() % num_mutations) + 1;
   int64_t pos;
   static const Operation mov_zero(Operation::Type::MOV,
                                   Operand(Operand::Type::DIRECT, 0),

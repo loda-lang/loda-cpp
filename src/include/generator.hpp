@@ -17,6 +17,7 @@ class Generator {
     int64_t length = 0;
     int64_t max_constant = 0;
     int64_t max_index = 0;
+    double mutation_rate = 0.0;
     bool loops = true;
     bool calls = true;
     bool indirect_access = false;

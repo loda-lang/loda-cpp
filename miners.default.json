@@ -189,7 +189,8 @@
     },
     {
       "name": "v6",
-      "version": 6
+      "version": 6,
+      "mutationRate": 0.3
     }
   ]
 }
