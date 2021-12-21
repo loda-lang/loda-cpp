@@ -744,7 +744,7 @@ void Test::stats() {
     Log::get().error("Error loading operation position counts from stats",
                      true);
   }
-  if (!s.found_programs.at(5)) {
+  if (!s.program_ids.exists(5)) {
     Log::get().error("Error loading program summary from stats", true);
   }
   if (!s.program_lengths.at(7)) {
@@ -795,10 +795,10 @@ void Test::stats() {
       Log::get().error("Unexpected number of operation position count", true);
     }
   }
-  if (s.found_programs.size() != t.found_programs.size()) {
+  if (s.program_ids.size() != t.program_ids.size()) {
     Log::get().error("Unexpected number of found programs: " +
-                         std::to_string(s.found_programs.size()) +
-                         "!=" + std::to_string(t.found_programs.size()),
+                         std::to_string(s.program_ids.size()) +
+                         "!=" + std::to_string(t.program_ids.size()),
                      true);
   }
   if (s.cached_b_files.size() != t.cached_b_files.size()) {
@@ -807,9 +807,9 @@ void Test::stats() {
                          "!=" + std::to_string(t.cached_b_files.size()),
                      true);
   }
-  for (size_t i = 0; i < s.found_programs.size(); i++) {
-    auto a = s.found_programs.at(i);
-    auto b = t.found_programs.at(i);
+  for (size_t i = 0; i < s.program_ids.size(); i++) {
+    auto a = s.program_ids.exists(i);
+    auto b = t.program_ids.exists(i);
     if (a != b) {
       Log::get().error("Unexpected found programs for: " + std::to_string(i),
                        true);

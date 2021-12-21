@@ -48,7 +48,7 @@ Generator::UPtr Generator::Factory::createGenerator(const Config &config,
 }
 
 Generator::Generator(const Config &config, const Stats &stats)
-    : config(config), found_programs(stats.found_programs) {
+    : config(config), program_ids(stats.program_ids) {
   if (!config.program_template.empty()) {
     auto temp = config.program_template;
     auto n = temp.find_last_of("/");
@@ -173,23 +173,12 @@ void Generator::fixCalls(Program &p) {
   for (auto &op : p.ops) {
     if (op.type == Operation::Type::SEQ) {
       if (op.source.type != Operand::Type::CONSTANT ||
-          (op.source.value < Number::ZERO ||
-           !(op.source.value < Number(found_programs.size())) ||
-           !found_programs[op.source.value.asInt()])) {
-        op.source =
-            Operand(Operand::Type::CONSTANT, Number(getRandomProgramId()));
+          !program_ids.exists(op.source.value.asInt())) {
+        op.source = Operand(Operand::Type::CONSTANT,
+                            Number(program_ids.getRandomProgramId()));
       }
     }
   }
-}
-
-int64_t Generator::getRandomProgramId() {
-  // TODO: avoid duplicate function
-  int64_t id;
-  do {
-    id = Random::get().gen() % found_programs.size();
-  } while (!found_programs[id]);
-  return id;
 }
 
 void Generator::ensureSourceNotOverwritten(Program &p) {
