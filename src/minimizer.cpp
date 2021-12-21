@@ -69,10 +69,9 @@ bool Minimizer::minimize(Program& p, size_t num_terms) const {
           p.ops[i] = op;
         }
       }
-    } else if (p.ops.size() >
-               1)  // try to remove the current operation (if there is at least
-                   // one operation, see A000004)
-    {
+    } else if (p.ops.size() > 1) {
+      // try to remove the current operation (if there is at least one
+      // operation, see A000004)
       p.ops.erase(p.ops.begin() + i, p.ops.begin() + i + 1);
       bool can_remove;
       try {
@@ -164,17 +163,18 @@ int64_t Minimizer::getPowerOf(const Number& v) {
 bool Minimizer::removeClr(Program& p) const {
   bool replaced = false;
   for (size_t i = 0; i < p.ops.size(); i++) {
-    if (p.ops[i].type == Operation::Type::CLR &&
-        p.ops[i].source.type == Operand::Type::CONSTANT) {
-      const int64_t length = p.ops[i].source.value.asInt();
+    auto& op = p.ops[i];
+    if (op.type == Operation::Type::CLR &&
+        op.target.type == Operand::Type::DIRECT &&
+        op.source.type == Operand::Type::CONSTANT) {
+      const int64_t length = op.source.value.asInt();
       if (length <= 0) {
         p.ops.erase(p.ops.begin() + i);
         replaced = true;
-      } else if (length <= 100)  // magic number
-      {
-        p.ops[i].type = Operation::Type::MOV;
-        p.ops[i].source.value = 0;
-        auto mov = p.ops[i];
+      } else if (length <= 100) {  // magic number
+        op.type = Operation::Type::MOV;
+        op.source.value = 0;
+        auto mov = op;
         for (int64_t j = 1; j < length; j++) {
           mov.target.value = Semantics::add(mov.target.value, Number::ONE);
           p.ops.insert(p.ops.begin() + i + j, mov);

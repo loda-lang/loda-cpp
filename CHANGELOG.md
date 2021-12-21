@@ -4,7 +4,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Bugfixes
 
-* Fix optimizer bug involving indirect memory access
+* Fix optimizer and minimizer bugs involving indirect memory access
 
 ### Features
 
