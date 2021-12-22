@@ -41,7 +41,7 @@ class Generator {
 
   const Config config;
 
-  const ProgramIds program_ids;
+  const RandomProgramIds random_program_ids;
 
  protected:
   void generateStateless(Program &p, size_t num_operations);

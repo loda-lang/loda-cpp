@@ -744,7 +744,7 @@ void Test::stats() {
     Log::get().error("Error loading operation position counts from stats",
                      true);
   }
-  if (!s.program_ids.exists(5)) {
+  if (!s.program_ids.at(5)) {
     Log::get().error("Error loading program summary from stats", true);
   }
   if (!s.program_lengths.at(7)) {
@@ -808,8 +808,8 @@ void Test::stats() {
                      true);
   }
   for (size_t i = 0; i < s.program_ids.size(); i++) {
-    auto a = s.program_ids.exists(i);
-    auto b = t.program_ids.exists(i);
+    auto a = s.program_ids.at(i);
+    auto b = t.program_ids.at(i);
     if (a != b) {
       Log::get().error("Unexpected found programs for: " + std::to_string(i),
                        true);

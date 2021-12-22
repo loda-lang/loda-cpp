@@ -48,7 +48,7 @@ Generator::UPtr Generator::Factory::createGenerator(const Config &config,
 }
 
 Generator::Generator(const Config &config, const Stats &stats)
-    : config(config), program_ids(stats.program_ids) {
+    : config(config), random_program_ids(stats.program_ids) {
   if (!config.program_template.empty()) {
     auto temp = config.program_template;
     auto n = temp.find_last_of("/");
@@ -173,9 +173,9 @@ void Generator::fixCalls(Program &p) {
   for (auto &op : p.ops) {
     if (op.type == Operation::Type::SEQ) {
       if (op.source.type != Operand::Type::CONSTANT ||
-          !program_ids.exists(op.source.value.asInt())) {
-        op.source = Operand(Operand::Type::CONSTANT,
-                            Number(program_ids.getRandomProgramId()));
+          !random_program_ids.exists(op.source.value.asInt())) {
+        op.source =
+            Operand(Operand::Type::CONSTANT, Number(random_program_ids.get()));
       }
     }
   }

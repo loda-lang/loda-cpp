@@ -159,7 +159,13 @@ void Stats::load(std::string path) {
     std::ifstream latest_programs(full);
     latest_program_ids.clear();
     while (std::getline(latest_programs, line)) {
-      latest_program_ids.push_back(std::stoll(line));
+      int64_t id = std::stoll(line);
+      if (id >= latest_program_ids.size()) {
+        const size_t new_size =
+            std::max<size_t>(id + 1, 2 * latest_program_ids.size());
+        latest_program_ids.resize(new_size);
+      }
+      latest_program_ids[id] = true;
     }
     latest_programs.close();
   }
@@ -225,8 +231,10 @@ void Stats::save(std::string path) {
   programs.close();
 
   std::ofstream latest_programs(path + "latest_programs.csv");
-  for (size_t i = 0; i < latest_program_ids.size(); i++) {
-    // latest_programs << id << "\n";
+  for (size_t id = 0; id < latest_program_ids.size(); id++) {
+    if (latest_program_ids[id]) {
+      latest_programs << id << "\n";
+    }
   }
   latest_programs.close();
 
@@ -444,7 +452,12 @@ void Stats::collectLatestProgramIds() {
   }
   latest_program_ids.clear();
   for (auto id : ids) {
-    latest_program_ids.insert(id);
+    if (id >= latest_program_ids.size()) {
+      const size_t new_size =
+          std::max<size_t>(id + 1, 2 * latest_program_ids.size());
+      latest_program_ids.resize(new_size);
+    }
+    latest_program_ids[id] = true;
   }
   if (latest_program_ids.empty()) {
     Log::get().warn("Cannot read programs commit history");
@@ -471,26 +484,21 @@ int64_t Stats::getTransitiveLength(size_t id) const {
   return length;
 }
 
-void ProgramIds::insert(int64_t id) {
-  if ((size_t)id >= size()) {
-    size_t new_size = std::max<size_t>(size() * 2, id + 1);
-    resize(new_size);
-  }
-  (*this)[id] = true;
-}
-
-bool ProgramIds::exists(int64_t id) const {
-  return id >= 0 && id < size() && (*this)[id];
-}
-
-int64_t ProgramIds::getRandomProgramId() const {
-  if (!empty()) {
-    for (size_t i = 0; i < 1000; i++) {
-      int64_t id = Random::get().gen() % size();
-      if ((*this)[id]) {
-        return id;
-      }
+RandomProgramIds::RandomProgramIds(const std::vector<bool> &flags) {
+  for (size_t id = 0; id < flags.size(); id++) {
+    if (flags[id]) {
+      ids.push_back(id);
     }
+  }
+}
+
+bool RandomProgramIds::exists(int64_t id) const {
+  return std::find(ids.begin(), ids.end(), id) != ids.end();
+}
+
+int64_t RandomProgramIds::get() const {
+  if (!ids.empty()) {
+    return ids[Random::get().gen() % ids.size()];
   }
   return 0;
 }

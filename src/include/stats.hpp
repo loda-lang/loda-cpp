@@ -28,11 +28,15 @@ class OpPos {
   }
 };
 
-class ProgramIds : public std::vector<bool> {
+class RandomProgramIds {
  public:
-  void insert(int64_t id);
+  RandomProgramIds(const std::vector<bool> &flags);
+
   bool exists(int64_t id) const;
-  int64_t getRandomProgramId() const;
+  int64_t get() const;
+
+ private:
+  std::vector<int64_t> ids;
 };
 
 class Stats {
@@ -63,8 +67,8 @@ class Stats {
   std::vector<int64_t> num_programs_per_length;
   std::vector<int64_t> num_ops_per_type;
   std::vector<int64_t> program_lengths;
-  ProgramIds program_ids;
-  ProgramIds latest_program_ids;
+  std::vector<bool> program_ids;
+  std::vector<bool> latest_program_ids;
   std::vector<bool> cached_b_files;
   Blocks blocks;
 
