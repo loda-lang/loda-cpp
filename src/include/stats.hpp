@@ -30,6 +30,7 @@ class OpPos {
 
 class ProgramIds : public std::vector<bool> {
  public:
+  void insert(int64_t id);
   bool exists(int64_t id) const;
   int64_t getRandomProgramId() const;
 };
@@ -63,6 +64,7 @@ class Stats {
   std::vector<int64_t> num_ops_per_type;
   std::vector<int64_t> program_lengths;
   ProgramIds program_ids;
+  ProgramIds latest_program_ids;
   std::vector<bool> cached_b_files;
   Blocks blocks;
 
@@ -71,4 +73,6 @@ class Stats {
   mutable std::set<size_t>
       printed_recursion_warning;  // used for getTransitiveLength()
   Blocks::Collector blocks_collector;
+
+  void collectLatestProgramIds();
 };

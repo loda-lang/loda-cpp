@@ -8,6 +8,7 @@
 #include "oeis_sequence.hpp"
 #include "parser.hpp"
 #include "program_util.hpp"
+#include "setup.hpp"
 
 Stats::Stats()
     : num_programs(0),
@@ -153,6 +154,17 @@ void Stats::load(std::string path) {
   }
 
   {
+    full = path + "latest_programs.csv";
+    Log::get().debug("Loading " + full);
+    std::ifstream latest_programs(full);
+    latest_program_ids.clear();
+    while (std::getline(latest_programs, line)) {
+      latest_program_ids.push_back(std::stoll(line));
+    }
+    latest_programs.close();
+  }
+
+  {
     full = path + "call_graph.csv";
     Log::get().debug("Loading " + full);
     std::ifstream call(full);
@@ -200,6 +212,7 @@ void Stats::save(std::string path) {
     constants << e.first << sep << e.second << "\n";
   }
   constants.close();
+
   std::ofstream programs(path + "programs.csv");
   for (size_t i = 0; i < program_ids.size(); i++) {
     const bool f = program_ids[i];
@@ -210,6 +223,13 @@ void Stats::save(std::string path) {
     }
   }
   programs.close();
+
+  std::ofstream latest_programs(path + "latest_programs.csv");
+  for (size_t i = 0; i < latest_program_ids.size(); i++) {
+    // latest_programs << id << "\n";
+  }
+  latest_programs.close();
+
   std::ofstream lengths(path + "program_lengths.csv");
   for (size_t i = 0; i < num_programs_per_length.size(); i++) {
     if (num_programs_per_length[i] > 0) {
@@ -217,6 +237,7 @@ void Stats::save(std::string path) {
     }
   }
   lengths.close();
+
   std::ofstream op_type_counts(path + "operation_type_counts.csv");
   for (size_t i = 0; i < num_ops_per_type.size(); i++) {
     if (num_ops_per_type[i] > 0) {
@@ -226,6 +247,7 @@ void Stats::save(std::string path) {
     }
   }
   op_type_counts.close();
+
   std::ofstream op_counts(path + "operation_counts.csv");
   for (auto &op : num_operations) {
     const auto &meta = Operation::Metadata::get(op.first.type);
@@ -235,6 +257,7 @@ void Stats::save(std::string path) {
               << op.second << "\n";
   }
   op_counts.close();
+
   std::ofstream oppos_counts(path + "operation_pos_counts.csv");
   for (auto &o : num_operation_positions) {
     const auto &meta = Operation::Metadata::get(o.first.op.type);
@@ -258,8 +281,7 @@ void Stats::save(std::string path) {
   }
   cal.close();
 
-  if (steps.total)  // write steps stats only if present
-  {
+  if (steps.total) {  // write steps stats only if present
     std::ofstream steps_out(path + "steps.csv");
     steps_out << "total,min,max,runs\n";
     steps_out << steps.total << sep << steps.min << sep << steps.max << sep
@@ -345,6 +367,88 @@ void Stats::finalize() {
     }
     blocks = blocks_collector.finalize();
   }
+  if (latest_program_ids.empty()) {
+    collectLatestProgramIds();
+  }
+}
+
+void Stats::collectLatestProgramIds() {
+  auto progs_dir = Setup::getProgramsHome();
+  static const int64_t max_commits = 100;    // magic number
+  static const int64_t max_programs = 1000;  // magic number
+  if (!hasGit()) {
+    Log::get().warn(
+        "Cannot read commit history because the git command was not found");
+    return;
+  }
+  if (!isDir(progs_dir + ".git")) {
+    Log::get().warn(
+        "Cannot read commit history because the .git folder was not found");
+    return;
+  }
+  const std::string git_tmp = getTmpDir() + "loda_git_tmp.txt";
+  std::string git_cmd = "cd \"" + progs_dir +
+                        "\" && git log --oneline --format=\"%H\" -n " +
+                        std::to_string(max_commits) + " > " + git_tmp;
+  if (system(git_cmd.c_str()) != 0) {
+    Log::get().warn("Cannot read programs commit history");
+    return;
+  }
+  std::string line;
+  std::vector<std::string> commits;
+  {
+    // read commits from file
+    std::ifstream in(git_tmp);
+    while (std::getline(in, line)) {
+      if (!line.empty()) {
+        commits.push_back(line);
+      }
+    }
+  }
+  std::remove(git_tmp.c_str());
+  if (commits.empty()) {
+    Log::get().warn("Cannot read programs commit history");
+    return;
+  }
+  std::set<int64_t> ids;
+  for (const auto &commit : commits) {
+    if (ids.size() >= max_programs) {
+      break;
+    }
+    git_cmd = "cd \"" + progs_dir +
+              "\" && git diff-tree --no-commit-id --name-only -r " + commit +
+              " > " + git_tmp;
+    if (system(git_cmd.c_str()) != 0) {
+      Log::get().warn("Cannot read files of commit " + commit);
+      std::remove(git_tmp.c_str());
+      return;
+    }
+    {
+      // read changed file names from file
+      std::ifstream in(git_tmp);
+      while (std::getline(in, line)) {
+        if (line.size() >= 11 && line.substr(line.size() - 4) == ".asm") {
+          auto id_str = line.substr(line.size() - 11, 7);
+          try {
+            OeisSequence seq(id_str);
+            if (isFile(seq.getProgramPath())) {
+              ids.insert(seq.id);
+            }
+          } catch (const std::exception &) {
+            // ignore because it is not a program of an OEIS sequence
+          }
+        }
+      }
+    }
+    std::remove(git_tmp.c_str());
+  }
+  latest_program_ids.clear();
+  for (auto id : ids) {
+    latest_program_ids.insert(id);
+  }
+  if (latest_program_ids.empty()) {
+    Log::get().warn("Cannot read programs commit history");
+  }
 }
 
 int64_t Stats::getTransitiveLength(size_t id) const {
@@ -365,6 +469,14 @@ int64_t Stats::getTransitiveLength(size_t id) const {
   }
   visited_programs.erase(id);
   return length;
+}
+
+void ProgramIds::insert(int64_t id) {
+  if ((size_t)id >= size()) {
+    size_t new_size = std::max<size_t>(size() * 2, id + 1);
+    resize(new_size);
+  }
+  (*this)[id] = true;
 }
 
 bool ProgramIds::exists(int64_t id) const {
