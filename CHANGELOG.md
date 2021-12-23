@@ -2,13 +2,15 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v21.12.23
+
 ### Bugfixes
 
 * Fix optimizer and minimizer bugs involving indirect memory access
 
 ### Features
 
-* Automatic clean up of local programs (not on Ubuntu 18)
+* Automatic clean up of local programs in client mode (not on Ubuntu 18)
 * Configurable mutation rate for generator v6
 * New metric for removed programs
 
