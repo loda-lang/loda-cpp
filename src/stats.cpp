@@ -160,7 +160,11 @@ void Stats::load(std::string path) {
     latest_program_ids.clear();
     while (std::getline(latest_programs, line)) {
       int64_t id = std::stoll(line);
-      if (id >= latest_program_ids.size()) {
+      if (id < 0 || id > 1000000) {
+        throw std::runtime_error("Unexpected latest program ID: " +
+                                 std::to_string(id));
+      }
+      if (id >= static_cast<int64_t>(latest_program_ids.size())) {
         const size_t new_size =
             std::max<size_t>(id + 1, 2 * latest_program_ids.size());
         latest_program_ids.resize(new_size);

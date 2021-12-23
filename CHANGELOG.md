@@ -15,6 +15,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Enhancements
 
 * Remove broken generator and matcher metrics
+* Prefer latest programs for mutations
 
 ## v21.12.15
 
