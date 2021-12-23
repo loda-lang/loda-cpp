@@ -499,6 +499,8 @@ RandomProgramIds::RandomProgramIds(const std::vector<bool> &flags) {
   }
 }
 
+bool RandomProgramIds::empty() const { return ids_set.empty(); }
+
 bool RandomProgramIds::exists(int64_t id) const {
   return (id >= 0) && (ids_set.find(id) != ids_set.end());
 }
@@ -519,7 +521,8 @@ bool RandomProgramIds2::exists(int64_t id) const {
 }
 
 int64_t RandomProgramIds2::get() const {
-  if (Random::get().gen() % 2 == 0) {  // magic number
+  if (Random::get().gen() % 2 == 0 ||
+      latest_program_ids.empty()) {  // magic number
     return all_program_ids.get();
   } else {
     return latest_program_ids.get();

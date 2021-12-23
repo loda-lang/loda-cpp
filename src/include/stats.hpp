@@ -75,6 +75,7 @@ class RandomProgramIds {
  public:
   RandomProgramIds(const std::vector<bool> &flags);
 
+  bool empty() const;
   bool exists(int64_t id) const;
   int64_t get() const;
 
