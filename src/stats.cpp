@@ -502,3 +502,19 @@ int64_t RandomProgramIds::get() const {
   }
   return 0;
 }
+
+RandomProgramIds2::RandomProgramIds2(const Stats &stats)
+    : all_program_ids(stats.program_ids),
+      latest_program_ids(stats.latest_program_ids) {}
+
+bool RandomProgramIds2::exists(int64_t id) const {
+  return all_program_ids.exists(id) || latest_program_ids.exists(id);
+}
+
+int64_t RandomProgramIds2::get() const {
+  if (Random::get().gen() % 2 == 0) {  // magic number
+    return all_program_ids.get();
+  } else {
+    return latest_program_ids.get();
+  }
+}

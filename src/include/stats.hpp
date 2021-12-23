@@ -28,17 +28,6 @@ class OpPos {
   }
 };
 
-class RandomProgramIds {
- public:
-  RandomProgramIds(const std::vector<bool> &flags);
-
-  bool exists(int64_t id) const;
-  int64_t get() const;
-
- private:
-  std::vector<int64_t> ids;
-};
-
 class Stats {
  public:
   Stats();
@@ -79,4 +68,27 @@ class Stats {
   Blocks::Collector blocks_collector;
 
   void collectLatestProgramIds();
+};
+
+class RandomProgramIds {
+ public:
+  RandomProgramIds(const std::vector<bool> &flags);
+
+  bool exists(int64_t id) const;
+  int64_t get() const;
+
+ private:
+  std::vector<int64_t> ids;
+};
+
+class RandomProgramIds2 {
+ public:
+  RandomProgramIds2(const Stats &stats);
+
+  bool exists(int64_t id) const;
+  int64_t get() const;
+
+ private:
+  RandomProgramIds all_program_ids;
+  RandomProgramIds latest_program_ids;
 };

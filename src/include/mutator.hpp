@@ -24,7 +24,7 @@ class Mutator {
   double mutation_rate;
 
  private:
-  RandomProgramIds random_program_ids;
+  RandomProgramIds2 random_program_ids;
   std::vector<Number> constants;
   std::vector<Operation::Type> operation_types;
 

@@ -48,7 +48,7 @@ Generator::UPtr Generator::Factory::createGenerator(const Config &config,
 }
 
 Generator::Generator(const Config &config, const Stats &stats)
-    : config(config), random_program_ids(stats.program_ids) {
+    : config(config), random_program_ids(stats) {
   if (!config.program_template.empty()) {
     auto temp = config.program_template;
     auto n = temp.find_last_of("/");
