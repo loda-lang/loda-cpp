@@ -458,7 +458,7 @@ void Stats::collectLatestProgramIds() {
   }
   latest_program_ids.clear();
   for (auto id : ids) {
-    if (id >= latest_program_ids.size()) {
+    if (id >= static_cast<int64_t>(latest_program_ids.size())) {
       const size_t new_size =
           std::max<size_t>(id + 1, 2 * latest_program_ids.size());
       latest_program_ids.resize(new_size);
