@@ -6,7 +6,7 @@
 
 GeneratorV6::GeneratorV6(const Config &config, const Stats &stats)
     : Generator(config, stats),
-      scheduler(120),  // 2 minutes
+      scheduler(60),  // 1 minute; magic number
       mutator(stats, config.mutation_rate) {
   // get first program template
   nextProgram();
@@ -30,7 +30,7 @@ void GeneratorV6::nextProgram() {
     try {
       program = parser.parse(path);
       ProgramUtil::removeOps(program, Operation::Type::NOP);
-      // Log::get().debug("Loaded template: " + path);
+      // Log::get().info("Loaded template: " + path);
       return;
     } catch (std::exception &) {
       Log::get().warn("Cannot load program " + path);

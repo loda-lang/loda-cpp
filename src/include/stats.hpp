@@ -2,6 +2,7 @@
 
 #include <map>
 #include <set>
+#include <unordered_set>
 
 #include "blocks.hpp"
 #include "evaluator.hpp"
@@ -56,7 +57,7 @@ class Stats {
   std::vector<int64_t> num_programs_per_length;
   std::vector<int64_t> num_ops_per_type;
   std::vector<int64_t> program_lengths;
-  std::vector<bool> program_ids;
+  std::vector<bool> all_program_ids;
   std::vector<bool> latest_program_ids;
   std::vector<bool> cached_b_files;
   Blocks blocks;
@@ -78,7 +79,8 @@ class RandomProgramIds {
   int64_t get() const;
 
  private:
-  std::vector<int64_t> ids;
+  std::vector<int64_t> ids_vector;
+  std::unordered_set<int64_t> ids_set;
 };
 
 class RandomProgramIds2 {

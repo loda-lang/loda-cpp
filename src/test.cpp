@@ -744,7 +744,7 @@ void Test::stats() {
     Log::get().error("Error loading operation position counts from stats",
                      true);
   }
-  if (!s.program_ids.at(5)) {
+  if (!s.all_program_ids.at(5)) {
     Log::get().error("Error loading program summary from stats", true);
   }
   if (!s.program_lengths.at(7)) {
@@ -795,10 +795,10 @@ void Test::stats() {
       Log::get().error("Unexpected number of operation position count", true);
     }
   }
-  if (s.program_ids.size() != t.program_ids.size()) {
+  if (s.all_program_ids.size() != t.all_program_ids.size()) {
     Log::get().error("Unexpected number of found programs: " +
-                         std::to_string(s.program_ids.size()) +
-                         "!=" + std::to_string(t.program_ids.size()),
+                         std::to_string(s.all_program_ids.size()) +
+                         "!=" + std::to_string(t.all_program_ids.size()),
                      true);
   }
   if (s.cached_b_files.size() != t.cached_b_files.size()) {
@@ -807,9 +807,9 @@ void Test::stats() {
                          "!=" + std::to_string(t.cached_b_files.size()),
                      true);
   }
-  for (size_t i = 0; i < s.program_ids.size(); i++) {
-    auto a = s.program_ids.at(i);
-    auto b = t.program_ids.at(i);
+  for (size_t i = 0; i < s.all_program_ids.size(); i++) {
+    auto a = s.all_program_ids.at(i);
+    auto b = t.all_program_ids.at(i);
     if (a != b) {
       Log::get().error("Unexpected found programs for: " + std::to_string(i),
                        true);
