@@ -8,6 +8,7 @@
 #include "oeis_sequence.hpp"
 #include "parser.hpp"
 #include "program_util.hpp"
+#include "setup.hpp"
 
 Stats::Stats()
     : num_programs(0),
@@ -124,7 +125,7 @@ void Stats::load(std::string path) {
     full = path + "programs.csv";
     Log::get().debug("Loading " + full);
     std::ifstream programs(full);
-    program_ids.resize(100000, false);
+    all_program_ids.resize(100000, false);
     cached_b_files.resize(100000, false);
     program_lengths.resize(100000, false);
     int64_t largest_id = 0;
@@ -136,20 +137,41 @@ void Stats::load(std::string path) {
       std::getline(s, l);
       int64_t id = std::stoll(k);
       largest_id = std::max<int64_t>(largest_id, id);
-      if ((size_t)id >= program_ids.size()) {
-        size_t new_size = std::max<size_t>(program_ids.size() * 2, id + 1);
-        program_ids.resize(new_size);
+      if ((size_t)id >= all_program_ids.size()) {
+        size_t new_size = std::max<size_t>(all_program_ids.size() * 2, id + 1);
+        all_program_ids.resize(new_size);
         cached_b_files.resize(new_size);
         program_lengths.resize(new_size);
       }
-      program_ids[id] = std::stoll(v);
+      all_program_ids[id] = std::stoll(v);
       cached_b_files[id] = std::stoll(w);
       program_lengths[id] = std::stoll(l);
     }
-    program_ids.resize(largest_id + 1);
+    all_program_ids.resize(largest_id + 1);
     cached_b_files.resize(largest_id + 1);
     program_lengths.resize(largest_id + 1);
     programs.close();
+  }
+
+  {
+    full = path + "latest_programs.csv";
+    Log::get().debug("Loading " + full);
+    std::ifstream latest_programs(full);
+    latest_program_ids.clear();
+    while (std::getline(latest_programs, line)) {
+      int64_t id = std::stoll(line);
+      if (id < 0 || id > 1000000) {
+        throw std::runtime_error("Unexpected latest program ID: " +
+                                 std::to_string(id));
+      }
+      if (id >= static_cast<int64_t>(latest_program_ids.size())) {
+        const size_t new_size =
+            std::max<size_t>(id + 1, 2 * latest_program_ids.size());
+        latest_program_ids.resize(new_size);
+      }
+      latest_program_ids[id] = true;
+    }
+    latest_programs.close();
   }
 
   {
@@ -200,9 +222,10 @@ void Stats::save(std::string path) {
     constants << e.first << sep << e.second << "\n";
   }
   constants.close();
+
   std::ofstream programs(path + "programs.csv");
-  for (size_t i = 0; i < program_ids.size(); i++) {
-    const bool f = program_ids[i];
+  for (size_t i = 0; i < all_program_ids.size(); i++) {
+    const bool f = all_program_ids[i];
     const bool b = cached_b_files[i];
     const int64_t l = program_lengths[i];
     if (f || b || l) {
@@ -210,6 +233,15 @@ void Stats::save(std::string path) {
     }
   }
   programs.close();
+
+  std::ofstream latest_programs(path + "latest_programs.csv");
+  for (size_t id = 0; id < latest_program_ids.size(); id++) {
+    if (latest_program_ids[id]) {
+      latest_programs << id << "\n";
+    }
+  }
+  latest_programs.close();
+
   std::ofstream lengths(path + "program_lengths.csv");
   for (size_t i = 0; i < num_programs_per_length.size(); i++) {
     if (num_programs_per_length[i] > 0) {
@@ -217,6 +249,7 @@ void Stats::save(std::string path) {
     }
   }
   lengths.close();
+
   std::ofstream op_type_counts(path + "operation_type_counts.csv");
   for (size_t i = 0; i < num_ops_per_type.size(); i++) {
     if (num_ops_per_type[i] > 0) {
@@ -226,6 +259,7 @@ void Stats::save(std::string path) {
     }
   }
   op_type_counts.close();
+
   std::ofstream op_counts(path + "operation_counts.csv");
   for (auto &op : num_operations) {
     const auto &meta = Operation::Metadata::get(op.first.type);
@@ -235,6 +269,7 @@ void Stats::save(std::string path) {
               << op.second << "\n";
   }
   op_counts.close();
+
   std::ofstream oppos_counts(path + "operation_pos_counts.csv");
   for (auto &o : num_operation_positions) {
     const auto &meta = Operation::Metadata::get(o.first.op.type);
@@ -258,8 +293,7 @@ void Stats::save(std::string path) {
   }
   cal.close();
 
-  if (steps.total)  // write steps stats only if present
-  {
+  if (steps.total) {  // write steps stats only if present
     std::ofstream steps_out(path + "steps.csv");
     steps_out << "total,min,max,runs\n";
     steps_out << steps.total << sep << steps.min << sep << steps.max << sep
@@ -281,8 +315,9 @@ std::string Stats::getMainStatsFile(std::string path) const {
 void Stats::updateProgramStats(size_t id, const Program &program) {
   num_programs++;
   const size_t num_ops = ProgramUtil::numOps(program, false);
-  if (id >= program_ids.size()) {
-    const size_t new_size = std::max<size_t>(id + 1, 2 * program_ids.size());
+  if (id >= all_program_ids.size()) {
+    const size_t new_size =
+        std::max<size_t>(id + 1, 2 * all_program_ids.size());
     program_lengths.resize(new_size);
   }
   program_lengths[id] = num_ops;
@@ -328,13 +363,14 @@ void Stats::updateProgramStats(size_t id, const Program &program) {
 void Stats::updateSequenceStats(size_t id, bool program_found,
                                 bool has_b_file) {
   num_sequences++;
-  if (id >= program_ids.size()) {
-    const size_t new_size = std::max<size_t>(id + 1, 2 * program_ids.size());
-    program_ids.resize(new_size);
+  if (id >= all_program_ids.size()) {
+    const size_t new_size =
+        std::max<size_t>(id + 1, 2 * all_program_ids.size());
+    all_program_ids.resize(new_size);
     cached_b_files.resize(new_size);
     program_lengths.resize(new_size);
   }
-  program_ids[id] = program_found;
+  all_program_ids[id] = program_found;
   cached_b_files[id] = has_b_file;
 }
 
@@ -344,6 +380,93 @@ void Stats::finalize() {
       Log::get().error("Attempted overwrite of blocks stats", true);
     }
     blocks = blocks_collector.finalize();
+  }
+  if (latest_program_ids.empty()) {
+    collectLatestProgramIds();
+  }
+}
+
+void Stats::collectLatestProgramIds() {
+  auto progs_dir = Setup::getProgramsHome();
+  static const int64_t max_commits = 100;    // magic number
+  static const int64_t max_programs = 1000;  // magic number
+  if (!hasGit()) {
+    Log::get().warn(
+        "Cannot read commit history because the git command was not found");
+    return;
+  }
+  if (!isDir(progs_dir + ".git")) {
+    Log::get().warn(
+        "Cannot read commit history because the .git folder was not found");
+    return;
+  }
+  const std::string git_tmp = getTmpDir() + "loda_git_tmp.txt";
+  std::string git_cmd = "cd \"" + progs_dir +
+                        "\" && git log --oneline --format=\"%H\" -n " +
+                        std::to_string(max_commits) + " > " + git_tmp;
+  if (system(git_cmd.c_str()) != 0) {
+    Log::get().warn("Cannot read programs commit history");
+    return;
+  }
+  std::string line;
+  std::vector<std::string> commits;
+  {
+    // read commits from file
+    std::ifstream in(git_tmp);
+    while (std::getline(in, line)) {
+      if (!line.empty()) {
+        commits.push_back(line);
+      }
+    }
+  }
+  std::remove(git_tmp.c_str());
+  if (commits.empty()) {
+    Log::get().warn("Cannot read programs commit history");
+    return;
+  }
+  std::set<int64_t> ids;
+  for (const auto &commit : commits) {
+    if (ids.size() >= max_programs) {
+      break;
+    }
+    git_cmd = "cd \"" + progs_dir +
+              "\" && git diff-tree --no-commit-id --name-only -r " + commit +
+              " > " + git_tmp;
+    if (system(git_cmd.c_str()) != 0) {
+      Log::get().warn("Cannot read files of commit " + commit);
+      std::remove(git_tmp.c_str());
+      return;
+    }
+    {
+      // read changed file names from file
+      std::ifstream in(git_tmp);
+      while (std::getline(in, line)) {
+        if (line.size() >= 11 && line.substr(line.size() - 4) == ".asm") {
+          auto id_str = line.substr(line.size() - 11, 7);
+          try {
+            OeisSequence seq(id_str);
+            if (isFile(seq.getProgramPath())) {
+              ids.insert(seq.id);
+            }
+          } catch (const std::exception &) {
+            // ignore because it is not a program of an OEIS sequence
+          }
+        }
+      }
+    }
+    std::remove(git_tmp.c_str());
+  }
+  latest_program_ids.clear();
+  for (auto id : ids) {
+    if (id >= latest_program_ids.size()) {
+      const size_t new_size =
+          std::max<size_t>(id + 1, 2 * latest_program_ids.size());
+      latest_program_ids.resize(new_size);
+    }
+    latest_program_ids[id] = true;
+  }
+  if (latest_program_ids.empty()) {
+    Log::get().warn("Cannot read programs commit history");
   }
 }
 
@@ -367,18 +490,41 @@ int64_t Stats::getTransitiveLength(size_t id) const {
   return length;
 }
 
-bool ProgramIds::exists(int64_t id) const {
-  return id >= 0 && id < size() && (*this)[id];
-}
-
-int64_t ProgramIds::getRandomProgramId() const {
-  if (!empty()) {
-    for (size_t i = 0; i < 1000; i++) {
-      int64_t id = Random::get().gen() % size();
-      if ((*this)[id]) {
-        return id;
-      }
+RandomProgramIds::RandomProgramIds(const std::vector<bool> &flags) {
+  for (size_t id = 0; id < flags.size(); id++) {
+    if (flags[id]) {
+      ids_vector.push_back(id);
+      ids_set.insert(id);
     }
   }
+}
+
+bool RandomProgramIds::empty() const { return ids_set.empty(); }
+
+bool RandomProgramIds::exists(int64_t id) const {
+  return (id >= 0) && (ids_set.find(id) != ids_set.end());
+}
+
+int64_t RandomProgramIds::get() const {
+  if (!ids_vector.empty()) {
+    return ids_vector[Random::get().gen() % ids_vector.size()];
+  }
   return 0;
+}
+
+RandomProgramIds2::RandomProgramIds2(const Stats &stats)
+    : all_program_ids(stats.all_program_ids),
+      latest_program_ids(stats.latest_program_ids) {}
+
+bool RandomProgramIds2::exists(int64_t id) const {
+  return all_program_ids.exists(id) || latest_program_ids.exists(id);
+}
+
+int64_t RandomProgramIds2::get() const {
+  if (Random::get().gen() % 2 == 0 ||
+      latest_program_ids.empty()) {  // magic number
+    return all_program_ids.get();
+  } else {
+    return latest_program_ids.get();
+  }
 }

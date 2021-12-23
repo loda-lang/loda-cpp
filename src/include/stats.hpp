@@ -2,6 +2,7 @@
 
 #include <map>
 #include <set>
+#include <unordered_set>
 
 #include "blocks.hpp"
 #include "evaluator.hpp"
@@ -26,12 +27,6 @@ class OpPos {
     if (op != o.op) return op < o.op;
     return false;  // equal
   }
-};
-
-class ProgramIds : public std::vector<bool> {
- public:
-  bool exists(int64_t id) const;
-  int64_t getRandomProgramId() const;
 };
 
 class Stats {
@@ -62,7 +57,8 @@ class Stats {
   std::vector<int64_t> num_programs_per_length;
   std::vector<int64_t> num_ops_per_type;
   std::vector<int64_t> program_lengths;
-  ProgramIds program_ids;
+  std::vector<bool> all_program_ids;
+  std::vector<bool> latest_program_ids;
   std::vector<bool> cached_b_files;
   Blocks blocks;
 
@@ -71,4 +67,31 @@ class Stats {
   mutable std::set<size_t>
       printed_recursion_warning;  // used for getTransitiveLength()
   Blocks::Collector blocks_collector;
+
+  void collectLatestProgramIds();
+};
+
+class RandomProgramIds {
+ public:
+  RandomProgramIds(const std::vector<bool> &flags);
+
+  bool empty() const;
+  bool exists(int64_t id) const;
+  int64_t get() const;
+
+ private:
+  std::vector<int64_t> ids_vector;
+  std::unordered_set<int64_t> ids_set;
+};
+
+class RandomProgramIds2 {
+ public:
+  RandomProgramIds2(const Stats &stats);
+
+  bool exists(int64_t id) const;
+  int64_t get() const;
+
+ private:
+  RandomProgramIds all_program_ids;
+  RandomProgramIds latest_program_ids;
 };

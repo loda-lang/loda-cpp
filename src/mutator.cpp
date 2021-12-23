@@ -6,7 +6,7 @@
 #define CONSTANTS_END 1000
 
 Mutator::Mutator(const Stats &stats, double mutation_rate)
-    : mutation_rate(mutation_rate), program_ids(stats.program_ids) {
+    : mutation_rate(mutation_rate), random_program_ids(stats) {
   // initialize constants distribution from stats
   constants.resize(CONSTANTS_END - CONSTANTS_START + 1);
   for (int64_t i = 0; i <= CONSTANTS_END - CONSTANTS_START; i++) {
@@ -81,7 +81,7 @@ void Mutator::mutateOperation(Operation &op, int64_t num_cells) {
     ProgramUtil::avoidNopOrOverflow(op);
   } else if (op.type == Operation::Type::SEQ) {
     // op.comment = "mutated from " + ProgramUtil::operationToString(op);
-    op.source.value = program_ids.getRandomProgramId();
+    op.source.value = random_program_ids.get();
   }
 }
 

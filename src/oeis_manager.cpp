@@ -270,7 +270,9 @@ bool OeisManager::shouldMatch(const OeisSequence &seq) const {
   }
 
   // check if program exists
-  const bool prog_exists = stats.program_ids.exists(seq.id);
+  const bool prog_exists = (seq.id >= 0) &&
+                           (seq.id < stats.all_program_ids.size()) &&
+                           stats.all_program_ids[seq.id];
 
   // decide based on overwrite mode
   switch (overwrite_mode) {
@@ -365,7 +367,7 @@ void OeisManager::update() {
         is_program = is_program && (ext == ".asm");
         const auto p = it.path().string();
         if (is_program && getFileAgeInDays(p) > max_age) {
-          Log::get().info("Removing \"" + p + "\"");
+          Log::get().debug("Removing \"" + p + "\"");
           std::filesystem::remove(it.path());
         }
       }
