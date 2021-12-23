@@ -352,8 +352,10 @@ void OeisManager::update() {
     // clean up local programs folder
     const int64_t max_age = Setup::getMaxLocalProgramAgeInDays();
     const auto local = Setup::getProgramsHome() + "local";
-    if (max_age >= 0 && isDir(local)) {
+    if (max_age >= 0 && isDir(local) &&
+        Setup::getMiningMode() == MiningMode::MINING_MODE_CLIENT) {
       Log::get().info("Cleaning up local programs directory");
+      int64_t num_removed = 0;
       for (const auto &it : std::filesystem::directory_iterator(local)) {
         const auto stem = it.path().filename().stem().string();
         const auto ext = it.path().filename().extension().string();
@@ -369,7 +371,12 @@ void OeisManager::update() {
         if (is_program && getFileAgeInDays(p) > max_age) {
           Log::get().debug("Removing \"" + p + "\"");
           std::filesystem::remove(it.path());
+          num_removed++;
         }
+      }
+      if (num_removed > 0) {
+        Log::get().info("Removed " + std::to_string(num_removed) +
+                        " old local programs");
       }
     }
 #endif

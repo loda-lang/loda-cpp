@@ -274,17 +274,23 @@ void Setup::runWizard() {
   if (!checkSubmittedBy()) {
     return;
   }
-  if (!checkMaxMemory()) {
-    return;
-  }
-  if (!checkUpdateInterval()) {
-    return;
-  }
+
+  std::cout << "Configure advanced settings? (y/N) ";
+  std::getline(std::cin, line);
+  std::cout << std::endl;
+  if (line == "y" || line == "Y") {
+    if (!checkMaxMemory()) {
+      return;
+    }
+    if (!checkUpdateInterval()) {
+      return;
+    }
 #ifdef STD_FILESYSTEM
-  if (!checkMaxLocalProgramAge()) {
-    return;
-  }
+    if (getMiningMode() == MINING_MODE_CLIENT && !checkMaxLocalProgramAge()) {
+      return;
+    }
 #endif
+  }
 
   saveSetup();
 
@@ -515,6 +521,7 @@ bool Setup::checkMiningMode() {
       break;
   }
   SETUP["LODA_MINING_MODE"] = mode_str;
+  MINING_MODE = UNDEFINED_INT;  // reset cached value
   std::cout << std::endl;
   return true;
 }
@@ -569,12 +576,16 @@ bool Setup::updateFile(const std::string& local_file, const std::string& url,
 bool Setup::checkMineParallelScript() {
   const std::string local_file =
       LODA_HOME + "bin" + FILE_SEP + "mine_parallel.sh";
-  const std::string url =
-      "https://raw.githubusercontent.com/loda-lang/loda-cpp/" +
-      Version::BRANCH + "/mine_parallel.sh";
-  const std::string header = "#!/bin/bash";
-  const std::string marker = "loda_version=" + Version::VERSION;
-  return updateFile(local_file, url, header, marker, true);
+  auto age = getFileAgeInDays(local_file);
+  if (age < 0 || age > 1) {
+    const std::string url =
+        "https://raw.githubusercontent.com/loda-lang/loda-cpp/" +
+        Version::BRANCH + "/mine_parallel.sh";
+    const std::string header = "#!/bin/bash";
+    const std::string marker = "loda_version=" + Version::VERSION;
+    return updateFile(local_file, url, header, marker, true);
+  }
+  return true;
 }
 
 bool Setup::checkSubmittedBy() {
