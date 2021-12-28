@@ -91,24 +91,13 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
   std::pair<status_t, steps_t> result;
   Memory mem;
   // clear cache to correctly detect recursion errors
-  interpreter.missing_programs.clear();
-  interpreter.program_cache.clear();
-  interpreter.terms_cache.clear();
+  interpreter.clearCaches();
   for (size_t i = 0; i < expected_seq.size(); i++) {
     mem.clear();
     mem.set(Program::INPUT_CELL, i);
     try {
-      if (id >= 0) {
-        interpreter.running_programs.insert(id);
-      }
-      result.second.add(interpreter.run(p, mem));
-      if (id >= 0) {
-        interpreter.running_programs.erase(id);
-      }
-    } catch (std::exception &e) {
-      if (id >= 0) {
-        interpreter.running_programs.erase(id);
-      }
+      result.second.add(interpreter.run(p, mem, id));
+    } catch (const std::exception &e) {
       if (settings.print_as_b_file) {
         std::cout << std::string(e.what()) << std::endl;
       }

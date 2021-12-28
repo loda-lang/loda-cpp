@@ -245,6 +245,25 @@ size_t Interpreter::run(const Program& p, Memory& mem) {
   return cycles;
 }
 
+size_t Interpreter::run(const Program& p, Memory& mem, int64_t id) {
+  size_t result;
+  if (id >= 0) {
+    running_programs.insert(id);
+  }
+  try {
+    result = run(p, mem);
+  } catch (const std::exception& e) {
+    if (id >= 0) {
+      running_programs.erase(id);
+    }
+    throw e;
+  }
+  if (id >= 0) {
+    running_programs.erase(id);
+  }
+  return result;
+}
+
 Number Interpreter::get(const Operand& a, const Memory& mem,
                         bool get_address) const {
   switch (a.type) {
@@ -328,10 +347,10 @@ std::pair<Number, size_t> Interpreter::call(int64_t id, const Number& arg) {
   }
 
   // add to cache if there is memory available
-  if (++num_memory_checks % 10000 == 0 && has_memory) {
+  if (++num_memory_checks % 10000 == 0) {
     has_memory = Setup::hasMemory();
   }
-  if (has_memory) {
+  if (has_memory || terms_cache.size() < 10000) {  // magic number
     terms_cache[key] = result;
   }
   return result;
@@ -352,4 +371,10 @@ const Program& Interpreter::getProgram(int64_t id) {
     }
   }
   return program_cache[id];
+}
+
+void Interpreter::clearCaches() {
+  missing_programs.clear();
+  program_cache.clear();
+  terms_cache.clear();
 }

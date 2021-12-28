@@ -34,20 +34,21 @@ void Miner::reload(bool load_generators, bool force_overwrite) {
   api_client.reset(new ApiClient());
   manager.reset(new OeisManager(settings, force_overwrite));
   manager->load();
-  manager->getFinder();  // initializes matchers
+  manager->getFinder();  // initializes stats and matchers
   if (load_generators) {
     multi_generator.reset(
         new MultiGenerator(settings, manager->getStats(), true));
   } else {
     multi_generator.reset();
   }
+  mutator.reset(new Mutator(manager->getStats()));
+  manager->releaseStats();  // not needed anymore
 }
 
 void Miner::mine() {
   if (!manager) {
     reload(true);
   }
-  Mutator mutator(manager->getStats());
   Parser parser;
   std::stack<Program> progs;
   Sequence norm_seq;
@@ -125,7 +126,7 @@ void Miner::mine() {
         }
         // mutate successful program
         if (mining_mode != MINING_MODE_SERVER && progs.size() < 1000) {
-          mutator.mutateCopies(r.program, NUM_MUTATIONS, progs);
+          mutator->mutateCopies(r.program, NUM_MUTATIONS, progs);
         }
       }
     }

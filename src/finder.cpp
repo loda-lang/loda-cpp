@@ -13,9 +13,9 @@
 #include "setup.hpp"
 #include "util.hpp"
 
-Finder::Finder(const Settings &settings)
+Finder::Finder(const Settings &settings, Evaluator &evaluator)
     : settings(settings),
-      evaluator(settings),
+      evaluator(evaluator),
       minimizer(settings),
       num_find_attempts(0),
       scheduler(1800)  // 30 minutes

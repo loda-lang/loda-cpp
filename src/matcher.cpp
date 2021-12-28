@@ -80,7 +80,8 @@ bool AbstractMatcher<T>::shouldMatchSequence(const Sequence &seq) const {
       // seq.to_string() );
       return false;
     }
-    if (has_memory && (Random::get().gen() % 10) == 0)  // magic number
+    if ((has_memory || match_attempts.size() < 1000) &&  // magic number
+        (Random::get().gen() % 10) == 0)                 // magic number
     {
       match_attempts.insert(seq);
     }

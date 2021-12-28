@@ -31,6 +31,8 @@ class OeisManager {
 
   const Stats& getStats();
 
+  void releaseStats();
+
   void setStatsHome(const std::string& home);
 
   Finder& getFinder();

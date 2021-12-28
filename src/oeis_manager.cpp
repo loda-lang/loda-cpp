@@ -35,7 +35,7 @@ OeisManager::OeisManager(const Settings &settings, bool force_overwrite,
                          ? OverwriteMode::ALL
                          : ConfigLoader::load(settings).overwrite_mode),
       evaluator(settings),
-      finder(settings),
+      finder(settings, evaluator),
       finder_initialized(false),
       optimizer(settings),
       loaded_count(0),
@@ -516,6 +516,8 @@ const Stats &OeisManager::getStats() {
 
   return *stats;
 }
+
+void OeisManager::releaseStats() { stats.reset(); }
 
 void OeisManager::addSeqComments(Program &p) const {
   for (auto &op : p.ops) {

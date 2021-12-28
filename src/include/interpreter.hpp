@@ -22,6 +22,10 @@ class Interpreter {
 
   size_t run(const Program &p, Memory &mem);
 
+  size_t run(const Program &p, Memory &mem, int64_t id);
+
+  void clearCaches();
+
  private:
   Number get(const Operand &a, const Memory &mem,
              bool get_address = false) const;
@@ -42,11 +46,7 @@ class Interpreter {
   std::unordered_map<int64_t, Program> program_cache;
   std::unordered_set<int64_t> missing_programs;
   std::unordered_set<int64_t> running_programs;
-
   std::unordered_map<std::pair<int64_t, Number>, std::pair<Number, size_t>,
                      pair_hasher>
       terms_cache;
-
-  // TODO: avoid this friend class
-  friend class Evaluator;
 };

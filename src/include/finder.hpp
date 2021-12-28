@@ -19,7 +19,7 @@ struct MatcherStats {
 
 class Finder {
  public:
-  Finder(const Settings &settings);
+  Finder(const Settings &settings, Evaluator &evaluator);
 
   virtual ~Finder() {}
 
@@ -44,7 +44,7 @@ class Finder {
   void notifyInvalidMatch(size_t id);
 
   const Settings &settings;
-  Evaluator evaluator;
+  Evaluator &evaluator;  // shared instance to save memory
   Minimizer minimizer;
   std::vector<std::unique_ptr<Matcher>> matchers;
   mutable size_t num_find_attempts;

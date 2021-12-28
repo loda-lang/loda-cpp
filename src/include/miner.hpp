@@ -5,6 +5,7 @@
 #include "api_client.hpp"
 #include "generator.hpp"
 #include "matcher.hpp"
+#include "mutator.hpp"
 #include "number.hpp"
 #include "oeis_manager.hpp"
 #include "optimizer.hpp"
@@ -45,6 +46,7 @@ class Miner {
   std::unique_ptr<ApiClient> api_client;
   std::unique_ptr<OeisManager> manager;
   std::unique_ptr<MultiGenerator> multi_generator;
+  std::unique_ptr<Mutator> mutator;
   Generator *generator;
   AdaptiveScheduler log_scheduler;
   AdaptiveScheduler metrics_scheduler;
