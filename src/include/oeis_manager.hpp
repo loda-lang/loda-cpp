@@ -82,7 +82,6 @@ class OeisManager {
   size_t loaded_count;
   size_t total_count;
 
-  Stats stats;
-  bool stats_loaded;
+  std::unique_ptr<Stats> stats;
   std::string stats_home;
 };

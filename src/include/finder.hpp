@@ -34,8 +34,6 @@ class Finder {
 
   std::vector<std::unique_ptr<Matcher>> &getMatchers() { return matchers; }
 
-  std::vector<MatcherStats> &getMatcherStats() { return matcher_stats; }
-
   void logSummary(size_t loaded_count);
 
  private:
@@ -49,7 +47,6 @@ class Finder {
   Evaluator evaluator;
   Minimizer minimizer;
   std::vector<std::unique_ptr<Matcher>> matchers;
-  mutable std::vector<MatcherStats> matcher_stats;
   mutable size_t num_find_attempts;
 
   std::map<size_t, int64_t> invalid_matches;

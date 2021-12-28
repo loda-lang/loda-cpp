@@ -40,7 +40,6 @@ OeisManager::OeisManager(const Settings &settings, bool force_overwrite,
       optimizer(settings),
       loaded_count(0),
       total_count(0),
-      stats_loaded(false),
       stats_home(stats_home.empty() ? (Setup::getLodaHome() + "stats")
                                     : stats_home)  // no trailing / here
 {}
@@ -271,8 +270,8 @@ bool OeisManager::shouldMatch(const OeisSequence &seq) const {
 
   // check if program exists
   const bool prog_exists = (seq.id >= 0) &&
-                           (seq.id < stats.all_program_ids.size()) &&
-                           stats.all_program_ids[seq.id];
+                           (seq.id < stats->all_program_ids.size()) &&
+                           stats->all_program_ids[seq.id];
 
   // decide based on overwrite mode
   switch (overwrite_mode) {
@@ -292,7 +291,7 @@ bool OeisManager::shouldMatch(const OeisSequence &seq) const {
       const bool should_overwrite =
           overwrite_list.find(seq.id) != overwrite_list.end();
       const bool is_complex =
-          stats.getTransitiveLength(seq.id) > 10;  // magic number
+          stats->getTransitiveLength(seq.id) > 10;  // magic number
       return is_complex || should_overwrite;
     }
   }
@@ -393,7 +392,7 @@ void OeisManager::generateStats(int64_t age_in_days) {
           std::to_string(age_in_days) + " days ago)";
   }
   Log::get().info(msg);
-  stats = Stats();
+  stats.reset(new Stats());
 
   size_t num_processed = 0;
   Parser parser;
@@ -425,10 +424,10 @@ void OeisManager::generateStats(int64_t age_in_days) {
       ProgramUtil::removeOps(program, Operation::Type::NOP);
 
       // update stats
-      stats.updateProgramStats(s.id, program);
+      stats->updateProgramStats(s.id, program);
       num_processed++;
     }
-    stats.updateSequenceStats(s.id, has_program, has_b_file);
+    stats->updateSequenceStats(s.id, has_program, has_b_file);
     if (notify.isTargetReached()) {
       notify.reset();
       Log::get().info("Processed " + std::to_string(num_processed) +
@@ -437,8 +436,8 @@ void OeisManager::generateStats(int64_t age_in_days) {
   }
 
   // write stats
-  stats.finalize();
-  stats.save(stats_home);
+  stats->finalize();
+  stats->save(stats_home);
 
   // done
   Log::get().info("Finished stats generation for " +
@@ -474,24 +473,25 @@ const std::vector<OeisSequence> &OeisManager::getSequences() const {
 }
 
 const Stats &OeisManager::getStats() {
-  if (!stats_loaded) {
+  if (!stats) {
     // obtain lock
     FolderLock lock(stats_home);
 
+    // create empty stats
+    stats.reset(new Stats());
+
     // check age of stats
-    auto age_in_days = getFileAgeInDays(stats.getMainStatsFile(stats_home));
+    auto age_in_days = getFileAgeInDays(stats->getMainStatsFile(stats_home));
     if (age_in_days < 0 || age_in_days >= Setup::getUpdateIntervalInDays()) {
       generateStats(age_in_days);
     }
     try {
-      stats.load(stats_home);
+      stats->load(stats_home);
     } catch (const std::exception &e) {
       Log::get().warn("Exception during stats loading, regenerating...");
       generateStats(age_in_days);
-      stats.load(stats_home);  // reload
+      stats->load(stats_home);  // reload
     }
-    stats_loaded = true;
-
     // lock released at the end of this block
   }
 
@@ -499,22 +499,22 @@ const Stats &OeisManager::getStats() {
   std::vector<Metrics::Entry> entries;
   std::map<std::string, std::string> labels;
   labels["kind"] = "total";
-  entries.push_back({"programs", labels, (double)stats.num_programs});
+  entries.push_back({"programs", labels, (double)stats->num_programs});
   entries.push_back({"sequences", labels, (double)total_count});
   labels["kind"] = "used";
-  entries.push_back({"sequences", labels, (double)stats.num_sequences});
+  entries.push_back({"sequences", labels, (double)stats->num_sequences});
   labels.clear();
-  for (size_t i = 0; i < stats.num_ops_per_type.size(); i++) {
-    if (stats.num_ops_per_type[i] > 0) {
+  for (size_t i = 0; i < stats->num_ops_per_type.size(); i++) {
+    if (stats->num_ops_per_type[i] > 0) {
       labels["type"] =
           Operation::Metadata::get(static_cast<Operation::Type>(i)).name;
       entries.push_back(
-          {"operation_types", labels, (double)stats.num_ops_per_type[i]});
+          {"operation_types", labels, (double)stats->num_ops_per_type[i]});
     }
   }
   Metrics::get().write(entries);
 
-  return stats;
+  return *stats;
 }
 
 void OeisManager::addSeqComments(Program &p) const {

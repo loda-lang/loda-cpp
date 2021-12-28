@@ -35,15 +35,6 @@ Finder::Finder(const Settings &settings)
       Log::get().warn("Ignoring error while loading " + m.type + " matcher");
     }
   }
-
-  // reset matcher stats
-  matcher_stats.resize(matchers.size());
-  for (auto &s : matcher_stats) {
-    s.candidates = 0;
-    s.successes = 0;
-    s.false_positives = 0;
-    s.errors = 0;
-  }
 }
 
 void Finder::insert(const Sequence &norm_seq, size_t id) {
@@ -106,18 +97,15 @@ void Finder::findAll(const Program &p, const Sequence &norm_seq,
 
     // validate the found matches
     for (auto t : tmp_result) {
-      matcher_stats[i].candidates++;
       auto &s = sequences.at(t.first);
       auto expected_seq = s.getTerms(s.existingNumTerms());
       auto res = evaluator.check(t.second, expected_seq,
                                  OeisSequence::DEFAULT_SEQ_LENGTH, t.first);
       if (res.first == status_t::ERROR) {
         notifyInvalidMatch(t.first);
-        matcher_stats[i].errors++;
         // Log::get().warn( "Ignoring invalid match for " + s.id_str() );
       } else {
         result.push_back(t);
-        matcher_stats[i].successes++;
         // Log::get().info( "Found potential match for " + s.id_str() );
       }
     }
