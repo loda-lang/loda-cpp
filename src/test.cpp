@@ -640,7 +640,7 @@ void Test::config() {
 
   std::string templates = std::string("tests") + FILE_SEP + "programs" +
                           FILE_SEP + "templates" + FILE_SEP;
-  check_int("generators.size", 3, config.generators.size());
+  check_int("generators.size", 2, config.generators.size());
   check_int("generators[0].version", 1, config.generators[0].version);
   check_int("generators[0].length", 30, config.generators[0].length);
   check_int("generators[0].maxConstant", 3, config.generators[0].max_constant);
@@ -649,28 +649,20 @@ void Test::config() {
   check_int("generators[0].calls", 1, config.generators[0].calls);
   check_int("generators[0].indirectAccess", 0,
             config.generators[0].indirect_access);
-  check_str("generators[0].template", templates + "call.asm",
-            config.generators[0].program_template);
+  check_int("generators[0].template", 2, config.generators[0].templates.size());
+  check_str("generators[0].template[0]", templates + "call.asm",
+            config.generators[0].templates[0]);
+  check_str("generators[0].template[1]", templates + "loop.asm",
+            config.generators[0].templates[1]);
   check_int("generators[1].version", 1, config.generators[1].version);
-  check_int("generators[1].length", 30, config.generators[1].length);
-  check_int("generators[1].maxConstant", 3, config.generators[1].max_constant);
-  check_int("generators[1].maxIndex", 4, config.generators[1].max_index);
-  check_int("generators[1].loops", 0, config.generators[1].loops);
-  check_int("generators[1].calls", 1, config.generators[1].calls);
-  check_int("generators[1].indirectAccess", 0,
+  check_int("generators[1].length", 40, config.generators[1].length);
+  check_int("generators[1].maxConstant", 4, config.generators[1].max_constant);
+  check_int("generators[1].maxIndex", 5, config.generators[1].max_index);
+  check_int("generators[1].loops", 1, config.generators[1].loops);
+  check_int("generators[1].calls", 0, config.generators[1].calls);
+  check_int("generators[1].indirectAccess", 1,
             config.generators[1].indirect_access);
-  check_str("generators[1].template", templates + "loop.asm",
-            config.generators[1].program_template);
-  check_int("generators[2].version", 1, config.generators[2].version);
-  check_int("generators[2].length", 40, config.generators[2].length);
-  check_int("generators[2].maxConstant", 4, config.generators[2].max_constant);
-  check_int("generators[2].maxIndex", 5, config.generators[2].max_index);
-  check_int("generators[2].loops", 1, config.generators[2].loops);
-  check_int("generators[2].calls", 0, config.generators[2].calls);
-  check_int("generators[2].indirectAccess", 1,
-            config.generators[2].indirect_access);
-  check_str("generators[2].template", "",
-            config.generators[2].program_template);
+  check_int("generators[1].template", 0, config.generators[1].templates.size());
 
   check_int("matchers.size", 2, config.matchers.size());
   check_str("matchers[0].type", "direct", config.matchers[0].type);
@@ -692,13 +684,16 @@ void Test::config() {
   check_str("matchers[1].type", "delta", config.matchers[1].type);
   check_int("matchers[1].backoff", 0, config.matchers[1].backoff);
 
+  // test selecting miner configx using index instead of name
   settings.miner = "0";
   config = ConfigLoader::load(settings);
-  check_int("generators.size", 3, config.generators.size());
+  check_int("generators.size", 2, config.generators.size());
+  check_int("generators[0].version", 1, config.generators[0].version);
 
   settings.miner = "1";
   config = ConfigLoader::load(settings);
   check_int("generators.size", 2, config.generators.size());
+  check_int("generators[0].version", 2, config.generators[0].version);
 }
 
 void Test::memUsage() {

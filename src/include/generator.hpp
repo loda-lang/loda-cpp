@@ -21,7 +21,7 @@ class Generator {
     bool loops = true;
     bool calls = true;
     bool indirect_access = false;
-    std::string program_template;
+    std::vector<std::string> templates;
     std::string miner;
   };
 
