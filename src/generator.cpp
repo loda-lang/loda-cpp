@@ -302,8 +302,7 @@ void Generator::ensureMeaningfulLoops(Program &p) {
 
 MultiGenerator::MultiGenerator(const Settings &settings, const Stats &stats,
                                bool print_info)
-    : scheduler(60)  // 1 minute
-{
+    : Generator(Generator::Config(), stats) {
   const auto config = ConfigLoader::load(settings);
   configs.clear();
   generators.clear();
@@ -319,7 +318,7 @@ MultiGenerator::MultiGenerator(const Settings &settings, const Stats &stats,
   if (generators.empty()) {
     Log::get().error("No valid generators configurations found", true);
   }
-  generator_index = Random::get().gen() % configs.size();
+  current_generator = Random::get().gen() % generators.size();
 
   // print info
   if (print_info) {
@@ -341,15 +340,12 @@ MultiGenerator::MultiGenerator(const Settings &settings, const Stats &stats,
   }
 }
 
-Generator *MultiGenerator::getGenerator() {
-  return generators[generator_index].get();
+Program MultiGenerator::generateProgram() {
+  current_generator = (current_generator + 1) % generators.size();
+  // Log::get().info("Using generator " + std::to_string(current_generator));
+  return generators[current_generator]->generateProgram();
 }
 
-void MultiGenerator::next() {
-  if (generators.size() > 1 && scheduler.isTargetReached()) {
-    generator_index = (generator_index + 1) % configs.size();
-    // Log::get().debug( "Using generator " + std::to_string( generator_index )
-    // );
-    scheduler.reset();
-  }
+std::pair<Operation, double> MultiGenerator::generateOperation() {
+  return generators[current_generator]->generateOperation();
 }

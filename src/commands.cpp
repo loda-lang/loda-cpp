@@ -192,7 +192,7 @@ void Commands::generate() {
   initLog(true);
   OeisManager manager(settings);
   MultiGenerator multi_generator(settings, manager.getStats(), false);
-  auto program = multi_generator.getGenerator()->generateProgram();
+  auto program = multi_generator.generateProgram();
   ProgramUtil::print(program, std::cout);
 }
 

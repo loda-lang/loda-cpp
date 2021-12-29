@@ -20,7 +20,6 @@ const int64_t Miner::NUM_MUTATIONS = 100;      // magic number
 Miner::Miner(const Settings &settings)
     : settings(settings),
       mining_mode(Setup::getMiningMode()),
-      generator(nullptr),
       log_scheduler(120),  // 2 minutes (magic number)
       metrics_scheduler(Metrics::get().publish_interval),
       api_scheduler(600),       // 10 minutes (magic number)
@@ -70,7 +69,6 @@ void Miner::mine() {
   Log::get().info("Mining programs for OEIS sequences in " + mode_str +
                   " mode");
 
-  generator = multi_generator->getGenerator();
   std::string submitted_by;
   current_fetch = (mining_mode == MINING_MODE_SERVER) ? PROGRAMS_TO_FETCH : 0;
   num_processed = 0;
@@ -92,10 +90,7 @@ void Miner::mine() {
 
     // generate new program if needed
     if (progs.empty() || (num_processed % 10) == 0) {
-      multi_generator
-          ->next();  // need to call "next" *before* generating the programs
-      generator = multi_generator->getGenerator();
-      progs.push(generator->generateProgram());
+      progs.push(multi_generator->generateProgram());
     }
 
     // get next program
@@ -172,7 +167,6 @@ void Miner::checkRegularTasks() {
   if (reload_scheduler.isTargetReached()) {
     reload_scheduler.reset();
     reload(true);
-    generator = multi_generator->getGenerator();
   }
 }
 
