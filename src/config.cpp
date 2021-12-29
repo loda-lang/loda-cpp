@@ -58,27 +58,32 @@ std::vector<Generator::Config> loadGeneratorConfigs(
     c.loops = get_jbool(g, "loops", true);
     c.calls = get_jbool(g, "calls", true);
     c.indirect_access = get_jbool(g, "indirectAccess", false);
-    switch (g["template"].get_type()) {
+    auto t = g["template"].get_type();
+    switch (t) {
       case jute::jType::JSTRING: {
-        c.program_template = get_template(g["template"].as_string());
-        generators.push_back(c);
+        c.templates.push_back(get_template(g["template"].as_string()));
         break;
       }
       case jute::jType::JARRAY: {
         auto a = g["template"];
         for (int i = 0; i < a.size(); i++) {
           if (a[i].get_type() == jute::jType::JSTRING) {
-            c.program_template = get_template(a[i].as_string());
-            generators.push_back(c);
+            c.templates.push_back(get_template(a[i].as_string()));
           }
         }
         break;
       }
+      case jute::jType::JNULL:
+      case jute::jType::JUNKNOWN: {
+        break;
+      }
       default: {
-        generators.push_back(c);
+        throw std::runtime_error("unexpected template value: " +
+                                 std::to_string(t));
         break;
       }
     }
+    generators.push_back(c);
   }
   return generators;
 }

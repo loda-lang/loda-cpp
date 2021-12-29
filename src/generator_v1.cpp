@@ -19,7 +19,7 @@
 #define POSITION_RANGE 100
 
 GeneratorV1::GeneratorV1(const Config &config, const Stats &stats)
-    : Generator(config, stats), num_generated(0), mutator(stats) {
+    : Generator(config, stats), current_template(0), mutator(stats) {
   // the post processing adds operations, so we reduce the target length here
   num_operations = std::max<int64_t>(config.length / 2, 1);
 
@@ -102,13 +102,19 @@ GeneratorV1::GeneratorV1(const Config &config, const Stats &stats)
     Log::get().error("No target operation types", true);
   }
 
-  // load program template
-  if (!config.program_template.empty()) {
-    Parser parser;
-    this->program_template = parser.parse(config.program_template);
-    ProgramUtil::removeOps(this->program_template, Operation::Type::NOP);
-    for (auto &op : this->program_template.ops) {
-      op.comment.clear();
+  // load program templates
+  Parser parser;
+  Program p;
+  for (auto &t : config.templates) {
+    try {
+      p = parser.parse(t);
+      ProgramUtil::removeOps(p, Operation::Type::NOP);
+      for (auto &op : p.ops) {
+        op.comment.clear();
+      }
+      templates.push_back(p);
+    } catch (const std::exception &) {
+      Log::get().warn("Cannot load template (ignoring): " + t);
     }
   }
 
@@ -176,13 +182,16 @@ std::pair<Operation, double> GeneratorV1::generateOperation() {
 
 Program GeneratorV1::generateProgram() {
   // use template for base program
-  Program p = program_template;
-  if (p.ops.empty() || (num_generated % 2)) {
+  Program p;
+  if (!templates.empty()) {
+    p = templates[current_template];
+    current_template = (current_template + 1) % templates.size();
+  }
+  if (p.ops.empty() || (Random::get().gen() % 2)) {
     generateStateless(p, num_operations);
     applyPostprocessing(p);
   } else {
     mutator.mutateRandom(p);
   }
-  num_generated++;
   return p;
 }
