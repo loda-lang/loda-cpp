@@ -850,8 +850,7 @@ void Test::minimizer(size_t tests) {
     if (i % (num_tests / 10) == 0) {
       Log::get().info("Testing minimizer " + std::to_string(i));
     }
-    program = multi_generator.getGenerator()->generateProgram();
-    multi_generator.next();
+    program = multi_generator.generateProgram();
     try {
       evaluator.eval(program, s1, OeisSequence::DEFAULT_SEQ_LENGTH);
       if (s1.size() != OeisSequence::DEFAULT_SEQ_LENGTH) {

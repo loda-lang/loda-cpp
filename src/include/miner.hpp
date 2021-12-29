@@ -47,7 +47,6 @@ class Miner {
   std::unique_ptr<OeisManager> manager;
   std::unique_ptr<MultiGenerator> multi_generator;
   std::unique_ptr<Mutator> mutator;
-  Generator *generator;
   AdaptiveScheduler log_scheduler;
   AdaptiveScheduler metrics_scheduler;
   AdaptiveScheduler api_scheduler;

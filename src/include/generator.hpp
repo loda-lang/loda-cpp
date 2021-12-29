@@ -62,16 +62,16 @@ class Generator {
   void ensureMeaningfulLoops(Program &p);
 };
 
-class MultiGenerator {
+class MultiGenerator : public Generator {
  public:
   MultiGenerator(const Settings &settings, const Stats &stats, bool print_info);
 
-  Generator *getGenerator();
+  virtual Program generateProgram() override;
 
-  void next();
+  virtual std::pair<Operation, double> generateOperation() override;
 
+ private:
   std::vector<Generator::Config> configs;
   std::vector<Generator::UPtr> generators;
-  AdaptiveScheduler scheduler;
-  int64_t generator_index;
+  size_t current_generator;
 };
