@@ -97,6 +97,21 @@
         "binary",
         "decimal"
       ]
+    },
+    {
+      "name": "server",
+      "overwrite": "all",
+      "backoff": false,
+      "generators": [
+        "v6"
+      ],
+      "matchers": [
+        "direct",
+        "linear1",
+        "linear2",
+        "binary",
+        "decimal"
+      ]
     }
   ],
   "generators": [
