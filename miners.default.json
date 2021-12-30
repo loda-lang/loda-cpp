@@ -100,17 +100,13 @@
     },
     {
       "name": "server",
-      "overwrite": "auto",
+      "overwrite": "all",
       "backoff": true,
       "generators": [
         "v6"
       ],
       "matchers": [
-        "direct",
-        "linear1",
-        "linear2",
-        "binary",
-        "decimal"
+        "direct"
       ]
     }
   ],
