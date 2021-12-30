@@ -2,11 +2,14 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v21.12.30
+
 ### Enhancements
 
 * Reduce memory consumption of generator v1
 * Improve scheduling of multi-generator
 * Improve cache handling of interpreter and matcher
+* Less mining in server mode (focus on submitted programs)
 
 ## v21.12.23
 
