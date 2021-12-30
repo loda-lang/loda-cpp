@@ -14,8 +14,8 @@
 #include "program_util.hpp"
 
 const std::string Miner::ANONYMOUS("anonymous");
-const int64_t Miner::PROGRAMS_TO_FETCH = 500;  // magic number
-const int64_t Miner::NUM_MUTATIONS = 100;      // magic number
+const int64_t Miner::PROGRAMS_TO_FETCH = 2000;  // magic number
+const int64_t Miner::NUM_MUTATIONS = 100;       // magic number
 
 Miner::Miner(const Settings &settings)
     : settings(settings),
