@@ -39,7 +39,7 @@
     },
     {
       "name": "hard",
-      "overwrite": "none",
+      "overwrite": "auto",
       "backoff": true,
       "generators": [
         "v1_hard"
@@ -81,32 +81,6 @@
         "linear2",
         "binary",
         "decimal"
-      ]
-    },
-    {
-      "name": "new-v4",
-      "overwrite": "none",
-      "backoff": true,
-      "generators": [
-        "v4"
-      ],
-      "matchers": [
-        "direct",
-        "linear1",
-        "linear2",
-        "binary",
-        "decimal"
-      ]
-    },
-    {
-      "name": "server",
-      "overwrite": "all",
-      "backoff": true,
-      "generators": [
-        "v6"
-      ],
-      "matchers": [
-        "direct"
       ]
     }
   ],
