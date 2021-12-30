@@ -100,8 +100,8 @@
     },
     {
       "name": "server",
-      "overwrite": "all",
-      "backoff": false,
+      "overwrite": "auto",
+      "backoff": true,
       "generators": [
         "v6"
       ],
