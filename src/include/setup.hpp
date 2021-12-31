@@ -9,6 +9,9 @@ enum MiningMode {
   MINING_MODE_SERVER = 3
 };
 
+std::string convertMiningModeToStr(MiningMode mode);
+MiningMode convertStrToMiningMode(const std::string& str);
+
 class Setup {
  public:
   static std::string getLodaHomeNoCheck();

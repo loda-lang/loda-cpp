@@ -22,6 +22,27 @@ int64_t Setup::MAX_MEMORY = UNDEFINED_INT;
 int64_t Setup::UPDATE_INTERVAL = UNDEFINED_INT;
 int64_t Setup::MAX_PROGRAM_AGE = UNDEFINED_INT;
 
+std::string convertMiningModeToStr(MiningMode mode) {
+  switch (mode) {
+    case MINING_MODE_LOCAL:
+      return "local";
+    case MINING_MODE_CLIENT:
+      return "client";
+    case MINING_MODE_SERVER:
+      return "server";
+  }
+  return "";
+}
+
+MiningMode convertStrToMiningMode(const std::string& str) {
+  if (str == "local") {
+    return MINING_MODE_LOCAL;
+  } else if (str == "server") {
+    return MINING_MODE_SERVER;
+  }
+  return MINING_MODE_CLIENT;
+}
+
 std::string Setup::getLodaHomeNoCheck() {
   auto loda_home = std::getenv("LODA_HOME");
   std::string result;
@@ -137,12 +158,10 @@ int64_t Setup::getSetupInt(const std::string& key, int64_t default_value) {
 MiningMode Setup::getMiningMode() {
   if (MINING_MODE == UNDEFINED_INT) {
     auto mode = getSetupValue("LODA_MINING_MODE");
-    if (mode == "local") {
-      MINING_MODE = static_cast<int64_t>(MINING_MODE_LOCAL);
-    } else if (mode == "server") {
-      MINING_MODE = static_cast<int64_t>(MINING_MODE_SERVER);
-    } else {
+    if (mode.empty()) {
       MINING_MODE = static_cast<int64_t>(MINING_MODE_CLIENT);
+    } else {
+      MINING_MODE = static_cast<int64_t>(convertStrToMiningMode(mode));
     }
   }
   return static_cast<MiningMode>(MINING_MODE);
@@ -508,19 +527,7 @@ bool Setup::checkMiningMode() {
     std::cout << "Invalid choice. Please restart the setup." << std::endl;
     return false;
   }
-  std::string mode_str;
-  switch (mode) {
-    case MINING_MODE_LOCAL:
-      mode_str = "local";
-      break;
-    case MINING_MODE_CLIENT:
-      mode_str = "client";
-      break;
-    case MINING_MODE_SERVER:
-      mode_str = "server";
-      break;
-  }
-  SETUP["LODA_MINING_MODE"] = mode_str;
+  SETUP["LODA_MINING_MODE"] = convertMiningModeToStr(mode);
   MINING_MODE = UNDEFINED_INT;  // reset cached value
   std::cout << std::endl;
   return true;
@@ -713,7 +720,7 @@ void Setup::ensureEnvVar(const std::string& key, const std::string& value,
                 << "configuration:" << std::endl;
     }
     std::cout << kv << std::endl;
-    std::cout << "Do you want the setup to add it to " << bashrc << "? (Y/n)";
+    std::cout << "Do you want the setup to add it to " << bashrc << "? (Y/n) ";
     std::getline(std::cin, line);
     std::cout << std::endl;
     if (line.empty() || line == "y" || line == "Y") {

@@ -54,20 +54,8 @@ void Miner::mine() {
   Program program;
 
   // print info
-  std::string mode_str;
-  switch (mining_mode) {
-    case MINING_MODE_LOCAL:
-      mode_str = "local";
-      break;
-    case MINING_MODE_CLIENT:
-      mode_str = "client";
-      break;
-    case MINING_MODE_SERVER:
-      mode_str = "server";
-      break;
-  }
-  Log::get().info("Mining programs for OEIS sequences in " + mode_str +
-                  " mode");
+  Log::get().info("Mining programs for OEIS sequences in " +
+                  convertMiningModeToStr(mining_mode) + " mode");
 
   std::string submitted_by;
   current_fetch = (mining_mode == MINING_MODE_SERVER) ? PROGRAMS_TO_FETCH : 0;
