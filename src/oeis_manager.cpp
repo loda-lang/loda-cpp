@@ -694,7 +694,7 @@ update_program_result_t OeisManager::updateProgram(size_t id, Program p) {
   result.is_new = false;
 
   // ignore this sequence?
-  if (ignore_list.find(id) == ignore_list.end()) {
+  if (ignore_list.find(id) != ignore_list.end()) {
     return result;
   }
 
