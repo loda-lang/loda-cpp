@@ -91,6 +91,7 @@ void Finder::findAll(const Program &p, const Sequence &norm_seq,
                      const std::vector<OeisSequence> &sequences,
                      Matcher::seq_programs_t &result) {
   // collect possible matches
+  std::pair<size_t, Program> last(0, Program());
   for (size_t i = 0; i < matchers.size(); i++) {
     tmp_result.clear();
     matchers[i]->match(p, norm_seq, tmp_result);
@@ -98,6 +99,12 @@ void Finder::findAll(const Program &p, const Sequence &norm_seq,
     // validate the found matches
     for (auto t : tmp_result) {
       auto &s = sequences.at(t.first);
+      if (t == last) {
+        // Log::get().warn("Ignoring duplicate match for " + s.id_str());
+        continue;
+      }
+      last = t;
+
       auto expected_seq = s.getTerms(s.existingNumTerms());
       auto res = evaluator.check(t.second, expected_seq,
                                  OeisSequence::DEFAULT_SEQ_LENGTH, t.first);

@@ -4,6 +4,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Enhancements
 
+* Improve mining performance by ignoring duplicate matches
 * Improve performance of server-side processing of submitted programs
 
 ## v21.12.30
