@@ -709,11 +709,10 @@ update_program_result_t OeisManager::updateProgram(size_t id, Program p) {
   const bool has_local = isFile(local_file);
   Program existing;
   if (has_global || has_local) {
-    std::string file_name = has_local ? local_file : global_file;
-    std::ifstream in(file_name);
+    const std::string file_name = has_local ? local_file : global_file;
     Parser parser;
     try {
-      existing = parser.parse(in);
+      existing = parser.parse(file_name);
       is_new = false;
     } catch (const std::exception &) {
       Log::get().error("Error parsing " + file_name, false);
