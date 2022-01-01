@@ -10,8 +10,6 @@ class OeisMaintenance {
   void maintain();
 
  private:
-  void generateLists();
-
   size_t checkAndMinimizePrograms();
 
   Evaluator evaluator;

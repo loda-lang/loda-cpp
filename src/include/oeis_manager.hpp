@@ -52,6 +52,8 @@ class OeisManager {
 
   void generateStats(int64_t age_in_days);
 
+  void generateLists();
+
   void addSeqComments(Program& p) const;
 
   void dumpProgram(size_t id, Program& p, const std::string& file,

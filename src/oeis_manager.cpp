@@ -40,9 +40,9 @@ OeisManager::OeisManager(const Settings &settings, bool force_overwrite,
       optimizer(settings),
       loaded_count(0),
       total_count(0),
-      stats_home(stats_home.empty() ? (Setup::getLodaHome() + "stats")
-                                    : stats_home)  // no trailing / here
-{}
+      stats_home(stats_home.empty()
+                     ? (Setup::getLodaHome() + "stats" + FILE_SEP)
+                     : stats_home) {}
 
 void OeisManager::load() {
   // check if already loaded
@@ -444,6 +444,85 @@ void OeisManager::generateStats(int64_t age_in_days) {
                   std::to_string(num_processed) + " programs");
 }
 
+void OeisManager::generateLists() {
+  load();
+  const std::string lists_home = OeisList::getListsHome();
+  Log::get().info("Generating program lists at \"" + lists_home + "\"");
+  const size_t list_file_size = 50000;
+  std::vector<std::stringstream> list_files(1000000 / list_file_size);
+  std::stringstream no_loda;
+  size_t num_processed = 0;
+  Parser parser;
+  Program program;
+  std::string file_name;
+  std::string buf;
+
+  for (auto &s : sequences) {
+    if (s.id == 0) {
+      continue;
+    }
+    file_name = s.getProgramPath();
+    std::ifstream program_file(file_name);
+    if (program_file.good()) {
+      try {
+        program = parser.parse(program_file);
+      } catch (const std::exception &exc) {
+        Log::get().error(
+            "Error parsing " + file_name + ": " + std::string(exc.what()),
+            false);
+        continue;
+      }
+
+      // update program list
+      const size_t list_index = (s.id + 1) / list_file_size;
+      buf = s.name;
+      std::replace(buf.begin(), buf.end(), '{', ' ');
+      std::replace(buf.begin(), buf.end(), '}', ' ');
+      list_files.at(list_index)
+          << "* [" << s.id_str() << "](https://oeis.org/" << s.id_str()
+          << ") ([program](/edit/?oeis=" << s.id << ")): " << buf << "\n";
+
+      num_processed++;
+
+      // if ( num_processed % 1000 == 0 )
+      //{
+      //  Log::get().info( "Processed " + std::to_string( num_processed ) + "
+      //  programs" );
+      //}
+    } else {
+      no_loda << s.id_str() << ": " << s.name << "\n";
+    }
+  }
+
+  // write lists
+  ensureDir(lists_home);
+  for (size_t i = 0; i < list_files.size(); i++) {
+    auto buf = list_files[i].str();
+    if (!buf.empty()) {
+      const std::string list_path =
+          lists_home + "list" + std::to_string(i) + ".markdown";
+      OeisSequence start(std::max<int64_t>(i * list_file_size, 1));
+      OeisSequence end(((i + 1) * list_file_size) - 1);
+      std::ofstream list_file(list_path);
+      list_file << "---\n";
+      list_file << "layout: page\n";
+      list_file << "title: Programs for " << start.id_str() << "-"
+                << end.id_str() << "\n";
+      list_file << "permalink: /list" << i << "/\n";
+      list_file << "---\n";
+      list_file << "List of integer sequences with links to LODA programs."
+                << "\n\n";
+      list_file << buf;
+    }
+  }
+  std::ofstream no_loda_file(lists_home + "no_loda.txt");
+  no_loda_file << no_loda.str();
+  no_loda_file.close();
+
+  Log::get().info("Finished generation of lists for " +
+                  std::to_string(num_processed) + " programs");
+}
+
 void OeisManager::migrate() {
   for (size_t id = 0; id < 400000; id++) {
     OeisSequence s(id);
@@ -484,6 +563,11 @@ const Stats &OeisManager::getStats() {
     auto age_in_days = getFileAgeInDays(stats->getMainStatsFile(stats_home));
     if (age_in_days < 0 || age_in_days >= Setup::getUpdateIntervalInDays()) {
       generateStats(age_in_days);
+
+      // generate lists in server mode
+      if (Setup::getMiningMode() == MINING_MODE_SERVER) {
+        generateLists();
+      }
     }
     try {
       stats->load(stats_home);
