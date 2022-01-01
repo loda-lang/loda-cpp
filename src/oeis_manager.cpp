@@ -702,7 +702,7 @@ update_program_result_t OeisManager::updateProgram(size_t id, Program p) {
   const std::string global_file = seq.getProgramPath(false);
   const std::string local_file = seq.getProgramPath(true);
   const std::string submitted_by = ProgramUtil::getSubmittedBy(p);
-  bool is_new = false;
+  bool is_new = true;
 
   // check if there is an existing program already
   const bool has_global = isFile(global_file);
