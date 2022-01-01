@@ -39,7 +39,7 @@
     },
     {
       "name": "hard",
-      "overwrite": "auto",
+      "overwrite": "none",
       "backoff": true,
       "generators": [
         "v1_hard"
