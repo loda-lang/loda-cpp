@@ -688,17 +688,48 @@ std::string OeisManager::isOptimizedBetter(Program existing, Program optimized,
   return "";
 }
 
-update_program_result_t OeisManager::updateProgram(size_t id,
-                                                   const Program &p) {
+update_program_result_t OeisManager::updateProgram(size_t id, Program p) {
+  update_program_result_t result;
+  result.updated = false;
+  result.is_new = false;
+
+  // ignore this sequence?
+  if (ignore_list.find(id) != ignore_list.end()) {
+    return result;
+  }
+
   auto &seq = sequences.at(id);
   const std::string global_file = seq.getProgramPath(false);
   const std::string local_file = seq.getProgramPath(true);
   const std::string submitted_by = ProgramUtil::getSubmittedBy(p);
   bool is_new = true;
-  std::string change;
-  update_program_result_t result;
-  result.updated = false;
-  result.is_new = false;
+
+  // check if there is an existing program already
+  const bool has_global = isFile(global_file);
+  const bool has_local = isFile(local_file);
+  Program existing;
+  if (has_global || has_local) {
+    const std::string file_name = has_local ? local_file : global_file;
+    Parser parser;
+    try {
+      existing = parser.parse(file_name);
+      is_new = false;
+    } catch (const std::exception &) {
+      Log::get().error("Error parsing " + file_name, false);
+      existing.ops.clear();
+    }
+  }
+
+  if (!is_new) {
+    // if the programs are exactly the same, no need to evaluate them
+    optimizer.removeNops(existing);
+    optimizer.removeNops(p);
+    if (p == existing) {
+      // Log::get().info("Skipping update for " + seq.id_str() + "
+      // (unchanged)");
+      return result;
+    }
+  }
 
   // minimize and check the program
   auto minimized = finder.checkAndMinimize(p, seq);
@@ -706,27 +737,11 @@ update_program_result_t OeisManager::updateProgram(size_t id,
     return result;
   }
 
-  // check if there is an existing program already
-  const bool has_global = isFile(global_file);
-  const bool has_local = isFile(local_file);
-  if (has_global || has_local) {
-    std::string file_name = has_local ? local_file : global_file;
-    std::ifstream in(file_name);
-    if (ignore_list.find(id) == ignore_list.end()) {
-      is_new = false;
-      Parser parser;
-      Program existing;
-      try {
-        existing = parser.parse(in);
-      } catch (const std::exception &) {
-        Log::get().error("Error parsing " + file_name, false);
-        return result;
-      }
-      change = isOptimizedBetter(existing, minimized.second, id);
-      if (change.empty()) {
-        return result;
-      }
-    } else {
+  std::string change;
+  if (!is_new) {
+    // compare programs
+    change = isOptimizedBetter(existing, minimized.second, id);
+    if (change.empty()) {
       return result;
     }
   }
