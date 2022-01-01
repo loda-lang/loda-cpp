@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Enhancements
+
+* Improve performance of server-side processing of submitted programs
+
 ## v21.12.30
 
 ### Enhancements

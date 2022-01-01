@@ -39,7 +39,7 @@ class OeisManager {
 
   size_t getTotalCount() const { return total_count; }
 
-  update_program_result_t updateProgram(size_t id, const Program& p);
+  update_program_result_t updateProgram(size_t id, Program p);
 
  private:
   void loadData();
