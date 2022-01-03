@@ -46,13 +46,15 @@ class Miner {
   std::unique_ptr<ApiClient> api_client;
   std::unique_ptr<OeisManager> manager;
   std::unique_ptr<MultiGenerator> multi_generator;
+  std::unique_ptr<RandomProgramIds> random_program_ids;
   std::unique_ptr<Mutator> mutator;
   AdaptiveScheduler log_scheduler;
   AdaptiveScheduler metrics_scheduler;
   AdaptiveScheduler api_scheduler;
   AdaptiveScheduler reload_scheduler;
   int64_t num_processed;
-  int64_t last_new;
-  int64_t last_updated;
+  int64_t num_new;
+  int64_t num_updated;
+  int64_t num_removed;
   int64_t current_fetch;
 };

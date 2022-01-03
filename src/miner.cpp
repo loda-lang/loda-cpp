@@ -25,8 +25,9 @@ Miner::Miner(const Settings &settings)
       api_scheduler(600),       // 10 minutes (magic number)
       reload_scheduler(21600),  // 6 hours (magic number)
       num_processed(0),
-      last_new(0),
-      last_updated(0),
+      num_new(0),
+      num_updated(0),
+      num_removed(0),
       current_fetch(0) {}
 
 void Miner::reload(bool load_generators, bool force_overwrite) {
@@ -41,6 +42,8 @@ void Miner::reload(bool load_generators, bool force_overwrite) {
     multi_generator.reset();
   }
   mutator.reset(new Mutator(manager->getStats()));
+  random_program_ids.reset(
+      new RandomProgramIds(manager->getStats().all_program_ids));
   manager->releaseStats();  // not needed anymore
 }
 
@@ -60,59 +63,71 @@ void Miner::mine() {
   std::string submitted_by;
   current_fetch = (mining_mode == MINING_MODE_SERVER) ? PROGRAMS_TO_FETCH : 0;
   num_processed = 0;
-  last_new = 0;
-  last_updated = 0;
+  num_new = 0;
+  num_updated = 0;
+  num_removed = 0;
   while (true) {
-    // server mode: fetch new program
-    if (progs.empty() && current_fetch > 0 &&
-        mining_mode == MINING_MODE_SERVER) {
-      program = api_client->getNextProgram();
-      if (program.ops.empty()) {
-        current_fetch = 0;
+    // if queue is empty: fetch or generate a new program
+    if (progs.empty()) {
+      // server mode: try to fetch a program
+      if (mining_mode == MINING_MODE_SERVER) {
+        if (current_fetch > 0) {
+          program = api_client->getNextProgram();
+          if (program.ops.empty()) {
+            current_fetch = 0;
+          } else {
+            current_fetch--;
+            ensureSubmittedBy(program);
+            progs.push(program);
+          }
+        }
       } else {
-        current_fetch--;
-        ensureSubmittedBy(program);
-        progs.push(program);
+        // client mode: generate new program
+        progs.push(multi_generator->generateProgram());
       }
     }
 
-    // generate new program if needed
-    if (progs.empty() || (num_processed % 10) == 0) {
-      progs.push(multi_generator->generateProgram());
-    }
+    if (progs.empty()) {
+      // match the next program to the sequence database
+      program = progs.top();
+      progs.pop();
+      // Log::get().info( "Matching program with " + std::to_string(
+      // program.ops.size() ) + " operations" ); ProgramUtil::print( program,
+      // std::cout );
 
-    // get next program
-    program = progs.top();
-    progs.pop();
-    // Log::get().info( "Matching program with " + std::to_string(
-    // program.ops.size() ) + " operations" ); ProgramUtil::print( program,
-    // std::cout );
-
-    // match sequences
-    auto seq_programs = manager->getFinder().findSequence(
-        program, norm_seq, manager->getSequences());
-    for (auto s : seq_programs) {
-      checkRegularTasks();
-      program = s.second;
-      setSubmittedBy(program);
-      auto r = manager->updateProgram(s.first, program);
-      if (r.updated) {
-        // update stats and increase priority of successful generator
-        if (r.is_new) {
-          last_new++;
-        } else {
-          last_updated++;
-        }
-        // in client mode: submit the program to the API server
-        if (mining_mode == MINING_MODE_CLIENT) {
-          api_client->postProgram(r.program, 10);  // magic number
-        }
-        // mutate successful program
-        if (mining_mode != MINING_MODE_SERVER && progs.size() < 1000) {
-          mutator->mutateCopies(r.program, NUM_MUTATIONS, progs);
+      // match sequences
+      auto seq_programs = manager->getFinder().findSequence(
+          program, norm_seq, manager->getSequences());
+      for (auto s : seq_programs) {
+        checkRegularTasks();
+        program = s.second;
+        setSubmittedBy(program);
+        auto r = manager->updateProgram(s.first, program);
+        if (r.updated) {
+          // update stats and increase priority of successful generator
+          if (r.is_new) {
+            num_new++;
+          } else {
+            num_updated++;
+          }
+          // in client mode: submit the program to the API server
+          if (mining_mode == MINING_MODE_CLIENT) {
+            api_client->postProgram(r.program, 10);  // magic number
+          }
+          // mutate successful program
+          if (mining_mode != MINING_MODE_SERVER && progs.size() < 1000) {
+            mutator->mutateCopies(r.program, NUM_MUTATIONS, progs);
+          }
         }
       }
+    } else {
+      // we are in server mode and have no programs to process
+      // => lets do maintenance work!
+      if (!manager->maintainProgram(random_program_ids->get())) {
+        num_removed++;
+      }
     }
+
     num_processed++;
     checkRegularTasks();
   }
@@ -143,12 +158,15 @@ void Miner::checkRegularTasks() {
     std::vector<Metrics::Entry> entries;
     std::map<std::string, std::string> labels;
     labels["kind"] = "new";
-    entries.push_back({"programs", labels, (double)last_new});
+    entries.push_back({"programs", labels, static_cast<double>(num_new)});
     labels["kind"] = "updated";
-    entries.push_back({"programs", labels, (double)last_updated});
+    entries.push_back({"programs", labels, static_cast<double>(num_updated)});
+    labels["kind"] = "removed";
+    entries.push_back({"programs", labels, static_cast<double>(num_removed)});
     Metrics::get().write(entries);
-    last_new = 0;
-    last_updated = 0;
+    num_new = 0;
+    num_updated = 0;
+    num_removed = 0;
   }
 
   // regular task: reload oeis manager and generators

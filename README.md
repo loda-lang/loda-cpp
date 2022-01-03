@@ -38,9 +38,8 @@ Core Commands:
 
 OEIS Commands:
   mine                Mine programs for OEIS sequences (see -i)
-  submit <id> <file>  Submit a program for an OEIS sequence
   check <id>          Check a program for an OEIS sequence (see -b)
-  maintain            Maintain all programs for OEIS sequences
+  submit <id> <file>  Submit a program for an OEIS sequence
 
 Targets:
   <file>              Path to a LODA file (file extension: *.asm)

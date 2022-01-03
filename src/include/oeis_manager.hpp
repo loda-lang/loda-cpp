@@ -6,6 +6,7 @@
 #include "number.hpp"
 #include "oeis_sequence.hpp"
 #include "optimizer.hpp"
+#include "parser.hpp"
 #include "program.hpp"
 #include "stats.hpp"
 #include "util.hpp"
@@ -41,6 +42,8 @@ class OeisManager {
 
   update_program_result_t updateProgram(size_t id, Program p);
 
+  bool maintainProgram(size_t id);
+
  private:
   void loadData();
 
@@ -69,12 +72,13 @@ class OeisManager {
 
   const Settings& settings;
   const OverwriteMode overwrite_mode;
+  Parser parser;
   Evaluator evaluator;
-
   Finder finder;
   bool finder_initialized;
 
   Optimizer optimizer;
+  Minimizer minimizer;
   std::vector<OeisSequence> sequences;
 
   std::unordered_set<size_t> deny_list;
