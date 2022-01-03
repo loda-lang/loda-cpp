@@ -87,7 +87,7 @@ void Miner::mine() {
       }
     }
 
-    if (progs.empty()) {
+    if (!progs.empty()) {
       // match the next program to the sequence database
       program = progs.top();
       progs.pop();
