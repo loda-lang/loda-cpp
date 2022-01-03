@@ -8,7 +8,6 @@
 #include "miner.hpp"
 #include "minimizer.hpp"
 #include "mutator.hpp"
-#include "oeis_maintenance.hpp"
 #include "oeis_manager.hpp"
 #include "optimizer.hpp"
 #include "parser.hpp"
@@ -49,12 +48,10 @@ void Commands::help() {
   std::cout << std::endl << "OEIS Commands:" << std::endl;
   std::cout << "  mine                Mine programs for OEIS sequences (see -i)"
             << std::endl;
-  std::cout << "  submit <id> <file>  Submit a program for an OEIS sequence"
-            << std::endl;
   std::cout << "  check <id>          Check a program for an OEIS sequence "
                "(see -b)"
             << std::endl;
-  std::cout << "  maintain            Maintain all programs for OEIS sequences"
+  std::cout << "  submit <id> <file>  Submit a program for an OEIS sequence"
             << std::endl;
   std::cout << std::endl << "Targets:" << std::endl;
   std::cout
@@ -165,12 +162,6 @@ void Commands::submit(const std::string& id, const std::string& path) {
   initLog(false);
   Miner miner(settings);
   miner.submit(id, path);
-}
-
-void Commands::maintain() {
-  initLog(false);
-  OeisMaintenance maintenance(settings);
-  maintenance.maintain();
 }
 
 // hidden commands (only in development versions)

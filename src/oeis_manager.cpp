@@ -17,7 +17,6 @@
 #include "number.hpp"
 #include "oeis_list.hpp"
 #include "optimizer.hpp"
-#include "parser.hpp"
 #include "program_util.hpp"
 #include "setup.hpp"
 #include "stats.hpp"
@@ -38,6 +37,7 @@ OeisManager::OeisManager(const Settings &settings, bool force_overwrite,
       finder(settings, evaluator),
       finder_initialized(false),
       optimizer(settings),
+      minimizer(settings),
       loaded_count(0),
       total_count(0),
       stats_home(stats_home.empty()
@@ -395,7 +395,6 @@ void OeisManager::generateStats(int64_t age_in_days) {
   stats.reset(new Stats());
 
   size_t num_processed = 0;
-  Parser parser;
   Program program;
   std::string file_name;
   bool has_b_file, has_program;
@@ -452,7 +451,6 @@ void OeisManager::generateLists() {
   std::vector<std::stringstream> list_files(1000000 / list_file_size);
   std::stringstream no_loda;
   size_t num_processed = 0;
-  Parser parser;
   Program program;
   std::string file_name;
   std::string buf;
@@ -527,7 +525,6 @@ void OeisManager::migrate() {
   for (size_t id = 0; id < 400000; id++) {
     OeisSequence s(id);
     std::ifstream f(s.getProgramPath());
-    Parser parser;
     Program p, out;
     if (f.good()) {
       Log::get().warn("Migrating " + s.getProgramPath());
@@ -794,7 +791,6 @@ update_program_result_t OeisManager::updateProgram(size_t id, Program p) {
   Program existing;
   if (has_global || has_local) {
     const std::string file_name = has_local ? local_file : global_file;
-    Parser parser;
     try {
       existing = parser.parse(file_name);
       is_new = false;
@@ -848,4 +844,72 @@ update_program_result_t OeisManager::updateProgram(size_t id, Program p) {
   alert(result.program, id, prefix, color, submitted_by);
 
   return result;
+}
+
+// returns false if the program was removed, otherwise true
+bool OeisManager::maintainProgram(size_t id) {
+  // check if the sequence exists
+  if (id >= sequences.size()) {
+    return true;
+  }
+  auto &s = sequences[id];
+  if (s.id == 0) {
+    return true;
+  }
+
+  // try to open the program file
+  const std::string file_name = s.getProgramPath();
+  std::ifstream program_file(file_name);
+  if (!program_file.good()) {
+    return true;  // program does not exist
+  }
+
+  // check if it is on the deny list
+  bool is_okay = (deny_list.find(s.id) == deny_list.end());
+
+  // try to load the program
+  Program program;
+  std::string submitted_by;
+  if (is_okay) {
+    Log::get().debug("Checking program for " + s.to_string());
+    try {
+      program = parser.parse(program_file);
+      submitted_by = ProgramUtil::getSubmittedBy(program);
+    } catch (const std::exception &) {
+      is_okay = false;
+    }
+    program_file.close();
+  }
+
+  // get the full number of terms
+  auto extended_seq = s.getTerms(OeisSequence::FULL_SEQ_LENGTH);
+
+  // check correctness of the program
+  try {
+    auto check = evaluator.check(program, extended_seq,
+                                 OeisSequence::DEFAULT_SEQ_LENGTH, id);
+    is_okay = (check.first != status_t::ERROR);  // we allow warnings
+  } catch (const std::exception &e) {
+    Log::get().error(
+        "Error checking " + file_name + ": " + std::string(e.what()), false);
+    return true;  // not clear what happened, so don't remove it
+  }
+
+  if (!is_okay) {
+    // send alert and remove file
+    alert(program, id, "Removed invalid", "danger", "");
+    remove(file_name.c_str());
+    return false;
+  } else {
+    // minimize and dump the program if it is not protected
+    const bool is_protected = (protect_list.find(s.id) != protect_list.end());
+    if (!is_protected && !ProgramUtil::isCodedManually(program)) {
+      ProgramUtil::removeOps(program, Operation::Type::NOP);
+      Program minimized = program;
+      minimizer.optimizeAndMinimize(minimized, 2, 1,
+                                    OeisSequence::DEFAULT_SEQ_LENGTH);
+      dumpProgram(s.id, minimized, file_name, submitted_by);
+    }
+    return true;
+  }
 }

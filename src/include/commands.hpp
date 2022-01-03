@@ -26,8 +26,6 @@ class Commands {
 
   void submit(const std::string& id, const std::string& path);
 
-  void maintain();
-
   // hidden commands (only in development versions)
 
   void test();

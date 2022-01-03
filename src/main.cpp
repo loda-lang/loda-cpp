@@ -45,8 +45,6 @@ int main(int argc, char *argv[]) {
       return 1;
     }
     commands.submit(args.at(1), args.at(2));
-  } else if (cmd == "maintain") {
-    commands.maintain();
   }
 #ifndef LODA_VERSION
   // hidden commands (only in development versions)

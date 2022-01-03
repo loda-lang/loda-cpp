@@ -52,7 +52,8 @@ class Miner {
   AdaptiveScheduler api_scheduler;
   AdaptiveScheduler reload_scheduler;
   int64_t num_processed;
-  int64_t last_new;
-  int64_t last_updated;
+  int64_t num_new;
+  int64_t num_updated;
+  int64_t num_removed;
   int64_t current_fetch;
 };
