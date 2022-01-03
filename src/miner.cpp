@@ -42,8 +42,6 @@ void Miner::reload(bool load_generators, bool force_overwrite) {
     multi_generator.reset();
   }
   mutator.reset(new Mutator(manager->getStats()));
-  random_program_ids.reset(
-      new RandomProgramIds(manager->getStats().all_program_ids));
   manager->releaseStats();  // not needed anymore
 }
 
@@ -123,7 +121,7 @@ void Miner::mine() {
     } else {
       // we are in server mode and have no programs to process
       // => lets do maintenance work!
-      if (!manager->maintainProgram(random_program_ids->get())) {
+      if (!manager->maintainProgram(mutator->random_program_ids.get())) {
         num_removed++;
       }
     }
