@@ -2,6 +2,14 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Bugfixes
+
+* Escape characters in generated program lists (Markdown format)
+
+### Enhancements
+
+* Boost performance of program list generation
+
 ## v22.1.3
 
 ### Enhancements

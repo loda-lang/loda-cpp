@@ -16,6 +16,9 @@ static constexpr char FILE_SEP = '/';
 #include <filesystem>
 #endif
 
+void replaceAll(std::string &str, const std::string &from,
+                const std::string &to);
+
 bool isFile(const std::string &path);
 
 bool isDir(const std::string &path);

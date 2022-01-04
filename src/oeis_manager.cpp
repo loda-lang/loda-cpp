@@ -445,48 +445,32 @@ void OeisManager::generateStats(int64_t age_in_days) {
 
 void OeisManager::generateLists() {
   load();
+  getStats();
   const std::string lists_home = OeisList::getListsHome();
   Log::get().info("Generating program lists at \"" + lists_home + "\"");
   const size_t list_file_size = 50000;
   std::vector<std::stringstream> list_files(1000000 / list_file_size);
   std::stringstream no_loda;
   size_t num_processed = 0;
-  Program program;
-  std::string file_name;
   std::string buf;
-
   for (auto &s : sequences) {
     if (s.id == 0) {
       continue;
     }
-    file_name = s.getProgramPath();
-    std::ifstream program_file(file_name);
-    if (program_file.good()) {
-      try {
-        program = parser.parse(program_file);
-      } catch (const std::exception &exc) {
-        Log::get().error(
-            "Error parsing " + file_name + ": " + std::string(exc.what()),
-            false);
-        continue;
-      }
-
+    if (s.id < stats->all_program_ids.size() && stats->all_program_ids[s.id]) {
       // update program list
       const size_t list_index = (s.id + 1) / list_file_size;
       buf = s.name;
-      std::replace(buf.begin(), buf.end(), '{', ' ');
-      std::replace(buf.begin(), buf.end(), '}', ' ');
+      replaceAll(buf, "{", "\\{");
+      replaceAll(buf, "}", "\\}");
+      replaceAll(buf, "*", "\\*");
+      replaceAll(buf, "_", "\\_");
+      replaceAll(buf, "|", "\\|");
       list_files.at(list_index)
           << "* [" << s.id_str() << "](https://oeis.org/" << s.id_str()
           << ") ([program](/edit/?oeis=" << s.id << ")): " << buf << "\n";
 
       num_processed++;
-
-      // if ( num_processed % 1000 == 0 )
-      //{
-      //  Log::get().info( "Processed " + std::to_string( num_processed ) + "
-      //  programs" );
-      //}
     } else {
       no_loda << s.id_str() << ": " << s.name << "\n";
     }

@@ -33,6 +33,18 @@
 #include <mach/mach.h>
 #endif
 
+void replaceAll(std::string &str, const std::string &from,
+                const std::string &to) {
+  if (from.empty()) {
+    return;
+  }
+  size_t start = 0;
+  while ((start = str.find(from, start)) != std::string::npos) {
+    str.replace(start, from.length(), to);
+    start += to.length();
+  }
+}
+
 bool isFile(const std::string &path) {
   std::ifstream f(path.c_str());
   return f.good();
