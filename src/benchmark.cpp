@@ -70,10 +70,14 @@ void Benchmark::programs() {
   std::cout << "| Sequence | Terms | Time    |" << std::endl;
   std::cout << "|----------|-------|---------|" << std::endl;
   program(796, 300);
+  program(1041, 300);
   program(1113, 300);
   program(2110, 300);
   program(79309, 300);
   program(2193, 400);
+  program(45, 2000);
+  program(5, 5000);
+  program(30, 500000);
   std::cout << std::endl;
 }
 
