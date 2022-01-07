@@ -18,6 +18,9 @@ int dispatchCommand(const Settings& settings,
       cmd != "check") {
     Log::get().error("Option -b only allowed in evaluate command", true);
   }
+  if (settings.parallel_mining && cmd != "mine") {
+    Log::get().error("Option -p only allowed in mine command", true);
+  }
   if (cmd == "help") {
     Commands::help();
     return EXIT_SUCCESS;

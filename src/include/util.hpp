@@ -56,11 +56,13 @@ class Log {
 
 class Settings {
  public:
+  static constexpr size_t DEFAULT_NUM_TERMS = 10;
+  static constexpr int64_t DEFAULT_MAX_MEMORY = 100;
+  static constexpr int64_t DEFAULT_MAX_CYCLES = 5000000;
+
   size_t num_terms;
   int64_t max_memory;
   int64_t max_cycles;
-  size_t max_stack_size;
-  bool throw_on_overflow;
   bool use_steps;
   bool parallel_mining;
   std::string miner;
@@ -72,6 +74,8 @@ class Settings {
   Settings();
 
   std::vector<std::string> parseArgs(int argc, char *argv[]);
+
+  void printArgs(std::vector<std::string> &args);
 };
 
 class AdaptiveScheduler {

@@ -197,11 +197,9 @@ void Log::log(Level level, const std::string &msg) {
 }
 
 Settings::Settings()
-    : num_terms(10),
-      max_memory(100),
-      max_cycles(5000000),
-      max_stack_size(100),
-      throw_on_overflow(true),
+    : num_terms(DEFAULT_NUM_TERMS),
+      max_memory(DEFAULT_MAX_MEMORY),
+      max_cycles(DEFAULT_MAX_CYCLES),
       use_steps(false),
       parallel_mining(false),
       miner("default"),
@@ -297,6 +295,35 @@ std::vector<std::string> Settings::parseArgs(int argc, char *argv[]) {
     }
   }
   return unparsed;
+}
+
+void Settings::printArgs(std::vector<std::string> &args) {
+  if (num_terms != DEFAULT_NUM_TERMS) {
+    args.push_back("-t");
+    args.push_back(std::to_string(num_terms));
+  }
+  if (max_memory != DEFAULT_MAX_MEMORY) {
+    args.push_back("-m");
+    args.push_back(std::to_string(max_memory));
+  }
+  if (max_cycles != DEFAULT_MAX_CYCLES) {
+    args.push_back("-c");
+    args.push_back(std::to_string(max_cycles));
+  }
+  if (use_steps) {
+    args.push_back("-s");
+  }
+  if (parallel_mining) {
+    args.push_back("-p");
+  }
+  if (!miner.empty() && miner != "default") {
+    args.push_back("-i");
+    args.push_back(miner);
+  }
+  if (print_as_b_file) {
+    args.push_back("-b");
+    args.push_back(std::to_string(print_as_b_file_offset));
+  }
 }
 
 AdaptiveScheduler::AdaptiveScheduler(int64_t target_seconds)

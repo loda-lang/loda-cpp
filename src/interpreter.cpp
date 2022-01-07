@@ -137,7 +137,7 @@ size_t Interpreter::run(const Program& p, Memory& mem) {
           throw std::runtime_error("Maximum memory exceeded: " +
                                    std::to_string(length));
         }
-        if (loop_stack.size() >= settings.max_stack_size) {
+        if (loop_stack.size() >= 100) {  // magic number
           throw std::runtime_error("Maximum stack size exceeded: " +
                                    std::to_string(loop_stack.size()));
         }
@@ -304,7 +304,7 @@ void Interpreter::set(const Operand& a, const Number& v, Memory& mem,
         "Maximum memory exceeded: " + std::to_string(index) +
         "; last operation: " + ProgramUtil::operationToString(last_op));
   }
-  if (settings.throw_on_overflow && v == Number::INF) {
+  if (v == Number::INF) {
     throw std::runtime_error(
         "Overflow in cell $" + std::to_string(index) +
         "; last operation: " + ProgramUtil::operationToString(last_op));
