@@ -202,7 +202,6 @@ Settings::Settings()
       max_cycles(DEFAULT_MAX_CYCLES),
       use_steps(false),
       parallel_mining(false),
-      miner("default"),
       print_as_b_file(false),
       print_as_b_file_offset(0) {}
 
@@ -252,7 +251,7 @@ std::vector<std::string> Settings::parseArgs(int argc, char *argv[]) {
       }
       option = Option::NONE;
     } else if (option == Option::MINER) {
-      miner = arg;
+      miner_profile = arg;
       option = Option::NONE;
     } else if (option == Option::LOG_LEVEL) {
       if (arg == "debug") {
@@ -316,9 +315,9 @@ void Settings::printArgs(std::vector<std::string> &args) {
   if (parallel_mining) {
     args.push_back("-p");
   }
-  if (!miner.empty() && miner != "default") {
+  if (!miner_profile.empty()) {
     args.push_back("-i");
-    args.push_back(miner);
+    args.push_back(miner_profile);
   }
   if (print_as_b_file) {
     args.push_back("-b");

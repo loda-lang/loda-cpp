@@ -634,7 +634,6 @@ void Test::config() {
   Log::get().info("Testing config");
 
   Settings settings;
-  settings.miner = "default";
   auto config = ConfigLoader::load(settings);
   check_int("overwrite", 1, config.overwrite_mode == OverwriteMode::NONE);
 
@@ -670,7 +669,7 @@ void Test::config() {
   check_str("matchers[1].type", "linear1", config.matchers[1].type);
   check_int("matchers[1].backoff", 1, config.matchers[1].backoff);
 
-  settings.miner = "update";
+  settings.miner_profile = "update";
   config = ConfigLoader::load(settings);
   check_int("overwrite", 1, config.overwrite_mode == OverwriteMode::ALL);
 
@@ -685,12 +684,12 @@ void Test::config() {
   check_int("matchers[1].backoff", 0, config.matchers[1].backoff);
 
   // test selecting miner configx using index instead of name
-  settings.miner = "0";
+  settings.miner_profile = "0";
   config = ConfigLoader::load(settings);
   check_int("generators.size", 2, config.generators.size());
   check_int("generators[0].version", 1, config.generators[0].version);
 
-  settings.miner = "1";
+  settings.miner_profile = "1";
   config = ConfigLoader::load(settings);
   check_int("generators.size", 2, config.generators.size());
   check_int("generators[0].version", 2, config.generators[0].version);

@@ -90,27 +90,30 @@ std::vector<Generator::Config> loadGeneratorConfigs(
 
 Miner::Config ConfigLoader::load(const Settings &settings) {
   const std::string loda_config = Setup::getMinersConfig();
-  Log::get().debug("Loading miner config \"" + settings.miner + "\" from " +
-                   loda_config);
   Miner::Config config;
 
   auto str = getFileAsString(loda_config);
   auto spec = jute::parser::parse(str);
   auto miners = spec["miners"];
 
+  // determine which profile to use
+  std::string profile = "default";
+  if (!settings.miner_profile.empty()) {
+    profile = settings.miner_profile;
+  }
   int index = -1;
-  if (!settings.miner.empty() &&
-      std::find_if(settings.miner.begin(), settings.miner.end(),
-                   [](unsigned char c) { return !std::isdigit(c); }) ==
-          settings.miner.end()) {
-    index = stoi(settings.miner) % miners.size();
+  if (!profile.empty() &&
+      std::find_if(profile.begin(), profile.end(), [](unsigned char c) {
+        return !std::isdigit(c);
+      }) == profile.end()) {
+    index = stoi(profile) % miners.size();
   }
 
   bool found = false;
   for (int i = 0; i < miners.size(); i++) {
     auto m = miners[i];
     auto name = m["name"].as_string();
-    if (name == settings.miner || i == index) {
+    if (name == profile || i == index) {
       config.name = name;
       auto overwrite_mode = m["overwrite"].as_string();
       if (overwrite_mode == "none") {
@@ -148,11 +151,8 @@ Miner::Config ConfigLoader::load(const Settings &settings) {
     }
   }
   if (!found) {
-    Log::get().error("Miner config not found: " + settings.miner, true);
+    Log::get().error("Miner config not found: " + profile, true);
   }
-  Log::get().debug("Finished loading miner config \"" + settings.miner +
-                   "\" from " + loda_config + " with " +
-                   std::to_string(config.generators.size()) + " generators");
   return config;
 }
 

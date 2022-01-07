@@ -83,6 +83,9 @@ void Commands::help() {
   std::cout
       << "  -i <string>         Name of miner configuration from miners.json"
       << std::endl;
+  std::cout << "  -p                  Parallel mining using multiple process "
+               "instances"
+            << std::endl;
 }
 
 std::string get_program_path(std::string arg) {

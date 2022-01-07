@@ -6,6 +6,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Escape characters in generated program lists (Markdown format)
 
+### Features
+
+* Built-in parallel mining command: `loda mine -p` (replaces `mine_parallel.sh` script)
+
 ### Enhancements
 
 * Boost performance of program list generation

@@ -26,6 +26,7 @@
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #endif
 
@@ -244,6 +245,13 @@ size_t getMemUsage() {
   }
 #endif
   return mem_usage;
+}
+
+bool isChildProcessAlive(int64_t pid) {
+  if (pid == 0) {
+    return false;
+  }
+  return (waitpid(pid, nullptr, WNOHANG) == 0);
 }
 
 bool hasGit() {

@@ -21,6 +21,7 @@ int64_t Setup::MINING_MODE = UNDEFINED_INT;
 int64_t Setup::MAX_MEMORY = UNDEFINED_INT;
 int64_t Setup::UPDATE_INTERVAL = UNDEFINED_INT;
 int64_t Setup::MAX_PROGRAM_AGE = UNDEFINED_INT;
+int64_t Setup::MAX_INSTANCES = UNDEFINED_INT;
 
 std::string convertMiningModeToStr(MiningMode mode) {
   switch (mode) {
@@ -191,6 +192,13 @@ int64_t Setup::getMaxLocalProgramAgeInDays() {
   return MAX_PROGRAM_AGE;
 }
 
+int64_t Setup::getMaxInstances() {
+  if (MAX_INSTANCES == UNDEFINED_INT) {
+    MAX_INSTANCES = getSetupInt("LODA_MAX_INSTANCES", DEFAULT_MAX_INSTANCES);
+  }
+  return MAX_INSTANCES;
+}
+
 bool Setup::hasMemory() {
   const auto max_physical_memory = getMaxMemory();
   const auto usage = getMemUsage();
@@ -282,11 +290,6 @@ void Setup::runWizard() {
   if (!checkProgramsHome()) {
     return;
   }
-#ifndef _WIN64
-  if (!checkMineParallelScript()) {
-    return;
-  }
-#endif
   if (!checkMiningMode()) {
     return;
   }
@@ -299,6 +302,9 @@ void Setup::runWizard() {
   std::cout << std::endl;
   if (line == "y" || line == "Y") {
     if (!checkMaxMemory()) {
+      return;
+    }
+    if (!checkMaxInstances()) {
       return;
     }
     if (!checkUpdateInterval()) {
@@ -319,11 +325,9 @@ void Setup::runWizard() {
             << "To run a Hello World example (Fibonacci numbers):" << std::endl
             << "  loda eval A000045" << std::endl
             << "To mine programs for OEIS sequences (single core):" << std::endl
-            << "  loda mine" << std::endl;
-#ifndef _WIN64
-  std::cout << "To mine programs for OEIS sequences (multi core):" << std::endl
-            << "  mine_parallel.sh" << std::endl;
-#endif
+            << "  loda mine" << std::endl
+            << "To mine programs for OEIS sequences (multi core):" << std::endl
+            << "  loda mine -p" << std::endl;
 }
 
 void Setup::checkLodaHome() {
@@ -580,21 +584,6 @@ bool Setup::updateFile(const std::string& local_file, const std::string& url,
   return true;
 }
 
-bool Setup::checkMineParallelScript() {
-  const std::string local_file =
-      LODA_HOME + "bin" + FILE_SEP + "mine_parallel.sh";
-  auto age = getFileAgeInDays(local_file);
-  if (age < 0 || age > 1) {
-    const std::string url =
-        "https://raw.githubusercontent.com/loda-lang/loda-cpp/" +
-        Version::BRANCH + "/mine_parallel.sh";
-    const std::string header = "#!/bin/bash";
-    const std::string marker = "loda_version=" + Version::VERSION;
-    return updateFile(local_file, url, header, marker, true);
-  }
-  return true;
-}
-
 bool Setup::checkSubmittedBy() {
   std::string submitted_by = getSubmittedBy();
   if (submitted_by.empty()) {
@@ -691,6 +680,26 @@ bool Setup::checkMaxLocalProgramAge() {
     SETUP.erase("LODA_MAX_PROGRAM_AGE");
   } else {
     SETUP["LODA_MAX_PROGRAM_AGE"] = std::to_string(max_age);
+  }
+  std::cout << std::endl;
+  return true;
+}
+
+bool Setup::checkMaxInstances() {
+  std::string line;
+  std::cout
+      << "Enter the maximum number of parallel miner instances (-1 for auto):"
+      << std::endl;
+  int64_t max_instances = getMaxInstances();
+  std::cout << "[" << max_instances << "] ";
+  std::getline(std::cin, line);
+  if (!line.empty()) {
+    max_instances = std::stoll(line);
+  }
+  if (max_instances == DEFAULT_MAX_PROGRAM_AGE) {
+    SETUP.erase("LODA_MAX_INSTANCES");
+  } else {
+    SETUP["LODA_MAX_INSTANCES"] = std::to_string(max_instances);
   }
   std::cout << std::endl;
   return true;
