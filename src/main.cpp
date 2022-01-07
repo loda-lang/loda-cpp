@@ -3,10 +3,9 @@
 #include "commands.hpp"
 #include "util.hpp"
 
-int main(int argc, char *argv[]) {
-  // parse command-line arguments
-  Settings settings;
-  auto args = settings.parseArgs(argc, argv);
+int dispatchCommand(const Settings& settings,
+                    const std::vector<std::string>& args) {
+  // pre-flight checks
   if (args.empty()) {
     Commands::help();
     return EXIT_SUCCESS;
@@ -16,7 +15,7 @@ int main(int argc, char *argv[]) {
     Log::get().error("Option -s only allowed in evaluate command", true);
   }
   if (settings.print_as_b_file && cmd != "evaluate" && cmd != "eval" &&
-      cmd != "check" && cmd != "collatz") {
+      cmd != "check") {
     Log::get().error("Option -b only allowed in evaluate command", true);
   }
   if (cmd == "help") {
@@ -67,4 +66,11 @@ int main(int argc, char *argv[]) {
     std::cerr << "Unknown command: " << cmd << std::endl;
     return EXIT_FAILURE;
   }
+  return EXIT_SUCCESS;
+}
+
+int main(int argc, char* argv[]) {
+  Settings settings;
+  auto args = settings.parseArgs(argc, argv);
+  dispatchCommand(settings, args);
 }
