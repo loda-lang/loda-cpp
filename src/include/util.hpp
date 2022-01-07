@@ -62,6 +62,7 @@ class Settings {
   size_t max_stack_size;
   bool throw_on_overflow;
   bool use_steps;
+  bool parallel_mining;
   std::string miner;
 
   // flag and offset for printing evaluation results in b-file format

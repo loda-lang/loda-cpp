@@ -203,6 +203,7 @@ Settings::Settings()
       max_stack_size(100),
       throw_on_overflow(true),
       use_steps(false),
+      parallel_mining(false),
       miner("default"),
       print_as_b_file(false),
       print_as_b_file_offset(0) {}
@@ -282,6 +283,8 @@ std::vector<std::string> Settings::parseArgs(int argc, char *argv[]) {
         option = Option::MINER;
       } else if (opt == "s") {
         use_steps = true;
+      } else if (opt == "p") {
+        parallel_mining = true;
       } else if (opt == "b") {
         option = Option::B_FILE_OFFSET;
       } else if (opt == "l") {
