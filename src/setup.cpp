@@ -4,6 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <thread>
 
 #include "file.hpp"
 #include "jute.h"
@@ -22,6 +23,11 @@ int64_t Setup::MAX_MEMORY = UNDEFINED_INT;
 int64_t Setup::UPDATE_INTERVAL = UNDEFINED_INT;
 int64_t Setup::MAX_PROGRAM_AGE = UNDEFINED_INT;
 int64_t Setup::MAX_INSTANCES = UNDEFINED_INT;
+
+int64_t getDefaultMaxInstances() {
+  int64_t n = std::thread::hardware_concurrency();
+  return std::max<int64_t>(n - 2, 2);
+}
 
 std::string convertMiningModeToStr(MiningMode mode) {
   switch (mode) {
@@ -171,7 +177,9 @@ MiningMode Setup::getMiningMode() {
 int64_t Setup::getMaxMemory() {
   if (MAX_MEMORY == UNDEFINED_INT) {
     // 1 GB default
-    MAX_MEMORY = getSetupInt("LODA_MAX_PHYSICAL_MEMORY", 1024) * 1024 * 1024;
+    MAX_MEMORY =
+        getSetupInt("LODA_MAX_PHYSICAL_MEMORY", DEFAULT_MAX_PHYSICAL_MEMORY) *
+        1024 * 1024;
   }
   return MAX_MEMORY;
 }
@@ -194,7 +202,7 @@ int64_t Setup::getMaxLocalProgramAgeInDays() {
 
 int64_t Setup::getMaxInstances() {
   if (MAX_INSTANCES == UNDEFINED_INT) {
-    MAX_INSTANCES = getSetupInt("LODA_MAX_INSTANCES", DEFAULT_MAX_INSTANCES);
+    MAX_INSTANCES = getSetupInt("LODA_MAX_INSTANCES", getDefaultMaxInstances());
   }
   return MAX_INSTANCES;
 }
@@ -618,9 +626,10 @@ bool Setup::checkSubmittedBy() {
 
 bool Setup::checkMaxMemory() {
   std::string line;
-  std::cout
-      << "Enter the maximum memory usage of the miner in MB (default 1024):"
-      << std::endl;
+  std::cout << "Enter the maximum memory usage per miner instance in MB."
+            << std::endl
+            << "The default value is " << DEFAULT_MAX_PHYSICAL_MEMORY << " MB."
+            << std::endl;
   int64_t max_memory = getMaxMemory() / (1024 * 1024);
   std::cout << "[" << max_memory << "] ";
   std::getline(std::cin, line);
@@ -631,7 +640,11 @@ bool Setup::checkMaxMemory() {
     std::cout << "Invalid value. Please restart the setup." << std::endl;
     return false;
   }
-  SETUP["LODA_MAX_PHYSICAL_MEMORY"] = std::to_string(max_memory);
+  if (max_memory == DEFAULT_MAX_PHYSICAL_MEMORY) {
+    SETUP.erase("LODA_MAX_PHYSICAL_MEMORY");
+  } else {
+    SETUP["LODA_MAX_PHYSICAL_MEMORY"] = std::to_string(max_memory);
+  }
   std::cout << std::endl;
   return true;
 }
@@ -687,16 +700,21 @@ bool Setup::checkMaxLocalProgramAge() {
 
 bool Setup::checkMaxInstances() {
   std::string line;
-  std::cout
-      << "Enter the maximum number of parallel miner instances (-1 for auto):"
-      << std::endl;
+  std::cout << "Enter the maximum number of parallel miner instances."
+            << std::endl
+            << "Every instance needs 1 CPU and at least 1 GB memory."
+            << std::endl;
   int64_t max_instances = getMaxInstances();
   std::cout << "[" << max_instances << "] ";
   std::getline(std::cin, line);
   if (!line.empty()) {
     max_instances = std::stoll(line);
   }
-  if (max_instances == DEFAULT_MAX_PROGRAM_AGE) {
+  if (max_instances <= 0) {
+    std::cout << "Invalid value. Please restart the setup." << std::endl;
+    return false;
+  }
+  if (max_instances == getDefaultMaxInstances()) {
     SETUP.erase("LODA_MAX_INSTANCES");
   } else {
     SETUP["LODA_MAX_INSTANCES"] = std::to_string(max_instances);
