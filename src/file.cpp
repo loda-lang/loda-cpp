@@ -2,21 +2,20 @@
 
 #include <stdlib.h>
 
+#include <chrono>
 #include <cstdlib>
 #include <ctime>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <thread>
 
 #include "util.hpp"
 
 // must be before <psapi.h>
 #ifdef _WIN64
 #include <windows.h>
-
-#include <chrono>
-#include <thread>
 #endif
 
 #ifdef _WIN64
@@ -26,6 +25,7 @@
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #endif
 
