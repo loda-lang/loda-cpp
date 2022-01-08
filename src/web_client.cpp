@@ -61,7 +61,12 @@ bool WebClient::postFile(const std::string &url, const std::string &file_path,
       if (!auth.empty()) {
         cmd += " -u " + auth;
       }
-      cmd += " --data-binary \"@" + file_path + "\" " + url;
+      if (file_path.empty()) {
+        cmd += " -X POST";
+      } else {
+        cmd += " --data-binary \"@" + file_path + "\"";
+      }
+      cmd += " " + url;
       break;
     }
     case WC_WGET: {

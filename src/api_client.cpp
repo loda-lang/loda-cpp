@@ -56,6 +56,13 @@ bool ApiClient::postProgram(const std::string& path, bool fail_on_error) {
   return true;
 }
 
+void ApiClient::postCPUHour() {
+  const std::string url = BASE_URL + "cpuhours";
+  if (!WebClient::postFile(url, {})) {
+    Log::get().warn("Error reporting CPU hour");
+  }
+}
+
 bool ApiClient::getProgram(int64_t index, const std::string& path) {
   std::remove(path.c_str());
   return WebClient::get(BASE_URL + "programs/" + std::to_string(index), path,

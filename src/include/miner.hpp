@@ -49,6 +49,7 @@ class Miner {
   std::unique_ptr<Mutator> mutator;
   AdaptiveScheduler log_scheduler;
   AdaptiveScheduler metrics_scheduler;
+  AdaptiveScheduler cpuhours_scheduler;
   AdaptiveScheduler api_scheduler;
   AdaptiveScheduler reload_scheduler;
   int64_t num_processed;

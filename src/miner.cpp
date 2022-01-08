@@ -22,8 +22,9 @@ Miner::Miner(const Settings &settings)
       mining_mode(Setup::getMiningMode()),
       log_scheduler(120),  // 2 minutes (magic number)
       metrics_scheduler(Metrics::get().publish_interval),
-      api_scheduler(600),       // 10 minutes (magic number)
-      reload_scheduler(21600),  // 6 hours (magic number)
+      api_scheduler(600),        // 10 minutes (magic number)
+      cpuhours_scheduler(3600),  // 1 hour (fixed!!)
+      reload_scheduler(21600),   // 6 hours (magic number)
       num_processed(0),
       num_new(0),
       num_updated(0),
@@ -165,6 +166,12 @@ void Miner::checkRegularTasks() {
     num_new = 0;
     num_updated = 0;
     num_removed = 0;
+  }
+
+  // regular task: report CPU hours
+  if (cpuhours_scheduler.isTargetReached()) {
+    cpuhours_scheduler.reset();
+    api_client->postCPUHour();
   }
 
   // regular task: reload oeis manager and generators

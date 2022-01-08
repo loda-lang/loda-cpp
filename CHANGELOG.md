@@ -9,6 +9,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Features
 
 * Built-in parallel mining command: `loda mine -p` (replaces `mine_parallel.sh` script)
+* New metrics on program submissions and CPU hours
 
 ### Enhancements
 

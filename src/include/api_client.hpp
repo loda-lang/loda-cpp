@@ -12,6 +12,8 @@ class ApiClient {
 
   bool postProgram(const std::string& path, bool fail_on_error = true);
 
+  void postCPUHour();
+
   Program getNextProgram();
 
  private:
