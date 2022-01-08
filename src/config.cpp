@@ -97,7 +97,7 @@ Miner::Config ConfigLoader::load(const Settings &settings) {
   auto miners = spec["miners"];
 
   // determine which profile to use
-  std::string profile = "default";
+  std::string profile = "0";  // default: first profile in config
   if (!settings.miner_profile.empty()) {
     profile = settings.miner_profile;
   }
