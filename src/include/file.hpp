@@ -47,8 +47,6 @@ int64_t getFileAgeInDays(const std::string &path);
 
 size_t getMemUsage();
 
-bool isChildProcessAlive(int64_t pid);
-
 bool hasGit();
 
 class FolderLock {

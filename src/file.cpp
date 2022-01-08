@@ -2,21 +2,20 @@
 
 #include <stdlib.h>
 
+#include <chrono>
 #include <cstdlib>
 #include <ctime>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <thread>
 
 #include "util.hpp"
 
 // must be before <psapi.h>
 #ifdef _WIN64
 #include <windows.h>
-
-#include <chrono>
-#include <thread>
 #endif
 
 #ifdef _WIN64
@@ -245,13 +244,6 @@ size_t getMemUsage() {
   }
 #endif
   return mem_usage;
-}
-
-bool isChildProcessAlive(int64_t pid) {
-  if (pid == 0) {
-    return false;
-  }
-  return (waitpid(pid, nullptr, WNOHANG) == 0);
 }
 
 bool hasGit() {
