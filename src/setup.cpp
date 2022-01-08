@@ -301,10 +301,10 @@ void Setup::runWizard() {
   std::getline(std::cin, line);
   std::cout << std::endl;
   if (line == "y" || line == "Y") {
-    if (!checkMaxMemory()) {
+    if (!checkMaxInstances()) {
       return;
     }
-    if (!checkMaxInstances()) {
+    if (!checkMaxMemory()) {
       return;
     }
     if (!checkUpdateInterval()) {

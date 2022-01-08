@@ -11,20 +11,25 @@
 #ifdef _WIN64
 #include <windows.h>
 #else
+#include <sys/wait.h>
 #include <unistd.h>
 typedef int64_t HANDLE;
 #endif
 
 int dispatch(Settings settings, const std::vector<std::string>& args);
 
-HANDLE fork(Settings settings, const std::vector<std::string>& args) {
+HANDLE fork(Settings settings, std::vector<std::string> args) {
 #ifdef _WIN64
   STARTUPINFO si;
   PROCESS_INFORMATION pi;
   ZeroMemory(&si, sizeof(si));
   si.cb = sizeof(si);
   ZeroMemory(&pi, sizeof(pi));
-  std::string cmd;
+  std::string cmd = "loda.exe";
+  settings.printArgs(args);
+  for (auto& a : args) {
+    cmd += " " + a;
+  }
   LPSTR c = const_cast<LPSTR>(cmd.c_str());
   // Start the child process.
   if (!CreateProcess(nullptr, c, nullptr, nullptr, false, 0, nullptr, nullptr,
