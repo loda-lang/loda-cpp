@@ -38,6 +38,21 @@
       ]
     },
     {
+      "name": "mutate",
+      "overwrite": "none",
+      "backoff": true,
+      "generators": [
+        "v6"
+      ],
+      "matchers": [
+        "direct",
+        "linear1",
+        "linear2",
+        "binary",
+        "decimal"
+      ]
+    },
+    {
       "name": "hard",
       "overwrite": "none",
       "backoff": true,
@@ -59,21 +74,6 @@
       "backoff": true,
       "generators": [
         "v5"
-      ],
-      "matchers": [
-        "direct",
-        "linear1",
-        "linear2",
-        "binary",
-        "decimal"
-      ]
-    },
-    {
-      "name": "mutate",
-      "overwrite": "none",
-      "backoff": true,
-      "generators": [
-        "v6"
       ],
       "matchers": [
         "direct",
