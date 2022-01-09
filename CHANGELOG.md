@@ -2,6 +2,8 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v22.1.9
+
 ### Bugfixes
 
 * Escape characters in generated program lists (Markdown format)
