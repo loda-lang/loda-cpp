@@ -659,6 +659,7 @@ size_t getBadOpsCount(const Program &p) {
   // - w/o indirect memory access
   // - w/o loops that have non-constant args
   // - w/o gcd with powers of a small constant
+  // - w/o bin (can be very slow)
   size_t num_ops = ProgramUtil::numOps(p, Operand::Type::INDIRECT);
   for (auto &op : p.ops) {
     if (op.type == Operation::Type::LPB &&
@@ -668,6 +669,9 @@ size_t getBadOpsCount(const Program &p) {
     if (op.type == Operation::Type::GCD &&
         op.source.type == Operand::Type::CONSTANT &&
         Minimizer::getPowerOf(op.source.value) != 0) {
+      num_ops++;
+    }
+    if (op.type == Operation::Type::BIN) {
       num_ops++;
     }
   }

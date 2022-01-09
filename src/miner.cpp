@@ -171,7 +171,8 @@ void Miner::checkRegularTasks() {
   // regular task: report CPU hours
   if (cpuhours_scheduler.isTargetReached()) {
     cpuhours_scheduler.reset();
-    if (mining_mode != MINING_MODE_LOCAL) {
+    if (mining_mode != MINING_MODE_LOCAL &&
+        Setup::getSetupFlag("LODA_SUBMIT_CPU_HOURS", true)) {
       api_client->postCPUHour();
     }
   }

@@ -36,7 +36,7 @@ class Setup {
 
   static std::string getSetupValue(const std::string& key);
 
-  static bool getSetupFlag(const std::string& key);
+  static bool getSetupFlag(const std::string& key, bool default_value);
 
   static int64_t getSetupInt(const std::string& key, int64_t default_value);
 

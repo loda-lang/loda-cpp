@@ -149,9 +149,12 @@ std::string Setup::getSetupValue(const std::string& key) {
   return std::string();
 }
 
-bool Setup::getSetupFlag(const std::string& key) {
+bool Setup::getSetupFlag(const std::string& key, bool default_value) {
   auto s = getSetupValue(key);
-  return (s == "yes" || s == "true");
+  if (s.empty()) {
+    return default_value;
+  }
+  return (s == "yes" || s == "true" || s == "1");
 }
 
 int64_t Setup::getSetupInt(const std::string& key, int64_t default_value) {
