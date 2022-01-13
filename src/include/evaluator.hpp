@@ -1,5 +1,6 @@
 #pragma once
 
+#include "evaluator_inc.hpp"
 #include "interpreter.hpp"
 #include "sequence.hpp"
 
@@ -34,5 +35,6 @@ class Evaluator {
  private:
   const Settings &settings;
   Interpreter interpreter;
+  IncrementalEvaluator inc_evaluator;
   const bool is_debug;
 };

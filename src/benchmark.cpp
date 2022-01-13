@@ -10,7 +10,7 @@
 #include "util.hpp"
 
 void Benchmark::all() {
-  operations();
+  // operations();
   programs();
 }
 
@@ -69,15 +69,15 @@ void Benchmark::programs() {
   Setup::setProgramsHome("tests/programs");
   std::cout << "| Sequence | Terms | Time    |" << std::endl;
   std::cout << "|----------|-------|---------|" << std::endl;
-  program(796, 300);
-  program(1041, 300);
-  program(1113, 300);
-  program(2110, 300);
-  program(79309, 300);
-  program(2193, 400);
-  program(45, 2000);
-  program(5, 5000);
-  program(30, 500000);
+  // program(796, 300);
+  // program(1041, 300);
+  // program(1113, 300);
+  // program(2110, 300);
+  program(79309, 800);
+  // program(2193, 400);
+  // program(45, 2000);
+  // program(5, 5000);
+  // program(30, 500000);
   std::cout << std::endl;
 }
 
@@ -108,4 +108,6 @@ void Benchmark::program(size_t id, size_t num_terms) {
   buf << speed;
   std::cout << "| " << seq.id_str() << "  | " << num_terms << "   | "
             << buf.str() << "s   |" << std::endl;
+
+  std::cout << "result: " << result.back() << std::endl;
 }
