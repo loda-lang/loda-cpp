@@ -19,7 +19,7 @@ cd loda-cpp/src && make && cd ..
 
 To do a simple test, you can run `loda eval A000045` to calculate the first terms of the Fibonacci sequence.
 
-To mine programs for OEIS sequences, you can run `loda mine` (single-core) or use the [mine_parallel.sh](mine_parallel.sh) script (multi-core).
+To mine programs for OEIS sequences, you can run `loda mine` (single-core) or `loda mine -p` (multi-core).
 
 ## Usage
 
@@ -78,9 +78,11 @@ Run the interactive configuration wizard.
 
 #### mine
 
-To mine programs for OEIS integer sequences, use `loda mine`. It generates programs in a loop and tries to match them to sequences. If a match was found, an alert is printed and the program is automatically saved to the local programs folder. If you are running in client mode, the programs are also submitted to acentral server and incorporated into the global [loda-programs](https://github.com/loda-lang/loda-programs) repository. The miner configurations are defined in [miners.json](miners.default.json). Depending on the configuration, programs overwritten if they are faster. This refers to the number of execution steps needed to calculate the sequence. 
+To mine programs for OEIS integer sequences, use the `loda mine` command. It generates programs in a loop and tries to match them to integer sequences. If a match was found, an alert is printed and the program is automatically saved to the local programs folder. If you are running in client mode, the programs are also submitted to a central API server and integrated into the global [loda-programs](https://github.com/loda-lang/loda-programs) repository.
 
-The `loda` tool is single-threaded and therefore uses one CPU during mining. It supports multiple process instances for parallel mining. You can use the [mine_parallel.sh](mine_parallel.sh) script for this. It automatically determines the number of processes to be used for parallel mining.
+By default, every miner uses one CPU. If you want to use more CPUs, you can run `loda mine -p` which will spawn multiple miner instances, each running as a separate process. You can configure the number of miner instances by running `loda setup`.
+
+There are multiple miner profiles defined in [miners.json](miners.default.json). You can choose a miner profile using the `-i` option, for example `loda mine -i mutate`.
 
 #### check
 
@@ -88,7 +90,7 @@ Check if a program for an OEIS sequence is correct. For interactive output, use 
 
 #### maintain
 
-Run a maintenance for all programs. This checks the correctness of all programs in a random order. The programs must generate the first 100 terms of the sequence. In addition, up to the first 2000 terms are taken into account if the program is correct. Incorrect programs are removed and correct programs are minimized (see the `minimize` command). In addition, the description of the sequence in the comment of the program is updated to the latest version of the OEIS database. The program statistics and program lists are regenerated. 
+Run a maintenance for all programs. This checks the correctness of all programs in a random order. The programs must generate the first 100 terms of the sequence. In addition, up to the first 2000 terms are taken into account if the program is correct. Incorrect programs are removed and correct programs are minimized (see the `minimize` command). In addition, the description of the sequence in the comment of the program is updated to the latest version of the OEIS database. The program statistics and program lists are regenerated.
 
 ## Additional Resources
 
