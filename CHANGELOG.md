@@ -2,6 +2,8 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v22.1.16
+
 ### Bugfixes
 
 * Extend timeout for folder locking on Windows
