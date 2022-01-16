@@ -11,6 +11,9 @@
 #include "util.hpp"
 #include "web_client.hpp"
 
+const std::string Setup::LODA_SUBMIT_CPU_HOURS("LODA_SUBMIT_CPU_HOURS");
+
+// TODO: use a singlton of Setup
 std::string Setup::LODA_HOME;
 std::string Setup::OEIS_HOME;
 std::string Setup::PROGRAMS_HOME;
@@ -304,23 +307,29 @@ void Setup::runWizard() {
   if (!checkMiningMode()) {
     return;
   }
-  if (!checkSubmittedBy()) {
-    return;
+  if (MINING_MODE == MINING_MODE_CLIENT) {
+    if (!checkSubmittedBy()) {
+      return;
+    }
+    if (!checkUsageStats()) {
+      return;
+    }
   }
-
   std::cout << "Configure advanced settings? (y/N) ";
   std::getline(std::cin, line);
   std::cout << std::endl;
-  if (line == "y" || line == "Y") {
+  if (line == "y" || line == "Y" || line == "yes") {
     if (!checkMaxInstances()) {
       return;
     }
     if (!checkMaxMemory()) {
       return;
     }
-    if (!checkUpdateInterval()) {
-      return;
-    }
+    // since we get the oeis data from the API server, we don't need to
+    // configure this anymore
+    // if (!checkUpdateInterval()) {
+    //  return;
+    // }
 #ifdef STD_FILESYSTEM
     if (getMiningMode() == MINING_MODE_CLIENT && !checkMaxLocalProgramAge()) {
       return;
@@ -543,7 +552,7 @@ bool Setup::checkMiningMode() {
     return false;
   }
   SETUP["LODA_MINING_MODE"] = convertMiningModeToStr(mode);
-  MINING_MODE = UNDEFINED_INT;  // reset cached value
+  MINING_MODE = mode;
   std::cout << std::endl;
   return true;
 }
@@ -610,9 +619,9 @@ bool Setup::checkSubmittedBy() {
             << std::endl
             << "at https://loda-lang.org and the programs repository at"
             << std::endl
-            << "https://github.com/loda-lang/loda-programs. If you like,"
+            << "https://github.com/loda-lang/loda-programs." << std::endl
             << std::endl
-            << "enter your name below, or \"none\" to not include it:"
+            << "Enter your name, or \"none\" to not include it in programs:"
             << std::endl;
   std::cout << "[" << submitted_by << "] ";
   std::getline(std::cin, submitted_by);
@@ -627,11 +636,46 @@ bool Setup::checkSubmittedBy() {
   return true;
 }
 
+bool Setup::checkUsageStats() {
+  std::cout << "To estimate the required server capacity, the LODA miner"
+            << std::endl
+            << "can send basic, anonymous usage statistics. Specifically,"
+            << std::endl
+            << "a running miner instance would send the value 1 to the"
+            << std::endl
+            << "API server once per hour. This data is used to determine"
+            << std::endl
+            << "the total number of active miners. There are no IDs or other"
+            << std::endl
+            << "data sent to the server. You can still mine without it."
+            << std::endl
+            << std::endl
+            << "Do you want to send this basic usage statisics? ";
+  bool flag = getSetupFlag(LODA_SUBMIT_CPU_HOURS, false);
+  if (flag) {
+    std::cout << "(Y/n) ";
+  } else {
+    std::cout << "(y/N) ";
+  }
+  std::string line;
+  std::getline(std::cin, line);
+  std::cout << std::endl;
+  if (!line.empty()) {
+    if (line == "y" || line == "Y" || line == "yes") {
+      SETUP[LODA_SUBMIT_CPU_HOURS] = "yes";
+    } else {
+      SETUP[LODA_SUBMIT_CPU_HOURS] = "no";
+    }
+  }
+  return true;
+}
+
 bool Setup::checkMaxMemory() {
   std::string line;
   std::cout << "Enter the maximum memory usage per miner instance in MB."
             << std::endl
-            << "The default value is " << DEFAULT_MAX_PHYSICAL_MEMORY << " MB."
+            << "The recommended range is " << DEFAULT_MAX_PHYSICAL_MEMORY
+            << " - " << (DEFAULT_MAX_PHYSICAL_MEMORY * 2) << " MB."
             << std::endl;
   int64_t max_memory = getMaxMemory() / (1024 * 1024);
   std::cout << "[" << max_memory << "] ";

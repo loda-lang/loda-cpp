@@ -10,6 +10,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Retrieve OEIS files from cache on API server
 
+### Enhancements
+
+* Improve setup: ask for usage statistics and clean up existing settings.
+
 ## v22.1.9
 
 ### Bugfixes

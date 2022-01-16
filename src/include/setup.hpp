@@ -14,6 +14,8 @@ MiningMode convertStrToMiningMode(const std::string& str);
 
 class Setup {
  public:
+  static const std::string LODA_SUBMIT_CPU_HOURS;
+
   static std::string getLodaHomeNoCheck();
 
   static const std::string& getLodaHome();
@@ -87,6 +89,7 @@ class Setup {
   static bool checkEnvVars();
   static bool checkMiningMode();
   static bool checkSubmittedBy();
+  static bool checkUsageStats();
   static bool checkMaxMemory();
   static bool checkUpdateInterval();
   static bool checkMaxLocalProgramAge();

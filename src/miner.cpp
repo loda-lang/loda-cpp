@@ -172,7 +172,7 @@ void Miner::checkRegularTasks() {
   if (cpuhours_scheduler.isTargetReached()) {
     cpuhours_scheduler.reset();
     if (mining_mode != MINING_MODE_LOCAL &&
-        Setup::getSetupFlag("LODA_SUBMIT_CPU_HOURS", true)) {
+        Setup::getSetupFlag(Setup::LODA_SUBMIT_CPU_HOURS, false)) {
       api_client->postCPUHour();
     }
   }
