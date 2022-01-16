@@ -327,13 +327,13 @@ void OeisManager::update() {
     std::string cmd, path;
     for (auto &file : files) {
       path = Setup::getOeisHome() + file;
-      WebClient::get("https://oeis.org/" + file + ".gz", path + ".gz");
-      std::ifstream f(Setup::getOeisHome() + file);
-      if (f.good()) {
-        f.close();
-        std::remove(path.c_str());
+      ApiClient api_client;
+      if (!api_client.getOeisFile(file, path)) {
+        Log::get().warn("Cannot fetch " + file +
+                        ".gz from API server, falling back to OEIS");
+        WebClient::get("https://oeis.org/" + file + ".gz", path + ".gz");
+        gunzip(path + ".gz");
       }
-      gunzip(path + ".gz");
     }
     // update programs repository using git pull
     auto mode = Setup::getMiningMode();

@@ -6,6 +6,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Extend timeout for folder locking on Windows
 
+### Features
+
+* Retrieve OEIS files from cache on API server
+
 ## v22.1.9
 
 ### Bugfixes

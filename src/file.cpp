@@ -102,10 +102,10 @@ void gunzip(const std::string &path) {
     }
     // https://stackoverflow.com/questions/9964865/c-system-not-working-when-there-are-spaces-in-two-different-parameters
     execCmd("cmd /S /C \"\"" + program_files +
-            "\\Git\\usr\\bin\\gzip.exe\" -d \"" + path + "\"\"");
+            "\\Git\\usr\\bin\\gzip.exe\" -f -d \"" + path + "\"\"");
   }
 #else
-  execCmd("gzip -d \"" + path + "\"");
+  execCmd("gzip -f -d \"" + path + "\"");
 #endif
 }
 

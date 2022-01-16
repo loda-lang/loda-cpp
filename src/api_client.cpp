@@ -63,6 +63,16 @@ void ApiClient::postCPUHour() {
   }
 }
 
+bool ApiClient::getOeisFile(const std::string& filename,
+                            const std::string& local_path) {
+  const std::string url = BASE_URL + "oeis/" + filename + ".gz";
+  const bool success = WebClient::get(url, local_path + ".gz", false, false);
+  if (success) {
+    gunzip(local_path + ".gz");
+  }
+  return success;
+}
+
 bool ApiClient::getProgram(int64_t index, const std::string& path) {
   std::remove(path.c_str());
   return WebClient::get(BASE_URL + "programs/" + std::to_string(index), path,
@@ -133,7 +143,6 @@ void ApiClient::updateSession() {
 }
 
 int64_t ApiClient::fetchInt(const std::string& endpoint) {
-  // TODO: store in tmp folder
   const std::string tmp = "tmp_int.txt";
   WebClient::get(BASE_URL + endpoint, tmp, true, true);
   std::ifstream in(tmp);
