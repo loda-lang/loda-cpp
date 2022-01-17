@@ -30,14 +30,85 @@ mov $0,$1
 */
 
 IncrementalEvaluator::IncrementalEvaluator(Interpreter& interpreter)
-    : interpreter(interpreter), arg(-1), previous_loop_count(0) {}
+    : interpreter(interpreter) {
+  reset();
+}
 
-bool IncrementalEvaluator::init(const Program& program) {
-  arg = -1;
+void IncrementalEvaluator::reset() {
+  loop_counter_cell = 0;
+  argument = 0;
   previous_loop_count = 0;
+  initialized = false;
   pre_loop.ops.clear();
   loop_body.ops.clear();
   post_loop.ops.clear();
+}
+
+bool IncrementalEvaluator::init(const Program& program) {
+  reset();
+  if (!extractFragments(program)) {
+    return false;
+  }
+  if (!checkPreLoop()) {
+    return false;
+  }
+  if (!checkLoopBody()) {
+    return false;
+  }
+  if (!checkPostLoop()) {
+    return false;
+  }
+  initialized = true;
+  return true;
+}
+
+Number IncrementalEvaluator::next() {
+  // sanity check: must be initialized
+  if (!initialized) {
+    throw std::runtime_error("incremental evaluator not initialized");
+  }
+  std::cout << "\n==== EVAL N=" << argument << std::endl << std::endl;
+
+  // execute pre-loop code
+  init_state.clear();
+  init_state.set(0, argument);
+  run(pre_loop, init_state);
+
+  // calculate new loop count
+  const int64_t new_loop_count = init_state.get(0).asInt();
+  int64_t additional_loops = new_loop_count - previous_loop_count;
+  previous_loop_count = new_loop_count;
+
+  // sanity check: loop count cannot be negative
+  if (additional_loops < 0) {
+    throw std::runtime_error("unexpected loop count: " +
+                             std::to_string(additional_loops));
+  }
+
+  // update loop state
+  if (argument == 0) {
+    loop_state = init_state;
+  } else {
+    loop_state.set(0, new_loop_count);
+  }
+
+  // execute loop body
+  while (additional_loops-- > 0) {
+    run(loop_body, loop_state);
+  }
+
+  // execute post-loop code
+  auto final_state = loop_state;
+  run(post_loop, final_state);
+
+  // prepare next iteration
+  argument++;
+
+  // return result of execution
+  return final_state.get(0);
+}
+
+bool IncrementalEvaluator::extractFragments(const Program& program) {
   int64_t phase = 0;
   for (auto& op : program.ops) {
     if (op.type == Operation::Type::NOP) {
@@ -65,45 +136,17 @@ bool IncrementalEvaluator::init(const Program& program) {
         break;
     }
   }
-  return false;
+  return true;
 }
 
-Number IncrementalEvaluator::next() {
-  arg++;
-  // std::cout << "\n==== EVAL N=" << arg << std::endl << std::endl;
+bool IncrementalEvaluator::checkPreLoop() { return true; }
 
-  // run init
-  init_state.clear();
-  init_state.set(0, arg);
-  run(pre_loop, init_state);
+bool IncrementalEvaluator::checkLoopBody() { return true; }
 
-  // check loop count
-  int64_t loop_count = init_state.get(0).asInt();
-  if (arg > 0 && loop_count != previous_loop_count + 1) {
-    throw std::runtime_error("unexpected loop count: " +
-                             std::to_string(loop_count));
-  }
-  previous_loop_count = loop_count;
-
-  // set loop count / state
-  if (arg == 0) {
-    loop_state = init_state;
-  } else {
-    loop_state.set(0, loop_count);
-    loop_count = 1;
-  }
-
-  while (loop_count-- > 0) {
-    run(loop_body, loop_state);
-  }
-
-  auto final_state = loop_state;
-  run(post_loop, final_state);
-  return final_state.get(0);
-}
+bool IncrementalEvaluator::checkPostLoop() { return true; }
 
 void IncrementalEvaluator::run(const Program& p, Memory& state) {
-  // std::cout << "CURRENT MEMORY: " << state << std::endl;
+  std::cout << "CURRENT MEMORY: " << state << std::endl;
   // ProgramUtil::print(p, std::cout);
   interpreter.run(p, state);
   // std::cout << std::endl;
