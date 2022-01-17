@@ -51,6 +51,8 @@ void IncrementalEvaluator::reset() {
   loop_state.clear();
 }
 
+// ====== Initialization functions (static code analysis) =========
+
 bool IncrementalEvaluator::init(const Program& program) {
   reset();
   if (!extractFragments(program)) {
@@ -60,60 +62,15 @@ bool IncrementalEvaluator::init(const Program& program) {
   if (!checkPreLoop()) {
     return false;
   }
-  if (!checkLoopBody()) {
+  if (!checkPostLoop()) {
     return false;
   }
-  if (!checkPostLoop()) {
+  // now the aggregation cells are initialized
+  if (!checkLoopBody()) {
     return false;
   }
   initialized = true;
   return true;
-}
-
-Number IncrementalEvaluator::next() {
-  // sanity check: must be initialized
-  if (!initialized) {
-    throw std::runtime_error("incremental evaluator not initialized");
-  }
-  std::cout << "\n==== EVAL N=" << argument << std::endl << std::endl;
-
-  // execute pre-loop code
-  tmp_state.clear();
-  tmp_state.set(0, argument);
-  runFragment(pre_loop, tmp_state);
-
-  // calculate new loop count
-  const int64_t new_loop_count = tmp_state.get(0).asInt();
-  int64_t additional_loops = new_loop_count - previous_loop_count;
-  previous_loop_count = new_loop_count;
-
-  // sanity check: loop count cannot be negative
-  if (additional_loops < 0) {
-    throw std::runtime_error("unexpected loop count: " +
-                             std::to_string(additional_loops));
-  }
-
-  // update loop state
-  if (argument == 0) {
-    loop_state = tmp_state;
-  } else {
-    loop_state.set(0, new_loop_count);
-  }
-
-  // execute loop body
-  while (additional_loops-- > 0) {
-    runFragment(loop_body, loop_state);
-  }
-
-  // execute post-loop code
-  tmp_state = loop_state;
-  runFragment(post_loop, tmp_state);
-
-  // prepare next iteration
-  argument++;
-
-  // return result of execution
-  return tmp_state.get(0);
 }
 
 bool IncrementalEvaluator::extractFragments(const Program& program) {
@@ -194,12 +151,109 @@ bool IncrementalEvaluator::checkPreLoop() {
   return true;
 }
 
-bool IncrementalEvaluator::checkLoopBody() { return true; }
+bool IncrementalEvaluator::checkLoopBody() {
+  for (auto& op : loop_body.ops) {
+    if (Operation::Metadata::get(op.type).num_operands == 0) {
+      continue;
+    }
+    const auto target = op.target.value.asInt();
+    // check aggregation cells
+    if (aggregation_cells.find(target) != aggregation_cells.end()) {
+      // must be a commutative operation
+      if (op.type != Operation::Type::ADD && op.type != Operation::Type::MUL) {
+        return false;
+      }
+    }
+    // check loop counter cell
+    if (target == loop_counter_cell) {
+      // must be subtraction by one (stepwise decrease)
+      if (op.type != Operation::Type::SUB && op.type != Operation::Type::TRN) {
+        return false;
+      }
+      if (op.source != Operand(Operand::Type::CONSTANT, Number::ONE)) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
 
-bool IncrementalEvaluator::checkPostLoop() { return true; }
+bool IncrementalEvaluator::checkPostLoop() {
+  // initialize aggregation cells. all memory cells that are read
+  // by the post-loop fragment must be agregation cells
+  bool is_overwriting_output = false;
+  for (auto& op : post_loop.ops) {
+    const auto meta = Operation::Metadata::get(op.type);
+    if (meta.num_operands > 0) {
+      if (meta.is_reading_target) {
+        aggregation_cells.insert(op.target.value.asInt());
+      } else if (meta.is_writing_target &&
+                 op.target.value == Program::OUTPUT_CELL) {
+        is_overwriting_output = true;
+      }
+    }
+    if (meta.num_operands > 1 && op.source.type == Operand::Type::DIRECT) {
+      aggregation_cells.insert(op.source.value.asInt());
+    }
+  }
+  if (!is_overwriting_output) {
+    aggregation_cells.insert(Program::OUTPUT_CELL);
+  }
+  return true;
+}
+
+// ====== Runtime of incremental evaluation ========
+
+// TODO: also return and use steps
+
+Number IncrementalEvaluator::next() {
+  // sanity check: must be initialized
+  if (!initialized) {
+    throw std::runtime_error("incremental evaluator not initialized");
+  }
+  // std::cout << "\n==== EVAL N=" << argument << std::endl << std::endl;
+
+  // execute pre-loop code
+  tmp_state.clear();
+  tmp_state.set(0, argument);
+  runFragment(pre_loop, tmp_state);
+
+  // calculate new loop count
+  const int64_t new_loop_count = tmp_state.get(0).asInt();
+  int64_t additional_loops = new_loop_count - previous_loop_count;
+  previous_loop_count = new_loop_count;
+
+  // sanity check: loop count cannot be negative
+  if (additional_loops < 0) {
+    throw std::runtime_error("unexpected loop count: " +
+                             std::to_string(additional_loops));
+  }
+
+  // update loop state
+  if (argument == 0) {
+    loop_state = tmp_state;
+  } else {
+    loop_state.set(0, new_loop_count);
+  }
+
+  // execute loop body
+  while (additional_loops-- > 0) {
+    runFragment(loop_body, loop_state);
+  }
+
+  // execute post-loop code
+  tmp_state = loop_state;
+  runFragment(post_loop, tmp_state);
+
+  // prepare next iteration
+  argument++;
+
+  // return result of execution
+  return tmp_state.get(0);
+}
 
 void IncrementalEvaluator::runFragment(const Program& p, Memory& state) {
-  std::cout << "CURRENT MEMORY: " << state << std::endl;
+  // std::cout << "CURRENT MEMORY: " << state << std::endl;
   // ProgramUtil::print(p, std::cout);
   interpreter.run(p, state);
   // std::cout << std::endl;

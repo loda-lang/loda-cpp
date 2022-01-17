@@ -1,5 +1,7 @@
 #pragma once
 
+#include <set>
+
 #include "interpreter.hpp"
 
 class IncrementalEvaluator {
@@ -24,7 +26,7 @@ class IncrementalEvaluator {
   Program pre_loop;
   Program loop_body;
   Program post_loop;
-  std::vector<int64_t> aggregation_cells;
+  std::set<int64_t> aggregation_cells;
   int64_t loop_counter_cell;
   bool initialized;
 
