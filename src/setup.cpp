@@ -491,7 +491,8 @@ bool Setup::checkUpdate() {
           latest_version + "/loda-" + Version::PLATFORM + exe;
       WebClient::get(exec_url, exec_tmp, true, true);
 #ifdef _WIN64
-      std::cout << "Run the following commands to complete the update:"
+      std::cout << std::endl
+                << "Please run the following commands to complete the update:"
                 << std::endl
                 << std::endl;
       std::cout << "move /Y " << exec_tmp << " " << exec_local << std::endl;
