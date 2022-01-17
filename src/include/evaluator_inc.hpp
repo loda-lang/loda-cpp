@@ -16,17 +16,21 @@ class IncrementalEvaluator {
   bool checkPreLoop();
   bool checkLoopBody();
   bool checkPostLoop();
-
-  void run(const Program& p, Memory& state);
+  void runFragment(const Program& fragment, Memory& state);
 
   Interpreter& interpreter;
+
+  // program fragments and metadata
   Program pre_loop;
   Program loop_body;
   Program post_loop;
+  std::vector<int64_t> aggregation_cells;
   int64_t loop_counter_cell;
+  bool initialized;
+
+  // runtime data
   int64_t argument;
   int64_t previous_loop_count;
-  bool initialized;
-  Memory init_state;
+  Memory tmp_state;
   Memory loop_state;
 };
