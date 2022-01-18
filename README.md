@@ -88,10 +88,6 @@ There are multiple miner profiles defined in [miners.json](miners.default.json).
 
 Check if a program for an OEIS sequence is correct. For interactive output, use `-b 1` to enable b-file printing. Use `-c -1` to allow an unlimited number of execution cycles.
 
-#### maintain
-
-Run a maintenance for all programs. This checks the correctness of all programs in a random order. The programs must generate the first 100 terms of the sequence. In addition, up to the first 2000 terms are taken into account if the program is correct. Incorrect programs are removed and correct programs are minimized (see the `minimize` command). In addition, the description of the sequence in the comment of the program is updated to the latest version of the OEIS database. The program statistics and program lists are regenerated.
-
 ## Additional Resources
 
 * [loda-lang.org](https://loda-lang.org): Main home page of LODA.
