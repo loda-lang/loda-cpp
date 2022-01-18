@@ -28,6 +28,29 @@ lpe
 sub $1,2
 mov $0,$1
 
+===========================================
+
+mov $2,$0
+add $2,1
+mov $3,$0
+
+lpb $2
+
+  mov $0,$3
+  sub $2,1
+  sub $0,$2
+  add $4,1
+  mov $5,$0
+  add $5,$0
+  bin $5,$0
+  div $5,$4
+  add $1,$5
+
+lpe
+
+mov $0,$1
+
+
 */
 
 IncrementalEvaluator::IncrementalEvaluator(Interpreter& interpreter)
@@ -219,7 +242,7 @@ std::pair<Number, size_t> IncrementalEvaluator::next() {
   size_t steps = runFragment(pre_loop, tmp_state);
 
   // calculate new loop count
-  const int64_t new_loop_count = tmp_state.get(0).asInt();
+  const int64_t new_loop_count = tmp_state.get(loop_counter_cell).asInt();
   int64_t additional_loops = new_loop_count - previous_loop_count;
   previous_loop_count = new_loop_count;
 
@@ -238,8 +261,17 @@ std::pair<Number, size_t> IncrementalEvaluator::next() {
 
   // execute loop body
   while (additional_loops-- > 0) {
-    total_loop_steps += runFragment(loop_body, loop_state) + 2;
+    total_loop_steps += runFragment(loop_body, loop_state) + 1;  // +1 for lpe
   }
+
+  // one more iteration is needed for the correct step count
+  if (argument == 0) {
+    tmp_state = loop_state;
+    total_loop_steps +=
+        runFragment(loop_body, tmp_state) + 2;  // +2 for lpb  lpe
+  }
+
+  // update steps count
   steps += total_loop_steps;
 
   // execute post-loop code
