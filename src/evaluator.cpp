@@ -34,25 +34,31 @@ steps_t Evaluator::eval(const Program &p, Sequence &seq, int64_t num_terms,
   steps_t steps;
   size_t s;
   const bool use_inc = inc_evaluator.init(p);
+  std::pair<Number, size_t> inc_result;
   for (int64_t i = 0; i < num_terms; i++) {
-    if (use_inc) {
-      seq[i] = inc_evaluator.next();
-      // TODO: update steps
-    } else {
-      mem.clear();
-      mem.set(Program::INPUT_CELL, i);
-      try {
+    try {
+      if (use_inc) {
+        inc_result = inc_evaluator.next();
+        seq[i] = inc_result.first;
+        s = inc_result.second;
+      } else {
+        mem.clear();
+        mem.set(Program::INPUT_CELL, i);
         s = interpreter.run(p, mem);
-      } catch (const std::exception &) {
-        seq.resize(i);
-        if (throw_on_error) {
-          throw;
-        } else {
-          return steps;
-        }
+        seq[i] = mem.get(Program::OUTPUT_CELL);
       }
-      steps.add(s);
-      seq[i] = settings.use_steps ? s : mem.get(Program::OUTPUT_CELL);
+    } catch (const std::exception &) {
+      seq.resize(i);
+      if (throw_on_error) {
+        throw;
+      } else {
+        return steps;
+      }
+    }
+
+    steps.add(s);
+    if (settings.use_steps) {
+      seq[i] = s;
     }
     if (settings.print_as_b_file) {
       std::cout << (settings.print_as_b_file_offset + i) << " " << seq[i]
@@ -102,24 +108,26 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
   // clear cache to correctly detect recursion errors
   interpreter.clearCaches();
   const bool use_inc = inc_evaluator.init(p);
+  std::pair<Number, size_t> inc_result;
   Number out;
   for (size_t i = 0; i < expected_seq.size(); i++) {
-    if (use_inc) {
-      out = inc_evaluator.next();
-    } else {
-      mem.clear();
-      mem.set(Program::INPUT_CELL, i);
-      try {
+    try {
+      if (use_inc) {
+        inc_result = inc_evaluator.next();
+        out = inc_result.first;
+      } else {
+        mem.clear();
+        mem.set(Program::INPUT_CELL, i);
         result.second.add(interpreter.run(p, mem, id));
-      } catch (const std::exception &e) {
-        if (settings.print_as_b_file) {
-          std::cout << std::string(e.what()) << std::endl;
-        }
-        result.first = ((int64_t)i >= num_terminating_terms) ? status_t::WARNING
-                                                             : status_t::ERROR;
-        return result;
+        out = mem.get(Program::OUTPUT_CELL);
       }
-      out = mem.get(Program::OUTPUT_CELL);
+    } catch (const std::exception &e) {
+      if (settings.print_as_b_file) {
+        std::cout << std::string(e.what()) << std::endl;
+      }
+      result.first = ((int64_t)i >= num_terminating_terms) ? status_t::WARNING
+                                                           : status_t::ERROR;
+      return result;
     }
     if (out != expected_seq[i]) {
       if (settings.print_as_b_file) {

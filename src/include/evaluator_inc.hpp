@@ -10,7 +10,7 @@ class IncrementalEvaluator {
 
   bool init(const Program& program);
 
-  Number next();
+  std::pair<Number, size_t> next();
 
  private:
   void reset();
@@ -18,7 +18,7 @@ class IncrementalEvaluator {
   bool checkPreLoop();
   bool checkLoopBody();
   bool checkPostLoop();
-  void runFragment(const Program& fragment, Memory& state);
+  size_t runFragment(const Program& fragment, Memory& state);
 
   Interpreter& interpreter;
 
@@ -33,6 +33,7 @@ class IncrementalEvaluator {
   // runtime data
   int64_t argument;
   int64_t previous_loop_count;
+  size_t total_loop_steps;
   Memory tmp_state;
   Memory loop_state;
 };

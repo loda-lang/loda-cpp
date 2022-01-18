@@ -47,6 +47,7 @@ void IncrementalEvaluator::reset() {
   // runtime data
   argument = 0;
   previous_loop_count = 0;
+  total_loop_steps = 0;
   tmp_state.clear();
   loop_state.clear();
 }
@@ -76,7 +77,7 @@ bool IncrementalEvaluator::init(const Program& program) {
 bool IncrementalEvaluator::extractFragments(const Program& program) {
   // split the program into three parts:
   // 1) pre-loop
-  // 2) loop
+  // 2) loop body
   // 3) post-loop
   // return false if the program does not have this structure
   int64_t phase = 0;
@@ -84,7 +85,8 @@ bool IncrementalEvaluator::extractFragments(const Program& program) {
     if (op.type == Operation::Type::NOP) {
       continue;
     }
-    if (ProgramUtil::hasIndirectOperand(op)) {
+    if (op.type == Operation::Type::CLR ||
+        ProgramUtil::hasIndirectOperand(op)) {
       return false;
     }
     if (op.type == Operation::Type::LPB) {
@@ -204,9 +206,7 @@ bool IncrementalEvaluator::checkPostLoop() {
 
 // ====== Runtime of incremental evaluation ========
 
-// TODO: also return and use steps
-
-Number IncrementalEvaluator::next() {
+std::pair<Number, size_t> IncrementalEvaluator::next() {
   // sanity check: must be initialized
   if (!initialized) {
     throw std::runtime_error("incremental evaluator not initialized");
@@ -216,7 +216,7 @@ Number IncrementalEvaluator::next() {
   // execute pre-loop code
   tmp_state.clear();
   tmp_state.set(0, argument);
-  runFragment(pre_loop, tmp_state);
+  size_t steps = runFragment(pre_loop, tmp_state);
 
   // calculate new loop count
   const int64_t new_loop_count = tmp_state.get(0).asInt();
@@ -238,23 +238,23 @@ Number IncrementalEvaluator::next() {
 
   // execute loop body
   while (additional_loops-- > 0) {
-    runFragment(loop_body, loop_state);
+    total_loop_steps += runFragment(loop_body, loop_state) + 2;
   }
+  steps += total_loop_steps;
 
   // execute post-loop code
   tmp_state = loop_state;
-  runFragment(post_loop, tmp_state);
+  steps += runFragment(post_loop, tmp_state);
 
   // prepare next iteration
   argument++;
 
-  // return result of execution
-  return tmp_state.get(0);
+  // return result of execution and steps
+  return std::pair<Number, size_t>(tmp_state.get(0), steps);
 }
 
-void IncrementalEvaluator::runFragment(const Program& p, Memory& state) {
+size_t IncrementalEvaluator::runFragment(const Program& p, Memory& state) {
   // std::cout << "CURRENT MEMORY: " << state << std::endl;
   // ProgramUtil::print(p, std::cout);
-  interpreter.run(p, state);
-  // std::cout << std::endl;
+  return interpreter.run(p, state);
 }
