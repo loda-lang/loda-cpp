@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Bugfixes
+
+* Fix suppressed debug logs for `eval` command
+
 ## v22.1.16
 
 ### Bugfixes
