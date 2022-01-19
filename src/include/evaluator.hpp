@@ -19,7 +19,7 @@ enum class status_t { OK, WARNING, ERROR };
 
 class Evaluator {
  public:
-  Evaluator(const Settings &settings);
+  Evaluator(const Settings &settings, bool use_inc_evaluator = true);
 
   steps_t eval(const Program &p, Sequence &seq, int64_t num_terms = -1,
                bool throw_on_error = true);
@@ -36,5 +36,6 @@ class Evaluator {
   const Settings &settings;
   Interpreter interpreter;
   IncrementalEvaluator inc_evaluator;
+  const bool use_inc_evaluator;
   const bool is_debug;
 };

@@ -18,10 +18,11 @@ void steps_t::add(const steps_t &s) {
   runs += s.runs;
 }
 
-Evaluator::Evaluator(const Settings &settings)
+Evaluator::Evaluator(const Settings &settings, bool use_inc_evaluator)
     : settings(settings),
       interpreter(settings),
       inc_evaluator(interpreter),
+      use_inc_evaluator(use_inc_evaluator),
       is_debug(Log::get().level == Log::Level::DEBUG) {}
 
 steps_t Evaluator::eval(const Program &p, Sequence &seq, int64_t num_terms,
@@ -33,7 +34,7 @@ steps_t Evaluator::eval(const Program &p, Sequence &seq, int64_t num_terms,
   Memory mem;
   steps_t steps;
   size_t s;
-  const bool use_inc = inc_evaluator.init(p);
+  const bool use_inc = use_inc_evaluator && inc_evaluator.init(p);
   std::pair<Number, size_t> inc_result;
   for (int64_t i = 0; i < num_terms; i++) {
     try {
@@ -107,7 +108,7 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
   Memory mem;
   // clear cache to correctly detect recursion errors
   interpreter.clearCaches();
-  const bool use_inc = inc_evaluator.init(p);
+  const bool use_inc = use_inc_evaluator && inc_evaluator.init(p);
   std::pair<Number, size_t> inc_result;
   Number out;
   for (size_t i = 0; i < expected_seq.size(); i++) {
