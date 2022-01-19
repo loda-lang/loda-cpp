@@ -73,7 +73,7 @@ void Benchmark::programs() {
   program(1041, 300);
   program(1113, 300);
   program(2110, 300);
-  program(79309, 800);
+  program(79309, 300);
   program(2193, 400);
   program(45, 2000);
   program(5, 5000);
