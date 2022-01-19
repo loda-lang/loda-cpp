@@ -29,6 +29,11 @@ class Test {
 
   void knownPrograms();
 
+  void incEval();
+
+  static void checkIncEval(const Settings &settings, size_t id,
+                           bool mustSupportIncEval);
+
   void apiClient();
 
   void oeisList();

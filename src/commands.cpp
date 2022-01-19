@@ -175,6 +175,18 @@ void Commands::test() {
   test.all();
 }
 
+void Commands::testIncEval() {
+  initLog(false);
+  Settings settings;
+  OeisManager manager(settings);
+  auto& stats = manager.getStats();
+  for (size_t id = 0; id < stats.all_program_ids.size(); id++) {
+    if (stats.all_program_ids[id]) {
+      Test::checkIncEval(settings, id, false);
+    }
+  }
+}
+
 void Commands::dot(const std::string& path) {
   initLog(true);
   Parser parser;

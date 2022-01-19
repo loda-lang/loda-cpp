@@ -51,6 +51,7 @@ void Test::all() {
   config();
   steps();
   blocks();
+  incEval();
   linearMatcher();
   deltaMatcher();
   digitMatcher();
@@ -462,6 +463,43 @@ void Test::knownPrograms() {
                         8192, 16384, 32768, 65536}));
   testSeq(1489, Sequence({0, -1, -2, -3, -4, -5, -6, -7, -8, -9, -10, -11, -12,
                           -13, -14, -15, -16, -17}));
+}
+
+void Test::incEval() {
+  std::vector<size_t> ids = {79309, 10};
+  for (auto id : ids) {
+    checkIncEval(settings, id, true);
+  }
+}
+
+void Test::checkIncEval(const Settings& settings, size_t id,
+                        bool mustSupportIncEval) {
+  OeisSequence s(id);
+  Parser parser;
+  Program p = parser.parse(s.getProgramPath());
+  Evaluator eval_reg(settings, false);
+  Evaluator eval_inc(settings, true);
+  Interpreter interpreter(settings);
+  IncrementalEvaluator inc(interpreter);
+  if (!inc.init(p)) {
+    if (mustSupportIncEval) {
+      Log::get().error(
+          "Error initializing incremental evaluator for " + s.id_str(), true);
+    } else {
+      return;
+    }
+  }
+  Log::get().info("Testing incremental evaluator for " + s.id_str());
+  Sequence seq_reg, seq_inc;
+  const int64_t num_terms = 100;
+  auto steps_reg = eval_reg.eval(p, seq_reg, num_terms);
+  auto steps_inc = eval_inc.eval(p, seq_inc, num_terms);
+  if (seq_reg != seq_inc) {
+    Log::get().error("Unexpected result of incremental evaluator", true);
+  }
+  if (steps_reg.total != steps_inc.total) {
+    Log::get().error("Unexpected steps of incremental evaluator", true);
+  }
 }
 
 void Test::apiClient() {
