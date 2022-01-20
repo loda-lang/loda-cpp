@@ -15,6 +15,7 @@ void IncrementalEvaluator::reset() {
   loop_body.ops.clear();
   post_loop.ops.clear();
   aggregation_cells.clear();
+  depends_on.clear();
   loop_counter_cell = 0;
   initialized = false;
 
@@ -157,7 +158,57 @@ bool IncrementalEvaluator::checkLoopBody() {
         return false;
       }
     }
+
+    // update dependencies
+    if (num_operands == 2 && op.source.type == Operand::Type::DIRECT) {
+      addDependency(op.target.value.asInt(), op.source.value.asInt());
+    }
   }
+
+  // check dependencies on loop counter
+  for (auto it : depends_on) {
+    if (it.second == loop_counter_cell && hasDependency(it.first, it.first)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool IncrementalEvaluator::hasDependency(int64_t from, int64_t to) const {
+  // check if the dependency exists already
+  auto range = depends_on.equal_range(from);
+  for (auto it = range.first; it != range.second; it++) {
+    if (it->second == to) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool IncrementalEvaluator::addDependency(int64_t from, int64_t to) {
+  if (hasDependency(from, to)) {
+    return false;
+  }
+  // insert new dependency
+  depends_on.insert(std::pair<int64_t, int64_t>(from, to));
+  // update transitive dependencies
+  bool changed;
+  do {
+    changed = false;
+    for (auto it1 : depends_on) {
+      for (auto it2 : depends_on) {
+        if (it1.second == it2.first && !hasDependency(it1.first, it2.second)) {
+          depends_on.insert(std::pair<int64_t, int64_t>(it1.first, it2.second));
+          changed = true;
+          break;
+        }
+      }
+      if (changed) {
+        break;
+      }
+    }
+  } while (changed);
   return true;
 }
 
