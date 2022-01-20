@@ -466,7 +466,7 @@ void Test::knownPrograms() {
 }
 
 void Test::incEval() {
-  std::vector<size_t> ids = {79309, 10};
+  std::vector<size_t> ids = {45, 142, 79309};
   for (auto id : ids) {
     checkIncEval(settings, id, true);
   }

@@ -97,11 +97,8 @@ bool IncrementalEvaluator::checkPreLoop() {
   // is monotonically increasing (not strictly)
   for (auto& op : pre_loop.ops) {
     switch (op.type) {
-      // assigning is okay
+      // setting, adding, subtracting constants is fine
       case Operation::Type::MOV:
-        break;
-
-      // adding, subtracting constants is fine
       case Operation::Type::ADD:
       case Operation::Type::SUB:
       case Operation::Type::TRN:
@@ -128,18 +125,28 @@ bool IncrementalEvaluator::checkPreLoop() {
 }
 
 bool IncrementalEvaluator::checkLoopBody() {
+  std::map<int64_t, Operation::Type> aggregation_types;
   for (auto& op : loop_body.ops) {
-    if (Operation::Metadata::get(op.type).num_operands == 0) {
+    const auto num_operands = Operation::Metadata::get(op.type).num_operands;
+    if (num_operands == 0) {
       continue;
     }
     const auto target = op.target.value.asInt();
+
     // check aggregation cells
     if (aggregation_cells.find(target) != aggregation_cells.end()) {
       // must be a commutative operation
       if (op.type != Operation::Type::ADD && op.type != Operation::Type::MUL) {
         return false;
       }
+      // cannot mix operations per memory cell (would not be commutative)
+      if (aggregation_types.find(target) != aggregation_types.end() &&
+          aggregation_types[target] != op.type) {
+        return false;
+      }
+      aggregation_types[target] = op.type;
     }
+
     // check loop counter cell
     if (target == loop_counter_cell) {
       // must be subtraction by one (stepwise decrease)
