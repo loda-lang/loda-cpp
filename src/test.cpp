@@ -466,7 +466,7 @@ void Test::knownPrograms() {
 }
 
 void Test::incEval() {
-  std::vector<size_t> ids = {45, 142, 246, 253, 407, 542, 79309};
+  std::vector<size_t> ids = {45, 142, 178, 246, 253, 278, 280, 407, 542, 79309};
   for (auto id : ids) {
     checkIncEval(settings, id, true);
   }
@@ -491,14 +491,13 @@ void Test::checkIncEval(const Settings& settings, size_t id,
   }
   Log::get().info("Testing incremental evaluator for " + s.id_str());
   Sequence seq_reg, seq_inc;
-  const int64_t num_terms = 100;
   steps_t steps_reg, steps_inc;
   try {
-    steps_reg = eval_reg.eval(p, seq_reg, num_terms);
-    steps_inc = eval_inc.eval(p, seq_inc, num_terms);
+    steps_reg = eval_reg.eval(p, seq_reg, 100);
+    steps_inc = eval_inc.eval(p, seq_inc, 100);
   } catch (const std::exception&) {
-    Log::get().warn("Ignoring evaluation error");
-    return;
+    steps_reg = eval_reg.eval(p, seq_reg, 10);
+    steps_inc = eval_inc.eval(p, seq_inc, 10);
   }
   if (seq_reg != seq_inc) {
     Log::get().error("Unexpected result of incremental evaluator", true);
