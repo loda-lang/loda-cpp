@@ -122,6 +122,10 @@ bool IncrementalEvaluator::checkPreLoop() {
         return false;
     }
   }
+  // we currently allow only $0 as loop counter cell
+  if (loop_counter_cell != Program::INPUT_CELL) {
+    return false;
+  }
   return true;
 }
 
