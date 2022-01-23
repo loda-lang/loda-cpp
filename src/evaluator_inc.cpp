@@ -291,7 +291,7 @@ std::pair<Number, size_t> IncrementalEvaluator::next() {
   // execute pre-loop code
   tmp_state.clear();
   tmp_state.set(0, argument);
-  size_t steps = runFragment(pre_loop, tmp_state);
+  size_t steps = interpreter.run(pre_loop, tmp_state);
 
   // calculate new loop count
   const int64_t new_loop_count =
@@ -308,14 +308,15 @@ std::pair<Number, size_t> IncrementalEvaluator::next() {
 
   // execute loop body
   while (additional_loops-- > 0) {
-    total_loop_steps += runFragment(loop_body, loop_state) + 1;  // +1 for lpe
+    total_loop_steps +=
+        interpreter.run(loop_body, loop_state) + 1;  // +1 for lpe
   }
 
   // one more iteration is needed for the correct step count
   if (argument == 0) {
     tmp_state = loop_state;
     total_loop_steps +=
-        runFragment(loop_body, tmp_state) + 2;  // +2 for lpb  lpe
+        interpreter.run(loop_body, tmp_state) + 2;  // +2 for lpb  lpe
   }
 
   // update steps count
@@ -323,17 +324,11 @@ std::pair<Number, size_t> IncrementalEvaluator::next() {
 
   // execute post-loop code
   tmp_state = loop_state;
-  steps += runFragment(post_loop, tmp_state);
+  steps += interpreter.run(post_loop, tmp_state);
 
   // prepare next iteration
   argument++;
 
   // return result of execution and steps
   return std::pair<Number, size_t>(tmp_state.get(0), steps);
-}
-
-size_t IncrementalEvaluator::runFragment(const Program& p, Memory& state) {
-  // std::cout << "\nCURRENT MEMORY: " << state << std::endl;
-  // ProgramUtil::print(p, std::cout);
-  return interpreter.run(p, state);
 }

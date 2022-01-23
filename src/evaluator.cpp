@@ -84,8 +84,7 @@ steps_t Evaluator::eval(const Program &p, std::vector<Sequence> &seqs,
   }
   Memory mem;
   steps_t steps;
-  // TODO: try to use incremental evaluator
-  // TODO: update steps
+  // note: we can't use the incremental evaluator here
   for (int64_t i = 0; i < num_terms; i++) {
     mem.clear();
     mem.set(Program::INPUT_CELL, i);

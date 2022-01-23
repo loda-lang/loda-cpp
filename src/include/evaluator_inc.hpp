@@ -21,8 +21,6 @@ class IncrementalEvaluator {
   bool updateStatefulCells(std::set<int64_t>& stateful_cells) const;
   bool updateLoopCounterDependentCells(std::set<int64_t>& cells) const;
 
-  size_t runFragment(const Program& fragment, Memory& state);
-
   Interpreter& interpreter;
 
   // program fragments and metadata
