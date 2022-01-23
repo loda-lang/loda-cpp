@@ -15,7 +15,6 @@ void IncrementalEvaluator::reset() {
   loop_body.ops.clear();
   post_loop.ops.clear();
   aggregation_cells.clear();
-  depends_on.clear();
   loop_counter_cell = 0;
   initialized = false;
 
@@ -30,6 +29,7 @@ void IncrementalEvaluator::reset() {
 // ====== Initialization functions (static code analysis) =========
 
 bool IncrementalEvaluator::init(const Program& program) {
+  // Log::get().info("Initializing incremental evaluator");
   reset();
   if (!extractFragments(program)) {
     return false;
@@ -127,6 +127,7 @@ bool IncrementalEvaluator::checkPreLoop() {
 
 bool IncrementalEvaluator::checkLoopBody() {
   std::map<int64_t, Operation::Type> aggregation_types;
+  bool loop_counter_updated = false;
   for (auto& op : loop_body.ops) {
     const auto num_operands = Operation::Metadata::get(op.type).num_operands;
     if (num_operands == 0) {
@@ -137,7 +138,7 @@ bool IncrementalEvaluator::checkLoopBody() {
     // check aggregation cells
     if (aggregation_cells.find(target) != aggregation_cells.end()) {
       // must be a commutative operation
-      if (op.type != Operation::Type::ADD && op.type != Operation::Type::MUL) {
+      if (!ProgramUtil::isCommutative(op.type)) {
         return false;
       }
       // cannot mix operations per memory cell (would not be commutative)
@@ -157,59 +158,97 @@ bool IncrementalEvaluator::checkLoopBody() {
       if (op.source != Operand(Operand::Type::CONSTANT, Number::ONE)) {
         return false;
       }
-    }
-
-    // update dependencies
-    if (num_operands == 2 && op.source.type == Operand::Type::DIRECT) {
-      addDependency(op.target.value.asInt(), op.source.value.asInt());
+      if (loop_counter_updated) {
+        return false;
+      }
+      loop_counter_updated = true;
     }
   }
+  if (!loop_counter_updated) {
+    return false;
+  }
 
-  // check dependencies on loop counter
-  for (auto it : depends_on) {
-    if (it.second == loop_counter_cell && hasDependency(it.first, it.first)) {
+  std::set<int64_t> stateful_cells;
+  while (updateStatefulCells(stateful_cells)) {
+  };
+  std::set<int64_t> loop_counter_depdent_cells;
+  while (updateLoopCounterDependentCells(loop_counter_depdent_cells)) {
+  };
+
+  for (auto agg_cell : aggregation_cells) {
+    if (stateful_cells.find(agg_cell) != stateful_cells.end() &&
+        loop_counter_depdent_cells.find(agg_cell) !=
+            loop_counter_depdent_cells.end() &&
+        stateful_cells.size() > 1) {
       return false;
     }
   }
-
   return true;
 }
 
-bool IncrementalEvaluator::hasDependency(int64_t from, int64_t to) const {
-  // check if the dependency exists already
-  auto range = depends_on.equal_range(from);
-  for (auto it = range.first; it != range.second; it++) {
-    if (it->second == to) {
-      return true;
+bool IncrementalEvaluator::updateStatefulCells(
+    std::set<int64_t>& stateful_cells) const {
+  bool changed = false;
+  std::set<int64_t> reset;
+  for (auto& op : loop_body.ops) {
+    const auto meta = Operation::Metadata::get(op.type);
+    if (meta.num_operands == 0) {
+      continue;
+    }
+    const auto target = op.target.value.asInt();
+    if (stateful_cells.find(target) != stateful_cells.end()) {
+      continue;
+    }
+    if (!meta.is_writing_target) {
+      continue;
+    }
+    if (target == loop_counter_cell) {
+      continue;
+    }
+    if (meta.is_reading_target) {
+      if (reset.find(target) == reset.end()) {
+        stateful_cells.insert(target);
+        changed = true;
+      }
+    } else {
+      reset.insert(target);
+    }
+    if (meta.num_operands == 2 && op.source.type == Operand::Type::DIRECT &&
+        stateful_cells.find(op.source.value.asInt()) != stateful_cells.end()) {
+      stateful_cells.insert(target);
+      changed = true;
     }
   }
-  return false;
+  return changed;
 }
 
-bool IncrementalEvaluator::addDependency(int64_t from, int64_t to) {
-  if (hasDependency(from, to)) {
-    return false;
-  }
-  // insert new dependency
-  depends_on.insert(std::pair<int64_t, int64_t>(from, to));
-  // update transitive dependencies
-  bool changed;
-  do {
-    changed = false;
-    for (auto it1 : depends_on) {
-      for (auto it2 : depends_on) {
-        if (it1.second == it2.first && !hasDependency(it1.first, it2.second)) {
-          depends_on.insert(std::pair<int64_t, int64_t>(it1.first, it2.second));
-          changed = true;
-          break;
-        }
-      }
-      if (changed) {
-        break;
+bool IncrementalEvaluator::updateLoopCounterDependentCells(
+    std::set<int64_t>& cells) const {
+  bool changed = false;
+  for (auto& op : loop_body.ops) {
+    const auto meta = Operation::Metadata::get(op.type);
+    if (meta.num_operands == 0) {
+      continue;
+    }
+    const auto target = op.target.value.asInt();
+    if (cells.find(target) != cells.end()) {
+      continue;
+    }
+    if (!meta.is_writing_target) {
+      continue;
+    }
+    if (target == loop_counter_cell) {
+      continue;
+    }
+    if (op.source.type == Operand::Type::DIRECT) {
+      const auto source = op.source.value.asInt();
+      if (source == loop_counter_cell || cells.find(source) != cells.end()) {
+        cells.insert(target);
+        changed = true;
       }
     }
-  } while (changed);
-  return true;
+  }
+  return changed;
 }
 
 bool IncrementalEvaluator::checkPostLoop() {

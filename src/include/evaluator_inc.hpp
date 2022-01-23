@@ -1,6 +1,5 @@
 #pragma once
 
-#include <map>
 #include <set>
 
 #include "interpreter.hpp"
@@ -19,8 +18,8 @@ class IncrementalEvaluator {
   bool checkPreLoop();
   bool checkLoopBody();
   bool checkPostLoop();
-  bool addDependency(int64_t from, int64_t to);
-  bool hasDependency(int64_t from, int64_t to) const;
+  bool updateStatefulCells(std::set<int64_t>& stateful_cells) const;
+  bool updateLoopCounterDependentCells(std::set<int64_t>& cells) const;
 
   size_t runFragment(const Program& fragment, Memory& state);
 
@@ -31,7 +30,6 @@ class IncrementalEvaluator {
   Program loop_body;
   Program post_loop;
   std::set<int64_t> aggregation_cells;
-  std::multimap<int64_t, int64_t> depends_on;
   int64_t loop_counter_cell;
   bool initialized;
 
