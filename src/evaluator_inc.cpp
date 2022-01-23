@@ -290,15 +290,10 @@ std::pair<Number, size_t> IncrementalEvaluator::next() {
   size_t steps = runFragment(pre_loop, tmp_state);
 
   // calculate new loop count
-  const int64_t new_loop_count = tmp_state.get(loop_counter_cell).asInt();
+  const int64_t new_loop_count =
+      Semantics::max(tmp_state.get(loop_counter_cell), Number::ZERO).asInt();
   int64_t additional_loops = new_loop_count - previous_loop_count;
   previous_loop_count = new_loop_count;
-
-  // sanity check: loop count cannot be negative
-  if (additional_loops < 0) {
-    throw std::runtime_error("unexpected loop count: " +
-                             std::to_string(additional_loops));
-  }
 
   // update loop state
   if (argument == 0) {
