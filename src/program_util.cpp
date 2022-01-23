@@ -107,7 +107,7 @@ bool ProgramUtil::isArithmetic(Operation::Type t) {
 bool ProgramUtil::isCommutative(Operation::Type t) {
   return (t == Operation::Type::ADD || t == Operation::Type::MUL ||
           t == Operation::Type::MIN || t == Operation::Type::MAX ||
-          t == Operation::Type::GCD);
+          t == Operation::Type::GCD || t == Operation::Type::CMP);
 }
 
 bool ProgramUtil::hasIndirectOperand(const Operation &op) {
