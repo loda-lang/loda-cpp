@@ -60,7 +60,7 @@ bool IncrementalEvaluator::extractFragments(const Program& program) {
     if (op.type == Operation::Type::NOP) {
       continue;
     }
-    if (op.type == Operation::Type::CLR ||
+    if (op.type == Operation::Type::CLR || op.type == Operation::Type::SEQ ||
         ProgramUtil::hasIndirectOperand(op)) {
       return false;
     }

@@ -31,7 +31,7 @@ class Test {
 
   void incEval();
 
-  static void checkIncEval(const Settings &settings, size_t id,
+  static bool checkIncEval(const Settings &settings, size_t id,
                            bool mustSupportIncEval);
 
   void apiClient();

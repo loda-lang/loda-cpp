@@ -474,7 +474,7 @@ void Test::incEval() {
   }
 }
 
-void Test::checkIncEval(const Settings& settings, size_t id,
+bool Test::checkIncEval(const Settings& settings, size_t id,
                         bool mustSupportIncEval) {
   OeisSequence s(id);
   Parser parser;
@@ -488,7 +488,7 @@ void Test::checkIncEval(const Settings& settings, size_t id,
       Log::get().error(
           "Error initializing incremental evaluator for " + s.id_str(), true);
     } else {
-      return;
+      return false;
     }
   }
   Log::get().info("Testing incremental evaluator for " + s.id_str());
@@ -502,11 +502,14 @@ void Test::checkIncEval(const Settings& settings, size_t id,
     steps_inc = eval_inc.eval(p, seq_inc, 10);
   }
   if (seq_reg != seq_inc) {
-    Log::get().error("Unexpected result of incremental evaluator", true);
+    Log::get().error(
+        "Unexpected result of incremental evaluator for " + s.id_str(), true);
   }
   if (steps_reg.total != steps_inc.total) {
-    Log::get().error("Unexpected steps of incremental evaluator", true);
+    Log::get().error(
+        "Unexpected steps of incremental evaluator for " + s.id_str(), true);
   }
+  return true;
 }
 
 void Test::apiClient() {
