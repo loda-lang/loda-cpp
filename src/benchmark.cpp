@@ -75,12 +75,13 @@ void Benchmark::operations() {
 
 void Benchmark::programs() {
   Setup::setProgramsHome("tests/programs");
-  std::cout << "| Sequence | Terms | Reg Eval | Inc Eval |" << std::endl;
-  std::cout << "|----------|-------|----------|----------|" << std::endl;
+  std::cout << "| Sequence | Terms  | Reg Eval | Inc Eval |" << std::endl;
+  std::cout << "|----------|--------|----------|----------|" << std::endl;
   program(796, 300);
   program(1041, 300);
   program(1113, 300);
   program(2110, 300);
+  program(57552, 300);
   program(79309, 300);
   program(2193, 400);
   program(12866, 1000);
@@ -97,7 +98,7 @@ void Benchmark::program(size_t id, size_t num_terms) {
   auto speed_reg = programEval(program, false, num_terms);
   auto speed_inc = programEval(program, true, num_terms);
   std::cout << "| " << seq.id_str() << "  | "
-            << fillString(std::to_string(num_terms), 5) << " | "
+            << fillString(std::to_string(num_terms), 6) << " | "
             << fillString(speed_reg, 8) << " | " << fillString(speed_inc, 8)
             << " |" << std::endl;
 }
