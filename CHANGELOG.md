@@ -16,7 +16,21 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Bugfixes
 
+* Fix suppressed debug logs for `eval` command
+
+## v22.1.16
+
+### Bugfixes
+
 * Extend timeout for folder locking on Windows
+
+### Features
+
+* Retrieve OEIS files from cache on API server
+
+### Enhancements
+
+* Improve setup: ask for usage statistics and clean up existing settings.
 
 ## v22.1.9
 

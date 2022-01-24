@@ -17,7 +17,7 @@
 #include "util.hpp"
 
 void Commands::initLog(bool silent) {
-  if (silent) {
+  if (silent && Log::get().level != Log::Level::DEBUG) {
     Log::get().silent = true;
   } else {
     Log::get().silent = false;

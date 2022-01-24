@@ -211,6 +211,14 @@ size_t Interpreter::run(const Program& p, Memory& mem) {
       pc_stack.push(pc_next);
     }
 
+    // the rest of the logic should be ommitted for loops
+    if (op.type == Operation::Type::NOP) {
+      continue;
+    }
+
+    // count execution steps
+    ++cycles;
+
     // print debug information
     if (is_debug) {
       std::stringstream buf;
@@ -218,11 +226,6 @@ size_t Interpreter::run(const Program& p, Memory& mem) {
       ProgramUtil::print(op, buf);
       buf << " " << old_mem << " => " << mem;
       Log::get().debug(buf.str());
-    }
-
-    // count execution steps (we don't want to count NOPs)
-    if (op.type != Operation::Type::NOP) {
-      ++cycles;
     }
 
     // check resource constraints
