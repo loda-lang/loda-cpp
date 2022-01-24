@@ -60,7 +60,7 @@ bool IncrementalEvaluator::extractFragments(const Program& program) {
     if (op.type == Operation::Type::NOP) {
       continue;
     }
-    if (op.type == Operation::Type::CLR || op.type == Operation::Type::SEQ ||
+    if (op.type == Operation::Type::CLR ||
         ProgramUtil::hasIndirectOperand(op)) {
       return false;
     }
@@ -136,6 +136,10 @@ bool IncrementalEvaluator::checkLoopBody() {
     const auto num_operands = Operation::Metadata::get(op.type).num_operands;
     if (num_operands == 0) {
       continue;
+    }
+    // seq operations are currenlty not supported:
+    if (op.type == Operation::Type::SEQ) {
+      return false;
     }
     const auto target = op.target.value.asInt();
 

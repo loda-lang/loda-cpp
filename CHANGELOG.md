@@ -2,6 +2,18 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Features
+
+* Improved performance of simple loops using incremental evaluation (IE). Uses static code analysis to decide whether IE can be applied for a given program. Currently, about 1370 programs fulfill these reqirements. Benchmark of selected programs:
+
+| Sequence | Terms  | Reg Eval | Inc Eval |
+|----------|--------|----------|----------|
+| A057552  | 300    | 5.11s    | 0.05s    |
+| A079309  | 300    | 5.08s    | 0.05s    |
+| A012866  | 1000   | 2.80s    | 0.01s    |
+| A000045  | 2000   | 6.13s    | 0.01s    |
+| A130487  | 5000   | 8.16s    | 0.01s    |
+
 ### Bugfixes
 
 * Extend timeout for folder locking on Windows
