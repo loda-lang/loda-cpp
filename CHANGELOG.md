@@ -4,6 +4,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Bugfixes
 
+* Fix race condition: `curl: (23) Failed writing body` when fetching session ID from API server
 * Fix suppressed debug logs for `eval` command
 
 ### Features
