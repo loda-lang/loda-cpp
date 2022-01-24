@@ -29,7 +29,6 @@ void IncrementalEvaluator::reset() {
 // ====== Initialization functions (static code analysis) =========
 
 bool IncrementalEvaluator::init(const Program& program) {
-  // Log::get().info("Initializing incremental evaluator");
   reset();
   if (!extractFragments(program)) {
     return false;
@@ -60,7 +59,7 @@ bool IncrementalEvaluator::extractFragments(const Program& program) {
     if (op.type == Operation::Type::NOP) {
       continue;
     }
-    if (op.type == Operation::Type::CLR ||
+    if (op.type == Operation::Type::CLR || op.type == Operation::Type::DBG ||
         ProgramUtil::hasIndirectOperand(op)) {
       return false;
     }
@@ -133,10 +132,6 @@ bool IncrementalEvaluator::checkLoopBody() {
   std::map<int64_t, Operation::Type> aggregation_types;
   bool loop_counter_updated = false;
   for (auto& op : loop_body.ops) {
-    const auto num_operands = Operation::Metadata::get(op.type).num_operands;
-    if (num_operands == 0) {
-      continue;
-    }
     // seq operations are currenlty not supported:
     if (op.type == Operation::Type::SEQ) {
       return false;
@@ -176,13 +171,18 @@ bool IncrementalEvaluator::checkLoopBody() {
     return false;
   }
 
+  // compute set of stateful memory cells
   std::set<int64_t> stateful_cells;
   while (updateStatefulCells(stateful_cells)) {
   };
+
+  // compute set of loop counter dependent cells
   std::set<int64_t> loop_counter_depdent_cells;
   while (updateLoopCounterDependentCells(loop_counter_depdent_cells)) {
   };
 
+  // is an aggregation cell is both stateful and loop counter dependent
+  // the set of stateful cells must be a singleton => simple aggregation
   for (auto agg_cell : aggregation_cells) {
     if (stateful_cells.find(agg_cell) != stateful_cells.end() &&
         loop_counter_depdent_cells.find(agg_cell) !=
@@ -231,15 +231,12 @@ bool IncrementalEvaluator::updateStatefulCells(
 }
 
 bool IncrementalEvaluator::updateLoopCounterDependentCells(
-    std::set<int64_t>& cells) const {
+    std::set<int64_t>& counter_dependent_cells) const {
   bool changed = false;
   for (auto& op : loop_body.ops) {
     const auto meta = Operation::Metadata::get(op.type);
-    if (meta.num_operands == 0) {
-      continue;
-    }
     const auto target = op.target.value.asInt();
-    if (cells.find(target) != cells.end()) {
+    if (counter_dependent_cells.find(target) != counter_dependent_cells.end()) {
       continue;
     }
     if (!meta.is_writing_target) {
@@ -248,10 +245,13 @@ bool IncrementalEvaluator::updateLoopCounterDependentCells(
     if (target == loop_counter_cell) {
       continue;
     }
-    if (op.source.type == Operand::Type::DIRECT) {
+    if (meta.num_operands == 2 && op.source.type == Operand::Type::DIRECT) {
       const auto source = op.source.value.asInt();
-      if (source == loop_counter_cell || cells.find(source) != cells.end()) {
-        cells.insert(target);
+      const bool is_dependent =
+          counter_dependent_cells.find(source) != counter_dependent_cells.end();
+      // add source if it is the loop counter or dependent on it
+      if (source == loop_counter_cell || is_dependent) {
+        counter_dependent_cells.insert(target);
         changed = true;
       }
     }
@@ -273,7 +273,7 @@ bool IncrementalEvaluator::checkPostLoop() {
         is_overwriting_output = true;
       }
     }
-    if (meta.num_operands > 1 && op.source.type == Operand::Type::DIRECT) {
+    if (meta.num_operands == 2 && op.source.type == Operand::Type::DIRECT) {
       aggregation_cells.insert(op.source.value.asInt());
     }
   }
@@ -290,7 +290,6 @@ std::pair<Number, size_t> IncrementalEvaluator::next() {
   if (!initialized) {
     throw std::runtime_error("incremental evaluator not initialized");
   }
-  // std::cout << "\n==== EVAL N=" << argument << std::endl << std::endl;
 
   // execute pre-loop code
   tmp_state.clear();
