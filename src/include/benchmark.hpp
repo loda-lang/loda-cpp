@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "number.hpp"
+#include "program.hpp"
 
 class Benchmark {
  public:
@@ -14,4 +14,7 @@ class Benchmark {
 
  private:
   void program(size_t id, size_t num_terms);
+
+  std::string programEval(const Program& p, bool use_inc_eval,
+                          size_t num_terms);
 };

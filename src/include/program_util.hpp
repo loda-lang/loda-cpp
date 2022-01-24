@@ -25,6 +25,8 @@ class ProgramUtil {
 
   static bool isArithmetic(Operation::Type t);
 
+  static bool isCommutative(Operation::Type t);
+
   static bool hasIndirectOperand(const Operation &op);
 
   static bool areIndependent(const Operation &op1, const Operation &op2);

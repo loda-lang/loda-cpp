@@ -175,6 +175,21 @@ void Commands::test() {
   test.all();
 }
 
+void Commands::testIncEval() {
+  initLog(false);
+  Settings settings;
+  OeisManager manager(settings);
+  auto& stats = manager.getStats();
+  int64_t count = 0;
+  for (size_t id = 0; id < stats.all_program_ids.size(); id++) {
+    if (stats.all_program_ids[id] && Test::checkIncEval(settings, id, false)) {
+      count++;
+    }
+  }
+  Log::get().info("Passed incremental evaluation check for " +
+                  std::to_string(count) + " programs");
+}
+
 void Commands::dot(const std::string& path) {
   initLog(true);
   Parser parser;

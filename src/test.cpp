@@ -51,6 +51,7 @@ void Test::all() {
   config();
   steps();
   blocks();
+  incEval();
   linearMatcher();
   deltaMatcher();
   digitMatcher();
@@ -464,6 +465,54 @@ void Test::knownPrograms() {
                           -13, -14, -15, -16, -17}));
 }
 
+void Test::incEval() {
+  std::vector<size_t> ids = {45,   142,  178,  246,   253,   278,   280,
+                             407,  542,  933,  1075,  1091,  1353,  1360,
+                             1519, 1541, 1542, 12866, 57552, 79309, 130487};
+  for (auto id : ids) {
+    checkIncEval(settings, id, true);
+  }
+}
+
+bool Test::checkIncEval(const Settings& settings, size_t id,
+                        bool mustSupportIncEval) {
+  OeisSequence s(id);
+  Parser parser;
+  Program p = parser.parse(s.getProgramPath());
+  Evaluator eval_reg(settings, false);
+  Evaluator eval_inc(settings, true);
+  Interpreter interpreter(settings);
+  IncrementalEvaluator inc(interpreter);
+  if (!inc.init(p)) {
+    if (mustSupportIncEval) {
+      Log::get().error(
+          "Error initializing incremental evaluator for " + s.id_str(), true);
+    } else {
+      return false;
+    }
+  }
+  Log::get().info("Testing incremental evaluator for " + s.id_str());
+  // std::cout << ProgramUtil::operationToString(p.ops.front()) << std::endl;
+  Sequence seq_reg, seq_inc;
+  steps_t steps_reg, steps_inc;
+  try {
+    steps_reg = eval_reg.eval(p, seq_reg, 100);
+    steps_inc = eval_inc.eval(p, seq_inc, 100);
+  } catch (const std::exception&) {
+    steps_reg = eval_reg.eval(p, seq_reg, 10);
+    steps_inc = eval_inc.eval(p, seq_inc, 10);
+  }
+  if (seq_reg != seq_inc) {
+    Log::get().error(
+        "Unexpected result of incremental evaluator for " + s.id_str(), true);
+  }
+  if (steps_reg.total != steps_inc.total) {
+    Log::get().error(
+        "Unexpected steps of incremental evaluator for " + s.id_str(), true);
+  }
+  return true;
+}
+
 void Test::apiClient() {
   Log::get().info("Testing API client");
   ApiClient client;
@@ -864,11 +913,12 @@ void Test::minimizer(size_t tests) {
     minimizer.optimizeAndMinimize(minimized, 2, 1, s1.size());
     evaluator.eval(minimized, s2, s1.size());
     if (s1.size() != s2.size() || (s1 != s2)) {
-      ProgramUtil::print(program, std::cout);
       std::cout << "before: " << s1 << std::endl;
+      ProgramUtil::print(program, std::cout);
       std::cout << "after:  " << s2 << std::endl;
+      ProgramUtil::print(minimized, std::cout);
       Log::get().error(
-          "Program evaluated to different sequence after optimization", true);
+          "Program evaluated to different sequence after minimization", true);
     }
   }
 }

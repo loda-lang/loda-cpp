@@ -99,10 +99,15 @@ size_t ProgramUtil::numOps(const Program &p, Operand::Type type) {
 }
 
 bool ProgramUtil::isArithmetic(Operation::Type t) {
-  // TODO: model this as metadata?
   return (t != Operation::Type::NOP && t != Operation::Type::DBG &&
           t != Operation::Type::LPB && t != Operation::Type::LPE &&
           t != Operation::Type::CLR && t != Operation::Type::SEQ);
+}
+
+bool ProgramUtil::isCommutative(Operation::Type t) {
+  return (t == Operation::Type::ADD || t == Operation::Type::MUL ||
+          t == Operation::Type::MIN || t == Operation::Type::MAX ||
+          t == Operation::Type::GCD || t == Operation::Type::CMP);
 }
 
 bool ProgramUtil::hasIndirectOperand(const Operation &op) {

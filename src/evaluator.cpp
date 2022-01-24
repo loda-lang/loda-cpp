@@ -18,9 +18,11 @@ void steps_t::add(const steps_t &s) {
   runs += s.runs;
 }
 
-Evaluator::Evaluator(const Settings &settings)
+Evaluator::Evaluator(const Settings &settings, bool use_inc_evaluator)
     : settings(settings),
       interpreter(settings),
+      inc_evaluator(interpreter),
+      use_inc_evaluator(use_inc_evaluator),
       is_debug(Log::get().level == Log::Level::DEBUG) {}
 
 steps_t Evaluator::eval(const Program &p, Sequence &seq, int64_t num_terms,
@@ -32,11 +34,20 @@ steps_t Evaluator::eval(const Program &p, Sequence &seq, int64_t num_terms,
   Memory mem;
   steps_t steps;
   size_t s;
+  const bool use_inc = use_inc_evaluator && inc_evaluator.init(p);
+  std::pair<Number, size_t> inc_result;
   for (int64_t i = 0; i < num_terms; i++) {
-    mem.clear();
-    mem.set(Program::INPUT_CELL, i);
     try {
-      s = interpreter.run(p, mem);
+      if (use_inc) {
+        inc_result = inc_evaluator.next();
+        seq[i] = inc_result.first;
+        s = inc_result.second;
+      } else {
+        mem.clear();
+        mem.set(Program::INPUT_CELL, i);
+        s = interpreter.run(p, mem);
+        seq[i] = mem.get(Program::OUTPUT_CELL);
+      }
     } catch (const std::exception &) {
       seq.resize(i);
       if (throw_on_error) {
@@ -45,8 +56,11 @@ steps_t Evaluator::eval(const Program &p, Sequence &seq, int64_t num_terms,
         return steps;
       }
     }
+
     steps.add(s);
-    seq[i] = settings.use_steps ? s : mem.get(Program::OUTPUT_CELL);
+    if (settings.use_steps) {
+      seq[i] = s;
+    }
     if (settings.print_as_b_file) {
       std::cout << (settings.print_as_b_file_offset + i) << " " << seq[i]
                 << std::endl;
@@ -70,6 +84,7 @@ steps_t Evaluator::eval(const Program &p, std::vector<Sequence> &seqs,
   }
   Memory mem;
   steps_t steps;
+  // note: we can't use the incremental evaluator here
   for (int64_t i = 0; i < num_terms; i++) {
     mem.clear();
     mem.set(Program::INPUT_CELL, i);
@@ -92,11 +107,20 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
   Memory mem;
   // clear cache to correctly detect recursion errors
   interpreter.clearCaches();
+  const bool use_inc = use_inc_evaluator && inc_evaluator.init(p);
+  std::pair<Number, size_t> inc_result;
+  Number out;
   for (size_t i = 0; i < expected_seq.size(); i++) {
-    mem.clear();
-    mem.set(Program::INPUT_CELL, i);
     try {
-      result.second.add(interpreter.run(p, mem, id));
+      if (use_inc) {
+        inc_result = inc_evaluator.next();
+        out = inc_result.first;
+      } else {
+        mem.clear();
+        mem.set(Program::INPUT_CELL, i);
+        result.second.add(interpreter.run(p, mem, id));
+        out = mem.get(Program::OUTPUT_CELL);
+      }
     } catch (const std::exception &e) {
       if (settings.print_as_b_file) {
         std::cout << std::string(e.what()) << std::endl;
@@ -105,11 +129,10 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
                                                            : status_t::ERROR;
       return result;
     }
-    if (mem.get(Program::OUTPUT_CELL) != expected_seq[i]) {
+    if (out != expected_seq[i]) {
       if (settings.print_as_b_file) {
-        std::cout << (settings.print_as_b_file_offset + i) << " "
-                  << mem.get(Program::OUTPUT_CELL) << " -> expected "
-                  << expected_seq[i] << std::endl;
+        std::cout << (settings.print_as_b_file_offset + i) << " " << out
+                  << " -> expected " << expected_seq[i] << std::endl;
       }
       result.first = status_t::ERROR;
       return result;

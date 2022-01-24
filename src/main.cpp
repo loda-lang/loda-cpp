@@ -144,6 +144,8 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
   // hidden commands (only in development versions)
   else if (cmd == "test") {
     commands.test();
+  } else if (cmd == "test-inc-eval") {
+    commands.testIncEval();
   } else if (cmd == "dot") {
     commands.dot(args.at(1));
   } else if (cmd == "generate" || cmd == "gen") {

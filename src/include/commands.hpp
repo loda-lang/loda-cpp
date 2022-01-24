@@ -30,6 +30,8 @@ class Commands {
 
   void test();
 
+  void testIncEval();
+
   void dot(const std::string& path);
 
   void generate();
