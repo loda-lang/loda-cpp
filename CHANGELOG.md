@@ -2,6 +2,8 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v22.1.25
+
 ### Bugfixes
 
 * Fix race condition: `curl: (23) Failed writing body` when fetching session ID from API server
