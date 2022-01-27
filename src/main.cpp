@@ -128,6 +128,21 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
     }
     commands.submit(args.at(1), args.at(2));
   }
+#ifdef _WIN64
+  // hidden helper command for updates on windows
+  else if (cmd == "update-windows-executable") {
+    // first replace the old binary by the new one
+    std::string cmd = "copy /Y \"" + args.at(1) + "\" \"" + args.at(2) + "\"" +
+                      getNullRedirect();
+    if (system(cmd.c_str()) != 0) {
+      std::cout << "error updating executable" << std::endl;
+      return 1;
+    }
+    // then start the setup of the new one (create a new process)
+    cmd = "\"" + args.at(2) + "\" setup";
+    create_win_process(cmd);
+  }
+#endif
 #ifndef LODA_VERSION
   // hidden commands (only in development versions)
   else if (cmd == "test") {
