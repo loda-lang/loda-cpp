@@ -15,7 +15,7 @@ HANDLE create_win_process(const std::string& command) {
   ZeroMemory(&si, sizeof(si));
   si.cb = sizeof(si);
   ZeroMemory(&pi, sizeof(pi));
-  LPSTR c = const_cast<LPSTR>(cmd.c_str());
+  LPSTR c = const_cast<LPSTR>(command.c_str());
   if (!CreateProcess(nullptr, c, nullptr, nullptr, false, 0, nullptr, nullptr,
                      &si, &pi)) {
     std::string msg = std::string("Error in CreateProcess: ") +
