@@ -131,10 +131,10 @@ bool IncrementalEvaluator::checkPreLoop() {
 bool IncrementalEvaluator::checkLoopBody() {
   std::map<int64_t, Operation::Type> aggregation_types;
   bool loop_counter_updated = false;
+  bool has_seq = false;
   for (auto& op : loop_body.ops) {
-    // seq operations are currenlty not supported:
     if (op.type == Operation::Type::SEQ) {
-      return false;
+      has_seq = true;
     }
     const auto target = op.target.value.asInt();
 
@@ -177,16 +177,18 @@ bool IncrementalEvaluator::checkLoopBody() {
   };
 
   // compute set of loop counter dependent cells
-  std::set<int64_t> loop_counter_depdent_cells;
-  while (updateLoopCounterDependentCells(loop_counter_depdent_cells)) {
+  std::set<int64_t> loop_counter_dependent_cells;
+  while (updateLoopCounterDependentCells(loop_counter_dependent_cells)) {
   };
 
-  // is an aggregation cell is both stateful and loop counter dependent
-  // the set of stateful cells must be a singleton => simple aggregation
+  // is an aggregation cell is stateful and
+  //    is either loop counter dependent or uses seqence calls,
+  // the set of stateful cells must be a singleton
   for (auto agg_cell : aggregation_cells) {
-    if (stateful_cells.find(agg_cell) != stateful_cells.end() &&
-        loop_counter_depdent_cells.find(agg_cell) !=
-            loop_counter_depdent_cells.end() &&
+    bool is_stateful = (stateful_cells.find(agg_cell) != stateful_cells.end());
+    bool is_loop_counter_dep = (loop_counter_dependent_cells.find(agg_cell) !=
+                                loop_counter_dependent_cells.end());
+    if (is_stateful && (is_loop_counter_dep || has_seq) &&
         stateful_cells.size() > 1) {
       return false;
     }
