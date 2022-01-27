@@ -4,7 +4,8 @@
     "files.associations": {
         "map": "cpp",
         "chrono": "cpp",
-        "utility": "cpp"
+        "utility": "cpp",
+        "stdexcept": "cpp"
     },
     "makefile.makeDirectory": "src"
 }

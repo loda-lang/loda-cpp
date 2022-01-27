@@ -9,7 +9,7 @@
 
 // must be after util.hpp
 #ifdef _WIN64
-#include <windows.h>
+#include "win_process.hpp"
 #else
 #include <sys/wait.h>
 #include <unistd.h>
@@ -20,24 +20,12 @@ int dispatch(Settings settings, const std::vector<std::string>& args);
 
 HANDLE fork(Settings settings, std::vector<std::string> args) {
 #ifdef _WIN64
-  STARTUPINFO si;
-  PROCESS_INFORMATION pi;
-  ZeroMemory(&si, sizeof(si));
-  si.cb = sizeof(si);
-  ZeroMemory(&pi, sizeof(pi));
   std::string cmd = "loda.exe";
   settings.printArgs(args);
   for (auto& a : args) {
     cmd += " " + a;
   }
-  LPSTR c = const_cast<LPSTR>(cmd.c_str());
-  // Start the child process.
-  if (!CreateProcess(nullptr, c, nullptr, nullptr, false, 0, nullptr, nullptr,
-                     &si, &pi)) {
-    Log::get().error(
-        "Error in CreateProcess: " + std::to_string(GetLastError()), true);
-  }
-  return pi.hProcess;
+  return create_win_process(cmd);
 #else
   int64_t child_pid = fork();
   if (child_pid == -1) {

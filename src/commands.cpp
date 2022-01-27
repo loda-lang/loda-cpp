@@ -46,8 +46,9 @@ void Commands::help() {
             << std::endl;
 
   std::cout << std::endl << "OEIS Commands:" << std::endl;
-  std::cout << "  mine                Mine programs for OEIS sequences (see -i)"
-            << std::endl;
+  std::cout
+      << "  mine                Mine programs for OEIS sequences (see -i,-p)"
+      << std::endl;
   std::cout << "  check <id>          Check a program for an OEIS sequence "
                "(see -b)"
             << std::endl;
