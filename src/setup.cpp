@@ -11,6 +11,11 @@
 #include "util.hpp"
 #include "web_client.hpp"
 
+// must be after util.hpp
+#ifdef _WIN64
+#include "win_process.hpp"
+#endif
+
 const std::string Setup::LODA_SUBMIT_CPU_HOURS("LODA_SUBMIT_CPU_HOURS");
 
 // TODO: use a singlton of Setup
@@ -491,14 +496,11 @@ bool Setup::checkUpdate() {
           latest_version + "/loda-" + Version::PLATFORM + exe;
       WebClient::get(exec_url, exec_tmp, true, true);
 #ifdef _WIN64
-      std::cout << std::endl
-                << "Please run the following commands to complete the update:"
-                << std::endl
-                << std::endl;
-      std::cout << "move /Y " << exec_tmp << " " << exec_local << std::endl;
-      std::cout << exec_local << " setup" << std::endl;
-      return false;
-#endif
+      const std::string cmd = "\"" + exec_tmp +
+                              "\" update-windows-executable \"" + exec_tmp +
+                              "\" \"" + exec_local + "\"";
+      create_win_process(cmd);
+#else
       makeExecutable(exec_tmp);
       moveFile(exec_tmp, exec_local);
       std::cout << "Update installed. Restarting setup... " << std::endl
@@ -508,6 +510,7 @@ bool Setup::checkUpdate() {
         std::cout << "Error running setup of LODA " << latest_version
                   << std::endl;
       }
+#endif
       // in any case, we must stop the current setup here
       return false;
     } else {

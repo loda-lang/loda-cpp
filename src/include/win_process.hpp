@@ -9,7 +9,7 @@
 
 #include <windows.h>
 
-HANDLE create_win_process(const std::string& command) {
+inline HANDLE create_win_process(const std::string& command) {
   STARTUPINFO si;
   PROCESS_INFORMATION pi;
   ZeroMemory(&si, sizeof(si));
