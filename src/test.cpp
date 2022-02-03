@@ -478,7 +478,17 @@ bool Test::checkIncEval(const Settings& settings, size_t id,
                         bool mustSupportIncEval) {
   OeisSequence s(id);
   Parser parser;
-  Program p = parser.parse(s.getProgramPath());
+  Program p;
+  try {
+    p = parser.parse(s.getProgramPath());
+  } catch (const std::exception& e) {
+    if (mustSupportIncEval) {
+      throw e;
+    } else {
+      Log::get().warn(std::string(e.what()));
+      return false;
+    }
+  }
   Evaluator eval_reg(settings, false);
   Evaluator eval_inc(settings, true);
   Interpreter interpreter(settings);
@@ -499,8 +509,17 @@ bool Test::checkIncEval(const Settings& settings, size_t id,
     steps_reg = eval_reg.eval(p, seq_reg, 100);
     steps_inc = eval_inc.eval(p, seq_inc, 100);
   } catch (const std::exception&) {
-    steps_reg = eval_reg.eval(p, seq_reg, 10);
-    steps_inc = eval_inc.eval(p, seq_inc, 10);
+    try {
+      steps_reg = eval_reg.eval(p, seq_reg, 10);
+      steps_inc = eval_inc.eval(p, seq_inc, 10);
+    } catch (const std::exception& e) {
+      if (mustSupportIncEval) {
+        throw e;
+      } else {
+        Log::get().warn(std::string(e.what()));
+        return false;
+      }
+    }
   }
   if (seq_reg != seq_inc) {
     Log::get().error(

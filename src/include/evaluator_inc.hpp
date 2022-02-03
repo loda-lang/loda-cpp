@@ -35,9 +35,8 @@ class IncrementalEvaluator {
   bool checkPreLoop();
   bool checkLoopBody();
   bool checkPostLoop();
-  bool updateStatefulCells(std::set<int64_t>& stateful_cells) const;
-  bool updateLoopCounterDependentCells(
-      std::set<int64_t>& counter_dependent_cells) const;
+  bool updateStatefulCells();
+  bool updateLoopCounterDependentCells();
 
   Interpreter& interpreter;
 
@@ -45,7 +44,10 @@ class IncrementalEvaluator {
   Program pre_loop;
   Program loop_body;
   Program post_loop;
+  std::map<int64_t, Operation::Type> aggregation_types;
   std::set<int64_t> aggregation_cells;
+  std::set<int64_t> stateful_cells;
+  std::set<int64_t> loop_counter_dependent_cells;
   int64_t loop_counter_cell;
   bool initialized;
 
