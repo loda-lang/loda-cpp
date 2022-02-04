@@ -19,10 +19,11 @@ enum class status_t { OK, WARNING, ERROR };
 
 class Evaluator {
  public:
-  Evaluator(const Settings &settings, bool use_inc_evaluator = true);
+  Evaluator(const Settings &settings);
 
   steps_t eval(const Program &p, Sequence &seq, int64_t num_terms = -1,
-               bool throw_on_error = true);
+               const bool throw_on_error = true,
+               const bool use_inc_eval = true);
 
   steps_t eval(const Program &p, std::vector<Sequence> &seqs,
                int64_t num_terms = -1);
@@ -30,12 +31,12 @@ class Evaluator {
   std::pair<status_t, steps_t> check(const Program &p,
                                      const Sequence &expected_seq,
                                      int64_t num_terminating_terms = -1,
-                                     int64_t id = -1);
+                                     int64_t id = -1,
+                                     const bool use_inc_eval = true);
 
  private:
   const Settings &settings;
   Interpreter interpreter;
   IncrementalEvaluator inc_evaluator;
-  const bool use_inc_evaluator;
   const bool is_debug;
 };

@@ -18,15 +18,14 @@ void steps_t::add(const steps_t &s) {
   runs += s.runs;
 }
 
-Evaluator::Evaluator(const Settings &settings, bool use_inc_evaluator)
+Evaluator::Evaluator(const Settings &settings)
     : settings(settings),
       interpreter(settings),
       inc_evaluator(interpreter),
-      use_inc_evaluator(use_inc_evaluator),
       is_debug(Log::get().level == Log::Level::DEBUG) {}
 
 steps_t Evaluator::eval(const Program &p, Sequence &seq, int64_t num_terms,
-                        bool throw_on_error) {
+                        const bool throw_on_error, const bool use_inc_eval) {
   if (num_terms < 0) {
     num_terms = settings.num_terms;
   }
@@ -34,7 +33,7 @@ steps_t Evaluator::eval(const Program &p, Sequence &seq, int64_t num_terms,
   Memory mem;
   steps_t steps;
   size_t s;
-  const bool use_inc = use_inc_evaluator && inc_evaluator.init(p);
+  const bool use_inc = use_inc_eval && inc_evaluator.init(p);
   std::pair<Number, size_t> inc_result;
   for (int64_t i = 0; i < num_terms; i++) {
     try {
@@ -99,7 +98,8 @@ steps_t Evaluator::eval(const Program &p, std::vector<Sequence> &seqs,
 std::pair<status_t, steps_t> Evaluator::check(const Program &p,
                                               const Sequence &expected_seq,
                                               int64_t num_terminating_terms,
-                                              int64_t id) {
+                                              int64_t id,
+                                              const bool use_inc_eval) {
   if (num_terminating_terms < 0) {
     num_terminating_terms = expected_seq.size();
   }
@@ -107,7 +107,7 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
   Memory mem;
   // clear cache to correctly detect recursion errors
   interpreter.clearCaches();
-  const bool use_inc = use_inc_evaluator && inc_evaluator.init(p);
+  const bool use_inc = use_inc_eval && inc_evaluator.init(p);
   std::pair<Number, size_t> inc_result;
   Number out;
   for (size_t i = 0; i < expected_seq.size(); i++) {

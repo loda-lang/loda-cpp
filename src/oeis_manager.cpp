@@ -870,8 +870,9 @@ bool OeisManager::maintainProgram(size_t id) {
 
   // check correctness of the program
   try {
+    // don't use incremental evaluation in maintenance to detect bugs
     auto check = evaluator.check(program, extended_seq,
-                                 OeisSequence::DEFAULT_SEQ_LENGTH, id);
+                                 OeisSequence::DEFAULT_SEQ_LENGTH, id, false);
     is_okay = (check.first != status_t::ERROR);  // we allow warnings
   } catch (const std::exception &e) {
     Log::get().error(

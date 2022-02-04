@@ -114,11 +114,11 @@ std::string Benchmark::programEval(const Program& p, bool use_inc_eval,
     return "-";
   }
   Sequence result;
-  Evaluator evaluator(settings, use_inc_eval);
+  Evaluator evaluator(settings);
   static const size_t runs = 4;
   auto start_time = std::chrono::steady_clock::now();
   for (size_t i = 0; i < runs; i++) {
-    evaluator.eval(p, result, num_terms);
+    evaluator.eval(p, result, num_terms, true, use_inc_eval);
     if (result.size() != num_terms) {
       Log::get().error(
           "Unexpected sequence length: " + std::to_string(result.size()), true);

@@ -6,6 +6,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Improve update experience on Windows
 * Incremental evaluation (IE) partially supports programs with `seq` operations. Now 2300 programs are supported by IE.
+* Don't use IE in maintenance mode (to detect bugs).
 
 ## v22.1.25
 
