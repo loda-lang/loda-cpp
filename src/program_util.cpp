@@ -230,6 +230,54 @@ bool ProgramUtil::hasLoopWithConstantNumIterations(const Program &p) {
   return false;
 }
 
+std::pair<int64_t, int64_t> ProgramUtil::getEnclosingLoop(const Program &p,
+                                                          int64_t op_index) {
+  int64_t open_loops;
+  std::pair<int64_t, int64_t> loop(-1, -1);
+  // find start
+  if (p.ops.at(op_index).type != Operation::Type::LPB) {
+    if (p.ops.at(op_index).type == Operation::Type::LPE) {
+      op_index--;  // get inside the loop
+    }
+    for (open_loops = 1; op_index >= 0 && open_loops; op_index--) {
+      auto t = p.ops.at(op_index).type;
+      if (t == Operation::Type::LPB) {
+        open_loops--;
+      } else if (t == Operation::Type::LPE) {
+        open_loops++;
+      }
+    }
+    if (open_loops) {
+      return loop;
+    }
+    op_index++;
+  }
+  loop.first = op_index;
+  // find end
+  op_index++;
+  for (open_loops = 1;
+       op_index < static_cast<int64_t>(p.ops.size()) && open_loops;
+       op_index++) {
+    auto t = p.ops.at(op_index).type;
+    if (t == Operation::Type::LPB) {
+      open_loops++;
+    } else if (t == Operation::Type::LPE) {
+      open_loops--;
+    }
+  }
+  op_index--;
+  if (open_loops) {
+    throw std::runtime_error("invalid program");
+  }
+  loop.second = op_index;
+  // final check
+  if (p.ops.at(loop.first).type != Operation::Type::LPB ||
+      p.ops.at(loop.second).type != Operation::Type::LPE) {
+    throw std::runtime_error("internal error");
+  }
+  return loop;
+}
+
 std::string getIndent(int indent) {
   std::string s;
   for (int i = 0; i < indent; i++) {

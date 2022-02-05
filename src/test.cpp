@@ -358,6 +358,26 @@ void Test::memory() {
   }
 }
 
+void checkEnclosingLoop(const Program& p, int64_t begin, int64_t end,
+                        int64_t op_index) {
+  if (begin >= 0 && end >= 0 &&
+      (p.ops.at(begin).type != Operation::Type::LPB ||
+       p.ops.at(end).type != Operation::Type::LPE)) {
+    ProgramUtil::print(p, std::cout);
+    Log::get().error("Unexpected enclosing loop test: " +
+                         std::to_string(begin) + "-" + std::to_string(end),
+                     true);
+  }
+  auto loop = ProgramUtil::getEnclosingLoop(p, op_index);
+  if (loop.first != begin || loop.second != end) {
+    Log::get().error(
+        "Unexpected enclosing loop: " + std::to_string(loop.first) + "-" +
+            std::to_string(loop.second) +
+            "; expected: " + std::to_string(begin) + "-" + std::to_string(end),
+        true);
+  }
+}
+
 void Test::programUtil() {
   Log::get().info("Testing program util");
   Parser parser;
@@ -372,6 +392,16 @@ void Test::programUtil() {
   if (ProgramUtil::hasLoopWithConstantNumIterations(primes_var_loop)) {
     Log::get().error("Unexpected contant loop in primes_var_loop.asm", true);
   }
+  auto p = parser.parse(OeisSequence(1041).getProgramPath());
+  checkEnclosingLoop(p, 7, 14, 12);
+  checkEnclosingLoop(p, 7, 14, 7);
+  checkEnclosingLoop(p, 7, 14, 14);
+  checkEnclosingLoop(p, 5, 18, 5);
+  checkEnclosingLoop(p, 5, 18, 6);
+  checkEnclosingLoop(p, 5, 18, 15);
+  checkEnclosingLoop(p, 5, 18, 18);
+  checkEnclosingLoop(p, -1, -1, 4);
+  checkEnclosingLoop(p, -1, -1, 19);
 }
 
 void validateIterated(const Program& p) {
