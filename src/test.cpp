@@ -917,7 +917,6 @@ void Test::stats() {
 }
 
 void Test::optimizer() {
-  Log::get().info("Testing optimizer");
   Settings settings;
   Interpreter interpreter(settings);
   Optimizer optimizer(settings);
@@ -925,6 +924,7 @@ void Test::optimizer() {
                               FILE_SEP + "E");
   size_t i = 1;
   for (auto& t : tests) {
+    Log::get().info("Testing optimizer " + std::to_string(i));
     optimizer.optimize(t.first, 2, 1);
     if (t.first != t.second) {
       ProgramUtil::print(t.first, std::cerr);

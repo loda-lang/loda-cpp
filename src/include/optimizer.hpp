@@ -38,4 +38,7 @@ class Optimizer {
 
  private:
   Settings settings;
+
+  bool doPartialEval(Program &p, size_t op_index,
+                     std::map<int64_t, Operand> &values) const;
 };
