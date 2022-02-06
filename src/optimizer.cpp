@@ -1,6 +1,7 @@
 #include "optimizer.hpp"
 
 #include <map>
+#include <set>
 #include <stack>
 
 #include "interpreter.hpp"
@@ -481,9 +482,22 @@ bool Optimizer::swapMemoryCells(Program &p, size_t num_reserved_cells) const {
   return true;
 }
 
-bool doPartialEval(Operation &op, std::map<int64_t, Operand> &values) {
+void removeReferences(const Operand &op, std::map<int64_t, Operand> &values) {
+  auto it = values.begin();
+  // do we need to do this transitively?
+  while (it != values.end()) {
+    if (it->second == op) {
+      it = values.erase(it);
+    } else {
+      it++;
+    }
+  }
+}
+
+bool Optimizer::doPartialEval(Program &p, size_t op_index,
+                              std::map<int64_t, Operand> &values) const {
   // make sure there is not indirect memory access
-  const auto num_ops = Operation::Metadata::get(op.type).num_operands;
+  Operation &op = p.ops[op_index];
   if (ProgramUtil::hasIndirectOperand(op)) {
     values.clear();
     return false;
@@ -505,7 +519,7 @@ bool doPartialEval(Operation &op, std::map<int64_t, Operand> &values) {
 
   // calculate new value
   bool has_result = false;
-
+  auto num_ops = Operation::Metadata::get(op.type).num_operands;
   switch (op.type) {
     case Operation::Type::NOP:
     case Operation::Type::DBG:
@@ -514,7 +528,22 @@ bool doPartialEval(Operation &op, std::map<int64_t, Operand> &values) {
     }
 
     case Operation::Type::LPB:
-    case Operation::Type::LPE:
+    case Operation::Type::LPE: {
+      // remove values from cells that are modified in the loop
+      auto loop = ProgramUtil::getEnclosingLoop(p, op_index);
+      for (int64_t i = loop.first + 1; i < loop.second; i++) {
+        if (p.ops[i].type == Operation::Type::CLR ||
+            ProgramUtil::hasIndirectOperand(p.ops[i])) {
+          values.clear();
+          break;
+        }
+        if (Operation::Metadata::get(p.ops[i].type).is_writing_target) {
+          values.erase(p.ops[i].target.value.asInt());
+          removeReferences(p.ops[i].target, values);
+        }
+      }
+      return false;
+    }
     case Operation::Type::CLR: {
       values.clear();
       return false;
@@ -558,14 +587,7 @@ bool doPartialEval(Operation &op, std::map<int64_t, Operand> &values) {
     }
 
     // remove references to target because they are out-dated now
-    auto it = values.begin();
-    while (it != values.end()) {
-      if (it->second == op.target) {
-        it = values.erase(it);
-      } else {
-        it++;
-      }
-    }
+    removeReferences(op.target, values);
   }
 
   return changed;
@@ -583,8 +605,8 @@ bool Optimizer::partialEval(Program &p, size_t num_initialized_cells) const {
     values[i] = Operand(Operand::Type::CONSTANT, 0);
   }
   bool changed = false;
-  for (auto &op : p.ops) {
-    if (doPartialEval(op, values)) {
+  for (size_t i = 0; i < p.ops.size(); i++) {
+    if (doPartialEval(p, i, values)) {
       changed = true;
     }
   }

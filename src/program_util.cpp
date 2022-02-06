@@ -267,6 +267,7 @@ std::pair<int64_t, int64_t> ProgramUtil::getEnclosingLoop(const Program &p,
   }
   op_index--;
   if (open_loops) {
+    print(p, std::cout);
     throw std::runtime_error("invalid program");
   }
   loop.second = op_index;
