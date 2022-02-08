@@ -402,6 +402,26 @@ void Test::programUtil() {
   checkEnclosingLoop(p, 5, 18, 18);
   checkEnclosingLoop(p, -1, -1, 4);
   checkEnclosingLoop(p, -1, -1, 19);
+  std::string com_in =
+      "mov $1,26\n"
+      "; Miner Profile: foobar\n"
+      "add $1,$0\n";
+  std::stringstream buf(com_in);
+  p = parser.parse(buf);
+  if (ProgramUtil::getCommentField(p, ProgramUtil::PREFIX_MINER_PROFILE) !=
+      "foobar") {
+    Log::get().error("Cannot extract miner profile from program comment", true);
+  }
+  ProgramUtil::removeCommentField(p, ProgramUtil::PREFIX_MINER_PROFILE);
+  buf = std::stringstream();
+  ProgramUtil::print(p, buf);
+  std::string com_out =
+      "mov $1,26\n"
+      "add $1,$0\n";
+  if (buf.str() != com_out) {
+    Log::get().error("Unexpected program after removing comment: " + buf.str(),
+                     true);
+  }
 }
 
 void validateIterated(const Program& p) {

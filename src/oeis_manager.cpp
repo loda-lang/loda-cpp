@@ -609,7 +609,7 @@ void OeisManager::dumpProgram(size_t id, Program &p, const std::string &file,
   nop.comment = seq.to_string();
   tmp.ops.push_back(nop);
   if (!submitted_by.empty()) {
-    nop.comment = ProgramUtil::SUBMITTED_BY_PREFIX + " " + submitted_by;
+    nop.comment = ProgramUtil::PREFIX_SUBMITTED_BY + " " + submitted_by;
     tmp.ops.push_back(nop);
   }
   nop.comment = seq.getTerms(OeisSequence::DEFAULT_SEQ_LENGTH).to_string();
@@ -638,7 +638,7 @@ void OeisManager::alert(Program p, size_t id, const std::string &prefix,
   buf << prefix << " program for " << seq
       << " Terms: " << seq.getTerms(settings.num_terms);
   if (!submitted_by.empty()) {
-    buf << ". " << ProgramUtil::SUBMITTED_BY_PREFIX << " " << submitted_by;
+    buf << ". " << ProgramUtil::PREFIX_SUBMITTED_BY << " " << submitted_by;
   }
   auto msg = buf.str();
   Log::AlertDetails details;
@@ -766,7 +766,8 @@ update_program_result_t OeisManager::updateProgram(size_t id, Program p) {
   auto &seq = sequences.at(id);
   const std::string global_file = seq.getProgramPath(false);
   const std::string local_file = seq.getProgramPath(true);
-  const std::string submitted_by = ProgramUtil::getSubmittedBy(p);
+  const std::string submitted_by =
+      ProgramUtil::getCommentField(p, ProgramUtil::PREFIX_SUBMITTED_BY);
   bool is_new = true;
 
   // check if there is an existing program already
@@ -858,7 +859,8 @@ bool OeisManager::maintainProgram(size_t id) {
     Log::get().debug("Checking program for " + s.to_string());
     try {
       program = parser.parse(program_file);
-      submitted_by = ProgramUtil::getSubmittedBy(program);
+      submitted_by = ProgramUtil::getCommentField(
+          program, ProgramUtil::PREFIX_SUBMITTED_BY);
     } catch (const std::exception &) {
       is_okay = false;
     }
