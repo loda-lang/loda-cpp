@@ -4,6 +4,7 @@
 #include <sstream>
 #include <unordered_set>
 
+#include "config.hpp"
 #include "file.hpp"
 #include "generator.hpp"
 #include "interpreter.hpp"
@@ -37,6 +38,7 @@ void Miner::reload(bool load_generators, bool force_overwrite) {
   manager->load();
   manager->getFinder();  // initializes stats and matchers
   if (load_generators) {
+    profile_name = ConfigLoader::load(settings).name;
     multi_generator.reset(
         new MultiGenerator(settings, manager->getStats(), true));
   } else {
@@ -123,7 +125,7 @@ void Miner::mine() {
             // add metadata as comment
             program = r.program;
             ProgramUtil::addComment(program, ProgramUtil::PREFIX_MINER_PROFILE +
-                                                 " " + settings.miner_profile);
+                                                 " " + profile_name);
             api_client->postProgram(program, 10);  // magic number
           }
           // mutate successful program

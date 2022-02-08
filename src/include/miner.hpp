@@ -44,6 +44,7 @@ class Miner {
   static const int64_t NUM_MUTATIONS;
   const Settings &settings;
   const MiningMode mining_mode;
+  std::string profile_name;
   std::unique_ptr<ApiClient> api_client;
   std::unique_ptr<OeisManager> manager;
   std::unique_ptr<MultiGenerator> multi_generator;
