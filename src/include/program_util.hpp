@@ -12,6 +12,8 @@ class ProgramUtil {
 
   static void removeComments(Program &p);
 
+  static void addComment(Program &p, const std::string &comment);
+
   static bool replaceOps(Program &p, Operation::Type oldType,
                          Operation::Type newType);
 
@@ -67,9 +69,14 @@ class ProgramUtil {
 
   static bool isCodedManually(const Program &p);
 
-  static std::string getSubmittedBy(const Program &p);
+  static std::string getCommentField(const Program &p,
+                                     const std::string &prefix);
 
-  static const std::string SUBMITTED_BY_PREFIX;
+  static void removeCommentField(Program &p, const std::string &prefix);
+
+  static const std::string PREFIX_SUBMITTED_BY;
+  static const std::string PREFIX_CODED_MANUALLY;
+  static const std::string PREFIX_MINER_PROFILE;
 
   static void avoidNopOrOverflow(Operation &op);
 };

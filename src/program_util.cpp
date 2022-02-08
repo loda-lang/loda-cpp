@@ -24,6 +24,12 @@ void ProgramUtil::removeComments(Program &p) {
   }
 }
 
+void ProgramUtil::addComment(Program &p, const std::string &comment) {
+  Operation nop(Operation::Type::NOP);
+  nop.comment = comment;
+  p.ops.push_back(nop);
+}
+
 bool ProgramUtil::replaceOps(Program &p, Operation::Type oldType,
                              Operation::Type newType) {
   bool result = false;
@@ -544,29 +550,44 @@ void ProgramUtil::migrateOutputCell(Program &p, int64_t old_out,
 }
 
 bool ProgramUtil::isCodedManually(const Program &p) {
-  static const std::string coded_manually = "Coded manually";
   for (const auto &op : p.ops) {
     if (op.type == Operation::Type::NOP &&
-        op.comment.find(coded_manually) != std::string::npos) {
+        op.comment.find(PREFIX_CODED_MANUALLY) != std::string::npos) {
       return true;
     }
   }
   return false;
 }
 
-std::string ProgramUtil::getSubmittedBy(const Program &p) {
+std::string ProgramUtil::getCommentField(const Program &p,
+                                         const std::string &prefix) {
   for (const auto &op : p.ops) {
     if (op.type == Operation::Type::NOP) {
-      auto pos = op.comment.find(SUBMITTED_BY_PREFIX);
+      auto pos = op.comment.find(prefix);
       if (pos != std::string::npos) {
-        return op.comment.substr(pos + SUBMITTED_BY_PREFIX.size() + 1);
+        return op.comment.substr(pos + prefix.size() + 1);
       }
     }
   }
   return std::string();
 }
 
-const std::string ProgramUtil::SUBMITTED_BY_PREFIX = "Submitted by";
+void ProgramUtil::removeCommentField(Program &p, const std::string &prefix) {
+  auto it = p.ops.begin();
+  while (it != p.ops.end()) {
+    if (it->type == Operation::Type::NOP &&
+        it->comment.find(prefix) != std::string::npos) {
+      it = p.ops.erase(it);
+    } else {
+      it++;
+    }
+  }
+}
+
+const std::string ProgramUtil::PREFIX_SUBMITTED_BY = "Submitted by";
+const std::string ProgramUtil::PREFIX_CODED_MANUALLY = "Coded manually";
+const std::string ProgramUtil::PREFIX_MINER_PROFILE =
+    "Miner Profile:";  // colon!
 
 void ProgramUtil::avoidNopOrOverflow(Operation &op) {
   if (op.source.type == Operand::Type::CONSTANT) {

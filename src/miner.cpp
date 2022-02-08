@@ -76,7 +76,16 @@ void Miner::mine() {
             current_fetch = 0;
           } else {
             current_fetch--;
+            // check metadata stored in program's comments
             ensureSubmittedBy(program);
+            auto profile = ProgramUtil::getCommentField(
+                program, ProgramUtil::PREFIX_MINER_PROFILE);
+            ProgramUtil::removeCommentField(program,
+                                            ProgramUtil::PREFIX_MINER_PROFILE);
+            if (profile.empty()) {
+              profile = "unknown";
+            }
+            num_received_per_profile[profile]++;
             progs.push(program);
           }
         }
@@ -100,7 +109,7 @@ void Miner::mine() {
       for (auto s : seq_programs) {
         checkRegularTasks();
         program = s.second;
-        setSubmittedBy(program);
+        updateSubmittedBy(program);
         auto r = manager->updateProgram(s.first, program);
         if (r.updated) {
           // update stats and increase priority of successful generator
@@ -111,7 +120,11 @@ void Miner::mine() {
           }
           // in client mode: submit the program to the API server
           if (mining_mode == MINING_MODE_CLIENT) {
-            api_client->postProgram(r.program, 10);  // magic number
+            // add metadata as comment
+            program = r.program;
+            ProgramUtil::addComment(program, ProgramUtil::PREFIX_MINER_PROFILE +
+                                                 " " + settings.miner_profile);
+            api_client->postProgram(program, 10);  // magic number
           }
           // mutate successful program
           if (mining_mode != MINING_MODE_SERVER && progs.size() < 1000) {
@@ -162,10 +175,16 @@ void Miner::checkRegularTasks() {
     entries.push_back({"programs", labels, static_cast<double>(num_updated)});
     labels["kind"] = "removed";
     entries.push_back({"programs", labels, static_cast<double>(num_removed)});
+    labels["kind"] = "received";
+    for (auto it : num_received_per_profile) {
+      labels["profile"] = it.first;
+      entries.push_back({"programs", labels, static_cast<double>(it.second)});
+    }
     Metrics::get().write(entries);
     num_new = 0;
     num_updated = 0;
     num_removed = 0;
+    num_received_per_profile.clear();
   }
 
   // regular task: report CPU hours
@@ -213,7 +232,7 @@ void Miner::submit(const std::string &id, const std::string &path) {
   size_t matches = 0;
   for (auto s : seq_programs) {
     program = s.second;
-    setSubmittedBy(program);
+    updateSubmittedBy(program);
     auto r = manager->updateProgram(s.first, program);
     if (r.updated) {
       // in client mode: submit the program to the API server
@@ -239,24 +258,24 @@ void Miner::submit(const std::string &id, const std::string &path) {
 }
 
 void Miner::ensureSubmittedBy(Program &program) {
-  auto submitted_by = ProgramUtil::getSubmittedBy(program);
+  auto submitted_by =
+      ProgramUtil::getCommentField(program, ProgramUtil::PREFIX_SUBMITTED_BY);
   if (submitted_by.empty()) {
-    Operation nop(Operation::Type::NOP);
-    nop.comment = ProgramUtil::SUBMITTED_BY_PREFIX + " " + ANONYMOUS;
-    program.ops.push_back(nop);
+    ProgramUtil::addComment(program,
+                            ProgramUtil::PREFIX_SUBMITTED_BY + " " + ANONYMOUS);
   }
 }
 
-void Miner::setSubmittedBy(Program &program) {
-  auto submitted_by = ProgramUtil::getSubmittedBy(program);
+void Miner::updateSubmittedBy(Program &program) {
+  auto submitted_by =
+      ProgramUtil::getCommentField(program, ProgramUtil::PREFIX_SUBMITTED_BY);
   if (submitted_by.empty()) {
     submitted_by = Setup::getSubmittedBy();
     if (!submitted_by.empty()) {
-      Operation nop(Operation::Type::NOP);
-      nop.comment = ProgramUtil::SUBMITTED_BY_PREFIX + " " + submitted_by;
-      program.ops.push_back(nop);
+      ProgramUtil::addComment(
+          program, ProgramUtil::PREFIX_SUBMITTED_BY + " " + submitted_by);
     }
   } else if (submitted_by == ANONYMOUS) {
-    ProgramUtil::removeOps(program, Operation::Type::NOP);
+    ProgramUtil::removeCommentField(program, ProgramUtil::PREFIX_SUBMITTED_BY);
   }
 }

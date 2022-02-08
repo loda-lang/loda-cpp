@@ -2,9 +2,13 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Features
+
+* New metric: number of received programs per miner profile
+* Automatically replace executable during updates on Windows
+
 ### Enhancements
 
-* Improve update experience on Windows
 * Optimizer supports partial evaluation inside of loops
 * Incremental evaluation (IE) partially supports programs with `seq` operations (IE supports 2300 programs now)
 * Don't use IE in maintenance mode (to detect bugs)

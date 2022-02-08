@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <memory>
 
 #include "api_client.hpp"
@@ -36,7 +37,7 @@ class Miner {
 
   void ensureSubmittedBy(Program &program);
 
-  void setSubmittedBy(Program &program);
+  void updateSubmittedBy(Program &program);
 
   static const std::string ANONYMOUS;
   static const int64_t PROGRAMS_TO_FETCH;
@@ -57,4 +58,5 @@ class Miner {
   int64_t num_updated;
   int64_t num_removed;
   int64_t current_fetch;
+  std::map<std::string, int64_t> num_received_per_profile;
 };
