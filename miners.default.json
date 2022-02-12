@@ -1,15 +1,11 @@
 {
   "miners": [
     {
-      "name": "default",
+      "name": "mutate",
       "overwrite": "none",
       "backoff": true,
       "generators": [
-        "v1_simple",
-        "v2",
-        "v3",
-        "v5",
-        "v6"
+        "v6_1"
       ],
       "matchers": [
         "direct",
@@ -27,7 +23,7 @@
         "v2",
         "v3",
         "v5",
-        "v6"
+        "v6_2"
       ],
       "matchers": [
         "direct",
@@ -38,11 +34,26 @@
       ]
     },
     {
-      "name": "mutate",
+      "name": "mutate2",
       "overwrite": "none",
       "backoff": true,
       "generators": [
-        "v6"
+        "v6_2"
+      ],
+      "matchers": [
+        "direct",
+        "linear1",
+        "linear2",
+        "binary",
+        "decimal"
+      ]
+    },
+    {
+      "name": "mutate3",
+      "overwrite": "none",
+      "backoff": true,
+      "generators": [
+        "v6_3"
       ],
       "matchers": [
         "direct",
@@ -57,7 +68,10 @@
       "overwrite": "none",
       "backoff": true,
       "generators": [
-        "v1_hard"
+        "v1",
+        "v2",
+        "v3",
+        "v5"
       ],
       "matchers": [
         "direct",
@@ -67,43 +81,11 @@
         "decimal",
         "delta"
       ]
-    },
-    {
-      "name": "blocks",
-      "overwrite": "auto",
-      "backoff": true,
-      "generators": [
-        "v5"
-      ],
-      "matchers": [
-        "direct",
-        "linear1",
-        "linear2",
-        "binary",
-        "decimal"
-      ]
     }
   ],
   "generators": [
     {
-      "name": "v1_simple",
-      "version": 1,
-      "length": 35,
-      "maxConstant": 5,
-      "maxIndex": 5,
-      "loops": false,
-      "calls": false,
-      "indirectAccess": false,
-      "template": [
-        "$LODA_HOME/programs/templates/call.asm",
-        "$LODA_HOME/programs/templates/call2.asm",
-        "$LODA_HOME/programs/templates/loop.asm",
-        "$LODA_HOME/programs/templates/loop2.asm",
-        "$LODA_HOME/programs/templates/loop_call.asm"
-      ]
-    },
-    {
-      "name": "v1_hard",
+      "name": "v1",
       "version": 1,
       "length": 60,
       "maxConstant": 8,
@@ -112,6 +94,11 @@
       "calls": false,
       "indirectAccess": false,
       "template": [
+        "$LODA_HOME/programs/templates/call.asm",
+        "$LODA_HOME/programs/templates/call2.asm",
+        "$LODA_HOME/programs/templates/loop.asm",
+        "$LODA_HOME/programs/templates/loop2.asm",
+        "$LODA_HOME/programs/templates/loop_call.asm",
         "$LODA_HOME/programs/oeis/002/A002580.asm",
         "$LODA_HOME/programs/oeis/002/A002581.asm",
         "$LODA_HOME/programs/oeis/005/A005480.asm",
@@ -146,9 +133,19 @@
       "length": 30
     },
     {
-      "name": "v6",
+      "name": "v6_1",
+      "version": 6,
+      "mutationRate": 0.2
+    },
+    {
+      "name": "v6_2",
       "version": 6,
       "mutationRate": 0.4
+    },
+    {
+      "name": "v6_3",
+      "version": 6,
+      "mutationRate": 0.6
     }
   ]
 }
