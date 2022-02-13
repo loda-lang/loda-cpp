@@ -62,7 +62,7 @@ void AbstractMatcher<T>::match(const Program &p, const Sequence &norm_seq,
       Program copy = p;
       if (extend(copy, data.at(id), reduced.second)) {
         result.push_back(std::pair<size_t, Program>(id, copy));
-        if ((Random::get().gen() % 10) == 0)  // magic number
+        if (backoff && (Random::get().gen() % 10) == 0)  // magic number
         {
           // avoid to many matches for the same sequence
           break;

@@ -21,8 +21,7 @@ struct update_program_result_t {
 
 class OeisManager {
  public:
-  OeisManager(const Settings& settings, bool force_overwrite = false,
-              const std::string& stats_home = "");
+  OeisManager(const Settings& settings, const std::string& stats_home = "");
 
   void load();
 

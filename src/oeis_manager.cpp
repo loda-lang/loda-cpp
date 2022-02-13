@@ -27,12 +27,10 @@ void throwParseError(const std::string &line) {
   Log::get().error("error parsing OEIS line: " + line, true);
 }
 
-OeisManager::OeisManager(const Settings &settings, bool force_overwrite,
+OeisManager::OeisManager(const Settings &settings,
                          const std::string &stats_home)
     : settings(settings),
-      overwrite_mode(force_overwrite
-                         ? OverwriteMode::ALL
-                         : ConfigLoader::load(settings).overwrite_mode),
+      overwrite_mode(ConfigLoader::load(settings).overwrite_mode),
       evaluator(settings),
       finder(settings, evaluator),
       finder_initialized(false),

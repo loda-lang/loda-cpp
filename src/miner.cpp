@@ -32,9 +32,9 @@ Miner::Miner(const Settings &settings)
       num_removed(0),
       current_fetch(0) {}
 
-void Miner::reload(bool load_generators, bool force_overwrite) {
+void Miner::reload(bool load_generators) {
   api_client.reset(new ApiClient());
-  manager.reset(new OeisManager(settings, force_overwrite));
+  manager.reset(new OeisManager(settings));
   manager->load();
   manager->getFinder();  // initializes stats and matchers
   if (load_generators) {
@@ -208,7 +208,8 @@ void Miner::checkRegularTasks() {
 void Miner::submit(const std::string &id, const std::string &path) {
   Parser parser;
   auto program = parser.parse(path);
-  reload(false, true);
+  ConfigLoader::MAINTAINANCE_MODE = true;
+  reload(false);
   OeisSequence seq(id);
   Settings settings(this->settings);
   settings.print_as_b_file = false;
