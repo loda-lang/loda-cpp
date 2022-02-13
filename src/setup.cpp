@@ -481,6 +481,16 @@ bool Setup::checkUpdate() {
   exe = ".exe";
 #endif
   const std::string exec_local = LODA_HOME + "bin" + FILE_SEP + "loda" + exe;
+  const std::string exec_tmp =
+      LODA_HOME + "bin" + FILE_SEP + "loda-" + Version::PLATFORM + exe;
+#ifdef _WIN64
+  if (isFile(exec_local) && isFile(exec_tmp)) {
+    std::string cmd = "del \"" + exec_tmp + "\" " + getNullRedirect();
+    if (system(cmd.c_str()) != 0) {
+      std::cout << "Error deleting temporary file: " + exec_tmp << std::endl;
+    }
+  }
+#endif
   auto latest_version = getLatestVersion();
   if (Version::IS_RELEASE &&
       (latest_version != Version::BRANCH || !isFile(exec_local))) {
@@ -489,8 +499,6 @@ bool Setup::checkUpdate() {
     std::string line;
     std::getline(std::cin, line);
     if (line.empty() || line == "y" || line == "Y") {
-      const std::string exec_tmp =
-          LODA_HOME + "bin" + FILE_SEP + "loda-" + Version::PLATFORM + exe;
       const std::string exec_url =
           "https://github.com/loda-lang/loda-cpp/releases/download/" +
           latest_version + "/loda-" + Version::PLATFORM + exe;

@@ -138,11 +138,9 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
       std::cout << "error updating executable" << std::endl;
       return 1;
     }
-    std::cout << "Update installed. Restarting setup... " << std::endl
-              << std::endl;
-    // then start the setup of the new one (create a new process)
-    cmd = "\"" + args.at(2) + "\" setup";
-    create_win_process(cmd);
+    std::cout << "Update installed. Please launch \"loda setup\" again"
+              << std::endl
+              << "to check and complete its configuration." << std::endl;
   }
 #endif
 #ifndef LODA_VERSION

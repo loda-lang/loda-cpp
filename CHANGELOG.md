@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Bugfixes
+
+* Fix two issues during update installation on Windows
+
 ## v22.2.10
 
 ### Bugfixes
