@@ -33,7 +33,7 @@ class Miner {
  private:
   void checkRegularTasks();
 
-  void reload(bool load_generators, bool force_overwrite = false);
+  void reload(bool load_generators);
 
   void ensureSubmittedBy(Program &program);
 

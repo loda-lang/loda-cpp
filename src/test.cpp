@@ -74,7 +74,7 @@ void Test::all() {
 
 OeisManager& Test::getManager() {
   if (!manager_ptr) {
-    manager_ptr.reset(new OeisManager(settings, false, getTmpDir() + "stats"));
+    manager_ptr.reset(new OeisManager(settings, getTmpDir() + "stats"));
   }
   return *manager_ptr;
 }

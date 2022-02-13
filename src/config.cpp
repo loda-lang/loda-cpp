@@ -4,6 +4,8 @@
 #include "jute.h"
 #include "setup.hpp"
 
+bool ConfigLoader::MAINTAINANCE_MODE = false;
+
 int64_t get_jint(jute::jValue &v, const std::string &key, int64_t def) {
   if (v[key].get_type() == jute::jType::JNUMBER) {
     return v[key].as_int();
@@ -89,6 +91,10 @@ std::vector<Generator::Config> loadGeneratorConfigs(
 }
 
 Miner::Config ConfigLoader::load(const Settings &settings) {
+  if (MAINTAINANCE_MODE) {
+    return getMaintenanceConfig();
+  }
+
   const std::string loda_config = Setup::getMinersConfig();
   Miner::Config config;
 
@@ -153,6 +159,17 @@ Miner::Config ConfigLoader::load(const Settings &settings) {
   if (!found) {
     Log::get().error("Miner config not found: " + profile, true);
   }
+  return config;
+}
+
+Miner::Config ConfigLoader::getMaintenanceConfig() {
+  Miner::Config config;
+  config.name = "maintenance";
+  config.overwrite_mode = OverwriteMode::ALL;
+  config.matchers.resize(1);
+  config.matchers.back().type = "direct";
+  config.matchers.back().backoff = false;
+  // no generators in maintenance mode
   return config;
 }
 
