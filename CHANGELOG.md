@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Features
+
+* Raspberry Pi OS support (64-bit)
+
 ### Bugfixes
 
 * Fix two issues during update installation on Windows
