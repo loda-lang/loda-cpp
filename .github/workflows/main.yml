@@ -8,22 +8,12 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-ubuntu-18:
-    runs-on: ubuntu-18.04
-    steps:
-      - uses: actions/checkout@v2
-      - name: Build
-        run: cd src && make
-      - name: Test
-        run: ./loda test
-      - name: Benchmark
-        run: ./loda benchmark
-  build-ubuntu-20:
+  build-linux-x86:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
       - name: Build
-        run: cd src && make
+        run: cd src && make -f Makefile.linux-x86
       - name: Test
         run: ./loda test
       - name: Benchmark
