@@ -32,17 +32,17 @@ Miner::Miner(const Settings &settings)
       num_removed(0),
       current_fetch(0) {}
 
-void Miner::reload(bool load_generators) {
+void Miner::reload() {
   api_client.reset(new ApiClient());
   manager.reset(new OeisManager(settings));
   manager->load();
   manager->getFinder();  // initializes stats and matchers
-  if (load_generators) {
-    profile_name = ConfigLoader::load(settings).name;
+  profile_name = ConfigLoader::load(settings).name;
+  if (mining_mode == MINING_MODE_SERVER || ConfigLoader::MAINTAINANCE_MODE) {
+    multi_generator.reset();
+  } else {
     multi_generator.reset(
         new MultiGenerator(settings, manager->getStats(), true));
-  } else {
-    multi_generator.reset();
   }
   mutator.reset(new Mutator(manager->getStats()));
   manager->releaseStats();  // not needed anymore
@@ -50,7 +50,7 @@ void Miner::reload(bool load_generators) {
 
 void Miner::mine() {
   if (!manager) {
-    reload(true);
+    reload();
   }
   Parser parser;
   std::stack<Program> progs;
@@ -201,7 +201,7 @@ void Miner::checkRegularTasks() {
   // regular task: reload oeis manager and generators
   if (reload_scheduler.isTargetReached()) {
     reload_scheduler.reset();
-    reload(true);
+    reload();
   }
 }
 
@@ -209,7 +209,7 @@ void Miner::submit(const std::string &id, const std::string &path) {
   Parser parser;
   auto program = parser.parse(path);
   ConfigLoader::MAINTAINANCE_MODE = true;
-  reload(false);
+  reload();
   OeisSequence seq(id);
   Settings settings(this->settings);
   settings.print_as_b_file = false;

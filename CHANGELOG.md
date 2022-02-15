@@ -2,9 +2,13 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v22.2.15
+
 ### Features
 
-* Raspberry Pi OS support (64-bit)
+* Statically linked executables for Linux:
+  * `loda-linux-x86`: for Intel/AMD x86. Replaces dynamically linked Ubuntu binaries.
+  * `loda-linux-arm64`: for ARM64 processors. Compatible with Raspberry Pi OS (64-bit).
 
 ### Bugfixes
 

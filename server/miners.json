@@ -1,0 +1,20 @@
+{
+    "miners": [
+        {
+            "name": "server-new",
+            "overwrite": "none",
+            "backoff": false,
+            "matchers": [
+                "direct"
+            ]
+        },
+        {
+            "name": "server-update",
+            "overwrite": "auto",
+            "backoff": false,
+            "matchers": [
+                "direct"
+            ]
+        }
+    ]
+}
