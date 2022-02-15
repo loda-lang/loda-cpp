@@ -28,15 +28,15 @@ jobs:
         run: ./loda test
       - name: Benchmark
         run: ./loda benchmark
-  build-raspberrypi64:
+  build-linux-arm64:
     runs-on:
       - self-hosted
-      - raspberrypi
+      - Linux
       - ARM64
     steps:
       - uses: actions/checkout@v2
       - name: Build
-        run: cd src && make
+        run: cd src && make -f Makefile.linux-arm64
       - name: Test
         run: ./loda test
       - name: Benchmark
