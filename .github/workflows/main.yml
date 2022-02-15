@@ -29,8 +29,6 @@ jobs:
         run: cd src && make -f Makefile.linux-arm64
       - name: Test
         run: ./loda test
-      - name: Benchmark
-        run: ./loda benchmark
   build-macos-11:
     runs-on: macos-11
     steps:

@@ -1,4 +1,4 @@
-name: CD
+name: Release
 
 on:
   workflow_dispatch:
@@ -36,24 +36,6 @@ jobs:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
           asset_path: ./loda
           asset_name: loda-linux-x86
-          asset_content_type: application/octet-stream
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-      - name: Upload (legacy ubuntu-18)
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./loda
-          asset_name: loda-ubuntu-18
-          asset_content_type: application/octet-stream
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-      - name: Upload (legacy ubuntu-20)
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./loda
-          asset_name: loda-ubuntu-20
           asset_content_type: application/octet-stream
         env:
           GITHUB_TOKEN: ${{ github.token }}
