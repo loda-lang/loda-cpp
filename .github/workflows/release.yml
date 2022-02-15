@@ -23,14 +23,23 @@ jobs:
     outputs:
       version: ${{ steps.generate-version.outputs.version }}
       upload_url: ${{ steps.create-release.outputs.upload_url }}
-  build-ubuntu-18:
+  build-linux-x86:
     needs: create-release
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
       - name: Build
-        run: cd src && make loda LODA_PLATFORM=ubuntu-18 LODA_VERSION=${{ needs.create-release.outputs.version }}
+        run: cd src && make -f Makefile.linux-x86 loda LODA_PLATFORM=linux-x86 LODA_VERSION=${{ needs.create-release.outputs.version }}
       - name: Upload
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./loda
+          asset_name: loda-linux-x86
+          asset_content_type: application/octet-stream
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - name: Upload (legacy ubuntu-18)
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
@@ -39,14 +48,7 @@ jobs:
           asset_content_type: application/octet-stream
         env:
           GITHUB_TOKEN: ${{ github.token }}
-  build-ubuntu-20:
-    needs: create-release
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-      - name: Build
-        run: cd src && make loda LODA_PLATFORM=ubuntu-20 LODA_VERSION=${{ needs.create-release.outputs.version }}
-      - name: Upload
+      - name: Upload (legacy ubuntu-20)
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
