@@ -64,7 +64,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build
-        run: cd src && make -f Makefile.linux-arm64 loda LODA_PLATFORM=raspberrypi64 LODA_VERSION=${{ needs.create-release.outputs.version }}
+        run: cd src && make -f Makefile.linux-arm64 loda LODA_PLATFORM=linux-arm64 LODA_VERSION=${{ needs.create-release.outputs.version }}
       - name: Upload
         uses: actions/upload-release-asset@v1
         with:
