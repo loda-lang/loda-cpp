@@ -2,11 +2,15 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Features
+
+* Universal macOS binary for Intel (x86-64) and Apple M1 processors (ARM64)
+
 ## v22.2.15
 
 ### Features
 
-* Statically linked executables for Linux:
+* Statically linked binaries for Linux:
   * `loda-linux-x86`: for Intel/AMD x86. Replaces dynamically linked Ubuntu binaries.
   * `loda-linux-arm64`: for ARM64 processors. Compatible with Raspberry Pi OS (64-bit).
 

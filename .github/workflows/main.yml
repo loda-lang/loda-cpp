@@ -29,17 +29,17 @@ jobs:
         run: cd src && make -f Makefile.linux-arm64
       - name: Test
         run: ./loda test
-  build-macos-11:
+  build-macos:
     runs-on: macos-11
     steps:
       - uses: actions/checkout@v2
       - name: Build
-        run: cd src && make
+        run: cd src && make -f Makefile.macos
       - name: Test
         run: ./loda test
       - name: Benchmark
         run: ./loda benchmark
-  build-windows-2019:
+  build-windows:
     runs-on: windows-2019
     steps:
       - uses: actions/checkout@v2

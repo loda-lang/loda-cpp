@@ -27,8 +27,3 @@ external/jute.cpp:
 
 clean:
 	rm -R -f $(OBJS) loda ../loda external
-
-test: loda
-	cd .. && ./loda test
-
-all: test

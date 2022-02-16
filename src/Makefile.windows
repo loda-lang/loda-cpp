@@ -23,3 +23,6 @@ external/jute.h:
 external/jute.cpp:
 	@if not exist external mkdir external
 	curl -sS -o external/jute.cpp https://raw.githubusercontent.com/amir-s/jute/master/jute.cpp
+
+clean:
+	del /f $(OBJS) loda ../loda external
