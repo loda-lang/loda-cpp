@@ -1,7 +1,4 @@
-# This is a generic Makefile for development purposes.
-# Release are built using platform-specific Makefiles.
-
-CXXFLAGS = -Iinclude -Iexternal -O2 -g -Wall -fmessage-length=0 -std=c++17
+CXXFLAGS += -Iinclude -Iexternal -O2 -g -Wall -fmessage-length=0 -std=c++17
 
 ifdef LODA_VERSION
 CXXFLAGS += -DLODA_VERSION=$(LODA_VERSION)
@@ -14,7 +11,7 @@ endif
 OBJS = api_client.o benchmark.o big_number.o blocks.o commands.o config.o distribution.o evaluator.o evaluator_inc.o extender.o external/jute.o file.o finder.o generator.o generator_v1.o generator_v2.o generator_v3.o generator_v4.o generator_v5.o generator_v6.o interpreter.o iterator.o main.o matcher.o memory.o metrics.o miner.o minimizer.o mutator.o number.o oeis_list.o oeis_manager.o oeis_sequence.o optimizer.o parser.o program.o program_util.o reducer.o semantics.o setup.o sequence.o stats.o test.o util.o web_client.o
 
 loda: external/jute.h external/jute.cpp $(OBJS)
-	$(CXX) -o loda $(OBJS)
+	$(CXX) $(LDFLAGS) -o loda $(OBJS)
 	[ -L ../loda ] || ( cd .. && ln -s src/loda loda )
 
 external/jute.h:
