@@ -1,9 +1,10 @@
-# BEGIN PLATFORM CONFIG FOR LINUX X86
-CXX = x86_64-linux-gnu-g++
-LDFLAGS = -static -static-libstdc++ -static-libgcc
-# END PLATFORM CONFIG FOR LINUX X86
+# BEGIN PLATFORM CONFIG FOR MAC OS X86
+CXX = clang++
+CXXFLAGS = -target x86_64-apple-macos11
+LDFLAGS = -target x86_64-apple-macos11
+# END PLATFORM CONFIG FOR MAC OS X86
 
-CXXFLAGS = -Iinclude -Iexternal -O2 -g -Wall -fmessage-length=0 -std=c++17
+CXXFLAGS += -Iinclude -Iexternal -O2 -g -Wall -fmessage-length=0 -std=c++17
 
 ifdef LODA_VERSION
 CXXFLAGS += -DLODA_VERSION=$(LODA_VERSION)
@@ -27,8 +28,3 @@ external/jute.cpp:
 
 clean:
 	rm -R -f $(OBJS) loda ../loda external
-
-test: loda
-	cd .. && ./loda test
-
-all: test

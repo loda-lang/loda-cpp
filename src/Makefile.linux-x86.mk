@@ -1,7 +1,7 @@
-# BEGIN PLATFORM CONFIG FOR LINUX ARM64
-CXX = aarch64-linux-gnu-g++
+# BEGIN PLATFORM CONFIG FOR LINUX X86
+CXX = x86_64-linux-gnu-g++
 LDFLAGS = -static -static-libstdc++ -static-libgcc
-# END PLATFORM CONFIG FOR LINUX ARM64
+# END PLATFORM CONFIG FOR LINUX X86
 
 CXXFLAGS = -Iinclude -Iexternal -O2 -g -Wall -fmessage-length=0 -std=c++17
 
@@ -27,8 +27,3 @@ external/jute.cpp:
 
 clean:
 	rm -R -f $(OBJS) loda ../loda external
-
-test: loda
-	cd .. && ./loda test
-
-all: test

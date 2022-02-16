@@ -29,7 +29,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build
-        run: cd src && make -f Makefile.linux-x86 loda LODA_PLATFORM=linux-x86 LODA_VERSION=${{ needs.create-release.outputs.version }}
+        run: cd src && make -f Makefile.linux-x86.mk loda LODA_PLATFORM=linux-x86 LODA_VERSION=${{ needs.create-release.outputs.version }}
       - name: Upload
         uses: actions/upload-release-asset@v1
         with:
@@ -48,7 +48,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build
-        run: cd src && make -f Makefile.linux-arm64 loda LODA_PLATFORM=linux-arm64 LODA_VERSION=${{ needs.create-release.outputs.version }}
+        run: cd src && make -f Makefile.linux-arm64.mk loda LODA_PLATFORM=linux-arm64 LODA_VERSION=${{ needs.create-release.outputs.version }}
       - name: Upload
         uses: actions/upload-release-asset@v1
         with:
@@ -58,14 +58,32 @@ jobs:
           asset_content_type: application/octet-stream
         env:
           GITHUB_TOKEN: ${{ github.token }}
-  build-macos-11:
+  build-macos:
     needs: create-release
     runs-on: macos-11
     steps:
       - uses: actions/checkout@v2
       - name: Build
-        run: cd src && make loda LODA_PLATFORM=macos-11 LODA_VERSION=${{ needs.create-release.outputs.version }}
+        run: |
+          cd src
+          make -f Makefile.macos-x86.mk loda LODA_PLATFORM=macos LODA_VERSION=${{ needs.create-release.outputs.version }}
+          mv loda loda-x86
+          make clean
+          make -f Makefile.macos-arm64.mk loda LODA_PLATFORM=macos LODA_VERSION=${{ needs.create-release.outputs.version }}
+          mv loda loda-arm64
+          lipo -create -output loda loda-x86 loda-arm64
+          rm loda-x86 loda-arm64
+          file loda
       - name: Upload
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./loda
+          asset_name: loda-macos
+          asset_content_type: application/octet-stream
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - name: Upload (legacy macos-11)
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
@@ -81,8 +99,17 @@ jobs:
       - uses: actions/checkout@v2
       - uses: ilammy/msvc-dev-cmd@v1
       - name: Build
-        run: cd src && nmake.exe /F Makefile.windows loda LODA_PLATFORM=windows-19 LODA_VERSION=${{ needs.create-release.outputs.version }}
+        run: cd src && nmake.exe /F Makefile.windows.mk loda LODA_PLATFORM=windows LODA_VERSION=${{ needs.create-release.outputs.version }}
       - name: Upload
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./loda.exe
+          asset_name: loda-windows.exe
+          asset_content_type: application/octet-stream
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - name: Upload (legacy windows-19)
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}

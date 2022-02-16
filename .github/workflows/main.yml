@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build
-        run: cd src && make -f Makefile.linux-x86
+        run: cd src && make -f Makefile.linux-x86.mk
       - name: Test
         run: ./loda test
       - name: Benchmark
@@ -26,26 +26,35 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build
-        run: cd src && make -f Makefile.linux-arm64
+        run: cd src && make -f Makefile.linux-arm64.mk
       - name: Test
         run: ./loda test
-  build-macos-11:
+  build-macos:
     runs-on: macos-11
     steps:
       - uses: actions/checkout@v2
       - name: Build
-        run: cd src && make
+        run: |
+          cd src
+          make -f Makefile.macos-x86.mk
+          mv loda loda-x86
+          make clean
+          make -f Makefile.macos-arm64.mk
+          mv loda loda-arm64
+          lipo -create -output loda loda-x86 loda-arm64
+          rm loda-x86 loda-arm64
+          file loda
       - name: Test
         run: ./loda test
       - name: Benchmark
         run: ./loda benchmark
-  build-windows-2019:
+  build-windows:
     runs-on: windows-2019
     steps:
       - uses: actions/checkout@v2
       - uses: ilammy/msvc-dev-cmd@v1
       - name: Build
-        run: cd src && nmake.exe /F Makefile.windows
+        run: cd src && nmake.exe /F Makefile.windows.mk
       - name: Test
         run: ./loda.exe test
       - name: Benchmark
