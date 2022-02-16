@@ -1,7 +1,4 @@
-# This is a generic Makefile for development purposes.
-# Release are built using platform-specific Makefiles.
-
-CXXFLAGS = -Iinclude -Iexternal -O2 -g -Wall -fmessage-length=0 -std=c++17
+CXXFLAGS += -Iinclude -Iexternal -O2 -g -Wall -fmessage-length=0 -std=c++17
 
 ifdef LODA_VERSION
 CXXFLAGS += -DLODA_VERSION=$(LODA_VERSION)
