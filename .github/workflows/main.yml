@@ -40,7 +40,7 @@ jobs:
           mv loda loda-x86
           make clean
           make -f Makefile.macos-arm64
-          mv loda loda-x86
+          mv loda loda-arm64
           make clean
           lipo -create -output loda loda-x86 loda-arm64
           rm loda-x86 loda-arm64
