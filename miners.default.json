@@ -140,12 +140,12 @@
     {
       "name": "v6_2",
       "version": 6,
-      "mutationRate": 0.4
+      "mutationRate": 0.3
     },
     {
       "name": "v6_3",
       "version": 6,
-      "mutationRate": 0.6
+      "mutationRate": 0.4
     }
   ]
 }
