@@ -2,6 +2,8 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v22.2.17
+
 ### Features
 
 * Universal macOS binary for Intel (x86-64) and Apple M1 processors (ARM64)
