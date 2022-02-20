@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Enhancements
+
+* Incremental evaluation (IE) partially supports programs with non-commutative updates of output cells. IE is supported for 5100 programs now.
+
 ## v22.2.17
 
 ### Features
