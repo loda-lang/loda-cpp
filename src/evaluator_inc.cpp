@@ -14,8 +14,8 @@ void IncrementalEvaluator::reset() {
   pre_loop.ops.clear();
   loop_body.ops.clear();
   post_loop.ops.clear();
-  aggregation_types.clear();
-  aggregation_cells.clear();
+  output_updates.clear();
+  output_cells.clear();
   stateful_cells.clear();
   loop_counter_dependent_cells.clear();
   loop_counter_cell = 0;
@@ -43,7 +43,7 @@ bool IncrementalEvaluator::init(const Program& program) {
   if (!checkPostLoop()) {
     return false;
   }
-  // now the aggregation cells are initialized
+  // now the output cells are initialized
   if (!checkLoopBody()) {
     return false;
   }
@@ -134,24 +134,25 @@ bool IncrementalEvaluator::checkPreLoop() {
 bool IncrementalEvaluator::checkLoopBody() {
   bool loop_counter_updated = false;
   bool has_seq = false;
+  bool is_commutative = true;
   for (auto& op : loop_body.ops) {
     if (op.type == Operation::Type::SEQ) {
       has_seq = true;
     }
     const auto target = op.target.value.asInt();
 
-    // check aggregation cells
-    if (aggregation_cells.find(target) != aggregation_cells.end()) {
+    // check output cells
+    if (output_cells.find(target) != output_cells.end()) {
       // must be a commutative operation
       if (!ProgramUtil::isCommutative(op.type)) {
-        return false;
+        is_commutative = false;
       }
       // cannot mix operations per memory cell (would not be commutative)
-      if (aggregation_types.find(target) != aggregation_types.end() &&
-          aggregation_types[target] != op.type) {
-        return false;
+      if (output_updates.find(target) != output_updates.end() &&
+          output_updates[target] != op.type) {
+        is_commutative = false;
       }
-      aggregation_types[target] = op.type;
+      output_updates[target] = op.type;
     }
 
     // check loop counter cell
@@ -181,11 +182,13 @@ bool IncrementalEvaluator::checkLoopBody() {
   while (updateLoopCounterDependentCells()) {
   };
 
-  // if there is more than one stateful cell, it is not just a simple
-  // aggregation. therefore we must ensure that there are no sequence
+  // if there is more than one stateful cell or non-commutative
+  // operations, it is not just a simple aggregation. therefore
+  // we must ensure that there are no sequence
   // calls or loop counter dependent cells in that case.
-  if (stateful_cells.size() > 1 &&
-      (has_seq || !loop_counter_dependent_cells.empty())) {
+  if ((stateful_cells.size() > 1 || !is_commutative) &&
+      (has_seq || !loop_counter_dependent_cells.empty() ||
+       output_cells.find(Program::INPUT_CELL) != output_cells.end())) {
     return false;
   }
   return true;
@@ -263,18 +266,18 @@ bool IncrementalEvaluator::checkPostLoop() {
     const auto meta = Operation::Metadata::get(op.type);
     if (meta.num_operands > 0) {
       if (meta.is_reading_target) {
-        aggregation_cells.insert(op.target.value.asInt());
+        output_cells.insert(op.target.value.asInt());
       } else if (meta.is_writing_target &&
                  op.target.value == Program::OUTPUT_CELL) {
         is_overwriting_output = true;
       }
     }
     if (meta.num_operands == 2 && op.source.type == Operand::Type::DIRECT) {
-      aggregation_cells.insert(op.source.value.asInt());
+      output_cells.insert(op.source.value.asInt());
     }
   }
   if (!is_overwriting_output) {
-    aggregation_cells.insert(Program::OUTPUT_CELL);
+    output_cells.insert(Program::OUTPUT_CELL);
   }
   return true;
 }

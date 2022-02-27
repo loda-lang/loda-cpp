@@ -6,13 +6,13 @@
 
 // Incremental Evaluator (IE) class for simple loop programs. It does not work
 // as a general evaluator for LODA programs, but only for a certain set of
-// programs that contain a simple loop that aggregates a result. IE is much
-// faster than regular evaluation, because the result is computed incrementally,
-// i.e., for every computing the next term of a sequence, the loop body needs
-// to be executed only once. This works by remembering the state of the previous
-// iteration and updating it, instead of computing it from scratch.
-// The decision whether IA works for a given program is made using a static code
-// analysis of the program to be executed.
+// programs that contain simple loops. IE is much faster than regular
+// evaluation, because the result is computed incrementally, i.e., for every
+// computing the next term of a sequence, the loop body needs to be executed
+// only once. This works by remembering the state of the previous iteration and
+// updating it, instead of computing it from scratch. The decision whether IA
+// works for a given program is made using a static code analysis of the program
+// to be executed.
 //
 // To find out whether your program is supported by IE, use the init() function.
 // If it returns true, use successive calls to the next() function to compute
@@ -44,8 +44,8 @@ class IncrementalEvaluator {
   Program pre_loop;
   Program loop_body;
   Program post_loop;
-  std::map<int64_t, Operation::Type> aggregation_types;
-  std::set<int64_t> aggregation_cells;
+  std::map<int64_t, Operation::Type> output_updates;
+  std::set<int64_t> output_cells;
   std::set<int64_t> stateful_cells;
   std::set<int64_t> loop_counter_dependent_cells;
   int64_t loop_counter_cell;
