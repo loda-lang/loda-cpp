@@ -182,19 +182,13 @@ bool IncrementalEvaluator::checkLoopBody() {
   while (updateLoopCounterDependentCells()) {
   };
 
-  // TODO: unify these two checks
-  if (!is_commutative &&
-      (!loop_counter_dependent_cells.empty() ||
-       output_cells.find(Program::INPUT_CELL) != output_cells.end() ||
-       has_seq)) {
-    return false;
-  }
-
-  // if there is more than one stateful cell, it is not just a simple
-  // aggregation. therefore we must ensure that there are no sequence
+  // if there is more than one stateful cell or non-commutative
+  // operations, it is not just a simple aggregation. therefore
+  // we must ensure that there are no sequence
   // calls or loop counter dependent cells in that case.
-  if (stateful_cells.size() > 1 &&
-      (has_seq || !loop_counter_dependent_cells.empty())) {
+  if ((stateful_cells.size() > 1 || !is_commutative) &&
+      (has_seq || !loop_counter_dependent_cells.empty() ||
+       output_cells.find(Program::INPUT_CELL) != output_cells.end())) {
     return false;
   }
   return true;
