@@ -65,7 +65,7 @@
     },
     {
       "name": "hard",
-      "overwrite": "none",
+      "overwrite": "auto",
       "backoff": true,
       "generators": [
         "v1",
@@ -99,6 +99,7 @@
         "$LODA_HOME/programs/templates/loop.asm",
         "$LODA_HOME/programs/templates/loop2.asm",
         "$LODA_HOME/programs/templates/loop_call.asm",
+        "$LODA_HOME/programs/oeis/000/A000040.asm",
         "$LODA_HOME/programs/oeis/002/A002580.asm",
         "$LODA_HOME/programs/oeis/002/A002581.asm",
         "$LODA_HOME/programs/oeis/005/A005480.asm",
