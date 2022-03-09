@@ -66,8 +66,11 @@ void Commands::help() {
   std::cout << std::endl << "Options:" << std::endl;
   std::cout << "  -t <number>         Number of sequence terms (default: "
             << settings.num_terms << ")" << std::endl;
-  std::cout << "  -b <number>         Print result in b-file format from a "
-               "given offset"
+  std::cout
+      << "  -b                  Print result in b-file format from offset 0"
+      << std::endl;
+  std::cout << "  -B <number>         Print result in b-file format from a "
+               "custom offset"
             << std::endl;
   std::cout << "  -s                  Evaluate program to number of "
                "execution steps"
@@ -84,7 +87,10 @@ void Commands::help() {
   std::cout
       << "  -i <string>         Name of miner configuration from miners.json"
       << std::endl;
-  std::cout << "  -p                  Parallel mining using multiple process "
+  std::cout << "  -p                  Parallel mining using default number of "
+               "instances"
+            << std::endl;
+  std::cout << "  -P <number>         Parallel mining using custom number of "
                "instances"
             << std::endl;
 }

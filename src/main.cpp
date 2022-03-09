@@ -62,7 +62,10 @@ bool isChildProcessAlive(HANDLE pid) {
 void mineParallel(Settings settings, const std::vector<std::string>& args) {
   const bool set_miner_profile = settings.miner_profile.empty();
   settings.parallel_mining = false;
-  const int64_t num_instances = Setup::getMaxInstances();
+  int64_t num_instances = settings.num_miner_instances;
+  if (num_instances == 0) {
+    num_instances = Setup::getMaxInstances();
+  }
   std::vector<HANDLE> children_pids(num_instances, 0);
   Log::get().info("Starting parallel mining using " +
                   std::to_string(num_instances) + " miner instances");

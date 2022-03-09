@@ -65,6 +65,7 @@ class Settings {
   int64_t max_cycles;
   bool use_steps;
   bool parallel_mining;
+  int64_t num_miner_instances;
   std::string miner_profile;
 
   // flag and offset for printing evaluation results in b-file format

@@ -202,6 +202,7 @@ Settings::Settings()
       max_cycles(DEFAULT_MAX_CYCLES),
       use_steps(false),
       parallel_mining(false),
+      num_miner_instances(0),
       print_as_b_file(false),
       print_as_b_file_offset(0) {}
 
@@ -211,6 +212,7 @@ enum class Option {
   MAX_MEMORY,
   MAX_CYCLES,
   B_FILE_OFFSET,
+  NUM_INSTANCES,
   MINER,
   LOG_LEVEL
 };
@@ -221,7 +223,8 @@ std::vector<std::string> Settings::parseArgs(int argc, char *argv[]) {
   for (int i = 1; i < argc; ++i) {
     std::string arg(argv[i]);
     if (option == Option::NUM_TERMS || option == Option::MAX_MEMORY ||
-        option == Option::MAX_CYCLES || option == Option::B_FILE_OFFSET) {
+        option == Option::MAX_CYCLES || option == Option::B_FILE_OFFSET ||
+        option == Option::NUM_INSTANCES) {
       std::stringstream s(arg);
       int64_t val;
       s >> val;
@@ -235,7 +238,6 @@ std::vector<std::string> Settings::parseArgs(int argc, char *argv[]) {
           num_terms = val;
           break;
         case Option::B_FILE_OFFSET:
-          print_as_b_file = true;
           print_as_b_file_offset = val;
           break;
         case Option::MAX_MEMORY:
@@ -243,6 +245,9 @@ std::vector<std::string> Settings::parseArgs(int argc, char *argv[]) {
           break;
         case Option::MAX_CYCLES:
           max_cycles = val;
+          break;
+        case Option::NUM_INSTANCES:
+          num_miner_instances = val;
           break;
         case Option::LOG_LEVEL:
         case Option::MINER:
@@ -282,7 +287,13 @@ std::vector<std::string> Settings::parseArgs(int argc, char *argv[]) {
         use_steps = true;
       } else if (opt == "p") {
         parallel_mining = true;
+      } else if (opt == "P") {
+        parallel_mining = true;
+        option = Option::NUM_INSTANCES;
       } else if (opt == "b") {
+        print_as_b_file = true;
+      } else if (opt == "B") {
+        print_as_b_file = true;
         option = Option::B_FILE_OFFSET;
       } else if (opt == "l") {
         option = Option::LOG_LEVEL;
@@ -292,6 +303,9 @@ std::vector<std::string> Settings::parseArgs(int argc, char *argv[]) {
     } else {
       unparsed.push_back(arg);
     }
+  }
+  if (option != Option::NONE) {
+    Log::get().error("Missing argument", true);
   }
   return unparsed;
 }
