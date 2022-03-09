@@ -699,11 +699,7 @@ bool Setup::checkMaxMemory() {
     std::cout << "Invalid value. Please restart the setup." << std::endl;
     return false;
   }
-  if (max_memory == DEFAULT_MAX_PHYSICAL_MEMORY) {
-    SETUP.erase("LODA_MAX_PHYSICAL_MEMORY");
-  } else {
-    SETUP["LODA_MAX_PHYSICAL_MEMORY"] = std::to_string(max_memory);
-  }
+  SETUP["LODA_MAX_PHYSICAL_MEMORY"] = std::to_string(max_memory);
   std::cout << std::endl;
   return true;
 }
@@ -725,11 +721,7 @@ bool Setup::checkUpdateInterval() {
     std::cout << "Invalid value. Please restart the setup." << std::endl;
     return false;
   }
-  if (update_interval == DEFAULT_UPDATE_INTERVAL) {
-    SETUP.erase("LODA_UPDATE_INTERVAL");
-  } else {
-    SETUP["LODA_UPDATE_INTERVAL"] = std::to_string(update_interval);
-  }
+  SETUP["LODA_UPDATE_INTERVAL"] = std::to_string(update_interval);
   std::cout << std::endl;
   return true;
 }
@@ -748,11 +740,7 @@ bool Setup::checkMaxLocalProgramAge() {
   if (!line.empty()) {
     max_age = std::stoll(line);
   }
-  if (max_age == DEFAULT_MAX_PROGRAM_AGE) {
-    SETUP.erase("LODA_MAX_PROGRAM_AGE");
-  } else {
-    SETUP["LODA_MAX_PROGRAM_AGE"] = std::to_string(max_age);
-  }
+  SETUP["LODA_MAX_PROGRAM_AGE"] = std::to_string(max_age);
   std::cout << std::endl;
   return true;
 }
@@ -773,11 +761,7 @@ bool Setup::checkMaxInstances() {
     std::cout << "Invalid value. Please restart the setup." << std::endl;
     return false;
   }
-  if (max_instances == getDefaultMaxInstances()) {
-    SETUP.erase("LODA_MAX_INSTANCES");
-  } else {
-    SETUP["LODA_MAX_INSTANCES"] = std::to_string(max_instances);
-  }
+  SETUP["LODA_MAX_INSTANCES"] = std::to_string(max_instances);
   std::cout << std::endl;
   return true;
 }

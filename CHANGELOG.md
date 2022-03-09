@@ -5,6 +5,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Enhancements
 
 * Incremental evaluation (IE) partially supports programs with non-commutative updates of output cells. IE is supported for 5100 programs now.
+* Store default values in `setup.txt`.
 
 ## v22.2.17
 
