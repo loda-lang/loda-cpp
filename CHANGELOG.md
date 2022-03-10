@@ -4,8 +4,13 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Enhancements
 
-* Incremental evaluation (IE) partially supports programs with non-commutative updates of output cells. IE is supported for 5100 programs now.
-* Store default values in `setup.txt`.
+* Incremental evaluation (IE) partially supports programs with non-commutative updates of output cells. IE is supported for 5200 programs now.
+* Store default values in `setup.txt`
+
+### Features
+
+* Parallel mining with custom number of instances: `-P <number>`
+* Short-hand parameter for b-file output with offset 0: `-b`
 
 ## v22.2.17
 
