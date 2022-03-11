@@ -125,11 +125,14 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
       commands.mine();
     }
   } else if (cmd == "submit") {
-    if (args.size() != 3) {
+    if (args.size() == 2) {
+      commands.submit(args.at(1), "");
+    } else if (args.size() == 3) {
+      commands.submit(args.at(1), args.at(2));
+    } else {
       std::cout << "invalid number of arguments" << std::endl;
       return 1;
     }
-    commands.submit(args.at(1), args.at(2));
   }
 #ifdef _WIN64
   // hidden helper command for updates on windows

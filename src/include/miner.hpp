@@ -28,7 +28,7 @@ class Miner {
 
   void mine();
 
-  void submit(const std::string &id, const std::string &path);
+  void submit(const std::string &path, std::string id);
 
  private:
   void checkRegularTasks();

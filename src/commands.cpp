@@ -52,7 +52,7 @@ void Commands::help() {
   std::cout << "  check <id>          Check a program for an OEIS sequence "
                "(see -b)"
             << std::endl;
-  std::cout << "  submit <id> <file>  Submit a program for an OEIS sequence"
+  std::cout << "  submit <file> [id]  Submit a program for an OEIS sequence"
             << std::endl;
   std::cout << std::endl << "Targets:" << std::endl;
   std::cout
@@ -168,10 +168,10 @@ void Commands::mine() {
   miner.mine();
 }
 
-void Commands::submit(const std::string& id, const std::string& path) {
+void Commands::submit(const std::string& path, const std::string& id) {
   initLog(false);
   Miner miner(settings);
-  miner.submit(id, path);
+  miner.submit(path, id);
 }
 
 // hidden commands (only in development versions)

@@ -26,7 +26,7 @@ To mine programs for OEIS sequences, you can run `loda mine` (single-core) or `l
 The `loda` command-line tool provides the following commands and options:
 
 ```
-Welcome to LODA developer version. More information at https://loda-lang.org
+Welcome to LODA developer version. More information at https://loda-lang.org/
 
 Usage: loda <command> <options>
 
@@ -37,9 +37,9 @@ Core Commands:
   setup               Run interactive setup to configure LODA
 
 OEIS Commands:
-  mine                Mine programs for OEIS sequences (see -i)
+  mine                Mine programs for OEIS sequences (see -i,-p)
   check <id>          Check a program for an OEIS sequence (see -b)
-  submit <id> <file>  Submit a program for an OEIS sequence
+  submit <file> [id]  Submit a program for an OEIS sequence
 
 Targets:
   <file>              Path to a LODA file (file extension: *.asm)
@@ -48,12 +48,15 @@ Targets:
 
 Options:
   -t <number>         Number of sequence terms (default: 10)
-  -b <number>         Print result in b-file format from a given offset
+  -b                  Print result in b-file format from offset 0
+  -B <number>         Print result in b-file format from a custom offset
   -s                  Evaluate program to number of execution steps
   -c <number>         Maximum number of interpreter cycles (no limit: -1)
   -m <number>         Maximum number of used memory cells (no limit: -1)
   -l <string>         Log level (values: debug,info,warn,error,alert)
   -i <string>         Name of miner configuration from miners.json
+  -p                  Parallel mining using default number of instances
+  -P <number>         Parallel mining using custom number of instances
 ```
 
 ### Core Commands

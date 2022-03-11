@@ -205,11 +205,18 @@ void Miner::checkRegularTasks() {
   }
 }
 
-void Miner::submit(const std::string &id, const std::string &path) {
+void Miner::submit(const std::string &path, std::string id) {
   Parser parser;
   auto program = parser.parse(path);
   ConfigLoader::MAINTAINANCE_MODE = true;
   reload();
+  if (id.empty() && program.ops.size() > 0 && !program.ops[0].comment.empty()) {
+    id = program.ops[0].comment;
+    auto n = id.find(':');
+    if (n != std::string::npos) {
+      id = id.substr(0, n);
+    }
+  }
   OeisSequence seq(id);
   Settings settings(this->settings);
   settings.print_as_b_file = false;

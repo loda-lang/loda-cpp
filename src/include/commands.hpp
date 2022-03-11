@@ -24,7 +24,7 @@ class Commands {
 
   void mine();
 
-  void submit(const std::string& id, const std::string& path);
+  void submit(const std::string& path, const std::string& id);
 
   // hidden commands (only in development versions)
 
