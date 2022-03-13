@@ -891,7 +891,7 @@ bool OeisManager::maintainProgram(size_t id) {
     if (!is_protected && !ProgramUtil::isCodedManually(program)) {
       ProgramUtil::removeOps(program, Operation::Type::NOP);
       Program minimized = program;
-      minimizer.optimizeAndMinimize(minimized, 2, 1,
+      minimizer.optimizeAndMinimize(minimized,
                                     OeisSequence::DEFAULT_SEQ_LENGTH);
       dumpProgram(s.id, minimized, file_name, submitted_by);
     }

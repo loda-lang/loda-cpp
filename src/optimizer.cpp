@@ -10,8 +10,7 @@
 #include "semantics.hpp"
 #include "util.hpp"
 
-bool Optimizer::optimize(Program &p, size_t num_reserved_cells,
-                         size_t num_initialized_cells) const {
+bool Optimizer::optimize(Program &p) const {
   if (Log::get().level == Log::Level::DEBUG) {
     Log::get().debug("Starting optimization of program with " +
                      std::to_string(p.ops.size()) + " operations");
@@ -20,7 +19,7 @@ bool Optimizer::optimize(Program &p, size_t num_reserved_cells,
   bool result = false;
   while (changed) {
     changed = false;
-    if (simplifyOperations(p, num_initialized_cells)) {
+    if (simplifyOperations(p)) {
       changed = true;
     }
     if (mergeOps(p)) {
@@ -32,13 +31,13 @@ bool Optimizer::optimize(Program &p, size_t num_reserved_cells,
     if (removeEmptyLoops(p)) {
       changed = true;
     }
-    if (reduceMemoryCells(p, num_reserved_cells)) {
+    if (reduceMemoryCells(p)) {
       changed = true;
     }
-    if (swapMemoryCells(p, num_reserved_cells)) {
+    if (swapMemoryCells(p)) {
       changed = true;
     }
-    if (partialEval(p, num_initialized_cells)) {
+    if (partialEval(p)) {
       changed = true;
     }
     if (sortOperations(p)) {
@@ -248,10 +247,9 @@ inline bool simplifyOperand(Operand &op,
   return false;
 }
 
-bool Optimizer::simplifyOperations(Program &p,
-                                   size_t num_initialized_cells) const {
+bool Optimizer::simplifyOperations(Program &p) const {
   std::unordered_set<int64_t> initialized_cells;
-  for (size_t i = 0; i < num_initialized_cells; ++i) {
+  for (size_t i = 0; i < NUM_INITIALIZED_CELLS; ++i) {
     initialized_cells.insert(i);
   }
   bool simplified = false;
@@ -387,7 +385,7 @@ bool Optimizer::canChangeVariableOrder(const Program &p) const {
   return true;
 }
 
-bool Optimizer::reduceMemoryCells(Program &p, size_t num_reserved_cells) const {
+bool Optimizer::reduceMemoryCells(Program &p) const {
   std::unordered_set<int64_t> used_cells;
   int64_t largest_used = 0;
   if (!canChangeVariableOrder(p)) {
@@ -399,7 +397,7 @@ bool Optimizer::reduceMemoryCells(Program &p, size_t num_reserved_cells) const {
   }
   for (int64_t candidate = 0; candidate < largest_used; ++candidate) {
     bool free = true;
-    if (candidate < static_cast<int64_t>(num_reserved_cells)) {
+    if (candidate < static_cast<int64_t>(NUM_RESERVED_CELLS)) {
       free = false;
     }
     for (int64_t used : used_cells) {
@@ -431,11 +429,11 @@ bool Optimizer::reduceMemoryCells(Program &p, size_t num_reserved_cells) const {
   return false;
 }
 
-bool Optimizer::swapMemoryCells(Program &p, size_t num_reserved_cells) const {
-  if (num_reserved_cells < 2) {
+bool Optimizer::swapMemoryCells(Program &p) const {
+  if (NUM_RESERVED_CELLS < 2) {
     return false;
   }
-  const int64_t target_cell = num_reserved_cells - 1;
+  const int64_t target_cell = NUM_RESERVED_CELLS - 1;
   int64_t mov_target = -1;
   for (int64_t i = p.ops.size() - 1; i >= 0; i--) {
     if (ProgramUtil::hasIndirectOperand(p.ops[i])) {
@@ -593,7 +591,7 @@ bool Optimizer::doPartialEval(Program &p, size_t op_index,
   return changed;
 }
 
-bool Optimizer::partialEval(Program &p, size_t num_initialized_cells) const {
+bool Optimizer::partialEval(Program &p) const {
   std::unordered_set<int64_t> used_cells;
   int64_t largest_used = 0;
   if (!ProgramUtil::getUsedMemoryCells(p, used_cells, largest_used,
@@ -601,7 +599,7 @@ bool Optimizer::partialEval(Program &p, size_t num_initialized_cells) const {
     return false;
   }
   std::map<int64_t, Operand> values;
-  for (int64_t i = num_initialized_cells; i <= largest_used; i++) {
+  for (int64_t i = NUM_INITIALIZED_CELLS; i <= largest_used; i++) {
     values[i] = Operand(Operand::Type::CONSTANT, 0);
   }
   bool changed = false;

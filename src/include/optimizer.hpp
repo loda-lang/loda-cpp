@@ -8,8 +8,7 @@ class Optimizer {
  public:
   Optimizer(const Settings &settings) : settings(settings) {}
 
-  bool optimize(Program &p, size_t num_reserved_cells,
-                size_t num_initialized_cells) const;
+  bool optimize(Program &p) const;
 
   bool removeNops(Program &p) const;
 
@@ -17,15 +16,15 @@ class Optimizer {
 
   bool mergeOps(Program &p) const;
 
-  bool simplifyOperations(Program &p, size_t num_initialized_cells) const;
+  bool simplifyOperations(Program &p) const;
 
-  bool reduceMemoryCells(Program &p, size_t num_reserved_cells) const;
+  bool reduceMemoryCells(Program &p) const;
 
-  bool swapMemoryCells(Program &p, size_t num_reserved_cells) const;
+  bool swapMemoryCells(Program &p) const;
 
   bool canChangeVariableOrder(const Program &p) const;
 
-  bool partialEval(Program &p, size_t num_initialized_cells) const;
+  bool partialEval(Program &p) const;
 
   bool shouldSwapOperations(const Operation &first,
                             const Operation &second) const;
@@ -35,6 +34,9 @@ class Optimizer {
   bool mergeLoops(Program &p) const;
 
   bool pullUpMov(Program &p) const;
+
+  static constexpr size_t NUM_RESERVED_CELLS = 1;
+  static constexpr size_t NUM_INITIALIZED_CELLS = 1;
 
  private:
   Settings settings;

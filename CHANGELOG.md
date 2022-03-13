@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Bugfixes
+
+* Optimizer does not consider `$1` as reserved cell anymore (formerly output cell)
+
 ## v22.3.11
 
 ### Features

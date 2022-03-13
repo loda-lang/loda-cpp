@@ -11,9 +11,7 @@ class Minimizer {
 
   bool minimize(Program &p, size_t num_terms) const;
 
-  bool optimizeAndMinimize(Program &p, size_t num_reserved_cells,
-                           size_t num_initialized_cells,
-                           size_t num_terms) const;
+  bool optimizeAndMinimize(Program &p, size_t num_terms) const;
 
   static int64_t getPowerOf(const Number &v);
 

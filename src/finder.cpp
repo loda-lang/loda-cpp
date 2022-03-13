@@ -142,7 +142,7 @@ std::pair<bool, Program> Finder::checkAndMinimize(const Program &p,
 
   // minimize for default number of terms
   minimizer.optimizeAndMinimize(
-      result.second, 2, 1, OeisSequence::DEFAULT_SEQ_LENGTH);  // default length
+      result.second, OeisSequence::DEFAULT_SEQ_LENGTH);  // default length
   check = evaluator.check(result.second, extended_seq,
                           OeisSequence::DEFAULT_SEQ_LENGTH, seq.id);
   result.first = (check.first != status_t::ERROR);  // we allow warnings
