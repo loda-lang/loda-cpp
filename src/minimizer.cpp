@@ -186,15 +186,12 @@ bool Minimizer::removeClr(Program& p) const {
   return replaced;
 }
 
-bool Minimizer::optimizeAndMinimize(Program& p, size_t num_reserved_cells,
-                                    size_t num_initialized_cells,
-                                    size_t num_terms) const {
+bool Minimizer::optimizeAndMinimize(Program& p, size_t num_terms) const {
   Program backup = p;
   try {
     bool optimized = false, minimized = false, result = false;
     do {
-      optimized =
-          optimizer.optimize(p, num_reserved_cells, num_initialized_cells);
+      optimized = optimizer.optimize(p);
       minimized = minimize(p, num_terms);
       result = result || optimized || minimized;
     } while (optimized || minimized);

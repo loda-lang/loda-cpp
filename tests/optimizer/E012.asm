@@ -1,8 +1,8 @@
 ; in
 mov $2,$0
-mov $0,1
-mov $1,$2
+add $2,17
+mov $0,$2
 ; out
 mov $1,$0
-mov $0,1
-mov $2,$1
+add $1,17
+mov $0,$1

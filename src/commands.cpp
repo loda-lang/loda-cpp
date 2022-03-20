@@ -148,7 +148,7 @@ void Commands::optimize(const std::string& path) {
   Parser parser;
   Program program = parser.parse(get_program_path(path));
   Optimizer optimizer(settings);
-  optimizer.optimize(program, 2, 1);
+  optimizer.optimize(program);
   ProgramUtil::print(program, std::cout);
 }
 
@@ -157,8 +157,7 @@ void Commands::minimize(const std::string& path) {
   Parser parser;
   Program program = parser.parse(get_program_path(path));
   Minimizer minimizer(settings);
-  minimizer.optimizeAndMinimize(program, 2, 1,
-                                OeisSequence::DEFAULT_SEQ_LENGTH);
+  minimizer.optimizeAndMinimize(program, OeisSequence::DEFAULT_SEQ_LENGTH);
   ProgramUtil::print(program, std::cout);
 }
 

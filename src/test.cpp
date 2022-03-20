@@ -945,7 +945,7 @@ void Test::optimizer() {
   size_t i = 1;
   for (auto& t : tests) {
     Log::get().info("Testing optimizer " + std::to_string(i));
-    optimizer.optimize(t.first, 2, 1);
+    optimizer.optimize(t.first);
     if (t.first != t.second) {
       ProgramUtil::print(t.first, std::cerr);
       Log::get().error(
@@ -978,7 +978,7 @@ void Test::minimizer(size_t tests) {
       continue;
     }
     minimized = program;
-    minimizer.optimizeAndMinimize(minimized, 2, 1, s1.size());
+    minimizer.optimizeAndMinimize(minimized, s1.size());
     evaluator.eval(minimized, s2, s1.size());
     if (s1.size() != s2.size() || (s1 != s2)) {
       std::cout << "before: " << s1 << std::endl;
