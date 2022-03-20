@@ -20,8 +20,6 @@ class Optimizer {
 
   bool reduceMemoryCells(Program &p) const;
 
-  bool swapMemoryCells(Program &p) const;
-
   bool canChangeVariableOrder(const Program &p) const;
 
   bool partialEval(Program &p) const;

@@ -34,9 +34,6 @@ bool Optimizer::optimize(Program &p) const {
     if (reduceMemoryCells(p)) {
       changed = true;
     }
-    if (swapMemoryCells(p)) {
-      changed = true;
-    }
     if (partialEval(p)) {
       changed = true;
     }
@@ -427,57 +424,6 @@ bool Optimizer::reduceMemoryCells(Program &p) const {
     }
   }
   return false;
-}
-
-bool Optimizer::swapMemoryCells(Program &p) const {
-  if (NUM_RESERVED_CELLS < 2) {
-    return false;
-  }
-  const int64_t target_cell = NUM_RESERVED_CELLS - 1;
-  int64_t mov_target = -1;
-  for (int64_t i = p.ops.size() - 1; i >= 0; i--) {
-    if (ProgramUtil::hasIndirectOperand(p.ops[i])) {
-      return false;
-    }
-    if (p.ops[i].type == Operation::Type::CLR) {
-      return false;
-    }
-    if (p.ops[i].type == Operation::Type::LPB &&
-        p.ops[i].source != Operand(Operand::Type::CONSTANT, 1)) {
-      return false;
-    }
-    if (mov_target == -1) {
-      if (!ProgramUtil::isArithmetic(p.ops[i].type) ||
-          p.ops[i].target != Operand(Operand::Type::DIRECT, target_cell)) {
-        return false;
-      } else if (p.ops[i].type == Operation::Type::MOV) {
-        mov_target = i;
-      }
-    }
-  }
-  if (mov_target == -1) {
-    return false;
-  }
-  auto s = p.ops[mov_target].source;
-  auto t = p.ops[mov_target].target;
-  if (s.type != Operand::Type::DIRECT || !(t.value < s.value)) {
-    return false;
-  }
-  // ok, ready to swap cells
-  for (int64_t i = 0; i <= mov_target; i++) {
-    auto &op = p.ops[i];
-    if (op.source == s) {
-      op.source = t;
-    } else if (op.source == t) {
-      op.source = s;
-    }
-    if (op.target == s) {
-      op.target = t;
-    } else if (op.target == t) {
-      op.target = s;
-    }
-  }
-  return true;
 }
 
 void removeReferences(const Operand &op, std::map<int64_t, Operand> &values) {
