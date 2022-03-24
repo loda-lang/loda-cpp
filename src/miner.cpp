@@ -234,7 +234,6 @@ void Miner::submit(const std::string &path, std::string id) {
   }
   Log::get().info("Validation successful");
   // match sequences
-  ApiClient api_client;
   Sequence norm_seq;
   const auto mode = Setup::getMiningMode();
   auto seq_programs = manager->getFinder().findSequence(
@@ -247,7 +246,11 @@ void Miner::submit(const std::string &path, std::string id) {
     if (r.updated) {
       // in client mode: submit the program to the API server
       if (mode == MINING_MODE_CLIENT) {
-        api_client.postProgram(r.program);
+        // add metadata as comment
+        program = r.program;
+        ProgramUtil::addComment(program,
+                                ProgramUtil::PREFIX_MINER_PROFILE + " manual");
+        api_client->postProgram(program);
       }
       matches++;
     }

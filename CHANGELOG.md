@@ -6,6 +6,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Optimizer does not consider `$1` as reserved cell anymore (formerly output cell)
 
+### Features
+
+* Track manually submitted programs in the miner profile metric
+
 ## v22.3.11
 
 ### Features
