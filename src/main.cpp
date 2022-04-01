@@ -140,11 +140,13 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
     // first replace the old binary by the new one
     std::string cmd = "copy /Y \"" + args.at(1) + "\" \"" + args.at(2) + "\"" +
                       getNullRedirect();
+    std::cout << std::endl << std::endl;
     if (system(cmd.c_str()) != 0) {
-      std::cout << "error updating executable" << std::endl;
+      std::cout << "Error updating executable. Failed command:" << std::endl
+                << cmd << std::endl;
       return 1;
     }
-    std::cout << "Update installed. Please launch \"loda setup\" again"
+    std::cout << "Update installed. Please run \"loda setup\" again"
               << std::endl
               << "to check and complete its configuration." << std::endl;
   }

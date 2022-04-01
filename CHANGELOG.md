@@ -13,6 +13,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 * Track manually submitted programs in the miner profile metric
 * `check` command accepts program files as argument (extracts A-number from comment in programs)
 
+### Enhancements
+
+* Improve output during updates on Windows.
+
 ## v22.3.11
 
 ### Features
