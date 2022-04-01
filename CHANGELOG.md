@@ -6,6 +6,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Optimizer does not consider `$1` as reserved cell anymore (formerly output cell)
 * Validator does not remove operations anymore that are needed for computing more terms
+* Fix corner case in big integer comparison
 
 ### Features
 

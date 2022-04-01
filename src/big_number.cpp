@@ -152,7 +152,7 @@ bool BigNumber::operator<(const BigNumber &n) const {
     } else if (words[i] > n.words[i]) {
       return is_negative;
     }
-    is_zero = is_zero && (words[i] != 0);
+    is_zero = is_zero && (words[i] == 0);
   }
   return !is_zero && is_negative && !n.is_negative;
 }
