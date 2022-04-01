@@ -29,8 +29,10 @@ class Finder {
       const Program &p, Sequence &norm_seq,
       const std::vector<OeisSequence> &sequences);
 
-  std::pair<bool, Program> checkAndMinimize(const Program &p,
-                                            const OeisSequence &seq);
+  std::pair<bool, Program> checkAndMinimize(Program p, const OeisSequence &seq);
+
+  std::string isOptimizedBetter(Program existing, Program optimized,
+                                const OeisSequence &seq);
 
   std::vector<std::unique_ptr<Matcher>> &getMatchers() { return matchers; }
 
@@ -45,6 +47,7 @@ class Finder {
 
   const Settings &settings;
   Evaluator &evaluator;  // shared instance to save memory
+  Optimizer optimizer;
   Minimizer minimizer;
   std::vector<std::unique_ptr<Matcher>> matchers;
   mutable size_t num_find_attempts;

@@ -652,105 +652,6 @@ void OeisManager::alert(Program p, size_t id, const std::string &prefix,
   Log::get().alert(msg, details);
 }
 
-size_t getBadOpsCount(const Program &p) {
-  // we prefer programs the following programs:
-  // - w/o indirect memory access
-  // - w/o loops that have non-constant args
-  // - w/o gcd with powers of a small constant
-  size_t num_ops = ProgramUtil::numOps(p, Operand::Type::INDIRECT);
-  for (auto &op : p.ops) {
-    if (op.type == Operation::Type::LPB &&
-        op.source.type != Operand::Type::CONSTANT) {
-      num_ops++;
-    }
-    if (op.type == Operation::Type::GCD &&
-        op.source.type == Operand::Type::CONSTANT &&
-        Minimizer::getPowerOf(op.source.value) != 0) {
-      num_ops++;
-    }
-  }
-  return num_ops;
-}
-
-std::string OeisManager::isOptimizedBetter(Program existing, Program optimized,
-                                           const OeisSequence &seq) {
-  // check if there are illegal recursions; do we really need this?!
-  for (auto &op : optimized.ops) {
-    if (op.type == Operation::Type::SEQ) {
-      if (op.source.type != Operand::Type::CONSTANT ||
-          op.source.value == Number(seq.id)) {
-        return "";
-      }
-    }
-  }
-
-  // remove nops...
-  optimizer.removeNops(existing);
-  optimizer.removeNops(optimized);
-
-  // we want at least one operation (avoid empty program for A000004
-  if (optimized.ops.empty()) {
-    return "";
-  }
-
-  // if the programs are the same, no need to evaluate them
-  if (optimized == existing) {
-    return "";
-  }
-
-  // check if there are loops with contant number of iterations involved
-  const int64_t const_loops_existing =
-      ProgramUtil::hasLoopWithConstantNumIterations(existing);
-  const int64_t const_loops_optimized =
-      ProgramUtil::hasLoopWithConstantNumIterations(optimized);
-  if (const_loops_optimized < const_loops_existing) {
-    return "Better";
-  } else if (const_loops_optimized > const_loops_existing) {
-    return "";  // optimized is worse
-  }
-
-  // get extended sequence
-  auto terms = seq.getTerms(OeisSequence::EXTENDED_SEQ_LENGTH);
-  if (terms.empty()) {
-    Log::get().error("Error fetching b-file for " + seq.id_str(), true);
-  }
-
-  // check if the first non-decreasing term is beyond the know sequence terms
-  static const int64_t num_terms = 10000;  // magic number
-  Sequence tmp;
-  const auto optimized_steps = evaluator.eval(optimized, tmp, num_terms, false);
-  if (tmp.get_first_non_decreasing_term() >=
-      static_cast<int64_t>(terms.size())) {
-    return "";
-  }
-
-  // compare number of successfully computed terms
-  const auto existing_steps = evaluator.eval(existing, tmp, num_terms, false);
-  if (optimized_steps.runs > existing_steps.runs) {
-    return "Better";
-  } else if (optimized_steps.runs < existing_steps.runs) {
-    return "";  // optimized is worse
-  }
-
-  // compare number of "bad" operations
-  auto optimized_bad_count = getBadOpsCount(optimized);
-  auto existing_bad_count = getBadOpsCount(existing);
-  if (optimized_bad_count < existing_bad_count) {
-    return "Simpler";
-  } else if (optimized_bad_count > existing_bad_count) {
-    return "";  // optimized is worse
-  }
-
-  // ...and compare number of execution cycles
-  if (optimized_steps.total < existing_steps.total) {
-    return "Faster";
-  } else if (optimized_steps.total > existing_steps.total) {
-    return "";  // optimized is worse
-  }
-
-  return "";
-}
-
 update_program_result_t OeisManager::updateProgram(size_t id, Program p) {
   update_program_result_t result;
   result.updated = false;
@@ -795,15 +696,15 @@ update_program_result_t OeisManager::updateProgram(size_t id, Program p) {
   }
 
   // minimize and check the program
-  auto minimized = finder.checkAndMinimize(p, seq);
-  if (!minimized.first) {
+  auto checked = finder.checkAndMinimize(p, seq);
+  if (!checked.first) {
     return result;
   }
 
   std::string change;
   if (!is_new) {
     // compare programs
-    change = isOptimizedBetter(existing, minimized.second, id);
+    change = finder.isOptimizedBetter(existing, checked.second, id);
     if (change.empty()) {
       return result;
     }
@@ -813,8 +714,8 @@ update_program_result_t OeisManager::updateProgram(size_t id, Program p) {
   result.updated = true;
   result.is_new = is_new;
 
-  // write new or optimized program version
-  result.program = minimized.second;
+  // write new or better program version
+  result.program = checked.second;
   if (Setup::getMiningMode() == MINING_MODE_SERVER) {
     dumpProgram(id, result.program, global_file, submitted_by);
   } else {
