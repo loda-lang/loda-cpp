@@ -74,6 +74,8 @@ class ProgramUtil {
 
   static void removeCommentField(Program &p, const std::string &prefix);
 
+  static std::string getSequenceIdFromProgram(const Program &p);
+
   static const std::string PREFIX_SUBMITTED_BY;
   static const std::string PREFIX_CODED_MANUALLY;
   static const std::string PREFIX_MINER_PROFILE;

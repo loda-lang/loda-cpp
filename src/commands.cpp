@@ -49,7 +49,7 @@ void Commands::help() {
   std::cout
       << "  mine                Mine programs for OEIS sequences (see -i,-p)"
       << std::endl;
-  std::cout << "  check <id>          Check a program for an OEIS sequence "
+  std::cout << "  check <program>     Check a program for an OEIS sequence "
                "(see -b)"
             << std::endl;
   std::cout << "  submit <file> [id]  Submit a program for an OEIS sequence"
@@ -95,14 +95,18 @@ void Commands::help() {
             << std::endl;
 }
 
-std::string get_program_path(std::string arg) {
+std::pair<std::string, size_t> getProgramPathAndSeqId(std::string arg) {
+  std::pair<std::string, size_t> result;
   try {
     OeisSequence s(arg);
-    return s.getProgramPath();
+    result.first = s.getProgramPath();
+    result.second = s.id;
   } catch (...) {
     // not an ID string
+    result.first = arg;
+    result.second = 0;
   }
-  return arg;
+  return result;
 }
 
 // official commands
@@ -112,7 +116,7 @@ void Commands::setup() { Setup::runWizard(); }
 void Commands::evaluate(const std::string& path) {
   initLog(true);
   Parser parser;
-  Program program = parser.parse(get_program_path(path));
+  Program program = parser.parse(getProgramPathAndSeqId(path).first);
   Evaluator evaluator(settings);
   Sequence seq;
   evaluator.eval(program, seq);
@@ -121,11 +125,16 @@ void Commands::evaluate(const std::string& path) {
   }
 }
 
-void Commands::check(const std::string& id) {
+void Commands::check(const std::string& path) {
   initLog(true);
-  OeisSequence seq(id);
+  auto path_and_id = getProgramPathAndSeqId(path);
   Parser parser;
-  Program program = parser.parse(seq.getProgramPath());
+  Program program = parser.parse(path_and_id.first);
+  OeisSequence seq(path_and_id.second);
+  if (seq.id == 0) {
+    auto id_str = ProgramUtil::getSequenceIdFromProgram(program);
+    seq = OeisSequence(id_str);
+  }
   Evaluator evaluator(settings);
   auto terms = seq.getTerms(OeisSequence::FULL_SEQ_LENGTH);
   auto result =
@@ -146,7 +155,7 @@ void Commands::check(const std::string& id) {
 void Commands::optimize(const std::string& path) {
   initLog(true);
   Parser parser;
-  Program program = parser.parse(get_program_path(path));
+  Program program = parser.parse(getProgramPathAndSeqId(path).first);
   Optimizer optimizer(settings);
   optimizer.optimize(program);
   ProgramUtil::print(program, std::cout);
@@ -155,7 +164,7 @@ void Commands::optimize(const std::string& path) {
 void Commands::minimize(const std::string& path) {
   initLog(true);
   Parser parser;
-  Program program = parser.parse(get_program_path(path));
+  Program program = parser.parse(getProgramPathAndSeqId(path).first);
   Minimizer minimizer(settings);
   minimizer.optimizeAndMinimize(program, OeisSequence::DEFAULT_SEQ_LENGTH);
   ProgramUtil::print(program, std::cout);
@@ -199,7 +208,7 @@ void Commands::testIncEval() {
 void Commands::dot(const std::string& path) {
   initLog(true);
   Parser parser;
-  Program program = parser.parse(get_program_path(path));
+  Program program = parser.parse(getProgramPathAndSeqId(path).first);
   ProgramUtil::exportToDot(program, std::cout);
 }
 

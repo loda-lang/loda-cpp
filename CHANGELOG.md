@@ -9,6 +9,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Features
 
 * Track manually submitted programs in the miner profile metric
+* `check` command accepts program files as argument (extracts A-number from comment in programs)
 
 ## v22.3.11
 

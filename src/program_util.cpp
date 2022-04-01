@@ -584,6 +584,21 @@ void ProgramUtil::removeCommentField(Program &p, const std::string &prefix) {
   }
 }
 
+std::string ProgramUtil::getSequenceIdFromProgram(const Program &p) {
+  std::string id_str;
+  if (p.ops.empty()) {
+    return id_str;  // not found
+  }
+  auto &c = p.ops[0].comment;
+  if (c.length() > 1 && c[0] == 'A' && std::isdigit(c[1])) {
+    id_str = c.substr(0, 2);
+    for (size_t i = 2; i < c.length() && std::isdigit(c[i]); i++) {
+      id_str += c[i];
+    }
+  }
+  return id_str;
+}
+
 const std::string ProgramUtil::PREFIX_SUBMITTED_BY = "Submitted by";
 const std::string ProgramUtil::PREFIX_CODED_MANUALLY = "Coded manually";
 const std::string ProgramUtil::PREFIX_MINER_PROFILE =

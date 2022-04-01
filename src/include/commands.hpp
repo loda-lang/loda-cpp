@@ -16,7 +16,7 @@ class Commands {
 
   void evaluate(const std::string& path);
 
-  void check(const std::string& id);
+  void check(const std::string& path);
 
   void optimize(const std::string& path);
 

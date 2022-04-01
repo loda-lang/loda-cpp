@@ -210,12 +210,8 @@ void Miner::submit(const std::string &path, std::string id) {
   auto program = parser.parse(path);
   ConfigLoader::MAINTAINANCE_MODE = true;
   reload();
-  if (id.empty() && program.ops.size() > 0 && !program.ops[0].comment.empty()) {
-    id = program.ops[0].comment;
-    auto n = id.find(':');
-    if (n != std::string::npos) {
-      id = id.substr(0, n);
-    }
+  if (id.empty()) {
+    id = ProgramUtil::getSequenceIdFromProgram(program);
   }
   OeisSequence seq(id);
   Settings settings(this->settings);
