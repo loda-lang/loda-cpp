@@ -16,6 +16,7 @@
 Finder::Finder(const Settings &settings, Evaluator &evaluator)
     : settings(settings),
       evaluator(evaluator),
+      optimizer(settings),
       minimizer(settings),
       num_find_attempts(0),
       scheduler(1800)  // 30 minutes
@@ -119,51 +120,170 @@ void Finder::findAll(const Program &p, const Sequence &norm_seq,
   }
 }
 
-std::pair<bool, Program> Finder::checkAndMinimize(const Program &p,
+void notifyMinimizerProblem(const Program &p, const std::string &id,
+                            size_t num_terms) {
+  Log::get().warn("Program for " + id +
+                  " generates wrong result after minimization with " +
+                  std::to_string(OeisSequence::DEFAULT_SEQ_LENGTH) + " terms");
+  const std::string f = Setup::getLodaHome() + "debug/minimizer/" + id + ".asm";
+  ensureDir(f);
+  std::ofstream out(f);
+  ProgramUtil::print(p, out);
+}
+
+std::pair<bool, Program> Finder::checkAndMinimize(Program p,
                                                   const OeisSequence &seq) {
   // Log::get().info( "Checking and minimizing program for " + seq.id_str() );
 
-  std::pair<status_t, steps_t> check;
   std::pair<bool, Program> result;
-  result.second = p;
 
   // get the extended sequence
   auto extended_seq = seq.getTerms(OeisSequence::EXTENDED_SEQ_LENGTH);
 
   // check the program w/o minimization
-  check = evaluator.check(p, extended_seq, OeisSequence::DEFAULT_SEQ_LENGTH,
-                          seq.id);
-  result.first = (check.first != status_t::ERROR);  // we allow warnings
-  if (!result.first) {
+  auto check_vanilla = evaluator.check(
+      p, extended_seq, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id);
+  if (check_vanilla.first == status_t::ERROR) {
     notifyInvalidMatch(seq.id);
+    result.first = false;
     return result;  // not correct
   }
-  const auto basic_check_result = check.first;
 
-  // minimize for default number of terms
-  minimizer.optimizeAndMinimize(
-      result.second, OeisSequence::DEFAULT_SEQ_LENGTH);  // default length
-  check = evaluator.check(result.second, extended_seq,
-                          OeisSequence::DEFAULT_SEQ_LENGTH, seq.id);
-  result.first = (check.first != status_t::ERROR);  // we allow warnings
-  if (result.first) {
+  // the program is correct => update result
+  result.first = true;
+  result.second = p;
+
+  // now minimize for default number of terms
+  static const size_t num_minimization_terms = OeisSequence::DEFAULT_SEQ_LENGTH;
+  if (!minimizer.optimizeAndMinimize(p, num_minimization_terms)) {
+    return result;  // minimization didn't change the program
+  }
+
+  // check minimized program
+  auto check_minimized = evaluator.check(
+      p, extended_seq, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id);
+  if (check_minimized.first == status_t::ERROR) {
+    if (check_vanilla.first == status_t::OK) {
+      // if we got here, the minimization changed the semantics of the program
+      notifyMinimizerProblem(result.second, seq.id_str(),
+                             num_minimization_terms);
+    }
     return result;
   }
 
-  if (basic_check_result == status_t::OK) {
-    // if we got here, the minimization changed the semantics of the program
-    Log::get().warn("Program for " + seq.id_str() +
-                    " generates wrong result after minimization with " +
-                    std::to_string(OeisSequence::DEFAULT_SEQ_LENGTH) +
-                    " terms");
-    std::string f =
-        Setup::getLodaHome() + "debug/minimizer/" + seq.id_str() + ".asm";
-    ensureDir(f);
-    std::ofstream out(f);
-    ProgramUtil::print(p, out);
+  // did the minimization introduce a warning?
+  if (check_vanilla.first == status_t::OK &&
+      check_minimized.first == status_t::WARNING) {
+    return result;
+  }
+
+  // final comparison: which program is better?
+  auto compare = isOptimizedBetter(result.second, p, seq);
+  if (!compare.empty()) {
+    // update result with minimized program
+    result.second = p;
   }
 
   return result;
+}
+
+size_t getBadOpsCount(const Program &p) {
+  // we prefer programs the following programs:
+  // - w/o indirect memory access
+  // - w/o loops that have non-constant args
+  // - w/o gcd with powers of a small constant
+  size_t num_ops = ProgramUtil::numOps(p, Operand::Type::INDIRECT);
+  for (auto &op : p.ops) {
+    if (op.type == Operation::Type::LPB &&
+        op.source.type != Operand::Type::CONSTANT) {
+      num_ops++;
+    }
+    if (op.type == Operation::Type::GCD &&
+        op.source.type == Operand::Type::CONSTANT &&
+        Minimizer::getPowerOf(op.source.value) != 0) {
+      num_ops++;
+    }
+  }
+  return num_ops;
+}
+
+std::string Finder::isOptimizedBetter(Program existing, Program optimized,
+                                      const OeisSequence &seq) {
+  // check if there are illegal recursions; do we really need this?!
+  for (auto &op : optimized.ops) {
+    if (op.type == Operation::Type::SEQ) {
+      if (op.source.type != Operand::Type::CONSTANT ||
+          op.source.value == Number(seq.id)) {
+        return "";
+      }
+    }
+  }
+
+  // remove nops...
+  optimizer.removeNops(existing);
+  optimizer.removeNops(optimized);
+
+  // we want at least one operation (avoid empty program for A000004
+  if (optimized.ops.empty()) {
+    return "";
+  }
+
+  // if the programs are the same, no need to evaluate them
+  if (optimized == existing) {
+    return "";
+  }
+
+  // check if there are loops with contant number of iterations involved
+  const int64_t const_loops_existing =
+      ProgramUtil::hasLoopWithConstantNumIterations(existing);
+  const int64_t const_loops_optimized =
+      ProgramUtil::hasLoopWithConstantNumIterations(optimized);
+  if (const_loops_optimized < const_loops_existing) {
+    return "Better";
+  } else if (const_loops_optimized > const_loops_existing) {
+    return "";  // optimized is worse
+  }
+
+  // get extended sequence
+  auto terms = seq.getTerms(OeisSequence::EXTENDED_SEQ_LENGTH);
+  if (terms.empty()) {
+    Log::get().error("Error fetching b-file for " + seq.id_str(), true);
+  }
+
+  // check if the first non-decreasing term is beyond the know sequence terms
+  static const int64_t num_terms = 10000;  // magic number
+  Sequence tmp;
+  const auto optimized_steps = evaluator.eval(optimized, tmp, num_terms, false);
+  if (tmp.get_first_non_decreasing_term() >=
+      static_cast<int64_t>(terms.size())) {
+    return "";
+  }
+
+  // compare number of successfully computed terms
+  const auto existing_steps = evaluator.eval(existing, tmp, num_terms, false);
+  if (optimized_steps.runs > existing_steps.runs) {
+    return "Better";
+  } else if (optimized_steps.runs < existing_steps.runs) {
+    return "";  // optimized is worse
+  }
+
+  // compare number of "bad" operations
+  auto optimized_bad_count = getBadOpsCount(optimized);
+  auto existing_bad_count = getBadOpsCount(existing);
+  if (optimized_bad_count < existing_bad_count) {
+    return "Simpler";
+  } else if (optimized_bad_count > existing_bad_count) {
+    return "";  // optimized is worse
+  }
+
+  // ...and compare number of execution cycles
+  if (optimized_steps.total < existing_steps.total) {
+    return "Faster";
+  } else if (optimized_steps.total > existing_steps.total) {
+    return "";  // optimized is worse
+  }
+
+  return "";
 }
 
 void Finder::notifyInvalidMatch(size_t id) {

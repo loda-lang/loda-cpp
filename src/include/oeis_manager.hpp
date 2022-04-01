@@ -64,9 +64,6 @@ class OeisManager {
   void alert(Program p, size_t id, const std::string& prefix,
              const std::string& color, const std::string& submitted_by) const;
 
-  std::string isOptimizedBetter(Program existing, Program optimized,
-                                const OeisSequence& seq);
-
   friend class OeisMaintenance;
 
   const Settings& settings;
