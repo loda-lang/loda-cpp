@@ -163,8 +163,11 @@ std::pair<bool, Program> Finder::checkAndMinimize(Program p,
   auto check_minimized = evaluator.check(
       p, extended_seq, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id);
   if (check_minimized.first == status_t::ERROR) {
-    // if we got here, the minimization changed the semantics of the program
-    notifyMinimizerProblem(result.second, seq.id_str(), num_minimization_terms);
+    if (check_vanilla.first == status_t::OK) {
+      // if we got here, the minimization changed the semantics of the program
+      notifyMinimizerProblem(result.second, seq.id_str(),
+                             num_minimization_terms);
+    }
     return result;
   }
 
