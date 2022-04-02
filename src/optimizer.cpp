@@ -557,35 +557,36 @@ bool Optimizer::partialEval(Program &p) const {
   return changed;
 }
 
-bool Optimizer::shouldSwapOperations(const Operation &first,
-                                     const Operation &second) const {
-  // check if we can swap
-  if (!ProgramUtil::areIndependent(first, second)) {
-    return false;
-  }
-  // check if we should swap
-  if (first.target.value < second.target.value) {
-    return false;
-  }
-  if (second.target.value < first.target.value) {
-    return true;
-  }
-  return false;
-}
-
 bool Optimizer::sortOperations(Program &p) const {
-  bool changed = false;
-  for (int64_t i = 1; i < static_cast<int64_t>(p.ops.size()); i++) {
-    for (int64_t j = i - 1; j >= 0; j--) {
-      if (shouldSwapOperations(p.ops[j], p.ops[j + 1])) {
-        std::swap(p.ops[j], p.ops[j + 1]);
-        changed = true;
-      } else {
-        break;
+  int64_t oldScore = 0, maxScore = 0;
+  size_t j = 0, maxIndex = 0;
+  opMover.init(p);
+  for (size_t i = 0; i < p.ops.size(); i++) {
+    j = i;
+    oldScore = opMover.getTotalScore();
+    while (opMover.up(j)) {
+      j--;
+    }
+    maxScore = opMover.getTotalScore();
+    while (opMover.down(j)) {
+      j++;
+      if (opMover.getTotalScore() > maxScore) {
+        maxScore = opMover.getTotalScore();
+        maxIndex = j;
       }
     }
+    if (maxScore <= oldScore) {
+      maxIndex = i;  // revert to old position
+    }
+    while (j != maxIndex) {
+      opMover.up(j);
+      j--;
+    }
+    if (maxIndex != i) {
+      return true;
+    }
   }
-  return changed;
+  return false;
 }
 
 void throwInvalidLoop() {
@@ -675,12 +676,12 @@ bool Optimizer::pullUpMov(Program &p) const {
 
 // === OperationMover ====================================
 
-void Optimizer::OperationMover::init(Program *prog) {
-  this->prog = prog;
-  opScores.resize(prog->ops.size());
+void Optimizer::OperationMover::init(Program &p) {
+  prog = &p;
+  opScores.resize(p.ops.size());
   std::fill(opScores.begin(), opScores.end(), 0);
   totalScore = 0;
-  for (size_t i = 0; i + 1 < prog->ops.size(); i++) {
+  for (size_t i = 0; i + 1 < p.ops.size(); i++) {
     updateScore(i);
   }
 }
@@ -702,7 +703,7 @@ void Optimizer::OperationMover::updateNeighborhood(size_t i) {
 }
 
 bool Optimizer::OperationMover::up(size_t i) {
-  if (i == 0) {
+  if (i == 0 || !ProgramUtil::areIndependent(prog->ops[i - 1], prog->ops[i])) {
     return false;
   }
   std::swap(prog->ops[i - 1], prog->ops[i]);
@@ -711,7 +712,8 @@ bool Optimizer::OperationMover::up(size_t i) {
 }
 
 bool Optimizer::OperationMover::down(size_t i) {
-  if (i + 1 == prog->ops.size()) {
+  if (i + 1 == prog->ops.size() ||
+      !ProgramUtil::areIndependent(prog->ops[i], prog->ops[i + 1])) {
     return false;
   }
   std::swap(prog->ops[i], prog->ops[i + 1]);
@@ -736,3 +738,5 @@ int64_t Optimizer::OperationMover::scoreNeighbors(size_t i) const {
   }
   return score;
 }
+
+int64_t Optimizer::OperationMover::getTotalScore() const { return totalScore; }
