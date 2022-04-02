@@ -672,3 +672,67 @@ bool Optimizer::pullUpMov(Program &p) const {
   }
   return changed;
 }
+
+// === OperationMover ====================================
+
+void Optimizer::OperationMover::init(Program *prog) {
+  this->prog = prog;
+  opScores.resize(prog->ops.size());
+  std::fill(opScores.begin(), opScores.end(), 0);
+  totalScore = 0;
+  for (size_t i = 0; i + 1 < prog->ops.size(); i++) {
+    updateScore(i);
+  }
+}
+
+void Optimizer::OperationMover::updateScore(size_t i) {
+  const auto score = scoreNeighbors(i);
+  totalScore += score - opScores[i];
+  opScores[i] = score;
+}
+
+void Optimizer::OperationMover::updateNeighborhood(size_t i) {
+  if (i > 0) {
+    updateScore(i - 1);
+  }
+  updateScore(i);
+  if (i + 1 < prog->ops.size()) {
+    updateScore(i + 1);
+  }
+}
+
+bool Optimizer::OperationMover::up(size_t i) {
+  if (i == 0) {
+    return false;
+  }
+  std::swap(prog->ops[i - 1], prog->ops[i]);
+  updateNeighborhood(i - 1);
+  return true;
+}
+
+bool Optimizer::OperationMover::down(size_t i) {
+  if (i + 1 == prog->ops.size()) {
+    return false;
+  }
+  std::swap(prog->ops[i], prog->ops[i + 1]);
+  updateNeighborhood(i);
+  return true;
+}
+
+int64_t Optimizer::OperationMover::scoreNeighbors(size_t i) const {
+  const Operation &op1 = prog->ops[i];
+  const Operation &op2 = prog->ops[i + 1];
+  int64_t score = 0;
+  if (op1.target == op2.target) {
+    score += 4;
+    if (op1.source.type == op2.source.type) {
+      score += 3;
+      if (canMerge(op1.type, op2.type)) {
+        score += 2;
+      }
+    }
+  } else if (op1.target.value < op2.target.value) {
+    score += 1;
+  }
+  return score;
+}
