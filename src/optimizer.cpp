@@ -567,6 +567,7 @@ bool Optimizer::sortOperations(Program &p) const {
     while (opMover.up(j)) {
       j--;
     }
+    maxIndex = j;
     maxScore = opMover.getTotalScore();
     while (opMover.down(j)) {
       j++;
@@ -577,10 +578,14 @@ bool Optimizer::sortOperations(Program &p) const {
     }
     if (maxScore <= oldScore) {
       maxIndex = i;  // revert to old position
+      maxScore = oldScore;
     }
     while (j != maxIndex) {
       opMover.up(j);
       j--;
+    }
+    if (maxScore != opMover.getTotalScore()) {
+      Log::get().error("internal error sorting operations");
     }
     if (maxIndex != i) {
       return true;
@@ -693,11 +698,14 @@ void Optimizer::OperationMover::updateScore(size_t i) {
 }
 
 void Optimizer::OperationMover::updateNeighborhood(size_t i) {
+  const auto s = prog->ops.size();
   if (i > 0) {
     updateScore(i - 1);
   }
-  updateScore(i);
-  if (i + 1 < prog->ops.size()) {
+  if (i + 1 < s) {
+    updateScore(i);
+  }
+  if (i + 2 < s) {
     updateScore(i + 1);
   }
 }
@@ -724,18 +732,24 @@ bool Optimizer::OperationMover::down(size_t i) {
 int64_t Optimizer::OperationMover::scoreNeighbors(size_t i) const {
   const Operation &op1 = prog->ops[i];
   const Operation &op2 = prog->ops[i + 1];
-  int64_t score = 0;
+  int64_t score = 0, diff;
   if (op1.target == op2.target) {
-    score += 4;
+    score += 4000;
     if (op1.source.type == op2.source.type) {
-      score += 3;
+      score += 2000;
       if (canMerge(op1.type, op2.type)) {
-        score += 2;
+        score += 1000;
       }
     }
-  } else if (op1.target.value < op2.target.value) {
-    score += 1;
+  } else {
+    diff = op2.target.value.asInt() - op1.target.value.asInt();
+    score += std::max<int64_t>(100 + diff, 0);
   }
+  // std::cout << "score " << i << " " << ProgramUtil::operationToString(op1)
+  //           << "; " << ProgramUtil::operationToString(op2) << "; "
+  //           << Operation::Metadata::get(op2.type).name << "; score: " <<
+  //           score
+  //           << std::endl;
   return score;
 }
 
