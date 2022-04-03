@@ -7,5 +7,5 @@ sub $0,10
 ; out
 mov $1,$0
 pow $1,3
-add $0,$1
 sub $0,7
+add $0,$1
