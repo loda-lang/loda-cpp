@@ -138,7 +138,7 @@ bool ProgramUtil::areIndependent(const Operation &op1, const Operation &op2) {
   }
   if (op1.target.value == op2.target.value &&
       !(isAdditive(op1.type) && isAdditive(op2.type) &&
-        !(isCommutative(op1.type) && isCommutative(op2.type)))) {
+        !(op1.type == op2.type && isCommutative(op1.type)))) {
     return false;
   }
   if (op1.source.type == Operand::Type::DIRECT &&
