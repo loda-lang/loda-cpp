@@ -732,18 +732,17 @@ bool Optimizer::OperationMover::down(size_t i) {
 int64_t Optimizer::OperationMover::scoreNeighbors(size_t i) const {
   const Operation &op1 = prog->ops[i];
   const Operation &op2 = prog->ops[i + 1];
-  int64_t score = 0, diff;
+  int64_t score = 0;
   if (op1.target == op2.target) {
-    score += 4000;
+    score += 40;
     if (op1.source.type == op2.source.type) {
-      score += 2000;
+      score += 20;
       if (canMerge(op1.type, op2.type)) {
-        score += 1000;
+        score += 10;
       }
     }
-  } else {
-    diff = op2.target.value.asInt() - op1.target.value.asInt();
-    score += std::max<int64_t>(100 + diff, 0);
+  } else if (op1.target.value < op2.target.value) {
+    score += 1;
   }
   // std::cout << "score " << i << " " << ProgramUtil::operationToString(op1)
   //           << "; " << ProgramUtil::operationToString(op2) << "; "
