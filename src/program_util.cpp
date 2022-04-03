@@ -122,6 +122,10 @@ bool ProgramUtil::hasIndirectOperand(const Operation &op) {
          (num_ops > 1 && op.source.type == Operand::Type::INDIRECT);
 }
 
+bool isAdditive(Operation::Type t) {
+  return (t == Operation::Type::ADD || t == Operation::Type::SUB);
+}
+
 bool ProgramUtil::areIndependent(const Operation &op1, const Operation &op2) {
   if (!isArithmetic(op1.type) && op1.type != Operation::Type::SEQ) {
     return false;
@@ -132,7 +136,9 @@ bool ProgramUtil::areIndependent(const Operation &op1, const Operation &op2) {
   if (hasIndirectOperand(op1) || hasIndirectOperand(op2)) {
     return false;
   }
-  if (op1.target.value == op2.target.value) {
+  if (op1.target.value == op2.target.value &&
+      !(isAdditive(op1.type) && isAdditive(op2.type) &&
+        !(op1.type == op2.type && isCommutative(op1.type)))) {
     return false;
   }
   if (op1.source.type == Operand::Type::DIRECT &&

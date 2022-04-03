@@ -24,9 +24,6 @@ class Optimizer {
 
   bool partialEval(Program &p) const;
 
-  bool shouldSwapOperations(const Operation &first,
-                            const Operation &second) const;
-
   bool sortOperations(Program &p) const;
 
   bool mergeLoops(Program &p) const;
@@ -37,7 +34,28 @@ class Optimizer {
   static constexpr size_t NUM_INITIALIZED_CELLS = 1;
 
  private:
+  /*
+   * Helper class for moving operations.
+   */
+  class OperationMover {
+   public:
+    void init(Program &prog);
+    bool up(size_t i);
+    bool down(size_t i);
+    int64_t getTotalScore() const;
+
+   private:
+    int64_t scoreNeighbors(size_t i) const;
+    void updateScore(size_t i);
+    void updateNeighborhood(size_t i);
+
+    Program *prog;
+    std::vector<int64_t> opScores;
+    int64_t totalScore;
+  };
+
   Settings settings;
+  mutable OperationMover opMover;
 
   bool doPartialEval(Program &p, size_t op_index,
                      std::map<int64_t, Operand> &values) const;

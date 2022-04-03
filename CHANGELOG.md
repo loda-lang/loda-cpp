@@ -15,7 +15,8 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Enhancements
 
-* Improve output during updates on Windows.
+* Improved operation sorting in optimizer
+* Improved output during updates on Windows
 
 ## v22.3.11
 
