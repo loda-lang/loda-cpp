@@ -744,11 +744,6 @@ int64_t Optimizer::OperationMover::scoreNeighbors(size_t i) const {
   } else if (op1.target.value < op2.target.value) {
     score += 1;
   }
-  // std::cout << "score " << i << " " << ProgramUtil::operationToString(op1)
-  //           << "; " << ProgramUtil::operationToString(op2) << "; "
-  //           << Operation::Metadata::get(op2.type).name << "; score: " <<
-  //           score
-  //           << std::endl;
   return score;
 }
 
