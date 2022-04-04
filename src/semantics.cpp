@@ -1,6 +1,12 @@
 #include "semantics.hpp"
 
 #include "number.hpp"
+#include "setup.hpp"
+
+bool Semantics::HAS_MEMORY = true;
+size_t Semantics::NUM_MEMORY_CHECKS = 0;
+std::unordered_map<std::pair<int64_t, int64_t>, Number, int_pair_hasher>
+    Semantics::BIN_CACHE;
 
 Number Semantics::add(const Number& a, const Number& b) {
   auto r = a;
@@ -142,21 +148,46 @@ Number Semantics::bin(const Number& nn, const Number& kk) {
   {
     return 0;
   }
-  Number r(1);
   if (n < mul(k, 2)) {
     k = sub(n, k);
   }
-  if (k.getNumUsedWords() > 1) {
+
+  // check argument sizes
+  if (n.getNumUsedWords() > 1 || k.getNumUsedWords() > 1) {
     return Number::INF;
   }
+  auto m = n.asInt();
   auto l = k.asInt();
-  for (int64_t i = 0; i < l; i++) {
-    r = mul(r, sub(n, i));
-    r = div(r, add(i, 1));
-    if (r == Number::INF) {
-      break;
+
+  // result value
+  Number r(1);
+
+  // check if the value is cached already
+  const std::pair<int64_t, int64_t> key(m, l);
+  auto it = BIN_CACHE.find(key);
+  if (it != BIN_CACHE.end()) {
+    // use cached value
+    r = it->second;
+  } else {
+    // main computation
+    for (int64_t i = 0; i < l; i++) {
+      r = mul(r, sub(n, i));
+      r = div(r, add(i, 1));
+      if (r == Number::INF) {
+        break;
+      }
+    }
+
+    // add to cache if there is memory available
+    if (++NUM_MEMORY_CHECKS % 10000 == 0) {  // magic number
+      HAS_MEMORY = Setup::hasMemory();
+    }
+    if (HAS_MEMORY || BIN_CACHE.size() < 10000) {  // magic number
+      BIN_CACHE[key] = r;
     }
   }
+
+  // apply sign (after caching)
   return mul(sign, r);
 }
 

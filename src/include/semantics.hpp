@@ -1,6 +1,14 @@
 #pragma once
 
+#include <unordered_map>
+
 #include "number.hpp"
+
+struct int_pair_hasher {
+  std::size_t operator()(const std::pair<int64_t, int64_t>& p) const {
+    return (p.first << 32) ^ p.second;
+  }
+};
 
 class Semantics {
  public:
@@ -33,4 +41,11 @@ class Semantics {
   static Number abs(const Number& a);
 
   static Number getPowerOf(Number value, const Number& base);
+
+ private:
+  static bool HAS_MEMORY;
+  static size_t NUM_MEMORY_CHECKS;
+  static std::unordered_map<std::pair<int64_t, int64_t>, Number,
+                            int_pair_hasher>
+      BIN_CACHE;
 };
