@@ -4,6 +4,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## v22.4.3
 
+### Enhancements
+
+* Improve performance of `bin` operation by introducing a cache
+
 ### Bugfixes
 
 * Optimizer does not consider `$1` as reserved cell anymore (formerly output cell)
