@@ -251,7 +251,7 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
   }
 
   // check if the first non-decreasing term is beyond the know sequence terms
-  static const int64_t num_terms = 10000;  // magic number
+  static const int64_t num_terms = 4000;  // magic number
   Sequence tmp;
   const auto optimized_steps = evaluator.eval(optimized, tmp, num_terms, false);
   if (tmp.get_first_non_decreasing_term() >=

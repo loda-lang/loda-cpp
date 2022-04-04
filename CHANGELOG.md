@@ -2,11 +2,12 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
-## v22.4.3
-
 ### Enhancements
 
 * Improve performance of `bin` operation by introducing a cache
+* Reduce maximum number of terms in validation to 4000 to increase performace
+
+## v22.4.3
 
 ### Bugfixes
 
