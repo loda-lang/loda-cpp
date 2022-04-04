@@ -155,33 +155,37 @@ Number Semantics::bin(const Number& nn, const Number& kk) {
     return Number::INF;
   }
 
+  // result value
+  Number r(1);
+
   // check if the value is cached already
   const std::pair<Number, Number> key(n, k);
   auto it = BIN_CACHE.find(key);
   if (it != BIN_CACHE.end()) {
-    return it->second;
-  }
+    // use cached value
+    r = it->second;
+  } else {
+    // main computation
+    auto l = k.asInt();
+    for (int64_t i = 0; i < l; i++) {
+      r = mul(r, sub(n, i));
+      r = div(r, add(i, 1));
+      if (r == Number::INF) {
+        break;
+      }
+    }
 
-  // main computation
-  Number r(1);
-  auto l = k.asInt();
-  for (int64_t i = 0; i < l; i++) {
-    r = mul(r, sub(n, i));
-    r = div(r, add(i, 1));
-    if (r == Number::INF) {
-      break;
+    // add to cache if there is memory available
+    if (++NUM_MEMORY_CHECKS % 10000 == 0) {  // magic number
+      HAS_MEMORY = Setup::hasMemory();
+    }
+    if (HAS_MEMORY || BIN_CACHE.size() < 10000) {  // magic number
+      BIN_CACHE[key] = r;
     }
   }
-  r = mul(sign, r);
 
-  // add to cache if there is memory available
-  if (++NUM_MEMORY_CHECKS % 10000 == 0) {  // magic number
-    HAS_MEMORY = Setup::hasMemory();
-  }
-  if (HAS_MEMORY || BIN_CACHE.size() < 10000) {  // magic number
-    BIN_CACHE[key] = r;
-  }
-  return r;
+  // apply sign (after caching)
+  return mul(sign, r);
 }
 
 Number Semantics::cmp(const Number& a, const Number& b) {
