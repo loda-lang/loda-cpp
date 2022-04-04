@@ -696,18 +696,9 @@ update_program_result_t OeisManager::updateProgram(size_t id, Program p) {
   }
 
   // minimize and check the program
-  auto checked = finder.checkAndMinimize(p, seq);
-  if (!checked.first) {
+  auto checked = finder.checkProgram(p, existing, seq);
+  if (checked.first.empty()) {
     return result;
-  }
-
-  std::string change;
-  if (!is_new) {
-    // compare programs
-    change = finder.isOptimizedBetter(existing, checked.second, id);
-    if (change.empty()) {
-      return result;
-    }
   }
 
   // update result
@@ -723,9 +714,8 @@ update_program_result_t OeisManager::updateProgram(size_t id, Program p) {
   }
 
   // send alert
-  std::string prefix = is_new ? "First" : change;
   std::string color = is_new ? "good" : "warning";
-  alert(result.program, id, prefix, color, submitted_by);
+  alert(result.program, id, checked.first, color, submitted_by);
 
   return result;
 }
