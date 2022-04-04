@@ -4,9 +4,9 @@
 
 #include "number.hpp"
 
-struct number_pair_hasher {
-  std::size_t operator()(const std::pair<Number, Number>& p) const {
-    return (p.first.hash() << 32) ^ p.second.hash();
+struct int_pair_hasher {
+  std::size_t operator()(const std::pair<int64_t, int64_t>& p) const {
+    return (p.first << 32) ^ p.second;
   }
 };
 
@@ -45,7 +45,7 @@ class Semantics {
  private:
   static bool HAS_MEMORY;
   static size_t NUM_MEMORY_CHECKS;
-  static std::unordered_map<std::pair<Number, Number>, Number,
-                            number_pair_hasher>
+  static std::unordered_map<std::pair<int64_t, int64_t>, Number,
+                            int_pair_hasher>
       BIN_CACHE;
 };
