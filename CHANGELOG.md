@@ -2,6 +2,8 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v22.4.5
+
 ### Bugfixes
 
 * Fix reporting of CPU hours (active miners) in parallel mining mode
