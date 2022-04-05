@@ -6,12 +6,13 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Fix reporting of CPU hours (active miners) in parallel mining mode
 
-### Enhancements
+### Performance Enhancements
 
-* Improve performance of `bin` operation by introducing a cache
-* Reduce maximum number of terms in validation to 4000 to increase performace
-* Omit expensive comparison for new program to increase performance
+* Ignore updates of recently found new programs
+* Reduce maximum number of terms in validation to 4000
+* Omit expensive comparison for new program
 * Prefer programs that support incremental evaluation
+* Introduce cache for `bin` operation
 
 ## v22.4.3
 

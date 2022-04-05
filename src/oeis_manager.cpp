@@ -713,6 +713,16 @@ update_program_result_t OeisManager::updateProgram(size_t id, Program p) {
     dumpProgram(id, result.program, local_file, submitted_by);
   }
 
+  // if not updating, ignore this sequence for future matches;
+  // this is important for performance: it is likly that we
+  // get many mutations at this point and we want to avoid
+  // expensive comparisons with the already found program
+  if (is_new && overwrite_mode == OverwriteMode::NONE) {
+    auto seq_norm = seq.getTerms(settings.num_terms);
+    finder.remove(seq_norm, seq.id);
+    ignore_list.insert(seq.id);
+  }
+
   // send alert
   std::string color = is_new ? "good" : "warning";
   alert(result.program, id, checked.first, color, submitted_by);
