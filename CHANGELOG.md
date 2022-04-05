@@ -12,7 +12,6 @@ To install or update LODA, please follow the [installation instructions](https:/
 * Reduce maximum number of terms in validation to 4000
 * Omit expensive comparison for new program
 * Prefer programs that support incremental evaluation
-* Introduce cache for `bin` operation
 
 ## v22.4.3
 
