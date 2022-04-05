@@ -30,7 +30,7 @@ class Finder {
       const std::vector<OeisSequence> &sequences);
 
   std::pair<std::string, Program> checkProgram(Program program,
-                                               Program existing,
+                                               Program existing, bool is_new,
                                                const OeisSequence &seq);
 
   std::vector<std::unique_ptr<Matcher>> &getMatchers() { return matchers; }
@@ -44,7 +44,8 @@ class Finder {
 
   void notifyInvalidMatch(size_t id);
 
-  std::pair<bool, Program> checkAndMinimize(Program p, const OeisSequence &seq);
+  std::pair<bool, Program> checkAndMinimize(Program p, const OeisSequence &seq,
+                                            bool compare);
 
   std::string isOptimizedBetter(Program existing, Program optimized,
                                 const OeisSequence &seq);

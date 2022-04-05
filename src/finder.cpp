@@ -133,16 +133,17 @@ void notifyMinimizerProblem(const Program &p, const std::string &id,
 
 std::pair<std::string, Program> Finder::checkProgram(Program program,
                                                      Program existing,
+                                                     bool is_new,
                                                      const OeisSequence &seq) {
   std::pair<std::string, Program> result;
 
   // minimize and check the program
-  auto checked = checkAndMinimize(program, seq);
+  auto checked = checkAndMinimize(program, seq, !is_new);
   if (!checked.first) {
     return result;
   }
 
-  if (existing.ops.empty()) {
+  if (is_new) {
     result.first = "First";
   } else {
     // compare programs
@@ -155,7 +156,8 @@ std::pair<std::string, Program> Finder::checkProgram(Program program,
 }
 
 std::pair<bool, Program> Finder::checkAndMinimize(Program p,
-                                                  const OeisSequence &seq) {
+                                                  const OeisSequence &seq,
+                                                  bool compare) {
   // Log::get().info( "Checking and minimizing program for " + seq.id_str() );
 
   std::pair<bool, Program> result;
@@ -200,10 +202,14 @@ std::pair<bool, Program> Finder::checkAndMinimize(Program p,
     return result;
   }
 
-  // final comparison: which program is better?
-  auto compare = isOptimizedBetter(result.second, p, seq);
-  if (!compare.empty()) {
-    // update result with minimized program
+  // update result with minimized program
+  if (compare) {
+    // final comparison: which program is better?
+    auto compareResult = isOptimizedBetter(result.second, p, seq);
+    if (!compareResult.empty()) {
+      result.second = p;
+    }
+  } else {
     result.second = p;
   }
 

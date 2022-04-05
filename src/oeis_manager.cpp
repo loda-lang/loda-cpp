@@ -696,7 +696,7 @@ update_program_result_t OeisManager::updateProgram(size_t id, Program p) {
   }
 
   // minimize and check the program
-  auto checked = finder.checkProgram(p, existing, seq);
+  auto checked = finder.checkProgram(p, existing, is_new, seq);
   if (checked.first.empty()) {
     return result;
   }
