@@ -226,6 +226,14 @@ void Commands::migrate() {
   manager.migrate();
 }
 
+void Commands::maintain(const std::string& id) {
+  initLog(false);
+  OeisSequence seq(id);
+  OeisManager manager(settings);
+  manager.load();
+  manager.maintainProgram(seq.id);
+}
+
 void Commands::iterate(const std::string& count) {
   initLog(true);
   int64_t c = stoll(count);

@@ -188,6 +188,8 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
     commands.generate();
   } else if (cmd == "migrate") {
     commands.migrate();
+  } else if (cmd == "maintain") {
+    commands.maintain(args.at(1));
   } else if (cmd == "iterate") {
     commands.iterate(args.at(1));
   } else if (cmd == "benchmark") {

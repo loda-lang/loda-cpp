@@ -38,6 +38,8 @@ class Commands {
 
   void migrate();
 
+  void maintain(const std::string& id);
+
   void iterate(const std::string& count);
 
   void benchmark();
