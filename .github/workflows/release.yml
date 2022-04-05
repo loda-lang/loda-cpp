@@ -2,6 +2,9 @@ name: Release
 
 on:
   workflow_dispatch:
+    inputs:
+      release_notes:
+        description: Release Notes
 
 jobs:
   create-release:
@@ -14,6 +17,7 @@ jobs:
         uses: actions/create-release@v1
         id: create-release
         with:
+          body: ${{ github.event.inputs.release_notes }}"
           draft: false
           prerelease: false
           release_name: v${{ steps.generate-version.outputs.version }}
