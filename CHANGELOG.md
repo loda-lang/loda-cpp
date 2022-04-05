@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Bugfixes
+
+* Fix reporting of CPU hours (active miners) in parallel mining mode
+
 ### Enhancements
 
 * Improve performance of `bin` operation by introducing a cache

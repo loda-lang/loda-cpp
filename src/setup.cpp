@@ -239,6 +239,11 @@ bool Setup::hasMemory() {
   return true;
 }
 
+bool Setup::shouldReportCPUHours() {
+  return (getMiningMode() == MINING_MODE_CLIENT &&
+          getSetupFlag(LODA_SUBMIT_CPU_HOURS, false));
+}
+
 void trimString(std::string& str) {
   while (!str.empty()) {
     if (str.front() == ' ') {

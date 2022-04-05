@@ -2,6 +2,7 @@
 #include <iostream>
 #include <thread>
 
+#include "api_client.hpp"
 #include "commands.hpp"
 #include "file.hpp"
 #include "setup.hpp"
@@ -59,27 +60,51 @@ bool isChildProcessAlive(HANDLE pid) {
 #endif
 }
 
-void mineParallel(Settings settings, const std::vector<std::string>& args) {
-  const bool set_miner_profile = settings.miner_profile.empty();
-  settings.parallel_mining = false;
+void mineParallel(const Settings& settings,
+                  const std::vector<std::string>& args) {
+  // get relevant settings
   int64_t num_instances = settings.num_miner_instances;
   if (num_instances == 0) {
     num_instances = Setup::getMaxInstances();
   }
+  const bool has_miner_profile = settings.miner_profile.empty();
+
+  // prepare instance settings
+  auto instance_settings = settings;
+  instance_settings.parallel_mining = false;
+  instance_settings.report_cpu_hours = false;
+
+  // runtime objects for parallel mining
   std::vector<HANDLE> children_pids(num_instances, 0);
+  AdaptiveScheduler cpuhours_scheduler(3600);  // 1 hour (fixed!!)
+  ApiClient api_client;
+
+  // run miner processes and monitor them
   Log::get().info("Starting parallel mining using " +
                   std::to_string(num_instances) + " miner instances");
   while (true) {
+    // check if miner processes are alive
     for (size_t i = 0; i < children_pids.size(); i++) {
       if (!isChildProcessAlive(children_pids[i])) {
-        if (set_miner_profile) {
-          settings.miner_profile = std::to_string(i);
+        if (has_miner_profile) {
+          instance_settings.miner_profile = std::to_string(i);
         }
-        children_pids[i] = fork(settings, args);
+        children_pids[i] = fork(instance_settings, args);
         std::this_thread::sleep_for(std::chrono::seconds(5));
       }
     }
+    // wait some time
     std::this_thread::sleep_for(std::chrono::seconds(10));
+    // report CPU hours
+    if (cpuhours_scheduler.isTargetReached()) {
+      cpuhours_scheduler.reset();
+      if (Setup::shouldReportCPUHours() && settings.report_cpu_hours) {
+        // TODO: extend api to do it in one call
+        for (int64_t i = 0; i < num_instances; i++) {
+          api_client.postCPUHour();
+        }
+      }
+    }
   }
 }
 

@@ -56,6 +56,8 @@ class Setup {
 
   static bool hasMemory();
 
+  static bool shouldReportCPUHours();
+
   static void runWizard();
 
  private:

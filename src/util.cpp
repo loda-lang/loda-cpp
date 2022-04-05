@@ -202,6 +202,7 @@ Settings::Settings()
       max_cycles(DEFAULT_MAX_CYCLES),
       use_steps(false),
       parallel_mining(false),
+      report_cpu_hours(true),
       num_miner_instances(0),
       print_as_b_file(false),
       print_as_b_file_offset(0) {}
@@ -295,6 +296,8 @@ std::vector<std::string> Settings::parseArgs(int argc, char *argv[]) {
       } else if (opt == "B") {
         print_as_b_file = true;
         option = Option::B_FILE_OFFSET;
+      } else if (opt == "-no-report-cpu-hours") {
+        report_cpu_hours = false;
       } else if (opt == "l") {
         option = Option::LOG_LEVEL;
       } else {
@@ -328,6 +331,9 @@ void Settings::printArgs(std::vector<std::string> &args) {
   }
   if (parallel_mining) {
     args.push_back("-p");
+  }
+  if (!report_cpu_hours) {
+    args.push_back("--no-report-cpu-hours");
   }
   if (!miner_profile.empty()) {
     args.push_back("-i");

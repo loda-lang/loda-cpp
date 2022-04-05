@@ -65,6 +65,7 @@ class Settings {
   int64_t max_cycles;
   bool use_steps;
   bool parallel_mining;
+  bool report_cpu_hours;
   int64_t num_miner_instances;
   std::string miner_profile;
 
