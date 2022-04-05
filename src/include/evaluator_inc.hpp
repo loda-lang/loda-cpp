@@ -22,6 +22,8 @@ class IncrementalEvaluator {
  public:
   IncrementalEvaluator(Interpreter& interpreter);
 
+  void reset();
+
   // Initialize the IE using a program. IE can be applied only if this function
   // returns true.
   bool init(const Program& program);
@@ -30,7 +32,6 @@ class IncrementalEvaluator {
   std::pair<Number, size_t> next();
 
  private:
-  void reset();
   bool extractFragments(const Program& program);
   bool checkPreLoop();
   bool checkLoopBody();

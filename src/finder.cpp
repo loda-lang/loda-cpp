@@ -243,6 +243,8 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
     if (op.type == Operation::Type::SEQ) {
       if (op.source.type != Operand::Type::CONSTANT ||
           op.source.value == Number(seq.id)) {
+        Log::get().warn("Illegal recursion detected in program for " +
+                        seq.id_str());
         return "";
       }
     }
@@ -260,6 +262,15 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
   // if the programs are the same, no need to evaluate them
   if (optimized == existing) {
     return "";
+  }
+
+  // check if the optimized program supports IE
+  const bool inc_eval_existing = evaluator.supportsIncEval(existing);
+  const bool inc_eval_optimized = evaluator.supportsIncEval(optimized);
+  if (inc_eval_optimized && !inc_eval_existing) {
+    return "Faster (IE)";
+  } else if (!inc_eval_optimized && inc_eval_existing) {
+    return "";  // worse
   }
 
   // check if there are loops with contant number of iterations involved

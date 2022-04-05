@@ -145,3 +145,9 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
   result.first = status_t::OK;
   return result;
 }
+
+bool Evaluator::supportsIncEval(const Program &p) {
+  bool result = inc_evaluator.init(p);
+  inc_evaluator.reset();
+  return result;
+}

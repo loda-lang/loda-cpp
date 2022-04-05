@@ -34,6 +34,8 @@ class Evaluator {
                                      int64_t id = -1,
                                      const bool use_inc_eval = true);
 
+  bool supportsIncEval(const Program &p);
+
  private:
   const Settings &settings;
   Interpreter interpreter;
