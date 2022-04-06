@@ -47,10 +47,13 @@ class Finder {
   void notifyInvalidMatch(size_t id);
 
   std::pair<bool, Program> checkAndMinimize(Program p, const OeisSequence &seq,
-                                            bool compare);
+                                            bool is_new);
 
   std::string isOptimizedBetter(Program existing, Program optimized,
                                 const OeisSequence &seq);
+
+  void notifyMinimizerProblem(const Program &p, const std::string &id,
+                              size_t num_terms);
 
   const Settings &settings;
   Evaluator &evaluator;  // shared instance to save memory
@@ -58,6 +61,7 @@ class Finder {
   Minimizer minimizer;
   std::vector<std::unique_ptr<Matcher>> matchers;
   mutable size_t num_find_attempts;
+  mutable bool notified_minimizer_problem;
 
   std::map<size_t, int64_t> invalid_matches;
   AdaptiveScheduler scheduler;

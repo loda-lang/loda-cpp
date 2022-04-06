@@ -6,6 +6,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Added `profile` command for measuring program evaluation time
 
+### Enhancements
+
+* Improve handling of programs with minimization errors/warnings
+
 ## v22.4.5
 
 ### Bugfixes

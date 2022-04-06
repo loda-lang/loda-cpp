@@ -19,6 +19,7 @@ Finder::Finder(const Settings &settings, Evaluator &evaluator)
       optimizer(settings),
       minimizer(settings),
       num_find_attempts(0),
+      notified_minimizer_problem(false),
       scheduler(1800)  // 30 minutes
 {
   auto config = ConfigLoader::load(settings);
@@ -126,15 +127,20 @@ void Finder::findAll(const Program &p, const Sequence &norm_seq,
   }
 }
 
-void notifyMinimizerProblem(const Program &p, const std::string &id,
-                            size_t num_terms) {
-  Log::get().warn("Program for " + id +
-                  " generates wrong result after minimization with " +
-                  std::to_string(OeisSequence::DEFAULT_SEQ_LENGTH) + " terms");
-  const std::string f = Setup::getLodaHome() + "debug/minimizer/" + id + ".asm";
-  ensureDir(f);
-  std::ofstream out(f);
-  ProgramUtil::print(p, out);
+void Finder::notifyMinimizerProblem(const Program &p, const std::string &id,
+                                    size_t num_terms) {
+  if (!notified_minimizer_problem) {
+    Log::get().warn("Program for " + id +
+                    " generates wrong result after minimization with " +
+                    std::to_string(OeisSequence::DEFAULT_SEQ_LENGTH) +
+                    " terms");
+    const std::string f =
+        Setup::getLodaHome() + "debug/minimizer/" + id + ".asm";
+    ensureDir(f);
+    std::ofstream out(f);
+    ProgramUtil::print(p, out);
+    notified_minimizer_problem = true;
+  }
 }
 
 std::pair<std::string, Program> Finder::checkProgram(Program program,
@@ -144,7 +150,7 @@ std::pair<std::string, Program> Finder::checkProgram(Program program,
   std::pair<std::string, Program> result;
 
   // minimize and check the program
-  auto checked = checkAndMinimize(program, seq, !is_new);
+  auto checked = checkAndMinimize(program, seq, is_new);
   if (!checked.first) {
     return result;
   }
@@ -163,7 +169,7 @@ std::pair<std::string, Program> Finder::checkProgram(Program program,
 
 std::pair<bool, Program> Finder::checkAndMinimize(Program p,
                                                   const OeisSequence &seq,
-                                                  bool compare) {
+                                                  bool is_new) {
   // Log::get().info( "Checking and minimizing program for " + seq.id_str() );
 
   std::pair<bool, Program> result;
@@ -193,32 +199,26 @@ std::pair<bool, Program> Finder::checkAndMinimize(Program p,
   // check minimized program
   auto check_minimized = evaluator.check(
       p, extended_seq, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id);
-  if (check_minimized.first == status_t::ERROR) {
-    if (check_vanilla.first == status_t::OK) {
-      // if we got here, the minimization changed the semantics of the program
-      notifyMinimizerProblem(result.second, seq.id_str(),
-                             num_minimization_terms);
-    }
-    return result;
-  }
-
-  // did the minimization introduce a warning?
-  if (check_vanilla.first == status_t::OK &&
-      check_minimized.first == status_t::WARNING) {
+  if (check_minimized.first == status_t::ERROR ||
+      (check_minimized.first == status_t::WARNING &&
+       check_vanilla.first == status_t::OK)) {
+    // looks like the minimization changed the semantics of the program
+    notifyMinimizerProblem(result.second, seq.id_str(), num_minimization_terms);
+    // ok only if the program is new
+    result.first = is_new;
     return result;
   }
 
   // update result with minimized program
-  if (compare) {
+  if (is_new) {
+    result.second = p;
+  } else {
     // final comparison: which program is better?
     auto compareResult = isOptimizedBetter(result.second, p, seq);
     if (!compareResult.empty()) {
       result.second = p;
     }
-  } else {
-    result.second = p;
   }
-
   return result;
 }
 

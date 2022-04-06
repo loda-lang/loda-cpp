@@ -259,8 +259,8 @@ bool IncrementalEvaluator::updateLoopCounterDependentCells() {
 }
 
 bool IncrementalEvaluator::checkPostLoop() {
-  // initialize aggregation cells. all memory cells that are read
-  // by the post-loop fragment must be agregation cells
+  // initialize output cells. all memory cells that are read
+  // by the post-loop fragment are output cells.
   bool is_overwriting_output = false;
   for (auto& op : post_loop.ops) {
     const auto meta = Operation::Metadata::get(op.type);
