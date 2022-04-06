@@ -22,6 +22,8 @@ class Commands {
 
   void minimize(const std::string& path);
 
+  void profile(const std::string& path);
+
   void mine();
 
   void submit(const std::string& path, const std::string& id);

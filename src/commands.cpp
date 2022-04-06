@@ -42,6 +42,8 @@ void Commands::help() {
             << std::endl;
   std::cout << "  minimize <program>  Minimize a program and print it (see -t)"
             << std::endl;
+  std::cout << "  profile  <program>  Measure program evaluation time (see -t)"
+            << std::endl;
   std::cout << "  setup               Run interactive setup to configure LODA"
             << std::endl;
 
@@ -168,6 +170,30 @@ void Commands::minimize(const std::string& path) {
   Minimizer minimizer(settings);
   minimizer.optimizeAndMinimize(program, OeisSequence::DEFAULT_SEQ_LENGTH);
   ProgramUtil::print(program, std::cout);
+}
+
+void Commands::profile(const std::string& path) {
+  initLog(true);
+  Parser parser;
+  Program program = parser.parse(getProgramPathAndSeqId(path).first);
+  Sequence res;
+  Evaluator evaluator(settings);
+  auto start_time = std::chrono::steady_clock::now();
+  evaluator.eval(program, res);
+  auto cur_time = std::chrono::steady_clock::now();
+  auto micro_secs = std::chrono::duration_cast<std::chrono::microseconds>(
+                        cur_time - start_time)
+                        .count();
+  std::cout.setf(std::ios::fixed);
+  std::cout.precision(3);
+  if (micro_secs < 1000) {
+    std::cout << micro_secs << "µs" << std::endl;
+  } else if (micro_secs < 1000000) {
+    std::cout << static_cast<double>(micro_secs) / 1000.0 << "ms" << std::endl;
+  } else {
+    std::cout << static_cast<double>(micro_secs) / 1000000.0 << "s"
+              << std::endl;
+  }
 }
 
 void Commands::mine() {
