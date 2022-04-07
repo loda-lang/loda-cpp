@@ -127,13 +127,10 @@ void Finder::findAll(const Program &p, const Sequence &norm_seq,
   }
 }
 
-void Finder::notifyMinimizerProblem(const Program &p, const std::string &id,
-                                    size_t num_terms) {
+void Finder::notifyMinimizerProblem(const Program &p, const std::string &id) {
   if (!notified_minimizer_problem) {
     Log::get().warn("Program for " + id +
-                    " generates wrong result after minimization with " +
-                    std::to_string(OeisSequence::DEFAULT_SEQ_LENGTH) +
-                    " terms");
+                    " generates wrong result after minimization");
     const std::string f =
         Setup::getLodaHome() + "debug/minimizer/" + id + ".asm";
     ensureDir(f);
@@ -149,75 +146,62 @@ std::pair<std::string, Program> Finder::checkProgram(Program program,
                                                      const OeisSequence &seq) {
   std::pair<std::string, Program> result;
 
-  // minimize and check the program
-  auto checked = checkAndMinimize(program, seq, is_new);
-  if (!checked.first) {
-    return result;
-  }
-
-  if (is_new) {
-    result.first = "First";
-  } else {
-    // compare programs
-    result.first = isOptimizedBetter(existing, checked.second, seq.id);
-  }
-  if (!result.first.empty()) {
-    result.second = checked.second;
-  }
-  return result;
-}
-
-std::pair<bool, Program> Finder::checkAndMinimize(Program p,
-                                                  const OeisSequence &seq,
-                                                  bool is_new) {
-  // Log::get().info( "Checking and minimizing program for " + seq.id_str() );
-
-  std::pair<bool, Program> result;
-
   // get the extended sequence
   auto extended_seq = seq.getTerms(OeisSequence::EXTENDED_SEQ_LENGTH);
 
   // check the program w/o minimization
   auto check_vanilla = evaluator.check(
-      p, extended_seq, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id);
+      program, extended_seq, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id);
   if (check_vanilla.first == status_t::ERROR) {
     notifyInvalidMatch(seq.id);
-    result.first = false;
     return result;  // not correct
   }
 
   // the program is correct => update result
-  result.first = true;
-  result.second = p;
+  result.second = program;
 
   // now minimize for default number of terms
-  static const size_t num_minimization_terms = OeisSequence::DEFAULT_SEQ_LENGTH;
-  if (!minimizer.optimizeAndMinimize(p, num_minimization_terms)) {
-    return result;  // minimization didn't change the program
-  }
+  minimizer.optimizeAndMinimize(program, OeisSequence::DEFAULT_SEQ_LENGTH);
+  if (program != result.second) {
+    // minimization changed program => check the minimized program
+    auto check_minimized = evaluator.check(
+        program, extended_seq, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id);
+    if (check_minimized.first == status_t::ERROR ||
+        (check_minimized.first == status_t::WARNING &&
+         check_vanilla.first == status_t::OK)) {
+      // looks like the minimization changed the semantics of the program
+      notifyMinimizerProblem(result.second, seq.id_str());
 
-  // check minimized program
-  auto check_minimized = evaluator.check(
-      p, extended_seq, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id);
-  if (check_minimized.first == status_t::ERROR ||
-      (check_minimized.first == status_t::WARNING &&
-       check_vanilla.first == status_t::OK)) {
-    // looks like the minimization changed the semantics of the program
-    notifyMinimizerProblem(result.second, seq.id_str(), num_minimization_terms);
-    // ok only if the program is new
-    result.first = is_new;
-    return result;
+      // use the original program, but only if it is new
+      if (is_new) {
+        result.first = "First";
+      } else {
+        result.second.ops.clear();
+      }
+      return result;  // stop here!
+    }
   }
 
   // update result with minimized program
   if (is_new) {
-    result.second = p;
+    // no additional checks needed for new programs
+    result.first = "First";
+    result.second = program;
   } else {
-    // final comparison: which program is better?
-    auto compareResult = isOptimizedBetter(result.second, p, seq);
-    if (!compareResult.empty()) {
-      result.second = p;
+    // now we are in the "update" case
+    // first: compare minimized program with original program
+    auto compare = isOptimizedBetter(result.second, program, seq);
+    if (!compare.empty()) {
+      // use minimized version
+      result.second = program;
     }
+    // second: compare (minimized) program with existing programs
+    result.first = isOptimizedBetter(existing, result.second, seq.id);
+  }
+
+  // clear result program if it's no good
+  if (result.first.empty()) {
+    result.second.ops.clear();
   }
   return result;
 }
