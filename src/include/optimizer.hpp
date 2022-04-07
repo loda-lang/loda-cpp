@@ -18,6 +18,8 @@ class Optimizer {
 
   bool simplifyOperations(Program &p) const;
 
+  bool fixSandwich(Program &p) const;
+
   bool reduceMemoryCells(Program &p) const;
 
   bool canChangeVariableOrder(const Program &p) const;

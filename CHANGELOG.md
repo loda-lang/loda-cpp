@@ -10,6 +10,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Improve handling of programs with minimization errors/warnings
 * Improve comparsion of programs supporting IE
+* Improve algebraic program optimizations
 * Avoid duplicate evaluation when updating programs
 
 ## v22.4.5

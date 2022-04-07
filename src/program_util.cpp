@@ -125,14 +125,14 @@ bool ProgramUtil::isCommutative(Operation::Type t) {
           t == Operation::Type::GCD || t == Operation::Type::CMP);
 }
 
+bool ProgramUtil::isAdditive(Operation::Type t) {
+  return (t == Operation::Type::ADD || t == Operation::Type::SUB);
+}
+
 bool ProgramUtil::hasIndirectOperand(const Operation &op) {
   const auto num_ops = Operation::Metadata::get(op.type).num_operands;
   return (num_ops > 0 && op.target.type == Operand::Type::INDIRECT) ||
          (num_ops > 1 && op.source.type == Operand::Type::INDIRECT);
-}
-
-bool isAdditive(Operation::Type t) {
-  return (t == Operation::Type::ADD || t == Operation::Type::SUB);
 }
 
 bool ProgramUtil::areIndependent(const Operation &op1, const Operation &op2) {

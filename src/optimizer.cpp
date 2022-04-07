@@ -22,8 +22,14 @@ bool Optimizer::optimize(Program &p) const {
     if (simplifyOperations(p)) {
       changed = true;
     }
-    if (mergeOps(p)) {
-      changed = true;
+    {
+      // attention: fixSandwich() should be executed directly before mergeOps()
+      if (fixSandwich(p)) {
+        changed = true;
+      }
+      if (mergeOps(p)) {
+        changed = true;
+      }
     }
     if (removeNops(p)) {
       changed = true;
@@ -365,6 +371,41 @@ bool Optimizer::simplifyOperations(Program &p) const {
     Log::get().debug("Simplifying operations");
   }
   return simplified;
+}
+
+bool Optimizer::fixSandwich(Program &p) const {
+  bool changed = false;
+  for (size_t i = 0; i + 2 < p.ops.size(); i++) {
+    auto &op1 = p.ops[i];
+    auto &op2 = p.ops[i + 1];
+    auto &op3 = p.ops[i + 2];
+    if (op1.target != op2.target || op2.target != op3.target ||
+        op1.target.type != Operand::Type::DIRECT ||
+        op1.source.type != Operand::Type::CONSTANT ||
+        op2.source.type != Operand::Type::CONSTANT ||
+        op3.source.type != Operand::Type::CONSTANT) {
+      continue;
+    }
+    if (ProgramUtil::isAdditive(op1.type) && op2.type == Operation::Type::MUL &&
+        ProgramUtil::isAdditive(op3.type)) {
+      std::swap(op1, op2);
+      op2.source.value *= op1.source.value;
+      changed = true;
+    } else if (ProgramUtil::isAdditive(op2.type) && op1.type == op3.type) {
+      if (op1.type == Operation::Type::DIV) {
+        std::swap(op1, op2);
+        op1.source.value *= op2.source.value;
+        changed = true;
+      } else if (op1.type == Operation::Type::MUL &&
+                 Semantics::mod(op2.source.value, op1.source.value) ==
+                     Number::ZERO) {
+        std::swap(op1, op2);
+        op1.source.value /= op2.source.value;
+        changed = true;
+      }
+    }
+  }
+  return changed;
 }
 
 bool Optimizer::canChangeVariableOrder(const Program &p) const {
