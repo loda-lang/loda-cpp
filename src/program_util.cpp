@@ -7,6 +7,15 @@
 
 #include "program.hpp"
 
+bool ProgramUtil::hasOp(const Program &p, Operation::Type type) {
+  for (auto &op : p.ops) {
+    if (op.type == type) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void ProgramUtil::removeOps(Program &p, Operation::Type type) {
   auto it = p.ops.begin();
   while (it != p.ops.end()) {

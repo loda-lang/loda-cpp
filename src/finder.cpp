@@ -255,12 +255,16 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
   }
 
   // check if the optimized program supports IE
-  const bool inc_eval_existing = evaluator.supportsIncEval(existing);
-  const bool inc_eval_optimized = evaluator.supportsIncEval(optimized);
-  if (inc_eval_optimized && !inc_eval_existing) {
-    return "Faster (IE)";
-  } else if (!inc_eval_optimized && inc_eval_existing) {
-    return "";  // worse
+  if (ProgramUtil::hasOp(existing, Operation::Type::LPB) &&
+      (ProgramUtil::hasOp(existing, Operation::Type::SEQ) ||
+       !ProgramUtil::hasOp(optimized, Operation::Type::SEQ))) {
+    const bool inc_eval_existing = evaluator.supportsIncEval(existing);
+    const bool inc_eval_optimized = evaluator.supportsIncEval(optimized);
+    if (inc_eval_optimized && !inc_eval_existing) {
+      return "Faster (IE)";
+    } else if (!inc_eval_optimized && inc_eval_existing) {
+      return "";  // worse
+    }
   }
 
   // check if there are loops with contant number of iterations involved

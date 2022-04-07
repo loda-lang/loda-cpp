@@ -8,6 +8,8 @@
 
 class ProgramUtil {
  public:
+  static bool hasOp(const Program &p, Operation::Type type);
+
   static void removeOps(Program &p, Operation::Type type);
 
   static void removeComments(Program &p);
