@@ -46,8 +46,10 @@ class Finder {
 
   void notifyInvalidMatch(size_t id);
 
-  std::string isOptimizedBetter(Program existing, Program optimized,
-                                const OeisSequence &seq);
+  std::pair<std::string, steps_t> isOptimizedBetter(Program existing,
+                                                    Program optimized,
+                                                    steps_t optimized_steps,
+                                                    const OeisSequence &seq);
 
   void notifyMinimizerProblem(const Program &p, const std::string &id);
 
