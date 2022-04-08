@@ -65,7 +65,7 @@
     },
     {
       "name": "hard",
-      "overwrite": "none",
+      "overwrite": "auto",
       "backoff": true,
       "generators": [
         "v1",
@@ -87,9 +87,9 @@
     {
       "name": "v1",
       "version": 1,
-      "length": 60,
-      "maxConstant": 12,
-      "maxIndex": 9,
+      "length": 40,
+      "maxConstant": 20,
+      "maxIndex": 7,
       "loops": false,
       "calls": false,
       "indirectAccess": false,
@@ -106,6 +106,7 @@
         "$LODA_HOME/programs/oeis/010/A010645.asm",
         "$LODA_HOME/programs/oeis/019/A019916.asm",
         "$LODA_HOME/programs/oeis/049/A049470.asm",
+        "$LODA_HOME/programs/oeis/093/A093515.asm",
         "$LODA_HOME/programs/oeis/098/A098090.asm",
         "$LODA_HOME/programs/oeis/145/A145432.asm",
         "$LODA_HOME/programs/oeis/192/A192938.asm",
