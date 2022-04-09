@@ -19,7 +19,6 @@ Finder::Finder(const Settings &settings, Evaluator &evaluator)
       optimizer(settings),
       minimizer(settings),
       num_find_attempts(0),
-      notified_minimizer_problem(false),
       scheduler(1800)  // 30 minutes
 {
   auto config = ConfigLoader::load(settings);
@@ -128,16 +127,12 @@ void Finder::findAll(const Program &p, const Sequence &norm_seq,
 }
 
 void Finder::notifyMinimizerProblem(const Program &p, const std::string &id) {
-  if (!notified_minimizer_problem) {
-    Log::get().warn("Program for " + id +
-                    " generates wrong result after minimization");
-    const std::string f =
-        Setup::getLodaHome() + "debug/minimizer/" + id + ".asm";
-    ensureDir(f);
-    std::ofstream out(f);
-    ProgramUtil::print(p, out);
-    notified_minimizer_problem = true;
-  }
+  Log::get().warn("Program for " + id +
+                  " generates wrong result after minimization");
+  const std::string f = Setup::getLodaHome() + "debug/minimizer/" + id + ".asm";
+  ensureDir(f);
+  std::ofstream out(f);
+  ProgramUtil::print(p, out);
 }
 
 std::pair<std::string, Program> Finder::checkProgram(Program program,
@@ -166,19 +161,15 @@ std::pair<std::string, Program> Finder::checkProgram(Program program,
     // minimization changed program => check the minimized program
     auto check_minimized = evaluator.check(
         program, extended_seq, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id);
-    if (check_minimized.first == status_t::ERROR ||
-        (check_minimized.first == status_t::WARNING &&
-         check_vanilla.first == status_t::OK)) {
-      // looks like the minimization changed the semantics of the program
-      notifyMinimizerProblem(result.second, seq.id_str());
-
-      // use the original program, but only if it is new
-      if (is_new) {
-        result.first = "First";
-      } else {
-        result.second.ops.clear();
+    if (check_minimized.first == status_t::ERROR) {
+      if (check_vanilla.first == status_t::OK) {
+        // looks like the minimization changed the semantics of the program
+        notifyMinimizerProblem(result.second, seq.id_str());
       }
-      return result;  // stop here!
+      // we ignore the case where the base program has a warning and minimized
+      // program an error, because it indicates a problem in the base program
+      result.second.ops.clear();
+      return result;  // program not ok
     }
   }
 
