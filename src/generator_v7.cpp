@@ -20,6 +20,8 @@ GeneratorV7::GeneratorV7(const Config &config, const Stats &stats)
         continue;
       }
       const auto path = it.path().string();
+      Operation dummy(Operation::Type::NOP);
+      dummy.comment = "dummy";
       try {
         program = parser.parse(path);
         ProgramUtil::removeOps(program, Operation::Type::NOP);
@@ -28,9 +30,11 @@ GeneratorV7::GeneratorV7(const Config &config, const Stats &stats)
           has_comment = has_comment || !op.comment.empty();
         }
         if (has_comment) {
+          program.ops.push_back(dummy);
           patterns.push_back(program);
         } else {
-          Log::get().warn("Missing annotations in pattern " + path);
+          Log::get().warn("Missing annotations in pattern " +
+                          it.path().filename().string());
         }
       } catch (std::exception &) {
         Log::get().warn("Cannot load pattern " + path);
@@ -49,13 +53,10 @@ Program GeneratorV7::generateProgram() {
 
   // std::cout << "==== PATTERN:" << std::endl;
   // ProgramUtil::print(program, std::cout);
+  // std::cout << std::endl;
 
   mutator.mutateRandom(program);
   ProgramUtil::removeComments(program);
-
-  // std::cout << "==== PROGRAM:" << std::endl;
-  // ProgramUtil::print(program, std::cout);
-  // std::cout << std::endl;
 
   return program;
 }

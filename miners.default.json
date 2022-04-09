@@ -171,7 +171,7 @@
     {
       "name": "v7",
       "version": 7,
-      "mutationRate": 0.2
+      "mutationRate": 0.3
     }
   ]
 }
