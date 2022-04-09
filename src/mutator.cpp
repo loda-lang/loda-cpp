@@ -73,15 +73,21 @@ void Mutator::mutateRandom(Program &program) {
     if (Random::get().gen() % 2 == 0 || program.ops.empty()) {
       // add new operation
       if (mutate_comment) {
-        i = Random::get().gen() % tmp_comment_positions.size();
-        pos = tmp_comment_positions[i];
-        for (; i < tmp_comment_positions.size(); i++) {
-          tmp_comment_positions[i]++;
+        i = Random::get().gen() % (tmp_comment_positions.size() + 1);
+        if (i < tmp_comment_positions.size()) {
+          pos = tmp_comment_positions[i];
+          program.ops.insert(program.ops.begin() + pos, mov_zero);
+          for (; i < tmp_comment_positions.size(); i++) {
+            tmp_comment_positions[i]++;
+          }
+        } else {
+          pos = program.ops.size();
+          program.ops.push_back(mov_zero);
         }
       } else {
         pos = Random::get().gen() % program.ops.size();
+        program.ops.insert(program.ops.begin() + pos, mov_zero);
       }
-      program.ops.insert(program.ops.begin() + pos, mov_zero);
     } else {
       // mutate existing operation
       if (mutate_comment) {
