@@ -7,6 +7,7 @@
 #include "generator_v4.hpp"
 #include "generator_v5.hpp"
 #include "generator_v6.hpp"
+#include "generator_v7.hpp"
 #include "semantics.hpp"
 #include "util.hpp"
 
@@ -36,6 +37,10 @@ Generator::UPtr Generator::Factory::createGenerator(const Config &config,
     }
     case 6: {
       generator.reset(new GeneratorV6(config, stats));
+      break;
+    }
+    case 7: {
+      generator.reset(new GeneratorV7(config, stats));
       break;
     }
     default: {
