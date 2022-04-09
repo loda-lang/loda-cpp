@@ -22,7 +22,16 @@ GeneratorV7::GeneratorV7(const Config &config, const Stats &stats)
       const auto path = it.path().string();
       try {
         program = parser.parse(path);
-        patterns.push_back(program);
+        ProgramUtil::removeOps(program, Operation::Type::NOP);
+        bool has_comment = false;
+        for (auto &op : program.ops) {
+          has_comment = has_comment || !op.comment.empty();
+        }
+        if (has_comment) {
+          patterns.push_back(program);
+        } else {
+          Log::get().warn("Missing annotations in pattern " + path);
+        }
       } catch (std::exception &) {
         Log::get().warn("Cannot load pattern " + path);
       }
@@ -37,7 +46,17 @@ GeneratorV7::GeneratorV7(const Config &config, const Stats &stats)
 
 Program GeneratorV7::generateProgram() {
   auto program = patterns[Random::get().gen() % patterns.size()];
+
+  // std::cout << "==== PATTERN:" << std::endl;
+  // ProgramUtil::print(program, std::cout);
+
   mutator.mutateRandom(program);
+  ProgramUtil::removeComments(program);
+
+  // std::cout << "==== PROGRAM:" << std::endl;
+  // ProgramUtil::print(program, std::cout);
+  // std::cout << std::endl;
+
   return program;
 }
 
