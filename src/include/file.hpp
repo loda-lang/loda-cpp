@@ -1,19 +1,12 @@
 #pragma once
 
+#include <filesystem>
 #include <string>
 
 #ifdef _WIN64
 static constexpr char FILE_SEP = '\\';
 #else
 static constexpr char FILE_SEP = '/';
-#endif
-
-#define STD_FILESYSTEM 1
-#if !defined(__clang__) && defined(__GNUC__) && __GNUC__ < 8
-#undef STD_FILESYSTEM
-#endif
-#ifdef STD_FILESYSTEM
-#include <filesystem>
 #endif
 
 void replaceAll(std::string &str, const std::string &from,
