@@ -1,0 +1,26 @@
+{
+  "miners": [
+    {
+      "name": "pattern",
+      "overwrite": "none",
+      "backoff": true,
+      "generators": [
+        "v7"
+      ],
+      "matchers": [
+        "direct",
+        "linear1",
+        "linear2",
+        "binary",
+        "decimal"
+      ]
+    }
+  ],
+  "generators": [
+    {
+      "name": "v7",
+      "version": 7,
+      "mutationRate": 0.3
+    }
+  ]
+}

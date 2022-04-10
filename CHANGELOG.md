@@ -5,6 +5,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Features
 
 * Added `profile` command for measuring program evaluation time
+* Added pattern-based generator (generator: `v7`, miner profile: `pattern`)
 
 ### Enhancements
 

@@ -5,8 +5,10 @@
 #define CONSTANTS_START -100
 #define CONSTANTS_END 1000
 
-Mutator::Mutator(const Stats &stats, double mutation_rate)
-    : mutation_rate(mutation_rate), random_program_ids(stats) {
+Mutator::Mutator(const Stats &stats, double mutation_rate, bool mutate_comment)
+    : random_program_ids(stats),
+      mutation_rate(mutation_rate),
+      mutate_comment(mutate_comment) {
   // initialize constants distribution from stats
   constants.resize(CONSTANTS_END - CONSTANTS_START + 1);
   for (int64_t i = 0; i <= CONSTANTS_END - CONSTANTS_START; i++) {
@@ -36,31 +38,58 @@ int64_t getRandomPos(const Program &program) {
 }
 
 void Mutator::mutateRandom(Program &program) {
+  int64_t num_cells, num_mutations, pos;
+  size_t i;
+
   // get number of used memory cells
-  const int64_t num_cells =
-      ProgramUtil::getLargestDirectMemoryCell(program) + 1;
+  num_cells = ProgramUtil::getLargestDirectMemoryCell(program) + 2;
 
   // calculate the number of mutations to apply
-  int64_t num_mutations =
-      static_cast<int64_t>(program.ops.size() * mutation_rate) + 1;
+  num_mutations = static_cast<int64_t>(program.ops.size() * mutation_rate) + 1;
   num_mutations = Random::get().gen() % num_mutations;  // could be zero
   if (mutation_rate > 0.0) {
     num_mutations++;  // at least one mutation
   }
 
+  // mutate only operations with comments?
+  if (mutate_comment) {
+    tmp_comment_positions.clear();
+    for (i = 0; i < program.ops.size(); i++) {
+      if (!program.ops[i].comment.empty()) {
+        tmp_comment_positions.push_back(i);
+      }
+    }
+    if (tmp_comment_positions.empty()) {
+      throw std::runtime_error("missing program comments for mutation");
+    }
+  }
+
   // mutate existing operations or add new ones
-  int64_t pos;
-  static const Operation mov_zero(Operation::Type::MOV,
+  static const Operation add_zero(Operation::Type::ADD,
                                   Operand(Operand::Type::DIRECT, 0),
                                   Operand(Operand::Type::CONSTANT, 0));
   for (; num_mutations > 0; num_mutations--) {
+    // choose whether to add a new operation or mutate an existing one
     if (Random::get().gen() % 2 == 0 || program.ops.empty()) {
       // add new operation
-      pos = Random::get().gen() % program.ops.size();
-      program.ops.insert(program.ops.begin() + pos, mov_zero);
+      if (mutate_comment) {
+        i = Random::get().gen() % tmp_comment_positions.size();
+        pos = tmp_comment_positions[i];
+        for (; i < tmp_comment_positions.size(); i++) {
+          tmp_comment_positions[i]++;
+        }
+      } else {
+        pos = Random::get().gen() % program.ops.size();
+      }
+      program.ops.insert(program.ops.begin() + pos, add_zero);
     } else {
       // mutate existing operation
-      pos = getRandomPos(program);
+      if (mutate_comment) {
+        pos = tmp_comment_positions[Random::get().gen() %
+                                    tmp_comment_positions.size()];
+      } else {
+        pos = getRandomPos(program);
+      }
     }
     mutateOperation(program.ops[pos], num_cells);
   }
@@ -77,7 +106,15 @@ void Mutator::mutateOperation(Operation &op, int64_t num_cells) {
       op.source =
           Operand(Operand::Type::DIRECT, Random::get().gen() % num_cells);
     }
-    op.target = Operand(Operand::Type::DIRECT, Random::get().gen() % num_cells);
+    if (op.type == Operation::Type::MOV &&
+        Random::get().gen() % 4 > 0) {  // magic number
+      // avoid overwriting
+      op.target = Operand(Operand::Type::DIRECT,
+                          (Random::get().gen() % 2) + num_cells - 1);
+    } else {
+      op.target =
+          Operand(Operand::Type::DIRECT, Random::get().gen() % num_cells);
+    }
     ProgramUtil::avoidNopOrOverflow(op);
   } else if (op.type == Operation::Type::SEQ) {
     // op.comment = "mutated from " + ProgramUtil::operationToString(op);
