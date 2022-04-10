@@ -107,7 +107,7 @@ void Mutator::mutateOperation(Operation &op, int64_t num_cells) {
           Operand(Operand::Type::DIRECT, Random::get().gen() % num_cells);
     }
     if (op.type == Operation::Type::MOV &&
-        Random::get().gen() % 10 > 0) {  // magic number
+        Random::get().gen() % 4 > 0) {  // magic number
       // avoid overwriting
       op.target = Operand(Operand::Type::DIRECT,
                           (Random::get().gen() % 2) + num_cells - 1);
