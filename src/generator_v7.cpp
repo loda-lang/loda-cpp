@@ -30,6 +30,8 @@ GeneratorV7::GeneratorV7(const Config &config, const Stats &stats)
           has_comment = has_comment || !op.comment.empty();
         }
         if (has_comment) {
+          // add dummy comments at begin and end of program
+          program.ops.insert(program.ops.begin(), dummy);
           program.ops.push_back(dummy);
           patterns.push_back(program);
         } else {
@@ -51,11 +53,12 @@ GeneratorV7::GeneratorV7(const Config &config, const Stats &stats)
 Program GeneratorV7::generateProgram() {
   auto program = patterns[Random::get().gen() % patterns.size()];
 
-  // std::cout << "==== PATTERN:" << std::endl;
+  // std::cout << "==== BEGIN PATTERN ======" << std::endl;
   // ProgramUtil::print(program, std::cout);
-  // std::cout << std::endl;
+  // std::cout << "==== END PATTERN ======" << std::endl << std::endl;
 
   mutator.mutateRandom(program);
+  ProgramUtil::removeOps(program, Operation::Type::NOP);
   ProgramUtil::removeComments(program);
 
   return program;

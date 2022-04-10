@@ -64,21 +64,6 @@
       ]
     },
     {
-      "name": "pattern",
-      "overwrite": "none",
-      "backoff": true,
-      "generators": [
-        "v7"
-      ],
-      "matchers": [
-        "direct",
-        "linear1",
-        "linear2",
-        "binary",
-        "decimal"
-      ]
-    },
-    {
       "name": "hard",
       "overwrite": "auto",
       "backoff": true,
@@ -167,11 +152,6 @@
       "name": "v6_3",
       "version": 6,
       "mutationRate": 0.4
-    },
-    {
-      "name": "v7",
-      "version": 7,
-      "mutationRate": 0.3
     }
   ]
 }

@@ -106,7 +106,15 @@ void Mutator::mutateOperation(Operation &op, int64_t num_cells) {
       op.source =
           Operand(Operand::Type::DIRECT, Random::get().gen() % num_cells);
     }
-    op.target = Operand(Operand::Type::DIRECT, Random::get().gen() % num_cells);
+    if (op.type == Operation::Type::MOV &&
+        Random::get().gen() % 10 > 0) {  // magic number
+      // avoid overwriting
+      op.target = Operand(Operand::Type::DIRECT,
+                          (Random::get().gen() % 2) + num_cells - 1);
+    } else {
+      op.target =
+          Operand(Operand::Type::DIRECT, Random::get().gen() % num_cells);
+    }
     ProgramUtil::avoidNopOrOverflow(op);
   } else if (op.type == Operation::Type::SEQ) {
     // op.comment = "mutated from " + ProgramUtil::operationToString(op);
