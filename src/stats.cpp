@@ -388,8 +388,9 @@ void Stats::finalize() {
 
 void Stats::collectLatestProgramIds() {
   auto progs_dir = Setup::getProgramsHome();
-  static const int64_t max_commits = 100;    // magic number
-  static const int64_t max_programs = 1000;  // magic number
+  static const size_t max_commits = 100;            // magic number
+  static const size_t max_added_programs = 500;     // magic number
+  static const size_t max_modified_programs = 500;  // magic number
   if (!hasGit()) {
     Log::get().warn(
         "Cannot read commit history because the git command was not found");
@@ -425,12 +426,14 @@ void Stats::collectLatestProgramIds() {
     return;
   }
   std::set<int64_t> ids;
+  size_t num_added_ids = 0, num_modified_ids = 0;
   for (const auto &commit : commits) {
-    if (ids.size() >= max_programs) {
+    if (num_added_ids >= max_added_programs &&
+        num_modified_ids >= max_modified_programs) {
       break;
     }
     git_cmd = "cd \"" + progs_dir +
-              "\" && git diff-tree --no-commit-id --name-only -r " + commit +
+              "\" && git diff-tree --no-commit-id --name-status -r " + commit +
               " > " + git_tmp;
     if (system(git_cmd.c_str()) != 0) {
       Log::get().warn("Cannot read files of commit " + commit);
@@ -440,13 +443,24 @@ void Stats::collectLatestProgramIds() {
     {
       // read changed file names from file
       std::ifstream in(git_tmp);
+      std::string status, path;
       while (std::getline(in, line)) {
-        if (line.size() >= 11 && line.substr(line.size() - 4) == ".asm") {
-          auto id_str = line.substr(line.size() - 11, 7);
+        std::istringstream iss(line);
+        iss >> status;
+        iss >> path;
+        if (path.size() >= 11 && path.substr(path.size() - 4) == ".asm") {
+          auto id_str = path.substr(path.size() - 11, 7);
           try {
             OeisSequence seq(id_str);
             if (isFile(seq.getProgramPath())) {
-              ids.insert(seq.id);
+              if (status == "A" && num_added_ids < max_added_programs) {
+                ids.insert(seq.id);
+                num_added_ids++;
+              } else if (status == "M" &&
+                         num_modified_ids < max_modified_programs) {
+                ids.insert(seq.id);
+                num_modified_ids++;
+              }
             }
           } catch (const std::exception &) {
             // ignore because it is not a program of an OEIS sequence

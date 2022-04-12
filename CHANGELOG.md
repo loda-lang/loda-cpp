@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Enhancements
+
+* Use 50% of the new and 50% of the last modified programs for mutations
+
 # v22.4.10
 
 ### Features
