@@ -31,7 +31,7 @@ class Miner {
   void submit(const std::string &path, std::string id);
 
  private:
-  void checkRegularTasks();
+  bool checkRegularTasks();
 
   void reload();
 
@@ -58,6 +58,7 @@ class Miner {
   int64_t num_new;
   int64_t num_updated;
   int64_t num_removed;
+  int64_t num_hours;
   int64_t current_fetch;
   std::map<std::string, int64_t> num_received_per_profile;
 };

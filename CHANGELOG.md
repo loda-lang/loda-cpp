@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Features
+
+* Added option `-H` for settings the number of mining hours (useful for BOINC)
+
 # v22.4.17
 
 ### Enhancements

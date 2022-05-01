@@ -204,6 +204,7 @@ Settings::Settings()
       parallel_mining(false),
       report_cpu_hours(true),
       num_miner_instances(0),
+      num_mine_hours(0),
       print_as_b_file(false),
       print_as_b_file_offset(0) {}
 
@@ -214,6 +215,7 @@ enum class Option {
   MAX_CYCLES,
   B_FILE_OFFSET,
   NUM_INSTANCES,
+  NUM_MINE_HOURS,
   MINER,
   LOG_LEVEL
 };
@@ -225,7 +227,7 @@ std::vector<std::string> Settings::parseArgs(int argc, char *argv[]) {
     std::string arg(argv[i]);
     if (option == Option::NUM_TERMS || option == Option::MAX_MEMORY ||
         option == Option::MAX_CYCLES || option == Option::B_FILE_OFFSET ||
-        option == Option::NUM_INSTANCES) {
+        option == Option::NUM_INSTANCES || option == Option::NUM_MINE_HOURS) {
       std::stringstream s(arg);
       int64_t val;
       s >> val;
@@ -249,6 +251,9 @@ std::vector<std::string> Settings::parseArgs(int argc, char *argv[]) {
           break;
         case Option::NUM_INSTANCES:
           num_miner_instances = val;
+          break;
+        case Option::NUM_MINE_HOURS:
+          num_mine_hours = val;
           break;
         case Option::LOG_LEVEL:
         case Option::MINER:
@@ -291,6 +296,8 @@ std::vector<std::string> Settings::parseArgs(int argc, char *argv[]) {
       } else if (opt == "P") {
         parallel_mining = true;
         option = Option::NUM_INSTANCES;
+      } else if (opt == "H") {
+        option = Option::NUM_MINE_HOURS;
       } else if (opt == "b") {
         print_as_b_file = true;
       } else if (opt == "B") {
@@ -331,6 +338,10 @@ void Settings::printArgs(std::vector<std::string> &args) {
   }
   if (parallel_mining) {
     args.push_back("-p");
+  }
+  if (num_mine_hours > 0) {
+    args.push_back("-H");
+    args.push_back(std::to_string(num_mine_hours));
   }
   if (!report_cpu_hours) {
     args.push_back("--no-report-cpu-hours");
