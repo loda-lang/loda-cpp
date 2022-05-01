@@ -68,6 +68,7 @@ void mineParallel(const Settings& settings,
     num_instances = Setup::getMaxInstances();
   }
   const bool has_miner_profile = settings.miner_profile.empty();
+  const bool restart_miners = (settings.num_mine_hours <= 0);
 
   // rather use single-process mining?
   if (!settings.parallel_mining || num_instances == 1) {
@@ -84,12 +85,6 @@ void mineParallel(const Settings& settings,
   // runtime objects for parallel mining
   std::vector<HANDLE> children_pids(num_instances, 0);
   AdaptiveScheduler cpuhours_scheduler(3600);  // 1 hour (fixed!!)
-  std::unique_ptr<AdaptiveScheduler> stop_scheduler;
-  if (settings.num_mine_hours > 0) {
-    int64_t target_secs =
-        (3600 * settings.num_mine_hours) - 120;  // we allow stop 2 mins earlier
-    stop_scheduler.reset(new AdaptiveScheduler(target_secs));
-  }
   ApiClient api_client;
 
   Log::get().info("Starting parallel mining using " +
@@ -97,20 +92,15 @@ void mineParallel(const Settings& settings,
   const auto start_time = std::chrono::steady_clock::now();
 
   // run miner processes and monitor them
-  bool stop = false, finished = false;
+  bool finished = false;
   while (!finished) {
-    // if number of mine hours is set, check if we should stop
-    if (stop_scheduler && stop_scheduler->isTargetReached()) {
-      stop = true;
-    }
-
     // check if miner processes are alive, restart them if should not stop
-    finished = stop;
+    finished = true;
     for (size_t i = 0; i < children_pids.size(); i++) {
       if (isChildProcessAlive(children_pids[i])) {
         // still alive
         finished = false;
-      } else if (!stop) {
+      } else if (restart_miners) {
         // restart process
         if (has_miner_profile) {
           instance_settings.miner_profile = std::to_string(i);
