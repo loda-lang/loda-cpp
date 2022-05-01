@@ -118,15 +118,17 @@ void boinc(Settings settings, const std::vector<std::string>& args) {
       Log::get().error("Cannot clone programs repository", true);
     }
   }
-  // todo: set client mode
-  // todo: activate cpu hours
-  // todo: set submitted by
+  // configure setup
+  Setup::setMiningMode(MINING_MODE_CLIENT);
+  Setup::forceCPUHours();
+  Setup::setSubmittedBy("BOINC");
   // pick a random miner profile if not mining in parallel
   if (!settings.parallel_mining || settings.num_miner_instances == 1) {
     settings.miner_profile = std::to_string(Random::get().gen() % 100);
   }
   // start mining
-  mineParallel(settings, args);
+  Commands commands(settings);
+  commands.mine();
 }
 
 int dispatch(Settings settings, const std::vector<std::string>& args) {

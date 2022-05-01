@@ -111,6 +111,11 @@ const std::string Setup::getSubmittedBy() {
   return getSetupValue("LODA_SUBMITTED_BY");
 }
 
+void Setup::setSubmittedBy(const std::string& submited_by) {
+  getSubmittedBy();
+  SETUP["LODA_SUBMITTED_BY"] = submited_by;
+}
+
 void Setup::setMinersConfig(const std::string& loda_config) {
   MINERS_CONFIG = loda_config;
 }
@@ -185,6 +190,8 @@ MiningMode Setup::getMiningMode() {
   return static_cast<MiningMode>(MINING_MODE);
 }
 
+void Setup::setMiningMode(MiningMode mode) { MINING_MODE = mode; }
+
 int64_t Setup::getMaxMemory() {
   if (MAX_MEMORY == UNDEFINED_INT) {
     // 1 GB default
@@ -242,6 +249,11 @@ bool Setup::hasMemory() {
 bool Setup::shouldReportCPUHours() {
   return (getMiningMode() == MINING_MODE_CLIENT &&
           getSetupFlag(LODA_SUBMIT_CPU_HOURS, false));
+}
+
+void Setup::forceCPUHours() {
+  shouldReportCPUHours();
+  SETUP[LODA_SUBMIT_CPU_HOURS] = "yes";
 }
 
 void trimString(std::string& str) {

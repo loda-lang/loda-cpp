@@ -24,9 +24,13 @@ class Setup {
 
   static MiningMode getMiningMode();
 
+  static void setMiningMode(MiningMode mode);
+
   static std::string getMinersConfig();
 
   static const std::string getSubmittedBy();
+
+  static void setSubmittedBy(const std::string& submited_by);
 
   static void setMinersConfig(const std::string& loda_config);
 
@@ -62,6 +66,8 @@ class Setup {
   static bool hasMemory();
 
   static bool shouldReportCPUHours();
+
+  static void forceCPUHours();
 
   static void runWizard();
 
