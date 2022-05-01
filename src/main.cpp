@@ -69,6 +69,13 @@ void mineParallel(const Settings& settings,
   }
   const bool has_miner_profile = settings.miner_profile.empty();
 
+  // rather use single-process mining?
+  if (!settings.parallel_mining || num_instances == 1) {
+    Commands commands(settings);
+    commands.mine();
+    return;
+  }
+
   // prepare instance settings
   auto instance_settings = settings;
   instance_settings.parallel_mining = false;
@@ -79,22 +86,42 @@ void mineParallel(const Settings& settings,
   AdaptiveScheduler cpuhours_scheduler(3600);  // 1 hour (fixed!!)
   ApiClient api_client;
 
-  // run miner processes and monitor them
   Log::get().info("Starting parallel mining using " +
                   std::to_string(num_instances) + " miner instances");
-  while (true) {
-    // check if miner processes are alive
+  const auto start_time = std::chrono::steady_clock::now();
+
+  // run miner processes and monitor them
+  bool stop = false, finished = false;
+  while (!finished) {
+    // if number of mine hours is set, check if we reached them
+    auto cur_time = std::chrono::steady_clock::now();
+    int64_t hours =
+        std::chrono::duration_cast<std::chrono::hours>(cur_time - start_time)
+            .count();
+    if (settings.num_mine_hours >= 0 && hours >= settings.num_mine_hours) {
+      stop = true;  // we should stop
+    }
+
+    // check if miner processes are alive, restart them if should not stop
+    finished = stop;
     for (size_t i = 0; i < children_pids.size(); i++) {
-      if (!isChildProcessAlive(children_pids[i])) {
+      if (isChildProcessAlive(children_pids[i])) {
+        // still alive
+        finished = false;
+      } else if (!stop) {
+        // restart process
         if (has_miner_profile) {
           instance_settings.miner_profile = std::to_string(i);
         }
         children_pids[i] = fork(instance_settings, args);
         std::this_thread::sleep_for(std::chrono::seconds(5));
+        finished = false;
       }
     }
+
     // wait some time
     std::this_thread::sleep_for(std::chrono::seconds(10));
+
     // report CPU hours
     if (cpuhours_scheduler.isTargetReached()) {
       cpuhours_scheduler.reset();
@@ -106,6 +133,14 @@ void mineParallel(const Settings& settings,
       }
     }
   }
+
+  // finished log message
+  auto cur_time = std::chrono::steady_clock::now();
+  int64_t mins =
+      std::chrono::duration_cast<std::chrono::minutes>(cur_time - start_time)
+          .count();
+  Log::get().info("Finished parallel mining after " + std::to_string(mins) +
+                  " minutes");
 }
 
 int dispatch(Settings settings, const std::vector<std::string>& args) {
@@ -146,11 +181,7 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
   } else if (cmd == "profile" || cmd == "prof") {
     commands.profile(args.at(1));
   } else if (cmd == "mine") {
-    if (settings.parallel_mining) {
-      mineParallel(settings, args);
-    } else {
-      commands.mine();
-    }
+    mineParallel(settings, args);
   } else if (cmd == "submit") {
     if (args.size() == 2) {
       commands.submit(args.at(1), "");

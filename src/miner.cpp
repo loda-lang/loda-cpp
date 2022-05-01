@@ -30,6 +30,7 @@ Miner::Miner(const Settings &settings)
       num_new(0),
       num_updated(0),
       num_removed(0),
+      num_hours(0),
       current_fetch(0) {}
 
 void Miner::reload() {
@@ -60,6 +61,7 @@ void Miner::mine() {
   // print info
   Log::get().info("Mining programs for OEIS sequences in " +
                   convertMiningModeToStr(mining_mode) + " mode");
+  const auto start_time = std::chrono::steady_clock::now();
 
   std::string submitted_by;
   current_fetch = (mining_mode == MINING_MODE_SERVER) ? PROGRAMS_TO_FETCH : 0;
@@ -143,11 +145,22 @@ void Miner::mine() {
     }
 
     num_processed++;
-    checkRegularTasks();
+    if (!checkRegularTasks()) {
+      break;
+    }
   }
+
+  // finish with log message
+  auto cur_time = std::chrono::steady_clock::now();
+  int64_t mins =
+      std::chrono::duration_cast<std::chrono::minutes>(cur_time - start_time)
+          .count();
+  Log::get().info("Finished mining after " + std::to_string(mins) + " minutes");
 }
 
-void Miner::checkRegularTasks() {
+bool Miner::checkRegularTasks() {
+  bool result = true;
+
   // regular task: log info about generated programs
   if (log_scheduler.isTargetReached()) {
     log_scheduler.reset();
@@ -195,6 +208,10 @@ void Miner::checkRegularTasks() {
     if (Setup::shouldReportCPUHours() && settings.report_cpu_hours) {
       api_client->postCPUHour();
     }
+    num_hours++;
+    if (settings.num_mine_hours >= 0 && num_hours >= settings.num_mine_hours) {
+      result = false;
+    }
   }
 
   // regular task: reload oeis manager and generators
@@ -202,6 +219,8 @@ void Miner::checkRegularTasks() {
     reload_scheduler.reset();
     reload();
   }
+
+  return result;
 }
 
 void Miner::submit(const std::string &path, std::string id) {
