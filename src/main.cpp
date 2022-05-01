@@ -97,10 +97,11 @@ void mineParallel(const Settings& settings,
     // check if miner processes are alive, restart them if should not stop
     finished = true;
     for (size_t i = 0; i < children_pids.size(); i++) {
-      if (isChildProcessAlive(children_pids[i])) {
+      const auto pid = children_pids[i];
+      if (pid != 0 && isChildProcessAlive(children_pids[i])) {
         // still alive
         finished = false;
-      } else if (restart_miners) {
+      } else if (pid == 0 || restart_miners) {
         // restart process
         if (has_miner_profile) {
           instance_settings.miner_profile = std::to_string(i);
