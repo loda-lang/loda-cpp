@@ -2,6 +2,11 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Enhancements
+
+* Use shared project directory when running in BOINC
+* Extract user name from BOINC metadata
+
 # v22.5.1
 
 ### Features
