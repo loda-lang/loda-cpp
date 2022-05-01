@@ -134,7 +134,6 @@ void boinc(Settings settings, const std::vector<std::string>& args) {
   if (!hasGit()) {
     Log::get().error("Git not found. Please install it and try again", true);
   }
-  Commands::initLog(false);
   Setup::getLodaHome();
   if (!Setup::existsProgramsHome()) {
     if (!Setup::cloneProgramsHome()) {
