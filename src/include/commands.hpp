@@ -46,8 +46,8 @@ class Commands {
 
   void benchmark();
 
+  static void initLog(bool silent);
+
  private:
   const Settings& settings;
-
-  static void initLog(bool silent);
 };

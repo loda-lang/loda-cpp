@@ -132,8 +132,10 @@ void mineParallel(const Settings& settings,
 void boinc(Settings settings, const std::vector<std::string>& args) {
   // check setup
   if (!hasGit()) {
-    Log::get().error("git not found. Please install it and try again", true);
+    Log::get().error("Git not found. Please install it and try again", true);
   }
+  Commands::initLog(false);
+  Setup::getLodaHome();
   if (!Setup::existsProgramsHome()) {
     if (!Setup::cloneProgramsHome()) {
       Log::get().error("Cannot clone programs repository", true);

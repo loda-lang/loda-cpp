@@ -431,8 +431,8 @@ bool Setup::existsProgramsHome() {
 }
 
 bool Setup::cloneProgramsHome(std::string git_url) {
-  std::string git_clone =
-      "git clone " + git_url + " \"" + LODA_HOME + "programs\"";
+  const std::string git_clone =
+      "git clone " + git_url + " \"" + getLodaHome() + "programs\"";
   return system(git_clone.c_str()) == 0;
 }
 
