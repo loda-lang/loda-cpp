@@ -50,18 +50,20 @@ void Miner::reload() {
 }
 
 void Miner::mine() {
-  if (!manager) {
-    reload();
-  }
   Parser parser;
   std::stack<Program> progs;
   Sequence norm_seq;
   Program program;
+  const auto start_time = std::chrono::steady_clock::now();
+
+  // load manager
+  if (!manager) {
+    reload();
+  }
 
   // print info
   Log::get().info("Mining programs for OEIS sequences in " +
                   convertMiningModeToStr(mining_mode) + " mode");
-  const auto start_time = std::chrono::steady_clock::now();
 
   std::string submitted_by;
   current_fetch = (mining_mode == MINING_MODE_SERVER) ? PROGRAMS_TO_FETCH : 0;

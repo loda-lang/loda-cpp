@@ -84,6 +84,12 @@ void mineParallel(const Settings& settings,
   // runtime objects for parallel mining
   std::vector<HANDLE> children_pids(num_instances, 0);
   AdaptiveScheduler cpuhours_scheduler(3600);  // 1 hour (fixed!!)
+  std::unique_ptr<AdaptiveScheduler> stop_scheduler;
+  if (settings.num_mine_hours > 0) {
+    int64_t target_secs =
+        (3600 * settings.num_mine_hours) - 120;  // we allow stop 2 mins earlier
+    stop_scheduler.reset(new AdaptiveScheduler(target_secs));
+  }
   ApiClient api_client;
 
   Log::get().info("Starting parallel mining using " +
@@ -93,13 +99,9 @@ void mineParallel(const Settings& settings,
   // run miner processes and monitor them
   bool stop = false, finished = false;
   while (!finished) {
-    // if number of mine hours is set, check if we reached them
-    auto cur_time = std::chrono::steady_clock::now();
-    int64_t hours =
-        std::chrono::duration_cast<std::chrono::hours>(cur_time - start_time)
-            .count();
-    if (settings.num_mine_hours > 0 && hours >= settings.num_mine_hours) {
-      stop = true;  // we should stop
+    // if number of mine hours is set, check if we should stop
+    if (stop_scheduler && stop_scheduler->isTargetReached()) {
+      stop = true;
     }
 
     // check if miner processes are alive, restart them if should not stop
