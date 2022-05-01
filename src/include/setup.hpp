@@ -24,13 +24,22 @@ class Setup {
 
   static MiningMode getMiningMode();
 
+  static void setMiningMode(MiningMode mode);
+
   static std::string getMinersConfig();
 
   static const std::string getSubmittedBy();
 
+  static void setSubmittedBy(const std::string& submited_by);
+
   static void setMinersConfig(const std::string& loda_config);
 
   static const std::string& getOeisHome();
+
+  static bool existsProgramsHome();
+
+  static bool cloneProgramsHome(
+      std::string git_url = "https://github.com/loda-lang/loda-programs.git");
 
   static const std::string& getProgramsHome();
 
@@ -57,6 +66,8 @@ class Setup {
   static bool hasMemory();
 
   static bool shouldReportCPUHours();
+
+  static void forceCPUHours();
 
   static void runWizard();
 

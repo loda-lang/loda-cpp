@@ -111,6 +111,11 @@ const std::string Setup::getSubmittedBy() {
   return getSetupValue("LODA_SUBMITTED_BY");
 }
 
+void Setup::setSubmittedBy(const std::string& submited_by) {
+  getSubmittedBy();
+  SETUP["LODA_SUBMITTED_BY"] = submited_by;
+}
+
 void Setup::setMinersConfig(const std::string& loda_config) {
   MINERS_CONFIG = loda_config;
 }
@@ -185,6 +190,8 @@ MiningMode Setup::getMiningMode() {
   return static_cast<MiningMode>(MINING_MODE);
 }
 
+void Setup::setMiningMode(MiningMode mode) { MINING_MODE = mode; }
+
 int64_t Setup::getMaxMemory() {
   if (MAX_MEMORY == UNDEFINED_INT) {
     // 1 GB default
@@ -242,6 +249,11 @@ bool Setup::hasMemory() {
 bool Setup::shouldReportCPUHours() {
   return (getMiningMode() == MINING_MODE_CLIENT &&
           getSetupFlag(LODA_SUBMIT_CPU_HOURS, false));
+}
+
+void Setup::forceCPUHours() {
+  getSetupFlag(LODA_SUBMIT_CPU_HOURS, false);
+  SETUP[LODA_SUBMIT_CPU_HOURS] = "yes";
 }
 
 void trimString(std::string& str) {
@@ -414,9 +426,19 @@ bool Setup::checkEnvVars() {
   return true;
 }
 
+bool Setup::existsProgramsHome() {
+  return isDir(LODA_HOME + "programs" + FILE_SEP + "oeis");
+}
+
+bool Setup::cloneProgramsHome(std::string git_url) {
+  const std::string git_clone =
+      "git clone " + git_url + " \"" + getLodaHome() + "programs\"";
+  return system(git_clone.c_str()) == 0;
+}
+
 bool Setup::checkProgramsHome() {
   std::string line;
-  if (!isDir(LODA_HOME + "programs" + FILE_SEP + "oeis")) {
+  if (!existsProgramsHome()) {
     std::cout << "LODA needs to download its programs repository from GitHub."
               << std::endl;
     std::cout << "It contains programs for more than 50,000 integer sequences."
@@ -446,9 +468,7 @@ bool Setup::checkProgramsHome() {
     if (!line.empty()) {
       git_url = line;
     }
-    std::string git_clone =
-        "git clone " + git_url + " \"" + LODA_HOME + "programs\"";
-    if (system(git_clone.c_str()) != 0) {
+    if (cloneProgramsHome(git_url)) {
       std::cout << std::endl
                 << "Error cloning repository. Aborting setup." << std::endl;
       return false;

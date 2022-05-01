@@ -129,6 +129,30 @@ void mineParallel(const Settings& settings,
                   " minutes");
 }
 
+void boinc(Settings settings, const std::vector<std::string>& args) {
+  // check setup
+  if (!hasGit()) {
+    Log::get().error("Git not found. Please install it and try again", true);
+  }
+  Setup::getLodaHome();
+  if (!Setup::existsProgramsHome()) {
+    if (!Setup::cloneProgramsHome()) {
+      Log::get().error("Cannot clone programs repository", true);
+    }
+  }
+  // configure setup
+  Setup::setMiningMode(MINING_MODE_CLIENT);
+  Setup::forceCPUHours();
+  Setup::setSubmittedBy("BOINC");
+  // pick a random miner profile if not mining in parallel
+  if (!settings.parallel_mining || settings.num_miner_instances == 1) {
+    settings.miner_profile = std::to_string(Random::get().gen() % 100);
+  }
+  // start mining
+  Commands commands(settings);
+  commands.mine();
+}
+
 int dispatch(Settings settings, const std::vector<std::string>& args) {
   // pre-flight checks
   if (args.empty()) {
@@ -181,6 +205,10 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
       std::cout << "invalid number of arguments" << std::endl;
       return 1;
     }
+  }
+  // hidden boinc command
+  else if (cmd == "boinc") {
+    boinc(settings, args);
   }
 #ifdef _WIN64
   // hidden helper command for updates on windows
