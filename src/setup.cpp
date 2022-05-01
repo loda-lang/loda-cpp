@@ -414,9 +414,19 @@ bool Setup::checkEnvVars() {
   return true;
 }
 
+bool Setup::existsProgramsHome() {
+  return isDir(LODA_HOME + "programs" + FILE_SEP + "oeis");
+}
+
+bool Setup::cloneProgramsHome(std::string git_url) {
+  std::string git_clone =
+      "git clone " + git_url + " \"" + LODA_HOME + "programs\"";
+  return system(git_clone.c_str()) == 0;
+}
+
 bool Setup::checkProgramsHome() {
   std::string line;
-  if (!isDir(LODA_HOME + "programs" + FILE_SEP + "oeis")) {
+  if (!existsProgramsHome()) {
     std::cout << "LODA needs to download its programs repository from GitHub."
               << std::endl;
     std::cout << "It contains programs for more than 50,000 integer sequences."
@@ -446,9 +456,7 @@ bool Setup::checkProgramsHome() {
     if (!line.empty()) {
       git_url = line;
     }
-    std::string git_clone =
-        "git clone " + git_url + " \"" + LODA_HOME + "programs\"";
-    if (system(git_clone.c_str()) != 0) {
+    if (cloneProgramsHome(git_url)) {
       std::cout << std::endl
                 << "Error cloning repository. Aborting setup." << std::endl;
       return false;

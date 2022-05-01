@@ -108,6 +108,27 @@ void mineParallel(const Settings& settings,
   }
 }
 
+void boinc(Settings settings, const std::vector<std::string>& args) {
+  // check setup
+  if (!hasGit()) {
+    Log::get().error("git not found. Please install it and try again", true);
+  }
+  if (!Setup::existsProgramsHome()) {
+    if (!Setup::cloneProgramsHome()) {
+      Log::get().error("Cannot clone programs repository", true);
+    }
+  }
+  // todo: set client mode
+  // todo: activate cpu hours
+  // todo: set submitted by
+  // pick a random miner profile if not mining in parallel
+  if (!settings.parallel_mining || settings.num_miner_instances == 1) {
+    settings.miner_profile = std::to_string(Random::get().gen() % 100);
+  }
+  // start mining
+  mineParallel(settings, args);
+}
+
 int dispatch(Settings settings, const std::vector<std::string>& args) {
   // pre-flight checks
   if (args.empty()) {
@@ -160,6 +181,10 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
       std::cout << "invalid number of arguments" << std::endl;
       return 1;
     }
+  }
+  // hidden boinc command
+  else if (cmd == "boinc") {
+    boinc(settings, args);
   }
 #ifdef _WIN64
   // hidden helper command for updates on windows
