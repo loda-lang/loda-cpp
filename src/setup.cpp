@@ -252,7 +252,7 @@ bool Setup::shouldReportCPUHours() {
 }
 
 void Setup::forceCPUHours() {
-  shouldReportCPUHours();
+  getSetupFlag(LODA_SUBMIT_CPU_HOURS, false);
   SETUP[LODA_SUBMIT_CPU_HOURS] = "yes";
 }
 
