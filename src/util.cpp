@@ -204,6 +204,7 @@ Settings::Settings()
       parallel_mining(false),
       report_cpu_hours(true),
       num_miner_instances(0),
+      num_mine_hours(0),
       print_as_b_file(false),
       print_as_b_file_offset(0) {}
 
@@ -338,7 +339,7 @@ void Settings::printArgs(std::vector<std::string> &args) {
   if (parallel_mining) {
     args.push_back("-p");
   }
-  if (num_mine_hours >= 0) {
+  if (num_mine_hours > 0) {
     args.push_back("-H");
     args.push_back(std::to_string(num_mine_hours));
   }

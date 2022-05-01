@@ -209,7 +209,7 @@ bool Miner::checkRegularTasks() {
       api_client->postCPUHour();
     }
     num_hours++;
-    if (settings.num_mine_hours >= 0 && num_hours >= settings.num_mine_hours) {
+    if (settings.num_mine_hours > 0 && num_hours >= settings.num_mine_hours) {
       result = false;
     }
   }

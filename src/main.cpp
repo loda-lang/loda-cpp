@@ -98,7 +98,7 @@ void mineParallel(const Settings& settings,
     int64_t hours =
         std::chrono::duration_cast<std::chrono::hours>(cur_time - start_time)
             .count();
-    if (settings.num_mine_hours >= 0 && hours >= settings.num_mine_hours) {
+    if (settings.num_mine_hours > 0 && hours >= settings.num_mine_hours) {
       stop = true;  // we should stop
     }
 
