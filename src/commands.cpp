@@ -48,9 +48,9 @@ void Commands::help() {
             << std::endl;
 
   std::cout << std::endl << "OEIS Commands:" << std::endl;
-  std::cout
-      << "  mine                Mine programs for OEIS sequences (see -i,-p)"
-      << std::endl;
+  std::cout << "  mine                Mine programs for OEIS sequences (see "
+               "-i,-p,-P,-H)"
+            << std::endl;
   std::cout << "  check <program>     Check a program for an OEIS sequence "
                "(see -b)"
             << std::endl;
@@ -95,6 +95,9 @@ void Commands::help() {
   std::cout << "  -P <number>         Parallel mining using custom number of "
                "instances"
             << std::endl;
+  std::cout
+      << "  -H <number>         Number of mining hours (default unlimited)"
+      << std::endl;
 }
 
 std::pair<std::string, size_t> getProgramPathAndSeqId(std::string arg) {

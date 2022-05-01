@@ -57,6 +57,7 @@ Options:
   -i <string>         Name of miner configuration from miners.json
   -p                  Parallel mining using default number of instances
   -P <number>         Parallel mining using custom number of instances
+  -H <number>         Number of mining hours (default unlimited)
 ```
 
 ### Core Commands

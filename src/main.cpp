@@ -68,6 +68,7 @@ void mineParallel(const Settings& settings,
     num_instances = Setup::getMaxInstances();
   }
   const bool has_miner_profile = settings.miner_profile.empty();
+  const bool restart_miners = (settings.num_mine_hours <= 0);
 
   // prepare instance settings
   auto instance_settings = settings;
@@ -79,22 +80,34 @@ void mineParallel(const Settings& settings,
   AdaptiveScheduler cpuhours_scheduler(3600);  // 1 hour (fixed!!)
   ApiClient api_client;
 
-  // run miner processes and monitor them
   Log::get().info("Starting parallel mining using " +
-                  std::to_string(num_instances) + " miner instances");
-  while (true) {
-    // check if miner processes are alive
+                  std::to_string(num_instances) + " instances");
+  const auto start_time = std::chrono::steady_clock::now();
+
+  // run miner processes and monitor them
+  bool finished = false;
+  while (!finished) {
+    // check if miner processes are alive, restart them if should not stop
+    finished = true;
     for (size_t i = 0; i < children_pids.size(); i++) {
-      if (!isChildProcessAlive(children_pids[i])) {
+      const auto pid = children_pids[i];
+      if (pid != 0 && isChildProcessAlive(pid)) {
+        // still alive
+        finished = false;
+      } else if (pid == 0 || restart_miners) {
+        // restart process
         if (has_miner_profile) {
           instance_settings.miner_profile = std::to_string(i);
         }
         children_pids[i] = fork(instance_settings, args);
         std::this_thread::sleep_for(std::chrono::seconds(5));
+        finished = false;
       }
     }
+
     // wait some time
     std::this_thread::sleep_for(std::chrono::seconds(10));
+
     // report CPU hours
     if (cpuhours_scheduler.isTargetReached()) {
       cpuhours_scheduler.reset();
@@ -106,6 +119,14 @@ void mineParallel(const Settings& settings,
       }
     }
   }
+
+  // finished log message
+  auto cur_time = std::chrono::steady_clock::now();
+  int64_t mins =
+      std::chrono::duration_cast<std::chrono::minutes>(cur_time - start_time)
+          .count();
+  Log::get().info("Finished parallel mining after " + std::to_string(mins) +
+                  " minutes");
 }
 
 void boinc(Settings settings, const std::vector<std::string>& args) {
