@@ -131,6 +131,11 @@ void mineParallel(const Settings& settings,
 
 void boinc(Settings settings, const std::vector<std::string>& args) {
   // check setup
+
+  // TODO: use a fixed loda home inside the users home dir
+  // TODO: make sure to lock the folder when cloning!
+  // TODO: read <user_name>...</user_name> from $PROJECT_DIR/init_data.xml
+
   if (!hasGit()) {
     Log::get().error("Git not found. Please install it and try again", true);
   }
