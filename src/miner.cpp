@@ -30,8 +30,9 @@ Miner::Miner(const Settings &settings)
       num_new(0),
       num_updated(0),
       num_removed(0),
-      num_hours(0),
-      current_fetch(0) {}
+      num_reported_hours(0),
+      current_fetch(0),
+      start_time(std::chrono::steady_clock::now()) {}
 
 void Miner::reload() {
   api_client.reset(new ApiClient());
@@ -54,11 +55,12 @@ void Miner::mine() {
   std::stack<Program> progs;
   Sequence norm_seq;
   Program program;
-  const auto start_time = std::chrono::steady_clock::now();
 
   // load manager
+  reportProgress();
   if (!manager) {
     reload();
+    reportProgress();
   }
 
   // print info
@@ -152,6 +154,11 @@ void Miner::mine() {
     }
   }
 
+  // report remaining cpu hours
+  while (num_reported_hours < settings.num_mine_hours) {
+    reportCPUHour();
+  }
+
   // finish with log message
   auto cur_time = std::chrono::steady_clock::now();
   int64_t mins =
@@ -163,7 +170,7 @@ void Miner::mine() {
 bool Miner::checkRegularTasks() {
   bool result = true;
 
-  // regular task: log info about generated programs
+  // regular task: log info
   if (log_scheduler.isTargetReached()) {
     log_scheduler.reset();
     if (num_processed) {
@@ -173,6 +180,14 @@ bool Miner::checkRegularTasks() {
     } else {
       Log::get().warn("Slow processing of programs");
     }
+
+    // regular task: report progress and check termination
+    if (settings.num_mine_hours > 0) {
+      if (getElapsedMinutes() >= settings.num_mine_hours * 60) {
+        result = false;
+      }
+      reportProgress();
+    }
   }
 
   // regular task: fetch programs from API server
@@ -181,7 +196,7 @@ bool Miner::checkRegularTasks() {
     current_fetch += PROGRAMS_TO_FETCH;
   }
 
-  // regular task: log info and publish metrics
+  // regular task: publish metrics
   if (metrics_scheduler.isTargetReached()) {
     metrics_scheduler.reset();
     std::vector<Metrics::Entry> entries;
@@ -207,13 +222,7 @@ bool Miner::checkRegularTasks() {
   // regular task: report CPU hours
   if (cpuhours_scheduler.isTargetReached()) {
     cpuhours_scheduler.reset();
-    if (Setup::shouldReportCPUHours() && settings.report_cpu_hours) {
-      api_client->postCPUHour();
-    }
-    num_hours++;
-    if (settings.num_mine_hours > 0 && num_hours >= settings.num_mine_hours) {
-      result = false;
-    }
+    reportCPUHour();
   }
 
   // regular task: reload oeis manager and generators
@@ -223,6 +232,32 @@ bool Miner::checkRegularTasks() {
   }
 
   return result;
+}
+
+void Miner::reportCPUHour() {
+  if (Setup::shouldReportCPUHours() && settings.report_cpu_hours) {
+    api_client->postCPUHour();
+  }
+  num_reported_hours++;
+}
+
+void Miner::reportProgress() {
+  if (settings.num_mine_hours > 0 && !progress_file.empty()) {
+    double progress = static_cast<double>(getElapsedMinutes()) /
+                      static_cast<double>(settings.num_mine_hours * 60);
+    if (progress > 1.0) {
+      progress = 1.0;
+    }
+    std::ofstream out(progress_file);
+    out.precision(6);
+    out << std::fixed << progress << std::endl;
+  }
+}
+
+int64_t Miner::getElapsedMinutes() const {
+  const auto cur_time = std::chrono::steady_clock::now();
+  return std::chrono::duration_cast<std::chrono::minutes>(cur_time - start_time)
+      .count();
 }
 
 void Miner::submit(const std::string &path, std::string id) {

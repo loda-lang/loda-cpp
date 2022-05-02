@@ -6,6 +6,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Use shared project directory when running in BOINC
 * Extract user name from BOINC metadata
+* Report progress to BOINC wrapper app
 
 # v22.5.1
 

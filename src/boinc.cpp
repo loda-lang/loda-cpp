@@ -38,6 +38,16 @@ void Boinc::run() {
     Log::get().error("Git not found. Please install it and try again", true);
   }
 
+  // pick a random miner profile if not mining in parallel
+  if (!settings.parallel_mining || settings.num_miner_instances == 1) {
+    settings.miner_profile = std::to_string(Random::get().gen() % 100);
+  }
+
+  // create initial progress file
+  Miner miner(settings);
+  miner.progress_file = slot_dir + "fraction_done";
+  miner.reportProgress();
+
   // clone programs repository if necessary
   if (!Setup::existsProgramsHome()) {
     FolderLock lock(project_dir);
@@ -46,13 +56,7 @@ void Boinc::run() {
     }
   }
 
-  // pick a random miner profile if not mining in parallel
-  if (!settings.parallel_mining || settings.num_miner_instances == 1) {
-    settings.miner_profile = std::to_string(Random::get().gen() % 100);
-  }
-
   // start mining!
-  Miner miner(settings);
   miner.mine();
 }
 
