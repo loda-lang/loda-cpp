@@ -28,7 +28,9 @@ class Commands {
 
   void submit(const std::string& path, const std::string& id);
 
-  // hidden commands (only in development versions)
+  // hidden commands
+
+  void boinc();
 
   void test();
 

@@ -1,5 +1,4 @@
 #include <chrono>
-#include <fstream>
 #include <iostream>
 #include <thread>
 
@@ -130,70 +129,6 @@ void mineParallel(const Settings& settings,
                   " minutes");
 }
 
-void boinc(Settings settings, const std::vector<std::string>& args) {
-  // get project dir
-  auto project_env = std::getenv("PROJECT_DIR");
-  if (!project_env) {
-    Log::get().error("PROJECT_DIR environment variable not set", true);
-  }
-  std::string project_dir(project_env);
-  ensureTrailingSlash(project_dir);
-
-  // set loda home dir
-  auto slots_pos = project_dir.find("slots");
-  if (slots_pos == std::string::npos) {
-    Log::get().error("Missing slots in project dir: " + project_dir, true);
-  }
-  const std::string loda_home = project_dir.substr(0, slots_pos) + "projects" +
-                                FILE_SEP + "boinc.loda-lang.org_loda";
-  Setup::setLodaHome(loda_home);
-
-  // mark setup as loaded
-  Setup::getMiningMode();
-
-  // ensure git is installed
-  if (!hasGit()) {
-    Log::get().error("Git not found. Please install it and try again", true);
-  }
-
-  // clone programs repository if necessary
-  if (!Setup::existsProgramsHome()) {
-    FolderLock lock(project_dir);
-    if (!Setup::cloneProgramsHome()) {
-      Log::get().error("Cannot clone programs repository", true);
-    }
-  }
-
-  // configure setup
-  Setup::setMiningMode(MINING_MODE_CLIENT);
-  Setup::forceCPUHours();
-  std::ifstream init_data(project_dir + "init_data.xml");
-  std::string line;
-  std::string submitted_by = "BOINC";
-  while (std::getline(init_data, line)) {
-    auto start = line.find("<user_name>");
-    auto end = line.find("</user_name>");
-    if (start != std::string::npos && end != std::string::npos) {
-      line = line.substr(start + 11);
-      line = line.substr(0, end - start - 11);
-      submitted_by = line;
-      Log::get().info("Submitting programs as " + submitted_by);
-      break;
-    }
-  }
-  Setup::setSubmittedBy(submitted_by);
-  return;
-
-  // pick a random miner profile if not mining in parallel
-  if (!settings.parallel_mining || settings.num_miner_instances == 1) {
-    settings.miner_profile = std::to_string(Random::get().gen() % 100);
-  }
-
-  // start mining!
-  Commands commands(settings);
-  commands.mine();
-}
-
 int dispatch(Settings settings, const std::vector<std::string>& args) {
   // pre-flight checks
   if (args.empty()) {
@@ -249,7 +184,7 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
   }
   // hidden boinc command
   else if (cmd == "boinc") {
-    boinc(settings, args);
+    commands.boinc();
   }
 #ifdef _WIN64
   // hidden helper command for updates on windows
