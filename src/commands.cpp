@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include "benchmark.hpp"
+#include "boinc.hpp"
 #include "evaluator.hpp"
 #include "iterator.hpp"
 #include "miner.hpp"
@@ -211,7 +212,13 @@ void Commands::submit(const std::string& path, const std::string& id) {
   miner.submit(path, id);
 }
 
-// hidden commands (only in development versions)
+// hidden commands
+
+void Commands::boinc() {
+  initLog(false);
+  Boinc boinc(settings);
+  boinc.run();
+}
 
 void Commands::test() {
   initLog(false);

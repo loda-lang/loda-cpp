@@ -10,7 +10,7 @@ CXXFLAGS = $(CXXFLAGS) /Z7
 CXXFLAGS = $(CXXFLAGS) /DLODA_PLATFORM=$(LODA_PLATFORM)
 !ENDIF
 
-SRCS = api_client.cpp benchmark.cpp big_number.cpp blocks.cpp commands.cpp config.cpp distribution.cpp evaluator.cpp evaluator_inc.cpp extender.cpp external/jute.cpp file.cpp finder.cpp generator.cpp generator_v1.cpp generator_v2.cpp generator_v3.cpp generator_v4.cpp generator_v5.cpp generator_v6.cpp generator_v7.cpp interpreter.cpp iterator.cpp main.cpp matcher.cpp memory.cpp metrics.cpp miner.cpp minimizer.cpp mutator.cpp number.cpp oeis_list.cpp oeis_manager.cpp oeis_sequence.cpp optimizer.cpp parser.cpp program.cpp program_util.cpp reducer.cpp semantics.cpp sequence.cpp setup.cpp stats.cpp test.cpp util.cpp web_client.cpp
+SRCS = api_client.cpp benchmark.cpp big_number.cpp blocks.cpp boinc.cpp commands.cpp config.cpp distribution.cpp evaluator.cpp evaluator_inc.cpp extender.cpp external/jute.cpp file.cpp finder.cpp generator.cpp generator_v1.cpp generator_v2.cpp generator_v3.cpp generator_v4.cpp generator_v5.cpp generator_v6.cpp generator_v7.cpp interpreter.cpp iterator.cpp main.cpp matcher.cpp memory.cpp metrics.cpp miner.cpp minimizer.cpp mutator.cpp number.cpp oeis_list.cpp oeis_manager.cpp oeis_sequence.cpp optimizer.cpp parser.cpp program.cpp program_util.cpp reducer.cpp semantics.cpp sequence.cpp setup.cpp stats.cpp test.cpp util.cpp web_client.cpp
 
 loda: external/jute.h external/jute.cpp $(SRCS)
 	cl /EHsc /Feloda.exe $(CXXFLAGS) $(SRCS)
