@@ -51,8 +51,10 @@ void Boinc::run() {
   // clone programs repository if necessary
   if (!Setup::existsProgramsHome()) {
     FolderLock lock(project_dir);
-    if (!Setup::cloneProgramsHome()) {
-      Log::get().error("Cannot clone programs repository", true);
+    if (!Setup::existsProgramsHome()) {  // need to check again here
+      if (!Setup::cloneProgramsHome()) {
+        Log::get().error("Cannot clone programs repository", true);
+      }
     }
   }
 

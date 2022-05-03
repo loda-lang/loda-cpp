@@ -59,6 +59,9 @@ MiningMode convertStrToMiningMode(const std::string& str) {
 }
 
 std::string Setup::getLodaHomeNoCheck() {
+  if (!LODA_HOME.empty()) {
+    return LODA_HOME;
+  }
   auto loda_home = std::getenv("LODA_HOME");
   std::string result;
   if (loda_home) {
