@@ -24,7 +24,8 @@ class Miner {
     std::vector<Matcher::Config> matchers;
   };
 
-  Miner(const Settings &settings);
+  Miner(const Settings &settings,
+        int64_t log_interval = 120);  // 2 minutes (magic number)
 
   void mine();
 

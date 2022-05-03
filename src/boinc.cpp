@@ -44,7 +44,7 @@ void Boinc::run() {
   }
 
   // create initial progress file
-  Miner miner(settings);
+  Miner miner(settings, 60);  // reduced log interval: 1 minute
   miner.progress_file = slot_dir + "fraction_done";
   miner.reportProgress();
 

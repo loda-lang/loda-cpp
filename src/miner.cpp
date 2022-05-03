@@ -18,10 +18,10 @@ const std::string Miner::ANONYMOUS("anonymous");
 const int64_t Miner::PROGRAMS_TO_FETCH = 2000;  // magic number
 const int64_t Miner::NUM_MUTATIONS = 100;       // magic number
 
-Miner::Miner(const Settings &settings)
+Miner::Miner(const Settings &settings, int64_t log_interval)
     : settings(settings),
       mining_mode(Setup::getMiningMode()),
-      log_scheduler(120),  // 2 minutes (magic number)
+      log_scheduler(log_interval),
       metrics_scheduler(Metrics::get().publish_interval),
       cpuhours_scheduler(3600),  // 1 hour (fixed!!)
       api_scheduler(600),        // 10 minutes (magic number)
@@ -249,7 +249,7 @@ void Miner::reportProgress() {
       progress = 1.0;
     }
     std::ofstream out(progress_file);
-    out.precision(6);
+    out.precision(3);
     out << std::fixed << progress << std::endl;
   }
 }
