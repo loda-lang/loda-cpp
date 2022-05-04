@@ -89,23 +89,37 @@ void moveFile(const std::string &from, const std::string &to) {
   execCmd("mv \"" + from + "\" \"" + to + "\"");
 }
 
+void execWinCmd(const std::string &exe, const std::string &args) {
+  std::string program_files = "C:\\Program Files";
+  auto p = std::getenv("PROGRAMFILES");
+  if (p) {
+    program_files = std::string(p);
+  }
+  // https://stackoverflow.com/questions/9964865/c-system-not-working-when-there-are-spaces-in-two-different-parameters
+  execCmd("cmd /S /C \"\"" + program_files + "\\" + exe + "\" " + args + "\"");
+}
+
 void gunzip(const std::string &path) {
 #ifdef _WIN64
   const std::string gzip_test = "gzip --version " + getNullRedirect();
-  if (system(gzip_test.c_str()) == 0) {
-    execCmd("gzip -d \"" + path + "\"");
-  } else {
-    std::string program_files = "C:\\Program Files";
-    auto p = std::getenv("PROGRAMFILES");
-    if (p) {
-      program_files = std::string(p);
-    }
-    // https://stackoverflow.com/questions/9964865/c-system-not-working-when-there-are-spaces-in-two-different-parameters
-    execCmd("cmd /S /C \"\"" + program_files +
-            "\\Git\\usr\\bin\\gzip.exe\" -f -d \"" + path + "\"\"");
+  if (system(gzip_test.c_str()) != 0) {
+    execWinCmd("Git\\usr\\bin\\gzip.exe", "-f -d \"" + path + "\"");
+    return;
   }
 #else
   execCmd("gzip -f -d \"" + path + "\"");
+#endif
+}
+
+void git(const std::string &args) {
+#ifdef _WIN64
+  const std::string git_test = "git --version " + getNullRedirect();
+  if (system(git_test.c_str()) != 0) {
+    execWinCmd("Git\\bin\\git.exe", args);
+    return;
+  }
+#else
+  execCmd("git " + args);
 #endif
 }
 
@@ -243,15 +257,6 @@ size_t getMemUsage() {
   }
 #endif
   return mem_usage;
-}
-
-bool hasGit() {
-  static int64_t git_check = -1;
-  if (git_check == -1) {
-    auto git_test = std::string("git --version ") + getNullRedirect();
-    git_check = system(git_test.c_str());
-  }
-  return git_check == 0;
 }
 
 FolderLock::FolderLock(std::string folder) {

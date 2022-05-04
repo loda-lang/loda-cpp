@@ -38,7 +38,7 @@ class Setup {
 
   static bool existsProgramsHome();
 
-  static bool cloneProgramsHome(
+  static void cloneProgramsHome(
       std::string git_url = "https://github.com/loda-lang/loda-programs.git");
 
   static const std::string& getProgramsHome();

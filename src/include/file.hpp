@@ -22,6 +22,8 @@ void moveFile(const std::string &from, const std::string &to);
 
 void gunzip(const std::string &path);
 
+void git(const std::string &args);
+
 void makeExecutable(const std::string &path);
 
 void ensureTrailingSlash(std::string &dir);
@@ -39,8 +41,6 @@ std::string getFileAsString(const std::string &filename);
 int64_t getFileAgeInDays(const std::string &path);
 
 size_t getMemUsage();
-
-bool hasGit();
 
 class FolderLock {
  public:
