@@ -79,7 +79,6 @@ void ensureDir(const std::string &path) {
 }
 
 void execCmd(const std::string &cmd) {
-  Log::get().info(cmd);
   if (system(cmd.c_str()) != 0) {
     Log::get().error("Error executing command: " + cmd, true);
   }
