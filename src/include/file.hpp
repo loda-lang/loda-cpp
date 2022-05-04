@@ -22,7 +22,7 @@ void moveFile(const std::string &from, const std::string &to);
 
 void gunzip(const std::string &path);
 
-void git(const std::string &args);
+void git(const std::string &folder, const std::string &args);
 
 void makeExecutable(const std::string &path);
 

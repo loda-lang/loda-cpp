@@ -79,6 +79,7 @@ void ensureDir(const std::string &path) {
 }
 
 void execCmd(const std::string &cmd) {
+  Log::get().info(cmd);
   if (system(cmd.c_str()) != 0) {
     Log::get().error("Error executing command: " + cmd, true);
   }
@@ -106,21 +107,30 @@ void gunzip(const std::string &path) {
     execWinCmd("Git\\usr\\bin\\gzip.exe", "-f -d \"" + path + "\"");
     return;
   }
-#else
-  execCmd("gzip -f -d \"" + path + "\"");
 #endif
+  execCmd("gzip -f -d \"" + path + "\"");
 }
 
-void git(const std::string &args) {
+void git(const std::string &folder, const std::string &args) {
+  std::string a;
+  if (!folder.empty()) {
+    a = "-C \"" + folder;
+    if (a[a.length() - 1] == '\\') {
+      a = a.substr(0, a.length() - 1);
+    }
+    a += "\"";
+  }
+  if (!args.empty()) {
+    a += " " + args;
+  }
 #ifdef _WIN64
   const std::string git_test = "git --version " + getNullRedirect();
   if (system(git_test.c_str()) != 0) {
-    execWinCmd("Git\\bin\\git.exe", args);
+    execWinCmd("Git\\bin\\git.exe", a);
     return;
   }
-#else
-  execCmd("git " + args);
 #endif
+  execCmd("git " + a);
 }
 
 void makeExecutable(const std::string &path) {
