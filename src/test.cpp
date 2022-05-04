@@ -993,6 +993,7 @@ void Test::minimizer(size_t tests) {
 
 void Test::miner() {
   Log::get().info("Testing miner");
+  git("", "--version");
   getManager().load();
   getManager().getFinder();
   MultiGenerator multi_generator(settings, getManager().getStats(), true);

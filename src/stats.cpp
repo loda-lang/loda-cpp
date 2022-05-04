@@ -391,24 +391,14 @@ void Stats::collectLatestProgramIds() {
   static const size_t max_commits = 100;            // magic number
   static const size_t max_added_programs = 500;     // magic number
   static const size_t max_modified_programs = 500;  // magic number
-  if (!hasGit()) {
-    Log::get().warn(
-        "Cannot read commit history because the git command was not found");
-    return;
-  }
   if (!isDir(progs_dir + ".git")) {
     Log::get().warn(
         "Cannot read commit history because the .git folder was not found");
     return;
   }
   const std::string git_tmp = getTmpDir() + "loda_git_tmp.txt";
-  std::string git_cmd = "cd \"" + progs_dir +
-                        "\" && git log --oneline --format=\"%H\" -n " +
-                        std::to_string(max_commits) + " > " + git_tmp;
-  if (system(git_cmd.c_str()) != 0) {
-    Log::get().warn("Cannot read programs commit history");
-    return;
-  }
+  git(progs_dir, "log --oneline --format=\"%H\" -n " +
+                     std::to_string(max_commits) + " > " + git_tmp);
   std::string line;
   std::vector<std::string> commits;
   {
@@ -432,14 +422,8 @@ void Stats::collectLatestProgramIds() {
         num_modified_ids >= max_modified_programs) {
       break;
     }
-    git_cmd = "cd \"" + progs_dir +
-              "\" && git diff-tree --no-commit-id --name-status -r " + commit +
-              " > " + git_tmp;
-    if (system(git_cmd.c_str()) != 0) {
-      Log::get().warn("Cannot read files of commit " + commit);
-      std::remove(git_tmp.c_str());
-      return;
-    }
+    git(progs_dir, "diff-tree --no-commit-id --name-status -r " + commit +
+                       " > " + git_tmp);
     {
       // read changed file names from file
       std::ifstream in(git_tmp);

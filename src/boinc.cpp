@@ -33,11 +33,6 @@ void Boinc::run() {
   Setup::setSubmittedBy(user_name);
   Setup::forceCPUHours();
 
-  // ensure git is installed
-  if (!hasGit()) {
-    Log::get().error("Git not found. Please install it and try again", true);
-  }
-
   // pick a random miner profile if not mining in parallel
   if (!settings.parallel_mining || settings.num_miner_instances == 1) {
     settings.miner_profile = std::to_string(Random::get().gen() % 100);
@@ -52,9 +47,7 @@ void Boinc::run() {
   if (!Setup::existsProgramsHome()) {
     FolderLock lock(project_dir);
     if (!Setup::existsProgramsHome()) {  // need to check again here
-      if (!Setup::cloneProgramsHome()) {
-        Log::get().error("Cannot clone programs repository", true);
-      }
+      Setup::cloneProgramsHome();
     }
   }
 
