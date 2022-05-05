@@ -78,9 +78,21 @@ void ensureDir(const std::string &path) {
   }
 }
 
+std::string getPath() {
+  auto p = std::getenv("PATH");
+  if (!p) {
+    Log::get().error("Internal error: cannot get PATH from environment", true);
+  }
+  return std::string(p);
+}
+
 void execCmd(const std::string &cmd) {
-  if (system(cmd.c_str()) != 0) {
-    Log::get().error("Error executing command: " + cmd, true);
+  auto exit_code = system(cmd.c_str());
+  if (exit_code != 0) {
+    Log::get().info("PATH=" + getPath());
+    Log::get().error("Error executing command (exit code " +
+                         std::to_string(exit_code) + "): " + cmd,
+                     true);
   }
 }
 
@@ -89,22 +101,38 @@ void moveFile(const std::string &from, const std::string &to) {
   execCmd("mv \"" + from + "\" \"" + to + "\"");
 }
 
-void execWinCmd(const std::string &exe, const std::string &args) {
+#ifdef _WIN64
+void addGitToWinPath() {
+  std::string path = getPath();
   std::string program_files = "C:\\Program Files";
   auto p = std::getenv("PROGRAMFILES");
   if (p) {
     program_files = std::string(p);
   }
-  // https://stackoverflow.com/questions/9964865/c-system-not-working-when-there-are-spaces-in-two-different-parameters
-  execCmd("cmd /S /C \"\"" + program_files + "\\" + exe + "\" " + args + "\"");
+  ensureTrailingSlash(program_files);
+  bool update = false;
+  if (path.find("Git\\bin") == std::string::npos) {
+    path += ";" + program_files + "Git\\bin";
+    update = true;
+  }
+  if (path.find("Git\\usr\\bin") == std::string::npos) {
+    path += ";" + program_files + "Git\\usr\\bin";
+    update = true;
+  }
+  if (update) {
+    Log::get().warn("Adding Git folders to PATH variable");
+    if (_putenv_s("PATH", path.c_str())) {
+      Log::get().error("Internal error: cannot set PATH using _putenv_s", true);
+    }
+  }
 }
+#endif
 
 void gunzip(const std::string &path) {
 #ifdef _WIN64
   const std::string gzip_test = "gzip --version " + getNullRedirect();
   if (system(gzip_test.c_str()) != 0) {
-    execWinCmd("Git\\usr\\bin\\gzip.exe", "-f -d \"" + path + "\"");
-    return;
+    addGitToWinPath();  // gzip is included in Git for Windows
   }
 #endif
   execCmd("gzip -f -d \"" + path + "\"");
@@ -125,8 +153,7 @@ void git(const std::string &folder, const std::string &args) {
 #ifdef _WIN64
   const std::string git_test = "git --version " + getNullRedirect();
   if (system(git_test.c_str()) != 0) {
-    execWinCmd("Git\\bin\\git.exe", a);
-    return;
+    addGitToWinPath();
   }
 #endif
   execCmd("git " + a);

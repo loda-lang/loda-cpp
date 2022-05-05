@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+* Fix git error in BOINC on Windows
+
+# v22.5.4
+
 ### Bugfixes
 
 * Fix "git not found" error in BOINC on Windows
