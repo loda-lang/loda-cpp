@@ -80,10 +80,10 @@ void ensureDir(const std::string &path) {
 
 std::string getPath() {
   auto p = std::getenv("PATH");
-  if (!p) {
-    Log::get().error("Internal error: cannot get PATH from environment", true);
+  if (p) {
+    return std::string(p);
   }
-  return std::string(p);
+  return "";
 }
 
 void execCmd(const std::string &cmd) {
@@ -112,11 +112,17 @@ void addGitToWinPath() {
   ensureTrailingSlash(program_files);
   bool update = false;
   if (path.find("Git\\bin") == std::string::npos) {
-    path += ";" + program_files + "Git\\bin";
+    if (!path.empty()) {
+      path += ";";
+    }
+    path += program_files + "Git\\bin";
     update = true;
   }
   if (path.find("Git\\usr\\bin") == std::string::npos) {
-    path += ";" + program_files + "Git\\usr\\bin";
+    if (!path.empty()) {
+      path += ";";
+    }
+    path += program_files + "Git\\usr\\bin";
     update = true;
   }
   if (update) {
