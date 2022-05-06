@@ -102,10 +102,25 @@ void moveFile(const std::string &from, const std::string &to) {
 }
 
 #ifdef _WIN64
+void putenv(const std::string &key, const std::string &value) {
+  if (_putenv_s(key.c_str(), value.c_str())) {
+    Log::get().error(
+        "Internal error: cannot set " + key + " environment variable", true);
+  }
+}
+
 void addGitToWinPath() {
+  const std::string sys32 = "C:\\WINDOWS\\system32";
   std::string path = getPath();
+  if (path.empty()) {
+    path = sys32;
+  }
+  auto p = std::getenv("COMSPEC");
+  if (!p) {
+    putenv("COMSPEC", sys32 + FILE_SEP + "cmd.exe");
+  }
   std::string program_files = "C:\\Program Files";
-  auto p = std::getenv("PROGRAMFILES");
+  p = std::getenv("PROGRAMFILES");
   if (p) {
     program_files = std::string(p);
   }
