@@ -126,11 +126,11 @@ void addGitToWinPath() {
   }
   ensureTrailingSlash(program_files);
   bool update = false;
-  if (path.find("Git\\bin") == std::string::npos) {
+  if (path.find("Git\\cmd") == std::string::npos) {
     if (!path.empty()) {
       path += ";";
     }
-    path += program_files + "Git\\bin";
+    path += program_files + "Git\\cmd";
     update = true;
   }
   if (path.find("Git\\usr\\bin") == std::string::npos) {

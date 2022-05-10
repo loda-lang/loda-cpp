@@ -2,6 +2,7 @@
 
 #include <fstream>
 
+#include "api_client.hpp"
 #include "file.hpp"
 #include "miner.hpp"
 
@@ -32,6 +33,11 @@ void Boinc::run() {
   Setup::setMiningMode(MINING_MODE_CLIENT);
   Setup::setSubmittedBy(user_name);
   Setup::forceCPUHours();
+
+  // test Internet connection
+  Log::get().info("Testing Internet connection");
+  ApiClient client;
+  client.getNextProgram();
 
   // pick a random miner profile if not mining in parallel
   if (!settings.parallel_mining || settings.num_miner_instances == 1) {
