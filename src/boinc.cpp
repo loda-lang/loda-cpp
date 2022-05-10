@@ -34,8 +34,10 @@ void Boinc::run() {
   Setup::setSubmittedBy(user_name);
   Setup::forceCPUHours();
 
-  // test Internet connection
-  Log::get().info("Testing Internet connection");
+  // check git and internet connection
+  Log::get().info("Checking git version");
+  git("", "--version");  // must be done before curl
+  Log::get().info("Checking API server connection");
   ApiClient client;
   client.getNextProgram();
 
