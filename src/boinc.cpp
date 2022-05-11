@@ -34,9 +34,13 @@ void Boinc::run() {
   Setup::setSubmittedBy(user_name);
   Setup::forceCPUHours();
 
-  // check git and internet connection
+  // check environment
+#ifdef _WIN64
+  Log::get().info("Checking environment");
+  fixWindowsEnv();
+#endif
   Log::get().info("Checking git version");
-  git("", "--version");  // must be done before curl
+  git("", "--version");
   Log::get().info("Checking API server connection");
   ApiClient client;
   client.getNextProgram();

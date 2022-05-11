@@ -20,6 +20,10 @@ void ensureDir(const std::string &path);
 
 void moveFile(const std::string &from, const std::string &to);
 
+#ifdef _WIN64
+void fixWindowsEnv();
+#endif
+
 void gunzip(const std::string &path);
 
 void git(const std::string &folder, const std::string &args);

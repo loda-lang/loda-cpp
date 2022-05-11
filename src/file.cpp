@@ -102,25 +102,31 @@ void moveFile(const std::string &from, const std::string &to) {
 }
 
 #ifdef _WIN64
-void putenv(const std::string &key, const std::string &value) {
+void putEnv(const std::string &key, const std::string &value) {
+  Log::get().warn("Setting environment variable: " + key + "=" + value);
   if (_putenv_s(key.c_str(), value.c_str())) {
     Log::get().error(
         "Internal error: cannot set " + key + " environment variable", true);
   }
 }
 
-void addGitToWinPath() {
+void ensureEnv(const std::string &key, const std::string &value) {
+  auto p = std::getenv(key.c_str());
+  if (!p) {
+    putEnv(key, value);
+  }
+}
+
+void fixWindowsEnv() {
   const std::string sys32 = "C:\\WINDOWS\\system32";
+  ensureEnv("COMSPEC", sys32 + FILE_SEP + "cmd.exe");
+  ensureEnv("SYSTEMROOT", "C:\\WINDOWS");
   std::string path = getPath();
   if (path.empty()) {
     path = sys32;
   }
-  auto p = std::getenv("COMSPEC");
-  if (!p) {
-    putenv("COMSPEC", sys32 + FILE_SEP + "cmd.exe");
-  }
   std::string program_files = "C:\\Program Files";
-  p = std::getenv("PROGRAMFILES");
+  auto p = std::getenv("PROGRAMFILES");
   if (p) {
     program_files = std::string(p);
   }
@@ -141,10 +147,7 @@ void addGitToWinPath() {
     update = true;
   }
   if (update) {
-    Log::get().warn("Adding Git folders to PATH variable");
-    if (_putenv_s("PATH", path.c_str())) {
-      Log::get().error("Internal error: cannot set PATH using _putenv_s", true);
-    }
+    putEnv("PATH", path);
   }
 }
 #endif
@@ -153,7 +156,7 @@ void gunzip(const std::string &path) {
 #ifdef _WIN64
   const std::string gzip_test = "gzip --version " + getNullRedirect();
   if (system(gzip_test.c_str()) != 0) {
-    addGitToWinPath();  // gzip is included in Git for Windows
+    fixWindowsEnv();  // gzip is included in Git for Windows
   }
 #endif
   execCmd("gzip -f -d \"" + path + "\"");
@@ -174,7 +177,7 @@ void git(const std::string &folder, const std::string &args) {
 #ifdef _WIN64
   const std::string git_test = "git --version " + getNullRedirect();
   if (system(git_test.c_str()) != 0) {
-    addGitToWinPath();
+    fixWindowsEnv();
   }
 #endif
   execCmd("git " + a);
