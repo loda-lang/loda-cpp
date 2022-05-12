@@ -87,15 +87,6 @@ jobs:
           asset_content_type: application/octet-stream
         env:
           GITHUB_TOKEN: ${{ github.token }}
-      - name: Upload (legacy macos-11)
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./loda
-          asset_name: loda-macos-11
-          asset_content_type: application/octet-stream
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
   build-windows:
     needs: create-release
     runs-on: windows-2019
@@ -110,15 +101,6 @@ jobs:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
           asset_path: ./loda.exe
           asset_name: loda-windows.exe
-          asset_content_type: application/octet-stream
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-      - name: Upload (legacy windows-19)
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./loda.exe
-          asset_name: loda-windows-19.exe
           asset_content_type: application/octet-stream
         env:
           GITHUB_TOKEN: ${{ github.token }}
