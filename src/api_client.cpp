@@ -143,7 +143,8 @@ void ApiClient::updateSession() {
 }
 
 int64_t ApiClient::fetchInt(const std::string& endpoint) {
-  const std::string tmp = "tmp_int_" + std::to_string(client_id) + ".txt";
+  const std::string tmp =
+      getTmpDir() + "tmp_int_" + std::to_string(client_id) + ".txt";
   WebClient::get(BASE_URL + endpoint, tmp, true, true);
   std::ifstream in(tmp);
   if (in.bad()) {

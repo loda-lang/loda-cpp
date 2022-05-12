@@ -40,6 +40,7 @@ bool WebClient::get(const std::string &url, const std::string &local_path,
   if (system(cmd.c_str()) != 0) {
     std::remove(local_path.c_str());
     if (fail_on_error) {
+      Log::get().info(cmd);
       Log::get().error("Error fetching " + url, true);
     } else {
       return false;
