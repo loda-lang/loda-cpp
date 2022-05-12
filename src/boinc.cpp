@@ -38,12 +38,9 @@ void Boinc::run() {
 #ifdef _WIN64
   Log::get().info("Checking environment");
   fixWindowsEnv();
+  ensureEnv("TMP", project_dir);
+  ensureEnv("TEMP", project_dir);
 #endif
-  Log::get().info("Checking git version");
-  git("", "--version");
-  Log::get().info("Checking API server connection");
-  ApiClient client;
-  client.getNextProgram();
 
   // pick a random miner profile if not mining in parallel
   if (!settings.parallel_mining || settings.num_miner_instances == 1) {

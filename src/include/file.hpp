@@ -21,6 +21,8 @@ void ensureDir(const std::string &path);
 void moveFile(const std::string &from, const std::string &to);
 
 #ifdef _WIN64
+void ensureEnv(const std::string &key, const std::string &value);
+
 void fixWindowsEnv();
 #endif
 
