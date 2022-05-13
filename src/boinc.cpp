@@ -27,6 +27,10 @@ void Boinc::run() {
   }
   ensureTrailingSlash(project_dir);
 
+  // log debugging info
+  Log::get().info("Platform: " + Version::PLATFORM +
+                  ", user name: " + user_name);
+
   // initialize setup
   Setup::setLodaHome(project_dir);
   Setup::getMiningMode();
