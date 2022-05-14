@@ -216,19 +216,26 @@ std::string getHomeDir() {
   return home;
 }
 
+std::string LODA_TMP_DIR;
+
 std::string getTmpDir() {
+  if (LODA_TMP_DIR.empty()) {
 #ifdef _WIN64
-  char tmp[500];
-  if (GetTempPathA(sizeof(tmp), tmp)) {
-    return std::string(tmp);
-  } else {
-    Log::get().error("Cannot determine temp directory", true);
-    return {};
-  }
+    char tmp[500];
+    if (GetTempPathA(sizeof(tmp), tmp)) {
+      LODA_TMP_DIR = std::string(tmp);
+    } else {
+      Log::get().error("Cannot determine temp directory", true);
+      return {};
+    }
 #else
-  return "/tmp/";
+    LODA_TMP_DIR = "/tmp/";
 #endif
+  }
+  return LODA_TMP_DIR;
 }
+
+void setTmpDir(const std::string &tmp) { LODA_TMP_DIR = tmp; }
 
 std::string getBashRc() {
 #ifndef _WIN64

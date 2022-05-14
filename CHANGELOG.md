@@ -2,6 +2,12 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+# v22.5.14
+
+### Bugfixes
+
+* Use project dir as fall-back for tmp dir
+
 # v22.5.13
 
 ### Enhancements

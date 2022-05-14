@@ -39,11 +39,19 @@ void Boinc::run() {
   Setup::forceCPUHours();
 
   // check environment
-#ifdef _WIN64
   Log::get().info("Checking environment");
+#ifdef _WIN64
   fixWindowsEnv();
   ensureEnv("TMP", project_dir);
   ensureEnv("TEMP", project_dir);
+#else
+  {
+    std::ofstream test_out(getTmpDir() + "test_write.txt");
+    if (!test_out) {
+      Log::get().warn("Setting tmp dir: " + project_dir);
+      setTmpDir(project_dir);
+    }
+  }
 #endif
 
   // pick a random miner profile if not mining in parallel

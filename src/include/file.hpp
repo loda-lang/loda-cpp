@@ -38,6 +38,8 @@ std::string getHomeDir();
 
 std::string getTmpDir();
 
+void setTmpDir(const std::string &tmp);
+
 std::string getBashRc();
 
 std::string getNullRedirect();
