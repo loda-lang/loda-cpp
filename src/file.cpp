@@ -89,7 +89,6 @@ std::string getPath() {
 void execCmd(const std::string &cmd) {
   auto exit_code = system(cmd.c_str());
   if (exit_code != 0) {
-    Log::get().info("PATH=" + getPath());
     Log::get().error("Error executing command (exit code " +
                          std::to_string(exit_code) + "): " + cmd,
                      true);
