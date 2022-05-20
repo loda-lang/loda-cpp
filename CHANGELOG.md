@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Bugfixes
+
+* Fix "access denied" error during stats generation on Windows.
+
 # v22.5.14
 
 ### Bugfixes
