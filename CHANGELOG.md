@@ -4,6 +4,12 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Bugfixes
 
+* Extend folder locking time out value on Windows
+
+# v22.5.20
+
+### Bugfixes
+
 * Fix "access denied" error during stats generation on Windows.
 
 # v22.5.14

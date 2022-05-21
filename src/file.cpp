@@ -333,7 +333,7 @@ FolderLock::FolderLock(std::string folder) {
   fd = 0;
   Log::get().debug("Acquiring lock " + lockfile);
 #ifdef _WIN64
-  for (size_t i = 0; i < 600; i++) {  // magic number
+  for (size_t i = 0; i < 1200; i++) {  // magic number
     fd = CreateFile(lockfile.c_str(), GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
     if (fd != INVALID_HANDLE_VALUE) {
       break;
