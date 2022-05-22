@@ -8,7 +8,8 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Enhancements
 
-* Change default update interval to 3 days to reduce network traffic
+* Change default update interval to 3 days
+* Throttle download of OEIS files from API server
 
 # v22.5.20
 
