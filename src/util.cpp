@@ -400,8 +400,8 @@ ProgressMonitor::ProgressMonitor(int64_t target_seconds,
       target_seconds(target_seconds),
       progress_file(progress_file) {
   if (target_seconds <= 0) {
-    throw std::runtime_error("internal error: invalid target duration: " +
-                             std::to_string(target_seconds));
+    Log::get().error(
+        "Invalid target duration: " + std::to_string(target_seconds), true);
   }
 }
 
@@ -418,6 +418,9 @@ bool ProgressMonitor::isTargetReached() {
 double ProgressMonitor::getProgress() {
   double progress = static_cast<double>(getElapsedSeconds()) /
                     static_cast<double>(target_seconds);
+  if (progress < 0.0) {
+    progress = 0.0;
+  }
   if (progress > 1.0) {
     progress = 1.0;
   }
@@ -425,11 +428,13 @@ double ProgressMonitor::getProgress() {
 }
 
 void ProgressMonitor::writeProgress() {
-  if (!progress_file.empty()) {
-    std::ofstream out(progress_file);
-    out.precision(3);
-    out << std::fixed << getProgress() << std::endl;
+  if (progress_file.empty()) {
+    Log::get().error("Error writing progress: missing file name", false);
+    return;
   }
+  std::ofstream out(progress_file);
+  out.precision(3);
+  out << std::fixed << getProgress() << std::endl;
 }
 
 Random &Random::get() {
