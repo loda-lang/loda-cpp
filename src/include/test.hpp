@@ -36,6 +36,8 @@ class Test {
 
   void apiClient();
 
+  void checkpoint();
+
   void oeisList();
 
   void oeisSeq();

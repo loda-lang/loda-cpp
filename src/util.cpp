@@ -395,20 +395,44 @@ void AdaptiveScheduler::reset() {
 }
 
 ProgressMonitor::ProgressMonitor(int64_t target_seconds,
-                                 const std::string &progress_file)
+                                 const std::string &progress_file,
+                                 const std::string &checkpoint_file,
+                                 uint64_t checkpoint_key)
     : start_time(std::chrono::steady_clock::now()),
       target_seconds(target_seconds),
-      progress_file(progress_file) {
+      checkpoint_seconds(0),
+      progress_file(progress_file),
+      checkpoint_file(checkpoint_file),
+      checkpoint_key(checkpoint_key) {
+  // validate target seconds
   if (target_seconds <= 0) {
     Log::get().error(
         "Invalid target duration: " + std::to_string(target_seconds), true);
+  }
+  // try to read checkpoint
+  if (!checkpoint_file.empty()) {
+    std::ifstream in(checkpoint_file);
+    if (in) {
+      try {
+        uint64_t value;
+        in >> value;
+        checkpoint_seconds = decode(value);
+        Log::get().info("Resuming from checkpoint at " +
+                        std::to_string(getProgress() * 100.0) + "%");
+      } catch (const std::exception &) {
+        Log::get().error("Error reading checkpoint: " + checkpoint_file,
+                         false);  // continue without checkpoint
+      }
+    }
   }
 }
 
 int64_t ProgressMonitor::getElapsedSeconds() {
   const auto now = std::chrono::steady_clock::now();
-  return std::chrono::duration_cast<std::chrono::seconds>(now - start_time)
-      .count();
+  const int64_t current_seconds =
+      std::chrono::duration_cast<std::chrono::seconds>(now - start_time)
+          .count();
+  return checkpoint_seconds + current_seconds;
 }
 
 bool ProgressMonitor::isTargetReached() {
@@ -428,13 +452,43 @@ double ProgressMonitor::getProgress() {
 }
 
 void ProgressMonitor::writeProgress() {
-  if (progress_file.empty()) {
-    Log::get().error("Error writing progress: missing file name", false);
+  if (progress_file.empty() || checkpoint_file.empty()) {
+    Log::get().error("Error writing progress: missing file names", false);
     return;
   }
-  std::ofstream out(progress_file);
-  out.precision(3);
-  out << std::fixed << getProgress() << std::endl;
+  {
+    std::ofstream progress_out(progress_file);
+    progress_out.precision(3);
+    progress_out << std::fixed << getProgress() << std::endl;
+  }
+  {
+    std::ofstream checkpoint_out(checkpoint_file);
+    checkpoint_out << encode(getElapsedSeconds()) << std::endl;
+  }
+}
+
+uint64_t checksum(uint64_t v) {
+  uint64_t checksum = 0;
+  while (v) {
+    checksum += (v & 1);
+    v = v >> 1;
+  }
+  return checksum;
+}
+
+uint64_t ProgressMonitor::encode(uint32_t value) {
+  uint64_t r = (checkpoint_key >> 16) + value;
+  return r + (checksum(r) << 48);
+}
+
+uint32_t ProgressMonitor::decode(uint64_t value) {
+  uint64_t c = value >> 48;
+  value = (value << 16) >> 16;
+  uint64_t r = value - (checkpoint_key >> 16);
+  if (c != checksum(value)) {
+    throw std::runtime_error("checksum error");
+  }
+  return r;
 }
 
 Random &Random::get() {

@@ -56,6 +56,7 @@ void Test::all() {
   deltaMatcher();
   digitMatcher();
   optimizer();
+  checkpoint();
   knownPrograms();
 
   // slow tests
@@ -589,6 +590,16 @@ void Test::apiClient() {
   auto program = client.getNextProgram();
   if (program.ops.empty()) {
     Log::get().error("Expected non-empty program from API server");
+  }
+}
+
+void Test::checkpoint() {
+  Log::get().info("Testing checkpoint");
+  ProgressMonitor m(3600, "", "", 23495249857);
+  uint32_t v = 123456;
+  auto enc = m.encode(v);
+  if (m.decode(enc) != v) {
+    Log::get().error("Error in checkpoint cycle");
   }
 }
 

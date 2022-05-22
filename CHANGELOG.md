@@ -6,6 +6,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Extend folder locking time out value on Windows
 
+### Features
+
+* Checkpoint support for BOINC
+
 ### Enhancements
 
 * Change default update interval to 3 days
