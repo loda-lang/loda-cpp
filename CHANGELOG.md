@@ -6,6 +6,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Extend folder locking time out value on Windows
 
+### Enhancements
+
+* Change default update interval to 3 days to reduce network traffic
+
 # v22.5.20
 
 ### Bugfixes
