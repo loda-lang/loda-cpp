@@ -60,9 +60,9 @@ void Boinc::run() {
   }
 
   // create initial progress file
-  Miner miner(settings, 60);  // reduced log interval: 1 minute
-  miner.progress_file = slot_dir + "fraction_done";
-  miner.reportProgress();
+  const int64_t target_seconds = settings.num_mine_hours * 3600;
+  const std::string progress_file = slot_dir + "fraction_done";
+  ProgressMonitor progress_monitor(target_seconds, progress_file);
 
   // clone programs repository if necessary
   if (!Setup::existsProgramsHome()) {
@@ -73,6 +73,8 @@ void Boinc::run() {
   }
 
   // start mining!
+  Miner miner(settings, 60,  // reduced log interval: 1 minute
+              &progress_monitor);
   miner.mine();
 }
 

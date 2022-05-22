@@ -18,7 +18,8 @@ const std::string Miner::ANONYMOUS("anonymous");
 const int64_t Miner::PROGRAMS_TO_FETCH = 2000;  // magic number
 const int64_t Miner::NUM_MUTATIONS = 100;       // magic number
 
-Miner::Miner(const Settings &settings, int64_t log_interval)
+Miner::Miner(const Settings &settings, int64_t log_interval,
+             ProgressMonitor *progress_monitor)
     : settings(settings),
       mining_mode(Setup::getMiningMode()),
       log_scheduler(log_interval),
@@ -26,13 +27,13 @@ Miner::Miner(const Settings &settings, int64_t log_interval)
       cpuhours_scheduler(3600),  // 1 hour (fixed!!)
       api_scheduler(600),        // 10 minutes (magic number)
       reload_scheduler(21600),   // 6 hours (magic number)
+      progress_monitor(progress_monitor),
       num_processed(0),
       num_new(0),
       num_updated(0),
       num_removed(0),
       num_reported_hours(0),
-      current_fetch(0),
-      start_time(std::chrono::steady_clock::now()) {}
+      current_fetch(0) {}
 
 void Miner::reload() {
   api_client.reset(new ApiClient());
@@ -56,11 +57,17 @@ void Miner::mine() {
   Sequence norm_seq;
   Program program;
 
+  // initial progress reporting
+  if (progress_monitor) {
+    progress_monitor->writeProgress();
+  }
+
   // load manager
-  reportProgress();
   if (!manager) {
     reload();
-    reportProgress();
+    if (progress_monitor) {
+      progress_monitor->writeProgress();
+    }
   }
 
   // print info
@@ -160,11 +167,11 @@ void Miner::mine() {
   }
 
   // finish with log message
-  auto cur_time = std::chrono::steady_clock::now();
-  int64_t mins =
-      std::chrono::duration_cast<std::chrono::minutes>(cur_time - start_time)
-          .count();
-  Log::get().info("Finished mining after " + std::to_string(mins) + " minutes");
+  if (progress_monitor) {
+    int64_t mins = progress_monitor->getElapsedSeconds() / 60;
+    Log::get().info("Finished mining after " + std::to_string(mins) +
+                    " minutes");
+  }
 }
 
 bool Miner::checkRegularTasks() {
@@ -182,11 +189,11 @@ bool Miner::checkRegularTasks() {
     }
 
     // regular task: report progress and check termination
-    if (settings.num_mine_hours > 0) {
-      if (getElapsedMinutes() >= settings.num_mine_hours * 60) {
+    if (progress_monitor) {
+      if (progress_monitor->isTargetReached()) {
         result = false;
       }
-      reportProgress();
+      progress_monitor->writeProgress();
     }
   }
 
@@ -239,25 +246,6 @@ void Miner::reportCPUHour() {
     api_client->postCPUHour();
   }
   num_reported_hours++;
-}
-
-void Miner::reportProgress() {
-  if (settings.num_mine_hours > 0 && !progress_file.empty()) {
-    double progress = static_cast<double>(getElapsedMinutes()) /
-                      static_cast<double>(settings.num_mine_hours * 60);
-    if (progress > 1.0) {
-      progress = 1.0;
-    }
-    std::ofstream out(progress_file);
-    out.precision(3);
-    out << std::fixed << progress << std::endl;
-  }
-}
-
-int64_t Miner::getElapsedMinutes() const {
-  const auto cur_time = std::chrono::steady_clock::now();
-  return std::chrono::duration_cast<std::chrono::minutes>(cur_time - start_time)
-      .count();
 }
 
 void Miner::submit(const std::string &path, std::string id) {
