@@ -1,6 +1,7 @@
 #include "api_client.hpp"
 
 #include <fstream>
+#include <thread>
 
 #include "file.hpp"
 #include "parser.hpp"
@@ -15,7 +16,14 @@ ApiClient::ApiClient()
     : client_id(Random::get().gen() % 100000),
       session_id(0),
       start(0),
-      count(0) {}
+      count(0),
+      fetched_oeis_files(0),
+      start_time(std::chrono::steady_clock::now()) {}
+
+ApiClient& ApiClient::getDefaultInstance() {
+  static ApiClient api_client;
+  return api_client;
+}
 
 void ApiClient::postProgram(const Program& program, size_t max_buffer) {
   // attention: curl sometimes has problems with absolute paths.
@@ -65,10 +73,22 @@ void ApiClient::postCPUHour() {
 
 bool ApiClient::getOeisFile(const std::string& filename,
                             const std::string& local_path) {
+  // throttling
+  const auto now = std::chrono::steady_clock::now();
+  const int64_t secs =
+      std::chrono::duration_cast<std::chrono::seconds>(now - start_time)
+          .count();
+  if (secs < OEIS_THROTTLING_SECS * fetched_oeis_files) {
+    Log::get().warn("Throttling download of OEIS file");
+    std::this_thread::sleep_for(std::chrono::seconds(OEIS_THROTTLING_SECS));
+  }
+
+  // fetch file
   const std::string url = BASE_URL + "oeis/" + filename + ".gz";
   const bool success = WebClient::get(url, local_path + ".gz", false, false);
   if (success) {
     gunzip(local_path + ".gz");
+    fetched_oeis_files++;
   }
   return success;
 }
