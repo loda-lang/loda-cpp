@@ -98,6 +98,24 @@ class AdaptiveScheduler {
   size_t next_check;
 };
 
+class ProgressMonitor {
+ public:
+  ProgressMonitor(int64_t target_seconds, const std::string &progress_file);
+
+  int64_t getElapsedSeconds();
+
+  bool isTargetReached();
+
+  double getProgress();
+
+  void writeProgress();
+
+ private:
+  const std::chrono::time_point<std::chrono::steady_clock> start_time;
+  const int64_t target_seconds;
+  const std::string progress_file;
+};
+
 class Random {
  public:
   static Random &get();

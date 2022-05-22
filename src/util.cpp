@@ -394,6 +394,49 @@ void AdaptiveScheduler::reset() {
   start_time = std::chrono::steady_clock::now();
 }
 
+ProgressMonitor::ProgressMonitor(int64_t target_seconds,
+                                 const std::string &progress_file)
+    : start_time(std::chrono::steady_clock::now()),
+      target_seconds(target_seconds),
+      progress_file(progress_file) {
+  if (target_seconds <= 0) {
+    Log::get().error(
+        "Invalid target duration: " + std::to_string(target_seconds), true);
+  }
+}
+
+int64_t ProgressMonitor::getElapsedSeconds() {
+  const auto now = std::chrono::steady_clock::now();
+  return std::chrono::duration_cast<std::chrono::seconds>(now - start_time)
+      .count();
+}
+
+bool ProgressMonitor::isTargetReached() {
+  return getElapsedSeconds() >= target_seconds;
+}
+
+double ProgressMonitor::getProgress() {
+  double progress = static_cast<double>(getElapsedSeconds()) /
+                    static_cast<double>(target_seconds);
+  if (progress < 0.0) {
+    progress = 0.0;
+  }
+  if (progress > 1.0) {
+    progress = 1.0;
+  }
+  return progress;
+}
+
+void ProgressMonitor::writeProgress() {
+  if (progress_file.empty()) {
+    Log::get().error("Error writing progress: missing file name", false);
+    return;
+  }
+  std::ofstream out(progress_file);
+  out.precision(3);
+  out << std::fixed << getProgress() << std::endl;
+}
+
 Random &Random::get() {
   static Random rand;
   return rand;
