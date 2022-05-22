@@ -20,6 +20,11 @@ ApiClient::ApiClient()
       fetched_oeis_files(0),
       start_time(std::chrono::steady_clock::now()) {}
 
+ApiClient& ApiClient::getDefaultInstance() {
+  static ApiClient api_client;
+  return api_client;
+}
+
 void ApiClient::postProgram(const Program& program, size_t max_buffer) {
   // attention: curl sometimes has problems with absolute paths.
   // so we use a relative path here!

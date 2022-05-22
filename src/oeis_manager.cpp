@@ -325,8 +325,7 @@ void OeisManager::update() {
     std::string cmd, path;
     for (auto &file : files) {
       path = Setup::getOeisHome() + file;
-      ApiClient api_client;
-      if (!api_client.getOeisFile(file, path)) {
+      if (!ApiClient::getDefaultInstance().getOeisFile(file, path)) {
         Log::get().warn("Cannot fetch " + file +
                         ".gz from API server, falling back to OEIS");
         WebClient::get("https://oeis.org/" + file + ".gz", path + ".gz");

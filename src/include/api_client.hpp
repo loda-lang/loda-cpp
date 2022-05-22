@@ -10,6 +10,8 @@ class ApiClient {
 
   ApiClient();
 
+  static ApiClient& getDefaultInstance();
+
   void postProgram(const Program& program, size_t max_buffer = 0);
 
   bool postProgram(const std::string& path, bool fail_on_error = true);
