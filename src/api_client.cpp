@@ -18,7 +18,8 @@ ApiClient::ApiClient()
       start(0),
       count(0),
       fetched_oeis_files(0),
-      start_time(std::chrono::steady_clock::now()) {}
+      last_oeis_time(std::chrono::steady_clock::now()),
+      printed_throttling_warning(false) {}
 
 ApiClient& ApiClient::getDefaultInstance() {
   static ApiClient api_client;
@@ -74,13 +75,18 @@ void ApiClient::postCPUHour() {
 bool ApiClient::getOeisFile(const std::string& filename,
                             const std::string& local_path) {
   // throttling
-  const auto now = std::chrono::steady_clock::now();
-  const int64_t secs =
-      std::chrono::duration_cast<std::chrono::seconds>(now - start_time)
-          .count();
-  if (secs < OEIS_THROTTLING_SECS * fetched_oeis_files) {
-    Log::get().warn("Throttling download of OEIS file");
-    std::this_thread::sleep_for(std::chrono::seconds(OEIS_THROTTLING_SECS));
+  if (fetched_oeis_files > 2) {
+    int64_t secs = std::chrono::duration_cast<std::chrono::seconds>(
+                       std::chrono::steady_clock::now() - last_oeis_time)
+                       .count();
+    if (secs < OEIS_THROTTLING_SECS) {
+      if (!printed_throttling_warning) {
+        Log::get().warn("Throttling download of OEIS files");
+        printed_throttling_warning = true;
+      }
+      std::this_thread::sleep_for(
+          std::chrono::seconds(OEIS_THROTTLING_SECS - secs));
+    }
   }
 
   // fetch file
@@ -89,6 +95,7 @@ bool ApiClient::getOeisFile(const std::string& filename,
   if (success) {
     gunzip(local_path + ".gz");
     fetched_oeis_files++;
+    last_oeis_time = std::chrono::steady_clock::now();
   }
   return success;
 }

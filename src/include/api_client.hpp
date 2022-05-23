@@ -23,8 +23,8 @@ class ApiClient {
   Program getNextProgram();
 
  private:
-  // throttle download of OEIS file from API server: max 10 files per minute
-  static constexpr int64_t OEIS_THROTTLING_SECS = 6;  // magic number
+  // throttle download of OEIS file from API server
+  static constexpr int64_t OEIS_THROTTLING_SECS = 10;  // magic number
 
   int64_t client_id;
   int64_t session_id;
@@ -33,7 +33,8 @@ class ApiClient {
   int64_t fetched_oeis_files;
   std::vector<int64_t> in_queue;
   std::vector<Program> out_queue;
-  const std::chrono::time_point<std::chrono::steady_clock> start_time;
+  std::chrono::time_point<std::chrono::steady_clock> last_oeis_time;
+  bool printed_throttling_warning;
 
   bool getProgram(int64_t index, const std::string& path);
 
