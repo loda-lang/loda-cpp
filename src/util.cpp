@@ -468,6 +468,7 @@ void ProgressMonitor::writeProgress() {
 }
 
 uint64_t checksum(uint64_t v) {
+  // uses only 8 bit
   uint64_t checksum = 0;
   while (v) {
     checksum += (v & 1);
@@ -477,18 +478,19 @@ uint64_t checksum(uint64_t v) {
 }
 
 uint64_t ProgressMonitor::encode(uint32_t value) {
-  uint64_t r = (checkpoint_key >> 16) + value;
-  return r + (checksum(r) << 48);
+  uint64_t tmp =
+      (checkpoint_key >> 16) + static_cast<uint64_t>(value);  // add key
+  return tmp + (checksum(tmp) << 48);                         // add checksum
 }
 
 uint32_t ProgressMonitor::decode(uint64_t value) {
-  uint64_t c = value >> 48;
-  value = (value << 16) >> 16;
-  uint64_t r = value - (checkpoint_key >> 16);
-  if (c != checksum(value)) {
+  uint64_t check = value >> 48;  // extract checksum
+  value = (value << 16) >> 16;   // remove checksum
+  uint64_t result = value - (checkpoint_key >> 16);
+  if (check != checksum(value)) {
     throw std::runtime_error("checksum error");
   }
-  return r;
+  return result;
 }
 
 Random &Random::get() {
