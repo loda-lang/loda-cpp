@@ -18,7 +18,7 @@ class ApiClient {
 
   void postCPUHour();
 
-  bool getOeisFile(const std::string& filename, const std::string& local_path);
+  void getOeisFile(const std::string& filename, const std::string& local_path);
 
   Program getNextProgram();
 

@@ -211,12 +211,7 @@ Sequence OeisSequence::getTerms(int64_t max_num_terms) const {
           big_file.peek() == std::ifstream::traits_type::eof()) {
         ensureDir(path);
         std::remove(path.c_str());
-        if (!ApiClient::getDefaultInstance().getOeisFile(id_str("b") + ".txt",
-                                                         path)) {
-          Log::get().warn(
-              "Cannot fetch b-file from API server, falling back to OEIS");
-          WebClient::get(url_str() + "/" + id_str("b") + ".txt", path);
-        }
+        ApiClient::getDefaultInstance().getOeisFile(id_str("b") + ".txt", path);
         big = loadBFile(id, terms);
       }
     }
