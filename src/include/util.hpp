@@ -100,7 +100,8 @@ class AdaptiveScheduler {
 
 class ProgressMonitor {
  public:
-  ProgressMonitor(int64_t target_seconds, const std::string &progress_file);
+  ProgressMonitor(int64_t target_seconds, const std::string &progress_file,
+                  const std::string &checkpoint_file, uint64_t checkpoint_key);
 
   int64_t getElapsedSeconds();
 
@@ -110,10 +111,16 @@ class ProgressMonitor {
 
   void writeProgress();
 
+  uint64_t encode(uint32_t value);
+  uint32_t decode(uint64_t value);
+
  private:
   const std::chrono::time_point<std::chrono::steady_clock> start_time;
   const int64_t target_seconds;
+  int64_t checkpoint_seconds;
   const std::string progress_file;
+  const std::string checkpoint_file;
+  const uint64_t checkpoint_key;
 };
 
 class Random {

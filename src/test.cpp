@@ -56,6 +56,7 @@ void Test::all() {
   deltaMatcher();
   digitMatcher();
   optimizer();
+  checkpoint();
   knownPrograms();
 
   // slow tests
@@ -588,7 +589,27 @@ void Test::apiClient() {
                      "oeis" + FILE_SEP + "000" + FILE_SEP + "A000005.asm");
   auto program = client.getNextProgram();
   if (program.ops.empty()) {
-    Log::get().error("Expected non-empty program from API server");
+    Log::get().error("Expected non-empty program from API server", true);
+  }
+}
+
+void Test::checkpoint() {
+  Log::get().info("Testing checkpoint");
+  ProgressMonitor m(3600, "", "", 23495249857);
+  uint32_t v = 123456;
+  auto enc = m.encode(v);
+  if (m.decode(enc) != v) {
+    Log::get().error("Error in checkpoint cycle", true);
+  }
+  bool checksum_error_detected;
+  try {
+    m.decode(enc ^ 1);  // flipped bit => invalid checksum
+    checksum_error_detected = false;
+  } catch (const std::exception&) {
+    checksum_error_detected = true;
+  }
+  if (!checksum_error_detected) {
+    Log::get().error("Checksum error not detected", true);
   }
 }
 

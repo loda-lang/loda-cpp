@@ -1,6 +1,7 @@
 #include "boinc.hpp"
 
 #include <fstream>
+#include <functional>
 
 #include "api_client.hpp"
 #include "file.hpp"
@@ -21,7 +22,8 @@ void Boinc::run() {
   auto init_data = readXML(slot_dir + "init_data.xml");
   auto project_dir = init_data["project_dir"];
   auto user_name = init_data["user_name"];
-  if (project_dir.empty() || user_name.empty()) {
+  auto wu_name = init_data["wu_name"];
+  if (project_dir.empty() || user_name.empty() || wu_name.empty()) {
     Log::get().error("Invalid project data: " + slot_dir + "init_data.xml",
                      true);
   }
@@ -62,7 +64,10 @@ void Boinc::run() {
   // create initial progress file
   const int64_t target_seconds = settings.num_mine_hours * 3600;
   const std::string progress_file = slot_dir + "fraction_done";
-  ProgressMonitor progress_monitor(target_seconds, progress_file);
+  const std::string checkpoint_file = slot_dir + "checkpoint";
+  const uint64_t checkpoint_key = std::hash<std::string>{}(wu_name);
+  ProgressMonitor progress_monitor(target_seconds, progress_file,
+                                   checkpoint_file, checkpoint_key);
 
   // clone programs repository if necessary
   if (!Setup::existsProgramsHome()) {
