@@ -325,12 +325,7 @@ void OeisManager::update() {
     std::string cmd, path;
     for (auto &file : files) {
       path = Setup::getOeisHome() + file;
-      if (!ApiClient::getDefaultInstance().getOeisFile(file, path)) {
-        Log::get().warn("Cannot fetch " + file +
-                        ".gz from API server, falling back to OEIS");
-        WebClient::get("https://oeis.org/" + file + ".gz", path + ".gz");
-        gunzip(path + ".gz");
-      }
+      ApiClient::getDefaultInstance().getOeisFile(file, path);
     }
     // update programs repository using git pull
     auto mode = Setup::getMiningMode();

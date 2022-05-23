@@ -72,7 +72,7 @@ void ApiClient::postCPUHour() {
   }
 }
 
-bool ApiClient::getOeisFile(const std::string& filename,
+void ApiClient::getOeisFile(const std::string& filename,
                             const std::string& local_path) {
   // throttling
   if (fetched_oeis_files > 2) {
@@ -91,13 +91,26 @@ bool ApiClient::getOeisFile(const std::string& filename,
 
   // fetch file
   const std::string url = BASE_URL + "oeis/" + filename + ".gz";
-  const bool success = WebClient::get(url, local_path + ".gz", false, false);
+  bool success = false;
+  int64_t backoff_delay = OEIS_THROTTLING_SECS;
+  for (int64_t i = 0; i < 5; i++) {
+    if (i > 0) {
+      Log::get().warn("Retrying fetch of " + url);
+    }
+    success = WebClient::get(url, local_path + ".gz", false, false);
+    if (success) {
+      break;
+    }
+    std::this_thread::sleep_for(std::chrono::seconds(backoff_delay));
+    backoff_delay *= 2;
+  }
   if (success) {
     gunzip(local_path + ".gz");
     fetched_oeis_files++;
     last_oeis_time = std::chrono::steady_clock::now();
+  } else {
+    Log::get().error("Error fetching " + url, true);
   }
-  return success;
 }
 
 bool ApiClient::getProgram(int64_t index, const std::string& path) {

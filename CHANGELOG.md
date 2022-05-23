@@ -5,6 +5,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Bugfixes
 
 * Extend folder locking time out value on Windows
+* Remove fall-back download from OEIS
 
 ### Features
 
@@ -13,7 +14,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Enhancements
 
 * Change default update interval to 3 days
-* Throttle download of OEIS files from API server
+* Throttling and exponential backoff for API server downloads
 
 # v22.5.20
 
