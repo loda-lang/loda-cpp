@@ -3,8 +3,8 @@
         {
             "name": "server-new",
             "overwrite": "none",
+            "validation": "basic",
             "backoff": false,
-            "validation": "full",
             "matchers": [
                 "direct"
             ]
@@ -12,6 +12,7 @@
         {
             "name": "server-update",
             "overwrite": "auto",
+            "validation": "full",
             "backoff": false,
             "matchers": [
                 "direct"
