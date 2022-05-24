@@ -20,6 +20,7 @@ class Miner {
    public:
     std::string name;
     OverwriteMode overwrite_mode;
+    ValidationMode validation_mode;
     std::vector<Generator::Config> generators;
     std::vector<Matcher::Config> matchers;
   };
@@ -48,6 +49,7 @@ class Miner {
   static const int64_t NUM_MUTATIONS;
   const Settings &settings;
   const MiningMode mining_mode;
+  ValidationMode validation_mode;
   std::string profile_name;
   std::unique_ptr<ApiClient> api_client;
   std::unique_ptr<OeisManager> manager;

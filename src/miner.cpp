@@ -22,6 +22,7 @@ Miner::Miner(const Settings &settings, int64_t log_interval,
              ProgressMonitor *progress_monitor)
     : settings(settings),
       mining_mode(Setup::getMiningMode()),
+      validation_mode(ValidationMode::FULL),  // set in reload()
       log_scheduler(log_interval),
       metrics_scheduler(Metrics::get().publish_interval),
       cpuhours_scheduler(3600),  // 1 hour (fixed!!)
@@ -40,7 +41,9 @@ void Miner::reload() {
   manager.reset(new OeisManager(settings));
   manager->load();
   manager->getFinder();  // initializes stats and matchers
-  profile_name = ConfigLoader::load(settings).name;
+  const auto miner_config = ConfigLoader::load(settings);
+  profile_name = miner_config.name;
+  validation_mode = miner_config.validation_mode;
   if (mining_mode == MINING_MODE_SERVER || ConfigLoader::MAINTAINANCE_MODE) {
     multi_generator.reset();
   } else {
@@ -56,6 +59,7 @@ void Miner::mine() {
   std::stack<Program> progs;
   Sequence norm_seq;
   Program program;
+  update_program_result_t update_result;
 
   // initial progress reporting
   if (progress_monitor) {
@@ -73,6 +77,9 @@ void Miner::mine() {
   // print info
   Log::get().info("Mining programs for OEIS sequences in " +
                   convertMiningModeToStr(mining_mode) + " mode");
+  if (validation_mode == ValidationMode::BASIC) {
+    Log::get().info("Using basic valdation mode");
+  }
 
   std::string submitted_by;
   current_fetch = (mining_mode == MINING_MODE_SERVER) ? PROGRAMS_TO_FETCH : 0;
@@ -125,10 +132,11 @@ void Miner::mine() {
         checkRegularTasks();
         program = s.second;
         updateSubmittedBy(program);
-        auto r = manager->updateProgram(s.first, program);
-        if (r.updated) {
+        update_result =
+            manager->updateProgram(s.first, program, validation_mode);
+        if (update_result.updated) {
           // update stats and increase priority of successful generator
-          if (r.is_new) {
+          if (update_result.is_new) {
             num_new++;
           } else {
             num_updated++;
@@ -136,14 +144,14 @@ void Miner::mine() {
           // in client mode: submit the program to the API server
           if (mining_mode == MINING_MODE_CLIENT) {
             // add metadata as comment
-            program = r.program;
+            program = update_result.program;
             ProgramUtil::addComment(program, ProgramUtil::PREFIX_MINER_PROFILE +
                                                  " " + profile_name);
             api_client->postProgram(program, 10);  // magic number
           }
           // mutate successful program
           if (mining_mode != MINING_MODE_SERVER && progs.size() < 1000) {
-            mutator->mutateCopies(r.program, NUM_MUTATIONS, progs);
+            mutator->mutateCopies(update_result.program, NUM_MUTATIONS, progs);
           }
         }
       }
@@ -281,7 +289,7 @@ void Miner::submit(const std::string &path, std::string id) {
   for (auto s : seq_programs) {
     program = s.second;
     updateSubmittedBy(program);
-    auto r = manager->updateProgram(s.first, program);
+    auto r = manager->updateProgram(s.first, program, ValidationMode::FULL);
     if (r.updated) {
       // in client mode: submit the program to the API server
       if (mode == MINING_MODE_CLIENT) {

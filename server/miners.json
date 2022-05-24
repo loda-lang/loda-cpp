@@ -4,6 +4,7 @@
             "name": "server-new",
             "overwrite": "none",
             "backoff": false,
+            "validation": "full",
             "matchers": [
                 "direct"
             ]
