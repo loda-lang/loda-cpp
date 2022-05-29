@@ -639,7 +639,8 @@ void OeisManager::alert(Program p, size_t id, const std::string &prefix,
   Log::get().alert(msg, details);
 }
 
-update_program_result_t OeisManager::updateProgram(size_t id, Program p) {
+update_program_result_t OeisManager::updateProgram(
+    size_t id, Program p, ValidationMode validation_mode) {
   update_program_result_t result;
   result.updated = false;
   result.is_new = false;
@@ -683,7 +684,15 @@ update_program_result_t OeisManager::updateProgram(size_t id, Program p) {
   }
 
   // minimize and check the program
-  auto checked = finder.checkProgram(p, existing, is_new, seq);
+  std::pair<std::string, Program> checked;
+  switch (validation_mode) {
+    case ValidationMode::BASIC:
+      checked = finder.checkProgramBasic(p, existing, is_new, seq);
+      break;
+    case ValidationMode::EXTENDED:
+      checked = finder.checkProgramExtended(p, existing, is_new, seq);
+      break;
+  }
   if (checked.first.empty()) {
     return result;
   }

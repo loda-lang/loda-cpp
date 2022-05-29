@@ -12,6 +12,7 @@
 #include "util.hpp"
 
 enum class OverwriteMode { NONE, ALL, AUTO };
+enum class ValidationMode { BASIC, EXTENDED };
 
 struct update_program_result_t {
   bool updated;
@@ -39,7 +40,8 @@ class OeisManager {
 
   size_t getTotalCount() const { return total_count; }
 
-  update_program_result_t updateProgram(size_t id, Program p);
+  update_program_result_t updateProgram(size_t id, Program p,
+                                        ValidationMode validation_mode);
 
   bool maintainProgram(size_t id);
 

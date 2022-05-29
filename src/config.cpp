@@ -131,6 +131,12 @@ Miner::Config ConfigLoader::load(const Settings &settings) {
       } else {
         throw std::runtime_error("Unknown overwrite mode: " + overwrite_mode);
       }
+      auto validation_mode = m["validation"].as_string();
+      if (validation_mode == "" || validation_mode == "extended") {
+        config.validation_mode = ValidationMode::EXTENDED;  // default
+      } else if (validation_mode == "basic") {
+        config.validation_mode = ValidationMode::BASIC;
+      }
 
       // load matcher configs
       bool backoff = get_jbool(m, "backoff", true);

@@ -135,10 +135,8 @@ void Finder::notifyMinimizerProblem(const Program &p, const std::string &id) {
   ProgramUtil::print(p, out);
 }
 
-std::pair<std::string, Program> Finder::checkProgram(Program program,
-                                                     Program existing,
-                                                     bool is_new,
-                                                     const OeisSequence &seq) {
+std::pair<std::string, Program> Finder::checkProgramExtended(
+    Program program, Program existing, bool is_new, const OeisSequence &seq) {
   std::pair<std::string, Program> result;
 
   // get the extended sequence
@@ -199,6 +197,31 @@ std::pair<std::string, Program> Finder::checkProgram(Program program,
   if (result.first.empty()) {
     result.second.ops.clear();
   }
+  return result;
+}
+
+std::pair<std::string, Program> Finder::checkProgramBasic(
+    Program program, Program existing, bool is_new, const OeisSequence &seq) {
+  // basic validation is currently support only for new programs
+  if (!is_new) {
+    return checkProgramExtended(program, existing, is_new, seq);
+  }
+
+  // get the default-length sequence
+  auto default_seq = seq.getTerms(OeisSequence::DEFAULT_SEQ_LENGTH);
+
+  // check the program
+  std::pair<std::string, Program> result;
+  auto check = evaluator.check(program, default_seq,
+                               OeisSequence::DEFAULT_SEQ_LENGTH, seq.id);
+  if (check.first == status_t::ERROR) {
+    notifyInvalidMatch(seq.id);
+    return result;  // not correct
+  }
+
+  // the program is correct => update result
+  result.first = "First";
+  result.second = program;
   return result;
 }
 
