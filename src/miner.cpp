@@ -91,9 +91,8 @@ void Miner::mine() {
       validation_mode_str = "extended";
       break;
   }
-  Log::get().info("Mining programs for OEIS sequences in " +
-                  convertMiningModeToStr(mining_mode) + " mode (" +
-                  validation_mode_str + " validation mode)");
+  Log::get().info("Mining programs in " + convertMiningModeToStr(mining_mode) +
+                  " mode (" + validation_mode_str + " validation mode)");
 
   std::string submitted_by;
   current_fetch = (mining_mode == MINING_MODE_SERVER) ? PROGRAMS_TO_FETCH : 0;
