@@ -31,10 +31,10 @@ class Finder {
       const Program &p, Sequence &norm_seq,
       const std::vector<OeisSequence> &sequences);
 
-  std::pair<std::string, Program> checkProgramFull(Program program,
-                                                   Program existing,
-                                                   bool is_new,
-                                                   const OeisSequence &seq);
+  std::pair<std::string, Program> checkProgramExtended(Program program,
+                                                       Program existing,
+                                                       bool is_new,
+                                                       const OeisSequence &seq);
 
   std::pair<std::string, Program> checkProgramBasic(Program program,
                                                     Program existing,

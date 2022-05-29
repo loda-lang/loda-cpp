@@ -12,7 +12,7 @@
 #include "util.hpp"
 
 enum class OverwriteMode { NONE, ALL, AUTO };
-enum class ValidationMode { BASIC, FULL };
+enum class ValidationMode { BASIC, EXTENDED };
 
 struct update_program_result_t {
   bool updated;

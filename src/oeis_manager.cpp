@@ -689,8 +689,8 @@ update_program_result_t OeisManager::updateProgram(
     case ValidationMode::BASIC:
       checked = finder.checkProgramBasic(p, existing, is_new, seq);
       break;
-    case ValidationMode::FULL:
-      checked = finder.checkProgramFull(p, existing, is_new, seq);
+    case ValidationMode::EXTENDED:
+      checked = finder.checkProgramExtended(p, existing, is_new, seq);
       break;
   }
   if (checked.first.empty()) {

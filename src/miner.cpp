@@ -22,7 +22,7 @@ Miner::Miner(const Settings &settings, int64_t log_interval,
              ProgressMonitor *progress_monitor)
     : settings(settings),
       mining_mode(Setup::getMiningMode()),
-      validation_mode(ValidationMode::FULL),  // set in reload()
+      validation_mode(ValidationMode::EXTENDED),  // set in reload()
       log_scheduler(log_interval),
       metrics_scheduler(Metrics::get().publish_interval),
       cpuhours_scheduler(3600),  // 1 hour (fixed!!)
@@ -74,12 +74,26 @@ void Miner::mine() {
     }
   }
 
-  // print info
-  Log::get().info("Mining programs for OEIS sequences in " +
-                  convertMiningModeToStr(mining_mode) + " mode");
-  if (validation_mode == ValidationMode::BASIC) {
-    Log::get().info("Using basic valdation mode");
+  // validate modes
+  if (validation_mode == ValidationMode::BASIC &&
+      mining_mode == MiningMode::MINING_MODE_CLIENT) {
+    Log::get().error("Basic validation not supported in client mining mode",
+                     true);
   }
+
+  // print info
+  std::string validation_mode_str;
+  switch (validation_mode) {
+    case ValidationMode::BASIC:
+      validation_mode_str = "basic";
+      break;
+    case ValidationMode::EXTENDED:
+      validation_mode_str = "extended";
+      break;
+  }
+  Log::get().info("Mining programs for OEIS sequences in " +
+                  convertMiningModeToStr(mining_mode) + " mode (" +
+                  validation_mode_str + " validation mode)");
 
   std::string submitted_by;
   current_fetch = (mining_mode == MINING_MODE_SERVER) ? PROGRAMS_TO_FETCH : 0;
@@ -289,7 +303,7 @@ void Miner::submit(const std::string &path, std::string id) {
   for (auto s : seq_programs) {
     program = s.second;
     updateSubmittedBy(program);
-    auto r = manager->updateProgram(s.first, program, ValidationMode::FULL);
+    auto r = manager->updateProgram(s.first, program, ValidationMode::EXTENDED);
     if (r.updated) {
       // in client mode: submit the program to the API server
       if (mode == MINING_MODE_CLIENT) {
