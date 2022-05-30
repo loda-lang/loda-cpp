@@ -156,10 +156,18 @@ void Miner::mine() {
           }
           // in client mode: submit the program to the API server
           if (mining_mode == MINING_MODE_CLIENT) {
-            // add metadata as comment
+            // add metadata as comments
             program = update_result.program;
             ProgramUtil::addComment(program, ProgramUtil::PREFIX_MINER_PROFILE +
                                                  " " + profile_name);
+            ProgramUtil::addComment(program, ProgramUtil::PREFIX_CHANGE_TYPE +
+                                                 " " +
+                                                 update_result.change_type);
+            if (!update_result.is_new) {
+              ProgramUtil::addComment(
+                  program, ProgramUtil::PREFIX_PREVIOUS_HASH + " " +
+                               std::to_string(update_result.previous_hash));
+            }
             api_client->postProgram(program, 10);  // magic number
           }
           // mutate successful program
