@@ -1,4 +1,5 @@
 CXXFLAGS += -Iinclude -Iexternal -O2 -g -Wall -fmessage-length=0 -std=c++17
+LDFLAGS += -s
 
 ifdef LODA_VERSION
 CXXFLAGS += -DLODA_VERSION=$(LODA_VERSION)
@@ -13,6 +14,7 @@ OBJS = api_client.o benchmark.o big_number.o blocks.o boinc.o commands.o config.
 loda: external/jute.h external/jute.cpp $(OBJS)
 	$(CXX) $(LDFLAGS) -o loda $(OBJS)
 	[ -L ../loda ] || ( cd .. && ln -s src/loda loda )
+	du -sh loda
 
 external/jute.h:
 	mkdir -p external && curl -sS -o external/jute.h https://raw.githubusercontent.com/amir-s/jute/master/jute.h

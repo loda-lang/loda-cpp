@@ -5,6 +5,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Enhancements
 
 * Support for reduced ("basic") validation on the server
+* Reduce file size of executable on Linux and MacOS
 
 # v22.5.23
 
