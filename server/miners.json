@@ -12,7 +12,7 @@
         {
             "name": "server-update",
             "overwrite": "auto",
-            "validation": "extended",
+            "validation": "basic",
             "backoff": false,
             "matchers": [
                 "direct"

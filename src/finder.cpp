@@ -202,9 +202,33 @@ std::pair<std::string, Program> Finder::checkProgramExtended(
 
 std::pair<std::string, Program> Finder::checkProgramBasic(
     Program program, Program existing, bool is_new, const OeisSequence &seq) {
-  // basic validation is currently support only for new programs
+  // basic validation of updated programs requires additional metadata
+  std::string change_type;
   if (!is_new) {
-    return checkProgramExtended(program, existing, is_new, seq);
+    // extract comments
+    change_type =
+        ProgramUtil::getCommentField(program, ProgramUtil::PREFIX_CHANGE_TYPE);
+    auto previous_hash_str = ProgramUtil::getCommentField(
+        program, ProgramUtil::PREFIX_PREVIOUS_HASH);
+
+    // check if metadata comments are set
+    if (change_type.empty() || previous_hash_str.empty()) {
+      Log::get().warn("Using extended validation for " + seq.id_str() +
+                      " due to missing metadata");
+      return checkProgramExtended(program, existing, is_new, seq);
+    }
+
+    // parse hash
+    std::stringstream buf(previous_hash_str);
+    size_t previous_hash;
+    buf >> previous_hash;
+
+    // compare with hash of existing program
+    if (previous_hash != ProgramUtil::hash(existing)) {
+      Log::get().warn("Using extended validation for " + seq.id_str() +
+                      " due to hash mismatch");
+      return checkProgramExtended(program, existing, is_new, seq);
+    }
   }
 
   // get the default-length sequence
@@ -220,7 +244,7 @@ std::pair<std::string, Program> Finder::checkProgramBasic(
   }
 
   // the program is correct => update result
-  result.first = "First";
+  result.first = is_new ? "First" : change_type;
   result.second = program;
   return result;
 }

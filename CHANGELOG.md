@@ -4,7 +4,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Enhancements
 
-* Support for reduced ("basic") validation of new programs
+* Support for reduced ("basic") validation on the server
 
 # v22.5.23
 
