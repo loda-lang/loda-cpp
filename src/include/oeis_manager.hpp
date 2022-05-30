@@ -17,6 +17,8 @@ enum class ValidationMode { BASIC, EXTENDED };
 struct update_program_result_t {
   bool updated;
   bool is_new;
+  size_t previous_hash;
+  std::string change_type;
   Program program;
 };
 

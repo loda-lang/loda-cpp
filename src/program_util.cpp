@@ -617,7 +617,10 @@ std::string ProgramUtil::getSequenceIdFromProgram(const Program &p) {
 const std::string ProgramUtil::PREFIX_SUBMITTED_BY = "Submitted by";
 const std::string ProgramUtil::PREFIX_CODED_MANUALLY = "Coded manually";
 const std::string ProgramUtil::PREFIX_MINER_PROFILE =
-    "Miner Profile:";  // colon!
+    "Miner Profile:";                                                // colon!
+const std::string ProgramUtil::PREFIX_CHANGE_TYPE = "Change Type:";  // colon!
+const std::string ProgramUtil::PREFIX_PREVIOUS_HASH =
+    "Previous Hash:";  // colon!
 
 void ProgramUtil::avoidNopOrOverflow(Operation &op) {
   if (op.source.type == Operand::Type::CONSTANT) {

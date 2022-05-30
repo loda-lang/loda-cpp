@@ -644,6 +644,7 @@ update_program_result_t OeisManager::updateProgram(
   update_program_result_t result;
   result.updated = false;
   result.is_new = false;
+  result.previous_hash = 0;
 
   // ignore this sequence?
   if (ignore_list.find(id) != ignore_list.end()) {
@@ -700,6 +701,10 @@ update_program_result_t OeisManager::updateProgram(
   // update result
   result.updated = true;
   result.is_new = is_new;
+  result.change_type = checked.first;
+  if (!is_new) {
+    result.previous_hash = ProgramUtil::hash(existing);
+  }
 
   // write new or better program version
   result.program = checked.second;
