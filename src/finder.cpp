@@ -201,28 +201,16 @@ std::pair<std::string, Program> Finder::checkProgramExtended(
 }
 
 std::pair<std::string, Program> Finder::checkProgramBasic(
-    Program program, Program existing, bool is_new, const OeisSequence &seq) {
+    Program program, Program existing, bool is_new, const OeisSequence &seq,
+    const std::string &change_type, size_t previous_hash) {
   // basic validation of updated programs requires additional metadata
-  std::string change_type;
   if (!is_new) {
-    // extract comments
-    change_type =
-        ProgramUtil::getCommentField(program, ProgramUtil::PREFIX_CHANGE_TYPE);
-    auto previous_hash_str = ProgramUtil::getCommentField(
-        program, ProgramUtil::PREFIX_PREVIOUS_HASH);
-
     // check if metadata comments are set
-    if (change_type.empty() || previous_hash_str.empty()) {
+    if (change_type.empty() || !previous_hash) {
       Log::get().warn("Using extended validation for " + seq.id_str() +
                       " due to missing metadata");
       return checkProgramExtended(program, existing, is_new, seq);
     }
-
-    // parse hash
-    std::stringstream buf(previous_hash_str);
-    size_t previous_hash;
-    buf >> previous_hash;
-
     // compare with hash of existing program
     if (previous_hash != ProgramUtil::hash(existing)) {
       Log::get().warn("Using extended validation for " + seq.id_str() +

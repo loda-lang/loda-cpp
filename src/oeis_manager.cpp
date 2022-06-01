@@ -654,13 +654,24 @@ update_program_result_t OeisManager::updateProgram(
   auto &seq = sequences.at(id);
   const std::string global_file = seq.getProgramPath(false);
   const std::string local_file = seq.getProgramPath(true);
+
+  // get metadata from comments
   const std::string submitted_by =
       ProgramUtil::getCommentField(p, ProgramUtil::PREFIX_SUBMITTED_BY);
-  bool is_new = true;
+  const std::string change_type =
+      ProgramUtil::getCommentField(p, ProgramUtil::PREFIX_CHANGE_TYPE);
+  const std::string previous_hash_str =
+      ProgramUtil::getCommentField(p, ProgramUtil::PREFIX_PREVIOUS_HASH);
+  size_t previous_hash = 0;
+  if (!previous_hash_str.empty()) {
+    std::stringstream buf(previous_hash_str);
+    buf >> previous_hash;
+  }
 
   // check if there is an existing program already
   const bool has_global = isFile(global_file);
   const bool has_local = isFile(local_file);
+  bool is_new = true;
   Program existing;
   if (has_global || has_local) {
     const std::string file_name = has_local ? local_file : global_file;
@@ -688,7 +699,8 @@ update_program_result_t OeisManager::updateProgram(
   std::pair<std::string, Program> checked;
   switch (validation_mode) {
     case ValidationMode::BASIC:
-      checked = finder.checkProgramBasic(p, existing, is_new, seq);
+      checked = finder.checkProgramBasic(p, existing, is_new, seq, change_type,
+                                         previous_hash);
       break;
     case ValidationMode::EXTENDED:
       checked = finder.checkProgramExtended(p, existing, is_new, seq);

@@ -36,10 +36,9 @@ class Finder {
                                                        bool is_new,
                                                        const OeisSequence &seq);
 
-  std::pair<std::string, Program> checkProgramBasic(Program program,
-                                                    Program existing,
-                                                    bool is_new,
-                                                    const OeisSequence &seq);
+  std::pair<std::string, Program> checkProgramBasic(
+      Program program, Program existing, bool is_new, const OeisSequence &seq,
+      const std::string &change_type, size_t previous_hash);
 
   std::vector<std::unique_ptr<Matcher>> &getMatchers() { return matchers; }
 
