@@ -59,6 +59,7 @@ void Miner::mine() {
   std::stack<Program> progs;
   Sequence norm_seq;
   Program program;
+  Matcher::seq_programs_t seq_programs;
   update_program_result_t update_result;
 
   // initial progress reporting
@@ -131,16 +132,29 @@ void Miner::mine() {
     }
 
     if (!progs.empty()) {
-      // match the next program to the sequence database
+      // get the next program
       program = progs.top();
       progs.pop();
-      // Log::get().info( "Matching program with " + std::to_string(
-      // program.ops.size() ) + " operations" ); ProgramUtil::print( program,
-      // std::cout );
 
-      // match sequences
-      auto seq_programs = manager->getFinder().findSequence(
-          program, norm_seq, manager->getSequences());
+      // try to extract A-number from comment (server mode)
+      seq_programs.clear();
+      auto id = ProgramUtil::getSequenceIdFromProgram(program);
+      if (!id.empty()) {
+        try {
+          OeisSequence seq(id);
+          seq_programs.push_back(std::pair<size_t, Program>(seq.id, program));
+        } catch (const std::exception &) {
+          Log::get().warn("Invalid sequence ID: " + id);
+        }
+      }
+
+      // otherwise match sequences
+      if (seq_programs.empty()) {
+        seq_programs = manager->getFinder().findSequence(
+            program, norm_seq, manager->getSequences());
+      }
+
+      // validate matched programs and update existing programs
       for (auto s : seq_programs) {
         checkRegularTasks();
         program = s.second;
