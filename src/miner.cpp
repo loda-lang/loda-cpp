@@ -138,6 +138,7 @@ void Miner::mine() {
 
       // try to extract A-number from comment (server mode)
       seq_programs.clear();
+      /*
       auto id = ProgramUtil::getSequenceIdFromProgram(program);
       if (!id.empty()) {
         try {
@@ -147,6 +148,7 @@ void Miner::mine() {
           Log::get().warn("Invalid sequence ID: " + id);
         }
       }
+      */
 
       // otherwise match sequences
       if (seq_programs.empty()) {
