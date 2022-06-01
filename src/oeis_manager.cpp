@@ -647,11 +647,12 @@ update_program_result_t OeisManager::updateProgram(
   result.previous_hash = 0;
 
   // ignore this sequence?
-  if (ignore_list.find(id) != ignore_list.end()) {
+  if (id == 0 || id >= sequences.size() || !sequences[id].id ||
+      ignore_list.find(id) != ignore_list.end()) {
     return result;
   }
 
-  auto &seq = sequences.at(id);
+  auto &seq = sequences[id];
   const std::string global_file = seq.getProgramPath(false);
   const std::string local_file = seq.getProgramPath(true);
 
