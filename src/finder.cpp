@@ -207,14 +207,14 @@ std::pair<std::string, Program> Finder::checkProgramBasic(
   if (!is_new) {
     // check if metadata comments are set
     if (change_type.empty() || !previous_hash) {
-      Log::get().warn("Using extended validation for " + seq.id_str() +
-                      " due to missing metadata");
+      Log::get().debug("Using extended validation for " + seq.id_str() +
+                       " due to missing metadata");
       return checkProgramExtended(program, existing, is_new, seq);
     }
     // compare with hash of existing program
     if (previous_hash != ProgramUtil::hash(existing)) {
-      Log::get().warn("Using extended validation for " + seq.id_str() +
-                      " due to hash mismatch");
+      Log::get().debug("Using extended validation for " + seq.id_str() +
+                       " due to hash mismatch");
       return checkProgramExtended(program, existing, is_new, seq);
     }
   }

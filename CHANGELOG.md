@@ -6,6 +6,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Fix basic validation for updated programs
 
+### Features
+
+* Configurable API server
+
 ### Enhancements
 
 * Skip unnecessary sequence matching in server mode

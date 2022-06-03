@@ -10,8 +10,6 @@
 #include "util.hpp"
 #include "web_client.hpp"
 
-const std::string ApiClient::BASE_URL("http://api.loda-lang.org/miner/v1/");
-
 ApiClient::ApiClient()
     : client_id(Random::get().gen() % 100000),
       session_id(0),
@@ -19,7 +17,16 @@ ApiClient::ApiClient()
       count(0),
       fetched_oeis_files(0),
       last_oeis_time(std::chrono::steady_clock::now()),
-      printed_throttling_warning(false) {}
+      printed_throttling_warning(false) {
+  auto server = Setup::getSetupValue("LODA_API_SERVER");
+  if (server.empty()) {
+    server = "http://api.loda-lang.org/";
+  } else {
+    Log::get().info("Using configured API server: " + server);
+  }
+  ensureTrailingSlash(server);
+  base_url = server + "miner/v1/";
+}
 
 ApiClient& ApiClient::getDefaultInstance() {
   static ApiClient api_client;
@@ -50,7 +57,7 @@ bool ApiClient::postProgram(const std::string& path, bool fail_on_error) {
   if (!isFile(path)) {
     Log::get().error("File not found: " + path, true);
   }
-  const std::string url = BASE_URL + "programs";
+  const std::string url = base_url + "programs";
   if (!WebClient::postFile(url, path)) {
     const std::string msg("Cannot submit program to API server");
     if (fail_on_error) {
@@ -66,7 +73,7 @@ bool ApiClient::postProgram(const std::string& path, bool fail_on_error) {
 }
 
 void ApiClient::postCPUHour() {
-  const std::string url = BASE_URL + "cpuhours";
+  const std::string url = base_url + "cpuhours";
   if (!WebClient::postFile(url, {})) {
     Log::get().warn("Error reporting CPU hour");
   }
@@ -90,7 +97,7 @@ void ApiClient::getOeisFile(const std::string& filename,
   }
 
   // fetch file
-  const std::string url = BASE_URL + "oeis/" + filename + ".gz";
+  const std::string url = base_url + "oeis/" + filename + ".gz";
   bool success = false;
   int64_t backoff_delay = OEIS_THROTTLING_SECS;
   for (int64_t i = 0; i < 5; i++) {
@@ -115,7 +122,7 @@ void ApiClient::getOeisFile(const std::string& filename,
 
 bool ApiClient::getProgram(int64_t index, const std::string& path) {
   std::remove(path.c_str());
-  return WebClient::get(BASE_URL + "programs/" + std::to_string(index), path,
+  return WebClient::get(base_url + "programs/" + std::to_string(index), path,
                         false, false);
 }
 
@@ -144,7 +151,7 @@ Program ApiClient::getNextProgram() {
   }
   std::remove(tmp.c_str());
   if (program.ops.empty()) {
-    Log::get().warn("Invalid program on API server: " + BASE_URL + "programs/" +
+    Log::get().warn("Invalid program on API server: " + base_url + "programs/" +
                     std::to_string(index));
   }
   return program;
@@ -185,7 +192,7 @@ void ApiClient::updateSession() {
 int64_t ApiClient::fetchInt(const std::string& endpoint) {
   const std::string tmp =
       getTmpDir() + "tmp_int_" + std::to_string(client_id) + ".txt";
-  WebClient::get(BASE_URL + endpoint, tmp, true, true);
+  WebClient::get(base_url + endpoint, tmp, true, true);
   std::ifstream in(tmp);
   if (in.bad()) {
     Log::get().error("Error fetching data from API server", true);

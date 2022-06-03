@@ -6,8 +6,6 @@
 
 class ApiClient {
  public:
-  static const std::string BASE_URL;
-
   ApiClient();
 
   static ApiClient& getDefaultInstance();
@@ -26,6 +24,7 @@ class ApiClient {
   // throttle download of OEIS file from API server
   static constexpr int64_t OEIS_THROTTLING_SECS = 10;  // magic number
 
+  std::string base_url;
   int64_t client_id;
   int64_t session_id;
   int64_t start;
