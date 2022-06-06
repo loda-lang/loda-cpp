@@ -24,7 +24,9 @@ ApiClient::ApiClient()
   } else {
     Log::get().info("Using configured API server: " + server);
   }
-  ensureTrailingSlash(server);
+  if (server.back() != '/') {
+    server += '/';
+  }
   base_url = server + "miner/v1/";
 }
 

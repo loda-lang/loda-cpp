@@ -16,7 +16,7 @@ Stats::Stats()
       num_ops_per_type(Operation::Types.size(), 0) {}
 
 void Stats::load(std::string path) {
-  ensureTrailingSlash(path);
+  ensureTrailingFileSep(path);
   Log::get().debug("Loading program stats from " + path);
 
   const std::string sep(",");
@@ -213,7 +213,7 @@ void Stats::load(std::string path) {
 }
 
 void Stats::save(std::string path) {
-  ensureTrailingSlash(path);
+  ensureTrailingFileSep(path);
   Log::get().debug("Saving program stats to " + path);
 
   const std::string sep(",");
@@ -307,7 +307,7 @@ void Stats::save(std::string path) {
 }
 
 std::string Stats::getMainStatsFile(std::string path) const {
-  ensureTrailingSlash(path);
+  ensureTrailingFileSep(path);
   path += "constant_counts.csv";
   return path;
 }

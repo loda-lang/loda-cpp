@@ -69,7 +69,7 @@ std::string Setup::getLodaHomeNoCheck() {
   } else {
     result = getHomeDir() + FILE_SEP + "loda" + FILE_SEP;
   }
-  ensureTrailingSlash(result);
+  ensureTrailingFileSep(result);
   return result;
 }
 
@@ -82,7 +82,7 @@ const std::string& Setup::getLodaHome() {
 
 void Setup::setLodaHome(const std::string& home) {
   LODA_HOME = home;
-  ensureTrailingSlash(LODA_HOME);
+  ensureTrailingFileSep(LODA_HOME);
   checkDir(LODA_HOME);
   Log::get().info("Using LODA home directory \"" + LODA_HOME + "\"");
 }
@@ -126,7 +126,7 @@ void Setup::setMinersConfig(const std::string& loda_config) {
 const std::string& Setup::getOeisHome() {
   if (OEIS_HOME.empty()) {
     OEIS_HOME = getLodaHome() + "oeis" + FILE_SEP;
-    ensureTrailingSlash(OEIS_HOME);
+    ensureTrailingFileSep(OEIS_HOME);
     ensureDir(OEIS_HOME);
   }
   return OEIS_HOME;
@@ -142,7 +142,7 @@ const std::string& Setup::getProgramsHome() {
 void Setup::setProgramsHome(const std::string& home) {
   PROGRAMS_HOME = home;
   checkDir(PROGRAMS_HOME);
-  ensureTrailingSlash(PROGRAMS_HOME);
+  ensureTrailingFileSep(PROGRAMS_HOME);
   checkDir(PROGRAMS_HOME);
 }
 
@@ -399,7 +399,7 @@ void Setup::checkLodaHome() {
   if (!line.empty()) {
     LODA_HOME = line;
   }
-  ensureTrailingSlash(LODA_HOME);
+  ensureTrailingFileSep(LODA_HOME);
   ensureDir(LODA_HOME);
 }
 

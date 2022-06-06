@@ -129,7 +129,7 @@ void fixWindowsEnv() {
   if (p) {
     program_files = std::string(p);
   }
-  ensureTrailingSlash(program_files);
+  ensureTrailingFileSep(program_files);
   bool update = false;
   if (path.find("Git\\cmd") == std::string::npos) {
     if (!path.empty()) {
@@ -188,7 +188,7 @@ void makeExecutable(const std::string &path) {
 #endif
 }
 
-void ensureTrailingSlash(std::string &dir) {
+void ensureTrailingFileSep(std::string &dir) {
   if (dir.back() != FILE_SEP) {
     dir += FILE_SEP;
   }
@@ -327,7 +327,7 @@ size_t getMemUsage() {
 
 FolderLock::FolderLock(std::string folder) {
   // obtain lock
-  ensureTrailingSlash(folder);
+  ensureTrailingFileSep(folder);
   ensureDir(folder);
   lockfile = folder + "lock";
   fd = 0;

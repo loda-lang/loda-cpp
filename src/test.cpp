@@ -904,7 +904,7 @@ void Test::stats() {
 
   // save & reload stats
   std::string dir = getTmpDir() + "stats2";
-  ensureTrailingSlash(dir);
+  ensureTrailingFileSep(dir);
   ensureDir(dir);
   s.save(dir);
   t.load(dir);

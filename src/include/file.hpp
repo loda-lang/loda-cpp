@@ -32,7 +32,7 @@ void git(const std::string &folder, const std::string &args);
 
 void makeExecutable(const std::string &path);
 
-void ensureTrailingSlash(std::string &dir);
+void ensureTrailingFileSep(std::string &dir);
 
 std::string getHomeDir();
 

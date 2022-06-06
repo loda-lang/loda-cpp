@@ -16,7 +16,7 @@ void Boinc::run() {
     Log::get().error("PROJECT_DIR environment variable not set", true);
   }
   std::string slot_dir(project_env);
-  ensureTrailingSlash(slot_dir);
+  ensureTrailingFileSep(slot_dir);
 
   // read slot init data
   auto init_data = readXML(slot_dir + "init_data.xml");
@@ -27,7 +27,7 @@ void Boinc::run() {
     Log::get().error("Invalid project data: " + slot_dir + "init_data.xml",
                      true);
   }
-  ensureTrailingSlash(project_dir);
+  ensureTrailingFileSep(project_dir);
 
   // log debugging info
   Log::get().info("Platform: " + Version::PLATFORM +
