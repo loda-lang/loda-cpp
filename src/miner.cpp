@@ -156,7 +156,9 @@ void Miner::mine() {
 
       // validate matched programs and update existing programs
       for (auto s : seq_programs) {
-        checkRegularTasks();
+        if (!checkRegularTasks()) {
+          break;
+        }
         program = s.second;
         updateSubmittedBy(program);
         update_result =
