@@ -31,14 +31,16 @@ class Finder {
       const Program &p, Sequence &norm_seq,
       const std::vector<OeisSequence> &sequences);
 
-  std::pair<std::string, Program> checkProgramExtended(Program program,
-                                                       Program existing,
-                                                       bool is_new,
-                                                       const OeisSequence &seq);
+  std::pair<std::string, Program> checkProgramDefault(Program program,
+                                                      Program existing,
+                                                      bool is_new,
+                                                      const OeisSequence &seq,
+                                                      size_t num_terms);
 
   std::pair<std::string, Program> checkProgramBasic(
       Program program, Program existing, bool is_new, const OeisSequence &seq,
-      const std::string &change_type, size_t previous_hash);
+      const std::string &change_type, size_t previous_hash,
+      size_t num_default_terms);
 
   std::vector<std::unique_ptr<Matcher>> &getMatchers() { return matchers; }
 

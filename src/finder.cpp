@@ -135,12 +135,13 @@ void Finder::notifyMinimizerProblem(const Program &p, const std::string &id) {
   ProgramUtil::print(p, out);
 }
 
-std::pair<std::string, Program> Finder::checkProgramExtended(
-    Program program, Program existing, bool is_new, const OeisSequence &seq) {
+std::pair<std::string, Program> Finder::checkProgramDefault(
+    Program program, Program existing, bool is_new, const OeisSequence &seq,
+    size_t num_terms) {
   std::pair<std::string, Program> result;
 
   // get the extended sequence
-  auto extended_seq = seq.getTerms(OeisSequence::EXTENDED_SEQ_LENGTH);
+  auto extended_seq = seq.getTerms(num_terms);
 
   // check the program w/o minimization
   auto check_vanilla = evaluator.check(
@@ -202,20 +203,21 @@ std::pair<std::string, Program> Finder::checkProgramExtended(
 
 std::pair<std::string, Program> Finder::checkProgramBasic(
     Program program, Program existing, bool is_new, const OeisSequence &seq,
-    const std::string &change_type, size_t previous_hash) {
+    const std::string &change_type, size_t previous_hash,
+    size_t num_default_terms) {
   // basic validation of updated programs requires additional metadata
   if (!is_new) {
     // check if metadata comments are set
     if (change_type.empty() || !previous_hash) {
-      Log::get().debug("Using extended validation for " + seq.id_str() +
-                       " due to missing metadata");
-      return checkProgramExtended(program, existing, is_new, seq);
+      Log::get().debug("Missing metadata in program");
+      return checkProgramDefault(program, existing, is_new, seq,
+                                 num_default_terms);
     }
     // compare with hash of existing program
     if (previous_hash != ProgramUtil::hash(existing)) {
-      Log::get().debug("Using extended validation for " + seq.id_str() +
-                       " due to hash mismatch");
-      return checkProgramExtended(program, existing, is_new, seq);
+      Log::get().debug("Hash mismatch of previous program");
+      return checkProgramDefault(program, existing, is_new, seq,
+                                 num_default_terms);
     }
   }
 

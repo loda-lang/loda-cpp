@@ -85,6 +85,7 @@ class OeisManager {
   std::unordered_set<size_t> overwrite_list;
   std::unordered_set<size_t> protect_list;
   std::unordered_set<size_t> ignore_list;
+  std::unordered_set<size_t> full_check_list;
   std::map<size_t, int64_t> invalid_matches_map;
 
   size_t loaded_count;

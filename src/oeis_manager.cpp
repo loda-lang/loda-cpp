@@ -48,9 +48,10 @@ void OeisManager::load() {
     return;
   }
 
-  // first load the deny and protect lists (needs no lock)
+  // first load the custom sequences lists (needs no lock)
   const std::string oeis_dir = Setup::getProgramsHome() + "oeis" + FILE_SEP;
   OeisList::loadList(oeis_dir + "deny.txt", deny_list);
+  OeisList::loadList(oeis_dir + "full_check.txt", full_check_list);
   OeisList::loadList(oeis_dir + "overwrite.txt", overwrite_list);
   OeisList::loadList(oeis_dir + "protect.txt", protect_list);
 
@@ -698,13 +699,18 @@ update_program_result_t OeisManager::updateProgram(
 
   // minimize and check the program
   std::pair<std::string, Program> checked;
+  size_t num_default_terms = OeisSequence::EXTENDED_SEQ_LENGTH;
+  if (full_check_list.find(seq.id) != full_check_list.end()) {
+    num_default_terms = OeisSequence::FULL_SEQ_LENGTH;
+  }
   switch (validation_mode) {
     case ValidationMode::BASIC:
       checked = finder.checkProgramBasic(p, existing, is_new, seq, change_type,
-                                         previous_hash);
+                                         previous_hash, num_default_terms);
       break;
     case ValidationMode::EXTENDED:
-      checked = finder.checkProgramExtended(p, existing, is_new, seq);
+      checked = finder.checkProgramDefault(p, existing, is_new, seq,
+                                           num_default_terms);
       break;
   }
   if (checked.first.empty()) {
