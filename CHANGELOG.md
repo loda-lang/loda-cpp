@@ -2,6 +2,8 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+# v22.6.10
+
 ### Bugfixes
 
 * Fix issue where tasks are stuck at 100% progress
