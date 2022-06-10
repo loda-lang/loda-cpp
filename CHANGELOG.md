@@ -6,6 +6,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Fix issue where tasks are stuck at 100% progress
 
+### Features
+
+* Support `full_check.txt` list for sequences that require checking up to 100k terms
+
 # v22.6.6
 
 ### Bugfixes
