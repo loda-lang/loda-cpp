@@ -775,7 +775,7 @@ bool OeisManager::maintainProgram(size_t id) {
   Program program;
   std::string submitted_by;
   if (is_okay) {
-    Log::get().debug("Checking program for " + s.to_string());
+    Log::get().info("Checking program for " + s.to_string());
     try {
       program = parser.parse(program_file);
       submitted_by = ProgramUtil::getCommentField(
