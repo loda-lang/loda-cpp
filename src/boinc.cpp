@@ -23,6 +23,7 @@ void Boinc::run() {
   auto project_dir = init_data["project_dir"];
   auto user_name = init_data["user_name"];
   auto wu_name = init_data["wu_name"];
+  auto hostid = init_data["hostid"];
   if (project_dir.empty() || user_name.empty() || wu_name.empty()) {
     Log::get().error("Invalid project data: " + slot_dir + "init_data.xml",
                      true);
@@ -31,7 +32,7 @@ void Boinc::run() {
 
   // log debugging info
   Log::get().info("Platform: " + Version::PLATFORM +
-                  ", user name: " + user_name);
+                  ", user name: " + user_name + ", hostid: " + hostid);
 
   // initialize setup
   Setup::setLodaHome(project_dir);
