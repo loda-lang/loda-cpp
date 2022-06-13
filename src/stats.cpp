@@ -526,3 +526,5 @@ int64_t RandomProgramIds2::get() const {
     return latest_program_ids.get();
   }
 }
+
+int64_t RandomProgramIds2::getFromAll() const { return all_program_ids.get(); }

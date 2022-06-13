@@ -195,7 +195,7 @@ void Miner::mine() {
     } else {
       // we are in server mode and have no programs to process
       // => lets do maintenance work!
-      if (!manager->maintainProgram(mutator->random_program_ids.get())) {
+      if (!manager->maintainProgram(mutator->random_program_ids.getFromAll())) {
         num_removed++;
       }
     }

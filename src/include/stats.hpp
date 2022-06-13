@@ -90,6 +90,7 @@ class RandomProgramIds2 {
 
   bool exists(int64_t id) const;
   int64_t get() const;
+  int64_t getFromAll() const;
 
  private:
   RandomProgramIds all_program_ids;
