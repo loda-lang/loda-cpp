@@ -77,21 +77,6 @@
         "binary",
         "decimal"
       ]
-    },
-    {
-      "name": "iterate",
-      "overwrite": "none",
-      "backoff": true,
-      "generators": [
-        "v4"
-      ],
-      "matchers": [
-        "direct",
-        "linear1",
-        "linear2",
-        "binary",
-        "decimal"
-      ]
     }
   ],
   "generators": [
