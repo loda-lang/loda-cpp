@@ -30,8 +30,6 @@ Miner::Miner(const Settings &settings, int64_t log_interval,
       reload_scheduler(21600),   // 6 hours (magic number)
       progress_monitor(progress_monitor),
       num_processed(0),
-      num_new(0),
-      num_updated(0),
       num_removed(0),
       num_reported_hours(0),
       current_fetch(0) {}
@@ -98,8 +96,6 @@ void Miner::mine() {
   std::string submitted_by;
   current_fetch = (mining_mode == MINING_MODE_SERVER) ? PROGRAMS_TO_FETCH : 0;
   num_processed = 0;
-  num_new = 0;
-  num_updated = 0;
   num_removed = 0;
   while (true) {
     // if queue is empty: fetch or generate a new program
@@ -114,14 +110,6 @@ void Miner::mine() {
             current_fetch--;
             // check metadata stored in program's comments
             ensureSubmittedBy(program);
-            auto profile = ProgramUtil::getCommentField(
-                program, ProgramUtil::PREFIX_MINER_PROFILE);
-            ProgramUtil::removeCommentField(program,
-                                            ProgramUtil::PREFIX_MINER_PROFILE);
-            if (profile.empty()) {
-              profile = "unknown";
-            }
-            num_received_per_profile[profile]++;
             progs.push(program);
           }
         }
@@ -164,11 +152,16 @@ void Miner::mine() {
         update_result =
             manager->updateProgram(s.first, program, validation_mode);
         if (update_result.updated) {
-          // update stats and increase priority of successful generator
+          // update metrics
+          submitted_by = ProgramUtil::getCommentField(
+              program, ProgramUtil::PREFIX_SUBMITTED_BY);
+          if (submitted_by.empty()) {
+            submitted_by = "unknown";
+          }
           if (update_result.is_new) {
-            num_new++;
+            num_new_per_user[submitted_by]++;
           } else {
-            num_updated++;
+            num_updated_per_user[submitted_by]++;
           }
           // in client mode: submit the program to the API server
           if (mining_mode == MINING_MODE_CLIENT) {
@@ -254,21 +247,21 @@ bool Miner::checkRegularTasks() {
     std::vector<Metrics::Entry> entries;
     std::map<std::string, std::string> labels;
     labels["kind"] = "new";
-    entries.push_back({"programs", labels, static_cast<double>(num_new)});
-    labels["kind"] = "updated";
-    entries.push_back({"programs", labels, static_cast<double>(num_updated)});
-    labels["kind"] = "removed";
-    entries.push_back({"programs", labels, static_cast<double>(num_removed)});
-    labels["kind"] = "received";
-    for (auto it : num_received_per_profile) {
-      labels["profile"] = it.first;
+    for (auto it : num_new_per_user) {
+      labels["user"] = it.first;
       entries.push_back({"programs", labels, static_cast<double>(it.second)});
     }
+    labels["kind"] = "updated";
+    for (auto it : num_updated_per_user) {
+      labels["user"] = it.first;
+      entries.push_back({"programs", labels, static_cast<double>(it.second)});
+    }
+    labels["kind"] = "removed";
+    entries.push_back({"programs", labels, static_cast<double>(num_removed)});
     Metrics::get().write(entries);
-    num_new = 0;
-    num_updated = 0;
+    num_new_per_user.clear();
+    num_updated_per_user.clear();
     num_removed = 0;
-    num_received_per_profile.clear();
   }
 
   // regular task: report CPU hours
