@@ -95,7 +95,7 @@ void Miner::mine() {
   Log::get().info("Mining programs in " + convertMiningModeToStr(mining_mode) +
                   " mode (" + validation_mode_str + " validation mode)");
 
-  std::string submitted_by, profile;
+  std::string submitted_by;
   current_fetch = (mining_mode == MINING_MODE_SERVER) ? PROGRAMS_TO_FETCH : 0;
   num_processed = 0;
   num_new = 0;
@@ -114,19 +114,14 @@ void Miner::mine() {
             current_fetch--;
             // check metadata stored in program's comments
             ensureSubmittedBy(program);
-            profile = ProgramUtil::getCommentField(
+            auto profile = ProgramUtil::getCommentField(
                 program, ProgramUtil::PREFIX_MINER_PROFILE);
             ProgramUtil::removeCommentField(program,
                                             ProgramUtil::PREFIX_MINER_PROFILE);
             if (profile.empty()) {
               profile = "unknown";
             }
-            submitted_by = ProgramUtil::getCommentField(
-                program, ProgramUtil::PREFIX_SUBMITTED_BY);
-            if (submitted_by.empty()) {
-              submitted_by = "unknown";
-            }
-            num_received[profile + ";" + submitted_by]++;
+            num_received_per_profile[profile]++;
             progs.push(program);
           }
         }
@@ -265,19 +260,15 @@ bool Miner::checkRegularTasks() {
     labels["kind"] = "removed";
     entries.push_back({"programs", labels, static_cast<double>(num_removed)});
     labels["kind"] = "received";
-    for (auto it : num_received) {
-      auto pos = it.first.find(';');
-      auto profile = it.first.substr(0, pos);
-      auto submitted_by = it.first.substr(pos + 1);
-      labels["profile"] = profile;
-      labels["submitted_by"] = profile;
+    for (auto it : num_received_per_profile) {
+      labels["profile"] = it.first;
       entries.push_back({"programs", labels, static_cast<double>(it.second)});
     }
     Metrics::get().write(entries);
     num_new = 0;
     num_updated = 0;
     num_removed = 0;
-    num_received.clear();
+    num_received_per_profile.clear();
   }
 
   // regular task: report CPU hours
