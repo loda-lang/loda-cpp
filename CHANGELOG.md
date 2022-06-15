@@ -4,6 +4,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Features
 
+* Submission count metric per user
 * Log `hostid` in BOINC mode
 
 ### Enhancements
