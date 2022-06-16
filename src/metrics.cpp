@@ -1,5 +1,6 @@
 #include "metrics.hpp"
 
+#include <algorithm>
 #include <fstream>
 #include <random>
 
@@ -10,7 +11,7 @@
 
 Metrics::Metrics()
     : publish_interval(Setup::getSetupInt("LODA_METRICS_PUBLISH_INTERVAL",
-                                          600)),  // magic number
+                                          300)),  // magic number
       notified(false) {
   host = Setup::getSetupValue("LODA_INFLUXDB_HOST");
   if (!host.empty()) {
@@ -41,13 +42,18 @@ void Metrics::write(const std::vector<Entry> entries) const {
   for (auto &entry : entries) {
     out << entry.field;
     for (auto &l : entry.labels) {
-      out << "," << l.first << "=" << l.second;
+      auto v = l.second;
+      std::replace(v.begin(), v.end(), ' ', '_');
+      out << "," << l.first << "=" << v;
     }
     out << " value=" << entry.value << "\n";
   }
   out.close();
-  if (!WebClient::postFile(host + "/write?db=loda", file_name, auth)) {
+  const std::string url = host + "/write?db=loda";
+  if (WebClient::postFile(url, file_name, auth)) {
+    std::remove(file_name.c_str());
+  } else {
+    WebClient::postFile(url, file_name, auth, true);  // for debugging
     Log::get().error("Error publishing metrics", false);
   }
-  std::remove(file_name.c_str());
 }

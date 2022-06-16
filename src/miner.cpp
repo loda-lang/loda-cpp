@@ -256,6 +256,7 @@ bool Miner::checkRegularTasks() {
       labels["user"] = it.first;
       entries.push_back({"programs", labels, static_cast<double>(it.second)});
     }
+    labels.clear();
     labels["kind"] = "removed";
     entries.push_back({"programs", labels, static_cast<double>(num_removed)});
     Metrics::get().write(entries);
