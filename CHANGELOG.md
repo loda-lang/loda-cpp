@@ -2,6 +2,8 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+# v22.6.19
+
 ### Features
 
 * Add username to program count metrics
@@ -10,6 +12,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Enhancements
 
 * Improve server-side program validation
+* Reduce update interval to 1 day
 
 # v22.6.12
 
