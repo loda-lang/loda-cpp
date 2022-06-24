@@ -7,7 +7,7 @@
 class Minimizer {
  public:
   Minimizer(const Settings &settings)
-      : settings(settings), optimizer(settings) {}
+      : settings(settings), optimizer(settings), evaluator(settings) {}
 
   bool minimize(Program &p, size_t num_terms) const;
 
@@ -18,6 +18,9 @@ class Minimizer {
  private:
   bool removeClr(Program &p) const;
 
+  bool check(const Program &p, const Sequence &seq, size_t max_total) const;
+
   Settings settings;
   Optimizer optimizer;
+  mutable Evaluator evaluator;
 };

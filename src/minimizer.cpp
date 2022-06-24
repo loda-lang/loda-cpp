@@ -12,7 +12,6 @@
 
 bool Minimizer::minimize(Program& p, size_t num_terms) const {
   Log::get().debug("Minimizing program");
-  Evaluator evaluator(settings);
 
   // calculate target sequence
   Sequence target_sequence;
@@ -37,15 +36,7 @@ bool Minimizer::minimize(Program& p, size_t num_terms) const {
       continue;
     } else if (op.type == Operation::Type::TRN) {
       p.ops[i].type = Operation::Type::SUB;
-      bool can_replace;
-      try {
-        auto res = evaluator.check(p, target_sequence);
-        can_replace = (res.first == status_t::OK) &&
-                      (res.second.total <= target_steps.total);
-      } catch (const std::exception&) {
-        can_replace = false;
-      }
-      if (can_replace) {
+      if (check(p, target_sequence, target_steps.total)) {
         local_change = true;
       } else {
         // revert change
@@ -54,15 +45,7 @@ bool Minimizer::minimize(Program& p, size_t num_terms) const {
     } else if (op.type == Operation::Type::LPB) {
       if (op.source.type != Operand::Type::CONSTANT || op.source.value != 1) {
         p.ops[i].source = Operand(Operand::Type::CONSTANT, 1);
-        bool can_reset;
-        try {
-          auto res = evaluator.check(p, target_sequence);
-          can_reset = (res.first == status_t::OK) &&
-                      (res.second.total <= target_steps.total);
-        } catch (const std::exception&) {
-          can_reset = false;
-        }
-        if (can_reset) {
+        if (check(p, target_sequence, target_steps.total)) {
           local_change = true;
         } else {
           // revert change
@@ -73,15 +56,7 @@ bool Minimizer::minimize(Program& p, size_t num_terms) const {
       // try to remove the current operation (if there is at least one
       // operation, see A000004)
       p.ops.erase(p.ops.begin() + i, p.ops.begin() + i + 1);
-      bool can_remove;
-      try {
-        auto res = evaluator.check(p, target_sequence);
-        can_remove = (res.first == status_t::OK) &&
-                     (res.second.total <= target_steps.total);
-      } catch (const std::exception&) {
-        can_remove = false;
-      }
-      if (can_remove) {
+      if (check(p, target_sequence, target_steps.total)) {
         local_change = true;
         --i;
       } else {
@@ -120,16 +95,8 @@ bool Minimizer::minimize(Program& p, size_t num_terms) const {
             p.ops.insert(p.ops.begin() + i + 5,
                          Operation(Operation::Type::MOV, op.target, tmp));
 
-            bool can_rewrite;
-            try {
-              auto res = evaluator.check(p, target_sequence);
-              can_rewrite =
-                  (res.first ==
-                   status_t::OK);  // we don't check the number of steps here!
-            } catch (const std::exception&) {
-              can_rewrite = false;
-            }
-            if (can_rewrite) {
+            // we don't check the number of steps here!
+            if (check(p, target_sequence, 0)) {
               local_change = true;
             } else {
               // revert change
@@ -143,6 +110,22 @@ bool Minimizer::minimize(Program& p, size_t num_terms) const {
     global_change = global_change || local_change;
   }
   return global_change;
+}
+
+bool Minimizer::check(const Program& p, const Sequence& seq,
+                      size_t max_total) const {
+  try {
+    auto res = evaluator.check(p, seq);
+    if (res.first != status_t::OK) {
+      return false;
+    }
+    if (max_total > 0 && res.second.total > max_total) {
+      return false;
+    }
+  } catch (const std::exception&) {
+    return false;
+  }
+  return true;
 }
 
 int64_t Minimizer::getPowerOf(const Number& v) {
