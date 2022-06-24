@@ -2,7 +2,6 @@
 
 #include <fstream>
 
-#include "evaluator.hpp"
 #include "file.hpp"
 #include "optimizer.hpp"
 #include "program_util.hpp"

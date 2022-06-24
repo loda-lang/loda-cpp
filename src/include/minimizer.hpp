@@ -1,5 +1,6 @@
 #pragma once
 
+#include "evaluator.hpp"
 #include "optimizer.hpp"
 #include "program.hpp"
 #include "util.hpp"
