@@ -293,15 +293,10 @@ std::pair<std::string, steps_t> Finder::isOptimizedBetter(
   }
 
   // check if there are loops with contant number of iterations involved
-  const int64_t const_loops_existing =
-      ProgramUtil::hasLoopWithConstantNumIterations(existing);
-  const int64_t const_loops_optimized =
-      ProgramUtil::hasLoopWithConstantNumIterations(optimized);
-  if (const_loops_optimized < const_loops_existing) {
-    result.first = "Simpler";
+  if (ProgramUtil::hasLoopWithConstantNumIterations(optimized)) {
+    // independently of the existing program, we stop here because
+    // otherwise it yields fake optimization of constant loops
     return result;
-  } else if (const_loops_optimized > const_loops_existing) {
-    return result;  // worse
   }
 
   // get extended sequence
