@@ -38,9 +38,10 @@ bool Sequence::is_linear(size_t start) const {
   return true;
 }
 
-int64_t Sequence::get_first_non_decreasing_term() const {
+int64_t Sequence::get_first_delta_lt(const Number &d) const {
   for (size_t i = 1; i < size(); i++) {
-    if (!((*this)[i - 1] < (*this)[i])) {
+    const auto delta = Semantics::sub((*this)[i], (*this)[i - 1]);
+    if (delta < d) {
       return i;
     }
   }

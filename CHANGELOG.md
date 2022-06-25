@@ -5,6 +5,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Enhancements
 
 * Improve handling of loops with constant number of iterations
+* Improve detection of fake "better" programs
 
 # v22.6.19
 
