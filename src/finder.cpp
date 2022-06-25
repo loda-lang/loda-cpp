@@ -313,10 +313,12 @@ std::pair<std::string, steps_t> Finder::isOptimizedBetter(
   }
   result.second = optimized_steps;
 
-  // check if the first non-decreasing term is beyond the know sequence terms
-  if (tmp.get_first_non_decreasing_term() >=
-      static_cast<int64_t>(terms.size())) {
-    return result;  // bad
+  // check if the first decreasing/non-increasing term is beyond the known
+  // sequence terms => fake "better" program
+  const int64_t s = terms.size();
+  if (tmp.get_first_delta_lt(Number::ZERO) >= s ||  // decreasing
+      tmp.get_first_delta_lt(Number::ONE) >= s) {   // non-increasing
+    return result;                                  // => fake "better" program
   }
 
   // evaluate existing program for same number of terms

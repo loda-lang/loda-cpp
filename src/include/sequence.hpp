@@ -17,7 +17,7 @@ class Sequence : public std::vector<Number> {
 
   bool is_linear(size_t start) const;
 
-  int64_t get_first_non_decreasing_term() const;
+  int64_t get_first_delta_lt(const Number &d) const;
 
   bool align(const Sequence &s, int64_t max_offset);
 
