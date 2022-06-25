@@ -11,6 +11,7 @@
 
 bool Minimizer::minimize(Program& p, size_t num_terms) const {
   Log::get().debug("Minimizing program");
+  evaluator.clearCaches();
 
   // calculate target sequence
   Sequence target_sequence;

@@ -148,3 +148,5 @@ bool Evaluator::supportsIncEval(const Program &p) {
   inc_evaluator.reset();
   return result;
 }
+
+void Evaluator::clearCaches() { interpreter.clearCaches(); }

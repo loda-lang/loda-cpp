@@ -36,6 +36,8 @@ class Evaluator {
 
   bool supportsIncEval(const Program &p);
 
+  void clearCaches();
+
  private:
   const Settings &settings;
   Interpreter interpreter;
