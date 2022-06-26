@@ -122,6 +122,9 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
         out = mem.get(Program::OUTPUT_CELL);
       }
     } catch (const std::exception &e) {
+      if (settings.print_as_b_file) {
+        std::cout << std::string(e.what()) << std::endl;
+      }
       result.first = ((int64_t)i >= num_terminating_terms) ? status_t::WARNING
                                                            : status_t::ERROR;
       return result;

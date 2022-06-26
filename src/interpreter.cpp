@@ -255,11 +255,11 @@ size_t Interpreter::run(const Program& p, Memory& mem, int64_t id) {
   }
   try {
     result = run(p, mem);
-  } catch (const std::exception& e) {
+  } catch (...) {
     if (id >= 0) {
       running_programs.erase(id);
     }
-    throw e;
+    std::rethrow_exception(std::current_exception());
   }
   if (id >= 0) {
     running_programs.erase(id);

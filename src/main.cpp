@@ -140,8 +140,8 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
     Log::get().error("Option -s only allowed in evaluate command", true);
   }
   if (settings.print_as_b_file && cmd != "evaluate" && cmd != "eval" &&
-      cmd != "check") {
-    Log::get().error("Option -b only allowed in evaluate command", true);
+      cmd != "check" && cmd != "maintain") {
+    Log::get().error("Option -b not allowed for this command", true);
   }
   if (settings.parallel_mining && cmd != "mine") {
     Log::get().error("Option -p only allowed in mine command", true);
