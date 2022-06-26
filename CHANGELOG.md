@@ -2,10 +2,16 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Bugfixes
+
+* Fix error message in `check` command
+
 ### Enhancements
 
 * Improve handling of loops with constant number of iterations
 * Improve detection of fake "better" programs
+* Disable incremental evaluation in `check` command for consistency
+* Adjust maximum big int size to handle A000336
 
 # v22.6.19
 

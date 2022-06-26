@@ -1,0 +1,1 @@
+A000572: A Beatty sequence: [ n(e+1) ].
