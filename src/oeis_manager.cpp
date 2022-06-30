@@ -250,11 +250,8 @@ bool OeisManager::shouldMatch(const OeisSequence &seq) const {
     return false;
   }
 
-  // sequence on the deny or protect list?
+  // sequence on the deny list?
   if (deny_list.find(seq.id) != deny_list.end()) {
-    return false;
-  }
-  if (protect_list.find(seq.id) != protect_list.end()) {
     return false;
   }
 
@@ -271,6 +268,11 @@ bool OeisManager::shouldMatch(const OeisSequence &seq) const {
   const bool prog_exists = (seq.id >= 0) &&
                            (seq.id < stats->all_program_ids.size()) &&
                            stats->all_program_ids[seq.id];
+
+  // program exists and protected?
+  if (prog_exists && protect_list.find(seq.id) != protect_list.end()) {
+    return false;
+  }
 
   // decide based on overwrite mode
   switch (overwrite_mode) {
