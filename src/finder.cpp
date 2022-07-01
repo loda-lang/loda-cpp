@@ -173,25 +173,15 @@ std::pair<std::string, Program> Finder::checkProgramDefault(
   }
 
   // update result with minimized program
+  result.second = program;
+
   if (is_new) {
     // no additional checks needed for new programs
     result.first = "First";
-    result.second = program;
   } else {
     // now we are in the "update" case
-    // first: compare minimized program with original program
-    steps_t optimized_steps;
-    auto compare =
-        isOptimizedBetter(result.second, program, optimized_steps, seq);
-    if (!compare.first.empty()) {
-      // use minimized version
-      result.second = program;
-      optimized_steps = compare.second;
-    }
-    // second: compare (minimized) program with existing programs
-    compare =
-        isOptimizedBetter(existing, result.second, optimized_steps, seq.id);
-    result.first = compare.first;
+    // compare (minimized) program with existing programs
+    result.first = isOptimizedBetter(existing, result.second, seq.id);
   }
 
   // clear result program if it's no good
@@ -259,23 +249,22 @@ size_t getBadOpsCount(const Program &p) {
   return num_ops;
 }
 
-std::pair<std::string, steps_t> Finder::isOptimizedBetter(
-    Program existing, Program optimized, steps_t optimized_steps,
-    const OeisSequence &seq) {
-  std::pair<std::string, steps_t> result;
+std::string Finder::isOptimizedBetter(Program existing, Program optimized,
+                                      const OeisSequence &seq) {
+  static const std::string not_better;
 
   // remove nops...
   optimizer.removeNops(existing);
   optimizer.removeNops(optimized);
 
-  // we want at least one operation (avoid empty program for A000004
+  // we want at least one operation (avoid empty program for A000004)
   if (optimized.ops.empty()) {
-    return result;
+    return not_better;
   }
 
   // if the programs are the same, no need to evaluate them
   if (optimized == existing) {
-    return result;
+    return not_better;
   }
 
   // check if the optimized program supports IE
@@ -285,10 +274,9 @@ std::pair<std::string, steps_t> Finder::isOptimizedBetter(
     const bool inc_eval_existing = evaluator.supportsIncEval(existing);
     const bool inc_eval_optimized = evaluator.supportsIncEval(optimized);
     if (inc_eval_optimized && !inc_eval_existing) {
-      result.first = "Faster (IE)";
-      return result;
+      return "Faster (IE)";
     } else if (!inc_eval_optimized && inc_eval_existing) {
-      return result;  // worse
+      return not_better;  // worse
     }
   }
 
@@ -296,7 +284,7 @@ std::pair<std::string, steps_t> Finder::isOptimizedBetter(
   if (ProgramUtil::hasLoopWithConstantNumIterations(optimized)) {
     // independently of the existing program, we stop here because
     // otherwise it yields fake optimization of constant loops
-    return result;
+    return not_better;
   }
 
   // get extended sequence
@@ -306,19 +294,16 @@ std::pair<std::string, steps_t> Finder::isOptimizedBetter(
   }
 
   // evaluate optimized program for fixed number of terms
-  static const int64_t num_terms = 4000;  // magic number
+  static const int64_t num_terms = OeisSequence::EXTENDED_SEQ_LENGTH;
   Sequence tmp;
-  if (optimized_steps.runs == 0) {  // eval optimized only if needed!
-    optimized_steps = evaluator.eval(optimized, tmp, num_terms, false);
-  }
-  result.second = optimized_steps;
+  auto optimized_steps = evaluator.eval(optimized, tmp, num_terms, false);
 
   // check if the first decreasing/non-increasing term is beyond the known
   // sequence terms => fake "better" program
   const int64_t s = terms.size();
   if (tmp.get_first_delta_lt(Number::ZERO) >= s ||  // decreasing
       tmp.get_first_delta_lt(Number::ONE) >= s) {   // non-increasing
-    return result;                                  // => fake "better" program
+    return not_better;                              // => fake "better" program
   }
 
   // evaluate existing program for same number of terms
@@ -326,31 +311,28 @@ std::pair<std::string, steps_t> Finder::isOptimizedBetter(
 
   // compare number of successfully computed terms
   if (optimized_steps.runs > existing_steps.runs) {
-    result.first = "Better";
-    return result;
+    return "Better";
   } else if (optimized_steps.runs < existing_steps.runs) {
-    return result;  // worse
+    return not_better;  // worse
   }
 
   // compare number of "bad" operations
   auto optimized_bad_count = getBadOpsCount(optimized);
   auto existing_bad_count = getBadOpsCount(existing);
   if (optimized_bad_count < existing_bad_count) {
-    result.first = "Simpler";
-    return result;
+    return "Simpler";
   } else if (optimized_bad_count > existing_bad_count) {
-    return result;  // worse
+    return not_better;  // worse
   }
 
   // ...and compare number of execution cycles
   if (optimized_steps.total < existing_steps.total) {
-    result.first = "Faster";
-    return result;
+    return "Faster";
   } else if (optimized_steps.total > existing_steps.total) {
-    return result;  //  worse
+    return not_better;  //  worse
   }
 
-  return result;  // not better or worse => no change
+  return not_better;  // not better or worse => no change
 }
 
 void Finder::notifyInvalidMatch(size_t id) {

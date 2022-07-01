@@ -381,9 +381,10 @@ bool AdaptiveScheduler::isTargetReached() {
     // check every 500ms
     speed = (500 * total_checks) / std::max<int64_t>(milliseconds, 1);
     next_check += std::min<int64_t>(std::max<int64_t>(speed, 1), 1000);
-    // Log::get().info("next check " + std::to_string(next_check) + " speed " +
-    //                std::to_string(speed) + " target " +
-    //                std::to_string(target_milliseconds));
+    // Log::get().info(
+    //    "Next check " + std::to_string(next_check - current_checks) +
+    //    "; Speed: " + std::to_string(speed) +
+    //    "; Target: " + std::to_string(target_milliseconds / 1000) + "s");
   }
   return false;
 }
