@@ -203,7 +203,12 @@ void Commands::profile(const std::string& path) {
 
 void Commands::mine() {
   initLog(false);
-  Miner miner(settings);
+  std::unique_ptr<ProgressMonitor> progress_monitor;
+  if (settings.num_mine_hours > 0) {
+    const int64_t target_seconds = settings.num_mine_hours * 3600;
+    progress_monitor.reset(new ProgressMonitor(target_seconds, "", "", 0));
+  }
+  Miner miner(settings, Miner::DEFAULT_LOG_INTERVAL, progress_monitor.get());
   miner.mine();
 }
 

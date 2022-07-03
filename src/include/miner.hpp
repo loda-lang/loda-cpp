@@ -25,8 +25,9 @@ class Miner {
     std::vector<Matcher::Config> matchers;
   };
 
-  Miner(const Settings &settings,
-        int64_t log_interval = 120,  // 2 minutes (magic number)
+  static constexpr int64_t DEFAULT_LOG_INTERVAL = 120;  // 2 minutes
+
+  Miner(const Settings &settings, int64_t log_interval = DEFAULT_LOG_INTERVAL,
         ProgressMonitor *progress_monitor = nullptr);
 
   void mine();

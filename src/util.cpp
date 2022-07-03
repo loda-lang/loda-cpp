@@ -453,16 +453,12 @@ double ProgressMonitor::getProgress() {
 }
 
 void ProgressMonitor::writeProgress() {
-  if (progress_file.empty() || checkpoint_file.empty()) {
-    Log::get().error("Error writing progress: missing file names", false);
-    return;
-  }
-  {
+  if (!progress_file.empty()) {
     std::ofstream progress_out(progress_file);
     progress_out.precision(3);
     progress_out << std::fixed << getProgress() << std::endl;
   }
-  {
+  if (!checkpoint_file.empty()) {
     std::ofstream checkpoint_out(checkpoint_file);
     checkpoint_out << encode(getElapsedSeconds()) << std::endl;
   }
