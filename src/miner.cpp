@@ -218,12 +218,20 @@ bool Miner::checkRegularTasks() {
   // regular task: log info
   if (log_scheduler.isTargetReached()) {
     log_scheduler.reset();
+    std::string progress;
+    if (progress_monitor) {
+      const double p = 100.0 * progress_monitor->getProgress();
+      std::stringstream buf;
+      buf.precision(1);
+      buf << ", " << std::fixed << p << "%";
+      progress = buf.str();
+    }
     if (num_processed) {
       Log::get().info("Processed " + std::to_string(num_processed) +
-                      " programs");
+                      " programs" + progress);
       num_processed = 0;
     } else {
-      Log::get().warn("Slow processing of programs");
+      Log::get().warn("Slow processing of programs" + progress);
     }
 
     // regular task: report progress and check termination

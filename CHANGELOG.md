@@ -10,6 +10,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Enhancements
 
 * Simplify comparison of programs (better/faster)
+* Include progress information in logs
 
 # v22.6.27
 
