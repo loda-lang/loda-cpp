@@ -34,6 +34,7 @@ OeisManager::OeisManager(const Settings &settings,
       evaluator(settings),
       finder(settings, evaluator),
       finder_initialized(false),
+      update_needed(false),
       optimizer(settings),
       minimizer(settings),
       loaded_count(0),
@@ -308,14 +309,13 @@ void OeisManager::update() {
   while (it != files.end()) {
     auto path = Setup::getOeisHome() + *it;
     age_in_days = getFileAgeInDays(path);
-    if (age_in_days >= 0 && age_in_days < Setup::getUpdateIntervalInDays()) {
-      // no need to update this file
-      it = files.erase(it);
-      continue;
+    if (age_in_days < 0 || age_in_days >= Setup::getUpdateIntervalInDays()) {
+      update_needed = true;
+      break;
     }
     it++;
   }
-  if (!files.empty()) {
+  if (update_needed) {
     Setup::checkLatestedVersion();
     if (age_in_days == -1) {
       Log::get().info("Creating OEIS index at \"" + Setup::getOeisHome() +
@@ -530,7 +530,8 @@ const Stats &OeisManager::getStats() {
 
     // check age of stats
     auto age_in_days = getFileAgeInDays(stats->getMainStatsFile(stats_home));
-    if (age_in_days < 0 || age_in_days >= Setup::getUpdateIntervalInDays()) {
+    if (update_needed || age_in_days < 0 ||
+        age_in_days >= Setup::getUpdateIntervalInDays()) {
       generateStats(age_in_days);
 
       // generate lists in server mode

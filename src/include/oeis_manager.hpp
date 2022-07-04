@@ -76,6 +76,7 @@ class OeisManager {
   Evaluator evaluator;
   Finder finder;
   bool finder_initialized;
+  bool update_needed;
 
   Optimizer optimizer;
   Minimizer minimizer;

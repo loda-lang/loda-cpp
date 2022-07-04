@@ -9,8 +9,9 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Enhancements
 
-* Simplify comparison of programs (better/faster)
 * Include progress information in logs
+* Simplify comparison of programs (better/faster)
+* Force stats regeneration after OEIS and programs update
 
 # v22.6.27
 
