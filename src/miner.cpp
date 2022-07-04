@@ -26,7 +26,7 @@ Miner::Miner(const Settings &settings, int64_t log_interval,
       log_scheduler(log_interval),
       metrics_scheduler(Metrics::get().publish_interval),
       cpuhours_scheduler(3600),  // 1 hour (fixed!!)
-      api_scheduler(600),        // 10 minutes (magic number)
+      api_scheduler(300),        // 5 minutes (magic number)
       reload_scheduler(21600),   // 6 hours (magic number)
       progress_monitor(progress_monitor),
       num_processed(0),
