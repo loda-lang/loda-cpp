@@ -35,6 +35,8 @@ class Miner {
   void submit(const std::string &path, std::string id);
 
  private:
+  void runMineLoop();
+
   bool checkRegularTasks();
 
   void reload();

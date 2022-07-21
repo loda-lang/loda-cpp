@@ -797,6 +797,9 @@ bool OeisManager::maintainProgram(size_t id) {
     // don't use incremental evaluation in maintenance to detect bugs
     auto check = evaluator.check(program, extended_seq,
                                  OeisSequence::DEFAULT_SEQ_LENGTH, id, false);
+    if (Signals::HALT) {
+      return true;  // interrupted evaluation
+    }
     is_okay = (check.first != status_t::ERROR);  // we allow warnings
   } catch (const std::exception &e) {
     Log::get().error(

@@ -78,6 +78,7 @@ Matcher::seq_programs_t Finder::findSequence(
     evaluator.eval(p, tmp_seqs);
     norm_seq = tmp_seqs[1];
   } catch (const std::exception &) {
+    // evaluation error
     return result;
   }
   Program p2 = p;

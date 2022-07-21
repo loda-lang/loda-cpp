@@ -53,6 +53,11 @@ void Miner::reload() {
 }
 
 void Miner::mine() {
+  // TODO: use thread if progress monitor
+  runMineLoop();
+}
+
+void Miner::runMineLoop() {
   Parser parser;
   std::stack<Program> progs;
   Sequence norm_seq;
@@ -213,6 +218,9 @@ void Miner::mine() {
 }
 
 bool Miner::checkRegularTasks() {
+  if (Signals::HALT) {
+    return false;  // stop immediately
+  }
   bool result = true;
 
   // regular task: log info

@@ -24,6 +24,10 @@ Evaluator::Evaluator(const Settings &settings)
       inc_evaluator(interpreter),
       is_debug(Log::get().level == Log::Level::DEBUG) {}
 
+void interruptEval() {
+  throw std::runtime_error("interrupted evaluation due to halt signal");
+}
+
 steps_t Evaluator::eval(const Program &p, Sequence &seq, int64_t num_terms,
                         const bool throw_on_error, const bool use_inc_eval) {
   if (num_terms < 0) {
@@ -46,6 +50,9 @@ steps_t Evaluator::eval(const Program &p, Sequence &seq, int64_t num_terms,
         mem.set(Program::INPUT_CELL, i);
         s = interpreter.run(p, mem);
         seq[i] = mem.get(Program::OUTPUT_CELL);
+      }
+      if (Signals::HALT) {
+        interruptEval();
       }
     } catch (const std::exception &) {
       seq.resize(i);
@@ -91,6 +98,9 @@ steps_t Evaluator::eval(const Program &p, std::vector<Sequence> &seqs,
     for (size_t s = 0; s < seqs.size(); s++) {
       seqs[s][i] = mem.get(s);
     }
+    if (Signals::HALT) {
+      interruptEval();
+    }
   }
   return steps;
 }
@@ -120,6 +130,9 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
         mem.set(Program::INPUT_CELL, i);
         result.second.add(interpreter.run(p, mem, id));
         out = mem.get(Program::OUTPUT_CELL);
+      }
+      if (Signals::HALT) {
+        interruptEval();
       }
     } catch (const std::exception &e) {
       if (settings.print_as_b_file) {
