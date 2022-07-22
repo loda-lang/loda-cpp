@@ -43,7 +43,7 @@ void Metrics::write(const std::vector<Entry> entries) const {
     out << entry.field;
     for (auto &l : entry.labels) {
       auto v = l.second;
-      std::replace(v.begin(), v.end(), ' ', '_');
+      replaceAll(v, " ", "\\ ");
       out << "," << l.first << "=" << v;
     }
     out << " value=" << entry.value << "\n";

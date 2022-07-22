@@ -2,11 +2,14 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+# v22.7.22
+
 ### Bugfixes
 
 * Interrupt long-running evaluations if time limit is reached
 * Fix handling of protected programs
 * Fix progress monitor for native mining (non-BOINC)
+* Fix escaping in Slack messages and metric labels
 
 ### Enhancements
 
