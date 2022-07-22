@@ -1,7 +1,9 @@
 #include "miner.hpp"
 
+#include <chrono>
 #include <fstream>
 #include <sstream>
+#include <thread>
 #include <unordered_set>
 
 #include "config.hpp"
@@ -18,12 +20,11 @@ const std::string Miner::ANONYMOUS("anonymous");
 const int64_t Miner::PROGRAMS_TO_FETCH = 2000;  // magic number
 const int64_t Miner::NUM_MUTATIONS = 100;       // magic number
 
-Miner::Miner(const Settings &settings, int64_t log_interval,
-             ProgressMonitor *progress_monitor)
+Miner::Miner(const Settings &settings, ProgressMonitor *progress_monitor)
     : settings(settings),
       mining_mode(Setup::getMiningMode()),
       validation_mode(ValidationMode::EXTENDED),  // set in reload()
-      log_scheduler(log_interval),
+      log_scheduler(36),                          // 1% steps (magic number)
       metrics_scheduler(Metrics::get().publish_interval),
       cpuhours_scheduler(3600),  // 1 hour (fixed!!)
       api_scheduler(300),        // 5 minutes (magic number)
@@ -53,6 +54,34 @@ void Miner::reload() {
 }
 
 void Miner::mine() {
+  if (progress_monitor) {
+    // start background thread for progress monitoring
+    auto monitor = progress_monitor;
+    auto delay = std::chrono::seconds(36);  // 1% steps (magic number)
+    std::thread thread([monitor, delay]() {
+      while (!monitor->isTargetReached()) {
+        monitor->writeProgress();
+        std::this_thread::sleep_for(delay);
+      }
+      Signals::HALT = true;
+    });
+
+    // run main mining loop
+    try {
+      runMineLoop();
+      auto mins = std::to_string(monitor->getElapsedSeconds() / 60);
+      Log::get().info("Finished mining after " + mins + " minutes");
+    } catch (const std::exception &e) {
+      Log::get().error("Mining error: " + std::string(e.what()));
+    }
+    thread.join();
+  } else {
+    // run mining loop w/o monitoring
+    runMineLoop();
+  }
+}
+
+void Miner::runMineLoop() {
   Parser parser;
   std::stack<Program> progs;
   Sequence norm_seq;
@@ -60,17 +89,9 @@ void Miner::mine() {
   Matcher::seq_programs_t seq_programs;
   update_program_result_t update_result;
 
-  // initial progress reporting
-  if (progress_monitor) {
-    progress_monitor->writeProgress();
-  }
-
   // load manager
   if (!manager) {
     reload();
-    if (progress_monitor) {
-      progress_monitor->writeProgress();
-    }
   }
 
   // validate modes
@@ -203,16 +224,12 @@ void Miner::mine() {
   while (num_reported_hours < settings.num_mine_hours) {
     reportCPUHour();
   }
-
-  // finish with log message
-  if (progress_monitor) {
-    int64_t mins = progress_monitor->getElapsedSeconds() / 60;
-    Log::get().info("Finished mining after " + std::to_string(mins) +
-                    " minutes");
-  }
 }
 
 bool Miner::checkRegularTasks() {
+  if (Signals::HALT) {
+    return false;  // stop immediately
+  }
   bool result = true;
 
   // regular task: log info
@@ -232,14 +249,6 @@ bool Miner::checkRegularTasks() {
       num_processed = 0;
     } else {
       Log::get().warn("Slow processing of programs" + progress);
-    }
-
-    // regular task: report progress and check termination
-    if (progress_monitor) {
-      if (progress_monitor->isTargetReached()) {
-        result = false;
-      }
-      progress_monitor->writeProgress();
     }
   }
 

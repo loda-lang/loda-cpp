@@ -4,6 +4,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Bugfixes
 
+* Interrupt long-running evaluations if time limit is reached
 * Fix handling of protected programs
 * Fix progress monitor for native mining (non-BOINC)
 

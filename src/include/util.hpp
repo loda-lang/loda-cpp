@@ -133,3 +133,8 @@ class Random {
  private:
   Random();
 };
+
+class Signals {
+ public:
+  static bool HALT;
+};

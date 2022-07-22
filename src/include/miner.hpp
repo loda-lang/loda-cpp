@@ -25,16 +25,15 @@ class Miner {
     std::vector<Matcher::Config> matchers;
   };
 
-  static constexpr int64_t DEFAULT_LOG_INTERVAL = 120;  // 2 minutes
-
-  Miner(const Settings &settings, int64_t log_interval = DEFAULT_LOG_INTERVAL,
-        ProgressMonitor *progress_monitor = nullptr);
+  Miner(const Settings &settings, ProgressMonitor *progress_monitor = nullptr);
 
   void mine();
 
   void submit(const std::string &path, std::string id);
 
  private:
+  void runMineLoop();
+
   bool checkRegularTasks();
 
   void reload();

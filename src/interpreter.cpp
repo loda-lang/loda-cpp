@@ -240,6 +240,11 @@ size_t Interpreter::run(const Program& p, Memory& mem) {
           "Maximum memory exceeded: " + std::to_string(mem.approximate_size()) +
           "; last operation: " + ProgramUtil::operationToString(op));
     }
+
+    // check for external interrupt
+    if (Signals::HALT) {
+      throw std::runtime_error("interpreter interrupted by halt signal");
+    }
   }
   if (is_debug) {
     Log::get().debug("Finished execution after " + std::to_string(cycles) +

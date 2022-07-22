@@ -16,6 +16,9 @@ bool Minimizer::minimize(Program& p, size_t num_terms) const {
   // calculate target sequence
   Sequence target_sequence;
   steps_t target_steps = evaluator.eval(p, target_sequence, num_terms, false);
+  if (Signals::HALT) {
+    return false;  // interrupted evaluation
+  }
   if (target_sequence.size() < settings.num_terms) {
     Log::get().error(
         "Cannot minimize program because there are too few terms: " +

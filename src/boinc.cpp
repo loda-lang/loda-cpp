@@ -79,8 +79,7 @@ void Boinc::run() {
   }
 
   // start mining!
-  Miner miner(settings, 60,  // reduced log interval: 1 minute
-              &progress_monitor);
+  Miner miner(settings, &progress_monitor);
   miner.mine();
 }
 

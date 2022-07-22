@@ -500,3 +500,5 @@ Random::Random() {
   seed = dev();
   gen.seed(seed);
 }
+
+bool Signals::HALT = false;
