@@ -5,7 +5,8 @@
         "map": "cpp",
         "chrono": "cpp",
         "utility": "cpp",
-        "stdexcept": "cpp"
+        "stdexcept": "cpp",
+        "thread": "cpp"
     },
     "makefile.makeDirectory": "src"
 }

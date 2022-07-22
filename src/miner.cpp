@@ -57,10 +57,11 @@ void Miner::mine() {
   if (progress_monitor) {
     // start background thread for progress monitoring
     auto monitor = progress_monitor;
-    std::thread thread([monitor]() {
+    auto delay = std::chrono::seconds(36);  // 1% steps (magic number)
+    std::thread thread([monitor, delay]() {
       while (!monitor->isTargetReached()) {
         monitor->writeProgress();
-        std::this_thread::sleep_for(std::chrono::seconds(30));  // magic number
+        std::this_thread::sleep_for(delay);
       }
       Signals::HALT = true;
     });
