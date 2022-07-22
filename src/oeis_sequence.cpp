@@ -14,7 +14,7 @@
 
 const size_t OeisSequence::DEFAULT_SEQ_LENGTH = 100;  // magic number
 
-const size_t OeisSequence::EXTENDED_SEQ_LENGTH = 2000;  // magic number
+const size_t OeisSequence::EXTENDED_SEQ_LENGTH = 1000;  // magic number
 
 const size_t OeisSequence::FULL_SEQ_LENGTH = 100000;  // magic number
 
