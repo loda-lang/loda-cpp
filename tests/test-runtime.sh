@@ -26,7 +26,7 @@ make clean ; make
 popd > /dev/null
 
 # start miner (2 hours)
-PROFILE=update
+PROFILE=mutate
 ./loda mine -i $PROFILE -H 2 &
 PID=$!
 
