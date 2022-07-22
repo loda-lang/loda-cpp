@@ -106,9 +106,9 @@ void Log::alert(const std::string &msg, AlertDetails details) {
 void Log::slack(const std::string &msg, AlertDetails details) {
   std::string cmd;
   if (!details.text.empty()) {
-    replaceAll(details.text, "\\", "\\\\");  // first escape backslashes
-    replaceAll(details.text, "\"", "\\\"");  // then the rest
     replaceAll(details.title, "\"", "\\\"");
+    replaceAll(details.text, "\"", "\\\"");
+    replaceAll(details.text, "\\/", "\\\\/");
     size_t index = 0;
     while (true) {
       index = details.text.find("$", index);
