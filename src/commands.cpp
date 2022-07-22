@@ -208,7 +208,7 @@ void Commands::mine() {
     const int64_t target_seconds = settings.num_mine_hours * 3600;
     progress_monitor.reset(new ProgressMonitor(target_seconds, "", "", 0));
   }
-  Miner miner(settings, Miner::DEFAULT_LOG_INTERVAL, progress_monitor.get());
+  Miner miner(settings, progress_monitor.get());
   miner.mine();
 }
 
