@@ -1,4 +1,4 @@
-CXXFLAGS += -Iinclude -Iexternal -O2 -g -Wall -fmessage-length=0 -std=c++17
+CXXFLAGS += -Iinclude -Iexternal -pthread -O2 -g -Wall -fmessage-length=0 -std=c++17
 LDFLAGS += -s
 
 ifdef LODA_VERSION
