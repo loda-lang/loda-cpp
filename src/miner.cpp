@@ -66,13 +66,14 @@ void Miner::mine() {
     });
 
     // run main mining loop
-    runMineLoop();
+    try {
+      runMineLoop();
+      auto mins = std::to_string(monitor->getElapsedSeconds() / 60);
+      Log::get().info("Finished mining after " + mins + " minutes");
+    } catch (const std::exception &e) {
+      Log::get().error("Mining error: " + std::string(e.what()));
+    }
     thread.join();
-
-    // finish with log message
-    int64_t mins = monitor->getElapsedSeconds() / 60;
-    Log::get().info("Finished mining after " + std::to_string(mins) +
-                    " minutes");
   } else {
     // run mining loop w/o monitoring
     runMineLoop();
