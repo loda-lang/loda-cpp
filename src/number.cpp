@@ -263,6 +263,21 @@ Number& Number::operator/=(const Number& n) {
   if (n.value == 0) {
     value = 0;
     big = INF_PTR;
+  } else if (value == MIN_INT) {
+    if (USE_BIG_NUMBER) {
+      convertToBig();
+      // It could be that *this == n. In that case, we just converted n to big
+      // as well!
+      if (n.big) {
+        (*big) /= (*n.big);
+      } else {
+        (*big) /= BigNumber(n.value);
+      }
+      checkInfBig();
+    } else {
+      value = 0;
+      big = INF_PTR;
+    }
   } else {
     value /= n.value;
   }
@@ -299,6 +314,21 @@ Number& Number::operator%=(const Number& n) {
   if (n.value == 0) {
     value = 0;
     big = INF_PTR;
+  } else if (value == MIN_INT) {
+    if (USE_BIG_NUMBER) {
+      convertToBig();
+      // It could be that *this == n. In that case, we just converted n to big
+      // as well!
+      if (n.big) {
+        (*big) %= (*n.big);
+      } else {
+        (*big) %= BigNumber(n.value);
+      }
+      checkInfBig();
+    } else {
+      value = 0;
+      big = INF_PTR;
+    }
   } else {
     value %= n.value;
   }

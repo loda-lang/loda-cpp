@@ -6,7 +6,8 @@
         "chrono": "cpp",
         "utility": "cpp",
         "stdexcept": "cpp",
-        "thread": "cpp"
+        "thread": "cpp",
+        "limits": "cpp"
     },
     "makefile.makeDirectory": "src"
 }

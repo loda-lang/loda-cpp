@@ -4,6 +4,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Bugfixes
 
+* Fix arithmetic exception
 * Catch errors of progress monitoring thread
 
 ### Enhancements
