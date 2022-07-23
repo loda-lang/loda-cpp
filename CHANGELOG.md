@@ -5,6 +5,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Enhancements
 
 * Reduce max number of terms to 1000
+* Print debug log message if CPU hour reporting fails
 
 # v22.7.22
 

@@ -76,7 +76,8 @@ bool ApiClient::postProgram(const std::string& path, bool fail_on_error) {
 
 void ApiClient::postCPUHour() {
   const std::string url = base_url + "cpuhours";
-  if (!WebClient::postFile(url, {})) {
+  if (!WebClient::postFile(url, {}) &&
+      !WebClient::postFile(url, {}, {}, true)) {
     Log::get().warn("Error reporting CPU hour");
   }
 }
