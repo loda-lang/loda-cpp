@@ -5,12 +5,13 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Bugfixes
 
 * Fix arithmetic exception
-* Catch errors of progress monitoring thread
+* Fix segmentation fault due to static linking problem
 
 ### Enhancements
 
 * Reduce max number of terms to 1000
 * Print debug log message if CPU hour reporting fails
+* Catch errors of progress monitoring thread
 
 # v22.7.22
 
