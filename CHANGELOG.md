@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Bugfixes
+
+* Catch errors of progress monitoring thread
+
 ### Enhancements
 
 * Reduce max number of terms to 1000

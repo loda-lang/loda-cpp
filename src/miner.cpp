@@ -54,11 +54,16 @@ void Miner::reload() {
 }
 
 void Miner::mine() {
+  // load manager
+  if (!manager) {
+    reload();
+  }
+
   if (progress_monitor) {
     // start background thread for progress monitoring
     auto monitor = progress_monitor;
-    auto delay = std::chrono::seconds(36);  // 1% steps (magic number)
-    std::thread thread([monitor, delay]() {
+    std::thread thread([monitor]() {
+      const auto delay = std::chrono::seconds(36);  // 1% steps (magic number)
       while (!monitor->isTargetReached()) {
         monitor->writeProgress();
         std::this_thread::sleep_for(delay);
@@ -71,10 +76,14 @@ void Miner::mine() {
       runMineLoop();
       auto mins = std::to_string(monitor->getElapsedSeconds() / 60);
       Log::get().info("Finished mining after " + mins + " minutes");
-    } catch (const std::exception &e) {
-      Log::get().error("Mining error: " + std::string(e.what()));
+    } catch (...) {
+      Log::get().error("Caught exception during mining", false);
     }
-    thread.join();
+    try {
+      thread.join();
+    } catch (...) {
+      Log::get().warn("Error joining progress monitoring thread");
+    }
   } else {
     // run mining loop w/o monitoring
     runMineLoop();
@@ -88,11 +97,6 @@ void Miner::runMineLoop() {
   Program program;
   Matcher::seq_programs_t seq_programs;
   update_program_result_t update_result;
-
-  // load manager
-  if (!manager) {
-    reload();
-  }
 
   // validate modes
   if (validation_mode == ValidationMode::BASIC &&
