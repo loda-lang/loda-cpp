@@ -9,13 +9,7 @@
 #include "util.hpp"
 
 // must be after util.hpp
-#ifdef _WIN64
-#include "win_process.hpp"
-#else
-#include <sys/wait.h>
-#include <unistd.h>
-typedef int64_t HANDLE;
-#endif
+#include "process.hpp"
 
 int dispatch(Settings settings, const std::vector<std::string>& args);
 
@@ -26,7 +20,7 @@ HANDLE fork(Settings settings, std::vector<std::string> args) {
   for (auto& a : args) {
     cmd += " " + a;
   }
-  return create_win_process(cmd);
+  return createWindowsProcess(cmd);
 #else
   int64_t child_pid = fork();
   if (child_pid == -1) {
@@ -40,23 +34,6 @@ HANDLE fork(Settings settings, std::vector<std::string> args) {
     return child_pid;
   }
   return -1;
-#endif
-}
-
-bool isChildProcessAlive(HANDLE pid) {
-  if (pid == 0) {
-    return false;
-  }
-#ifdef _WIN64
-  DWORD exit_code = STILL_ACTIVE;
-  GetExitCodeProcess(pid, &exit_code);
-  if (exit_code != STILL_ACTIVE) {
-    CloseHandle(pid);
-    return false;
-  }
-  return true;
-#else
-  return (waitpid(pid, nullptr, WNOHANG) == 0);
 #endif
 }
 

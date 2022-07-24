@@ -1,15 +1,12 @@
-#pragma once
+#include "process.hpp"
 
 #include <stdexcept>
-#include <string>
-
-// Header-only util functions for process managment on Windows.
 
 #ifdef _WIN64
 
 #include <windows.h>
 
-inline HANDLE create_win_process(const std::string& command) {
+HANDLE createWindowsProcess(const std::string& command) {
   STARTUPINFO si;
   PROCESS_INFORMATION pi;
   ZeroMemory(&si, sizeof(si));
@@ -26,3 +23,20 @@ inline HANDLE create_win_process(const std::string& command) {
 }
 
 #endif
+
+bool isChildProcessAlive(HANDLE pid) {
+  if (pid == 0) {
+    return false;
+  }
+#ifdef _WIN64
+  DWORD exit_code = STILL_ACTIVE;
+  GetExitCodeProcess(pid, &exit_code);
+  if (exit_code != STILL_ACTIVE) {
+    CloseHandle(pid);
+    return false;
+  }
+  return true;
+#else
+  return (waitpid(pid, nullptr, WNOHANG) == 0);
+#endif
+}
