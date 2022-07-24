@@ -11,7 +11,7 @@
 #include <stdexcept>
 #include <thread>
 
-#include "util.hpp"
+#include "log.hpp"
 
 // must be before <psapi.h>
 #ifdef _WIN64

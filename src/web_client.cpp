@@ -1,7 +1,7 @@
 #include "web_client.hpp"
 
 #include "file.hpp"
-#include "util.hpp"
+#include "log.hpp"
 
 enum WebClientType { WC_UNKNOWN = 0, WC_CURL = 1, WC_WGET = 2 };
 

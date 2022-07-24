@@ -6,12 +6,12 @@
 
 #include "config.hpp"
 #include "file.hpp"
+#include "log.hpp"
 #include "number.hpp"
 #include "oeis_list.hpp"
 #include "oeis_sequence.hpp"
 #include "program_util.hpp"
 #include "setup.hpp"
-#include "util.hpp"
 
 Finder::Finder(const Settings &settings, Evaluator &evaluator)
     : settings(settings),

@@ -9,6 +9,7 @@
 
 #include "distribution.hpp"
 #include "interpreter.hpp"
+#include "log.hpp"
 #include "number.hpp"
 #include "optimizer.hpp"
 #include "parser.hpp"

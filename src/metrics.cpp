@@ -5,6 +5,7 @@
 #include <random>
 
 #include "file.hpp"
+#include "log.hpp"
 #include "setup.hpp"
 #include "util.hpp"
 #include "web_client.hpp"

@@ -6,6 +6,7 @@
 #include "boinc.hpp"
 #include "evaluator.hpp"
 #include "iterator.hpp"
+#include "log.hpp"
 #include "miner.hpp"
 #include "minimizer.hpp"
 #include "mutator.hpp"

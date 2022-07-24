@@ -5,6 +5,7 @@
 #include "api_client.hpp"
 #include "commands.hpp"
 #include "file.hpp"
+#include "log.hpp"
 #include "setup.hpp"
 #include "util.hpp"
 

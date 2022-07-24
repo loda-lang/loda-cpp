@@ -3,6 +3,7 @@
 #include <fstream>
 
 #include "file.hpp"
+#include "log.hpp"
 #include "optimizer.hpp"
 #include "program_util.hpp"
 #include "semantics.hpp"

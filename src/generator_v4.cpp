@@ -10,6 +10,7 @@
 #include "file.hpp"
 #include "generator.hpp"
 #include "generator_v1.hpp"
+#include "log.hpp"
 #include "parser.hpp"
 #include "program_util.hpp"
 #include "setup.hpp"

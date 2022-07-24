@@ -1,5 +1,6 @@
 #include "matcher.hpp"
 
+#include "log.hpp"
 #include "optimizer.hpp"
 #include "reducer.hpp"
 #include "semantics.hpp"

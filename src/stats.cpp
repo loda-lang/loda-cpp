@@ -5,6 +5,7 @@
 #include <sstream>
 
 #include "file.hpp"
+#include "log.hpp"
 #include "oeis_sequence.hpp"
 #include "parser.hpp"
 #include "program_util.hpp"

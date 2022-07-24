@@ -2,6 +2,7 @@
 
 #include "file.hpp"
 #include "jute.h"
+#include "log.hpp"
 #include "setup.hpp"
 
 bool ConfigLoader::MAINTAINANCE_MODE = false;
