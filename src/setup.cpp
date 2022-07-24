@@ -12,9 +12,7 @@
 #include "web_client.hpp"
 
 // must be after util.hpp
-#ifdef _WIN64
-#include "win_process.hpp"
-#endif
+#include "process.hpp"
 
 const std::string Setup::LODA_SUBMIT_CPU_HOURS("LODA_SUBMIT_CPU_HOURS");
 
@@ -515,7 +513,7 @@ bool Setup::checkUpdate() {
       const std::string cmd = "\"" + exec_tmp +
                               "\" update-windows-executable \"" + exec_tmp +
                               "\" \"" + exec_local + "\"";
-      create_win_process(cmd);
+      createWindowsProcess(cmd);
 #else
       makeExecutable(exec_tmp);
       moveFile(exec_tmp, exec_local);
