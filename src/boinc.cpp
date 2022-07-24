@@ -5,6 +5,7 @@
 
 #include "api_client.hpp"
 #include "file.hpp"
+#include "log.hpp"
 #include "miner.hpp"
 
 Boinc::Boinc(const Settings& settings) : settings(settings) {}

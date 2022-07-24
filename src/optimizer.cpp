@@ -5,6 +5,7 @@
 #include <stack>
 
 #include "interpreter.hpp"
+#include "log.hpp"
 #include "number.hpp"
 #include "program_util.hpp"
 #include "semantics.hpp"

@@ -14,6 +14,7 @@
 #include "config.hpp"
 #include "file.hpp"
 #include "interpreter.hpp"
+#include "log.hpp"
 #include "number.hpp"
 #include "oeis_list.hpp"
 #include "optimizer.hpp"

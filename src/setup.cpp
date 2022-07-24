@@ -8,6 +8,7 @@
 
 #include "file.hpp"
 #include "jute.h"
+#include "log.hpp"
 #include "util.hpp"
 #include "web_client.hpp"
 

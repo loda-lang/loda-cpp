@@ -1,6 +1,7 @@
 #include "generator_v3.hpp"
 
 #include "generator.hpp"
+#include "log.hpp"
 #include "stats.hpp"
 
 inline size_t getIndex(size_t pos, size_t len) {

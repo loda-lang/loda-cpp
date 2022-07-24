@@ -4,11 +4,11 @@
 
 #include "evaluator.hpp"
 #include "evaluator_inc.hpp"
+#include "log.hpp"
 #include "oeis_sequence.hpp"
 #include "parser.hpp"
 #include "program_util.hpp"
 #include "setup.hpp"
-#include "util.hpp"
 
 void Benchmark::all() {
   operations();

@@ -2,6 +2,8 @@
 
 #include <sstream>
 
+#include "log.hpp"
+
 steps_t::steps_t() : min(0), max(0), total(0), runs(0) {}
 
 void steps_t::add(size_t s) {

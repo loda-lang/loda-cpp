@@ -15,6 +15,7 @@
 #include "generator_v1.hpp"
 #include "interpreter.hpp"
 #include "iterator.hpp"
+#include "log.hpp"
 #include "matcher.hpp"
 #include "miner.hpp"
 #include "minimizer.hpp"

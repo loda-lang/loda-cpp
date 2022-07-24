@@ -8,6 +8,7 @@
 #include "generator_v5.hpp"
 #include "generator_v6.hpp"
 #include "generator_v7.hpp"
+#include "log.hpp"
 #include "semantics.hpp"
 #include "util.hpp"
 

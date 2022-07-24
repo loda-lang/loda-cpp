@@ -3,9 +3,9 @@
 #include <fstream>
 
 #include "file.hpp"
+#include "log.hpp"
 #include "oeis_sequence.hpp"
 #include "setup.hpp"
-#include "util.hpp"
 
 std::string OeisList::LISTS_HOME;
 

@@ -10,6 +10,7 @@
 #include "file.hpp"
 #include "generator.hpp"
 #include "interpreter.hpp"
+#include "log.hpp"
 #include "mutator.hpp"
 #include "oeis_manager.hpp"
 #include "optimizer.hpp"
