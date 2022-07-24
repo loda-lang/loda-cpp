@@ -1,5 +1,4 @@
 CXXFLAGS += -Iinclude -Iexternal -O2 -g -Wall -fmessage-length=0 -std=c++17
-LDFLAGS += -s
 
 ifdef LODA_VERSION
 CXXFLAGS += -DLODA_VERSION=$(LODA_VERSION)

@@ -9,17 +9,15 @@ This repository ([loda-cpp](https://github.com/loda-lang/loda-cpp)) contains an 
 
 To install LODA using binaries, please follow the [official installation instructions](http://loda-lang.org/install/).
 
-Alternatively, you can also build it from sources. You need the `make` tool and a standard C++ compiler. It has been tested on Linux and macOS and does not require any external libraries, but only the `curl`, `gzip` command-line tools. To build it, you need to run the following commands:
+Alternatively, you can also build it from sources. You need the `make` (`nmake` on Windows) tool and a standard C++ compiler. It is supported on Linux, macOS and Windows. It does not require any external libraries, but only the `curl`, `gzip` command-line tools. To build it, switch to the `src` folder and run the build command for your platform:
 
-```bash
-git clone git@github.com:loda-lang/loda-cpp.git
-cd loda-cpp/src && make && cd ..
-./loda setup
-```
+* Linux x86\_64: `make -f Makefile.linux-x86.mk`
+* Linux ARM64: `make -f Makefile.linux-arm64.mk`
+* macOS Intel: `make -f Makefile.macos-x86.mk`
+* macOS M1: `make -f Makefile.macos-arm64.mk`
+* Windows: `nmake /F Makefile.windows.mk`
 
-To do a simple test, you can run `loda eval A000045` to calculate the first terms of the Fibonacci sequence.
-
-To mine programs for OEIS sequences, you can run `loda mine` (single-core) or `loda mine -p` (multi-core).
+To do a simple test, you can run `loda eval A000045` to calculate the first terms of the Fibonacci sequence. Run `loda setup` to intialize the LODA home directory. To mine programs for OEIS sequences, you can run `loda mine` (single-core) or `loda mine -p` (multi-core).
 
 ## Usage
 
