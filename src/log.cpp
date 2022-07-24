@@ -1,9 +1,12 @@
 #include "log.hpp"
 
+#include <algorithm>
 #include <chrono>
+#include <fstream>
 #include <iostream>
 
 #include "file.hpp"
+#include "setup.hpp"
 
 enum TwitterClient {
   TW_UNKNOWN = 0,
