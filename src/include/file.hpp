@@ -51,6 +51,8 @@ std::string getFileAsString(const std::string &filename);
 
 int64_t getFileAgeInDays(const std::string &path);
 
+size_t getMemUsage();
+
 std::map<std::string, std::string> readXML(const std::string &path);
 
 int64_t getJInt(jute::jValue &v, const std::string &key, int64_t def);
