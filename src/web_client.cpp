@@ -67,7 +67,6 @@ bool WebClient::postFile(const std::string &url, const std::string &file_path,
       } else {
         cmd += " --data-binary \"@" + file_path + "\"";
       }
-      cmd += " " + url;
       break;
     }
     case WC_WGET: {
@@ -77,12 +76,17 @@ bool WebClient::postFile(const std::string &url, const std::string &file_path,
         cmd += " --user '" + auth.substr(0, colon) + "' --password '" +
                auth.substr(colon + 1) + "'";
       }
-      cmd += " --post-file \"" + file_path + "\" " + url;
+      if (file_path.empty()) {
+        cmd += " --post-data \"\"";
+      } else {
+        cmd += " --post-file \"" + file_path + "\"";
+      }
       break;
     }
     default:
       Log::get().error("Unsupported web client for POST request", true);
   }
+  cmd += " " + url;
   const std::string msg = "Executing command: " + cmd;
   if (enable_debug) {
     Log::get().info(msg);

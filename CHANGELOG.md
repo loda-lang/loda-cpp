@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Bugfixes
+
+* Fix CPU hour reporting using `wget`
+
 ### Enhancements
 
 * Increase max number of interpreter cycles to 10 million
