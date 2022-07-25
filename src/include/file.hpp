@@ -26,7 +26,7 @@ void moveFile(const std::string &from, const std::string &to);
 #ifdef _WIN64
 void ensureEnv(const std::string &key, const std::string &value);
 
-void fixWindowsEnv();
+void fixWindowsEnv(std::string project_dir = "");
 #endif
 
 void gunzip(const std::string &path);

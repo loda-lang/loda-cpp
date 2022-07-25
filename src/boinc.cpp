@@ -45,7 +45,7 @@ void Boinc::run() {
   // check environment
   Log::get().info("Checking environment");
 #ifdef _WIN64
-  fixWindowsEnv();
+  fixWindowsEnv(project_dir);
   ensureEnv("TMP", project_dir);
   ensureEnv("TEMP", project_dir);
 #else
