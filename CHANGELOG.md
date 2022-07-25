@@ -6,6 +6,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Fix CPU hour reporting using `wget`
 
+### Features
+
+* Embedded `git` for BOINC on Windows
+
 ### Enhancements
 
 * Increase max number of interpreter cycles to 10 million

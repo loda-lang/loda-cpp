@@ -33,6 +33,8 @@
 #include <mach/mach.h>
 #endif
 
+#include "web_client.hpp"
+
 void replaceAll(std::string &str, const std::string &from,
                 const std::string &to) {
   if (from.empty()) {
@@ -87,12 +89,12 @@ std::string getPath() {
   return "";
 }
 
-void execCmd(const std::string &cmd) {
+void execCmd(const std::string &cmd, bool fail_on_error = true) {
   auto exit_code = system(cmd.c_str());
   if (exit_code != 0) {
     Log::get().error("Error executing command (exit code " +
                          std::to_string(exit_code) + "): " + cmd,
-                     true);
+                     fail_on_error);
   }
 }
 
@@ -117,7 +119,7 @@ void ensureEnv(const std::string &key, const std::string &value) {
   }
 }
 
-void fixWindowsEnv() {
+void fixWindowsEnv(std::string project_dir) {
   const std::string sys32 = "C:\\WINDOWS\\system32";
   ensureEnv("COMSPEC", sys32 + FILE_SEP + "cmd.exe");
   ensureEnv("SYSTEMROOT", "C:\\WINDOWS");
@@ -131,12 +133,18 @@ void fixWindowsEnv() {
     program_files = std::string(p);
   }
   ensureTrailingFileSep(program_files);
+  if (!project_dir.empty()) {
+    ensureTrailingFileSep(project_dir);
+  }
   bool update = false;
   if (path.find("Git\\cmd") == std::string::npos) {
     if (!path.empty()) {
       path += ";";
     }
     path += program_files + "Git\\cmd";
+    if (!project_dir.empty()) {
+      path += ";" + project_dir + "git\\cmd";
+    }
     update = true;
   }
   if (path.find("Git\\usr\\bin") == std::string::npos) {
@@ -144,9 +152,25 @@ void fixWindowsEnv() {
       path += ";";
     }
     path += program_files + "Git\\usr\\bin";
+    if (!project_dir.empty()) {
+      path += ";" + project_dir + "git\\usr\\bin";
+    }
     update = true;
   }
   if (update) {
+    const std::string mingit_dir = project_dir + "git";
+    if (!project_dir.empty() && !isDir(mingit_dir)) {
+      ensureDir(mingit_dir);
+      const std::string mingit_url =
+          "https://github.com/git-for-windows/git/releases/download/"
+          "v2.37.1.windows.1/MinGit-2.37.1-64-bit.zip";
+      const std::string mingit_zip = project_dir + "mingit.zip";
+      if (WebClient::get(mingit_url, mingit_zip, false, false)) {
+        execCmd("powershell -command \"Expand-Archive -Force '" + mingit_zip +
+                "' '" + mingit_dir + "'\"");
+      }
+      std::remove(mingit_zip.c_str());
+    }
     putEnv("PATH", path);
   }
 }
