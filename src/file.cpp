@@ -21,6 +21,7 @@
 #ifdef _WIN64
 #include <io.h>
 #include <psapi.h>
+#include <windows.h>
 #else
 #include <sys/file.h>
 #include <sys/stat.h>
@@ -295,6 +296,7 @@ int64_t getFileAgeInDays(const std::string &path) {
   return -1;
 }
 
+// TODO: move this to process.hpp
 size_t getMemUsage() {
   size_t mem_usage = 0;
 #if __linux__
@@ -323,6 +325,54 @@ size_t getMemUsage() {
   }
 #endif
   return mem_usage;
+}
+
+std::map<std::string, std::string> readXML(const std::string &path) {
+  std::map<std::string, std::string> result;
+  std::ifstream in(path);
+  std::string line, key, value;
+  while (std::getline(in, line)) {
+    auto b = line.find('<');
+    if (b == std::string::npos) {
+      continue;
+    }
+    line = line.substr(b + 1);
+    b = line.find('>');
+    if (b == std::string::npos) {
+      continue;
+    }
+    key = line.substr(0, b);
+    line = line.substr(b + 1);
+    b = line.find("</");
+    if (b == std::string::npos) {
+      continue;
+    }
+    value = line.substr(0, b);
+    result[key] = value;
+    Log::get().debug("read xml tag: " + key + "=" + value);
+  }
+  return result;
+}
+
+int64_t getJInt(jute::jValue &v, const std::string &key, int64_t def) {
+  if (v[key].get_type() == jute::jType::JNUMBER) {
+    return v[key].as_int();
+  }
+  return def;
+}
+
+double getJDouble(jute::jValue &v, const std::string &key, double def) {
+  if (v[key].get_type() == jute::jType::JNUMBER) {
+    return v[key].as_double();
+  }
+  return def;
+}
+
+bool getJBool(jute::jValue &v, const std::string &key, bool def) {
+  if (v[key].get_type() == jute::jType::JBOOLEAN) {
+    return v[key].as_bool();
+  }
+  return def;
 }
 
 FolderLock::FolderLock(std::string folder) {

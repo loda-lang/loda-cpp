@@ -83,30 +83,3 @@ void Boinc::run() {
   Miner miner(settings, &progress_monitor);
   miner.mine();
 }
-
-std::map<std::string, std::string> Boinc::readXML(const std::string& path) {
-  std::map<std::string, std::string> result;
-  std::ifstream in(path);
-  std::string line, key, value;
-  while (std::getline(in, line)) {
-    auto b = line.find('<');
-    if (b == std::string::npos) {
-      continue;
-    }
-    line = line.substr(b + 1);
-    b = line.find('>');
-    if (b == std::string::npos) {
-      continue;
-    }
-    key = line.substr(0, b);
-    line = line.substr(b + 1);
-    b = line.find("</");
-    if (b == std::string::npos) {
-      continue;
-    }
-    value = line.substr(0, b);
-    result[key] = value;
-    Log::get().debug("read xml tag: " + key + "=" + value);
-  }
-  return result;
-}

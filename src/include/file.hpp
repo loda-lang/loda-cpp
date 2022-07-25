@@ -1,7 +1,10 @@
 #pragma once
 
 #include <filesystem>
+#include <map>
 #include <string>
+
+#include "jute.h"
 
 #ifdef _WIN64
 static constexpr char FILE_SEP = '\\';
@@ -49,6 +52,14 @@ std::string getFileAsString(const std::string &filename);
 int64_t getFileAgeInDays(const std::string &path);
 
 size_t getMemUsage();
+
+std::map<std::string, std::string> readXML(const std::string &path);
+
+int64_t getJInt(jute::jValue &v, const std::string &key, int64_t def);
+
+double getJDouble(jute::jValue &v, const std::string &key, double def);
+
+bool getJBool(jute::jValue &v, const std::string &key, bool def);
 
 class FolderLock {
  public:
