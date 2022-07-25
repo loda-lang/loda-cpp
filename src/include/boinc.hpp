@@ -8,8 +8,6 @@ class Boinc {
 
   void run();
 
-  std::map<std::string, std::string> readXML(const std::string& path);
-
  private:
   Settings settings;
 };

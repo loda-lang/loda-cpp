@@ -1,32 +1,10 @@
 #include "config.hpp"
 
 #include "file.hpp"
-#include "jute.h"
 #include "log.hpp"
 #include "setup.hpp"
 
 bool ConfigLoader::MAINTAINANCE_MODE = false;
-
-int64_t get_jint(jute::jValue &v, const std::string &key, int64_t def) {
-  if (v[key].get_type() == jute::jType::JNUMBER) {
-    return v[key].as_int();
-  }
-  return def;
-}
-
-double get_jdouble(jute::jValue &v, const std::string &key, double def) {
-  if (v[key].get_type() == jute::jType::JNUMBER) {
-    return v[key].as_double();
-  }
-  return def;
-}
-
-bool get_jbool(jute::jValue &v, const std::string &key, bool def) {
-  if (v[key].get_type() == jute::jType::JBOOLEAN) {
-    return v[key].as_bool();
-  }
-  return def;
-}
 
 std::string get_template(std::string t) {
   static const std::string h(
@@ -52,15 +30,15 @@ std::vector<Generator::Config> loadGeneratorConfigs(
       continue;
     }
     Generator::Config c;
-    c.version = get_jint(g, "version", 1);
+    c.version = getJInt(g, "version", 1);
     c.miner = miner;
-    c.length = get_jint(g, "length", 20);
-    c.max_constant = get_jint(g, "maxConstant", 4);
-    c.max_index = get_jint(g, "maxIndex", 4);
-    c.mutation_rate = get_jdouble(g, "mutationRate", 0.3);
-    c.loops = get_jbool(g, "loops", true);
-    c.calls = get_jbool(g, "calls", true);
-    c.indirect_access = get_jbool(g, "indirectAccess", false);
+    c.length = getJInt(g, "length", 20);
+    c.max_constant = getJInt(g, "maxConstant", 4);
+    c.max_index = getJInt(g, "maxIndex", 4);
+    c.mutation_rate = getJDouble(g, "mutationRate", 0.3);
+    c.loops = getJBool(g, "loops", true);
+    c.calls = getJBool(g, "calls", true);
+    c.indirect_access = getJBool(g, "indirectAccess", false);
     auto t = g["template"].get_type();
     switch (t) {
       case jute::jType::JSTRING: {
@@ -140,7 +118,7 @@ Miner::Config ConfigLoader::load(const Settings &settings) {
       }
 
       // load matcher configs
-      bool backoff = get_jbool(m, "backoff", true);
+      bool backoff = getJBool(m, "backoff", true);
       auto matchers = m["matchers"];
       for (int j = 0; j < matchers.size(); j++) {
         Matcher::Config mc;

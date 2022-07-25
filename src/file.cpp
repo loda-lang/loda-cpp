@@ -13,23 +13,14 @@
 
 #include "log.hpp"
 
-// must be before <psapi.h>
-#ifdef _WIN64
-#include <windows.h>
-#endif
-
 #ifdef _WIN64
 #include <io.h>
-#include <psapi.h>
+#include <windows.h>
 #else
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#endif
-
-#if __MACH__
-#include <mach/mach.h>
 #endif
 
 void replaceAll(std::string &str, const std::string &from,
@@ -295,34 +286,52 @@ int64_t getFileAgeInDays(const std::string &path) {
   return -1;
 }
 
-size_t getMemUsage() {
-  size_t mem_usage = 0;
-#if __linux__
-  auto fp = fopen("/proc/self/statm", "r");
-  if (fp) {
-    long rss = 0;
-    if (fscanf(fp, "%*s%ld", &rss) != 1) {
-      rss = 0;
+std::map<std::string, std::string> readXML(const std::string &path) {
+  std::map<std::string, std::string> result;
+  std::ifstream in(path);
+  std::string line, key, value;
+  while (std::getline(in, line)) {
+    auto b = line.find('<');
+    if (b == std::string::npos) {
+      continue;
     }
-    fclose(fp);
-    mem_usage = (size_t)(rss) * (size_t)(sysconf(_SC_PAGE_SIZE));
+    line = line.substr(b + 1);
+    b = line.find('>');
+    if (b == std::string::npos) {
+      continue;
+    }
+    key = line.substr(0, b);
+    line = line.substr(b + 1);
+    b = line.find("</");
+    if (b == std::string::npos) {
+      continue;
+    }
+    value = line.substr(0, b);
+    result[key] = value;
+    Log::get().debug("read xml tag: " + key + "=" + value);
   }
-#elif __MACH__
-  mach_msg_type_number_t count = TASK_VM_INFO_COUNT;
-  task_vm_info_data_t info;
-  auto kr = task_info(mach_task_self(), TASK_VM_INFO_PURGEABLE,
-                      reinterpret_cast<task_info_t>(&info), &count);
-  if (kr == KERN_SUCCESS) {
-    mem_usage = info.phys_footprint;
+  return result;
+}
+
+int64_t getJInt(jute::jValue &v, const std::string &key, int64_t def) {
+  if (v[key].get_type() == jute::jType::JNUMBER) {
+    return v[key].as_int();
   }
-#elif _WIN64
-  PROCESS_MEMORY_COUNTERS pmc;
-  auto result = GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc));
-  if (result) {
-    mem_usage = pmc.WorkingSetSize;
+  return def;
+}
+
+double getJDouble(jute::jValue &v, const std::string &key, double def) {
+  if (v[key].get_type() == jute::jType::JNUMBER) {
+    return v[key].as_double();
   }
-#endif
-  return mem_usage;
+  return def;
+}
+
+bool getJBool(jute::jValue &v, const std::string &key, bool def) {
+  if (v[key].get_type() == jute::jType::JBOOLEAN) {
+    return v[key].as_bool();
+  }
+  return def;
 }
 
 FolderLock::FolderLock(std::string folder) {

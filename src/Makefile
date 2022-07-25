@@ -16,10 +16,10 @@ loda: external/jute.h external/jute.cpp $(OBJS)
 	du -sh loda
 
 external/jute.h:
-	mkdir -p external && curl -sS -o external/jute.h https://raw.githubusercontent.com/amir-s/jute/master/jute.h
+	mkdir -p external && curl -sS -o external/jute.h https://raw.githubusercontent.com/ckrause/jute/master/jute.h
 
 external/jute.cpp:
-	mkdir -p external && curl -sS -o external/jute.cpp https://raw.githubusercontent.com/amir-s/jute/master/jute.cpp
+	mkdir -p external && curl -sS -o external/jute.cpp https://raw.githubusercontent.com/ckrause/jute/master/jute.cpp
 
 clean:
 	rm -R -f $(OBJS) loda ../loda external

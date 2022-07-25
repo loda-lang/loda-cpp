@@ -24,6 +24,7 @@
 #include "oeis_manager.hpp"
 #include "optimizer.hpp"
 #include "parser.hpp"
+#include "process.hpp"
 #include "program_util.hpp"
 #include "semantics.hpp"
 #include "setup.hpp"
