@@ -158,6 +158,10 @@ void fixWindowsEnv(std::string project_dir) {
     update = true;
   }
   if (update) {
+    // first set the path
+    putEnv("PATH", path);
+
+    // then fetch the embedded git
     const std::string mingit_dir = project_dir + "git";
     if (!project_dir.empty() && !isDir(mingit_dir)) {
       ensureDir(mingit_dir);
@@ -171,7 +175,6 @@ void fixWindowsEnv(std::string project_dir) {
       }
       std::remove(mingit_zip.c_str());
     }
-    putEnv("PATH", path);
   }
 }
 #endif
