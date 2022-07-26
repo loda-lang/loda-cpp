@@ -2,6 +2,8 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+# v22.7.26
+
 ### Bugfixes
 
 * Fix CPU hour reporting using `wget`
@@ -9,6 +11,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Features
 
 * Embedded `git` for BOINC on Windows
+* Read parameters from BOINC task input
 
 ### Enhancements
 

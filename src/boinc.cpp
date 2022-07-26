@@ -33,7 +33,7 @@ void Boinc::run() {
 
   // log debugging info
   Log::get().info("Platform: " + Version::PLATFORM +
-                  ", user name: " + user_name + ", hostid: " + hostid);
+                  ", user name: " + user_name + ", host ID: " + hostid);
 
   // initialize setup
   Setup::setLodaHome(project_dir);
@@ -58,8 +58,36 @@ void Boinc::run() {
   }
 #endif
 
-  // pick a random miner profile if not mining in parallel
-  if (!settings.parallel_mining || settings.num_miner_instances == 1) {
+  // read input data
+  auto input_str = getFileAsString(slot_dir + "input");
+  if (!input_str.empty() && input_str[0] == '{') {
+    auto input = jute::parser::parse(input_str);
+
+    auto minSequenceTerms = input["minSequenceTerms"];
+    if (minSequenceTerms.get_type() == jute::JNUMBER) {
+      settings.num_terms = minSequenceTerms.as_int();
+      Log::get().info("Setting minimum sequence terms to " +
+                      std::to_string(settings.num_terms));
+    }
+
+    auto maxCycles = input["maxCycles"];
+    if (maxCycles.get_type() == jute::JNUMBER) {
+      settings.max_cycles = maxCycles.as_int();
+      Log::get().info("Setting maximum cycles to " +
+                      std::to_string(settings.max_cycles));
+    }
+
+    auto minerProfile = input["minerProfile"];
+    if (minerProfile.get_type() == jute::JSTRING) {
+      settings.miner_profile = minerProfile.as_string();
+      Log::get().info("Setting miner profile to \"" + settings.miner_profile +
+                      "\"");
+    }
+  }
+
+  // pick a random miner profile if not set already
+  if ((!settings.parallel_mining || settings.num_miner_instances == 1) &&
+      settings.miner_profile.empty()) {
     settings.miner_profile = std::to_string(Random::get().gen() % 100);
   }
 

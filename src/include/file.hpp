@@ -47,7 +47,8 @@ std::string getBashRc();
 
 std::string getNullRedirect();
 
-std::string getFileAsString(const std::string &filename);
+std::string getFileAsString(const std::string &filename,
+                            bool fail_on_error = true);
 
 int64_t getFileAgeInDays(const std::string &path);
 

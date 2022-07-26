@@ -295,7 +295,7 @@ std::string getNullRedirect() {
 #endif
 }
 
-std::string getFileAsString(const std::string &filename) {
+std::string getFileAsString(const std::string &filename, bool fail_on_error) {
   std::ifstream in(filename);
   std::string str;
   if (in.good()) {
@@ -306,7 +306,7 @@ std::string getFileAsString(const std::string &filename) {
     in.close();
   }
   if (str.empty()) {
-    Log::get().error("Error loading " + filename, true);
+    Log::get().error("Error loading " + filename, fail_on_error);
   }
   return str;
 }
