@@ -12,7 +12,7 @@ jobs:
     steps:
       - name: Generate Version
         id: generate-version
-        run: echo "::set-output name=version::$(date +"%-y.%-m.%-d")"
+        run: echo "::set-output name=version::22.7.27"
       - name: Create Release
         uses: actions/create-release@v1
         id: create-release
