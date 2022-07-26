@@ -121,11 +121,12 @@ void ensureEnv(const std::string &key, const std::string &value) {
 
 void fixWindowsEnv(std::string project_dir) {
   const std::string sys32 = "C:\\WINDOWS\\system32";
+  const std::string ps = "C:\\WINDOWS\\system32\\WindowsPowerShell\\v1.0";
   ensureEnv("COMSPEC", sys32 + FILE_SEP + "cmd.exe");
   ensureEnv("SYSTEMROOT", "C:\\WINDOWS");
   std::string path = getPath();
   if (path.empty()) {
-    path = sys32;
+    path = sys32 + ";" + ps;
   }
   std::string program_files = "C:\\Program Files";
   auto p = std::getenv("PROGRAMFILES");
@@ -171,7 +172,8 @@ void fixWindowsEnv(std::string project_dir) {
       const std::string mingit_zip = project_dir + "mingit.zip";
       if (WebClient::get(mingit_url, mingit_zip, false, false)) {
         execCmd("powershell -command \"Expand-Archive -Force '" + mingit_zip +
-                "' '" + mingit_dir + "'\"");
+                    "' '" + mingit_dir + "'\"",
+                false);
       }
       std::remove(mingit_zip.c_str());
     }
