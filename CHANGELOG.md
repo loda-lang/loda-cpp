@@ -2,7 +2,13 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
-# v22.7.26
+# v22.7.29
+
+### Bugfixes
+
+* Fix embedded `git` on Windows
+
+# v22.7.28
 
 ### Bugfixes
 
