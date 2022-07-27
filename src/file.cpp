@@ -159,23 +159,44 @@ void fixWindowsEnv(std::string project_dir) {
     update = true;
   }
   if (update) {
-    // first set the path
+    // 1) set the path so that we can use the web client!
     putEnv("PATH", path);
 
-    // then fetch the embedded git
-    const std::string mingit_dir = project_dir + "git";
-    if (!project_dir.empty() && !isDir(mingit_dir)) {
-      ensureDir(mingit_dir);
+    if (!project_dir.empty()) {
+      // 2) fetch mingit
+      const std::string mingit_zip = project_dir + "mingit.zip";
       const std::string mingit_url =
           "https://github.com/git-for-windows/git/releases/download/"
           "v2.37.1.windows.1/MinGit-2.37.1-64-bit.zip";
-      const std::string mingit_zip = project_dir + "mingit.zip";
-      if (WebClient::get(mingit_url, mingit_zip, false, false)) {
-        execCmd("powershell -command \"Expand-Archive -Force '" + mingit_zip +
-                    "' '" + mingit_dir + "'\"",
-                false);
+      if (!isFile(mingit_zip)) {
+        FolderLock lock(project_dir);
+        if (!isFile(mingit_zip)) {
+          WebClient::get(mingit_url, mingit_zip, false, false);
+        }
       }
-      std::remove(mingit_zip.c_str());
+
+      // 3) unzip mingit
+      const std::string mingit_dir = project_dir + "git";
+      const std::string bin_dir = mingit_dir + "\\usr\\bin";
+      if (isFile(mingit_zip) && !isDir(bin_dir)) {
+        FolderLock lock(project_dir);
+        if (!isDir(bin_dir)) {
+          ensureDir(mingit_dir);
+          execCmd("powershell -command \"Expand-Archive -Force '" + mingit_zip +
+                      "' '" + mingit_dir + "'\"",
+                  false);
+        }
+      }
+
+      // 4) fetch gzip.exe
+      const std::string gzip_exe = bin_dir + "\\gzip.exe";
+      if (isDir(bin_dir) && !isFile(gzip_exe)) {
+        FolderLock lock(bin_dir);
+        if (!isFile(gzip_exe)) {
+          WebClient::get("https://boinc.loda-lang.org/loda/dl/gzip.exe",
+                         gzip_exe, false, false);
+        }
+      }
     }
   }
 }
