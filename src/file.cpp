@@ -194,7 +194,7 @@ void fixWindowsEnv(std::string project_dir) {
         FolderLock lock(bin_dir);
         if (!isFile(gzip_exe)) {
           WebClient::get("https://boinc.loda-lang.org/loda/dl/gzip.exe",
-                         gzip_exe, false, false)
+                         gzip_exe, false, false);
         }
       }
     }
