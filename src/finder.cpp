@@ -254,6 +254,16 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
                                       const OeisSequence &seq) {
   static const std::string not_better;
 
+  // check if there are illegal recursions
+  // why is this not detected by the interpreter?
+  for (auto &op : optimized.ops) {
+    if (op.type == Operation::Type::SEQ &&
+        (op.source.type != Operand::Type::CONSTANT ||
+         op.source.value == Number(seq.id))) {
+      return not_better;
+    }
+  }
+
   // remove nops...
   optimizer.removeNops(existing);
   optimizer.removeNops(optimized);

@@ -72,7 +72,7 @@ void ensureDir(const std::string &path) {
 #else
       auto cmd = "mkdir -p \"" + dir + "\"";
 #endif
-      if (system(cmd.c_str()) != 0) {
+      if (system(cmd.c_str()) != 0 && !isDir(dir)) {
         Log::get().error("Error creating directory " + dir, true);
       }
     }

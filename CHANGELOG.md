@@ -2,6 +2,11 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Bugfixes
+
+* Fix race condition when creating directories
+* Improve detection of recursive calls
+
 # v22.7.29
 
 ### Bugfixes
