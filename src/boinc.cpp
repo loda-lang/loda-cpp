@@ -7,6 +7,7 @@
 #include "file.hpp"
 #include "log.hpp"
 #include "miner.hpp"
+#include "oeis_list.hpp"
 
 Boinc::Boinc(const Settings& settings) : settings(settings) {}
 
@@ -82,6 +83,13 @@ void Boinc::run() {
       settings.miner_profile = minerProfile.as_string();
       Log::get().info("Setting miner profile to \"" + settings.miner_profile +
                       "\"");
+    }
+
+    const bool deleteInvalidMatches =
+        getJBool(input, "deleteInvalidMatches", false);
+    if (deleteInvalidMatches) {
+      auto f = OeisList::getListsHome() + OeisList::INVALID_MATCHES_FILE;
+      std::remove(f.c_str());
     }
   }
 

@@ -7,15 +7,16 @@
 #include "oeis_sequence.hpp"
 #include "setup.hpp"
 
-std::string OeisList::LISTS_HOME;
+const std::string OeisList::INVALID_MATCHES_FILE("invalid_matches.txt");
 
 const std::string& OeisList::getListsHome() {
-  if (LISTS_HOME.empty()) {
+  static std::string lists_home;
+  if (lists_home.empty()) {
     // don't remove the trailing /
-    LISTS_HOME = Setup::getLodaHome() + "lists" + FILE_SEP;
-    ensureDir(LISTS_HOME);
+    lists_home = Setup::getLodaHome() + "lists" + FILE_SEP;
+    ensureDir(lists_home);
   }
-  return LISTS_HOME;
+  return lists_home;
 }
 
 void OeisList::loadList(const std::string& path,

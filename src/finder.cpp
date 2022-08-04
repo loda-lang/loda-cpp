@@ -356,7 +356,7 @@ void Finder::notifyInvalidMatch(size_t id) {
     scheduler.reset();
     Log::get().debug("Saving " + std::to_string(invalid_matches.size()) +
                      " invalid matches");
-    OeisList::mergeMap("invalid_matches.txt", invalid_matches);
+    OeisList::mergeMap(OeisList::INVALID_MATCHES_FILE, invalid_matches);
   }
 }
 

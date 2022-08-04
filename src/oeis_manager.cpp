@@ -59,7 +59,7 @@ void OeisManager::load() {
 
   // load invalid matches map
   const std::string invalid_matches_file =
-      OeisList::getListsHome() + "invalid_matches.txt";
+      OeisList::getListsHome() + OeisList::INVALID_MATCHES_FILE;
   try {
     OeisList::loadMap(invalid_matches_file, invalid_matches_map);
   } catch (const std::exception &) {

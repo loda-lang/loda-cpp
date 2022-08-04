@@ -5,7 +5,11 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Bugfixes
 
 * Fix race condition when creating directories
-* Improve detection of recursive calls
+* Fix detection of recursive calls
+
+### Enhancements
+
+* Delete invalid matches cache based on BOINC input flag
 
 # v22.7.29
 
