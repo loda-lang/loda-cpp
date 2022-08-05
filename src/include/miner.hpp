@@ -31,6 +31,8 @@ class Miner {
 
   void submit(const std::string &path, std::string id);
 
+  void setBaseProgram(const Program &p) { base_program = p; }
+
  private:
   void runMineLoop();
 
@@ -61,6 +63,7 @@ class Miner {
   AdaptiveScheduler api_scheduler;
   AdaptiveScheduler reload_scheduler;
   ProgressMonitor *progress_monitor;
+  Program base_program;
   int64_t num_processed;
   int64_t num_removed;
   int64_t num_reported_hours;

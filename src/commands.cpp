@@ -56,6 +56,9 @@ void Commands::help() {
   std::cout << "  check <program>     Check a program for an OEIS sequence "
                "(see -b)"
             << std::endl;
+  std::cout
+      << "  mutate <program>    Mutate a program and mine for OEIS sequences"
+      << std::endl;
   std::cout << "  submit <file> [id]  Submit a program for an OEIS sequence"
             << std::endl;
   std::cout << std::endl << "Targets:" << std::endl;
@@ -202,14 +205,29 @@ void Commands::profile(const std::string& path) {
   }
 }
 
-void Commands::mine() {
-  initLog(false);
+std::unique_ptr<ProgressMonitor> makeProgressMonitor(const Settings& settings) {
   std::unique_ptr<ProgressMonitor> progress_monitor;
   if (settings.num_mine_hours > 0) {
     const int64_t target_seconds = settings.num_mine_hours * 3600;
     progress_monitor.reset(new ProgressMonitor(target_seconds, "", "", 0));
   }
+  return progress_monitor;
+}
+
+void Commands::mine() {
+  initLog(false);
+  auto progress_monitor = makeProgressMonitor(settings);
   Miner miner(settings, progress_monitor.get());
+  miner.mine();
+}
+
+void Commands::mutate(const std::string& path) {
+  initLog(false);
+  Parser parser;
+  Program base_program = parser.parse(getProgramPathAndSeqId(path).first);
+  auto progress_monitor = makeProgressMonitor(settings);
+  Miner miner(settings, progress_monitor.get());
+  miner.setBaseProgram(base_program);
   miner.mine();
 }
 

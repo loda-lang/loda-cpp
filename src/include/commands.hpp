@@ -28,6 +28,8 @@ class Commands {
 
   void submit(const std::string& path, const std::string& id);
 
+  void mutate(const std::string& path);
+
   // hidden commands
 
   void boinc();

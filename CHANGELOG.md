@@ -2,6 +2,12 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Features
+
+* Added `mutate` command
+
+# v22.8.4
+
 ### Bugfixes
 
 * Fix race condition when creating directories

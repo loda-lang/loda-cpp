@@ -91,6 +91,16 @@ void Miner::mine() {
   }
 }
 
+std::string convertValidationModeToStr(ValidationMode mode) {
+  switch (mode) {
+    case ValidationMode::BASIC:
+      return "basic";
+    case ValidationMode::EXTENDED:
+      return "extended";
+  }
+  return "";
+}
+
 void Miner::runMineLoop() {
   Parser parser;
   std::stack<Program> progs;
@@ -99,25 +109,36 @@ void Miner::runMineLoop() {
   Matcher::seq_programs_t seq_programs;
   update_program_result_t update_result;
 
-  // validate modes
+  // check validate modes
   if (validation_mode == ValidationMode::BASIC &&
       mining_mode == MiningMode::MINING_MODE_CLIENT) {
     Log::get().error("Basic validation not supported in client mining mode",
                      true);
   }
 
-  // print info
-  std::string validation_mode_str;
-  switch (validation_mode) {
-    case ValidationMode::BASIC:
-      validation_mode_str = "basic";
-      break;
-    case ValidationMode::EXTENDED:
-      validation_mode_str = "extended";
-      break;
+  // prepare base program
+  std::string base_program_name;
+  if (!base_program.ops.empty()) {
+    if (!base_program.ops[0].comment.empty()) {
+      base_program_name = base_program.ops[0].comment;
+    }
+    ProgramUtil::removeOps(base_program, Operation::Type::NOP);
+    ProgramUtil::removeComments(base_program);
   }
-  Log::get().info("Mining programs in " + convertMiningModeToStr(mining_mode) +
-                  " mode (" + validation_mode_str + " validation mode)");
+
+  // print info
+  if (base_program.ops.empty()) {
+    Log::get().info("Mining programs in " +
+                    convertMiningModeToStr(mining_mode) + " mode (" +
+                    convertValidationModeToStr(validation_mode) +
+                    " validation mode)");
+  } else {
+    std::string msg = "Mutating program";
+    if (!base_program_name.empty()) {
+      msg += " " + base_program_name;
+    }
+    Log::get().info(msg);
+  }
 
   std::string submitted_by;
   current_fetch = (mining_mode == MINING_MODE_SERVER) ? PROGRAMS_TO_FETCH : 0;
@@ -140,8 +161,14 @@ void Miner::runMineLoop() {
           }
         }
       } else {
-        // client mode: generate new program
-        progs.push(multi_generator->generateProgram());
+        // client mode
+        if (base_program.ops.empty()) {
+          // generate new program
+          progs.push(multi_generator->generateProgram());
+        } else {
+          // mutate base program
+          mutator->mutateCopies(base_program, NUM_MUTATIONS, progs);
+        }
       }
     }
 

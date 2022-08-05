@@ -150,6 +150,8 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
     } else {
       commands.mine();
     }
+  } else if (cmd == "mutate") {
+    commands.mutate(args.at(1));
   } else if (cmd == "submit") {
     if (args.size() == 2) {
       commands.submit(args.at(1), "");
