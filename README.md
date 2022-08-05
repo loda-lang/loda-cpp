@@ -37,6 +37,7 @@ Core Commands:
 OEIS Commands:
   mine                Mine programs for OEIS sequences (see -i,-p)
   check <id>          Check a program for an OEIS sequence (see -b)
+  mutate <program>    Mutate a program and mine for OEIS sequences
   submit <file> [id]  Submit a program for an OEIS sequence
 
 Targets:

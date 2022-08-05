@@ -119,6 +119,9 @@ void Miner::runMineLoop() {
   // prepare base program
   std::string base_program_name;
   if (!base_program.ops.empty()) {
+    if (mining_mode == MiningMode::MINING_MODE_SERVER) {
+      Log::get().error("Mutate not supported in server mining mode", true);
+    }
     if (!base_program.ops[0].comment.empty()) {
       base_program_name = base_program.ops[0].comment;
     }
