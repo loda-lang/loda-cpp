@@ -77,6 +77,25 @@
         "binary",
         "decimal"
       ]
+    },
+    {
+      "name": "hard",
+      "overwrite": "none",
+      "backoff": true,
+      "generators": [
+        "v1",
+        "v2",
+        "v3",
+        "v5"
+      ],
+      "matchers": [
+        "direct",
+        "linear1",
+        "linear2",
+        "binary",
+        "decimal",
+        "delta"
+      ]
     }
   ],
   "generators": [
