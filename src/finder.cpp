@@ -67,7 +67,7 @@ Matcher::seq_programs_t Finder::findSequence(
   tmp_used_cells.clear();
   if (ProgramUtil::getUsedMemoryCells(p, tmp_used_cells, largest_used_cell,
                                       settings.max_memory) &&
-      largest_used_cell <= 100) {
+      largest_used_cell <= 100) {  // magic number
     max_index = largest_used_cell;
   }
 
@@ -307,6 +307,7 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
   // evaluate optimized program for fixed number of terms
   static const int64_t num_terms = OeisSequence::EXTENDED_SEQ_LENGTH;
   Sequence tmp;
+  evaluator.clearCaches();
   auto optimized_steps = evaluator.eval(optimized, tmp, num_terms, false);
 
   // check if the first decreasing/non-increasing term is beyond the known
@@ -318,6 +319,7 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
   }
 
   // evaluate existing program for same number of terms
+  evaluator.clearCaches();
   const auto existing_steps = evaluator.eval(existing, tmp, num_terms, false);
 
   // compare number of successfully computed terms
