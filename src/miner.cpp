@@ -19,6 +19,7 @@
 
 const std::string Miner::ANONYMOUS("anonymous");
 const int64_t Miner::PROGRAMS_TO_FETCH = 2000;  // magic number
+const int64_t Miner::MAX_BACKLOG = 1000;        // magic number
 const int64_t Miner::NUM_MUTATIONS = 100;       // magic number
 
 Miner::Miner(const Settings &settings, ProgressMonitor *progress_monitor)
@@ -127,6 +128,9 @@ void Miner::runMineLoop() {
     }
     ProgramUtil::removeOps(base_program, Operation::Type::NOP);
     ProgramUtil::removeComments(base_program);
+
+    // start with constants mutations; later do random mutation
+    mutator->mutateCopiesConstants(base_program, NUM_MUTATIONS, progs);
   }
 
   // print info
@@ -170,7 +174,7 @@ void Miner::runMineLoop() {
           progs.push(multi_generator->generateProgram());
         } else {
           // mutate base program
-          mutator->mutateCopies(base_program, NUM_MUTATIONS, progs);
+          mutator->mutateCopiesRandom(base_program, NUM_MUTATIONS, progs);
         }
       }
     }
@@ -236,8 +240,11 @@ void Miner::runMineLoop() {
             api_client->postProgram(program, 10);  // magic number
           }
           // mutate successful program
-          if (mining_mode != MINING_MODE_SERVER && progs.size() < 1000) {
-            mutator->mutateCopies(update_result.program, NUM_MUTATIONS, progs);
+          if (mining_mode != MINING_MODE_SERVER && progs.size() < MAX_BACKLOG) {
+            mutator->mutateCopiesConstants(update_result.program,
+                                           NUM_MUTATIONS / 2, progs);
+            mutator->mutateCopiesRandom(update_result.program,
+                                        NUM_MUTATIONS / 2, progs);
           }
         }
       }

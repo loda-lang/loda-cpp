@@ -122,10 +122,8 @@ void Mutator::mutateOperation(Operation &op, int64_t num_cells) {
   }
 }
 
-void Mutator::mutateCopies(const Program &program, size_t num_results,
-                           std::stack<Program> &result) {
-  num_results = num_results / 2;
-  mutateConstants(program, num_results, result);
+void Mutator::mutateCopiesRandom(const Program &program, size_t num_results,
+                                 std::stack<Program> &result) {
   for (size_t i = 0; i < num_results; i++) {
     auto p = program;
     mutateRandom(p);
@@ -133,8 +131,8 @@ void Mutator::mutateCopies(const Program &program, size_t num_results,
   }
 }
 
-void Mutator::mutateConstants(const Program &program, size_t num_results,
-                              std::stack<Program> &result) {
+void Mutator::mutateCopiesConstants(const Program &program, size_t num_results,
+                                    std::stack<Program> &result) {
   std::vector<size_t> indices;
   for (size_t i = 0; i < program.ops.size(); i++) {
     if (Operation::Metadata::get(program.ops[i].type).num_operands == 2 &&
