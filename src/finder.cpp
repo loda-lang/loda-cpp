@@ -322,11 +322,14 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
   evaluator.clearCaches();
   const auto existing_steps = evaluator.eval(existing, tmp, num_terms, false);
 
-  // compare number of successfully computed terms
-  if (optimized_steps.runs > existing_steps.runs) {
-    return "Better";
-  } else if (optimized_steps.runs < existing_steps.runs) {
-    return not_better;  // worse
+  // ensure a minimum number of known terms before comparing
+  if (terms.size() >= OeisSequence::DEFAULT_SEQ_LENGTH) {
+    // compare number of successfully computed terms
+    if (optimized_steps.runs > existing_steps.runs) {
+      return "Better";
+    } else if (optimized_steps.runs < existing_steps.runs) {
+      return not_better;  // worse
+    }
   }
 
   // compare number of "bad" operations
