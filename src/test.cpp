@@ -394,10 +394,13 @@ void Test::programUtil() {
                    "util" + FILE_SEP;
   primes_const_loop = parser.parse(base_path + "primes_const_loop.asm");
   primes_var_loop = parser.parse(base_path + "primes_var_loop.asm");
-  if (!ProgramUtil::hasLoopWithConstantNumIterations(primes_const_loop)) {
+  auto const_info = ProgramUtil::findConstantLoop(primes_const_loop);
+  auto var_info = ProgramUtil::findConstantLoop(primes_var_loop);
+  if (!const_info.has_constant_loop || const_info.index_lpb != 3 ||
+      const_info.constant_value.asInt() != 7776) {
     Log::get().error("Expected contant loop in primes_const_loop.asm", true);
   }
-  if (ProgramUtil::hasLoopWithConstantNumIterations(primes_var_loop)) {
+  if (var_info.has_constant_loop) {
     Log::get().error("Unexpected contant loop in primes_var_loop.asm", true);
   }
   auto p = parser.parse(OeisSequence(1041).getProgramPath());

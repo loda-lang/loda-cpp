@@ -17,7 +17,9 @@ class Minimizer {
   static int64_t getPowerOf(const Number &v);
 
  private:
-  bool removeClr(Program &p) const;
+  bool replaceClr(Program &p) const;
+
+  bool replaceConstantLoop(Program &p, const Sequence &seq, int64_t exp) const;
 
   bool check(const Program &p, const Sequence &seq, size_t max_total) const;
 
