@@ -223,10 +223,12 @@ Number ProgramUtil::getLargestConstant(const Program &p) {
   return largest;
 }
 
-bool ProgramUtil::hasLoopWithConstantNumIterations(const Program &p) {
+ProgramUtil::ConstantLoopInfo ProgramUtil::findConstantLoop(const Program &p) {
   // assumes that the program is optimized already
+  ProgramUtil::ConstantLoopInfo info;
   std::map<Number, Number> values;
-  for (auto &op : p.ops) {
+  for (size_t i = 0; i < p.ops.size(); i++) {
+    auto &op = p.ops[i];
     if (op.target.type != Operand::Type::DIRECT) {
       values.clear();
       continue;
@@ -238,8 +240,13 @@ bool ProgramUtil::hasLoopWithConstantNumIterations(const Program &p) {
         values.erase(op.target.value);
       }
     } else if (op.type == Operation::Type::LPB) {
-      if (values.find(op.target.value) != values.end()) {
-        return true;
+      auto it = values.find(op.target.value);
+      if (it != values.end()) {
+        // constant loop found!
+        info.has_constant_loop = true;
+        info.index_lpb = i;
+        info.constant_value = it->second;
+        return info;
       }
       values.clear();
     } else if (op.type == Operation::Type::LPE) {
@@ -248,7 +255,9 @@ bool ProgramUtil::hasLoopWithConstantNumIterations(const Program &p) {
       values.erase(op.target.value);
     }
   }
-  return false;
+  // no constant loop found
+  info.has_constant_loop = false;
+  return info;
 }
 
 std::pair<int64_t, int64_t> ProgramUtil::getEnclosingLoop(const Program &p,

@@ -292,7 +292,8 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
   }
 
   // check if there are loops with contant number of iterations involved
-  if (ProgramUtil::hasLoopWithConstantNumIterations(optimized)) {
+  auto info = ProgramUtil::findConstantLoop(optimized);
+  if (info.has_constant_loop) {
     // independently of the existing program, we stop here because
     // otherwise it yields fake optimization of constant loops
     return not_better;

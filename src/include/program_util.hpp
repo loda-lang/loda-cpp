@@ -45,7 +45,14 @@ class ProgramUtil {
 
   static Number getLargestConstant(const Program &p);
 
-  static bool hasLoopWithConstantNumIterations(const Program &p);
+  class ConstantLoopInfo {
+   public:
+    bool has_constant_loop;
+    size_t index_lpb;
+    Number constant_value;
+  };
+
+  static ConstantLoopInfo findConstantLoop(const Program &p);
 
   static std::pair<int64_t, int64_t> getEnclosingLoop(const Program &p,
                                                       int64_t op_index);

@@ -28,8 +28,20 @@ bool Minimizer::minimize(Program& p, size_t num_terms) const {
     return false;
   }
 
-  // remove "clr" operations
-  bool global_change = removeClr(p);
+  bool global_change = false;
+
+  // replace "clr" operations
+  if (replaceClr(p)) {
+    global_change = true;
+  }
+
+  // replace constant loops
+  for (int64_t exp = 2; exp <= 5; exp++) {
+    if (replaceConstantLoop(p, target_sequence, exp)) {
+      global_change = true;
+      break;
+    }
+  }
 
   // remove or replace operations
   bool local_change;
@@ -147,7 +159,7 @@ int64_t Minimizer::getPowerOf(const Number& v) {
   return 0;
 }
 
-bool Minimizer::removeClr(Program& p) const {
+bool Minimizer::replaceClr(Program& p) const {
   bool replaced = false;
   for (size_t i = 0; i < p.ops.size(); i++) {
     auto& op = p.ops[i];
@@ -171,6 +183,45 @@ bool Minimizer::removeClr(Program& p) const {
     }
   }
   return replaced;
+}
+
+bool Minimizer::replaceConstantLoop(Program& p, const Sequence& seq,
+                                    int64_t exp) const {
+  // check pre-conditions
+  auto info = ProgramUtil::findConstantLoop(p);
+  if (!info.has_constant_loop) {
+    return false;
+  }
+  if (info.constant_value < Number(100)) {  // magic number
+    return false;
+  }
+  if (info.index_lpb == 0) {
+    return false;
+  }
+  const Operation& old_mov = p.ops[info.index_lpb - 1];
+  const Operation& lpb = p.ops[info.index_lpb];
+  if (old_mov.type != Operation::Type::MOV || old_mov.target != lpb.target ||
+      old_mov.source.type != Operand::Type::CONSTANT) {
+    return false;
+  }
+
+  // apply change
+  auto backup = p;
+  Operation mov(Operation::Type::MOV, lpb.target,
+                Operand(Operand::Type::DIRECT, Number(Program::INPUT_CELL)));
+  Operation add(Operation::Type::ADD, lpb.target,
+                Operand(Operand::Type::CONSTANT, Number(2 * exp)));
+  Operation pow(Operation::Type::POW, lpb.target,
+                Operand(Operand::Type::CONSTANT, Number(exp)));
+  p.ops[info.index_lpb - 1] = mov;
+  p.ops.insert(p.ops.begin() + info.index_lpb, add);
+  p.ops.insert(p.ops.begin() + info.index_lpb + 1, pow);
+  if (check(p, seq, 0)) {
+    return true;
+  } else {
+    p = backup;
+    return false;
+  }
 }
 
 bool Minimizer::optimizeAndMinimize(Program& p, size_t num_terms) const {

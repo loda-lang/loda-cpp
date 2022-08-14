@@ -2,6 +2,12 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Enhancements
+
+* Minimizer tries to replace loops with constant number or iterations
+
+# v22.8.12
+
 ### Features
 
 * Added `mutate` command
