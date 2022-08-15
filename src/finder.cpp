@@ -323,16 +323,6 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
   evaluator.clearCaches();
   const auto existing_steps = evaluator.eval(existing, tmp, num_terms, false);
 
-  // ensure a minimum number of known terms before comparing
-  if (terms.size() >= OeisSequence::DEFAULT_SEQ_LENGTH) {
-    // compare number of successfully computed terms
-    if (optimized_steps.runs > existing_steps.runs) {
-      return "Better";
-    } else if (optimized_steps.runs < existing_steps.runs) {
-      return not_better;  // worse
-    }
-  }
-
   // compare number of "bad" operations
   auto optimized_bad_count = getBadOpsCount(optimized);
   auto existing_bad_count = getBadOpsCount(existing);
@@ -342,7 +332,19 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
     return not_better;  // worse
   }
 
-  // ...and compare number of execution cycles
+  // ensure a minimum number of known terms before comparing
+  if (terms.size() < OeisSequence::DEFAULT_SEQ_LENGTH) {
+    return not_better;
+  }
+
+  // compare number of successfully computed terms
+  if (optimized_steps.runs > existing_steps.runs) {
+    return "Better";
+  } else if (optimized_steps.runs < existing_steps.runs) {
+    return not_better;  // worse
+  }
+
+  //  compare number of execution cycles
   if (optimized_steps.total < existing_steps.total) {
     return "Faster";
   } else if (optimized_steps.total > existing_steps.total) {
