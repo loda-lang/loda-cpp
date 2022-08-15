@@ -205,7 +205,7 @@ std::pair<std::string, Program> Finder::checkProgramBasic(
                                  num_default_terms);
     }
     // compare with hash of existing program
-    if (previous_hash != ProgramUtil::hash(existing)) {
+    if (previous_hash != ProgramUtil::hash(existing, true)) {
       Log::get().debug("Hash mismatch of previous program");
       return checkProgramDefault(program, existing, is_new, seq,
                                  num_default_terms);

@@ -68,7 +68,7 @@ class ProgramUtil {
 
   static void exportToDot(const Program &p, std::ostream &out);
 
-  static size_t hash(const Program &p);
+  static size_t hash(const Program &p, bool include_version);
 
   static size_t hash(const Operation &op);
 

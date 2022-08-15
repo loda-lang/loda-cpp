@@ -5,6 +5,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Enhancements
 
 * Minimizer tries to replace loops with constant number or iterations
+* Include LODA version in hash of transmitted programs
 
 # v22.8.12
 

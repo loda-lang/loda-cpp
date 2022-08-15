@@ -6,6 +6,7 @@
 #include <stack>
 
 #include "program.hpp"
+#include "util.hpp"
 
 bool ProgramUtil::hasOp(const Program &p, Operation::Type type) {
   for (auto &op : p.ops) {
@@ -461,12 +462,15 @@ void ProgramUtil::exportToDot(const Program &p, std::ostream &out) {
   out << "}" << std::endl;
 }
 
-size_t ProgramUtil::hash(const Program &p) {
+size_t ProgramUtil::hash(const Program &p, bool include_version) {
   size_t h = 0;
   for (auto &op : p.ops) {
     if (op.type != Operation::Type::NOP) {
       h = (h * 3) + hash(op);
     }
+  }
+  if (include_version) {
+    h = (h * 2) + Version::VERSION_HASH;
   }
   return h;
 }

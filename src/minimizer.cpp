@@ -36,7 +36,7 @@ bool Minimizer::minimize(Program& p, size_t num_terms) const {
   }
 
   // replace constant loops
-  for (int64_t exp = 2; exp <= 5; exp++) {
+  for (int64_t exp = 1; exp <= 5; exp++) {
     if (replaceConstantLoop(p, target_sequence, exp)) {
       global_change = true;
       break;
@@ -241,7 +241,8 @@ bool Minimizer::optimizeAndMinimize(Program& p, size_t num_terms) const {
     Log::get().error("Exception during minimization: " + std::string(e.what()),
                      false);
     std::string f = Setup::getLodaHome() + "debug/minimizer/" +
-                    std::to_string(ProgramUtil::hash(p) % 100000) + ".asm";
+                    std::to_string(ProgramUtil::hash(p, false) % 100000) +
+                    ".asm";
     ensureDir(f);
     std::ofstream out(f);
     ProgramUtil::print(p, out);
