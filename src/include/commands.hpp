@@ -50,6 +50,8 @@ class Commands {
 
   void benchmark();
 
+  void lists();
+
  private:
   const Settings& settings;
 

@@ -47,6 +47,8 @@ class OeisManager {
 
   bool maintainProgram(size_t id);
 
+  void generateLists();
+
  private:
   void loadData();
 
@@ -57,8 +59,6 @@ class OeisManager {
   void update();
 
   void generateStats(int64_t age_in_days);
-
-  void generateLists();
 
   void addSeqComments(Program& p) const;
 

@@ -201,6 +201,8 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
     commands.iterate(args.at(1));
   } else if (cmd == "benchmark") {
     commands.benchmark();
+  } else if (cmd == "lists") {
+    commands.lists();
   }
 #endif
   // unknown command

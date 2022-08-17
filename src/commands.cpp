@@ -313,3 +313,10 @@ void Commands::benchmark() {
   Benchmark benchmark;
   benchmark.all();
 }
+
+void Commands::lists() {
+  initLog(false);
+  OeisManager manager(settings);
+  manager.load();
+  manager.generateLists();
+}
