@@ -254,6 +254,8 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
                                       const OeisSequence &seq) {
   static const std::string not_better;
 
+  // ====== STATIC CODE CHECKS ========
+
   // check if there are illegal recursions
   // why is this not detected by the interpreter?
   for (auto &op : optimized.ops) {
@@ -299,10 +301,28 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
     return not_better;
   }
 
+  // compare number of "bad" operations
+  auto optimized_bad_count = getBadOpsCount(optimized);
+  auto existing_bad_count = getBadOpsCount(existing);
+  if (optimized_bad_count < existing_bad_count) {
+    return "Simpler";
+  } else if (optimized_bad_count > existing_bad_count) {
+    return not_better;  // worse
+  }
+
+  // ======= EVALUATION CHECKS =========
+
   // get extended sequence
   auto terms = seq.getTerms(OeisSequence::EXTENDED_SEQ_LENGTH);
   if (terms.empty()) {
     Log::get().error("Error fetching b-file for " + seq.id_str(), true);
+  }
+
+  // ensure a minimum number of known terms before comparing
+  if (terms.size() < OeisSequence::DEFAULT_SEQ_LENGTH) {
+    // Log::get().warn(
+    //    "Skipping further comparison because there are too few terms");
+    return not_better;
   }
 
   // evaluate optimized program for fixed number of terms
@@ -322,20 +342,6 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
   // evaluate existing program for same number of terms
   evaluator.clearCaches();
   const auto existing_steps = evaluator.eval(existing, tmp, num_terms, false);
-
-  // compare number of "bad" operations
-  auto optimized_bad_count = getBadOpsCount(optimized);
-  auto existing_bad_count = getBadOpsCount(existing);
-  if (optimized_bad_count < existing_bad_count) {
-    return "Simpler";
-  } else if (optimized_bad_count > existing_bad_count) {
-    return not_better;  // worse
-  }
-
-  // ensure a minimum number of known terms before comparing
-  if (terms.size() < OeisSequence::DEFAULT_SEQ_LENGTH) {
-    return not_better;
-  }
 
   // compare number of successfully computed terms
   if (optimized_steps.runs > existing_steps.runs) {
