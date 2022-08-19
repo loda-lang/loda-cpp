@@ -2,6 +2,12 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Bugfixes
+
+* Fix `git` directory ownership error
+
+# v22.8.18
+
 ### Enhancements
 
 * Minimizer tries to replace loops with constant number or iterations

@@ -398,8 +398,10 @@ void Stats::collectLatestProgramIds() {
     return;
   }
   const std::string git_tmp = getTmpDir() + "loda_git_tmp.txt";
-  git(progs_dir, "log --oneline --format=\"%H\" -n " +
-                     std::to_string(max_commits) + " > \"" + git_tmp + "\"");
+  git(progs_dir,
+      "log --oneline --format=\"%H\" -n " + std::to_string(max_commits) +
+          " > \"" + git_tmp + "\"",
+      true);
   std::string line;
   std::vector<std::string> commits;
   {
@@ -423,8 +425,10 @@ void Stats::collectLatestProgramIds() {
         num_modified_ids >= max_modified_programs) {
       break;
     }
-    git(progs_dir, "diff-tree --no-commit-id --name-status -r " + commit +
-                       " > \"" + git_tmp + "\"");
+    git(progs_dir,
+        "diff-tree --no-commit-id --name-status -r " + commit + " > \"" +
+            git_tmp + "\"",
+        true);
     {
       // read changed file names from file
       std::ifstream in(git_tmp);
