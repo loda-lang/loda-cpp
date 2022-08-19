@@ -13,11 +13,11 @@ Boinc::Boinc(const Settings& settings) : settings(settings) {}
 
 void Boinc::run() {
   // get project dir
-  auto project_env = std::getenv("PROJECT_DIR");
-  if (!project_env) {
-    Log::get().error("PROJECT_DIR environment variable not set", true);
+  auto pwd_env = std::getenv("PWD");
+  if (!pwd_env) {
+    Log::get().error("PWD environment variable not set", true);
   }
-  std::string slot_dir(project_env);
+  std::string slot_dir(pwd_env);
   ensureTrailingFileSep(slot_dir);
 
   // read slot init data
