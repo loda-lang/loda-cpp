@@ -2,12 +2,6 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
-# v22.8.19
-
-### Bugfixes
-
-* Fix `git` directory ownership error
-
 # v22.8.18
 
 ### Enhancements

@@ -336,7 +336,7 @@ void OeisManager::update() {
     auto progs_dir = Setup::getProgramsHome();
     if (mode != MINING_MODE_SERVER && isDir(progs_dir + ".git")) {
       Log::get().info("Updating programs repository");
-      git(progs_dir, "pull origin main -q --ff-only", true);
+      git(progs_dir, "pull origin main -q --ff-only");
     }
     // clean up local programs folder
     const int64_t max_age = Setup::getMaxLocalProgramAgeInDays();

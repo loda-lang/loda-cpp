@@ -89,15 +89,13 @@ std::string getPath() {
   return "";
 }
 
-bool execCmd(const std::string &cmd, bool fail_on_error = true) {
+void execCmd(const std::string &cmd, bool fail_on_error = true) {
   auto exit_code = system(cmd.c_str());
   if (exit_code != 0) {
     Log::get().error("Error executing command (exit code " +
                          std::to_string(exit_code) + "): " + cmd,
                      fail_on_error);
-    return false;
   }
-  return true;
 }
 
 void moveFile(const std::string &from, const std::string &to) {
@@ -214,7 +212,7 @@ void gunzip(const std::string &path) {
   execCmd("gzip -f -d \"" + path + "\"");
 }
 
-void git(const std::string &folder, const std::string &args, bool fix_owner) {
+void git(const std::string &folder, const std::string &args) {
   std::string a;
   if (!folder.empty()) {
     a = "-C \"" + folder;
@@ -232,17 +230,7 @@ void git(const std::string &folder, const std::string &args, bool fix_owner) {
     fixWindowsEnv();
   }
 #endif
-  if (fix_owner && !folder.empty()) {
-    if (execCmd("git " + a, false)) {
-      // success
-      return;
-    } else {
-      Log::get().warn("Try fixing unsafe git directory");
-      execCmd("git config --global --add safe.directory \"" + folder + "\"",
-              false);
-    }
-  }
-  execCmd("git " + a);  // fails on error
+  execCmd("git " + a);
 }
 
 void makeExecutable(const std::string &path) {

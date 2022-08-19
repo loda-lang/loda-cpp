@@ -31,7 +31,7 @@ void fixWindowsEnv(std::string project_dir = "");
 
 void gunzip(const std::string &path);
 
-void git(const std::string &folder, const std::string &args, bool fix_owner);
+void git(const std::string &folder, const std::string &args);
 
 void makeExecutable(const std::string &path);
 
