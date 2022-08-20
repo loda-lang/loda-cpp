@@ -12,23 +12,35 @@
 Boinc::Boinc(const Settings& settings) : settings(settings) {}
 
 void Boinc::run() {
-  // get project dir
+  const std::string init_data_xml("init_data.xml");
+
+  // determine slot dir
+  std::string slot_dir;
   auto project_env = std::getenv("PROJECT_DIR");
-  if (!project_env) {
-    Log::get().error("PROJECT_DIR environment variable not set", true);
+  if (project_env) {
+    slot_dir = std::string(project_env);
+    ensureTrailingFileSep(slot_dir);
+    Log::get().info("Found environment variable: PROJECT_DIR=" + slot_dir);
+    if (!isFile(slot_dir + init_data_xml)) {
+      slot_dir = "";  // try current working directory instead
+    }
   }
-  std::string slot_dir(project_env);
-  ensureTrailingFileSep(slot_dir);
+
+  // check init data file
+  const std::string init_data_path = slot_dir + init_data_xml;
+  Log::get().info("Loading init data from file: " + init_data_path);
+  if (!isFile(init_data_path)) {
+    Log::get().error("File not found: " + init_data_path, true);
+  }
 
   // read slot init data
-  auto init_data = readXML(slot_dir + "init_data.xml");
+  auto init_data = readXML(init_data_path);
   auto project_dir = init_data["project_dir"];
   auto user_name = init_data["user_name"];
   auto wu_name = init_data["wu_name"];
   auto hostid = init_data["hostid"];
   if (project_dir.empty() || user_name.empty() || wu_name.empty()) {
-    Log::get().error("Invalid project data: " + slot_dir + "init_data.xml",
-                     true);
+    Log::get().error("Invalid init data", true);
   }
   ensureTrailingFileSep(project_dir);
 
