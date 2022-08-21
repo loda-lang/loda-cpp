@@ -135,6 +135,7 @@
         "$LODA_HOME/programs/oeis/019/A019916.asm",
         "$LODA_HOME/programs/oeis/020/A020639.asm",
         "$LODA_HOME/programs/oeis/049/A049470.asm",
+        "$LODA_HOME/programs/oeis/086/A086468.asm",
         "$LODA_HOME/programs/oeis/093/A093515.asm",
         "$LODA_HOME/programs/oeis/098/A098090.asm",
         "$LODA_HOME/programs/oeis/145/A145432.asm",
