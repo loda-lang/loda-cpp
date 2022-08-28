@@ -115,6 +115,7 @@
         "$LODA_HOME/programs/templates/loop2.asm",
         "$LODA_HOME/programs/templates/loop_call.asm",
         "$LODA_HOME/programs/templates/primes-flat.asm",
+        "$LODA_HOME/programs/oeis/000/A000005.asm",
         "$LODA_HOME/programs/oeis/000/A000040.asm",
         "$LODA_HOME/programs/oeis/001/A001221.asm",
         "$LODA_HOME/programs/oeis/001/A001622.asm",
