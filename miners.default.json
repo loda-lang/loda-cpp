@@ -16,24 +16,6 @@
       ]
     },
     {
-      "name": "update",
-      "overwrite": "auto",
-      "backoff": true,
-      "generators": [
-        "v2",
-        "v3",
-        "v5",
-        "v6_2"
-      ],
-      "matchers": [
-        "direct",
-        "linear1",
-        "linear2",
-        "binary",
-        "decimal"
-      ]
-    },
-    {
       "name": "mutate2",
       "overwrite": "none",
       "backoff": true,
@@ -80,7 +62,7 @@
     },
     {
       "name": "hard",
-      "overwrite": "auto",
+      "overwrite": "none",
       "backoff": true,
       "generators": [
         "v1",
