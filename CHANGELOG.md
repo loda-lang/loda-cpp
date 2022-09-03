@@ -2,7 +2,11 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
-# v22.8.18
+### Enhancements
+
+* Optimizer merges repeated `add` and `mul` operations
+
+# v22.8.21
 
 ### Enhancements
 

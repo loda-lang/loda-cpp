@@ -16,6 +16,8 @@ class Optimizer {
 
   bool mergeOps(Program &p) const;
 
+  bool mergeRepeated(Program &p) const;
+
   bool simplifyOperations(Program &p) const;
 
   bool fixSandwich(Program &p) const;

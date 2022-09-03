@@ -31,6 +31,9 @@ bool Optimizer::optimize(Program &p) const {
       if (mergeOps(p)) {
         changed = true;
       }
+      if (mergeRepeated(p)) {
+        changed = true;
+      }
     }
     if (removeNops(p)) {
       changed = true;
@@ -224,6 +227,61 @@ bool Optimizer::mergeOps(Program &p) const {
   }
 
   return merged;
+}
+
+std::pair<int64_t, int64_t> findRepeatedOps(const Program &p,
+                                            int64_t min_repetitions) {
+  std::pair<int64_t, int64_t> pos(-1, 0);  // start, length
+  for (size_t i = 0; i < p.ops.size(); i++) {
+    if (pos.first != -1) {  // start found already
+      if (p.ops[i] == p.ops[pos.first]) {
+        // another repetition
+        pos.second++;
+      } else {
+        // reached end
+        if (pos.second >= min_repetitions) {
+          return pos;
+        }
+        pos.first = -1;
+        pos.second = 0;
+      }
+    }
+    if (pos.first == -1 && (p.ops[i].type == Operation::Type::ADD ||
+                            p.ops[i].type == Operation::Type::MUL)) {
+      pos.first = i;   // new start found
+      pos.second = 1;  // one operation so far
+    }
+  }
+  // final check
+  if (pos.second < min_repetitions) {
+    pos.first = -1;
+  }
+  return pos;
+}
+
+bool Optimizer::mergeRepeated(Program &p) const {
+  auto pos = findRepeatedOps(p, 3);
+  if (pos.first == -1) {
+    return false;
+  }
+  if (ProgramUtil::hasIndirectOperand(p)) {
+    return false;
+  }
+  Operation::Type merge_type = (p.ops[pos.first].type == Operation::Type::ADD)
+                                   ? Operation::Type::MUL
+                                   : Operation::Type::POW;
+  auto largest = ProgramUtil::getLargestDirectMemoryCell(p);
+  Operand tmp_cell(Operand::Type::DIRECT, largest + 1);
+  Operand count(Operand::Type::CONSTANT, pos.second);
+  p.ops[pos.first].type = Operation::Type::MOV;
+  p.ops[pos.first].target = tmp_cell;
+  p.ops[pos.first + 1] = Operation(merge_type, tmp_cell, count);
+  p.ops[pos.first + 2].source = tmp_cell;
+  if (static_cast<int64_t>(p.ops.size()) >= pos.first + pos.second) {
+    p.ops.erase(p.ops.begin() + pos.first + 3,
+                p.ops.begin() + pos.first + pos.second);
+  }
+  return true;
 }
 
 inline bool simplifyOperand(Operand &op,
