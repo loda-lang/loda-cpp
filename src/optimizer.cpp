@@ -277,7 +277,7 @@ bool Optimizer::mergeRepeated(Program &p) const {
   p.ops[pos.first].target = tmp_cell;
   p.ops[pos.first + 1] = Operation(merge_type, tmp_cell, count);
   p.ops[pos.first + 2].source = tmp_cell;
-  if (static_cast<int64_t>(p.ops.size()) >= pos.first + pos.second) {
+  if (pos.second > 3) {
     p.ops.erase(p.ops.begin() + pos.first + 3,
                 p.ops.begin() + pos.first + pos.second);
   }
