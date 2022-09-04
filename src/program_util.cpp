@@ -136,6 +136,15 @@ bool ProgramUtil::hasIndirectOperand(const Operation &op) {
          (num_ops > 1 && op.source.type == Operand::Type::INDIRECT);
 }
 
+bool ProgramUtil::hasIndirectOperand(const Program &p) {
+  for (auto &op : p.ops) {
+    if (hasIndirectOperand(op)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool ProgramUtil::areIndependent(const Operation &op1, const Operation &op2) {
   if (!isArithmetic(op1.type) && op1.type != Operation::Type::SEQ) {
     return false;

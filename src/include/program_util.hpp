@@ -35,6 +35,8 @@ class ProgramUtil {
 
   static bool hasIndirectOperand(const Operation &op);
 
+  static bool hasIndirectOperand(const Program &p);
+
   static bool areIndependent(const Operation &op1, const Operation &op2);
 
   static bool getUsedMemoryCells(const Program &p,
