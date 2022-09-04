@@ -5,6 +5,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Enhancements
 
 * Optimizer merges repeated `add` and `mul` operations
+* Remove sequences from deny list in `no_loda.txt`
 
 # v22.8.21
 

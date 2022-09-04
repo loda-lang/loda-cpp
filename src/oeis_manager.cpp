@@ -443,7 +443,7 @@ void OeisManager::generateLists() {
   size_t num_processed = 0;
   std::string buf;
   for (auto &s : sequences) {
-    if (s.id == 0) {
+    if (s.id == 0 || deny_list.find(s.id) != deny_list.end()) {
       continue;
     }
     if (s.id < stats->all_program_ids.size() && stats->all_program_ids[s.id]) {
