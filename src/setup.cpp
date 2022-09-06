@@ -429,7 +429,7 @@ bool Setup::checkEnvVars() {
 }
 
 bool Setup::existsProgramsHome() {
-  return isDir(LODA_HOME + "programs" + FILE_SEP + "oeis");
+  return isDir(LODA_HOME + "programs" + FILE_SEP + ".git");
 }
 
 void Setup::cloneProgramsHome(std::string git_url) {
