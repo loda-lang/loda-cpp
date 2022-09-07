@@ -10,6 +10,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Optimizer merges repeated `add` and `mul` operations
 * Remove sequences from deny list in `no_loda.txt`
+* Increase default max memory cells to 1000 (for [A000041](https://oeis.org/A000041))
 
 # v22.8.21
 
