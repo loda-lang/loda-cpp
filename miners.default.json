@@ -99,6 +99,7 @@
         "$LODA_HOME/programs/templates/primes-flat.asm",
         "$LODA_HOME/programs/oeis/000/A000005.asm",
         "$LODA_HOME/programs/oeis/000/A000040.asm",
+        "$LODA_HOME/programs/oeis/000/A000041.asm",
         "$LODA_HOME/programs/oeis/001/A001221.asm",
         "$LODA_HOME/programs/oeis/001/A001622.asm",
         "$LODA_HOME/programs/oeis/002/A002117.asm",
