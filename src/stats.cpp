@@ -331,7 +331,8 @@ void Stats::updateProgramStats(size_t id, const Program &program) {
   o.pos = 0;
   for (auto &op : program.ops) {
     num_ops_per_type[static_cast<size_t>(op.type)]++;
-    if (Operation::Metadata::get(op.type).num_operands == 2 &&
+    if (op.type != Operation::Type::SEQ &&
+        Operation::Metadata::get(op.type).num_operands == 2 &&
         op.source.type == Operand::Type::CONSTANT) {
       if (num_constants.find(op.source.value) == num_constants.end()) {
         num_constants[op.source.value] = 0;
