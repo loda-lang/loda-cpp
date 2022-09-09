@@ -116,18 +116,20 @@ void Boinc::run() {
   const std::string progress_file = slot_dir + "fraction_done";
   const std::string checkpoint_file = slot_dir + "checkpoint";
   const uint64_t checkpoint_key = std::hash<std::string>{}(wu_name);
-  ProgressMonitor progress_monitor(target_seconds, progress_file,
-                                   checkpoint_file, checkpoint_key);
+  ProgressMonitor monitor(target_seconds, progress_file, checkpoint_file,
+                          checkpoint_key);
+  monitor.writeProgress();
 
   // clone programs repository if necessary
   if (!Setup::existsProgramsHome()) {
     FolderLock lock(project_dir);
     if (!Setup::existsProgramsHome()) {  // need to check again here
       Setup::cloneProgramsHome();
+      monitor.writeProgress();
     }
   }
 
   // start mining!
-  Miner miner(settings, &progress_monitor);
+  Miner miner(settings, &monitor);
   miner.mine();
 }
