@@ -7,7 +7,8 @@
         "utility": "cpp",
         "stdexcept": "cpp",
         "thread": "cpp",
-        "limits": "cpp"
+        "limits": "cpp",
+        "iosfwd": "cpp"
     },
     "makefile.makeDirectory": "src"
 }

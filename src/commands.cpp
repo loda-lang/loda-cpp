@@ -320,3 +320,19 @@ void Commands::lists() {
   manager.load();
   manager.generateLists();
 }
+
+void Commands::compare(const std::string& path1, const std::string& path2) {
+  initLog(true);
+  Parser parser;
+  Program p1 = parser.parse(getProgramPathAndSeqId(path1).first);
+  Program p2 = parser.parse(getProgramPathAndSeqId(path2).first);
+  auto id_str = ProgramUtil::getSequenceIdFromProgram(p1);
+  OeisSequence seq(id_str);
+  OeisManager manager(settings);
+  manager.load();
+  auto result = manager.getFinder().isOptimizedBetter(p1, p2, seq);
+  if (result.empty()) {
+    result = "Worse or Equal";
+  }
+  std::cout << result << std::endl;
+}

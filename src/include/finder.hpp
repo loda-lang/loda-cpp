@@ -46,15 +46,15 @@ class Finder {
 
   void logSummary(size_t loaded_count);
 
+  std::string isOptimizedBetter(Program existing, Program optimized,
+                                const OeisSequence &seq);
+
  private:
   void findAll(const Program &p, const Sequence &norm_seq,
                const std::vector<OeisSequence> &sequences,
                Matcher::seq_programs_t &result);
 
   void notifyInvalidMatch(size_t id);
-
-  std::string isOptimizedBetter(Program existing, Program optimized,
-                                const OeisSequence &seq);
 
   void notifyMinimizerProblem(const Program &p, const std::string &id);
 

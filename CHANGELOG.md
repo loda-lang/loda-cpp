@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Enhancements
+
+* Internal `compare` command for checking if a program is faster/better
+
 # v22.9.8
 
 ### Bugfixes
