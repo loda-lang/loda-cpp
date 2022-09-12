@@ -695,8 +695,6 @@ update_program_result_t OeisManager::updateProgram(
     optimizer.removeNops(existing);
     optimizer.removeNops(p);
     if (p == existing) {
-      // Log::get().info("Skipping update for " + seq.id_str() + "
-      // (unchanged)");
       return result;
     }
   }
@@ -717,25 +715,24 @@ update_program_result_t OeisManager::updateProgram(
                                            num_default_terms);
       break;
   }
-  if (checked.first.empty()) {
+  // not better or the same after optimization?
+  if (checked.first.empty() || (!is_new && checked.second == existing)) {
     return result;
   }
 
   // update result
   result.updated = true;
   result.is_new = is_new;
+  result.program = checked.second;
   result.change_type = checked.first;
   if (!is_new) {
     result.previous_hash = ProgramUtil::hash(existing, true);
   }
 
   // write new or better program version
-  result.program = checked.second;
-  if (Setup::getMiningMode() == MINING_MODE_SERVER) {
-    dumpProgram(id, result.program, global_file, submitted_by);
-  } else {
-    dumpProgram(id, result.program, local_file, submitted_by);
-  }
+  const bool is_server = (Setup::getMiningMode() == MINING_MODE_SERVER);
+  const std::string target_file = is_server ? global_file : local_file;
+  dumpProgram(id, result.program, target_file, submitted_by);
 
   // if not updating, ignore this sequence for future matches;
   // this is important for performance: it is likly that we
