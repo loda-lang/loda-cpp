@@ -345,12 +345,22 @@ void Test::memory() {
     base.set(i, i);
     checkMemory(base, i, i);
   }
-  checkMemory(base, -1, 0);
+  bool ok;
+  try {
+    checkMemory(base, -1, 0);
+    ok = false;
+  } catch (...) {
+    ok = true;
+  }
+  if (!ok) {
+    throw std::runtime_error(
+        "unexpected behavior for memory access with negative index");
+  }
   checkMemory(base, size + 1, 0);
 
   // fragments
   int64_t max_frag_length = 50;
-  for (int64_t start = -10; start < size + 10; start++) {
+  for (int64_t start = 0; start < size + 10; start++) {
     for (int64_t length = 0; length < max_frag_length; length++) {
       auto frag = base.fragment(start, length);
       for (int64_t i = 0; i < length; i++) {
@@ -358,8 +368,6 @@ void Test::memory() {
         int64_t v = (j < 0 || j >= size) ? 0 : j;
         checkMemory(frag, i, v);
       }
-      checkMemory(frag, -1, 0);
-      checkMemory(frag, -2, 0);
       checkMemory(frag, length, 0);
       checkMemory(frag, length + 1, 0);
     }
