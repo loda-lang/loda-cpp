@@ -1,5 +1,8 @@
 #include "memory.hpp"
 
+#include <stdexcept>
+#include <string>
+
 #include "number.hpp"
 
 Memory::Memory() { cache.fill(0); }
