@@ -323,7 +323,8 @@ void Interpreter::set(const Operand& a, const Number& v, Memory& mem,
 
 std::pair<Number, size_t> Interpreter::call(int64_t id, const Number& arg) {
   if (arg < 0) {
-    throw std::runtime_error("seq using negative argument");
+    throw std::runtime_error("seq using negative argument: " +
+                             std::to_string(id));
   }
 
   // check if already cached
@@ -338,7 +339,8 @@ std::pair<Number, size_t> Interpreter::call(int64_t id, const Number& arg) {
 
   // check for recursive calls
   if (running_programs.find(id) != running_programs.end()) {
-    throw std::runtime_error("recursion detected");
+    throw std::runtime_error("Recursion detected: " +
+                             OeisSequence(id).id_str());
   }
 
   // evaluate program
@@ -367,7 +369,7 @@ std::pair<Number, size_t> Interpreter::call(int64_t id, const Number& arg) {
 
 const Program& Interpreter::getProgram(int64_t id) {
   if (missing_programs.find(id) != missing_programs.end()) {
-    throw std::runtime_error("program not found");
+    throw std::runtime_error("Program not found: " + OeisSequence(id).id_str());
   }
   if (program_cache.find(id) == program_cache.end()) {
     Parser parser;

@@ -4,9 +4,17 @@
 
 Memory::Memory() { cache.fill(0); }
 
+void throwNegativeIndexError(int64_t index) {
+  throw std::runtime_error("Memory access with negative index: " +
+                           std::to_string(index));
+}
+
 Number Memory::get(int64_t index) const {
   if (index >= 0 && index < MEMORY_CACHE_SIZE) {
     return cache[index];
+  }
+  if (index < 0) {
+    throwNegativeIndexError(index);
   }
   auto it = full.find(index);
   if (it != full.end()) {
@@ -18,6 +26,8 @@ Number Memory::get(int64_t index) const {
 void Memory::set(int64_t index, const Number &value) {
   if (index >= 0 && index < MEMORY_CACHE_SIZE) {
     cache[index] = value;
+  } else if (index < 0) {
+    throwNegativeIndexError(index);
   } else {
     if (value == Number::ZERO) {
       full.erase(index);
