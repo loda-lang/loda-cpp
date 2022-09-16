@@ -10,6 +10,7 @@
 #ifdef _WIN64
 #include <io.h>
 #include <psapi.h>
+#include <windows.h>
 #else
 #include <sys/wait.h>
 #include <unistd.h>
