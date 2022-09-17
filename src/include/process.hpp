@@ -17,5 +17,3 @@ typedef int64_t HANDLE;
 #endif
 
 bool isChildProcessAlive(HANDLE pid);
-
-size_t getTotalSystemMemory();

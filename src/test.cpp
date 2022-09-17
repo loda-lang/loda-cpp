@@ -6,10 +6,6 @@
 #include <sstream>
 #include <stdexcept>
 
-// begin: must be before log.hpp
-#include "process.hpp"
-// end
-
 #include "api_client.hpp"
 #include "big_number.hpp"
 #include "blocks.hpp"
@@ -868,7 +864,7 @@ void Test::config() {
 
 void Test::memUsage() {
   int64_t usage = getMemUsage() / (1024 * 1024);
-  int64_t total = getTotalSystemMemory() / (1024 * 1024);
+  int64_t total = getTotalSystemMem() / (1024 * 1024);
   Log::get().info("Testing memory usage: " + std::to_string(usage) + "/" +
                   std::to_string(total) + " MB");
   if (usage < 250 || usage > 1000) {

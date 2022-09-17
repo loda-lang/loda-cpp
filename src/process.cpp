@@ -44,16 +44,3 @@ bool isChildProcessAlive(HANDLE pid) {
   return (waitpid(pid, nullptr, WNOHANG) == 0);
 #endif
 }
-
-size_t getTotalSystemMemory() {
-#ifdef _WIN64
-  MEMORYSTATUSEX status;
-  status.dwLength = sizeof(status);
-  GlobalMemoryStatusEx(&status);
-  return status.ullTotalPhys;
-#else
-  auto pages = sysconf(_SC_PHYS_PAGES);
-  auto page_size = sysconf(_SC_PAGE_SIZE);
-  return pages * page_size;
-#endif
-}

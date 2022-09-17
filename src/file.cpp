@@ -377,6 +377,20 @@ size_t getMemUsage() {
   return mem_usage;
 }
 
+// TODO: move this to process.hpp
+size_t getTotalSystemMem() {
+#ifdef _WIN64
+  MEMORYSTATUSEX status;
+  status.dwLength = sizeof(status);
+  GlobalMemoryStatusEx(&status);
+  return status.ullTotalPhys;
+#else
+  auto pages = sysconf(_SC_PHYS_PAGES);
+  auto page_size = sysconf(_SC_PAGE_SIZE);
+  return pages * page_size;
+#endif
+}
+
 std::map<std::string, std::string> readXML(const std::string &path) {
   std::map<std::string, std::string> result;
   std::ifstream in(path);
