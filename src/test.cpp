@@ -24,6 +24,7 @@
 #include "oeis_manager.hpp"
 #include "optimizer.hpp"
 #include "parser.hpp"
+#include "process.hpp"
 #include "program_util.hpp"
 #include "semantics.hpp"
 #include "setup.hpp"
@@ -864,7 +865,9 @@ void Test::config() {
 
 void Test::memUsage() {
   int64_t usage = getMemUsage() / (1024 * 1024);
-  Log::get().info("Testing memory usage: " + std::to_string(usage) + " MB");
+  int64_t total = getTotalSystemMemory() / (1024 * 1024);
+  Log::get().info("Testing memory usage: " + std::to_string(usage) + "/" +
+                  std::to_string(total) + " MB");
   if (usage < 250 || usage > 1000) {
     Log::get().error("Unexpected memory usage", true);
   }
