@@ -3,8 +3,12 @@
 #include <stdexcept>
 
 #ifdef _WIN64
-
 #include <windows.h>
+#else
+#include <unistd.h>
+#endif
+
+#ifdef _WIN64
 
 HANDLE createWindowsProcess(const std::string& command) {
   STARTUPINFO si;

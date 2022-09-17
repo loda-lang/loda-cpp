@@ -864,7 +864,9 @@ void Test::config() {
 
 void Test::memUsage() {
   int64_t usage = getMemUsage() / (1024 * 1024);
-  Log::get().info("Testing memory usage: " + std::to_string(usage) + " MB");
+  int64_t total = getTotalSystemMem() / (1024 * 1024);
+  Log::get().info("Testing memory usage: " + std::to_string(usage) + "/" +
+                  std::to_string(total) + " MiB");
   if (usage < 250 || usage > 1000) {
     Log::get().error("Unexpected memory usage", true);
   }
