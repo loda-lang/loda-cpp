@@ -45,8 +45,10 @@ void Boinc::run() {
   ensureTrailingFileSep(project_dir);
 
   // log debugging info
+  auto total_mem = getTotalSystemMem() / (1024 * 1024);
   Log::get().info("Platform: " + Version::PLATFORM +
-                  ", user name: " + user_name + ", host ID: " + hostid);
+                  ", system memory: " + std::to_string(total_mem) + " MiB");
+  Log::get().info("User name: " + user_name + ", host ID: " + hostid);
 
   // initialize setup
   Setup::setLodaHome(project_dir);

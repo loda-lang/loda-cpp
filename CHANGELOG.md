@@ -2,9 +2,12 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+# v22.9.17
+
 ### Enhancements
 
 * Forbid indirect memory access with negative indices
+* Log total system memory in BOINC mode
 
 # v22.9.12
 
