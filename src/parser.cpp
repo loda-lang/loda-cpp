@@ -112,6 +112,14 @@ Number Parser::readValue() {
   return Number(buf);
 }
 
+Number Parser::readNonNegativeValue() {
+  auto value = readValue();
+  if (value < Number::ZERO) {
+    throw std::runtime_error("negative value not allowed");
+  }
+  return value;
+}
+
 std::string Parser::readIdentifier() {
   std::string s;
   int c;
@@ -143,9 +151,9 @@ Operand Parser::readOperand() {
     c = in->peek();
     if (c == '$') {
       in->get();
-      return Operand(Operand::Type::INDIRECT, readValue());
+      return Operand(Operand::Type::INDIRECT, readNonNegativeValue());
     } else {
-      return Operand(Operand::Type::DIRECT, readValue());
+      return Operand(Operand::Type::DIRECT, readNonNegativeValue());
     }
   } else {
     return Operand(Operand::Type::CONSTANT, readValue());
@@ -153,10 +161,5 @@ Operand Parser::readOperand() {
 }
 
 Operation::Type Parser::readOperationType() {
-  auto name = readIdentifier();
-  if (name == "cal")  // backward-compatibility: cal -> seq
-  {
-    return Operation::Type::SEQ;
-  }
-  return Operation::Metadata::get(name).type;
+  return Operation::Metadata::get(readIdentifier()).type;
 }

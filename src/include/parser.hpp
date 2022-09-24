@@ -16,6 +16,8 @@ class Parser {
 
   Number readValue();
 
+  Number readNonNegativeValue();
+
   std::string readIdentifier();
 
   Operand readOperand();

@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Bugfixes
+
+* Forbid invalid number formats in parser
+
 # v22.9.17
 
 ### Enhancements

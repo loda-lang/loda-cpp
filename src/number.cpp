@@ -391,17 +391,13 @@ std::string Number::to_string() const {
   return ss.str();
 }
 
-void throwParseError(std::istream& in) {
-  std::string tmp;
-  std::getline(in, tmp);
-  throw std::runtime_error("Error parsing number: '" + tmp + "'");
-}
+void throwParseError() { throw std::runtime_error("Error parsing number"); }
 
 void Number::readIntString(std::istream& in, std::string& out) {
   out.clear();
   auto ch = in.peek();
   if (!std::isdigit(ch) && ch != '-') {
-    throwParseError(in);
+    throwParseError();
   }
   out += (char)ch;
   in.get();
@@ -412,6 +408,12 @@ void Number::readIntString(std::istream& in, std::string& out) {
     }
     out += (char)ch;
     in.get();
+  }
+  if (out[0] == '0' && out.size() > 1) {
+    throwParseError();
+  }
+  if (out[0] == '-' && (out.size() == 1 || out[1] == '0')) {
+    throwParseError();
   }
 }
 
