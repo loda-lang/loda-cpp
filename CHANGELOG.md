@@ -2,6 +2,8 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+# v22.9.25
+
 ### Bugfixes
 
 * Fix `curl` SSL error on some Windows systems
