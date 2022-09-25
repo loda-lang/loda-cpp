@@ -28,12 +28,7 @@ bool WebClient::get(const std::string &url, const std::string &local_path,
   std::string cmd;
   switch (WEB_CLIENT_TYPE) {
     case WC_CURL:
-      cmd = "curl";
-#ifdef _WIN64
-      // see https://github.com/loda-lang/loda-cpp/issues/178
-      cmd += " --ssl-no-revoke";
-#endif
-      cmd += " -fsSLo \"" + local_path + "\" " + url;
+      cmd = "curl -fsSLo \"" + local_path + "\" " + url;
       break;
     case WC_WGET:
       cmd =
