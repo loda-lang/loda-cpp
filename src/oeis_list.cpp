@@ -6,6 +6,7 @@
 #include "log.hpp"
 #include "oeis_sequence.hpp"
 #include "setup.hpp"
+#include "util.hpp"
 
 const std::string OeisList::INVALID_MATCHES_FILE("invalid_matches.txt");
 
@@ -46,6 +47,43 @@ void OeisList::loadList(const std::string& path,
   }
   Log::get().debug("Finished loading of list " + path + " with " +
                    std::to_string(list.size()) + " entries");
+}
+
+void OeisList::loadMapWithComments(const std::string& path,
+                                   std::map<size_t, std::string>& map) {
+  Log::get().debug("Loading map " + path);
+  std::ifstream names(path);
+  if (!names.good()) {
+    Log::get().warn("Sequence list not found: " + path);
+  }
+  std::string line, id, comment;
+  map.clear();
+  while (std::getline(names, line)) {
+    if (line.empty() || line[0] == '#') {
+      continue;
+    }
+    if (line[0] != 'A') {
+      Log::get().error("Error parsing OEIS sequence ID: " + line, true);
+    }
+    id = "";
+    comment = "";
+    bool is_comment = false;
+    for (char ch : line) {
+      if (!is_comment && ch == ':') {
+        is_comment = true;
+        continue;
+      }
+      if (is_comment) {
+        comment += ch;
+      } else {
+        id += ch;
+      }
+    }
+    trimString(comment);
+    map[OeisSequence(id).id] = comment;
+  }
+  Log::get().debug("Finished loading of list " + path + " with " +
+                   std::to_string(map.size()) + " entries");
 }
 
 bool OeisList::loadMap(const std::string& path,

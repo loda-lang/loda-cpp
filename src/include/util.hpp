@@ -101,3 +101,5 @@ class Signals {
  public:
   static bool HALT;
 };
+
+void trimString(std::string &str);

@@ -336,3 +336,15 @@ Random::Random() {
 }
 
 bool Signals::HALT = false;
+
+void trimString(std::string &str) {
+  while (!str.empty()) {
+    if (str.front() == ' ') {
+      str = str.substr(1);
+    } else if (str.back() == ' ') {
+      str = str.substr(0, str.size() - 1);
+    } else {
+      break;
+    }
+  }
+}
