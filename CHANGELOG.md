@@ -4,6 +4,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Bugfixes
 
+* Fix `curl` SSL error on some Windows systems
 * Forbid invalid number formats in parser
 
 # v22.9.17
