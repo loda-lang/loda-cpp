@@ -25,6 +25,7 @@
 #include "optimizer.hpp"
 #include "parser.hpp"
 #include "program_util.hpp"
+#include "recurrence.hpp"
 #include "semantics.hpp"
 #include "setup.hpp"
 #include "stats.hpp"
@@ -59,6 +60,7 @@ void Test::all() {
   optimizer();
   checkpoint();
   knownPrograms();
+  recurrence();
 
   // slow tests
   number();
@@ -869,6 +871,21 @@ void Test::memUsage() {
                   std::to_string(total) + " MiB");
   if (usage < 250 || usage > 1000) {
     Log::get().error("Unexpected memory usage", true);
+  }
+}
+
+void Test::recurrence() {
+  std::string path = std::string("tests") + FILE_SEP +
+                     std::string("recurrence") + FILE_SEP +
+                     std::string("recurrence.txt");
+  std::map<size_t, std::string> map;
+  OeisList::loadMapWithComments(path, map);
+  if (map.empty()) {
+    Log::get().error("unexpected map content", true);
+  }
+  for (auto& e : map) {
+    OeisSequence seq(e.first);
+    Log::get().info("Testing recurrence for " + seq.id_str() + ": " + e.second);
   }
 }
 

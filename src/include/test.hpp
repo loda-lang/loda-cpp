@@ -66,6 +66,8 @@ class Test {
 
   void memUsage();
 
+  void recurrence();
+
  private:
   std::vector<std::pair<Program, Program>> loadInOutTests(
       const std::string &prefix);
