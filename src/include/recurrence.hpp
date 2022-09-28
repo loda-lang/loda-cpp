@@ -7,14 +7,21 @@
 #include "program.hpp"
 
 class Expression {
+ public:
   enum class Type { CONSTANT, PARAMETER, PLUS, MINUS, MUL, DIV, RECURRENCE };
 
- public:
   Type type;
+  std::string name;
   Number value;
-  std::unique_ptr<Expression> left, right;
+  std::vector<std::shared_ptr<Expression>> children;
 
   std::string to_string() const;
+
+  void addChild(Type type, const std::string& name = "",
+                Number value = Number::ZERO);
+
+ private:
+  std::string to_string_op(const std::string& op) const;
 };
 
 class RecurrenceRelation {

@@ -45,6 +45,9 @@ Test::Test() {
 }
 
 void Test::all() {
+  recurrence();
+  return;
+
   // fast tests
   sequence();
   memory();
@@ -881,11 +884,22 @@ void Test::recurrence() {
   std::map<size_t, std::string> map;
   OeisList::loadMapWithComments(path, map);
   if (map.empty()) {
-    Log::get().error("unexpected map content", true);
+    Log::get().error("Unexpected map content", true);
   }
+  Parser parser;
   for (auto& e : map) {
     OeisSequence seq(e.first);
     Log::get().info("Testing recurrence for " + seq.id_str() + ": " + e.second);
+    auto p = parser.parse(seq.getProgramPath());
+    auto r = RecurrenceRelation::fromProgram(p);
+    if (!r.first) {
+      Log::get().error("Cannot generate recurrence relation from program",
+                       true);
+    }
+    if (r.second.to_string() != e.second) {
+      Log::get().error(
+          "Unexpected recurrence relation: " + r.second.to_string(), true);
+    }
   }
 }
 
