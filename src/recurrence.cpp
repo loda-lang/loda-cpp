@@ -9,20 +9,20 @@ std::string RecurrenceRelation::to_string() const {
       result += ", ";
     }
     auto& e = entries[i];
-    result += e.first.to_string() + "=" + e.second.to_string();
+    result += e.first.toString() + "=" + e.second.toString();
   }
   return result;
 }
 
-std::shared_ptr<Expression> operandToExpression(Operand op) {
-  std::shared_ptr<Expression> e(new Expression);
+Expression operandToExpression(Operand op) {
+  Expression e;
   if (op.type == Operand::Type::DIRECT) {
-    e->type = Expression::Type::FUNCTION;
-    e->name = "a" + op.value.to_string();
-    e->addChild(Expression::Type::PARAMETER, "n");
+    e.type = Expression::Type::FUNCTION;
+    e.name = "a" + op.value.to_string();
+    e.newChild(Expression::Type::PARAMETER, "n");
   } else {
-    e->type = Expression::Type::CONSTANT;
-    e->value = op.value;
+    e.type = Expression::Type::CONSTANT;
+    e.value = op.value;
   }
   return e;
 }
@@ -48,20 +48,21 @@ std::pair<bool, RecurrenceRelation> RecurrenceRelation::fromProgram(
 
     e.first.type = Expression::Type::FUNCTION;
     e.first.name = "a" + op.target.value.to_string();
-    e.first.addChild(Expression::Type::PARAMETER, "n");
+    e.first.newChild(Expression::Type::PARAMETER, "n");
 
     if (op.type == Operation::Type::MOV) {
-      e.second = *operandToExpression(op.source).get();
+      e.second = operandToExpression(op.source);
     } else if (op.type == Operation::Type::ADD) {
-      e.second.type = Expression::Type::PLUS;
+      e.second.type = Expression::Type::SUM;
 
-      std::shared_ptr<Expression> t(new Expression());
+      auto t = new Expression();
       t->type = Expression::Type::FUNCTION;
       t->name = "a" + op.target.value.to_string();
-      t->addChild(Expression::Type::PARAMETER, "n");
+      t->newChild(Expression::Type::PARAMETER, "n");
 
       e.second.children.push_back(t);
-      e.second.children.push_back(operandToExpression(op.source));
+      e.second.children.push_back(
+          new Expression(operandToExpression(op.source)));
     }
 
     rec.entries.emplace_back(std::move(e));
