@@ -44,6 +44,7 @@ Expression& Expression::operator=(Expression&& e) {
     name = std::move(e.name);
     value = std::move(e.value);
     children = std::move(e.children);
+    e.children.clear();
   }
   return *this;
 }
@@ -78,9 +79,10 @@ Expression& Expression::newChild(Expression::Type type, const std::string& name,
 void Expression::replaceAll(const Expression& from, const Expression& to) {
   if (*this == from) {
     *this = to;
-  }
-  for (auto& c : children) {
-    c->replaceAll(from, to);
+  } else {
+    for (auto& c : children) {
+      c->replaceAll(from, to);
+    }
   }
 }
 
