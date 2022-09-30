@@ -124,7 +124,7 @@ void Expression::printChildren(std::ostream& out, const std::string& op) const {
     if (i > 0) {
       out << op;
     }
-    out << children[i];
+    out << *children[i];
   }
 }
 
@@ -133,7 +133,7 @@ bool Expression::equalChildren(const Expression& e) {
     return false;
   }
   for (size_t i = 0; i < children.size(); i++) {
-    if (children[i] != e.children[i]) {
+    if (*children[i] != *e.children[i]) {
       return false;
     }
   }
