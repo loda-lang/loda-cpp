@@ -8,7 +8,7 @@ ifdef LODA_PLATFORM
 CXXFLAGS += -DLODA_PLATFORM=$(LODA_PLATFORM)
 endif
 
-OBJS = api_client.o benchmark.o big_number.o blocks.o boinc.o commands.o config.o distribution.o evaluator.o evaluator_inc.o extender.o external/jute.o file.o finder.o generator.o generator_v1.o generator_v2.o generator_v3.o generator_v4.o generator_v5.o generator_v6.o generator_v7.o interpreter.o iterator.o log.o main.o matcher.o memory.o metrics.o miner.o minimizer.o mutator.o number.o oeis_list.o oeis_manager.o oeis_sequence.o optimizer.o parser.o process.o program.o program_util.o reducer.o semantics.o setup.o sequence.o stats.o test.o util.o web_client.o
+OBJS = api_client.o benchmark.o big_number.o blocks.o boinc.o commands.o config.o distribution.o evaluator.o evaluator_inc.o expression.o extender.o external/jute.o file.o finder.o generator.o generator_v1.o generator_v2.o generator_v3.o generator_v4.o generator_v5.o generator_v6.o generator_v7.o interpreter.o iterator.o log.o main.o matcher.o memory.o metrics.o miner.o minimizer.o mutator.o number.o oeis_list.o oeis_manager.o oeis_sequence.o optimizer.o parser.o process.o program.o program_util.o reducer.o semantics.o setup.o sequence.o stats.o test.o util.o web_client.o
 
 loda: external/jute.h external/jute.cpp $(OBJS)
 	$(CXX) $(LDFLAGS) -o loda $(OBJS)
