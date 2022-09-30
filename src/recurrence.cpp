@@ -2,44 +2,6 @@
 
 #include "evaluator_inc.hpp"
 
-std::string Expression::to_string() const {
-  switch (type) {
-    case Expression::Type::CONSTANT:
-      return value.to_string();
-    case Expression::Type::PARAMETER:
-      return name;
-    case Expression::Type::PLUS:
-      return to_string_op("+");
-    case Expression::Type::MINUS:
-      return to_string_op("-");
-    case Expression::Type::MUL:
-      return to_string_op("*");
-    case Expression::Type::DIV:
-      return to_string_op("/");
-    case Expression::Type::RECURRENCE:
-      return name + "(" + children.at(0)->to_string() + ")";
-  }
-}
-
-std::string Expression::to_string_op(const std::string& op) const {
-  std::string out;
-  for (size_t i = 0; i < children.size(); i++) {
-    if (i > 0) {
-      out += op;
-    }
-    out += children[i]->to_string();
-  }
-  return out;
-}
-
-void Expression::addChild(Expression::Type type, const std::string& name,
-                          Number value) {
-  children.emplace_back(std::unique_ptr<Expression>(new Expression()));
-  children.back()->type = type;
-  children.back()->name = name;
-  children.back()->value = value;
-}
-
 std::string RecurrenceRelation::to_string() const {
   std::string result;
   for (size_t i = 0; i < entries.size(); i++) {
@@ -50,6 +12,19 @@ std::string RecurrenceRelation::to_string() const {
     result += e.first.to_string() + "=" + e.second.to_string();
   }
   return result;
+}
+
+std::shared_ptr<Expression> operandToExpression(Operand op) {
+  std::shared_ptr<Expression> e(new Expression);
+  if (op.type == Operand::Type::DIRECT) {
+    e->type = Expression::Type::FUNCTION;
+    e->name = "a" + op.value.to_string();
+    e->addChild(Expression::Type::PARAMETER, "n");
+  } else {
+    e->type = Expression::Type::CONSTANT;
+    e->value = op.value;
+  }
+  return e;
 }
 
 std::pair<bool, RecurrenceRelation> RecurrenceRelation::fromProgram(
@@ -71,18 +46,25 @@ std::pair<bool, RecurrenceRelation> RecurrenceRelation::fromProgram(
   for (auto& op : body.ops) {
     std::pair<Expression, Expression> e;
 
+    e.first.type = Expression::Type::FUNCTION;
+    e.first.name = "a" + op.target.value.to_string();
+    e.first.addChild(Expression::Type::PARAMETER, "n");
+
     if (op.type == Operation::Type::MOV) {
-      e.first.type = Expression::Type::RECURRENCE;
-      e.first.name = "a" + op.target.value.to_string();
-      e.first.addChild(Expression::Type::PARAMETER, "n");
-      if (op.source.type == Operand::Type::DIRECT) {
-        e.second.type = Expression::Type::RECURRENCE;
-        e.second.name = "a" + op.source.value.to_string();
-        e.second.addChild(Expression::Type::PARAMETER, "n");
-      }
-      rec.entries.emplace_back(std::move(e));
+      e.second = *operandToExpression(op.source).get();
     } else if (op.type == Operation::Type::ADD) {
+      e.second.type = Expression::Type::PLUS;
+
+      std::shared_ptr<Expression> t(new Expression());
+      t->type = Expression::Type::FUNCTION;
+      t->name = "a" + op.target.value.to_string();
+      t->addChild(Expression::Type::PARAMETER, "n");
+
+      e.second.children.push_back(t);
+      e.second.children.push_back(operandToExpression(op.source));
     }
+
+    rec.entries.emplace_back(std::move(e));
   }
 
   result.first = true;
