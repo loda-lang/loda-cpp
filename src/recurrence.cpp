@@ -52,10 +52,8 @@ std::pair<bool, RecurrenceRelation> RecurrenceRelation::fromProgram(
       e.second = operandToExpression(op.source);
     } else if (op.type == Operation::Type::ADD) {
       e.second.type = Expression::Type::SUM;
-      e.second.children.push_back(
-          new Expression(operandToExpression(op.target)));
-      e.second.children.push_back(
-          new Expression(operandToExpression(op.source)));
+      e.second.newChild(operandToExpression(op.target));
+      e.second.newChild(operandToExpression(op.source));
     }
 
     rec.entries.emplace_back(std::move(e));
