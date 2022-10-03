@@ -14,12 +14,28 @@ std::string RecurrenceRelation::to_string() const {
   return result;
 }
 
-Expression operandToExpression(Operand op) {
+Expression* RecurrenceRelation::findEndtry(const Expression& left) {
+  for (auto& e : entries) {
+    if (e.first == left) {
+      return &e.second;
+    }
+  }
+  return nullptr;
+}
+
+Expression operandToExpression(Operand op, bool prev) {
   Expression e;
   if (op.type == Operand::Type::DIRECT) {
     e.type = Expression::Type::FUNCTION;
     e.name = "a" + op.value.to_string();
-    e.newChild(Expression::Type::PARAMETER, "n");
+    if (prev) {
+      Expression d(Expression::Type::DIFFERENCE);
+      d.newChild(Expression::Type::PARAMETER, "n");
+      d.newChild(Expression::Type::CONSTANT, "", Number(1));
+      e.newChild(d);
+    } else {
+      e.newChild(Expression::Type::PARAMETER, "n");
+    }
   } else {
     e.type = Expression::Type::CONSTANT;
     e.value = op.value;
@@ -46,14 +62,22 @@ std::pair<bool, RecurrenceRelation> RecurrenceRelation::fromProgram(
   for (auto& op : body.ops) {
     std::pair<Expression, Expression> e;
 
-    e.first = operandToExpression(op.target);
+    const Expression targetExpr = operandToExpression(op.target, false);
+    e.first = targetExpr;
 
     if (op.type == Operation::Type::MOV) {
-      e.second = operandToExpression(op.source);
+      e.second = operandToExpression(op.source, false);
     } else if (op.type == Operation::Type::ADD) {
       e.second.type = Expression::Type::SUM;
-      e.second.newChild(operandToExpression(op.target));
-      e.second.newChild(operandToExpression(op.source));
+
+      auto f = rec.findEndtry(targetExpr);
+      if (f) {
+        e.second.newChild(targetExpr);
+      } else {
+        e.second.newChild(operandToExpression(op.target, true));
+      }
+
+      e.second.newChild(operandToExpression(op.source, false));
     }
 
     rec.entries.emplace_back(std::move(e));

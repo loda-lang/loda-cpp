@@ -9,5 +9,8 @@ class RecurrenceRelation {
 
   std::string to_string() const;
 
+ private:
+  Expression* findEndtry(const Expression& left);
+
   std::vector<std::pair<Expression, Expression>> entries;
 };
