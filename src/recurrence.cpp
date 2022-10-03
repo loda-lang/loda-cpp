@@ -46,21 +46,14 @@ std::pair<bool, RecurrenceRelation> RecurrenceRelation::fromProgram(
   for (auto& op : body.ops) {
     std::pair<Expression, Expression> e;
 
-    e.first.type = Expression::Type::FUNCTION;
-    e.first.name = "a" + op.target.value.to_string();
-    e.first.newChild(Expression::Type::PARAMETER, "n");
+    e.first = operandToExpression(op.target);
 
     if (op.type == Operation::Type::MOV) {
       e.second = operandToExpression(op.source);
     } else if (op.type == Operation::Type::ADD) {
       e.second.type = Expression::Type::SUM;
-
-      auto t = new Expression();
-      t->type = Expression::Type::FUNCTION;
-      t->name = "a" + op.target.value.to_string();
-      t->newChild(Expression::Type::PARAMETER, "n");
-
-      e.second.children.push_back(t);
+      e.second.children.push_back(
+          new Expression(operandToExpression(op.target)));
       e.second.children.push_back(
           new Expression(operandToExpression(op.source)));
     }
