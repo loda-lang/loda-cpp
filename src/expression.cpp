@@ -70,6 +70,11 @@ bool Expression::operator==(const Expression& e) {
 
 bool Expression::operator!=(const Expression& e) { return !(*this == e); }
 
+Expression& Expression::newChild(const Expression& e) {
+  children.emplace_back(new Expression(e));
+  return *children.back();
+}
+
 Expression& Expression::newChild(Expression::Type type, const std::string& name,
                                  const Number& value) {
   children.emplace_back(new Expression(type, name, value));

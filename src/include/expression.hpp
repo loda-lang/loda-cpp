@@ -35,6 +35,8 @@ class Expression {
 
   bool operator!=(const Expression& e);
 
+  Expression& newChild(const Expression& e);
+
   Expression& newChild(Type type, const std::string& name = "",
                        const Number& value = Number::ZERO);
 

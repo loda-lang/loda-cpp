@@ -31,6 +31,11 @@ class IncrementalEvaluator {
   // Compute the next term and step count.
   std::pair<Number, size_t> next();
 
+  inline const Program& getPreLoop() { return pre_loop; }
+  inline const Program& getLoopBody() { return loop_body; }
+  inline const Program& getPostLoop() { return post_loop; }
+  inline int64_t getLoopCounterCell() { return loop_counter_cell; }
+
  private:
   bool extractFragments(const Program& program);
   bool checkPreLoop();
