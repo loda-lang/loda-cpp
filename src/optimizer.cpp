@@ -53,6 +53,9 @@ bool Optimizer::optimize(Program &p) const {
     if (mergeLoops(p)) {
       changed = true;
     }
+    if (collapseLoops(p)) {
+      changed = true;
+    }
     if (pullUpMov(p)) {
       changed = true;
     }
@@ -721,6 +724,61 @@ bool Optimizer::mergeLoops(Program &p) const {
         }
       }
     }
+  }
+  return false;
+}
+
+bool Optimizer::collapseLoops(Program &p) const {
+  if (ProgramUtil::hasIndirectOperand(p)) {
+    return false;
+  }
+  for (size_t i = 0; i + 3 < p.ops.size(); i++) {
+    if (p.ops[i].type != Operation::Type::LPB) {  // must be loop start
+      continue;
+    }
+    if (p.ops[i].source !=
+        Operand(Operand::Type::CONSTANT, 1)) {  // must be simple loop
+      continue;
+    }
+    const Operand loop_counter = p.ops[i].target;
+    const Operation sub_test(Operation::Type::SUB, loop_counter,
+                             Operand(Operand::Type::CONSTANT, 1));
+    if (p.ops[i + 1] != sub_test) {  // must be "sub <loop_counter>,1"
+      continue;
+    }
+    const Operation::Type basic_type = p.ops[i + 2].type;
+    if (basic_type != Operation::Type::ADD &&
+        basic_type != Operation::Type::MUL) {  // must be add or mul
+      continue;
+    }
+    const Operand argument = p.ops[i + 2].source;
+    const Operand target = p.ops[i + 2].target;
+    if (argument == target || argument == loop_counter ||
+        target == loop_counter) {  // argument, target, counter must be
+                                   // different cells
+      continue;
+    }
+    if (p.ops[i + 3].type != Operation::Type::LPE) {  // must be loop end
+      continue;
+    }
+    // all checks passed, we can collapse the loop now
+    const Operation::Type fold_type = (basic_type == Operation::Type::ADD)
+                                          ? Operation::Type::MUL
+                                          : Operation::Type::POW;
+    auto largest = ProgramUtil::getLargestDirectMemoryCell(p);
+    const Operand tmp_counter(Operand::Type::DIRECT, largest + 1);
+    const Operand tmp_result(Operand::Type::DIRECT, largest + 2);
+    p.ops[i] = Operation(Operation::Type::MOV, tmp_counter, loop_counter);
+    p.ops[i + 1] = Operation(Operation::Type::MAX, tmp_counter,
+                             Operand(Operand::Type::CONSTANT, 0));
+    p.ops[i + 2] = Operation(Operation::Type::MOV, tmp_result, argument);
+    p.ops[i + 3] = Operation(fold_type, tmp_result, tmp_counter);
+    p.ops.insert(p.ops.begin() + i + 4,
+                 Operation(basic_type, target, tmp_result));
+    p.ops.insert(p.ops.begin() + i + 5,
+                 Operation(Operation::Type::MIN, loop_counter,
+                           Operand(Operand::Type::CONSTANT, 0)));
+    return true;
   }
   return false;
 }
