@@ -1,0 +1,24 @@
+; in
+pow $0,2
+mov $2,7
+mov $1,$0
+add $1,$0
+sub $1,1
+lpb $1
+  sub $1,1
+  add $2,$0
+lpe
+mov $0,$2
+; out
+pow $0,2
+mov $1,$0
+add $1,$0
+sub $1,1
+mov $3,$1
+max $3,0
+mov $4,$0
+mul $4,$3
+min $1,0
+mov $2,7
+add $2,$4
+mov $0,$2

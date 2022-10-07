@@ -32,6 +32,8 @@ class Optimizer {
 
   bool mergeLoops(Program &p) const;
 
+  bool collapseLoops(Program &p) const;
+
   bool pullUpMov(Program &p) const;
 
   static constexpr size_t NUM_RESERVED_CELLS = 1;
