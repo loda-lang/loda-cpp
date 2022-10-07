@@ -12,6 +12,7 @@
 #include "config.hpp"
 #include "evaluator.hpp"
 #include "file.hpp"
+#include "formula.hpp"
 #include "generator_v1.hpp"
 #include "interpreter.hpp"
 #include "iterator.hpp"
@@ -25,7 +26,6 @@
 #include "optimizer.hpp"
 #include "parser.hpp"
 #include "program_util.hpp"
-#include "recurrence.hpp"
 #include "semantics.hpp"
 #include "setup.hpp"
 #include "stats.hpp"
@@ -45,7 +45,7 @@ Test::Test() {
 }
 
 void Test::all() {
-  recurrence();
+  formula();
   return;
 
   // fast tests
@@ -63,7 +63,7 @@ void Test::all() {
   optimizer();
   checkpoint();
   knownPrograms();
-  recurrence();
+  formula();
 
   // slow tests
   number();
@@ -877,10 +877,9 @@ void Test::memUsage() {
   }
 }
 
-void Test::recurrence() {
-  std::string path = std::string("tests") + FILE_SEP +
-                     std::string("recurrence") + FILE_SEP +
-                     std::string("recurrence.txt");
+void Test::formula() {
+  std::string path = std::string("tests") + FILE_SEP + std::string("formula") +
+                     FILE_SEP + std::string("program-formula.txt");
   std::map<size_t, std::string> map;
   OeisList::loadMapWithComments(path, map);
   if (map.empty()) {
@@ -889,16 +888,14 @@ void Test::recurrence() {
   Parser parser;
   for (auto& e : map) {
     OeisSequence seq(e.first);
-    Log::get().info("Testing recurrence for " + seq.id_str() + ": " + e.second);
+    Log::get().info("Testing formula for " + seq.id_str() + ": " + e.second);
     auto p = parser.parse(seq.getProgramPath());
-    auto r = RecurrenceRelation::fromProgram(p);
+    auto r = Formula::fromProgram(p);
     if (!r.first) {
-      Log::get().error("Cannot generate recurrence relation from program",
-                       true);
+      Log::get().error("Cannot generate formula from program", true);
     }
     if (r.second.to_string() != e.second) {
-      Log::get().error(
-          "Unexpected recurrence relation: " + r.second.to_string(), true);
+      Log::get().error("Unexpected formula: " + r.second.to_string(), true);
     }
   }
 }

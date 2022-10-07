@@ -1,8 +1,8 @@
-#include "recurrence.hpp"
+#include "formula.hpp"
 
 #include "evaluator_inc.hpp"
 
-std::string RecurrenceRelation::to_string() const {
+std::string Formula::to_string() const {
   std::string result;
   for (size_t i = 0; i < entries.size(); i++) {
     if (i > 0) {
@@ -14,7 +14,7 @@ std::string RecurrenceRelation::to_string() const {
   return result;
 }
 
-Expression* RecurrenceRelation::findEndtry(const Expression& left) {
+Expression* Formula::findEndtry(const Expression& left) {
   for (auto& e : entries) {
     if (e.first == left) {
       return &e.second;
@@ -43,9 +43,8 @@ Expression operandToExpression(Operand op, bool prev) {
   return e;
 }
 
-std::pair<bool, RecurrenceRelation> RecurrenceRelation::fromProgram(
-    const Program& p) {
-  std::pair<bool, RecurrenceRelation> result;
+std::pair<bool, Formula> Formula::fromProgram(const Program& p) {
+  std::pair<bool, Formula> result;
   result.first = false;
 
   // TODO: pass in settings, cache as members?

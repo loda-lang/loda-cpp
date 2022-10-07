@@ -66,7 +66,7 @@ class Test {
 
   void memUsage();
 
-  void recurrence();
+  void formula();
 
  private:
   std::vector<std::pair<Program, Program>> loadInOutTests(

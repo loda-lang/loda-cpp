@@ -3,9 +3,9 @@
 #include "expression.hpp"
 #include "program.hpp"
 
-class RecurrenceRelation {
+class Formula {
  public:
-  static std::pair<bool, RecurrenceRelation> fromProgram(const Program& p);
+  static std::pair<bool, Formula> fromProgram(const Program& p);
 
   std::string to_string() const;
 
