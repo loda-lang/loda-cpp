@@ -185,6 +185,13 @@ Number& Number::operator+=(const Number& n) {
   return *this;
 }
 
+Number& Number::operator-=(const Number& n) {
+  auto m = n;
+  m.negate();
+  *this += m;
+  return *this;
+}
+
 Number& Number::operator*=(const Number& n) {
   if (checkInfArgs(n)) {
     return *this;

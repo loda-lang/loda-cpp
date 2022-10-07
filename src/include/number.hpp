@@ -41,6 +41,8 @@ class Number {
 
   Number& operator+=(const Number& n);
 
+  Number& operator-=(const Number& n);
+
   Number& operator*=(const Number& n);
 
   Number& operator/=(const Number& n);

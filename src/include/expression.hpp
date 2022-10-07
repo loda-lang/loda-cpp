@@ -31,9 +31,11 @@ class Expression {
 
   Expression& operator=(Expression&& e);
 
-  bool operator==(const Expression& e);
+  bool operator==(const Expression& e) const;
 
-  bool operator!=(const Expression& e);
+  bool operator!=(const Expression& e) const;
+
+  bool operator<(const Expression& e) const;
 
   Expression& newChild(const Expression& e);
 
@@ -41,6 +43,8 @@ class Expression {
                        const Number& value = Number::ZERO);
 
   void replaceAll(const Expression& from, const Expression& to);
+
+  void normalize();
 
   friend std::ostream& operator<<(std::ostream& out, const Expression& e);
 
@@ -54,5 +58,11 @@ class Expression {
  private:
   void printChildren(std::ostream& out, const std::string& op) const;
 
-  bool equalChildren(const Expression& e);
+  bool equalChildren(const Expression& e) const;
+
+  bool lessChildren(const Expression& e) const;
+
+  bool mergeTwoChildren();
+
+  bool mergeAllChildren();
 };
