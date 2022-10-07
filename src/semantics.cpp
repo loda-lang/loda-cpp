@@ -12,9 +12,9 @@ Number Semantics::add(const Number& a, const Number& b) {
 }
 
 Number Semantics::sub(const Number& a, const Number& b) {
-  auto c = b;
-  c.negate();
-  return add(a, c);
+  auto r = a;
+  r -= b;
+  return r;
 }
 
 Number Semantics::trn(const Number& a, const Number& b) {

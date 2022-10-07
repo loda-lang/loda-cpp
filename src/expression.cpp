@@ -1,5 +1,6 @@
 #include "expression.hpp"
 
+#include <algorithm>
 #include <sstream>
 
 Expression::Expression()
@@ -49,11 +50,12 @@ Expression& Expression::operator=(Expression&& e) {
   return *this;
 }
 
-bool Expression::operator==(const Expression& e) {
+bool Expression::operator==(const Expression& e) const {
   if (type != e.type) {
     return false;
   }
-  switch (e.type) {
+  // same type => compare content
+  switch (type) {
     case Expression::Type::CONSTANT:
       return (value == e.value);
     case Expression::Type::PARAMETER:
@@ -68,7 +70,30 @@ bool Expression::operator==(const Expression& e) {
   }
 }
 
-bool Expression::operator!=(const Expression& e) { return !(*this == e); }
+bool Expression::operator!=(const Expression& e) const { return !(*this == e); }
+
+bool Expression::operator<(const Expression& e) const {
+  if (type != e.type) {
+    return (type < e.type);
+  }
+  // same type => compare content
+  switch (type) {
+    case Expression::Type::CONSTANT:
+      return (value < e.value);
+    case Expression::Type::PARAMETER:
+      return (name < e.name);
+    case Expression::Type::FUNCTION:
+      if (name != e.name) {
+        return (name < e.name);
+      }
+      return lessChildren(e);
+    case Expression::Type::SUM:
+    case Expression::Type::DIFFERENCE:
+    case Expression::Type::PRODUCT:
+    case Expression::Type::FRACTION:
+      return lessChildren(e);
+  }
+}
 
 Expression& Expression::newChild(const Expression& e) {
   children.emplace_back(new Expression(e));
@@ -88,6 +113,36 @@ void Expression::replaceAll(const Expression& from, const Expression& to) {
     for (auto& c : children) {
       c->replaceAll(from, to);
     }
+  }
+}
+
+bool compareExprPtr(const Expression* lhs, const Expression* rhs) {
+  return (*lhs < *rhs);
+}
+
+void Expression::normalize() {
+  for (auto& c : children) {
+    c->normalize();
+  }
+  switch (type) {
+    case Expression::Type::CONSTANT:
+    case Expression::Type::PARAMETER:
+    case Expression::Type::FUNCTION:
+      break;
+    case Expression::Type::SUM:
+    case Expression::Type::PRODUCT:
+      if (children.size() > 1) {  // at least two elements
+        std::sort(children.begin(), children.end(), compareExprPtr);
+        mergeAllChildren();
+      }
+      break;
+    case Expression::Type::DIFFERENCE:
+    case Expression::Type::FRACTION:
+      if (children.size() > 2) {  // at least three elements
+        std::sort(children.begin() + 1, children.end(), compareExprPtr);
+        mergeAllChildren();
+      }
+      break;
   }
 }
 
@@ -133,7 +188,7 @@ void Expression::printChildren(std::ostream& out, const std::string& op) const {
   }
 }
 
-bool Expression::equalChildren(const Expression& e) {
+bool Expression::equalChildren(const Expression& e) const {
   if (children.size() != e.children.size()) {
     return false;
   }
@@ -143,4 +198,65 @@ bool Expression::equalChildren(const Expression& e) {
     }
   }
   return true;
+}
+
+bool Expression::lessChildren(const Expression& e) const {
+  if (children.size() < e.children.size()) {
+    return true;
+  } else if (children.size() > e.children.size()) {
+    return false;
+  }
+  for (size_t i = 0; i < children.size(); i++) {
+    if (children[i] < e.children[i]) {
+      return true;
+    } else if (e.children[i] < children[i]) {
+      return false;
+    }
+  }
+  return false;  // equal
+}
+
+bool Expression::mergeTwoChildren() {
+  for (size_t i = 0; i + 1 < children.size(); i++) {
+    auto c = children[i];
+    auto d = children[i + 1];
+    if (c->type != Expression::Type::CONSTANT ||
+        d->type != Expression::Type::CONSTANT) {
+      continue;
+    }
+    bool merged = false;
+    switch (type) {
+      case Expression::Type::SUM: {
+        c->value += d->value;
+        merged = true;
+        break;
+      }
+      case Expression::Type::DIFFERENCE: {
+        c->value -= d->value;
+        merged = true;
+        break;
+      }
+      case Expression::Type::PRODUCT: {
+        c->value *= d->value;
+        merged = true;
+        break;
+      }
+      default:
+        break;
+    }
+    if (merged) {
+      delete d;
+      children.erase(children.begin() + i + 1);
+      return true;
+    }
+  }
+  return false;
+}
+
+bool Expression::mergeAllChildren() {
+  bool changed = false;
+  while (mergeTwoChildren()) {
+    changed = true;
+  }
+  return changed;
 }
