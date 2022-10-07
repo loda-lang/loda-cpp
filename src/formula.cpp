@@ -44,7 +44,6 @@ std::pair<bool, Formula> Formula::fromProgram(const Program& p) {
   if (!ok) {
     return std::pair<bool, Formula>(false, {});
   }
-
   auto expr = f.find(paramKey);
   auto finalKey = simpleFunction("a", "n");
   f.entries.clear();

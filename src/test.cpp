@@ -45,9 +45,6 @@ Test::Test() {
 }
 
 void Test::all() {
-  formula();
-  return;
-
   // fast tests
   sequence();
   memory();
