@@ -12,6 +12,7 @@
 #include "config.hpp"
 #include "evaluator.hpp"
 #include "file.hpp"
+#include "formula.hpp"
 #include "generator_v1.hpp"
 #include "interpreter.hpp"
 #include "iterator.hpp"
@@ -59,6 +60,7 @@ void Test::all() {
   optimizer();
   checkpoint();
   knownPrograms();
+  formula();
 
   // slow tests
   number();
@@ -869,6 +871,29 @@ void Test::memUsage() {
                   std::to_string(total) + " MiB");
   if (usage < 250 || usage > 1000) {
     Log::get().error("Unexpected memory usage", true);
+  }
+}
+
+void Test::formula() {
+  std::string path = std::string("tests") + FILE_SEP + std::string("formula") +
+                     FILE_SEP + std::string("program-formula.txt");
+  std::map<size_t, std::string> map;
+  OeisList::loadMapWithComments(path, map);
+  if (map.empty()) {
+    Log::get().error("Unexpected map content", true);
+  }
+  Parser parser;
+  for (auto& e : map) {
+    OeisSequence seq(e.first);
+    Log::get().info("Testing formula for " + seq.id_str() + ": " + e.second);
+    auto p = parser.parse(seq.getProgramPath());
+    auto r = Formula::fromProgram(p);
+    if (!r.first) {
+      Log::get().error("Cannot generate formula from program", true);
+    }
+    if (r.second.toString() != e.second) {
+      Log::get().error("Unexpected formula: " + r.second.toString(), true);
+    }
   }
 }
 

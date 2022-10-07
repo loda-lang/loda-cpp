@@ -193,7 +193,7 @@ bool Expression::equalChildren(const Expression& e) const {
     return false;
   }
   for (size_t i = 0; i < children.size(); i++) {
-    if (*children[i] != *e.children[i]) {
+    if (*children[i] != *e.children[i]) {  // dereference!
       return false;
     }
   }
@@ -207,9 +207,9 @@ bool Expression::lessChildren(const Expression& e) const {
     return false;
   }
   for (size_t i = 0; i < children.size(); i++) {
-    if (children[i] < e.children[i]) {
+    if (*children[i] < *e.children[i]) {  // dereference!
       return true;
-    } else if (e.children[i] < children[i]) {
+    } else if (*e.children[i] < *children[i]) {  // dereference!
       return false;
     }
   }
