@@ -894,8 +894,8 @@ void Test::formula() {
     if (!r.first) {
       Log::get().error("Cannot generate formula from program", true);
     }
-    if (r.second.to_string() != e.second) {
-      Log::get().error("Unexpected formula: " + r.second.to_string(), true);
+    if (r.second.toString() != e.second) {
+      Log::get().error("Unexpected formula: " + r.second.toString(), true);
     }
   }
 }
