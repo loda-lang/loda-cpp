@@ -68,7 +68,7 @@ bool Expression::operator==(const Expression& e) const {
     case Expression::Type::FRACTION:
       return equalChildren(e);
   }
-  return false;  // unreachable
+  throw std::runtime_error("internal error");  // unreachable
 }
 
 bool Expression::operator!=(const Expression& e) const { return !(*this == e); }
@@ -94,7 +94,7 @@ bool Expression::operator<(const Expression& e) const {
     case Expression::Type::FRACTION:
       return lessChildren(e);
   }
-  return false;  // unreachable
+  throw std::runtime_error("internal error");  // unreachable
 }
 
 Expression& Expression::newChild(const Expression& e) {

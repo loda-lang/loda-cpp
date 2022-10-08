@@ -21,8 +21,9 @@ Expression simpleFunction(const std::string& f, const std::string& p) {
 
 Expression operandToExpression(Operand op) {
   switch (op.type) {
-    case Operand::Type::CONSTANT:
+    case Operand::Type::CONSTANT: {
       return Expression(Expression::Type::CONSTANT, "", op.value);
+    }
     case Operand::Type::DIRECT: {
       std::string a("a");
       if (op.value != Number::ZERO) {
@@ -30,9 +31,11 @@ Expression operandToExpression(Operand op) {
       }
       return simpleFunction(a, "n");
     }
-    case Operand::Type::INDIRECT:
+    case Operand::Type::INDIRECT: {
       throw std::runtime_error("indirect operation not supported");
+    }
   }
+  throw std::runtime_error("internal error");  // unreachable
 }
 
 std::pair<bool, Formula> Formula::fromProgram(const Program& p) {
