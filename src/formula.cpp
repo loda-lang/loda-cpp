@@ -77,6 +77,13 @@ bool Formula::update(const Operation& op) {
       entries[target] = Expression(Expression::Type::SUM);
       entries[target].newChild(prevTargetValue);
       entries[target].newChild(source);
+      entries[target].normalize();
+      return true;
+    case Operation::Type::MUL:
+      entries[target] = Expression(Expression::Type::PRODUCT);
+      entries[target].newChild(prevTargetValue);
+      entries[target].newChild(source);
+      entries[target].normalize();
       return true;
     default:
       return false;

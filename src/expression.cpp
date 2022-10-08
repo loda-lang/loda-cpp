@@ -130,6 +130,11 @@ void Expression::normalize() {
     case Expression::Type::FUNCTION:
       break;
     case Expression::Type::SUM:
+      if (children.size() > 1) {  // at least two elements
+        std::sort(children.rbegin(), children.rend(), compareExprPtr);
+        mergeAllChildren();
+      }
+      break;
     case Expression::Type::PRODUCT:
       if (children.size() > 1) {  // at least two elements
         std::sort(children.begin(), children.end(), compareExprPtr);
