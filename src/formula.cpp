@@ -2,6 +2,9 @@
 
 #include <stdexcept>
 
+#include "log.hpp"
+#include "program_util.hpp"
+
 std::string Formula::toString() const {
   std::string result;
   for (auto& e : entries) {
@@ -48,6 +51,8 @@ std::pair<bool, Formula> Formula::fromProgram(const Program& p) {
       ok = false;
       break;
     }
+    Log::get().debug("Operation " + ProgramUtil::operationToString(op) +
+                     " updated formula to " + f.toString());
   }
   if (!ok) {
     return std::pair<bool, Formula>(false, {});
@@ -66,6 +71,15 @@ Expression Formula::find(const Expression& e) {
   return Expression(Expression::Type::CONSTANT, "", 0);
 }
 
+Expression treeExpr(Expression::Type t, const Expression& c1,
+                    const Expression& c2) {
+  Expression result(t);
+  result.newChild(c1);
+  result.newChild(c2);
+  result.normalize();
+  return result;
+}
+
 bool Formula::update(const Operation& op) {
   auto source = operandToExpression(op.source);
   auto target = operandToExpression(op.target);
@@ -77,16 +91,16 @@ bool Formula::update(const Operation& op) {
       entries[target] = source;
       return true;
     case Operation::Type::ADD:
-      entries[target] = Expression(Expression::Type::SUM);
-      entries[target].newChild(prevTargetValue);
-      entries[target].newChild(source);
-      entries[target].normalize();
+      entries[target] =
+          treeExpr(Expression::Type::SUM, prevTargetValue, source);
+      return true;
+    case Operation::Type::SUB:
+      entries[target] =
+          treeExpr(Expression::Type::DIFFERENCE, prevTargetValue, source);
       return true;
     case Operation::Type::MUL:
-      entries[target] = Expression(Expression::Type::PRODUCT);
-      entries[target].newChild(prevTargetValue);
-      entries[target].newChild(source);
-      entries[target].normalize();
+      entries[target] =
+          treeExpr(Expression::Type::PRODUCT, prevTargetValue, source);
       return true;
     default:
       return false;
