@@ -16,6 +16,24 @@
       ]
     },
     {
+      "name": "update",
+      "overwrite": "auto",
+      "backoff": true,
+      "generators": [
+        "v2",
+        "v3",
+        "v5",
+        "v6_2"
+      ],
+      "matchers": [
+        "direct",
+        "linear1",
+        "linear2",
+        "binary",
+        "decimal"
+      ]
+    },
+    {
       "name": "mutate2",
       "overwrite": "none",
       "backoff": true,
@@ -46,8 +64,68 @@
       ]
     },
     {
-      "name": "pattern",
+      "name": "mutate4",
       "overwrite": "none",
+      "backoff": true,
+      "generators": [
+        "v6_4"
+      ],
+      "matchers": [
+        "direct",
+        "linear1",
+        "linear2",
+        "binary",
+        "decimal"
+      ]
+    },
+    {
+      "name": "mutate5",
+      "overwrite": "none",
+      "backoff": true,
+      "generators": [
+        "v6_5"
+      ],
+      "matchers": [
+        "direct",
+        "linear1",
+        "linear2",
+        "binary",
+        "decimal"
+      ]
+    },
+    {
+      "name": "mutate6",
+      "overwrite": "none",
+      "backoff": true,
+      "generators": [
+        "v6_6"
+      ],
+      "matchers": [
+        "direct",
+        "linear1",
+        "linear2",
+        "binary",
+        "decimal"
+      ]
+    },
+    {
+      "name": "pattern1",
+      "overwrite": "none",
+      "backoff": true,
+      "generators": [
+        "v7"
+      ],
+      "matchers": [
+        "direct",
+        "linear1",
+        "linear2",
+        "binary",
+        "decimal"
+      ]
+    },
+    {
+      "name": "pattern2",
+      "overwrite": "auto",
       "backoff": true,
       "generators": [
         "v7"
@@ -173,6 +251,21 @@
       "name": "v6_3",
       "version": 6,
       "mutationRate": 0.4
+    },
+    {
+      "name": "v6_4",
+      "version": 6,
+      "mutationRate": 0.15
+    },
+    {
+      "name": "v6_5",
+      "version": 6,
+      "mutationRate": 0.25
+    },
+    {
+      "name": "v6_6",
+      "version": 6,
+      "mutationRate": 0.35
     },
     {
       "name": "v7",
