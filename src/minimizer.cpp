@@ -241,8 +241,7 @@ bool Minimizer::optimizeAndMinimize(Program& p, size_t num_terms) const {
     Log::get().error("Exception during minimization: " + std::string(e.what()),
                      false);
     std::string f = Setup::getLodaHome() + "debug/minimizer/" +
-                    std::to_string(ProgramUtil::hash(p, false) % 100000) +
-                    ".asm";
+                    std::to_string(ProgramUtil::hash(p) % 100000) + ".asm";
     ensureDir(f);
     std::ofstream out(f);
     ProgramUtil::print(p, out);

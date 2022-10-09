@@ -444,13 +444,13 @@ void Test::programUtil() {
                      true);
   }
   p = parser.parse(OeisSequence(45).getProgramPath());
-  auto h = ProgramUtil::hash(p, false);
+  auto h = ProgramUtil::hash(p);
   size_t expected_hash = 5011492004605980214L;
   if (h != expected_hash) {
     Log::get().error("Unexpected program hash: " + std::to_string(h), true);
   }
   ProgramUtil::removeOps(p, Operation::Type::NOP);
-  h = ProgramUtil::hash(p, false);
+  h = ProgramUtil::hash(p);
   if (h != expected_hash) {
     Log::get().error("Unexpected program hash: " + std::to_string(h), true);
   }

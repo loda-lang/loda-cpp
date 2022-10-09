@@ -13,7 +13,6 @@ class Version {
   static const std::string BRANCH;
   static const std::string INFO;
   static const std::string PLATFORM;
-  static const size_t VERSION_HASH;
   static const bool IS_RELEASE;
 };
 

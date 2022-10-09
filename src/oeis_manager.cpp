@@ -726,7 +726,7 @@ update_program_result_t OeisManager::updateProgram(
   result.program = checked.second;
   result.change_type = checked.first;
   if (!is_new) {
-    result.previous_hash = ProgramUtil::hash(existing, true);
+    result.previous_hash = ProgramUtil::hash(existing);
   }
 
   // write new or better program version

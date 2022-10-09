@@ -9,7 +9,6 @@
 #include "log.hpp"
 #include "setup.hpp"
 
-#define hstr(a) std::hash<std::string>{}(cstr(a))
 #define cstr(a) std::string(xstr(a))
 #define xstr(a) ystr(a)
 #define ystr(a) #a
@@ -19,14 +18,12 @@ const std::string Version::VERSION = cstr(LODA_VERSION);
 const std::string Version::BRANCH = "v" + cstr(LODA_VERSION);
 const std::string Version::INFO = "LODA v" + cstr(LODA_VERSION);
 const std::string Version::PLATFORM = cstr(LODA_PLATFORM);
-const size_t Version::VERSION_HASH = hstr(LODA_VERSION);
 const bool Version::IS_RELEASE = true;
 #else
 const std::string Version::VERSION = "dev";
 const std::string Version::BRANCH = "main";
 const std::string Version::INFO = "LODA developer version";
 const std::string Version::PLATFORM = "unknown";
-const size_t Version::VERSION_HASH = 1;
 const bool Version::IS_RELEASE = false;
 #endif
 
