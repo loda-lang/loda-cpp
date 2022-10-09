@@ -56,7 +56,10 @@ class Expression {
   std::vector<Expression*> children;
 
  private:
-  void printChildren(std::ostream& out, const std::string& op) const;
+  void print(std::ostream& out, bool isRoot, Expression::Type parentType) const;
+
+  void printChildren(std::ostream& out, const std::string& op, bool isRoot,
+                     Expression::Type parentType) const;
 
   bool equalChildren(const Expression& e) const;
 
@@ -65,4 +68,6 @@ class Expression {
   bool mergeTwoChildren();
 
   bool mergeAllChildren();
+
+  bool simplifyNegativeProduct();
 };

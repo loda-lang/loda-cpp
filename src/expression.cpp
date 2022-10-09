@@ -151,32 +151,11 @@ void Expression::normalize() {
       }
       break;
   }
+  simplifyNegativeProduct();
 }
 
 std::ostream& operator<<(std::ostream& out, const Expression& e) {
-  switch (e.type) {
-    case Expression::Type::CONSTANT:
-      out << e.value;
-      break;
-    case Expression::Type::PARAMETER:
-      out << e.name;
-      break;
-    case Expression::Type::FUNCTION:
-      out << e.name << "(" << *e.children.front() << ")";
-      break;
-    case Expression::Type::SUM:
-      e.printChildren(out, "+");
-      break;
-    case Expression::Type::DIFFERENCE:
-      e.printChildren(out, "-");
-      break;
-    case Expression::Type::PRODUCT:
-      e.printChildren(out, "*");
-      break;
-    case Expression::Type::FRACTION:
-      e.printChildren(out, "/");
-      break;
-  }
+  e.print(out, true, Expression::Type::CONSTANT);
   return out;
 }
 
@@ -186,12 +165,60 @@ std::string Expression::toString() const {
   return ss.str();
 }
 
-void Expression::printChildren(std::ostream& out, const std::string& op) const {
+void Expression::print(std::ostream& out, bool isRoot,
+                       Expression::Type parentType) const {
+  switch (type) {
+    case Expression::Type::CONSTANT:
+      out << value;
+      break;
+    case Expression::Type::PARAMETER:
+      out << name;
+      break;
+    case Expression::Type::FUNCTION:
+      out << name;
+      printChildren(out, ",", isRoot, parentType);
+      break;
+    case Expression::Type::SUM:
+      printChildren(out, "+", isRoot, parentType);
+      break;
+    case Expression::Type::DIFFERENCE:
+      printChildren(out, "-", isRoot, parentType);
+      break;
+    case Expression::Type::PRODUCT:
+      printChildren(out, "*", isRoot, parentType);
+      break;
+    case Expression::Type::FRACTION:
+      printChildren(out, "/", isRoot, parentType);
+      break;
+  }
+}
+
+bool needsBrackets(Expression::Type type, Expression::Type parentType,
+                   bool isRoot) {
+  if (isRoot && type != Expression::Type::FUNCTION) {
+    return false;
+  }
+  if (type == Expression::Type::PRODUCT &&
+      parentType == Expression::Type::SUM) {
+    return false;
+  }
+  return true;
+}
+
+void Expression::printChildren(std::ostream& out, const std::string& op,
+                               bool isRoot, Expression::Type parentType) const {
+  const bool brackets = needsBrackets(type, parentType, isRoot);
+  if (brackets) {
+    out << "(";
+  }
   for (size_t i = 0; i < children.size(); i++) {
     if (i > 0) {
       out << op;
     }
-    out << *children[i];
+    children[i]->print(out, false, type);
+  }
+  if (brackets) {
+    out << ")";
   }
 }
 
@@ -266,4 +293,29 @@ bool Expression::mergeAllChildren() {
     changed = true;
   }
   return changed;
+}
+
+bool Expression::simplifyNegativeProduct() {
+  if (type != Expression::Type::PRODUCT) {
+    return false;
+  }
+  if (children.size() != 2) {
+    return false;
+  }
+  if (children[0]->type != Expression::Type::CONSTANT) {
+    return false;
+  }
+  if (children[0]->value != Number(-1)) {
+    return false;
+  }
+  if (children[1]->type != Expression::Type::DIFFERENCE) {
+    return false;
+  }
+  if (children[1]->children.size() != 2) {
+    return false;
+  }
+  auto tmp = *children[1];
+  std::swap(tmp.children[0], tmp.children[1]);
+  *this = tmp;
+  return true;
 }
