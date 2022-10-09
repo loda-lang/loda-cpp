@@ -109,23 +109,8 @@
       ]
     },
     {
-      "name": "pattern1",
+      "name": "pattern",
       "overwrite": "none",
-      "backoff": true,
-      "generators": [
-        "v7"
-      ],
-      "matchers": [
-        "direct",
-        "linear1",
-        "linear2",
-        "binary",
-        "decimal"
-      ]
-    },
-    {
-      "name": "pattern2",
-      "overwrite": "auto",
       "backoff": true,
       "generators": [
         "v7"
