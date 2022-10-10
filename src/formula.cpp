@@ -115,6 +115,10 @@ bool Formula::update(const Operation& op) {
       entries[target] =
           treeExpr(Expression::Type::PRODUCT, prevTargetValue, source);
       return true;
+    case Operation::Type::POW:
+      entries[target] =
+          treeExpr(Expression::Type::POWER, prevTargetValue, source);
+      return true;
     default:
       return false;
   }

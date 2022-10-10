@@ -13,7 +13,8 @@ class Expression {
     SUM,
     DIFFERENCE,
     PRODUCT,
-    FRACTION
+    FRACTION,
+    POWER
   };
 
   Expression();

@@ -274,7 +274,7 @@ void Commands::testPari() {
   OeisManager manager(settings);
   manager.load();
   auto& stats = manager.getStats();
-  int64_t count = 0;
+  int64_t good = 0, bad = 0;
   for (size_t id = 0; id < stats.all_program_ids.size(); id++) {
     if (!stats.all_program_ids[id]) {
       continue;
@@ -291,12 +291,14 @@ void Commands::testPari() {
     if (genSeq != expSeq) {
       Log::get().info("Generated sequence: " + genSeq.to_string());
       Log::get().info("Expected sequence:  " + expSeq.to_string());
-      Log::get().error("Unexpected PARI sequence", true);
+      Log::get().error("Unexpected PARI sequence", false);
+      bad++;
+    } else {
+      good++;
     }
-    count++;
   }
-  Log::get().info("Passed PARI check for " + std::to_string(count) +
-                  " programs");
+  Log::get().info(std::to_string(good) + " passed, " + std::to_string(bad) +
+                  " failed PARI check");
 }
 
 void Commands::dot(const std::string& path) {

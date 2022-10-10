@@ -66,6 +66,7 @@ bool Expression::operator==(const Expression& e) const {
     case Expression::Type::DIFFERENCE:
     case Expression::Type::PRODUCT:
     case Expression::Type::FRACTION:
+    case Expression::Type::POWER:
       return equalChildren(e);
   }
   throw std::runtime_error("internal error");  // unreachable
@@ -92,6 +93,7 @@ bool Expression::operator<(const Expression& e) const {
     case Expression::Type::DIFFERENCE:
     case Expression::Type::PRODUCT:
     case Expression::Type::FRACTION:
+    case Expression::Type::POWER:
       return lessChildren(e);
   }
   throw std::runtime_error("internal error");  // unreachable
@@ -130,6 +132,7 @@ void Expression::normalize() {
     case Expression::Type::CONSTANT:
     case Expression::Type::PARAMETER:
     case Expression::Type::FUNCTION:
+    case Expression::Type::POWER:
       break;
     case Expression::Type::SUM:
       if (children.size() > 1) {  // at least two elements
@@ -170,6 +173,13 @@ std::string Expression::toString() const {
 
 void Expression::print(std::ostream& out, bool isRoot,
                        Expression::Type parentType) const {
+  if (type == Expression::Type::FUNCTION) {
+    out << name;
+  }
+  const bool brackets = needsBrackets(parentType, isRoot);
+  if (brackets) {
+    out << "(";
+  }
   switch (type) {
     case Expression::Type::CONSTANT:
       out << value;
@@ -178,7 +188,6 @@ void Expression::print(std::ostream& out, bool isRoot,
       out << name;
       break;
     case Expression::Type::FUNCTION:
-      out << name;
       printChildren(out, ",", isRoot, parentType);
       break;
     case Expression::Type::SUM:
@@ -193,10 +202,22 @@ void Expression::print(std::ostream& out, bool isRoot,
     case Expression::Type::FRACTION:
       printChildren(out, "/", isRoot, parentType);
       break;
+    case Expression::Type::POWER:
+      printChildren(out, "^", isRoot, parentType);
+      break;
+  }
+  if (brackets) {
+    out << ")";
   }
 }
 
 bool Expression::needsBrackets(Expression::Type parentType, bool isRoot) const {
+  if (type == Expression::Type::PARAMETER) {
+    return false;
+  }
+  if (type == Expression::Type::CONSTANT && (Number(-1) < value)) {
+    return false;
+  }
   if (isRoot && type != Expression::Type::FUNCTION) {
     return false;
   }
@@ -215,18 +236,11 @@ bool Expression::needsBrackets(Expression::Type parentType, bool isRoot) const {
 
 void Expression::printChildren(std::ostream& out, const std::string& op,
                                bool isRoot, Expression::Type parentType) const {
-  const bool brackets = needsBrackets(parentType, isRoot);
-  if (brackets) {
-    out << "(";
-  }
   for (size_t i = 0; i < children.size(); i++) {
     if (i > 0) {
       out << op;
     }
     children[i]->print(out, false, type);
-  }
-  if (brackets) {
-    out << ")";
   }
 }
 
