@@ -151,6 +151,9 @@ void Expression::normalize() {
       }
       break;
   }
+  if (pullUpChildren()) {
+    normalize();
+  }
   simplifyNegativeProduct();
 }
 
@@ -193,14 +196,18 @@ void Expression::print(std::ostream& out, bool isRoot,
   }
 }
 
-bool needsBrackets(Expression::Type type, Expression::Type parentType,
-                   bool isRoot) {
+bool Expression::needsBrackets(Expression::Type parentType, bool isRoot) const {
   if (isRoot && type != Expression::Type::FUNCTION) {
     return false;
   }
   if (type == Expression::Type::PRODUCT &&
-      (parentType == Expression::Type::SUM ||
-       parentType == Expression::Type::DIFFERENCE)) {
+      parentType == Expression::Type::SUM) {
+    return false;
+  }
+  if (type == Expression::Type::PRODUCT &&
+      parentType == Expression::Type::DIFFERENCE &&
+      (children.front()->type != Expression::Type::CONSTANT ||
+       Number(-1) < children.front()->value)) {
     return false;
   }
   return true;
@@ -208,7 +215,7 @@ bool needsBrackets(Expression::Type type, Expression::Type parentType,
 
 void Expression::printChildren(std::ostream& out, const std::string& op,
                                bool isRoot, Expression::Type parentType) const {
-  const bool brackets = needsBrackets(type, parentType, isRoot);
+  const bool brackets = needsBrackets(parentType, isRoot);
   if (brackets) {
     out << "(";
   }
@@ -294,6 +301,25 @@ bool Expression::mergeAllChildren() {
     changed = true;
   }
   return changed;
+}
+
+bool Expression::pullUpChildren() {
+  if (type != Expression::Type::SUM && type != Expression::Type::PRODUCT) {
+    return false;
+  }
+  std::vector<Expression*> collected;
+  auto it = children.begin();
+  while (it != children.end()) {
+    if ((*it)->type == type) {
+      collected.insert(collected.end(), (*it)->children.begin(),
+                       (*it)->children.end());
+      it = children.erase(it);
+    } else {
+      it++;
+    }
+  }
+  children.insert(children.begin(), collected.begin(), collected.end());
+  return !collected.empty();
 }
 
 bool Expression::simplifyNegativeProduct() {
