@@ -12,6 +12,7 @@
 #include "mutator.hpp"
 #include "oeis_manager.hpp"
 #include "optimizer.hpp"
+#include "pari.hpp"
 #include "parser.hpp"
 #include "program_util.hpp"
 #include "setup.hpp"
@@ -264,6 +265,38 @@ void Commands::testIncEval() {
   }
   Log::get().info("Passed incremental evaluation check for " +
                   std::to_string(count) + " programs");
+}
+
+void Commands::testPari() {
+  initLog(false);
+  Parser parser;
+  Settings settings;
+  OeisManager manager(settings);
+  manager.load();
+  auto& stats = manager.getStats();
+  int64_t count = 0;
+  for (size_t id = 0; id < stats.all_program_ids.size(); id++) {
+    if (!stats.all_program_ids[id]) {
+      continue;
+    }
+    auto seq = manager.getSequences().at(id);
+    auto program = parser.parse(seq.getProgramPath());
+    auto formula = Formula::fromProgram(program);
+    if (!formula.first) {
+      continue;
+    }
+    Log::get().info(seq.id_str() + ": " + formula.second.toString());
+    auto expSeq = seq.getTerms(seq.existingNumTerms());
+    auto genSeq = Pari::eval(formula.second, 0, seq.existingNumTerms() - 1);
+    if (genSeq != expSeq) {
+      Log::get().info("Generated sequence: " + genSeq.to_string());
+      Log::get().info("Expected sequence:  " + expSeq.to_string());
+      Log::get().error("Unexpected PARI sequence", true);
+    }
+    count++;
+  }
+  Log::get().info("Passed PARI check for " + std::to_string(count) +
+                  " programs");
 }
 
 void Commands::dot(const std::string& path) {

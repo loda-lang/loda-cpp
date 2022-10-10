@@ -38,6 +38,8 @@ class Commands {
 
   void testIncEval();
 
+  void testPari();
+
   void dot(const std::string& path);
 
   void generate();
