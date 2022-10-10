@@ -42,33 +42,42 @@ Expression operandToExpression(Operand op) {
 }
 
 std::pair<bool, Formula> Formula::fromProgram(const Program& p) {
-  const auto paramKey = operandToExpression(Operand(Operand::Type::DIRECT, 0));
-  bool ok = true;
-  Formula f;
-  f.entries[paramKey] = Expression(Expression::Type::PARAMETER, "n");
+  std::pair<bool, Formula> result;
+  result.first = false;
+  Formula& f = result.second;
+
+  // indirect operands are not supported
+  if (ProgramUtil::hasIndirectOperand(p)) {
+    return result;
+  }
+
+  // initialize expressions for memory cells
+  Expression paramKey;  // initialized in the loop
+  int64_t largestCell = ProgramUtil::getLargestDirectMemoryCell(p);
+  for (int64_t i = 0; i <= largestCell; i++) {
+    auto key = operandToExpression(Operand(Operand::Type::DIRECT, i));
+    if (i == 0) {
+      paramKey = key;
+      f.entries[key] = Expression(Expression::Type::PARAMETER, "n");
+    } else {
+      f.entries[key] = Expression(Expression::Type::CONSTANT, "", Number::ZERO);
+    }
+  }
+
+  // update expressions using operations
   for (auto& op : p.ops) {
     if (!f.update(op)) {
-      ok = false;
-      break;
+      return result;  // operation not supported
     }
     Log::get().debug("Operation " + ProgramUtil::operationToString(op) +
                      " updated formula to " + f.toString());
   }
-  if (!ok) {
-    return std::pair<bool, Formula>(false, {});
-  }
-  auto expr = f.find(paramKey);
-  f.entries.clear();
-  f.entries[paramKey] = expr;
-  return std::pair<bool, Formula>(true, f);
-}
 
-Expression Formula::find(const Expression& e) {
-  auto it = entries.find(e);
-  if (it != entries.end()) {
-    return it->second;
-  }
-  return Expression(Expression::Type::CONSTANT, "", 0);
+  auto r = f.entries[paramKey];
+  f.entries.clear();
+  f.entries[paramKey] = r;
+  result.first = true;
+  return result;
 }
 
 Expression treeExpr(Expression::Type t, const Expression& c1,
@@ -83,7 +92,11 @@ Expression treeExpr(Expression::Type t, const Expression& c1,
 bool Formula::update(const Operation& op) {
   auto source = operandToExpression(op.source);
   auto target = operandToExpression(op.target);
-  auto prevTargetValue = find(target);
+
+  if (source.type == Expression::Type::FUNCTION) {
+    source = entries[source];
+  }
+  auto prevTargetValue = entries[target];
   switch (op.type) {
     case Operation::Type::NOP:
       return true;

@@ -199,7 +199,8 @@ bool needsBrackets(Expression::Type type, Expression::Type parentType,
     return false;
   }
   if (type == Expression::Type::PRODUCT &&
-      parentType == Expression::Type::SUM) {
+      (parentType == Expression::Type::SUM ||
+       parentType == Expression::Type::DIFFERENCE)) {
     return false;
   }
   return true;

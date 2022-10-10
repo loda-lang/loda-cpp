@@ -16,7 +16,5 @@ class Formula {
 
   bool update(const Operation& op);
 
-  Expression find(const Expression& e);
-
   void replaceAll(const Expression& from, const Expression& to);
 };
