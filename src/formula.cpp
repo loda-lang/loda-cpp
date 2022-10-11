@@ -115,10 +115,18 @@ bool Formula::update(const Operation& op) {
       entries[target] =
           treeExpr(Expression::Type::PRODUCT, prevTargetValue, source);
       return true;
-    case Operation::Type::POW:
-      entries[target] =
-          treeExpr(Expression::Type::POWER, prevTargetValue, source);
+    case Operation::Type::POW: {
+      auto pow = treeExpr(Expression::Type::POWER, prevTargetValue, source);
+      if (source.type == Expression::Type::PARAMETER ||
+          (source.type == Expression::Type::CONSTANT &&
+           Number(-1) < source.value)) {
+        entries[target] = pow;
+      } else {
+        entries[target] = Expression(Expression::Type::FUNCTION, "floor");
+        entries[target].newChild(pow);
+      }
       return true;
+    }
     default:
       return false;
   }

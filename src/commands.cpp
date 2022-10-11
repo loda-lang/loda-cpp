@@ -291,7 +291,7 @@ void Commands::testPari() {
     if (genSeq != expSeq) {
       Log::get().info("Generated sequence: " + genSeq.to_string());
       Log::get().info("Expected sequence:  " + expSeq.to_string());
-      Log::get().error("Unexpected PARI sequence", false);
+      Log::get().error("Unexpected PARI sequence", true);
       bad++;
     } else {
       good++;
