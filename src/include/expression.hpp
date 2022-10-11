@@ -75,4 +75,6 @@ class Expression {
   bool pullUpChildren();
 
   bool simplifyNegativeProduct();
+
+  bool removeNeutral();
 };

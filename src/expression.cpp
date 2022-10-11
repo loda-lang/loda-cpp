@@ -157,6 +157,7 @@ void Expression::normalize() {
   if (pullUpChildren()) {
     normalize();
   }
+  removeNeutral();
   simplifyNegativeProduct();
 }
 
@@ -359,4 +360,41 @@ bool Expression::simplifyNegativeProduct() {
   std::swap(tmp.children[0], tmp.children[1]);
   *this = tmp;
   return true;
+}
+
+bool Expression::removeNeutral() {
+  Number neutral;
+  size_t start = 0;
+  switch (type) {
+    case Expression::Type::SUM:
+      neutral = Number::ZERO;
+      start = 0;
+      break;
+    case Expression::Type::DIFFERENCE:
+      neutral = Number::ZERO;
+      start = 1;
+      break;
+    case Expression::Type::PRODUCT:
+      neutral = Number::ONE;
+      start = 0;
+      break;
+    case Expression::Type::FRACTION:
+      neutral = Number::ONE;
+      start = 1;
+      break;
+    default:
+      return false;
+  }
+  auto it = children.begin() + start;
+  bool changed = false;
+  while (it != children.end()) {
+    if ((*it)->type == Expression::Type::CONSTANT && (*it)->value == neutral) {
+      delete *it;
+      it = children.erase(it);
+      changed = true;
+    } else {
+      it++;
+    }
+  }
+  return changed;
 }
