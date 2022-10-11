@@ -80,6 +80,29 @@ std::pair<bool, Formula> Formula::fromProgram(const Program& p) {
   return result;
 }
 
+bool CanBeNegative(const Expression& e) {
+  switch (e.type) {
+    case Expression::Type::CONSTANT:
+      return e.value < Number::ZERO;
+    case Expression::Type::PARAMETER:
+      return false;
+    case Expression::Type::FUNCTION:
+    case Expression::Type::DIFFERENCE:
+      return true;
+    case Expression::Type::SUM:
+    case Expression::Type::PRODUCT:
+    case Expression::Type::FRACTION:
+    case Expression::Type::POWER:
+      for (auto c : e.children) {
+        if (CanBeNegative(*c)) {
+          return true;
+        }
+      }
+      return false;
+  }
+  return false;
+}
+
 Expression treeExpr(Expression::Type t, const Expression& c1,
                     const Expression& c2) {
   Expression result(t);
@@ -116,15 +139,11 @@ bool Formula::update(const Operation& op) {
           treeExpr(Expression::Type::PRODUCT, prevTargetValue, source);
       return true;
     case Operation::Type::POW: {
-      auto pow = treeExpr(Expression::Type::POWER, prevTargetValue, source);
-      if (source.type == Expression::Type::PARAMETER ||
-          (source.type == Expression::Type::CONSTANT &&
-           Number(-1) < source.value)) {
-        entries[target] = pow;
-      } else {
-        entries[target] = Expression(Expression::Type::FUNCTION, "floor");
-        entries[target].newChild(pow);
+      if (CanBeNegative(source)) {
+        return false;
       }
+      entries[target] =
+          treeExpr(Expression::Type::POWER, prevTargetValue, source);
       return true;
     }
     default:
