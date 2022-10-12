@@ -222,14 +222,18 @@ bool Expression::needsBrackets(Expression::Type parentType, bool isRoot) const {
   if (isRoot && type != Expression::Type::FUNCTION) {
     return false;
   }
-  if (type == Expression::Type::PRODUCT &&
-      parentType == Expression::Type::SUM) {
-    return false;
+  if (type == Expression::Type::PRODUCT || type == Expression::Type::POWER) {
+    if (parentType == Expression::Type::SUM) {
+      return false;
+    }
+    if (parentType == Expression::Type::DIFFERENCE &&
+        (children.front()->type != Expression::Type::CONSTANT ||
+         Number(-1) < children.front()->value)) {
+      return false;
+    }
   }
-  if (type == Expression::Type::PRODUCT &&
-      parentType == Expression::Type::DIFFERENCE &&
-      (children.front()->type != Expression::Type::CONSTANT ||
-       Number(-1) < children.front()->value)) {
+  if (type == Expression::Type::POWER &&
+      parentType == Expression::Type::PRODUCT) {
     return false;
   }
   return true;
@@ -277,29 +281,47 @@ bool Expression::mergeTwoChildren() {
   for (size_t i = 0; i + 1 < children.size(); i++) {
     auto c = children[i];
     auto d = children[i + 1];
-    if (c->type != Expression::Type::CONSTANT ||
-        d->type != Expression::Type::CONSTANT) {
-      continue;
-    }
     bool merged = false;
-    switch (type) {
-      case Expression::Type::SUM: {
-        c->value += d->value;
-        merged = true;
-        break;
+    if (c->type == Expression::Type::CONSTANT &&
+        d->type == Expression::Type::CONSTANT) {
+      switch (type) {
+        case Expression::Type::SUM: {
+          c->value += d->value;
+          merged = true;
+          break;
+        }
+        case Expression::Type::DIFFERENCE: {
+          c->value -= d->value;
+          merged = true;
+          break;
+        }
+        case Expression::Type::PRODUCT: {
+          c->value *= d->value;
+          merged = true;
+          break;
+        }
+        default:
+          break;
       }
-      case Expression::Type::DIFFERENCE: {
-        c->value -= d->value;
-        merged = true;
-        break;
+    } else if (*c == *d) {
+      switch (type) {
+        case Expression::Type::SUM: {
+          *c = Expression(Expression::Type::PRODUCT);
+          c->newChild(Expression::Type::CONSTANT, "", Number(2));
+          c->newChild(*d);
+          merged = true;
+          break;
+        }
+        case Expression::Type::PRODUCT: {
+          *c = Expression(Expression::Type::POWER);
+          c->newChild(*d);
+          c->newChild(Expression::Type::CONSTANT, "", Number(2));
+          merged = true;
+          break;
+        }
+        default:
+          break;
       }
-      case Expression::Type::PRODUCT: {
-        c->value *= d->value;
-        merged = true;
-        break;
-      }
-      default:
-        break;
     }
     if (merged) {
       delete d;
