@@ -13,6 +13,7 @@
 
 #include "config.hpp"
 #include "file.hpp"
+#include "formula.hpp"
 #include "interpreter.hpp"
 #include "log.hpp"
 #include "number.hpp"
@@ -612,6 +613,11 @@ void OeisManager::dumpProgram(size_t id, Program &p, const std::string &file,
     }
   }
   tmp.ops.push_back(nop);
+  auto formula = Formula::fromProgram(p);
+  if (formula.first) {
+    nop.comment = formula.second.toString();
+    tmp.ops.push_back(nop);
+  }
   nop.comment.clear();
   tmp.ops.push_back(nop);
   p.ops.insert(p.ops.begin(), tmp.ops.begin(), tmp.ops.end());
@@ -627,6 +633,10 @@ void OeisManager::alert(Program p, size_t id, const std::string &prefix,
   std::stringstream buf;
   buf << prefix << " program for " << seq
       << " Terms: " << seq.getTerms(settings.num_terms);
+  auto formula = Formula::fromProgram(p);
+  if (formula.first) {
+    buf << ". Formula: " << formula.second.toString();
+  }
   if (!submitted_by.empty()) {
     buf << ". " << ProgramUtil::PREFIX_SUBMITTED_BY << " " << submitted_by;
   }
