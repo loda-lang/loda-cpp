@@ -31,6 +31,7 @@ class Settings {
   int64_t num_miner_instances;
   int64_t num_mine_hours;
   std::string miner_profile;
+  std::string export_format;
 
   // flag and offset for printing evaluation results in b-file format
   bool print_as_b_file;

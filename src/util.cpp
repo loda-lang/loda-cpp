@@ -47,7 +47,8 @@ enum class Option {
   B_FILE_OFFSET,
   NUM_INSTANCES,
   NUM_MINE_HOURS,
-  MINER,
+  MINER_PROFILE,
+  EXPORT_FORMAT,
   LOG_LEVEL
 };
 
@@ -87,13 +88,17 @@ std::vector<std::string> Settings::parseArgs(int argc, char *argv[]) {
           num_mine_hours = val;
           break;
         case Option::LOG_LEVEL:
-        case Option::MINER:
+        case Option::MINER_PROFILE:
+        case Option::EXPORT_FORMAT:
         case Option::NONE:
           break;
       }
       option = Option::NONE;
-    } else if (option == Option::MINER) {
+    } else if (option == Option::MINER_PROFILE) {
       miner_profile = arg;
+      option = Option::NONE;
+    } else if (option == Option::EXPORT_FORMAT) {
+      export_format = arg;
       option = Option::NONE;
     } else if (option == Option::LOG_LEVEL) {
       if (arg == "debug") {
@@ -119,7 +124,9 @@ std::vector<std::string> Settings::parseArgs(int argc, char *argv[]) {
       } else if (opt == "c") {
         option = Option::MAX_CYCLES;
       } else if (opt == "i") {
-        option = Option::MINER;
+        option = Option::MINER_PROFILE;
+      } else if (opt == "o") {
+        option = Option::EXPORT_FORMAT;
       } else if (opt == "s") {
         use_steps = true;
       } else if (opt == "p") {

@@ -22,6 +22,8 @@ class Commands {
 
   void minimize(const std::string& path);
 
+  void export_(const std::string& path);
+
   void profile(const std::string& path);
 
   void mine();

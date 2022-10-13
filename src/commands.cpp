@@ -41,6 +41,8 @@ void Commands::help() {
       << "  evaluate <program>  Evaluate a program to an integer sequence (see "
          "-t,-b,-s)"
       << std::endl;
+  std::cout << "  export   <program>  Export a program print result (see -o)"
+            << std::endl;
   std::cout << "  optimize <program>  Optimize a program and print it"
             << std::endl;
   std::cout << "  minimize <program>  Minimize a program and print it (see -t)"
@@ -80,6 +82,7 @@ void Commands::help() {
   std::cout << "  -B <number>         Print result in b-file format from a "
                "custom offset"
             << std::endl;
+  std::cout << "  -o <string>         Export format (pari,loda)" << std::endl;
   std::cout << "  -s                  Evaluate program to number of "
                "execution steps"
             << std::endl;
@@ -180,6 +183,24 @@ void Commands::minimize(const std::string& path) {
   Minimizer minimizer(settings);
   minimizer.optimizeAndMinimize(program, OeisSequence::DEFAULT_SEQ_LENGTH);
   ProgramUtil::print(program, std::cout);
+}
+
+void Commands::export_(const std::string& path) {
+  initLog(true);
+  Parser parser;
+  Program program = parser.parse(getProgramPathAndSeqId(path).first);
+  const auto& format = settings.export_format;
+  if (format.empty() || format == "pari") {
+    auto formula = Formula::fromProgram(program);
+    if (!formula.first) {
+      throw std::runtime_error("program cannot be converted to formula");
+    }
+    std::cout << Pari::generate(formula.second) << std::endl;
+  } else if (format == "loda") {
+    ProgramUtil::print(program, std::cout);
+  } else {
+    throw std::runtime_error("unknown format");
+  }
 }
 
 void Commands::profile(const std::string& path) {
