@@ -87,6 +87,7 @@ bool CanBeNegative(const Expression& e) {
     case Expression::Type::PARAMETER:
       return false;
     case Expression::Type::FUNCTION:
+    case Expression::Type::NEGATION:
     case Expression::Type::DIFFERENCE:
       return true;
     case Expression::Type::SUM:

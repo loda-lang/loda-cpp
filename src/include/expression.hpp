@@ -10,6 +10,7 @@ class Expression {
     CONSTANT,
     PARAMETER,
     FUNCTION,
+    NEGATION,
     SUM,
     DIFFERENCE,
     PRODUCT,
@@ -57,12 +58,14 @@ class Expression {
   std::vector<Expression*> children;
 
  private:
-  void print(std::ostream& out, bool isRoot, Expression::Type parentType) const;
+  void print(std::ostream& out, size_t index, bool isRoot,
+             Expression::Type parentType) const;
 
   void printChildren(std::ostream& out, const std::string& op, bool isRoot,
                      Expression::Type parentType) const;
 
-  bool needsBrackets(Expression::Type parentType, bool isRoot) const;
+  bool needsBrackets(size_t index, bool isRoot,
+                     Expression::Type parentType) const;
 
   bool equalChildren(const Expression& e) const;
 
@@ -77,4 +80,6 @@ class Expression {
   bool simplifyNegativeProduct();
 
   bool removeNeutral();
+
+  bool diffToNeg();
 };
