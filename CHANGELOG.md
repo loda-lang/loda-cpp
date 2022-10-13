@@ -2,6 +2,8 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+# v22.10.13
+
 ### Features
 
 * New `export` command for converting programs to [PARI/GP](https://pari.math.u-bordeaux.fr/)
