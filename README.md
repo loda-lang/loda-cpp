@@ -30,13 +30,15 @@ Usage: loda <command> <options>
 
 Core Commands:
   evaluate <program>  Evaluate a program to an integer sequence (see -t,-b,-s)
+  export   <program>  Export a program print result (see -o)
   optimize <program>  Optimize a program and print it
   minimize <program>  Minimize a program and print it (see -t)
+  profile  <program>  Measure program evaluation time (see -t)
   setup               Run interactive setup to configure LODA
 
 OEIS Commands:
-  mine                Mine programs for OEIS sequences (see -i,-p)
-  check <id>          Check a program for an OEIS sequence (see -b)
+  mine                Mine programs for OEIS sequences (see -i,-p,-P,-H)
+  check <program>     Check a program for an OEIS sequence (see -b)
   mutate <program>    Mutate a program and mine for OEIS sequences
   submit <file> [id]  Submit a program for an OEIS sequence
 
@@ -49,6 +51,7 @@ Options:
   -t <number>         Number of sequence terms (default: 10)
   -b                  Print result in b-file format from offset 0
   -B <number>         Print result in b-file format from a custom offset
+  -o <string>         Export format (pari,loda)
   -s                  Evaluate program to number of execution steps
   -c <number>         Maximum number of interpreter cycles (no limit: -1)
   -m <number>         Maximum number of used memory cells (no limit: -1)
@@ -56,7 +59,7 @@ Options:
   -i <string>         Name of miner configuration from miners.json
   -p                  Parallel mining using default number of instances
   -P <number>         Parallel mining using custom number of instances
-  -H <number>         Number of mining hours (default unlimited)
+  -H <number>         Number of mining hours (default: unlimited)
 ```
 
 ### Core Commands
