@@ -35,7 +35,8 @@ OeisManager::OeisManager(const Settings &settings,
       evaluator(settings),
       finder(settings, evaluator),
       finder_initialized(false),
-      update_needed(false),
+      update_oeis(false),
+      update_programs(false),
       optimizer(settings),
       minimizer(settings),
       loaded_count(0),
@@ -304,19 +305,23 @@ bool OeisManager::shouldMatch(const OeisSequence &seq) const {
 void OeisManager::update() {
   std::vector<std::string> files = {"stripped", "names"};
 
-  // check which files need to be updated
+  // check whether oeis files need to be updated
   auto it = files.begin();
   int64_t age_in_days = -1;
   while (it != files.end()) {
     auto path = Setup::getOeisHome() + *it;
     age_in_days = getFileAgeInDays(path);
-    if (age_in_days < 0 || age_in_days >= Setup::getUpdateIntervalInDays()) {
-      update_needed = true;
+    if (age_in_days < 0 || age_in_days >= Setup::getOeisUpdateInterval()) {
+      update_oeis = true;
       break;
     }
     it++;
   }
-  if (update_needed) {
+
+  // check whether programs need to be updated
+  // TODO
+
+  if (update_oeis) {
     Setup::checkLatestedVersion();
     if (age_in_days == -1) {
       Log::get().info("Creating OEIS index at \"" + Setup::getOeisHome() +
@@ -530,9 +535,11 @@ const Stats &OeisManager::getStats() {
     stats.reset(new Stats());
 
     // check age of stats
+    auto update_interval = std::min<int64_t>(
+        Setup::getOeisUpdateInterval(), Setup::getProgramsUpdateInterval());
     auto age_in_days = getFileAgeInDays(stats->getMainStatsFile(stats_home));
-    if (update_needed || age_in_days < 0 ||
-        age_in_days >= Setup::getUpdateIntervalInDays()) {
+    if (update_oeis || update_programs || age_in_days < 0 ||
+        age_in_days >= update_interval) {
       generateStats(age_in_days);
 
       // generate lists in server mode

@@ -53,7 +53,9 @@ class Setup {
 
   static int64_t getMaxMemory();
 
-  static int64_t getUpdateIntervalInDays();
+  static int64_t getOeisUpdateInterval();
+
+  static int64_t getProgramsUpdateInterval();
 
   static int64_t getMaxLocalProgramAgeInDays();
 
@@ -72,8 +74,10 @@ class Setup {
   static void runWizard();
 
  private:
-  static constexpr int64_t UNDEFINED_INT = -2;            // cannot use -1
-  static constexpr int64_t DEFAULT_UPDATE_INTERVAL = 1;   // 1 day default
+  static constexpr int64_t UNDEFINED_INT = -2;                // cannot use -1
+  static constexpr int64_t DEFAULT_OEIS_UPDATE_INTERVAL = 7;  // 1 week default
+  static constexpr int64_t DEFAULT_PROGRAMS_UPDATE_INTERVAL =
+      1;                                                  // 1 day default
   static constexpr int64_t DEFAULT_MAX_PROGRAM_AGE = 14;  // 2 weeks default
   static constexpr int64_t DEFAULT_MAX_PHYSICAL_MEMORY = 1024;  // 1 GB
 
@@ -86,7 +90,8 @@ class Setup {
   static bool PRINTED_MEMORY_WARNING;
   static int64_t MINING_MODE;
   static int64_t MAX_MEMORY;
-  static int64_t UPDATE_INTERVAL;
+  static int64_t OEIS_UPDATE_INTERVAL;
+  static int64_t PROGRAMS_UPDATE_INTERVAL;
   static int64_t MAX_PROGRAM_AGE;
   static int64_t MAX_INSTANCES;
 
@@ -104,7 +109,6 @@ class Setup {
   static bool checkSubmittedBy();
   static bool checkUsageStats();
   static bool checkMaxMemory();
-  static bool checkUpdateInterval();
   static bool checkMaxLocalProgramAge();
   static bool checkMaxInstances();
 
