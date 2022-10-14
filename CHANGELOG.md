@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Enhancements
+
+* Separate update intervals for OEIS files (7 days) and programs repository (1 day)
+
 # v22.10.13
 
 ### Features
