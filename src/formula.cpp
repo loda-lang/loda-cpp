@@ -139,6 +139,11 @@ bool Formula::update(const Operation& op) {
       entries[target] =
           treeExpr(Expression::Type::PRODUCT, prevTargetValue, source);
       return true;
+    case Operation::Type::DIV:
+      entries[target] = Expression(Expression::Type::FUNCTION, "truncate");
+      entries[target].newChild(
+          treeExpr(Expression::Type::FRACTION, prevTargetValue, source));
+      return true;
     case Operation::Type::POW: {
       if (CanBeNegative(source)) {
         return false;
