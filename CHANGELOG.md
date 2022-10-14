@@ -6,9 +6,12 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Separate update intervals for OEIS files (7 days) and programs repository (1 day)
 
+# v22.10.13
+
 ### Features
 
 * New `export` command for converting programs to [PARI/GP](https://pari.math.u-bordeaux.fr/)
+* Add formulae to programs
 
 ### Enhancements
 

@@ -105,7 +105,7 @@ void Commands::help() {
                "instances"
             << std::endl;
   std::cout
-      << "  -H <number>         Number of mining hours (default unlimited)"
+      << "  -H <number>         Number of mining hours (default: unlimited)"
       << std::endl;
 }
 
