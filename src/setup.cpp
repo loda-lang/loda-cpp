@@ -27,7 +27,8 @@ bool Setup::LOADED_SETUP = false;
 bool Setup::PRINTED_MEMORY_WARNING = false;
 int64_t Setup::MINING_MODE = UNDEFINED_INT;
 int64_t Setup::MAX_MEMORY = UNDEFINED_INT;
-int64_t Setup::UPDATE_INTERVAL = UNDEFINED_INT;
+int64_t Setup::GITHUB_UPDATE_INTERVAL = UNDEFINED_INT;
+int64_t Setup::OEIS_UPDATE_INTERVAL = UNDEFINED_INT;
 int64_t Setup::MAX_PROGRAM_AGE = UNDEFINED_INT;
 int64_t Setup::MAX_INSTANCES = UNDEFINED_INT;
 
@@ -98,7 +99,7 @@ std::string Setup::getMinersConfig() {
   {
     FolderLock lock(getLodaHome());
     const auto age_in_days = getFileAgeInDays(default_config);
-    if (age_in_days < 0 || age_in_days >= getUpdateIntervalInDays()) {
+    if (age_in_days < 0 || age_in_days >= getGitHubUpdateInterval()) {
       const std::string url =
           "https://raw.githubusercontent.com/loda-lang/loda-cpp/main/"
           "miners.default.json";
@@ -204,12 +205,20 @@ int64_t Setup::getMaxMemory() {
   return MAX_MEMORY;
 }
 
-int64_t Setup::getUpdateIntervalInDays() {
-  if (UPDATE_INTERVAL == UNDEFINED_INT) {
-    UPDATE_INTERVAL =
-        getSetupInt("LODA_UPDATE_INTERVAL", DEFAULT_UPDATE_INTERVAL);
+int64_t Setup::getGitHubUpdateInterval() {
+  if (GITHUB_UPDATE_INTERVAL == UNDEFINED_INT) {
+    GITHUB_UPDATE_INTERVAL = getSetupInt("LODA_GITHUB_UPDATE_INTERVAL",
+                                         DEFAULT_GITHUB_UPDATE_INTERVAL);
   }
-  return UPDATE_INTERVAL;
+  return GITHUB_UPDATE_INTERVAL;
+}
+
+int64_t Setup::getOeisUpdateInterval() {
+  if (OEIS_UPDATE_INTERVAL == UNDEFINED_INT) {
+    OEIS_UPDATE_INTERVAL =
+        getSetupInt("LODA_OEIS_UPDATE_INTERVAL", DEFAULT_OEIS_UPDATE_INTERVAL);
+  }
+  return OEIS_UPDATE_INTERVAL;
 }
 
 int64_t Setup::getMaxLocalProgramAgeInDays() {
@@ -337,11 +346,6 @@ void Setup::runWizard() {
     if (!checkMaxMemory()) {
       return;
     }
-    // since we get the oeis data from the API server, we don't need to
-    // configure this anymore
-    // if (!checkUpdateInterval()) {
-    //  return;
-    // }
 #ifdef STD_FILESYSTEM
     if (getMiningMode() == MINING_MODE_CLIENT && !checkMaxLocalProgramAge()) {
       return;
@@ -695,28 +699,6 @@ bool Setup::checkMaxMemory() {
     return false;
   }
   SETUP["LODA_MAX_PHYSICAL_MEMORY"] = std::to_string(max_memory);
-  std::cout << std::endl;
-  return true;
-}
-
-bool Setup::checkUpdateInterval() {
-  std::string line;
-  std::cout << "Enter the update interval for the main OEIS files and the"
-            << std::endl
-            << "programs repository in days (default " +
-                   std::to_string(DEFAULT_UPDATE_INTERVAL)
-            << "):" << std::endl;
-  int64_t update_interval = getUpdateIntervalInDays();
-  std::cout << "[" << update_interval << "] ";
-  std::getline(std::cin, line);
-  if (!line.empty()) {
-    update_interval = std::stoll(line);
-  }
-  if (update_interval <= 0) {
-    std::cout << "Invalid value. Please restart the setup." << std::endl;
-    return false;
-  }
-  SETUP["LODA_UPDATE_INTERVAL"] = std::to_string(update_interval);
   std::cout << std::endl;
   return true;
 }
