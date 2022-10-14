@@ -307,11 +307,12 @@ void OeisManager::update() {
 
   // check whether oeis files need to be updated
   auto it = files.begin();
-  int64_t age_in_days = -1;
+  int64_t oeis_age_in_days = -1;
   while (it != files.end()) {
     auto path = Setup::getOeisHome() + *it;
-    age_in_days = getFileAgeInDays(path);
-    if (age_in_days < 0 || age_in_days >= Setup::getOeisUpdateInterval()) {
+    oeis_age_in_days = getFileAgeInDays(path);
+    if (oeis_age_in_days < 0 ||
+        oeis_age_in_days >= Setup::getOeisUpdateInterval()) {
       update_oeis = true;
       break;
     }
@@ -319,38 +320,63 @@ void OeisManager::update() {
   }
 
   // check whether programs need to be updated
-  // TODO
+  const std::string progs_dir = Setup::getProgramsHome();
+  const std::string local_dir = progs_dir + "local";
+  const std::string update_progs_file = local_dir + FILE_SEP + ".update";
+  int64_t programs_age_in_days = getFileAgeInDays(update_progs_file);
+  if (programs_age_in_days < 0) {
+    update_programs = update_oeis;  // fall-back if file is not present
+  } else if (programs_age_in_days >= Setup::getGitHubUpdateInterval()) {
+    update_programs = true;
+  }
 
+  // perform oeis update
   if (update_oeis) {
     Setup::checkLatestedVersion();
-    if (age_in_days == -1) {
+    if (oeis_age_in_days == -1) {
       Log::get().info("Creating OEIS index at \"" + Setup::getOeisHome() +
                       "\"");
       ensureDir(Setup::getOeisHome());
     } else {
       Log::get().info("Updating OEIS index (last update " +
-                      std::to_string(age_in_days) + " days ago)");
+                      std::to_string(oeis_age_in_days) + " days ago)");
     }
     std::string cmd, path;
     for (auto &file : files) {
       path = Setup::getOeisHome() + file;
       ApiClient::getDefaultInstance().getOeisFile(file, path);
     }
-    // update programs repository using git pull
+  }
+
+  // perform programs update
+  if (update_programs) {
     auto mode = Setup::getMiningMode();
-    auto progs_dir = Setup::getProgramsHome();
     if (mode != MINING_MODE_SERVER && isDir(progs_dir + ".git")) {
-      Log::get().info("Updating programs repository");
+      std::string msg("Updating programs repository");
+      if (programs_age_in_days >= 0) {
+        msg += " (last update " + std::to_string(programs_age_in_days) +
+               " days ago)";
+      }
+      Log::get().info(msg);
+      // update programs repository using git pull
       git(progs_dir, "pull origin main -q --ff-only");
+      // touch marker file to track the age
+      ensureDir(update_progs_file);
+      std::ofstream marker(update_progs_file);
+      if (marker) {
+        marker << "1" << std::endl;
+      } else {
+        Log::get().warn("Cannot write update marker: " + update_progs_file);
+      }
     }
+
     // clean up local programs folder
     const int64_t max_age = Setup::getMaxLocalProgramAgeInDays();
-    const auto local = Setup::getProgramsHome() + "local";
-    if (max_age >= 0 && isDir(local) &&
+    if (max_age >= 0 && isDir(local_dir) &&
         Setup::getMiningMode() == MiningMode::MINING_MODE_CLIENT) {
       Log::get().info("Cleaning up local programs directory");
       int64_t num_removed = 0;
-      for (const auto &it : std::filesystem::directory_iterator(local)) {
+      for (const auto &it : std::filesystem::directory_iterator(local_dir)) {
         const auto stem = it.path().filename().stem().string();
         const auto ext = it.path().filename().extension().string();
         bool is_program;
@@ -535,8 +561,8 @@ const Stats &OeisManager::getStats() {
     stats.reset(new Stats());
 
     // check age of stats
-    auto update_interval = std::min<int64_t>(
-        Setup::getOeisUpdateInterval(), Setup::getProgramsUpdateInterval());
+    auto update_interval = std::min<int64_t>(Setup::getOeisUpdateInterval(),
+                                             Setup::getGitHubUpdateInterval());
     auto age_in_days = getFileAgeInDays(stats->getMainStatsFile(stats_home));
     if (update_oeis || update_programs || age_in_days < 0 ||
         age_in_days >= update_interval) {

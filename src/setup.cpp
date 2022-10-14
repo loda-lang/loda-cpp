@@ -27,8 +27,8 @@ bool Setup::LOADED_SETUP = false;
 bool Setup::PRINTED_MEMORY_WARNING = false;
 int64_t Setup::MINING_MODE = UNDEFINED_INT;
 int64_t Setup::MAX_MEMORY = UNDEFINED_INT;
+int64_t Setup::GITHUB_UPDATE_INTERVAL = UNDEFINED_INT;
 int64_t Setup::OEIS_UPDATE_INTERVAL = UNDEFINED_INT;
-int64_t Setup::PROGRAMS_UPDATE_INTERVAL = UNDEFINED_INT;
 int64_t Setup::MAX_PROGRAM_AGE = UNDEFINED_INT;
 int64_t Setup::MAX_INSTANCES = UNDEFINED_INT;
 
@@ -99,7 +99,7 @@ std::string Setup::getMinersConfig() {
   {
     FolderLock lock(getLodaHome());
     const auto age_in_days = getFileAgeInDays(default_config);
-    if (age_in_days < 0 || age_in_days >= getProgramsUpdateInterval()) {
+    if (age_in_days < 0 || age_in_days >= getGitHubUpdateInterval()) {
       const std::string url =
           "https://raw.githubusercontent.com/loda-lang/loda-cpp/main/"
           "miners.default.json";
@@ -205,20 +205,20 @@ int64_t Setup::getMaxMemory() {
   return MAX_MEMORY;
 }
 
+int64_t Setup::getGitHubUpdateInterval() {
+  if (GITHUB_UPDATE_INTERVAL == UNDEFINED_INT) {
+    GITHUB_UPDATE_INTERVAL = getSetupInt("LODA_GITHUB_UPDATE_INTERVAL",
+                                         DEFAULT_GITHUB_UPDATE_INTERVAL);
+  }
+  return GITHUB_UPDATE_INTERVAL;
+}
+
 int64_t Setup::getOeisUpdateInterval() {
   if (OEIS_UPDATE_INTERVAL == UNDEFINED_INT) {
     OEIS_UPDATE_INTERVAL =
         getSetupInt("LODA_OEIS_UPDATE_INTERVAL", DEFAULT_OEIS_UPDATE_INTERVAL);
   }
   return OEIS_UPDATE_INTERVAL;
-}
-
-int64_t Setup::getProgramsUpdateInterval() {
-  if (PROGRAMS_UPDATE_INTERVAL == UNDEFINED_INT) {
-    PROGRAMS_UPDATE_INTERVAL = getSetupInt("LODA_PROGRAMS_UPDATE_INTERVAL",
-                                           DEFAULT_PROGRAMS_UPDATE_INTERVAL);
-  }
-  return PROGRAMS_UPDATE_INTERVAL;
 }
 
 int64_t Setup::getMaxLocalProgramAgeInDays() {
