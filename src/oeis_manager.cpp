@@ -325,9 +325,8 @@ void OeisManager::update() {
   const std::string local_dir = progs_dir + "local";
   const std::string update_progs_file = local_dir + FILE_SEP + ".update";
   int64_t programs_age_in_days = getFileAgeInDays(update_progs_file);
-  if (programs_age_in_days < 0) {
-    update_programs = update_oeis;  // fall-back if file is not present
-  } else if (programs_age_in_days >= Setup::getGitHubUpdateInterval()) {
+  if (programs_age_in_days < 0 ||
+      programs_age_in_days >= Setup::getGitHubUpdateInterval()) {
     update_programs = true;
   }
 
