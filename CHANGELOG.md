@@ -6,6 +6,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Fix programs update interval
 
+### Enhancements
+
+* Support `div` in formulas
+
 # v22.10.14
 
 ### Enhancements

@@ -51,7 +51,7 @@ Options:
   -t <number>         Number of sequence terms (default: 10)
   -b                  Print result in b-file format from offset 0
   -B <number>         Print result in b-file format from a custom offset
-  -o <string>         Export format (pari,loda)
+  -o <string>         Export format (formula,loda,pari)
   -s                  Evaluate program to number of execution steps
   -c <number>         Maximum number of interpreter cycles (no limit: -1)
   -m <number>         Maximum number of used memory cells (no limit: -1)

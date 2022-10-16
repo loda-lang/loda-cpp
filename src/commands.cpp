@@ -82,7 +82,8 @@ void Commands::help() {
   std::cout << "  -B <number>         Print result in b-file format from a "
                "custom offset"
             << std::endl;
-  std::cout << "  -o <string>         Export format (pari,loda)" << std::endl;
+  std::cout << "  -o <string>         Export format (formula,loda,pari)"
+            << std::endl;
   std::cout << "  -s                  Evaluate program to number of "
                "execution steps"
             << std::endl;
@@ -190,10 +191,16 @@ void Commands::export_(const std::string& path) {
   Parser parser;
   Program program = parser.parse(getProgramPathAndSeqId(path).first);
   const auto& format = settings.export_format;
-  if (format.empty() || format == "pari") {
-    auto formula = Formula::fromProgram(program);
+  if (format.empty() || format == "formula") {
+    auto formula = Formula::fromProgram(program, false);
     if (!formula.first) {
       throw std::runtime_error("program cannot be converted to formula");
+    }
+    std::cout << Pari::generate(formula.second) << std::endl;
+  } else if (format == "pari") {
+    auto formula = Formula::fromProgram(program, true);
+    if (!formula.first) {
+      throw std::runtime_error("program cannot be converted to pari");
     }
     std::cout << Pari::generate(formula.second) << std::endl;
   } else if (format == "loda") {
@@ -302,7 +309,7 @@ void Commands::testPari() {
     }
     auto seq = manager.getSequences().at(id);
     auto program = parser.parse(seq.getProgramPath());
-    auto formula = Formula::fromProgram(program);
+    auto formula = Formula::fromProgram(program, true);
     if (!formula.first) {
       continue;
     }
