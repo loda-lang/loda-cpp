@@ -192,7 +192,7 @@ void Commands::export_(const std::string& path) {
   Program program = parser.parse(getProgramPathAndSeqId(path).first);
   const auto& format = settings.export_format;
   if (format.empty() || format == "formula") {
-    auto formula = Formula::fromProgram(program, true);
+    auto formula = Formula::fromProgram(program, false);
     if (!formula.first) {
       throw std::runtime_error("program cannot be converted to formula");
     }
