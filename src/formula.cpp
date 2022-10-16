@@ -41,7 +41,7 @@ Expression operandToExpression(Operand op) {
   throw std::runtime_error("internal error");  // unreachable
 }
 
-std::pair<bool, Formula> Formula::fromProgram(const Program& p) {
+std::pair<bool, Formula> Formula::fromProgram(const Program& p, bool pariMode) {
   std::pair<bool, Formula> result;
   result.first = false;
   Formula& f = result.second;
@@ -66,7 +66,7 @@ std::pair<bool, Formula> Formula::fromProgram(const Program& p) {
 
   // update expressions using operations
   for (auto& op : p.ops) {
-    if (!f.update(op)) {
+    if (!f.update(op, pariMode)) {
       return result;  // operation not supported
     }
     Log::get().debug("Operation " + ProgramUtil::operationToString(op) +
@@ -113,7 +113,7 @@ Expression treeExpr(Expression::Type t, const Expression& c1,
   return result;
 }
 
-bool Formula::update(const Operation& op) {
+bool Formula::update(const Operation& op, bool pariMode) {
   auto source = operandToExpression(op.source);
   auto target = operandToExpression(op.target);
 
@@ -140,16 +140,25 @@ bool Formula::update(const Operation& op) {
           treeExpr(Expression::Type::PRODUCT, prevTargetValue, source);
       return true;
     case Operation::Type::DIV:
-      entries[target] = Expression(Expression::Type::FUNCTION, "truncate");
-      entries[target].newChild(
-          treeExpr(Expression::Type::FRACTION, prevTargetValue, source));
+      if (pariMode) {
+        entries[target] = Expression(Expression::Type::FUNCTION, "truncate");
+        entries[target].newChild(
+            treeExpr(Expression::Type::FRACTION, prevTargetValue, source));
+
+      } else {
+        entries[target] =
+            treeExpr(Expression::Type::FRACTION, prevTargetValue, source);
+      }
       return true;
     case Operation::Type::POW: {
-      if (CanBeNegative(source)) {
-        return false;
+      if (pariMode && CanBeNegative(source)) {
+        entries[target] = Expression(Expression::Type::FUNCTION, "truncate");
+        entries[target].newChild(
+            treeExpr(Expression::Type::POWER, prevTargetValue, source));
+      } else {
+        entries[target] =
+            treeExpr(Expression::Type::POWER, prevTargetValue, source);
       }
-      entries[target] =
-          treeExpr(Expression::Type::POWER, prevTargetValue, source);
       return true;
     }
     default:

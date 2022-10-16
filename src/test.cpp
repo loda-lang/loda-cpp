@@ -887,7 +887,7 @@ void Test::formula() {
     OeisSequence seq(e.first);
     Log::get().info("Testing formula for " + seq.id_str() + ": " + e.second);
     auto p = parser.parse(seq.getProgramPath());
-    auto r = Formula::fromProgram(p);
+    auto r = Formula::fromProgram(p, false);
     if (!r.first) {
       Log::get().error("Cannot generate formula from program", true);
     }
