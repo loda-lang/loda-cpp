@@ -299,6 +299,7 @@ void Commands::testPari() {
   initLog(false);
   Parser parser;
   Settings settings;
+  Evaluator evaluator(settings);
   OeisManager manager(settings);
   manager.load();
   auto& stats = manager.getStats();
@@ -314,7 +315,8 @@ void Commands::testPari() {
       continue;
     }
     Log::get().info(seq.id_str() + ": " + formula.second.toString());
-    auto expSeq = seq.getTerms(seq.existingNumTerms());
+    Sequence expSeq;
+    evaluator.eval(program, expSeq, seq.existingNumTerms());
     auto genSeq = Pari::eval(formula.second, 0, seq.existingNumTerms() - 1);
     if (genSeq != expSeq) {
       Log::get().info("Generated sequence: " + genSeq.to_string());
