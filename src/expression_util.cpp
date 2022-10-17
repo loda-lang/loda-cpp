@@ -214,3 +214,28 @@ bool ExpressionUtil::normalize(Expression& e) {
   // TODO: track changes
   return true;
 }
+
+bool ExpressionUtil::canBeNegative(const Expression& e) {
+  switch (e.type) {
+    case Expression::Type::CONSTANT:
+      return e.value < Number::ZERO;
+    case Expression::Type::PARAMETER:
+      return false;
+    case Expression::Type::FUNCTION:
+    case Expression::Type::NEGATION:
+    case Expression::Type::DIFFERENCE:
+      return true;
+    case Expression::Type::SUM:
+    case Expression::Type::PRODUCT:
+    case Expression::Type::FRACTION:
+    case Expression::Type::POWER:
+    case Expression::Type::MODULUS:
+      for (auto c : e.children) {
+        if (canBeNegative(*c)) {
+          return true;
+        }
+      }
+      return false;
+  }
+  return false;
+}

@@ -15,6 +15,14 @@ Expression::~Expression() {
 Expression::Expression(Type type, const std::string& name, const Number& value)
     : type(type), name(name), value(value){};
 
+Expression::Expression(Type type, const std::string& name,
+                       std::initializer_list<Expression> children)
+    : type(type), name(name) {
+  for (auto& c : children) {
+    newChild(c);
+  }
+}
+
 Expression::Expression(const Expression& e) { *this = e; }
 
 Expression::Expression(Expression&& e) { *this = std::move(e); }
