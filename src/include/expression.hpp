@@ -47,8 +47,6 @@ class Expression {
 
   void replaceAll(const Expression& from, const Expression& to);
 
-  void normalize();
-
   friend std::ostream& operator<<(std::ostream& out, const Expression& e);
 
   std::string toString() const;
@@ -71,16 +69,4 @@ class Expression {
 
   bool needsBrackets(size_t index, bool isRoot,
                      Expression::Type parentType) const;
-
-  bool mergeTwoChildren();
-
-  bool mergeAllChildren();
-
-  bool pullUpChildren();
-
-  bool simplifyNegativeProduct();
-
-  bool removeNeutral();
-
-  bool diffToNeg();
 };

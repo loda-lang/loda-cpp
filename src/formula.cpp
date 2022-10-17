@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 
+#include "expression_util.hpp"
 #include "log.hpp"
 #include "program_util.hpp"
 
@@ -110,7 +111,7 @@ Expression treeExpr(Expression::Type t, const Expression& c1,
   Expression result(t);
   result.newChild(c1);
   result.newChild(c2);
-  result.normalize();
+  ExpressionUtil::normalize(result);
   return result;
 }
 
