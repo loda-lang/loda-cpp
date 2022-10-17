@@ -17,12 +17,6 @@ std::string Formula::toString() const {
   return result;
 }
 
-Expression simpleFunction(const std::string& f, const std::string& p) {
-  Expression e(Expression::Type::FUNCTION, f);
-  e.newChild(Expression::Type::PARAMETER, p);
-  return e;
-}
-
 Expression operandToExpression(Operand op) {
   switch (op.type) {
     case Operand::Type::CONSTANT: {
@@ -33,7 +27,8 @@ Expression operandToExpression(Operand op) {
       if (op.value != Number::ZERO) {
         a += op.value.to_string();
       }
-      return simpleFunction(a, "n");
+      return Expression(Expression::Type::FUNCTION, a,
+                        {Expression(Expression::Type::PARAMETER, "n")});
     }
     case Operand::Type::INDIRECT: {
       throw std::runtime_error("indirect operation not supported");
@@ -81,63 +76,16 @@ std::pair<bool, Formula> Formula::fromProgram(const Program& p, bool pariMode) {
   return result;
 }
 
-bool CanBeNegative(const Expression& e) {
-  switch (e.type) {
-    case Expression::Type::CONSTANT:
-      return e.value < Number::ZERO;
-    case Expression::Type::PARAMETER:
-      return false;
-    case Expression::Type::FUNCTION:
-    case Expression::Type::NEGATION:
-    case Expression::Type::DIFFERENCE:
-      return true;
-    case Expression::Type::SUM:
-    case Expression::Type::PRODUCT:
-    case Expression::Type::FRACTION:
-    case Expression::Type::POWER:
-    case Expression::Type::MODULUS:
-      for (auto c : e.children) {
-        if (CanBeNegative(*c)) {
-          return true;
-        }
-      }
-      return false;
-  }
-  return false;
-}
-
-Expression treeExpr(Expression::Type t, const Expression& c1,
-                    const Expression& c2) {
-  Expression result(t);
-  result.newChild(c1);
-  result.newChild(c2);
-  ExpressionUtil::normalize(result);
-  return result;
-}
-
-Expression binFunc(const std::string& name, const Expression& c1,
-                   const Expression& c2) {
-  Expression func(Expression::Type::FUNCTION, name);
-  func.newChild(c1);
-  func.newChild(c2);
-  return func;
-}
-
-Expression func(const Expression& e, const std::string& name) {
-  auto f = Expression(Expression::Type::FUNCTION, name);
-  f.newChild(e);
-  return f;
-}
-
 Expression fraction(const Expression& num, const Expression& den,
                     bool pariMode) {
-  auto frac = treeExpr(Expression::Type::FRACTION, num, den);
+  auto frac = Expression(Expression::Type::FRACTION, "", {num, den});
   if (pariMode) {
-    if (CanBeNegative(num) || CanBeNegative(den)) {
-      return func(frac, "truncate");
-    } else {
-      return func(frac, "floor");
+    std::string func = "floor";
+    if (ExpressionUtil::canBeNegative(num) ||
+        ExpressionUtil::canBeNegative(den)) {
+      func = "truncate";
     }
+    return Expression(Expression::Type::FUNCTION, func, {frac});
   }
   return frac;
 }
@@ -145,64 +93,73 @@ Expression fraction(const Expression& num, const Expression& den,
 bool Formula::update(const Operation& op, bool pariMode) {
   auto source = operandToExpression(op.source);
   auto target = operandToExpression(op.target);
-
   if (source.type == Expression::Type::FUNCTION) {
     source = entries[source];
   }
   auto prevTarget = entries[target];
-  auto& result = entries[target];  // reference to result
+  auto& res = entries[target];  // reference to result
+  bool okay = true;
   switch (op.type) {
-    case Operation::Type::NOP:
-      return true;
-    case Operation::Type::MOV:
-      result = source;
-      return true;
-    case Operation::Type::ADD:
-      result = treeExpr(Expression::Type::SUM, prevTarget, source);
-      return true;
-    case Operation::Type::SUB:
-      result = treeExpr(Expression::Type::DIFFERENCE, prevTarget, source);
-      return true;
-    case Operation::Type::MUL:
-      result = treeExpr(Expression::Type::PRODUCT, prevTarget, source);
-      return true;
+    case Operation::Type::NOP: {
+      break;
+    }
+    case Operation::Type::MOV: {
+      res = source;
+      break;
+    }
+    case Operation::Type::ADD: {
+      res = Expression(Expression::Type::SUM, "", {prevTarget, source});
+      break;
+    }
+    case Operation::Type::SUB: {
+      res = Expression(Expression::Type::DIFFERENCE, "", {prevTarget, source});
+      break;
+    }
+    case Operation::Type::MUL: {
+      res = Expression(Expression::Type::PRODUCT, "", {prevTarget, source});
+      break;
+    }
     case Operation::Type::DIV: {
-      result = fraction(prevTarget, source, pariMode);
-      return true;
+      res = fraction(prevTarget, source, pariMode);
+      break;
     }
     case Operation::Type::POW: {
-      auto pow = treeExpr(Expression::Type::POWER, prevTarget, source);
-      if (pariMode && CanBeNegative(source)) {
-        result = func(pow, "truncate");
+      auto pow = Expression(Expression::Type::POWER, "", {prevTarget, source});
+      if (pariMode && ExpressionUtil::canBeNegative(source)) {
+        res = Expression(Expression::Type::FUNCTION, "truncate", {pow});
       } else {
-        result = pow;
+        res = pow;
       }
-      return true;
+      break;
     }
     case Operation::Type::MOD: {
-      if (pariMode && (CanBeNegative(prevTarget) || CanBeNegative(source))) {
-        result = Expression(Expression::Type::DIFFERENCE);
-        result.newChild(prevTarget);
-        result.newChild(Expression::Type::PRODUCT);
-        result.children[1]->newChild(source);
-        result.children[1]->newChild(fraction(prevTarget, source, pariMode));
-        return true;
+      if (pariMode && (ExpressionUtil::canBeNegative(prevTarget) ||
+                       ExpressionUtil::canBeNegative(source))) {
+        res = Expression(Expression::Type::DIFFERENCE);
+        res.newChild(prevTarget);
+        res.newChild(Expression::Type::PRODUCT);
+        res.children[1]->newChild(source);
+        res.children[1]->newChild(fraction(prevTarget, source, pariMode));
       } else {
-        result = treeExpr(Expression::Type::MODULUS, prevTarget, source);
-        return true;
+        res = Expression(Expression::Type::MODULUS, "", {prevTarget, source});
       }
+      break;
     }
     case Operation::Type::MIN: {
-      result = binFunc("min", prevTarget, source);
-      return true;
+      res = Expression(Expression::Type::FUNCTION, "min", {prevTarget, source});
+      break;
     }
     case Operation::Type::MAX: {
-      result = binFunc("max", prevTarget, source);
-      return true;
+      res = Expression(Expression::Type::FUNCTION, "max", {prevTarget, source});
+      break;
     }
-    default:
-      return false;
+    default: {
+      okay = false;
+      break;
+    }
   }
+  ExpressionUtil::normalize(res);
+  return okay;
 }
 
 void Formula::replaceAll(const Expression& from, const Expression& to) {

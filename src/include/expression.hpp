@@ -26,6 +26,9 @@ class Expression {
   Expression(Type type, const std::string& name = "",
              const Number& value = Number::ZERO);
 
+  Expression(Type type, const std::string& name,
+             std::initializer_list<Expression> children);
+
   Expression(const Expression& e);
 
   Expression(Expression&& e);
