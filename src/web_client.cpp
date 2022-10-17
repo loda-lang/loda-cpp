@@ -23,12 +23,16 @@ void WebClient::initWebClient() {
 }
 
 bool WebClient::get(const std::string &url, const std::string &local_path,
-                    bool silent, bool fail_on_error) {
+                    bool silent, bool fail_on_error, bool insecure) {
   initWebClient();
   std::string cmd;
   switch (WEB_CLIENT_TYPE) {
     case WC_CURL:
-      cmd = "curl -fsSLo \"" + local_path + "\" " + url;
+      cmd = "curl";
+      if (insecure) {
+        cmd += " --insecure";
+      }
+      cmd += " -fsSLo \"" + local_path + "\" " + url;
       break;
     case WC_WGET:
       cmd =

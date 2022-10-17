@@ -104,7 +104,10 @@ std::string Setup::getMinersConfig() {
           "https://raw.githubusercontent.com/loda-lang/loda-cpp/main/"
           "miners.default.json";
       std::remove(default_config.c_str());
-      WebClient::get(url, default_config);
+      if (!WebClient::get(url, default_config, false, false)) {
+        // insecure fall-back option
+        WebClient::get(url, default_config, true, true);
+      }
     }
   }
   return default_config;

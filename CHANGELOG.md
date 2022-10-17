@@ -6,6 +6,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Support `mod`, `min` and `max` in formulas
 * Use `floor` instead of `truncate` in PARI if possible
+* Add insecure fall-back option for `curl`
 
 # v22.10.16
 
