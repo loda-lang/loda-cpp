@@ -94,6 +94,7 @@ bool CanBeNegative(const Expression& e) {
     case Expression::Type::PRODUCT:
     case Expression::Type::FRACTION:
     case Expression::Type::POWER:
+    case Expression::Type::MODULUS:
       for (auto c : e.children) {
         if (CanBeNegative(*c)) {
           return true;
@@ -113,6 +114,33 @@ Expression treeExpr(Expression::Type t, const Expression& c1,
   return result;
 }
 
+Expression binFunc(const std::string& name, const Expression& c1,
+                   const Expression& c2) {
+  Expression func(Expression::Type::FUNCTION, name);
+  func.newChild(c1);
+  func.newChild(c2);
+  return func;
+}
+
+Expression func(const Expression& e, const std::string& name) {
+  auto f = Expression(Expression::Type::FUNCTION, name);
+  f.newChild(e);
+  return f;
+}
+
+Expression fraction(const Expression& num, const Expression& den,
+                    bool pariMode) {
+  auto frac = treeExpr(Expression::Type::FRACTION, num, den);
+  if (pariMode) {
+    if (CanBeNegative(num) || CanBeNegative(den)) {
+      return func(frac, "truncate");
+    } else {
+      return func(frac, "floor");
+    }
+  }
+  return frac;
+}
+
 bool Formula::update(const Operation& op, bool pariMode) {
   auto source = operandToExpression(op.source);
   auto target = operandToExpression(op.target);
@@ -120,45 +148,55 @@ bool Formula::update(const Operation& op, bool pariMode) {
   if (source.type == Expression::Type::FUNCTION) {
     source = entries[source];
   }
-  auto prevTargetValue = entries[target];
+  auto prevTarget = entries[target];
+  auto& result = entries[target];  // reference to result
   switch (op.type) {
     case Operation::Type::NOP:
       return true;
     case Operation::Type::MOV:
-      entries[target] = source;
+      result = source;
       return true;
     case Operation::Type::ADD:
-      entries[target] =
-          treeExpr(Expression::Type::SUM, prevTargetValue, source);
+      result = treeExpr(Expression::Type::SUM, prevTarget, source);
       return true;
     case Operation::Type::SUB:
-      entries[target] =
-          treeExpr(Expression::Type::DIFFERENCE, prevTargetValue, source);
+      result = treeExpr(Expression::Type::DIFFERENCE, prevTarget, source);
       return true;
     case Operation::Type::MUL:
-      entries[target] =
-          treeExpr(Expression::Type::PRODUCT, prevTargetValue, source);
+      result = treeExpr(Expression::Type::PRODUCT, prevTarget, source);
       return true;
-    case Operation::Type::DIV:
-      if (pariMode) {
-        entries[target] = Expression(Expression::Type::FUNCTION, "truncate");
-        entries[target].newChild(
-            treeExpr(Expression::Type::FRACTION, prevTargetValue, source));
-
-      } else {
-        entries[target] =
-            treeExpr(Expression::Type::FRACTION, prevTargetValue, source);
-      }
+    case Operation::Type::DIV: {
+      result = fraction(prevTarget, source, pariMode);
       return true;
+    }
     case Operation::Type::POW: {
+      auto pow = treeExpr(Expression::Type::POWER, prevTarget, source);
       if (pariMode && CanBeNegative(source)) {
-        entries[target] = Expression(Expression::Type::FUNCTION, "truncate");
-        entries[target].newChild(
-            treeExpr(Expression::Type::POWER, prevTargetValue, source));
+        result = func(pow, "truncate");
       } else {
-        entries[target] =
-            treeExpr(Expression::Type::POWER, prevTargetValue, source);
+        result = pow;
       }
+      return true;
+    }
+    case Operation::Type::MOD: {
+      if (pariMode && (CanBeNegative(prevTarget) || CanBeNegative(source))) {
+        result = Expression(Expression::Type::DIFFERENCE);
+        result.newChild(prevTarget);
+        result.newChild(Expression::Type::PRODUCT);
+        result.children[1]->newChild(source);
+        result.children[1]->newChild(fraction(prevTarget, source, pariMode));
+        return true;
+      } else {
+        result = treeExpr(Expression::Type::MODULUS, prevTarget, source);
+        return true;
+      }
+    }
+    case Operation::Type::MIN: {
+      result = binFunc("min", prevTarget, source);
+      return true;
+    }
+    case Operation::Type::MAX: {
+      result = binFunc("max", prevTarget, source);
       return true;
     }
     default:

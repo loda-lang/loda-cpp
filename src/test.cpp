@@ -33,9 +33,6 @@
 Test::Test() {
   Log::get().info("Initialized random number generator using seed " +
                   std::to_string(Random::get().seed));
-#ifndef STD_FILESYSTEM
-  Log::get().warn("std::filesystem not available");
-#endif
   const std::string home = getTmpDir() + "loda" + FILE_SEP;
   ensureDir(home);
   Setup::setLodaHome(home);

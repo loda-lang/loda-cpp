@@ -68,6 +68,7 @@ bool Expression::operator==(const Expression& e) const {
     case Expression::Type::PRODUCT:
     case Expression::Type::FRACTION:
     case Expression::Type::POWER:
+    case Expression::Type::MODULUS:
       return equalChildren(e);
   }
   throw std::runtime_error("internal error");  // unreachable
@@ -96,9 +97,38 @@ bool Expression::operator<(const Expression& e) const {
     case Expression::Type::PRODUCT:
     case Expression::Type::FRACTION:
     case Expression::Type::POWER:
+    case Expression::Type::MODULUS:
       return lessChildren(e);
   }
   throw std::runtime_error("internal error");  // unreachable
+}
+
+bool Expression::equalChildren(const Expression& e) const {
+  if (children.size() != e.children.size()) {
+    return false;
+  }
+  for (size_t i = 0; i < children.size(); i++) {
+    if (*children[i] != *e.children[i]) {  // dereference!
+      return false;
+    }
+  }
+  return true;
+}
+
+bool Expression::lessChildren(const Expression& e) const {
+  if (children.size() < e.children.size()) {
+    return true;
+  } else if (children.size() > e.children.size()) {
+    return false;
+  }
+  for (size_t i = 0; i < children.size(); i++) {
+    if (*children[i] < *e.children[i]) {  // dereference!
+      return true;
+    } else if (*e.children[i] < *children[i]) {  // dereference!
+      return false;
+    }
+  }
+  return false;  // equal
 }
 
 Expression& Expression::newChild(const Expression& e) {
@@ -136,6 +166,7 @@ void Expression::normalize() {
     case Expression::Type::FUNCTION:
     case Expression::Type::NEGATION:
     case Expression::Type::POWER:
+    case Expression::Type::MODULUS:
       break;
     case Expression::Type::SUM:
       if (children.size() > 1) {  // at least two elements
@@ -178,9 +209,6 @@ std::string Expression::toString() const {
 
 void Expression::print(std::ostream& out, size_t index, bool isRoot,
                        Expression::Type parentType) const {
-  if (type == Expression::Type::FUNCTION) {
-    out << name;
-  }
   const bool brackets = needsBrackets(index, isRoot, parentType);
   if (brackets) {
     out << "(";
@@ -197,7 +225,9 @@ void Expression::print(std::ostream& out, size_t index, bool isRoot,
       children.front()->print(out, index, false, type);
       break;
     case Expression::Type::FUNCTION:
+      out << name << "(";
       printChildren(out, ",", isRoot, parentType);
+      out << ")";
       break;
     case Expression::Type::SUM:
       printChildren(out, "+", isRoot, parentType);
@@ -214,6 +244,9 @@ void Expression::print(std::ostream& out, size_t index, bool isRoot,
     case Expression::Type::POWER:
       printChildren(out, "^", isRoot, parentType);
       break;
+    case Expression::Type::MODULUS:
+      printChildren(out, "%", isRoot, parentType);
+      break;
   }
   if (brackets) {
     out << ")";
@@ -222,13 +255,17 @@ void Expression::print(std::ostream& out, size_t index, bool isRoot,
 
 bool Expression::needsBrackets(size_t index, bool isRoot,
                                Expression::Type parentType) const {
+  if (isRoot) {
+    return false;
+  }
   if (type == Expression::Type::PARAMETER) {
     return false;
   }
   if (type == Expression::Type::CONSTANT && (Number(-1) < value)) {
     return false;
   }
-  if (isRoot && type != Expression::Type::FUNCTION) {
+  if (type == Expression::Type::FUNCTION ||
+      parentType == Expression::Type::FUNCTION) {
     return false;
   }
   if (type == Expression::Type::NEGATION &&
@@ -237,7 +274,8 @@ bool Expression::needsBrackets(size_t index, bool isRoot,
       index == 0) {
     return false;
   }
-  if (type == Expression::Type::PRODUCT || type == Expression::Type::POWER) {
+  if (type == Expression::Type::PRODUCT || type == Expression::Type::POWER ||
+      type == Expression::Type::FRACTION || type == Expression::Type::MODULUS) {
     if (parentType == Expression::Type::SUM) {
       return false;
     }
@@ -262,34 +300,6 @@ void Expression::printChildren(std::ostream& out, const std::string& op,
     }
     children[i]->print(out, i, false, type);
   }
-}
-
-bool Expression::equalChildren(const Expression& e) const {
-  if (children.size() != e.children.size()) {
-    return false;
-  }
-  for (size_t i = 0; i < children.size(); i++) {
-    if (*children[i] != *e.children[i]) {  // dereference!
-      return false;
-    }
-  }
-  return true;
-}
-
-bool Expression::lessChildren(const Expression& e) const {
-  if (children.size() < e.children.size()) {
-    return true;
-  } else if (children.size() > e.children.size()) {
-    return false;
-  }
-  for (size_t i = 0; i < children.size(); i++) {
-    if (*children[i] < *e.children[i]) {  // dereference!
-      return true;
-    } else if (*e.children[i] < *children[i]) {  // dereference!
-      return false;
-    }
-  }
-  return false;  // equal
 }
 
 bool Expression::mergeTwoChildren() {
@@ -396,15 +406,14 @@ bool Expression::simplifyNegativeProduct() {
   if (children[0]->value != Number(-1)) {
     return false;
   }
-  if (children[1]->type != Expression::Type::DIFFERENCE) {
-    return false;
-  }
-  if (children[1]->children.size() != 2) {
-    return false;
-  }
   auto tmp = *children[1];
-  std::swap(tmp.children[0], tmp.children[1]);
-  *this = tmp;
+  if (tmp.type == Expression::Type::DIFFERENCE && tmp.children.size() == 2) {
+    std::swap(tmp.children[0], tmp.children[1]);
+    *this = tmp;
+  } else {
+    *this = Expression(Expression::Type::NEGATION);
+    newChild(tmp);
+  }
   return true;
 }
 

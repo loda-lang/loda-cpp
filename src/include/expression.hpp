@@ -15,7 +15,8 @@ class Expression {
     DIFFERENCE,
     PRODUCT,
     FRACTION,
-    POWER
+    POWER,
+    MODULUS
   };
 
   Expression();
@@ -58,6 +59,10 @@ class Expression {
   std::vector<Expression*> children;
 
  private:
+  bool equalChildren(const Expression& e) const;
+
+  bool lessChildren(const Expression& e) const;
+
   void print(std::ostream& out, size_t index, bool isRoot,
              Expression::Type parentType) const;
 
@@ -66,10 +71,6 @@ class Expression {
 
   bool needsBrackets(size_t index, bool isRoot,
                      Expression::Type parentType) const;
-
-  bool equalChildren(const Expression& e) const;
-
-  bool lessChildren(const Expression& e) const;
 
   bool mergeTwoChildren();
 

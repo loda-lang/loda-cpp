@@ -2,6 +2,11 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Enhancements
+
+* Support `mod`, `min` and `max` in formulas
+* Use `floor` instead of `truncate` in PARI if possible
+
 # v22.10.16
 
 ### Bugfixes
