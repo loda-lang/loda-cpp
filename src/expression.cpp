@@ -111,6 +111,18 @@ bool Expression::operator<(const Expression& e) const {
   throw std::runtime_error("internal error");  // unreachable
 }
 
+bool Expression::contains(const Expression& e) {
+  if (*this == e) {
+    return true;
+  }
+  for (auto c : children) {
+    if (c->contains(e)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool Expression::equalChildren(const Expression& e) const {
   if (children.size() != e.children.size()) {
     return false;
@@ -157,6 +169,15 @@ void Expression::replaceAll(const Expression& from, const Expression& to) {
     for (auto& c : children) {
       c->replaceAll(from, to);
     }
+  }
+}
+
+void Expression::replaceName(const std::string& from, const std::string& to) {
+  if (name == from) {
+    name = to;
+  }
+  for (auto& c : children) {
+    c->replaceName(from, to);
   }
 }
 

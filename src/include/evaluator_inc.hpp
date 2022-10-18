@@ -35,6 +35,7 @@ class IncrementalEvaluator {
   inline const Program& getLoopBody() { return loop_body; }
   inline const Program& getPostLoop() { return post_loop; }
   inline int64_t getLoopCounterCell() { return loop_counter_cell; }
+  inline const Memory& getLoopState() { return loop_state; }
 
  private:
   bool extractFragments(const Program& program);

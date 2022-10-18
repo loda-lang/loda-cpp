@@ -43,12 +43,16 @@ class Expression {
 
   bool operator<(const Expression& e) const;
 
+  bool contains(const Expression& e);
+
   Expression& newChild(const Expression& e);
 
   Expression& newChild(Type type, const std::string& name = "",
                        const Number& value = Number::ZERO);
 
   void replaceAll(const Expression& from, const Expression& to);
+
+  void replaceName(const std::string& from, const std::string& to);
 
   friend std::ostream& operator<<(std::ostream& out, const Expression& e);
 
