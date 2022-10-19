@@ -77,6 +77,7 @@ bool Expression::operator==(const Expression& e) const {
     case Expression::Type::FRACTION:
     case Expression::Type::POWER:
     case Expression::Type::MODULUS:
+    case Expression::Type::IF:
       return equalChildren(e);
   }
   throw std::runtime_error("internal error");  // unreachable
@@ -106,12 +107,13 @@ bool Expression::operator<(const Expression& e) const {
     case Expression::Type::FRACTION:
     case Expression::Type::POWER:
     case Expression::Type::MODULUS:
+    case Expression::Type::IF:
       return lessChildren(e);
   }
   throw std::runtime_error("internal error");  // unreachable
 }
 
-bool Expression::contains(const Expression& e) {
+bool Expression::contains(const Expression& e) const {
   if (*this == e) {
     return true;
   }
@@ -121,6 +123,12 @@ bool Expression::contains(const Expression& e) {
     }
   }
   return false;
+}
+
+void Expression::assertNumChildren(size_t num) const {
+  if (children.size() != num) {
+    throw std::runtime_error("unexpected number of children: " + toString());
+  }
 }
 
 bool Expression::equalChildren(const Expression& e) const {
@@ -207,6 +215,7 @@ void Expression::print(std::ostream& out, size_t index, bool isRoot,
       break;
     case Expression::Type::NEGATION:
       out << "-";
+      assertNumChildren(1);
       children.front()->print(out, index, false, type);
       break;
     case Expression::Type::FUNCTION:
@@ -232,6 +241,12 @@ void Expression::print(std::ostream& out, size_t index, bool isRoot,
     case Expression::Type::MODULUS:
       printChildren(out, "%", isRoot, parentType);
       break;
+    case Expression::Type::IF:
+      assertNumChildren(3);
+      out << name << "if(n==";
+      printChildren(out, ",", isRoot, parentType);
+      out << ")";
+      break;
   }
   if (brackets) {
     out << ")";
@@ -251,6 +266,9 @@ bool Expression::needsBrackets(size_t index, bool isRoot,
   }
   if (type == Expression::Type::FUNCTION ||
       parentType == Expression::Type::FUNCTION) {
+    return false;
+  }
+  if (type == Expression::Type::IF || parentType == Expression::Type::IF) {
     return false;
   }
   if (type == Expression::Type::NEGATION &&

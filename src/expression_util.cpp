@@ -178,13 +178,6 @@ bool ExpressionUtil::normalize(Expression& e) {
     normalize(*c);
   }
   switch (e.type) {
-    case Expression::Type::CONSTANT:
-    case Expression::Type::PARAMETER:
-    case Expression::Type::FUNCTION:
-    case Expression::Type::NEGATION:
-    case Expression::Type::POWER:
-    case Expression::Type::MODULUS:
-      break;
     case Expression::Type::SUM:
       if (e.children.size() > 1) {  // at least two elements
         std::sort(e.children.rbegin(), e.children.rend(), compareExprPtr);
@@ -203,6 +196,8 @@ bool ExpressionUtil::normalize(Expression& e) {
         std::sort(e.children.rbegin(), e.children.rend() - 1, compareExprPtr);
         mergeAllChildren(e);
       }
+      break;
+    default:
       break;
   }
   if (pullUpChildren(e)) {
@@ -230,6 +225,7 @@ bool ExpressionUtil::canBeNegative(const Expression& e) {
     case Expression::Type::FRACTION:
     case Expression::Type::POWER:
     case Expression::Type::MODULUS:
+    case Expression::Type::IF:
       for (auto c : e.children) {
         if (canBeNegative(*c)) {
           return true;

@@ -5,6 +5,8 @@
 #include "benchmark.hpp"
 #include "boinc.hpp"
 #include "evaluator.hpp"
+#include "evaluator_inc.hpp"
+#include "formula_gen.hpp"
 #include "iterator.hpp"
 #include "log.hpp"
 #include "miner.hpp"
@@ -192,17 +194,17 @@ void Commands::export_(const std::string& path) {
   Program program = parser.parse(getProgramPathAndSeqId(path).first);
   const auto& format = settings.export_format;
   if (format.empty() || format == "formula") {
-    auto formula = Formula::fromProgram(program, false);
+    auto formula = FormulaGenerator::generate(program, false);
     if (!formula.first) {
       throw std::runtime_error("program cannot be converted to formula");
     }
-    std::cout << Pari::generate(formula.second) << std::endl;
+    std::cout << formula.second.toString(false) << std::endl;
   } else if (format == "pari") {
-    auto formula = Formula::fromProgram(program, true);
+    auto formula = FormulaGenerator::generate(program, true);
     if (!formula.first) {
       throw std::runtime_error("program cannot be converted to pari");
     }
-    std::cout << Pari::generate(formula.second) << std::endl;
+    std::cout << formula.second.toString(true) << std::endl;
   } else if (format == "loda") {
     ProgramUtil::print(program, std::cout);
   } else {
@@ -299,7 +301,9 @@ void Commands::testPari() {
   initLog(false);
   Parser parser;
   Settings settings;
+  Interpreter interpreter(settings);
   Evaluator evaluator(settings);
+  IncrementalEvaluator inceval(interpreter);
   OeisManager manager(settings);
   manager.load();
   auto& stats = manager.getStats();
@@ -310,14 +314,18 @@ void Commands::testPari() {
     }
     auto seq = manager.getSequences().at(id);
     auto program = parser.parse(seq.getProgramPath());
-    auto formula = Formula::fromProgram(program, true);
+    auto formula = FormulaGenerator::generate(program, true);
     if (!formula.first) {
       continue;
     }
-    Log::get().info(seq.id_str() + ": " + formula.second.toString());
+    Log::get().info(seq.id_str() + ": " + formula.second.toString(true));
     Sequence expSeq;
-    evaluator.eval(program, expSeq, seq.existingNumTerms());
-    auto genSeq = Pari::eval(formula.second, 0, seq.existingNumTerms() - 1);
+    size_t numTerms = seq.existingNumTerms();
+    if (inceval.init(program)) {
+      numTerms = std::min<size_t>(numTerms, 10);
+    }
+    evaluator.eval(program, expSeq, numTerms);
+    auto genSeq = Pari::eval(formula.second, 0, numTerms - 1);
     if (genSeq != expSeq) {
       Log::get().info("Generated sequence: " + genSeq.to_string());
       Log::get().info("Expected sequence:  " + expSeq.to_string());

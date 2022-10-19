@@ -12,7 +12,7 @@
 #include "config.hpp"
 #include "evaluator.hpp"
 #include "file.hpp"
-#include "formula.hpp"
+#include "formula_gen.hpp"
 #include "generator_v1.hpp"
 #include "interpreter.hpp"
 #include "iterator.hpp"
@@ -884,12 +884,12 @@ void Test::formula() {
     OeisSequence seq(e.first);
     Log::get().info("Testing formula for " + seq.id_str() + ": " + e.second);
     auto p = parser.parse(seq.getProgramPath());
-    auto r = Formula::fromProgram(p, false);
+    auto r = FormulaGenerator::generate(p, false);
     if (!r.first) {
       Log::get().error("Cannot generate formula from program", true);
     }
-    if (r.second.toString() != e.second) {
-      Log::get().error("Unexpected formula: " + r.second.toString(), true);
+    if (r.second.toString(false) != e.second) {
+      Log::get().error("Unexpected formula: " + r.second.toString(false), true);
     }
   }
 }

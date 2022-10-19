@@ -5,6 +5,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Enhancements
 
 * Support `mod`, `min` and `max` in formulas
+* Support recursive formulas for a small subset of IE programs
 * Use `floor` instead of `truncate` in PARI if possible
 * Add insecure fall-back option for `curl`
 
