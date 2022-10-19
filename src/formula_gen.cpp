@@ -266,10 +266,10 @@ std::pair<bool, Formula> FormulaGenerator::generate(const Program& p,
 
   // add initial terms for IE programs
   if (use_ie) {
+    // find out which initial terms are needed
     std::map<int64_t, int64_t> maxOffsets;
     for (int64_t i = 0; i <= largestCell; i++) {
       for (int64_t j = 0; j <= largestCell; j++) {
-        // find out if this initial term is needed
         Expression funcSearch(Expression::Type::FUNCTION, memoryCellToName(j));
         if (i == 0) {
           funcSearch.newChild(paramExpr);
@@ -283,14 +283,13 @@ std::pair<bool, Formula> FormulaGenerator::generate(const Program& p,
         }
       }
     }
-
+    // evaluate program and add initial terms to formula
     for (int64_t i = 0; i <= largestCell; i++) {
       ie.next();
       for (int64_t j = 0; j <= largestCell; j++) {
         if (maxOffsets[j] < i) {
           continue;
         }
-        // add the initial term
         Expression index(Expression::Type::CONSTANT, "", Number(i));
         Expression func(Expression::Type::FUNCTION, memoryCellToName(j),
                         {index});
