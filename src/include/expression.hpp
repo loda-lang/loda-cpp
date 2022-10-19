@@ -16,7 +16,8 @@ class Expression {
     PRODUCT,
     FRACTION,
     POWER,
-    MODULUS
+    MODULUS,
+    IF
   };
 
   Expression();
@@ -43,7 +44,7 @@ class Expression {
 
   bool operator<(const Expression& e) const;
 
-  bool contains(const Expression& e);
+  bool contains(const Expression& e) const;
 
   Expression& newChild(const Expression& e);
 
@@ -64,6 +65,8 @@ class Expression {
   std::vector<Expression*> children;
 
  private:
+  void assertNumChildren(size_t num) const;
+
   bool equalChildren(const Expression& e) const;
 
   bool lessChildren(const Expression& e) const;
