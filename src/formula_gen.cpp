@@ -190,6 +190,13 @@ std::pair<bool, Formula> FormulaGenerator::generate(const Program& p,
         return result;
       }
     }
+    // TODO: remove this limitation
+    for (auto& op : ie.getLoopBody().ops) {
+      if (op.type == Operation::Type::MOV &&
+          op.source.type == Operand::Type::CONSTANT) {
+        return result;
+      }
+    }
   }
 
   // initialize expressions for memory cells
