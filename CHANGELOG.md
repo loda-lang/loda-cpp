@@ -2,6 +2,8 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+# v22.10.19
+
 ### Enhancements
 
 * Support `mod`, `min` and `max` in formulas
