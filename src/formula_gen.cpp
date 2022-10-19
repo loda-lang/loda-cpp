@@ -175,9 +175,21 @@ std::pair<bool, Formula> FormulaGenerator::generate(const Program& p,
   IncrementalEvaluator ie(interpreter);
   bool use_ie = ie.init(p);
 
-  // TODO: remove this limitation
-  if (use_ie && !ie.getLoopCounterDependentCells().empty()) {
-    return result;
+  if (use_ie) {
+    // TODO: remove this limitation
+    if (ie.getLoopCounterCell() != 0) {
+      return result;
+    }
+    // TODO: remove this limitation
+    if (!ie.getLoopCounterDependentCells().empty()) {
+      return result;
+    }
+    // TODO: remove this limitation
+    for (auto& op : ie.getPreLoop().ops) {
+      if (op.target == Operand(Operand::Type::DIRECT, Number::ZERO)) {
+        return result;
+      }
+    }
   }
 
   // initialize expressions for memory cells
