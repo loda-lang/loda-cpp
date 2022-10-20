@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Enhancements
+
+* Increase max interpreter cycles to 20 million
+
 # v22.10.19
 
 ### Enhancements
