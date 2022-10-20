@@ -14,7 +14,11 @@ std::string Formula::toString(bool pariMode) const {
     if (pariMode && entries.size() > 1) {
       result += "(";
     }
-    result += it->first.toString() + "=" + it->second.toString();
+    std::string eq = " = ";
+    if (pariMode) {
+      eq = "=";
+    }
+    result += it->first.toString() + eq + it->second.toString();
     if (pariMode && entries.size() > 1) {
       result += ")";
     }
