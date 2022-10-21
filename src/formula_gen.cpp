@@ -186,7 +186,7 @@ std::pair<bool, Formula> FormulaGenerator::generate(const Program& p,
     }
     // TODO: remove this limitation
     for (auto& op : ie.getPreLoop().ops) {
-      if (op.target == Operand(Operand::Type::DIRECT, Number::ZERO)) {
+      if (op.type == Operation::Type::MUL || op.type == Operation::Type::DIV) {
         return result;
       }
     }
@@ -230,7 +230,7 @@ std::pair<bool, Formula> FormulaGenerator::generate(const Program& p,
   if (!update(f, main, pariMode)) {
     return result;
   }
-  Log::get().debug("Updated formula: " + f.toString(false));
+  Log::get().debug("Updated formula:  " + f.toString(false));
 
   // additional work for IE programs
   std::map<std::string, std::string> identities;
@@ -238,6 +238,7 @@ std::pair<bool, Formula> FormulaGenerator::generate(const Program& p,
     // resolve function references
     for (auto& e : f.entries) {
       resolve(f, e.first, e.second);
+      ExpressionUtil::normalize(e.second);
     }
     Log::get().debug("Resolved formula: " + f.toString(false));
 
@@ -255,7 +256,7 @@ std::pair<bool, Formula> FormulaGenerator::generate(const Program& p,
         return result;
       }
     }
-    Log::get().debug("Updated formula: " + f.toString(false));
+    Log::get().debug("Updated formula:  " + f.toString(false));
   }
 
   // extract main formula (filter out irrelant memory cells)
@@ -266,35 +267,52 @@ std::pair<bool, Formula> FormulaGenerator::generate(const Program& p,
 
   // add initial terms for IE programs
   if (use_ie) {
+    // calculate offset
+    Memory mem;
+    interpreter.run(ie.getPreLoop(), mem);
+    int64_t preloopOffset =
+        std::max<int64_t>(0, -(mem.get(ie.getLoopCounterCell()).asInt()));
+    Log::get().debug("Calculated offset from pre-loop: " +
+                     std::to_string(preloopOffset));
+
     // find out which initial terms are needed
     std::map<int64_t, int64_t> maxOffsets;
-    for (int64_t i = 0; i <= largestCell; i++) {
-      for (int64_t j = 0; j <= largestCell; j++) {
-        Expression funcSearch(Expression::Type::FUNCTION, memoryCellToName(j));
-        if (i == 0) {
+    // maximum offsets are bound by number of used memory cells
+    for (int64_t offset = 0; offset <= largestCell; offset++) {
+      for (int64_t cell = 0; cell <= largestCell; cell++) {
+        Expression funcSearch(Expression::Type::FUNCTION,
+                              memoryCellToName(cell));
+        if (offset == 0) {
           funcSearch.newChild(paramExpr);
         } else {
           funcSearch.newChild(Expression(
               Expression::Type::DIFFERENCE, "",
-              {paramExpr, Expression(Expression::Type::CONSTANT, "", i + 1)}));
+              {paramExpr,
+               Expression(Expression::Type::CONSTANT, "", offset + 1)}));
         }
         if (f.contains(funcSearch)) {
-          maxOffsets[j] = std::max<int64_t>(maxOffsets[j], i);
+          maxOffsets[cell] =
+              std::max<int64_t>(maxOffsets[cell], offset) + preloopOffset;
         }
       }
     }
+    for (auto e : maxOffsets) {
+      Log::get().debug(
+          "Calculated offset from formula: " + memoryCellToName(e.first) +
+          " => " + std::to_string(e.second));
+    }
     // evaluate program and add initial terms to formula
-    for (int64_t i = 0; i <= largestCell; i++) {
+    for (int64_t offset = 0; offset <= largestCell; offset++) {
       ie.next();
-      for (int64_t j = 0; j <= largestCell; j++) {
-        if (maxOffsets[j] < i) {
+      for (int64_t cell = 0; cell <= largestCell; cell++) {
+        if (maxOffsets[cell] < offset) {
           continue;
         }
-        Expression index(Expression::Type::CONSTANT, "", Number(i));
-        Expression func(Expression::Type::FUNCTION, memoryCellToName(j),
+        Expression index(Expression::Type::CONSTANT, "", Number(offset));
+        Expression func(Expression::Type::FUNCTION, memoryCellToName(cell),
                         {index});
         Expression val(Expression::Type::CONSTANT, "",
-                       ie.getLoopState().get(j));
+                       ie.getLoopState().get(cell));
         f.entries[func] = val;
       }
     }
