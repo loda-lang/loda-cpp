@@ -123,6 +123,13 @@ bool update(Formula& f, const Operation& op, bool pariMode) {
       res = Expression(Expression::Type::FUNCTION, "max", {prevTarget, source});
       break;
     }
+    case Operation::Type::TRN: {
+      res = Expression(
+          Expression::Type::FUNCTION, "max",
+          {Expression(Expression::Type::DIFFERENCE, "", {prevTarget, source}),
+           Expression(Expression::Type::CONSTANT, "", Number::ZERO)});
+      break;
+    }
     default: {
       okay = false;
       break;
