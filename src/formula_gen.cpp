@@ -105,6 +105,16 @@ bool update(Formula& f, const Operation& op, bool pariMode) {
       }
       break;
     }
+    case Operation::Type::BIN: {
+      // TODO: check feedback from PARI team to avoid this limitation
+      if (pariMode && ExpressionUtil::canBeNegative(source)) {
+        okay = false;
+      } else {
+        res = Expression(Expression::Type::FUNCTION, "binomial",
+                         {prevTarget, source});
+      }
+      break;
+    }
     case Operation::Type::MIN: {
       res = Expression(Expression::Type::FUNCTION, "min", {prevTarget, source});
       break;
