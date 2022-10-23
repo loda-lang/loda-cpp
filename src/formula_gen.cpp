@@ -115,6 +115,10 @@ bool update(Formula& f, const Operation& op, bool pariMode) {
       }
       break;
     }
+    case Operation::Type::GCD: {
+      res = Expression(Expression::Type::FUNCTION, "gcd", {prevTarget, source});
+      break;
+    }
     case Operation::Type::MIN: {
       res = Expression(Expression::Type::FUNCTION, "min", {prevTarget, source});
       break;
