@@ -6,6 +6,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Increase max interpreter cycles to 20 million
 * Support `bin`, `gcd` and `trn` operations in formula generator
+* Improve expression normalizer
 
 # v22.10.19
 
