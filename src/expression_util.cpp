@@ -153,8 +153,10 @@ bool removeNeutral(Expression& e) {
   }
   if (e.children.empty()) {
     e = neutralExpr;
+    changed = true;
   } else if (e.children.size() == 1) {
     e = Expression(*e.children[0]);
+    changed = true;
   }
   return changed;
 }
