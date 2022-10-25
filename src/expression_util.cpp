@@ -117,32 +117,33 @@ bool simplifyNegativeProduct(Expression& e) {
 }
 
 bool removeNeutral(Expression& e) {
-  Number neutral;
+  Number neutralElem;
   size_t start = 0;
   switch (e.type) {
     case Expression::Type::SUM:
-      neutral = Number::ZERO;
+      neutralElem = Number::ZERO;
       start = 0;
       break;
     case Expression::Type::DIFFERENCE:
-      neutral = Number::ZERO;
+      neutralElem = Number::ZERO;
       start = 1;
       break;
     case Expression::Type::PRODUCT:
-      neutral = Number::ONE;
+      neutralElem = Number::ONE;
       start = 0;
       break;
     case Expression::Type::FRACTION:
-      neutral = Number::ONE;
+      neutralElem = Number::ONE;
       start = 1;
       break;
     default:
       return false;
   }
+  Expression neutralExpr(Expression::Type::CONSTANT, "", neutralElem);
   auto it = e.children.begin() + start;
   bool changed = false;
   while (it != e.children.end()) {
-    if ((*it)->type == Expression::Type::CONSTANT && (*it)->value == neutral) {
+    if (*(*it) == neutralExpr) {
       delete *it;
       it = e.children.erase(it);
       changed = true;
@@ -150,7 +151,31 @@ bool removeNeutral(Expression& e) {
       it++;
     }
   }
+  if (e.children.empty()) {
+    e = neutralExpr;
+  } else if (e.children.size() == 1) {
+    e = Expression(*e.children[0]);
+  }
   return changed;
+}
+
+bool zeroProduct(Expression& e) {
+  if (e.type != Expression::Type::PRODUCT) {
+    return false;
+  }
+  const Expression zero(Expression::Type::CONSTANT, "", Number::ZERO);
+  bool found = false;
+  for (auto c : e.children) {
+    if (*c == zero) {
+      found = true;
+      break;
+    }
+  }
+  if (found) {
+    e = zero;
+    return true;
+  }
+  return false;
 }
 
 bool diffToNeg(Expression& e) {
@@ -205,6 +230,7 @@ bool ExpressionUtil::normalize(Expression& e) {
   }
   diffToNeg(e);
   removeNeutral(e);
+  zeroProduct(e);
   simplifyNegativeProduct(e);
   // TODO: track changes
   return true;
