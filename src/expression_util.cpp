@@ -175,9 +175,8 @@ bool zeroProduct(Expression& e) {
   }
   if (found) {
     e = zero;
-    return true;
   }
-  return false;
+  return found;
 }
 
 bool diffToNeg(Expression& e) {
