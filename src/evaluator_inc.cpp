@@ -133,12 +133,8 @@ bool IncrementalEvaluator::checkPreLoop() {
 
 bool IncrementalEvaluator::checkLoopBody() {
   bool loop_counter_updated = false;
-  bool has_seq = false;
   bool is_commutative = true;
   for (auto& op : loop_body.ops) {
-    if (op.type == Operation::Type::SEQ) {
-      has_seq = true;
-    }
     const auto target = op.target.value.asInt();
 
     // check output cells
@@ -187,7 +183,7 @@ bool IncrementalEvaluator::checkLoopBody() {
   // we must ensure that there are no sequence
   // calls or loop counter dependent cells in that case.
   if ((stateful_cells.size() > 1 || !is_commutative) &&
-      (has_seq || !loop_counter_dependent_cells.empty() ||
+      (!loop_counter_dependent_cells.empty() ||
        output_cells.find(Program::INPUT_CELL) != output_cells.end())) {
     return false;
   }
