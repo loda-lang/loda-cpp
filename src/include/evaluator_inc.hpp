@@ -45,7 +45,7 @@ class IncrementalEvaluator {
   bool checkPreLoop();
   bool checkLoopBody();
   bool checkPostLoop();
-  bool updateStatefulCells();
+  void computeStatefulCells();
   bool updateLoopCounterDependentCells();
 
   Interpreter& interpreter;

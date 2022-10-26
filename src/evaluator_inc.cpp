@@ -175,8 +175,7 @@ bool IncrementalEvaluator::checkLoopBody() {
   }
 
   // compute set of stateful memory cells
-  while (updateStatefulCells()) {
-  };
+  computeStatefulCells();
 
   // compute set of loop counter dependent cells
   while (updateLoopCounterDependentCells()) {
@@ -194,39 +193,35 @@ bool IncrementalEvaluator::checkLoopBody() {
   return true;
 }
 
-bool IncrementalEvaluator::updateStatefulCells() {
-  bool changed = false;
-  std::set<int64_t> reset;
+void IncrementalEvaluator::computeStatefulCells() {
+  std::set<int64_t> read;
+  std::set<int64_t> write;
+  stateful_cells.clear();
   for (auto& op : loop_body.ops) {
     const auto meta = Operation::Metadata::get(op.type);
     if (meta.num_operands == 0) {
       continue;
     }
     const auto target = op.target.value.asInt();
-    if (stateful_cells.find(target) != stateful_cells.end()) {
-      continue;
-    }
-    if (!meta.is_writing_target) {
-      continue;
-    }
     if (target == loop_counter_cell) {
       continue;
     }
+    // update read cells
     if (meta.is_reading_target) {
-      if (reset.find(target) == reset.end()) {
-        stateful_cells.insert(target);
-        changed = true;
-      }
-    } else {
-      reset.insert(target);
+      read.insert(target);
     }
-    if (meta.num_operands == 2 && op.source.type == Operand::Type::DIRECT &&
-        stateful_cells.find(op.source.value.asInt()) != stateful_cells.end()) {
-      stateful_cells.insert(target);
-      changed = true;
+    if (meta.num_operands == 2 && op.source.type == Operand::Type::DIRECT) {
+      read.insert(op.source.value.asInt());
+    }
+
+    // update written cells
+    if (meta.is_writing_target && write.find(target) == write.end()) {
+      if (read.find(target) != read.end()) {
+        stateful_cells.insert(target);
+      }
+      write.insert(target);
     }
   }
-  return changed;
 }
 
 bool IncrementalEvaluator::updateLoopCounterDependentCells() {
