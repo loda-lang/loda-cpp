@@ -310,7 +310,7 @@ std::pair<Number, size_t> IncrementalEvaluator::next() {
         interpreter.run(loop_body, loop_state) + 1;  // +1 for lpb
   }
 
-  // one more iteration is needed for the correct step count
+  // additional step for lpb in the first iteration
   if (argument == 0) {
     total_loop_steps += 1;  // +1 for lpb
   }
