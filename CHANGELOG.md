@@ -4,14 +4,15 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Bugfixes
 
-* Fix step count
+* Fix step count calculation
+* Fix incremental evaluation
 
 ### Enhancements
 
 * Increase max interpreter cycles to 20 million
+* Support incremental evaluation for more programs (from 9k to 15k programs)
 * Support `bin`, `gcd` and `trn` operations in formula generator
 * Improve expression normalizer (neutral element handling)
-* Support incremental evaluation for more programs
 
 # v22.10.19
 

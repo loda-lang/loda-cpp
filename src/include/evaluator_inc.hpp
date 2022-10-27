@@ -45,8 +45,9 @@ class IncrementalEvaluator {
   bool checkPreLoop();
   bool checkLoopBody();
   bool checkPostLoop();
+  bool isCommutative(int64_t cell) const;
   void computeStatefulCells();
-  bool updateLoopCounterDependentCells();
+  void computeLoopCounterDependentCells();
 
   Interpreter& interpreter;
 
@@ -54,7 +55,6 @@ class IncrementalEvaluator {
   Program pre_loop;
   Program loop_body;
   Program post_loop;
-  std::map<int64_t, Operation::Type> output_updates;
   std::set<int64_t> output_cells;
   std::set<int64_t> stateful_cells;
   std::set<int64_t> loop_counter_dependent_cells;
