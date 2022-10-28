@@ -184,12 +184,13 @@ bool IncrementalEvaluator::checkLoopBody() {
   // compute set of loop counter dependent cells
   computeLoopCounterDependentCells();
 
-  // from now on, we check for postive cases
+  // ================================================= //
+  // === from now on, we check for positive cases ==== //
+  // ================================================= //
 
   if (loop_counter_dependent_cells.empty()) {
     return true;
   }
-
   if (stateful_cells.empty()) {
     return true;
   }

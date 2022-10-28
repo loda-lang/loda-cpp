@@ -195,8 +195,12 @@ bool diffToNeg(Expression& e) {
   return false;
 }
 
-bool compareExprPtr(const Expression* lhs, const Expression* rhs) {
-  return (*lhs < *rhs);
+bool lessExprPtr(const Expression* lhs, const Expression* rhs) {
+  return *lhs < *rhs;
+}
+
+bool greaterExprPtr(const Expression* lhs, const Expression* rhs) {
+  return *lhs > *rhs;
 }
 
 bool ExpressionUtil::normalize(Expression& e) {
@@ -206,20 +210,20 @@ bool ExpressionUtil::normalize(Expression& e) {
   switch (e.type) {
     case Expression::Type::SUM:
       if (e.children.size() > 1) {  // at least two elements
-        std::sort(e.children.rbegin(), e.children.rend(), compareExprPtr);
+        std::sort(e.children.begin(), e.children.end(), greaterExprPtr);
         mergeAllChildren(e);
       }
       break;
     case Expression::Type::PRODUCT:
       if (e.children.size() > 1) {  // at least two elements
-        std::sort(e.children.begin(), e.children.end(), compareExprPtr);
+        std::sort(e.children.begin(), e.children.end(), lessExprPtr);
         mergeAllChildren(e);
       }
       break;
     case Expression::Type::DIFFERENCE:
     case Expression::Type::FRACTION:
       if (e.children.size() > 2) {  // at least three elements
-        std::sort(e.children.rbegin(), e.children.rend() - 1, compareExprPtr);
+        std::sort(e.children.begin() + 1, e.children.end(), greaterExprPtr);
         mergeAllChildren(e);
       }
       break;
