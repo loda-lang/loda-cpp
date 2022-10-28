@@ -154,9 +154,8 @@ void Commands::check(const std::string& path) {
   }
   Evaluator evaluator(settings);
   auto terms = seq.getTerms(OeisSequence::FULL_SEQ_LENGTH);
-  // don't use incremental evaluation in maintenance to detect bugs
-  auto result = evaluator.check(
-      program, terms, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id, false);
+  auto result =
+      evaluator.check(program, terms, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id);
   switch (result.first) {
     case status_t::OK:
       std::cout << "ok" << std::endl;

@@ -569,10 +569,9 @@ bool Test::checkIncEval(const Settings& settings, size_t id,
       return false;
     }
   }
-  Evaluator evaluator(settings);
-  Interpreter interpreter(settings);
-  IncrementalEvaluator inc(interpreter);
-  if (!inc.init(p)) {
+  Evaluator eval_reg(settings, false);
+  Evaluator eval_inc(settings, true);
+  if (!eval_inc.supportsIncEval(p)) {
     if (mustSupportIncEval) {
       Log::get().error(
           "Error initializing incremental evaluator for " + s.id_str(), true);
@@ -585,12 +584,12 @@ bool Test::checkIncEval(const Settings& settings, size_t id,
   Sequence seq_reg, seq_inc;
   steps_t steps_reg, steps_inc;
   try {
-    steps_reg = evaluator.eval(p, seq_reg, 100, true, false);
-    steps_inc = evaluator.eval(p, seq_inc, 100, true, true);
+    steps_reg = eval_reg.eval(p, seq_reg, 100, true);
+    steps_inc = eval_inc.eval(p, seq_inc, 100, true);
   } catch (const std::exception&) {
     try {
-      steps_reg = evaluator.eval(p, seq_reg, 10, true, false);
-      steps_inc = evaluator.eval(p, seq_inc, 10, true, true);
+      steps_reg = eval_reg.eval(p, seq_reg, 10, true);
+      steps_inc = eval_inc.eval(p, seq_inc, 10, true);
     } catch (const std::exception& e) {
       if (mustSupportIncEval) {
         throw e;

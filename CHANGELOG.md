@@ -16,6 +16,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Increase max interpreter cycles to 20 million
 * Support incremental evaluation for more programs (from 9k to 15k programs)
+* Activate incremental evaluation in validation
 
 # v22.10.19
 
