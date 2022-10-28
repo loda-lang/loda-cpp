@@ -16,8 +16,6 @@ jobs:
         run: cd src && make -f Makefile.linux-x86.mk
       - name: Test
         run: ./loda test
-      - name: Benchmark
-        run: ./loda benchmark
   build-linux-arm64:
     runs-on:
       - self-hosted
@@ -46,8 +44,6 @@ jobs:
           file loda
       - name: Test
         run: ./loda test
-      - name: Benchmark
-        run: ./loda benchmark
   build-windows:
     runs-on: windows-2019
     steps:
@@ -57,5 +53,3 @@ jobs:
         run: cd src && nmake.exe /F Makefile.windows.mk
       - name: Test
         run: ./loda.exe test
-      - name: Benchmark
-        run: ./loda.exe benchmark

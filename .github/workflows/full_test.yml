@@ -1,0 +1,28 @@
+name: Full Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  full-test:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        run: cd src && make -f Makefile.linux-x86.mk
+      - name: Test
+        run: ./loda test
+      - name: Setup
+        run: |
+          mkdir -p $HOME/loda
+          git clone https://github.com/loda-lang/loda-programs.git $HOME/loda/programs
+      - name: Test IE
+        run: ./loda test-ie
+      - name: Test PARI
+        run: |
+          sudo apt-get update
+          sudo apt-get install pari-gp
+          gp --version
+          ./loda test-pari
+      - name: Benchmark
+        run: ./loda benchmark
