@@ -58,48 +58,38 @@ Expression& Expression::operator=(Expression&& e) {
   return *this;
 }
 
-bool Expression::operator==(const Expression& e) const {
-  if (type != e.type) {
-    return false;
+int Expression::compare(const Expression& e) const {
+  if (type < e.type) {
+    return -1;
+  } else if (e.type < type) {
+    return 1;
   }
   // same type => compare content
   switch (type) {
     case Expression::Type::CONSTANT:
-      return (value == e.value);
-    case Expression::Type::PARAMETER:
-      return (name == e.name);
-    case Expression::Type::FUNCTION:
-      return (name == e.name && equalChildren(e));
-    case Expression::Type::NEGATION:
-    case Expression::Type::SUM:
-    case Expression::Type::DIFFERENCE:
-    case Expression::Type::PRODUCT:
-    case Expression::Type::FRACTION:
-    case Expression::Type::POWER:
-    case Expression::Type::MODULUS:
-    case Expression::Type::IF:
-      return equalChildren(e);
-  }
-  throw std::runtime_error("internal error");  // unreachable
-}
-
-bool Expression::operator!=(const Expression& e) const { return !(*this == e); }
-
-bool Expression::operator<(const Expression& e) const {
-  if (type != e.type) {
-    return (type < e.type);
-  }
-  // same type => compare content
-  switch (type) {
-    case Expression::Type::CONSTANT:
-      return (value < e.value);
-    case Expression::Type::PARAMETER:
-      return (name < e.name);
-    case Expression::Type::FUNCTION:
-      if (name != e.name) {
-        return (name < e.name);
+      if (value < e.value) {
+        return -1;
+      } else if (e.value < value) {
+        return 1;
+      } else {
+        return 0;
       }
-      return lessChildren(e);
+    case Expression::Type::PARAMETER:
+      if (name < e.name) {
+        return -1;
+      } else if (e.name < name) {
+        return 1;
+      } else {
+        return 0;
+      }
+    case Expression::Type::FUNCTION:
+      if (name < e.name) {
+        return -1;
+      } else if (e.name < name) {
+        return 1;
+      } else {
+        return compareChildren(e);
+      }
     case Expression::Type::NEGATION:
     case Expression::Type::SUM:
     case Expression::Type::DIFFERENCE:
@@ -108,9 +98,9 @@ bool Expression::operator<(const Expression& e) const {
     case Expression::Type::POWER:
     case Expression::Type::MODULUS:
     case Expression::Type::IF:
-      return lessChildren(e);
+      return compareChildren(e);
   }
-  throw std::runtime_error("internal error");  // unreachable
+  return 0;  // equal
 }
 
 bool Expression::contains(const Expression& e) const {
@@ -125,38 +115,34 @@ bool Expression::contains(const Expression& e) const {
   return false;
 }
 
+size_t Expression::numTerms() const {
+  size_t result = 1;
+  for (auto c : children) {
+    result += c->numTerms();
+  }
+  return result;
+}
+
 void Expression::assertNumChildren(size_t num) const {
   if (children.size() != num) {
     throw std::runtime_error("unexpected number of children: " + toString());
   }
 }
 
-bool Expression::equalChildren(const Expression& e) const {
-  if (children.size() != e.children.size()) {
-    return false;
-  }
-  for (size_t i = 0; i < children.size(); i++) {
-    if (*children[i] != *e.children[i]) {  // dereference!
-      return false;
-    }
-  }
-  return true;
-}
-
-bool Expression::lessChildren(const Expression& e) const {
+int Expression::compareChildren(const Expression& e) const {
   if (children.size() < e.children.size()) {
-    return true;
+    return -1;
   } else if (children.size() > e.children.size()) {
-    return false;
+    return 1;
   }
+  // same number of children => compare them one by one
   for (size_t i = 0; i < children.size(); i++) {
-    if (*children[i] < *e.children[i]) {  // dereference!
-      return true;
-    } else if (*e.children[i] < *children[i]) {  // dereference!
-      return false;
+    auto r = children[i]->compare(*e.children[i]);
+    if (r != 0) {
+      return r;
     }
   }
-  return false;  // equal
+  return 0;  // equal
 }
 
 Expression& Expression::newChild(const Expression& e) {

@@ -14,7 +14,6 @@ void IncrementalEvaluator::reset() {
   pre_loop.ops.clear();
   loop_body.ops.clear();
   post_loop.ops.clear();
-  output_updates.clear();
   output_cells.clear();
   stateful_cells.clear();
   loop_counter_dependent_cells.clear();
@@ -131,27 +130,36 @@ bool IncrementalEvaluator::checkPreLoop() {
   return true;
 }
 
+bool IncrementalEvaluator::isCommutative(int64_t cell) const {
+  auto update_type = Operation::Type::NOP;
+  for (auto& op : loop_body.ops) {
+    const auto meta = Operation::Metadata::get(op.type);
+    const auto target = op.target.value.asInt();
+    if (target == cell) {
+      if (!ProgramUtil::isCommutative(op.type)) {
+        return false;
+      }
+      if (update_type == Operation::Type::NOP) {
+        update_type = op.type;
+      } else if (update_type != op.type) {
+        return false;
+      }
+    }
+    if (meta.num_operands == 2 && op.source.type == Operand::Type::DIRECT) {
+      const auto source = op.source.value.asInt();
+      if (source == cell) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
 bool IncrementalEvaluator::checkLoopBody() {
+  // check loop counter cell
   bool loop_counter_updated = false;
-  bool is_commutative = true;
   for (auto& op : loop_body.ops) {
     const auto target = op.target.value.asInt();
-
-    // check output cells
-    if (output_cells.find(target) != output_cells.end()) {
-      // must be a commutative operation
-      if (!ProgramUtil::isCommutative(op.type)) {
-        is_commutative = false;
-      }
-      // cannot mix operations per memory cell (would not be commutative)
-      if (output_updates.find(target) != output_updates.end() &&
-          output_updates[target] != op.type) {
-        is_commutative = false;
-      }
-      output_updates[target] = op.type;
-    }
-
-    // check loop counter cell
     if (target == loop_counter_cell) {
       // must be subtraction by one (stepwise decrease)
       if (op.type != Operation::Type::SUB && op.type != Operation::Type::TRN) {
@@ -171,87 +179,103 @@ bool IncrementalEvaluator::checkLoopBody() {
   }
 
   // compute set of stateful memory cells
-  while (updateStatefulCells()) {
-  };
+  computeStatefulCells();
 
   // compute set of loop counter dependent cells
-  while (updateLoopCounterDependentCells()) {
-  };
+  computeLoopCounterDependentCells();
 
-  // if there is more than one stateful cell or non-commutative
-  // operations, it is not just a simple aggregation. therefore
-  // we must ensure that there are no sequence
-  // calls or loop counter dependent cells in that case.
-  if ((stateful_cells.size() > 1 || !is_commutative) &&
-      (!loop_counter_dependent_cells.empty() ||
-       output_cells.find(Program::INPUT_CELL) != output_cells.end())) {
-    return false;
+  // ================================================= //
+  // === from now on, we check for positive cases ==== //
+  // ================================================= //
+
+  if (loop_counter_dependent_cells.empty()) {
+    return true;
   }
-  return true;
+  if (stateful_cells.empty()) {
+    return true;
+  }
+
+  // we have both stateful and loop-counter dependent cells
+  // we allow only one such case:
+  // - only one stateful cell and
+  // - all stateful and output cells are commutative
+  if (stateful_cells.size() == 1) {
+    bool is_commutative = true;
+    for (auto s : stateful_cells) {
+      is_commutative = is_commutative && isCommutative(s);
+    }
+    for (auto s : output_cells) {
+      is_commutative = is_commutative && isCommutative(s);
+    }
+    if (is_commutative) {
+      return true;
+    }
+  }
+
+  // IE not supported
+  return false;
 }
 
-bool IncrementalEvaluator::updateStatefulCells() {
-  bool changed = false;
-  std::set<int64_t> reset;
+void IncrementalEvaluator::computeStatefulCells() {
+  std::set<int64_t> read;
+  std::set<int64_t> write;
+  stateful_cells.clear();
   for (auto& op : loop_body.ops) {
     const auto meta = Operation::Metadata::get(op.type);
     if (meta.num_operands == 0) {
       continue;
     }
     const auto target = op.target.value.asInt();
-    if (stateful_cells.find(target) != stateful_cells.end()) {
-      continue;
-    }
-    if (!meta.is_writing_target) {
-      continue;
-    }
     if (target == loop_counter_cell) {
       continue;
     }
+    // update read cells
     if (meta.is_reading_target) {
-      if (reset.find(target) == reset.end()) {
-        stateful_cells.insert(target);
-        changed = true;
-      }
-    } else {
-      reset.insert(target);
-    }
-    if (meta.num_operands == 2 && op.source.type == Operand::Type::DIRECT &&
-        stateful_cells.find(op.source.value.asInt()) != stateful_cells.end()) {
-      stateful_cells.insert(target);
-      changed = true;
-    }
-  }
-  return changed;
-}
-
-bool IncrementalEvaluator::updateLoopCounterDependentCells() {
-  bool changed = false;
-  for (auto& op : loop_body.ops) {
-    const auto meta = Operation::Metadata::get(op.type);
-    const auto target = op.target.value.asInt();
-    if (loop_counter_dependent_cells.find(target) !=
-        loop_counter_dependent_cells.end()) {
-      continue;
-    }
-    if (!meta.is_writing_target) {
-      continue;
-    }
-    if (target == loop_counter_cell) {
-      continue;
+      read.insert(target);
     }
     if (meta.num_operands == 2 && op.source.type == Operand::Type::DIRECT) {
-      const auto source = op.source.value.asInt();
-      const bool is_dependent = loop_counter_dependent_cells.find(source) !=
-                                loop_counter_dependent_cells.end();
-      // add source if it is the loop counter or dependent on it
-      if (source == loop_counter_cell || is_dependent) {
-        loop_counter_dependent_cells.insert(target);
-        changed = true;
+      read.insert(op.source.value.asInt());
+    }
+    // update written cells
+    if (meta.is_writing_target && write.find(target) == write.end()) {
+      if (read.find(target) != read.end()) {
+        stateful_cells.insert(target);
+      }
+      write.insert(target);
+    }
+  }
+}
+
+void IncrementalEvaluator::computeLoopCounterDependentCells() {
+  loop_counter_dependent_cells.clear();
+  bool changed = true;
+  while (changed) {
+    changed = false;
+    for (auto& op : loop_body.ops) {
+      const auto meta = Operation::Metadata::get(op.type);
+      const auto target = op.target.value.asInt();
+      if (loop_counter_dependent_cells.find(target) !=
+          loop_counter_dependent_cells.end()) {
+        continue;
+      }
+      if (!meta.is_writing_target) {
+        continue;
+      }
+      if (target == loop_counter_cell) {
+        continue;
+      }
+      if (meta.num_operands == 2 && op.source.type == Operand::Type::DIRECT) {
+        const auto source = op.source.value.asInt();
+        const bool is_dependent = loop_counter_dependent_cells.find(source) !=
+                                  loop_counter_dependent_cells.end();
+        // add source if it is the loop counter or dependent on it
+        if (source == loop_counter_cell || is_dependent) {
+          loop_counter_dependent_cells.insert(target);
+          changed = true;
+        }
       }
     }
   }
-  return changed;
 }
 
 bool IncrementalEvaluator::checkPostLoop() {
@@ -286,10 +310,11 @@ std::pair<Number, size_t> IncrementalEvaluator::next() {
     throw std::runtime_error("incremental evaluator not initialized");
   }
 
-  // execute pre-loop code
+  // execute pre-loop code; TODO: do this only once
   tmp_state.clear();
-  tmp_state.set(0, argument);
+  tmp_state.set(Program::INPUT_CELL, argument);
   size_t steps = interpreter.run(pre_loop, tmp_state);
+  auto loop_counter_before = tmp_state.get(Program::INPUT_CELL);
 
   // calculate new loop count
   const int64_t new_loop_count =
@@ -300,6 +325,7 @@ std::pair<Number, size_t> IncrementalEvaluator::next() {
   // update loop state
   if (argument == 0) {
     loop_state = tmp_state;
+    total_loop_steps += 1;  // +1 for lpb of zero-th iteration
   } else {
     loop_state.set(loop_counter_cell, new_loop_count);
   }
@@ -310,16 +336,13 @@ std::pair<Number, size_t> IncrementalEvaluator::next() {
         interpreter.run(loop_body, loop_state) + 1;  // +1 for lpb
   }
 
-  // additional step for lpb in the first iteration
-  if (argument == 0) {
-    total_loop_steps += 1;  // +1 for lpb
-  }
-
   // update steps count
   steps += total_loop_steps;
 
   // execute post-loop code
   tmp_state = loop_state;
+  tmp_state.set(loop_counter_cell,
+                Semantics::min(loop_counter_before, Number::ZERO));
   steps += interpreter.run(post_loop, tmp_state);
 
   // prepare next iteration

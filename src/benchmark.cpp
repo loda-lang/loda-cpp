@@ -85,6 +85,8 @@ void Benchmark::programs() {
   program(79309, 300);
   program(2193, 400);
   program(35856, 500);
+  program(1609, 1000);
+  program(3411, 1000);
   program(12866, 1000);
   program(45, 2000);
   program(1304, 3000);

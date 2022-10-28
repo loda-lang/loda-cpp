@@ -38,13 +38,19 @@ class Expression {
 
   Expression& operator=(Expression&& e);
 
-  bool operator==(const Expression& e) const;
+  inline bool operator==(const Expression& e) const { return compare(e) == 0; }
 
-  bool operator!=(const Expression& e) const;
+  inline bool operator!=(const Expression& e) const { return compare(e) != 0; }
 
-  bool operator<(const Expression& e) const;
+  inline bool operator<(const Expression& e) const { return compare(e) == -1; }
+
+  inline bool operator>(const Expression& e) const { return compare(e) == 1; }
+
+  int compare(const Expression& e) const;
 
   bool contains(const Expression& e) const;
+
+  size_t numTerms() const;
 
   Expression& newChild(const Expression& e);
 
@@ -67,9 +73,7 @@ class Expression {
  private:
   void assertNumChildren(size_t num) const;
 
-  bool equalChildren(const Expression& e) const;
-
-  bool lessChildren(const Expression& e) const;
+  int compareChildren(const Expression& e) const;
 
   void print(std::ostream& out, size_t index, bool isRoot,
              Expression::Type parentType) const;
