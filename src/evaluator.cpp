@@ -20,14 +20,15 @@ void steps_t::add(const steps_t &s) {
   runs += s.runs;
 }
 
-Evaluator::Evaluator(const Settings &settings)
+Evaluator::Evaluator(const Settings &settings, const bool use_inc_eval)
     : settings(settings),
       interpreter(settings),
       inc_evaluator(interpreter),
+      use_inc_eval(use_inc_eval),
       is_debug(Log::get().level == Log::Level::DEBUG) {}
 
 steps_t Evaluator::eval(const Program &p, Sequence &seq, int64_t num_terms,
-                        const bool throw_on_error, const bool use_inc_eval) {
+                        const bool throw_on_error) {
   if (num_terms < 0) {
     num_terms = settings.num_terms;
   }
@@ -100,8 +101,7 @@ steps_t Evaluator::eval(const Program &p, std::vector<Sequence> &seqs,
 std::pair<status_t, steps_t> Evaluator::check(const Program &p,
                                               const Sequence &expected_seq,
                                               int64_t num_terminating_terms,
-                                              int64_t id,
-                                              const bool use_inc_eval) {
+                                              int64_t id) {
   if (num_terminating_terms < 0) {
     num_terminating_terms = expected_seq.size();
   }

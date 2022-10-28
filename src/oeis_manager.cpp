@@ -834,9 +834,8 @@ bool OeisManager::maintainProgram(size_t id) {
 
   // check correctness of the program
   try {
-    // don't use incremental evaluation in maintenance to detect bugs
     auto check = evaluator.check(program, extended_seq,
-                                 OeisSequence::DEFAULT_SEQ_LENGTH, id, false);
+                                 OeisSequence::DEFAULT_SEQ_LENGTH, id);
     if (Signals::HALT) {
       return true;  // interrupted evaluation
     }
