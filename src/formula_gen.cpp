@@ -288,38 +288,18 @@ std::pair<bool, Formula> FormulaGenerator::generate(const Program& p,
         std::max<int64_t>(0, -(mem.get(ie.getLoopCounterCell()).asInt()));
     Log::get().debug("Calculated offset from pre-loop: " +
                      std::to_string(preloopOffset));
+    int64_t statefulCells = ie.getStatefulCells().size();
+    int64_t requiredOffset =
+        std::max<int64_t>(preloopOffset, statefulCells - 1);
 
-    // find out which initial terms are needed
-    std::map<int64_t, int64_t> maxOffsets;
-    // maximum offsets are bound by number of used memory cells
-    for (int64_t offset = 0; offset <= largestCell; offset++) {
-      for (int64_t cell = 0; cell <= largestCell; cell++) {
-        Expression funcSearch(Expression::Type::FUNCTION,
-                              memoryCellToName(cell));
-        if (offset == 0) {
-          funcSearch.newChild(paramExpr);
-        } else {
-          funcSearch.newChild(Expression(
-              Expression::Type::DIFFERENCE, "",
-              {paramExpr,
-               Expression(Expression::Type::CONSTANT, "", offset + 1)}));
-        }
-        if (f.contains(funcSearch)) {
-          maxOffsets[cell] =
-              std::max<int64_t>(maxOffsets[cell], offset) + preloopOffset;
-        }
-      }
-    }
-    for (auto e : maxOffsets) {
-      Log::get().debug(
-          "Calculated offset from formula: " + memoryCellToName(e.first) +
-          " => " + std::to_string(e.second));
-    }
+    Log::get().debug("Calculated stateful cells: " +
+                     std::to_string(statefulCells));
+
     // evaluate program and add initial terms to formula
     for (int64_t offset = 0; offset <= largestCell; offset++) {
       ie.next();
       for (int64_t cell = 0; cell <= largestCell; cell++) {
-        if (maxOffsets[cell] < offset) {
+        if (requiredOffset < offset) {
           continue;
         }
         Expression index(Expression::Type::CONSTANT, "", Number(offset));
