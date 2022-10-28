@@ -2,6 +2,12 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Enhancements
+
+* Support more recursive in formulas
+
+## v22.10.28
+
 ### Bugfixes
 
 * Fix step count calculation
@@ -18,7 +24,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 * Support incremental evaluation for more programs (from 9k to 15k programs)
 * Activate incremental evaluation in validation
 
-# v22.10.19
+## v22.10.19
 
 ### Enhancements
 
@@ -27,7 +33,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 * Use `floor` instead of `truncate` in PARI if possible
 * Add insecure fall-back option for `curl`
 
-# v22.10.16
+## v22.10.16
 
 ### Bugfixes
 
@@ -37,13 +43,13 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Support `div` in formulas
 
-# v22.10.14
+## v22.10.14
 
 ### Enhancements
 
 * Separate update intervals for OEIS files (7 days) and programs repository (1 day)
 
-# v22.10.13
+## v22.10.13
 
 ### Features
 
@@ -54,20 +60,20 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Optimizer collapses simple loops
 
-# v22.9.25
+## v22.9.25
 
 ### Bugfixes
 
 * Forbid invalid number formats in parser
 
-# v22.9.17
+## v22.9.17
 
 ### Enhancements
 
 * Forbid indirect memory access with negative indices
 * Log total system memory in BOINC mode
 
-# v22.9.12
+## v22.9.12
 
 ### Bugfixes
 
@@ -79,7 +85,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 * Ignore `seq` arguments in constants stats
 * Update BOINC progress after `git clone`
 
-# v22.9.8
+## v22.9.8
 
 ### Bugfixes
 
@@ -91,7 +97,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 * Remove sequences from deny list in `no_loda.txt`
 * Increase default max memory cells to 1000 (for [A000041](https://oeis.org/A000041))
 
-# v22.8.21
+## v22.8.21
 
 ### Enhancements
 
@@ -100,7 +106,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 * Improve decision for "faster" programs
 * Internal command for generating program lists
 
-# v22.8.12
+## v22.8.12
 
 ### Features
 
@@ -112,7 +118,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 * Improve decision for "better" programs
 * Clear caches before comparing programs
 
-# v22.8.4
+## v22.8.4
 
 ### Bugfixes
 
@@ -123,13 +129,13 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Delete invalid matches cache based on BOINC input flag
 
-# v22.7.29
+## v22.7.29
 
 ### Bugfixes
 
 * Fix embedded `git` on Windows
 
-# v22.7.28
+## v22.7.28
 
 ### Bugfixes
 
@@ -144,7 +150,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Increase max number of interpreter cycles to 10 million
 
-# v22.7.23
+## v22.7.23
 
 ### Bugfixes
 
@@ -157,7 +163,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 * Print debug log message if CPU hour reporting fails
 * Catch errors of progress monitoring thread
 
-# v22.7.22
+## v22.7.22
 
 ### Bugfixes
 
@@ -172,7 +178,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 * Simplify comparison of programs (better/faster)
 * Force stats regeneration after OEIS and programs update
 
-# v22.6.27
+## v22.6.27
 
 ### Bugfixes
 
@@ -185,7 +191,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 * Disable incremental evaluation in `check` command for consistency
 * Adjust maximum big int size to handle A000336
 
-# v22.6.19
+## v22.6.19
 
 ### Features
 
@@ -197,7 +203,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 * Improve server-side program validation
 * Reduce update interval to 1 day
 
-# v22.6.12
+## v22.6.12
 
 ### Bugfixes
 
@@ -207,7 +213,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Support `full_check.txt` list for sequences that require checking up to 100k terms
 
-# v22.6.6
+## v22.6.6
 
 ### Bugfixes
 
@@ -221,14 +227,14 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Skip unnecessary sequence matching in server mode
 
-# v22.5.31
+## v22.5.31
 
 ### Enhancements
 
 * Support for reduced ("basic") validation on the server
 * Reduce file size of executable on Linux and MacOS
 
-# v22.5.23
+## v22.5.23
 
 ### Bugfixes
 
@@ -244,43 +250,43 @@ To install or update LODA, please follow the [installation instructions](https:/
 * Change default update interval to 3 days
 * Throttling and exponential backoff for API server downloads
 
-# v22.5.20
+## v22.5.20
 
 ### Bugfixes
 
 * Fix "access denied" error during stats generation on Windows.
 
-# v22.5.14
+## v22.5.14
 
 ### Bugfixes
 
 * Use project dir as fall-back for tmp dir
 
-# v22.5.13
+## v22.5.13
 
 ### Enhancements
 
 * Debug logs for BOINC
 
-# v22.5.12
+## v22.5.12
 
 ### Bugfixes
 
 * Fix various errors in BOINC on Windows
 
-# v22.5.4
+## v22.5.4
 
 ### Enhancements
 
 * Improve progress monitoring in BOINC
 
-# v22.5.3
+## v22.5.3
 
 ### Bugfixes
 
 * Fixes setup issues when runing in BOINC
 
-# v22.5.2
+## v22.5.2
 
 ### Enhancements
 
@@ -288,20 +294,20 @@ To install or update LODA, please follow the [installation instructions](https:/
 * Extract user name from BOINC metadata
 * Report progress to BOINC wrapper app
 
-# v22.5.1
+## v22.5.1
 
 ### Features
 
 * Added option `-H` for settings the number of mining hours (needed for BOINC)
 * Internal `boinc` command
 
-# v22.4.17
+## v22.4.17
 
 ### Enhancements
 
 * Use 50% of the new and 50% of the last modified programs for mutations
 
-# v22.4.10
+## v22.4.10
 
 ### Features
 

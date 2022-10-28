@@ -289,8 +289,7 @@ std::pair<bool, Formula> FormulaGenerator::generate(const Program& p,
     Log::get().debug("Calculated offset from pre-loop: " +
                      std::to_string(preloopOffset));
     int64_t statefulCells = ie.getStatefulCells().size();
-    int64_t requiredOffset =
-        std::max<int64_t>(preloopOffset, statefulCells - 1);
+    int64_t requiredOffset = preloopOffset + (statefulCells - 1);
 
     Log::get().debug("Calculated stateful cells: " +
                      std::to_string(statefulCells));
