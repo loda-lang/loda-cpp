@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Bugfixes
+
+* Fix insecure fall-back option for `curl`
+
 ### Enhancements
 
 * Support more recursive in formulas
