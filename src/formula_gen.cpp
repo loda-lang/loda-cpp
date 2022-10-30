@@ -259,14 +259,15 @@ std::pair<bool, Formula> FormulaGenerator::generate(const Program& p,
     // handle post-loop code
     auto post = ie.getPostLoop();
     for (auto& op : post.ops) {
+      auto t = operandToExpression(op.target);
       if (op.type == Operation::Type::MOV &&
           op.source.type == Operand::Type::DIRECT) {
-        auto t = operandToExpression(op.target);
         auto s = operandToExpression(op.source);
         identities[t.name] = s.name;
         f.entries[t] = s;
+      } else if (update(f, op, pariMode)) {
+        identities.erase(t.name);
       } else {
-        // TODO: avoid this limitation
         return result;
       }
     }
@@ -297,6 +298,8 @@ std::pair<bool, Formula> FormulaGenerator::generate(const Program& p,
     // evaluate program and add initial terms to formula
     for (int64_t offset = 0; offset <= largestCell; offset++) {
       ie.next();
+      auto state = ie.getLoopState();
+      interpreter.run(ie.getPostLoop(), state);
       for (int64_t cell = 0; cell <= largestCell; cell++) {
         if (requiredOffset < offset) {
           continue;
@@ -304,8 +307,7 @@ std::pair<bool, Formula> FormulaGenerator::generate(const Program& p,
         Expression index(Expression::Type::CONSTANT, "", Number(offset));
         Expression func(Expression::Type::FUNCTION, memoryCellToName(cell),
                         {index});
-        Expression val(Expression::Type::CONSTANT, "",
-                       ie.getLoopState().get(cell));
+        Expression val(Expression::Type::CONSTANT, "", state.get(cell));
         f.entries[func] = val;
       }
     }
@@ -324,12 +326,14 @@ std::pair<bool, Formula> FormulaGenerator::generate(const Program& p,
   }
 
   // TODO: avoid this limitation
+  /*
   auto mainCell = memoryCellToName(0);
   for (auto& e : f.entries) {
     if (e.first.name != mainCell) {
       return result;
     }
   }
+  */
 
   // pari: convert initial terms to "if"
   if (pariMode) {
