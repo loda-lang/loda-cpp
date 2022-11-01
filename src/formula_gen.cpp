@@ -156,7 +156,7 @@ bool update(Formula& f, const Program& p, bool pariMode) {
   return true;
 }
 
-void resolve(Formula& f, const Expression& left, Expression& right) {
+void resolve(const Formula& f, const Expression& left, Expression& right) {
   if (right.type == Expression::Type::FUNCTION) {
     Expression lookup(Expression::Type::FUNCTION, right.name,
                       {Expression(Expression::Type::PARAMETER, "n")});
@@ -177,6 +177,33 @@ void resolve(Formula& f, const Expression& left, Expression& right) {
   for (auto c : right.children) {
     resolve(f, left, *c);
   }
+}
+
+bool containsFunction(const Expression& e, const std::string& name) {
+  if (e.type == Expression::Type::FUNCTION && e.name == name) {
+    return true;
+  }
+  for (auto c : e.children) {
+    if (containsFunction(*c, name)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool isRecursive(const Formula& f, int64_t cell) {
+  const auto name = memoryCellToName(cell);
+  for (auto& e : f.entries) {
+    if (containsFunction(e.first, name) && containsFunction(e.second, name)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool isSimpleFunction(const Expression& e) {
+  return e.type == Expression::Type::FUNCTION && e.children.size() == 1 &&
+         e.children[0]->type == Expression::Type::PARAMETER;
 }
 
 std::pair<bool, Formula> FormulaGenerator::generate(const Program& p,
@@ -247,14 +274,14 @@ std::pair<bool, Formula> FormulaGenerator::generate(const Program& p,
   Log::get().debug("Updated formula:  " + f.toString(false));
 
   // additional work for IE programs
-  std::map<std::string, std::string> identities;
   if (use_ie) {
     // resolve function references
+    auto ff = f;
     for (auto& e : f.entries) {
-      resolve(f, e.first, e.second);
+      resolve(ff, e.first, e.second);
       ExpressionUtil::normalize(e.second);
+      Log::get().debug("Resolved formula: " + f.toString(false));
     }
-    Log::get().debug("Resolved formula: " + f.toString(false));
 
     // handle post-loop code
     auto post = ie.getPostLoop();
@@ -263,10 +290,8 @@ std::pair<bool, Formula> FormulaGenerator::generate(const Program& p,
       if (op.type == Operation::Type::MOV &&
           op.source.type == Operand::Type::DIRECT) {
         auto s = operandToExpression(op.source);
-        identities[t.name] = s.name;
         f.entries[t] = s;
       } else if (update(f, op, pariMode)) {
-        identities.erase(t.name);
       } else {
         return result;
       }
@@ -301,7 +326,7 @@ std::pair<bool, Formula> FormulaGenerator::generate(const Program& p,
       auto state = ie.getLoopState();
       interpreter.run(ie.getPostLoop(), state);
       for (int64_t cell = 0; cell <= largestCell; cell++) {
-        if (requiredOffset < offset) {
+        if (requiredOffset < offset || !isRecursive(f, cell)) {
           continue;
         }
         Expression index(Expression::Type::CONSTANT, "", Number(offset));
@@ -313,9 +338,13 @@ std::pair<bool, Formula> FormulaGenerator::generate(const Program& p,
     }
     Log::get().debug("Added intial terms: " + f.toString(false));
 
-    // simplify identical functions
-    for (auto& e : identities) {
-      f.replaceName(e.second, e.first);
+    // resolve identies
+    auto entries = f.entries;  // copy entries
+    for (auto& e : entries) {
+      if (isSimpleFunction(e.first) && isSimpleFunction(e.second)) {
+        f.entries.erase(e.first);
+        f.replaceName(e.second.name, e.first.name);
+      }
     }
 
     // need to filter again
