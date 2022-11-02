@@ -13,6 +13,9 @@ class Formula {
 
   bool contains(const Expression& search) const;
 
+  std::multimap<std::string, std::string> getFunctionDeps(
+      bool transitive) const;
+
   void replaceAll(const Expression& from, const Expression& to);
 
   void replaceName(const std::string& from, const std::string& to);

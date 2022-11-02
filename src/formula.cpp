@@ -34,6 +34,63 @@ bool Formula::contains(const Expression& search) const {
   return false;
 }
 
+bool containsPair(std::multimap<std::string, std::string>& deps,
+                  const std::string& key, const std::string& value) {
+  auto range = deps.equal_range(key);
+  for (auto i = range.first; i != range.second; ++i) {
+    if (i->second == value) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void collectDeps(const std::string& fname, const Expression& e,
+                 std::multimap<std::string, std::string>& deps) {
+  if (e.type == Expression::Type::FUNCTION && !e.name.empty() &&
+      !containsPair(deps, fname, e.name)) {
+    deps.insert({fname, e.name});
+  }
+  for (auto c : e.children) {
+    collectDeps(fname, *c, deps);
+  }
+}
+
+std::pair<std::string, std::string> findMissingPair(
+    std::multimap<std::string, std::string>& deps) {
+  std::pair<std::string, std::string> result;
+  for (auto i : deps) {
+    auto range = deps.equal_range(i.second);
+    for (auto j = range.first; j != range.second; ++j) {
+      if (!containsPair(deps, i.first, j->second)) {
+        result = {i.first, j->second};
+        return result;
+      }
+    }
+  }
+  return result;
+}
+
+std::multimap<std::string, std::string> Formula::getFunctionDeps(
+    bool transitive) const {
+  std::multimap<std::string, std::string> deps;
+  for (auto& e : entries) {
+    if (e.first.type == Expression::Type::FUNCTION && !e.first.name.empty()) {
+      collectDeps(e.first.name, e.second, deps);
+    }
+  }
+  if (transitive) {
+    while (true) {
+      auto missing = findMissingPair(deps);
+      if (missing.first.empty()) {
+        break;
+      }
+      deps.insert(missing);
+    }
+  }
+  return deps;
+}
+
 void Formula::replaceAll(const Expression& from, const Expression& to) {
   auto newEntries = entries;
   for (auto& e : entries) {

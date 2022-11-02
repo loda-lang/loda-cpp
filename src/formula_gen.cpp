@@ -179,22 +179,11 @@ void resolve(const Formula& f, const Expression& left, Expression& right) {
   }
 }
 
-bool containsFunction(const Expression& e, const std::string& name) {
-  if (e.type == Expression::Type::FUNCTION && e.name == name) {
-    return true;
-  }
-  for (auto c : e.children) {
-    if (containsFunction(*c, name)) {
-      return true;
-    }
-  }
-  return false;
-}
-
 bool isRecursive(const Formula& f, int64_t cell) {
-  const auto name = memoryCellToName(cell);
-  for (auto& e : f.entries) {
-    if (containsFunction(e.first, name) && containsFunction(e.second, name)) {
+  auto deps = f.getFunctionDeps(false);
+  auto name = memoryCellToName(cell);
+  for (auto it : deps) {
+    if (it.first == name && it.second == name) {
       return true;
     }
   }
@@ -285,15 +274,22 @@ std::pair<bool, Formula> FormulaGenerator::generate(const Program& p,
 
     // handle post-loop code
     auto post = ie.getPostLoop();
+    bool hasArithmetic = false;
     for (auto& op : post.ops) {
       auto t = operandToExpression(op.target);
+      // TODO: remove this limitation
       if (op.type == Operation::Type::MOV &&
           op.source.type == Operand::Type::DIRECT) {
+        if (hasArithmetic) {
+          return result;
+        }
         auto s = operandToExpression(op.source);
         f.entries[t] = s;
-      } else if (update(f, op, pariMode)) {
       } else {
-        return result;
+        if (!update(f, op, pariMode)) {
+          return result;
+        }
+        hasArithmetic = true;
       }
     }
     Log::get().debug("Updated formula:  " + f.toString(false));
@@ -310,8 +306,8 @@ std::pair<bool, Formula> FormulaGenerator::generate(const Program& p,
     // calculate offset
     Memory mem;
     interpreter.run(ie.getPreLoop(), mem);
-    int64_t preloopOffset =
-        std::max<int64_t>(0, -(mem.get(ie.getLoopCounterCell()).asInt()));
+    int64_t preloopShift = mem.get(ie.getLoopCounterCell()).asInt();
+    int64_t preloopOffset = std::abs(preloopShift);
     Log::get().debug("Calculated offset from pre-loop: " +
                      std::to_string(preloopOffset));
     int64_t statefulCells = ie.getStatefulCells().size();
@@ -326,7 +322,8 @@ std::pair<bool, Formula> FormulaGenerator::generate(const Program& p,
       auto state = ie.getLoopState();
       interpreter.run(ie.getPostLoop(), state);
       for (int64_t cell = 0; cell <= largestCell; cell++) {
-        if (requiredOffset < offset || !isRecursive(f, cell)) {
+        if (requiredOffset < offset ||
+            (!isRecursive(f, cell) && preloopShift == 0)) {
           continue;
         }
         Expression index(Expression::Type::CONSTANT, "", Number(offset));
@@ -355,14 +352,30 @@ std::pair<bool, Formula> FormulaGenerator::generate(const Program& p,
   }
 
   // TODO: avoid this limitation
-  /*
-  auto mainCell = memoryCellToName(0);
-  for (auto& e : f.entries) {
-    if (e.first.name != mainCell) {
+  auto deps = f.getFunctionDeps(true);
+  std::set<std::string> recursive, keys;
+  for (auto e : f.entries) {
+    if (e.first.type == Expression::Type::FUNCTION) {
+      keys.insert(e.first.name);
+    }
+  }
+  for (auto it : deps) {
+    // std::cout << it.first << " => " << it.second << std::endl;
+    if (it.first == it.second) {
+      recursive.insert(it.first);
+    }
+  }
+  if (keys.size() > 2) {
+    return result;
+  }
+  if (recursive.size() > 1) {
+    return result;
+  }
+  for (auto r : recursive) {
+    if (deps.count(r) > 1) {
       return result;
     }
   }
-  */
 
   // pari: convert initial terms to "if"
   if (pariMode) {
