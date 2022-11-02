@@ -306,8 +306,8 @@ std::pair<bool, Formula> FormulaGenerator::generate(const Program& p,
     // calculate offset
     Memory mem;
     interpreter.run(ie.getPreLoop(), mem);
-    int64_t preloopShift = mem.get(ie.getLoopCounterCell()).asInt();
-    int64_t preloopOffset = std::abs(preloopShift);
+    int64_t preloopOffset =
+        std::max<int64_t>(0, -mem.get(ie.getLoopCounterCell()).asInt());
     Log::get().debug("Calculated offset from pre-loop: " +
                      std::to_string(preloopOffset));
     int64_t statefulCells = ie.getStatefulCells().size();
@@ -322,13 +322,16 @@ std::pair<bool, Formula> FormulaGenerator::generate(const Program& p,
       auto state = ie.getLoopState();
       interpreter.run(ie.getPostLoop(), state);
       for (int64_t cell = 0; cell <= largestCell; cell++) {
-        if (requiredOffset < offset ||
-            (!isRecursive(f, cell) && preloopShift == 0)) {
+        if (requiredOffset < offset) {
+          continue;
+        }
+        auto name = memoryCellToName(cell);
+        if (!isRecursive(f, cell) &&
+            (f.getNumInitialTermsNeeded(name) < offset + 1)) {
           continue;
         }
         Expression index(Expression::Type::CONSTANT, "", Number(offset));
-        Expression func(Expression::Type::FUNCTION, memoryCellToName(cell),
-                        {index});
+        Expression func(Expression::Type::FUNCTION, name, {index});
         Expression val(Expression::Type::CONSTANT, "", state.get(cell));
         f.entries[func] = val;
       }

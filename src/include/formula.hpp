@@ -16,6 +16,8 @@ class Formula {
   std::multimap<std::string, std::string> getFunctionDeps(
       bool transitive) const;
 
+  int64_t getNumInitialTermsNeeded(const std::string& fname);
+
   void replaceAll(const Expression& from, const Expression& to);
 
   void replaceName(const std::string& from, const std::string& to);

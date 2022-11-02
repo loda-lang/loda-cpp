@@ -91,6 +91,34 @@ std::multimap<std::string, std::string> Formula::getFunctionDeps(
   return deps;
 }
 
+int64_t getNumTerms(const Expression& e) {
+  int64_t numTerms = 0;
+  if (e.type == Expression::Type::FUNCTION) {
+    for (auto c : e.children) {
+      if (c->type == Expression::Type::DIFFERENCE && c->children.size() == 2 &&
+          c->children[0]->type == Expression::Type::PARAMETER &
+              c->children[1]->type == Expression::Type::CONSTANT) {
+        numTerms = std::max(numTerms, c->children[1]->value.asInt());
+      }
+    }
+  } else {
+    for (auto c : e.children) {
+      numTerms = std::max(numTerms, getNumTerms(*c));
+    }
+  }
+  return numTerms;
+}
+
+int64_t Formula::getNumInitialTermsNeeded(const std::string& fname) {
+  int64_t numTerms = 0;
+  for (auto e : entries) {
+    if (e.first.name == fname) {
+      numTerms = std::max(numTerms, getNumTerms(e.second));
+    }
+  }
+  return numTerms;
+}
+
 void Formula::replaceAll(const Expression& from, const Expression& to) {
   auto newEntries = entries;
   for (auto& e : entries) {
