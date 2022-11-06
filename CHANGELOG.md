@@ -10,6 +10,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Support more recursive in formulas
 
+### Features
+
+* Support disabling of profiles
+
 ## v22.10.28
 
 ### Bugfixes

@@ -79,7 +79,16 @@ Miner::Config ConfigLoader::load(const Settings &settings) {
 
   auto str = getFileAsString(loda_config);
   auto spec = jute::parser::parse(str);
-  auto miners = spec["miners"];
+  auto all = spec["miners"];
+
+  // filter based on "enabled" flag
+  std::vector<jute::jValue> miners;
+  for (int i = 0; i < all.size(); i++) {
+    auto m = all[i];
+    if (getJBool(m, "enabled", true)) {
+      miners.push_back(m);
+    }
+  }
 
   // determine which profile to use
   std::string profile = "0";  // default: first profile in config
@@ -142,7 +151,7 @@ Miner::Config ConfigLoader::load(const Settings &settings) {
     }
   }
   if (!found) {
-    Log::get().error("Miner config not found: " + profile, true);
+    Log::get().error("Miner config not found or disabled: " + profile, true);
   }
   return config;
 }
