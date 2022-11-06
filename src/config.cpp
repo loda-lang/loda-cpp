@@ -104,7 +104,7 @@ Miner::Config ConfigLoader::load(const Settings &settings) {
   }
 
   bool found = false;
-  for (int i = 0; i < miners.size(); i++) {
+  for (int i = 0; i < static_cast<int>(miners.size()); i++) {
     auto m = miners[i];
     auto name = m["name"].as_string();
     if (name == profile || i == index) {
