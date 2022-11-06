@@ -18,6 +18,11 @@ echo "Cleaning up"
 rm -r $HOME/loda/stats 2> /dev/null
 rm $HOME/new-*.out 2> /dev/null
 rm $HOME/update-*.out 2> /dev/null
+if [ -d $HOME/loda/programs/.git ]; then
+  pushd $HOME/loda/programs > /dev/null
+  git gc
+  popd > /dev/null
+fi
 
 echo "Waiting for network"
 while ! ping -c 1 loda-lang.org &> /dev/null 2>&1; do
