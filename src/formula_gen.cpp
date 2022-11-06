@@ -307,7 +307,7 @@ std::pair<bool, Formula> FormulaGenerator::generate(const Program& p,
     Memory mem;
     interpreter.run(ie.getPreLoop(), mem);
     int64_t preloopOffset =
-        std::max<int64_t>(0, -mem.get(ie.getLoopCounterCell()).asInt());
+        std::max<int64_t>(0, -(mem.get(ie.getLoopCounterCell()).asInt()));
     Log::get().debug("Calculated offset from pre-loop: " +
                      std::to_string(preloopOffset));
     int64_t statefulCells = ie.getStatefulCells().size();
