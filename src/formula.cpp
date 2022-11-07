@@ -96,8 +96,8 @@ int64_t getNumTerms(const Expression& e) {
   if (e.type == Expression::Type::FUNCTION) {
     for (auto c : e.children) {
       if (c->type == Expression::Type::DIFFERENCE && c->children.size() == 2 &&
-          c->children[0]->type == Expression::Type::PARAMETER &
-              c->children[1]->type == Expression::Type::CONSTANT) {
+          c->children[0]->type == Expression::Type::PARAMETER &&
+          c->children[1]->type == Expression::Type::CONSTANT) {
         numTerms = std::max(numTerms, c->children[1]->value.asInt());
       }
     }
