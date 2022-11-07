@@ -83,10 +83,11 @@ int Expression::compare(const Expression& e) const {
         return 0;
       }
     case Expression::Type::FUNCTION:
+      // reverse sorting for function names!
       if (name < e.name) {
-        return -1;
-      } else if (e.name < name) {
         return 1;
+      } else if (e.name < name) {
+        return -1;
       } else {
         return compareChildren(e);
       }
