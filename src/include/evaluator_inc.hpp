@@ -31,15 +31,20 @@ class IncrementalEvaluator {
   // Compute the next term and step count.
   std::pair<Number, size_t> next();
 
-  inline const Program& getPreLoop() { return pre_loop; }
-  inline const Program& getLoopBody() { return loop_body; }
-  inline const Program& getPostLoop() { return post_loop; }
-  inline int64_t getLoopCounterCell() { return loop_counter_cell; }
-  inline const std::set<int64_t>& getLoopCounterDependentCells() {
+  inline const Program& getPreLoop() const { return pre_loop; }
+  inline const Program& getLoopBody() const { return loop_body; }
+  inline const Program& getPostLoop() const { return post_loop; }
+  inline int64_t getLoopCounterCell() const { return loop_counter_cell; }
+  inline const std::set<int64_t>& getLoopCounterDependentCells() const {
     return loop_counter_dependent_cells;
   }
-  inline const std::set<int64_t>& getStatefulCells() { return stateful_cells; }
-  inline const Memory& getLoopState() { return loop_state; }
+  inline const std::set<int64_t>& getStatefulCells() const {
+    return stateful_cells;
+  }
+  inline const std::set<int64_t>& getOutputCells() const {
+    return output_cells;
+  }
+  inline const Memory& getLoopState() const { return loop_state; }
 
  private:
   bool extractFragments(const Program& program);

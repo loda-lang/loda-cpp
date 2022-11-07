@@ -195,6 +195,42 @@ bool isSimpleFunction(const Expression& e) {
          e.children[0]->type == Expression::Type::PARAMETER;
 }
 
+bool usesFunction(const Formula& f, const std::string& fname) {
+  for (auto& e : f.entries) {
+    if (e.first.type == Expression::Type::FUNCTION && e.first.name == fname) {
+      return true;
+    }
+  }
+  return false;
+}
+
+int64_t getNumInitialTermsNeeded(int64_t cell, const Formula& f,
+                                 const IncrementalEvaluator& ie,
+                                 Interpreter& interpreter) {
+  Memory mem;
+  interpreter.run(ie.getPreLoop(), mem);
+  int64_t loopCounterOffset =
+      std::max<int64_t>(0, -(mem.get(ie.getLoopCounterCell()).asInt()));
+  int64_t numStateful = ie.getStatefulCells().size();
+  int64_t globalNumTerms = loopCounterOffset + numStateful;
+  auto name = memoryCellToName(cell);
+  auto localNumTerms = f.getNumInitialTermsNeeded(name);
+  // TODO: is it possible to avoid this extra check?
+  for (auto op : ie.getLoopBody().ops) {
+    if (op.type == Operation::Type::MOV &&
+        op.target == Operand(Operand::Type::DIRECT, cell) &&
+        op.source.type == Operand::Type::CONSTANT) {
+      localNumTerms = std::max<int64_t>(localNumTerms, 1);
+      break;
+    }
+  }
+  if (isRecursive(f, cell)) {
+    return std::max<int64_t>(localNumTerms, globalNumTerms);
+  } else {
+    return localNumTerms;
+  }
+}
+
 std::pair<bool, Formula> FormulaGenerator::generate(const Program& p,
                                                     bool pariMode) {
   std::pair<bool, Formula> result;
@@ -205,7 +241,7 @@ std::pair<bool, Formula> FormulaGenerator::generate(const Program& p,
   if (ProgramUtil::hasIndirectOperand(p)) {
     return result;
   }
-  const int64_t largestCell = ProgramUtil::getLargestDirectMemoryCell(p);
+  const int64_t numCells = ProgramUtil::getLargestDirectMemoryCell(p) + 1;
 
   Settings settings;
   Interpreter interpreter(settings);
@@ -231,7 +267,7 @@ std::pair<bool, Formula> FormulaGenerator::generate(const Program& p,
 
   // initialize expressions for memory cells
   const Expression paramExpr(Expression::Type::PARAMETER, "n");
-  for (int64_t i = 0; i <= largestCell; i++) {
+  for (int64_t i = 0; i < numCells; i++) {
     auto key = operandToExpression(Operand(Operand::Type::DIRECT, i));
     if (use_ie) {
       f.entries[key] = key;
@@ -303,37 +339,24 @@ std::pair<bool, Formula> FormulaGenerator::generate(const Program& p,
 
   // add initial terms for IE programs
   if (use_ie) {
-    // calculate offset
-    Memory mem;
-    interpreter.run(ie.getPreLoop(), mem);
-    int64_t preloopOffset =
-        std::max<int64_t>(0, -(mem.get(ie.getLoopCounterCell()).asInt()));
-    Log::get().debug("Calculated offset from pre-loop: " +
-                     std::to_string(preloopOffset));
-    int64_t statefulCells = ie.getStatefulCells().size();
-    int64_t requiredOffset = preloopOffset + (statefulCells - 1);
-
-    Log::get().debug("Calculated stateful cells: " +
-                     std::to_string(statefulCells));
+    std::vector<int64_t> numTerms(numCells);
+    for (int64_t cell = 0; cell < numCells; cell++) {
+      numTerms[cell] = getNumInitialTermsNeeded(cell, f, ie, interpreter);
+    }
 
     // evaluate program and add initial terms to formula
-    for (int64_t offset = 0; offset <= largestCell; offset++) {
+    for (int64_t offset = 0; offset < numCells; offset++) {
       ie.next();
       auto state = ie.getLoopState();
       interpreter.run(ie.getPostLoop(), state);
-      for (int64_t cell = 0; cell <= largestCell; cell++) {
-        if (requiredOffset < offset) {
-          continue;
+      for (int64_t cell = 0; cell < numCells; cell++) {
+        if (offset < numTerms[cell]) {
+          Expression index(Expression::Type::CONSTANT, "", Number(offset));
+          Expression func(Expression::Type::FUNCTION, memoryCellToName(cell),
+                          {index});
+          Expression val(Expression::Type::CONSTANT, "", state.get(cell));
+          f.entries[func] = val;
         }
-        auto name = memoryCellToName(cell);
-        if (!isRecursive(f, cell) &&
-            (f.getNumInitialTermsNeeded(name) < offset + 1)) {
-          continue;
-        }
-        Expression index(Expression::Type::CONSTANT, "", Number(offset));
-        Expression func(Expression::Type::FUNCTION, name, {index});
-        Expression val(Expression::Type::CONSTANT, "", state.get(cell));
-        f.entries[func] = val;
       }
     }
     Log::get().debug("Added intial terms: " + f.toString(false));
@@ -377,6 +400,22 @@ std::pair<bool, Formula> FormulaGenerator::generate(const Program& p,
   for (auto r : recursive) {
     if (deps.count(r) > 1) {
       return result;
+    }
+  }
+
+  // rename helper functions if there are gaps
+  bool changed = true;
+  while (changed) {
+    changed = false;
+    for (int64_t cell = 1; cell < numCells; cell++) {
+      auto from = memoryCellToName(cell);
+      auto to = memoryCellToName(cell - 1);
+      if (usesFunction(f, from) && !usesFunction(f, to)) {
+        f.replaceName(from, to);
+        Log::get().debug("Renamed function " + from + " to " + to + ": " +
+                         f.toString(false));
+        changed = true;
+      }
     }
   }
 

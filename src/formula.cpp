@@ -101,15 +101,14 @@ int64_t getNumTerms(const Expression& e) {
         numTerms = std::max(numTerms, c->children[1]->value.asInt());
       }
     }
-  } else {
-    for (auto c : e.children) {
-      numTerms = std::max(numTerms, getNumTerms(*c));
-    }
+  }
+  for (auto c : e.children) {
+    numTerms = std::max(numTerms, getNumTerms(*c));
   }
   return numTerms;
 }
 
-int64_t Formula::getNumInitialTermsNeeded(const std::string& fname) {
+int64_t Formula::getNumInitialTermsNeeded(const std::string& fname) const {
   int64_t numTerms = 0;
   for (auto e : entries) {
     if (e.first.name == fname) {
@@ -120,7 +119,7 @@ int64_t Formula::getNumInitialTermsNeeded(const std::string& fname) {
 }
 
 void Formula::replaceAll(const Expression& from, const Expression& to) {
-  auto newEntries = entries;
+  std::map<Expression, Expression> newEntries;
   for (auto& e : entries) {
     auto key = e.first;
     auto value = e.second;
@@ -132,7 +131,7 @@ void Formula::replaceAll(const Expression& from, const Expression& to) {
 }
 
 void Formula::replaceName(const std::string& from, const std::string& to) {
-  auto newEntries = entries;
+  std::map<Expression, Expression> newEntries;
   for (auto& e : entries) {
     auto key = e.first;
     auto value = e.second;
