@@ -2,6 +2,8 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v22.11.7
+
 ### Bugfixes
 
 * Fix insecure fall-back option for `curl`
