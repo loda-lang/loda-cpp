@@ -100,7 +100,6 @@ size_t Interpreter::run(const Program& p, Memory& mem) {
   SizeStack pc_stack;
   SizeStack loop_stack;
   SizeStack frag_length_stack;
-  SizeStack cycle_stack;
   MemStack mem_stack;
   MemStack frag_stack;
 
@@ -110,7 +109,7 @@ size_t Interpreter::run(const Program& p, Memory& mem) {
   size_t cycles = 0;
   const size_t max_cycles = getMaxCycles();
   Memory old_mem, frag, frag_prev, prev;
-  size_t pc, pc_next, ps_begin, old_cycles;
+  size_t pc, pc_next, ps_begin;
   Number source, target;
   int64_t start, length, length2;
   Operation lpb;
@@ -146,7 +145,6 @@ size_t Interpreter::run(const Program& p, Memory& mem) {
         mem_stack.push(mem);
         frag_stack.push(frag);
         frag_length_stack.push(length);
-        cycle_stack.push(cycles);
         break;
       }
       case Operation::Type::LPE: {
@@ -161,9 +159,6 @@ size_t Interpreter::run(const Program& p, Memory& mem) {
         length = frag_length_stack.top();
         frag_length_stack.pop();
 
-        old_cycles = cycle_stack.top();
-        cycle_stack.pop();
-
         start = get(lpb.target, mem, true).asInt();
         length2 = get(lpb.source, mem).asInt();
 
@@ -176,10 +171,8 @@ size_t Interpreter::run(const Program& p, Memory& mem) {
           mem_stack.push(mem);
           frag_stack.push(frag);
           frag_length_stack.push(length);
-          cycle_stack.push(cycles);
         } else {
           mem = prev;
-          cycles = old_cycles;
           loop_stack.pop();
         }
         break;

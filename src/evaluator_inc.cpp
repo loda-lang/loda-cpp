@@ -339,6 +339,11 @@ std::pair<Number, size_t> IncrementalEvaluator::next() {
   // update steps count
   steps += total_loop_steps;
 
+  // one more iteration is needed for the correct step count
+  tmp_state = loop_state;
+  tmp_state.set(Program::INPUT_CELL, Number::ZERO);
+  steps += interpreter.run(loop_body, tmp_state) + 1;  // +1 for lpb
+
   // execute post-loop code
   tmp_state = loop_state;
   tmp_state.set(loop_counter_cell,
