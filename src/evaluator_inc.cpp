@@ -345,6 +345,12 @@ std::pair<Number, size_t> IncrementalEvaluator::next() {
                 Semantics::min(loop_counter_before, Number::ZERO));
   steps += interpreter.run(post_loop, tmp_state);
 
+  // check maximum number of steps
+  if (steps > interpreter.getMaxCycles()) {
+    throw std::runtime_error("Exceeded maximum number of steps (" +
+                             std::to_string(interpreter.getMaxCycles()) + ")");
+  }
+
   // prepare next iteration
   argument++;
 

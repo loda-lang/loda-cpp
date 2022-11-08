@@ -108,9 +108,7 @@ size_t Interpreter::run(const Program& p, Memory& mem) {
   pc_stack.push(0);
 
   size_t cycles = 0;
-  const size_t max_cycles = (settings.max_cycles >= 0)
-                                ? settings.max_cycles
-                                : std::numeric_limits<size_t>::max();
+  const size_t max_cycles = getMaxCycles();
   Memory old_mem, frag, frag_prev, prev;
   size_t pc, pc_next, ps_begin, old_cycles;
   Number source, target;
@@ -239,8 +237,8 @@ size_t Interpreter::run(const Program& p, Memory& mem) {
     // check resource constraints
     if (cycles > max_cycles) {
       throw std::runtime_error(
-          "Program did not terminate after " + std::to_string(cycles) +
-          " cycles; last operation: " + ProgramUtil::operationToString(op));
+          "Exceeded maximum number of steps (" + std::to_string(max_cycles) +
+          "); last operation: " + ProgramUtil::operationToString(op));
     }
     if (static_cast<int64_t>(mem.approximate_size()) > settings.max_memory &&
         settings.max_memory >= 0) {
@@ -389,6 +387,11 @@ const Program& Interpreter::getProgram(int64_t id) {
     }
   }
   return program_cache[id];
+}
+
+size_t Interpreter::getMaxCycles() const {
+  return (settings.max_cycles >= 0) ? settings.max_cycles
+                                    : std::numeric_limits<size_t>::max();
 }
 
 void Interpreter::clearCaches() {

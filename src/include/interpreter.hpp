@@ -24,6 +24,8 @@ class Interpreter {
 
   size_t run(const Program &p, Memory &mem, int64_t id);
 
+  size_t getMaxCycles() const;
+
   void clearCaches();
 
  private:

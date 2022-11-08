@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Bugfixes
+
+* Check maximum number of steps in incremental evaluator
+
 ## v22.11.7
 
 ### Bugfixes
