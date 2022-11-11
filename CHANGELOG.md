@@ -4,8 +4,9 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Bugfixes
 
-* Check maximum number of steps in incremental evaluator
 * Fix step count inconsistency
+* Check maximum number of steps in incremental evaluator
+* Avoid fixed number of 100 terms in `minimize` command; now configurable using `-t` with default of 10 terms
 
 ## v22.11.7
 

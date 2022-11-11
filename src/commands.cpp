@@ -183,7 +183,7 @@ void Commands::minimize(const std::string& path) {
   Parser parser;
   Program program = parser.parse(getProgramPathAndSeqId(path).first);
   Minimizer minimizer(settings);
-  minimizer.optimizeAndMinimize(program, OeisSequence::DEFAULT_SEQ_LENGTH);
+  minimizer.optimizeAndMinimize(program, settings.num_terms);
   ProgramUtil::print(program, std::cout);
 }
 
