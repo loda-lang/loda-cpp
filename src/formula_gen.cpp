@@ -1,12 +1,13 @@
 #include "formula_gen.hpp"
 
+#include <set>
 #include <stdexcept>
-#include <unordered_set>
 
 #include "evaluator_inc.hpp"
 #include "expression_util.hpp"
 #include "log.hpp"
 #include "oeis_sequence.hpp"
+#include "parser.hpp"
 #include "program_util.hpp"
 
 std::string memoryCellToName(Number index) {
@@ -239,8 +240,7 @@ int64_t getNumInitialTermsNeeded(int64_t cell, const Formula& f,
   }
 }
 
-bool FormulaGenerator::generate(const Program& p, int64_t id, Formula& result,
-                                bool pariMode, bool withDeps) {
+bool generateSingle(const Program& p, Formula& result, bool pariMode) {
   Formula f, tmp;
 
   // indirect operands are not supported
@@ -248,16 +248,6 @@ bool FormulaGenerator::generate(const Program& p, int64_t id, Formula& result,
     return false;
   }
   const int64_t numCells = ProgramUtil::getLargestDirectMemoryCell(p) + 1;
-
-  // TODO: remove this limitation
-  if (withDeps && ProgramUtil::hasOp(p, Operation::Type::SEQ)) {
-    return false;
-  }
-
-  // make sure there is no recursion
-  if (id > 0 && usesFunction(result, OeisSequence(id).id_str())) {
-    return false;
-  }
 
   Settings settings;
   Interpreter interpreter(settings);
@@ -458,5 +448,65 @@ bool FormulaGenerator::generate(const Program& p, int64_t id, Formula& result,
 
   // success
   result = f;
+  return true;
+}
+
+void addProgramIds(const Program& p, std::set<int64_t>& ids) {
+  // TODO: check for recursion
+  Parser parser;
+  for (auto op : p.ops) {
+    if (op.type == Operation::Type::SEQ) {
+      auto id = op.source.value.asInt();
+      if (ids.find(id) == ids.end()) {
+        ids.insert(id);
+        auto q = parser.parse(OeisSequence(id).getProgramPath());
+        addProgramIds(q, ids);
+      }
+    }
+  }
+}
+
+void addFormula(Formula& main, Formula extension) {
+  int64_t numCells =
+      main.entries.size() + extension.entries.size() + 1;  // upper bound
+  for (int64_t i = 0; i < numCells; i++) {
+    auto from = memoryCellToName(i);
+    if (usesFunction(main, from) && usesFunction(extension, from)) {
+      for (int64_t j = 1; j < numCells; j++) {
+        auto to = memoryCellToName(j);
+        if (!usesFunction(main, to) && !usesFunction(extension, to)) {
+          extension.replaceName(from, to);
+          break;
+        }
+      }
+    }
+  }
+  main.entries.insert(extension.entries.begin(), extension.entries.end());
+}
+
+bool FormulaGenerator::generate(const Program& p, int64_t id, Formula& result,
+                                bool pariMode, bool withDeps) {
+  if (!generateSingle(p, result, pariMode)) {
+    result.clear();
+    return false;
+  }
+  if (withDeps) {
+    std::set<int64_t> ids;
+    addProgramIds(p, ids);
+    Parser parser;
+    for (auto id2 : ids) {
+      OeisSequence seq(id2);
+      auto p2 = parser.parse(seq.getProgramPath());
+      Formula f2;
+      if (!generateSingle(p2, f2, pariMode)) {
+        result.clear();
+        return false;
+      }
+      auto from = memoryCellToName(Program::INPUT_CELL);
+      auto to = memoryCellToName(seq.id);
+      f2.replaceName(from, to);
+      addFormula(result, f2);
+    }
+  }
   return true;
 }

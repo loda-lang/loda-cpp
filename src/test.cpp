@@ -885,7 +885,7 @@ void Test::formula() {
     Log::get().info("Testing formula for " + seq.id_str() + ": " + e.second);
     auto p = parser.parse(seq.getProgramPath());
     Formula f;
-    if (!FormulaGenerator::generate(p, seq.id, f, false, false)) {
+    if (!FormulaGenerator::generate(p, seq.id, f, false, true)) {
       Log::get().error("Cannot generate formula from program", true);
     }
     if (f.toString(false) != e.second) {
