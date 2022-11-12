@@ -5,5 +5,6 @@
 
 class FormulaGenerator {
  public:
-  static std::pair<bool, Formula> generate(const Program& p, bool pariMode);
+  static bool generate(const Program& p, int64_t id, Formula& result,
+                       bool pariMode, bool withDeps);
 };

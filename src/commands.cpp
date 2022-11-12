@@ -86,6 +86,9 @@ void Commands::help() {
             << std::endl;
   std::cout << "  -o <string>         Export format (formula,loda,pari)"
             << std::endl;
+  std::cout
+      << "  -d                  Export with dependencies to other programs"
+      << std::endl;
   std::cout << "  -s                  Evaluate program to number of "
                "execution steps"
             << std::endl;
@@ -192,18 +195,18 @@ void Commands::export_(const std::string& path) {
   Parser parser;
   Program program = parser.parse(getProgramPathAndSeqId(path).first);
   const auto& format = settings.export_format;
+  Formula formula;
+  auto generate = FormulaGenerator::generate;
   if (format.empty() || format == "formula") {
-    auto formula = FormulaGenerator::generate(program, false);
-    if (!formula.first) {
+    if (!generate(program, -1, formula, false, settings.with_deps)) {
       throw std::runtime_error("program cannot be converted to formula");
     }
-    std::cout << formula.second.toString(false) << std::endl;
+    std::cout << formula.toString(false) << std::endl;
   } else if (format == "pari") {
-    auto formula = FormulaGenerator::generate(program, true);
-    if (!formula.first) {
+    if (!generate(program, -1, formula, true, settings.with_deps)) {
       throw std::runtime_error("program cannot be converted to pari");
     }
-    std::cout << formula.second.toString(true) << std::endl;
+    std::cout << formula.toString(true) << std::endl;
   } else if (format == "loda") {
     ProgramUtil::print(program, std::cout);
   } else {
@@ -313,11 +316,11 @@ void Commands::testPari() {
     }
     auto seq = manager.getSequences().at(id);
     auto program = parser.parse(seq.getProgramPath());
-    auto formula = FormulaGenerator::generate(program, true);
-    if (!formula.first) {
+    Formula formula;
+    if (!FormulaGenerator::generate(program, id, formula, true, true)) {
       continue;
     }
-    auto pariCode = formula.second.toString(true);
+    auto pariCode = formula.toString(true);
     Log::get().info(seq.id_str() + ": " + pariCode);
     Sequence expSeq;
     size_t numTerms = seq.existingNumTerms();
@@ -325,8 +328,11 @@ void Commands::testPari() {
         pariCode.find("binomial") != std::string::npos) {
       numTerms = std::min<size_t>(numTerms, 10);
     }
+    if (ProgramUtil::hasOp(program, Operation::Type::SEQ)) {
+      numTerms = std::min<size_t>(numTerms, 3);
+    }
     evaluator.eval(program, expSeq, numTerms);
-    auto genSeq = Pari::eval(formula.second, 0, numTerms - 1);
+    auto genSeq = Pari::eval(formula, 0, numTerms - 1);
     if (genSeq != expSeq) {
       Log::get().info("Generated sequence: " + genSeq.to_string());
       Log::get().info("Expected sequence:  " + expSeq.to_string());
