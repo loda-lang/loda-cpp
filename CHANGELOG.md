@@ -8,6 +8,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 * Check maximum number of steps in incremental evaluator
 * Avoid fixed number of 100 terms in `minimize` command; now configurable using `-t` with default of 10 terms
 
+### Features
+
+* Support `seq` operation in formula generator
+
 ## v22.11.7
 
 ### Bugfixes

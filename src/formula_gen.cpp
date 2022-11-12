@@ -1,10 +1,12 @@
 #include "formula_gen.hpp"
 
 #include <stdexcept>
+#include <unordered_set>
 
 #include "evaluator_inc.hpp"
 #include "expression_util.hpp"
 #include "log.hpp"
+#include "oeis_sequence.hpp"
 #include "program_util.hpp"
 
 std::string memoryCellToName(Number index) {
@@ -127,6 +129,12 @@ bool update(Formula& f, const Operation& op, bool pariMode) {
       res = Expression(Expression::Type::FUNCTION, "max", {prevTarget, source});
       break;
     }
+    case Operation::Type::SEQ: {
+      res =
+          Expression(Expression::Type::FUNCTION,
+                     OeisSequence(source.value.asInt()).id_str(), {prevTarget});
+      break;
+    }
     case Operation::Type::TRN: {
       res = Expression(
           Expression::Type::FUNCTION, "max",
@@ -231,17 +239,25 @@ int64_t getNumInitialTermsNeeded(int64_t cell, const Formula& f,
   }
 }
 
-std::pair<bool, Formula> FormulaGenerator::generate(const Program& p,
-                                                    bool pariMode) {
-  std::pair<bool, Formula> result;
-  result.first = false;
+bool FormulaGenerator::generate(const Program& p, int64_t id, Formula& result,
+                                bool pariMode, bool withDeps) {
   Formula f, tmp;
 
   // indirect operands are not supported
   if (ProgramUtil::hasIndirectOperand(p)) {
-    return result;
+    return false;
   }
   const int64_t numCells = ProgramUtil::getLargestDirectMemoryCell(p) + 1;
+
+  // TODO: remove this limitation
+  if (withDeps && ProgramUtil::hasOp(p, Operation::Type::SEQ)) {
+    return false;
+  }
+
+  // make sure there is no recursion
+  if (id > 0 && usesFunction(result, OeisSequence(id).id_str())) {
+    return false;
+  }
 
   Settings settings;
   Interpreter interpreter(settings);
@@ -251,16 +267,16 @@ std::pair<bool, Formula> FormulaGenerator::generate(const Program& p,
   if (use_ie) {
     // TODO: remove this limitation
     if (ie.getLoopCounterCell() != 0) {
-      return result;
+      return false;
     }
     // TODO: remove this limitation
     if (!ie.getLoopCounterDependentCells().empty()) {
-      return result;
+      return false;
     }
     // TODO: remove this limitation
     for (auto& op : ie.getPreLoop().ops) {
       if (op.type == Operation::Type::MUL || op.type == Operation::Type::DIV) {
-        return result;
+        return false;
       }
     }
   }
@@ -294,7 +310,7 @@ std::pair<bool, Formula> FormulaGenerator::generate(const Program& p,
     main = p;
   }
   if (!update(f, main, pariMode)) {
-    return result;
+    return false;
   }
   Log::get().debug("Updated formula:  " + f.toString(false));
 
@@ -317,13 +333,13 @@ std::pair<bool, Formula> FormulaGenerator::generate(const Program& p,
       if (op.type == Operation::Type::MOV &&
           op.source.type == Operand::Type::DIRECT) {
         if (hasArithmetic) {
-          return result;
+          return false;
         }
         auto s = operandToExpression(op.source);
         f.entries[t] = s;
       } else {
         if (!update(f, op, pariMode)) {
-          return result;
+          return false;
         }
         hasArithmetic = true;
       }
@@ -392,14 +408,14 @@ std::pair<bool, Formula> FormulaGenerator::generate(const Program& p,
     }
   }
   if (keys.size() > 2) {
-    return result;
+    return false;
   }
   if (recursive.size() > 1) {
-    return result;
+    return false;
   }
   for (auto r : recursive) {
     if (deps.count(r) > 1) {
-      return result;
+      return false;
     }
   }
 
@@ -441,7 +457,6 @@ std::pair<bool, Formula> FormulaGenerator::generate(const Program& p,
   }
 
   // success
-  result.first = true;
-  result.second = f;
-  return result;
+  result = f;
+  return true;
 }

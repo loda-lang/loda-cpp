@@ -645,9 +645,9 @@ void OeisManager::dumpProgram(size_t id, Program &p, const std::string &file,
     }
   }
   tmp.ops.push_back(nop);
-  auto formula = FormulaGenerator::generate(p, false);
-  if (formula.first) {
-    nop.comment = "Formula: " + formula.second.toString(false);
+  Formula formula;
+  if (FormulaGenerator::generate(p, id, formula, false, false)) {
+    nop.comment = "Formula: " + formula.toString(false);
     tmp.ops.push_back(nop);
   }
   nop.comment.clear();
@@ -665,9 +665,9 @@ void OeisManager::alert(Program p, size_t id, const std::string &prefix,
   std::stringstream buf;
   buf << prefix << " program for " << seq
       << " Terms: " << seq.getTerms(settings.num_terms);
-  auto formula = FormulaGenerator::generate(p, false);
-  if (formula.first) {
-    buf << ". Formula: " << formula.second.toString(false);
+  Formula formula;
+  if (FormulaGenerator::generate(p, id, formula, false, false)) {
+    buf << ". Formula: " << formula.toString(false);
   }
   if (!submitted_by.empty()) {
     buf << ". " << ProgramUtil::PREFIX_SUBMITTED_BY << " " << submitted_by;

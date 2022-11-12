@@ -26,6 +26,7 @@ class Settings {
   int64_t max_memory;
   int64_t max_cycles;
   bool use_steps;
+  bool with_deps;
   bool parallel_mining;
   bool report_cpu_hours;
   int64_t num_miner_instances;

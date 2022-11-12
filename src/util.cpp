@@ -32,6 +32,7 @@ Settings::Settings()
       max_memory(DEFAULT_MAX_MEMORY),
       max_cycles(DEFAULT_MAX_CYCLES),
       use_steps(false),
+      with_deps(false),
       parallel_mining(false),
       report_cpu_hours(true),
       num_miner_instances(0),
@@ -129,6 +130,8 @@ std::vector<std::string> Settings::parseArgs(int argc, char *argv[]) {
         option = Option::EXPORT_FORMAT;
       } else if (opt == "s") {
         use_steps = true;
+      } else if (opt == "d") {
+        with_deps = true;
       } else if (opt == "p") {
         parallel_mining = true;
       } else if (opt == "P") {
