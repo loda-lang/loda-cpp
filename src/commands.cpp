@@ -324,7 +324,8 @@ void Commands::testPari() {
     Log::get().info(seq.id_str() + ": " + pariCode);
     Sequence expSeq;
     size_t numTerms = seq.existingNumTerms();
-    if (inceval.init(program) || pariCode.find("binomial") != std::string::npos)) {
+    if (inceval.init(program) ||
+        pariCode.find("binomial") != std::string::npos) {
       numTerms = std::min<size_t>(numTerms, 10);
     }
     if (pariCode.find("A000045") != std::string::npos) {
