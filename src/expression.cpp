@@ -83,13 +83,21 @@ int Expression::compare(const Expression& e) const {
         return 0;
       }
     case Expression::Type::FUNCTION:
-      // reverse sorting for function names!
-      if (name < e.name) {
-        return 1;
-      } else if (e.name < name) {
-        return -1;
-      } else {
+      // custom sorting for function names
+      if (name == e.name) {
         return compareChildren(e);
+      } else if (name.empty()) {
+        return 1;
+      } else if (e.name.empty()) {
+        return -1;
+      } else if (std::islower(name[0]) && std::isupper(e.name[0])) {
+        return 1;
+      } else if (std::isupper(name[0]) && std::islower(e.name[0])) {
+        return -1;
+      } else if (name < e.name) {
+        return 1;
+      } else {
+        return -1;
       }
     case Expression::Type::NEGATION:
     case Expression::Type::SUM:
