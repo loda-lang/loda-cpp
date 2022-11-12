@@ -2,6 +2,8 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v22.11.12
+
 ### Bugfixes
 
 * Fix step count inconsistency
