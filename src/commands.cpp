@@ -327,7 +327,7 @@ void Commands::testPari() {
     if (inceval.init(program) ||
         pariCode.find("binomial") != std::string::npos ||
         ProgramUtil::hasOp(program, Operation::Type::SEQ)) {
-      numTerms = std::min<size_t>(numTerms, 6);
+      numTerms = std::min<size_t>(numTerms, 5);
     }
     evaluator.eval(program, expSeq, numTerms);
     auto genSeq = Pari::eval(formula, 0, numTerms - 1);
