@@ -451,7 +451,7 @@ bool generateSingle(const Program& p, Formula& result, bool pariMode) {
   return true;
 }
 
-void addProgramIds(const Program& p, std::set<int64_t>& ids) {
+bool addProgramIds(const Program& p, std::set<int64_t>& ids) {
   // TODO: check for recursion
   Parser parser;
   for (auto op : p.ops) {
@@ -459,11 +459,17 @@ void addProgramIds(const Program& p, std::set<int64_t>& ids) {
       auto id = op.source.value.asInt();
       if (ids.find(id) == ids.end()) {
         ids.insert(id);
-        auto q = parser.parse(OeisSequence(id).getProgramPath());
-        addProgramIds(q, ids);
+        OeisSequence seq(id);
+        try {
+          auto q = parser.parse(seq.getProgramPath());
+          addProgramIds(q, ids);
+        } catch (const std::exception&) {
+          return false;
+        }
       }
     }
   }
+  return true;
 }
 
 void addFormula(Formula& main, Formula extension) {
@@ -493,11 +499,19 @@ bool FormulaGenerator::generate(const Program& p, int64_t id, Formula& result,
   }
   if (withDeps) {
     std::set<int64_t> ids;
-    addProgramIds(p, ids);
+    if (!addProgramIds(p, ids)) {
+      return false;
+    }
     Parser parser;
     for (auto id2 : ids) {
       OeisSequence seq(id2);
-      auto p2 = parser.parse(seq.getProgramPath());
+      Program p2;
+      try {
+        p2 = parser.parse(seq.getProgramPath());
+      } catch (const std::exception&) {
+        result.clear();
+        return false;
+      }
       Formula f2;
       if (!generateSingle(p2, f2, pariMode)) {
         result.clear();
