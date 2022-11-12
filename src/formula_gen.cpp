@@ -475,6 +475,7 @@ void addFormula(Formula& main, Formula extension) {
       for (int64_t j = 1; j < numCells; j++) {
         auto to = memoryCellToName(j);
         if (!usesFunction(main, to) && !usesFunction(extension, to)) {
+          Log::get().debug("Replacing " + from + " by " + to);
           extension.replaceName(from, to);
           break;
         }
@@ -503,7 +504,8 @@ bool FormulaGenerator::generate(const Program& p, int64_t id, Formula& result,
         return false;
       }
       auto from = memoryCellToName(Program::INPUT_CELL);
-      auto to = memoryCellToName(seq.id);
+      auto to = seq.id_str();
+      Log::get().debug("Replacing " + from + " by " + to);
       f2.replaceName(from, to);
       addFormula(result, f2);
     }
