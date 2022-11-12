@@ -328,7 +328,7 @@ void Commands::testPari() {
         pariCode.find("binomial") != std::string::npos) {
       numTerms = std::min<size_t>(numTerms, 10);
     }
-    if (pariCode.find("A000045") != std::string::npos) {
+    if (ProgramUtil::hasOp(program, Operation::Type::SEQ)) {
       numTerms = std::min<size_t>(numTerms, 3);
     }
     evaluator.eval(program, expSeq, numTerms);
