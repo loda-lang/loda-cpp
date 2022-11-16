@@ -240,6 +240,29 @@ int64_t getNumInitialTermsNeeded(int64_t cell, const Formula& f,
   }
 }
 
+Formula initFormula(int64_t numCells, bool use_ie) {
+  Formula f;
+  const Expression paramExpr(Expression::Type::PARAMETER, "n");
+  for (int64_t i = 0; i < numCells; i++) {
+    auto key = operandToExpression(Operand(Operand::Type::DIRECT, i));
+    if (i == 0) {
+      f.entries[key] = paramExpr;
+    } else {
+      if (use_ie) {
+        f.entries[key] = key;
+        Expression prev(Expression::Type::DIFFERENCE, "",
+                        {paramExpr, Expression(Expression::Type::CONSTANT, "",
+                                               Number::ONE)});
+        f.entries[key].replaceAll(paramExpr, prev);
+      } else {
+        f.entries[key] =
+            Expression(Expression::Type::CONSTANT, "", Number::ZERO);
+      }
+    }
+  }
+  return f;
+}
+
 bool generateSingle(const Program& p, Formula& result, bool pariMode) {
   Formula f, tmp;
 
@@ -269,22 +292,17 @@ bool generateSingle(const Program& p, Formula& result, bool pariMode) {
 
   // initialize expressions for memory cells
   const Expression paramExpr(Expression::Type::PARAMETER, "n");
-  for (int64_t i = 0; i < numCells; i++) {
-    auto key = operandToExpression(Operand(Operand::Type::DIRECT, i));
-    if (i == 0) {
-      f.entries[key] = paramExpr;
-    } else {
-      if (use_ie) {
-        f.entries[key] = key;
-        Expression prev(Expression::Type::DIFFERENCE, "",
-                        {paramExpr, Expression(Expression::Type::CONSTANT, "",
-                                               Number::ONE)});
-        f.entries[key].replaceAll(paramExpr, prev);
-      } else {
-        f.entries[key] =
-            Expression(Expression::Type::CONSTANT, "", Number::ZERO);
-      }
+  f = initFormula(numCells, false);
+  if (use_ie) {
+    // update formula based on pre-loop code
+    if (!update(f, ie.getPreLoop(), pariMode)) {
+      return false;
     }
+    auto param =
+        operandToExpression(Operand(Operand::Type::DIRECT, Number::ZERO));
+    auto saved = f.entries[param];
+    f = initFormula(numCells, true);
+    f.entries[param] = saved;
   }
   Log::get().debug("Initialized formula to " + f.toString(false));
 
