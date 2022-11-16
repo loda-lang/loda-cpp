@@ -260,10 +260,6 @@ bool generateSingle(const Program& p, Formula& result, bool pariMode) {
       return false;
     }
     // TODO: remove this limitation
-    if (!ie.getLoopCounterDependentCells().empty()) {
-      return false;
-    }
-    // TODO: remove this limitation
     for (auto& op : ie.getPreLoop().ops) {
       if (op.type == Operation::Type::MUL || op.type == Operation::Type::DIV) {
         return false;
@@ -275,15 +271,15 @@ bool generateSingle(const Program& p, Formula& result, bool pariMode) {
   const Expression paramExpr(Expression::Type::PARAMETER, "n");
   for (int64_t i = 0; i < numCells; i++) {
     auto key = operandToExpression(Operand(Operand::Type::DIRECT, i));
-    if (use_ie) {
-      f.entries[key] = key;
-      Expression prev(
-          Expression::Type::DIFFERENCE, "",
-          {paramExpr, Expression(Expression::Type::CONSTANT, "", Number::ONE)});
-      f.entries[key].replaceAll(paramExpr, prev);
+    if (i == 0) {
+      f.entries[key] = paramExpr;
     } else {
-      if (i == 0) {
-        f.entries[key] = paramExpr;
+      if (use_ie) {
+        f.entries[key] = key;
+        Expression prev(Expression::Type::DIFFERENCE, "",
+                        {paramExpr, Expression(Expression::Type::CONSTANT, "",
+                                               Number::ONE)});
+        f.entries[key].replaceAll(paramExpr, prev);
       } else {
         f.entries[key] =
             Expression(Expression::Type::CONSTANT, "", Number::ZERO);
