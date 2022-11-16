@@ -78,8 +78,6 @@ class ProgramUtil {
 
   static void validate(const Program &p);
 
-  static void migrateOutputCell(Program &p, int64_t old_out, int64_t new_out);
-
   static bool isCodedManually(const Program &p);
 
   static std::string getCommentField(const Program &p,

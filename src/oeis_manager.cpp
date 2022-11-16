@@ -526,24 +526,43 @@ void OeisManager::generateLists() {
 }
 
 void OeisManager::migrate() {
+  Settings settings;
+  Interpreter interpreter(settings);
+  IncrementalEvaluator ie(interpreter);
   for (size_t id = 0; id < 400000; id++) {
     OeisSequence s(id);
     std::ifstream f(s.getProgramPath());
     Program p, out;
     if (f.good()) {
-      Log::get().warn("Migrating " + s.getProgramPath());
       p = parser.parse(f);
       f.close();
-      ProgramUtil::migrateOutputCell(p, 1, 0);
-      for (size_t i = 0; i < p.ops.size(); i++) {
-        if (p.ops[i].type != Operation::Type::NOP) {
-          p.ops.insert(p.ops.begin() + i, Operation());
-          break;
+      if (!ie.init(p)) {
+        continue;
+      }
+      try {
+        Memory mem;
+        interpreter.run(p, mem);
+      } catch (const std::exception &e) {
+        std::string msg(e.what());
+        if (msg.find("seq using negative argument") != std::string::npos) {
+          bool loop_started = false;
+          for (auto &op : p.ops) {
+            if (op.type == Operation::Type::LPB) {
+              loop_started = true;
+            } else if (op.type == Operation::Type::LPE) {
+              loop_started = false;
+            } else if (loop_started && op.type == Operation::Type::SUB &&
+                       op.source == Operand(Operand::Type::CONSTANT, 1)) {
+              Log::get().warn("Migrating " + s.getProgramPath());
+              op.type = Operation::Type::TRN;
+              std::ofstream out(s.getProgramPath());
+              ProgramUtil::print(p, out);
+              out.close();
+              loop_started = false;
+            }
+          }
         }
       }
-      std::ofstream out(s.getProgramPath());
-      ProgramUtil::print(p, out);
-      out.close();
     }
   }
 }
