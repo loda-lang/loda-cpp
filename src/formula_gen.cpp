@@ -240,6 +240,29 @@ int64_t getNumInitialTermsNeeded(int64_t cell, const Formula& f,
   }
 }
 
+Formula initFormula(int64_t numCells, bool use_ie) {
+  Formula f;
+  const Expression paramExpr(Expression::Type::PARAMETER, "n");
+  for (int64_t i = 0; i < numCells; i++) {
+    auto key = operandToExpression(Operand(Operand::Type::DIRECT, i));
+    if (i == 0) {
+      f.entries[key] = paramExpr;
+    } else {
+      if (use_ie) {
+        f.entries[key] = key;
+        Expression prev(Expression::Type::DIFFERENCE, "",
+                        {paramExpr, Expression(Expression::Type::CONSTANT, "",
+                                               Number::ONE)});
+        f.entries[key].replaceAll(paramExpr, prev);
+      } else {
+        f.entries[key] =
+            Expression(Expression::Type::CONSTANT, "", Number::ZERO);
+      }
+    }
+  }
+  return f;
+}
+
 bool generateSingle(const Program& p, Formula& result, bool pariMode) {
   Formula f, tmp;
 
@@ -260,10 +283,6 @@ bool generateSingle(const Program& p, Formula& result, bool pariMode) {
       return false;
     }
     // TODO: remove this limitation
-    if (!ie.getLoopCounterDependentCells().empty()) {
-      return false;
-    }
-    // TODO: remove this limitation
     for (auto& op : ie.getPreLoop().ops) {
       if (op.type == Operation::Type::MUL || op.type == Operation::Type::DIV) {
         return false;
@@ -273,22 +292,17 @@ bool generateSingle(const Program& p, Formula& result, bool pariMode) {
 
   // initialize expressions for memory cells
   const Expression paramExpr(Expression::Type::PARAMETER, "n");
-  for (int64_t i = 0; i < numCells; i++) {
-    auto key = operandToExpression(Operand(Operand::Type::DIRECT, i));
-    if (use_ie) {
-      f.entries[key] = key;
-      Expression prev(
-          Expression::Type::DIFFERENCE, "",
-          {paramExpr, Expression(Expression::Type::CONSTANT, "", Number::ONE)});
-      f.entries[key].replaceAll(paramExpr, prev);
-    } else {
-      if (i == 0) {
-        f.entries[key] = paramExpr;
-      } else {
-        f.entries[key] =
-            Expression(Expression::Type::CONSTANT, "", Number::ZERO);
-      }
+  f = initFormula(numCells, false);
+  if (use_ie) {
+    // update formula based on pre-loop code
+    if (!update(f, ie.getPreLoop(), pariMode)) {
+      return false;
     }
+    auto param =
+        operandToExpression(Operand(Operand::Type::DIRECT, Number::ZERO));
+    auto saved = f.entries[param];
+    f = initFormula(numCells, true);
+    f.entries[param] = saved;
   }
   Log::get().debug("Initialized formula to " + f.toString(false));
 
@@ -317,13 +331,24 @@ bool generateSingle(const Program& p, Formula& result, bool pariMode) {
     // handle post-loop code
     auto post = ie.getPostLoop();
     bool hasArithmetic = false;
+    bool wroteOut = false;
+    Operand out(Operand::Type::DIRECT, Number::ZERO);
     for (auto& op : post.ops) {
+      auto meta = Operation::Metadata::get(op.type);
       auto t = operandToExpression(op.target);
+      // TODO: remove this limitation
+      if (!wroteOut &&
+          (op.source == out || (op.target == out && meta.is_reading_target))) {
+        return false;
+      }
       // TODO: remove this limitation
       if (op.type == Operation::Type::MOV &&
           op.source.type == Operand::Type::DIRECT) {
         if (hasArithmetic) {
           return false;
+        }
+        if (op.target == out) {
+          wroteOut = true;
         }
         auto s = operandToExpression(op.source);
         f.entries[t] = s;
@@ -367,7 +392,7 @@ bool generateSingle(const Program& p, Formula& result, bool pariMode) {
     }
     Log::get().debug("Added intial terms: " + f.toString(false));
 
-    // resolve identies
+    // resolve identities
     auto entries = f.entries;  // copy entries
     for (auto& e : entries) {
       if (isSimpleFunction(e.first) && isSimpleFunction(e.second)) {

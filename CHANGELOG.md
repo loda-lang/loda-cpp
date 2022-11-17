@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Enhancements
+
+* Support argument access in recursive formulas (e.g. in [A000142](https://loda-lang.org/edit/?oeis=142))
+
 ## v22.11.12
 
 ### Bugfixes
