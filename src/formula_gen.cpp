@@ -331,13 +331,24 @@ bool generateSingle(const Program& p, Formula& result, bool pariMode) {
     // handle post-loop code
     auto post = ie.getPostLoop();
     bool hasArithmetic = false;
+    bool wroteOut = false;
+    Operand out(Operand::Type::DIRECT, Number::ZERO);
     for (auto& op : post.ops) {
+      auto meta = Operation::Metadata::get(op.type);
       auto t = operandToExpression(op.target);
+      // TODO: remove this limitation
+      if (!wroteOut &&
+          (op.source == out || (op.target == out && meta.is_reading_target))) {
+        return false;
+      }
       // TODO: remove this limitation
       if (op.type == Operation::Type::MOV &&
           op.source.type == Operand::Type::DIRECT) {
         if (hasArithmetic) {
           return false;
+        }
+        if (op.target == out) {
+          wroteOut = true;
         }
         auto s = operandToExpression(op.source);
         f.entries[t] = s;
@@ -381,7 +392,7 @@ bool generateSingle(const Program& p, Formula& result, bool pariMode) {
     }
     Log::get().debug("Added intial terms: " + f.toString(false));
 
-    // resolve identies
+    // resolve identities
     auto entries = f.entries;  // copy entries
     for (auto& e : entries) {
       if (isSimpleFunction(e.first) && isSimpleFunction(e.second)) {
