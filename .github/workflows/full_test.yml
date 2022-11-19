@@ -12,6 +12,8 @@ jobs:
         run: cd src && make -f Makefile.linux-x86.mk
       - name: Test
         run: ./loda test
+      - name: Benchmark
+        run: ./loda benchmark
       - name: Setup
         run: |
           mkdir -p $HOME/loda
@@ -24,5 +26,5 @@ jobs:
           sudo apt-get install pari-gp
           gp --version
           ./loda test-pari
-      - name: Benchmark
-        run: ./loda benchmark
+      - name: Find Slow
+        run: ./loda find-slow

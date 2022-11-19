@@ -4,7 +4,8 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Enhancements
 
-* Support argument access in recursive formulas (e.g. in [A000142](https://loda-lang.org/edit/?oeis=142))
+* Support more recursive formulas, e.g. [A000142](https://loda-lang.org/edit/?oeis=142)
+* Internal command for finding slow programs
 
 ## v22.11.12
 

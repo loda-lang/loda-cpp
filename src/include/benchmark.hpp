@@ -6,11 +6,13 @@
 
 class Benchmark {
  public:
-  void all();
+  void smokeTest();
 
   void operations();
 
   void programs();
+
+  void findSlow();
 
  private:
   void program(size_t id, size_t num_terms);

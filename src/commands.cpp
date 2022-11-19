@@ -390,8 +390,15 @@ void Commands::iterate(const std::string& count) {
 }
 
 void Commands::benchmark() {
+  initLog(true);
   Benchmark benchmark;
-  benchmark.all();
+  benchmark.smokeTest();
+}
+
+void Commands::findSlow() {
+  initLog(false);
+  Benchmark benchmark;
+  benchmark.findSlow();
 }
 
 void Commands::lists() {

@@ -54,6 +54,8 @@ class Commands {
 
   void benchmark();
 
+  void findSlow();
+
   void lists();
 
   void compare(const std::string& path1, const std::string& path2);

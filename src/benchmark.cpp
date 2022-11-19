@@ -1,5 +1,7 @@
 #include "benchmark.hpp"
 
+#include <fstream>
+#include <queue>
 #include <sstream>
 
 #include "evaluator.hpp"
@@ -10,7 +12,7 @@
 #include "program_util.hpp"
 #include "setup.hpp"
 
-void Benchmark::all() {
+void Benchmark::smokeTest() {
   operations();
   programs();
 }
@@ -127,9 +129,9 @@ std::string Benchmark::programEval(const Program& p, bool use_inc_eval,
           "Unexpected sequence length: " + std::to_string(result.size()), true);
     }
   }
-  auto cur_time = std::chrono::steady_clock::now();
+  auto end_time = std::chrono::steady_clock::now();
   double speed = std::chrono::duration_cast<std::chrono::milliseconds>(
-                     cur_time - start_time)
+                     end_time - start_time)
                      .count() /
                  static_cast<double>(runs * 1000);
   std::stringstream buf;
@@ -137,4 +139,39 @@ std::string Benchmark::programEval(const Program& p, bool use_inc_eval,
   buf.precision(2);
   buf << speed << "s";
   return buf.str();
+}
+
+void Benchmark::findSlow() {
+  Parser parser;
+  Settings settings;
+  Interpreter interpreter(settings);
+  Evaluator evaluator(settings);
+  Sequence seq;
+  const int64_t numTerms = 10;
+  std::priority_queue<std::pair<int64_t, int64_t> > queue;
+  for (size_t id = 0; id < 400000; id++) {
+    OeisSequence oeisSeq(id);
+    std::ifstream in(oeisSeq.getProgramPath());
+    if (!in) {
+      continue;
+    }
+    auto program = parser.parse(in);
+    auto start_time = std::chrono::steady_clock::now();
+    evaluator.eval(program, seq, numTerms, false);
+    auto end_time = std::chrono::steady_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
+        end_time - start_time);
+    Log::get().info(oeisSeq.id_str() + ": " + std::to_string(duration.count()) +
+                    "µs");
+    queue.push(std::pair<int64_t, int64_t>(duration.count(), oeisSeq.id));
+  }
+  std::cout << std::endl << "Slowest programs:" << std::endl;
+  for (size_t i = 0; i < 10; i++) {
+    auto entry = queue.top();
+    queue.pop();
+    OeisSequence oeisSeq(entry.second);
+    std::cout << "[" << oeisSeq.id_str()
+              << "](https://loda-lang.org/edit/?oeis=" << entry.second
+              << "): " << (entry.first / 1000) << "ms" << std::endl;
+  }
 }
