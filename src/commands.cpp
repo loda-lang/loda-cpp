@@ -316,7 +316,13 @@ void Commands::testPari() {
       continue;
     }
     auto seq = manager.getSequences().at(id);
-    auto program = parser.parse(seq.getProgramPath());
+    Program program;
+    try {
+      program = parser.parse(seq.getProgramPath());
+    } catch (std::exception& e) {
+      Log::get().warn(std::string(e.what()));
+      continue;
+    }
 
     // generate PARI code
     FormulaGenerator gen(true);
@@ -351,6 +357,9 @@ void Commands::testPari() {
     if (ProgramUtil::hasOp(program, Operation::Type::SEQ)) {
       numTerms = std::min<size_t>(numTerms, 3);
     }
+    if (numTerms == 0) {
+      Log::get().error("No known terms", true);
+    }
 
     // evaluate LODA program
     try {
@@ -358,6 +367,9 @@ void Commands::testPari() {
     } catch (const std::exception&) {
       Log::get().warn("Cannot evaluate " + seq.id_str());
       continue;
+    }
+    if (expSeq.empty()) {
+      Log::get().error("Evaluation error", true);
     }
 
     // evaluate PARI program

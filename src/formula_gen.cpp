@@ -236,17 +236,16 @@ Formula FormulaGenerator::initFormula(int64_t numCells, bool use_ie) const {
   return f;
 }
 
-std::string memoryCellToName(Number index) {
-  int64_t i = index.asInt();
-  if (i < 0) {
+std::string memoryCellToName(int64_t cell) {
+  if (cell < 0) {
     throw std::runtime_error("negative index of memory cell");
   }
   constexpr char MAX_CHAR = 5;
-  if (i > static_cast<int64_t>(MAX_CHAR)) {
+  if (cell > static_cast<int64_t>(MAX_CHAR)) {
     return std::string(1, 'a' + MAX_CHAR) +
-           std::to_string(i - static_cast<int64_t>(MAX_CHAR));
+           std::to_string(cell - static_cast<int64_t>(MAX_CHAR));
   }
-  return std::string(1, 'a' + static_cast<char>(i));
+  return std::string(1, 'a' + static_cast<char>(cell));
 }
 
 bool FormulaGenerator::generateSingle(const Program& p, Formula& result) {
@@ -278,7 +277,7 @@ bool FormulaGenerator::generateSingle(const Program& p, Formula& result) {
 
   // initialize function names for memory cells
   cellNames.clear();
-  for (size_t cell = 0; cell < numCells; cell++) {
+  for (int64_t cell = 0; cell < numCells; cell++) {
     cellNames[cell] = memoryCellToName(cell);
   }
 
