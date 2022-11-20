@@ -317,14 +317,32 @@ void Commands::testPari() {
     }
     auto seq = manager.getSequences().at(id);
     auto program = parser.parse(seq.getProgramPath());
+
+    // generate PARI code
     FormulaGenerator gen(true);
     Formula formula;
-    if (!gen.generate(program, id, formula, true)) {
-      continue;
+    Sequence expSeq;
+    try {
+      if (!gen.generate(program, id, formula, true)) {
+        continue;
+      }
+    } catch (const std::exception&) {
+      // error during formula generation => check evaluation
+      bool hasEvalError;
+      try {
+        evaluator.eval(program, expSeq, 10);
+        hasEvalError = false;
+      } catch (const std::exception&) {
+        hasEvalError = true;
+      }
+      if (!hasEvalError) {
+        Log::get().error("Expected evaluation error for " + seq.id_str(), true);
+      }
     }
     auto pariCode = formula.toString(true);
     Log::get().info(seq.id_str() + ": " + pariCode);
-    Sequence expSeq;
+
+    // determine number of terms for testing
     size_t numTerms = seq.existingNumTerms();
     if (inceval.init(program) ||
         pariCode.find("binomial") != std::string::npos) {
@@ -333,8 +351,19 @@ void Commands::testPari() {
     if (ProgramUtil::hasOp(program, Operation::Type::SEQ)) {
       numTerms = std::min<size_t>(numTerms, 3);
     }
-    evaluator.eval(program, expSeq, numTerms);
+
+    // evaluate LODA program
+    try {
+      evaluator.eval(program, expSeq, numTerms);
+    } catch (const std::exception&) {
+      Log::get().warn("Cannot evaluate " + seq.id_str());
+      continue;
+    }
+
+    // evaluate PARI program
     auto genSeq = Pari::eval(formula, 0, numTerms - 1);
+
+    // compare results
     if (genSeq != expSeq) {
       Log::get().info("Generated sequence: " + genSeq.to_string());
       Log::get().info("Expected sequence:  " + expSeq.to_string());
