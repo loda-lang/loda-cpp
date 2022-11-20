@@ -100,6 +100,16 @@ std::multimap<std::string, std::string> Formula::getFunctionDeps(
   return deps;
 }
 
+bool Formula::isRecursive(std::string funcName) const {
+  auto deps = getFunctionDeps(false);
+  for (auto it : deps) {
+    if (it.first == funcName && it.second == funcName) {
+      return true;
+    }
+  }
+  return false;
+}
+
 int64_t getNumTerms(const Expression& e) {
   int64_t numTerms = 0;
   if (e.type == Expression::Type::FUNCTION) {
