@@ -241,6 +241,11 @@ bool ExpressionUtil::normalize(Expression& e) {
   return true;
 }
 
+bool ExpressionUtil::isSimpleFunction(const Expression& e) {
+  return e.type == Expression::Type::FUNCTION && e.children.size() == 1 &&
+         e.children[0]->type == Expression::Type::PARAMETER;
+}
+
 bool ExpressionUtil::canBeNegative(const Expression& e) {
   switch (e.type) {
     case Expression::Type::CONSTANT:
