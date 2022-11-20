@@ -155,6 +155,15 @@ bool IncrementalEvaluator::isCommutative(int64_t cell) const {
   return true;
 }
 
+bool IncrementalEvaluator::isCommutative(const std::set<int64_t>& cells) const {
+  for (auto c : cells) {
+    if (!isCommutative(c)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 bool IncrementalEvaluator::checkLoopBody() {
   // check loop counter cell
   bool loop_counter_updated = false;
@@ -184,6 +193,10 @@ bool IncrementalEvaluator::checkLoopBody() {
   // compute set of loop counter dependent cells
   computeLoopCounterDependentCells();
 
+  // check if stateful cells and output cells are commutative
+  bool is_commutative =
+      isCommutative(stateful_cells) && isCommutative(output_cells);
+
   // ================================================= //
   // === from now on, we check for positive cases ==== //
   // ================================================= //
@@ -191,25 +204,9 @@ bool IncrementalEvaluator::checkLoopBody() {
   if (loop_counter_dependent_cells.empty()) {
     return true;
   }
-  if (stateful_cells.empty()) {
-    return true;
-  }
 
-  // we have both stateful and loop-counter dependent cells
-  // we allow only one such case:
-  // - only one stateful cell and
-  // - all stateful and output cells are commutative
-  if (stateful_cells.size() == 1) {
-    bool is_commutative = true;
-    for (auto s : stateful_cells) {
-      is_commutative = is_commutative && isCommutative(s);
-    }
-    for (auto s : output_cells) {
-      is_commutative = is_commutative && isCommutative(s);
-    }
-    if (is_commutative) {
-      return true;
-    }
+  if (stateful_cells.size() <= 1 && is_commutative) {
+    return true;
   }
 
   // IE not supported
