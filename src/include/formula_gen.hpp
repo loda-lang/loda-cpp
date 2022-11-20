@@ -12,18 +12,21 @@ class FormulaGenerator {
   bool generate(const Program& p, int64_t id, Formula& result, bool withDeps);
 
  private:
-  bool generateSingle(const Program& p, Formula& result);
+  bool generateSingle(const Program& p);
 
-  bool update(Formula& f, const Operation& op) const;
+  void initFormula(int64_t numCells, bool use_ie);
 
-  bool update(Formula& f, const Program& p) const;
+  bool update(const Operation& op);
 
-  Expression operandToExpression(Operand op) const;
-
-  Formula initFormula(int64_t numCells, bool use_ie) const;
+  bool update(const Program& p);
 
   std::string getCellName(int64_t cell) const;
 
+  Expression operandToExpression(Operand op) const;
+
+  void convertInitialTermsToIf();
+
   const bool pariMode;
+  Formula formula;
   std::map<int64_t, std::string> cellNames;
 };
