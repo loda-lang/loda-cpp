@@ -5,6 +5,16 @@
 
 class FormulaGenerator {
  public:
-  static bool generate(const Program& p, int64_t id, Formula& result,
-                       bool pariMode, bool withDeps);
+  FormulaGenerator(bool pariMode);
+
+  bool generate(const Program& p, int64_t id, Formula& result, bool withDeps);
+
+ private:
+  bool generateSingle(const Program& p, Formula& result);
+
+  bool update(Formula& f, const Operation& op);
+
+  bool update(Formula& f, const Program& p);
+
+  const bool pariMode;
 };

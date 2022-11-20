@@ -664,8 +664,9 @@ void OeisManager::dumpProgram(size_t id, Program &p, const std::string &file,
     }
   }
   tmp.ops.push_back(nop);
+  FormulaGenerator gen(false);
   Formula formula;
-  if (FormulaGenerator::generate(p, id, formula, false, false)) {
+  if (gen.generate(p, id, formula, false)) {
     nop.comment = "Formula: " + formula.toString(false);
     tmp.ops.push_back(nop);
   }
@@ -684,8 +685,9 @@ void OeisManager::alert(Program p, size_t id, const std::string &prefix,
   std::stringstream buf;
   buf << prefix << " program for " << seq
       << " Terms: " << seq.getTerms(settings.num_terms);
+  FormulaGenerator gen(false);
   Formula formula;
-  if (FormulaGenerator::generate(p, id, formula, false, false)) {
+  if (gen.generate(p, id, formula, false)) {
     buf << ". Formula: " << formula.toString(false);
   }
   if (!submitted_by.empty()) {

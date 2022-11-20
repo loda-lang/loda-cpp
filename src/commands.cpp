@@ -196,14 +196,15 @@ void Commands::export_(const std::string& path) {
   Program program = parser.parse(getProgramPathAndSeqId(path).first);
   const auto& format = settings.export_format;
   Formula formula;
-  auto generate = FormulaGenerator::generate;
   if (format.empty() || format == "formula") {
-    if (!generate(program, -1, formula, false, settings.with_deps)) {
+    FormulaGenerator gen(false);
+    if (!gen.generate(program, -1, formula, settings.with_deps)) {
       throw std::runtime_error("program cannot be converted to formula");
     }
     std::cout << formula.toString(false) << std::endl;
   } else if (format == "pari") {
-    if (!generate(program, -1, formula, true, settings.with_deps)) {
+    FormulaGenerator gen(true);
+    if (!gen.generate(program, -1, formula, settings.with_deps)) {
       throw std::runtime_error("program cannot be converted to pari");
     }
     std::cout << formula.toString(true) << std::endl;
@@ -316,8 +317,9 @@ void Commands::testPari() {
     }
     auto seq = manager.getSequences().at(id);
     auto program = parser.parse(seq.getProgramPath());
+    FormulaGenerator gen(true);
     Formula formula;
-    if (!FormulaGenerator::generate(program, id, formula, true, true)) {
+    if (!gen.generate(program, id, formula, true)) {
       continue;
     }
     auto pariCode = formula.toString(true);

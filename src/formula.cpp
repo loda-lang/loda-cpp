@@ -34,6 +34,15 @@ bool Formula::contains(const Expression& search) const {
   return false;
 }
 
+bool Formula::containsFunctionDef(const std::string& fname) const {
+  for (auto& e : entries) {
+    if (e.first.type == Expression::Type::FUNCTION && e.first.name == fname) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool containsPair(std::multimap<std::string, std::string>& deps,
                   const std::string& key, const std::string& value) {
   auto range = deps.equal_range(key);

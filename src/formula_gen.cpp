@@ -10,6 +10,8 @@
 #include "parser.hpp"
 #include "program_util.hpp"
 
+FormulaGenerator::FormulaGenerator(bool pariMode) : pariMode(pariMode) {}
+
 std::string memoryCellToName(Number index) {
   int64_t i = index.asInt();
   if (i < 0) {
@@ -53,7 +55,7 @@ Expression fraction(const Expression& num, const Expression& den,
   return frac;
 }
 
-bool update(Formula& f, const Operation& op, bool pariMode) {
+bool FormulaGenerator::update(Formula& f, const Operation& op) {
   auto source = operandToExpression(op.source);
   auto target = operandToExpression(op.target);
   if (source.type == Expression::Type::FUNCTION) {
@@ -156,9 +158,9 @@ bool update(Formula& f, const Operation& op, bool pariMode) {
   return okay;
 }
 
-bool update(Formula& f, const Program& p, bool pariMode) {
+bool FormulaGenerator::update(Formula& f, const Program& p) {
   for (auto& op : p.ops) {
-    if (!update(f, op, pariMode)) {
+    if (!update(f, op)) {
       return false;  // operation not supported
     }
   }
@@ -202,15 +204,6 @@ bool isRecursive(const Formula& f, int64_t cell) {
 bool isSimpleFunction(const Expression& e) {
   return e.type == Expression::Type::FUNCTION && e.children.size() == 1 &&
          e.children[0]->type == Expression::Type::PARAMETER;
-}
-
-bool usesFunction(const Formula& f, const std::string& fname) {
-  for (auto& e : f.entries) {
-    if (e.first.type == Expression::Type::FUNCTION && e.first.name == fname) {
-      return true;
-    }
-  }
-  return false;
 }
 
 int64_t getNumInitialTermsNeeded(int64_t cell, const Formula& f,
@@ -263,7 +256,7 @@ Formula initFormula(int64_t numCells, bool use_ie) {
   return f;
 }
 
-bool generateSingle(const Program& p, Formula& result, bool pariMode) {
+bool FormulaGenerator::generateSingle(const Program& p, Formula& result) {
   Formula f, tmp;
 
   // indirect operands are not supported
@@ -295,7 +288,7 @@ bool generateSingle(const Program& p, Formula& result, bool pariMode) {
   f = initFormula(numCells, false);
   if (use_ie) {
     // update formula based on pre-loop code
-    if (!update(f, ie.getPreLoop(), pariMode)) {
+    if (!update(f, ie.getPreLoop())) {
       return false;
     }
     auto param =
@@ -313,7 +306,7 @@ bool generateSingle(const Program& p, Formula& result, bool pariMode) {
   } else {
     main = p;
   }
-  if (!update(f, main, pariMode)) {
+  if (!update(f, main)) {
     return false;
   }
   Log::get().debug("Updated formula:  " + f.toString(false));
@@ -353,7 +346,7 @@ bool generateSingle(const Program& p, Formula& result, bool pariMode) {
         auto s = operandToExpression(op.source);
         f.entries[t] = s;
       } else {
-        if (!update(f, op, pariMode)) {
+        if (!update(f, op)) {
           return false;
         }
         hasArithmetic = true;
@@ -441,7 +434,7 @@ bool generateSingle(const Program& p, Formula& result, bool pariMode) {
     for (int64_t cell = 1; cell < numCells; cell++) {
       auto from = memoryCellToName(cell);
       auto to = memoryCellToName(cell - 1);
-      if (usesFunction(f, from) && !usesFunction(f, to)) {
+      if (f.containsFunctionDef(from) && !f.containsFunctionDef(to)) {
         f.replaceName(from, to);
         Log::get().debug("Renamed function " + from + " to " + to + ": " +
                          f.toString(false));
@@ -502,10 +495,11 @@ void addFormula(Formula& main, Formula extension) {
       main.entries.size() + extension.entries.size() + 1;  // upper bound
   for (int64_t i = 0; i < numCells; i++) {
     auto from = memoryCellToName(i);
-    if (usesFunction(main, from) && usesFunction(extension, from)) {
+    if (main.containsFunctionDef(from) && extension.containsFunctionDef(from)) {
       for (int64_t j = 1; j < numCells; j++) {
         auto to = memoryCellToName(j);
-        if (!usesFunction(main, to) && !usesFunction(extension, to)) {
+        if (!main.containsFunctionDef(to) &&
+            !extension.containsFunctionDef(to)) {
           Log::get().debug("Replacing " + from + " by " + to);
           extension.replaceName(from, to);
           break;
@@ -517,8 +511,8 @@ void addFormula(Formula& main, Formula extension) {
 }
 
 bool FormulaGenerator::generate(const Program& p, int64_t id, Formula& result,
-                                bool pariMode, bool withDeps) {
-  if (!generateSingle(p, result, pariMode)) {
+                                bool withDeps) {
+  if (!generateSingle(p, result)) {
     result.clear();
     return false;
   }
@@ -538,7 +532,7 @@ bool FormulaGenerator::generate(const Program& p, int64_t id, Formula& result,
         return false;
       }
       Formula f2;
-      if (!generateSingle(p2, f2, pariMode)) {
+      if (!generateSingle(p2, f2)) {
         result.clear();
         return false;
       }

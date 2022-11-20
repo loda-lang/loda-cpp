@@ -880,12 +880,13 @@ void Test::formula() {
     Log::get().error("Unexpected map content", true);
   }
   Parser parser;
+  FormulaGenerator gen(false);
   for (auto& e : map) {
     OeisSequence seq(e.first);
     Log::get().info("Testing formula for " + seq.id_str() + ": " + e.second);
     auto p = parser.parse(seq.getProgramPath());
     Formula f;
-    if (!FormulaGenerator::generate(p, seq.id, f, false, true)) {
+    if (!gen.generate(p, seq.id, f, true)) {
       Log::get().error("Cannot generate formula from program", true);
     }
     if (f.toString(false) != e.second) {

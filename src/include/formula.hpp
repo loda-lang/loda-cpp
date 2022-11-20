@@ -13,6 +13,8 @@ class Formula {
 
   bool contains(const Expression& search) const;
 
+  bool containsFunctionDef(const std::string& fname) const;
+
   std::multimap<std::string, std::string> getFunctionDeps(
       bool transitive) const;
 
