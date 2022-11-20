@@ -20,11 +20,19 @@ class FormulaGenerator {
 
   bool update(const Program& p);
 
+  void resolve(const Expression& left, Expression& right) const;
+
   std::string getCellName(int64_t cell) const;
 
   Expression operandToExpression(Operand op) const;
 
   void convertInitialTermsToIf();
+
+  void simplifyFunctionNames(int64_t numCells);
+
+  void restrictToMain();
+
+  void resolveIdentities();
 
   const bool pariMode;
   Formula formula;

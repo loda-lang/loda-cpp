@@ -166,12 +166,13 @@ bool FormulaGenerator::update(const Program& p) {
   return true;
 }
 
-void resolve(const Formula& f, const Expression& left, Expression& right) {
+void FormulaGenerator::resolve(const Expression& left,
+                               Expression& right) const {
   if (right.type == Expression::Type::FUNCTION) {
     Expression lookup(Expression::Type::FUNCTION, right.name, {getParamExpr()});
     if (lookup != left) {
-      auto it = f.entries.find(lookup);
-      if (it != f.entries.end()) {
+      auto it = formula.entries.find(lookup);
+      if (it != formula.entries.end()) {
         auto replacement = it->second;
         replacement.replaceAll(getParamExpr(), *right.children[0]);
         ExpressionUtil::normalize(replacement);
@@ -183,8 +184,9 @@ void resolve(const Formula& f, const Expression& left, Expression& right) {
     }
   }
   for (auto c : right.children) {
-    resolve(f, left, *c);
+    resolve(left, *c);
   }
+  ExpressionUtil::normalize(right);
 }
 
 int64_t getNumInitialTermsNeeded(int64_t cell, const std::string& funcName,
@@ -249,8 +251,6 @@ std::string memoryCellToName(int64_t cell) {
 }
 
 bool FormulaGenerator::generateSingle(const Program& p) {
-  Formula tmp;
-
   // indirect operands are not supported
   if (ProgramUtil::hasIndirectOperand(p)) {
     return false;
@@ -311,12 +311,12 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   // additional work for IE programs
   if (use_ie) {
     // resolve function references
-    auto ff = formula;
-    for (auto& e : formula.entries) {
-      resolve(ff, e.first, e.second);
-      ExpressionUtil::normalize(e.second);
-      Log::get().debug("Resolved formula: " + formula.toString(false));
+    auto copy = formula;
+    for (auto& e : copy.entries) {
+      resolve(e.first, e.second);
+      Log::get().debug("Resolved formula: " + copy.toString(false));
     }
+    formula = copy;
 
     // handle post-loop code
     auto post = ie.getPostLoop();
@@ -353,10 +353,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   }
 
   // extract main formula (filter out irrelant memory cells)
-  tmp.clear();
-  formula.collectEntries(getCellName(Program::OUTPUT_CELL), tmp);
-  formula = tmp;
-  Log::get().debug("Filtered formula: " + formula.toString(false));
+  restrictToMain();
 
   // add initial terms for IE programs
   if (use_ie) {
@@ -384,20 +381,10 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     Log::get().debug("Added intial terms: " + formula.toString(false));
 
     // resolve identities
-    auto entries = formula.entries;  // copy entries
-    for (auto& e : entries) {
-      if (ExpressionUtil::isSimpleFunction(e.first) &&
-          ExpressionUtil::isSimpleFunction(e.second)) {
-        formula.entries.erase(e.first);
-        formula.replaceName(e.second.name, e.first.name);
-      }
-    }
+    resolveIdentities();
 
     // need to filter again
-    tmp.clear();
-    formula.collectEntries(getCellName(Program::OUTPUT_CELL), tmp);
-    formula = tmp;
-    Log::get().debug("Filtered formula: " + formula.toString(false));
+    restrictToMain();
   }
 
   // TODO: avoid this limitation
@@ -427,6 +414,18 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   }
 
   // rename helper functions if there are gaps
+  simplifyFunctionNames(numCells);
+
+  // pari: convert initial terms to "if"
+  if (pariMode) {
+    convertInitialTermsToIf();
+  }
+
+  // success
+  return true;
+}
+
+void FormulaGenerator::simplifyFunctionNames(int64_t numCells) {
   bool changed = true;
   while (changed) {
     changed = false;
@@ -442,14 +441,6 @@ bool FormulaGenerator::generateSingle(const Program& p) {
       }
     }
   }
-
-  // pari: convert initial terms to "if"
-  if (pariMode) {
-    convertInitialTermsToIf();
-  }
-
-  // success
-  return true;
 }
 
 void FormulaGenerator::convertInitialTermsToIf() {
@@ -467,6 +458,25 @@ void FormulaGenerator::convertInitialTermsToIf() {
       it = formula.entries.erase(it);
     } else {
       it++;
+    }
+  }
+}
+
+void FormulaGenerator::restrictToMain() {
+  Formula tmp;
+  formula.collectEntries(getCellName(Program::OUTPUT_CELL), tmp);
+  formula = tmp;
+  Log::get().debug("Restricted formula: " + formula.toString(false));
+}
+
+void FormulaGenerator::resolveIdentities() {
+  // resolve identities
+  auto entries = formula.entries;  // copy entries
+  for (auto& e : entries) {
+    if (ExpressionUtil::isSimpleFunction(e.first) &&
+        ExpressionUtil::isSimpleFunction(e.second)) {
+      formula.entries.erase(e.first);
+      formula.replaceName(e.second.name, e.first.name);
     }
   }
 }
