@@ -12,6 +12,12 @@
 
 FormulaGenerator::FormulaGenerator(bool pariMode) : pariMode(pariMode) {}
 
+std::string FormulaGenerator::newName() {
+  std::string name = "a" + std::to_string(freeNameIndex);
+  freeNameIndex++;
+  return name;
+}
+
 std::string FormulaGenerator::getCellName(int64_t cell) const {
   auto it = cellNames.find(cell);
   if (it == cellNames.end()) {
@@ -20,8 +26,24 @@ std::string FormulaGenerator::getCellName(int64_t cell) const {
   return it->second;
 }
 
+std::string canonicalName(int64_t index) {
+  if (index < 0) {
+    throw std::runtime_error("negative index of memory cell");
+  }
+  constexpr char MAX_CHAR = 5;
+  if (index > static_cast<int64_t>(MAX_CHAR)) {
+    return std::string(1, 'a' + MAX_CHAR) +
+           std::to_string(index - static_cast<int64_t>(MAX_CHAR));
+  }
+  return std::string(1, 'a' + static_cast<char>(index));
+}
+
 Expression getParamExpr() {
   return Expression(Expression::Type::PARAMETER, "n");
+}
+
+Expression getFuncExpr(const std::string& name) {
+  return Expression(Expression::Type::FUNCTION, name, {getParamExpr()});
 }
 
 Expression FormulaGenerator::operandToExpression(Operand op) const {
@@ -30,8 +52,7 @@ Expression FormulaGenerator::operandToExpression(Operand op) const {
       return Expression(Expression::Type::CONSTANT, "", op.value);
     }
     case Operand::Type::DIRECT: {
-      return Expression(Expression::Type::FUNCTION,
-                        getCellName(op.value.asInt()), {getParamExpr()});
+      return getFuncExpr(getCellName(op.value.asInt()));
     }
     case Operand::Type::INDIRECT: {
       throw std::runtime_error("indirect operation not supported");
@@ -169,7 +190,7 @@ bool FormulaGenerator::update(const Program& p) {
 void FormulaGenerator::resolve(const Expression& left,
                                Expression& right) const {
   if (right.type == Expression::Type::FUNCTION) {
-    Expression lookup(Expression::Type::FUNCTION, right.name, {getParamExpr()});
+    auto lookup = getFuncExpr(right.name);
     if (lookup != left) {
       auto it = formula.entries.find(lookup);
       if (it != formula.entries.end()) {
@@ -209,11 +230,18 @@ int64_t getNumInitialTermsNeeded(int64_t cell, const std::string& funcName,
       break;
     }
   }
+  int64_t totalNumTerms;
   if (f.isRecursive(funcName)) {
-    return std::max<int64_t>(localNumTerms, globalNumTerms);
+    totalNumTerms = std::max<int64_t>(localNumTerms, globalNumTerms);
   } else {
-    return localNumTerms;
+    totalNumTerms = localNumTerms;
   }
+  // print debug info
+  std::string msg = " number of terms for " + funcName + ": ";
+  Log::get().debug("Local" + msg + std::to_string(localNumTerms));
+  Log::get().debug("Global" + msg + std::to_string(globalNumTerms));
+  Log::get().debug("Total" + msg + std::to_string(totalNumTerms));
+  return totalNumTerms;
 }
 
 void FormulaGenerator::initFormula(int64_t numCells, bool use_ie) {
@@ -236,18 +264,6 @@ void FormulaGenerator::initFormula(int64_t numCells, bool use_ie) {
       }
     }
   }
-}
-
-std::string memoryCellToName(int64_t cell) {
-  if (cell < 0) {
-    throw std::runtime_error("negative index of memory cell");
-  }
-  constexpr char MAX_CHAR = 5;
-  if (cell > static_cast<int64_t>(MAX_CHAR)) {
-    return std::string(1, 'a' + MAX_CHAR) +
-           std::to_string(cell - static_cast<int64_t>(MAX_CHAR));
-  }
-  return std::string(1, 'a' + static_cast<char>(cell));
 }
 
 bool FormulaGenerator::generateSingle(const Program& p) {
@@ -278,7 +294,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   // initialize function names for memory cells
   cellNames.clear();
   for (int64_t cell = 0; cell < numCells; cell++) {
-    cellNames[cell] = memoryCellToName(cell);
+    cellNames[cell] = newName();
   }
 
   // initialize expressions for memory cells
@@ -314,60 +330,23 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     auto copy = formula;
     for (auto& e : copy.entries) {
       resolve(e.first, e.second);
-      Log::get().debug("Resolved formula: " + copy.toString(false));
     }
     formula = copy;
+    Log::get().debug("Resolved formula: " + formula.toString(false));
 
-    // handle post-loop code
-    auto post = ie.getPostLoop();
-    bool hasArithmetic = false;
-    bool wroteOut = false;
-    Operand out(Operand::Type::DIRECT, Number::ZERO);
-    for (auto& op : post.ops) {
-      auto meta = Operation::Metadata::get(op.type);
-      auto t = operandToExpression(op.target);
-      // TODO: remove this limitation
-      if (!wroteOut &&
-          (op.source == out || (op.target == out && meta.is_reading_target))) {
-        return false;
-      }
-      // TODO: remove this limitation
-      if (op.type == Operation::Type::MOV &&
-          op.source.type == Operand::Type::DIRECT) {
-        if (hasArithmetic) {
-          return false;
-        }
-        if (op.target == out) {
-          wroteOut = true;
-        }
-        auto s = operandToExpression(op.source);
-        formula.entries[t] = s;
-      } else {
-        if (!update(op)) {
-          return false;
-        }
-        hasArithmetic = true;
-      }
-    }
-    Log::get().debug("Updated formula:  " + formula.toString(false));
-  }
-
-  // extract main formula (filter out irrelant memory cells)
-  restrictToMain();
-
-  // add initial terms for IE programs
-  if (use_ie) {
+    // determine number of initial terms needed
     std::vector<int64_t> numTerms(numCells);
+    int64_t maxNumTerms = 0;
     for (int64_t cell = 0; cell < numCells; cell++) {
       numTerms[cell] = getNumInitialTermsNeeded(cell, getCellName(cell),
                                                 formula, ie, interpreter);
+      maxNumTerms = std::max(maxNumTerms, numTerms[cell]);
     }
 
     // evaluate program and add initial terms to formula
-    for (int64_t offset = 0; offset < numCells; offset++) {
+    for (int64_t offset = 0; offset < maxNumTerms; offset++) {
       ie.next();
-      auto state = ie.getLoopState();
-      interpreter.run(ie.getPostLoop(), state);
+      const auto state = ie.getLoopState();
       for (int64_t cell = 0; cell < numCells; cell++) {
         if (offset < numTerms[cell]) {
           Expression index(Expression::Type::CONSTANT, "", Number(offset));
@@ -377,15 +356,32 @@ bool FormulaGenerator::generateSingle(const Program& p) {
           formula.entries[func] = val;
         }
       }
+      Log::get().debug("Added intial terms: " + formula.toString(false));
     }
-    Log::get().debug("Added intial terms: " + formula.toString(false));
 
-    // resolve identities
-    resolveIdentities();
+    // prepare post-loop processing
+    for (int64_t cell = 0; cell < numCells; cell++) {
+      auto name = newName();
+      auto left = getFuncExpr(name);
+      auto right = getFuncExpr(getCellName(cell));
+      formula.entries[left] = right;
+      cellNames[cell] = name;
+    }
+    Log::get().debug("Prepared post-loop: " + formula.toString(false));
 
-    // need to filter again
-    restrictToMain();
+    // handle post-loop code
+    auto post = ie.getPostLoop();
+    if (!update(post)) {
+      return false;
+    }
+    Log::get().debug("Processed post-loop: " + formula.toString(false));
   }
+
+  // extract main formula (filter out irrelant memory cells)
+  restrictToMain();
+
+  // resolve identities
+  resolveIdentities();
 
   // TODO: avoid this limitation
   auto deps = formula.getFunctionDeps(true);
@@ -413,41 +409,41 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     }
   }
 
-  // rename helper functions if there are gaps
-  simplifyFunctionNames(numCells);
-
   // pari: convert initial terms to "if"
   if (pariMode) {
     convertInitialTermsToIf();
   }
 
+  Log::get().debug("Generated formula: " + formula.toString(false));
+
   // success
   return true;
 }
 
-void FormulaGenerator::simplifyFunctionNames(int64_t numCells) {
-  bool changed = true;
-  while (changed) {
-    changed = false;
-    for (int64_t cell = 1; cell < numCells; cell++) {
-      auto from = memoryCellToName(cell);
-      auto to = memoryCellToName(cell - 1);
-      if (formula.containsFunctionDef(from) &&
-          !formula.containsFunctionDef(to)) {
-        formula.replaceName(from, to);
-        Log::get().debug("Renamed function " + from + " to " + to + ": " +
-                         formula.toString(false));
-        changed = true;
-      }
+void FormulaGenerator::simplifyFunctionNames() {
+  std::set<std::string> names;
+  for (auto& e : formula.entries) {
+    auto& f = e.first;
+    if (f.type == Expression::Type::FUNCTION && !f.name.empty() &&
+        std::islower(f.name[0])) {
+      names.insert(e.first.name);
     }
+  }
+  formula.replaceName(getCellName(0), canonicalName(0));
+  size_t cell = 1;
+  for (auto& n : names) {
+    if (n == getCellName(0)) {
+      continue;
+    }
+    formula.replaceName(n, canonicalName(cell++));
   }
 }
 
 void FormulaGenerator::convertInitialTermsToIf() {
   auto it = formula.entries.begin();
   while (it != formula.entries.end()) {
-    Expression left = it->first;
-    Expression general(Expression::Type::FUNCTION, left.name, {getParamExpr()});
+    auto left = it->first;
+    auto general = getFuncExpr(left.name);
     auto general_it = formula.entries.find(general);
     if (left.type == Expression::Type::FUNCTION && left.children.size() == 1 &&
         left.children.front()->type == Expression::Type::CONSTANT &&
@@ -474,11 +470,13 @@ void FormulaGenerator::resolveIdentities() {
   auto entries = formula.entries;  // copy entries
   for (auto& e : entries) {
     if (ExpressionUtil::isSimpleFunction(e.first) &&
-        ExpressionUtil::isSimpleFunction(e.second)) {
+        ExpressionUtil::isSimpleFunction(e.second) &&
+        entries.find(e.second) != entries.end()) {
       formula.entries.erase(e.first);
       formula.replaceName(e.second.name, e.first.name);
     }
   }
+  Log::get().debug("Resolved identities: " + formula.toString(false));
 }
 
 bool addProgramIds(const Program& p, std::set<int64_t>& ids) {
@@ -502,31 +500,15 @@ bool addProgramIds(const Program& p, std::set<int64_t>& ids) {
   return true;
 }
 
-void addFormula(Formula& main, Formula extension) {
-  int64_t numCells =
-      main.entries.size() + extension.entries.size() + 1;  // upper bound
-  for (int64_t i = 0; i < numCells; i++) {
-    auto from = memoryCellToName(i);
-    if (main.containsFunctionDef(from) && extension.containsFunctionDef(from)) {
-      for (int64_t j = 1; j < numCells; j++) {
-        auto to = memoryCellToName(j);
-        if (!main.containsFunctionDef(to) &&
-            !extension.containsFunctionDef(to)) {
-          Log::get().debug("Replacing " + from + " by " + to);
-          extension.replaceName(from, to);
-          break;
-        }
-      }
-    }
-  }
-  main.entries.insert(extension.entries.begin(), extension.entries.end());
-}
-
 bool FormulaGenerator::generate(const Program& p, int64_t id, Formula& result,
                                 bool withDeps) {
+  formula.clear();
+  freeNameIndex = 0;
   if (!generateSingle(p)) {
     return false;
   }
+  static const std::string mainName = "MAIN";  // must be upper case
+  formula.replaceName(getCellName(0), mainName);
   result = formula;
   if (withDeps) {
     std::set<int64_t> ids;
@@ -536,6 +518,7 @@ bool FormulaGenerator::generate(const Program& p, int64_t id, Formula& result,
     Parser parser;
     for (auto id2 : ids) {
       OeisSequence seq(id2);
+      Log::get().debug("Adding dependency " + seq.id_str());
       Program p2;
       try {
         p2 = parser.parse(seq.getProgramPath());
@@ -551,8 +534,13 @@ bool FormulaGenerator::generate(const Program& p, int64_t id, Formula& result,
       auto to = seq.id_str();
       Log::get().debug("Replacing " + from + " by " + to);
       formula.replaceName(from, to);
-      addFormula(result, formula);
+      result.entries.insert(formula.entries.begin(), formula.entries.end());
     }
   }
+  // rename helper functions
+  formula = result;
+  simplifyFunctionNames();
+  formula.replaceName(mainName, canonicalName(0));
+  result = formula;
   return true;
 }

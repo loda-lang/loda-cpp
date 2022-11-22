@@ -22,13 +22,15 @@ class FormulaGenerator {
 
   void resolve(const Expression& left, Expression& right) const;
 
+  std::string newName();
+
   std::string getCellName(int64_t cell) const;
 
   Expression operandToExpression(Operand op) const;
 
   void convertInitialTermsToIf();
 
-  void simplifyFunctionNames(int64_t numCells);
+  void simplifyFunctionNames();
 
   void restrictToMain();
 
@@ -37,4 +39,5 @@ class FormulaGenerator {
   const bool pariMode;
   Formula formula;
   std::map<int64_t, std::string> cellNames;
+  size_t freeNameIndex;
 };

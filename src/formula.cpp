@@ -112,14 +112,10 @@ bool Formula::isRecursive(std::string funcName) const {
 
 int64_t getNumTerms(const Expression& e) {
   int64_t numTerms = 0;
-  if (e.type == Expression::Type::FUNCTION) {
-    for (auto c : e.children) {
-      if (c->type == Expression::Type::DIFFERENCE && c->children.size() == 2 &&
-          c->children[0]->type == Expression::Type::PARAMETER &&
-          c->children[1]->type == Expression::Type::CONSTANT) {
-        numTerms = std::max(numTerms, c->children[1]->value.asInt());
-      }
-    }
+  if (e.type == Expression::Type::DIFFERENCE && e.children.size() == 2 &&
+      e.children[0]->type == Expression::Type::PARAMETER &&
+      e.children[1]->type == Expression::Type::CONSTANT) {
+    numTerms = std::max(numTerms, e.children[1]->value.asInt());
   }
   for (auto c : e.children) {
     numTerms = std::max(numTerms, getNumTerms(*c));

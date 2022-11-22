@@ -2,13 +2,15 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v22.11.22
+
 ### Bugfixes
 
 * Fix incorrect result of incremental evaluator
 
 ### Enhancements
 
-* Support more recursive formulas, e.g. [A000142](https://loda-lang.org/edit/?oeis=142)
+* Support more recursive formulas
 * Internal command for finding slow programs
 
 ## v22.11.12
