@@ -417,7 +417,7 @@ void OeisManager::generateStats(int64_t age_in_days) {
   size_t num_processed = 0;
   Program program;
   std::string file_name;
-  bool has_b_file, has_program;
+  bool has_program;
 
   AdaptiveScheduler notify(20);  // magic number
   for (auto &s : sequences) {
@@ -426,8 +426,6 @@ void OeisManager::generateStats(int64_t age_in_days) {
     }
     file_name = s.getProgramPath();
     std::ifstream program_file(file_name);
-    std::ifstream b_file(s.getBFilePath());
-    has_b_file = b_file.good();
     has_program = false;
     if (program_file.good()) {
       try {
@@ -446,7 +444,7 @@ void OeisManager::generateStats(int64_t age_in_days) {
       stats->updateProgramStats(s.id, program);
       num_processed++;
     }
-    stats->updateSequenceStats(s.id, has_program, has_b_file);
+    stats->updateSequenceStats(s.id, has_program);
     if (notify.isTargetReached()) {
       notify.reset();
       Log::get().info("Processed " + std::to_string(num_processed) +

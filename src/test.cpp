@@ -987,25 +987,11 @@ void Test::stats() {
                          "!=" + std::to_string(t.all_program_ids.size()),
                      true);
   }
-  if (s.cached_b_files.size() != t.cached_b_files.size()) {
-    Log::get().error("Unexpected number of cached b-files: " +
-                         std::to_string(s.cached_b_files.size()) +
-                         "!=" + std::to_string(t.cached_b_files.size()),
-                     true);
-  }
   for (size_t i = 0; i < s.all_program_ids.size(); i++) {
     auto a = s.all_program_ids.at(i);
     auto b = t.all_program_ids.at(i);
     if (a != b) {
       Log::get().error("Unexpected found programs for: " + std::to_string(i),
-                       true);
-    }
-  }
-  for (size_t i = 0; i < s.cached_b_files.size(); i++) {
-    auto a = s.cached_b_files.at(i);
-    auto b = t.cached_b_files.at(i);
-    if (a != b) {
-      Log::get().error("Unexpected cached b-files for: " + std::to_string(i),
                        true);
     }
   }

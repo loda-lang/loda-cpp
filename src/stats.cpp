@@ -11,6 +11,19 @@
 #include "program_util.hpp"
 #include "setup.hpp"
 
+const std::string Stats::CALL_GRAPH_HEADER("caller,callee");
+const std::string Stats::PROGRAMS_HEADER("id,length");
+const std::string Stats::STEPS_HEADER("total,min,max,runs");
+const std::string Stats::SUMMARY_HEADER("num_programs,num_sequences");
+
+void checkHeader(std::istream &in, const std::string &header,
+                 const std::string &file) {
+  std::string line;
+  if (!std::getline(in, line) || line != header) {
+    throw std::runtime_error("unexpected header in " + file);
+  }
+}
+
 Stats::Stats()
     : num_programs(0),
       num_sequences(0),
@@ -127,29 +140,24 @@ void Stats::load(std::string path) {
     Log::get().debug("Loading " + full);
     std::ifstream programs(full);
     all_program_ids.resize(100000, false);
-    cached_b_files.resize(100000, false);
     program_lengths.resize(100000, false);
     int64_t largest_id = 0;
+    checkHeader(programs, PROGRAMS_HEADER, full);
     while (std::getline(programs, line)) {
       std::stringstream s(line);
       std::getline(s, k, ',');
-      std::getline(s, v, ',');
-      std::getline(s, w, ',');
       std::getline(s, l);
       int64_t id = std::stoll(k);
       largest_id = std::max<int64_t>(largest_id, id);
       if ((size_t)id >= all_program_ids.size()) {
         size_t new_size = std::max<size_t>(all_program_ids.size() * 2, id + 1);
         all_program_ids.resize(new_size);
-        cached_b_files.resize(new_size);
         program_lengths.resize(new_size);
       }
-      all_program_ids[id] = std::stoll(v);
-      cached_b_files[id] = std::stoll(w);
+      all_program_ids[id] = true;
       program_lengths[id] = std::stoll(l);
     }
     all_program_ids.resize(largest_id + 1);
-    cached_b_files.resize(largest_id + 1);
     program_lengths.resize(largest_id + 1);
     programs.close();
   }
@@ -162,7 +170,7 @@ void Stats::load(std::string path) {
     while (std::getline(latest_programs, line)) {
       int64_t id = std::stoll(line);
       if (id < 0 || id > 1000000) {
-        throw std::runtime_error("Unexpected latest program ID: " +
+        throw std::runtime_error("unexpected latest program ID: " +
                                  std::to_string(id));
       }
       if (id >= static_cast<int64_t>(latest_program_ids.size())) {
@@ -179,9 +187,7 @@ void Stats::load(std::string path) {
     full = path + "call_graph.csv";
     Log::get().debug("Loading " + full);
     std::ifstream call(full);
-    if (!std::getline(call, line) || line != "caller,callee") {
-      throw std::runtime_error("Unexpected first line in " + full);
-    }
+    checkHeader(call, CALL_GRAPH_HEADER, full);
     call_graph.clear();
     while (std::getline(call, line)) {
       std::stringstream s(line);
@@ -197,9 +203,7 @@ void Stats::load(std::string path) {
     full = path + "summary.csv";
     Log::get().debug("Loading " + full);
     std::ifstream summary(full);
-    if (!std::getline(summary, line) || line != "num_programs,num_sequences") {
-      throw std::runtime_error("Unexpected first line in " + full);
-    }
+    checkHeader(summary, SUMMARY_HEADER, full);
     std::getline(summary, k, ',');
     std::getline(summary, v);
     num_programs = std::stoll(k);
@@ -225,12 +229,10 @@ void Stats::save(std::string path) {
   constants.close();
 
   std::ofstream programs(path + "programs.csv");
-  for (size_t i = 0; i < all_program_ids.size(); i++) {
-    const bool f = all_program_ids[i];
-    const bool b = cached_b_files[i];
-    const int64_t l = program_lengths[i];
-    if (f || b || l) {
-      programs << i << sep << f << sep << b << sep << l << "\n";
+  programs << PROGRAMS_HEADER << "\n";
+  for (size_t id = 0; id < all_program_ids.size(); id++) {
+    if (all_program_ids[id]) {
+      programs << id << sep << program_lengths[id] << "\n";
     }
   }
   programs.close();
@@ -282,12 +284,12 @@ void Stats::save(std::string path) {
   oppos_counts.close();
 
   std::ofstream summary(path + "summary.csv");
-  summary << "num_programs,num_sequences\n";
+  summary << SUMMARY_HEADER << "\n";
   summary << num_programs << sep << num_sequences << "\n";
   summary.close();
 
   std::ofstream cal(path + "call_graph.csv");
-  cal << "caller,callee\n";
+  cal << CALL_GRAPH_HEADER << "\n";
   for (auto it : call_graph) {
     cal << OeisSequence(it.first).id_str() << sep
         << OeisSequence(it.second).id_str() << "\n";
@@ -296,7 +298,7 @@ void Stats::save(std::string path) {
 
   if (steps.total) {  // write steps stats only if present
     std::ofstream steps_out(path + "steps.csv");
-    steps_out << "total,min,max,runs\n";
+    steps_out << STEPS_HEADER << "\n";
     steps_out << steps.total << sep << steps.min << sep << steps.max << sep
               << steps.runs << "\n";
     steps_out.close();
@@ -362,18 +364,15 @@ void Stats::updateProgramStats(size_t id, const Program &program) {
   blocks_collector.add(program);
 }
 
-void Stats::updateSequenceStats(size_t id, bool program_found,
-                                bool has_b_file) {
+void Stats::updateSequenceStats(size_t id, bool program_found) {
   num_sequences++;
   if (id >= all_program_ids.size()) {
     const size_t new_size =
         std::max<size_t>(id + 1, 2 * all_program_ids.size());
     all_program_ids.resize(new_size);
-    cached_b_files.resize(new_size);
     program_lengths.resize(new_size);
   }
   all_program_ids[id] = program_found;
-  cached_b_files[id] = has_b_file;
 }
 
 void Stats::finalize() {

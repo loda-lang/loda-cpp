@@ -31,6 +31,11 @@ class OpPos {
 
 class Stats {
  public:
+  static const std::string CALL_GRAPH_HEADER;
+  static const std::string PROGRAMS_HEADER;
+  static const std::string STEPS_HEADER;
+  static const std::string SUMMARY_HEADER;
+
   Stats();
 
   void load(std::string path);
@@ -41,7 +46,7 @@ class Stats {
 
   void updateProgramStats(size_t id, const Program &program);
 
-  void updateSequenceStats(size_t id, bool program_found, bool has_b_file);
+  void updateSequenceStats(size_t id, bool program_found);
 
   void finalize();
 
@@ -59,7 +64,6 @@ class Stats {
   std::vector<int64_t> program_lengths;
   std::vector<bool> all_program_ids;
   std::vector<bool> latest_program_ids;
-  std::vector<bool> cached_b_files;
   Blocks blocks;
 
  private:
