@@ -364,6 +364,12 @@ bool FormulaGenerator::generateSingle(const Program& p) {
       auto name = newName();
       auto left = getFuncExpr(name);
       auto right = getFuncExpr(getCellName(cell));
+      if (cell == ie.getLoopCounterCell()) {
+        auto tmp = right;
+        right = Expression(
+            Expression::Type::FUNCTION, "min",
+            {right, Expression(Expression::Type::CONSTANT, "", Number::ZERO)});
+      }
       formula.entries[left] = right;
       cellNames[cell] = name;
     }
@@ -385,20 +391,11 @@ bool FormulaGenerator::generateSingle(const Program& p) {
 
   // TODO: avoid this limitation
   auto deps = formula.getFunctionDeps(true);
-  std::set<std::string> recursive, keys;
-  for (auto e : formula.entries) {
-    if (e.first.type == Expression::Type::FUNCTION) {
-      keys.insert(e.first.name);
-    }
-  }
+  std::set<std::string> recursive;
   for (auto it : deps) {
-    // std::cout << it.first << " => " << it.second << std::endl;
     if (it.first == it.second) {
       recursive.insert(it.first);
     }
-  }
-  if (keys.size() > 2) {
-    return false;
   }
   if (recursive.size() > 1) {
     return false;
