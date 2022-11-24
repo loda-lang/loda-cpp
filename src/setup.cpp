@@ -459,7 +459,10 @@ std::string Setup::getLatestVersion() {
   const std::string local_release_info(".latest-release.json");
   const std::string release_info_url(
       "https://api.github.com/repos/loda-lang/loda-cpp/releases/latest");
-  WebClient::get(release_info_url, local_release_info, true, true);
+  if (!WebClient::get(release_info_url, local_release_info, true, false)) {
+    Log::get().warn("Cannot get latest version info and check for updates");
+    return Version::BRANCH;  // pretend we are on the latest version
+  }
   const std::string content = getFileAsString(local_release_info);
   std::remove(local_release_info.c_str());
   auto json = jute::parser::parse(content);

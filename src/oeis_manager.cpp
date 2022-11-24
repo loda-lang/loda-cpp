@@ -360,14 +360,15 @@ void OeisManager::update() {
       Log::get().info(msg);
       // update programs repository using git pull
       git(progs_dir, "pull origin main -q --ff-only");
-      // touch marker file to track the age
-      ensureDir(update_progs_file);
-      std::ofstream marker(update_progs_file);
-      if (marker) {
-        marker << "1" << std::endl;
-      } else {
-        Log::get().warn("Cannot write update marker: " + update_progs_file);
-      }
+    }
+
+    // touch marker file to track the age (even in sever mode)
+    ensureDir(update_progs_file);
+    std::ofstream marker(update_progs_file);
+    if (marker) {
+      marker << "1" << std::endl;
+    } else {
+      Log::get().warn("Cannot write update marker: " + update_progs_file);
     }
 
     // clean up local programs folder
