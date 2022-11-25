@@ -362,7 +362,7 @@ void OeisManager::update() {
       git(progs_dir, "pull origin main -q --ff-only");
     }
 
-    // touch marker file to track the age (even in sever mode)
+    // touch marker file to track the age (even in server mode)
     ensureDir(update_progs_file);
     std::ofstream marker(update_progs_file);
     if (marker) {

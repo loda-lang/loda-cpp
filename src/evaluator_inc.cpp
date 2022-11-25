@@ -1,5 +1,6 @@
 #include "evaluator_inc.hpp"
 
+#include "log.hpp"
 #include "program_util.hpp"
 #include "semantics.hpp"
 #include "util.hpp"
@@ -33,20 +34,25 @@ void IncrementalEvaluator::reset() {
 bool IncrementalEvaluator::init(const Program& program) {
   reset();
   if (!extractFragments(program)) {
+    Log::get().debug("[IE] extraction of fragments failed");
     return false;
   }
   // now the program fragments and the loop counter cell are initialized
   if (!checkPreLoop()) {
+    Log::get().debug("[IE] pre-loop check failed");
     return false;
   }
   if (!checkPostLoop()) {
+    Log::get().debug("[IE] post-loop check failed");
     return false;
   }
   // now the output cells are initialized
   if (!checkLoopBody()) {
+    Log::get().debug("[IE] loop body check failed");
     return false;
   }
   initialized = true;
+  Log::get().debug("[IE] initialization successful");
   return true;
 }
 
@@ -97,10 +103,31 @@ bool IncrementalEvaluator::checkPreLoop() {
   // here we do a static code analysis of the pre-loop
   // fragment to make sure here that the loop counter cell
   // is monotonically increasing (not strictly)
+  static const Operand input_op(Operand::Type::DIRECT, Program::INPUT_CELL);
+  bool loop_counter_initialized = (loop_counter_cell == Program::INPUT_CELL);
+  bool needs_input_reset = false;
   for (auto& op : pre_loop.ops) {
     switch (op.type) {
-      // setting, adding, subtracting constants is fine
       case Operation::Type::MOV:
+        // using other cells as loop counters is allowed
+        if (op.target.value.asInt() == loop_counter_cell) {
+          if (op.source != input_op) {
+            return false;
+          }
+          loop_counter_initialized = true;
+          needs_input_reset = true;
+        } else {
+          // non-loop-counters can be initialized only with constants
+          if (op.source.type != Operand::Type::CONSTANT) {
+            return false;
+          }
+          if (op.target.value.asInt() == Program::INPUT_CELL) {
+            needs_input_reset = false;
+          }
+        }
+        break;
+
+      // adding, subtracting constants is fine
       case Operation::Type::ADD:
       case Operation::Type::SUB:
       case Operation::Type::TRN:
@@ -112,8 +139,9 @@ bool IncrementalEvaluator::checkPreLoop() {
       // multiplying, dividing by non-negative constants is ok
       case Operation::Type::MUL:
       case Operation::Type::DIV:
+      case Operation::Type::POW:
         if (op.source.type != Operand::Type::CONSTANT ||
-            op.source.value < Number::ZERO) {
+            op.source.value < Number::ONE) {
           return false;
         }
         break;
@@ -123,8 +151,7 @@ bool IncrementalEvaluator::checkPreLoop() {
         return false;
     }
   }
-  // we currently allow only $0 as loop counter cell
-  if (loop_counter_cell != Program::INPUT_CELL) {
+  if (!loop_counter_initialized || needs_input_reset) {
     return false;
   }
   return true;
@@ -307,7 +334,7 @@ std::pair<Number, size_t> IncrementalEvaluator::next() {
     throw std::runtime_error("incremental evaluator not initialized");
   }
 
-  // execute pre-loop code; TODO: do this only once
+  // execute pre-loop code
   tmp_state.clear();
   tmp_state.set(Program::INPUT_CELL, argument);
   size_t steps = interpreter.run(pre_loop, tmp_state);
@@ -338,7 +365,7 @@ std::pair<Number, size_t> IncrementalEvaluator::next() {
 
   // one more iteration is needed for the correct step count
   tmp_state = loop_state;
-  tmp_state.set(Program::INPUT_CELL, Number::ZERO);
+  tmp_state.set(loop_counter_cell, Number::ZERO);
   steps += interpreter.run(loop_body, tmp_state) + 1;  // +1 for lpb
 
   // execute post-loop code
