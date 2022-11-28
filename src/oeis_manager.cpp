@@ -514,6 +514,8 @@ void OeisManager::generateLists() {
       list_file << "List of integer sequences with links to LODA programs."
                 << "\n\n";
       list_file << buf;
+      list_file << "\n\n[License Info](https://github.com/loda-lang/"
+                   "loda-programs#license)\n";
     }
   }
   std::ofstream no_loda_file(lists_home + "no_loda.txt");
