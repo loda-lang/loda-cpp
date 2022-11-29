@@ -438,10 +438,14 @@ void Commands::benchmark() {
   benchmark.smokeTest();
 }
 
-void Commands::findSlow() {
+void Commands::findSlow(const std::string& type) {
   initLog(false);
+  auto t = Operation::Type::NOP;
+  if (!type.empty()) {
+    t = Operation::Metadata::get(type).type;
+  }
   Benchmark benchmark;
-  benchmark.findSlow();
+  benchmark.findSlow(t);
 }
 
 void Commands::lists() {

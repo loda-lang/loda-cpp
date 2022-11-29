@@ -54,7 +54,7 @@ class Commands {
 
   void benchmark();
 
-  void findSlow();
+  void findSlow(const std::string& type);
 
   void lists();
 

@@ -12,7 +12,7 @@ class Benchmark {
 
   void programs();
 
-  void findSlow();
+  void findSlow(Operation::Type type);
 
  private:
   void program(size_t id, size_t num_terms);

@@ -141,7 +141,7 @@ std::string Benchmark::programEval(const Program& p, bool use_inc_eval,
   return buf.str();
 }
 
-void Benchmark::findSlow() {
+void Benchmark::findSlow(Operation::Type type) {
   Parser parser;
   Settings settings;
   Interpreter interpreter(settings);
@@ -156,6 +156,9 @@ void Benchmark::findSlow() {
       continue;
     }
     auto program = parser.parse(in);
+    if (type != Operation::Type::NOP && !ProgramUtil::hasOp(program, type)) {
+      continue;
+    }
     auto start_time = std::chrono::steady_clock::now();
     evaluator.eval(program, seq, numTerms, false);
     auto end_time = std::chrono::steady_clock::now();
