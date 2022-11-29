@@ -207,10 +207,14 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
     commands.benchmark();
   } else if (cmd == "find-slow") {
     std::string type;
+    int64_t num_terms = 10;
     if (args.size() > 1) {
-      type = args.at(1);
+      num_terms = stoll(args.at(1));
     }
-    commands.findSlow(type);
+    if (args.size() > 2) {
+      type = args.at(2);
+    }
+    commands.findSlow(num_terms, type);
   } else if (cmd == "lists") {
     commands.lists();
   } else if (cmd == "compare") {
