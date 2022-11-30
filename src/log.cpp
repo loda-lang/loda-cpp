@@ -80,7 +80,7 @@ void Log::alert(const std::string &msg, AlertDetails details) {
     if (slack_alerts) {
       slack(copy, details);
     }
-    if (tweet_alerts) {
+    if (tweet_alerts && details.tweet) {
       tweet(copy);
     }
   }

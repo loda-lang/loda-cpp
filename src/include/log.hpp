@@ -12,6 +12,7 @@ class Log {
     std::string title;
     std::string title_link;
     std::string color;
+    bool tweet;
   };
 
   Log();

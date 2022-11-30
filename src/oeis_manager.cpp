@@ -681,7 +681,7 @@ void OeisManager::dumpProgram(size_t id, Program &p, const std::string &file,
 
 void OeisManager::alert(Program p, size_t id, const std::string &prefix,
                         const std::string &color,
-                        const std::string &submitted_by) const {
+                        const std::string &submitted_by, bool tweet) const {
   auto &seq = sequences.at(id);
   std::stringstream buf;
   buf << prefix << " program for " << seq
@@ -699,6 +699,7 @@ void OeisManager::alert(Program p, size_t id, const std::string &prefix,
   details.title = seq.id_str();
   details.title_link = seq.url_str();
   details.color = color;
+  details.tweet = tweet;
   buf << "\\n\\`\\`\\`\\n";
   ProgramUtil::removeOps(p, Operation::Type::NOP);
   addSeqComments(p);
@@ -810,7 +811,7 @@ update_program_result_t OeisManager::updateProgram(
 
   // send alert
   std::string color = is_new ? "good" : "warning";
-  alert(result.program, id, checked.first, color, submitted_by);
+  alert(result.program, id, checked.first, color, submitted_by, is_new);
 
   return result;
 }
@@ -870,7 +871,7 @@ bool OeisManager::maintainProgram(size_t id) {
 
   if (!is_okay) {
     // send alert and remove file
-    alert(program, id, "Removed invalid", "danger", "");
+    alert(program, id, "Removed invalid", "danger", "", false);
     remove(file_name.c_str());
     return false;
   } else {

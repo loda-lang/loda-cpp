@@ -37,13 +37,13 @@ pushd $HOME > /dev/null
 
 for i in $(seq 1 ${num_new}); do
   echo "Starting new-${i}"
-  nohup loda mine -i server-new > $HOME/new-${i}.out 2>&1 &
+  nohup loda mine -i server-new > $HOME/miner-new-${i}.out 2>&1 &
   sleep 2
 done
 
 for i in $(seq 1 ${num_update}); do
   echo "Starting update-${i}"
-  nohup loda mine -i server-update > $HOME/update-${i}.out 2>&1 &
+  nohup loda mine -i server-update > $HOME/miner-update-${i}.out 2>&1 &
   sleep 2
 done
 
