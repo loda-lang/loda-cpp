@@ -76,7 +76,7 @@ void OeisManager::load() {
     FolderLock lock(Setup::getOeisHome());
 
     // update index if needed
-    update();
+    update(false);
 
     // load sequence data, names and deny list
     Log::get().info("Loading sequences from the OEIS index");
@@ -303,10 +303,11 @@ bool OeisManager::shouldMatch(const OeisSequence &seq) const {
   return true;  // unreachable
 }
 
-void OeisManager::update() {
+void OeisManager::update(bool force) {
   std::vector<std::string> files = {"stripped", "names"};
 
   // check whether oeis files need to be updated
+  update_oeis = false;
   auto it = files.begin();
   int64_t oeis_age_in_days = -1;
   while (it != files.end()) {
@@ -321,6 +322,7 @@ void OeisManager::update() {
   }
 
   // check whether programs need to be updated
+  update_programs = false;
   const std::string progs_dir = Setup::getProgramsHome();
   const std::string local_dir = progs_dir + "local";
   const std::string update_progs_file = local_dir + FILE_SEP + ".update";
@@ -330,9 +332,26 @@ void OeisManager::update() {
     update_programs = true;
   }
 
+  // figure out if we should check for loda update
+  bool check_loda_update = (update_oeis && (Random::get().gen() % 5 == 0));
+
+  // force update?
+  if (force) {
+    update_oeis = true;
+    update_programs = true;
+    check_loda_update = true;
+  }
+
+  // check and perform loda update
+  if (check_loda_update) {
+    auto latest_version = Setup::checkLatestedVersion(false);
+    if (force && !latest_version.empty()) {
+      Setup::performUpdate(latest_version, false);
+    }
+  }
+
   // perform oeis update
   if (update_oeis) {
-    Setup::checkLatestedVersion();
     if (oeis_age_in_days == -1) {
       Log::get().info("Creating OEIS index at \"" + Setup::getOeisHome() +
                       "\"");
@@ -683,24 +702,26 @@ void OeisManager::alert(Program p, size_t id, const std::string &prefix,
                         const std::string &color,
                         const std::string &submitted_by, bool tweet) const {
   auto &seq = sequences.at(id);
-  std::stringstream buf;
-  buf << prefix << " program for " << seq
-      << " Terms: " << seq.getTerms(settings.num_terms);
+  std::string msg, full;
+  msg = prefix + " program for " + seq.to_string();
+  full = msg + " Terms: " + seq.getTerms(settings.num_terms).to_string();
   FormulaGenerator gen(false);
   Formula formula;
   if (gen.generate(p, id, formula, false)) {
-    buf << ". Formula: " << formula.toString(false);
+    full += ". Formula: " + formula.toString(false);
   }
   if (!submitted_by.empty()) {
-    buf << ". " << ProgramUtil::PREFIX_SUBMITTED_BY << " " << submitted_by;
+    std::string sub = ProgramUtil::PREFIX_SUBMITTED_BY + " " + submitted_by;
+    msg += " " + sub;
+    full += ". " + sub;
   }
-  auto msg = buf.str();
   Log::AlertDetails details;
   details.title = seq.id_str();
   details.title_link = seq.url_str();
   details.color = color;
   details.tweet = tweet;
-  buf << "\\n\\`\\`\\`\\n";
+  std::stringstream buf;
+  buf << full << "\\n\\`\\`\\`\\n";
   ProgramUtil::removeOps(p, Operation::Type::NOP);
   addSeqComments(p);
   ProgramUtil::print(p, buf, "\\n");
