@@ -134,6 +134,8 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
   // official commands
   if (cmd == "setup") {
     commands.setup();
+  } else if (cmd == "update") {
+    commands.update();
   } else if (cmd == "evaluate" || cmd == "eval") {
     commands.evaluate(args.at(1));
   } else if (cmd == "check") {

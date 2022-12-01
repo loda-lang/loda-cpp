@@ -2,6 +2,8 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v22.12.1
+
 ### Bugfixes
 
 * Fix update issues
@@ -9,6 +11,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Feature
 
 * Install script
+* Update command
 
 ### Enhancements
 

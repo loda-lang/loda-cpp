@@ -63,7 +63,7 @@ class Setup {
 
   static std::string getLatestVersion();
 
-  static void checkLatestedVersion();
+  static std::string checkLatestedVersion(bool silent);
 
   static bool hasMemory();
 
@@ -72,6 +72,8 @@ class Setup {
   static void forceCPUHours();
 
   static void runWizard();
+
+  static void performUpdate(const std::string& new_version, bool silent);
 
  private:
   static constexpr int64_t UNDEFINED_INT = -2;                  // cannot use -1
@@ -114,4 +116,6 @@ class Setup {
   static bool updateFile(const std::string& local_file, const std::string& url,
                          const std::string& header, const std::string& marker,
                          bool executable);
+
+  static std::string getExecutable(const std::string& suffix);
 };

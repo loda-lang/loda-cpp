@@ -51,8 +51,6 @@ void Commands::help() {
             << std::endl;
   std::cout << "  profile  <program>  Measure program evaluation time (see -t)"
             << std::endl;
-  std::cout << "  setup               Run interactive setup to configure LODA"
-            << std::endl;
 
   std::cout << std::endl << "OEIS Commands:" << std::endl;
   std::cout << "  mine                Mine programs for OEIS sequences (see "
@@ -66,6 +64,14 @@ void Commands::help() {
       << std::endl;
   std::cout << "  submit <file> [id]  Submit a program for an OEIS sequence"
             << std::endl;
+
+  std::cout << std::endl << "Admin Commands:" << std::endl;
+  std::cout << "  setup               Run interactive setup to configure LODA"
+            << std::endl;
+  std::cout
+      << "  update              Run non-interactive update of LODA and its data"
+      << std::endl;
+
   std::cout << std::endl << "Targets:" << std::endl;
   std::cout
       << "  <file>              Path to a LODA file (file extension: *.asm)"
@@ -131,7 +137,18 @@ std::pair<std::string, size_t> getProgramPathAndSeqId(std::string arg) {
 
 // official commands
 
-void Commands::setup() { Setup::runWizard(); }
+void Commands::setup() {
+  initLog(true);
+  Setup::runWizard();
+}
+
+void Commands::update() {
+  initLog(false);
+  OeisManager manager(settings);
+  manager.update(true);
+  manager.getStats();
+  manager.generateLists();
+}
 
 void Commands::evaluate(const std::string& path) {
   initLog(true);

@@ -28,6 +28,8 @@ class OeisManager {
 
   void load();
 
+  void update(bool force);
+
   void migrate();
 
   const std::vector<OeisSequence>& getSequences() const;
@@ -55,8 +57,6 @@ class OeisManager {
   void loadNames();
 
   bool shouldMatch(const OeisSequence& seq) const;
-
-  void update();
 
   void generateStats(int64_t age_in_days);
 
