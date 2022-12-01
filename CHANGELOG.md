@@ -13,6 +13,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Enhancements
 
 * Support more programs in incremental evaluation
+* Increase maximum number of cycles to 25 million
 * Tweet only for first programs
 
 ## v22.11.22
