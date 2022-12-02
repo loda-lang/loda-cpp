@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Enhancements
+
+* Increase default OEIS update interval
+
 ## v22.12.1
 
 ### Bugfixes

@@ -78,8 +78,9 @@ class Setup {
  private:
   static constexpr int64_t UNDEFINED_INT = -2;                  // cannot use -1
   static constexpr int64_t DEFAULT_GITHUB_UPDATE_INTERVAL = 1;  // 1 day default
-  static constexpr int64_t DEFAULT_OEIS_UPDATE_INTERVAL = 7;  // 1 week default
-  static constexpr int64_t DEFAULT_MAX_PROGRAM_AGE = 14;      // 2 weeks default
+  static constexpr int64_t DEFAULT_OEIS_UPDATE_INTERVAL =
+      30;                                                 // 1 month default
+  static constexpr int64_t DEFAULT_MAX_PROGRAM_AGE = 14;  // 2 weeks default
   static constexpr int64_t DEFAULT_MAX_PHYSICAL_MEMORY = 1024;  // 1 GB
 
   static std::string LODA_HOME;
