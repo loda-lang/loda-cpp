@@ -474,12 +474,15 @@ int64_t Stats::getTransitiveLength(size_t id) const {
     visited_programs.clear();
     if (printed_recursion_warning.find(id) == printed_recursion_warning.end()) {
       printed_recursion_warning.insert(id);
-      Log::get().warn("Recursion detected in stats for " +
-                      OeisSequence(id).getProgramPath());
+      Log::get().warn("Recursion detected: " + OeisSequence(id).id_str());
     }
     return -1;
   }
   visited_programs.insert(id);
+  if (id >= program_lengths.size()) {
+    Log::get().warn("Invalid reference: " + OeisSequence(id).id_str());
+    return -1;
+  }
   int64_t length = program_lengths.at(id);
   auto range = call_graph.equal_range(id);
   for (auto &it = range.first; it != range.second; it++) {

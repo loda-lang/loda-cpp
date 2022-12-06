@@ -2,6 +2,18 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v22.12.6
+
+### Bugfixes
+
+* Fix vector exception
+
+### Enhancements
+
+* Increase maximum number of cycles to 30 million
+
+## v22.12.2
+
 ### Enhancements
 
 * Increase default OEIS update interval
