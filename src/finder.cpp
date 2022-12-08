@@ -196,19 +196,29 @@ std::pair<std::string, Program> Finder::checkProgramBasic(
     Program program, Program existing, bool is_new, const OeisSequence &seq,
     const std::string &change_type, size_t previous_hash,
     size_t num_default_terms) {
-  // basic validation of updated programs requires additional metadata
+  static const std::string first = "First";
+  std::pair<std::string, Program> result;  // empty string indicates no update
+
+  // additional metadata checks for program update
   if (!is_new) {
-    // check if metadata comments are set
+    // check if another miner already submitted a program for this sequence
+    if (change_type == first) {
+      Log::get().warn("Skipping update of " + seq.id_str() +
+                      " because program is not new");
+      return result;
+    }
+    // fall back to default validation if metadata is missing
     if (change_type.empty() || !previous_hash) {
-      Log::get().debug("Missing metadata in program");
+      Log::get().debug(
+          "Falling back to default validation due to missing metadata");
       return checkProgramDefault(program, existing, is_new, seq,
                                  num_default_terms);
     }
     // compare with hash of existing program
     if (previous_hash != ProgramUtil::hash(existing)) {
-      Log::get().debug("Hash mismatch of previous program");
-      return checkProgramDefault(program, existing, is_new, seq,
-                                 num_default_terms);
+      Log::get().warn("Skipping update of " + seq.id_str() +
+                      " because of hash mismatch");
+      return result;
     }
   }
 
@@ -216,7 +226,6 @@ std::pair<std::string, Program> Finder::checkProgramBasic(
   auto default_seq = seq.getTerms(OeisSequence::DEFAULT_SEQ_LENGTH);
 
   // check the program
-  std::pair<std::string, Program> result;
   auto check = evaluator.check(program, default_seq,
                                OeisSequence::DEFAULT_SEQ_LENGTH, seq.id);
   if (check.first == status_t::ERROR) {
@@ -225,17 +234,16 @@ std::pair<std::string, Program> Finder::checkProgramBasic(
   }
 
   // the program is correct => update result
-  result.first = is_new ? "First" : change_type;
+  result.first = is_new ? first : change_type;
   result.second = program;
   return result;
 }
 
 size_t getBadOpsCount(const Program &p) {
   // we prefer programs the following programs:
-  // - w/o indirect memory access
   // - w/o loops that have non-constant args
   // - w/o gcd with powers of a small constant
-  size_t num_ops = ProgramUtil::numOps(p, Operand::Type::INDIRECT);
+  size_t num_ops = 0;
   for (auto &op : p.ops) {
     if (op.type == Operation::Type::LPB &&
         op.source.type != Operand::Type::CONSTANT) {
@@ -243,7 +251,8 @@ size_t getBadOpsCount(const Program &p) {
     }
     if (op.type == Operation::Type::GCD &&
         op.source.type == Operand::Type::CONSTANT &&
-        Minimizer::getPowerOf(op.source.value) != 0) {
+        (Minimizer::getPowerOf(op.source.value) != 0 ||
+         Number(100000) < op.source.value)) {
       num_ops++;
     }
   }
@@ -344,16 +353,22 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
   const auto existing_steps = evaluator.eval(existing, tmp, num_terms, false);
 
   // compare number of successfully computed terms
-  if (optimized_steps.runs > existing_steps.runs) {
+  int64_t existing_runs = existing_steps.runs;
+  int64_t optimized_runs = static_cast<int64_t>(
+      static_cast<double>(optimized_steps.runs) * THRESHOLD_BETTER);
+  if (optimized_runs > existing_runs) {
     return "Better";
-  } else if (optimized_steps.runs < existing_steps.runs) {
+  } else if (optimized_runs < existing_runs) {
     return not_better;  // worse
   }
 
   //  compare number of execution cycles
-  if (optimized_steps.total < existing_steps.total) {
+  int64_t existing_total = existing_steps.total;
+  int64_t optimized_total = static_cast<int64_t>(
+      static_cast<double>(optimized_steps.total) * THRESHOLD_FASTER);
+  if (optimized_total < existing_total) {
     return "Faster";
-  } else if (optimized_steps.total > existing_steps.total) {
+  } else if (optimized_total > existing_total) {
     return not_better;  //  worse
   }
 
