@@ -203,8 +203,8 @@ std::pair<std::string, Program> Finder::checkProgramBasic(
   if (!is_new) {
     // check if another miner already submitted a program for this sequence
     if (change_type == first) {
-      Log::get().warn("Skipping update of " + seq.id_str() +
-                      " because program is not new");
+      Log::get().debug("Skipping update of " + seq.id_str() +
+                       " because program is not new");
       return result;
     }
     // fall back to default validation if metadata is missing
@@ -216,8 +216,8 @@ std::pair<std::string, Program> Finder::checkProgramBasic(
     }
     // compare with hash of existing program
     if (previous_hash != ProgramUtil::hash(existing)) {
-      Log::get().warn("Skipping update of " + seq.id_str() +
-                      " because of hash mismatch");
+      Log::get().debug("Skipping update of " + seq.id_str() +
+                       " because of hash mismatch");
       return result;
     }
   }
@@ -353,12 +353,12 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
   const auto existing_steps = evaluator.eval(existing, tmp, num_terms, false);
 
   // compare number of successfully computed terms
-  int64_t existing_runs = existing_steps.runs;
-  int64_t optimized_runs = static_cast<int64_t>(
-      static_cast<double>(optimized_steps.runs) * THRESHOLD_BETTER);
-  if (optimized_runs > existing_runs) {
+  int64_t existing_terms = static_cast<int64_t>(
+      static_cast<double>(existing_steps.runs) * THRESHOLD_BETTER);
+  int64_t optimized_terms = optimized_steps.runs;
+  if (optimized_terms > existing_terms) {
     return "Better";
-  } else if (optimized_runs < existing_runs) {
+  } else if (optimized_terms < existing_terms) {
     return not_better;  // worse
   }
 
