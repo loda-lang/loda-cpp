@@ -50,8 +50,8 @@ class Finder {
                                 const OeisSequence &seq);
 
  private:
-  static constexpr double THRESHOLD_BETTER = 1.05;
-  static constexpr double THRESHOLD_FASTER = 1.05;
+  static constexpr double THRESHOLD_BETTER = 1.1;
+  static constexpr double THRESHOLD_FASTER = 1.1;
 
   void findAll(const Program &p, const Sequence &norm_seq,
                const std::vector<OeisSequence> &sequences,

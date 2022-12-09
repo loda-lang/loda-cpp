@@ -259,6 +259,12 @@ size_t getBadOpsCount(const Program &p) {
   return num_ops;
 }
 
+bool isBetterIndirectMemory(const Program &existing, const Program &optimized) {
+  return (ProgramUtil::hasIndirectOperand(existing) &&
+          !ProgramUtil::hasIndirectOperand(optimized) &&
+          !ProgramUtil::hasOp(optimized, Operation::Type::SEQ));
+}
+
 std::string Finder::isOptimizedBetter(Program existing, Program optimized,
                                       const OeisSequence &seq) {
   static const std::string not_better;
@@ -318,6 +324,11 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
   } else if (optimized_bad_count > existing_bad_count) {
     return not_better;  // worse
   }
+  if (isBetterIndirectMemory(existing, optimized)) {
+    return "Simpler";
+  } else if (isBetterIndirectMemory(optimized, existing)) {
+    return not_better;  // worse
+  }
 
   // ======= EVALUATION CHECKS =========
 
@@ -353,22 +364,20 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
   const auto existing_steps = evaluator.eval(existing, tmp, num_terms, false);
 
   // compare number of successfully computed terms
-  int64_t existing_terms = static_cast<int64_t>(
-      static_cast<double>(existing_steps.runs) * THRESHOLD_BETTER);
-  int64_t optimized_terms = optimized_steps.runs;
-  if (optimized_terms > existing_terms) {
+  double existing_terms = existing_steps.runs;
+  double optimized_terms = optimized_steps.runs;
+  if (optimized_terms > (existing_terms * THRESHOLD_BETTER)) {
     return "Better";
-  } else if (optimized_terms < existing_terms) {
+  } else if (existing_terms > (optimized_terms * THRESHOLD_BETTER)) {
     return not_better;  // worse
   }
 
   //  compare number of execution cycles
-  int64_t existing_total = existing_steps.total;
-  int64_t optimized_total = static_cast<int64_t>(
-      static_cast<double>(optimized_steps.total) * THRESHOLD_FASTER);
-  if (optimized_total < existing_total) {
+  double existing_total = existing_steps.total;
+  double optimized_total = optimized_steps.total;
+  if (existing_total > (optimized_total * THRESHOLD_FASTER)) {
     return "Faster";
-  } else if (optimized_total > existing_total) {
+  } else if (optimized_total > (existing_total * THRESHOLD_FASTER)) {
     return not_better;  //  worse
   }
 

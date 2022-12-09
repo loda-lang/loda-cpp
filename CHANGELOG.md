@@ -2,6 +2,12 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v22.12.9
+
+### Bugfixes
+
+* Fix decision making for better/faster programs
+
 ## v22.12.8
 
 ### Enhancements
