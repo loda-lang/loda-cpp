@@ -812,7 +812,7 @@ update_program_result_t OeisManager::updateProgram(
   result.program = checked.second;
   result.change_type = checked.first;
   if (!is_new) {
-    result.previous_hash = ProgramUtil::hash(existing);
+    result.previous_hash = finder.getTransitiveProgramHash(existing);
   }
 
   // write new or better program version

@@ -64,6 +64,8 @@ class Stats {
   std::vector<int64_t> program_lengths;
   std::vector<bool> all_program_ids;
   std::vector<bool> latest_program_ids;
+  std::vector<bool> supports_inceval;
+  std::vector<bool> supports_logeval;
   Blocks blocks;
 
  private:
@@ -73,6 +75,7 @@ class Stats {
   Blocks::Collector blocks_collector;
 
   void collectLatestProgramIds();
+  void resizeProgramLists(size_t id);
 };
 
 class RandomProgramIds {

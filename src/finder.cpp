@@ -2,9 +2,11 @@
 
 #include <fstream>
 #include <iomanip>
+#include <set>
 #include <sstream>
 
 #include "config.hpp"
+#include "evaluator_log.hpp"
 #include "file.hpp"
 #include "log.hpp"
 #include "number.hpp"
@@ -215,7 +217,7 @@ std::pair<std::string, Program> Finder::checkProgramBasic(
                                  num_default_terms);
     }
     // compare with hash of existing program
-    if (previous_hash != ProgramUtil::hash(existing)) {
+    if (previous_hash != getTransitiveProgramHash(existing)) {
       Log::get().debug("Skipping update of " + seq.id_str() +
                        " because of hash mismatch");
       return result;
@@ -265,6 +267,21 @@ bool isBetterIndirectMemory(const Program &existing, const Program &optimized) {
           !ProgramUtil::hasOp(optimized, Operation::Type::SEQ));
 }
 
+bool isBetterIncEval(const Program &existing, const Program &optimized,
+                     Evaluator &evaluator) {
+  return (ProgramUtil::hasOp(existing, Operation::Type::LPB) &&
+          (ProgramUtil::hasOp(existing, Operation::Type::SEQ) ||
+           !ProgramUtil::hasOp(optimized, Operation::Type::SEQ)) &&
+          !evaluator.supportsIncEval(existing) &&
+          evaluator.supportsIncEval(optimized));
+}
+
+bool isBetterLogEval(const Program &existing, const Program &optimized) {
+  return (ProgramUtil::hasOp(existing, Operation::Type::LPB) &&
+          !LogarithmicEvaluator::hasLogarithmicComplexity(existing) &&
+          LogarithmicEvaluator::hasLogarithmicComplexity(optimized));
+}
+
 std::string Finder::isOptimizedBetter(Program existing, Program optimized,
                                       const OeisSequence &seq) {
   static const std::string not_better;
@@ -295,17 +312,18 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
     return not_better;
   }
 
-  // check if the optimized program supports IE
-  if (ProgramUtil::hasOp(existing, Operation::Type::LPB) &&
-      (ProgramUtil::hasOp(existing, Operation::Type::SEQ) ||
-       !ProgramUtil::hasOp(optimized, Operation::Type::SEQ))) {
-    const bool inc_eval_existing = evaluator.supportsIncEval(existing);
-    const bool inc_eval_optimized = evaluator.supportsIncEval(optimized);
-    if (inc_eval_optimized && !inc_eval_existing) {
-      return "Faster (IE)";
-    } else if (!inc_eval_optimized && inc_eval_existing) {
-      return not_better;  // worse
-    }
+  // check if the optimized program has logarithmic complexity
+  if (isBetterLogEval(existing, optimized)) {
+    return "Faster (log)";
+  } else if (isBetterLogEval(optimized, existing)) {
+    return not_better;  // worse
+  }
+
+  // check if the optimized program supports incremental evaluation
+  if (isBetterIncEval(existing, optimized, evaluator)) {
+    return "Faster (IE)";
+  } else if (isBetterIncEval(optimized, existing, evaluator)) {
+    return not_better;  // worse
   }
 
   // check if there are loops with contant number of iterations involved
@@ -324,6 +342,8 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
   } else if (optimized_bad_count > existing_bad_count) {
     return not_better;  // worse
   }
+
+  // check indirect memory
   if (isBetterIndirectMemory(existing, optimized)) {
     return "Simpler";
   } else if (isBetterIndirectMemory(optimized, existing)) {
@@ -364,13 +384,13 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
   const auto existing_steps = evaluator.eval(existing, tmp, num_terms, false);
 
   // compare number of successfully computed terms
-  double existing_terms = existing_steps.runs;
-  double optimized_terms = optimized_steps.runs;
-  if (optimized_terms > (existing_terms * THRESHOLD_BETTER)) {
-    return "Better";
-  } else if (existing_terms > (optimized_terms * THRESHOLD_BETTER)) {
-    return not_better;  // worse
-  }
+  // double existing_terms = existing_steps.runs;
+  // double optimized_terms = optimized_steps.runs;
+  // if (optimized_terms > (existing_terms * THRESHOLD_BETTER)) {
+  //  return "Better";
+  //} else if (existing_terms > (optimized_terms * THRESHOLD_BETTER)) {
+  //  return not_better;  // worse
+  //}
 
   //  compare number of execution cycles
   double existing_total = existing_steps.total;
@@ -382,6 +402,37 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
   }
 
   return not_better;  // not better or worse => no change
+}
+
+void collectPrograms(const Program &p, std::set<Program> &collected) {
+  if (collected.find(p) != collected.end()) {
+    return;
+  }
+  collected.insert(p);
+  for (auto &op : p.ops) {
+    if (op.type == Operation::Type::SEQ &&
+        op.source.type == Operand::Type::CONSTANT) {
+      auto id = op.source.value.asInt();
+      auto path = OeisSequence(id).getProgramPath();
+      try {
+        Parser parser;
+        auto p2 = parser.parse(path);
+        collectPrograms(p2, collected);
+      } catch (const std::exception &) {
+        Log::get().warn("Referenced program not found: " + path);
+      }
+    }
+  }
+}
+
+size_t Finder::getTransitiveProgramHash(const Program &program) {
+  std::set<Program> collected;
+  collectPrograms(program, collected);
+  size_t h = 0;
+  for (auto &p : collected) {
+    h += ProgramUtil::hash(p);
+  }
+  return h;
 }
 
 void Finder::notifyInvalidMatch(size_t id) {

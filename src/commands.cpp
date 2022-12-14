@@ -1,11 +1,13 @@
 #include "commands.hpp"
 
+#include <fstream>
 #include <iostream>
 
 #include "benchmark.hpp"
 #include "boinc.hpp"
 #include "evaluator.hpp"
 #include "evaluator_inc.hpp"
+#include "evaluator_log.hpp"
 #include "formula_gen.hpp"
 #include "iterator.hpp"
 #include "log.hpp"
@@ -315,6 +317,32 @@ void Commands::testIncEval() {
   }
   Log::get().info("Passed incremental evaluation check for " +
                   std::to_string(count) + " programs");
+}
+
+void Commands::testLogEval() {
+  initLog(false);
+  Log::get().info("Testing logarithmic evaluator");
+  Parser parser;
+  OeisManager manager(settings);
+  auto& stats = manager.getStats();
+  int64_t count = 0;
+  for (size_t id = 0; id < stats.all_program_ids.size(); id++) {
+    if (!stats.all_program_ids[id]) {
+      continue;
+    }
+    OeisSequence seq(id);
+    std::ifstream in(seq.getProgramPath());
+    if (!in) {
+      continue;
+    }
+    auto program = parser.parse(in);
+    if (LogarithmicEvaluator::hasLogarithmicComplexity(program)) {
+      Log::get().info(seq.id_str() + " has logarithmic complexity");
+      count++;
+    }
+  }
+  Log::get().info(std::to_string(count) +
+                  " programs have logarithmic complexity");
 }
 
 void Commands::testPari() {

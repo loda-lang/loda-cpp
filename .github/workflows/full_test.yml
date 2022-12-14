@@ -18,8 +18,10 @@ jobs:
         run: |
           mkdir -p $HOME/loda
           git clone https://github.com/loda-lang/loda-programs.git $HOME/loda/programs
-      - name: Test IE
-        run: ./loda test-ie
+      - name: Test IncEval
+        run: ./loda test-inceval
+      - name: Test LogEval
+        run: ./loda test-logeval
       - name: Test PARI
         run: |
           sudo apt-get update

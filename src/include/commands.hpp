@@ -42,6 +42,8 @@ class Commands {
 
   void testIncEval();
 
+  void testLogEval();
+
   void testPari();
 
   void dot(const std::string& path);

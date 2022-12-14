@@ -49,6 +49,8 @@ class Finder {
   std::string isOptimizedBetter(Program existing, Program optimized,
                                 const OeisSequence &seq);
 
+  size_t getTransitiveProgramHash(const Program &program);
+
  private:
   static constexpr double THRESHOLD_BETTER = 1.1;
   static constexpr double THRESHOLD_FASTER = 1.1;
