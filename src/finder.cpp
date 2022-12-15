@@ -14,6 +14,7 @@
 #include "oeis_sequence.hpp"
 #include "program_util.hpp"
 #include "setup.hpp"
+#include "util.hpp"
 
 Finder::Finder(const Settings &settings, Evaluator &evaluator)
     : settings(settings),
@@ -370,6 +371,9 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
   Sequence tmp;
   evaluator.clearCaches();
   auto optimized_steps = evaluator.eval(optimized, tmp, num_terms, false);
+  if (Signals::HALT) {
+    return not_better;  // interrupted evaluation
+  }
 
   // check if the first decreasing/non-increasing term is beyond the known
   // sequence terms => fake "better" program
@@ -382,14 +386,17 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
   // evaluate existing program for same number of terms
   evaluator.clearCaches();
   const auto existing_steps = evaluator.eval(existing, tmp, num_terms, false);
+  if (Signals::HALT) {
+    return not_better;  // interrupted evaluation
+  }
 
   // check number of successfully computed terms
   // we don't try to optimize for number of terms
-  int64_t existing_terms = existing_steps.runs;
-  int64_t optimized_terms = optimized_steps.runs;
-  if (optimized_terms == num_terms && existing_terms < num_terms) {
+  double existing_terms = existing_steps.runs;
+  double optimized_terms = optimized_steps.runs;
+  if (optimized_terms > (existing_terms * THRESHOLD_BETTER)) {
     return "Better";
-  } else if (existing_terms == num_terms && optimized_terms < num_terms) {
+  } else if (existing_terms > (optimized_terms * THRESHOLD_BETTER)) {
     return not_better;  // worse
   }
 
