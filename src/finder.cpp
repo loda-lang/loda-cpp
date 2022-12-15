@@ -383,14 +383,15 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
   evaluator.clearCaches();
   const auto existing_steps = evaluator.eval(existing, tmp, num_terms, false);
 
-  // compare number of successfully computed terms
-  // double existing_terms = existing_steps.runs;
-  // double optimized_terms = optimized_steps.runs;
-  // if (optimized_terms > (existing_terms * THRESHOLD_BETTER)) {
-  //  return "Better";
-  //} else if (existing_terms > (optimized_terms * THRESHOLD_BETTER)) {
-  //  return not_better;  // worse
-  //}
+  // check number of successfully computed terms
+  // we don't try to optimize for number of terms
+  int64_t existing_terms = existing_steps.runs;
+  int64_t optimized_terms = optimized_steps.runs;
+  if (optimized_terms == num_terms && existing_terms < num_terms) {
+    return "Better";
+  } else if (existing_terms == num_terms && optimized_terms < num_terms) {
+    return not_better;  // worse
+  }
 
   //  compare number of execution cycles
   double existing_total = existing_steps.total;

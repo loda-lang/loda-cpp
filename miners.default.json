@@ -19,7 +19,7 @@
     {
       "name": "update",
       "overwrite": "auto",
-      "enabled": true,
+      "enabled": false,
       "backoff": true,
       "generators": [
         "v2",
