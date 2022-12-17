@@ -226,7 +226,7 @@ int64_t getNumInitialTermsNeeded(int64_t cell, const std::string& funcName,
     if (op.type == Operation::Type::MOV &&
         op.target == Operand(Operand::Type::DIRECT, cell) &&
         op.source.type == Operand::Type::CONSTANT) {
-      localNumTerms = std::max<int64_t>(localNumTerms, 1);
+      localNumTerms = std::max<int64_t>(localNumTerms, globalNumTerms);
       break;
     }
   }
@@ -354,9 +354,10 @@ bool FormulaGenerator::generateSingle(const Program& p) {
                           {index});
           Expression val(Expression::Type::CONSTANT, "", state.get(cell));
           formula.entries[func] = val;
+          Log::get().debug("Added intial term: " + func.toString() + " = " +
+                           val.toString());
         }
       }
-      Log::get().debug("Added intial terms: " + formula.toString(false));
     }
 
     // prepare post-loop processing
@@ -432,7 +433,9 @@ void FormulaGenerator::simplifyFunctionNames() {
     if (n == getCellName(0)) {
       continue;
     }
-    formula.replaceName(n, canonicalName(cell++));
+    auto c = canonicalName(cell++);
+    Log::get().debug("Renaming function " + n + " => " + c);
+    formula.replaceName(n, c);
   }
 }
 

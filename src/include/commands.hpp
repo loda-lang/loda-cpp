@@ -40,7 +40,7 @@ class Commands {
 
   void testIncEval();
 
-  void testPari();
+  void testPari(const std::string& id);
 
   void dot(const std::string& path);
 

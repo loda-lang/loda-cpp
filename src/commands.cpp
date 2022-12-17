@@ -300,7 +300,7 @@ void Commands::testIncEval() {
                   std::to_string(count) + " programs");
 }
 
-void Commands::testPari() {
+void Commands::testPari(const std::string& test_id) {
   initLog(false);
   Parser parser;
   Settings settings;
@@ -311,8 +311,12 @@ void Commands::testPari() {
   manager.load();
   auto& stats = manager.getStats();
   int64_t good = 0, bad = 0;
+  size_t target_id = 0;
+  if (!test_id.empty()) {
+    target_id = OeisSequence(test_id).id;
+  }
   for (size_t id = 0; id < stats.all_program_ids.size(); id++) {
-    if (!stats.all_program_ids[id]) {
+    if (!stats.all_program_ids[id] || (target_id > 0 && id != target_id)) {
       continue;
     }
     auto seq = manager.getSequences().at(id);
