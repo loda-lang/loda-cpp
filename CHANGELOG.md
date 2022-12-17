@@ -2,6 +2,64 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v22.12.14
+
+### Bugfixes
+
+* Fix validation for IE programs
+* Use transitive hash values for programs with `seq`
+
+### Enhancements
+
+* Add detection of programs with logarithmic complexity
+* Add stats for incremental and logarithmic eval
+
+## v22.12.9
+
+### Bugfixes
+
+* Fix decision making for better/faster programs
+
+## v22.12.8
+
+### Enhancements
+
+* Reduce server-side validation effort
+* Introduce threshold for faster/better programs (5%)
+
+## v22.12.6
+
+### Bugfixes
+
+* Fix vector exception
+
+### Enhancements
+
+* Increase maximum number of cycles to 30 million
+
+## v22.12.2
+
+### Enhancements
+
+* Increase default OEIS update interval
+
+## v22.12.1
+
+### Bugfixes
+
+* Fix update issues
+
+### Feature
+
+* Install script
+* Update command
+
+### Enhancements
+
+* Support more programs in incremental evaluation
+* Increase maximum number of cycles to 25 million
+* Tweet only for first programs
+
 ## v22.11.22
 
 ### Bugfixes

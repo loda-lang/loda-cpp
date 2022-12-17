@@ -459,73 +459,94 @@ std::string Setup::getLatestVersion() {
   const std::string local_release_info(".latest-release.json");
   const std::string release_info_url(
       "https://api.github.com/repos/loda-lang/loda-cpp/releases/latest");
-  WebClient::get(release_info_url, local_release_info, true, true);
+  if (!WebClient::get(release_info_url, local_release_info, true, false)) {
+    Log::get().warn("Cannot get latest version info and check for updates");
+    return Version::BRANCH;  // pretend we are on the latest version
+  }
   const std::string content = getFileAsString(local_release_info);
   std::remove(local_release_info.c_str());
   auto json = jute::parser::parse(content);
   return json["tag_name"].as_string();
 }
 
-void Setup::checkLatestedVersion() {
-  if (Version::IS_RELEASE && (Random::get().gen() % 5 == 0)) {
-    const auto latest_version = Setup::getLatestVersion();
+std::string Setup::checkLatestedVersion(bool silent) {
+  if (Version::IS_RELEASE) {
+    const auto latest_version = getLatestVersion();
     if (latest_version != Version::BRANCH) {
-      Log::get().info("LODA " + latest_version +
-                      " is available. Run 'loda setup' to update.");
+      if (!silent) {
+        Log::get().info("Update to LODA " + latest_version + " available");
+      }
+      return latest_version;
     }
   }
+  return "";
 }
 
-bool Setup::checkUpdate() {
-  ensureDir(LODA_HOME + "bin" + FILE_SEP);
+std::string Setup::getExecutable(const std::string& suffix) {
   std::string exe;
 #ifdef _WIN64
   exe = ".exe";
 #endif
-  const std::string exec_local = LODA_HOME + "bin" + FILE_SEP + "loda" + exe;
-  const std::string exec_tmp =
-      LODA_HOME + "bin" + FILE_SEP + "loda-" + Version::PLATFORM + exe;
+  return LODA_HOME + "bin" + FILE_SEP + "loda" + suffix + exe;
+}
+
+void Setup::performUpdate(const std::string& new_version, bool silent) {
+  std::string exe;
+#ifdef _WIN64
+  exe = ".exe";
+#endif
+  ensureDir(LODA_HOME + "bin" + FILE_SEP);
+  const std::string exec_local = getExecutable("");
+  const std::string exec_tmp = getExecutable("-" + Version::PLATFORM);
 #ifdef _WIN64
   if (isFile(exec_local) && isFile(exec_tmp)) {
     std::string cmd = "del \"" + exec_tmp + "\" " + getNullRedirect();
     if (system(cmd.c_str()) != 0) {
-      std::cout << "Error deleting temporary file: " + exec_tmp << std::endl;
+      Log::get().error("Cannot delete temporary file: " + exec_tmp, false);
     }
   }
 #endif
-  auto latest_version = getLatestVersion();
-  if (Version::IS_RELEASE &&
-      (latest_version != Version::BRANCH || !isFile(exec_local))) {
-    std::cout << "LODA " << latest_version << " is available!" << std::endl
-              << "Do you want to install the update? (Y/n) ";
-    std::string line;
-    std::getline(std::cin, line);
-    if (line.empty() || line == "y" || line == "Y") {
-      const std::string exec_url =
-          "https://github.com/loda-lang/loda-cpp/releases/download/" +
-          latest_version + "/loda-" + Version::PLATFORM + exe;
-      WebClient::get(exec_url, exec_tmp, true, true);
+  const std::string exec_url =
+      "https://github.com/loda-lang/loda-cpp/releases/download/" + new_version +
+      "/loda-" + Version::PLATFORM + exe;
+  WebClient::get(exec_url, exec_tmp, true, true);
 #ifdef _WIN64
-      const std::string cmd = "\"" + exec_tmp +
-                              "\" update-windows-executable \"" + exec_tmp +
-                              "\" \"" + exec_local + "\"";
-      createWindowsProcess(cmd);
+  const std::string cmd = "\"" + exec_tmp + "\" update-windows-executable \"" +
+                          exec_tmp + "\" \"" + exec_local + "\"";
+  createWindowsProcess(cmd);
 #else
-      makeExecutable(exec_tmp);
-      moveFile(exec_tmp, exec_local);
-      std::cout << "Update installed. Restarting setup... " << std::endl
-                << std::endl;
-      std::string new_setup = exec_local + " setup";
-      if (system(new_setup.c_str()) != 0) {
-        std::cout << "Error running setup of LODA " << latest_version
-                  << std::endl;
-      }
+  makeExecutable(exec_tmp);
+  moveFile(exec_tmp, exec_local);
+  if (!silent) {
+    Log::get().info("Installed update to LODA " + new_version);
+  }
 #endif
-      // in any case, we must stop the current setup here
-      return false;
-    } else {
-      std::cout << std::endl;
+}
+
+bool Setup::checkUpdate() {
+  auto latest_version = checkLatestedVersion(true);
+  if (latest_version.empty()) {
+    return true;
+  }
+  std::cout << "LODA " << latest_version << " is available!" << std::endl
+            << "Do you want to install the update? (Y/n) ";
+  std::string line;
+  std::getline(std::cin, line);
+  if (line.empty() || line == "y" || line == "Y") {
+    performUpdate(latest_version, true);
+#ifndef _WIN64
+    std::cout << "Update installed. Restarting setup... " << std::endl
+              << std::endl;
+    std::string new_setup = getExecutable("") + " setup";
+    if (system(new_setup.c_str()) != 0) {
+      std::cout << "Error running setup of LODA " << latest_version
+                << std::endl;
     }
+#endif
+    // in any case, we must stop the current setup here
+    return false;
+  } else {
+    std::cout << std::endl;
   }
   return true;
 }

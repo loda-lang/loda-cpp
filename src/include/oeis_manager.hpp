@@ -28,6 +28,8 @@ class OeisManager {
 
   void load();
 
+  void update(bool force);
+
   void migrate();
 
   const std::vector<OeisSequence>& getSequences() const;
@@ -56,8 +58,6 @@ class OeisManager {
 
   bool shouldMatch(const OeisSequence& seq) const;
 
-  void update();
-
   void generateStats(int64_t age_in_days);
 
   void addSeqComments(Program& p) const;
@@ -66,7 +66,8 @@ class OeisManager {
                    const std::string& submitted_by) const;
 
   void alert(Program p, size_t id, const std::string& prefix,
-             const std::string& color, const std::string& submitted_by) const;
+             const std::string& color, const std::string& submitted_by,
+             bool tweet) const;
 
   friend class OeisMaintenance;
 

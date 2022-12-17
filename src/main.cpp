@@ -134,6 +134,8 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
   // official commands
   if (cmd == "setup") {
     commands.setup();
+  } else if (cmd == "update") {
+    commands.update();
   } else if (cmd == "evaluate" || cmd == "eval") {
     commands.evaluate(args.at(1));
   } else if (cmd == "check") {
@@ -189,8 +191,10 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
   // hidden commands (only in development versions)
   else if (cmd == "test") {
     commands.test();
-  } else if (cmd == "test-ie") {
+  } else if (cmd == "test-inceval") {
     commands.testIncEval();
+  } else if (cmd == "test-logeval") {
+    commands.testLogEval();
   } else if (cmd == "test-pari") {
     std::string id;
     if (args.size() > 1) {
@@ -210,7 +214,15 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
   } else if (cmd == "benchmark") {
     commands.benchmark();
   } else if (cmd == "find-slow") {
-    commands.findSlow();
+    std::string type;
+    int64_t num_terms = 10;
+    if (args.size() > 1) {
+      num_terms = stoll(args.at(1));
+    }
+    if (args.size() > 2) {
+      type = args.at(2);
+    }
+    commands.findSlow(num_terms, type);
   } else if (cmd == "lists") {
     commands.lists();
   } else if (cmd == "compare") {

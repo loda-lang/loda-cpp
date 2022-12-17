@@ -76,7 +76,8 @@
         "vector": "cpp",
         "algorithm": "cpp",
         "filesystem": "cpp",
-        "queue": "cpp"
+        "queue": "cpp",
+        "functional": "cpp"
     },
     "makefile.makeDirectory": "src"
 }

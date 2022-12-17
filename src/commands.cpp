@@ -1,11 +1,13 @@
 #include "commands.hpp"
 
+#include <fstream>
 #include <iostream>
 
 #include "benchmark.hpp"
 #include "boinc.hpp"
 #include "evaluator.hpp"
 #include "evaluator_inc.hpp"
+#include "evaluator_log.hpp"
 #include "formula_gen.hpp"
 #include "iterator.hpp"
 #include "log.hpp"
@@ -51,8 +53,6 @@ void Commands::help() {
             << std::endl;
   std::cout << "  profile  <program>  Measure program evaluation time (see -t)"
             << std::endl;
-  std::cout << "  setup               Run interactive setup to configure LODA"
-            << std::endl;
 
   std::cout << std::endl << "OEIS Commands:" << std::endl;
   std::cout << "  mine                Mine programs for OEIS sequences (see "
@@ -66,6 +66,14 @@ void Commands::help() {
       << std::endl;
   std::cout << "  submit <file> [id]  Submit a program for an OEIS sequence"
             << std::endl;
+
+  std::cout << std::endl << "Admin Commands:" << std::endl;
+  std::cout << "  setup               Run interactive setup to configure LODA"
+            << std::endl;
+  std::cout
+      << "  update              Run non-interactive update of LODA and its data"
+      << std::endl;
+
   std::cout << std::endl << "Targets:" << std::endl;
   std::cout
       << "  <file>              Path to a LODA file (file extension: *.asm)"
@@ -131,7 +139,18 @@ std::pair<std::string, size_t> getProgramPathAndSeqId(std::string arg) {
 
 // official commands
 
-void Commands::setup() { Setup::runWizard(); }
+void Commands::setup() {
+  initLog(true);
+  Setup::runWizard();
+}
+
+void Commands::update() {
+  initLog(false);
+  OeisManager manager(settings);
+  manager.update(true);
+  manager.getStats();
+  manager.generateLists();
+}
 
 void Commands::evaluate(const std::string& path) {
   initLog(true);
@@ -300,6 +319,32 @@ void Commands::testIncEval() {
                   std::to_string(count) + " programs");
 }
 
+void Commands::testLogEval() {
+  initLog(false);
+  Log::get().info("Testing logarithmic evaluator");
+  Parser parser;
+  OeisManager manager(settings);
+  auto& stats = manager.getStats();
+  int64_t count = 0;
+  for (size_t id = 0; id < stats.all_program_ids.size(); id++) {
+    if (!stats.all_program_ids[id]) {
+      continue;
+    }
+    OeisSequence seq(id);
+    std::ifstream in(seq.getProgramPath());
+    if (!in) {
+      continue;
+    }
+    auto program = parser.parse(in);
+    if (LogarithmicEvaluator::hasLogarithmicComplexity(program)) {
+      Log::get().info(seq.id_str() + " has logarithmic complexity");
+      count++;
+    }
+  }
+  Log::get().info(std::to_string(count) +
+                  " programs have logarithmic complexity");
+}
+
 void Commands::testPari(const std::string& test_id) {
   initLog(false);
   Parser parser;
@@ -442,10 +487,14 @@ void Commands::benchmark() {
   benchmark.smokeTest();
 }
 
-void Commands::findSlow() {
+void Commands::findSlow(int64_t num_terms, const std::string& type) {
   initLog(false);
+  auto t = Operation::Type::NOP;
+  if (!type.empty()) {
+    t = Operation::Metadata::get(type).type;
+  }
   Benchmark benchmark;
-  benchmark.findSlow();
+  benchmark.findSlow(num_terms, t);
 }
 
 void Commands::lists() {

@@ -14,6 +14,8 @@ class Commands {
 
   void setup();
 
+  void update();
+
   void evaluate(const std::string& path);
 
   void check(const std::string& path);
@@ -40,6 +42,8 @@ class Commands {
 
   void testIncEval();
 
+  void testLogEval();
+
   void testPari(const std::string& id);
 
   void dot(const std::string& path);
@@ -54,7 +58,7 @@ class Commands {
 
   void benchmark();
 
-  void findSlow();
+  void findSlow(int64_t num_terms, const std::string& type);
 
   void lists();
 

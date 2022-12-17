@@ -141,13 +141,12 @@ std::string Benchmark::programEval(const Program& p, bool use_inc_eval,
   return buf.str();
 }
 
-void Benchmark::findSlow() {
+void Benchmark::findSlow(int64_t num_terms, Operation::Type type) {
   Parser parser;
   Settings settings;
   Interpreter interpreter(settings);
   Evaluator evaluator(settings);
   Sequence seq;
-  const int64_t numTerms = 10;
   std::priority_queue<std::pair<int64_t, int64_t> > queue;
   for (size_t id = 0; id < 400000; id++) {
     OeisSequence oeisSeq(id);
@@ -156,8 +155,11 @@ void Benchmark::findSlow() {
       continue;
     }
     auto program = parser.parse(in);
+    if (type != Operation::Type::NOP && !ProgramUtil::hasOp(program, type)) {
+      continue;
+    }
     auto start_time = std::chrono::steady_clock::now();
-    evaluator.eval(program, seq, numTerms, false);
+    evaluator.eval(program, seq, num_terms, false);
     auto end_time = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
         end_time - start_time);

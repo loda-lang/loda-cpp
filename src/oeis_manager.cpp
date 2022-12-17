@@ -76,7 +76,7 @@ void OeisManager::load() {
     FolderLock lock(Setup::getOeisHome());
 
     // update index if needed
-    update();
+    update(false);
 
     // load sequence data, names and deny list
     Log::get().info("Loading sequences from the OEIS index");
@@ -303,10 +303,11 @@ bool OeisManager::shouldMatch(const OeisSequence &seq) const {
   return true;  // unreachable
 }
 
-void OeisManager::update() {
+void OeisManager::update(bool force) {
   std::vector<std::string> files = {"stripped", "names"};
 
   // check whether oeis files need to be updated
+  update_oeis = false;
   auto it = files.begin();
   int64_t oeis_age_in_days = -1;
   while (it != files.end()) {
@@ -321,6 +322,7 @@ void OeisManager::update() {
   }
 
   // check whether programs need to be updated
+  update_programs = false;
   const std::string progs_dir = Setup::getProgramsHome();
   const std::string local_dir = progs_dir + "local";
   const std::string update_progs_file = local_dir + FILE_SEP + ".update";
@@ -330,9 +332,26 @@ void OeisManager::update() {
     update_programs = true;
   }
 
+  // figure out if we should check for loda update
+  bool check_loda_update = (update_oeis && (Random::get().gen() % 5 == 0));
+
+  // force update?
+  if (force) {
+    update_oeis = true;
+    update_programs = true;
+    check_loda_update = true;
+  }
+
+  // check and perform loda update
+  if (check_loda_update) {
+    auto latest_version = Setup::checkLatestedVersion(false);
+    if (force && !latest_version.empty()) {
+      Setup::performUpdate(latest_version, false);
+    }
+  }
+
   // perform oeis update
   if (update_oeis) {
-    Setup::checkLatestedVersion();
     if (oeis_age_in_days == -1) {
       Log::get().info("Creating OEIS index at \"" + Setup::getOeisHome() +
                       "\"");
@@ -360,14 +379,15 @@ void OeisManager::update() {
       Log::get().info(msg);
       // update programs repository using git pull
       git(progs_dir, "pull origin main -q --ff-only");
-      // touch marker file to track the age
-      ensureDir(update_progs_file);
-      std::ofstream marker(update_progs_file);
-      if (marker) {
-        marker << "1" << std::endl;
-      } else {
-        Log::get().warn("Cannot write update marker: " + update_progs_file);
-      }
+    }
+
+    // touch marker file to track the age (even in server mode)
+    ensureDir(update_progs_file);
+    std::ofstream marker(update_progs_file);
+    if (marker) {
+      marker << "1" << std::endl;
+    } else {
+      Log::get().warn("Cannot write update marker: " + update_progs_file);
     }
 
     // clean up local programs folder
@@ -513,6 +533,8 @@ void OeisManager::generateLists() {
       list_file << "List of integer sequences with links to LODA programs."
                 << "\n\n";
       list_file << buf;
+      list_file << "\n\n[License Info](https://github.com/loda-lang/"
+                   "loda-programs#license)\n";
     }
   }
   std::ofstream no_loda_file(lists_home + "no_loda.txt");
@@ -678,25 +700,28 @@ void OeisManager::dumpProgram(size_t id, Program &p, const std::string &file,
 
 void OeisManager::alert(Program p, size_t id, const std::string &prefix,
                         const std::string &color,
-                        const std::string &submitted_by) const {
+                        const std::string &submitted_by, bool tweet) const {
   auto &seq = sequences.at(id);
-  std::stringstream buf;
-  buf << prefix << " program for " << seq
-      << " Terms: " << seq.getTerms(settings.num_terms);
+  std::string msg, full;
+  msg = prefix + " program for " + seq.to_string();
+  full = msg + " Terms: " + seq.getTerms(settings.num_terms).to_string();
   FormulaGenerator gen(false);
   Formula formula;
   if (gen.generate(p, id, formula, false)) {
-    buf << ". Formula: " << formula.toString(false);
+    full += ". Formula: " + formula.toString(false);
   }
   if (!submitted_by.empty()) {
-    buf << ". " << ProgramUtil::PREFIX_SUBMITTED_BY << " " << submitted_by;
+    std::string sub = ProgramUtil::PREFIX_SUBMITTED_BY + " " + submitted_by;
+    msg += " " + sub;
+    full += ". " + sub;
   }
-  auto msg = buf.str();
   Log::AlertDetails details;
   details.title = seq.id_str();
   details.title_link = seq.url_str();
   details.color = color;
-  buf << "\\n\\`\\`\\`\\n";
+  details.tweet = tweet;
+  std::stringstream buf;
+  buf << full << "\\n\\`\\`\\`\\n";
   ProgramUtil::removeOps(p, Operation::Type::NOP);
   addSeqComments(p);
   ProgramUtil::print(p, buf, "\\n");
@@ -787,7 +812,7 @@ update_program_result_t OeisManager::updateProgram(
   result.program = checked.second;
   result.change_type = checked.first;
   if (!is_new) {
-    result.previous_hash = ProgramUtil::hash(existing);
+    result.previous_hash = finder.getTransitiveProgramHash(existing);
   }
 
   // write new or better program version
@@ -807,7 +832,7 @@ update_program_result_t OeisManager::updateProgram(
 
   // send alert
   std::string color = is_new ? "good" : "warning";
-  alert(result.program, id, checked.first, color, submitted_by);
+  alert(result.program, id, checked.first, color, submitted_by, is_new);
 
   return result;
 }
@@ -867,7 +892,7 @@ bool OeisManager::maintainProgram(size_t id) {
 
   if (!is_okay) {
     // send alert and remove file
-    alert(program, id, "Removed invalid", "danger", "");
+    alert(program, id, "Removed invalid", "danger", "", false);
     remove(file_name.c_str());
     return false;
   } else {

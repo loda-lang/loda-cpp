@@ -4,6 +4,8 @@
 #include <iostream>
 #include <sstream>
 
+#include "evaluator_inc.hpp"
+#include "evaluator_log.hpp"
 #include "file.hpp"
 #include "log.hpp"
 #include "oeis_sequence.hpp"
@@ -12,7 +14,7 @@
 #include "setup.hpp"
 
 const std::string Stats::CALL_GRAPH_HEADER("caller,callee");
-const std::string Stats::PROGRAMS_HEADER("id,length");
+const std::string Stats::PROGRAMS_HEADER("id,length,inc_eval,log_eval");
 const std::string Stats::STEPS_HEADER("total,min,max,runs");
 const std::string Stats::SUMMARY_HEADER("num_programs,num_sequences");
 
@@ -139,26 +141,28 @@ void Stats::load(std::string path) {
     full = path + "programs.csv";
     Log::get().debug("Loading " + full);
     std::ifstream programs(full);
-    all_program_ids.resize(100000, false);
-    program_lengths.resize(100000, false);
+    resizeProgramLists(100000);
     int64_t largest_id = 0;
     checkHeader(programs, PROGRAMS_HEADER, full);
     while (std::getline(programs, line)) {
       std::stringstream s(line);
       std::getline(s, k, ',');
-      std::getline(s, l);
+      std::getline(s, l, ',');
+      std::getline(s, v, ',');
+      std::getline(s, w);
       int64_t id = std::stoll(k);
       largest_id = std::max<int64_t>(largest_id, id);
-      if ((size_t)id >= all_program_ids.size()) {
-        size_t new_size = std::max<size_t>(all_program_ids.size() * 2, id + 1);
-        all_program_ids.resize(new_size);
-        program_lengths.resize(new_size);
-      }
+      resizeProgramLists(id);
       all_program_ids[id] = true;
       program_lengths[id] = std::stoll(l);
+      supports_inceval[id] = std::stoll(v);
+      supports_logeval[id] = std::stoll(w);
     }
-    all_program_ids.resize(largest_id + 1);
-    program_lengths.resize(largest_id + 1);
+    size_t new_size = largest_id + 1;
+    all_program_ids.resize(new_size);
+    program_lengths.resize(new_size);
+    supports_inceval.resize(new_size);
+    supports_logeval.resize(new_size);
     programs.close();
   }
 
@@ -232,7 +236,8 @@ void Stats::save(std::string path) {
   programs << PROGRAMS_HEADER << "\n";
   for (size_t id = 0; id < all_program_ids.size(); id++) {
     if (all_program_ids[id]) {
-      programs << id << sep << program_lengths[id] << "\n";
+      programs << id << sep << program_lengths[id] << sep
+               << supports_inceval[id] << sep << supports_logeval[id] << "\n";
     }
   }
   programs.close();
@@ -318,11 +323,7 @@ std::string Stats::getMainStatsFile(std::string path) const {
 void Stats::updateProgramStats(size_t id, const Program &program) {
   num_programs++;
   const size_t num_ops = ProgramUtil::numOps(program, false);
-  if (id >= all_program_ids.size()) {
-    const size_t new_size =
-        std::max<size_t>(id + 1, 2 * all_program_ids.size());
-    program_lengths.resize(new_size);
-  }
+  resizeProgramLists(id);
   program_lengths[id] = num_ops;
   if (num_ops >= num_programs_per_length.size()) {
     num_programs_per_length.resize(num_ops + 1);
@@ -361,18 +362,30 @@ void Stats::updateProgramStats(size_t id, const Program &program) {
     }
     o.pos++;
   }
+  Settings settings;
+  Interpreter interpreter(settings);
+  IncrementalEvaluator inceval(interpreter);
+  supports_inceval[id] = inceval.init(program);
+  supports_logeval[id] =
+      LogarithmicEvaluator::hasLogarithmicComplexity(program);
   blocks_collector.add(program);
 }
 
 void Stats::updateSequenceStats(size_t id, bool program_found) {
   num_sequences++;
+  resizeProgramLists(id);
+  all_program_ids[id] = program_found;
+}
+
+void Stats::resizeProgramLists(size_t id) {
   if (id >= all_program_ids.size()) {
     const size_t new_size =
         std::max<size_t>(id + 1, 2 * all_program_ids.size());
     all_program_ids.resize(new_size);
     program_lengths.resize(new_size);
+    supports_inceval.resize(new_size);
+    supports_logeval.resize(new_size);
   }
-  all_program_ids[id] = program_found;
 }
 
 void Stats::finalize() {
@@ -474,12 +487,15 @@ int64_t Stats::getTransitiveLength(size_t id) const {
     visited_programs.clear();
     if (printed_recursion_warning.find(id) == printed_recursion_warning.end()) {
       printed_recursion_warning.insert(id);
-      Log::get().warn("Recursion detected in stats for " +
-                      OeisSequence(id).getProgramPath());
+      Log::get().warn("Recursion detected: " + OeisSequence(id).id_str());
     }
     return -1;
   }
   visited_programs.insert(id);
+  if (id >= program_lengths.size()) {
+    Log::get().warn("Invalid reference: " + OeisSequence(id).id_str());
+    return -1;
+  }
   int64_t length = program_lengths.at(id);
   auto range = call_graph.equal_range(id);
   for (auto &it = range.first; it != range.second; it++) {

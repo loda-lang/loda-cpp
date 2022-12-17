@@ -63,7 +63,7 @@ class Setup {
 
   static std::string getLatestVersion();
 
-  static void checkLatestedVersion();
+  static std::string checkLatestedVersion(bool silent);
 
   static bool hasMemory();
 
@@ -73,11 +73,14 @@ class Setup {
 
   static void runWizard();
 
+  static void performUpdate(const std::string& new_version, bool silent);
+
  private:
   static constexpr int64_t UNDEFINED_INT = -2;                  // cannot use -1
   static constexpr int64_t DEFAULT_GITHUB_UPDATE_INTERVAL = 1;  // 1 day default
-  static constexpr int64_t DEFAULT_OEIS_UPDATE_INTERVAL = 7;  // 1 week default
-  static constexpr int64_t DEFAULT_MAX_PROGRAM_AGE = 14;      // 2 weeks default
+  static constexpr int64_t DEFAULT_OEIS_UPDATE_INTERVAL =
+      30;                                                 // 1 month default
+  static constexpr int64_t DEFAULT_MAX_PROGRAM_AGE = 14;  // 2 weeks default
   static constexpr int64_t DEFAULT_MAX_PHYSICAL_MEMORY = 1024;  // 1 GB
 
   static std::string LODA_HOME;
@@ -114,4 +117,6 @@ class Setup {
   static bool updateFile(const std::string& local_file, const std::string& url,
                          const std::string& header, const std::string& marker,
                          bool executable);
+
+  static std::string getExecutable(const std::string& suffix);
 };
