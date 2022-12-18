@@ -285,7 +285,8 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     }
     // TODO: remove this limitation
     for (auto& op : ie.getPreLoop().ops) {
-      if (op.type == Operation::Type::MUL || op.type == Operation::Type::DIV) {
+      if (op.type == Operation::Type::MUL || op.type == Operation::Type::DIV ||
+          op.type == Operation::Type::TRN) {
         return false;
       }
     }
