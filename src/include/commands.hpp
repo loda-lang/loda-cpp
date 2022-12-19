@@ -44,7 +44,7 @@ class Commands {
 
   void testLogEval();
 
-  void testPari();
+  void testPari(const std::string& id);
 
   void dot(const std::string& path);
 

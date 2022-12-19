@@ -218,30 +218,13 @@ int64_t getNumInitialTermsNeeded(int64_t cell, const std::string& funcName,
   interpreter.run(ie.getPreLoop(), mem);
   int64_t loopCounterOffset =
       std::max<int64_t>(0, -(mem.get(ie.getLoopCounterCell()).asInt()));
-  int64_t numStateful = ie.getStatefulCells().size();
-  int64_t globalNumTerms = loopCounterOffset + numStateful;
-  auto localNumTerms = f.getNumInitialTermsNeeded(funcName);
-  // TODO: is it possible to avoid this extra check?
-  for (auto op : ie.getLoopBody().ops) {
-    if (op.type == Operation::Type::MOV &&
-        op.target == Operand(Operand::Type::DIRECT, cell) &&
-        op.source.type == Operand::Type::CONSTANT) {
-      localNumTerms = std::max<int64_t>(localNumTerms, 1);
-      break;
-    }
+  auto stateful = ie.getStatefulCells();
+  stateful.insert(ie.getOutputCells().begin(), ie.getOutputCells().end());
+  // stateful.erase(Program::OUTPUT_CELL);
+  if (stateful.find(cell) != stateful.end()) {
+    return loopCounterOffset + stateful.size();
   }
-  int64_t totalNumTerms;
-  if (f.isRecursive(funcName)) {
-    totalNumTerms = std::max<int64_t>(localNumTerms, globalNumTerms);
-  } else {
-    totalNumTerms = localNumTerms;
-  }
-  // print debug info
-  std::string msg = " number of terms for " + funcName + ": ";
-  Log::get().debug("Local" + msg + std::to_string(localNumTerms));
-  Log::get().debug("Global" + msg + std::to_string(globalNumTerms));
-  Log::get().debug("Total" + msg + std::to_string(totalNumTerms));
-  return totalNumTerms;
+  return 0;
 }
 
 void FormulaGenerator::initFormula(int64_t numCells, bool use_ie) {
@@ -285,7 +268,8 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     }
     // TODO: remove this limitation
     for (auto& op : ie.getPreLoop().ops) {
-      if (op.type == Operation::Type::MUL || op.type == Operation::Type::DIV) {
+      if (op.type == Operation::Type::MUL || op.type == Operation::Type::DIV ||
+          op.type == Operation::Type::TRN) {
         return false;
       }
     }
@@ -354,9 +338,10 @@ bool FormulaGenerator::generateSingle(const Program& p) {
                           {index});
           Expression val(Expression::Type::CONSTANT, "", state.get(cell));
           formula.entries[func] = val;
+          Log::get().debug("Added intial term: " + func.toString() + " = " +
+                           val.toString());
         }
       }
-      Log::get().debug("Added intial terms: " + formula.toString(false));
     }
 
     // prepare post-loop processing
@@ -364,6 +349,12 @@ bool FormulaGenerator::generateSingle(const Program& p) {
       auto name = newName();
       auto left = getFuncExpr(name);
       auto right = getFuncExpr(getCellName(cell));
+      if (cell == ie.getLoopCounterCell()) {
+        auto tmp = right;
+        right = Expression(
+            Expression::Type::FUNCTION, "min",
+            {right, Expression(Expression::Type::CONSTANT, "", Number::ZERO)});
+      }
       formula.entries[left] = right;
       cellNames[cell] = name;
     }
@@ -385,20 +376,11 @@ bool FormulaGenerator::generateSingle(const Program& p) {
 
   // TODO: avoid this limitation
   auto deps = formula.getFunctionDeps(true);
-  std::set<std::string> recursive, keys;
-  for (auto e : formula.entries) {
-    if (e.first.type == Expression::Type::FUNCTION) {
-      keys.insert(e.first.name);
-    }
-  }
+  std::set<std::string> recursive;
   for (auto it : deps) {
-    // std::cout << it.first << " => " << it.second << std::endl;
     if (it.first == it.second) {
       recursive.insert(it.first);
     }
-  }
-  if (keys.size() > 2) {
-    return false;
   }
   if (recursive.size() > 1) {
     return false;
@@ -435,7 +417,9 @@ void FormulaGenerator::simplifyFunctionNames() {
     if (n == getCellName(0)) {
       continue;
     }
-    formula.replaceName(n, canonicalName(cell++));
+    auto c = canonicalName(cell++);
+    Log::get().debug("Renaming function " + n + " => " + c);
+    formula.replaceName(n, c);
   }
 }
 

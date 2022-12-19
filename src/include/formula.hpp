@@ -20,8 +20,6 @@ class Formula {
 
   bool isRecursive(std::string funcName) const;
 
-  int64_t getNumInitialTermsNeeded(const std::string& fname) const;
-
   void replaceAll(const Expression& from, const Expression& to);
 
   void replaceName(const std::string& from, const std::string& to);

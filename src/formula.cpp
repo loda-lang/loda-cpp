@@ -110,29 +110,6 @@ bool Formula::isRecursive(std::string funcName) const {
   return false;
 }
 
-int64_t getNumTerms(const Expression& e) {
-  int64_t numTerms = 0;
-  if (e.type == Expression::Type::DIFFERENCE && e.children.size() == 2 &&
-      e.children[0]->type == Expression::Type::PARAMETER &&
-      e.children[1]->type == Expression::Type::CONSTANT) {
-    numTerms = std::max(numTerms, e.children[1]->value.asInt());
-  }
-  for (auto c : e.children) {
-    numTerms = std::max(numTerms, getNumTerms(*c));
-  }
-  return numTerms;
-}
-
-int64_t Formula::getNumInitialTermsNeeded(const std::string& fname) const {
-  int64_t numTerms = 0;
-  for (auto e : entries) {
-    if (e.first.name == fname) {
-      numTerms = std::max(numTerms, getNumTerms(e.second));
-    }
-  }
-  return numTerms;
-}
-
 void Formula::replaceAll(const Expression& from, const Expression& to) {
   std::map<Expression, Expression> newEntries;
   for (auto& e : entries) {

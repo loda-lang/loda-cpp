@@ -305,22 +305,33 @@ void IncrementalEvaluator::computeLoopCounterDependentCells() {
 bool IncrementalEvaluator::checkPostLoop() {
   // initialize output cells. all memory cells that are read
   // by the post-loop fragment are output cells.
-  bool is_overwriting_output = false;
+  std::set<int64_t> write;
   for (auto& op : post_loop.ops) {
     const auto meta = Operation::Metadata::get(op.type);
-    if (meta.num_operands > 0) {
-      if (meta.is_reading_target) {
-        output_cells.insert(op.target.value.asInt());
-      } else if (meta.is_writing_target &&
-                 op.target.value == Program::OUTPUT_CELL) {
-        is_overwriting_output = true;
+    if (meta.num_operands < 1) {
+      continue;
+    }
+    auto target = op.target.value.asInt();
+    if (meta.is_reading_target) {
+      if (write.find(target) == write.end()) {
+        output_cells.insert(target);
       }
     }
-    if (meta.num_operands == 2 && op.source.type == Operand::Type::DIRECT) {
-      output_cells.insert(op.source.value.asInt());
+    if (meta.is_writing_target) {
+      write.insert(target);
+    }
+    if (meta.num_operands < 2) {
+      continue;
+    }
+    if (op.source.type != Operand::Type::DIRECT) {
+      continue;
+    }
+    auto source = op.source.value.asInt();
+    if (write.find(source) == write.end()) {
+      output_cells.insert(source);
     }
   }
-  if (!is_overwriting_output) {
+  if (write.find(Program::OUTPUT_CELL) == write.end()) {
     output_cells.insert(Program::OUTPUT_CELL);
   }
   return true;

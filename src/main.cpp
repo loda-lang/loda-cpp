@@ -196,7 +196,11 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
   } else if (cmd == "test-logeval") {
     commands.testLogEval();
   } else if (cmd == "test-pari") {
-    commands.testPari();
+    std::string id;
+    if (args.size() > 1) {
+      id = args.at(1);
+    }
+    commands.testPari(id);
   } else if (cmd == "dot") {
     commands.dot(args.at(1));
   } else if (cmd == "generate" || cmd == "gen") {
