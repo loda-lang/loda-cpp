@@ -218,30 +218,13 @@ int64_t getNumInitialTermsNeeded(int64_t cell, const std::string& funcName,
   interpreter.run(ie.getPreLoop(), mem);
   int64_t loopCounterOffset =
       std::max<int64_t>(0, -(mem.get(ie.getLoopCounterCell()).asInt()));
-  int64_t numStateful = ie.getStatefulCells().size();
-  int64_t globalNumTerms = loopCounterOffset + numStateful;
-  auto localNumTerms = f.getNumInitialTermsNeeded(funcName);
-  // TODO: is it possible to avoid this extra check?
-  for (auto op : ie.getLoopBody().ops) {
-    if (op.type == Operation::Type::MOV &&
-        op.target == Operand(Operand::Type::DIRECT, cell) &&
-        op.source.type == Operand::Type::CONSTANT) {
-      localNumTerms = std::max<int64_t>(localNumTerms, globalNumTerms);
-      break;
-    }
+  auto stateful = ie.getStatefulCells();
+  stateful.insert(ie.getOutputCells().begin(), ie.getOutputCells().end());
+  // stateful.erase(Program::OUTPUT_CELL);
+  if (stateful.find(cell) != stateful.end()) {
+    return loopCounterOffset + stateful.size();
   }
-  int64_t totalNumTerms;
-  if (f.isRecursive(funcName)) {
-    totalNumTerms = std::max<int64_t>(localNumTerms, globalNumTerms);
-  } else {
-    totalNumTerms = localNumTerms;
-  }
-  // print debug info
-  std::string msg = " number of terms for " + funcName + ": ";
-  Log::get().debug("Local" + msg + std::to_string(localNumTerms));
-  Log::get().debug("Global" + msg + std::to_string(globalNumTerms));
-  Log::get().debug("Total" + msg + std::to_string(totalNumTerms));
-  return totalNumTerms;
+  return 0;
 }
 
 void FormulaGenerator::initFormula(int64_t numCells, bool use_ie) {
