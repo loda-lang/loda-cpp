@@ -213,8 +213,8 @@ void Stats::load(std::string path) {
     std::getline(summary, k, ',');
     std::getline(summary, v, ',');
     std::getline(summary, w);
-    num_sequences = std::stoll(v);
-    num_programs = std::stoll(k);
+    num_sequences = std::stoll(k);
+    num_programs = std::stoll(v);
     num_formulas = std::stoll(w);
   }
 
