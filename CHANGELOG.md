@@ -2,6 +2,11 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Enhancements
+
+* Support more (recursive) formulas
+* Metric for number of formulas
+
 ## v22.12.14
 
 ### Bugfixes
@@ -49,7 +54,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Fix update issues
 
-### Feature
+### Features
 
 * Install script
 * Update command

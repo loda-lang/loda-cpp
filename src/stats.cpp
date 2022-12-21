@@ -16,7 +16,8 @@
 const std::string Stats::CALL_GRAPH_HEADER("caller,callee");
 const std::string Stats::PROGRAMS_HEADER("id,length,inc_eval,log_eval");
 const std::string Stats::STEPS_HEADER("total,min,max,runs");
-const std::string Stats::SUMMARY_HEADER("num_programs,num_sequences");
+const std::string Stats::SUMMARY_HEADER(
+    "num_sequences,num_programs,num_formulas");
 
 void checkHeader(std::istream &in, const std::string &header,
                  const std::string &file) {
@@ -29,6 +30,7 @@ void checkHeader(std::istream &in, const std::string &header,
 Stats::Stats()
     : num_programs(0),
       num_sequences(0),
+      num_formulas(0),
       num_ops_per_type(Operation::Types.size(), 0) {}
 
 void Stats::load(std::string path) {
@@ -209,9 +211,11 @@ void Stats::load(std::string path) {
     std::ifstream summary(full);
     checkHeader(summary, SUMMARY_HEADER, full);
     std::getline(summary, k, ',');
-    std::getline(summary, v);
-    num_programs = std::stoll(k);
+    std::getline(summary, v, ',');
+    std::getline(summary, w);
     num_sequences = std::stoll(v);
+    num_programs = std::stoll(k);
+    num_formulas = std::stoll(w);
   }
 
   { blocks.load(path + "blocks.asm"); }
@@ -290,7 +294,8 @@ void Stats::save(std::string path) {
 
   std::ofstream summary(path + "summary.csv");
   summary << SUMMARY_HEADER << "\n";
-  summary << num_programs << sep << num_sequences << "\n";
+  summary << num_sequences << sep << num_programs << sep << num_formulas
+          << "\n";
   summary.close();
 
   std::ofstream cal(path + "call_graph.csv");
@@ -321,7 +326,6 @@ std::string Stats::getMainStatsFile(std::string path) const {
 }
 
 void Stats::updateProgramStats(size_t id, const Program &program) {
-  num_programs++;
   const size_t num_ops = ProgramUtil::numOps(program, false);
   resizeProgramLists(id);
   program_lengths[id] = num_ops;
@@ -371,8 +375,11 @@ void Stats::updateProgramStats(size_t id, const Program &program) {
   blocks_collector.add(program);
 }
 
-void Stats::updateSequenceStats(size_t id, bool program_found) {
+void Stats::updateSequenceStats(size_t id, bool program_found,
+                                bool formula_found) {
   num_sequences++;
+  num_programs += static_cast<int64_t>(program_found);
+  num_formulas += static_cast<int64_t>(formula_found);
   resizeProgramLists(id);
   all_program_ids[id] = program_found;
 }

@@ -437,7 +437,7 @@ void OeisManager::generateStats(int64_t age_in_days) {
   size_t num_processed = 0;
   Program program;
   std::string file_name;
-  bool has_program;
+  bool has_program, has_formula;
 
   AdaptiveScheduler notify(20);  // magic number
   for (auto &s : sequences) {
@@ -447,24 +447,26 @@ void OeisManager::generateStats(int64_t age_in_days) {
     file_name = s.getProgramPath();
     std::ifstream program_file(file_name);
     has_program = false;
+    has_formula = false;
     if (program_file.good()) {
       try {
         program = parser.parse(program_file);
         has_program = true;
+        has_formula =
+            !ProgramUtil::getCommentField(program, ProgramUtil::PREFIX_FORMULA)
+                 .empty();
+        ProgramUtil::removeOps(program, Operation::Type::NOP);
+
+        // update stats
+        stats->updateProgramStats(s.id, program);
+        num_processed++;
       } catch (const std::exception &exc) {
         Log::get().error(
             "Error parsing " + file_name + ": " + std::string(exc.what()),
             false);
-        continue;
       }
-
-      ProgramUtil::removeOps(program, Operation::Type::NOP);
-
-      // update stats
-      stats->updateProgramStats(s.id, program);
-      num_processed++;
     }
-    stats->updateSequenceStats(s.id, has_program);
+    stats->updateSequenceStats(s.id, has_program, has_formula);
     if (notify.isTargetReached()) {
       notify.reset();
       Log::get().info("Processed " + std::to_string(num_processed) +
@@ -628,6 +630,7 @@ const Stats &OeisManager::getStats() {
   labels["kind"] = "total";
   entries.push_back({"programs", labels, (double)stats->num_programs});
   entries.push_back({"sequences", labels, (double)total_count});
+  entries.push_back({"formulas", labels, (double)stats->num_formulas});
   labels["kind"] = "used";
   entries.push_back({"sequences", labels, (double)stats->num_sequences});
   labels.clear();
@@ -684,10 +687,10 @@ void OeisManager::dumpProgram(size_t id, Program &p, const std::string &file,
     }
   }
   tmp.ops.push_back(nop);
-  FormulaGenerator gen(false);
+  FormulaGenerator generator;
   Formula formula;
-  if (gen.generate(p, id, formula, false)) {
-    nop.comment = "Formula: " + formula.toString(false);
+  if (generator.generate(p, id, formula, false)) {
+    nop.comment = ProgramUtil::PREFIX_FORMULA + " " + formula.toString();
     tmp.ops.push_back(nop);
   }
   nop.comment.clear();
@@ -705,10 +708,10 @@ void OeisManager::alert(Program p, size_t id, const std::string &prefix,
   std::string msg, full;
   msg = prefix + " program for " + seq.to_string();
   full = msg + " Terms: " + seq.getTerms(settings.num_terms).to_string();
-  FormulaGenerator gen(false);
+  FormulaGenerator generator;
   Formula formula;
-  if (gen.generate(p, id, formula, false)) {
-    full += ". Formula: " + formula.toString(false);
+  if (generator.generate(p, id, formula, false)) {
+    full += ". " + ProgramUtil::PREFIX_FORMULA + " " + formula.toString();
   }
   if (!submitted_by.empty()) {
     std::string sub = ProgramUtil::PREFIX_SUBMITTED_BY + " " + submitted_by;

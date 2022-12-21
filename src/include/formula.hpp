@@ -7,7 +7,7 @@
 
 class Formula {
  public:
-  std::string toString(bool pariMode) const;
+  std::string toString() const;
 
   void clear();
 
@@ -27,6 +27,8 @@ class Formula {
   void collectEntries(const std::string& name, Formula& target);
 
   void collectEntries(const Expression& e, Formula& target);
+
+  void resolveIdentities();
 
   std::map<Expression, Expression> entries;
 };

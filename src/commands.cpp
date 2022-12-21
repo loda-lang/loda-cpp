@@ -215,18 +215,18 @@ void Commands::export_(const std::string& path) {
   Program program = parser.parse(getProgramPathAndSeqId(path).first);
   const auto& format = settings.export_format;
   Formula formula;
+  FormulaGenerator generator;
   if (format.empty() || format == "formula") {
-    FormulaGenerator gen(false);
-    if (!gen.generate(program, -1, formula, settings.with_deps)) {
+    if (!generator.generate(program, -1, formula, settings.with_deps)) {
       throw std::runtime_error("program cannot be converted to formula");
     }
-    std::cout << formula.toString(false) << std::endl;
+    std::cout << formula.toString() << std::endl;
   } else if (format == "pari") {
-    FormulaGenerator gen(true);
-    if (!gen.generate(program, -1, formula, settings.with_deps)) {
+    if (!generator.generate(program, -1, formula, settings.with_deps) ||
+        !Pari::convertToPari(formula)) {
       throw std::runtime_error("program cannot be converted to pari");
     }
-    std::cout << formula.toString(true) << std::endl;
+    std::cout << Pari::toString(formula) << std::endl;
   } else if (format == "loda") {
     ProgramUtil::print(program, std::cout);
   } else {
@@ -374,11 +374,12 @@ void Commands::testPari(const std::string& test_id) {
     }
 
     // generate PARI code
-    FormulaGenerator gen(true);
+    FormulaGenerator generator;
     Formula formula;
     Sequence expSeq;
     try {
-      if (!gen.generate(program, id, formula, true)) {
+      if (!generator.generate(program, id, formula, true) ||
+          !Pari::convertToPari(formula)) {
         continue;
       }
     } catch (const std::exception&) {
@@ -394,7 +395,7 @@ void Commands::testPari(const std::string& test_id) {
         Log::get().error("Expected evaluation error for " + seq.id_str(), true);
       }
     }
-    auto pariCode = formula.toString(true);
+    auto pariCode = Pari::toString(formula);
     Log::get().info(seq.id_str() + ": " + pariCode);
 
     // determine number of terms for testing

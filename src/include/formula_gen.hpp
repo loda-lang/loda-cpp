@@ -7,8 +7,6 @@
 
 class FormulaGenerator {
  public:
-  FormulaGenerator(bool pariMode);
-
   bool generate(const Program& p, int64_t id, Formula& result, bool withDeps);
 
  private:
@@ -30,13 +28,12 @@ class FormulaGenerator {
 
   void convertInitialTermsToIf();
 
+  bool convertArithToPari();
+
   void simplifyFunctionNames();
 
   void restrictToMain();
 
-  void resolveIdentities();
-
-  const bool pariMode;
   Formula formula;
   std::map<int64_t, std::string> cellNames;
   size_t freeNameIndex;

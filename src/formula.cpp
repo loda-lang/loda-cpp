@@ -1,23 +1,15 @@
 #include "formula.hpp"
 
-std::string Formula::toString(bool pariMode) const {
+#include "expression_util.hpp"
+
+std::string Formula::toString() const {
   std::string result;
   bool first = true;
   for (auto it = entries.rbegin(); it != entries.rend(); it++) {
     if (!first) {
-      if (pariMode) {
-        result += "; ";
-      } else {
-        result += ", ";
-      }
-    }
-    if (pariMode && entries.size() > 1) {
-      result += "(";
+      result += ", ";
     }
     result += it->first.toString() + " = " + it->second.toString();
-    if (pariMode && entries.size() > 1) {
-      result += ")";
-    }
     first = false;
   }
   return result;
@@ -152,5 +144,17 @@ void Formula::collectEntries(const Expression& e, Formula& target) {
   }
   for (auto c : e.children) {
     collectEntries(*c, target);
+  }
+}
+
+void Formula::resolveIdentities() {
+  auto copy = entries;
+  for (auto& e : copy) {
+    if (ExpressionUtil::isSimpleFunction(e.first) &&
+        ExpressionUtil::isSimpleFunction(e.second) &&
+        copy.find(e.second) != copy.end()) {
+      entries.erase(e.first);
+      replaceName(e.second.name, e.first.name);
+    }
   }
 }

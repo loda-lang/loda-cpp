@@ -10,8 +10,6 @@
 #include "parser.hpp"
 #include "program_util.hpp"
 
-FormulaGenerator::FormulaGenerator(bool pariMode) : pariMode(pariMode) {}
-
 std::string FormulaGenerator::newName() {
   std::string name = "a" + std::to_string(freeNameIndex);
   freeNameIndex++;
@@ -61,20 +59,6 @@ Expression FormulaGenerator::operandToExpression(Operand op) const {
   throw std::runtime_error("internal error");  // unreachable
 }
 
-Expression fraction(const Expression& num, const Expression& den,
-                    bool pariMode) {
-  auto frac = Expression(Expression::Type::FRACTION, "", {num, den});
-  if (pariMode) {
-    std::string func = "floor";
-    if (ExpressionUtil::canBeNegative(num) ||
-        ExpressionUtil::canBeNegative(den)) {
-      func = "truncate";
-    }
-    return Expression(Expression::Type::FUNCTION, func, {frac});
-  }
-  return frac;
-}
-
 bool FormulaGenerator::update(const Operation& op) {
   auto source = operandToExpression(op.source);
   auto target = operandToExpression(op.target);
@@ -105,39 +89,20 @@ bool FormulaGenerator::update(const Operation& op) {
       break;
     }
     case Operation::Type::DIV: {
-      res = fraction(prevTarget, source, pariMode);
+      res = Expression(Expression::Type::FRACTION, "", {prevTarget, source});
       break;
     }
     case Operation::Type::POW: {
-      auto pow = Expression(Expression::Type::POWER, "", {prevTarget, source});
-      if (pariMode && ExpressionUtil::canBeNegative(source)) {
-        res = Expression(Expression::Type::FUNCTION, "truncate", {pow});
-      } else {
-        res = pow;
-      }
+      res = Expression(Expression::Type::POWER, "", {prevTarget, source});
       break;
     }
     case Operation::Type::MOD: {
-      if (pariMode && (ExpressionUtil::canBeNegative(prevTarget) ||
-                       ExpressionUtil::canBeNegative(source))) {
-        res = Expression(Expression::Type::DIFFERENCE);
-        res.newChild(prevTarget);
-        res.newChild(Expression::Type::PRODUCT);
-        res.children[1]->newChild(source);
-        res.children[1]->newChild(fraction(prevTarget, source, pariMode));
-      } else {
-        res = Expression(Expression::Type::MODULUS, "", {prevTarget, source});
-      }
+      res = Expression(Expression::Type::MODULUS, "", {prevTarget, source});
       break;
     }
     case Operation::Type::BIN: {
-      // TODO: check feedback from PARI team to avoid this limitation
-      if (pariMode && ExpressionUtil::canBeNegative(source)) {
-        okay = false;
-      } else {
-        res = Expression(Expression::Type::FUNCTION, "binomial",
-                         {prevTarget, source});
-      }
+      res = Expression(Expression::Type::FUNCTION, "binomial",
+                       {prevTarget, source});
       break;
     }
     case Operation::Type::GCD: {
@@ -173,7 +138,7 @@ bool FormulaGenerator::update(const Operation& op) {
   if (okay) {
     ExpressionUtil::normalize(res);
     Log::get().debug("Operation " + ProgramUtil::operationToString(op) +
-                     " updated formula to " + formula.toString(false));
+                     " updated formula to " + formula.toString());
   }
   return okay;
 }
@@ -269,7 +234,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     // TODO: remove this limitation
     for (auto& op : ie.getPreLoop().ops) {
       if (op.type == Operation::Type::MUL || op.type == Operation::Type::DIV ||
-          op.type == Operation::Type::TRN) {
+          op.type == Operation::Type::POW || op.type == Operation::Type::TRN) {
         return false;
       }
     }
@@ -294,7 +259,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     initFormula(numCells, true);
     formula.entries[param] = saved;
   }
-  Log::get().debug("Initialized formula to " + formula.toString(false));
+  Log::get().debug("Initialized formula to " + formula.toString());
 
   // update formula based on main program / loop body
   Program main;
@@ -306,7 +271,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   if (!update(main)) {
     return false;
   }
-  Log::get().debug("Updated formula:  " + formula.toString(false));
+  Log::get().debug("Updated formula:  " + formula.toString());
 
   // additional work for IE programs
   if (use_ie) {
@@ -316,7 +281,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
       resolve(e.first, e.second);
     }
     formula = copy;
-    Log::get().debug("Resolved formula: " + formula.toString(false));
+    Log::get().debug("Resolved formula: " + formula.toString());
 
     // determine number of initial terms needed
     std::vector<int64_t> numTerms(numCells);
@@ -358,21 +323,22 @@ bool FormulaGenerator::generateSingle(const Program& p) {
       formula.entries[left] = right;
       cellNames[cell] = name;
     }
-    Log::get().debug("Prepared post-loop: " + formula.toString(false));
+    Log::get().debug("Prepared post-loop: " + formula.toString());
 
     // handle post-loop code
     auto post = ie.getPostLoop();
     if (!update(post)) {
       return false;
     }
-    Log::get().debug("Processed post-loop: " + formula.toString(false));
+    Log::get().debug("Processed post-loop: " + formula.toString());
   }
 
   // extract main formula (filter out irrelant memory cells)
   restrictToMain();
 
   // resolve identities
-  resolveIdentities();
+  formula.resolveIdentities();
+  Log::get().debug("Resolved identities: " + formula.toString());
 
   // TODO: avoid this limitation
   auto deps = formula.getFunctionDeps(true);
@@ -382,21 +348,13 @@ bool FormulaGenerator::generateSingle(const Program& p) {
       recursive.insert(it.first);
     }
   }
-  if (recursive.size() > 1) {
-    return false;
-  }
   for (auto r : recursive) {
-    if (deps.count(r) > 1) {
+    if (deps.count(r) > 2) {
       return false;
     }
   }
 
-  // pari: convert initial terms to "if"
-  if (pariMode) {
-    convertInitialTermsToIf();
-  }
-
-  Log::get().debug("Generated formula: " + formula.toString(false));
+  Log::get().debug("Generated formula: " + formula.toString());
 
   // success
   return true;
@@ -423,44 +381,11 @@ void FormulaGenerator::simplifyFunctionNames() {
   }
 }
 
-void FormulaGenerator::convertInitialTermsToIf() {
-  auto it = formula.entries.begin();
-  while (it != formula.entries.end()) {
-    auto left = it->first;
-    auto general = getFuncExpr(left.name);
-    auto general_it = formula.entries.find(general);
-    if (left.type == Expression::Type::FUNCTION && left.children.size() == 1 &&
-        left.children.front()->type == Expression::Type::CONSTANT &&
-        general_it != formula.entries.end()) {
-      general_it->second =
-          Expression(Expression::Type::IF, "",
-                     {*left.children.front(), it->second, general_it->second});
-      it = formula.entries.erase(it);
-    } else {
-      it++;
-    }
-  }
-}
-
 void FormulaGenerator::restrictToMain() {
   Formula tmp;
   formula.collectEntries(getCellName(Program::OUTPUT_CELL), tmp);
   formula = tmp;
-  Log::get().debug("Restricted formula: " + formula.toString(false));
-}
-
-void FormulaGenerator::resolveIdentities() {
-  // resolve identities
-  auto entries = formula.entries;  // copy entries
-  for (auto& e : entries) {
-    if (ExpressionUtil::isSimpleFunction(e.first) &&
-        ExpressionUtil::isSimpleFunction(e.second) &&
-        entries.find(e.second) != entries.end()) {
-      formula.entries.erase(e.first);
-      formula.replaceName(e.second.name, e.first.name);
-    }
-  }
-  Log::get().debug("Resolved identities: " + formula.toString(false));
+  Log::get().debug("Restricted formula: " + formula.toString());
 }
 
 bool addProgramIds(const Program& p, std::set<int64_t>& ids) {

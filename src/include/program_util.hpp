@@ -89,6 +89,7 @@ class ProgramUtil {
 
   static const std::string PREFIX_SUBMITTED_BY;
   static const std::string PREFIX_CODED_MANUALLY;
+  static const std::string PREFIX_FORMULA;
   static const std::string PREFIX_MINER_PROFILE;
   static const std::string PREFIX_CHANGE_TYPE;
   static const std::string PREFIX_PREVIOUS_HASH;

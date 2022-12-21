@@ -46,7 +46,7 @@ class Stats {
 
   void updateProgramStats(size_t id, const Program &program);
 
-  void updateSequenceStats(size_t id, bool program_found);
+  void updateSequenceStats(size_t id, bool program_found, bool formula_found);
 
   void finalize();
 
@@ -54,6 +54,7 @@ class Stats {
 
   int64_t num_programs;
   int64_t num_sequences;
+  int64_t num_formulas;
   steps_t steps;
   std::map<Number, int64_t> num_constants;
   std::map<Operation, int64_t> num_operations;

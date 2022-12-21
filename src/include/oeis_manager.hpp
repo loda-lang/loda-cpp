@@ -69,8 +69,6 @@ class OeisManager {
              const std::string& color, const std::string& submitted_by,
              bool tweet) const;
 
-  friend class OeisMaintenance;
-
   const Settings& settings;
   const OverwriteMode overwrite_mode;
   Parser parser;

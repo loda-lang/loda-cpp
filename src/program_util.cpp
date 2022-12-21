@@ -579,13 +579,15 @@ std::string ProgramUtil::getSequenceIdFromProgram(const Program &p) {
   return id_str;
 }
 
+// prefixes without colon
 const std::string ProgramUtil::PREFIX_SUBMITTED_BY = "Submitted by";
 const std::string ProgramUtil::PREFIX_CODED_MANUALLY = "Coded manually";
-const std::string ProgramUtil::PREFIX_MINER_PROFILE =
-    "Miner Profile:";                                                // colon!
-const std::string ProgramUtil::PREFIX_CHANGE_TYPE = "Change Type:";  // colon!
-const std::string ProgramUtil::PREFIX_PREVIOUS_HASH =
-    "Previous Hash:";  // colon!
+
+// prefixes with colon
+const std::string ProgramUtil::PREFIX_FORMULA = "Formula:";
+const std::string ProgramUtil::PREFIX_MINER_PROFILE = "Miner Profile:";
+const std::string ProgramUtil::PREFIX_CHANGE_TYPE = "Change Type:";
+const std::string ProgramUtil::PREFIX_PREVIOUS_HASH = "Previous Hash:";
 
 void ProgramUtil::avoidNopOrOverflow(Operation &op) {
   if (op.source.type == Operand::Type::CONSTANT) {
