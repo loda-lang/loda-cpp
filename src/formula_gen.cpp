@@ -340,6 +340,14 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   formula.resolveIdentities();
   Log::get().debug("Resolved identities: " + formula.toString());
 
+  // resolve linear functions
+  formula.resolveSimpleRecursions();
+  Log::get().debug("Resolved simple recursions: " + formula.toString());
+
+  // resolve linear functions
+  formula.resolveSimpleFunctions();
+  Log::get().debug("Resolved simple functions: " + formula.toString());
+
   // TODO: avoid this limitation
   auto deps = formula.getFunctionDeps(true);
   std::set<std::string> recursive;
