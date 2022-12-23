@@ -1,5 +1,7 @@
 #include "formula.hpp"
 
+#include <set>
+
 #include "expression_util.hpp"
 
 std::string Formula::toString() const {
@@ -156,5 +158,170 @@ void Formula::resolveIdentities() {
       entries.erase(e.first);
       replaceName(e.second.name, e.first.name);
     }
+  }
+}
+
+void replaceFunction(Expression& target, const std::string& func,
+                     const Expression& param, const Expression& val) {
+  // bottom-up
+  for (auto& c : target.children) {
+    replaceFunction(*c, func, param, val);
+  }
+  if (target.type != Expression::Type::FUNCTION ||
+      target.children.size() != 1 || target.name != func) {
+    return;
+  }
+  auto updated = val;
+  updated.replaceAll(param, *target.children.front());
+  ExpressionUtil::normalize(updated);
+  target = updated;
+}
+
+void Formula::resolveSimpleFunctions() {
+  // collect function definitions
+  std::set<std::string> simple_funcs;
+  std::map<std::string, Expression> params, defs;
+  for (auto& e : entries) {
+    if (ExpressionUtil::isSimpleFunction(e.first)) {
+      simple_funcs.insert(e.first.name);
+      params[e.first.name] = *e.first.children.front();
+      defs[e.first.name] = e.second;
+    }
+  }
+  // filter out non-simple functions
+  auto deps = getFunctionDeps(false);
+  for (auto& e : entries) {
+    if (e.first.type != Expression::Type::FUNCTION) {
+      continue;  // should not happen
+    }
+    auto f = e.first.name;
+    bool is_simple = true;
+    if (!ExpressionUtil::isSimpleFunction(e.first)) {
+      is_simple = false;
+    }
+    for (auto it : deps) {
+      if (it.first == f && containsFunctionDef(it.second)) {
+        is_simple = false;
+        break;
+      }
+    }
+    if (!is_simple) {
+      simple_funcs.erase(e.first.name);
+    }
+  }
+  // perform replacements
+  for (auto& f : simple_funcs) {
+    for (auto& e : entries) {
+      replaceFunction(e.second, f, params[f], defs[f]);
+    }
+  }
+}
+
+void Formula::resolveSimpleRecursions() {
+  // collect functions
+  std::set<std::string> funcs;
+  for (auto& e : entries) {
+    if (ExpressionUtil::isSimpleFunction(e.first)) {
+      funcs.insert(e.first.name);
+    }
+  }
+  // collect and check their slopes and offsets
+  std::map<std::string, Number> slopes, offsets;
+  std::map<std::string, Expression> params;
+  std::map<Number, Number> constants;
+  for (auto& f : funcs) {
+    constants.clear();
+    bool found_slope = false;
+    Number slope = 0;
+    for (auto& e : entries) {
+      if (e.first.type != Expression::Type::FUNCTION) {
+        continue;
+      }
+      if (e.first.name != f) {
+        continue;
+      }
+      auto arg_type = e.first.children.front()->type;
+      if (arg_type == Expression::Type::CONSTANT) {
+        if (e.second.type != Expression::Type::CONSTANT) {
+          constants.clear();
+          break;
+        }
+        constants[e.first.children.front()->value] = e.second.value;
+      } else if (arg_type == Expression::Type::PARAMETER) {
+        params[f] = *e.first.children.front();
+        auto val = e.second;
+        if (val.type != Expression::Type::SUM &&
+            val.type != Expression::Type::DIFFERENCE) {
+          found_slope = false;
+          break;
+        }
+        if (val.children.size() != 2) {
+          found_slope = false;
+          break;
+        }
+        if (val.children.at(1)->type != Expression::Type::CONSTANT) {
+          found_slope = false;
+          break;
+        }
+        Expression predecessor(
+            Expression::Type::DIFFERENCE, "",
+            {params[f],
+             Expression(Expression::Type::CONSTANT, "", Number::ONE)});
+        Expression prevTerm(Expression::Type::FUNCTION, f, {predecessor});
+        if (*val.children.at(0) != prevTerm) {
+          found_slope = false;
+          break;
+        }
+        slope = val.children.at(1)->value;
+        if (val.type == Expression::Type::DIFFERENCE) {
+          slope.negate();
+        }
+        found_slope = true;
+      } else {
+        found_slope = false;
+        break;
+      }
+    }
+    if (!found_slope || constants.find(Number::ZERO) == constants.end()) {
+      continue;
+    }
+    auto offset = constants.at(Number::ZERO);
+    for (auto& c : constants) {
+      auto expected_val = slope;
+      expected_val *= c.first;
+      expected_val += offset;
+      if (c.second != expected_val) {
+        found_slope = false;
+        break;
+      }
+    }
+    if (found_slope) {
+      slopes[f] = slope;
+      offsets[f] = offset;
+    }
+  }
+  for (auto& f : funcs) {
+    if (slopes.find(f) == slopes.end()) {
+      continue;
+    }
+    // remove function
+    auto it = entries.begin();
+    while (it != entries.end()) {
+      if (it->first.name == f) {
+        it = entries.erase(it);
+      } else {
+        it++;
+      }
+    }
+    // add simple function
+    Expression prod(
+        Expression::Type::PRODUCT, "",
+        {Expression(Expression::Type::CONSTANT, "", slopes[f]), params[f]});
+    Expression sum(
+        Expression::Type::SUM, "",
+        {Expression(Expression::Type::CONSTANT, "", offsets[f]), prod});
+    ExpressionUtil::normalize(sum);
+    Expression func(Expression::Type::FUNCTION, f, {params[f]});
+    entries[func] = sum;
   }
 }

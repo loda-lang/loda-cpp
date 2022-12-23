@@ -32,8 +32,6 @@ class FormulaGenerator {
 
   void simplifyFunctionNames();
 
-  void restrictToMain();
-
   Formula formula;
   std::map<int64_t, std::string> cellNames;
   size_t freeNameIndex;

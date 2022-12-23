@@ -30,5 +30,9 @@ class Formula {
 
   void resolveIdentities();
 
+  void resolveSimpleFunctions();
+
+  void resolveSimpleRecursions();
+
   std::map<Expression, Expression> entries;
 };

@@ -333,8 +333,19 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     Log::get().debug("Processed post-loop: " + formula.toString());
   }
 
+  // resolve linear functions
+  formula.resolveSimpleRecursions();
+  Log::get().debug("Resolved simple recursions: " + formula.toString());
+
+  // resolve linear functions
+  formula.resolveSimpleFunctions();
+  Log::get().debug("Resolved simple functions: " + formula.toString());
+
   // extract main formula (filter out irrelant memory cells)
-  restrictToMain();
+  Formula tmp;
+  formula.collectEntries(getCellName(Program::OUTPUT_CELL), tmp);
+  formula = tmp;
+  Log::get().debug("Pruned formula: " + formula.toString());
 
   // resolve identities
   formula.resolveIdentities();
@@ -379,13 +390,6 @@ void FormulaGenerator::simplifyFunctionNames() {
     Log::get().debug("Renaming function " + n + " => " + c);
     formula.replaceName(n, c);
   }
-}
-
-void FormulaGenerator::restrictToMain() {
-  Formula tmp;
-  formula.collectEntries(getCellName(Program::OUTPUT_CELL), tmp);
-  formula = tmp;
-  Log::get().debug("Restricted formula: " + formula.toString());
 }
 
 bool addProgramIds(const Program& p, std::set<int64_t>& ids) {
