@@ -99,9 +99,7 @@ int Expression::compare(const Expression& e) const {
       } else {
         return -1;
       }
-    case Expression::Type::NEGATION:
     case Expression::Type::SUM:
-    case Expression::Type::DIFFERENCE:
     case Expression::Type::PRODUCT:
     case Expression::Type::FRACTION:
     case Expression::Type::POWER:
@@ -195,23 +193,70 @@ std::string Expression::toString() const {
   return ss.str();
 }
 
+std::pair<Expression, bool> extractSign(const Expression& e) {
+  std::pair<Expression, bool> result;
+  switch (e.type) {
+    case Expression::Type::CONSTANT:
+      result.first = e;
+      if (e.value < Number::ZERO) {
+        result.first.value.negate();
+        result.second = true;
+      } else {
+        result.second = false;
+      }
+      break;
+    case Expression::Type::PRODUCT:
+      result.first.type = Expression::Type::PRODUCT;
+      result.second = false;
+      for (auto c : e.children) {
+        if (c->type == Expression::Type::CONSTANT && c->value < Number::ZERO) {
+          auto constant = *c;
+          constant.value.negate();
+          if (constant.value != Number::ONE) {
+            result.first.newChild(constant);
+          }
+          result.second = !result.second;
+        } else {
+          result.first.newChild(*c);
+        }
+      }
+      if (result.first.children.empty()) {
+        result.first.newChild(
+            Expression(Expression::Type::CONSTANT, "", Number::ONE));
+      }
+      break;
+    default:
+      result.first = e;
+      result.second = false;
+      break;
+  }
+  return result;
+}
+
 void Expression::print(std::ostream& out, size_t index, bool isRoot,
                        Expression::Type parentType) const {
   const bool brackets = needsBrackets(index, isRoot, parentType);
   if (brackets) {
     out << "(";
   }
+  auto extracted = extractSign(*this);
+  if (extracted.second) {
+    out << "-";
+  }
+  extracted.first.printExtracted(out, index, isRoot, parentType);
+  if (brackets) {
+    out << ")";
+  }
+}
+
+void Expression::printExtracted(std::ostream& out, size_t index, bool isRoot,
+                                Expression::Type parentType) const {
   switch (type) {
     case Expression::Type::CONSTANT:
       out << value;
       break;
     case Expression::Type::PARAMETER:
       out << name;
-      break;
-    case Expression::Type::NEGATION:
-      out << "-";
-      assertNumChildren(1);
-      children.front()->print(out, index, false, type);
       break;
     case Expression::Type::FUNCTION:
       out << name << "(";
@@ -220,9 +265,6 @@ void Expression::print(std::ostream& out, size_t index, bool isRoot,
       break;
     case Expression::Type::SUM:
       printChildren(out, "+", isRoot, parentType);
-      break;
-    case Expression::Type::DIFFERENCE:
-      printChildren(out, "-", isRoot, parentType);
       break;
     case Expression::Type::PRODUCT:
       printChildren(out, "*", isRoot, parentType);
@@ -243,9 +285,6 @@ void Expression::print(std::ostream& out, size_t index, bool isRoot,
       out << ")";
       break;
   }
-  if (brackets) {
-    out << ")";
-  }
 }
 
 bool Expression::needsBrackets(size_t index, bool isRoot,
@@ -256,7 +295,8 @@ bool Expression::needsBrackets(size_t index, bool isRoot,
   if (type == Expression::Type::PARAMETER) {
     return false;
   }
-  if (type == Expression::Type::CONSTANT && (Number(-1) < value)) {
+  if (type == Expression::Type::CONSTANT &&
+      (parentType == Expression::Type::SUM || (Number(-1) < value))) {
     return false;
   }
   if (type == Expression::Type::FUNCTION ||
@@ -266,20 +306,9 @@ bool Expression::needsBrackets(size_t index, bool isRoot,
   if (type == Expression::Type::IF || parentType == Expression::Type::IF) {
     return false;
   }
-  if (type == Expression::Type::NEGATION &&
-      (parentType == Expression::Type::SUM ||
-       parentType == Expression::Type::DIFFERENCE) &&
-      index == 0) {
-    return false;
-  }
   if (type == Expression::Type::PRODUCT || type == Expression::Type::POWER ||
       type == Expression::Type::FRACTION || type == Expression::Type::MODULUS) {
     if (parentType == Expression::Type::SUM) {
-      return false;
-    }
-    if (parentType == Expression::Type::DIFFERENCE &&
-        (children.front()->type != Expression::Type::CONSTANT ||
-         Number(-1) < children.front()->value)) {
       return false;
     }
   }
@@ -293,7 +322,8 @@ bool Expression::needsBrackets(size_t index, bool isRoot,
 void Expression::printChildren(std::ostream& out, const std::string& op,
                                bool isRoot, Expression::Type parentType) const {
   for (size_t i = 0; i < children.size(); i++) {
-    if (i > 0) {
+    auto extracted = extractSign(*children[i]);
+    if (i > 0 && (op != "+" || !extracted.second)) {
       out << op;
     }
     children[i]->print(out, i, false, type);
