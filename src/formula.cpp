@@ -250,8 +250,7 @@ void Formula::resolveSimpleRecursions() {
       } else if (arg_type == Expression::Type::PARAMETER) {
         params[f] = *e.first.children.front();
         auto val = e.second;
-        if (val.type != Expression::Type::SUM &&
-            val.type != Expression::Type::DIFFERENCE) {
+        if (val.type != Expression::Type::SUM) {
           found_slope = false;
           break;
         }
@@ -264,18 +263,15 @@ void Formula::resolveSimpleRecursions() {
           break;
         }
         Expression predecessor(
-            Expression::Type::DIFFERENCE, "",
+            Expression::Type::SUM, "",
             {params[f],
-             Expression(Expression::Type::CONSTANT, "", Number::ONE)});
+             Expression(Expression::Type::CONSTANT, "", Number(-1))});
         Expression prevTerm(Expression::Type::FUNCTION, f, {predecessor});
         if (*val.children.at(0) != prevTerm) {
           found_slope = false;
           break;
         }
         slope = val.children.at(1)->value;
-        if (val.type == Expression::Type::DIFFERENCE) {
-          slope.negate();
-        }
         found_slope = true;
       } else {
         found_slope = false;

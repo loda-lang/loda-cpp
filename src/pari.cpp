@@ -55,11 +55,13 @@ bool convertExprToPari(Expression& expr) {
     auto c2 = *expr.children.at(1);
     if (ExpressionUtil::canBeNegative(c1) ||
         ExpressionUtil::canBeNegative(c2)) {
-      Expression wrapper(Expression::Type::DIFFERENCE);
+      Expression wrapper(Expression::Type::SUM);
       wrapper.newChild(c1);
       wrapper.newChild(Expression::Type::PRODUCT);
       Expression frac(Expression::Type::FRACTION, "", {c1, c2});
       convertFracToPari(frac);
+      wrapper.children[1]->newChild(
+          Expression(Expression::Type::CONSTANT, "", Number(-1)));
       wrapper.children[1]->newChild(c2);
       wrapper.children[1]->newChild(frac);
       expr = wrapper;

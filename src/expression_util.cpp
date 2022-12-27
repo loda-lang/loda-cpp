@@ -13,15 +13,6 @@ bool mergeTwoChildren(Expression& e) {
           merged = true;
           break;
         }
-        case Expression::Type::DIFFERENCE: {
-          if (i == 0) {
-            c->value -= d->value;
-          } else {
-            c->value += d->value;
-          }
-          merged = true;
-          break;
-        }
         case Expression::Type::PRODUCT: {
           c->value *= d->value;
           merged = true;
@@ -68,9 +59,7 @@ bool mergeAllChildren(Expression& e) {
 }
 
 bool pullUpChildren(Expression& e) {
-  if (e.type != Expression::Type::SUM &&
-      e.type != Expression::Type::DIFFERENCE &&
-      e.type != Expression::Type::PRODUCT) {
+  if (e.type != Expression::Type::SUM && e.type != Expression::Type::PRODUCT) {
     return false;
   }
   std::vector<Expression*> collected;
@@ -83,16 +72,12 @@ bool pullUpChildren(Expression& e) {
     } else {
       it++;
     }
-    // for differences, we can only pull up the first child
-    if (e.type == Expression::Type::DIFFERENCE) {
-      break;
-    }
   }
   e.children.insert(e.children.begin(), collected.begin(), collected.end());
   return !collected.empty();
 }
 
-bool simplifyNegativeProduct(Expression& e) {
+bool multiplyThrough(Expression& e) {
   if (e.type != Expression::Type::PRODUCT) {
     return false;
   }
@@ -102,16 +87,23 @@ bool simplifyNegativeProduct(Expression& e) {
   if (e.children[0]->type != Expression::Type::CONSTANT) {
     return false;
   }
-  if (e.children[0]->value != Number(-1)) {
+  if (e.children[1]->type != Expression::Type::SUM) {
     return false;
   }
-  auto tmp = *(e.children[1]);
-  if (tmp.type == Expression::Type::DIFFERENCE && tmp.children.size() == 2) {
-    std::swap(tmp.children[0], tmp.children[1]);
-    e = tmp;
-  } else {
-    e = Expression(Expression::Type::NEGATION);
-    e.newChild(tmp);
+  auto constant = *e.children[0];
+  auto sum = *e.children[1];
+  e.type = Expression::Type::SUM;
+  e.children.clear();
+  for (auto c : sum.children) {
+    Expression prod(Expression::Type::PRODUCT, "", {constant});
+    if (c->type == Expression::Type::PRODUCT) {
+      for (auto d : c->children) {
+        prod.newChild(*d);
+      }
+    } else {
+      prod.newChild(*c);
+    }
+    e.newChild(prod);
   }
   return true;
 }
@@ -123,10 +115,6 @@ bool removeNeutral(Expression& e) {
     case Expression::Type::SUM:
       neutralElem = Number::ZERO;
       start = 0;
-      break;
-    case Expression::Type::DIFFERENCE:
-      neutralElem = Number::ZERO;
-      start = 1;
       break;
     case Expression::Type::PRODUCT:
       neutralElem = Number::ONE;
@@ -179,22 +167,6 @@ bool zeroProduct(Expression& e) {
   return found;
 }
 
-bool diffToNeg(Expression& e) {
-  if (e.type == Expression::Type::DIFFERENCE && e.children.size() == 2 &&
-      *(e.children.front()) ==
-          Expression(Expression::Type::CONSTANT, "", Number::ZERO)) {
-    auto c = *(e.children[1]);
-    if (c.type == Expression::Type::NEGATION) {
-      e = *(c.children[0]);
-    } else {
-      e = Expression(Expression::Type::NEGATION);
-      e.newChild(c);
-    }
-    return true;
-  }
-  return false;
-}
-
 bool lessExprPtr(const Expression* lhs, const Expression* rhs) {
   return *lhs < *rhs;
 }
@@ -220,7 +192,6 @@ bool ExpressionUtil::normalize(Expression& e) {
         mergeAllChildren(e);
       }
       break;
-    case Expression::Type::DIFFERENCE:
     case Expression::Type::FRACTION:
       if (e.children.size() > 2) {  // at least three elements
         std::sort(e.children.begin() + 1, e.children.end(), greaterExprPtr);
@@ -233,10 +204,9 @@ bool ExpressionUtil::normalize(Expression& e) {
   if (pullUpChildren(e)) {
     normalize(e);
   }
-  diffToNeg(e);
   removeNeutral(e);
   zeroProduct(e);
-  simplifyNegativeProduct(e);
+  multiplyThrough(e);
   // TODO: track changes
   return true;
 }
@@ -253,8 +223,6 @@ bool ExpressionUtil::canBeNegative(const Expression& e) {
     case Expression::Type::PARAMETER:
       return false;
     case Expression::Type::FUNCTION:
-    case Expression::Type::NEGATION:
-    case Expression::Type::DIFFERENCE:
       return true;
     case Expression::Type::SUM:
     case Expression::Type::PRODUCT:

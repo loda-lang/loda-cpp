@@ -10,9 +10,7 @@ class Expression {
     CONSTANT,
     PARAMETER,
     FUNCTION,
-    NEGATION,
     SUM,
-    DIFFERENCE,
     PRODUCT,
     FRACTION,
     POWER,
@@ -77,6 +75,9 @@ class Expression {
 
   void print(std::ostream& out, size_t index, bool isRoot,
              Expression::Type parentType) const;
+
+  void printExtracted(std::ostream& out, size_t index, bool isRoot,
+                      Expression::Type parentType) const;
 
   void printChildren(std::ostream& out, const std::string& op, bool isRoot,
                      Expression::Type parentType) const;

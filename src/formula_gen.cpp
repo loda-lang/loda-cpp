@@ -81,7 +81,9 @@ bool FormulaGenerator::update(const Operation& op) {
       break;
     }
     case Operation::Type::SUB: {
-      res = Expression(Expression::Type::DIFFERENCE, "", {prevTarget, source});
+      Expression minus_one(Expression::Type::CONSTANT, "", Number(-1));
+      Expression negated(Expression::Type::PRODUCT, "", {minus_one, source});
+      res = Expression(Expression::Type::SUM, "", {prevTarget, negated});
       break;
     }
     case Operation::Type::MUL: {
@@ -124,9 +126,11 @@ bool FormulaGenerator::update(const Operation& op) {
       break;
     }
     case Operation::Type::TRN: {
+      Expression minus_one(Expression::Type::CONSTANT, "", Number(-1));
+      Expression negated(Expression::Type::PRODUCT, "", {minus_one, source});
       res = Expression(
           Expression::Type::FUNCTION, "max",
-          {Expression(Expression::Type::DIFFERENCE, "", {prevTarget, source}),
+          {Expression(Expression::Type::SUM, "", {prevTarget, negated}),
            Expression(Expression::Type::CONSTANT, "", Number::ZERO)});
       break;
     }
@@ -202,9 +206,9 @@ void FormulaGenerator::initFormula(int64_t numCells, bool use_ie) {
     } else {
       if (use_ie) {
         formula.entries[key] = key;
-        Expression prev(Expression::Type::DIFFERENCE, "",
+        Expression prev(Expression::Type::SUM, "",
                         {paramExpr, Expression(Expression::Type::CONSTANT, "",
-                                               Number::ONE)});
+                                               Number(-1))});
         formula.entries[key].replaceAll(paramExpr, prev);
       } else {
         formula.entries[key] =
