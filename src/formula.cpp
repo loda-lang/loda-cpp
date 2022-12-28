@@ -75,7 +75,7 @@ std::pair<std::string, std::string> findMissingPair(
 }
 
 std::multimap<std::string, std::string> Formula::getFunctionDeps(
-    bool transitive) const {
+    bool transitive, bool ignoreSelf) const {
   std::multimap<std::string, std::string> deps;
   for (auto& e : entries) {
     if (e.first.type == Expression::Type::FUNCTION && !e.first.name.empty()) {
@@ -91,11 +91,21 @@ std::multimap<std::string, std::string> Formula::getFunctionDeps(
       deps.insert(missing);
     }
   }
+  if (ignoreSelf) {
+    auto it = deps.begin();
+    while (it != deps.end()) {
+      if (it->first == it->second) {
+        it = deps.erase(it);
+      } else {
+        it++;
+      }
+    }
+  }
   return deps;
 }
 
 bool Formula::isRecursive(std::string funcName) const {
-  auto deps = getFunctionDeps(false);
+  auto deps = getFunctionDeps(false, false);
   for (auto it : deps) {
     if (it.first == funcName && it.second == funcName) {
       return true;
@@ -189,7 +199,7 @@ void Formula::resolveSimpleFunctions() {
     }
   }
   // filter out non-simple functions
-  auto deps = getFunctionDeps(false);
+  auto deps = getFunctionDeps(false, false);
   for (auto& e : entries) {
     if (e.first.type != Expression::Type::FUNCTION) {
       continue;  // should not happen
