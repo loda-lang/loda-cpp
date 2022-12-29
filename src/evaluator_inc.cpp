@@ -352,9 +352,9 @@ std::pair<Number, size_t> IncrementalEvaluator::next() {
   auto loop_counter_before = tmp_state.get(Program::INPUT_CELL);
 
   // calculate new loop count
-  const int64_t new_loop_count =
-      Semantics::max(tmp_state.get(loop_counter_cell), Number::ZERO).asInt();
-  int64_t additional_loops = new_loop_count - previous_loop_count;
+  const int64_t new_loop_count = tmp_state.get(loop_counter_cell).asInt();
+  int64_t additional_loops = std::max<int64_t>(new_loop_count, 0) -
+                             std::max<int64_t>(previous_loop_count, 0);
   previous_loop_count = new_loop_count;
 
   // update loop state

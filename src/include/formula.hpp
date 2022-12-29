@@ -16,7 +16,7 @@ class Formula {
   bool containsFunctionDef(const std::string& fname) const;
 
   std::multimap<std::string, std::string> getFunctionDeps(
-      bool transitive) const;
+      bool transitive, bool ignoreSelf) const;
 
   bool isRecursive(std::string funcName) const;
 

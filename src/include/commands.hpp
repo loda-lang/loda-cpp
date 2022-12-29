@@ -40,7 +40,7 @@ class Commands {
 
   void test();
 
-  void testIncEval();
+  void testIncEval(const std::string& id);
 
   void testLogEval();
 
