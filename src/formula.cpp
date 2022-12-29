@@ -177,6 +177,7 @@ void replaceFunction(Expression& target, const std::string& func,
   for (auto& c : target.children) {
     replaceFunction(*c, func, param, val);
   }
+  ExpressionUtil::normalize(target);
   if (target.type != Expression::Type::FUNCTION ||
       target.children.size() != 1 || target.name != func) {
     return;
