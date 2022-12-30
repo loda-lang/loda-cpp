@@ -270,6 +270,7 @@ bool isBetterIndirectMemory(const Program &existing, const Program &optimized) {
 
 bool isBetterIncEval(const Program &existing, const Program &optimized,
                      Evaluator &evaluator) {
+  // optimized version is IE, existing is NOT and IE program
   return (ProgramUtil::hasOp(existing, Operation::Type::LPB) &&
           (ProgramUtil::hasOp(existing, Operation::Type::SEQ) ||
            !ProgramUtil::hasOp(optimized, Operation::Type::SEQ)) &&
@@ -277,7 +278,37 @@ bool isBetterIncEval(const Program &existing, const Program &optimized,
           evaluator.supportsIncEval(optimized));
 }
 
+bool isTrivialPostLoop(const Program &post_loop) {
+  if (post_loop.ops.size() > 1) {
+    return false;
+  }
+  if (post_loop.ops.size() == 1 &&
+      post_loop.ops[0].type != Operation::Type::MOV) {
+    return false;
+  }
+  return true;
+}
+
+bool isBetterIncEval2(const Program &existing, const Program &optimized,
+                      Evaluator &evaluator) {
+  // both are IE programs. optimized version has trivial post-loop, existing not
+  auto &inc = evaluator.getIncEvaluator();
+  if (!inc.init(existing)) {
+    return false;
+  }
+  auto post_loop_existing = inc.getPostLoop();
+  inc.reset();
+  if (!inc.init(optimized)) {
+    return false;
+  }
+  auto post_loop_optimized = inc.getPostLoop();
+  inc.reset();
+  return (isTrivialPostLoop(post_loop_optimized) &&
+          !isTrivialPostLoop(post_loop_existing));
+}
+
 bool isBetterLogEval(const Program &existing, const Program &optimized) {
+  // optimized version has log complexity, existing does not
   return (ProgramUtil::hasOp(existing, Operation::Type::LPB) &&
           !LogarithmicEvaluator::hasLogarithmicComplexity(existing) &&
           LogarithmicEvaluator::hasLogarithmicComplexity(optimized));
@@ -324,6 +355,13 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
   if (isBetterIncEval(existing, optimized, evaluator)) {
     return "Faster (IE)";
   } else if (isBetterIncEval(optimized, existing, evaluator)) {
+    return not_better;  // worse
+  }
+
+  // check if programs support incremental evaluation and optimized is simpler
+  if (isBetterIncEval2(existing, optimized, evaluator)) {
+    return "Simpler";
+  } else if (isBetterIncEval2(optimized, existing, evaluator)) {
     return not_better;  // worse
   }
 

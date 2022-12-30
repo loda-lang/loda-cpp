@@ -34,6 +34,8 @@ class Evaluator {
 
   bool supportsIncEval(const Program &p);
 
+  IncrementalEvaluator &getIncEvaluator() { return inc_evaluator; }
+
   void clearCaches();
 
  private:
