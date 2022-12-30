@@ -270,12 +270,15 @@ bool isBetterIndirectMemory(const Program &existing, const Program &optimized) {
 
 bool isBetterIncEval(const Program &existing, const Program &optimized,
                      Evaluator &evaluator) {
-  // optimized version is IE, existing is NOT and IE program
-  return (ProgramUtil::hasOp(existing, Operation::Type::LPB) &&
-          (ProgramUtil::hasOp(existing, Operation::Type::SEQ) ||
-           !ProgramUtil::hasOp(optimized, Operation::Type::SEQ)) &&
-          !evaluator.supportsIncEval(existing) &&
-          evaluator.supportsIncEval(optimized));
+  // optimized program supports IE, but existing doesn't
+  if (evaluator.supportsIncEval(existing)) {
+    return false;
+  }
+  // avoid overwriting probrams w/o loops
+  if (!ProgramUtil::hasOp(existing, Operation::Type::LPB)) {
+    return false;
+  }
+  return evaluator.supportsIncEval(optimized);
 }
 
 bool isTrivialPostLoop(const Program &post_loop) {
