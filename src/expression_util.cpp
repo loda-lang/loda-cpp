@@ -223,6 +223,7 @@ bool ExpressionUtil::canBeNegative(const Expression& e) {
     case Expression::Type::PARAMETER:
       return false;
     case Expression::Type::FUNCTION:
+    case Expression::Type::LOCAL:
       return true;
     case Expression::Type::SUM:
     case Expression::Type::PRODUCT:

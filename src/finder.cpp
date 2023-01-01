@@ -274,7 +274,7 @@ bool isBetterIncEval(const Program &existing, const Program &optimized,
   if (evaluator.supportsIncEval(existing)) {
     return false;
   }
-  // avoid overwriting probrams w/o loops
+  // avoid overwriting programs w/o loops
   if (!ProgramUtil::hasOp(existing, Operation::Type::LPB) &&
       !ProgramUtil::hasOp(existing, Operation::Type::SEQ)) {
     return false;

@@ -99,6 +99,14 @@ int Expression::compare(const Expression& e) const {
       } else {
         return -1;
       }
+    case Expression::Type::LOCAL:
+      if (name < e.name) {
+        return -1;
+      } else if (e.name < name) {
+        return 1;
+      } else {
+        return compareChildren(e);
+      }
     case Expression::Type::SUM:
     case Expression::Type::PRODUCT:
     case Expression::Type::FRACTION:
@@ -263,6 +271,10 @@ void Expression::printExtracted(std::ostream& out, size_t index, bool isRoot,
       printChildren(out, ",", isRoot, parentType);
       out << ")";
       break;
+    case Expression::Type::LOCAL:
+      out << "local(" << name << "=";
+      printChildren(out, "); ", isRoot, parentType);
+      break;
     case Expression::Type::SUM:
       printChildren(out, "+", isRoot, parentType);
       break;
@@ -301,6 +313,10 @@ bool Expression::needsBrackets(size_t index, bool isRoot,
   }
   if (type == Expression::Type::FUNCTION ||
       parentType == Expression::Type::FUNCTION) {
+    return false;
+  }
+  if (type == Expression::Type::LOCAL ||
+      parentType == Expression::Type::LOCAL) {
     return false;
   }
   if (type == Expression::Type::IF || parentType == Expression::Type::IF) {

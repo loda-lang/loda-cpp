@@ -6,6 +6,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Support more (recursive) formulas
 * Metric for number of formulas
+* Use local variables in generated PARI code
 * Prefer IE programs with trivial post-loop code
 
 ## v22.12.14

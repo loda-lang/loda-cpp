@@ -10,6 +10,7 @@ class Expression {
     CONSTANT,
     PARAMETER,
     FUNCTION,
+    LOCAL,
     SUM,
     PRODUCT,
     FRACTION,

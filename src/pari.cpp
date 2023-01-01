@@ -76,12 +76,51 @@ bool convertExprToPari(Expression& expr) {
   return true;
 }
 
+void countFuncs(const Formula& f, const Expression& e,
+                std::map<Expression, size_t>& count) {
+  if (e.type == Expression::Type::FUNCTION && f.containsFunctionDef(e.name)) {
+    if (count.find(e) == count.end()) {
+      count[e] = 0;
+    } else {
+      count[e]++;
+    }
+  }
+  for (auto c : e.children) {
+    countFuncs(f, *c, count);
+  }
+}
+
+bool addLocalVars(Formula& f) {
+  std::map<Expression, size_t> count;
+  bool changed = false;
+  for (auto& e : f.entries) {
+    count.clear();
+    countFuncs(f, e.second, count);
+    size_t i = 1;
+    for (auto& c : count) {
+      if (c.second < 2) {
+        continue;
+      }
+      std::string name = "l" + std::to_string(i++);
+      auto r = e.second;  // copy
+      r.replaceAll(c.first, Expression(Expression::Type::PARAMETER, name, {}));
+      Expression local(Expression::Type::LOCAL, name, {c.first, r});
+      Log::get().debug("Added local variable: " + name + " = " +
+                       c.first.toString());
+      e.second = local;
+      changed = true;
+    }
+  }
+  return changed;
+}
+
 bool Pari::convertToPari(Formula& f) {
   for (auto& entry : f.entries) {
     if (!convertExprToPari(entry.second)) {
       return false;
     }
   }
+  addLocalVars(f);
   convertInitialTermsToIf(f);
   return true;
 }
