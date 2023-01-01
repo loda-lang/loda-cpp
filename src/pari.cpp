@@ -80,7 +80,7 @@ void countFuncs(const Formula& f, const Expression& e,
                 std::map<Expression, size_t>& count) {
   if (e.type == Expression::Type::FUNCTION && f.containsFunctionDef(e.name)) {
     if (count.find(e) == count.end()) {
-      count[e] = 0;
+      count[e] = 1;
     } else {
       count[e]++;
     }
