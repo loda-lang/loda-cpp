@@ -23,6 +23,7 @@
 #endif
 
 using MemStack = std::stack<Memory>;
+using IntStack = std::stack<int64_t>;
 using SizeStack = std::stack<size_t>;
 
 Interpreter::Interpreter(const Settings& settings)
@@ -90,6 +91,16 @@ Number Interpreter::calc(const Operation::Type type, const Number& target,
   return 0;
 }
 
+bool needsFragments(const Program& p) {
+  for (auto& op : p.ops) {
+    if (op.type == Operation::Type::LPB &&
+        op.source != Operand(Operand::Type::CONSTANT, Number::ONE)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 size_t Interpreter::run(const Program& p, Memory& mem) {
   // check for empty program
   if (p.ops.empty()) {
@@ -97,32 +108,30 @@ size_t Interpreter::run(const Program& p, Memory& mem) {
   }
 
   // define stacks
-  SizeStack pc_stack;
   SizeStack loop_stack;
-  SizeStack frag_length_stack;
+  IntStack counter_stack;
+  IntStack frag_length_stack;
   MemStack mem_stack;
   MemStack frag_stack;
 
-  // push first operation to stack
-  pc_stack.push(0);
-
   size_t cycles = 0;
   const size_t max_cycles = getMaxCycles();
-  Memory old_mem, frag, frag_prev, prev;
-  size_t pc, pc_next, ps_begin;
+  const bool needs_frags = needsFragments(p);
+  const size_t num_ops = p.ops.size();
+  Memory old_mem, frag;
+  size_t pc, pc_next;
   Number source, target;
-  int64_t start, length, length2;
+  int64_t counter, start, length, length2;
   Operation lpb;
 
-  // loop until stack is empty
-  while (!pc_stack.empty()) {
+  // start program execution
+  pc = 0;
+  while (pc < num_ops) {
     if (is_debug) {
       old_mem = mem;
     }
 
-    pc = pc_stack.top();
-    pc_stack.pop();
-    auto& op = p.ops.at(pc);
+    auto& op = p.ops[pc];
     pc_next = pc + 1;
 
     switch (op.type) {
@@ -130,50 +139,58 @@ size_t Interpreter::run(const Program& p, Memory& mem) {
         break;
       }
       case Operation::Type::LPB: {
-        length = get(op.source, mem).asInt();
-        start = get(op.target, mem, true).asInt();
-        if (length > settings.max_memory && settings.max_memory >= 0) {
-          throw std::runtime_error("Maximum memory exceeded: " +
-                                   std::to_string(length));
-        }
         if (loop_stack.size() >= 100) {  // magic number
           throw std::runtime_error("Maximum stack size exceeded: " +
                                    std::to_string(loop_stack.size()));
         }
-        frag = mem.fragment(start, length);
         loop_stack.push(pc);
         mem_stack.push(mem);
-        frag_stack.push(frag);
-        frag_length_stack.push(length);
-        break;
-      }
-      case Operation::Type::LPE: {
-        ps_begin = loop_stack.top();
-        lpb = p.ops[ps_begin];
-        prev = mem_stack.top();
-        mem_stack.pop();
-
-        frag_prev = frag_stack.top();
-        frag_stack.pop();
-
-        length = frag_length_stack.top();
-        frag_length_stack.pop();
-
-        start = get(lpb.target, mem, true).asInt();
-        length2 = get(lpb.source, mem).asInt();
-
-        length = std::min(length, length2);
-
-        frag = mem.fragment(start, length);
-
-        if (frag.is_less(frag_prev, length, true)) {
-          pc_next = ps_begin + 1;
-          mem_stack.push(mem);
+        if (needs_frags) {
+          length = get(op.source, mem).asInt();
+          start = get(op.target, mem, true).asInt();
+          if (length > settings.max_memory && settings.max_memory >= 0) {
+            throw std::runtime_error("Maximum memory exceeded: " +
+                                     std::to_string(length));
+          }
+          frag = mem.fragment(start, length);
           frag_stack.push(frag);
           frag_length_stack.push(length);
         } else {
-          mem = prev;
-          loop_stack.pop();
+          counter_stack.push(get(op.target, mem, false).asInt());
+        }
+        break;
+      }
+      case Operation::Type::LPE: {
+        lpb = p.ops[loop_stack.top()];
+        if (needs_frags) {
+          start = get(lpb.target, mem, true).asInt();
+          length2 = get(lpb.source, mem).asInt();
+          length = std::min(frag_length_stack.top(), length2);
+          frag = mem.fragment(start, length);
+          if (frag.is_less(frag_stack.top(), length, true)) {
+            pc_next = loop_stack.top() + 1;  // jump back to begin
+            mem_stack.top() = mem;
+            frag_stack.top() = frag;
+            frag_length_stack.top() = length;
+          } else {
+            mem = mem_stack.top();
+            mem_stack.pop();
+            loop_stack.pop();
+            frag_stack.pop();
+            frag_length_stack.pop();
+          }
+        } else {
+          counter = get(lpb.target, mem, false).asInt();
+          if (counter >= 0 && counter < counter_stack.top()) {
+            pc_next = loop_stack.top() + 1;  // jump back to begin
+            mem_stack.top() = mem;
+            counter_stack.top() = counter;
+          } else {
+            mem = mem_stack.top();
+            mem_stack.pop();
+            loop_stack.pop();
+            counter_stack.pop();
+          }
         }
         break;
       }
@@ -206,11 +223,9 @@ size_t Interpreter::run(const Program& p, Memory& mem) {
         break;
       }
     }
-    if (pc_next < p.ops.size()) {
-      pc_stack.push(pc_next);
-    }
+    pc = pc_next;
 
-    // the rest of the logic should be ommitted for loops
+    // the rest of the logic should be ommitted for nops
     if (op.type == Operation::Type::NOP) {
       continue;
     }
@@ -244,6 +259,11 @@ size_t Interpreter::run(const Program& p, Memory& mem) {
     if (Signals::HALT) {
       throw std::runtime_error("interpreter interrupted by halt signal");
     }
+  }
+
+  if (loop_stack.size() + counter_stack.size() + mem_stack.size() +
+      frag_stack.size() + frag_length_stack.size()) {
+    throw std::runtime_error("execution error");
   }
   if (is_debug) {
     Log::get().debug("Finished execution after " + std::to_string(cycles) +
