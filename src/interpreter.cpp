@@ -24,6 +24,7 @@
 
 using MemStack = std::stack<Memory>;
 using IntStack = std::stack<int64_t>;
+using NumStack = std::stack<Number>;
 using SizeStack = std::stack<size_t>;
 
 Interpreter::Interpreter(const Settings& settings)
@@ -109,7 +110,7 @@ size_t Interpreter::run(const Program& p, Memory& mem) {
 
   // define stacks
   SizeStack loop_stack;
-  IntStack counter_stack;
+  NumStack counter_stack;
   IntStack frag_length_stack;
   MemStack mem_stack;
   MemStack frag_stack;
@@ -120,8 +121,8 @@ size_t Interpreter::run(const Program& p, Memory& mem) {
   const size_t num_ops = p.ops.size();
   Memory old_mem, frag;
   size_t pc, pc_next;
-  Number source, target;
-  int64_t counter, start, length, length2;
+  Number source, target, counter;
+  int64_t start, length, length2;
   Operation lpb;
 
   // start program execution
@@ -156,7 +157,8 @@ size_t Interpreter::run(const Program& p, Memory& mem) {
           frag_stack.push(frag);
           frag_length_stack.push(length);
         } else {
-          counter_stack.push(get(op.target, mem, false).asInt());
+          counter = get(op.target, mem, false);
+          counter_stack.push(counter);
         }
         break;
       }
@@ -180,8 +182,8 @@ size_t Interpreter::run(const Program& p, Memory& mem) {
             frag_length_stack.pop();
           }
         } else {
-          counter = get(lpb.target, mem, false).asInt();
-          if (counter >= 0 && counter < counter_stack.top()) {
+          counter = get(lpb.target, mem, false);
+          if (Number::MINUS_ONE < counter && counter < counter_stack.top()) {
             pc_next = loop_stack.top() + 1;  // jump back to begin
             mem_stack.top() = mem;
             counter_stack.top() = counter;

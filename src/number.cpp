@@ -8,6 +8,7 @@
 
 const Number Number::ZERO(0);
 const Number Number::ONE(1);
+const Number Number::MINUS_ONE(-1);
 const Number Number::MIN = Number::minMax(false);
 const Number Number::MAX = Number::minMax(true);
 const Number Number::INF = Number::infinity();

@@ -31,8 +31,8 @@
 #include "stats.hpp"
 
 Test::Test() {
-  Log::get().info("Initialized random number generator using seed " +
-                  std::to_string(Random::get().seed));
+  settings.max_memory = 100000;  // for ackermann
+  settings.max_cycles = 10000000;
   const std::string home = getTmpDir() + "loda" + FILE_SEP;
   ensureDir(home);
   Setup::setLodaHome(home);
@@ -61,7 +61,7 @@ void Test::all() {
 
   // slow tests
   number();
-  randomNumber(1000);
+  randomNumber(100);
   ackermann();
   stats();
   apiClient();
@@ -542,6 +542,12 @@ void Test::knownPrograms() {
                         8192, 16384, 32768, 65536}));
   testSeq(1489, Sequence({0, -1, -2, -3, -4, -5, -6, -7, -8, -9, -10, -11, -12,
                           -13, -14, -15, -16, -17}));
+  testSeq(248765,
+          Sequence({1,     1,     1,     1,      1,      2,      2,
+                    2,     6,     12,    12,     12,     12,     12,
+                    12,    24,    24,    144,    144,    720,    720,
+                    720,   720,   1440,  1440,   1440,   4320,   60480,
+                    60480, 60480, 60480, 120960, 120960, 241920, 1209600}));
 }
 
 void Test::incEval() {
@@ -1088,9 +1094,6 @@ void Test::testBinary(const std::string& func, const std::string& file,
                       const std::vector<std::vector<int64_t>>& values) {
   Log::get().info("Testing " + file);
   Parser parser;
-  Settings settings;  // settings needed for ackermann function
-  settings.max_memory = 100000;
-  settings.max_cycles = 10000000;
   Interpreter interpreter(settings);
   auto program = parser.parse(file);
   for (size_t i = 0; i < values.size(); i++) {

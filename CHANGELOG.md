@@ -2,6 +2,12 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v23.1.5
+
+### Bugfixes
+
+* Fix integer overflow
+
 ## v23.1.4
 
 ### Enhancements
