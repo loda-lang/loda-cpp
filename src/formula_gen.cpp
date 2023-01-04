@@ -418,22 +418,6 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   formula.resolveIdentities();
   Log::get().debug("Resolved identities: " + formula.toString());
 
-  // TODO: avoid this limitation
-  auto deps = formula.getFunctionDeps(true, false);
-  std::set<std::string> recursive;
-  for (auto it : deps) {
-    if (it.first == it.second) {
-      recursive.insert(it.first);
-    }
-  }
-  for (auto r : recursive) {
-    if (deps.count(r) > 2) {
-      return false;
-    }
-  }
-
-  Log::get().debug("Generated formula: " + formula.toString());
-
   // success
   return true;
 }

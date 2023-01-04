@@ -16,8 +16,7 @@ sleep 3
 
 echo "Cleaning up"
 rm -r $HOME/loda/stats 2> /dev/null
-rm $HOME/new-*.out 2> /dev/null
-rm $HOME/update-*.out 2> /dev/null
+rm $HOME/server-*.out 2> /dev/null
 if [ -d $HOME/loda/programs/.git ]; then
   pushd $HOME/loda/programs > /dev/null
   git gc
@@ -36,14 +35,14 @@ num_update=4
 pushd $HOME > /dev/null
 
 for i in $(seq 1 ${num_new}); do
-  echo "Starting new-${i}"
-  nohup loda mine -i server-new > $HOME/miner-new-${i}.out 2>&1 &
+  echo "Starting server-new-${i}"
+  nohup loda mine -i server-new > $HOME/server-new-${i}.out 2>&1 &
   sleep 2
 done
 
 for i in $(seq 1 ${num_update}); do
-  echo "Starting update-${i}"
-  nohup loda mine -i server-update > $HOME/miner-update-${i}.out 2>&1 &
+  echo "Starting server-update-${i}"
+  nohup loda mine -i server-update > $HOME/server-update-${i}.out 2>&1 &
   sleep 2
 done
 

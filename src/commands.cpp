@@ -367,8 +367,13 @@ void Commands::testPari(const std::string& test_id) {
   if (!test_id.empty()) {
     target_id = OeisSequence(test_id).id;
   }
+  // ignore exceptionally slow programs
+  std::vector<size_t> exceptions = {74265,  167398, 214855, 284494, 284535,
+                                    285141, 285207, 285208, 285420, 322129};
   for (size_t id = 0; id < stats.all_program_ids.size(); id++) {
-    if (!stats.all_program_ids[id] || (target_id > 0 && id != target_id)) {
+    if (!stats.all_program_ids[id] || (target_id > 0 && id != target_id) ||
+        std::find(exceptions.begin(), exceptions.end(), id) !=
+            exceptions.end()) {
       continue;
     }
     auto seq = manager.getSequences().at(id);
@@ -407,12 +412,18 @@ void Commands::testPari(const std::string& test_id) {
 
     // determine number of terms for testing
     size_t numTerms = seq.existingNumTerms();
-    if (inceval.init(program) ||
-        pariCode.find("binomial") != std::string::npos) {
+    if (inceval.init(program)) {
       numTerms = std::min<size_t>(numTerms, 10);
     }
-    if (ProgramUtil::hasOp(program, Operation::Type::SEQ)) {
-      numTerms = std::min<size_t>(numTerms, 3);
+    for (auto& op : program.ops) {
+      if (op.type == Operation::Type::SEQ) {
+        numTerms = std::min<size_t>(numTerms, 5);
+      }
+      if ((op.type == Operation::Type::POW ||
+           op.type == Operation::Type::BIN) &&
+          op.source.type == Operand::Type::DIRECT) {
+        numTerms = std::min<size_t>(numTerms, 5);
+      }
     }
     if (numTerms == 0) {
       Log::get().error("No known terms", true);

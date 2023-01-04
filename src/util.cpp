@@ -208,7 +208,7 @@ bool AdaptiveScheduler::isTargetReached() {
   current_checks++;
   total_checks++;
   if (current_checks >= next_check) {
-    int64_t milliseconds, speed;
+    int64_t milliseconds, speed, step;
     const auto current_time = std::chrono::steady_clock::now();
     milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
                        current_time - start_time)
@@ -220,12 +220,14 @@ bool AdaptiveScheduler::isTargetReached() {
                        current_time - setup_time)
                        .count();
     // check every 500ms
+    static constexpr int64_t MAX_STEP = 1000;
     speed = (500 * total_checks) / std::max<int64_t>(milliseconds, 1);
-    next_check += std::min<int64_t>(std::max<int64_t>(speed, 1), 1000);
-    // Log::get().info(
-    //    "Next check " + std::to_string(next_check - current_checks) +
-    //    "; Speed: " + std::to_string(speed) +
-    //    "; Target: " + std::to_string(target_milliseconds / 1000) + "s");
+    step = std::min<int64_t>(std::max<int64_t>(speed, 1), MAX_STEP);
+    if (step == MAX_STEP && next_check < MAX_STEP) {
+      next_check = MAX_STEP;
+    } else {
+      next_check += step;
+    }
   }
   return false;
 }

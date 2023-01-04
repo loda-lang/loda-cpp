@@ -2,12 +2,17 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v23.1.4
+
 ### Enhancements
 
-* Support more (recursive) formulas
+* Improve interpreter performance
+* Increase maximum step count to 50 million
+* Support more recursive formulas
 * Metric for number of formulas
 * Use local variables in generated PARI code
 * Prefer IE programs with trivial post-loop code
+* Improve log messages for processed programs
 
 ## v22.12.14
 

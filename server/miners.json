@@ -11,7 +11,7 @@
         },
         {
             "name": "server-update",
-            "overwrite": "auto",
+            "overwrite": "all",
             "validation": "basic",
             "backoff": false,
             "matchers": [

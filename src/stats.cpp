@@ -410,8 +410,8 @@ void Stats::finalize() {
 void Stats::collectLatestProgramIds() {
   auto progs_dir = Setup::getProgramsHome();
   static const size_t max_commits = 100;            // magic number
-  static const size_t max_added_programs = 500;     // magic number
-  static const size_t max_modified_programs = 500;  // magic number
+  static const size_t max_added_programs = 750;     // magic number
+  static const size_t max_modified_programs = 250;  // magic number
   if (!isDir(progs_dir + ".git")) {
     Log::get().warn(
         "Cannot read commit history because the .git folder was not found");
