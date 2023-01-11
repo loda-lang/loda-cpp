@@ -800,8 +800,8 @@ update_program_result_t OeisManager::updateProgram(
                                          previous_hash, num_default_terms);
       break;
     case ValidationMode::EXTENDED:
-      checked = finder.checkProgramDefault(p, existing, is_new, seq,
-                                           num_default_terms);
+      checked = finder.checkProgramExtended(p, existing, is_new, seq,
+                                            num_default_terms);
       break;
   }
   // not better or the same after optimization?

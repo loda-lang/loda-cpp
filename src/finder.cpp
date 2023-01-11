@@ -139,7 +139,7 @@ void Finder::notifyMinimizerProblem(const Program &p, const std::string &id) {
   ProgramUtil::print(p, out);
 }
 
-std::pair<std::string, Program> Finder::checkProgramDefault(
+std::pair<std::string, Program> Finder::checkProgramExtended(
     Program program, Program existing, bool is_new, const OeisSequence &seq,
     size_t num_terms) {
   std::pair<std::string, Program> result;
@@ -185,7 +185,8 @@ std::pair<std::string, Program> Finder::checkProgramDefault(
   } else {
     // now we are in the "update" case
     // compare (minimized) program with existing programs
-    result.first = isOptimizedBetter(existing, result.second, seq.id);
+    result.first =
+        isOptimizedBetter(existing, result.second, seq.id, num_terms);
   }
 
   // clear result program if it's no good
@@ -214,8 +215,8 @@ std::pair<std::string, Program> Finder::checkProgramBasic(
     if (change_type.empty() || !previous_hash) {
       Log::get().debug(
           "Falling back to default validation due to missing metadata");
-      return checkProgramDefault(program, existing, is_new, seq,
-                                 num_default_terms);
+      return checkProgramExtended(program, existing, is_new, seq,
+                                  num_default_terms);
     }
     // compare with hash of existing program
     if (previous_hash != getTransitiveProgramHash(existing)) {
@@ -279,6 +280,11 @@ bool isBetterIncEval(const Program &existing, const Program &optimized,
       !ProgramUtil::hasOp(existing, Operation::Type::SEQ)) {
     return false;
   }
+  // avoid adding more seq operations
+  if (ProgramUtil::numOps(optimized, Operation::Type::SEQ) >
+      ProgramUtil::numOps(existing, Operation::Type::SEQ)) {
+    return false;
+  }
   return evaluator.supportsIncEval(optimized);
 }
 
@@ -319,7 +325,8 @@ bool isBetterLogEval(const Program &existing, const Program &optimized) {
 }
 
 std::string Finder::isOptimizedBetter(Program existing, Program optimized,
-                                      const OeisSequence &seq) {
+                                      const OeisSequence &seq,
+                                      size_t num_terms) {
   static const std::string not_better;
 
   // ====== STATIC CODE CHECKS ========
@@ -348,27 +355,6 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
     return not_better;
   }
 
-  // check if the optimized program has logarithmic complexity
-  if (isBetterLogEval(existing, optimized)) {
-    return "Faster (log)";
-  } else if (isBetterLogEval(optimized, existing)) {
-    return not_better;  // worse
-  }
-
-  // check if the optimized program supports incremental evaluation
-  if (isBetterIncEval(existing, optimized, evaluator)) {
-    return "Faster (IE)";
-  } else if (isBetterIncEval(optimized, existing, evaluator)) {
-    return not_better;  // worse
-  }
-
-  // check if programs support incremental evaluation and optimized is simpler
-  if (isBetterIncEval2(existing, optimized, evaluator)) {
-    return "Simpler";
-  } else if (isBetterIncEval2(optimized, existing, evaluator)) {
-    return not_better;  // worse
-  }
-
   // check if there are loops with contant number of iterations involved
   auto info = ProgramUtil::findConstantLoop(optimized);
   if (info.has_constant_loop) {
@@ -393,10 +379,31 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
     return not_better;  // worse
   }
 
+  // check if the optimized program has logarithmic complexity
+  if (isBetterLogEval(existing, optimized)) {
+    return "Faster (log)";
+  } else if (isBetterLogEval(optimized, existing)) {
+    return not_better;  // worse
+  }
+
+  // check if the optimized program supports incremental evaluation
+  if (isBetterIncEval(existing, optimized, evaluator)) {
+    return "Faster (IE)";
+  } else if (isBetterIncEval(optimized, existing, evaluator)) {
+    return not_better;  // worse
+  }
+
+  // check if programs support incremental evaluation and optimized is simpler
+  if (isBetterIncEval2(existing, optimized, evaluator)) {
+    return "Simpler";
+  } else if (isBetterIncEval2(optimized, existing, evaluator)) {
+    return not_better;  // worse
+  }
+
   // ======= EVALUATION CHECKS =========
 
   // get extended sequence
-  auto terms = seq.getTerms(OeisSequence::EXTENDED_SEQ_LENGTH);
+  auto terms = seq.getTerms(num_terms);
   if (terms.empty()) {
     Log::get().error("Error fetching b-file for " + seq.id_str(), true);
   }
@@ -409,7 +416,8 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
   }
 
   // evaluate optimized program for fixed number of terms
-  static const int64_t num_terms = OeisSequence::EXTENDED_SEQ_LENGTH;
+  num_terms = std::min<size_t>(num_terms, terms.size());
+  num_terms = std::max<size_t>(num_terms, OeisSequence::EXTENDED_SEQ_LENGTH);
   Sequence tmp;
   evaluator.clearCaches();
   auto optimized_steps = evaluator.eval(optimized, tmp, num_terms, false);
@@ -438,8 +446,8 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
   double optimized_terms = optimized_steps.runs;
   if (optimized_terms > (existing_terms * THRESHOLD_BETTER)) {
     return "Better";
-  } else if (existing_terms > (optimized_terms * THRESHOLD_BETTER)) {
-    return not_better;  // worse
+  } else if (existing_steps.runs > optimized_steps.runs) {  // no threshold
+    return not_better;
   }
 
   //  compare number of execution cycles
@@ -447,8 +455,8 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
   double optimized_total = optimized_steps.total;
   if (existing_total > (optimized_total * THRESHOLD_FASTER)) {
     return "Faster";
-  } else if (optimized_total > (existing_total * THRESHOLD_FASTER)) {
-    return not_better;  //  worse
+  } else if (optimized_steps.total > existing_steps.total) {  // no threshold
+    return not_better;
   }
 
   return not_better;  // not better or worse => no change

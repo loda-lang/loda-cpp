@@ -31,11 +31,11 @@ class Finder {
       const Program &p, Sequence &norm_seq,
       const std::vector<OeisSequence> &sequences);
 
-  std::pair<std::string, Program> checkProgramDefault(Program program,
-                                                      Program existing,
-                                                      bool is_new,
-                                                      const OeisSequence &seq,
-                                                      size_t num_terms);
+  std::pair<std::string, Program> checkProgramExtended(Program program,
+                                                       Program existing,
+                                                       bool is_new,
+                                                       const OeisSequence &seq,
+                                                       size_t num_terms);
 
   std::pair<std::string, Program> checkProgramBasic(
       Program program, Program existing, bool is_new, const OeisSequence &seq,
@@ -47,7 +47,7 @@ class Finder {
   void logSummary(size_t loaded_count);
 
   std::string isOptimizedBetter(Program existing, Program optimized,
-                                const OeisSequence &seq);
+                                const OeisSequence &seq, size_t num_terms);
 
   size_t getTransitiveProgramHash(const Program &program);
 
