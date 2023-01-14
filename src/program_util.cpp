@@ -28,18 +28,6 @@ void ProgramUtil::removeOps(Program &p, Operation::Type type) {
   }
 }
 
-void ProgramUtil::removeComments(Program &p) {
-  for (auto &op : p.ops) {
-    op.comment.clear();
-  }
-}
-
-void ProgramUtil::addComment(Program &p, const std::string &comment) {
-  Operation nop(Operation::Type::NOP);
-  nop.comment = comment;
-  p.ops.push_back(nop);
-}
-
 bool ProgramUtil::replaceOps(Program &p, Operation::Type oldType,
                              Operation::Type newType) {
   bool result = false;
@@ -528,66 +516,6 @@ void swapCells(Operand &o, int64_t old_cell, int64_t new_cell) {
     o.value = old_cell;
   }
 }
-
-bool ProgramUtil::isCodedManually(const Program &p) {
-  for (const auto &op : p.ops) {
-    if (op.type == Operation::Type::NOP &&
-        op.comment.find(PREFIX_CODED_MANUALLY) != std::string::npos) {
-      return true;
-    }
-  }
-  return false;
-}
-
-std::string ProgramUtil::getCommentField(const Program &p,
-                                         const std::string &prefix) {
-  for (const auto &op : p.ops) {
-    if (op.type == Operation::Type::NOP) {
-      auto pos = op.comment.find(prefix);
-      if (pos != std::string::npos) {
-        return op.comment.substr(pos + prefix.size() + 1);
-      }
-    }
-  }
-  return std::string();
-}
-
-void ProgramUtil::removeCommentField(Program &p, const std::string &prefix) {
-  auto it = p.ops.begin();
-  while (it != p.ops.end()) {
-    if (it->type == Operation::Type::NOP &&
-        it->comment.find(prefix) != std::string::npos) {
-      it = p.ops.erase(it);
-    } else {
-      it++;
-    }
-  }
-}
-
-std::string ProgramUtil::getSequenceIdFromProgram(const Program &p) {
-  std::string id_str;
-  if (p.ops.empty()) {
-    return id_str;  // not found
-  }
-  auto &c = p.ops[0].comment;
-  if (c.length() > 1 && c[0] == 'A' && std::isdigit(c[1])) {
-    id_str = c.substr(0, 2);
-    for (size_t i = 2; i < c.length() && std::isdigit(c[i]); i++) {
-      id_str += c[i];
-    }
-  }
-  return id_str;
-}
-
-// prefixes without colon
-const std::string ProgramUtil::PREFIX_SUBMITTED_BY = "Submitted by";
-const std::string ProgramUtil::PREFIX_CODED_MANUALLY = "Coded manually";
-
-// prefixes with colon
-const std::string ProgramUtil::PREFIX_FORMULA = "Formula:";
-const std::string ProgramUtil::PREFIX_MINER_PROFILE = "Miner Profile:";
-const std::string ProgramUtil::PREFIX_CHANGE_TYPE = "Change Type:";
-const std::string ProgramUtil::PREFIX_PREVIOUS_HASH = "Previous Hash:";
 
 void ProgramUtil::avoidNopOrOverflow(Operation &op) {
   if (op.source.type == Operand::Type::CONSTANT) {

@@ -9,6 +9,7 @@
 #include "api_client.hpp"
 #include "big_number.hpp"
 #include "blocks.hpp"
+#include "comments.hpp"
 #include "config.hpp"
 #include "evaluator.hpp"
 #include "file.hpp"
@@ -426,11 +427,11 @@ void Test::programUtil() {
       "add $1,$0\n";
   std::stringstream buf(com_in);
   p = parser.parse(buf);
-  if (ProgramUtil::getCommentField(p, ProgramUtil::PREFIX_MINER_PROFILE) !=
+  if (Comments::getCommentField(p, Comments::PREFIX_MINER_PROFILE) !=
       "foobar") {
     Log::get().error("Cannot extract miner profile from program comment", true);
   }
-  ProgramUtil::removeCommentField(p, ProgramUtil::PREFIX_MINER_PROFILE);
+  Comments::removeCommentField(p, Comments::PREFIX_MINER_PROFILE);
   buf = std::stringstream();
   ProgramUtil::print(p, buf);
   std::string com_out =

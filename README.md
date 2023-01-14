@@ -34,6 +34,7 @@ Core Commands:
   optimize <program>  Optimize a program and print it
   minimize <program>  Minimize a program and print it (see -t)
   profile  <program>  Measure program evaluation time (see -t)
+  unfold   <program>  Unfold the first seq operation of a program
 
 OEIS Commands:
   mine                Mine programs for OEIS sequences (see -i,-p,-P,-H)

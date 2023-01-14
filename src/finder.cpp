@@ -11,6 +11,7 @@
 #include "log.hpp"
 #include "number.hpp"
 #include "oeis_list.hpp"
+#include "oeis_program.hpp"
 #include "oeis_sequence.hpp"
 #include "program_util.hpp"
 #include "setup.hpp"
@@ -219,7 +220,7 @@ std::pair<std::string, Program> Finder::checkProgramBasic(
                                   num_default_terms);
     }
     // compare with hash of existing program
-    if (previous_hash != getTransitiveProgramHash(existing)) {
+    if (previous_hash != OeisProgram::getTransitiveProgramHash(existing)) {
       Log::get().debug("Skipping update of " + seq.id_str() +
                        " because of hash mismatch");
       return result;
@@ -460,37 +461,6 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
   }
 
   return not_better;  // not better or worse => no change
-}
-
-void collectPrograms(const Program &p, std::set<Program> &collected) {
-  if (collected.find(p) != collected.end()) {
-    return;
-  }
-  collected.insert(p);
-  for (auto &op : p.ops) {
-    if (op.type == Operation::Type::SEQ &&
-        op.source.type == Operand::Type::CONSTANT) {
-      auto id = op.source.value.asInt();
-      auto path = OeisSequence(id).getProgramPath();
-      try {
-        Parser parser;
-        auto p2 = parser.parse(path);
-        collectPrograms(p2, collected);
-      } catch (const std::exception &) {
-        Log::get().warn("Referenced program not found: " + path);
-      }
-    }
-  }
-}
-
-size_t Finder::getTransitiveProgramHash(const Program &program) {
-  std::set<Program> collected;
-  collectPrograms(program, collected);
-  size_t h = 0;
-  for (auto &p : collected) {
-    h += ProgramUtil::hash(p);
-  }
-  return h;
 }
 
 void Finder::notifyInvalidMatch(size_t id) {

@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Features
+
+* Added `unfold` command to embed called seqeunce programs
+
 ## v23.1.11
 
 ### Enhancements

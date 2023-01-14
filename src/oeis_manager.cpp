@@ -11,6 +11,7 @@
 #include <limits>
 #include <sstream>
 
+#include "comments.hpp"
 #include "config.hpp"
 #include "file.hpp"
 #include "formula_gen.hpp"
@@ -18,6 +19,7 @@
 #include "log.hpp"
 #include "number.hpp"
 #include "oeis_list.hpp"
+#include "oeis_program.hpp"
 #include "optimizer.hpp"
 #include "program_util.hpp"
 #include "setup.hpp"
@@ -453,7 +455,7 @@ void OeisManager::generateStats(int64_t age_in_days) {
         program = parser.parse(program_file);
         has_program = true;
         has_formula =
-            !ProgramUtil::getCommentField(program, ProgramUtil::PREFIX_FORMULA)
+            !Comments::getCommentField(program, Comments::PREFIX_FORMULA)
                  .empty();
         ProgramUtil::removeOps(program, Operation::Type::NOP);
 
@@ -665,7 +667,7 @@ void OeisManager::addSeqComments(Program &p) const {
 void OeisManager::dumpProgram(size_t id, Program &p, const std::string &file,
                               const std::string &submitted_by) const {
   ProgramUtil::removeOps(p, Operation::Type::NOP);
-  ProgramUtil::removeComments(p);
+  Comments::removeComments(p);
   addSeqComments(p);
   ensureDir(file);
   auto &seq = sequences.at(id);
@@ -674,7 +676,7 @@ void OeisManager::dumpProgram(size_t id, Program &p, const std::string &file,
   nop.comment = seq.to_string();
   tmp.ops.push_back(nop);
   if (!submitted_by.empty()) {
-    nop.comment = ProgramUtil::PREFIX_SUBMITTED_BY + " " + submitted_by;
+    nop.comment = Comments::PREFIX_SUBMITTED_BY + " " + submitted_by;
     tmp.ops.push_back(nop);
   }
   nop.comment = seq.getTerms(OeisSequence::DEFAULT_SEQ_LENGTH).to_string();
@@ -690,7 +692,7 @@ void OeisManager::dumpProgram(size_t id, Program &p, const std::string &file,
   FormulaGenerator generator;
   Formula formula;
   if (generator.generate(p, id, formula, false)) {
-    nop.comment = ProgramUtil::PREFIX_FORMULA + " " + formula.toString();
+    nop.comment = Comments::PREFIX_FORMULA + " " + formula.toString();
     tmp.ops.push_back(nop);
   }
   nop.comment.clear();
@@ -711,10 +713,10 @@ void OeisManager::alert(Program p, size_t id, const std::string &prefix,
   FormulaGenerator generator;
   Formula formula;
   if (generator.generate(p, id, formula, false)) {
-    full += ". " + ProgramUtil::PREFIX_FORMULA + " " + formula.toString();
+    full += ". " + Comments::PREFIX_FORMULA + " " + formula.toString();
   }
   if (!submitted_by.empty()) {
-    std::string sub = ProgramUtil::PREFIX_SUBMITTED_BY + " " + submitted_by;
+    std::string sub = Comments::PREFIX_SUBMITTED_BY + " " + submitted_by;
     msg += " " + sub;
     full += ". " + sub;
   }
@@ -752,11 +754,11 @@ update_program_result_t OeisManager::updateProgram(
 
   // get metadata from comments
   const std::string submitted_by =
-      ProgramUtil::getCommentField(p, ProgramUtil::PREFIX_SUBMITTED_BY);
+      Comments::getCommentField(p, Comments::PREFIX_SUBMITTED_BY);
   const std::string change_type =
-      ProgramUtil::getCommentField(p, ProgramUtil::PREFIX_CHANGE_TYPE);
+      Comments::getCommentField(p, Comments::PREFIX_CHANGE_TYPE);
   const std::string previous_hash_str =
-      ProgramUtil::getCommentField(p, ProgramUtil::PREFIX_PREVIOUS_HASH);
+      Comments::getCommentField(p, Comments::PREFIX_PREVIOUS_HASH);
   size_t previous_hash = 0;
   if (!previous_hash_str.empty()) {
     std::stringstream buf(previous_hash_str);
@@ -815,7 +817,7 @@ update_program_result_t OeisManager::updateProgram(
   result.program = checked.second;
   result.change_type = checked.first;
   if (!is_new) {
-    result.previous_hash = finder.getTransitiveProgramHash(existing);
+    result.previous_hash = OeisProgram::getTransitiveProgramHash(existing);
   }
 
   // write new or better program version
@@ -868,8 +870,8 @@ bool OeisManager::maintainProgram(size_t id) {
     Log::get().info("Checking program for " + s.to_string());
     try {
       program = parser.parse(program_file);
-      submitted_by = ProgramUtil::getCommentField(
-          program, ProgramUtil::PREFIX_SUBMITTED_BY);
+      submitted_by =
+          Comments::getCommentField(program, Comments::PREFIX_SUBMITTED_BY);
     } catch (const std::exception &) {
       is_okay = false;
     }
@@ -901,7 +903,7 @@ bool OeisManager::maintainProgram(size_t id) {
   } else {
     // minimize and dump the program if it is not protected
     const bool is_protected = (protect_list.find(s.id) != protect_list.end());
-    if (!is_protected && !ProgramUtil::isCodedManually(program)) {
+    if (!is_protected && !Comments::isCodedManually(program)) {
       ProgramUtil::removeOps(program, Operation::Type::NOP);
       Program minimized = program;
       minimizer.optimizeAndMinimize(minimized,
