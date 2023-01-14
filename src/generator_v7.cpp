@@ -1,5 +1,6 @@
 #include "generator_v7.hpp"
 
+#include "comments.hpp"
 #include "file.hpp"
 #include "log.hpp"
 #include "oeis_sequence.hpp"
@@ -60,7 +61,7 @@ Program GeneratorV7::generateProgram() {
 
   mutator.mutateRandom(program);
   ProgramUtil::removeOps(program, Operation::Type::NOP);
-  ProgramUtil::removeComments(program);
+  Comments::removeComments(program);
 
   return program;
 }

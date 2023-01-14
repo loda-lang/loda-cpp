@@ -5,6 +5,7 @@
 
 #include "benchmark.hpp"
 #include "boinc.hpp"
+#include "comments.hpp"
 #include "evaluator.hpp"
 #include "evaluator_inc.hpp"
 #include "evaluator_log.hpp"
@@ -15,9 +16,9 @@
 #include "minimizer.hpp"
 #include "mutator.hpp"
 #include "oeis_manager.hpp"
+#include "oeis_program.hpp"
 #include "optimizer.hpp"
 #include "pari.hpp"
-#include "parser.hpp"
 #include "program_util.hpp"
 #include "setup.hpp"
 #include "test.hpp"
@@ -52,6 +53,9 @@ void Commands::help() {
   std::cout << "  minimize <program>  Minimize a program and print it (see -t)"
             << std::endl;
   std::cout << "  profile  <program>  Measure program evaluation time (see -t)"
+            << std::endl;
+  std::cout << "  unfold   <program>  Unfold the first seq operation of a "
+               "program"
             << std::endl;
 
   std::cout << std::endl << "OEIS Commands:" << std::endl;
@@ -123,20 +127,6 @@ void Commands::help() {
       << std::endl;
 }
 
-std::pair<std::string, size_t> getProgramPathAndSeqId(std::string arg) {
-  std::pair<std::string, size_t> result;
-  try {
-    OeisSequence s(arg);
-    result.first = s.getProgramPath();
-    result.second = s.id;
-  } catch (...) {
-    // not an ID string
-    result.first = arg;
-    result.second = 0;
-  }
-  return result;
-}
-
 // official commands
 
 void Commands::setup() {
@@ -154,8 +144,7 @@ void Commands::update() {
 
 void Commands::evaluate(const std::string& path) {
   initLog(true);
-  Parser parser;
-  Program program = parser.parse(getProgramPathAndSeqId(path).first);
+  Program program = OeisProgram::getProgramAndSeqId(path).first;
   Evaluator evaluator(settings);
   Sequence seq;
   evaluator.eval(program, seq);
@@ -166,18 +155,16 @@ void Commands::evaluate(const std::string& path) {
 
 void Commands::check(const std::string& path) {
   initLog(true);
-  auto path_and_id = getProgramPathAndSeqId(path);
-  Parser parser;
-  Program program = parser.parse(path_and_id.first);
-  OeisSequence seq(path_and_id.second);
+  auto program_and_id = OeisProgram::getProgramAndSeqId(path);
+  OeisSequence seq(program_and_id.second);
   if (seq.id == 0) {
-    auto id_str = ProgramUtil::getSequenceIdFromProgram(program);
+    auto id_str = Comments::getSequenceIdFromProgram(program_and_id.first);
     seq = OeisSequence(id_str);
   }
   Evaluator evaluator(settings);
   auto terms = seq.getTerms(OeisSequence::FULL_SEQ_LENGTH);
-  auto result =
-      evaluator.check(program, terms, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id);
+  auto result = evaluator.check(program_and_id.first, terms,
+                                OeisSequence::DEFAULT_SEQ_LENGTH, seq.id);
   switch (result.first) {
     case status_t::OK:
       std::cout << "ok" << std::endl;
@@ -193,8 +180,7 @@ void Commands::check(const std::string& path) {
 
 void Commands::optimize(const std::string& path) {
   initLog(true);
-  Parser parser;
-  Program program = parser.parse(getProgramPathAndSeqId(path).first);
+  Program program = OeisProgram::getProgramAndSeqId(path).first;
   Optimizer optimizer(settings);
   optimizer.optimize(program);
   ProgramUtil::print(program, std::cout);
@@ -202,8 +188,7 @@ void Commands::optimize(const std::string& path) {
 
 void Commands::minimize(const std::string& path) {
   initLog(true);
-  Parser parser;
-  Program program = parser.parse(getProgramPathAndSeqId(path).first);
+  Program program = OeisProgram::getProgramAndSeqId(path).first;
   Minimizer minimizer(settings);
   minimizer.optimizeAndMinimize(program, settings.num_terms);
   ProgramUtil::print(program, std::cout);
@@ -211,8 +196,7 @@ void Commands::minimize(const std::string& path) {
 
 void Commands::export_(const std::string& path) {
   initLog(true);
-  Parser parser;
-  Program program = parser.parse(getProgramPathAndSeqId(path).first);
+  Program program = OeisProgram::getProgramAndSeqId(path).first;
   const auto& format = settings.export_format;
   Formula formula;
   FormulaGenerator generator;
@@ -236,8 +220,7 @@ void Commands::export_(const std::string& path) {
 
 void Commands::profile(const std::string& path) {
   initLog(true);
-  Parser parser;
-  Program program = parser.parse(getProgramPathAndSeqId(path).first);
+  Program program = OeisProgram::getProgramAndSeqId(path).first;
   Sequence res;
   Evaluator evaluator(settings);
   auto start_time = std::chrono::steady_clock::now();
@@ -258,6 +241,15 @@ void Commands::profile(const std::string& path) {
   }
 }
 
+void Commands::unfold(const std::string& path) {
+  initLog(true);
+  auto p = OeisProgram::getProgramAndSeqId(path).first;
+  if (!OeisProgram::unfold(p)) {
+    throw std::runtime_error("cannot unfold program");
+  }
+  ProgramUtil::print(p, std::cout);
+}
+
 std::unique_ptr<ProgressMonitor> makeProgressMonitor(const Settings& settings) {
   std::unique_ptr<ProgressMonitor> progress_monitor;
   if (settings.num_mine_hours > 0) {
@@ -276,8 +268,7 @@ void Commands::mine() {
 
 void Commands::mutate(const std::string& path) {
   initLog(false);
-  Parser parser;
-  Program base_program = parser.parse(getProgramPathAndSeqId(path).first);
+  Program base_program = OeisProgram::getProgramAndSeqId(path).first;
   auto progress_monitor = makeProgressMonitor(settings);
   Miner miner(settings, progress_monitor.get());
   miner.setBaseProgram(base_program);
@@ -459,8 +450,7 @@ void Commands::testPari(const std::string& test_id) {
 
 void Commands::dot(const std::string& path) {
   initLog(true);
-  Parser parser;
-  Program program = parser.parse(getProgramPathAndSeqId(path).first);
+  Program program = OeisProgram::getProgramAndSeqId(path).first;
   ProgramUtil::exportToDot(program, std::cout);
 }
 
@@ -525,10 +515,9 @@ void Commands::lists() {
 
 void Commands::compare(const std::string& path1, const std::string& path2) {
   initLog(true);
-  Parser parser;
-  Program p1 = parser.parse(getProgramPathAndSeqId(path1).first);
-  Program p2 = parser.parse(getProgramPathAndSeqId(path2).first);
-  auto id_str = ProgramUtil::getSequenceIdFromProgram(p1);
+  Program p1 = OeisProgram::getProgramAndSeqId(path1).first;
+  Program p2 = OeisProgram::getProgramAndSeqId(path2).first;
+  auto id_str = Comments::getSequenceIdFromProgram(p1);
   OeisSequence seq(id_str);
   OeisManager manager(settings);
   manager.load();

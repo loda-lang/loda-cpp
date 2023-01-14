@@ -75,7 +75,6 @@ class Stats {
       printed_recursion_warning;  // used for getTransitiveLength()
   Blocks::Collector blocks_collector;
 
-  void collectLatestProgramIds();
   void resizeProgramLists(size_t id);
 };
 

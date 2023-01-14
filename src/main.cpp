@@ -148,6 +148,8 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
     commands.export_(args.at(1));
   } else if (cmd == "profile" || cmd == "prof") {
     commands.profile(args.at(1));
+  } else if (cmd == "unfold") {
+    commands.unfold(args.at(1));
   } else if (cmd == "mine") {
     if (settings.parallel_mining) {
       mineParallel(settings, args);

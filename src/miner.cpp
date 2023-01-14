@@ -6,6 +6,7 @@
 #include <thread>
 #include <unordered_set>
 
+#include "comments.hpp"
 #include "config.hpp"
 #include "file.hpp"
 #include "generator.hpp"
@@ -127,7 +128,7 @@ void Miner::runMineLoop() {
       base_program_name = base_program.ops[0].comment;
     }
     ProgramUtil::removeOps(base_program, Operation::Type::NOP);
-    ProgramUtil::removeComments(base_program);
+    Comments::removeComments(base_program);
 
     // start with constants mutations; later do random mutation
     mutator->mutateCopiesConstants(base_program, NUM_MUTATIONS, progs);
@@ -186,7 +187,7 @@ void Miner::runMineLoop() {
 
       // try to extract A-number from comment (server mode)
       seq_programs.clear();
-      auto id = ProgramUtil::getSequenceIdFromProgram(program);
+      auto id = Comments::getSequenceIdFromProgram(program);
       if (!id.empty()) {
         try {
           OeisSequence seq(id);
@@ -213,8 +214,8 @@ void Miner::runMineLoop() {
             manager->updateProgram(s.first, program, validation_mode);
         if (update_result.updated) {
           // update metrics
-          submitted_by = ProgramUtil::getCommentField(
-              program, ProgramUtil::PREFIX_SUBMITTED_BY);
+          submitted_by =
+              Comments::getCommentField(program, Comments::PREFIX_SUBMITTED_BY);
           if (submitted_by.empty()) {
             submitted_by = "unknown";
           }
@@ -227,14 +228,13 @@ void Miner::runMineLoop() {
           if (mining_mode == MINING_MODE_CLIENT) {
             // add metadata as comments
             program = update_result.program;
-            ProgramUtil::addComment(program, ProgramUtil::PREFIX_MINER_PROFILE +
-                                                 " " + profile_name);
-            ProgramUtil::addComment(program, ProgramUtil::PREFIX_CHANGE_TYPE +
-                                                 " " +
-                                                 update_result.change_type);
+            Comments::addComment(
+                program, Comments::PREFIX_MINER_PROFILE + " " + profile_name);
+            Comments::addComment(program, Comments::PREFIX_CHANGE_TYPE + " " +
+                                              update_result.change_type);
             if (!update_result.is_new) {
-              ProgramUtil::addComment(
-                  program, ProgramUtil::PREFIX_PREVIOUS_HASH + " " +
+              Comments::addComment(
+                  program, Comments::PREFIX_PREVIOUS_HASH + " " +
                                std::to_string(update_result.previous_hash));
             }
             api_client->postProgram(program, 10);  // magic number
@@ -352,7 +352,7 @@ void Miner::submit(const std::string &path, std::string id) {
   ConfigLoader::MAINTAINANCE_MODE = true;
   reload();
   if (id.empty()) {
-    id = ProgramUtil::getSequenceIdFromProgram(program);
+    id = Comments::getSequenceIdFromProgram(program);
   }
   OeisSequence seq(id);
   Settings settings(this->settings);
@@ -385,8 +385,8 @@ void Miner::submit(const std::string &path, std::string id) {
       if (mode == MINING_MODE_CLIENT) {
         // add metadata as comment
         program = r.program;
-        ProgramUtil::addComment(program,
-                                ProgramUtil::PREFIX_MINER_PROFILE + " manual");
+        Comments::addComment(program,
+                             Comments::PREFIX_MINER_PROFILE + " manual");
         api_client->postProgram(program);
       }
       matches++;
@@ -409,23 +409,23 @@ void Miner::submit(const std::string &path, std::string id) {
 
 void Miner::ensureSubmittedBy(Program &program) {
   auto submitted_by =
-      ProgramUtil::getCommentField(program, ProgramUtil::PREFIX_SUBMITTED_BY);
+      Comments::getCommentField(program, Comments::PREFIX_SUBMITTED_BY);
   if (submitted_by.empty()) {
-    ProgramUtil::addComment(program,
-                            ProgramUtil::PREFIX_SUBMITTED_BY + " " + ANONYMOUS);
+    Comments::addComment(program,
+                         Comments::PREFIX_SUBMITTED_BY + " " + ANONYMOUS);
   }
 }
 
 void Miner::updateSubmittedBy(Program &program) {
   auto submitted_by =
-      ProgramUtil::getCommentField(program, ProgramUtil::PREFIX_SUBMITTED_BY);
+      Comments::getCommentField(program, Comments::PREFIX_SUBMITTED_BY);
   if (submitted_by.empty()) {
     submitted_by = Setup::getSubmittedBy();
     if (!submitted_by.empty()) {
-      ProgramUtil::addComment(
-          program, ProgramUtil::PREFIX_SUBMITTED_BY + " " + submitted_by);
+      Comments::addComment(program,
+                           Comments::PREFIX_SUBMITTED_BY + " " + submitted_by);
     }
   } else if (submitted_by == ANONYMOUS) {
-    ProgramUtil::removeCommentField(program, ProgramUtil::PREFIX_SUBMITTED_BY);
+    Comments::removeCommentField(program, Comments::PREFIX_SUBMITTED_BY);
   }
 }

@@ -12,10 +12,6 @@ class ProgramUtil {
 
   static void removeOps(Program &p, Operation::Type type);
 
-  static void removeComments(Program &p);
-
-  static void addComment(Program &p, const std::string &comment);
-
   static bool replaceOps(Program &p, Operation::Type oldType,
                          Operation::Type newType);
 
@@ -77,22 +73,6 @@ class ProgramUtil {
   static size_t hash(const Operand &op);
 
   static void validate(const Program &p);
-
-  static bool isCodedManually(const Program &p);
-
-  static std::string getCommentField(const Program &p,
-                                     const std::string &prefix);
-
-  static void removeCommentField(Program &p, const std::string &prefix);
-
-  static std::string getSequenceIdFromProgram(const Program &p);
-
-  static const std::string PREFIX_SUBMITTED_BY;
-  static const std::string PREFIX_CODED_MANUALLY;
-  static const std::string PREFIX_FORMULA;
-  static const std::string PREFIX_MINER_PROFILE;
-  static const std::string PREFIX_CHANGE_TYPE;
-  static const std::string PREFIX_PREVIOUS_HASH;
 
   static void avoidNopOrOverflow(Operation &op);
 };
