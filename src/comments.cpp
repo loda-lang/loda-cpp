@@ -1,5 +1,7 @@
 #include "comments.hpp"
 
+#include <cctype>
+
 void Comments::addComment(Program &p, const std::string &comment) {
   Operation nop(Operation::Type::NOP);
   nop.comment = comment;
