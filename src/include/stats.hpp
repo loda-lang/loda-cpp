@@ -63,6 +63,7 @@ class Stats {
   std::vector<int64_t> num_programs_per_length;
   std::vector<int64_t> num_ops_per_type;
   std::vector<int64_t> program_lengths;
+  std::vector<int64_t> program_usages;
   std::vector<bool> all_program_ids;
   std::vector<bool> latest_program_ids;
   std::vector<bool> supports_inceval;

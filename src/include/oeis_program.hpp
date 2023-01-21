@@ -10,6 +10,8 @@ class OeisProgram {
 
   static bool unfold(Program& p);
 
+  static bool autoUnfold(Program& p);
+
   static std::vector<bool> collectLatestProgramIds(
       size_t max_commits, size_t max_added_programs,
       size_t max_modified_programs);

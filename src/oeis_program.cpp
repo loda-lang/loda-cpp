@@ -2,6 +2,7 @@
 
 #include <set>
 
+#include "comments.hpp"
 #include "file.hpp"
 #include "log.hpp"
 #include "oeis_sequence.hpp"
@@ -91,6 +92,7 @@ bool OeisProgram::unfold(Program &p) {
   }
   // prepare program for embedding
   ProgramUtil::removeOps(p2, Operation::Type::NOP);
+  Comments::removeComments(p2);
   int64_t target = p.ops[seq_index].target.value.asInt();
   int64_t largest_used = ProgramUtil::getLargestDirectMemoryCell(p);
   for (auto &op : p2.ops) {
@@ -102,6 +104,50 @@ bool OeisProgram::unfold(Program &p) {
   // embed program
   p.ops.insert(p.ops.begin() + seq_index, p2.ops.begin(), p2.ops.end());
   return true;
+}
+
+bool isTooComplex(const Program &p) {
+  int64_t level = 0;
+  int64_t numLoops = 0;
+  bool hasRootSeq = false;
+  for (auto &op : p.ops) {
+    switch (op.type) {
+      case Operation::Type::LPB:
+        level++;
+        numLoops++;
+        break;
+      case Operation::Type::LPE:
+        level--;
+        break;
+      case Operation::Type::SEQ:
+        if (level == 0) {
+          hasRootSeq = true;
+        }
+        break;
+      default:
+        break;
+    }
+  }
+  return (numLoops > 1) || (numLoops > 0 && hasRootSeq);
+}
+
+bool OeisProgram::autoUnfold(Program &p) {
+  bool changed = false;
+  while (true) {
+    // try to unfold
+    auto copy = p;
+    if (!OeisProgram::unfold(copy)) {
+      break;
+    }
+    // abort if unfolded program is too complex
+    if (isTooComplex(copy)) {
+      break;
+    }
+    // ok, update program!
+    p = copy;
+    changed = true;
+  }
+  return changed;
 }
 
 std::vector<bool> OeisProgram::collectLatestProgramIds(

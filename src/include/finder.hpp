@@ -31,23 +31,22 @@ class Finder {
       const Program &p, Sequence &norm_seq,
       const std::vector<OeisSequence> &sequences);
 
-  std::pair<std::string, Program> checkProgramExtended(Program program,
-                                                       Program existing,
-                                                       bool is_new,
-                                                       const OeisSequence &seq,
-                                                       size_t num_terms);
+  std::pair<std::string, Program> checkProgramExtended(
+      Program program, Program existing, bool is_new, const OeisSequence &seq,
+      size_t num_terms, size_t num_usages);
 
   std::pair<std::string, Program> checkProgramBasic(
       Program program, Program existing, bool is_new, const OeisSequence &seq,
       const std::string &change_type, size_t previous_hash,
-      size_t num_default_terms);
+      size_t num_default_terms, size_t num_usages);
 
   std::vector<std::unique_ptr<Matcher>> &getMatchers() { return matchers; }
 
   void logSummary(size_t loaded_count);
 
   std::string isOptimizedBetter(Program existing, Program optimized,
-                                const OeisSequence &seq, size_t num_terms);
+                                const OeisSequence &seq, size_t num_terms,
+                                size_t num_usages);
 
  private:
   static constexpr double THRESHOLD_BETTER = 1.1;

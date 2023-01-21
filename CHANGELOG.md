@@ -6,6 +6,11 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Added `unfold` command to embed called seqeunce programs
 
+### Enhancements
+
+* Selective auto-unfolding during program maintenance
+* Prefer faster over IE for programs that are used a lot
+
 ## v23.1.11
 
 ### Enhancements

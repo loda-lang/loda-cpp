@@ -15,7 +15,7 @@
 #include "setup.hpp"
 
 const std::string Stats::CALL_GRAPH_HEADER("caller,callee");
-const std::string Stats::PROGRAMS_HEADER("id,length,inc_eval,log_eval");
+const std::string Stats::PROGRAMS_HEADER("id,length,usages,inc_eval,log_eval");
 const std::string Stats::STEPS_HEADER("total,min,max,runs");
 const std::string Stats::SUMMARY_HEADER(
     "num_sequences,num_programs,num_formulas");
@@ -39,7 +39,7 @@ void Stats::load(std::string path) {
   Log::get().debug("Loading program stats from " + path);
 
   const std::string sep(",");
-  std::string full, line, k, v, w, l;
+  std::string full, line, k, l, m, v, w;
   Parser parser;
   Operation op;
   Operand count;
@@ -151,6 +151,7 @@ void Stats::load(std::string path) {
       std::stringstream s(line);
       std::getline(s, k, ',');
       std::getline(s, l, ',');
+      std::getline(s, m, ',');
       std::getline(s, v, ',');
       std::getline(s, w);
       int64_t id = std::stoll(k);
@@ -158,6 +159,7 @@ void Stats::load(std::string path) {
       resizeProgramLists(id);
       all_program_ids[id] = true;
       program_lengths[id] = std::stoll(l);
+      program_usages[id] = std::stoll(m);
       supports_inceval[id] = std::stoll(v);
       supports_logeval[id] = std::stoll(w);
     }
@@ -241,8 +243,9 @@ void Stats::save(std::string path) {
   programs << PROGRAMS_HEADER << "\n";
   for (size_t id = 0; id < all_program_ids.size(); id++) {
     if (all_program_ids[id]) {
-      programs << id << sep << program_lengths[id] << sep
-               << supports_inceval[id] << sep << supports_logeval[id] << "\n";
+      programs << id << sep << program_lengths[id] << sep << program_usages[id]
+               << sep << supports_inceval[id] << sep << supports_logeval[id]
+               << "\n";
     }
   }
   programs.close();
@@ -362,8 +365,10 @@ void Stats::updateProgramStats(size_t id, const Program &program) {
     }
     if (op.type == Operation::Type::SEQ &&
         op.source.type == Operand::Type::CONSTANT) {
-      call_graph.insert(
-          std::pair<int64_t, int64_t>(id, op.source.value.asInt()));
+      auto called = op.source.value.asInt();
+      resizeProgramLists(called);
+      call_graph.insert(std::pair<int64_t, int64_t>(id, called));
+      program_usages[called]++;
     }
     o.pos++;
   }
@@ -391,6 +396,7 @@ void Stats::resizeProgramLists(size_t id) {
         std::max<size_t>(id + 1, 2 * all_program_ids.size());
     all_program_ids.resize(new_size);
     program_lengths.resize(new_size);
+    program_usages.resize(new_size);
     supports_inceval.resize(new_size);
     supports_logeval.resize(new_size);
   }

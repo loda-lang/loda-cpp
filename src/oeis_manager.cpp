@@ -796,14 +796,19 @@ update_program_result_t OeisManager::updateProgram(
   if (full_check_list.find(seq.id) != full_check_list.end()) {
     num_default_terms = OeisSequence::FULL_SEQ_LENGTH;
   }
+  size_t num_usages = 0;
+  if (seq.id < getStats().program_usages.size()) {
+    num_usages = stats->program_usages[seq.id];
+  }
   switch (validation_mode) {
     case ValidationMode::BASIC:
       checked = finder.checkProgramBasic(p, existing, is_new, seq, change_type,
-                                         previous_hash, num_default_terms);
+                                         previous_hash, num_default_terms,
+                                         num_usages);
       break;
     case ValidationMode::EXTENDED:
       checked = finder.checkProgramExtended(p, existing, is_new, seq,
-                                            num_default_terms);
+                                            num_default_terms, num_usages);
       break;
   }
   // not better or the same after optimization?
@@ -901,14 +906,14 @@ bool OeisManager::maintainProgram(size_t id) {
     remove(file_name.c_str());
     return false;
   } else {
-    // minimize and dump the program if it is not protected
+    // unfold, minimize and dump the program if it is not protected
     const bool is_protected = (protect_list.find(s.id) != protect_list.end());
     if (!is_protected && !Comments::isCodedManually(program)) {
       ProgramUtil::removeOps(program, Operation::Type::NOP);
-      Program minimized = program;
-      minimizer.optimizeAndMinimize(minimized,
-                                    OeisSequence::DEFAULT_SEQ_LENGTH);
-      dumpProgram(s.id, minimized, file_name, submitted_by);
+      auto m = program;
+      OeisProgram::autoUnfold(m);
+      minimizer.optimizeAndMinimize(m, OeisSequence::DEFAULT_SEQ_LENGTH);
+      dumpProgram(s.id, m, file_name, submitted_by);
     }
     return true;
   }

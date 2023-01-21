@@ -521,8 +521,12 @@ void Commands::compare(const std::string& path1, const std::string& path2) {
   OeisSequence seq(id_str);
   OeisManager manager(settings);
   manager.load();
+  size_t num_usages = 0;
+  if (seq.id < manager.getStats().program_usages.size()) {
+    num_usages = manager.getStats().program_usages[seq.id];
+  }
   auto result = manager.getFinder().isOptimizedBetter(
-      p1, p2, seq, OeisSequence::EXTENDED_SEQ_LENGTH);
+      p1, p2, seq, OeisSequence::EXTENDED_SEQ_LENGTH, num_usages);
   if (result.empty()) {
     result = "Worse or Equal";
   }
