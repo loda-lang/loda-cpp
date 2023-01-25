@@ -66,6 +66,8 @@ class Commands {
 
   void compare(const std::string& path1, const std::string& path2);
 
+  void autoFold();
+
  private:
   const Settings& settings;
 

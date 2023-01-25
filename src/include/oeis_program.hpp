@@ -1,5 +1,7 @@
 #pragma once
 
+#include <map>
+
 #include "program.hpp"
 
 class OeisProgram {
@@ -8,9 +10,14 @@ class OeisProgram {
 
   static size_t getTransitiveProgramHash(const Program& p);
 
+  static bool isTooComplex(const Program& p);
+
   static bool unfold(Program& p);
 
   static bool autoUnfold(Program& p);
+
+  static bool fold(Program& main, const Program& sub, size_t subId,
+                   std::map<int64_t, int64_t>& cell_map);
 
   static std::vector<bool> collectLatestProgramIds(
       size_t max_commits, size_t max_added_programs,

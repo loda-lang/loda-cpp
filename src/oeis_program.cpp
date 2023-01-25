@@ -106,7 +106,7 @@ bool OeisProgram::unfold(Program &p) {
   return true;
 }
 
-bool isTooComplex(const Program &p) {
+bool OeisProgram::isTooComplex(const Program &p) {
   int64_t level = 0;
   int64_t numLoops = 0;
   bool hasRootSeq = false;
@@ -148,6 +148,88 @@ bool OeisProgram::autoUnfold(Program &p) {
     changed = true;
   }
   return changed;
+}
+
+bool updateOperandFold(const Operand &src, const Operand &trg,
+                       std::map<int64_t, int64_t> &cell_map) {
+  if (src.type != trg.type) {
+    return false;
+  }
+  switch (src.type) {
+    case Operand::Type::CONSTANT: {
+      if (src.value != trg.value) {
+        return false;
+      }
+      break;
+    }
+    case Operand::Type::DIRECT: {
+      auto s = src.value.asInt();
+      auto t = trg.value.asInt();
+      auto it = cell_map.find(s);
+      if (it == cell_map.end()) {
+        cell_map[s] = t;
+      } else if (it->second != t) {
+        return false;
+      }
+      break;
+    }
+    case Operand::Type::INDIRECT: {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool OeisProgram::fold(Program &main, const Program &sub, size_t subId,
+                       std::map<int64_t, int64_t> &cell_map) {
+  // find a match
+  size_t main_pos = 0, sub_pos = 0;
+  while (sub_pos < sub.ops.size() && main_pos < main.ops.size()) {
+    bool reset = false;
+    if (sub.ops[sub_pos].type != main.ops[main_pos].type) {
+      reset = true;
+    } else if (!updateOperandFold(sub.ops[sub_pos].target,
+                                  main.ops[main_pos].target, cell_map)) {
+      reset = true;
+    } else if (!updateOperandFold(sub.ops[sub_pos].source,
+                                  main.ops[main_pos].source, cell_map)) {
+      reset = true;
+    }
+    if (reset) {
+      main_pos = main_pos - sub_pos + 1;
+      sub_pos = 0;
+      cell_map.clear();
+    } else {
+      main_pos++;
+      sub_pos++;
+    }
+  }
+  // ensure we matched full subprogram
+  if (sub_pos < sub.ops.size()) {
+    return false;
+  }
+  // no indirect ops allowed
+  if (ProgramUtil::hasIndirectOperand(main) ||
+      ProgramUtil::hasIndirectOperand(sub)) {
+    return false;
+  }
+  // apply folding on a copy
+  auto folded = main;
+  folded.ops[main_pos - 1] = Operation(
+      Operation::Type::SEQ,
+      Operand(Operand::Type::DIRECT, Number(cell_map.at(Program::INPUT_CELL))),
+      Operand(Operand::Type::CONSTANT, Number(subId)));
+  // folded.ops.erase(folded.ops.begin() + (main_pos - sub.ops.size()),
+  //                  folded.ops.begin() + (main_pos + sub.ops.size() - 1));
+  //  check mapping
+  /*
+  for (auto &e : cell_map) {
+    if (e.first == Program::INPUT_CELL) {
+    } else {
+    }
+  }
+  */
+  return true;
 }
 
 std::vector<bool> OeisProgram::collectLatestProgramIds(

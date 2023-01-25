@@ -532,3 +532,72 @@ void Commands::compare(const std::string& path1, const std::string& path2) {
   }
   std::cout << result << std::endl;
 }
+
+void Commands::autoFold() {
+  initLog(false);
+  OeisManager manager(settings);
+  manager.load();
+  auto& program_ids = manager.getStats().all_program_ids;
+  const auto num_ids = program_ids.size();
+  const auto num_programs = manager.getStats().num_programs;
+  std::vector<Program> programs(num_ids);
+  Parser parser;
+  // load all programs
+  Log::get().info("Loading " + std::to_string(manager.getStats().num_programs) +
+                  " programs");
+  AdaptiveScheduler scheduler(20);
+  int64_t loaded = 0;
+  for (size_t id = 0; id < num_ids; id++) {
+    if (!program_ids[id]) {
+      continue;
+    }
+    OeisSequence seq(id);
+    std::ifstream in(seq.getProgramPath());
+    if (!in) {
+      continue;
+    }
+    try {
+      programs[id] = parser.parse(in);
+      loaded++;
+    } catch (const std::exception& e) {
+      Log::get().warn("Skipping " + seq.id_str() + ": " + e.what());
+      continue;
+    }
+    if (scheduler.isTargetReached()) {
+      scheduler.reset();
+      Log::get().info("Loaded " + std::to_string(loaded) + "/" +
+                      std::to_string(num_programs) + " programs");
+    }
+  }
+  Log::get().info("Folding programs");
+  // try to unfold all programs
+  bool folded;
+  Program main;
+  std::map<int64_t, int64_t> cell_map;
+  size_t main_id, sub_id, main_loops, sub_loops;
+  for (main_id = 0; main_id < num_ids; main_id++) {
+    if (programs[main_id].ops.empty() ||
+        !OeisProgram::isTooComplex(programs[main_id])) {
+      continue;
+    }
+    folded = false;
+    main = programs[main_id];
+    main_loops = ProgramUtil::numOps(programs[main_id], Operation::Type::LPB);
+    for (sub_id = 0; sub_id < num_ids; sub_id++) {
+      sub_loops = ProgramUtil::numOps(programs[sub_id], Operation::Type::LPB);
+      if (programs[sub_id].ops.empty() || sub_id == main_id ||
+          main_loops == 0 || sub_loops == 0 || main_loops == sub_loops) {
+        continue;
+      }
+      cell_map.clear();
+      if (OeisProgram::fold(main, programs[sub_id], sub_id, cell_map)) {
+        folded = true;
+        break;
+      }
+    }
+    if (folded) {
+      Log::get().info("Folded " + OeisSequence(main_id).id_str() + " using " +
+                      OeisSequence(sub_id).id_str());
+    }
+  }
+}
