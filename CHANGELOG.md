@@ -2,12 +2,15 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v23.1.25
+
 ### Features
 
 * Added `unfold` command to embed called seqeunce programs
 
 ### Enhancements
 
+* Reduce default number of terms to 8 (include 10k more OEIS seqs)
 * Selective auto-unfolding during program maintenance
 * Prefer faster over IE for programs that are used a lot
 

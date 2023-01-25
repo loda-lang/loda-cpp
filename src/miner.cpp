@@ -402,8 +402,7 @@ void Miner::submit(const std::string &path, std::string id) {
                       " matched sequences");
     }
   } else {
-    Log::get().info(
-        "Skipped submission because there exists already a (faster) program");
+    Log::get().info("No matches or existing programs are better");
   }
 }
 

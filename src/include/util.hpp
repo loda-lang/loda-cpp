@@ -18,7 +18,7 @@ class Version {
 
 class Settings {
  public:
-  static constexpr size_t DEFAULT_NUM_TERMS = 10;
+  static constexpr size_t DEFAULT_NUM_TERMS = 8;
   static constexpr int64_t DEFAULT_MAX_MEMORY = 1000;
   static constexpr int64_t DEFAULT_MAX_CYCLES = 50000000;
 
