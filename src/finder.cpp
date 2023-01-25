@@ -182,7 +182,7 @@ std::pair<std::string, Program> Finder::checkProgramExtended(
 
   if (is_new) {
     // no additional checks needed for new programs
-    result.first = "First";
+    result.first = "Found";
   } else {
     // now we are in the "update" case
     // compare (minimized) program with existing programs
@@ -201,7 +201,7 @@ std::pair<std::string, Program> Finder::checkProgramBasic(
     Program program, Program existing, bool is_new, const OeisSequence &seq,
     const std::string &change_type, size_t previous_hash,
     size_t num_default_terms, size_t num_usages) {
-  static const std::string first = "First";
+  static const std::string first = "Found";
   std::pair<std::string, Program> result;  // empty string indicates no update
 
   // additional metadata checks for program update

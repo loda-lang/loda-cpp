@@ -411,7 +411,7 @@ void Stats::finalize() {
   }
   if (latest_program_ids.empty()) {
     latest_program_ids =
-        OeisProgram::collectLatestProgramIds(100, 750, 250);  // magic number
+        OeisProgram::collectLatestProgramIds(20, 200, 200);  // magic number
   }
 }
 
