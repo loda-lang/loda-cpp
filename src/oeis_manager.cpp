@@ -15,6 +15,7 @@
 #include "config.hpp"
 #include "file.hpp"
 #include "formula_gen.hpp"
+#include "git.hpp"
 #include "interpreter.hpp"
 #include "log.hpp"
 #include "number.hpp"
@@ -380,7 +381,7 @@ void OeisManager::update(bool force) {
       }
       Log::get().info(msg);
       // update programs repository using git pull
-      git(progs_dir, "pull origin main -q --ff-only");
+      Git::git(progs_dir, "pull origin main -q --ff-only");
     }
 
     // touch marker file to track the age (even in server mode)

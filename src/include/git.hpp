@@ -1,0 +1,25 @@
+#pragma once
+
+#include <string>
+#include <vector>
+
+class Git {
+ public:
+#ifdef _WIN64
+  static void ensureEnv(const std::string &key, const std::string &value);
+
+  static void fixWindowsEnv(std::string project_dir = "");
+#endif
+
+  static void git(const std::string &folder, const std::string &args);
+
+  static void clone(const std::string &url, const std::string &folder);
+
+  static std::vector<std::string> log(const std::string &folder,
+                                      size_t max_commits);
+
+  static std::vector<std::pair<std::string, std::string>> diffTree(
+      const std::string &folder, const std::string &commit_id);
+
+  static void gunzip(const std::string &path);
+};

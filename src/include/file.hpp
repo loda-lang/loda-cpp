@@ -23,15 +23,7 @@ void ensureDir(const std::string &path);
 
 void moveFile(const std::string &from, const std::string &to);
 
-#ifdef _WIN64
-void ensureEnv(const std::string &key, const std::string &value);
-
-void fixWindowsEnv(std::string project_dir = "");
-#endif
-
-void gunzip(const std::string &path);
-
-void git(const std::string &folder, const std::string &args);
+void execCmd(const std::string &cmd, bool fail_on_error = true);
 
 void makeExecutable(const std::string &path);
 
