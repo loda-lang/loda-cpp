@@ -1,6 +1,7 @@
 #include "git.hpp"
 
 #include "file.hpp"
+#include "log.hpp"
 #include "util.hpp"
 #include "web_client.hpp"
 
