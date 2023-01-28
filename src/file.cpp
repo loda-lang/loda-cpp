@@ -79,14 +79,6 @@ void ensureDir(const std::string &path) {
   }
 }
 
-std::string getPath() {
-  auto p = std::getenv("PATH");
-  if (p) {
-    return std::string(p);
-  }
-  return "";
-}
-
 void execCmd(const std::string &cmd, bool fail_on_error) {
   auto exit_code = system(cmd.c_str());
   if (exit_code != 0) {

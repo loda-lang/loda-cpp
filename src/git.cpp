@@ -6,6 +6,14 @@
 #include "web_client.hpp"
 
 #ifdef _WIN64
+std::string getPath() {
+  auto p = std::getenv("PATH");
+  if (p) {
+    return std::string(p);
+  }
+  return "";
+}
+
 void putEnv(const std::string &key, const std::string &value) {
   Log::get().warn("Setting environment variable: " + key + "=" + value);
   if (_putenv_s(key.c_str(), value.c_str())) {
