@@ -79,5 +79,18 @@
         "queue": "cpp",
         "functional": "cpp"
     },
-    "makefile.makeDirectory": "src"
+    "makefile.makeDirectory": "src",
+    "c-cpp-flylint.clang.includePaths": [
+        "${workspaceFolder}/src/include",
+        "${workspaceFolder}/src/external"
+    ],
+    "c-cpp-flylint.clang.warnings": [
+        "all",
+        "extra",
+        "no-pragma-once-outside-header"
+    ],
+    "c-cpp-flylint.clang.standard": [
+        "c++17"
+    ],
+    "c-cpp-flylint.flexelint.enable": false
 }
