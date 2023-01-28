@@ -4,6 +4,7 @@
 
 #include "comments.hpp"
 #include "file.hpp"
+#include "git.hpp"
 #include "log.hpp"
 #include "oeis_sequence.hpp"
 #include "parser.hpp"
@@ -160,21 +161,7 @@ std::vector<bool> OeisProgram::collectLatestProgramIds(
         "Cannot read commit history because the .git folder was not found");
     return latest_program_ids;
   }
-  const std::string git_tmp = getTmpDir() + "loda_git_tmp.txt";
-  git(progs_dir, "log --oneline --format=\"%H\" -n " +
-                     std::to_string(max_commits) + " > \"" + git_tmp + "\"");
-  std::string line;
-  std::vector<std::string> commits;
-  {
-    // read commits from file
-    std::ifstream in(git_tmp);
-    while (std::getline(in, line)) {
-      if (!line.empty()) {
-        commits.push_back(line);
-      }
-    }
-  }
-  std::remove(git_tmp.c_str());
+  auto commits = Git::log(progs_dir, max_commits);
   if (commits.empty()) {
     Log::get().warn("Cannot read programs commit history");
     return latest_program_ids;
@@ -186,37 +173,31 @@ std::vector<bool> OeisProgram::collectLatestProgramIds(
         num_modified_ids >= max_modified_programs) {
       break;
     }
-    git(progs_dir, "diff-tree --no-commit-id --name-status -r " + commit +
-                       " > \"" + git_tmp + "\"");
-    {
-      // read changed file names from file
-      std::ifstream in(git_tmp);
-      std::string status, path;
-      while (std::getline(in, line)) {
-        std::istringstream iss(line);
-        iss >> status;
-        iss >> path;
-        if (path.size() >= 11 && path.substr(path.size() - 4) == ".asm") {
-          auto id_str = path.substr(path.size() - 11, 7);
-          try {
-            OeisSequence seq(id_str);
-            if (isFile(seq.getProgramPath())) {
-              if (status == "A" && num_added_ids < max_added_programs) {
-                ids.insert(seq.id);
-                num_added_ids++;
-              } else if (status == "M" &&
-                         num_modified_ids < max_modified_programs) {
-                ids.insert(seq.id);
-                num_modified_ids++;
-              }
+    auto changes = Git::diffTree(progs_dir, commit);
+    for (const auto &c : changes) {
+      const auto &status = c.first;
+      const auto &path = c.second;
+      if (path.size() >= 11 && path.substr(path.size() - 4) == ".asm") {
+        auto id_str = path.substr(path.size() - 11, 7);
+        try {
+          OeisSequence seq(id_str);
+          if (isFile(seq.getProgramPath())) {
+            if (status == "A" && num_added_ids < max_added_programs) {
+              Log::get().debug("Added program for " + seq.id_str());
+              ids.insert(seq.id);
+              num_added_ids++;
+            } else if (status == "M" &&
+                       num_modified_ids < max_modified_programs) {
+              Log::get().debug("Modified program for " + seq.id_str());
+              ids.insert(seq.id);
+              num_modified_ids++;
             }
-          } catch (const std::exception &) {
-            // ignore because it is not a program of an OEIS sequence
           }
+        } catch (const std::exception &) {
+          // ignore because it is not a program of an OEIS sequence
         }
       }
     }
-    std::remove(git_tmp.c_str());
   }
   for (auto id : ids) {
     if (id >= static_cast<int64_t>(latest_program_ids.size())) {

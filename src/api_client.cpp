@@ -4,6 +4,7 @@
 #include <thread>
 
 #include "file.hpp"
+#include "git.hpp"
 #include "log.hpp"
 #include "parser.hpp"
 #include "program_util.hpp"
@@ -116,7 +117,7 @@ void ApiClient::getOeisFile(const std::string& filename,
     backoff_delay *= 2;
   }
   if (success) {
-    gunzip(local_path + ".gz");
+    Git::gunzip(local_path + ".gz");
     fetched_oeis_files++;
     last_oeis_time = std::chrono::steady_clock::now();
   } else {

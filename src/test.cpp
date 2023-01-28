@@ -15,6 +15,7 @@
 #include "file.hpp"
 #include "formula_gen.hpp"
 #include "generator_v1.hpp"
+#include "git.hpp"
 #include "interpreter.hpp"
 #include "iterator.hpp"
 #include "log.hpp"
@@ -1061,7 +1062,7 @@ void Test::minimizer(size_t tests) {
 
 void Test::miner() {
   Log::get().info("Testing miner");
-  git("", "--version");
+  Git::git("", "--version");
   getManager().load();
   getManager().getFinder();
   MultiGenerator multi_generator(settings, getManager().getStats(), true);

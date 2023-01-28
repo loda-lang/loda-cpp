@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <fstream>
-#include <random>
 
 #include "file.hpp"
 #include "log.hpp"
@@ -18,8 +17,7 @@ Metrics::Metrics()
   if (!host.empty()) {
     auth = Setup::getSetupValue("LODA_INFLUXDB_AUTH");
   }
-  std::random_device rand;
-  tmp_file_id = rand() % 1000;
+  tmp_file_id = Random::get().gen() % 1000;
 }
 
 Metrics &Metrics::get() {
@@ -28,7 +26,7 @@ Metrics &Metrics::get() {
 }
 
 void Metrics::write(const std::vector<Entry> entries) const {
-  if (Metrics::host.empty()) {
+  if (host.empty()) {
     return;
   }
   if (!notified) {
@@ -37,9 +35,9 @@ void Metrics::write(const std::vector<Entry> entries) const {
   }
   // attention: curl sometimes has problems with absolute paths.
   // so we use a relative path here!
-  const std::string file_name =
+  const std::string tmp_file =
       "loda_metrics_" + std::to_string(tmp_file_id) + ".txt";
-  std::ofstream out(file_name);
+  std::ofstream out(tmp_file);
   for (auto &entry : entries) {
     out << entry.field;
     for (auto &l : entry.labels) {
@@ -51,10 +49,9 @@ void Metrics::write(const std::vector<Entry> entries) const {
   }
   out.close();
   const std::string url = host + "/write?db=loda";
-  if (WebClient::postFile(url, file_name, auth)) {
-    std::remove(file_name.c_str());
-  } else {
-    WebClient::postFile(url, file_name, auth, true);  // for debugging
+  if (!WebClient::postFile(url, tmp_file, auth)) {
+    WebClient::postFile(url, tmp_file, auth, true);  // for debugging
     Log::get().error("Error publishing metrics", false);
   }
+  std::remove(tmp_file.c_str());
 }

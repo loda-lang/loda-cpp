@@ -7,6 +7,7 @@
 #include <thread>
 
 #include "file.hpp"
+#include "git.hpp"
 #include "jute.h"
 #include "log.hpp"
 #include "util.hpp"
@@ -428,7 +429,7 @@ bool Setup::existsProgramsHome() {
 }
 
 void Setup::cloneProgramsHome(std::string git_url) {
-  git("", "clone " + git_url + " \"" + getLodaHome() + "programs\"");
+  Git::clone(git_url, getLodaHome() + "programs");
 }
 
 bool Setup::checkProgramsHome() {
@@ -439,7 +440,7 @@ bool Setup::checkProgramsHome() {
     std::cout << "The repository requires around 350 MB of disk space."
               << std::endl;
     std::cout << "Checking whether git is installed:" << std::endl;
-    git("", "--version");
+    Git::git("", "--version");
     std::cout << std::endl;
     std::string git_url = "https://github.com/loda-lang/loda-programs.git";
     std::cout << "Press return to download the default programs repository:"
