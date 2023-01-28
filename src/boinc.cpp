@@ -5,6 +5,7 @@
 
 #include "api_client.hpp"
 #include "file.hpp"
+#include "git.hpp"
 #include "log.hpp"
 #include "miner.hpp"
 #include "oeis_list.hpp"
@@ -60,9 +61,9 @@ void Boinc::run() {
   // check environment
   Log::get().info("Checking environment");
 #ifdef _WIN64
-  fixWindowsEnv(project_dir);
-  ensureEnv("TMP", project_dir);
-  ensureEnv("TEMP", project_dir);
+  Git::fixWindowsEnv(project_dir);
+  Git::ensureEnv("TMP", project_dir);
+  Git::ensureEnv("TEMP", project_dir);
 #else
   {
     std::ofstream test_out(getTmpDir() + "test_write.txt");
