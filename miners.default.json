@@ -19,7 +19,7 @@
     {
       "name": "update",
       "overwrite": "auto",
-      "enabled": false,
+      "enabled": true,
       "backoff": true,
       "generators": [
         "v2",
@@ -39,7 +39,7 @@
       "name": "mutate2",
       "overwrite": "none",
       "enabled": true,
-      "backoff": true,
+      "backoff": false,
       "generators": [
         "v6_2"
       ],
