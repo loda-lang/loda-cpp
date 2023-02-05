@@ -38,11 +38,12 @@ int64_t getRandomPos(const Program &program) {
 }
 
 void Mutator::mutateRandom(Program &program) {
-  int64_t num_cells, num_mutations, pos;
+  int64_t num_mutations, pos;
   size_t i;
 
   // get number of used memory cells
-  num_cells = ProgramUtil::getLargestDirectMemoryCell(program) + 2;
+  int64_t num_cells = ProgramUtil::getLargestDirectMemoryCell(program) + 1;
+  static const int64_t new_cells = 2;
 
   // calculate the number of mutations to apply
   num_mutations = static_cast<int64_t>(program.ops.size() * mutation_rate) + 1;
@@ -91,11 +92,12 @@ void Mutator::mutateRandom(Program &program) {
         pos = getRandomPos(program);
       }
     }
-    mutateOperation(program.ops[pos], num_cells);
+    mutateOperation(program.ops[pos], num_cells, new_cells);
   }
 }
 
-void Mutator::mutateOperation(Operation &op, int64_t num_cells) {
+void Mutator::mutateOperation(Operation &op, int64_t num_cells,
+                              int64_t new_cells) {
   if (ProgramUtil::isArithmetic(op.type)) {
     // op.comment = "mutated from " + ProgramUtil::operationToString(op);
     op.type = operation_types.at(operation_types_dist(Random::get().gen));
@@ -103,17 +105,17 @@ void Mutator::mutateOperation(Operation &op, int64_t num_cells) {
       op.source = Operand(Operand::Type::CONSTANT,
                           constants.at(constants_dist(Random::get().gen)));
     } else {
-      op.source =
-          Operand(Operand::Type::DIRECT, Random::get().gen() % num_cells);
+      op.source = Operand(Operand::Type::DIRECT,
+                          Random::get().gen() % (num_cells + new_cells));
     }
     if (op.type == Operation::Type::MOV &&
         Random::get().gen() % 4 > 0) {  // magic number
       // avoid overwriting
       op.target = Operand(Operand::Type::DIRECT,
-                          (Random::get().gen() % 2) + num_cells - 1);
+                          (Random::get().gen() % new_cells) + num_cells);
     } else {
-      op.target =
-          Operand(Operand::Type::DIRECT, Random::get().gen() % num_cells);
+      op.target = Operand(Operand::Type::DIRECT,
+                          Random::get().gen() % (num_cells + new_cells));
     }
     ProgramUtil::avoidNopOrOverflow(op);
   } else if (op.type == Operation::Type::SEQ) {

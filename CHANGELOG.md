@@ -2,6 +2,11 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Enhancements
+
+* Increase maximum number of steps to 60 million
+* Small enhancements in program mutator
+
 ## v23.1.25
 
 ### Features

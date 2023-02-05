@@ -15,7 +15,7 @@ class Mutator {
 
   void mutateRandom(Program &program);
 
-  void mutateOperation(Operation &op, int64_t num_cells);
+  void mutateOperation(Operation &op, int64_t num_cells, int64_t new_cells);
 
   void mutateCopiesRandom(const Program &program, size_t num_results,
                           std::stack<Program> &result);
