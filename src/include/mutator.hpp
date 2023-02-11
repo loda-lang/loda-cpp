@@ -3,7 +3,7 @@
 #include <stack>
 
 #include "distribution.hpp"
-#include "number.hpp"
+#include "number/number.hpp"
 #include "program.hpp"
 #include "stats.hpp"
 

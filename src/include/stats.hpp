@@ -6,7 +6,7 @@
 
 #include "blocks.hpp"
 #include "evaluator.hpp"
-#include "number.hpp"
+#include "number/number.hpp"
 #include "program.hpp"
 
 class OpPos {

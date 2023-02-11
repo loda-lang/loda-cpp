@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "number.hpp"
+#include "number/number.hpp"
 #include "program.hpp"
 #include "stats.hpp"
 #include "util.hpp"

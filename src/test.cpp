@@ -7,7 +7,6 @@
 #include <stdexcept>
 
 #include "api_client.hpp"
-#include "big_number.hpp"
 #include "blocks.hpp"
 #include "comments.hpp"
 #include "config.hpp"
@@ -22,7 +21,8 @@
 #include "matcher.hpp"
 #include "miner.hpp"
 #include "minimizer.hpp"
-#include "number.hpp"
+#include "number/big_number.hpp"
+#include "number/number.hpp"
 #include "oeis_list.hpp"
 #include "oeis_manager.hpp"
 #include "optimizer.hpp"

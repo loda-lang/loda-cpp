@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-#include "number.hpp"
+#include "number/number.hpp"
 #include "setup.hpp"
 
 Number Semantics::add(const Number& a, const Number& b) {

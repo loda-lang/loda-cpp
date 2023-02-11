@@ -5,7 +5,7 @@
 #include <string>
 #include <unordered_set>
 
-#include "number.hpp"
+#include "number/number.hpp"
 
 class OeisList {
  public:

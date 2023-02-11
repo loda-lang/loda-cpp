@@ -4,7 +4,7 @@
 #include <unordered_set>
 
 #include "extender.hpp"
-#include "number.hpp"
+#include "number/number.hpp"
 #include "program.hpp"
 #include "reducer.hpp"
 

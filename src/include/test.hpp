@@ -3,7 +3,7 @@
 #include <memory>
 
 #include "matcher.hpp"
-#include "number.hpp"
+#include "number/number.hpp"
 #include "oeis_manager.hpp"
 #include "util.hpp"
 

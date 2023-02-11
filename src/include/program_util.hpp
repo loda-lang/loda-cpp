@@ -3,7 +3,7 @@
 #include <map>
 #include <unordered_set>
 
-#include "number.hpp"
+#include "number/number.hpp"
 #include "program.hpp"
 
 class ProgramUtil {

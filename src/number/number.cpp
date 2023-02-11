@@ -1,10 +1,10 @@
-#include "number.hpp"
+#include "number/number.hpp"
 
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
 
-#include "big_number.hpp"
+#include "number/big_number.hpp"
 
 const Number Number::ZERO(0);
 const Number Number::ONE(1);

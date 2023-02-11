@@ -6,7 +6,7 @@
 
 #include "interpreter.hpp"
 #include "log.hpp"
-#include "number.hpp"
+#include "number/number.hpp"
 #include "program_util.hpp"
 #include "semantics.hpp"
 #include "util.hpp"

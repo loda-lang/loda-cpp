@@ -10,7 +10,7 @@
 #include "distribution.hpp"
 #include "interpreter.hpp"
 #include "log.hpp"
-#include "number.hpp"
+#include "number/number.hpp"
 #include "optimizer.hpp"
 #include "parser.hpp"
 #include "program_util.hpp"

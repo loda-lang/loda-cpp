@@ -1,6 +1,6 @@
 #pragma once
 
-#include "number.hpp"
+#include "number/number.hpp"
 #include "program.hpp"
 #include "util.hpp"
 

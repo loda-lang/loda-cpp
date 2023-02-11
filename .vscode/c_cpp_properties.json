@@ -3,6 +3,7 @@
         {
             "name": "Mac",
             "includePath": [
+                "${workspaceFolder}/src",
                 "${workspaceFolder}/src/include"
             ],
             "cppStandard": "c++17",

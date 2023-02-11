@@ -5,9 +5,9 @@
 #include <sstream>
 
 #include "api_client.hpp"
-#include "big_number.hpp"
 #include "file.hpp"
 #include "log.hpp"
+#include "number/big_number.hpp"
 #include "parser.hpp"
 #include "setup.hpp"
 #include "util.hpp"

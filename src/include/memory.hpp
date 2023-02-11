@@ -4,7 +4,7 @@
 #include <iostream>
 #include <unordered_map>
 
-#include "number.hpp"
+#include "number/number.hpp"
 
 #define MEMORY_CACHE_SIZE 16
 

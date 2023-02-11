@@ -9,7 +9,7 @@
 #include "evaluator_log.hpp"
 #include "file.hpp"
 #include "log.hpp"
-#include "number.hpp"
+#include "number/number.hpp"
 #include "oeis_list.hpp"
 #include "oeis_program.hpp"
 #include "oeis_sequence.hpp"

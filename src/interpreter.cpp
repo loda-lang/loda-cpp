@@ -8,7 +8,7 @@
 #include <stack>
 
 #include "log.hpp"
-#include "number.hpp"
+#include "number/number.hpp"
 #include "oeis_sequence.hpp"
 #include "parser.hpp"
 #include "program.hpp"

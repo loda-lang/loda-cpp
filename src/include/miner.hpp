@@ -7,7 +7,7 @@
 #include "generator.hpp"
 #include "matcher.hpp"
 #include "mutator.hpp"
-#include "number.hpp"
+#include "number/number.hpp"
 #include "oeis_manager.hpp"
 #include "optimizer.hpp"
 #include "program.hpp"

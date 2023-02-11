@@ -18,7 +18,7 @@
 #include "git.hpp"
 #include "interpreter.hpp"
 #include "log.hpp"
-#include "number.hpp"
+#include "number/number.hpp"
 #include "oeis_list.hpp"
 #include "oeis_program.hpp"
 #include "optimizer.hpp"

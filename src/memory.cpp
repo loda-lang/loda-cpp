@@ -3,8 +3,6 @@
 #include <stdexcept>
 #include <string>
 
-#include "number.hpp"
-
 Memory::Memory() { cache.fill(0); }
 
 void throwNegativeIndexError(int64_t index) {

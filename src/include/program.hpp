@@ -3,7 +3,7 @@
 #include <array>
 #include <vector>
 
-#include "number.hpp"
+#include "number/number.hpp"
 
 class Operand {
  public:

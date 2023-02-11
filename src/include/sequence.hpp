@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "number.hpp"
+#include "number/number.hpp"
 
 class Sequence : public std::vector<Number> {
  public:

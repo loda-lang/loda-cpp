@@ -3,7 +3,7 @@
 #include "evaluator.hpp"
 #include "finder.hpp"
 #include "minimizer.hpp"
-#include "number.hpp"
+#include "number/number.hpp"
 #include "oeis_sequence.hpp"
 #include "optimizer.hpp"
 #include "parser.hpp"
