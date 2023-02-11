@@ -1,4 +1,4 @@
-CXXFLAGS = /Iinclude /Iexternal /O2 /std:c++17
+CXXFLAGS = /Iinclude /Iexternal /O2 /std:c++20
 
 !IFDEF LODA_VERSION
 CXXFLAGS = $(CXXFLAGS) /DLODA_VERSION=$(LODA_VERSION)
