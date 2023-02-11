@@ -14,9 +14,9 @@ class Metrics {
 
   Metrics();
 
-  static Metrics &get();
+  static Metrics& get();
 
-  void write(const std::vector<Entry> entries) const;
+  void write(const std::vector<Entry>& entries) const;
 
   const int64_t publish_interval;
 

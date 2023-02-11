@@ -45,7 +45,7 @@ bool LogarithmicEvaluator::hasLogarithmicComplexity(const Program& program) {
   }
 
   // static code analysis of the pre-loop fragment
-  for (auto& op : pre_loop.ops) {
+  for (const auto& op : pre_loop.ops) {
     // exponentiation allowed only for constant exponents, because
     // it could result in exponential growth of the loop counter
     if (op.type == Operation::Type::POW &&

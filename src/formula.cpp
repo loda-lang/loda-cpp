@@ -29,7 +29,7 @@ bool Formula::contains(const Expression& search) const {
 }
 
 bool Formula::containsFunctionDef(const std::string& fname) const {
-  for (auto& e : entries) {
+  for (const auto& e : entries) {
     if (e.first.type == Expression::Type::FUNCTION && e.first.name == fname) {
       return true;
     }
@@ -116,7 +116,7 @@ bool Formula::isRecursive(std::string funcName) const {
 
 void Formula::replaceAll(const Expression& from, const Expression& to) {
   std::map<Expression, Expression> newEntries;
-  for (auto& e : entries) {
+  for (const auto& e : entries) {
     auto key = e.first;
     auto value = e.second;
     key.replaceAll(from, to);
@@ -128,7 +128,7 @@ void Formula::replaceAll(const Expression& from, const Expression& to) {
 
 void Formula::replaceName(const std::string& from, const std::string& to) {
   std::map<Expression, Expression> newEntries;
-  for (auto& e : entries) {
+  for (const auto& e : entries) {
     auto key = e.first;
     auto value = e.second;
     key.replaceName(from, to);
@@ -174,7 +174,7 @@ void Formula::resolveIdentities() {
 void replaceFunction(Expression& target, const std::string& func,
                      const Expression& param, const Expression& val) {
   // bottom-up
-  for (auto& c : target.children) {
+  for (const auto& c : target.children) {
     replaceFunction(*c, func, param, val);
   }
   ExpressionUtil::normalize(target);
@@ -221,7 +221,7 @@ void Formula::resolveSimpleFunctions() {
     }
   }
   // perform replacements
-  for (auto& f : simple_funcs) {
+  for (const auto& f : simple_funcs) {
     for (auto& e : entries) {
       replaceFunction(e.second, f, params[f], defs[f]);
     }
@@ -293,7 +293,7 @@ void Formula::resolveSimpleRecursions() {
       continue;
     }
     auto offset = constants.at(Number::ZERO);
-    for (auto& c : constants) {
+    for (const auto& c : constants) {
       auto expected_val = slope;
       expected_val *= c.first;
       expected_val += offset;

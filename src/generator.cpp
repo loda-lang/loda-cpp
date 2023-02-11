@@ -91,7 +91,7 @@ std::vector<int64_t> Generator::fixCausality(Program &p) {
   int64_t new_cell;
   for (size_t position = 0; position < p.ops.size(); position++) {
     auto &op = p.ops[position];
-    auto &meta = Operation::Metadata::get(op.type);
+    const auto &meta = Operation::Metadata::get(op.type);
 
     // fix source operand in new operation
     if (meta.num_operands == 2 && op.source.type == Operand::Type::DIRECT &&

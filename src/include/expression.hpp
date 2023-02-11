@@ -23,8 +23,8 @@ class Expression {
 
   ~Expression();
 
-  Expression(Type type, const std::string& name = "",
-             const Number& value = Number::ZERO);
+  explicit Expression(Type type, const std::string& name = "",
+                      const Number& value = Number::ZERO);
 
   Expression(Type type, const std::string& name,
              std::initializer_list<Expression> children);

@@ -47,7 +47,7 @@ class Settings {
 
 class AdaptiveScheduler {
  public:
-  AdaptiveScheduler(int64_t target_seconds);
+  explicit AdaptiveScheduler(int64_t target_seconds);
 
   bool isTargetReached();
 

@@ -33,10 +33,6 @@ class FormulaGenerator {
 
   Expression operandToExpression(Operand op) const;
 
-  void convertInitialTermsToIf();
-
-  bool convertArithToPari();
-
   void simplifyFunctionNames();
 
   Formula formula;

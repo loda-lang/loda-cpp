@@ -223,7 +223,7 @@ void Iterator::doNext() {
 
   // begin avoid open loops
   int64_t open_loops = 0;
-  for (auto& op : program.ops) {
+  for (const auto& op : program.ops) {
     if (op.type == Operation::Type::LPB) {
       open_loops++;
     }

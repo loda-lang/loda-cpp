@@ -176,7 +176,7 @@ bool greaterExprPtr(const Expression* lhs, const Expression* rhs) {
 }
 
 bool ExpressionUtil::normalize(Expression& e) {
-  for (auto& c : e.children) {
+  for (const auto& c : e.children) {
     normalize(*c);
   }
   switch (e.type) {

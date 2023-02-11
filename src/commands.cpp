@@ -406,7 +406,7 @@ void Commands::testPari(const std::string& test_id) {
     if (inceval.init(program)) {
       numTerms = std::min<size_t>(numTerms, 10);
     }
-    for (auto& op : program.ops) {
+    for (const auto& op : program.ops) {
       if (op.type == Operation::Type::SEQ) {
         numTerms = std::min<size_t>(numTerms, 5);
       }

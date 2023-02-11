@@ -4,7 +4,7 @@
 
 class Boinc {
  public:
-  Boinc(const Settings& settings);
+  explicit Boinc(const Settings& settings);
 
   void run();
 

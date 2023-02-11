@@ -10,13 +10,6 @@
 
 class OeisSequence;
 
-struct MatcherStats {
-  int64_t candidates;
-  int64_t successes;
-  int64_t false_positives;
-  int64_t errors;
-};
-
 class Finder {
  public:
   Finder(const Settings &settings, Evaluator &evaluator);

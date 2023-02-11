@@ -7,7 +7,7 @@
 
 // --- Factory --------------------------------------------------------
 
-Matcher::UPtr Matcher::Factory::create(const Matcher::Config config) {
+Matcher::UPtr Matcher::Factory::create(const Matcher::Config &config) {
   Matcher::UPtr result;
   if (config.type == "direct") {
     result.reset(new DirectMatcher(config.backoff));

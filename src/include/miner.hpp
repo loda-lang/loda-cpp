@@ -25,7 +25,8 @@ class Miner {
     std::vector<Matcher::Config> matchers;
   };
 
-  Miner(const Settings &settings, ProgressMonitor *progress_monitor = nullptr);
+  explicit Miner(const Settings &settings,
+                 ProgressMonitor *progress_monitor = nullptr);
 
   void mine();
 

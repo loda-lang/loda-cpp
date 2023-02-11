@@ -15,7 +15,7 @@ struct pair_hasher {
 
 class Interpreter {
  public:
-  Interpreter(const Settings &settings);
+  explicit Interpreter(const Settings &settings);
 
   static Number calc(const Operation::Type type, const Number &target,
                      const Number &source);

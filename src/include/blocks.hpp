@@ -11,7 +11,7 @@ class Blocks {
    public:
     Interface();
 
-    Interface(const Program& p);
+    explicit Interface(const Program& p);
 
     void extend(const Operation& op);
 

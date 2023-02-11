@@ -4,7 +4,8 @@ class Iterator {
  public:
   Iterator() : size(0), skipped(0) {}
 
-  Iterator(const Program &p) : program(p), size(p.ops.size()), skipped(0) {}
+  explicit Iterator(const Program &p)
+      : program(p), size(p.ops.size()), skipped(0) {}
 
   Program next();
 

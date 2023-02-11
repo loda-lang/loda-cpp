@@ -2,9 +2,10 @@
 
 #include <iostream>
 #include <map>
-#include <number.hpp>
 #include <string>
 #include <unordered_set>
+
+#include "number.hpp"
 
 class OeisList {
  public:

@@ -47,9 +47,9 @@ std::vector<Generator::Config> loadGeneratorConfigs(
       }
       case jute::jType::JARRAY: {
         auto a = g["template"];
-        for (int i = 0; i < a.size(); i++) {
-          if (a[i].get_type() == jute::jType::JSTRING) {
-            c.templates.push_back(get_template(a[i].as_string()));
+        for (int j = 0; j < a.size(); j++) {
+          if (a[j].get_type() == jute::jType::JSTRING) {
+            c.templates.push_back(get_template(a[j].as_string()));
           }
         }
         break;
@@ -61,7 +61,6 @@ std::vector<Generator::Config> loadGeneratorConfigs(
       default: {
         throw std::runtime_error("unexpected template value: " +
                                  std::to_string(t));
-        break;
       }
     }
     generators.push_back(c);

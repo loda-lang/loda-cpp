@@ -58,7 +58,7 @@ bool getJBool(jute::jValue &v, const std::string &key, bool def);
 
 class FolderLock {
  public:
-  FolderLock(std::string folder);
+  explicit FolderLock(std::string folder);
 
   ~FolderLock();
 
