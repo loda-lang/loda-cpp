@@ -56,12 +56,11 @@ void BigNumber::load(const std::string &s) {
     throwNumberParseError(s);
   }
   words.fill(0);
-  char ch;
   for (int64_t i = 0; i < size; i++) {
     if (is_infinite) {
       break;
     }
-    ch = s[start + i];
+    char ch = s[start + i];
     if (ch < '0' || ch > '9') {
       throwNumberParseError(s);
     }
@@ -74,7 +73,7 @@ bool BigNumber::isZero() const {
   if (is_infinite) {
     return false;
   }
-  for (auto &word : words) {
+  for (const auto &word : words) {
     if (word != 0) {
       return false;
     }
@@ -196,9 +195,9 @@ BigNumber &BigNumber::operator+=(const BigNumber &n) {
 }
 
 void BigNumber::add(const BigNumber &n) {
-  uint64_t low, high;
   uint64_t carry = 0;
   for (size_t i = 0; i < NUM_WORDS; i++) {
+    uint64_t low, high;
     low = (words[i] & LOW_BIT_MASK) + (n.words[i] & LOW_BIT_MASK) + carry;
     carry = low >> 32;
     high = (words[i] >> 32) + (n.words[i] >> 32) + carry;
@@ -211,9 +210,9 @@ void BigNumber::add(const BigNumber &n) {
 }
 
 void BigNumber::sub(const BigNumber &n) {
-  uint64_t low, high;
   uint64_t carry = 0;
   for (size_t i = 0; i < NUM_WORDS; i++) {
+    uint64_t low, high;
     low = (words[i] & LOW_BIT_MASK) - (n.words[i] & LOW_BIT_MASK) - carry;
     carry = (low >> 32) != 0;
     high = (words[i] >> 32) - (n.words[i] >> 32) - carry;
@@ -257,9 +256,9 @@ BigNumber &BigNumber::operator*=(const BigNumber &n) {
 
 void BigNumber::mulShort(uint64_t n) {
   uint64_t carry = 0;
-  uint64_t low, high;
   const int64_t s = std::min<int64_t>(getNumUsedWords() + 1, NUM_WORDS);
   for (int64_t i = 0; i < s; i++) {
+    uint64_t low, high;
     auto &w = words[i];
     high = (w >> 32) * n;
     low = (w & LOW_BIT_MASK) * n;
@@ -311,8 +310,8 @@ void BigNumber::div(const BigNumber &n) {
 
 void BigNumber::divShort(const uint64_t n) {
   uint64_t carry = 0;
-  uint64_t h, l, t, h2, u, l2;
   for (int64_t i = NUM_WORDS - 1; i >= 0; i--) {
+    uint64_t h, l, t, h2, u, l2;
     auto &w = words[i];
     h = w >> 32;
     l = w & LOW_BIT_MASK;
@@ -383,7 +382,7 @@ std::size_t BigNumber::hash() const {
   }
   std::size_t seed = 0;
   bool is_zero = true;
-  for (auto &w : words) {
+  for (const auto &w : words) {
     seed ^= w + 0x9e3779b9 + (seed << 6) + (seed >> 2);
     is_zero = is_zero && (w != 0);
   }

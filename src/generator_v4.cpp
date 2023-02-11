@@ -141,7 +141,7 @@ void GeneratorV4::init(const Stats& stats) {
   s.generated = 0;
   s.start.push_back(Operation::Type::MOV, Operand::Type::DIRECT,
                     Program::OUTPUT_CELL, Operand::Type::CONSTANT, 0);
-  for (auto& p : programs) {
+  for (const auto& p : programs) {
     if (p == s.start) {
       continue;
     }
@@ -198,5 +198,4 @@ Program GeneratorV4::generateProgram() {
 
 std::pair<Operation, double> GeneratorV4::generateOperation() {
   throw std::runtime_error("unsupported operation in generator v4");
-  return {};
 }

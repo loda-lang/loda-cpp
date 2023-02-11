@@ -81,7 +81,7 @@ class Stats {
 
 class RandomProgramIds {
  public:
-  RandomProgramIds(const std::vector<bool> &flags);
+  explicit RandomProgramIds(const std::vector<bool> &flags);
 
   bool empty() const;
   bool exists(int64_t id) const;
@@ -94,7 +94,7 @@ class RandomProgramIds {
 
 class RandomProgramIds2 {
  public:
-  RandomProgramIds2(const Stats &stats);
+  explicit RandomProgramIds2(const Stats &stats);
 
   bool exists(int64_t id) const;
   int64_t get() const;

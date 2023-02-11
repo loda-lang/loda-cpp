@@ -25,7 +25,7 @@ Metrics &Metrics::get() {
   return metrics;
 }
 
-void Metrics::write(const std::vector<Entry> entries) const {
+void Metrics::write(const std::vector<Entry> &entries) const {
   if (host.empty()) {
     return;
   }
@@ -38,9 +38,9 @@ void Metrics::write(const std::vector<Entry> entries) const {
   const std::string tmp_file =
       "loda_metrics_" + std::to_string(tmp_file_id) + ".txt";
   std::ofstream out(tmp_file);
-  for (auto &entry : entries) {
+  for (const auto &entry : entries) {
     out << entry.field;
-    for (auto &l : entry.labels) {
+    for (const auto &l : entry.labels) {
       auto v = l.second;
       replaceAll(v, " ", "\\ ");
       out << "," << l.first << "=" << v;

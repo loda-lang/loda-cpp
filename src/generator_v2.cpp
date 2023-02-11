@@ -19,7 +19,7 @@ GeneratorV2::GeneratorV2(const Config &config, const Stats &stats)
   operations.resize(stats.num_operations.size());
   probs.resize(stats.num_operations.size());
   i = 0;
-  for (auto &it : stats.num_operations) {
+  for (const auto &it : stats.num_operations) {
     operations[i] = it.first;
     probs[i] = it.second;
     i++;

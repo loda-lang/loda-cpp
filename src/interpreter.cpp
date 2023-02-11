@@ -93,7 +93,7 @@ Number Interpreter::calc(const Operation::Type type, const Number& target,
 }
 
 bool needsFragments(const Program& p) {
-  for (auto& op : p.ops) {
+  for (const auto& op : p.ops) {
     if (op.type == Operation::Type::LPB &&
         op.source != Operand(Operand::Type::CONSTANT, Number::ONE)) {
       return true;
@@ -120,7 +120,7 @@ size_t Interpreter::run(const Program& p, Memory& mem) {
   const bool needs_frags = needsFragments(p);
   const size_t num_ops = p.ops.size();
   Memory old_mem, frag;
-  size_t pc, pc_next;
+  size_t pc;
   Number source, target, counter;
   int64_t start, length, length2;
   Operation lpb;
@@ -133,7 +133,7 @@ size_t Interpreter::run(const Program& p, Memory& mem) {
     }
 
     auto& op = p.ops[pc];
-    pc_next = pc + 1;
+    size_t pc_next = pc + 1;
 
     switch (op.type) {
       case Operation::Type::NOP: {
@@ -319,7 +319,6 @@ void Interpreter::set(const Operand& a, const Number& v, Memory& mem,
   switch (a.type) {
     case Operand::Type::CONSTANT:
       throw std::runtime_error("Cannot set value of a constant");
-      index = 0;  // we don't get here
       break;
     case Operand::Type::DIRECT:
       index = a.value.asInt();

@@ -29,7 +29,7 @@ GeneratorV3::GeneratorV3(const Config &config, const Stats &stats)
 
   // initialize operation distributions
   OpProb p;
-  for (auto &it : stats.num_operation_positions) {
+  for (const auto &it : stats.num_operation_positions) {
     i = getIndex(it.first.pos, it.first.len);
     auto &op_dist = operation_dists.at(i);
     p.operation = it.first.op;
@@ -51,10 +51,10 @@ GeneratorV3::GeneratorV3(const Config &config, const Stats &stats)
 Program GeneratorV3::generateProgram() {
   Program p;
   const size_t len = length_dist(Random::get().gen);
-  size_t sample, left, right, mid;
   size_t num_loops = 0;
   Operation::Type op_type;
   for (size_t pos = 0; pos < len; pos++) {
+    size_t sample, left, right;
     auto &op_dist = operation_dists.at(getIndex(pos, len));
     if (op_dist.empty() || op_dist.back().partial_sum == 0) {
       Log::get().error("Invalid operation distribution at position " +
@@ -65,7 +65,7 @@ Program GeneratorV3::generateProgram() {
     left = 0;
     right = op_dist.size() - 1;
     while (right - left > 1) {
-      mid = (left + right) / 2;
+      size_t mid = (left + right) / 2;
       if (sample > op_dist.at(mid).partial_sum) {
         left = mid;
       } else {

@@ -42,5 +42,4 @@ void GeneratorV6::nextProgram() {
 
 std::pair<Operation, double> GeneratorV6::generateOperation() {
   throw std::runtime_error("unsupported operation");
-  return {};
 }

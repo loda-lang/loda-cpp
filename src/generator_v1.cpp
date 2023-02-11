@@ -43,7 +43,7 @@ GeneratorV1::GeneratorV1(const Config &config, const Stats &stats)
     } else {
       auto type = Operation::Type::NOP;
       for (auto &t : Operation::Types) {
-        auto &m = Operation::Metadata::get(t);
+        const auto &m = Operation::Metadata::get(t);
         if (m.is_public && m.short_name == c) {
           type = t;
           break;
@@ -122,7 +122,7 @@ GeneratorV1::GeneratorV1(const Config &config, const Stats &stats)
   // initialize distributions
   constants.resize(stats.num_constants.size());
   size_t i = 0;
-  for (auto &c : stats.num_constants) {
+  for (const auto &c : stats.num_constants) {
     constants[i++] = c.first;
   }
 

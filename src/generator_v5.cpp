@@ -78,5 +78,4 @@ Program GeneratorV5::generateProgram() {
 
 std::pair<Operation, double> GeneratorV5::generateOperation() {
   throw std::runtime_error("unsupported operation");
-  return {};
 }

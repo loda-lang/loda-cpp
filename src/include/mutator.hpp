@@ -9,9 +9,9 @@
 
 class Mutator {
  public:
-  Mutator(const Stats &stats,
-          double mutation_rate = 0.3,  // magic number
-          bool mutate_comment = false);
+  explicit Mutator(const Stats &stats,
+                   double mutation_rate = 0.3,  // magic number
+                   bool mutate_comment = false);
 
   void mutateRandom(Program &program);
 

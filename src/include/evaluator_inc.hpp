@@ -20,7 +20,7 @@
 //
 class IncrementalEvaluator {
  public:
-  IncrementalEvaluator(Interpreter& interpreter);
+  explicit IncrementalEvaluator(Interpreter& interpreter);
 
   void reset();
 

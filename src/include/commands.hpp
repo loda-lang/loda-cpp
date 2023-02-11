@@ -6,7 +6,7 @@
 
 class Commands {
  public:
-  Commands(const Settings& settings) : settings(settings) {}
+  explicit Commands(const Settings& settings) : settings(settings) {}
 
   static void help();
 

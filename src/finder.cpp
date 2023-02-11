@@ -60,7 +60,7 @@ Matcher::seq_programs_t Finder::findSequence(
   // update memory usage info
   if (num_find_attempts++ % 1000 == 0) {
     bool has_memory = Setup::hasMemory();
-    for (auto &matcher : matchers) {
+    for (const auto &matcher : matchers) {
       matcher->has_memory = has_memory;
     }
   }
@@ -334,7 +334,7 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
 
   // check if there are illegal recursions
   // why is this not detected by the interpreter?
-  for (auto &op : optimized.ops) {
+  for (const auto &op : optimized.ops) {
     if (op.type == Operation::Type::SEQ &&
         (op.source.type != Operand::Type::CONSTANT ||
          op.source.value == Number(seq.id))) {
