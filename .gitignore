@@ -3,9 +3,9 @@
 *.o
 *.obj
 *.pdb
-/src/external/
 /src/loda
 /src/loda.exe
+/src/sys/jute.*
 /tests/programs/local/
 /loda
 /loda.exe

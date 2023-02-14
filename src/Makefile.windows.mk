@@ -1,4 +1,4 @@
-CXXFLAGS = /Iinclude /Iexternal /O2 /std:c++17
+CXXFLAGS = /I. /O2 /std:c++17
 
 !IFDEF LODA_VERSION
 CXXFLAGS = $(CXXFLAGS) /DLODA_VERSION=$(LODA_VERSION)
@@ -10,19 +10,22 @@ CXXFLAGS = $(CXXFLAGS) /Z7
 CXXFLAGS = $(CXXFLAGS) /DLODA_PLATFORM=$(LODA_PLATFORM)
 !ENDIF
 
-SRCS = api_client.cpp benchmark.cpp big_number.cpp blocks.cpp boinc.cpp commands.cpp comments.cpp config.cpp distribution.cpp evaluator.cpp evaluator_inc.cpp evaluator_log.cpp expression.cpp expression_util.cpp extender.cpp external/jute.cpp file.cpp finder.cpp formula.cpp formula_gen.cpp generator.cpp generator_v1.cpp generator_v2.cpp generator_v3.cpp generator_v4.cpp generator_v5.cpp generator_v6.cpp generator_v7.cpp git.cpp interpreter.cpp iterator.cpp log.cpp main.cpp matcher.cpp memory.cpp metrics.cpp miner.cpp minimizer.cpp mutator.cpp number.cpp oeis_list.cpp oeis_manager.cpp oeis_program.cpp oeis_sequence.cpp optimizer.cpp pari.cpp parser.cpp process.cpp program.cpp program_util.cpp reducer.cpp semantics.cpp sequence.cpp setup.cpp stats.cpp test.cpp util.cpp web_client.cpp
+SRCS = cmd/benchmark.cpp cmd/boinc.cpp cmd/commands.cpp cmd/main.cpp cmd/test.cpp \
+  form/expression_util.cpp form/expression.cpp form/formula_gen.cpp form/formula.cpp form/pari.cpp \
+  lang/big_number.cpp lang/comments.cpp lang/evaluator.cpp lang/evaluator_inc.cpp lang/evaluator_log.cpp lang/interpreter.cpp lang/memory.cpp lang/minimizer.cpp lang/number.cpp lang/optimizer.cpp lang/parser.cpp lang/program.cpp lang/program_util.cpp  lang/semantics.cpp lang/sequence.cpp \
+  mine/api_client.cpp mine/blocks.cpp mine/config.cpp mine/distribution.cpp mine/extender.cpp mine/finder.cpp mine/generator.cpp mine/generator_v1.cpp mine/generator_v2.cpp mine/generator_v3.cpp mine/generator_v4.cpp mine/generator_v5.cpp mine/generator_v6.cpp mine/generator_v7.cpp mine/iterator.cpp mine/matcher.cpp mine/miner.cpp mine/mutator.cpp mine/reducer.cpp mine/stats.cpp \
+  oeis/oeis_list.cpp oeis/oeis_manager.cpp oeis/oeis_program.cpp oeis/oeis_sequence.cpp \
+  sys/file.cpp sys/git.cpp sys/jute.cpp sys/log.cpp sys/metrics.cpp sys/process.cpp sys/setup.cpp sys/util.cpp sys/web_client.cpp
 
-loda: external/jute.h external/jute.cpp $(SRCS)
+loda: sys/jute.h sys/jute.cpp $(SRCS)
 	cl /EHsc /Feloda.exe $(CXXFLAGS) $(SRCS)
 	copy loda.exe ..
 
-external/jute.h:
-	@if not exist external mkdir external
-	curl -sS -o external/jute.h https://raw.githubusercontent.com/amir-s/jute/master/jute.h
+sys/jute.h:
+	curl -sS -o sys/jute.h https://raw.githubusercontent.com/amir-s/jute/master/jute.h
 
-external/jute.cpp:
-	@if not exist external mkdir external
-	curl -sS -o external/jute.cpp https://raw.githubusercontent.com/amir-s/jute/master/jute.cpp
+sys/jute.cpp:
+	curl -sS -o sys/jute.cpp https://raw.githubusercontent.com/amir-s/jute/master/jute.cpp
 
 clean:
-	del /f $(OBJS) loda ../loda external
+	del /f $(OBJS) loda ../loda sys/jute.h sys/jute.cpp

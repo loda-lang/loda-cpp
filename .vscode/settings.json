@@ -81,8 +81,7 @@
     },
     "makefile.makeDirectory": "src",
     "c-cpp-flylint.clang.includePaths": [
-        "${workspaceFolder}/src/include",
-        "${workspaceFolder}/src/external"
+        "${workspaceFolder}/src"
     ],
     "c-cpp-flylint.clang.warnings": [
         "all",

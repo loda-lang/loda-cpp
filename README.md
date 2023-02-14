@@ -5,19 +5,9 @@ You can use it to mine programs that compute sequences from the [On-Line Encyclo
 
 This repository ([loda-cpp](https://github.com/loda-lang/loda-cpp)) contains an implementation of the [LODA language](https://loda-lang.org/spec) in C++ including an interpreter, an optimizer and a miner. The miner is used to generate LODA programs for integer sequences from the OEIS which are stored in [loda-programs](https://github.com/loda-lang/loda-programs).
 
-## Installation
+## Getting Started
 
-To install LODA using binaries, please follow the [official installation instructions](http://loda-lang.org/install/).
-
-Alternatively, you can also build it from sources. You need the `make` (`nmake` on Windows) tool and a standard C++ compiler. It is supported on Linux, macOS and Windows. It does not require any external libraries, but only the `curl`, `gzip` command-line tools. To build it, switch to the `src` folder and run the build command for your platform:
-
-* Linux x86\_64: `make -f Makefile.linux-x86.mk`
-* Linux ARM64: `make -f Makefile.linux-arm64.mk`
-* macOS Intel: `make -f Makefile.macos-x86.mk`
-* macOS M1: `make -f Makefile.macos-arm64.mk`
-* Windows: `nmake /F Makefile.windows.mk`
-
-To do a simple test, you can run `loda eval A000045` to calculate the first terms of the Fibonacci sequence. Run `loda setup` to intialize the LODA home directory. To mine programs for OEIS sequences, you can run `loda mine` (single-core) or `loda mine -p` (multi-core).
+To install LODA using binaries, please follow the [official installation instructions](http://loda-lang.org/install/). To do a simple test, you can run `loda eval A000045` to calculate the first terms of the Fibonacci sequence. Run `loda setup` to intialize the LODA home directory. To mine programs for OEIS sequences, you can run `loda mine` (single-core) or `loda mine -p` (multi-core).
 
 ## Usage
 
@@ -98,19 +88,3 @@ There are multiple miner profiles defined in [miners.json](miners.default.json).
 #### check
 
 Check if a program for an OEIS sequence is correct. For interactive output, use `-b 1` to enable b-file printing. Use `-c -1` to allow an unlimited number of execution cycles.
-
-## Additional Resources
-
-* [loda-lang.org](https://loda-lang.org): Main home page of LODA.
-* [loda-programs](https://github.com/loda-lang/loda-programs): Repository of mined LODA programs for OEIS sequences.
-* [loda-rust](https://github.com/loda-lang/loda-rust): Interpreter and web interface written in Rust.
-
-## Development
-
-If you want to contribute to `loda-cpp`, the best starting point for reading the code is probably [program.hpp](/src/include/program.hpp). It contains the model classes for programs including operands, operations and programs. You can find the implementation of all arithmetics operations in [semantics.cpp](/src/semantics.cpp). Apart from container classes for sequences and memory, the main part of the operational semantics of programs is implemented in [interpreter.cpp](/src/interpreter.cpp). The evaluation of programs to sequences is coded in [evaluator.cpp](/src/evaluator.cpp).
-
-For mining, there are multiple generator implementations, which are used to create random programs. They are configured via [miners.json](/miners.default.json) and use statistics from the existing programs stored in the `stats` folder. To reduce and index the target sequences, we use [Matcher](/src/include/matcher.hpp) classes. They allow matching of sequences modulo additional operations such as linear transformations.
-
-To reduce and normalize the programs we use the [Optimizer](/src/include/optimizer.hpp) and the [Minimizer](/src/include/minimizer.hpp) class.
-
-There is a test suite in [test.cpp](/src/test.cpp) which can be executed using `loda test`. This is also automatically executed as an action in the GitHub workflow.
