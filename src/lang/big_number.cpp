@@ -65,7 +65,7 @@ void BigNumber::load(const std::string &s) {
       throwNumberParseError(s);
     }
     mulShort(10);
-    add(ch - '0');  // TODO: use addShort
+    add(BigNumber(ch - '0'));  // TODO: use addShort
   }
 }
 
@@ -125,9 +125,7 @@ BigNumber BigNumber::minMax(bool is_max) {
   BigNumber m;
   m.is_infinite = false;
   m.is_negative = !is_max;
-  for (auto &word : m.words) {
-    word = std::numeric_limits<uint64_t>::max();
-  }
+  m.words.fill(std::numeric_limits<uint64_t>::max());
   return m;
 }
 

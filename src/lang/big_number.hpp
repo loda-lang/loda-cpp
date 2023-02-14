@@ -11,9 +11,9 @@ class BigNumber {
 
   BigNumber();
 
-  BigNumber(int64_t value);
+  explicit BigNumber(int64_t value);
 
-  BigNumber(const std::string& s);
+  explicit BigNumber(const std::string& s);
 
   bool operator==(const BigNumber& n) const;
 

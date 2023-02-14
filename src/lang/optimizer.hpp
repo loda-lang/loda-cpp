@@ -6,7 +6,7 @@
 
 class Optimizer {
  public:
-  Optimizer(const Settings &settings) : settings(settings) {}
+  explicit Optimizer(const Settings &settings) : settings(settings) {}
 
   bool optimize(Program &p) const;
 

@@ -661,10 +661,10 @@ bool Optimizer::partialEval(Program &p) const {
 }
 
 bool Optimizer::sortOperations(Program &p) const {
-  int64_t oldScore = 0, maxScore = 0;
-  size_t j = 0, maxIndex = 0;
   opMover.init(p);
   for (size_t i = 0; i < p.ops.size(); i++) {
+    int64_t oldScore = 0, maxScore = 0;
+    size_t j = 0, maxIndex = 0;
     j = i;
     oldScore = opMover.getTotalScore();
     while (opMover.up(j)) {
@@ -806,7 +806,7 @@ bool Optimizer::pullUpMov(Program &p) const {
   for (size_t i = 0; i + 2 < p.ops.size(); i++) {
     auto &a = p.ops[i];
     auto &b = p.ops[i + 1];
-    auto &c = p.ops[i + 2];
+    const auto &c = p.ops[i + 2];
     // check operation types
     if (!canMerge(a.type, c.type)) {
       continue;

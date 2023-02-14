@@ -2,10 +2,10 @@
 
 #include <fstream>
 
-#include "sys/setup.hpp"
 #include "oeis/oeis_sequence.hpp"
 #include "sys/file.hpp"
 #include "sys/log.hpp"
+#include "sys/setup.hpp"
 #include "sys/util.hpp"
 
 const std::string OeisList::INVALID_MATCHES_FILE("invalid_matches.txt");

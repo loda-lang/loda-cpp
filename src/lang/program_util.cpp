@@ -68,30 +68,22 @@ size_t ProgramUtil::numOps(const Program &p, bool withNops) {
   if (withNops) {
     return p.ops.size();
   } else {
-    size_t num_ops = 0;
-    for (auto &op : p.ops) {
-      if (op.type != Operation::Type::NOP) {
-        num_ops++;
-      }
-    }
-    return num_ops;
+    return std::count_if(p.ops.begin(), p.ops.end(), [](const Operation &op) {
+      return (op.type != Operation::Type::NOP);
+    });
   }
 }
 
 size_t ProgramUtil::numOps(const Program &p, Operation::Type type) {
-  size_t num_ops = 0;
-  for (auto &op : p.ops) {
-    if (op.type == type) {
-      num_ops++;
-    }
-  }
-  return num_ops;
+  return std::count_if(p.ops.begin(), p.ops.end(), [type](const Operation &op) {
+    return (op.type == type);
+  });
 }
 
 size_t ProgramUtil::numOps(const Program &p, Operand::Type type) {
   size_t num_ops = 0;
   for (auto &op : p.ops) {
-    auto &m = Operation::Metadata::get(op.type);
+    const auto &m = Operation::Metadata::get(op.type);
     if (m.num_operands == 1 && op.target.type == type) {
       num_ops++;
     } else if (m.num_operands == 2 &&

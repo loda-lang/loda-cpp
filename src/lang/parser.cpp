@@ -121,11 +121,11 @@ Number Parser::readNonNegativeValue() {
 }
 
 std::string Parser::readIdentifier() {
-  std::string s;
   int c;
   *in >> std::ws;
   c = in->get();
   if (c == '_' || std::isalpha(c)) {
+    std::string s;
     s += (char)c;
     while (true) {
       c = in->peek();

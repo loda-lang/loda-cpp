@@ -410,7 +410,7 @@ void Number::readIntString(std::istream& in, std::string& out) {
   out += (char)ch;
   in.get();
   while (true) {
-    auto ch = in.peek();
+    ch = in.peek();
     if (!std::isdigit(ch)) {
       break;
     }

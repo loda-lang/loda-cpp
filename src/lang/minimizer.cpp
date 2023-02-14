@@ -44,9 +44,8 @@ bool Minimizer::minimize(Program& p, size_t num_terms) const {
   }
 
   // remove or replace operations
-  bool local_change;
   for (int64_t i = 0; i < (int64_t)p.ops.size(); ++i) {
-    local_change = false;
+    bool local_change = false;
     const auto op = p.ops[i];  // make a backup of the original operation
     if (op.type == Operation::Type::LPE) {
       continue;
