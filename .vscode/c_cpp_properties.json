@@ -3,7 +3,7 @@
         {
             "name": "Mac",
             "includePath": [
-                "${workspaceFolder}/src/include"
+                "${workspaceFolder}/src"
             ],
             "cppStandard": "c++17",
             "configurationProvider": "ms-vscode.makefile-tools"
@@ -11,7 +11,7 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceFolder}/src/include"
+                "${workspaceFolder}/src"
             ],
             "defines": [
                 "_DEBUG",
