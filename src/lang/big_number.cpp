@@ -70,15 +70,8 @@ void BigNumber::load(const std::string &s) {
 }
 
 bool BigNumber::isZero() const {
-  if (is_infinite) {
-    return false;
-  }
-  for (const auto &word : words) {
-    if (word != 0) {
-      return false;
-    }
-  }
-  return true;
+  return !is_infinite && std::all_of(words.begin(), words.end(),
+                                     [](uint64_t w) { return w == 0; });
 }
 
 void BigNumber::makeInfinite() {
