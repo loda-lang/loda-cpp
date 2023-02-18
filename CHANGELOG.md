@@ -4,6 +4,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Enhancements
 
+* Faster `pow` operation
 * Increase maximum number of steps to 60 million
 * Small enhancements in program mutator
 
