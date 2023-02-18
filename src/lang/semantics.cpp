@@ -67,29 +67,22 @@ Number Semantics::pow(const Number& base, const Number& exp) {
     if (exp < Number::ZERO) {
       return 0;
     } else {
-      Number res = 1;
-      for (int64_t e = exp.asInt(); e > 0; e--) {
-        res *= base;
-        if (res == Number::INF) {
-          break;
-        }
-      }
-      // TODO: fix fast pow
-      /*
+      Number r = 1;
       Number b = base;
       Number e = exp;
-      while (res != Number::INF && Number::ZERO < e) {
+      while (r != Number::INF && e != Number::ZERO) {
         if (e.odd()) {
-          res = mul(res, b);
+          r = mul(r, b);
         }
         e = div(e, 2);
-        b = mul(b, b);
-        if (b == Number::INF) {
-          res = Number::INF;
+        if (e != Number::ZERO) {
+          b = mul(b, b);
+          if (b == Number::INF) {
+            r = Number::INF;
+          }
         }
       }
-      */
-      return res;
+      return r;
     }
   }
 }
