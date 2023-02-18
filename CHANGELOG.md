@@ -8,7 +8,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Faster `pow` operation
 * Increase maximum number of steps to 60 million
-* Extend maximum bumber of decimal digits to 1155
+* Extend maximum number of decimal digits to 1155
 * Small enhancements in program mutator
 
 ## v23.1.25
