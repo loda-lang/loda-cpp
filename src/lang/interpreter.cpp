@@ -7,7 +7,6 @@
 #include <sstream>
 #include <stack>
 
-#include "sys/setup.hpp"
 #include "lang/number.hpp"
 #include "lang/parser.hpp"
 #include "lang/program.hpp"
@@ -15,6 +14,7 @@
 #include "lang/semantics.hpp"
 #include "oeis/oeis_sequence.hpp"
 #include "sys/log.hpp"
+#include "sys/setup.hpp"
 
 #ifdef _WIN64
 #include <io.h>
@@ -93,13 +93,12 @@ Number Interpreter::calc(const Operation::Type type, const Number& target,
 }
 
 bool needsFragments(const Program& p) {
-  for (const auto& op : p.ops) {
-    if (op.type == Operation::Type::LPB &&
-        op.source != Operand(Operand::Type::CONSTANT, Number::ONE)) {
-      return true;
-    }
-  }
-  return false;
+  // we must use memory fragments if there are loops where the counter is not
+  // just a single cell, but a region (optional second lpb-parameter).
+  return std::any_of(p.ops.begin(), p.ops.end(), [](const Operation& op) {
+    return (op.type == Operation::Type::LPB &&
+            op.source != Operand(Operand::Type::CONSTANT, Number::ONE));
+  });
 }
 
 size_t Interpreter::run(const Program& p, Memory& mem) {
