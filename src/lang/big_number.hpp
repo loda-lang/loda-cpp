@@ -7,7 +7,7 @@
 
 class BigNumber {
  public:
-  static constexpr size_t NUM_WORDS = 50;
+  static constexpr size_t NUM_WORDS = 60;
 
   BigNumber();
 
