@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Bugfixes
+
+* Fix implicitly initialized cells in `unfold` command
+
 ## v23.2.18
 
 ### Enhancements

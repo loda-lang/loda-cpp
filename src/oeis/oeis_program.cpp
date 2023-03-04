@@ -92,8 +92,36 @@ bool OeisProgram::unfold(Program &p) {
     return false;
   }
   // prepare program for embedding
+  // remove nops and comments
   ProgramUtil::removeOps(p2, Operation::Type::NOP);
   Comments::removeComments(p2);
+  // find cells that are read and uninitialized
+  std::set<Operand> initialized, uninitialized;
+  initialized.insert(Operand(Operand::Type::DIRECT, Program::INPUT_CELL));
+  for (const auto &op : p2.ops) {
+    auto meta = Operation::Metadata::get(op.type);
+    if (meta.num_operands > 0 && op.target.type == Operand::Type::DIRECT) {
+      if (meta.is_reading_target &&
+          initialized.find(op.target) == initialized.end()) {
+        uninitialized.insert(op.target);
+      }
+      if (meta.is_writing_target) {
+        initialized.insert(op.target);
+      }
+    }
+    if (meta.num_operands > 1 && op.source.type == Operand::Type::DIRECT) {
+      if (initialized.find(op.source) == initialized.end()) {
+        uninitialized.insert(op.source);
+      }
+    }
+  }
+  // initialize cells that are read and were uninitialized
+  for (auto cell : uninitialized) {
+    p2.ops.insert(p2.ops.begin(),
+                  Operation(Operation::Type::MOV, cell,
+                            Operand(Operand::Type::CONSTANT, 0)));
+  }
+  // shift used operands
   int64_t target = p.ops[seq_index].target.value.asInt();
   int64_t largest_used = ProgramUtil::getLargestDirectMemoryCell(p);
   for (auto &op : p2.ops) {
@@ -111,7 +139,7 @@ bool isTooComplex(const Program &p) {
   int64_t level = 0;
   int64_t numLoops = 0;
   bool hasRootSeq = false;
-  for (auto &op : p.ops) {
+  for (const auto &op : p.ops) {
     switch (op.type) {
       case Operation::Type::LPB:
         level++;
