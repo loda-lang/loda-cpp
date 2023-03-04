@@ -159,11 +159,14 @@ bool Optimizer::mergeOps(Program &p) const {
         else if (o1.type == Operation::Type::MUL &&
                  o2.type == Operation::Type::DIV &&
                  o1.source.value != Number::ZERO &&
-                 o2.source.value != Number::ZERO &&
-                 Semantics::mod(o1.source.value, o2.source.value) ==
-                     Number::ZERO) {
-          o1.source.value = Semantics::div(o1.source.value, o2.source.value);
-          do_merge = true;
+                 o2.source.value != Number::ZERO) {
+          auto gcd = Semantics::gcd(o1.source.value, o2.source.value);
+          o1.source.value = Semantics::div(o1.source.value, gcd);
+          if (gcd == o2.source.value) {
+            do_merge = true;
+          } else {
+            o2.source.value = Semantics::div(o2.source.value, gcd);
+          }
         }
 
         // both sources same memory cell?
