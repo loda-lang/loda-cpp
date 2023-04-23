@@ -94,7 +94,11 @@ bool OeisProgram::unfold(Program &p) {
   // prepare program for embedding
   // remove nops and comments
   ProgramUtil::removeOps(p2, Operation::Type::NOP);
-  Comments::removeComments(p2);
+  for (auto &op : p2.ops) {
+    if (op.type != Operation::Type::SEQ) {
+      op.comment.clear();
+    }
+  }
   // find cells that are read and uninitialized
   std::set<Operand> initialized, uninitialized;
   initialized.insert(Operand(Operand::Type::DIRECT, Program::INPUT_CELL));

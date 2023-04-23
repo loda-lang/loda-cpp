@@ -389,7 +389,7 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
 
   // consider incremental evaluation only if the program is not used
   // a lot by other programs. if it is used a lot, we prefer faster programs
-  if (num_usages < 10) {  // magic number
+  if (num_usages < 5) {  // magic number
     // check if the optimized program supports incremental evaluation
     if (isBetterIncEval(existing, optimized, evaluator)) {
       return "Faster (IE)";

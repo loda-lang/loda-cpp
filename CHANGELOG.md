@@ -9,6 +9,8 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Enhancements
 
 * Improve reduction of constants in optimizer
+* Improve decision for faster vs. simpler programs
+* Retain `seq` comments in `unfold` command
 
 ## v23.2.18
 
