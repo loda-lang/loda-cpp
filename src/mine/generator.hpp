@@ -22,6 +22,7 @@ class Generator {
     bool calls = true;
     bool indirect_access = false;
     std::vector<std::string> templates;
+    std::string batch_file;
     std::string miner;
   };
 

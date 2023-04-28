@@ -39,6 +39,9 @@ std::vector<Generator::Config> loadGeneratorConfigs(
     c.loops = getJBool(g, "loops", true);
     c.calls = getJBool(g, "calls", true);
     c.indirect_access = getJBool(g, "indirectAccess", false);
+    if (g["batchFile"].get_type() == jute::jType::JSTRING) {
+      c.batch_file = g["batchFile"].as_string();
+    }
     auto t = g["template"].get_type();
     switch (t) {
       case jute::jType::JSTRING: {

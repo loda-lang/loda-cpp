@@ -9,6 +9,7 @@
 #include "mine/generator_v5.hpp"
 #include "mine/generator_v6.hpp"
 #include "mine/generator_v7.hpp"
+#include "mine/generator_v8.hpp"
 #include "sys/log.hpp"
 #include "sys/util.hpp"
 
@@ -42,6 +43,10 @@ Generator::UPtr Generator::Factory::createGenerator(const Config &config,
     }
     case 7: {
       generator.reset(new GeneratorV7(config, stats));
+      break;
+    }
+    case 8: {
+      generator.reset(new GeneratorV8(config, stats));
       break;
     }
     default: {
