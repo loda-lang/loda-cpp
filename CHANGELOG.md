@@ -12,6 +12,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 * Improve decision for faster vs. simpler programs
 * Retain `seq` comments in `unfold` command
 
+### Features
+
+* Mining by reading programs from a batch file (v8 generator)
+
 ## v23.2.18
 
 ### Enhancements
