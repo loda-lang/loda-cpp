@@ -2,6 +2,8 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v23.4.28
+
 ### Bugfixes
 
 * Fix implicitly initialized cells in `unfold` command
@@ -14,7 +16,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Features
 
-* Mining by reading programs from a batch file (v8 generator)
+* Mining by reading programs from a batch file (generator v8)
 
 ## v23.2.18
 
