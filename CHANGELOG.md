@@ -6,6 +6,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Fix decision making for simpler/faster programs
 
+### Enhancements
+
+* Increase max memory and max number of steps
+
 ## v23.4.28
 
 ### Bugfixes
