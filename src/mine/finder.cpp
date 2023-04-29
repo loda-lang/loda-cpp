@@ -290,21 +290,12 @@ bool isSimpler(const Program &existing, const Program &optimized) {
 
 bool isBetterIncEval(const Program &existing, const Program &optimized,
                      Evaluator &evaluator) {
-  // optimized program supports IE, but existing doesn't
-  if (evaluator.supportsIncEval(existing)) {
-    return false;
+  bool optimized_has_seq = ProgramUtil::hasOp(optimized, Operation::Type::SEQ);
+  if (!evaluator.supportsIncEval(existing) &&
+      evaluator.supportsIncEval(optimized) && !optimized_has_seq) {
+    return true;
   }
-  // avoid overwriting programs w/o loops
-  if (!ProgramUtil::hasOp(existing, Operation::Type::LPB) &&
-      !ProgramUtil::hasOp(existing, Operation::Type::SEQ)) {
-    return false;
-  }
-  // avoid adding more seq operations
-  if (ProgramUtil::numOps(optimized, Operation::Type::SEQ) >
-      ProgramUtil::numOps(existing, Operation::Type::SEQ)) {
-    return false;
-  }
-  return evaluator.supportsIncEval(optimized);
+  return false;
 }
 
 bool isTrivialPostLoop(const Program &post_loop) {
@@ -390,12 +381,14 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
   // consider incremental evaluation only if the program is not used
   // a lot by other programs. if it is used a lot, we prefer faster programs
   if (num_usages < 5) {  // magic number
+
     // check if the optimized program supports incremental evaluation
     if (isBetterIncEval(existing, optimized, evaluator)) {
       return "Faster (IE)";
     } else if (isBetterIncEval(optimized, existing, evaluator)) {
       return not_better;  // worse
     }
+
     // check if programs support incremental evaluation and optimized is simpler
     if (isBetterIncEval2(existing, optimized, evaluator)) {
       return "Simpler";

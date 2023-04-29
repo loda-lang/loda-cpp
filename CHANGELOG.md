@@ -4,7 +4,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Bugfixes
 
-* Fix decision making for simpler programs
+* Fix decision making for simpler and IE programs
 
 ## v23.4.28
 
