@@ -295,12 +295,14 @@ bool isSimpler(const Program &existing, const Program &optimized) {
 
 bool isBetterIncEval(const Program &existing, const Program &optimized,
                      Evaluator &evaluator) {
-  bool optimized_has_seq = ProgramUtil::hasOp(optimized, Operation::Type::SEQ);
-  if (!evaluator.supportsIncEval(existing) &&
-      evaluator.supportsIncEval(optimized) && !optimized_has_seq) {
-    return true;
+  // avoid overwriting programs w/o loops
+  if (!ProgramUtil::hasOp(existing, Operation::Type::LPB) &&
+      !ProgramUtil::hasOp(existing, Operation::Type::SEQ)) {
+    return false;
   }
-  return false;
+  bool optimized_has_seq = ProgramUtil::hasOp(optimized, Operation::Type::SEQ);
+  return (!evaluator.supportsIncEval(existing) &&
+          evaluator.supportsIncEval(optimized) && !optimized_has_seq);
 }
 
 bool isTrivialPostLoop(const Program &post_loop) {
