@@ -794,10 +794,7 @@ update_program_result_t OeisManager::updateProgram(
 
   // minimize and check the program
   std::pair<std::string, Program> checked;
-  size_t num_default_terms = OeisSequence::EXTENDED_SEQ_LENGTH;
-  if (full_check_list.find(seq.id) != full_check_list.end()) {
-    num_default_terms = OeisSequence::FULL_SEQ_LENGTH;
-  }
+  bool full_check = full_check_list.find(seq.id) != full_check_list.end();
   size_t num_usages = 0;
   if (seq.id < getStats().program_usages.size()) {
     num_usages = stats->program_usages[seq.id];
@@ -805,12 +802,11 @@ update_program_result_t OeisManager::updateProgram(
   switch (validation_mode) {
     case ValidationMode::BASIC:
       checked = finder.checkProgramBasic(p, existing, is_new, seq, change_type,
-                                         previous_hash, num_default_terms,
-                                         num_usages);
+                                         previous_hash, full_check, num_usages);
       break;
     case ValidationMode::EXTENDED:
       checked = finder.checkProgramExtended(p, existing, is_new, seq,
-                                            num_default_terms, num_usages);
+                                            full_check, num_usages);
       break;
   }
   // not better or the same after optimization?
