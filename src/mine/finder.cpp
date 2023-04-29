@@ -244,30 +244,48 @@ std::pair<std::string, Program> Finder::checkProgramBasic(
   return result;
 }
 
-size_t getBadOpsCount(const Program &p) {
-  // we prefer programs the following programs:
-  // - w/o loops that have non-constant args
-  // - w/o gcd with powers of a small constant
-  size_t num_ops = 0;
-  for (auto &op : p.ops) {
-    if (op.type == Operation::Type::LPB &&
-        op.source.type != Operand::Type::CONSTANT) {
-      num_ops++;
-    }
+bool hasBadGcd(const Program &p) {
+  for (const auto &op : p.ops) {
     if (op.type == Operation::Type::GCD &&
         op.source.type == Operand::Type::CONSTANT &&
         (Minimizer::getPowerOf(op.source.value) != 0 ||
          Number(100000) < op.source.value)) {
-      num_ops++;
+      return true;
     }
   }
-  return num_ops;
+  return false;
 }
 
-bool isBetterIndirectMemory(const Program &existing, const Program &optimized) {
-  return (ProgramUtil::hasIndirectOperand(existing) &&
-          !ProgramUtil::hasIndirectOperand(optimized) &&
-          !ProgramUtil::hasOp(optimized, Operation::Type::SEQ));
+bool hasBadLoop(const Program &p) {
+  for (const auto &op : p.ops) {
+    if (op.type == Operation::Type::LPB &&
+        (op.source.type != Operand::Type::CONSTANT ||
+         op.source.value != Number::ONE)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool isSimpler(const Program &existing, const Program &optimized) {
+  bool optimized_has_seq = ProgramUtil::hasOp(optimized, Operation::Type::SEQ);
+  if (hasBadGcd(existing) && !hasBadGcd(optimized) && !optimized_has_seq) {
+    return true;
+  }
+  if (hasBadLoop(existing) && !hasBadLoop(optimized) && !optimized_has_seq) {
+    return true;
+  }
+  auto info_existing = ProgramUtil::findConstantLoop(existing);
+  auto info_optimized = ProgramUtil::findConstantLoop(optimized);
+  if (info_existing.has_constant_loop && !info_optimized.has_constant_loop &&
+      !optimized_has_seq) {
+    return true;
+  }
+  if (ProgramUtil::hasIndirectOperand(existing) &&
+      !ProgramUtil::hasIndirectOperand(optimized) && !optimized_has_seq) {
+    return true;
+  }
+  return false;
 }
 
 bool isBetterIncEval(const Program &existing, const Program &optimized,
@@ -356,27 +374,9 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
     return not_better;
   }
 
-  // check if there are loops with contant number of iterations involved
-  auto info = ProgramUtil::findConstantLoop(optimized);
-  if (info.has_constant_loop) {
-    // independently of the existing program, we stop here because
-    // otherwise it yields fake optimization of constant loops
-    return not_better;
-  }
-
-  // compare number of "bad" operations
-  auto optimized_bad_count = getBadOpsCount(optimized);
-  auto existing_bad_count = getBadOpsCount(existing);
-  if (optimized_bad_count < existing_bad_count) {
+  if (isSimpler(existing, optimized)) {
     return "Simpler";
-  } else if (optimized_bad_count > existing_bad_count) {
-    return not_better;  // worse
-  }
-
-  // check indirect memory
-  if (isBetterIndirectMemory(existing, optimized)) {
-    return "Simpler";
-  } else if (isBetterIndirectMemory(optimized, existing)) {
+  } else if (isSimpler(optimized, existing)) {
     return not_better;  // worse
   }
 
