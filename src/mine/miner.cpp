@@ -271,7 +271,7 @@ void Miner::runMineLoop() {
   }
 
   // final progress message
-  logProgress(true);
+  logProgress(false);
 
   // report remaining cpu hours
   while (num_reported_hours < settings.num_mine_hours) {
