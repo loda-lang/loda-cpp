@@ -14,6 +14,8 @@ class GeneratorV6 : public Generator {
 
   virtual bool supportsRestart() const override;
 
+  virtual bool isFinished() const override;
+
  private:
   AdaptiveScheduler scheduler;
   Mutator mutator;

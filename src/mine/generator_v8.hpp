@@ -22,6 +22,8 @@ class GeneratorV8 : public Generator {
 
   virtual bool supportsRestart() const override;
 
+  virtual bool isFinished() const override;
+
  private:
   std::shared_ptr<std::ifstream> file_in;
   Parser parser;

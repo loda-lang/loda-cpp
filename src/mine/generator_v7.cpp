@@ -71,3 +71,5 @@ std::pair<Operation, double> GeneratorV7::generateOperation() {
 }
 
 bool GeneratorV7::supportsRestart() const { return true; }
+
+bool GeneratorV7::isFinished() const { return false; };

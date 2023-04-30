@@ -17,6 +17,8 @@ class GeneratorV3 : public Generator {
 
   virtual bool supportsRestart() const override;
 
+  virtual bool isFinished() const override;
+
  private:
   std::discrete_distribution<> length_dist;
   std::vector<std::vector<OpProb>> operation_dists;

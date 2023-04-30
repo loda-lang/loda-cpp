@@ -45,6 +45,8 @@ class Miner {
 
   void updateSubmittedBy(Program &program);
 
+  void logProgress(bool report_slow);
+
   void reportCPUHour();
 
   static const std::string ANONYMOUS;

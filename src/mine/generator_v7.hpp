@@ -17,6 +17,8 @@ class GeneratorV7 : public Generator {
 
   virtual bool supportsRestart() const override;
 
+  virtual bool isFinished() const override;
+
  private:
   std::vector<Program> patterns;
   Mutator mutator;

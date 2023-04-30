@@ -81,3 +81,5 @@ std::pair<Operation, double> GeneratorV5::generateOperation() {
 }
 
 bool GeneratorV5::supportsRestart() const { return true; }
+
+bool GeneratorV5::isFinished() const { return false; };
