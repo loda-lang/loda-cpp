@@ -42,6 +42,8 @@ class Generator {
 
   virtual bool supportsRestart() const = 0;
 
+  virtual bool isFinished() const = 0;
+
   const Config config;
 
   const RandomProgramIds2 random_program_ids;
@@ -74,6 +76,8 @@ class MultiGenerator : public Generator {
   virtual std::pair<Operation, double> generateOperation() override;
 
   virtual bool supportsRestart() const override;
+
+  virtual bool isFinished() const override;
 
  private:
   std::vector<Generator::Config> configs;

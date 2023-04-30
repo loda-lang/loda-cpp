@@ -53,16 +53,18 @@ Program GeneratorV8::generateProgram() {
     program = readNextProgram();
   }
   // log message on invalid programs
-  if (log_scheduler.isTargetReached() || !file_in) {
+  bool log_invalid = false;
+  if (log_scheduler.isTargetReached()) {
     log_scheduler.reset();
-    if (num_invalid_programs) {
-      Log::get().warn("Ignored " + std::to_string(num_invalid_programs) +
-                      " invalid programs");
-      num_invalid_programs = 0;
-    }
+    log_invalid = true;
   }
   if (!file_in) {
-    Log::get().error("Reached end of file", true);
+    log_invalid = true;
+  }
+  if (log_invalid && num_invalid_programs > 0) {
+    Log::get().warn("Ignored " + std::to_string(num_invalid_programs) +
+                    " invalid programs");
+    num_invalid_programs = 0;
   }
   return program;
 }
@@ -76,3 +78,5 @@ bool GeneratorV8::supportsRestart() const {
   // beginning again
   return false;
 }
+
+bool GeneratorV8::isFinished() const { return !file_in; };

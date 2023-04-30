@@ -201,3 +201,5 @@ std::pair<Operation, double> GeneratorV4::generateOperation() {
 }
 
 bool GeneratorV4::supportsRestart() const { return true; }
+
+bool GeneratorV4::isFinished() const { return false; };

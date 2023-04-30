@@ -13,6 +13,8 @@ class GeneratorV1 : public Generator {
 
   virtual bool supportsRestart() const override;
 
+  virtual bool isFinished() const override;
+
  private:
   int64_t num_operations;
   size_t current_template;

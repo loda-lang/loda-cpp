@@ -43,3 +43,5 @@ Program GeneratorV2::generateProgram() {
 }
 
 bool GeneratorV2::supportsRestart() const { return true; }
+
+bool GeneratorV2::isFinished() const { return false; };

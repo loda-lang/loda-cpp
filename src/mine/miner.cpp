@@ -93,6 +93,7 @@ void Miner::mine() {
   } else {
     // run mining loop w/o monitoring
     runMineLoop();
+    Log::get().info("Finished mining");
   }
 }
 
@@ -175,7 +176,11 @@ void Miner::runMineLoop() {
         // client mode
         if (base_program.ops.empty()) {
           // generate new program
-          progs.push(multi_generator->generateProgram());
+          program = multi_generator->generateProgram();
+          if (program.ops.empty() && multi_generator->isFinished()) {
+            break;
+          }
+          progs.push(std::move(program));
         } else {
           // mutate base program
           mutator->mutateCopiesRandom(base_program, NUM_MUTATIONS, progs);
@@ -265,6 +270,9 @@ void Miner::runMineLoop() {
     }
   }
 
+  // final progress message
+  logProgress(false);
+
   // report remaining cpu hours
   while (num_reported_hours < settings.num_mine_hours) {
     reportCPUHour();
@@ -280,21 +288,7 @@ bool Miner::checkRegularTasks() {
   // regular task: log info
   if (log_scheduler.isTargetReached()) {
     log_scheduler.reset();
-    std::string progress;
-    if (progress_monitor) {
-      const double p = 100.0 * progress_monitor->getProgress();
-      std::stringstream buf;
-      buf.precision(1);
-      buf << ", " << std::fixed << p << "%";
-      progress = buf.str();
-    }
-    if (num_processed) {
-      Log::get().info("Processed " + std::to_string(num_processed) +
-                      " programs" + progress);
-      num_processed = 0;
-    } else {
-      Log::get().warn("Slow processing of programs" + progress);
-    }
+    logProgress(true);
   }
 
   // regular task: fetch programs from API server
@@ -340,6 +334,24 @@ bool Miner::checkRegularTasks() {
   }
 
   return result;
+}
+
+void Miner::logProgress(bool report_slow) {
+  std::string progress;
+  if (progress_monitor) {
+    const double p = 100.0 * progress_monitor->getProgress();
+    std::stringstream buf;
+    buf.precision(1);
+    buf << ", " << std::fixed << p << "%";
+    progress = buf.str();
+  }
+  if (num_processed) {
+    Log::get().info("Processed " + std::to_string(num_processed) + " programs" +
+                    progress);
+    num_processed = 0;
+  } else if (report_slow) {
+    Log::get().warn("Slow processing of programs" + progress);
+  }
 }
 
 void Miner::reportCPUHour() {

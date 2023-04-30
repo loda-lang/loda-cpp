@@ -31,6 +31,8 @@ class GeneratorV4 : public Generator {
 
   virtual bool supportsRestart() const override;
 
+  virtual bool isFinished() const override;
+
  private:
   void init(const Stats &stats);
 

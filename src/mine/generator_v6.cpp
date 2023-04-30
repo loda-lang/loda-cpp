@@ -45,3 +45,5 @@ std::pair<Operation, double> GeneratorV6::generateOperation() {
 }
 
 bool GeneratorV6::supportsRestart() const { return true; }
+
+bool GeneratorV6::isFinished() const { return false; };

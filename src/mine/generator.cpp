@@ -355,7 +355,6 @@ MultiGenerator::MultiGenerator(const Settings &settings, const Stats &stats,
 
 Program MultiGenerator::generateProgram() {
   current_generator = (current_generator + 1) % generators.size();
-  // Log::get().info("Using generator " + std::to_string(current_generator));
   return generators[current_generator]->generateProgram();
 }
 
@@ -369,3 +368,10 @@ bool MultiGenerator::supportsRestart() const {
       generators.begin(), generators.end(),
       [](const Generator::UPtr &gen) { return gen->supportsRestart(); });
 }
+
+bool MultiGenerator::isFinished() const {
+  // finished if all are finished
+  return std::all_of(
+      generators.begin(), generators.end(),
+      [](const Generator::UPtr &gen) { return gen->isFinished(); });
+};
