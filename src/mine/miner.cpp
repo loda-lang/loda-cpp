@@ -93,6 +93,7 @@ void Miner::mine() {
   } else {
     // run mining loop w/o monitoring
     runMineLoop();
+    Log::get().info("Finished mining");
   }
 }
 
