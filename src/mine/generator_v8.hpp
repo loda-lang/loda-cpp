@@ -3,6 +3,7 @@
 #include "lang/parser.hpp"
 #include "mine/generator.hpp"
 #include "mine/mutator.hpp"
+#include "sys/util.hpp"
 
 /*
  * Generator that loads programs from a batch file.
@@ -23,4 +24,8 @@ class GeneratorV8 : public Generator {
   std::shared_ptr<std::ifstream> file_in;
   Parser parser;
   std::string line;
+  AdaptiveScheduler log_scheduler;
+  size_t num_invalid_programs;
+
+  Program readNextProgram();
 };

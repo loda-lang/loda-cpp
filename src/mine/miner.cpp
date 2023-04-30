@@ -28,7 +28,7 @@ Miner::Miner(const Settings &settings, ProgressMonitor *progress_monitor)
     : settings(settings),
       mining_mode(Setup::getMiningMode()),
       validation_mode(ValidationMode::EXTENDED),  // set in reload()
-      log_scheduler(36),                          // 1% steps (magic number)
+      log_scheduler(36),                          // 36 seconds => 1% steps
       metrics_scheduler(Metrics::get().publish_interval),
       cpuhours_scheduler(3600),  // 1 hour (fixed!!)
       api_scheduler(300),        // 5 minutes (magic number)
