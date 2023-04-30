@@ -1,5 +1,7 @@
 #include "mine/generator.hpp"
 
+#include <algorithm>
+
 #include "lang/semantics.hpp"
 #include "mine/config.hpp"
 #include "mine/generator_v1.hpp"
@@ -359,4 +361,11 @@ Program MultiGenerator::generateProgram() {
 
 std::pair<Operation, double> MultiGenerator::generateOperation() {
   return generators[current_generator]->generateOperation();
+}
+
+bool MultiGenerator::supportsRestart() const {
+  // all generator need to support restart
+  return std::all_of(
+      generators.begin(), generators.end(),
+      [](const Generator::UPtr &gen) { return gen->supportsRestart(); });
 }

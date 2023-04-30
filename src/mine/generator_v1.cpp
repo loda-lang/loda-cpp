@@ -196,3 +196,5 @@ Program GeneratorV1::generateProgram() {
   }
   return p;
 }
+
+bool GeneratorV1::supportsRestart() const { return true; }

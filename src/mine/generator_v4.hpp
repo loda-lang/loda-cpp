@@ -29,6 +29,8 @@ class GeneratorV4 : public Generator {
 
   virtual std::pair<Operation, double> generateOperation() override;
 
+  virtual bool supportsRestart() const override;
+
  private:
   void init(const Stats &stats);
 

@@ -20,6 +20,8 @@ class GeneratorV8 : public Generator {
 
   virtual std::pair<Operation, double> generateOperation() override;
 
+  virtual bool supportsRestart() const override;
+
  private:
   std::shared_ptr<std::ifstream> file_in;
   Parser parser;

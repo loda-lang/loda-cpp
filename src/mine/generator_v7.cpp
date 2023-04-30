@@ -69,3 +69,5 @@ Program GeneratorV7::generateProgram() {
 std::pair<Operation, double> GeneratorV7::generateOperation() {
   throw std::runtime_error("unsupported operation");
 }
+
+bool GeneratorV7::supportsRestart() const { return true; }

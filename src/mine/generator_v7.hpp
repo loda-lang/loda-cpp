@@ -15,6 +15,8 @@ class GeneratorV7 : public Generator {
 
   virtual std::pair<Operation, double> generateOperation() override;
 
+  virtual bool supportsRestart() const override;
+
  private:
   std::vector<Program> patterns;
   Mutator mutator;

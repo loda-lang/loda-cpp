@@ -70,3 +70,9 @@ Program GeneratorV8::generateProgram() {
 std::pair<Operation, double> GeneratorV8::generateOperation() {
   throw std::runtime_error("unsupported operation");
 }
+
+bool GeneratorV8::supportsRestart() const {
+  // restart is not supported because we would start reading the file from the
+  // beginning again
+  return false;
+}

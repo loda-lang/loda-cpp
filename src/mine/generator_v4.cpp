@@ -199,3 +199,5 @@ Program GeneratorV4::generateProgram() {
 std::pair<Operation, double> GeneratorV4::generateOperation() {
   throw std::runtime_error("unsupported operation in generator v4");
 }
+
+bool GeneratorV4::supportsRestart() const { return true; }

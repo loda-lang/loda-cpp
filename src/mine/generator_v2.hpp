@@ -10,6 +10,8 @@ class GeneratorV2 : public Generator {
 
   virtual std::pair<Operation, double> generateOperation() override;
 
+  virtual bool supportsRestart() const override;
+
  private:
   std::discrete_distribution<> length_dist;
   std::discrete_distribution<> operation_dist;

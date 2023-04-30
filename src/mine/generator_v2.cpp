@@ -41,3 +41,5 @@ Program GeneratorV2::generateProgram() {
   applyPostprocessing(p);
   return p;
 }
+
+bool GeneratorV2::supportsRestart() const { return true; }

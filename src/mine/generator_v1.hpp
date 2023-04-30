@@ -11,6 +11,8 @@ class GeneratorV1 : public Generator {
 
   virtual std::pair<Operation, double> generateOperation() override;
 
+  virtual bool supportsRestart() const override;
+
  private:
   int64_t num_operations;
   size_t current_template;

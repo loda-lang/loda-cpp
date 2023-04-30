@@ -12,6 +12,8 @@ class GeneratorV6 : public Generator {
 
   virtual std::pair<Operation, double> generateOperation() override;
 
+  virtual bool supportsRestart() const override;
+
  private:
   AdaptiveScheduler scheduler;
   Mutator mutator;

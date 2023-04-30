@@ -50,8 +50,10 @@ void Miner::reload() {
   if (mining_mode == MINING_MODE_SERVER || ConfigLoader::MAINTAINANCE_MODE) {
     multi_generator.reset();
   } else {
-    multi_generator.reset(
-        new MultiGenerator(settings, manager->getStats(), true));
+    if (!multi_generator || multi_generator->supportsRestart()) {
+      multi_generator.reset(
+          new MultiGenerator(settings, manager->getStats(), true));
+    }
   }
   mutator.reset(new Mutator(manager->getStats()));
   manager->releaseStats();  // not needed anymore

@@ -40,6 +40,8 @@ class Generator {
 
   virtual std::pair<Operation, double> generateOperation() = 0;
 
+  virtual bool supportsRestart() const = 0;
+
   const Config config;
 
   const RandomProgramIds2 random_program_ids;
@@ -70,6 +72,8 @@ class MultiGenerator : public Generator {
   virtual Program generateProgram() override;
 
   virtual std::pair<Operation, double> generateOperation() override;
+
+  virtual bool supportsRestart() const override;
 
  private:
   std::vector<Generator::Config> configs;
