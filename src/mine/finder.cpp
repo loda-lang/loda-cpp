@@ -413,13 +413,6 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
     Log::get().error("Error fetching b-file for " + seq.id_str(), true);
   }
 
-  // ensure a minimum number of known terms before comparing
-  if (terms.size() < OeisSequence::DEFAULT_SEQ_LENGTH) {
-    // Log::get().warn(
-    //    "Skipping further comparison because there are too few terms");
-    return not_better;
-  }
-
   // evaluate optimized program for fixed number of terms
   num_terms = std::min<size_t>(num_terms, terms.size());
   num_terms = std::max<size_t>(num_terms, OeisSequence::EXTENDED_SEQ_LENGTH);
@@ -455,7 +448,7 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
     return not_better;
   }
 
-  //  compare number of execution cycles
+  //  compare number of execution steps
   double existing_total = existing_steps.total;
   double optimized_total = optimized_steps.total;
   if (existing_total > (optimized_total * THRESHOLD_FASTER)) {

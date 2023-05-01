@@ -2,9 +2,12 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v23.5.1
+
 ### Enhancements
 
 * Improve output and behavior of generator v8 (reading programs from batch file)
+* Improve decision for better/faster programs
 
 ## v23.4.30
 
