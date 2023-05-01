@@ -168,7 +168,7 @@ void Benchmark::findSlow(int64_t num_terms, Operation::Type type) {
     queue.push(std::pair<int64_t, int64_t>(duration.count(), oeisSeq.id));
   }
   std::cout << std::endl << "Slowest programs:" << std::endl;
-  for (size_t i = 0; i < 10; i++) {
+  for (size_t i = 0; i < 20; i++) {
     auto entry = queue.top();
     queue.pop();
     OeisSequence oeisSeq(entry.second);
