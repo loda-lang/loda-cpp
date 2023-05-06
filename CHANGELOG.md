@@ -2,9 +2,13 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Features
+
+* Added option `-z` to limit the maximum evaluation time
+
 ### Enhancements
 
-* Submit command considers `-i` option for better control and performance
+* The `submit` command considers `-i` option for better control and performance
 
 ## v23.5.1
 

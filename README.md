@@ -50,6 +50,7 @@ Options:
   -s                  Evaluate program to number of execution steps
   -c <number>         Maximum number of interpreter cycles (no limit: -1)
   -m <number>         Maximum number of used memory cells (no limit: -1)
+  -z <number>         Maximum evaluation time in seconds (no limit: -1)
   -l <string>         Log level (values: debug,info,warn,error,alert)
   -i <string>         Name of miner configuration from miners.json
   -p                  Parallel mining using default number of instances

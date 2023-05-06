@@ -25,6 +25,7 @@ Evaluator::Evaluator(const Settings &settings, const bool use_inc_eval)
       interpreter(settings),
       inc_evaluator(interpreter),
       use_inc_eval(use_inc_eval),
+      check_eval_time(settings.max_eval_secs >= 0),
       is_debug(Log::get().level == Log::Level::DEBUG) {}
 
 steps_t Evaluator::eval(const Program &p, Sequence &seq, int64_t num_terms,
@@ -33,6 +34,9 @@ steps_t Evaluator::eval(const Program &p, Sequence &seq, int64_t num_terms,
     num_terms = settings.num_terms;
   }
   seq.resize(num_terms);
+  if (check_eval_time) {
+    start_time = std::chrono::steady_clock::now();
+  }
   Memory mem;
   steps_t steps;
   size_t s;
@@ -49,6 +53,9 @@ steps_t Evaluator::eval(const Program &p, Sequence &seq, int64_t num_terms,
         mem.set(Program::INPUT_CELL, i);
         s = interpreter.run(p, mem);
         seq[i] = mem.get(Program::OUTPUT_CELL);
+      }
+      if (check_eval_time) {
+        checkEvalTime();
       }
     } catch (const std::exception &) {
       seq.resize(i);
@@ -84,6 +91,9 @@ steps_t Evaluator::eval(const Program &p, std::vector<Sequence> &seqs,
   for (size_t s = 0; s < seqs.size(); s++) {
     seqs[s].resize(num_terms);
   }
+  if (check_eval_time) {
+    start_time = std::chrono::steady_clock::now();
+  }
   Memory mem;
   steps_t steps;
   // note: we can't use the incremental evaluator here
@@ -93,6 +103,9 @@ steps_t Evaluator::eval(const Program &p, std::vector<Sequence> &seqs,
     steps.add(interpreter.run(p, mem));
     for (size_t s = 0; s < seqs.size(); s++) {
       seqs[s][i] = mem.get(s);
+    }
+    if (check_eval_time) {
+      checkEvalTime();
     }
   }
   return steps;
@@ -104,6 +117,9 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
                                               int64_t id) {
   if (num_terminating_terms < 0) {
     num_terminating_terms = expected_seq.size();
+  }
+  if (check_eval_time) {
+    start_time = std::chrono::steady_clock::now();
   }
   std::pair<status_t, steps_t> result;
   Memory mem;
@@ -122,6 +138,9 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
         mem.set(Program::INPUT_CELL, i);
         result.second.add(interpreter.run(p, mem, id));
         out = mem.get(Program::OUTPUT_CELL);
+      }
+      if (check_eval_time) {
+        checkEvalTime();
       }
     } catch (const std::exception &e) {
       if (settings.print_as_b_file) {
@@ -155,3 +174,12 @@ bool Evaluator::supportsIncEval(const Program &p) {
 }
 
 void Evaluator::clearCaches() { interpreter.clearCaches(); }
+
+void Evaluator::checkEvalTime() const {
+  const int64_t millis = std::chrono::duration_cast<std::chrono::milliseconds>(
+                             std::chrono::steady_clock::now() - start_time)
+                             .count();
+  if (millis > 1000 * settings.max_eval_secs) {
+    throw std::runtime_error("maximum evalutation time exceeded");
+  }
+}
