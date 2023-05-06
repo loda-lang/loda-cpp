@@ -110,6 +110,9 @@ void Commands::help() {
   std::cout << "  -m <number>         Maximum number of used memory cells "
                "(no limit: -1)"
             << std::endl;
+  std::cout << "  -z <number>         Maximum evaluation time in seconds "
+               "(no limit: -1)"
+            << std::endl;
   std::cout << "  -l <string>         Log level (values: "
                "debug,info,warn,error,alert)"
             << std::endl;

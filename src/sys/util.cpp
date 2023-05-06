@@ -5,9 +5,9 @@
 #include <iostream>
 #include <sstream>
 
-#include "sys/setup.hpp"
 #include "sys/file.hpp"
 #include "sys/log.hpp"
+#include "sys/setup.hpp"
 
 #define cstr(a) std::string(xstr(a))
 #define xstr(a) ystr(a)
@@ -31,6 +31,7 @@ Settings::Settings()
     : num_terms(DEFAULT_NUM_TERMS),
       max_memory(DEFAULT_MAX_MEMORY),
       max_cycles(DEFAULT_MAX_CYCLES),
+      max_eval_secs(-1),
       use_steps(false),
       with_deps(false),
       parallel_mining(false),
@@ -45,6 +46,7 @@ enum class Option {
   NUM_TERMS,
   MAX_MEMORY,
   MAX_CYCLES,
+  MAX_EVAL_SECS,
   B_FILE_OFFSET,
   NUM_INSTANCES,
   NUM_MINE_HOURS,
@@ -59,13 +61,14 @@ std::vector<std::string> Settings::parseArgs(int argc, char *argv[]) {
   for (int i = 1; i < argc; ++i) {
     std::string arg(argv[i]);
     if (option == Option::NUM_TERMS || option == Option::MAX_MEMORY ||
-        option == Option::MAX_CYCLES || option == Option::B_FILE_OFFSET ||
-        option == Option::NUM_INSTANCES || option == Option::NUM_MINE_HOURS) {
+        option == Option::MAX_CYCLES || option == Option::MAX_EVAL_SECS ||
+        option == Option::B_FILE_OFFSET || option == Option::NUM_INSTANCES ||
+        option == Option::NUM_MINE_HOURS) {
       std::stringstream s(arg);
       int64_t val;
       s >> val;
-      if (option != Option::MAX_CYCLES && option != Option::B_FILE_OFFSET &&
-          val < 1) {
+      if (option != Option::MAX_CYCLES && option != Option::MAX_EVAL_SECS &&
+          option != Option::B_FILE_OFFSET && val < 1) {
         Log::get().error("Invalid value for option: " + std::to_string(val),
                          true);
       }
@@ -81,6 +84,9 @@ std::vector<std::string> Settings::parseArgs(int argc, char *argv[]) {
           break;
         case Option::MAX_CYCLES:
           max_cycles = val;
+          break;
+        case Option::MAX_EVAL_SECS:
+          max_eval_secs = val;
           break;
         case Option::NUM_INSTANCES:
           num_miner_instances = val;
@@ -124,6 +130,8 @@ std::vector<std::string> Settings::parseArgs(int argc, char *argv[]) {
         option = Option::MAX_MEMORY;
       } else if (opt == "c") {
         option = Option::MAX_CYCLES;
+      } else if (opt == "z") {
+        option = Option::MAX_EVAL_SECS;
       } else if (opt == "i") {
         option = Option::MINER_PROFILE;
       } else if (opt == "o") {

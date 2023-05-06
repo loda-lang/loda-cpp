@@ -25,6 +25,7 @@ class Settings {
   size_t num_terms;
   int64_t max_memory;
   int64_t max_cycles;
+  int64_t max_eval_secs;
   bool use_steps;
   bool with_deps;
   bool parallel_mining;

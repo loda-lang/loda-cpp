@@ -1,5 +1,7 @@
 #pragma once
 
+#include <chrono>
+
 #include "lang/evaluator_inc.hpp"
 #include "lang/interpreter.hpp"
 #include "lang/sequence.hpp"
@@ -43,5 +45,9 @@ class Evaluator {
   Interpreter interpreter;
   IncrementalEvaluator inc_evaluator;
   const bool use_inc_eval;
+  const bool check_eval_time;
   const bool is_debug;
+  std::chrono::time_point<std::chrono::steady_clock> start_time;
+
+  void checkEvalTime() const;
 };
