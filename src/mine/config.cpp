@@ -4,8 +4,6 @@
 #include "sys/log.hpp"
 #include "sys/setup.hpp"
 
-bool ConfigLoader::MAINTAINANCE_MODE = false;
-
 std::string get_template(std::string t) {
   static const std::string h(
       "$LODA_HOME/programs/");  // TODO: use proper variable replacing
@@ -72,10 +70,6 @@ std::vector<Generator::Config> loadGeneratorConfigs(
 }
 
 Miner::Config ConfigLoader::load(const Settings &settings) {
-  if (MAINTAINANCE_MODE) {
-    return getMaintenanceConfig();
-  }
-
   const std::string loda_config = Setup::getMinersConfig();
   Miner::Config config;
 
@@ -155,17 +149,6 @@ Miner::Config ConfigLoader::load(const Settings &settings) {
   if (!found) {
     Log::get().error("Miner config not found or disabled: " + profile, true);
   }
-  return config;
-}
-
-Miner::Config ConfigLoader::getMaintenanceConfig() {
-  Miner::Config config;
-  config.name = "maintenance";
-  config.overwrite_mode = OverwriteMode::ALL;
-  config.matchers.resize(1);
-  config.matchers.back().type = "direct";
-  config.matchers.back().backoff = false;
-  // no generators in maintenance mode
   return config;
 }
 

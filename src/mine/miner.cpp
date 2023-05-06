@@ -28,7 +28,8 @@ Miner::Miner(const Settings &settings, ProgressMonitor *progress_monitor)
     : settings(settings),
       mining_mode(Setup::getMiningMode()),
       validation_mode(ValidationMode::EXTENDED),  // set in reload()
-      log_scheduler(36),                          // 36 seconds => 1% steps
+      submit_mode(false),
+      log_scheduler(36),  // 36 seconds => 1% steps
       metrics_scheduler(Metrics::get().publish_interval),
       cpuhours_scheduler(3600),  // 1 hour (fixed!!)
       api_scheduler(300),        // 5 minutes (magic number)
@@ -47,7 +48,7 @@ void Miner::reload() {
   const auto miner_config = ConfigLoader::load(settings);
   profile_name = miner_config.name;
   validation_mode = miner_config.validation_mode;
-  if (mining_mode == MINING_MODE_SERVER || ConfigLoader::MAINTAINANCE_MODE) {
+  if (mining_mode == MINING_MODE_SERVER || submit_mode) {
     multi_generator.reset();
   } else {
     if (!multi_generator || multi_generator->supportsRestart()) {
@@ -364,7 +365,7 @@ void Miner::reportCPUHour() {
 void Miner::submit(const std::string &path, std::string id) {
   Parser parser;
   auto program = parser.parse(path);
-  ConfigLoader::MAINTAINANCE_MODE = true;
+  submit_mode = true;
   reload();
   if (id.empty()) {
     id = Comments::getSequenceIdFromProgram(program);

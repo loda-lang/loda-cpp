@@ -56,6 +56,7 @@ class Miner {
   const Settings &settings;
   const MiningMode mining_mode;
   ValidationMode validation_mode;
+  bool submit_mode;
   std::string profile_name;
   std::unique_ptr<ApiClient> api_client;
   std::unique_ptr<OeisManager> manager;
