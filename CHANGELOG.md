@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Enhancements
+
+* Submit command considers `-i` option for better control and performance
+
 ## v23.5.1
 
 ### Enhancements
