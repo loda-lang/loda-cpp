@@ -180,6 +180,6 @@ void Evaluator::checkEvalTime() const {
                              std::chrono::steady_clock::now() - start_time)
                              .count();
   if (millis > 1000 * settings.max_eval_secs) {
-    throw std::runtime_error("maximum evalutation time exceeded");
+    throw std::runtime_error("maximum evaluation time exceeded");
   }
 }
