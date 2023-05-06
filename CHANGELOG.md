@@ -2,6 +2,8 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v23.5.6
+
 ### Features
 
 * Added option `-z` to limit the maximum evaluation time
