@@ -19,6 +19,7 @@ void IncrementalEvaluator::reset() {
   stateful_cells.clear();
   loop_counter_dependent_cells.clear();
   loop_counter_cell = 0;
+  loop_counter_decrement = 0;
   initialized = false;
 
   // runtime data
@@ -201,16 +202,20 @@ bool IncrementalEvaluator::checkLoopBody() {
       if (op.type != Operation::Type::SUB && op.type != Operation::Type::TRN) {
         return false;
       }
-      if (op.source != Operand(Operand::Type::CONSTANT, Number::ONE)) {
+      if (op.source.type != Operand::Type::CONSTANT) {
         return false;
       }
       if (loop_counter_updated) {
         return false;
       }
       loop_counter_updated = true;
+      loop_counter_decrement = op.source.value.asInt();
     }
   }
   if (!loop_counter_updated) {
+    return false;
+  }
+  if (loop_counter_decrement != 1) {
     return false;
   }
 

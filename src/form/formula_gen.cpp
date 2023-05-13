@@ -294,6 +294,10 @@ bool FormulaGenerator::generateSingle(const Program& p) {
       return false;
     }
     // TODO: remove this limitation
+    if (ie.getLoopCounterDecrement() != 1) {
+      return false;
+    }
+    // TODO: remove this limitation
     for (const auto& op : ie.getPreLoop().ops) {
       if (op.type == Operation::Type::MUL || op.type == Operation::Type::DIV ||
           op.type == Operation::Type::POW || op.type == Operation::Type::TRN) {
