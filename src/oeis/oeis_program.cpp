@@ -169,7 +169,7 @@ bool OeisProgram::autoUnfold(Program &p) {
   while (true) {
     // try to unfold
     auto copy = p;
-    if (!OeisProgram::unfold(copy)) {
+    if (!unfold(copy)) {
       break;
     }
     // abort if unfolded program is too complex

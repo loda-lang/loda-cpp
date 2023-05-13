@@ -131,9 +131,10 @@ void Finder::findAll(const Program &p, const Sequence &norm_seq,
   }
 }
 
-void Finder::notifyMinimizerProblem(const Program &p, const std::string &id) {
+void Finder::notifyUnfoldOrMinimizeProblem(const Program &p,
+                                           const std::string &id) {
   Log::get().warn("Program for " + id +
-                  " generates wrong result after minimization");
+                  " generates wrong result after unfold/minimize");
   const std::string f = Setup::getLodaHome() + "debug/minimizer/" + id + ".asm";
   ensureDir(f);
   std::ofstream out(f);
@@ -164,7 +165,10 @@ std::pair<std::string, Program> Finder::checkProgramExtended(
   // the program is correct => update result
   result.second = program;
 
-  // now minimize for default number of terms
+  // auto-unfold seq operations
+  OeisProgram::autoUnfold(program);
+
+  // minimize for default number of terms
   minimizer.optimizeAndMinimize(program, OeisSequence::DEFAULT_SEQ_LENGTH);
   if (program != result.second) {
     // minimization changed program => check the minimized program
@@ -173,7 +177,7 @@ std::pair<std::string, Program> Finder::checkProgramExtended(
     if (check_minimized.first == status_t::ERROR) {
       if (check_vanilla.first == status_t::OK) {
         // looks like the minimization changed the semantics of the program
-        notifyMinimizerProblem(result.second, seq.id_str());
+        notifyUnfoldOrMinimizeProblem(result.second, seq.id_str());
       }
       // we ignore the case where the base program has a warning and minimized
       // program an error, because it indicates a problem in the base program

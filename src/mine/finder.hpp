@@ -50,7 +50,7 @@ class Finder {
 
   void notifyInvalidMatch(size_t id);
 
-  void notifyMinimizerProblem(const Program &p, const std::string &id);
+  void notifyUnfoldOrMinimizeProblem(const Program &p, const std::string &id);
 
   const Settings &settings;
   Evaluator &evaluator;  // shared instance to save memory

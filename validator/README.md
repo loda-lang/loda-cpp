@@ -2,7 +2,7 @@
 
 This page comprises information for setting up a worker node in the validation mode.
 In this mode, LODA fetches submitted programs from the API server, validates them
-and ads them to the programs repository. It also checks and updates existing programs.
+and adds them to the programs repository. It also checks and updates existing programs.
 
 ## Recommended VM Setup
 

@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Enhancements
+
+* Auto-unfold `seq` operations
+
 ## v23.5.6
 
 ### Features
