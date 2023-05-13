@@ -30,7 +30,7 @@ done
 
 # number of instances
 num_new=1
-num_update=4
+num_update=1
 
 pushd $HOME > /dev/null
 
