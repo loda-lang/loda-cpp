@@ -35,14 +35,14 @@ num_update=1
 pushd $HOME > /dev/null
 
 for i in $(seq 1 ${num_new}); do
-  echo "Starting server-new-${i}"
-  nohup loda mine -i server-new > $HOME/server-new-${i}.out 2>&1 &
+  echo "Starting validate-new-${i}"
+  nohup loda mine -i validate-new > $HOME/validate-new-${i}.out 2>&1 &
   sleep 2
 done
 
 for i in $(seq 1 ${num_update}); do
-  echo "Starting server-update-${i}"
-  nohup loda mine -i server-update > $HOME/server-update-${i}.out 2>&1 &
+  echo "Starting validate-update-${i}"
+  nohup loda mine -i validate-update > $HOME/validate-update-${i}.out 2>&1 &
   sleep 2
 done
 

@@ -138,7 +138,7 @@ LODA_SLACK_ALERTS=yes
 Before starting the validators, defining these aliases can be useful:
 
 ```bash
-alias tl="tail -f $HOME/server-*.out"
+alias tl="tail -f $HOME/validate-*.out"
 alias lc="loda check -b"
 alias le="loda eval -b -s"
 ```

@@ -1,7 +1,7 @@
 {
     "miners": [
         {
-            "name": "server-new",
+            "name": "validate-new",
             "overwrite": "none",
             "validation": "basic",
             "backoff": false,
@@ -10,7 +10,7 @@
             ]
         },
         {
-            "name": "server-update",
+            "name": "validate-update",
             "overwrite": "all",
             "validation": "basic",
             "backoff": false,
