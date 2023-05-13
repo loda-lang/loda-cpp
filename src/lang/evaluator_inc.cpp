@@ -215,9 +215,6 @@ bool IncrementalEvaluator::checkLoopBody() {
   if (!loop_counter_updated) {
     return false;
   }
-  if (loop_counter_decrement != 1) {
-    return false;
-  }
 
   // compute set of stateful memory cells
   computeStatefulCells();
