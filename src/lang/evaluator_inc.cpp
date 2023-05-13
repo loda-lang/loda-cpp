@@ -24,10 +24,10 @@ void IncrementalEvaluator::reset() {
 
   // runtime data
   argument = 0;
-  previous_loop_count = 0;
   total_loop_steps = 0;
   tmp_state.clear();
-  loop_state.clear();
+  loop_states.clear();
+  previous_loop_counts.clear();
 }
 
 // ====== Initialization functions (static code analysis) =========
@@ -215,6 +215,11 @@ bool IncrementalEvaluator::checkLoopBody() {
   if (!loop_counter_updated) {
     return false;
   }
+  if (loop_counter_decrement < 1 ||
+      loop_counter_decrement >
+          1000) {  // prevent exhaustive memory usage; magic number
+    return false;
+  }
 
   // compute set of stateful memory cells
   computeStatefulCells();
@@ -353,36 +358,42 @@ std::pair<Number, size_t> IncrementalEvaluator::next() {
   size_t steps = interpreter.run(pre_loop, tmp_state);
   auto loop_counter_before = tmp_state.get(Program::INPUT_CELL);
 
+  // determine loop slice
+  const int64_t slice = argument % loop_counter_decrement;
+
   // calculate new loop count
+  if (argument == 0) {
+    previous_loop_counts.resize(loop_counter_decrement, 0);
+  }
   const int64_t new_loop_count = tmp_state.get(loop_counter_cell).asInt();
   int64_t additional_loops = std::max<int64_t>(new_loop_count, 0) -
-                             std::max<int64_t>(previous_loop_count, 0);
-  previous_loop_count = new_loop_count;
+                             std::max<int64_t>(previous_loop_counts[slice], 0);
+  previous_loop_counts[slice] = new_loop_count;
 
-  // update loop state
-  if (argument == 0) {
-    loop_state = tmp_state;
+  // init or update loop state
+  if (argument < loop_counter_decrement) {
+    loop_states.push_back(tmp_state);
     total_loop_steps += 1;  // +1 for lpb of zero-th iteration
   } else {
-    loop_state.set(loop_counter_cell, new_loop_count);
+    loop_states[slice].set(loop_counter_cell, new_loop_count);
   }
 
   // execute loop body
   while (additional_loops-- > 0) {
     total_loop_steps +=
-        interpreter.run(loop_body, loop_state) + 1;  // +1 for lpb
+        interpreter.run(loop_body, loop_states[slice]) + 1;  // +1 for lpb
   }
 
   // update steps count
   steps += total_loop_steps;
 
   // one more iteration is needed for the correct step count
-  tmp_state = loop_state;
+  tmp_state = loop_states[slice];
   tmp_state.set(loop_counter_cell, Number::ZERO);
   steps += interpreter.run(loop_body, tmp_state) + 1;  // +1 for lpb
 
   // execute post-loop code
-  tmp_state = loop_state;
+  tmp_state = loop_states[slice];
   tmp_state.set(loop_counter_cell,
                 Semantics::min(loop_counter_before, Number::ZERO));
   steps += interpreter.run(post_loop, tmp_state);
