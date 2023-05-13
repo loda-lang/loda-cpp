@@ -74,6 +74,12 @@ num_new=1
 num_update=1
 ```
 
+Install the validator configuration `~/loda/miners.json` usig these commands:
+
+```bash
+wget -qO ~/loda/miners.json https://raw.githubusercontent.com/loda-lang/loda-cpp/master/server/miners.json
+```
+
 ## Metrics
 
 To send metrics to InfluxDB, add the host and credential information to `~/loda/setup.txt`:
