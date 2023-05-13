@@ -59,14 +59,14 @@ LODA_OEIS_UPDATE_INTERVAL=1
 LODA_MAX_PHYSICAL_MEMORY=750
 ```
 
-Install the `loda-server.sh` script:
+Install the `loda-validator.sh` script:
 
 ```bash
-wget -qO ~/loda/bin/loda-server.sh https://raw.githubusercontent.com/loda-lang/loda-cpp/master/server/loda-server.sh
-chmod +x ~/loda/bin/loda-server.sh
+wget -qO ~/loda/bin/loda-validator.sh https://raw.githubusercontent.com/loda-lang/loda-cpp/master/validator/loda-validator.sh
+chmod +x ~/loda/bin/loda-validator.sh
 ```
 
-Verify the correct number of validator instances in `loda-server.sh`:
+Verify the correct number of validator instances in `loda-validator.sh`:
 
 ```bash
 # number of instances
@@ -77,7 +77,7 @@ num_update=1
 Install the validator configuration `~/loda/miners.json` usig these commands:
 
 ```bash
-wget -qO ~/loda/miners.json https://raw.githubusercontent.com/loda-lang/loda-cpp/master/server/miners.json
+wget -qO ~/loda/miners.json https://raw.githubusercontent.com/loda-lang/loda-cpp/master/validator/miners.json
 ```
 
 ## Metrics
@@ -121,7 +121,7 @@ wget -qO ~/loda/bin/slack https://raw.githubusercontent.com/rockymadden/slack-cl
 chmod +x ~/loda/bin/slack
 ```
 
-Generate an API token and update this line in `~/loda/bin/loda-server.sh`:
+Generate an API token and update this line in `~/loda/bin/loda-validator.sh`:
 
 ```bash
 export SLACK_CLI_TOKEN=...
@@ -146,7 +146,7 @@ alias le="loda eval -b -s"
 Now it's time to start the validators:
 
 ```bash
-loda-server.sh
+loda-validator.sh
 ```
 
 Already running validators and the new validators are started automatically in background mode.
@@ -157,15 +157,15 @@ You can follow the logs using the `tl` alias.
 It is helpful to regularly restart the validators using cron jobs:
 
 ```txt
-30 1 * * * $HOME/loda/bin/loda-server.sh > $HOME/loda-server.out 2>&1
-30 3 * * * $HOME/loda/bin/loda-server.sh > $HOME/loda-server.out 2>&1
-30 5 * * * $HOME/loda/bin/loda-server.sh > $HOME/loda-server.out 2>&1
-30 7 * * * $HOME/loda/bin/loda-server.sh > $HOME/loda-server.out 2>&1
-30 9 * * * $HOME/loda/bin/loda-server.sh > $HOME/loda-server.out 2>&1
-30 13 * * * $HOME/loda/bin/loda-server.sh > $HOME/loda-server.out 2>&1
-30 15 * * * $HOME/loda/bin/loda-server.sh > $HOME/loda-server.out 2>&1
-30 18 * * * $HOME/loda/bin/loda-server.sh > $HOME/loda-server.out 2>&1
-30 21 * * * $HOME/loda/bin/loda-server.sh > $HOME/loda-server.out 2>&1
+30 1 * * * $HOME/loda/bin/loda-validator.sh > $HOME/loda-validator.out 2>&1
+30 3 * * * $HOME/loda/bin/loda-validator.sh > $HOME/loda-validator.out 2>&1
+30 5 * * * $HOME/loda/bin/loda-validator.sh > $HOME/loda-validator.out 2>&1
+30 7 * * * $HOME/loda/bin/loda-validator.sh > $HOME/loda-validator.out 2>&1
+30 9 * * * $HOME/loda/bin/loda-validator.sh > $HOME/loda-validator.out 2>&1
+30 13 * * * $HOME/loda/bin/loda-validator.sh > $HOME/loda-validator.out 2>&1
+30 15 * * * $HOME/loda/bin/loda-validator.sh > $HOME/loda-validator.out 2>&1
+30 18 * * * $HOME/loda/bin/loda-validator.sh > $HOME/loda-validator.out 2>&1
+30 21 * * * $HOME/loda/bin/loda-validator.sh > $HOME/loda-validator.out 2>&1
 
 50 18 * * * cd $HOME/loda/programs/scripts; ./update_programs.sh --commit-staged > $HOME/update_programs.out 2>&1
 00 19 * * * cd $HOME/loda/programs/scripts; ./add_programs.sh > $HOME/add_programs.out 2>&1
@@ -180,7 +180,7 @@ If you run on a hyperscaler, you can add this startup script. This is particular
 
 ```bash
 export LODA_USER=...
-sudo -u $LODA_USER -H bash /home/$LODA_USER/loda/bin/loda-server.sh
+sudo -u $LODA_USER -H bash /home/$LODA_USER/loda/bin/loda-validator.sh
 ```
 
 You may also want to create an instance schedule to start the VM automatically.
