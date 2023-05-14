@@ -1,16 +1,14 @@
 # Validator
 
-This page comprises information for setting up a worker node in the validation mode.
-In this mode, LODA fetches submitted programs from the API server, validates them
-and adds them to the programs repository. It also checks and updates existing programs.
+This page comprises information for setting up a worker node in the validation mode. In this mode, `loda` fetches submitted programs from the [API server](https://github.com/loda-lang/loda-api), validates them and adds them to the [programs repository](https://github.com/loda-lang/loda-programs). It also checks and updates existing programs.
 
 ## Recommended VM Setup
 
 * 2 vCPUs
-* 2 GB main memory (reserve 1 GB per vCPU)
-* Pre-emptive ('spot') mode for cost saving (restarts are fine)
+* 2 GB main memory (1 GB per vCPU)
 * 30 GB root disk
 * Latest Ubuntu LTS image
+* Pre-emptive ('spot') mode for cost saving (restarts are fine)
 * SSH access only (no HTTP/HTTPS access)
 
 ## GitHub Access
@@ -47,10 +45,7 @@ Follow the [installation instructions](https://loda-lang.org/install/) with thes
  `git@github.com:loda-lang/loda-programs.git`
 * Choose `server` mode
 
-We recommend to access the LODA API server via an URL in the local network. You also may want to reduce the data update intervals to 1 day.
-For the recommend setup of 2 GB main memory, you
-should reduce the maximum physical memory to 750 MB.
-Add these lines to `~/loda/setup.txt`:
+We recommend to access the LODA API server via an URL in the local network. You also may want to reduce the OEIS and programs update intervals to 1 day. For the recommended setup of 2 GB main memory, you should reduce the maximum physical memory per instance to 750 MB. Add these lines to `~/loda/setup.txt`:
 
 ```bash
 LODA_API_SERVER=http://loda-api-1
@@ -74,7 +69,7 @@ num_new=1
 num_update=1
 ```
 
-Install the validator configuration `~/loda/miners.json` usig these commands:
+Install the validator configuration file `~/loda/miners.json`:
 
 ```bash
 wget -qO ~/loda/miners.json https://raw.githubusercontent.com/loda-lang/loda-cpp/master/validator/miners.json
@@ -99,7 +94,7 @@ sudo apt install python3-pip
 sudo pip3 install rainbowstream
 ```
 
-Login to the `@lodaminer` Twitter account and authorize the app:
+Login to the [@lodaminer](https://twitter.com/lodaminer) Twitter account and authorize the app:
 
 ```bash
 rainbowstream
@@ -149,14 +144,13 @@ Now it's time to start the validators:
 loda-validator.sh
 ```
 
-Already running validators and the new validators are started automatically in background mode.
-You can follow the logs using the `tl` alias.
+Already running validators are stopped and the new validators are started automatically in background mode. You can follow the logs using the `tl` alias.
 
 ## Cron Jobs
 
 It is helpful to regularly restart the validators using cron jobs:
 
-```txt
+```crontab
 30 1 * * * $HOME/loda/bin/loda-validator.sh > $HOME/loda-validator.out 2>&1
 30 3 * * * $HOME/loda/bin/loda-validator.sh > $HOME/loda-validator.out 2>&1
 30 5 * * * $HOME/loda/bin/loda-validator.sh > $HOME/loda-validator.out 2>&1
@@ -166,21 +160,45 @@ It is helpful to regularly restart the validators using cron jobs:
 30 15 * * * $HOME/loda/bin/loda-validator.sh > $HOME/loda-validator.out 2>&1
 30 18 * * * $HOME/loda/bin/loda-validator.sh > $HOME/loda-validator.out 2>&1
 30 21 * * * $HOME/loda/bin/loda-validator.sh > $HOME/loda-validator.out 2>&1
+```
 
+To automatically commit and push added and reviewed updated programs, add these jobs:
+
+```crontab
 50 18 * * * cd $HOME/loda/programs/scripts; ./update_programs.sh --commit-staged > $HOME/update_programs.out 2>&1
 00 19 * * * cd $HOME/loda/programs/scripts; ./add_programs.sh > $HOME/add_programs.out 2>&1
+```
 
+Optional jobs for updating pattern file and program lists:
+
+```
 # 30 5 * * SUN $HOME/loda/bin/loda-patterns.sh > $HOME/patterns.out 2>&1
 # 0 10 * * SUN cd $HOME/git/loda-lang.github.io; ./update-lists.sh > $HOME/lists.out 2>&1
 ```
 
 ## Hyperscaler Startup Script and Schedule
 
-If you run on a hyperscaler, you can add this startup script. This is particularly useful if you run in pre-emptive mode.
+If you run on a hyperscaler, you can add this startup script to your VM definition. This is particularly useful if you run in pre-emptive mode.
 
 ```bash
 export LODA_USER=...
 sudo -u $LODA_USER -H bash /home/$LODA_USER/loda/bin/loda-validator.sh
 ```
 
-You may also want to create an instance schedule to start the VM automatically.
+You may also want to create an instance schedule to start and stop the VM regularly.
+
+## Operations
+
+New programs are automatically added, commited and pushed to the programs repository using the `add_programs.sh` script that is scheduled in the cron job. Updated and deleted programs need to be reviewed though. There are interactive shell scripts available:
+
+```bash
+cd ~/loda/programs/scripts
+
+# review and stage updated programs:
+./update_programs.sh
+
+# review and stage deleted programs:
+./delete_programs.sh
+```
+
+As mentioned already, if you have set up the cron jobs as described above, you don't need to care about adding programs manually. Also note that the cron jobs will take care of committing and pushing the updated and deleted programs as well. Hence it is sufficient to stage updated and deleted programs using the scripts but not commit them directly. The scripts detect is a change is staged already or not. You can interrupt and restart program reviews at any point in time.
