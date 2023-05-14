@@ -181,8 +181,7 @@ Optional jobs for updating pattern file and program lists:
 If you run on a hyperscaler, you can add this startup script to your VM definition. This is particularly useful if you run in pre-emptive mode.
 
 ```bash
-export LODA_USER=...
-sudo -u $LODA_USER -H bash /home/$LODA_USER/loda/bin/loda-validator.sh
+sudo -u <USERNAME> -H bash /home/<USERNAME>/loda/bin/loda-validator.sh
 ```
 
 You may also want to create an instance schedule to start and stop the VM regularly.
