@@ -5,6 +5,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Enhancements
 
 * Auto-unfold `seq` operations
+* Incremental evaluation supports loop counter decrements >1
 
 ## v23.5.6
 
