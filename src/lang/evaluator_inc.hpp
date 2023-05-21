@@ -77,9 +77,9 @@ class IncrementalEvaluator {
 
   // runtime data
   int64_t argument;
-  size_t total_loop_steps;
   Memory tmp_state;
   std::vector<Memory> loop_states;
   std::vector<int64_t> previous_loop_counts;
+  std::vector<size_t> total_loop_steps;
   std::vector<bool> initialized_states;
 };

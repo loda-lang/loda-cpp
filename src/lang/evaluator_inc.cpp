@@ -24,11 +24,11 @@ void IncrementalEvaluator::reset() {
 
   // runtime data
   argument = 0;
-  total_loop_steps = 0;
   tmp_state.clear();
   loop_states.clear();
   previous_loop_counts.clear();
   initialized_states.clear();
+  total_loop_steps.clear();
 }
 
 // ====== Initialization functions (static code analysis) =========
@@ -352,6 +352,7 @@ void IncrementalEvaluator::initRuntimeData() {
   loop_states.resize(loop_counter_decrement);
   previous_loop_counts.resize(loop_counter_decrement, 0);
   initialized_states.resize(loop_counter_decrement, false);
+  total_loop_steps.resize(loop_counter_decrement, 0);
 }
 
 std::pair<Number, size_t> IncrementalEvaluator::next() {
@@ -383,19 +384,19 @@ std::pair<Number, size_t> IncrementalEvaluator::next() {
   if (!initialized_states[slice]) {
     loop_states[slice] = tmp_state;
     initialized_states[slice] = true;
-    total_loop_steps += 1;  // +1 for lpb of zero-th iteration
+    total_loop_steps[slice] += 1;  // +1 for lpb of zero-th iteration
   } else {
     loop_states[slice].set(loop_counter_cell, new_loop_count);
   }
 
   // execute loop body
   while (additional_loops-- > 0) {
-    total_loop_steps +=
+    total_loop_steps[slice] +=
         interpreter.run(loop_body, loop_states[slice]) + 1;  // +1 for lpb
   }
 
   // update steps count
-  steps += total_loop_steps;
+  steps += total_loop_steps[slice];
 
   // one more iteration is needed for the correct step count
   tmp_state = loop_states[slice];
