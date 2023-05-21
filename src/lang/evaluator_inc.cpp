@@ -28,6 +28,7 @@ void IncrementalEvaluator::reset() {
   tmp_state.clear();
   loop_states.clear();
   previous_loop_counts.clear();
+  initialized_states.clear();
 }
 
 // ====== Initialization functions (static code analysis) =========
@@ -52,6 +53,7 @@ bool IncrementalEvaluator::init(const Program& program) {
     Log::get().debug("[IE] loop body check failed");
     return false;
   }
+  initRuntimeData();
   initialized = true;
   Log::get().debug("[IE] initialization successful");
   return true;
@@ -346,6 +348,12 @@ bool IncrementalEvaluator::checkPostLoop() {
 
 // ====== Runtime of incremental evaluation ========
 
+void IncrementalEvaluator::initRuntimeData() {
+  loop_states.resize(loop_counter_decrement);
+  previous_loop_counts.resize(loop_counter_decrement, 0);
+  initialized_states.resize(loop_counter_decrement, false);
+}
+
 std::pair<Number, size_t> IncrementalEvaluator::next() {
   // sanity check: must be initialized
   if (!initialized) {
@@ -359,29 +367,37 @@ std::pair<Number, size_t> IncrementalEvaluator::next() {
   auto loop_counter_before = tmp_state.get(Program::INPUT_CELL);
 
   // determine loop slice
-  const int64_t slice = argument % loop_counter_decrement;
+  const int64_t slice =
+      Semantics::mod(loop_counter_before, Number(loop_counter_decrement))
+          .asInt();
 
   // calculate new loop count
-  if (argument == 0) {
-    previous_loop_counts.resize(loop_counter_decrement, 0);
-  }
   const int64_t new_loop_count = tmp_state.get(loop_counter_cell).asInt();
-  int64_t additional_loops = std::max<int64_t>(new_loop_count, 0) -
-                             std::max<int64_t>(previous_loop_counts[slice], 0);
+  int64_t additional_loops =
+      (std::max<int64_t>(new_loop_count, 0) / loop_counter_decrement) -
+      (std::max<int64_t>(previous_loop_counts[slice], 0) /
+       loop_counter_decrement);
   previous_loop_counts[slice] = new_loop_count;
 
   // init or update loop state
-  if (argument < loop_counter_decrement) {
-    loop_states.push_back(tmp_state);
+  if (!initialized_states[slice]) {  // TODO: track initialized slices
+    loop_states[slice] = tmp_state;
+    initialized_states[slice] = true;
     total_loop_steps += 1;  // +1 for lpb of zero-th iteration
   } else {
     loop_states[slice].set(loop_counter_cell, new_loop_count);
   }
 
+  std::cout << "ARG " << argument << " slice " << slice << " additional loops "
+            << additional_loops << " dec " << loop_counter_decrement
+            << " before " << loop_counter_before << " state "
+            << loop_states[slice] << std::endl;
+
   // execute loop body
   while (additional_loops-- > 0) {
     total_loop_steps +=
         interpreter.run(loop_body, loop_states[slice]) + 1;  // +1 for lpb
+    std::cout << "updated state " << loop_states[slice] << std::endl;
   }
 
   // update steps count

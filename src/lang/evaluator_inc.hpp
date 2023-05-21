@@ -60,6 +60,7 @@ class IncrementalEvaluator {
   bool isCommutative(const std::set<int64_t>& cells) const;
   void computeStatefulCells();
   void computeLoopCounterDependentCells();
+  void initRuntimeData();
 
   Interpreter& interpreter;
 
@@ -80,4 +81,5 @@ class IncrementalEvaluator {
   Memory tmp_state;
   std::vector<Memory> loop_states;
   std::vector<int64_t> previous_loop_counts;
+  std::vector<bool> initialized_states;
 };
