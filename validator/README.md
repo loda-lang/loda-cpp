@@ -201,3 +201,13 @@ cd ~/loda/programs/scripts
 ```
 
 As mentioned already, if you have set up the cron jobs as described above, you don't need to care about adding programs manually. Also note that the cron jobs will take care of committing and pushing the updated and deleted programs as well. Hence it is sufficient to stage updated and deleted programs using the scripts but not commit them directly. The scripts detect is a change is staged already or not. You can interrupt and restart program reviews at any point in time.
+
+To update the history chart, run these commands:
+
+```bash
+sudo apt install gnuplot-nox
+cd loda/programs/scripts/
+./make_charts.sh
+cd ..
+git add program_counts.png
+```
