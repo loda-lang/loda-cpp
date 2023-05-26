@@ -20,6 +20,7 @@ void IncrementalEvaluator::reset() {
   loop_counter_dependent_cells.clear();
   loop_counter_cell = 0;
   loop_counter_decrement = 0;
+  loop_counter_type = Operation::Type::NOP;
   initialized = false;
 
   // runtime data
@@ -204,6 +205,7 @@ bool IncrementalEvaluator::checkLoopBody() {
       if (op.type != Operation::Type::SUB && op.type != Operation::Type::TRN) {
         return false;
       }
+      loop_counter_type = op.type;
       if (op.source.type != Operand::Type::CONSTANT) {
         return false;
       }

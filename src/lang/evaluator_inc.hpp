@@ -73,6 +73,7 @@ class IncrementalEvaluator {
   std::set<int64_t> loop_counter_dependent_cells;
   int64_t loop_counter_cell;
   int64_t loop_counter_decrement;
+  Operation::Type loop_counter_type;
   bool initialized;
 
   // runtime data
