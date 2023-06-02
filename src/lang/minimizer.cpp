@@ -12,7 +12,7 @@
 #include "sys/util.hpp"
 
 bool Minimizer::minimize(Program& p, size_t num_terms) const {
-  Log::get().info("Minimizing program");
+  Log::get().debug("Minimizing program");
   evaluator.clearCaches();
 
   // calculate target sequence
@@ -22,7 +22,6 @@ bool Minimizer::minimize(Program& p, size_t num_terms) const {
     return false;  // interrupted evaluation
   }
 
-  Log::get().info("Initialized");
   if (target_sequence.size() < settings.num_terms) {
     Log::get().error(
         "Cannot minimize program because there are too few terms: " +
