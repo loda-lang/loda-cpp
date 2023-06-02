@@ -1,6 +1,7 @@
 #include "lang/minimizer.hpp"
 
 #include <fstream>
+#include <set>
 
 #include "lang/optimizer.hpp"
 #include "lang/program_util.hpp"
@@ -11,7 +12,7 @@
 #include "sys/util.hpp"
 
 bool Minimizer::minimize(Program& p, size_t num_terms) const {
-  Log::get().debug("Minimizing program");
+  Log::get().info("Minimizing program");
   evaluator.clearCaches();
 
   // calculate target sequence
@@ -20,6 +21,8 @@ bool Minimizer::minimize(Program& p, size_t num_terms) const {
   if (Signals::HALT) {
     return false;  // interrupted evaluation
   }
+
+  Log::get().info("Initialized");
   if (target_sequence.size() < settings.num_terms) {
     Log::get().error(
         "Cannot minimize program because there are too few terms: " +
@@ -223,11 +226,27 @@ bool Minimizer::replaceConstantLoop(Program& p, const Sequence& seq,
   }
 }
 
+void dumpProgram(const Program& p) {
+  std::string f = Setup::getLodaHome() + "debug" + FILE_SEP + "minimizer" +
+                  FILE_SEP + std::to_string(ProgramUtil::hash(p) % 100000) +
+                  ".asm";
+  ensureDir(f);
+  std::ofstream out(f);
+  ProgramUtil::print(p, out);
+}
+
 bool Minimizer::optimizeAndMinimize(Program& p, size_t num_terms) const {
   Program backup = p;
   try {
+    std::set<Program> stages;
     bool optimized = false, minimized = false, result = false;
     do {
+      if (stages.find(p) != stages.end()) {
+        Log::get().warn("Detected optimization/minimization loop");
+        dumpProgram(p);
+        break;
+      }
+      stages.insert(p);
       optimized = optimizer.optimize(p);
       minimized = minimize(p, num_terms);
       result = result || optimized || minimized;
@@ -239,11 +258,7 @@ bool Minimizer::optimizeAndMinimize(Program& p, size_t num_terms) const {
     // log error and dump program for later analysis
     Log::get().error("Exception during minimization: " + std::string(e.what()),
                      false);
-    std::string f = Setup::getLodaHome() + "debug/minimizer/" +
-                    std::to_string(ProgramUtil::hash(p) % 100000) + ".asm";
-    ensureDir(f);
-    std::ofstream out(f);
-    ProgramUtil::print(p, out);
+    dumpProgram(p);
   }
   return false;
 }
