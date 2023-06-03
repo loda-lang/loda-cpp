@@ -146,16 +146,15 @@ bool Minimizer::check(const Program& p, const Sequence& seq,
 }
 
 int64_t Minimizer::getPowerOf(const Number& v) {
-  if (Number(9) < Semantics::getPowerOf(v, 2)) {
-    return 2;
-  } else if (Number(5) < Semantics::getPowerOf(v, 3)) {
-    return 3;
-  } else if (Number(4) < Semantics::getPowerOf(v, 5)) {
-    return 5;
-  } else if (Number(3) < Semantics::getPowerOf(v, 7)) {
-    return 7;
-  } else if (Number(2) < Semantics::getPowerOf(v, 10)) {
-    return 10;
+  std::vector<int64_t> bases = {2, 3, 5, 7, 10};
+  for (int64_t base : bases) {
+    auto exp = Semantics::getPowerOf(v, base);
+    if (exp == Number::INF) {
+      continue;
+    }
+    if (Number(4) < exp) {
+      return base;
+    }
   }
   return 0;
 }
