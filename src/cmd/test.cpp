@@ -303,6 +303,9 @@ void Test::semantics() {
       check_inf(Interpreter::calc(type, -1, Number::INF));
     }
   }
+  if (Semantics::getPowerOf(0, 2) != Number::INF) {
+    Log::get().error("Unexpected power-of result", true);
+  }
 }
 
 void Test::sequence() {

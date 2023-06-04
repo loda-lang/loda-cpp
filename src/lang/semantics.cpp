@@ -186,7 +186,10 @@ Number Semantics::abs(const Number& a) {
 }
 
 Number Semantics::getPowerOf(Number value, const Number& base) {
-  if (value == Number::INF || base == Number::INF || base == Number::ZERO) {
+  if (value == Number::INF || base == Number::INF) {
+    return Number::INF;
+  }
+  if (value < Number::ONE || base < Number(2)) {
     return Number::INF;
   }
   int64_t result = 0;

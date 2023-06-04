@@ -75,6 +75,8 @@ void Miner::mine() {
         monitor->writeProgress();
         std::this_thread::sleep_for(delay);
       }
+      monitor->writeProgress();  // final write
+      Log::get().info("Initiating shutdown");
       Signals::HALT = true;
     });
 

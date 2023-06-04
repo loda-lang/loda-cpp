@@ -1,6 +1,7 @@
 #include "lang/minimizer.hpp"
 
 #include <fstream>
+#include <set>
 
 #include "lang/optimizer.hpp"
 #include "lang/program_util.hpp"
@@ -20,6 +21,7 @@ bool Minimizer::minimize(Program& p, size_t num_terms) const {
   if (Signals::HALT) {
     return false;  // interrupted evaluation
   }
+
   if (target_sequence.size() < settings.num_terms) {
     Log::get().error(
         "Cannot minimize program because there are too few terms: " +
@@ -144,16 +146,15 @@ bool Minimizer::check(const Program& p, const Sequence& seq,
 }
 
 int64_t Minimizer::getPowerOf(const Number& v) {
-  if (Number(9) < Semantics::getPowerOf(v, 2)) {
-    return 2;
-  } else if (Number(5) < Semantics::getPowerOf(v, 3)) {
-    return 3;
-  } else if (Number(4) < Semantics::getPowerOf(v, 5)) {
-    return 5;
-  } else if (Number(3) < Semantics::getPowerOf(v, 7)) {
-    return 7;
-  } else if (Number(2) < Semantics::getPowerOf(v, 10)) {
-    return 10;
+  std::vector<int64_t> bases = {2, 3, 5, 7, 10};
+  for (int64_t base : bases) {
+    auto exp = Semantics::getPowerOf(v, base);
+    if (exp == Number::INF) {
+      continue;
+    }
+    if (Number(4) < exp) {
+      return base;
+    }
   }
   return 0;
 }
@@ -223,11 +224,27 @@ bool Minimizer::replaceConstantLoop(Program& p, const Sequence& seq,
   }
 }
 
+void dumpProgram(const Program& p) {
+  std::string f = Setup::getLodaHome() + "debug" + FILE_SEP + "minimizer" +
+                  FILE_SEP + std::to_string(ProgramUtil::hash(p) % 100000) +
+                  ".asm";
+  ensureDir(f);
+  std::ofstream out(f);
+  ProgramUtil::print(p, out);
+}
+
 bool Minimizer::optimizeAndMinimize(Program& p, size_t num_terms) const {
   Program backup = p;
   try {
+    std::set<Program> stages;
     bool optimized = false, minimized = false, result = false;
     do {
+      if (stages.find(p) != stages.end()) {
+        Log::get().warn("Detected optimization/minimization loop");
+        dumpProgram(p);
+        break;
+      }
+      stages.insert(p);
       optimized = optimizer.optimize(p);
       minimized = minimize(p, num_terms);
       result = result || optimized || minimized;
@@ -239,11 +256,7 @@ bool Minimizer::optimizeAndMinimize(Program& p, size_t num_terms) const {
     // log error and dump program for later analysis
     Log::get().error("Exception during minimization: " + std::string(e.what()),
                      false);
-    std::string f = Setup::getLodaHome() + "debug/minimizer/" +
-                    std::to_string(ProgramUtil::hash(p) % 100000) + ".asm";
-    ensureDir(f);
-    std::ofstream out(f);
-    ProgramUtil::print(p, out);
+    dumpProgram(p);
   }
   return false;
 }

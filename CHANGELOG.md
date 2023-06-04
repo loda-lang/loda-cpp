@@ -2,6 +2,18 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v23.6.3
+
+### Bugfixes
+
+* Fix hanging process (infinite loop)
+
+## v23.6.2
+
+### Bugfixes
+
+* Detect optimization/minimization loops
+
 ### Enhancements
 
 * Auto-unfold `seq` operations
