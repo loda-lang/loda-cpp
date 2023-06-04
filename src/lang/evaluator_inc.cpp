@@ -380,7 +380,15 @@ std::pair<Number, size_t> IncrementalEvaluator::next() {
       (std::max<int64_t>(new_loop_count, 0) / loop_counter_decrement) -
       (std::max<int64_t>(previous_loop_counts[slice], 0) /
        loop_counter_decrement);
+  if (loop_counter_type == Operation::Type::TRN && argument > 0 &&
+      argument < loop_counter_decrement) {
+    additional_loops++;
+  }
+
   previous_loop_counts[slice] = new_loop_count;
+
+  // std::cout << "arg: " << argument << ", add-loops: " << additional_loops
+  //           << " slice: " << slice << ", state: " << tmp_state << std::endl;
 
   // init or update loop state
   if (!initialized_states[slice]) {
