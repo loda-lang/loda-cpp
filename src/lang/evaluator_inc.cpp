@@ -371,7 +371,9 @@ std::pair<Number, size_t> IncrementalEvaluator::next() {
 
   // determine loop slice
   const int64_t slice =
-      Semantics::mod(loop_counter_before, Number(loop_counter_decrement))
+      Semantics::max(
+          Semantics::mod(loop_counter_before, Number(loop_counter_decrement)),
+          Number::ZERO)
           .asInt();
 
   // calculate new loop count
