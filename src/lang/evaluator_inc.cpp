@@ -367,31 +367,35 @@ std::pair<Number, size_t> IncrementalEvaluator::next() {
   tmp_state.clear();
   tmp_state.set(Program::INPUT_CELL, argument);
   size_t steps = interpreter.run(pre_loop, tmp_state);
-  auto loop_counter_before = tmp_state.get(Program::INPUT_CELL);
+  const int64_t new_loop_count = tmp_state.get(loop_counter_cell).asInt();
 
   // determine loop slice
   const int64_t slice =
-      Semantics::max(
-          Semantics::mod(loop_counter_before, Number(loop_counter_decrement)),
-          Number::ZERO)
-          .asInt();
+      std::max<int64_t>(new_loop_count % loop_counter_decrement, 0);
 
-  // calculate new loop count
-  const int64_t new_loop_count = tmp_state.get(loop_counter_cell).asInt();
-  int64_t additional_loops =
-      (std::max<int64_t>(new_loop_count, 0) / loop_counter_decrement) -
-      (std::max<int64_t>(previous_loop_counts[slice], 0) /
-       loop_counter_decrement);
-  if (loop_counter_type == Operation::Type::TRN &&
-      Number::ZERO < loop_counter_before &&
-      loop_counter_before < Number(loop_counter_decrement)) {
-    additional_loops++;
+  // calculate number of additional loops
+  int64_t additional_loops;
+  if (new_loop_count > 0) {
+    if (!initialized_states[slice]) {
+      additional_loops = new_loop_count / loop_counter_decrement;
+      if (loop_counter_type == Operation::Type::TRN &&
+          new_loop_count % loop_counter_decrement) {
+        additional_loops++;
+      }
+    } else {
+      additional_loops = (new_loop_count - previous_loop_counts[slice]) /
+                         loop_counter_decrement;
+    }
+  } else {
+    additional_loops = 0;
   }
 
+  // update previous loop count
   previous_loop_counts[slice] = new_loop_count;
 
-  // std::cout << "arg: " << argument << ", add-loops: " << additional_loops
-  //           << " slice: " << slice << ", state: " << tmp_state << std::endl;
+  // std::cout << "arg: " << argument << ", new loop count: " << new_loop_count
+  //          << ", add-loops: " << additional_loops << " slice: " << slice
+  //          << ", state: " << tmp_state << std::endl;
 
   // init or update loop state
   if (!initialized_states[slice]) {
@@ -412,14 +416,16 @@ std::pair<Number, size_t> IncrementalEvaluator::next() {
   steps += total_loop_steps[slice];
 
   // one more iteration is needed for the correct step count
+  int64_t last_counter_value =
+      (loop_counter_type == Operation::Type::TRN) ? 0 : slice;
   tmp_state = loop_states[slice];
-  tmp_state.set(loop_counter_cell, Number::ZERO);
+  tmp_state.set(loop_counter_cell, Number(last_counter_value));
   steps += interpreter.run(loop_body, tmp_state) + 1;  // +1 for lpb
 
   // execute post-loop code
   tmp_state = loop_states[slice];
   tmp_state.set(loop_counter_cell,
-                Semantics::min(loop_counter_before, Number(slice)));
+                Number(std::min<int64_t>(new_loop_count, slice)));
   steps += interpreter.run(post_loop, tmp_state);
 
   // check maximum number of steps
