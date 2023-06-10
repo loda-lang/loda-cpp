@@ -840,6 +840,25 @@ bool Optimizer::pullUpMov(Program &p) const {
   return changed;
 }
 
+bool Optimizer::removeDetour(Program &p) const {
+  // see test E042
+  if (ProgramUtil::hasIndirectOperand(p)) {
+    return false;
+  }
+  for (size_t i = 0; i + 2 < p.ops.size(); i++) {
+    auto &op1 = p.ops[i];
+    auto &op2 = p.ops[i + 1];
+    auto &op3 = p.ops[i + 2];
+    // check operation types
+    if (op1.type != Operation::Type::MOV || op3.type != Operation::Type::MOV ||
+        !ProgramUtil::isCommutative(op2.type)) {
+      continue;
+    }
+    // TODO
+  }
+  return false;
+}
+
 // === OperationMover ====================================
 
 void Optimizer::OperationMover::init(Program &p) {

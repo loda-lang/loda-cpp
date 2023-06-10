@@ -36,6 +36,8 @@ class Optimizer {
 
   bool pullUpMov(Program &p) const;
 
+  bool removeDetour(Program &p) const;
+
   static constexpr size_t NUM_RESERVED_CELLS = 1;
   static constexpr size_t NUM_INITIALIZED_CELLS = 1;
 
