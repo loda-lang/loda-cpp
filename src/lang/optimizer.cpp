@@ -854,7 +854,14 @@ bool Optimizer::removeDetour(Program &p) const {
         !ProgramUtil::isCommutative(op2.type)) {
       continue;
     }
-    // TODO
+    // check operands
+    if (op1.target != op2.target || op1.target != op3.source ||
+        op2.source != op3.target) {
+      return false;
+    }
+    // check whether the cell used in the detour is read later
+
+    // apply change...
   }
   return false;
 }
