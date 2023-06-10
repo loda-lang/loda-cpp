@@ -374,20 +374,13 @@ std::pair<Number, size_t> IncrementalEvaluator::next() {
   const int64_t slice = new_loop_count % loop_counter_decrement;
 
   // calculate number of additional loops
-  int64_t additional_loops;
-  if (new_loop_count > 0) {
-    if (!initialized_states[slice]) {
-      additional_loops = new_loop_count / loop_counter_decrement;
-      if (loop_counter_type == Operation::Type::TRN &&
-          new_loop_count % loop_counter_decrement) {
-        additional_loops++;
-      }
-    } else {
-      additional_loops = (new_loop_count - previous_loop_counts[slice]) /
-                         loop_counter_decrement;
-    }
-  } else {
-    additional_loops = 0;
+  int64_t additional_loops =
+      (new_loop_count - previous_loop_counts[slice]) / loop_counter_decrement;
+
+  // one more iteration may be needed when using trn
+  if (!initialized_states[slice] && loop_counter_type == Operation::Type::TRN &&
+      new_loop_count % loop_counter_decrement) {
+    additional_loops++;
   }
 
   // update previous loop count
