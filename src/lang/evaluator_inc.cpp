@@ -399,7 +399,7 @@ std::pair<Number, size_t> IncrementalEvaluator::next() {
     initialized_states[slice] = true;
     total_loop_steps[slice] += 1;  // +1 for lpb of zero-th iteration
   } else {
-    loop_states[slice].set(loop_counter_cell, new_loop_count);
+    loop_states[slice].set(loop_counter_cell, loop_counter_before);
   }
 
   // execute loop body
