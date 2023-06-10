@@ -368,10 +368,17 @@ std::pair<Number, size_t> IncrementalEvaluator::next() {
   tmp_state.set(Program::INPUT_CELL, argument);
   size_t steps = interpreter.run(pre_loop, tmp_state);
 
-  // derive loop count and slice
+  // derive loop count
   const int64_t loop_counter_before = tmp_state.get(loop_counter_cell).asInt();
   const int64_t new_loop_count = std::max<int64_t>(loop_counter_before, 0);
-  const int64_t slice = new_loop_count % loop_counter_decrement;
+
+  // derive slice
+  const int64_t non_negative_counter =
+      (loop_counter_before >= 0)
+          ? loop_counter_before
+          : loop_counter_decrement -
+                (-loop_counter_before % loop_counter_decrement);
+  const int64_t slice = non_negative_counter % loop_counter_decrement;
 
   // calculate number of additional loops
   int64_t additional_loops =
