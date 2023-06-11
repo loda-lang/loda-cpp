@@ -59,6 +59,9 @@ bool Optimizer::optimize(Program &p) const {
     if (pullUpMov(p)) {
       changed = true;
     }
+    if (removeCommutativeDetour(p)) {
+      changed = true;
+    }
     result = result || changed;
   }
   if (Log::get().level == Log::Level::DEBUG) {
@@ -838,6 +841,64 @@ bool Optimizer::pullUpMov(Program &p) const {
     changed = true;
   }
   return changed;
+}
+
+bool Optimizer::removeCommutativeDetour(Program &p) const {
+  // see test E042
+  if (ProgramUtil::hasIndirectOperand(p)) {
+    return false;
+  }
+  int64_t open_loops = 0;
+  for (size_t i = 0; i + 2 < p.ops.size(); i++) {
+    const auto &op1 = p.ops[i];
+    auto &op2 = p.ops[i + 1];
+    const auto &op3 = p.ops[i + 2];
+    // keep track of loops
+    if (op1.type == Operation::Type::LPB) {
+      open_loops++;
+    } else if (op1.type == Operation::Type::LPE) {
+      open_loops--;
+    }
+    if (open_loops > 0) {
+      continue;
+    }
+    // check operation types
+    if (op1.type != Operation::Type::MOV || op3.type != Operation::Type::MOV ||
+        !ProgramUtil::isCommutative(op2.type)) {
+      continue;
+    }
+    // check operands
+    if (op1.target != op2.target || op1.target != op3.source ||
+        op2.source != op3.target) {
+      continue;
+    }
+    // check whether it is the output cell
+    const auto detour_cell = op1.target;
+    if (detour_cell.value == Number(Program::OUTPUT_CELL)) {
+      continue;
+    }
+    // check whether the cell used in the detour is read later
+    bool is_read = false;
+    for (size_t j = i + 3; j < p.ops.size(); j++) {
+      auto meta = Operation::Metadata::get(p.ops[j].type);
+      if ((meta.num_operands == 2 && p.ops[j].source == detour_cell) ||
+          (meta.num_operands > 0 && meta.is_reading_target &&
+           p.ops[j].target == detour_cell)) {
+        is_read = true;
+        break;
+      }
+    }
+    if (is_read) {
+      continue;
+    }
+    // ok, apply change
+    op2.target = op2.source;
+    op2.source = op1.source;
+    p.ops.erase(p.ops.begin() + i + 2);
+    p.ops.erase(p.ops.begin() + i);
+    return true;
+  }
+  return false;
 }
 
 // === OperationMover ====================================
