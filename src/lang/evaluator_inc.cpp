@@ -20,14 +20,15 @@ void IncrementalEvaluator::reset() {
   loop_counter_dependent_cells.clear();
   loop_counter_cell = 0;
   loop_counter_decrement = 0;
+  loop_counter_type = Operation::Type::NOP;
   initialized = false;
 
   // runtime data
   argument = 0;
-  previous_loop_count = 0;
-  total_loop_steps = 0;
   tmp_state.clear();
-  loop_state.clear();
+  loop_states.clear();
+  previous_loop_counts.clear();
+  total_loop_steps.clear();
 }
 
 // ====== Initialization functions (static code analysis) =========
@@ -52,6 +53,7 @@ bool IncrementalEvaluator::init(const Program& program) {
     Log::get().debug("[IE] loop body check failed");
     return false;
   }
+  initRuntimeData();
   initialized = true;
   Log::get().debug("[IE] initialization successful");
   return true;
@@ -202,6 +204,7 @@ bool IncrementalEvaluator::checkLoopBody() {
       if (op.type != Operation::Type::SUB && op.type != Operation::Type::TRN) {
         return false;
       }
+      loop_counter_type = op.type;
       if (op.source.type != Operand::Type::CONSTANT) {
         return false;
       }
@@ -215,7 +218,9 @@ bool IncrementalEvaluator::checkLoopBody() {
   if (!loop_counter_updated) {
     return false;
   }
-  if (loop_counter_decrement != 1) {
+  if (loop_counter_decrement < 1 ||
+      loop_counter_decrement >
+          1000) {  // prevent exhaustive memory usage; magic number
     return false;
   }
 
@@ -344,6 +349,12 @@ bool IncrementalEvaluator::checkPostLoop() {
 
 // ====== Runtime of incremental evaluation ========
 
+void IncrementalEvaluator::initRuntimeData() {
+  loop_states.resize(loop_counter_decrement);
+  previous_loop_counts.resize(loop_counter_decrement, 0);
+  total_loop_steps.resize(loop_counter_decrement, 0);
+}
+
 std::pair<Number, size_t> IncrementalEvaluator::next() {
   // sanity check: must be initialized
   if (!initialized) {
@@ -354,40 +365,54 @@ std::pair<Number, size_t> IncrementalEvaluator::next() {
   tmp_state.clear();
   tmp_state.set(Program::INPUT_CELL, argument);
   size_t steps = interpreter.run(pre_loop, tmp_state);
-  auto loop_counter_before = tmp_state.get(Program::INPUT_CELL);
 
-  // calculate new loop count
-  const int64_t new_loop_count = tmp_state.get(loop_counter_cell).asInt();
-  int64_t additional_loops = std::max<int64_t>(new_loop_count, 0) -
-                             std::max<int64_t>(previous_loop_count, 0);
-  previous_loop_count = new_loop_count;
+  // derive loop count and slice
+  const int64_t loop_counter_before = tmp_state.get(loop_counter_cell).asInt();
+  const int64_t new_loop_count = std::max<int64_t>(loop_counter_before, 0);
+  const int64_t slice = new_loop_count % loop_counter_decrement;
 
-  // update loop state
-  if (argument == 0) {
-    loop_state = tmp_state;
-    total_loop_steps += 1;  // +1 for lpb of zero-th iteration
-  } else {
-    loop_state.set(loop_counter_cell, new_loop_count);
+  // calculate number of additional loops
+  int64_t additional_loops =
+      (new_loop_count - previous_loop_counts[slice]) / loop_counter_decrement;
+
+  // one more iteration may be needed when using trn
+  if (previous_loop_counts[slice] == 0 &&
+      loop_counter_type == Operation::Type::TRN &&
+      new_loop_count % loop_counter_decrement) {
+    additional_loops++;
   }
+
+  // init or update loop state
+  if (previous_loop_counts[slice] == 0) {
+    loop_states[slice] = tmp_state;
+  } else {
+    loop_states[slice].set(loop_counter_cell, loop_counter_before);
+  }
+
+  // update previous loop count
+  previous_loop_counts[slice] = new_loop_count;
 
   // execute loop body
   while (additional_loops-- > 0) {
-    total_loop_steps +=
-        interpreter.run(loop_body, loop_state) + 1;  // +1 for lpb
+    total_loop_steps[slice] +=
+        interpreter.run(loop_body, loop_states[slice]) + 1;  // +1 for lpb
   }
 
   // update steps count
-  steps += total_loop_steps;
+  steps += total_loop_steps[slice] + 1;  // +1 for lpb of zero-th iteration
 
   // one more iteration is needed for the correct step count
-  tmp_state = loop_state;
-  tmp_state.set(loop_counter_cell, Number::ZERO);
+  const Number final_counter_value = Semantics::min(
+      Number(loop_counter_before), (loop_counter_type == Operation::Type::TRN)
+                                       ? Number::ZERO
+                                       : Number(slice));
+  tmp_state = loop_states[slice];
+  tmp_state.set(loop_counter_cell, final_counter_value);
   steps += interpreter.run(loop_body, tmp_state) + 1;  // +1 for lpb
 
   // execute post-loop code
-  tmp_state = loop_state;
-  tmp_state.set(loop_counter_cell,
-                Semantics::min(loop_counter_before, Number::ZERO));
+  tmp_state = loop_states[slice];
+  tmp_state.set(loop_counter_cell, final_counter_value);
   steps += interpreter.run(post_loop, tmp_state);
 
   // check maximum number of steps
