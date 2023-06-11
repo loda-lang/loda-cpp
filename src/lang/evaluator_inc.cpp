@@ -402,17 +402,17 @@ std::pair<Number, size_t> IncrementalEvaluator::next() {
   steps += total_loop_steps[slice] + 1;  // +1 for lpb of zero-th iteration
 
   // one more iteration is needed for the correct step count
-  const int64_t last_counter_value =
-      (loop_counter_type == Operation::Type::TRN) ? 0 : slice;
+  const Number final_counter_value = Semantics::min(
+      Number(loop_counter_before), (loop_counter_type == Operation::Type::TRN)
+                                       ? Number::ZERO
+                                       : Number(slice));
   tmp_state = loop_states[slice];
-  tmp_state.set(loop_counter_cell, Number(last_counter_value));
+  tmp_state.set(loop_counter_cell, final_counter_value);
   steps += interpreter.run(loop_body, tmp_state) + 1;  // +1 for lpb
 
   // execute post-loop code
-  const int64_t final_value =
-      std::min<int64_t>(loop_counter_before, last_counter_value);
   tmp_state = loop_states[slice];
-  tmp_state.set(loop_counter_cell, Number(final_value));
+  tmp_state.set(loop_counter_cell, final_counter_value);
   steps += interpreter.run(post_loop, tmp_state);
 
   // check maximum number of steps
