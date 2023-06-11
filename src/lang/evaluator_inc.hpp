@@ -47,7 +47,9 @@ class IncrementalEvaluator {
   inline const std::set<int64_t>& getOutputCells() const {
     return output_cells;
   }
-  inline const Memory& getLoopState() const { return loop_state; }
+  inline const std::vector<Memory>& getLoopStates() const {
+    return loop_states;
+  }
 
  private:
   bool extractFragments(const Program& program);
@@ -58,6 +60,7 @@ class IncrementalEvaluator {
   bool isCommutative(const std::set<int64_t>& cells) const;
   void computeStatefulCells();
   void computeLoopCounterDependentCells();
+  void initRuntimeData();
 
   Interpreter& interpreter;
 
@@ -70,12 +73,13 @@ class IncrementalEvaluator {
   std::set<int64_t> loop_counter_dependent_cells;
   int64_t loop_counter_cell;
   int64_t loop_counter_decrement;
+  Operation::Type loop_counter_type;
   bool initialized;
 
   // runtime data
   int64_t argument;
-  int64_t previous_loop_count;
-  size_t total_loop_steps;
   Memory tmp_state;
-  Memory loop_state;
+  std::vector<Memory> loop_states;
+  std::vector<int64_t> previous_loop_counts;
+  std::vector<size_t> total_loop_steps;
 };

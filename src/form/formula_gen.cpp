@@ -366,7 +366,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     // evaluate program and add initial terms to formula
     for (int64_t offset = 0; offset < maxNumTerms; offset++) {
       ie.next();
-      const auto state = ie.getLoopState();
+      const auto state = ie.getLoopStates().front();
       for (int64_t cell = 0; cell < numCells; cell++) {
         if (offset < numTerms[cell]) {
           Expression index(Expression::Type::CONSTANT, "", Number(offset));

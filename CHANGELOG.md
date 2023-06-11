@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Enhancements
+
+* Incremental evaluation supports loop counter decrements >1
+
 ## v23.6.3
 
 ### Bugfixes
