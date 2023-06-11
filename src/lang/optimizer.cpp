@@ -878,7 +878,6 @@ bool Optimizer::removeCommutativeDetour(Program &p) const {
       continue;
     }
     // check whether the cell used in the detour is read later
-    // (careful with loops)
     bool is_read = false;
     for (size_t j = i + 3; j < p.ops.size(); j++) {
       auto meta = Operation::Metadata::get(p.ops[j].type);
