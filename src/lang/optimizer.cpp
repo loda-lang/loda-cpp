@@ -881,9 +881,6 @@ bool Optimizer::removeCommutativeDetour(Program &p) const {
     // (careful with loops)
     bool is_read = false;
     for (size_t j = i + 3; j < p.ops.size(); j++) {
-      if (j == i + 2) {
-        continue;
-      }
       auto meta = Operation::Metadata::get(p.ops[j].type);
       if ((meta.num_operands == 2 && p.ops[j].source == detour_cell) ||
           (meta.num_operands > 0 && meta.is_reading_target &&
