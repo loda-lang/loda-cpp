@@ -28,7 +28,6 @@ void IncrementalEvaluator::reset() {
   tmp_state.clear();
   loop_states.clear();
   previous_loop_counts.clear();
-  initialized_states.clear();
   total_loop_steps.clear();
 }
 
@@ -353,7 +352,6 @@ bool IncrementalEvaluator::checkPostLoop() {
 void IncrementalEvaluator::initRuntimeData() {
   loop_states.resize(loop_counter_decrement);
   previous_loop_counts.resize(loop_counter_decrement, 0);
-  initialized_states.resize(loop_counter_decrement, false);
   total_loop_steps.resize(loop_counter_decrement, 0);
 }
 
@@ -378,22 +376,21 @@ std::pair<Number, size_t> IncrementalEvaluator::next() {
       (new_loop_count - previous_loop_counts[slice]) / loop_counter_decrement;
 
   // one more iteration may be needed when using trn
-  if (!initialized_states[slice] && loop_counter_type == Operation::Type::TRN &&
+  if (previous_loop_counts[slice] == 0 &&
+      loop_counter_type == Operation::Type::TRN &&
       new_loop_count % loop_counter_decrement) {
     additional_loops++;
   }
 
-  // update previous loop count
-  previous_loop_counts[slice] = new_loop_count;
-
   // init or update loop state
-  if (!initialized_states[slice]) {
+  if (previous_loop_counts[slice] == 0) {
     loop_states[slice] = tmp_state;
-    initialized_states[slice] = true;
-    total_loop_steps[slice] += 1;  // +1 for lpb of zero-th iteration
   } else {
     loop_states[slice].set(loop_counter_cell, loop_counter_before);
   }
+
+  // update previous loop count
+  previous_loop_counts[slice] = new_loop_count;
 
   // execute loop body
   while (additional_loops-- > 0) {
@@ -402,7 +399,7 @@ std::pair<Number, size_t> IncrementalEvaluator::next() {
   }
 
   // update steps count
-  steps += total_loop_steps[slice];
+  steps += total_loop_steps[slice] + 1;  // +1 for lpb of zero-th iteration
 
   // one more iteration is needed for the correct step count
   const int64_t last_counter_value =
