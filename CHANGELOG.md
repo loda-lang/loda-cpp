@@ -5,6 +5,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Enhancements
 
 * Incremental evaluation supports loop counter decrements >1
+* Optimizer removes "commutative detours"
 
 ## v23.6.3
 

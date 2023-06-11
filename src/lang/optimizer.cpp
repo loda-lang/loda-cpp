@@ -857,8 +857,14 @@ bool Optimizer::removeDetour(Program &p) const {
     // check operands
     if (op1.target != op2.target || op1.target != op3.source ||
         op2.source != op3.target) {
-      return false;
+      continue;
     }
+    // check whether it is the output cell
+    const auto detour_cell = op1.target;
+    if (detour_cell.value == Number(Program::OUTPUT_CELL)) {
+      continue;
+    }
+
     // check whether the cell used in the detour is read later
 
     // apply change...
