@@ -208,7 +208,8 @@ int64_t getNumInitialTermsNeeded(int64_t cell, const std::string& funcName,
   return 0;
 }
 
-void FormulaGenerator::initFormula(int64_t numCells, bool use_ie) {
+void FormulaGenerator::initFormula(int64_t numCells, bool use_ie,
+                                   int64_t loop_counter_decrement) {
   formula.clear();
   const auto paramExpr = getParamExpr();
   for (int64_t cell = 0; cell < numCells; cell++) {
@@ -218,9 +219,10 @@ void FormulaGenerator::initFormula(int64_t numCells, bool use_ie) {
     } else {
       if (use_ie) {
         formula.entries[key] = key;
-        Expression prev(Expression::Type::SUM, "",
-                        {paramExpr, Expression(Expression::Type::CONSTANT, "",
-                                               Number(-1))});
+        Expression prev(
+            Expression::Type::SUM, "",
+            {paramExpr, Expression(Expression::Type::CONSTANT, "",
+                                   Number(-loop_counter_decrement))});
         formula.entries[key].replaceAll(paramExpr, prev);
       } else {
         formula.entries[key] =
@@ -294,10 +296,6 @@ bool FormulaGenerator::generateSingle(const Program& p) {
       return false;
     }
     // TODO: remove this limitation
-    if (ie.getLoopCounterDecrement() != 1) {
-      return false;
-    }
-    // TODO: remove this limitation
     for (const auto& op : ie.getPreLoop().ops) {
       if (op.type == Operation::Type::MUL || op.type == Operation::Type::DIV ||
           op.type == Operation::Type::POW || op.type == Operation::Type::TRN) {
@@ -313,7 +311,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   }
 
   // initialize expressions for memory cells
-  initFormula(numCells, false);
+  initFormula(numCells, false, ie.getLoopCounterDecrement());
   if (use_ie) {
     // update formula based on pre-loop code
     if (!update(ie.getPreLoop())) {
@@ -322,7 +320,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     auto param =
         operandToExpression(Operand(Operand::Type::DIRECT, Number::ZERO));
     auto saved = formula.entries[param];
-    initFormula(numCells, true);
+    initFormula(numCells, true, ie.getLoopCounterDecrement());
     formula.entries[param] = saved;
   }
   Log::get().debug("Initialized formula to " + formula.toString());
