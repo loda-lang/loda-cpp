@@ -12,7 +12,7 @@ jobs:
         run: echo "::set-output name=version::$(date +"%-y.%-m.%-d")"
       - name: Generate Version 2
         id: generate-version-2
-        run: echo "loda_version=$(date +'%-y.%-m.%-d')" >> "$GITHUB_ENV"
+        run: echo "version=$(date +'%-y.%-m.%-d')" >> "$GITHUB_OUTPUT"
       - name: Test Version
         id: test-version
-        run: echo "version 1 = '${{ steps.generate-version-1.outputs.version }}', version 2 = '${{ env.loda_version }}' "
+        run: echo "version 1 = '${{ steps.generate-version-1.outputs.version }}', version 2 = '${{ steps.generate-version-2.outputs.version }}' "
