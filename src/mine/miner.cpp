@@ -176,7 +176,7 @@ void Miner::runMineLoop() {
                 program, Comments::PREFIX_MINER_PROFILE);
             if (submitted_profile.empty()) {
               Log::get().warn(
-                  "Ignoring submission because of missing miner profile");
+                  "Ignoring submission due to missing miner profile");
               continue;
             }
             current_fetch--;
