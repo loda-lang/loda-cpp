@@ -156,6 +156,7 @@ void Miner::runMineLoop() {
   }
 
   std::string submitted_by;
+  std::string submitted_profile;
   current_fetch = (mining_mode == MINING_MODE_SERVER) ? PROGRAMS_TO_FETCH : 0;
   num_processed = 0;
   num_removed = 0;
@@ -165,14 +166,24 @@ void Miner::runMineLoop() {
       // server mode: try to fetch a program
       if (mining_mode == MINING_MODE_SERVER) {
         if (current_fetch > 0) {
-          program = api_client->getNextProgram();
-          if (program.ops.empty()) {
-            current_fetch = 0;
-          } else {
+          while (true) {
+            program = api_client->getNextProgram();
+            if (program.ops.empty()) {
+              current_fetch = 0;
+              break;
+            }
+            submitted_profile = Comments::getCommentField(
+                program, Comments::PREFIX_MINER_PROFILE);
+            if (!submitted_profile.empty()) {
+              Log::get().warn(
+                  "Ignoring submission because of missing miner profile");
+              continue;
+            }
             current_fetch--;
             // check metadata stored in program's comments
             ensureSubmittedBy(program);
             progs.push(program);
+            break;
           }
         }
       } else {
