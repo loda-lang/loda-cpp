@@ -14,25 +14,28 @@ echo "Stopping instances"
 killall loda 2> /dev/null
 sleep 3
 
+echo "Waiting for network"
+while ! ping -c 1 loda-lang.org &> /dev/null 2>&1; do
+  sleep 5
+done
+
 echo "Cleaning up"
-rm -r $HOME/loda/stats 2> /dev/null
-rm $HOME/server-*.out 2> /dev/null
+rm $HOME/validate-*.out 2> /dev/null
 if [ -d $HOME/loda/programs/.git ]; then
   pushd $HOME/loda/programs > /dev/null
   git gc
   popd > /dev/null
 fi
 
-echo "Waiting for network"
-while ! ping -c 1 loda-lang.org &> /dev/null 2>&1; do
-  sleep 5
-done
-
 # number of instances
 num_new=1
 num_update=1
 
 pushd $HOME > /dev/null
+
+echo "Updating LODA"
+nohup loda update > $HOME/loda-update.out 2>&1 &
+sleep 5
 
 for i in $(seq 1 ${num_new}); do
   echo "Starting validate-new-${i}"
