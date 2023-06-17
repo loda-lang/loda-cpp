@@ -106,7 +106,6 @@ bool Iterator::inc(Operation& op) {
 
     case Operation::Type::NOP:  // excluded
     case Operation::Type::DBG:  // excluded
-    case Operation::Type::CLR:  // excluded
     case Operation::Type::SEQ:  // excluded
     case Operation::Type::MIN:  // excluded
     case Operation::Type::MAX:  // excluded

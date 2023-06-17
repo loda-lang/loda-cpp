@@ -12,7 +12,7 @@ bool LogarithmicEvaluator::hasLogarithmicComplexity(const Program& program) {
       continue;
     }
     // check for forbidden operation/operand types
-    if (op.type == Operation::Type::SEQ || op.type == Operation::Type::CLR ||
+    if (op.type == Operation::Type::SEQ ||
         ProgramUtil::hasIndirectOperand(op)) {
       return false;
     }

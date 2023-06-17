@@ -82,7 +82,6 @@ Number Interpreter::calc(const Operation::Type type, const Number& target,
     case Operation::Type::DBG:
     case Operation::Type::LPB:
     case Operation::Type::LPE:
-    case Operation::Type::CLR:
     case Operation::Type::SEQ:
       Log::get().error(
           "non-arithmetic operation: " + Operation::Metadata::get(type).name,
@@ -201,14 +200,6 @@ size_t Interpreter::run(const Program& p, Memory& mem) {
         auto result = call(source.asInt(), target);
         set(op.target, result.first, mem, op);
         cycles += result.second;
-        break;
-      }
-      case Operation::Type::CLR: {
-        length = get(op.source, mem).asInt();
-        start = get(op.target, mem, true).asInt();
-        if (length > 0) {
-          mem.clear(start, length);
-        }
         break;
       }
       case Operation::Type::DBG: {

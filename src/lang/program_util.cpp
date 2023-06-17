@@ -97,7 +97,7 @@ size_t ProgramUtil::numOps(const Program &p, Operand::Type type) {
 bool ProgramUtil::isArithmetic(Operation::Type t) {
   return (t != Operation::Type::NOP && t != Operation::Type::DBG &&
           t != Operation::Type::LPB && t != Operation::Type::LPE &&
-          t != Operation::Type::CLR && t != Operation::Type::SEQ);
+          t != Operation::Type::SEQ);
 }
 
 bool ProgramUtil::isCommutative(Operation::Type t) {
@@ -161,7 +161,7 @@ bool ProgramUtil::getUsedMemoryCells(const Program &p,
         op.target.type == Operand::Type::INDIRECT) {
       return false;
     }
-    if (op.type == Operation::Type::LPB || op.type == Operation::Type::CLR) {
+    if (op.type == Operation::Type::LPB) {
       if (op.source.type == Operand::Type::CONSTANT) {
         region_length = op.source.value.asInt();
       } else {
