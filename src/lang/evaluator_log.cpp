@@ -1,5 +1,7 @@
 #include "lang/evaluator_log.hpp"
 
+#include <algorithm>
+
 #include "lang/program_util.hpp"
 
 bool LogarithmicEvaluator::hasLogarithmicComplexity(const Program& program) {
@@ -44,14 +46,13 @@ bool LogarithmicEvaluator::hasLogarithmicComplexity(const Program& program) {
     return false;
   }
 
-  // static code analysis of the pre-loop fragment
-  for (const auto& op : pre_loop.ops) {
-    // exponentiation allowed only for constant exponents, because
-    // it could result in exponential growth of the loop counter
-    if (op.type == Operation::Type::POW &&
-        op.source.type != Operand::Type::CONSTANT) {
-      return false;
-    }
+  // check for exponential growth in pre-loop fragment
+  if (std::any_of(pre_loop.ops.begin(), pre_loop.ops.end(),
+                  [](const Operation& op) {
+                    return op.type == Operation::Type::POW &&
+                           op.source.type != Operand::Type::CONSTANT;
+                  })) {
+    return false;
   }
 
   // check updates of loop counter cell in loop body
@@ -60,11 +61,9 @@ bool LogarithmicEvaluator::hasLogarithmicComplexity(const Program& program) {
     const auto target = op.target.value.asInt();
     if (target == loop_counter_cell) {
       // loop counter must be updated using division
-      if (op.type == Operation::Type::DIV || op.type == Operation::Type::DIF) {
+      if (op.type == Operation::Type::DIV) {
         loop_counter_updated = true;
-      } else if (op.type != Operation::Type::SUB &&
-                 op.type != Operation::Type::TRN) {
-        // more updates using subtraction are ok, but nothing else
+      } else {
         return false;
       }
       // all updates must be using a constant argument
