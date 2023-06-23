@@ -2,6 +2,8 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v23.6.23
+
 ### Enhancements
 
 * Remove deprecated `clr` operation
