@@ -50,6 +50,7 @@ class IncrementalEvaluator {
   inline const std::vector<Memory>& getLoopStates() const {
     return loop_states;
   }
+  inline int64_t getPreviousSlice() const { return previous_slice; }
 
  private:
   bool extractFragments(const Program& program);
@@ -82,4 +83,5 @@ class IncrementalEvaluator {
   std::vector<Memory> loop_states;
   std::vector<int64_t> previous_loop_counts;
   std::vector<size_t> total_loop_steps;
+  int64_t previous_slice;
 };

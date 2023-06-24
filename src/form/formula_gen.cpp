@@ -202,10 +202,14 @@ int64_t getNumInitialTermsNeeded(int64_t cell, const std::string& funcName,
   auto stateful = ie.getStatefulCells();
   stateful.insert(ie.getOutputCells().begin(), ie.getOutputCells().end());
   // stateful.erase(Program::OUTPUT_CELL);
+  int64_t terms_needed = 0;
   if (stateful.find(cell) != stateful.end()) {
-    return loopCounterOffset + stateful.size();
+    terms_needed += loopCounterOffset + stateful.size();
   }
-  return 0;
+  if (ie.getLoopCounterDecrement() > 1) {
+    terms_needed += ie.getLoopCounterDecrement() - 1;
+  }
+  return terms_needed;
 }
 
 void FormulaGenerator::initFormula(int64_t numCells, bool use_ie,
@@ -364,7 +368,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     // evaluate program and add initial terms to formula
     for (int64_t offset = 0; offset < maxNumTerms; offset++) {
       ie.next();
-      const auto state = ie.getLoopStates().front();
+      const auto state = ie.getLoopStates().at(ie.getPreviousSlice());
       for (int64_t cell = 0; cell < numCells; cell++) {
         if (offset < numTerms[cell]) {
           Expression index(Expression::Type::CONSTANT, "", Number(offset));
