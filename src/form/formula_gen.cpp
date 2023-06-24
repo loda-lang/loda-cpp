@@ -204,10 +204,11 @@ int64_t getNumInitialTermsNeeded(int64_t cell, const std::string& funcName,
   // stateful.erase(Program::OUTPUT_CELL);
   int64_t terms_needed = 0;
   if (stateful.find(cell) != stateful.end()) {
-    terms_needed += loopCounterOffset + stateful.size();
+    terms_needed = loopCounterOffset + stateful.size();
   }
   if (ie.getLoopCounterDecrement() > 1) {
-    terms_needed += ie.getLoopCounterDecrement() - 1;
+    terms_needed =
+        std::max<int64_t>(terms_needed, ie.getLoopCounterDecrement());
   }
   return terms_needed;
 }
@@ -389,9 +390,14 @@ bool FormulaGenerator::generateSingle(const Program& p) {
       auto right = getFuncExpr(getCellName(cell));
       if (cell == ie.getLoopCounterCell()) {
         auto tmp = right;
-        right = Expression(
-            Expression::Type::FUNCTION, "min",
-            {right, Expression(Expression::Type::CONSTANT, "", Number::ZERO)});
+        auto last = Expression(Expression::Type::CONSTANT, "", Number::ZERO);
+        if (ie.getLoopCounterDecrement() > 1) {
+          last = Expression(Expression::Type::MODULUS, "",
+                            {Expression(Expression::Type::PARAMETER, "n"),
+                             Expression(Expression::Type::CONSTANT, "",
+                                        Number(ie.getLoopCounterDecrement()))});
+        }
+        right = Expression(Expression::Type::FUNCTION, "min", {tmp, last});
       }
       formula.entries[left] = right;
       cellNames[cell] = name;
