@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Enhancements
+
+* Formula generation supports loop counter decrements >1
+
 ## v23.6.23
 
 ### Enhancements
@@ -14,7 +18,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Enhancements
 
-* Incremental evaluation and formula generation supports loop counter decrements >1
+* Incremental evaluation supports loop counter decrements >1
 * Optimizer removes "commutative detours"
 
 ## v23.6.3
