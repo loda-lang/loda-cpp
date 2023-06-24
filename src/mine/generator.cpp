@@ -193,7 +193,7 @@ void Generator::ensureSourceNotOverwritten(Program &p) {
     if (op.target.type == Operand::Type::DIRECT &&
         op.target.value == Program::INPUT_CELL) {
       resets = false;
-      if (op.type == Operation::Type::MOV || op.type == Operation::Type::CLR) {
+      if (op.type == Operation::Type::MOV) {
         resets = true;
       } else if ((op.source == op.target) &&
                  (op.type == Operation::Type::SUB ||

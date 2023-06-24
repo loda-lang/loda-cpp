@@ -2,6 +2,16 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v23.6.23
+
+### Enhancements
+
+* Remove deprecated `clr` operation
+* Require miner profile in submitted programs
+* Stricter check for logarithmic program complexity
+
+## v23.6.17
+
 ### Enhancements
 
 * Incremental evaluation and formula generation supports loop counter decrements >1

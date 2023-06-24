@@ -32,11 +32,6 @@ bool Minimizer::minimize(Program& p, size_t num_terms) const {
 
   bool global_change = false;
 
-  // replace "clr" operations
-  if (replaceClr(p)) {
-    global_change = true;
-  }
-
   // replace constant loops
   for (int64_t exp = 1; exp <= 5; exp++) {
     if (replaceConstantLoop(p, target_sequence, exp)) {
@@ -157,32 +152,6 @@ int64_t Minimizer::getPowerOf(const Number& v) {
     }
   }
   return 0;
-}
-
-bool Minimizer::replaceClr(Program& p) const {
-  bool replaced = false;
-  for (size_t i = 0; i < p.ops.size(); i++) {
-    auto& op = p.ops[i];
-    if (op.type == Operation::Type::CLR &&
-        op.target.type == Operand::Type::DIRECT &&
-        op.source.type == Operand::Type::CONSTANT) {
-      const int64_t length = op.source.value.asInt();
-      if (length <= 0) {
-        p.ops.erase(p.ops.begin() + i);
-        replaced = true;
-      } else if (length <= 100) {  // magic number
-        op.type = Operation::Type::MOV;
-        op.source.value = 0;
-        auto mov = op;
-        for (int64_t j = 1; j < length; j++) {
-          mov.target.value = Semantics::add(mov.target.value, Number::ONE);
-          p.ops.insert(p.ops.begin() + i + j, mov);
-        }
-        replaced = true;
-      }
-    }
-  }
-  return replaced;
 }
 
 bool Minimizer::replaceConstantLoop(Program& p, const Sequence& seq,
