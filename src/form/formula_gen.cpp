@@ -204,8 +204,9 @@ int64_t getNumInitialTermsNeeded(int64_t cell, const std::string& funcName,
   // stateful.erase(Program::OUTPUT_CELL);
   int64_t terms_needed = 0;
   if (stateful.find(cell) != stateful.end()) {
-    terms_needed = std::max<int64_t>(loopCounterOffset + stateful.size(),
-                                     ie.getLoopCounterDecrement());
+    terms_needed =
+        loopCounterOffset +
+        std::max<int64_t>(stateful.size(), ie.getLoopCounterDecrement());
   }
   return terms_needed;
 }
