@@ -191,8 +191,7 @@ bool FormulaGenerator::resolve(const Alternatives& alt, const Expression& left,
   return resolved;
 }
 
-int64_t getNumInitialTermsNeeded(int64_t cell, const std::string& funcName,
-                                 const Formula& f,
+int64_t getNumInitialTermsNeeded(int64_t cell, const Formula& f,
                                  const IncrementalEvaluator& ie,
                                  Interpreter& interpreter) {
   Memory mem;
@@ -205,9 +204,10 @@ int64_t getNumInitialTermsNeeded(int64_t cell, const std::string& funcName,
   int64_t terms_needed = 0;
   if (stateful.find(cell) != stateful.end()) {
     terms_needed =
-        loopCounterOffset +
-        std::max<int64_t>(stateful.size(), ie.getLoopCounterDecrement());
+        loopCounterOffset + ie.getLoopCounterDecrement() * stateful.size();
   }
+  Log::get().debug("Cell $" + std::to_string(cell) + " requires " +
+                   std::to_string(terms_needed) + " intial terms");
   return terms_needed;
 }
 
@@ -360,8 +360,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     std::vector<int64_t> numTerms(numCells);
     int64_t maxNumTerms = 0;
     for (int64_t cell = 0; cell < numCells; cell++) {
-      numTerms[cell] = getNumInitialTermsNeeded(cell, getCellName(cell),
-                                                formula, ie, interpreter);
+      numTerms[cell] = getNumInitialTermsNeeded(cell, formula, ie, interpreter);
       maxNumTerms = std::max(maxNumTerms, numTerms[cell]);
     }
 
