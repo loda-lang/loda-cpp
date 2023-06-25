@@ -29,6 +29,7 @@ void IncrementalEvaluator::reset() {
   loop_states.clear();
   previous_loop_counts.clear();
   total_loop_steps.clear();
+  previous_slice = 0;
 }
 
 // ====== Initialization functions (static code analysis) =========
@@ -353,6 +354,7 @@ void IncrementalEvaluator::initRuntimeData() {
   loop_states.resize(loop_counter_decrement);
   previous_loop_counts.resize(loop_counter_decrement, 0);
   total_loop_steps.resize(loop_counter_decrement, 0);
+  previous_slice = 0;
 }
 
 std::pair<Number, size_t> IncrementalEvaluator::next() {
@@ -423,6 +425,7 @@ std::pair<Number, size_t> IncrementalEvaluator::next() {
 
   // prepare next iteration
   argument++;
+  previous_slice = slice;
 
   // return result of execution and steps
   return std::pair<Number, size_t>(tmp_state.get(0), steps);

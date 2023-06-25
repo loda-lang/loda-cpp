@@ -191,8 +191,7 @@ bool FormulaGenerator::resolve(const Alternatives& alt, const Expression& left,
   return resolved;
 }
 
-int64_t getNumInitialTermsNeeded(int64_t cell, const std::string& funcName,
-                                 const Formula& f,
+int64_t getNumInitialTermsNeeded(int64_t cell, const Formula& f,
                                  const IncrementalEvaluator& ie,
                                  Interpreter& interpreter) {
   Memory mem;
@@ -202,13 +201,18 @@ int64_t getNumInitialTermsNeeded(int64_t cell, const std::string& funcName,
   auto stateful = ie.getStatefulCells();
   stateful.insert(ie.getOutputCells().begin(), ie.getOutputCells().end());
   // stateful.erase(Program::OUTPUT_CELL);
+  int64_t terms_needed = 0;
   if (stateful.find(cell) != stateful.end()) {
-    return loopCounterOffset + stateful.size();
+    terms_needed =
+        loopCounterOffset + (ie.getLoopCounterDecrement() * stateful.size());
   }
-  return 0;
+  Log::get().debug("Cell $" + std::to_string(cell) + " requires " +
+                   std::to_string(terms_needed) + " intial terms");
+  return terms_needed;
 }
 
-void FormulaGenerator::initFormula(int64_t numCells, bool use_ie) {
+void FormulaGenerator::initFormula(int64_t numCells, bool use_ie,
+                                   int64_t loop_counter_decrement) {
   formula.clear();
   const auto paramExpr = getParamExpr();
   for (int64_t cell = 0; cell < numCells; cell++) {
@@ -218,9 +222,10 @@ void FormulaGenerator::initFormula(int64_t numCells, bool use_ie) {
     } else {
       if (use_ie) {
         formula.entries[key] = key;
-        Expression prev(Expression::Type::SUM, "",
-                        {paramExpr, Expression(Expression::Type::CONSTANT, "",
-                                               Number(-1))});
+        Expression prev(
+            Expression::Type::SUM, "",
+            {paramExpr, Expression(Expression::Type::CONSTANT, "",
+                                   Number(-loop_counter_decrement))});
         formula.entries[key].replaceAll(paramExpr, prev);
       } else {
         formula.entries[key] =
@@ -294,10 +299,6 @@ bool FormulaGenerator::generateSingle(const Program& p) {
       return false;
     }
     // TODO: remove this limitation
-    if (ie.getLoopCounterDecrement() != 1) {
-      return false;
-    }
-    // TODO: remove this limitation
     for (const auto& op : ie.getPreLoop().ops) {
       if (op.type == Operation::Type::MUL || op.type == Operation::Type::DIV ||
           op.type == Operation::Type::POW || op.type == Operation::Type::TRN) {
@@ -313,7 +314,8 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   }
 
   // initialize expressions for memory cells
-  initFormula(numCells, false);
+  initFormula(numCells, false, ie.getLoopCounterDecrement());
+  auto preloop_param_expr = getParamExpr();
   if (use_ie) {
     // update formula based on pre-loop code
     if (!update(ie.getPreLoop())) {
@@ -321,9 +323,9 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     }
     auto param =
         operandToExpression(Operand(Operand::Type::DIRECT, Number::ZERO));
-    auto saved = formula.entries[param];
-    initFormula(numCells, true);
-    formula.entries[param] = saved;
+    preloop_param_expr = formula.entries[param];
+    initFormula(numCells, true, ie.getLoopCounterDecrement());
+    formula.entries[param] = preloop_param_expr;
   }
   Log::get().debug("Initialized formula to " + formula.toString());
 
@@ -358,15 +360,14 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     std::vector<int64_t> numTerms(numCells);
     int64_t maxNumTerms = 0;
     for (int64_t cell = 0; cell < numCells; cell++) {
-      numTerms[cell] = getNumInitialTermsNeeded(cell, getCellName(cell),
-                                                formula, ie, interpreter);
+      numTerms[cell] = getNumInitialTermsNeeded(cell, formula, ie, interpreter);
       maxNumTerms = std::max(maxNumTerms, numTerms[cell]);
     }
 
     // evaluate program and add initial terms to formula
     for (int64_t offset = 0; offset < maxNumTerms; offset++) {
       ie.next();
-      const auto state = ie.getLoopStates().front();
+      const auto state = ie.getLoopStates().at(ie.getPreviousSlice());
       for (int64_t cell = 0; cell < numCells; cell++) {
         if (offset < numTerms[cell]) {
           Expression index(Expression::Type::CONSTANT, "", Number(offset));
@@ -387,9 +388,14 @@ bool FormulaGenerator::generateSingle(const Program& p) {
       auto right = getFuncExpr(getCellName(cell));
       if (cell == ie.getLoopCounterCell()) {
         auto tmp = right;
-        right = Expression(
-            Expression::Type::FUNCTION, "min",
-            {right, Expression(Expression::Type::CONSTANT, "", Number::ZERO)});
+        auto last = Expression(Expression::Type::CONSTANT, "", Number::ZERO);
+        if (ie.getLoopCounterDecrement() > 1) {
+          auto loop_dec = Expression(Expression::Type::CONSTANT, "",
+                                     Number(ie.getLoopCounterDecrement()));
+          last = Expression(Expression::Type::MODULUS, "",
+                            {preloop_param_expr, loop_dec});
+        }
+        right = Expression(Expression::Type::FUNCTION, "min", {tmp, last});
       }
       formula.entries[left] = right;
       cellNames[cell] = name;

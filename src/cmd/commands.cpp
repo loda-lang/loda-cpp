@@ -349,7 +349,6 @@ void Commands::testLogEval() {
 void Commands::testPari(const std::string& test_id) {
   initLog(false);
   Parser parser;
-  Settings settings;
   Interpreter interpreter(settings);
   Evaluator evaluator(settings);
   IncrementalEvaluator inceval(interpreter);
@@ -402,12 +401,12 @@ void Commands::testPari(const std::string& test_id) {
       }
     }
     auto pariCode = Pari::toString(formula);
-    Log::get().info(seq.id_str() + ": " + pariCode);
 
     // determine number of terms for testing
     size_t numTerms = seq.existingNumTerms();
     if (inceval.init(program)) {
-      numTerms = std::min<size_t>(numTerms, 10);
+      numTerms =
+          std::min<size_t>(numTerms, 12 * inceval.getLoopCounterDecrement());
     }
     for (const auto& op : program.ops) {
       if (op.type == Operation::Type::SEQ) {
@@ -419,6 +418,9 @@ void Commands::testPari(const std::string& test_id) {
         numTerms = std::min<size_t>(numTerms, 5);
       }
     }
+    Log::get().info("Checking " + std::to_string(numTerms) + " terms of " +
+                    seq.id_str() + ": " + pariCode);
+
     if (numTerms == 0) {
       Log::get().error("No known terms", true);
     }
