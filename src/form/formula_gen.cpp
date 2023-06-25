@@ -314,6 +314,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
 
   // initialize expressions for memory cells
   initFormula(numCells, false, ie.getLoopCounterDecrement());
+  auto preloop_param_expr = getParamExpr();
   if (use_ie) {
     // update formula based on pre-loop code
     if (!update(ie.getPreLoop())) {
@@ -321,9 +322,9 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     }
     auto param =
         operandToExpression(Operand(Operand::Type::DIRECT, Number::ZERO));
-    auto saved = formula.entries[param];
+    preloop_param_expr = formula.entries[param];
     initFormula(numCells, true, ie.getLoopCounterDecrement());
-    formula.entries[param] = saved;
+    formula.entries[param] = preloop_param_expr;
   }
   Log::get().debug("Initialized formula to " + formula.toString());
 
@@ -392,7 +393,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
           auto loop_dec = Expression(Expression::Type::CONSTANT, "",
                                      Number(ie.getLoopCounterDecrement()));
           last = Expression(Expression::Type::MODULUS, "",
-                            {getParamExpr(), loop_dec});
+                            {preloop_param_expr, loop_dec});
         }
         right = Expression(Expression::Type::FUNCTION, "min", {tmp, last});
       }
