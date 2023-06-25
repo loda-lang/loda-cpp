@@ -204,7 +204,7 @@ int64_t getNumInitialTermsNeeded(int64_t cell, const Formula& f,
   int64_t terms_needed = 0;
   if (stateful.find(cell) != stateful.end()) {
     terms_needed =
-        loopCounterOffset + ie.getLoopCounterDecrement() * stateful.size();
+        loopCounterOffset + (ie.getLoopCounterDecrement() * stateful.size());
   }
   Log::get().debug("Cell $" + std::to_string(cell) + " requires " +
                    std::to_string(terms_needed) + " intial terms");
