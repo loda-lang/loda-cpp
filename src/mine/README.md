@@ -13,8 +13,7 @@ See below for further details on the [program generation](#program-generation) a
 
 ## Program Generation
 
-There are multiple generators available with differing strategies. They can generate
-programs either randomly or deterministally. Random program generators can use statistics on existing LODA program to define probability distributions. We also distinguish between generators that create programs from scratch, or that mutate
+There are multiple generators available with differing strategies. They can generate programs either randomly or deterministically. Random program generators can use statistics on existing LODA program to define probability distributions. We also distinguish between generators that create programs from scratch, or that mutate
 randomly chosen existing programs, or use patterns or templates to create programs.
 
 All generator implement the [Generator](generator.hpp) interface. They are identified using a plain version number and instantiated using a factory class.
@@ -124,12 +123,12 @@ See the examples in the following sections for better understanding of the proce
 ### Direct Matcher
 
 This is the most simple of all matchers. It just evaluates the generated program for a number of terms
-and matches it to sequences starting with exactly these terms. Thus, sequence are not reduced and
+and matches it to sequences starting with exactly these terms. Thus, sequences are not reduced and
 generated program are not extended.
 
 ### Linear Matcher 1
 
-Sequences are reduced as follows:
+Supports linear output transformations to match sequences. Sequences are reduced as follows:
 
 1. Find the smallest non-negative term in a sequences and store it as `offset`. Subtract the `offset` from all sequence terms.
 1. Find the largest positive common divisor of all sequence terms and store it as `factor`. Divide all sequence terms by the `factor`.
