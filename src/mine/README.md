@@ -2,10 +2,9 @@
 
 The source code in this folder is used for mining LODA programs that generate integer sequences from the OEIS database.
 The high-level architecture is shown below.
-The mining process is coordinated in the [Miner](miner.hpp) class. It uses [Generator](generator.hpp) instances to
+The mining process is coordinated in the [Miner](miner.cpp) class. It uses [Generator](generator.hpp) instances to
 produce random LODA programs, which are evaluated and matched against the integer sequence database using instances of
-the [Matcher](matcher.hpp) class. If a generated program matches a sequence and there is no know program for it or it is considered
-better as the existing one, it is written to the programs folder and submitted to the central API server.
+the [Matcher](matcher.hpp) class. If a generated program matches a sequence and there is no known program for it or it is considered better as the existing one, it is written to the programs folder and submitted to the central API server.
 
 ![Mining architecture](../../images/mining-arch.svg)
 
