@@ -392,7 +392,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
           auto loop_dec = Expression(Expression::Type::CONSTANT, "",
                                      Number(ie.getLoopCounterDecrement()));
           last = Expression(Expression::Type::MODULUS, "",
-                            {preloop_param_expr, loop_dec});
+                            {getParamExpr(), loop_dec});
         }
         right = Expression(Expression::Type::FUNCTION, "min", {tmp, last});
       }
