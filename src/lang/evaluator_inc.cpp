@@ -13,6 +13,7 @@ IncrementalEvaluator::IncrementalEvaluator(Interpreter& interpreter)
 void IncrementalEvaluator::reset() {
   // program fragments and metadata
   pre_loop.ops.clear();
+  pre_loop_filtered.ops.clear();
   loop_body.ops.clear();
   post_loop.ops.clear();
   output_cells.clear();
@@ -34,14 +35,15 @@ void IncrementalEvaluator::reset() {
 
 // ====== Initialization functions (static code analysis) =========
 
-bool IncrementalEvaluator::init(const Program& program) {
+bool IncrementalEvaluator::init(const Program& program,
+                                bool skip_input_transform) {
   reset();
   if (!extractFragments(program)) {
     Log::get().debug("[IE] extraction of fragments failed");
     return false;
   }
   // now the program fragments and the loop counter cell are initialized
-  if (!checkPreLoop()) {
+  if (!checkPreLoop(skip_input_transform)) {
     Log::get().debug("[IE] pre-loop check failed");
     return false;
   }
@@ -103,14 +105,16 @@ bool IncrementalEvaluator::extractFragments(const Program& program) {
   return (phase == 2);
 }
 
-bool IncrementalEvaluator::checkPreLoop() {
+bool IncrementalEvaluator::checkPreLoop(bool skip_input_transform) {
   // here we do a static code analysis of the pre-loop
   // fragment to make sure here that the loop counter cell
   // is monotonically increasing (not strictly)
   static const Operand input_op(Operand::Type::DIRECT, Program::INPUT_CELL);
   bool loop_counter_initialized = (loop_counter_cell == Program::INPUT_CELL);
   bool needs_input_reset = false;
+  pre_loop_filtered.ops.clear();
   for (auto& op : pre_loop.ops) {
+    bool is_transform = false;
     switch (op.type) {
       case Operation::Type::MOV:
         // using other cells as loop counters is allowed
@@ -138,6 +142,7 @@ bool IncrementalEvaluator::checkPreLoop() {
         if (op.source.type != Operand::Type::CONSTANT) {
           return false;
         }
+        is_transform = true;
         break;
 
       // multiplying, dividing by non-negative constants is ok
@@ -148,11 +153,15 @@ bool IncrementalEvaluator::checkPreLoop() {
             op.source.value < Number::ONE) {
           return false;
         }
+        is_transform = true;
         break;
 
       default:
         // everything else is currently not allowed
         return false;
+    }
+    if (!skip_input_transform || !is_transform) {
+      pre_loop_filtered.ops.push_back(op);
     }
   }
   if (!loop_counter_initialized || needs_input_reset) {
@@ -366,7 +375,7 @@ std::pair<Number, size_t> IncrementalEvaluator::next() {
   // execute pre-loop code
   tmp_state.clear();
   tmp_state.set(Program::INPUT_CELL, argument);
-  size_t steps = interpreter.run(pre_loop, tmp_state);
+  size_t steps = interpreter.run(pre_loop_filtered, tmp_state);
 
   // derive loop count and slice
   const int64_t loop_counter_before = tmp_state.get(loop_counter_cell).asInt();

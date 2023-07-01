@@ -291,7 +291,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   Settings settings;
   Interpreter interpreter(settings);
   IncrementalEvaluator ie(interpreter);
-  bool use_ie = ie.init(p);
+  bool use_ie = ie.init(p, true);  // skip input transformations
 
   if (use_ie) {
     // TODO: remove this limitation
