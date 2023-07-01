@@ -325,7 +325,6 @@ bool FormulaGenerator::generateSingle(const Program& p) {
         operandToExpression(Operand(Operand::Type::DIRECT, Number::ZERO));
     preloop_param_expr = formula.entries[param];
     initFormula(numCells, true, ie.getLoopCounterDecrement());
-    // formula.entries[param] = preloop_param_expr;
   }
   Log::get().debug("Initialized formula to " + formula.toString());
 
@@ -355,6 +354,8 @@ bool FormulaGenerator::generateSingle(const Program& p) {
       }
       Log::get().debug("Updated formula: " + formula.toString());
     };
+
+    // TODO: intial terms must be computed without parameter transformation
 
     // determine number of initial terms needed
     std::vector<int64_t> numTerms(numCells);
