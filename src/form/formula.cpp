@@ -160,15 +160,19 @@ void Formula::collectEntries(const Expression& e, Formula& target) {
 }
 
 void Formula::resolveIdentities() {
-  auto copy = entries;
-  for (auto& e : copy) {
-    if (ExpressionUtil::isSimpleFunction(e.first) &&
-        ExpressionUtil::isSimpleFunction(e.second) &&
-        copy.find(e.second) != copy.end()) {
-      entries.erase(e.first);
-      replaceName(e.second.name, e.first.name);
+  size_t num_entries;
+  do {
+    num_entries = entries.size();
+    auto copy = entries;
+    for (auto& e : copy) {
+      if (ExpressionUtil::isSimpleFunction(e.first) &&
+          ExpressionUtil::isSimpleFunction(e.second) &&
+          copy.find(e.second) != copy.end()) {
+        entries.erase(e.first);
+        replaceName(e.second.name, e.first.name);
+      }
     }
-  }
+  } while (entries.size() < num_entries);
 }
 
 void replaceFunction(Expression& target, const std::string& func,

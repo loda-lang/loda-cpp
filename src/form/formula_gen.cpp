@@ -325,7 +325,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
         operandToExpression(Operand(Operand::Type::DIRECT, Number::ZERO));
     preloop_param_expr = formula.entries[param];
     initFormula(numCells, true, ie.getLoopCounterDecrement());
-    formula.entries[param] = preloop_param_expr;
+    // formula.entries[param] = preloop_param_expr;
   }
   Log::get().debug("Initialized formula to " + formula.toString());
 
@@ -408,6 +408,15 @@ bool FormulaGenerator::generateSingle(const Program& p) {
       return false;
     }
     Log::get().debug("Processed post-loop: " + formula.toString());
+  }
+
+  if (preloop_param_expr != getParamExpr()) {
+    auto right = Expression(Expression::Type::FUNCTION, cellNames[0],
+                            {preloop_param_expr});
+    cellNames[0] = newName();
+    auto left = getFuncExpr(cellNames[0]);
+    formula.entries[left] = right;
+    Log::get().debug("Applied parameter transformation: " + formula.toString());
   }
 
   // resolve linear functions
