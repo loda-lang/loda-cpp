@@ -355,8 +355,6 @@ bool FormulaGenerator::generateSingle(const Program& p) {
       Log::get().debug("Updated formula: " + formula.toString());
     };
 
-    // TODO: intial terms must be computed without parameter transformation
-
     // determine number of initial terms needed
     std::vector<int64_t> numTerms(numCells);
     int64_t maxNumTerms = 0;
@@ -412,8 +410,10 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   }
 
   if (preloop_param_expr != getParamExpr()) {
-    auto right = Expression(Expression::Type::FUNCTION, cellNames[0],
-                            {preloop_param_expr});
+    auto zero = Expression(Expression::Type::CONSTANT, "", Number::ZERO);
+    auto max = Expression(Expression::Type::FUNCTION, "max",
+                          {preloop_param_expr, zero});
+    auto right = Expression(Expression::Type::FUNCTION, cellNames[0], {max});
     cellNames[0] = newName();
     auto left = getFuncExpr(cellNames[0]);
     formula.entries[left] = right;
