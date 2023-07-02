@@ -36,6 +36,10 @@ std::string canonicalName(int64_t index) {
   return std::string(1, 'a' + static_cast<char>(index));
 }
 
+Expression getConstantExpr(int64_t value) {
+  return Expression(Expression::Type::CONSTANT, "", Number(value));
+}
+
 Expression getParamExpr() {
   return Expression(Expression::Type::PARAMETER, "n");
 }
@@ -81,8 +85,8 @@ bool FormulaGenerator::update(const Operation& op) {
       break;
     }
     case Operation::Type::SUB: {
-      Expression minus_one(Expression::Type::CONSTANT, "", Number(-1));
-      Expression negated(Expression::Type::PRODUCT, "", {minus_one, source});
+      Expression negated(Expression::Type::PRODUCT, "",
+                         {getConstantExpr(-1), source});
       res = Expression(Expression::Type::SUM, "", {prevTarget, negated});
       break;
     }
@@ -126,12 +130,12 @@ bool FormulaGenerator::update(const Operation& op) {
       break;
     }
     case Operation::Type::TRN: {
-      Expression minus_one(Expression::Type::CONSTANT, "", Number(-1));
-      Expression negated(Expression::Type::PRODUCT, "", {minus_one, source});
+      Expression negated(Expression::Type::PRODUCT, "",
+                         {getConstantExpr(-1), source});
       res = Expression(
           Expression::Type::FUNCTION, "max",
           {Expression(Expression::Type::SUM, "", {prevTarget, negated}),
-           Expression(Expression::Type::CONSTANT, "", Number::ZERO)});
+           getConstantExpr(0)});
       break;
     }
     default: {
@@ -222,14 +226,11 @@ void FormulaGenerator::initFormula(int64_t numCells, bool use_ie,
     } else {
       if (use_ie) {
         formula.entries[key] = key;
-        Expression prev(
-            Expression::Type::SUM, "",
-            {paramExpr, Expression(Expression::Type::CONSTANT, "",
-                                   Number(-loop_counter_decrement))});
+        Expression prev(Expression::Type::SUM, "",
+                        {paramExpr, getConstantExpr(-loop_counter_decrement)});
         formula.entries[key].replaceAll(paramExpr, prev);
       } else {
-        formula.entries[key] =
-            Expression(Expression::Type::CONSTANT, "", Number::ZERO);
+        formula.entries[key] = getConstantExpr(0);
       }
     }
   }
@@ -370,9 +371,8 @@ bool FormulaGenerator::generateSingle(const Program& p) {
       const auto state = ie.getLoopStates().at(ie.getPreviousSlice());
       for (int64_t cell = 0; cell < numCells; cell++) {
         if (offset < numTerms[cell]) {
-          Expression index(Expression::Type::CONSTANT, "", Number(offset));
           Expression func(Expression::Type::FUNCTION, getCellName(cell),
-                          {index});
+                          {getConstantExpr(offset)});
           Expression val(Expression::Type::CONSTANT, "", state.get(cell));
           formula.entries[func] = val;
           Log::get().debug("Added intial term: " + func.toString() + " = " +
@@ -388,10 +388,9 @@ bool FormulaGenerator::generateSingle(const Program& p) {
       auto right = getFuncExpr(getCellName(cell));
       if (cell == ie.getLoopCounterCell()) {
         auto tmp = right;
-        auto last = Expression(Expression::Type::CONSTANT, "", Number::ZERO);
+        auto last = getConstantExpr(0);
         if (ie.getLoopCounterDecrement() > 1) {
-          auto loop_dec = Expression(Expression::Type::CONSTANT, "",
-                                     Number(ie.getLoopCounterDecrement()));
+          auto loop_dec = getConstantExpr(ie.getLoopCounterDecrement());
           last = Expression(Expression::Type::MODULUS, "",
                             {preloop_param_expr, loop_dec});
         }
