@@ -387,7 +387,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
       auto safe_param = preloop_param_expr;
       if (ExpressionUtil::canBeNegative(safe_param)) {
         auto tmp = safe_param;
-        safe_param = Expression(Expression::Type::FUNCTION, "min",
+        safe_param = Expression(Expression::Type::FUNCTION, "max",
                                 {tmp, getConstantExpr(0)});
       }
       auto right = Expression(Expression::Type::FUNCTION, getCellName(cell),
