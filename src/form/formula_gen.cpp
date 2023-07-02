@@ -398,7 +398,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
         if (ie.getLoopCounterDecrement() > 1) {
           auto loop_dec = getConstantExpr(ie.getLoopCounterDecrement());
           last = Expression(Expression::Type::MODULUS, "",
-                            {getParamExpr(), loop_dec});
+                            {preloop_param_expr, loop_dec});
         }
         right = Expression(Expression::Type::FUNCTION, "min", {tmp, last});
       }
