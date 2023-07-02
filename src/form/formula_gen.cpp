@@ -384,23 +384,25 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     for (int64_t cell = 0; cell < numCells; cell++) {
       auto name = newName();
       auto left = getFuncExpr(name);
-      auto safe_param = preloop_param_expr;
-      if (ExpressionUtil::canBeNegative(safe_param)) {
-        auto tmp = safe_param;
-        safe_param = Expression(Expression::Type::FUNCTION, "max",
-                                {tmp, getConstantExpr(0)});
-      }
-      auto right = Expression(Expression::Type::FUNCTION, getCellName(cell),
-                              {safe_param});
+      Expression right;
       if (cell == ie.getLoopCounterCell()) {
-        auto tmp = right;
         auto last = getConstantExpr(0);
         if (ie.getLoopCounterDecrement() > 1) {
           auto loop_dec = getConstantExpr(ie.getLoopCounterDecrement());
           last = Expression(Expression::Type::MODULUS, "",
                             {preloop_param_expr, loop_dec});
         }
-        right = Expression(Expression::Type::FUNCTION, "min", {tmp, last});
+        right = Expression(Expression::Type::FUNCTION, "min",
+                           {preloop_param_expr, last});
+      } else {
+        auto safe_param = preloop_param_expr;
+        if (ExpressionUtil::canBeNegative(safe_param)) {
+          auto tmp = safe_param;
+          safe_param = Expression(Expression::Type::FUNCTION, "max",
+                                  {tmp, getConstantExpr(0)});
+        }
+        right = Expression(Expression::Type::FUNCTION, getCellName(cell),
+                           {safe_param});
       }
       formula.entries[left] = right;
       cellNames[cell] = name;
