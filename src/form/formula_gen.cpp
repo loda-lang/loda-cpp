@@ -322,8 +322,8 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     if (!update(ie.getPreLoop())) {
       return false;
     }
-    auto param =
-        operandToExpression(Operand(Operand::Type::DIRECT, Number::ZERO));
+    auto param = operandToExpression(
+        Operand(Operand::Type::DIRECT, Number(Program::INPUT_CELL)));
     preloop_param_expr = formula.entries[param];
     initFormula(numCells, true, ie.getLoopCounterDecrement());
   }
