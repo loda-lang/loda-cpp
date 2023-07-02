@@ -85,8 +85,8 @@ bool FormulaGenerator::update(const Operation& op) {
       break;
     }
     case Operation::Type::SUB: {
-      Expression minus_one(Expression::Type::CONSTANT, "", Number(-1));
-      Expression negated(Expression::Type::PRODUCT, "", {minus_one, source});
+      Expression negated(Expression::Type::PRODUCT, "",
+                         {getConstantExpr(-1), source});
       res = Expression(Expression::Type::SUM, "", {prevTarget, negated});
       break;
     }
@@ -130,12 +130,12 @@ bool FormulaGenerator::update(const Operation& op) {
       break;
     }
     case Operation::Type::TRN: {
-      Expression minus_one(Expression::Type::CONSTANT, "", Number(-1));
-      Expression negated(Expression::Type::PRODUCT, "", {minus_one, source});
+      Expression negated(Expression::Type::PRODUCT, "",
+                         {getConstantExpr(-1), source});
       res = Expression(
           Expression::Type::FUNCTION, "max",
           {Expression(Expression::Type::SUM, "", {prevTarget, negated}),
-           Expression(Expression::Type::CONSTANT, "", Number::ZERO)});
+           getConstantExpr(0)});
       break;
     }
     default: {
@@ -370,9 +370,8 @@ bool FormulaGenerator::generateSingle(const Program& p) {
       const auto state = ie.getLoopStates().at(ie.getPreviousSlice());
       for (int64_t cell = 0; cell < numCells; cell++) {
         if (offset < numTerms[cell]) {
-          auto index = getConstantExpr(offset);
           Expression func(Expression::Type::FUNCTION, getCellName(cell),
-                          {index});
+                          {getConstantExpr(offset)});
           Expression val(Expression::Type::CONSTANT, "", state.get(cell));
           formula.entries[func] = val;
           Log::get().debug("Added intial term: " + func.toString() + " = " +
@@ -395,7 +394,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
                               {safe_param});
       if (cell == ie.getLoopCounterCell()) {
         auto tmp = right;
-        auto last = Expression(Expression::Type::CONSTANT, "", Number::ZERO);
+        auto last = getConstantExpr(0);
         if (ie.getLoopCounterDecrement() > 1) {
           auto loop_dec = getConstantExpr(ie.getLoopCounterDecrement());
           last = Expression(Expression::Type::MODULUS, "",
