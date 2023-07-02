@@ -36,6 +36,10 @@ std::string canonicalName(int64_t index) {
   return std::string(1, 'a' + static_cast<char>(index));
 }
 
+Expression getConstantExpr(int64_t value) {
+  return Expression(Expression::Type::CONSTANT, "", Number(value));
+}
+
 Expression getParamExpr() {
   return Expression(Expression::Type::PARAMETER, "n");
 }
@@ -222,14 +226,11 @@ void FormulaGenerator::initFormula(int64_t numCells, bool use_ie,
     } else {
       if (use_ie) {
         formula.entries[key] = key;
-        Expression prev(
-            Expression::Type::SUM, "",
-            {paramExpr, Expression(Expression::Type::CONSTANT, "",
-                                   Number(-loop_counter_decrement))});
+        Expression prev(Expression::Type::SUM, "",
+                        {paramExpr, getConstantExpr(-loop_counter_decrement)});
         formula.entries[key].replaceAll(paramExpr, prev);
       } else {
-        formula.entries[key] =
-            Expression(Expression::Type::CONSTANT, "", Number::ZERO);
+        formula.entries[key] = getConstantExpr(0);
       }
     }
   }
@@ -369,7 +370,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
       const auto state = ie.getLoopStates().at(ie.getPreviousSlice());
       for (int64_t cell = 0; cell < numCells; cell++) {
         if (offset < numTerms[cell]) {
-          Expression index(Expression::Type::CONSTANT, "", Number(offset));
+          auto index = getConstantExpr(offset);
           Expression func(Expression::Type::FUNCTION, getCellName(cell),
                           {index});
           Expression val(Expression::Type::CONSTANT, "", state.get(cell));
@@ -384,13 +385,19 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     for (int64_t cell = 0; cell < numCells; cell++) {
       auto name = newName();
       auto left = getFuncExpr(name);
-      auto right = getFuncExpr(getCellName(cell));
+      auto safe_param = preloop_param_expr;
+      if (ExpressionUtil::canBeNegative(safe_param)) {
+        auto tmp = safe_param;
+        safe_param = Expression(Expression::Type::FUNCTION, "min",
+                                {tmp, getConstantExpr(0)});
+      }
+      auto right = Expression(Expression::Type::FUNCTION, getCellName(cell),
+                              {safe_param});
       if (cell == ie.getLoopCounterCell()) {
         auto tmp = right;
         auto last = Expression(Expression::Type::CONSTANT, "", Number::ZERO);
         if (ie.getLoopCounterDecrement() > 1) {
-          auto loop_dec = Expression(Expression::Type::CONSTANT, "",
-                                     Number(ie.getLoopCounterDecrement()));
+          auto loop_dec = getConstantExpr(ie.getLoopCounterDecrement());
           last = Expression(Expression::Type::MODULUS, "",
                             {getParamExpr(), loop_dec});
         }
@@ -407,17 +414,6 @@ bool FormulaGenerator::generateSingle(const Program& p) {
       return false;
     }
     Log::get().debug("Processed post-loop: " + formula.toString());
-  }
-
-  if (preloop_param_expr != getParamExpr()) {
-    auto zero = Expression(Expression::Type::CONSTANT, "", Number::ZERO);
-    auto max = Expression(Expression::Type::FUNCTION, "max",
-                          {preloop_param_expr, zero});
-    auto right = Expression(Expression::Type::FUNCTION, cellNames[0], {max});
-    cellNames[0] = newName();
-    auto left = getFuncExpr(cellNames[0]);
-    formula.entries[left] = right;
-    Log::get().debug("Applied parameter transformation: " + formula.toString());
   }
 
   // resolve linear functions
