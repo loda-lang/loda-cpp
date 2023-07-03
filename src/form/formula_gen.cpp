@@ -198,17 +198,12 @@ bool FormulaGenerator::resolve(const Alternatives& alt, const Expression& left,
 int64_t getNumInitialTermsNeeded(int64_t cell, const Formula& f,
                                  const IncrementalEvaluator& ie,
                                  Interpreter& interpreter) {
-  Memory mem;
-  interpreter.run(ie.getPreLoop(), mem);
-  int64_t loopCounterOffset =
-      std::max<int64_t>(0, -(mem.get(ie.getLoopCounterCell()).asInt()));
   auto stateful = ie.getStatefulCells();
   stateful.insert(ie.getOutputCells().begin(), ie.getOutputCells().end());
   // stateful.erase(Program::OUTPUT_CELL);
   int64_t terms_needed = 0;
   if (stateful.find(cell) != stateful.end()) {
-    terms_needed =
-        loopCounterOffset + (ie.getLoopCounterDecrement() * stateful.size());
+    terms_needed = (ie.getLoopCounterDecrement() * stateful.size());
   }
   Log::get().debug("Cell $" + std::to_string(cell) + " requires " +
                    std::to_string(terms_needed) + " intial terms");
@@ -292,19 +287,12 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   Settings settings;
   Interpreter interpreter(settings);
   IncrementalEvaluator ie(interpreter);
-  bool use_ie = ie.init(p);
+  bool use_ie = ie.init(p, true);  // skip input transformations
 
   if (use_ie) {
     // TODO: remove this limitation
     if (ie.getLoopCounterCell() != 0) {
       return false;
-    }
-    // TODO: remove this limitation
-    for (const auto& op : ie.getPreLoop().ops) {
-      if (op.type == Operation::Type::MUL || op.type == Operation::Type::DIV ||
-          op.type == Operation::Type::POW || op.type == Operation::Type::TRN) {
-        return false;
-      }
     }
   }
 
@@ -322,11 +310,10 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     if (!update(ie.getPreLoop())) {
       return false;
     }
-    auto param =
-        operandToExpression(Operand(Operand::Type::DIRECT, Number::ZERO));
+    auto param = operandToExpression(
+        Operand(Operand::Type::DIRECT, Number(Program::INPUT_CELL)));
     preloop_param_expr = formula.entries[param];
     initFormula(numCells, true, ie.getLoopCounterDecrement());
-    formula.entries[param] = preloop_param_expr;
   }
   Log::get().debug("Initialized formula to " + formula.toString());
 
@@ -367,7 +354,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
 
     // evaluate program and add initial terms to formula
     for (int64_t offset = 0; offset < maxNumTerms; offset++) {
-      ie.next();
+      ie.next(true, true);  // skip final iteration and post loop code
       const auto state = ie.getLoopStates().at(ie.getPreviousSlice());
       for (int64_t cell = 0; cell < numCells; cell++) {
         if (offset < numTerms[cell]) {
@@ -385,16 +372,25 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     for (int64_t cell = 0; cell < numCells; cell++) {
       auto name = newName();
       auto left = getFuncExpr(name);
-      auto right = getFuncExpr(getCellName(cell));
+      Expression right;
       if (cell == ie.getLoopCounterCell()) {
-        auto tmp = right;
         auto last = getConstantExpr(0);
         if (ie.getLoopCounterDecrement() > 1) {
           auto loop_dec = getConstantExpr(ie.getLoopCounterDecrement());
           last = Expression(Expression::Type::MODULUS, "",
                             {preloop_param_expr, loop_dec});
         }
-        right = Expression(Expression::Type::FUNCTION, "min", {tmp, last});
+        right = Expression(Expression::Type::FUNCTION, "min",
+                           {preloop_param_expr, last});
+      } else {
+        auto safe_param = preloop_param_expr;
+        if (ExpressionUtil::canBeNegative(safe_param)) {
+          auto tmp = safe_param;
+          safe_param = Expression(Expression::Type::FUNCTION, "max",
+                                  {tmp, getConstantExpr(0)});
+        }
+        right = Expression(Expression::Type::FUNCTION, getCellName(cell),
+                           {safe_param});
       }
       formula.entries[left] = right;
       cellNames[cell] = name;

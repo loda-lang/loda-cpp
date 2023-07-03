@@ -26,12 +26,14 @@ class IncrementalEvaluator {
 
   // Initialize the IE using a program. IE can be applied only if this function
   // returns true.
-  bool init(const Program& program);
+  bool init(const Program& program, bool skip_input_transform = false);
 
   // Compute the next term and step count.
-  std::pair<Number, size_t> next();
+  std::pair<Number, size_t> next(bool skip_final_iter = false,
+                                 bool skip_post_loop = false);
 
   inline const Program& getPreLoop() const { return pre_loop; }
+  inline const Program& getPreLoopFiltered() const { return pre_loop_filtered; }
   inline const Program& getLoopBody() const { return loop_body; }
   inline const Program& getPostLoop() const { return post_loop; }
   inline int64_t getLoopCounterCell() const { return loop_counter_cell; }
@@ -54,7 +56,7 @@ class IncrementalEvaluator {
 
  private:
   bool extractFragments(const Program& program);
-  bool checkPreLoop();
+  bool checkPreLoop(bool skip_input_transform);
   bool checkLoopBody();
   bool checkPostLoop();
   bool isCommutative(int64_t cell) const;
@@ -67,6 +69,7 @@ class IncrementalEvaluator {
 
   // program fragments and metadata
   Program pre_loop;
+  Program pre_loop_filtered;
   Program loop_body;
   Program post_loop;
   std::set<int64_t> output_cells;

@@ -61,7 +61,7 @@ bool LogarithmicEvaluator::hasLogarithmicComplexity(const Program& program) {
     const auto target = op.target.value.asInt();
     if (target == loop_counter_cell) {
       // loop counter must be updated using division
-      if (op.type == Operation::Type::DIV) {
+      if (op.type == Operation::Type::DIV || op.type == Operation::Type::DIF) {
         loop_counter_updated = true;
       } else {
         return false;

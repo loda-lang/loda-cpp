@@ -353,6 +353,7 @@ void Commands::testPari(const std::string& test_id) {
   Evaluator evaluator(settings);
   IncrementalEvaluator inceval(interpreter);
   OeisManager manager(settings);
+  Memory tmp_memory;
   manager.load();
   auto& stats = manager.getStats();
   int64_t good = 0, bad = 0;
@@ -360,13 +361,8 @@ void Commands::testPari(const std::string& test_id) {
   if (!test_id.empty()) {
     target_id = OeisSequence(test_id).id;
   }
-  // ignore exceptionally slow programs
-  std::vector<size_t> exceptions = {74265,  167398, 214855, 284494, 284535,
-                                    285141, 285207, 285208, 285420, 322129};
   for (size_t id = 0; id < stats.all_program_ids.size(); id++) {
-    if (!stats.all_program_ids[id] || (target_id > 0 && id != target_id) ||
-        std::find(exceptions.begin(), exceptions.end(), id) !=
-            exceptions.end()) {
+    if (!stats.all_program_ids[id] || (target_id > 0 && id != target_id)) {
       continue;
     }
     auto seq = manager.getSequences().at(id);
@@ -387,7 +383,7 @@ void Commands::testPari(const std::string& test_id) {
           !Pari::convertToPari(formula)) {
         continue;
       }
-    } catch (const std::exception&) {
+    } catch (const std::exception& e) {
       // error during formula generation => check evaluation
       bool hasEvalError;
       try {
@@ -397,7 +393,9 @@ void Commands::testPari(const std::string& test_id) {
         hasEvalError = true;
       }
       if (!hasEvalError) {
-        Log::get().error("Expected evaluation error for " + seq.id_str(), true);
+        Log::get().error(
+            "Expected evaluation error for " + seq.id_str() + ": " + e.what(),
+            true);
       }
     }
     auto pariCode = Pari::toString(formula);
@@ -405,8 +403,18 @@ void Commands::testPari(const std::string& test_id) {
     // determine number of terms for testing
     size_t numTerms = seq.existingNumTerms();
     if (inceval.init(program)) {
-      numTerms =
-          std::min<size_t>(numTerms, 12 * inceval.getLoopCounterDecrement());
+      const int64_t targetTerms = 15 * inceval.getLoopCounterDecrement();
+      numTerms = std::min<size_t>(numTerms, targetTerms);
+      while (numTerms > 0) {
+        tmp_memory.clear();
+        tmp_memory.set(Program::INPUT_CELL, numTerms - 1);
+        interpreter.run(inceval.getPreLoop(), tmp_memory);
+        int64_t tmpTerms = tmp_memory.get(inceval.getLoopCounterCell()).asInt();
+        if (tmpTerms <= targetTerms) {
+          break;
+        }
+        numTerms--;
+      }
     }
     for (const auto& op : program.ops) {
       if (op.type == Operation::Type::SEQ) {
@@ -422,7 +430,8 @@ void Commands::testPari(const std::string& test_id) {
                     seq.id_str() + ": " + pariCode);
 
     if (numTerms == 0) {
-      Log::get().error("No known terms", true);
+      Log::get().warn("Skipping " + seq.id_str());
+      continue;
     }
 
     // evaluate LODA program
