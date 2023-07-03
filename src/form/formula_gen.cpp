@@ -198,17 +198,12 @@ bool FormulaGenerator::resolve(const Alternatives& alt, const Expression& left,
 int64_t getNumInitialTermsNeeded(int64_t cell, const Formula& f,
                                  const IncrementalEvaluator& ie,
                                  Interpreter& interpreter) {
-  Memory mem;
-  interpreter.run(ie.getPreLoop(), mem);
-  int64_t loopCounterOffset =
-      std::max<int64_t>(0, -(mem.get(ie.getLoopCounterCell()).asInt()));
   auto stateful = ie.getStatefulCells();
   stateful.insert(ie.getOutputCells().begin(), ie.getOutputCells().end());
   // stateful.erase(Program::OUTPUT_CELL);
   int64_t terms_needed = 0;
   if (stateful.find(cell) != stateful.end()) {
-    terms_needed =
-        loopCounterOffset + (ie.getLoopCounterDecrement() * stateful.size());
+    terms_needed = (ie.getLoopCounterDecrement() * stateful.size());
   }
   Log::get().debug("Cell $" + std::to_string(cell) + " requires " +
                    std::to_string(terms_needed) + " intial terms");
@@ -299,13 +294,6 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     if (ie.getLoopCounterCell() != 0) {
       return false;
     }
-    // TODO: remove this limitation
-    for (const auto& op : ie.getPreLoop().ops) {
-      if (op.type == Operation::Type::DIV || op.type == Operation::Type::POW ||
-          op.type == Operation::Type::TRN) {
-        return false;
-      }
-    }
   }
 
   // initialize function names for memory cells
@@ -366,7 +354,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
 
     // evaluate program and add initial terms to formula
     for (int64_t offset = 0; offset < maxNumTerms; offset++) {
-      ie.next();
+      ie.next(true, true);  // skip final iteration and post loop code
       const auto state = ie.getLoopStates().at(ie.getPreviousSlice());
       for (int64_t cell = 0; cell < numCells; cell++) {
         if (offset < numTerms[cell]) {

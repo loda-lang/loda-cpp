@@ -29,7 +29,8 @@ class IncrementalEvaluator {
   bool init(const Program& program, bool skip_input_transform = false);
 
   // Compute the next term and step count.
-  std::pair<Number, size_t> next();
+  std::pair<Number, size_t> next(bool skip_final_iter = false,
+                                 bool skip_post_loop = false);
 
   inline const Program& getPreLoop() const { return pre_loop; }
   inline const Program& getPreLoopFiltered() const { return pre_loop_filtered; }

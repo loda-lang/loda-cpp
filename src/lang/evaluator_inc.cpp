@@ -366,7 +366,8 @@ void IncrementalEvaluator::initRuntimeData() {
   previous_slice = 0;
 }
 
-std::pair<Number, size_t> IncrementalEvaluator::next() {
+std::pair<Number, size_t> IncrementalEvaluator::next(bool skip_final_iter,
+                                                     bool skip_post_loop) {
   // sanity check: must be initialized
   if (!initialized) {
     throw std::runtime_error("incremental evaluator not initialized");
@@ -412,19 +413,25 @@ std::pair<Number, size_t> IncrementalEvaluator::next() {
   // update steps count
   steps += total_loop_steps[slice] + 1;  // +1 for lpb of zero-th iteration
 
-  // one more iteration is needed for the correct step count
+  // determine final loop counter value
   const Number final_counter_value = Semantics::min(
       Number(loop_counter_before), (loop_counter_type == Operation::Type::TRN)
                                        ? Number::ZERO
                                        : Number(slice));
-  tmp_state = loop_states[slice];
-  tmp_state.set(loop_counter_cell, final_counter_value);
-  steps += interpreter.run(loop_body, tmp_state) + 1;  // +1 for lpb
+
+  // one more iteration is needed for the correct step count
+  if (!skip_final_iter) {
+    tmp_state = loop_states[slice];
+    tmp_state.set(loop_counter_cell, final_counter_value);
+    steps += interpreter.run(loop_body, tmp_state) + 1;  // +1 for lpb
+  }
 
   // execute post-loop code
   tmp_state = loop_states[slice];
-  tmp_state.set(loop_counter_cell, final_counter_value);
-  steps += interpreter.run(post_loop, tmp_state);
+  if (!skip_post_loop) {
+    tmp_state.set(loop_counter_cell, final_counter_value);
+    steps += interpreter.run(post_loop, tmp_state);
+  }
 
   // check maximum number of steps
   if (steps > interpreter.getMaxCycles()) {
@@ -437,5 +444,5 @@ std::pair<Number, size_t> IncrementalEvaluator::next() {
   previous_slice = slice;
 
   // return result of execution and steps
-  return std::pair<Number, size_t>(tmp_state.get(0), steps);
+  return std::pair<Number, size_t>(tmp_state.get(Program::OUTPUT_CELL), steps);
 }
