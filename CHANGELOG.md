@@ -2,6 +2,8 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v23.7.3
+
 ### Enhancements
 
 * Formula generation supports pre-loop transformations and loop counter decrements >1
