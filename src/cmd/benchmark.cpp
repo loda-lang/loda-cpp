@@ -147,6 +147,7 @@ void Benchmark::findSlow(int64_t num_terms, Operation::Type type) {
   Interpreter interpreter(settings);
   Evaluator evaluator(settings);
   Sequence seq;
+  Program program;
   std::priority_queue<std::pair<int64_t, int64_t> > queue;
   for (size_t id = 0; id < 400000; id++) {
     OeisSequence oeisSeq(id);
@@ -154,7 +155,12 @@ void Benchmark::findSlow(int64_t num_terms, Operation::Type type) {
     if (!in) {
       continue;
     }
-    auto program = parser.parse(in);
+    try {
+      program = parser.parse(in);
+    } catch (std::exception& e) {
+      Log::get().warn("Skipping " + oeisSeq.id_str() + ": " + e.what());
+      continue;
+    }
     if (type != Operation::Type::NOP && !ProgramUtil::hasOp(program, type)) {
       continue;
     }
