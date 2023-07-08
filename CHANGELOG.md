@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Enhancements
+
+* Support formulas when loop counter is not `$0`
+
 ## v23.7.3
 
 ### Enhancements

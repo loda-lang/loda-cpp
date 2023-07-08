@@ -14,7 +14,7 @@ class FormulaGenerator {
  private:
   bool generateSingle(const Program& p);
 
-  void initFormula(int64_t numCells, bool use_ie,
+  void initFormula(int64_t numCells, bool use_ie, int64_t loop_counter_cell,
                    int64_t loop_counter_decrement);
 
   bool update(const Operation& op);

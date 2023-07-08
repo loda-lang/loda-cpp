@@ -211,22 +211,24 @@ int64_t getNumInitialTermsNeeded(int64_t cell, const Formula& f,
 }
 
 void FormulaGenerator::initFormula(int64_t numCells, bool use_ie,
+                                   int64_t loop_counter_cell,
                                    int64_t loop_counter_decrement) {
   formula.clear();
   const auto paramExpr = getParamExpr();
   for (int64_t cell = 0; cell < numCells; cell++) {
     auto key = operandToExpression(Operand(Operand::Type::DIRECT, cell));
-    if (cell == 0) {
-      formula.entries[key] = paramExpr;
-    } else {
-      if (use_ie) {
+    if (use_ie) {
+      if (cell == loop_counter_cell) {
+        formula.entries[key] = paramExpr;
+      } else {
         formula.entries[key] = key;
         Expression prev(Expression::Type::SUM, "",
                         {paramExpr, getConstantExpr(-loop_counter_decrement)});
         formula.entries[key].replaceAll(paramExpr, prev);
-      } else {
-        formula.entries[key] = getConstantExpr(0);
       }
+    } else {
+      formula.entries[key] =
+          (cell == Program::INPUT_CELL) ? paramExpr : getConstantExpr(0);
     }
   }
 }
@@ -287,14 +289,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   Settings settings;
   Interpreter interpreter(settings);
   IncrementalEvaluator ie(interpreter);
-  bool use_ie = ie.init(p, true);  // skip input transformations
-
-  if (use_ie) {
-    // TODO: remove this limitation
-    if (ie.getLoopCounterCell() != 0) {
-      return false;
-    }
-  }
+  const bool use_ie = ie.init(p, true);  // skip input transformations
 
   // initialize function names for memory cells
   cellNames.clear();
@@ -303,7 +298,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   }
 
   // initialize expressions for memory cells
-  initFormula(numCells, false, ie.getLoopCounterDecrement());
+  initFormula(numCells, false, 0, 0);
   auto preloop_param_expr = getParamExpr();
   if (use_ie) {
     // update formula based on pre-loop code
@@ -311,9 +306,10 @@ bool FormulaGenerator::generateSingle(const Program& p) {
       return false;
     }
     auto param = operandToExpression(
-        Operand(Operand::Type::DIRECT, Number(Program::INPUT_CELL)));
+        Operand(Operand::Type::DIRECT, Number(ie.getLoopCounterCell())));
     preloop_param_expr = formula.entries[param];
-    initFormula(numCells, true, ie.getLoopCounterDecrement());
+    initFormula(numCells, true, ie.getLoopCounterCell(),
+                ie.getLoopCounterDecrement());
   }
   Log::get().debug("Initialized formula to " + formula.toString());
 
