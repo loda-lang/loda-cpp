@@ -106,6 +106,41 @@ bool ProgramUtil::isCommutative(Operation::Type t) {
           t == Operation::Type::GCD || t == Operation::Type::CMP);
 }
 
+bool ProgramUtil::isCommutative(const Program &p, int64_t cell) {
+  auto update_type = Operation::Type::NOP;
+  for (auto &op : p.ops) {
+    const auto meta = Operation::Metadata::get(op.type);
+    const auto target = op.target.value.asInt();
+    if (target == cell) {
+      if (!ProgramUtil::isCommutative(op.type)) {
+        return false;
+      }
+      if (update_type == Operation::Type::NOP) {
+        update_type = op.type;
+      } else if (update_type != op.type) {
+        return false;
+      }
+    }
+    if (meta.num_operands == 2 && op.source.type == Operand::Type::DIRECT) {
+      const auto source = op.source.value.asInt();
+      if (source == cell) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+bool ProgramUtil::isCommutative(const Program &p,
+                                const std::set<int64_t> &cells) {
+  for (auto c : cells) {
+    if (!isCommutative(p, c)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 bool ProgramUtil::isAdditive(Operation::Type t) {
   return (t == Operation::Type::ADD || t == Operation::Type::SUB);
 }

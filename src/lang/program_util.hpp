@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <set>
 #include <unordered_set>
 
 #include "lang/number.hpp"
@@ -26,6 +27,10 @@ class ProgramUtil {
   static bool isArithmetic(Operation::Type t);
 
   static bool isCommutative(Operation::Type t);
+
+  static bool isCommutative(const Program &p, int64_t cell);
+
+  static bool isCommutative(const Program &p, const std::set<int64_t> &cells);
 
   static bool isAdditive(Operation::Type t);
 

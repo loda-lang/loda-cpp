@@ -170,40 +170,6 @@ bool IncrementalEvaluator::checkPreLoop(bool skip_input_transform) {
   return true;
 }
 
-bool IncrementalEvaluator::isCommutative(int64_t cell) const {
-  auto update_type = Operation::Type::NOP;
-  for (auto& op : loop_body.ops) {
-    const auto meta = Operation::Metadata::get(op.type);
-    const auto target = op.target.value.asInt();
-    if (target == cell) {
-      if (!ProgramUtil::isCommutative(op.type)) {
-        return false;
-      }
-      if (update_type == Operation::Type::NOP) {
-        update_type = op.type;
-      } else if (update_type != op.type) {
-        return false;
-      }
-    }
-    if (meta.num_operands == 2 && op.source.type == Operand::Type::DIRECT) {
-      const auto source = op.source.value.asInt();
-      if (source == cell) {
-        return false;
-      }
-    }
-  }
-  return true;
-}
-
-bool IncrementalEvaluator::isCommutative(const std::set<int64_t>& cells) const {
-  for (auto c : cells) {
-    if (!isCommutative(c)) {
-      return false;
-    }
-  }
-  return true;
-}
-
 bool IncrementalEvaluator::checkLoopBody() {
   // check loop counter cell
   bool loop_counter_updated = false;
@@ -241,8 +207,8 @@ bool IncrementalEvaluator::checkLoopBody() {
   computeLoopCounterDependentCells();
 
   // check if stateful cells and output cells are commutative
-  bool is_commutative =
-      isCommutative(stateful_cells) && isCommutative(output_cells);
+  bool is_commutative = ProgramUtil::isCommutative(loop_body, stateful_cells) &&
+                        ProgramUtil::isCommutative(loop_body, output_cells);
 
   // ================================================= //
   // === from now on, we check for positive cases ==== //
