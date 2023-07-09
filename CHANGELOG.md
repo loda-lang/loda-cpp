@@ -2,9 +2,13 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v23.7.9
+
 ### Enhancements
 
 * Support formulas when loop counter is not `$0`
+* Reduce minimum number of terms to 80
+* Increase maximum number of steps to 100 million
 
 ## v23.7.3
 

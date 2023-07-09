@@ -13,7 +13,7 @@
 #include "sys/util.hpp"
 #include "sys/web_client.hpp"
 
-const size_t OeisSequence::DEFAULT_SEQ_LENGTH = 100;  // magic number
+const size_t OeisSequence::DEFAULT_SEQ_LENGTH = 80;  // magic number
 
 const size_t OeisSequence::EXTENDED_SEQ_LENGTH = 1000;  // magic number
 
