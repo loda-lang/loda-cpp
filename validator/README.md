@@ -85,27 +85,6 @@ LODA_INFLUXDB_HOST=http://loda-api-1/influxdb
 LODA_METRICS_PUBLISH_INTERVAL=60
 ```
 
-## Twitter Notifications
-
-Install the [Rainbow stream](https://github.com/orakaro/rainbowstream) command-line client:
-
-```bash
-sudo apt install python3-pip
-sudo pip3 install rainbowstream
-```
-
-Login to the [@lodaminer](https://twitter.com/lodaminer) Twitter account and authorize the app:
-
-```bash
-rainbowstream
-```
-
-Add this line to `~/loda/setup.txt`:
-
-```bash
-LODA_TWEET_ALERTS=yes
-```
-
 ## Slack Notifications
 
 Install Slack command-line client:
