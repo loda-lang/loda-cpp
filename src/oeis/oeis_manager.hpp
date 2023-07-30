@@ -65,8 +65,7 @@ class OeisManager {
                    const std::string& submitted_by) const;
 
   void alert(Program p, size_t id, const std::string& prefix,
-             const std::string& color, const std::string& submitted_by,
-             bool tweet) const;
+             const std::string& color, const std::string& submitted_by) const;
 
   const Settings& settings;
   const OverwriteMode overwrite_mode;

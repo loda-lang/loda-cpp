@@ -8,32 +8,11 @@
 #include "sys/file.hpp"
 #include "sys/setup.hpp"
 
-enum TwitterClient {
-  TW_UNKNOWN = 0,
-  TW_NONE = 1,
-  TW_TWIDGE = 2,
-  TW_RAINBOWSTREAM = 3
-};
-
-TwitterClient findTwitterClient() {
-  std::string cmd = "twidge lsfollowers " + getNullRedirect();
-  if (system(cmd.c_str()) == 0) {
-    return TW_TWIDGE;
-  }
-  cmd = "rainbowstream -h " + getNullRedirect();
-  if (system(cmd.c_str()) == 0) {
-    return TW_RAINBOWSTREAM;
-  }
-  return TW_NONE;
-}
-
 Log::Log()
     : level(Level::INFO),
       silent(false),
       loaded_alerts_config(false),
-      slack_alerts(false),
-      tweet_alerts(false),
-      twitter_client(TW_UNKNOWN) {}
+      slack_alerts(false) {}
 
 Log &Log::get() {
   static Log log;
@@ -57,18 +36,17 @@ void Log::alert(const std::string &msg, AlertDetails details) {
   log(Log::Level::ALERT, msg);
   if (!loaded_alerts_config) {
     slack_alerts = Setup::getSetupFlag("LODA_SLACK_ALERTS", false);
-    tweet_alerts = Setup::getSetupFlag("LODA_TWEET_ALERTS", false);
     loaded_alerts_config = true;
   }
   std::string copy = msg;
-  if (slack_alerts || tweet_alerts) {
+  if (slack_alerts) {
     std::replace(copy.begin(), copy.end(), '"', ' ');
     std::replace(copy.begin(), copy.end(), '\'', ' ');
     if (copy.length() > 140) {
-      copy = copy.substr(0, 137);
+      copy.resize(137);
       while (!copy.empty()) {
         char ch = copy.at(copy.size() - 1);
-        copy = copy.substr(0, copy.length() - 1);
+        copy.pop_back();
         if (ch == ' ' || ch == '.' || ch == ',') break;
       }
       if (!copy.empty()) {
@@ -79,9 +57,6 @@ void Log::alert(const std::string &msg, AlertDetails details) {
   if (!copy.empty()) {
     if (slack_alerts) {
       slack(copy, details);
-    }
-    if (tweet_alerts && details.tweet) {
-      tweet(copy);
     }
   }
 }
@@ -121,32 +96,6 @@ void Log::slack(const std::string &msg, AlertDetails details) {
     std::ofstream out(slack_debug + ".cmd");
     out << cmd;
     out.close();
-  }
-}
-
-void Log::tweet(const std::string &msg) {
-  if (twitter_client == TW_UNKNOWN) {
-    twitter_client = findTwitterClient();
-  }
-  std::string cmd;
-  switch (twitter_client) {
-    case TW_UNKNOWN:
-      break;
-    case TW_NONE:
-      break;
-    case TW_TWIDGE:
-      cmd = "twidge update \"" + msg + "\" " + getNullRedirect();
-      break;
-    case TW_RAINBOWSTREAM:
-      cmd = "printf \"t " + msg + "\\nexit()\\n\" | rainbowstream " +
-            getNullRedirect();
-      break;
-  }
-  if (!cmd.empty()) {
-    auto exit_code = system(cmd.c_str());
-    if (exit_code != 0) {
-      Log::get().error("Error tweeting alert! Failed command: " + cmd, false);
-    }
   }
 }
 
