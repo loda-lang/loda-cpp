@@ -12,7 +12,6 @@ class Log {
     std::string title;
     std::string title_link;
     std::string color;
-    bool tweet;
   };
 
   Log();
@@ -29,14 +28,9 @@ class Log {
   bool silent;
   bool loaded_alerts_config;
   bool slack_alerts;
-  bool tweet_alerts;
 
  private:
-  int twitter_client;
-
   void slack(const std::string &msg, AlertDetails details);
-
-  void tweet(const std::string &msg);
 
   void log(Level level, const std::string &msg);
 };
