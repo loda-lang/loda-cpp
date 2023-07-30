@@ -681,10 +681,11 @@ void OeisManager::dumpProgram(size_t id, Program &p, const std::string &file,
     nop.comment = Comments::PREFIX_SUBMITTED_BY + " " + submitted_by;
     tmp.ops.push_back(nop);
   }
-  nop.comment = seq.getTerms(OeisSequence::DEFAULT_SEQ_LENGTH).to_string();
-  static constexpr size_t max_length = 500;
-  if (nop.comment.size() > max_length) {  // magic number
-    nop.comment = nop.comment.substr(0, max_length);
+  static constexpr size_t MAX_PRINT_TERMS = 80;   // magic number
+  static constexpr size_t MAX_PRINT_CHARS = 500;  // magic number
+  nop.comment = seq.getTerms(MAX_PRINT_TERMS).to_string();
+  if (nop.comment.size() > MAX_PRINT_CHARS) {
+    nop.comment = nop.comment.substr(0, MAX_PRINT_CHARS);
     auto n = nop.comment.find_last_of(',');
     if (n != std::string::npos) {
       nop.comment = nop.comment.substr(0, n);
