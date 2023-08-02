@@ -4,15 +4,15 @@
 #include <iostream>
 #include <sstream>
 
-#include "sys/setup.hpp"
+#include "lang/analyzer.hpp"
 #include "lang/evaluator_inc.hpp"
-#include "lang/evaluator_log.hpp"
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
 #include "oeis/oeis_program.hpp"
 #include "oeis/oeis_sequence.hpp"
 #include "sys/file.hpp"
 #include "sys/log.hpp"
+#include "sys/setup.hpp"
 
 const std::string Stats::CALL_GRAPH_HEADER("caller,callee");
 const std::string Stats::PROGRAMS_HEADER("id,length,usages,inc_eval,log_eval");
@@ -376,8 +376,7 @@ void Stats::updateProgramStats(size_t id, const Program &program) {
   Interpreter interpreter(settings);
   IncrementalEvaluator inceval(interpreter);
   supports_inceval[id] = inceval.init(program);
-  supports_logeval[id] =
-      LogarithmicEvaluator::hasLogarithmicComplexity(program);
+  supports_logeval[id] = Analyzer::hasLogarithmicComplexity(program);
   blocks_collector.add(program);
 }
 

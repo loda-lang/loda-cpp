@@ -8,10 +8,10 @@
 #include "cmd/test.hpp"
 #include "form/formula_gen.hpp"
 #include "form/pari.hpp"
+#include "lang/analyzer.hpp"
 #include "lang/comments.hpp"
 #include "lang/evaluator.hpp"
 #include "lang/evaluator_inc.hpp"
-#include "lang/evaluator_log.hpp"
 #include "lang/minimizer.hpp"
 #include "lang/optimizer.hpp"
 #include "lang/program_util.hpp"
@@ -337,7 +337,7 @@ void Commands::testLogEval() {
       continue;
     }
     auto program = parser.parse(in);
-    if (LogarithmicEvaluator::hasLogarithmicComplexity(program)) {
+    if (Analyzer::hasLogarithmicComplexity(program)) {
       Log::get().info(seq.id_str() + " has logarithmic complexity");
       count++;
     }

@@ -5,7 +5,7 @@
 #include <set>
 #include <sstream>
 
-#include "lang/evaluator_log.hpp"
+#include "lang/analyzer.hpp"
 #include "lang/number.hpp"
 #include "lang/program_util.hpp"
 #include "mine/config.hpp"
@@ -341,8 +341,8 @@ bool isBetterIncEval2(const Program &existing, const Program &optimized,
 bool isBetterLogEval(const Program &existing, const Program &optimized) {
   // optimized version has log complexity, existing does not
   return (ProgramUtil::hasOp(existing, Operation::Type::LPB) &&
-          !LogarithmicEvaluator::hasLogarithmicComplexity(existing) &&
-          LogarithmicEvaluator::hasLogarithmicComplexity(optimized));
+          !Analyzer::hasLogarithmicComplexity(existing) &&
+          Analyzer::hasLogarithmicComplexity(optimized));
 }
 
 std::string Finder::isOptimizedBetter(Program existing, Program optimized,
