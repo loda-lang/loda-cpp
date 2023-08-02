@@ -1,10 +1,10 @@
-#include "lang/evaluator_log.hpp"
+#include "lang/analyzer.hpp"
 
 #include <algorithm>
 
 #include "lang/program_util.hpp"
 
-bool LogarithmicEvaluator::hasLogarithmicComplexity(const Program& program) {
+bool Analyzer::hasLogarithmicComplexity(const Program& program) {
   // split up the program into fragments:
   Program pre_loop, loop_body;
   int64_t phase = 0;
