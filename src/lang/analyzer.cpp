@@ -52,7 +52,7 @@ SimpleLoopProgram Analyzer::extractSimpleLoop(const Program& program) {
 }
 
 bool Analyzer::hasLogarithmicComplexity(const Program& program) {
-  // check for forbidded operations
+  // check for forbidden operation types
   if (ProgramUtil::numOps(program, Operation::Type::SEQ) > 0) {
     return false;
   }
