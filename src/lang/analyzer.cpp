@@ -4,6 +4,53 @@
 
 #include "lang/program_util.hpp"
 
+SimpleLoopProgram Analyzer::extractSimpleLoop(const Program& program) {
+  // split the program into three parts:
+  // 1) pre-loop
+  // 2) loop body
+  // 3) post-loop
+  // return false if the program does not have this structure
+  SimpleLoopProgram result;
+  int64_t phase = 0;
+  for (auto& op : program.ops) {
+    if (op.type == Operation::Type::NOP) {
+      continue;
+    }
+    if (ProgramUtil::hasIndirectOperand(op)) {
+      result.is_simple_loop = false;
+      return result;
+    }
+    if (op.type == Operation::Type::LPB) {
+      if (phase != 0 || op.target.type != Operand::Type::DIRECT ||
+          op.source != Operand(Operand::Type::CONSTANT, 1)) {
+        result.is_simple_loop = false;
+        return result;
+      }
+      result.counter = op.target.value.asInt();
+      phase = 1;
+      continue;
+    }
+    if (op.type == Operation::Type::LPE) {
+      if (phase != 1) {
+        result.is_simple_loop = false;
+        return result;
+      }
+      phase = 2;
+      continue;
+    }
+    if (phase == 0) {
+      result.pre_loop.ops.push_back(op);
+    } else if (phase == 1) {
+      result.body.ops.push_back(op);
+    } else if (phase == 2) {
+      result.post_loop.ops.push_back(op);
+    }
+  }
+  // need to be in the post-loop phase here for success
+  result.is_simple_loop = (phase == 2);
+  return result;
+}
+
 bool Analyzer::hasLogarithmicComplexity(const Program& program) {
   // split up the program into fragments:
   Program pre_loop, loop_body;

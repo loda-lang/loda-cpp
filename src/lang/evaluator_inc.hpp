@@ -2,6 +2,7 @@
 
 #include <set>
 
+#include "lang/analyzer.hpp"
 #include "lang/interpreter.hpp"
 
 // Incremental Evaluator (IE) class for simple loop programs. It does not work
@@ -32,11 +33,8 @@ class IncrementalEvaluator {
   std::pair<Number, size_t> next(bool skip_final_iter = false,
                                  bool skip_post_loop = false);
 
-  inline const Program& getPreLoop() const { return pre_loop; }
+  inline const SimpleLoopProgram& getSimpleLoop() const { return simple_loop; }
   inline const Program& getPreLoopFiltered() const { return pre_loop_filtered; }
-  inline const Program& getLoopBody() const { return loop_body; }
-  inline const Program& getPostLoop() const { return post_loop; }
-  inline int64_t getLoopCounterCell() const { return loop_counter_cell; }
   inline int64_t getLoopCounterDecrement() const {
     return loop_counter_decrement;
   }
@@ -55,7 +53,6 @@ class IncrementalEvaluator {
   inline int64_t getPreviousSlice() const { return previous_slice; }
 
  private:
-  bool extractFragments(const Program& program);
   bool checkPreLoop(bool skip_input_transform);
   bool checkLoopBody();
   bool checkPostLoop();
@@ -66,14 +63,11 @@ class IncrementalEvaluator {
   Interpreter& interpreter;
 
   // program fragments and metadata
-  Program pre_loop;
+  SimpleLoopProgram simple_loop;
   Program pre_loop_filtered;
-  Program loop_body;
-  Program post_loop;
   std::set<int64_t> output_cells;
   std::set<int64_t> stateful_cells;
   std::set<int64_t> loop_counter_dependent_cells;
-  int64_t loop_counter_cell;
   int64_t loop_counter_decrement;
   Operation::Type loop_counter_type;
   bool initialized;

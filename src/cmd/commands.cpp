@@ -408,8 +408,9 @@ void Commands::testPari(const std::string& test_id) {
       while (numTerms > 0) {
         tmp_memory.clear();
         tmp_memory.set(Program::INPUT_CELL, numTerms - 1);
-        interpreter.run(inceval.getPreLoop(), tmp_memory);
-        int64_t tmpTerms = tmp_memory.get(inceval.getLoopCounterCell()).asInt();
+        interpreter.run(inceval.getSimpleLoop().pre_loop, tmp_memory);
+        int64_t tmpTerms =
+            tmp_memory.get(inceval.getSimpleLoop().counter).asInt();
         if (tmpTerms <= targetTerms) {
           break;
         }

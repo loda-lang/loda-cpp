@@ -327,12 +327,12 @@ bool isBetterIncEval2(const Program &existing, const Program &optimized,
   if (!inc.init(existing)) {
     return false;
   }
-  auto post_loop_existing = inc.getPostLoop();
+  auto post_loop_existing = inc.getSimpleLoop().post_loop;
   inc.reset();
   if (!inc.init(optimized)) {
     return false;
   }
-  auto post_loop_optimized = inc.getPostLoop();
+  auto post_loop_optimized = inc.getSimpleLoop().post_loop;
   inc.reset();
   return (isTrivialPostLoop(post_loop_optimized) &&
           !isTrivialPostLoop(post_loop_existing));
