@@ -302,13 +302,13 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   auto preloop_param_expr = getParamExpr();
   if (use_ie) {
     // update formula based on pre-loop code
-    if (!update(ie.getPreLoop())) {
+    if (!update(ie.getSimpleLoop().pre_loop)) {
       return false;
     }
     auto param = operandToExpression(
-        Operand(Operand::Type::DIRECT, Number(ie.getLoopCounterCell())));
+        Operand(Operand::Type::DIRECT, Number(ie.getSimpleLoop().counter)));
     preloop_param_expr = formula.entries[param];
-    initFormula(numCells, true, ie.getLoopCounterCell(),
+    initFormula(numCells, true, ie.getSimpleLoop().counter,
                 ie.getLoopCounterDecrement());
   }
   Log::get().debug("Initialized formula to " + formula.toString());
@@ -316,7 +316,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   // update formula based on main program / loop body
   Program main;
   if (use_ie) {
-    main = ie.getLoopBody();
+    main = ie.getSimpleLoop().body;
   } else {
     main = p;
   }
@@ -369,7 +369,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
       auto name = newName();
       auto left = getFuncExpr(name);
       Expression right;
-      if (cell == ie.getLoopCounterCell()) {
+      if (cell == ie.getSimpleLoop().counter) {
         auto last = getConstantExpr(0);
         if (ie.getLoopCounterDecrement() > 1) {
           auto loop_dec = getConstantExpr(ie.getLoopCounterDecrement());
@@ -394,7 +394,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     Log::get().debug("Prepared post-loop: " + formula.toString());
 
     // handle post-loop code
-    auto post = ie.getPostLoop();
+    auto post = ie.getSimpleLoop().post_loop;
     if (!update(post)) {
       return false;
     }
