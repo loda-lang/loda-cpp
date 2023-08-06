@@ -93,17 +93,21 @@ bool Analyzer::hasLogarithmicComplexity(const Program& program) {
   return true;
 }
 
+bool isConstantGreaterOne(const Operand& op) {
+  return (op.type == Operand::Type::CONSTANT && Number::ONE < op.value);
+}
+
+// ensure that the pre-loop contains exponential growth
+// example pre-loop:
+//   mov $1,2  ; [required,phase:=1] init loop counter with a constant >1
+//   add $0,1  ; [optional] increase argument
+//   pow $1,$0 ; [required,phase:=2] exponetial growth of loop counter
+//   mov $2,7  ; [optional] initialize other cells
 bool isExponentialPreLoop(const Program& pre_loop, int64_t counter) {
   // loop counter must be different than argument
   if (counter == Program::INPUT_CELL) {
     return false;
   }
-  // ensure that the pre-loop contains exponential growth.
-  // example pre-loop:
-  //   mov $1,2  ; [required,phase:=1] init loop counter with a constant >1
-  //   add $0,1  ; [optional] increase argument
-  //   pow $1,$0 ; [required,phase:=2] exponetial growth of loop counter
-  //   mov $2,7  ; [optional] initialize other cells
   int64_t phase = 0;
   for (auto& op : pre_loop.ops) {
     auto target = op.target.value.asInt();
@@ -111,8 +115,7 @@ bool isExponentialPreLoop(const Program& pre_loop, int64_t counter) {
     if (target == counter) {
       // initialization of loop counter with constant >1
       if (phase == 0 && op.type == Operation::Type::MOV &&
-          op.source.type == Operand::Type::CONSTANT &&
-          Number::ONE < op.source.value) {
+          isConstantGreaterOne(op.source)) {
         phase = 1;
       }
       // exponential growth of loop counter
@@ -131,13 +134,11 @@ bool isExponentialPreLoop(const Program& pre_loop, int64_t counter) {
       if (op.type != Operation::Type::ADD && op.type != Operation::Type::MUL) {
         return false;
       }
-      if (op.source.type != Operand::Type::CONSTANT ||
-          op.source.value < Number::ONE) {
+      if (!isConstantGreaterOne(op.source)) {
         return false;
       }
       // update is ok
     }
-    // everything else is ok
   }
   // must be in the last phase
   return (phase == 2);
@@ -149,15 +150,14 @@ bool isLinearBody(const Program& body, int64_t counter) {
   for (auto& op : body.ops) {
     const auto target = op.target.value.asInt();
     if (target == counter) {
-      // loop counter must be updated using division
+      // loop counter must be updated using subtraction or truncation
       if (op.type == Operation::Type::SUB || op.type == Operation::Type::TRN) {
         loop_counter_updated = true;
       } else {
         return false;
       }
-      // all updates must be using a positiv constant argument
-      if (op.source.type != Operand::Type::CONSTANT ||
-          op.source.value < Number::ONE) {
+      // all updates must be using a positive constant argument
+      if (!isConstantGreaterOne(op.source)) {
         return false;
       }
     }
