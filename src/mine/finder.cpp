@@ -99,11 +99,6 @@ Matcher::seq_programs_t Finder::findSequence(
   return result;
 }
 
-size_t getNumTerms(bool full_check) {
-  return full_check ? OeisSequence::FULL_SEQ_LENGTH
-                    : OeisSequence::EXTENDED_SEQ_LENGTH;
-}
-
 void Finder::findAll(const Program &p, const Sequence &norm_seq,
                      const std::vector<OeisSequence> &sequences,
                      Matcher::seq_programs_t &result) {
@@ -151,8 +146,9 @@ std::pair<std::string, Program> Finder::checkProgramExtended(
   std::pair<std::string, Program> result;
 
   // get the extended sequence and number of required terms
-  auto extended_seq = seq.getTerms(getNumTerms(full_check));
+  auto num_check = OeisProgram::getNumCheckTerms(full_check);
   auto num_required = OeisProgram::getNumRequiredTerms(program);
+  auto extended_seq = seq.getTerms(num_check);
 
   // check the program w/o minimization
   auto check_vanilla =
@@ -412,18 +408,18 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
   // ======= EVALUATION CHECKS =========
 
   // get extended sequence
-  auto num_terms = getNumTerms(full_check);
-  auto terms = seq.getTerms(num_terms);
+  auto num_check = OeisProgram::getNumCheckTerms(full_check);
+  auto terms = seq.getTerms(num_check);
   if (terms.empty()) {
     Log::get().error("Error fetching b-file for " + seq.id_str(), true);
   }
 
   // evaluate optimized program for fixed number of terms
-  num_terms = std::min<size_t>(num_terms, terms.size());
-  num_terms = std::max<size_t>(num_terms, OeisSequence::EXTENDED_SEQ_LENGTH);
+  num_check = std::min<size_t>(num_check, terms.size());
+  num_check = std::max<size_t>(num_check, OeisSequence::EXTENDED_SEQ_LENGTH);
   Sequence tmp;
   evaluator.clearCaches();
-  auto optimized_steps = evaluator.eval(optimized, tmp, num_terms, false);
+  auto optimized_steps = evaluator.eval(optimized, tmp, num_check, false);
   if (Signals::HALT) {
     return not_better;  // interrupted evaluation
   }
@@ -438,7 +434,7 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
 
   // evaluate existing program for same number of terms
   evaluator.clearCaches();
-  const auto existing_steps = evaluator.eval(existing, tmp, num_terms, false);
+  const auto existing_steps = evaluator.eval(existing, tmp, num_check, false);
   if (Signals::HALT) {
     return not_better;  // interrupted evaluation
   }

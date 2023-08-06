@@ -59,6 +59,11 @@ size_t OeisProgram::getTransitiveProgramHash(const Program &program) {
   return h;
 }
 
+size_t OeisProgram::getNumCheckTerms(bool full_check) {
+  return full_check ? OeisSequence::FULL_SEQ_LENGTH
+                    : OeisSequence::EXTENDED_SEQ_LENGTH;
+}
+
 size_t OeisProgram::getNumRequiredTerms(const Program &p) {
   return Analyzer::hasExponentialComplexity(p)
              ? OeisSequence::MIN_NUM_EXP_TERMS

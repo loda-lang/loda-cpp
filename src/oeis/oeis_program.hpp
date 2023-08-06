@@ -8,6 +8,8 @@ class OeisProgram {
 
   static size_t getTransitiveProgramHash(const Program& p);
 
+  static size_t getNumCheckTerms(bool full_check);
+
   static size_t getNumRequiredTerms(const Program& p);
 
   static bool unfold(Program& p);
