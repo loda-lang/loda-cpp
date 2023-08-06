@@ -12,6 +12,10 @@ class OeisSequence {
 
   static const size_t FULL_SEQ_LENGTH;
 
+  // required number of terminating terms for programs
+  // with exponential runtime complexity
+  static const size_t MIN_NUM_EXP_TERMS;
+
   static bool isTooBig(const Number& n);
 
   OeisSequence(size_t id = 0);

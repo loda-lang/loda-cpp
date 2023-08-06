@@ -99,6 +99,18 @@ Matcher::seq_programs_t Finder::findSequence(
   return result;
 }
 
+size_t getNumTerms(bool full_check) {
+  return full_check ? OeisSequence::FULL_SEQ_LENGTH
+                    : OeisSequence::EXTENDED_SEQ_LENGTH;
+}
+
+// determine number of required terminating terms
+size_t getNumTerminatingTerms(const Program &program) {
+  return Analyzer::hasExponentialComplexity(program)
+             ? OeisSequence::MIN_NUM_EXP_TERMS
+             : OeisSequence::DEFAULT_SEQ_LENGTH;
+}
+
 void Finder::findAll(const Program &p, const Sequence &norm_seq,
                      const std::vector<OeisSequence> &sequences,
                      Matcher::seq_programs_t &result) {
@@ -116,10 +128,9 @@ void Finder::findAll(const Program &p, const Sequence &norm_seq,
         continue;
       }
       last = t;
-
       auto expected_seq = s.getTerms(s.existingNumTerms());
       auto res = evaluator.check(t.second, expected_seq,
-                                 OeisSequence::DEFAULT_SEQ_LENGTH, t.first);
+                                 getNumTerminatingTerms(p), t.first);
       if (res.first == status_t::ERROR) {
         notifyInvalidMatch(t.first);
         // Log::get().warn( "Ignoring invalid match for " + s.id_str() );
@@ -141,11 +152,6 @@ void Finder::notifyUnfoldOrMinimizeProblem(const Program &p,
   ProgramUtil::print(p, out);
 }
 
-size_t getNumTerms(bool full_check) {
-  return full_check ? OeisSequence::FULL_SEQ_LENGTH
-                    : OeisSequence::EXTENDED_SEQ_LENGTH;
-}
-
 std::pair<std::string, Program> Finder::checkProgramExtended(
     Program program, Program existing, bool is_new, const OeisSequence &seq,
     bool full_check, size_t num_usages) {
@@ -154,9 +160,12 @@ std::pair<std::string, Program> Finder::checkProgramExtended(
   // get the extended sequence
   auto extended_seq = seq.getTerms(getNumTerms(full_check));
 
+  // determine number of required terminating terms
+  size_t num_terminating_terms = getNumTerminatingTerms(program);
+
   // check the program w/o minimization
-  auto check_vanilla = evaluator.check(
-      program, extended_seq, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id);
+  auto check_vanilla =
+      evaluator.check(program, extended_seq, num_terminating_terms, seq.id);
   if (check_vanilla.first == status_t::ERROR) {
     notifyInvalidMatch(seq.id);
     return result;  // not correct
@@ -168,12 +177,13 @@ std::pair<std::string, Program> Finder::checkProgramExtended(
   // auto-unfold seq operations
   OeisProgram::autoUnfold(program);
 
-  // minimize for default number of terms
-  minimizer.optimizeAndMinimize(program, OeisSequence::DEFAULT_SEQ_LENGTH);
+  // minimize based on number of terminating terms
+  minimizer.optimizeAndMinimize(program, num_terminating_terms);
   if (program != result.second) {
     // minimization changed program => check the minimized program
-    auto check_minimized = evaluator.check(
-        program, extended_seq, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id);
+    num_terminating_terms = getNumTerminatingTerms(program);
+    auto check_minimized =
+        evaluator.check(program, extended_seq, num_terminating_terms, seq.id);
     if (check_minimized.first == status_t::ERROR) {
       if (check_vanilla.first == status_t::OK) {
         // looks like the minimization changed the semantics of the program
@@ -237,11 +247,11 @@ std::pair<std::string, Program> Finder::checkProgramBasic(
   }
 
   // get the default-length sequence
-  auto default_seq = seq.getTerms(OeisSequence::DEFAULT_SEQ_LENGTH);
+  size_t num_terminating_terms = getNumTerminatingTerms(program);
+  auto terms = seq.getTerms(num_terminating_terms);
 
   // check the program
-  auto check = evaluator.check(program, default_seq,
-                               OeisSequence::DEFAULT_SEQ_LENGTH, seq.id);
+  auto check = evaluator.check(program, terms, num_terminating_terms, seq.id);
   if (check.first == status_t::ERROR) {
     notifyInvalidMatch(seq.id);
     return result;  // not correct

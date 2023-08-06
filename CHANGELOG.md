@@ -2,8 +2,11 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v23.8.6
+
 ### Enhancements
 
+* Detect programs with exponential complexity
 * Remove Twitter support
 
 ## v23.7.9
