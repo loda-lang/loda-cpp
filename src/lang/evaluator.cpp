@@ -113,10 +113,10 @@ steps_t Evaluator::eval(const Program &p, std::vector<Sequence> &seqs,
 
 std::pair<status_t, steps_t> Evaluator::check(const Program &p,
                                               const Sequence &expected_seq,
-                                              int64_t num_terminating_terms,
+                                              int64_t num_required_terms,
                                               int64_t id) {
-  if (num_terminating_terms < 0) {
-    num_terminating_terms = expected_seq.size();
+  if (num_required_terms < 0) {
+    num_required_terms = expected_seq.size();
   }
   if (check_eval_time) {
     start_time = std::chrono::steady_clock::now();
@@ -146,8 +146,8 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
       if (settings.print_as_b_file) {
         std::cout << std::string(e.what()) << std::endl;
       }
-      result.first = ((int64_t)i >= num_terminating_terms) ? status_t::WARNING
-                                                           : status_t::ERROR;
+      result.first = ((int64_t)i >= num_required_terms) ? status_t::WARNING
+                                                        : status_t::ERROR;
       return result;
     }
     if (out != expected_seq[i]) {
