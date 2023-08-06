@@ -298,7 +298,7 @@ void Commands::test() {
   test.all();
 }
 
-void Commands::testAnalyzer(const std::string& test_id) {
+void Commands::testIncEval(const std::string& test_id) {
   initLog(false);
   Settings settings;
   OeisManager manager(settings);
@@ -320,7 +320,7 @@ void Commands::testAnalyzer(const std::string& test_id) {
                   std::to_string(count) + " programs");
 }
 
-void Commands::testLogEval() {
+void Commands::testAnalyzer() {
   initLog(false);
   Log::get().info("Testing analyzer");
   Parser parser;

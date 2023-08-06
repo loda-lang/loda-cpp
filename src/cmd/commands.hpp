@@ -42,9 +42,9 @@ class Commands {
 
   void test();
 
-  void testAnalyzer(const std::string& id);
+  void testIncEval(const std::string& id);
 
-  void testLogEval();
+  void testAnalyzer();
 
   void testPari(const std::string& id);
 
