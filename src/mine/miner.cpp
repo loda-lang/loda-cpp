@@ -15,6 +15,7 @@
 #include "mine/generator.hpp"
 #include "mine/mutator.hpp"
 #include "oeis/oeis_manager.hpp"
+#include "oeis/oeis_program.hpp"
 #include "sys/file.hpp"
 #include "sys/log.hpp"
 #include "sys/metrics.hpp"
@@ -389,13 +390,13 @@ void Miner::submit(const std::string &path, std::string id) {
   Log::get().info("Validating program for " + seq.id_str());
   Evaluator evaluator(settings);
   auto terms = seq.getTerms(OeisSequence::FULL_SEQ_LENGTH);
-  auto result =
-      evaluator.check(program, terms, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id);
+  auto num_required = OeisProgram::getNumRequiredTerms(program);
+  auto result = evaluator.check(program, terms, num_required, seq.id);
   if (result.first == status_t::ERROR) {
     Log::get().error("Validation failed", false);
     settings.print_as_b_file = true;
     Evaluator evaluator2(settings);
-    evaluator2.check(program, terms, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id);
+    evaluator2.check(program, terms, num_required, seq.id);
     return;  // error
   }
   Log::get().info("Validation successful");

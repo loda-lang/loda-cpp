@@ -159,15 +159,16 @@ void Commands::evaluate(const std::string& path) {
 void Commands::check(const std::string& path) {
   initLog(true);
   auto program_and_id = OeisProgram::getProgramAndSeqId(path);
+  auto program = program_and_id.first;
   OeisSequence seq(program_and_id.second);
   if (seq.id == 0) {
-    auto id_str = Comments::getSequenceIdFromProgram(program_and_id.first);
+    auto id_str = Comments::getSequenceIdFromProgram(program);
     seq = OeisSequence(id_str);
   }
   Evaluator evaluator(settings);
   auto terms = seq.getTerms(OeisSequence::FULL_SEQ_LENGTH);
-  auto result = evaluator.check(program_and_id.first, terms,
-                                OeisSequence::DEFAULT_SEQ_LENGTH, seq.id);
+  auto num_required = OeisProgram::getNumRequiredTerms(program);
+  auto result = evaluator.check(program, terms, num_required, seq.id);
   switch (result.first) {
     case status_t::OK:
       std::cout << "ok" << std::endl;

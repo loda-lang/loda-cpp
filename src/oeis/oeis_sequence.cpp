@@ -19,6 +19,8 @@ const size_t OeisSequence::EXTENDED_SEQ_LENGTH = 1000;  // magic number
 
 const size_t OeisSequence::FULL_SEQ_LENGTH = 100000;  // magic number
 
+const size_t OeisSequence::MIN_NUM_EXP_TERMS = 16;  // magic number
+
 bool OeisSequence::isTooBig(const Number& n) {
   if (n == Number::INF) {
     return true;
