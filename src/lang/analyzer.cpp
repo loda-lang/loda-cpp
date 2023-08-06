@@ -149,7 +149,6 @@ bool isLinearBody(const Program& body, int64_t counter) {
   for (auto& op : body.ops) {
     const auto target = op.target.value.asInt();
     if (target == counter) {
-      loop_counter_updated = true;
       // loop counter must be updated using subtraction or truncation
       if (op.type != Operation::Type::SUB && op.type != Operation::Type::TRN) {
         return false;
@@ -158,6 +157,7 @@ bool isLinearBody(const Program& body, int64_t counter) {
       if (!isConstantGreaterThan(op.source, 0)) {
         return false;
       }
+      loop_counter_updated = true;
     }
   }
   return loop_counter_updated;
