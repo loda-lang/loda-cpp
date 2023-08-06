@@ -5,11 +5,6 @@
 #include "lang/program_util.hpp"
 
 SimpleLoopProgram Analyzer::extractSimpleLoop(const Program& program) {
-  // split the program into three parts:
-  // 1) pre-loop
-  // 2) loop body
-  // 3) post-loop
-  // return false if the program does not have this structure
   SimpleLoopProgram result;
   int64_t phase = 0;
   for (auto& op : program.ops) {
@@ -137,8 +132,9 @@ bool isExponentialPreLoop(const Program& pre_loop, int64_t counter) {
       if (!isConstantGreaterOne(op.source)) {
         return false;
       }
-      // update is ok
+      // argument update is ok
     }
+    // updates to other cells are ok
   }
   // must be in the last phase
   return (phase == 2);
@@ -150,10 +146,9 @@ bool isLinearBody(const Program& body, int64_t counter) {
   for (auto& op : body.ops) {
     const auto target = op.target.value.asInt();
     if (target == counter) {
+      loop_counter_updated = true;
       // loop counter must be updated using subtraction or truncation
-      if (op.type == Operation::Type::SUB || op.type == Operation::Type::TRN) {
-        loop_counter_updated = true;
-      } else {
+      if (op.type != Operation::Type::SUB && op.type != Operation::Type::TRN) {
         return false;
       }
       // all updates must be using a positive constant argument

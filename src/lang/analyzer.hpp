@@ -13,7 +13,10 @@ class SimpleLoopProgram {
 
 class Analyzer {
  public:
-  // Check if a program is a simple loop and extract its parts.
+  // Check if a program is a simple loop and extract its parts:
+  // 1) pre-loop
+  // 2) loop body
+  // 3) post-loop
   static SimpleLoopProgram extractSimpleLoop(const Program& program);
 
   // Static code analysis check to find out whether a program consists of a
