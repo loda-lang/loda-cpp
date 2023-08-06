@@ -2,6 +2,7 @@
 
 #include <set>
 
+#include "lang/analyzer.hpp"
 #include "lang/comments.hpp"
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
@@ -56,6 +57,12 @@ size_t OeisProgram::getTransitiveProgramHash(const Program &program) {
     h += ProgramUtil::hash(p);
   }
   return h;
+}
+
+size_t OeisProgram::getNumRequiredTerms(const Program &p) {
+  return Analyzer::hasExponentialComplexity(p)
+             ? OeisSequence::MIN_NUM_EXP_TERMS
+             : OeisSequence::DEFAULT_SEQ_LENGTH;
 }
 
 void updateOperand(Operand &op, int64_t target, int64_t largest_used) {

@@ -883,12 +883,11 @@ bool OeisManager::maintainProgram(size_t id) {
 
   // get the full number of terms
   auto extended_seq = s.getTerms(OeisSequence::FULL_SEQ_LENGTH);
-  auto num_terminating_terms = Finder::getNumTerminatingTerms(program);
+  auto num_required = OeisProgram::getNumRequiredTerms(program);
 
   // check correctness of the program
   try {
-    auto check =
-        evaluator.check(program, extended_seq, num_terminating_terms, id);
+    auto check = evaluator.check(program, extended_seq, num_required, id);
     if (Signals::HALT) {
       return true;  // interrupted evaluation
     }
@@ -912,7 +911,7 @@ bool OeisManager::maintainProgram(size_t id) {
     ProgramUtil::removeOps(program, Operation::Type::NOP);
     auto m = program;
     OeisProgram::autoUnfold(m);
-    minimizer.optimizeAndMinimize(m, num_terminating_terms);
+    minimizer.optimizeAndMinimize(m, num_required);
     dumpProgram(s.id, m, file_name, submitted_by);
   }
   return true;
