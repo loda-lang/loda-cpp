@@ -44,7 +44,7 @@ class Commands {
 
   void testIncEval(const std::string& id);
 
-  void testLogEval();
+  void testAnalyzer();
 
   void testPari(const std::string& id);
 
