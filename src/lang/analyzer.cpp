@@ -69,7 +69,6 @@ bool Analyzer::hasLogarithmicComplexity(const Program& program) {
                   })) {
     return false;
   }
-
   // check updates of loop counter cell in loop body
   bool loop_counter_updated = false;
   for (auto& op : simple_loop.body.ops) {
@@ -90,7 +89,96 @@ bool Analyzer::hasLogarithmicComplexity(const Program& program) {
   if (!loop_counter_updated) {
     return false;
   }
-
   // success: program has log complexity
+  return true;
+}
+
+bool isExponentialPreLoop(const Program& pre_loop, int64_t counter) {
+  // loop counter must be different than argument
+  if (counter == Program::INPUT_CELL) {
+    return false;
+  }
+  // ensure that the pre-loop contains exponential growth.
+  // example pre-loop:
+  //   mov $1,2  ; [required,phase:=1] init loop counter with a constant >1
+  //   add $0,1  ; [optional] increase argument
+  //   pow $1,$0 ; [required,phase:=2] exponetial growth of loop counter
+  //   mov $2,7  ; [optional] initialize other cells
+  int64_t phase = 0;
+  for (auto& op : pre_loop.ops) {
+    auto target = op.target.value.asInt();
+    // loop counter update
+    if (target == counter) {
+      // initialization of loop counter with constant >1
+      if (phase == 0 && op.type == Operation::Type::MOV &&
+          op.source.type == Operand::Type::CONSTANT &&
+          Number::ONE < op.source.value) {
+        phase = 1;
+      }
+      // exponential growth of loop counter
+      else if (phase == 1 && op.type == Operation::Type::POW &&
+               op.source ==
+                   Operand(Operand::Type::DIRECT, Program::INPUT_CELL)) {
+        phase = 2;
+      } else {
+        // everything else is not ok
+        return false;
+      }
+    }
+    // argument update
+    else if (target == Program::INPUT_CELL) {
+      // check for allowed updates
+      if (op.type != Operation::Type::ADD && op.type != Operation::Type::MUL) {
+        return false;
+      }
+      if (op.source.type != Operand::Type::CONSTANT ||
+          op.source.value < Number::ONE) {
+        return false;
+      }
+      // update is ok
+    }
+    // everything else is ok
+  }
+  // must be in the last phase
+  return (phase == 2);
+}
+
+bool isLinearBody(const Program& body, int64_t counter) {
+  // check updates of loop counter cell in loop body
+  bool loop_counter_updated = false;
+  for (auto& op : body.ops) {
+    const auto target = op.target.value.asInt();
+    if (target == counter) {
+      // loop counter must be updated using division
+      if (op.type == Operation::Type::SUB || op.type == Operation::Type::TRN) {
+        loop_counter_updated = true;
+      } else {
+        return false;
+      }
+      // all updates must be using a positiv constant argument
+      if (op.source.type != Operand::Type::CONSTANT ||
+          op.source.value < Number::ONE) {
+        return false;
+      }
+    }
+  }
+  return loop_counter_updated;
+}
+
+bool Analyzer::hasExponentialComplexity(const Program& program) {
+  // split up the program into fragments
+  auto simple_loop = extractSimpleLoop(program);
+  if (!simple_loop.is_simple_loop) {
+    return false;
+  }
+  // check pre-loop
+  if (!isExponentialPreLoop(simple_loop.pre_loop, simple_loop.counter)) {
+    return false;
+  }
+  // check body
+  if (!isLinearBody(simple_loop.body, simple_loop.counter)) {
+    return false;
+  }
+  // success: program has exponential complexity
   return true;
 }
