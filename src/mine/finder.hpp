@@ -34,6 +34,9 @@ class Finder {
 
   std::vector<std::unique_ptr<Matcher>> &getMatchers() { return matchers; }
 
+  // determine number of required terminating terms
+  static size_t getNumTerminatingTerms(const Program &program);
+
   void logSummary(size_t loaded_count);
 
   std::string isOptimizedBetter(Program existing, Program optimized,

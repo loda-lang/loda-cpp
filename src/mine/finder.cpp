@@ -104,8 +104,7 @@ size_t getNumTerms(bool full_check) {
                     : OeisSequence::EXTENDED_SEQ_LENGTH;
 }
 
-// determine number of required terminating terms
-size_t getNumTerminatingTerms(const Program &program) {
+size_t Finder::getNumTerminatingTerms(const Program &program) {
   return Analyzer::hasExponentialComplexity(program)
              ? OeisSequence::MIN_NUM_EXP_TERMS
              : OeisSequence::DEFAULT_SEQ_LENGTH;

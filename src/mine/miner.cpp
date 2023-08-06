@@ -389,13 +389,13 @@ void Miner::submit(const std::string &path, std::string id) {
   Log::get().info("Validating program for " + seq.id_str());
   Evaluator evaluator(settings);
   auto terms = seq.getTerms(OeisSequence::FULL_SEQ_LENGTH);
-  auto result =
-      evaluator.check(program, terms, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id);
+  auto num_terminating_terms = Finder::getNumTerminatingTerms(program);
+  auto result = evaluator.check(program, terms, num_terminating_terms, seq.id);
   if (result.first == status_t::ERROR) {
     Log::get().error("Validation failed", false);
     settings.print_as_b_file = true;
     Evaluator evaluator2(settings);
-    evaluator2.check(program, terms, OeisSequence::DEFAULT_SEQ_LENGTH, seq.id);
+    evaluator2.check(program, terms, num_terminating_terms, seq.id);
     return;  // error
   }
   Log::get().info("Validation successful");

@@ -883,11 +883,12 @@ bool OeisManager::maintainProgram(size_t id) {
 
   // get the full number of terms
   auto extended_seq = s.getTerms(OeisSequence::FULL_SEQ_LENGTH);
+  auto num_terminating_terms = Finder::getNumTerminatingTerms(program);
 
   // check correctness of the program
   try {
-    auto check = evaluator.check(program, extended_seq,
-                                 OeisSequence::DEFAULT_SEQ_LENGTH, id);
+    auto check =
+        evaluator.check(program, extended_seq, num_terminating_terms, id);
     if (Signals::HALT) {
       return true;  // interrupted evaluation
     }
@@ -903,16 +904,16 @@ bool OeisManager::maintainProgram(size_t id) {
     alert(program, id, "Removed invalid", "danger", "");
     remove(file_name.c_str());
     return false;
-  } else {
-    // unfold, minimize and dump the program if it is not protected
-    const bool is_protected = (protect_list.find(s.id) != protect_list.end());
-    if (!is_protected && !Comments::isCodedManually(program)) {
-      ProgramUtil::removeOps(program, Operation::Type::NOP);
-      auto m = program;
-      OeisProgram::autoUnfold(m);
-      minimizer.optimizeAndMinimize(m, OeisSequence::DEFAULT_SEQ_LENGTH);
-      dumpProgram(s.id, m, file_name, submitted_by);
-    }
-    return true;
   }
+
+  // unfold, minimize and dump the program if it is not protected
+  const bool is_protected = (protect_list.find(s.id) != protect_list.end());
+  if (!is_protected && !Comments::isCodedManually(program)) {
+    ProgramUtil::removeOps(program, Operation::Type::NOP);
+    auto m = program;
+    OeisProgram::autoUnfold(m);
+    minimizer.optimizeAndMinimize(m, num_terminating_terms);
+    dumpProgram(s.id, m, file_name, submitted_by);
+  }
+  return true;
 }

@@ -166,8 +166,10 @@ void Commands::check(const std::string& path) {
   }
   Evaluator evaluator(settings);
   auto terms = seq.getTerms(OeisSequence::FULL_SEQ_LENGTH);
+  auto num_terminating_terms =
+      Finder::getNumTerminatingTerms(program_and_id.first);
   auto result = evaluator.check(program_and_id.first, terms,
-                                OeisSequence::DEFAULT_SEQ_LENGTH, seq.id);
+                                num_terminating_terms, seq.id);
   switch (result.first) {
     case status_t::OK:
       std::cout << "ok" << std::endl;
