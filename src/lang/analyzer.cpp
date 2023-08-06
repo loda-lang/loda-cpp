@@ -88,8 +88,8 @@ bool Analyzer::hasLogarithmicComplexity(const Program& program) {
   return true;
 }
 
-bool isConstantGreaterOne(const Operand& op) {
-  return (op.type == Operand::Type::CONSTANT && Number::ONE < op.value);
+bool isConstantGreaterThan(const Operand& op, int64_t constant) {
+  return (op.type == Operand::Type::CONSTANT && Number(constant) < op.value);
 }
 
 // ensure that the pre-loop contains exponential growth
@@ -110,7 +110,7 @@ bool isExponentialPreLoop(const Program& pre_loop, int64_t counter) {
     if (target == counter) {
       // initialization of loop counter with constant >1
       if (phase == 0 && op.type == Operation::Type::MOV &&
-          isConstantGreaterOne(op.source)) {
+          isConstantGreaterThan(op.source, 1)) {
         phase = 1;
       }
       // exponential growth of loop counter
@@ -126,10 +126,13 @@ bool isExponentialPreLoop(const Program& pre_loop, int64_t counter) {
     // argument update
     else if (target == Program::INPUT_CELL) {
       // check for allowed updates
-      if (op.type != Operation::Type::ADD && op.type != Operation::Type::MUL) {
-        return false;
-      }
-      if (!isConstantGreaterOne(op.source)) {
+      if (op.type == Operation::Type::ADD &&
+          isConstantGreaterThan(op.source, -1)) {
+        // ok
+      } else if (op.type != Operation::Type::MUL &&
+                 isConstantGreaterThan(op.source, 0)) {
+        // ok
+      } else {
         return false;
       }
       // argument update is ok
@@ -152,7 +155,7 @@ bool isLinearBody(const Program& body, int64_t counter) {
         return false;
       }
       // all updates must be using a positive constant argument
-      if (!isConstantGreaterOne(op.source)) {
+      if (!isConstantGreaterThan(op.source, 0)) {
         return false;
       }
     }
