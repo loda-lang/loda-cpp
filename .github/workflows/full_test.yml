@@ -20,8 +20,8 @@ jobs:
           git clone https://github.com/loda-lang/loda-programs.git $HOME/loda/programs
       - name: Test IncEval
         run: ./loda test-inceval
-      - name: Test LogEval
-        run: ./loda test-logeval
+      - name: Test Analyzer
+        run: ./loda test-analyzer
       - name: Test PARI
         run: |
           sudo apt-get update

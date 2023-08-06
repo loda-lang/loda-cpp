@@ -198,8 +198,8 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
     if (args.size() > 1) {
       id = args.at(1);
     }
-    commands.testIncEval(id);
-  } else if (cmd == "test-logeval") {
+    commands.testAnalyzer(id);
+  } else if (cmd == "test-analyzer") {
     commands.testLogEval();
   } else if (cmd == "test-pari") {
     std::string id;

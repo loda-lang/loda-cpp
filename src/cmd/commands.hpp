@@ -42,7 +42,7 @@ class Commands {
 
   void test();
 
-  void testIncEval(const std::string& id);
+  void testAnalyzer(const std::string& id);
 
   void testLogEval();
 

@@ -298,7 +298,7 @@ void Commands::test() {
   test.all();
 }
 
-void Commands::testIncEval(const std::string& test_id) {
+void Commands::testAnalyzer(const std::string& test_id) {
   initLog(false);
   Settings settings;
   OeisManager manager(settings);
@@ -322,28 +322,47 @@ void Commands::testIncEval(const std::string& test_id) {
 
 void Commands::testLogEval() {
   initLog(false);
-  Log::get().info("Testing logarithmic evaluator");
+  Log::get().info("Testing analyzer");
   Parser parser;
+  Program program;
   OeisManager manager(settings);
   auto& stats = manager.getStats();
-  int64_t count = 0;
+  int64_t log_count = 0, exp_count = 0;
   for (size_t id = 0; id < stats.all_program_ids.size(); id++) {
     if (!stats.all_program_ids[id]) {
       continue;
     }
     OeisSequence seq(id);
+    auto id_str = seq.id_str();
     std::ifstream in(seq.getProgramPath());
     if (!in) {
       continue;
     }
-    auto program = parser.parse(in);
-    if (Analyzer::hasLogarithmicComplexity(program)) {
-      Log::get().info(seq.id_str() + " has logarithmic complexity");
-      count++;
+    try {
+      program = parser.parse(in);
+    } catch (std::exception& e) {
+      Log::get().warn("Skipping " + id_str + ": " + e.what());
+      continue;
+    }
+    bool is_log = Analyzer::hasLogarithmicComplexity(program);
+    bool is_exp = Analyzer::hasExponentialComplexity(program);
+    if (is_log) {
+      Log::get().info(id_str + " has logarithmic complexity");
+      log_count++;
+    }
+    if (is_exp) {
+      Log::get().info(id_str + " has exponential complexity");
+      exp_count++;
+    }
+    if (is_log && is_exp) {
+      Log::get().error(
+          id_str + " has both logarithmic and exponential complexity", true);
     }
   }
-  Log::get().info(std::to_string(count) +
+  Log::get().info(std::to_string(log_count) +
                   " programs have logarithmic complexity");
+  Log::get().info(std::to_string(exp_count) +
+                  " programs have exponential complexity");
 }
 
 void Commands::testPari(const std::string& test_id) {
