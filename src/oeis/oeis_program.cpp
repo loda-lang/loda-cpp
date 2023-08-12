@@ -65,9 +65,10 @@ size_t OeisProgram::getNumCheckTerms(bool full_check) {
 }
 
 size_t OeisProgram::getNumRequiredTerms(const Program &p) {
-  return Analyzer::hasExponentialComplexity(p)
-             ? OeisSequence::MIN_NUM_EXP_TERMS
-             : OeisSequence::DEFAULT_SEQ_LENGTH;
+  return OeisSequence::DEFAULT_SEQ_LENGTH;
+  // return Analyzer::hasExponentialComplexity(p)
+  //            ? OeisSequence::MIN_NUM_EXP_TERMS
+  //            : OeisSequence::DEFAULT_SEQ_LENGTH;
 }
 
 void updateOperand(Operand &op, int64_t target, int64_t largest_used) {

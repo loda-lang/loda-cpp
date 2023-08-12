@@ -2,6 +2,12 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v23.8.12
+
+### Bugfixes
+
+* Disable reduced number of terms for exponential programs
+
 ## v23.8.6
 
 ### Enhancements
