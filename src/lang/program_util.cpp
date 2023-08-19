@@ -237,9 +237,20 @@ int64_t ProgramUtil::getLargestDirectMemoryCell(const Program &p) {
   return largest;
 }
 
+std::set<Number> ProgramUtil::getAllConstants(const Program &p) {
+  std::set<Number> result;
+  for (const auto &op : p.ops) {
+    auto num_operands = Operation::Metadata::get(op.type).num_operands;
+    if (num_operands > 1 && op.source.type == Operand::Type::CONSTANT) {
+      result.insert(op.source.value);
+    }
+  }
+  return result;
+}
+
 Number ProgramUtil::getLargestConstant(const Program &p) {
   Number largest(-1);
-  for (auto &op : p.ops) {
+  for (const auto &op : p.ops) {
     if (op.source.type == Operand::Type::CONSTANT &&
         largest < op.source.value) {
       largest = op.source.value;

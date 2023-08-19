@@ -250,32 +250,26 @@ std::pair<std::string, Program> Finder::checkProgramBasic(
   return result;
 }
 
-bool hasBadGcd(const Program &p) {
-  for (const auto &op : p.ops) {
-    if (op.type == Operation::Type::GCD &&
-        op.source.type == Operand::Type::CONSTANT &&
-        (Minimizer::getPowerOf(op.source.value) != 0 ||
-         Number(100000) < op.source.value)) {
-      return true;
-    }
-  }
-  return false;
+bool hasBadConstant(const Program &p) {
+  auto constants = ProgramUtil::getAllConstants(p);
+  return std::any_of(constants.begin(), constants.end(), [](const Number &c) {
+    return (Minimizer::getPowerOf(c) != 0 ||
+            Number(100000) < c);  // magic number
+  });
 }
 
 bool hasBadLoop(const Program &p) {
-  for (const auto &op : p.ops) {
-    if (op.type == Operation::Type::LPB &&
-        (op.source.type != Operand::Type::CONSTANT ||
-         op.source.value != Number::ONE)) {
-      return true;
-    }
-  }
-  return false;
+  return std::any_of(p.ops.begin(), p.ops.end(), [](const Operation &op) {
+    return (op.type == Operation::Type::LPB &&
+            (op.source.type != Operand::Type::CONSTANT ||
+             op.source.value != Number::ONE));
+  });
 }
 
 bool isSimpler(const Program &existing, const Program &optimized) {
   bool optimized_has_seq = ProgramUtil::hasOp(optimized, Operation::Type::SEQ);
-  if (hasBadGcd(existing) && !hasBadGcd(optimized) && !optimized_has_seq) {
+  if (hasBadConstant(existing) && !hasBadConstant(optimized) &&
+      !optimized_has_seq) {
     return true;
   }
   if (hasBadLoop(existing) && !hasBadLoop(optimized) && !optimized_has_seq) {
@@ -304,35 +298,6 @@ bool isBetterIncEval(const Program &existing, const Program &optimized,
   bool optimized_has_seq = ProgramUtil::hasOp(optimized, Operation::Type::SEQ);
   return (!evaluator.supportsIncEval(existing) &&
           evaluator.supportsIncEval(optimized) && !optimized_has_seq);
-}
-
-bool isTrivialPostLoop(const Program &post_loop) {
-  if (post_loop.ops.size() > 1) {
-    return false;
-  }
-  if (post_loop.ops.size() == 1 &&
-      post_loop.ops[0].type != Operation::Type::MOV) {
-    return false;
-  }
-  return true;
-}
-
-bool isBetterIncEval2(const Program &existing, const Program &optimized,
-                      Evaluator &evaluator) {
-  // both are IE programs. optimized version has trivial post-loop, existing not
-  auto &inc = evaluator.getIncEvaluator();
-  if (!inc.init(existing)) {
-    return false;
-  }
-  auto post_loop_existing = inc.getSimpleLoop().post_loop;
-  inc.reset();
-  if (!inc.init(optimized)) {
-    return false;
-  }
-  auto post_loop_optimized = inc.getSimpleLoop().post_loop;
-  inc.reset();
-  return (isTrivialPostLoop(post_loop_optimized) &&
-          !isTrivialPostLoop(post_loop_existing));
 }
 
 bool isBetterLogEval(const Program &existing, const Program &optimized) {
@@ -394,13 +359,6 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
     if (isBetterIncEval(existing, optimized, evaluator)) {
       return "Faster (IE)";
     } else if (isBetterIncEval(optimized, existing, evaluator)) {
-      return not_better;  // worse
-    }
-
-    // check if programs support incremental evaluation and optimized is simpler
-    if (isBetterIncEval2(existing, optimized, evaluator)) {
-      return "Simpler";
-    } else if (isBetterIncEval2(optimized, existing, evaluator)) {
       return not_better;  // worse
     }
   }

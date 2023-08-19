@@ -46,6 +46,8 @@ class ProgramUtil {
 
   static int64_t getLargestDirectMemoryCell(const Program &p);
 
+  static std::set<Number> getAllConstants(const Program &p);
+
   static Number getLargestConstant(const Program &p);
 
   class ConstantLoopInfo {
