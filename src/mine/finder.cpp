@@ -251,7 +251,7 @@ std::pair<std::string, Program> Finder::checkProgramBasic(
 }
 
 bool hasBadConstant(const Program &p) {
-  auto constants = ProgramUtil::getAllConstants(p);
+  auto constants = ProgramUtil::getAllConstants(p, true);
   return std::any_of(constants.begin(), constants.end(), [](const Number &c) {
     return (Minimizer::getPowerOf(c) != 0 ||
             Number(100000) < c);  // magic number

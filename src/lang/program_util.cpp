@@ -237,11 +237,13 @@ int64_t ProgramUtil::getLargestDirectMemoryCell(const Program &p) {
   return largest;
 }
 
-std::set<Number> ProgramUtil::getAllConstants(const Program &p) {
+std::set<Number> ProgramUtil::getAllConstants(const Program &p,
+                                              bool arithmetic_only) {
   std::set<Number> result;
   for (const auto &op : p.ops) {
     auto num_operands = Operation::Metadata::get(op.type).num_operands;
-    if (num_operands > 1 && op.source.type == Operand::Type::CONSTANT) {
+    if (num_operands > 1 && op.source.type == Operand::Type::CONSTANT &&
+        (isArithmetic(op.type) || !arithmetic_only)) {
       result.insert(op.source.value);
     }
   }

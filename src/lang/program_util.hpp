@@ -46,7 +46,8 @@ class ProgramUtil {
 
   static int64_t getLargestDirectMemoryCell(const Program &p);
 
-  static std::set<Number> getAllConstants(const Program &p);
+  static std::set<Number> getAllConstants(const Program &p,
+                                          bool arithmetic_only);
 
   static Number getLargestConstant(const Program &p);
 

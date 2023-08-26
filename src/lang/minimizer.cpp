@@ -141,13 +141,15 @@ bool Minimizer::check(const Program& p, const Sequence& seq,
 }
 
 int64_t Minimizer::getPowerOf(const Number& v) {
-  std::vector<int64_t> bases = {2, 3, 5, 7, 10};  // magic number
-  for (int64_t base : bases) {
-    auto exp = Semantics::getPowerOf(v, base);
-    if (exp == Number::INF) {
+  std::vector<int64_t> bases = {2, 3, 5, 7, 10};         // magic number
+  std::vector<int64_t> min_exponents = {7, 6, 5, 5, 4};  // magic number
+  for (size_t i = 0; i < bases.size(); i++) {
+    auto base = bases.at(i);
+    auto exponent = Semantics::getPowerOf(v, base);
+    if (exponent == Number::INF) {
       continue;
     }
-    if (Number(4) < exp) {  // magic number
+    if (min_exponents.at(i) <= exponent.asInt()) {
       return base;
     }
   }
