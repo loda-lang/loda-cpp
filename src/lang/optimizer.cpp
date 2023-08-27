@@ -469,13 +469,23 @@ bool Optimizer::fixSandwich(Program &p) const {
         op1.source.value /= op2.source.value;
         changed = true;
       }
+    } else if (ProgramUtil::isAdditive(op2.type) &&
+               op1.type == Operation::Type::MUL &&
+               op3.type == Operation::Type::DIV && op1.source == op3.source &&
+               Number::ONE < op1.source.value &&
+               Number::ONE < op2.source.value &&
+               Semantics::mod(op2.source.value, op1.source.value) ==
+                   Number::ZERO) {
+      std::swap(op1, op2);
+      op1.source.value /= op2.source.value;
+      changed = true;
     }
   }
   return changed;
 }
 
 bool Optimizer::canChangeVariableOrder(const Program &p) const {
-  for (auto &op : p.ops) {
+  for (const auto &op : p.ops) {
     if (op.source.type == Operand::Type::INDIRECT ||
         op.target.type == Operand::Type::INDIRECT) {
       return false;

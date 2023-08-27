@@ -5,6 +5,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Enhancements
 
 * Improve miner preferences regarding large constants
+* Optimizer enhancements
 
 ## v23.8.19
 
