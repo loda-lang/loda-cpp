@@ -104,6 +104,22 @@
       ]
     },
     {
+      "name": "iterate",
+      "overwrite": "none",
+      "enabled": true,
+      "backoff": false,
+      "generators": [
+        "v4"
+      ],
+      "matchers": [
+        "direct",
+        "linear1",
+        "linear2",
+        "binary",
+        "decimal"
+      ]
+    },
+    {
       "name": "batch-new",
       "overwrite": "none",
       "enabled": false,
