@@ -229,6 +229,10 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
     commands.lists();
   } else if (cmd == "compare") {
     commands.compare(args.at(1), args.at(2));
+  } else if (cmd == "fold") {
+    commands.fold(args.at(1), args.at(2));
+  } else if (cmd == "auto-fold") {
+    commands.autoFold();
   }
 #endif
   // unknown command

@@ -245,6 +245,20 @@ void Commands::profile(const std::string& path) {
   }
 }
 
+void Commands::fold(const std::string& main_path, const std::string& sub_id) {
+  initLog(true);
+  auto main = OeisProgram::getProgramAndSeqId(main_path).first;
+  auto sub = OeisProgram::getProgramAndSeqId(sub_id);
+  if (sub.second == 0) {
+    throw std::runtime_error("subprogram must be given by ID");
+  }
+  std::map<int64_t, int64_t> cell_map;
+  if (!OeisProgram::fold(main, sub.first, sub.second, cell_map)) {
+    throw std::runtime_error("cannot fold program");
+  }
+  ProgramUtil::print(main, std::cout);
+}
+
 void Commands::unfold(const std::string& path) {
   initLog(true);
   auto p = OeisProgram::getProgramAndSeqId(path).first;
@@ -252,6 +266,43 @@ void Commands::unfold(const std::string& path) {
     throw std::runtime_error("cannot unfold program");
   }
   ProgramUtil::print(p, std::cout);
+}
+
+void Commands::autoFold() {
+  initLog(false);
+  OeisManager manager(settings);
+  const auto programs = manager.loadAllPrograms();
+  const auto num_ids = manager.getStats().all_program_ids.size();
+  Log::get().info("Folding programs");
+  bool folded;
+  Program main;
+  std::map<int64_t, int64_t> cell_map;
+  size_t main_id, sub_id, main_loops, sub_loops;
+  for (main_id = 0; main_id < num_ids; main_id++) {
+    if (programs[main_id].ops.empty() ||
+        !OeisProgram::isTooComplex(programs[main_id])) {
+      continue;
+    }
+    folded = false;
+    main = programs[main_id];
+    main_loops = ProgramUtil::numOps(programs[main_id], Operation::Type::LPB);
+    for (sub_id = 0; sub_id < num_ids; sub_id++) {
+      sub_loops = ProgramUtil::numOps(programs[sub_id], Operation::Type::LPB);
+      if (programs[sub_id].ops.empty() || sub_id == main_id ||
+          main_loops == 0 || sub_loops == 0 || main_loops == sub_loops) {
+        continue;
+      }
+      cell_map.clear();
+      if (OeisProgram::fold(main, programs[sub_id], sub_id, cell_map)) {
+        folded = true;
+        break;
+      }
+    }
+    if (folded) {
+      Log::get().info("Folded " + OeisSequence(main_id).id_str() + " using " +
+                      OeisSequence(sub_id).id_str());
+    }
+  }
 }
 
 std::unique_ptr<ProgressMonitor> makeProgressMonitor(const Settings& settings) {

@@ -38,6 +38,10 @@ class Commands {
 
   // hidden commands
 
+  void fold(const std::string& main_path, const std::string& sub_id);
+
+  void autoFold();
+
   void boinc();
 
   void test();
