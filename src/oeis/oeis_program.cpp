@@ -272,7 +272,7 @@ bool OeisProgram::fold(Program &main, Program sub, size_t subId,
       ProgramUtil::hasIndirectOperand(sub)) {
     return false;
   }
-  // apply folding on a copy
+  // perform folding on main program
   const Number mapped_input(cell_map.at(Program::INPUT_CELL));
   const Number mapped_output(cell_map.at(output_cell));
   main.ops.erase(main.ops.begin() + main_pos - sub.ops.size(),
