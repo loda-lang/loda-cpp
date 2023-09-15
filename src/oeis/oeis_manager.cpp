@@ -924,7 +924,6 @@ std::vector<Program> OeisManager::loadAllPrograms() {
   const auto num_programs = getStats().num_programs;
   std::vector<Program> programs(num_ids);
   Parser parser;
-  // load all programs
   Log::get().info("Loading " + std::to_string(num_programs) + " programs");
   AdaptiveScheduler scheduler(20);
   int64_t loaded = 0;
