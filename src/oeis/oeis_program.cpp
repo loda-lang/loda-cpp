@@ -226,8 +226,21 @@ bool updateOperandFold(const Operand &src, const Operand &trg,
   return true;
 }
 
-bool OeisProgram::fold(Program &main, const Program &sub, size_t subId,
+bool OeisProgram::fold(Program &main, Program sub, size_t subId,
                        std::map<int64_t, int64_t> &cell_map) {
+  // prepare and check subprogram
+  ProgramUtil::removeOps(sub, Operation::Type::NOP);
+  if (sub.ops.empty()) {
+    return false;
+  }
+  int64_t output_cell = Program::OUTPUT_CELL;
+  auto last = sub.ops.back();
+  if (sub.ops.size() > 1 && last.type == Operation::Type::MOV &&
+      last.target == Operand(Operand::Type::DIRECT, Program::OUTPUT_CELL) &&
+      last.source.type == Operand::Type::DIRECT) {
+    output_cell = last.source.value.asInt();
+    sub.ops.pop_back();
+  }
   // find a match
   size_t main_pos = 0, sub_pos = 0;
   while (sub_pos < sub.ops.size() && main_pos < main.ops.size()) {
@@ -260,21 +273,18 @@ bool OeisProgram::fold(Program &main, const Program &sub, size_t subId,
     return false;
   }
   // apply folding on a copy
-  auto folded = main;
-  folded.ops[main_pos - 1] = Operation(
-      Operation::Type::SEQ,
-      Operand(Operand::Type::DIRECT, Number(cell_map.at(Program::INPUT_CELL))),
-      Operand(Operand::Type::CONSTANT, Number(subId)));
-  folded.ops.erase(folded.ops.begin() + (main_pos - sub.ops.size()),
-                   folded.ops.begin() + (main_pos + sub.ops.size() - 1));
-  //  check mapping
-  /*
-  for (auto &e : cell_map) {
-    if (e.first == Program::INPUT_CELL) {
-    } else {
-    }
-  }
-  */
+  const Number mapped_input(cell_map.at(Program::INPUT_CELL));
+  const Number mapped_output(cell_map.at(output_cell));
+  main.ops.erase(main.ops.begin() + main_pos - sub.ops.size(),
+                 main.ops.begin() + main_pos);
+  main.ops.insert(main.ops.begin() + main_pos - sub.ops.size(),
+                  Operation(Operation::Type::SEQ,
+                            Operand(Operand::Type::DIRECT, mapped_input),
+                            Operand(Operand::Type::CONSTANT, Number(subId))));
+  main.ops.insert(main.ops.begin() + main_pos - sub.ops.size() + 1,
+                  Operation(Operation::Type::MOV,
+                            Operand(Operand::Type::DIRECT, mapped_output),
+                            Operand(Operand::Type::DIRECT, mapped_input)));
   return true;
 }
 
