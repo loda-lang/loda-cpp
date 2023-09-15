@@ -28,6 +28,8 @@ class Commands {
 
   void profile(const std::string& path);
 
+  void fold(const std::string& main_path, const std::string& sub_id);
+
   void unfold(const std::string& path);
 
   void mine();
@@ -37,8 +39,6 @@ class Commands {
   void mutate(const std::string& path);
 
   // hidden commands
-
-  void fold(const std::string& main_path, const std::string& sub_id);
 
   void autoFold();
 
