@@ -19,43 +19,44 @@ Welcome to LODA developer version. More information at https://loda-lang.org/
 Usage: loda <command> <options>
 
 Core Commands:
-  evaluate <program>  Evaluate a program to an integer sequence (see -t,-b,-s)
-  export   <program>  Export a program print result (see -o)
-  optimize <program>  Optimize a program and print it
-  minimize <program>  Minimize a program and print it (see -t)
-  profile  <program>  Measure program evaluation time (see -t)
-  unfold   <program>  Unfold the first seq operation of a program
+  evaluate  <program>  Evaluate a program to an integer sequence (see -t,-b,-s)
+  export    <program>  Export a program print result (see -o)
+  optimize  <program>  Optimize a program and print it
+  minimize  <program>  Minimize a program and print it (see -t)
+  profile   <program>  Measure program evaluation time (see -t)
+  fold <program> <id>  Fold a subprogram given by ID into a seq operation
+  unfold    <program>  Unfold the first seq operation of a program
 
 OEIS Commands:
-  mine                Mine programs for OEIS sequences (see -i,-p,-P,-H)
-  check <program>     Check a program for an OEIS sequence (see -b)
-  mutate <program>    Mutate a program and mine for OEIS sequences
-  submit <file> [id]  Submit a program for an OEIS sequence
+  mine                 Mine programs for OEIS sequences (see -i,-p,-P,-H)
+  check  <program>     Check a program for an OEIS sequence (see -b)
+  mutate <program>     Mutate a program and mine for OEIS sequences
+  submit <file> [id]   Submit a program for an OEIS sequence
 
 Admin Commands:
-  setup               Run interactive setup to configure LODA
-  update              Run non-interactive update of LODA and its data
+  setup                Run interactive setup to configure LODA
+  update               Run non-interactive update of LODA and its data
 
 Targets:
-  <file>              Path to a LODA file (file extension: *.asm)
-  <id>                ID of an OEIS integer sequence (example: A000045)
-  <program>           Either an <file> or an <id>
+  <file>               Path to a LODA file (file extension: *.asm)
+  <id>                 ID of an OEIS integer sequence (example: A000045)
+  <program>            Either an <file> or an <id>
 
 Options:
-  -t <number>         Number of sequence terms (default: 10)
-  -b                  Print result in b-file format from offset 0
-  -B <number>         Print result in b-file format from a custom offset
-  -o <string>         Export format (formula,loda,pari)
-  -d                  Export with dependencies to other programs
-  -s                  Evaluate program to number of execution steps
-  -c <number>         Maximum number of interpreter cycles (no limit: -1)
-  -m <number>         Maximum number of used memory cells (no limit: -1)
-  -z <number>         Maximum evaluation time in seconds (no limit: -1)
-  -l <string>         Log level (values: debug,info,warn,error,alert)
-  -i <string>         Name of miner configuration from miners.json
-  -p                  Parallel mining using default number of instances
-  -P <number>         Parallel mining using custom number of instances
-  -H <number>         Number of mining hours (default: unlimited)
+  -t <number>          Number of sequence terms (default: 8)
+  -b                   Print result in b-file format from offset 0
+  -B <number>          Print result in b-file format from a custom offset
+  -o <string>          Export format (formula,loda,pari)
+  -d                   Export with dependencies to other programs
+  -s                   Evaluate program to number of execution steps
+  -c <number>          Maximum number of interpreter cycles (no limit: -1)
+  -m <number>          Maximum number of used memory cells (no limit: -1)
+  -z <number>          Maximum evaluation time in seconds (no limit: -1)
+  -l <string>          Log level (values: debug,info,warn,error,alert)
+  -i <string>          Name of miner configuration from miners.json
+  -p                   Parallel mining using default number of instances
+  -P <number>          Parallel mining using custom number of instances
+  -H <number>          Number of mining hours (default: unlimited)
 ```
 
 ### Core Commands

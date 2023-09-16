@@ -916,3 +916,38 @@ bool OeisManager::maintainProgram(size_t id) {
   }
   return true;
 }
+
+std::vector<Program> OeisManager::loadAllPrograms() {
+  load();
+  auto &program_ids = getStats().all_program_ids;
+  const auto num_ids = program_ids.size();
+  const auto num_programs = getStats().num_programs;
+  std::vector<Program> programs(num_ids);
+  Parser parser;
+  Log::get().info("Loading " + std::to_string(num_programs) + " programs");
+  AdaptiveScheduler scheduler(20);
+  int64_t loaded = 0;
+  for (size_t id = 0; id < num_ids; id++) {
+    if (!program_ids[id]) {
+      continue;
+    }
+    OeisSequence seq(id);
+    std::ifstream in(seq.getProgramPath());
+    if (!in) {
+      continue;
+    }
+    try {
+      programs[id] = parser.parse(in);
+      loaded++;
+    } catch (const std::exception &e) {
+      Log::get().warn("Skipping " + seq.id_str() + ": " + e.what());
+      continue;
+    }
+    if (scheduler.isTargetReached() || loaded == num_programs) {
+      scheduler.reset();
+      Log::get().info("Loaded " + std::to_string(loaded) + "/" +
+                      std::to_string(num_programs) + " programs");
+    }
+  }
+  return programs;
+}

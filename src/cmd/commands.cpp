@@ -42,91 +42,95 @@ void Commands::help() {
             << std::endl;
   std::cout << "Usage: loda <command> <options>" << std::endl << std::endl;
   std::cout << "Core Commands:" << std::endl;
-  std::cout
-      << "  evaluate <program>  Evaluate a program to an integer sequence (see "
-         "-t,-b,-s)"
-      << std::endl;
-  std::cout << "  export   <program>  Export a program print result (see -o)"
+  std::cout << "  evaluate  <program>  Evaluate a program to an integer "
+               "sequence (see "
+               "-t,-b,-s)"
             << std::endl;
-  std::cout << "  optimize <program>  Optimize a program and print it"
+  std::cout << "  export    <program>  Export a program print result (see -o)"
             << std::endl;
-  std::cout << "  minimize <program>  Minimize a program and print it (see -t)"
+  std::cout << "  optimize  <program>  Optimize a program and print it"
             << std::endl;
-  std::cout << "  profile  <program>  Measure program evaluation time (see -t)"
+  std::cout << "  minimize  <program>  Minimize a program and print it (see -t)"
             << std::endl;
-  std::cout << "  unfold   <program>  Unfold the first seq operation of a "
+  std::cout << "  profile   <program>  Measure program evaluation time (see -t)"
+            << std::endl;
+  std::cout << "  fold <program> <id>  Fold a subprogram given by ID into a "
+               "seq operation"
+            << std::endl;
+  std::cout << "  unfold    <program>  Unfold the first seq operation of a "
                "program"
             << std::endl;
 
   std::cout << std::endl << "OEIS Commands:" << std::endl;
-  std::cout << "  mine                Mine programs for OEIS sequences (see "
+  std::cout << "  mine                 Mine programs for OEIS sequences (see "
                "-i,-p,-P,-H)"
             << std::endl;
-  std::cout << "  check <program>     Check a program for an OEIS sequence "
+  std::cout << "  check  <program>     Check a program for an OEIS sequence "
                "(see -b)"
             << std::endl;
   std::cout
-      << "  mutate <program>    Mutate a program and mine for OEIS sequences"
+      << "  mutate <program>     Mutate a program and mine for OEIS sequences"
       << std::endl;
-  std::cout << "  submit <file> [id]  Submit a program for an OEIS sequence"
+  std::cout << "  submit <file> [id]   Submit a program for an OEIS sequence"
             << std::endl;
 
   std::cout << std::endl << "Admin Commands:" << std::endl;
-  std::cout << "  setup               Run interactive setup to configure LODA"
+  std::cout << "  setup                Run interactive setup to configure LODA"
             << std::endl;
-  std::cout
-      << "  update              Run non-interactive update of LODA and its data"
-      << std::endl;
+  std::cout << "  update               Run non-interactive update of LODA and "
+               "its data"
+            << std::endl;
 
   std::cout << std::endl << "Targets:" << std::endl;
   std::cout
-      << "  <file>              Path to a LODA file (file extension: *.asm)"
+      << "  <file>               Path to a LODA file (file extension: *.asm)"
       << std::endl;
-  std::cout << "  <id>                ID of an OEIS integer sequence "
+  std::cout << "  <id>                 ID of an OEIS integer sequence "
                "(example: A000045)"
             << std::endl;
-  std::cout << "  <program>           Either an <file> or an <id>" << std::endl;
+  std::cout << "  <program>            Either an <file> or an <id>"
+            << std::endl;
 
   std::cout << std::endl << "Options:" << std::endl;
-  std::cout << "  -t <number>         Number of sequence terms (default: "
+  std::cout << "  -t <number>          Number of sequence terms (default: "
             << settings.num_terms << ")" << std::endl;
   std::cout
-      << "  -b                  Print result in b-file format from offset 0"
+      << "  -b                   Print result in b-file format from offset 0"
       << std::endl;
-  std::cout << "  -B <number>         Print result in b-file format from a "
+  std::cout << "  -B <number>          Print result in b-file format from a "
                "custom offset"
             << std::endl;
-  std::cout << "  -o <string>         Export format (formula,loda,pari)"
+  std::cout << "  -o <string>          Export format (formula,loda,pari)"
             << std::endl;
   std::cout
-      << "  -d                  Export with dependencies to other programs"
+      << "  -d                   Export with dependencies to other programs"
       << std::endl;
-  std::cout << "  -s                  Evaluate program to number of "
+  std::cout << "  -s                   Evaluate program to number of "
                "execution steps"
             << std::endl;
-  std::cout << "  -c <number>         Maximum number of interpreter cycles "
+  std::cout << "  -c <number>          Maximum number of interpreter cycles "
                "(no limit: -1)"
             << std::endl;
-  std::cout << "  -m <number>         Maximum number of used memory cells "
+  std::cout << "  -m <number>          Maximum number of used memory cells "
                "(no limit: -1)"
             << std::endl;
-  std::cout << "  -z <number>         Maximum evaluation time in seconds "
+  std::cout << "  -z <number>          Maximum evaluation time in seconds "
                "(no limit: -1)"
             << std::endl;
-  std::cout << "  -l <string>         Log level (values: "
+  std::cout << "  -l <string>          Log level (values: "
                "debug,info,warn,error,alert)"
             << std::endl;
   std::cout
-      << "  -i <string>         Name of miner configuration from miners.json"
+      << "  -i <string>          Name of miner configuration from miners.json"
       << std::endl;
-  std::cout << "  -p                  Parallel mining using default number of "
+  std::cout << "  -p                   Parallel mining using default number of "
                "instances"
             << std::endl;
-  std::cout << "  -P <number>         Parallel mining using custom number of "
+  std::cout << "  -P <number>          Parallel mining using custom number of "
                "instances"
             << std::endl;
   std::cout
-      << "  -H <number>         Number of mining hours (default: unlimited)"
+      << "  -H <number>          Number of mining hours (default: unlimited)"
       << std::endl;
 }
 
@@ -245,6 +249,20 @@ void Commands::profile(const std::string& path) {
   }
 }
 
+void Commands::fold(const std::string& main_path, const std::string& sub_id) {
+  initLog(true);
+  auto main = OeisProgram::getProgramAndSeqId(main_path).first;
+  auto sub = OeisProgram::getProgramAndSeqId(sub_id);
+  if (sub.second == 0) {
+    throw std::runtime_error("subprogram must be given by ID");
+  }
+  std::map<int64_t, int64_t> cell_map;
+  if (!OeisProgram::fold(main, sub.first, sub.second, cell_map)) {
+    throw std::runtime_error("cannot fold program");
+  }
+  ProgramUtil::print(main, std::cout);
+}
+
 void Commands::unfold(const std::string& path) {
   initLog(true);
   auto p = OeisProgram::getProgramAndSeqId(path).first;
@@ -252,6 +270,43 @@ void Commands::unfold(const std::string& path) {
     throw std::runtime_error("cannot unfold program");
   }
   ProgramUtil::print(p, std::cout);
+}
+
+void Commands::autoFold() {
+  initLog(false);
+  OeisManager manager(settings);
+  const auto programs = manager.loadAllPrograms();
+  const auto num_ids = manager.getStats().all_program_ids.size();
+  Log::get().info("Folding programs");
+  bool folded;
+  Program main;
+  std::map<int64_t, int64_t> cell_map;
+  size_t main_id, sub_id, main_loops, sub_loops;
+  for (main_id = 0; main_id < num_ids; main_id++) {
+    if (programs[main_id].ops.empty() ||
+        !OeisProgram::isTooComplex(programs[main_id])) {
+      continue;
+    }
+    folded = false;
+    main = programs[main_id];
+    main_loops = ProgramUtil::numOps(programs[main_id], Operation::Type::LPB);
+    for (sub_id = 0; sub_id < num_ids; sub_id++) {
+      sub_loops = ProgramUtil::numOps(programs[sub_id], Operation::Type::LPB);
+      if (programs[sub_id].ops.empty() || sub_id == main_id ||
+          main_loops == 0 || sub_loops == 0 || main_loops == sub_loops) {
+        continue;
+      }
+      cell_map.clear();
+      if (OeisProgram::fold(main, programs[sub_id], sub_id, cell_map)) {
+        folded = true;
+        break;
+      }
+    }
+    if (folded) {
+      Log::get().info("Folded " + OeisSequence(main_id).id_str() + " using " +
+                      OeisSequence(sub_id).id_str());
+    }
+  }
 }
 
 std::unique_ptr<ProgressMonitor> makeProgressMonitor(const Settings& settings) {

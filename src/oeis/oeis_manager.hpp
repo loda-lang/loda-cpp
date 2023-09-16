@@ -50,6 +50,8 @@ class OeisManager {
 
   void generateLists();
 
+  std::vector<Program> loadAllPrograms();
+
  private:
   void loadData();
 
