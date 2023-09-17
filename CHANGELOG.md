@@ -2,9 +2,13 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
-### Feature
+### Features
 
 * Added `fold` command to replace a subprogram by a `seq` operation
+
+### Enhancements
+
+* Optimizer improvements
 
 ## v23.8.27
 
