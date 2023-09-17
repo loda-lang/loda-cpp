@@ -467,7 +467,6 @@ bool Optimizer::fixSandwich(Program &p) const {
       std::swap(op1, op2);
       op2.source.value /= op1.source.value;
       changed = true;
-
     } else if (ProgramUtil::isAdditive(op2.type) && op1.type == op3.type) {
       if (op1.type == Operation::Type::DIV) {
         std::swap(op1, op2);
