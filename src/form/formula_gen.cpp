@@ -301,6 +301,10 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   initFormula(numCells, false, 0, 0);
   auto preloop_param_expr = getParamExpr();
   if (use_ie) {
+    // TODO: remove this limitation
+    if (ie.getInputDependentCells().size() != 1) {
+      return false;
+    }
     // update formula based on pre-loop code
     if (!update(ie.getSimpleLoop().pre_loop)) {
       return false;
