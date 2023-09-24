@@ -211,24 +211,23 @@ int64_t getNumInitialTermsNeeded(int64_t cell, const Formula& f,
 }
 
 void FormulaGenerator::initFormula(int64_t numCells, bool use_ie,
-                                   int64_t loop_counter_cell,
-                                   int64_t loop_counter_decrement) {
-  formula.clear();
-  const auto paramExpr = getParamExpr();
+                                   const IncrementalEvaluator& ie) {
   for (int64_t cell = 0; cell < numCells; cell++) {
     auto key = operandToExpression(Operand(Operand::Type::DIRECT, cell));
     if (use_ie) {
-      if (cell == loop_counter_cell) {
-        formula.entries[key] = paramExpr;
-      } else {
+      if (cell == ie.getSimpleLoop().counter) {
+        formula.entries[key] = getParamExpr();
+      } else if (ie.getInputDependentCells().find(cell) ==
+                 ie.getInputDependentCells().end()) {
         formula.entries[key] = key;
-        Expression prev(Expression::Type::SUM, "",
-                        {paramExpr, getConstantExpr(-loop_counter_decrement)});
-        formula.entries[key].replaceAll(paramExpr, prev);
+        Expression prev(
+            Expression::Type::SUM, "",
+            {getParamExpr(), getConstantExpr(-ie.getLoopCounterDecrement())});
+        formula.entries[key].replaceAll(getParamExpr(), prev);
       }
     } else {
       formula.entries[key] =
-          (cell == Program::INPUT_CELL) ? paramExpr : getConstantExpr(0);
+          (cell == Program::INPUT_CELL) ? getParamExpr() : getConstantExpr(0);
     }
   }
 }
@@ -298,13 +297,10 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   }
 
   // initialize expressions for memory cells
-  initFormula(numCells, false, 0, 0);
+  formula.clear();
+  initFormula(numCells, false, ie);
   auto preloop_param_expr = getParamExpr();
   if (use_ie) {
-    // TODO: remove this limitation
-    if (ie.getInputDependentCells().size() != 1) {
-      return false;
-    }
     // update formula based on pre-loop code
     if (!update(ie.getSimpleLoop().pre_loop)) {
       return false;
@@ -312,8 +308,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     auto param = operandToExpression(
         Operand(Operand::Type::DIRECT, Number(ie.getSimpleLoop().counter)));
     preloop_param_expr = formula.entries[param];
-    initFormula(numCells, true, ie.getSimpleLoop().counter,
-                ie.getLoopCounterDecrement());
+    initFormula(numCells, true, ie);
   }
   Log::get().debug("Initialized formula to " + formula.toString());
 

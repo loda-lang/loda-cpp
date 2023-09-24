@@ -3,6 +3,7 @@
 #include <map>
 
 #include "form/formula.hpp"
+#include "lang/evaluator_inc.hpp"
 #include "lang/program.hpp"
 
 typedef std::multimap<Expression, Expression> Alternatives;
@@ -14,8 +15,8 @@ class FormulaGenerator {
  private:
   bool generateSingle(const Program& p);
 
-  void initFormula(int64_t numCells, bool use_ie, int64_t loop_counter_cell,
-                   int64_t loop_counter_decrement);
+  void initFormula(int64_t numCells, bool use_ie,
+                   const IncrementalEvaluator& ie);
 
   bool update(const Operation& op);
 
