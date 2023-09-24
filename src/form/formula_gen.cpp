@@ -36,25 +36,13 @@ std::string canonicalName(int64_t index) {
   return std::string(1, 'a' + static_cast<char>(index));
 }
 
-Expression getConstantExpr(int64_t value) {
-  return Expression(Expression::Type::CONSTANT, "", Number(value));
-}
-
-Expression getParamExpr() {
-  return Expression(Expression::Type::PARAMETER, "n");
-}
-
-Expression getFuncExpr(const std::string& name) {
-  return Expression(Expression::Type::FUNCTION, name, {getParamExpr()});
-}
-
 Expression FormulaGenerator::operandToExpression(Operand op) const {
   switch (op.type) {
     case Operand::Type::CONSTANT: {
       return Expression(Expression::Type::CONSTANT, "", op.value);
     }
     case Operand::Type::DIRECT: {
-      return getFuncExpr(getCellName(op.value.asInt()));
+      return ExpressionUtil::newFunction(getCellName(op.value.asInt()));
     }
     case Operand::Type::INDIRECT: {
       throw std::runtime_error("indirect operation not supported");
@@ -86,7 +74,7 @@ bool FormulaGenerator::update(const Operation& op) {
     }
     case Operation::Type::SUB: {
       Expression negated(Expression::Type::PRODUCT, "",
-                         {getConstantExpr(-1), source});
+                         {ExpressionUtil::newConstant(-1), source});
       res = Expression(Expression::Type::SUM, "", {prevTarget, negated});
       break;
     }
@@ -131,11 +119,11 @@ bool FormulaGenerator::update(const Operation& op) {
     }
     case Operation::Type::TRN: {
       Expression negated(Expression::Type::PRODUCT, "",
-                         {getConstantExpr(-1), source});
+                         {ExpressionUtil::newConstant(-1), source});
       res = Expression(
           Expression::Type::FUNCTION, "max",
           {Expression(Expression::Type::SUM, "", {prevTarget, negated}),
-           getConstantExpr(0)});
+           ExpressionUtil::newConstant(0)});
       break;
     }
     default: {
@@ -163,12 +151,13 @@ bool FormulaGenerator::update(const Program& p) {
 bool FormulaGenerator::resolve(const Alternatives& alt, const Expression& left,
                                Expression& right) const {
   if (right.type == Expression::Type::FUNCTION) {
-    auto lookup = getFuncExpr(right.name);
+    auto lookup = ExpressionUtil::newFunction(right.name);
     if (lookup != left) {
       auto range = alt.equal_range(lookup);
       for (auto it = range.first; it != range.second; it++) {
         auto replacement = it->second;
-        replacement.replaceAll(getParamExpr(), *right.children[0]);
+        replacement.replaceAll(ExpressionUtil::newParameter(),
+                               *right.children[0]);
         ExpressionUtil::normalize(replacement);
         auto range2 = alt.equal_range(left);
         bool exists = false;
@@ -214,7 +203,7 @@ void FormulaGenerator::initFormula(int64_t numCells, bool use_ie,
                                    int64_t loop_counter_cell,
                                    int64_t loop_counter_decrement) {
   formula.clear();
-  const auto paramExpr = getParamExpr();
+  const auto paramExpr = ExpressionUtil::newParameter();
   for (int64_t cell = 0; cell < numCells; cell++) {
     auto key = operandToExpression(Operand(Operand::Type::DIRECT, cell));
     if (use_ie) {
@@ -222,13 +211,15 @@ void FormulaGenerator::initFormula(int64_t numCells, bool use_ie,
         formula.entries[key] = paramExpr;
       } else {
         formula.entries[key] = key;
-        Expression prev(Expression::Type::SUM, "",
-                        {paramExpr, getConstantExpr(-loop_counter_decrement)});
+        Expression prev(
+            Expression::Type::SUM, "",
+            {paramExpr, ExpressionUtil::newConstant(-loop_counter_decrement)});
         formula.entries[key].replaceAll(paramExpr, prev);
       }
     } else {
-      formula.entries[key] =
-          (cell == Program::INPUT_CELL) ? paramExpr : getConstantExpr(0);
+      formula.entries[key] = (cell == Program::INPUT_CELL)
+                                 ? paramExpr
+                                 : ExpressionUtil::newConstant(0);
     }
   }
 }
@@ -299,7 +290,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
 
   // initialize expressions for memory cells
   initFormula(numCells, false, 0, 0);
-  auto preloop_param_expr = getParamExpr();
+  auto preloop_param_expr = ExpressionUtil::newParameter();
   if (use_ie) {
     // TODO: remove this limitation
     if (ie.getInputDependentCells().size() != 1) {
@@ -359,7 +350,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
       for (int64_t cell = 0; cell < numCells; cell++) {
         if (offset < numTerms[cell]) {
           Expression func(Expression::Type::FUNCTION, getCellName(cell),
-                          {getConstantExpr(offset)});
+                          {ExpressionUtil::newConstant(offset)});
           Expression val(Expression::Type::CONSTANT, "", state.get(cell));
           formula.entries[func] = val;
           Log::get().debug("Added intial term: " + func.toString() + " = " +
@@ -371,12 +362,13 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     // prepare post-loop processing
     for (int64_t cell = 0; cell < numCells; cell++) {
       auto name = newName();
-      auto left = getFuncExpr(name);
+      auto left = ExpressionUtil::newFunction(name);
       Expression right;
       if (cell == ie.getSimpleLoop().counter) {
-        auto last = getConstantExpr(0);
+        auto last = ExpressionUtil::newConstant(0);
         if (ie.getLoopCounterDecrement() > 1) {
-          auto loop_dec = getConstantExpr(ie.getLoopCounterDecrement());
+          auto loop_dec =
+              ExpressionUtil::newConstant(ie.getLoopCounterDecrement());
           last = Expression(Expression::Type::MODULUS, "",
                             {preloop_param_expr, loop_dec});
         }
@@ -387,7 +379,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
         if (ExpressionUtil::canBeNegative(safe_param)) {
           auto tmp = safe_param;
           safe_param = Expression(Expression::Type::FUNCTION, "max",
-                                  {tmp, getConstantExpr(0)});
+                                  {tmp, ExpressionUtil::newConstant(0)});
         }
         right = Expression(Expression::Type::FUNCTION, getCellName(cell),
                            {safe_param});
