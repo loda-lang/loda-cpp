@@ -143,11 +143,10 @@ bool IncrementalEvaluator::checkLoopBody() {
       }
       loop_counter_updated = true;
       loop_counter_decrement = op.source.value.asInt();
-    } else if (meta.num_operands > 1 && isInputDependent(op.source) &&
-               op.source.value.asInt() != simple_loop.counter) {
+    } else if (meta.num_operands > 0 && isInputDependent(op.target) &&
+               meta.is_reading_target) {
       return false;
-    } else if (meta.num_operands > 0 && meta.is_reading_target &&
-               isInputDependent(op.target) &&
+    } else if (meta.num_operands > 1 && isInputDependent(op.source) &&
                op.source.value.asInt() != simple_loop.counter) {
       return false;
     }
