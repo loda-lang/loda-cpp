@@ -53,6 +53,7 @@ class IncrementalEvaluator {
   inline int64_t getPreviousSlice() const { return previous_slice; }
 
  private:
+  bool isInputDependent(const Operand& op) const;
   bool checkPreLoop(bool skip_input_transform);
   bool checkLoopBody();
   bool checkPostLoop();
@@ -67,6 +68,7 @@ class IncrementalEvaluator {
   Program pre_loop_filtered;
   std::set<int64_t> output_cells;
   std::set<int64_t> stateful_cells;
+  std::set<int64_t> input_dependent_cells;
   std::set<int64_t> loop_counter_dependent_cells;
   int64_t loop_counter_decrement;
   Operation::Type loop_counter_type;

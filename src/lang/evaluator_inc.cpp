@@ -16,6 +16,7 @@ void IncrementalEvaluator::reset() {
   pre_loop_filtered.ops.clear();
   output_cells.clear();
   stateful_cells.clear();
+  input_dependent_cells.clear();
   loop_counter_dependent_cells.clear();
   loop_counter_decrement = 0;
   loop_counter_type = Operation::Type::NOP;
@@ -60,33 +61,28 @@ bool IncrementalEvaluator::init(const Program& program,
   return true;
 }
 
+bool IncrementalEvaluator::isInputDependent(const Operand& op) const {
+  return (op.type == Operand::Type::DIRECT &&
+          input_dependent_cells.find(op.value.asInt()) !=
+              input_dependent_cells.end());
+}
+
 bool IncrementalEvaluator::checkPreLoop(bool skip_input_transform) {
   // here we do a static code analysis of the pre-loop
   // fragment to make sure here that the loop counter cell
   // is monotonically increasing (not strictly)
-  static const Operand input_op(Operand::Type::DIRECT, Program::INPUT_CELL);
-  bool loop_counter_initialized = (simple_loop.counter == Program::INPUT_CELL);
-  bool needs_input_reset = false;
   pre_loop_filtered.ops.clear();
+  input_dependent_cells.clear();
+  input_dependent_cells.insert(Program::INPUT_CELL);
   for (auto& op : simple_loop.pre_loop.ops) {
     bool is_transform = false;
     switch (op.type) {
       case Operation::Type::MOV:
-        // using other cells as loop counters is allowed
-        if (op.target.value.asInt() == simple_loop.counter) {
-          if (op.source != input_op) {
-            return false;
-          }
-          loop_counter_initialized = true;
-          needs_input_reset = true;
-        } else {
-          // non-loop-counters can be initialized only with constants
-          if (op.source.type != Operand::Type::CONSTANT) {
-            return false;
-          }
-          if (op.target.value.asInt() == Program::INPUT_CELL) {
-            needs_input_reset = false;
-          }
+        if (isInputDependent(op.source)) {
+          input_dependent_cells.insert(op.target.value.asInt());
+        } else if (isInputDependent(op.target) &&
+                   op.source.type == Operand::Type::CONSTANT) {
+          input_dependent_cells.erase(op.target.value.asInt());
         }
         break;
 
@@ -119,7 +115,13 @@ bool IncrementalEvaluator::checkPreLoop(bool skip_input_transform) {
       pre_loop_filtered.ops.push_back(op);
     }
   }
-  if (!loop_counter_initialized || needs_input_reset) {
+  // we allow only one input-dependent cell (the loop counter)
+  if (input_dependent_cells.size() != 1) {
+    return false;
+  }
+  // check if loop counter is initialized
+  if (input_dependent_cells.find(simple_loop.counter) ==
+      input_dependent_cells.end()) {
     return false;
   }
   return true;
