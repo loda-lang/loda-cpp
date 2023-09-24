@@ -1,5 +1,17 @@
 #include "form/expression_util.hpp"
 
+Expression ExpressionUtil::newConstant(int64_t value) {
+  return Expression(Expression::Type::CONSTANT, "", Number(value));
+}
+
+Expression ExpressionUtil::newParameter() {
+  return Expression(Expression::Type::PARAMETER, "n");
+}
+
+Expression ExpressionUtil::newFunction(const std::string& name) {
+  return Expression(Expression::Type::FUNCTION, name, {newParameter()});
+}
+
 bool mergeTwoChildren(Expression& e) {
   for (size_t i = 0; i + 1 < e.children.size(); i++) {
     auto c = e.children[i];
