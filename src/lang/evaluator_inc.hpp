@@ -38,6 +38,9 @@ class IncrementalEvaluator {
   inline int64_t getLoopCounterDecrement() const {
     return loop_counter_decrement;
   }
+  inline const std::set<int64_t>& getInputDependentCells() const {
+    return input_dependent_cells;
+  }
   inline const std::set<int64_t>& getLoopCounterDependentCells() const {
     return loop_counter_dependent_cells;
   }
