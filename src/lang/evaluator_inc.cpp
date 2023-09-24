@@ -115,10 +115,6 @@ bool IncrementalEvaluator::checkPreLoop(bool skip_input_transform) {
       pre_loop_filtered.ops.push_back(op);
     }
   }
-  // we allow only one input-dependent cell (the loop counter)
-  if (input_dependent_cells.size() != 1) {
-    return false;
-  }
   // check if loop counter is initialized
   if (input_dependent_cells.find(simple_loop.counter) ==
       input_dependent_cells.end()) {
@@ -131,6 +127,7 @@ bool IncrementalEvaluator::checkLoopBody() {
   // check loop counter cell
   bool loop_counter_updated = false;
   for (auto& op : simple_loop.body.ops) {
+    const auto meta = Operation::Metadata::get(op.type);
     const auto target = op.target.value.asInt();
     if (target == simple_loop.counter) {
       // must be subtraction by one (stepwise decrease)
@@ -146,6 +143,13 @@ bool IncrementalEvaluator::checkLoopBody() {
       }
       loop_counter_updated = true;
       loop_counter_decrement = op.source.value.asInt();
+    } else if (meta.num_operands > 1 && isInputDependent(op.source) &&
+               op.source.value.asInt() != simple_loop.counter) {
+      return false;
+    } else if (meta.num_operands > 0 && meta.is_reading_target &&
+               isInputDependent(op.target) &&
+               op.source.value.asInt() != simple_loop.counter) {
+      return false;
     }
   }
   if (!loop_counter_updated) {
@@ -323,7 +327,9 @@ std::pair<Number, size_t> IncrementalEvaluator::next(bool skip_final_iter,
   if (previous_loop_counts[slice] == 0) {
     loop_states[slice] = tmp_state;
   } else {
-    loop_states[slice].set(simple_loop.counter, loop_counter_before);
+    for (auto& cell : input_dependent_cells) {
+      loop_states[slice].set(cell, tmp_state.get(cell));
+    }
   }
 
   // update previous loop count
