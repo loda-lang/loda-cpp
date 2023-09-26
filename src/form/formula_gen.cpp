@@ -375,6 +375,9 @@ bool FormulaGenerator::generateSingle(const Program& p) {
         }
         right = Expression(Expression::Type::FUNCTION, "min",
                            {preloop_counter, last});
+      } else if (ie.getInputDependentCells().find(cell) !=
+                 ie.getInputDependentCells().end()) {
+        right = preloop_exprs.at(cell);
       } else {
         auto safe_param = preloop_counter;
         if (ExpressionUtil::canBeNegative(safe_param)) {
