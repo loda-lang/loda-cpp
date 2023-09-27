@@ -204,6 +204,7 @@ int64_t getNumInitialTermsNeeded(int64_t cell, const IncrementalEvaluator& ie) {
 
 void FormulaGenerator::initFormula(int64_t numCells, bool use_ie,
                                    const IncrementalEvaluator& ie) {
+  formula.clear();
   for (int64_t cell = 0; cell < numCells; cell++) {
     auto key = operandToExpression(Operand(Operand::Type::DIRECT, cell));
     if (use_ie) {
@@ -291,7 +292,6 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   }
 
   // initialize expressions for memory cells
-  formula.clear();
   initFormula(numCells, false, ie);
   std::map<int64_t, Expression> preloop_exprs;
   if (use_ie) {
