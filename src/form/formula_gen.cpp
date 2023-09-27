@@ -366,7 +366,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     }
 
     // prepare post-loop processing
-    auto preloop_counter = preloop_exprs[ie.getSimpleLoop().counter];
+    auto preloop_counter = preloop_exprs.at(ie.getSimpleLoop().counter);
     for (int64_t cell = 0; cell < numCells; cell++) {
       auto name = newName();
       auto left = ExpressionUtil::newFunction(name);
