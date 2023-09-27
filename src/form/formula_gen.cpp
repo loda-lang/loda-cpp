@@ -295,6 +295,12 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   initFormula(numCells, false, ie);
   std::map<int64_t, Expression> preloop_exprs;
   if (use_ie) {
+    // TODO: remove this limitation
+    for (auto& op : ie.getSimpleLoop().body.ops) {
+      if (op.type == Operation::Type::MOV && ie.isInputDependent(op.target)) {
+        return false;
+      }
+    }
     // update formula based on pre-loop code
     if (!update(ie.getSimpleLoop().pre_loop)) {
       return false;
