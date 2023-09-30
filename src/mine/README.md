@@ -160,7 +160,7 @@ pow $0,2
 sub $0,36 ; offset of generated sequence
 div $0,4  ; factor of generated sequence
 mul $0,3  ; factor of target sequence
-add $0,1  ; offset of generated sequence
+add $0,1  ; offset of target sequence
 ```
 
 ### Linear Matcher 2

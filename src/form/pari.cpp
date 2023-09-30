@@ -147,6 +147,7 @@ std::string Pari::toString(const Formula& f) {
 Sequence Pari::eval(const Formula& f, int64_t start, int64_t end) {
   const std::string gpPath("pari-loda.gp");
   const std::string gpResult("pari-result.txt");
+  const int64_t maxparisize = 256;  // in MB
   std::ofstream gp(gpPath);
   if (!gp) {
     throw std::runtime_error("error generating gp file");
@@ -155,7 +156,8 @@ Sequence Pari::eval(const Formula& f, int64_t start, int64_t end) {
   gp << "for (n = " << start << ", " << end << ", print(a(n)))" << std::endl;
   gp << "quit" << std::endl;
   gp.close();
-  std::string cmd = "gp -q " + gpPath + " > " + gpResult;
+  std::string cmd = "gp -s " + std::to_string(maxparisize) + "M -q " + gpPath +
+                    " > " + gpResult;
   if (system(cmd.c_str()) != 0) {
     Log::get().error("Error evaluating PARI code: " + gpPath, true);
   }

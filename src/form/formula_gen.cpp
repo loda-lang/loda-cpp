@@ -184,11 +184,14 @@ bool FormulaGenerator::resolve(const Alternatives& alt, const Expression& left,
   return resolved;
 }
 
-int64_t getNumInitialTermsNeeded(int64_t cell, const Formula& f,
-                                 const IncrementalEvaluator& ie,
-                                 Interpreter& interpreter) {
+int64_t getNumInitialTermsNeeded(int64_t cell, const IncrementalEvaluator& ie) {
   auto stateful = ie.getStatefulCells();
-  stateful.insert(ie.getOutputCells().begin(), ie.getOutputCells().end());
+  for (const auto& out : ie.getOutputCells()) {
+    if (ie.getInputDependentCells().find(out) ==
+        ie.getInputDependentCells().end()) {
+      stateful.insert(out);
+    }
+  }
   // stateful.erase(Program::OUTPUT_CELL);
   int64_t terms_needed = 0;
   if (stateful.find(cell) != stateful.end()) {
@@ -200,25 +203,25 @@ int64_t getNumInitialTermsNeeded(int64_t cell, const Formula& f,
 }
 
 void FormulaGenerator::initFormula(int64_t numCells, bool use_ie,
-                                   int64_t loop_counter_cell,
-                                   int64_t loop_counter_decrement) {
+                                   const IncrementalEvaluator& ie) {
   formula.clear();
-  const auto paramExpr = ExpressionUtil::newParameter();
   for (int64_t cell = 0; cell < numCells; cell++) {
     auto key = operandToExpression(Operand(Operand::Type::DIRECT, cell));
     if (use_ie) {
-      if (cell == loop_counter_cell) {
-        formula.entries[key] = paramExpr;
-      } else {
+      if (cell == ie.getSimpleLoop().counter) {
+        formula.entries[key] = ExpressionUtil::newParameter();
+      } else if (ie.getInputDependentCells().find(cell) ==
+                 ie.getInputDependentCells().end()) {
         formula.entries[key] = key;
         Expression prev(
             Expression::Type::SUM, "",
-            {paramExpr, ExpressionUtil::newConstant(-loop_counter_decrement)});
-        formula.entries[key].replaceAll(paramExpr, prev);
+            {ExpressionUtil::newParameter(),
+             ExpressionUtil::newConstant(-ie.getLoopCounterDecrement())});
+        formula.entries[key].replaceAll(ExpressionUtil::newParameter(), prev);
       }
     } else {
       formula.entries[key] = (cell == Program::INPUT_CELL)
-                                 ? paramExpr
+                                 ? ExpressionUtil::newParameter()
                                  : ExpressionUtil::newConstant(0);
     }
   }
@@ -289,22 +292,25 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   }
 
   // initialize expressions for memory cells
-  initFormula(numCells, false, 0, 0);
-  auto preloop_param_expr = ExpressionUtil::newParameter();
+  initFormula(numCells, false, ie);
+  std::map<int64_t, Expression> preloop_exprs;
   if (use_ie) {
     // TODO: remove this limitation
-    if (ie.getInputDependentCells().size() != 1) {
+    if (ie.getInputDependentCells().size() > 1 &&
+        ProgramUtil::numOps(ie.getSimpleLoop().body, Operation::Type::MOV) >
+            0) {
       return false;
     }
     // update formula based on pre-loop code
     if (!update(ie.getSimpleLoop().pre_loop)) {
       return false;
     }
-    auto param = operandToExpression(
-        Operand(Operand::Type::DIRECT, Number(ie.getSimpleLoop().counter)));
-    preloop_param_expr = formula.entries[param];
-    initFormula(numCells, true, ie.getSimpleLoop().counter,
-                ie.getLoopCounterDecrement());
+    for (auto cell : ie.getInputDependentCells()) {
+      auto op = Operand(Operand::Type::DIRECT, Number(cell));
+      auto param = operandToExpression(op);
+      preloop_exprs[cell] = formula.entries[param];
+    }
+    initFormula(numCells, true, ie);
   }
   Log::get().debug("Initialized formula to " + formula.toString());
 
@@ -339,7 +345,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     std::vector<int64_t> numTerms(numCells);
     int64_t maxNumTerms = 0;
     for (int64_t cell = 0; cell < numCells; cell++) {
-      numTerms[cell] = getNumInitialTermsNeeded(cell, formula, ie, interpreter);
+      numTerms[cell] = getNumInitialTermsNeeded(cell, ie);
       maxNumTerms = std::max(maxNumTerms, numTerms[cell]);
     }
 
@@ -360,6 +366,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     }
 
     // prepare post-loop processing
+    auto preloop_counter = preloop_exprs.at(ie.getSimpleLoop().counter);
     for (int64_t cell = 0; cell < numCells; cell++) {
       auto name = newName();
       auto left = ExpressionUtil::newFunction(name);
@@ -370,12 +377,15 @@ bool FormulaGenerator::generateSingle(const Program& p) {
           auto loop_dec =
               ExpressionUtil::newConstant(ie.getLoopCounterDecrement());
           last = Expression(Expression::Type::MODULUS, "",
-                            {preloop_param_expr, loop_dec});
+                            {preloop_counter, loop_dec});
         }
         right = Expression(Expression::Type::FUNCTION, "min",
-                           {preloop_param_expr, last});
+                           {preloop_counter, last});
+      } else if (ie.getInputDependentCells().find(cell) !=
+                 ie.getInputDependentCells().end()) {
+        right = preloop_exprs.at(cell);
       } else {
-        auto safe_param = preloop_param_expr;
+        auto safe_param = preloop_counter;
         if (ExpressionUtil::canBeNegative(safe_param)) {
           auto tmp = safe_param;
           safe_param = Expression(Expression::Type::FUNCTION, "max",

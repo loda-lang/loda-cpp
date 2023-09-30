@@ -2,14 +2,16 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v23.9.30
+
 ### Features
 
 * Added `fold` command to replace a subprogram by a `seq` operation
 
 ### Enhancements
 
+* Incremental evaluator and formula generator support more programs
 * Optimizer improvements
-* Incremental evaluator supports more programs
 
 ## v23.8.27
 

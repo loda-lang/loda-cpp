@@ -54,9 +54,9 @@ class IncrementalEvaluator {
     return loop_states;
   }
   inline int64_t getPreviousSlice() const { return previous_slice; }
+  bool isInputDependent(const Operand& op) const;
 
  private:
-  bool isInputDependent(const Operand& op) const;
   bool checkPreLoop(bool skip_input_transform);
   bool checkLoopBody();
   bool checkPostLoop();
