@@ -295,11 +295,14 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   initFormula(numCells, false, ie);
   std::map<int64_t, Expression> preloop_exprs;
   if (use_ie) {
+    const auto& body_ops = ie.getSimpleLoop().body.ops;
+    const bool has_input_dep = ie.getInputDependentCells().size() > 1;
+    const bool has_mov = std::any_of(
+        body_ops.begin(), body_ops.end(),
+        [](const Operation& op) { return op.type == Operation::Type::MOV; });
     // TODO: remove this limitation
-    for (auto& op : ie.getSimpleLoop().body.ops) {
-      if (op.type == Operation::Type::MOV && ie.isInputDependent(op.target)) {
-        return false;
-      }
+    if (has_input_dep && has_mov) {
+      return false;
     }
     // update formula based on pre-loop code
     if (!update(ie.getSimpleLoop().pre_loop)) {
