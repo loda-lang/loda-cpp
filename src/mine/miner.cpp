@@ -86,8 +86,11 @@ void Miner::mine() {
       runMineLoop();
       auto mins = std::to_string(monitor->getElapsedSeconds() / 60);
       Log::get().info("Finished mining after " + mins + " minutes");
+    } catch (const std::exception &e) {
+      Log::get().error(
+          "Caught exception during mining: " + std::string(e.what()), false);
     } catch (...) {
-      Log::get().error("Caught exception during mining", false);
+      Log::get().error("Caught unknown exception during mining", false);
     }
     try {
       thread.join();

@@ -148,12 +148,17 @@ void OeisList::mergeMap(const std::string& file_name,
   FolderLock lock(getListsHome());
   std::ifstream in(getListsHome() + file_name);
   if (in.good()) {
-    addToMap(in, map);
+    try {
+      addToMap(in, map);
+    } catch (...) {
+      Log::get().warn("Overwriting corrupt data in " + file_name);
+    }
     in.close();
   }
   std::ofstream out(getListsHome() + file_name);
   for (auto it : map) {
-    out << OeisSequence(it.first).id_str() << ": " << it.second << "\n";
+    out << OeisSequence(it.first).id_str() << ": " << it.second
+        << std::endl;  // flush at every line to avoid corrupt data
   }
   out.close();
   map.clear();

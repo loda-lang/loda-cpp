@@ -2,6 +2,12 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v23.10.8
+
+### Bugfixes
+
+* Fix errors during loading and saving of stats
+
 ## v23.9.30
 
 ### Features

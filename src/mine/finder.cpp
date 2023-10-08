@@ -427,8 +427,8 @@ void Finder::notifyInvalidMatch(size_t id) {
   }
   if (scheduler.isTargetReached()) {
     scheduler.reset();
-    Log::get().debug("Saving " + std::to_string(invalid_matches.size()) +
-                     " invalid matches");
+    Log::get().info("Saving invalid matches stats for " +
+                    std::to_string(invalid_matches.size()) + " sequences");
     OeisList::mergeMap(OeisList::INVALID_MATCHES_FILE, invalid_matches);
   }
 }
