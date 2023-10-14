@@ -1,6 +1,7 @@
 #include "form/expression.hpp"
 
 #include <algorithm>
+#include <iostream>
 #include <sstream>
 
 Expression::Expression()
@@ -214,6 +215,7 @@ void Expression::substituteFunction(const std::string& from,
     name = to.name;
     Expression arg = *to.children.front();
     replaceAll(Expression(Type::PARAMETER, param), arg);
+    std::cout << "result " << toString() << std::endl;
     return;
   }
   for (auto& c : children) {

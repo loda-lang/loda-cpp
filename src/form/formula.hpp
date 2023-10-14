@@ -30,7 +30,7 @@ class Formula {
 
   void collectEntries(const Expression& e, Formula& target);
 
-  void resolveIdentities();
+  std::map<std::string, std::string> resolveIdentities();
 
   void resolveSimpleFunctions();
 
