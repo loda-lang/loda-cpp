@@ -24,6 +24,8 @@ class Formula {
 
   void replaceName(const std::string& from, const std::string& to);
 
+  void substituteFunction(const std::string& from, const Expression& to);
+
   void collectEntries(const std::string& name, Formula& target);
 
   void collectEntries(const Expression& e, Formula& target);

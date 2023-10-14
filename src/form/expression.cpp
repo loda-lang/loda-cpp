@@ -130,6 +130,18 @@ bool Expression::contains(const Expression& e) const {
   return false;
 }
 
+bool Expression::contains(Type t) const {
+  if (type == t) {
+    return true;
+  }
+  for (auto c : children) {
+    if (c->contains(t)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 size_t Expression::numTerms() const {
   size_t result = 1;
   for (auto c : children) {
@@ -187,6 +199,25 @@ void Expression::replaceName(const std::string& from, const std::string& to) {
   }
   for (auto& c : children) {
     c->replaceName(from, to);
+  }
+}
+
+void Expression::substituteFunction(const std::string& from,
+                                    const Expression& to,
+                                    const std::string& param) {
+  if (type == Type::FUNCTION && name == from) {
+    // sanity check
+    if (to.type != Type::FUNCTION || to.children.size() != 1) {
+      throw std::runtime_error("invalid function substitution: " +
+                               to.toString());
+    }
+    name = to.name;
+    Expression arg = *to.children.front();
+    replaceAll(Expression(Type::PARAMETER, param), arg);
+    return;
+  }
+  for (auto& c : children) {
+    c->substituteFunction(from, to, param);
   }
 }
 

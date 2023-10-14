@@ -138,6 +138,14 @@ void Formula::replaceName(const std::string& from, const std::string& to) {
   entries = newEntries;
 }
 
+void Formula::substituteFunction(const std::string& from,
+                                 const Expression& to) {
+  const auto param = ExpressionUtil::newParameter();
+  for (auto& e : entries) {
+    e.second.substituteFunction(from, to, param.name);
+  }
+}
+
 void Formula::collectEntries(const std::string& name, Formula& target) {
   for (auto& e : entries) {
     if (e.first.name == name) {
@@ -162,11 +170,14 @@ void Formula::collectEntries(const Expression& e, Formula& target) {
 void Formula::resolveIdentities() {
   auto copy = entries;
   for (auto& e : copy) {
-    if (ExpressionUtil::isSimpleFunction(e.first) &&
-        ExpressionUtil::isSimpleFunction(e.second) &&
-        copy.find(e.second) != copy.end()) {
+    if (!ExpressionUtil::isSimpleFunction(e.first, false) ||
+        !ExpressionUtil::isSimpleFunction(e.second, true)) {
+      continue;
+    }
+    auto r = ExpressionUtil::newFunction(e.second.name);
+    if (copy.find(r) != copy.end()) {
       entries.erase(e.first);
-      replaceName(e.second.name, e.first.name);
+      substituteFunction(e.second.name, e.first);
     }
   }
 }

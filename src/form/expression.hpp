@@ -49,6 +49,8 @@ class Expression {
 
   bool contains(const Expression& e) const;
 
+  bool contains(Type t) const;
+
   size_t numTerms() const;
 
   Expression& newChild(const Expression& e);
@@ -59,6 +61,9 @@ class Expression {
   void replaceAll(const Expression& from, const Expression& to);
 
   void replaceName(const std::string& from, const std::string& to);
+
+  void substituteFunction(const std::string& from, const Expression& to,
+                          const std::string& param);
 
   friend std::ostream& operator<<(std::ostream& out, const Expression& e);
 
