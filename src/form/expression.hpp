@@ -49,6 +49,8 @@ class Expression {
 
   bool contains(const Expression& e) const;
 
+  bool contains(Type t) const;
+
   size_t numTerms() const;
 
   Expression& newChild(const Expression& e);

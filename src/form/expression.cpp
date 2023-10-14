@@ -130,6 +130,18 @@ bool Expression::contains(const Expression& e) const {
   return false;
 }
 
+bool Expression::contains(Type t) const {
+  if (type == t) {
+    return true;
+  }
+  for (auto c : children) {
+    if (c->contains(t)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 size_t Expression::numTerms() const {
   size_t result = 1;
   for (auto c : children) {
