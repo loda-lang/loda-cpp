@@ -416,14 +416,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   Log::get().debug("Resolved simple functions: " + formula.toString());
 
   // resolve identities
-  auto substitutions = formula.resolveIdentities();
-  auto copy = cellNames;
-  for (auto c : copy) {
-    auto it = substitutions.find(c.second);
-    if (it != substitutions.end()) {
-      cellNames[c.first] = it->second;
-    }
-  }
+  formula.resolveIdentities(getCellName(0));
   Log::get().debug("Resolved identities: " + formula.toString());
 
   // extract main formula (filter out irrelant memory cells)

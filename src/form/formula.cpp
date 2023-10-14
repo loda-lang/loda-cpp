@@ -171,12 +171,12 @@ void Formula::collectEntries(const Expression& e, Formula& target) {
   }
 }
 
-std::map<std::string, std::string> Formula::resolveIdentities() {
-  std::map<std::string, std::string> substitutions;
+void Formula::resolveIdentities(const std::string& main) {
   auto copy = entries;
   for (auto& e : copy) {
     if (!ExpressionUtil::isSimpleFunction(e.first, false) ||
-        !ExpressionUtil::isSimpleFunction(e.second, true)) {
+        !ExpressionUtil::isSimpleFunction(e.second, true) ||
+        e.first.name == main) {
       continue;
     }
     auto r = ExpressionUtil::newFunction(e.second.name);
@@ -186,10 +186,8 @@ std::map<std::string, std::string> Formula::resolveIdentities() {
       entries.erase(e.first);
 
       substituteFunction(e.first.name, e.second);
-      substitutions[e.first.name] = r.name;
     }
   }
-  return substitutions;
 }
 
 void replaceFunction(Expression& target, const std::string& func,
