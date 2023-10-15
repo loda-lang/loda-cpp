@@ -213,8 +213,10 @@ void Expression::substituteFunction(const std::string& from,
                                to.toString());
     }
     name = to.name;
-    Expression arg = *to.children.front();
-    replaceAll(Expression(Type::PARAMETER, param), arg);
+    Expression& arg = *children.front();
+    Expression newArg = *to.children.front();  // copy
+    newArg.replaceAll(Expression(Type::PARAMETER, param), arg);
+    arg = newArg;
     std::cout << "result " << toString() << std::endl;
     return;
   }
