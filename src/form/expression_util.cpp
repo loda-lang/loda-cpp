@@ -223,9 +223,16 @@ bool ExpressionUtil::normalize(Expression& e) {
   return true;
 }
 
-bool ExpressionUtil::isSimpleFunction(const Expression& e) {
-  return e.type == Expression::Type::FUNCTION && e.children.size() == 1 &&
-         e.children[0]->type == Expression::Type::PARAMETER;
+bool ExpressionUtil::isSimpleFunction(const Expression& e, bool strict) {
+  if (e.type != Expression::Type::FUNCTION || e.children.size() != 1) {
+    return false;
+  }
+  const auto arg = e.children.front();
+  if (strict) {
+    return arg->type == Expression::Type::PARAMETER;
+  } else {
+    return !arg->contains(Expression::Type::FUNCTION);
+  }
 }
 
 bool ExpressionUtil::canBeNegative(const Expression& e) {

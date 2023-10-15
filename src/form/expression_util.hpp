@@ -12,7 +12,7 @@ class ExpressionUtil {
 
   static bool normalize(Expression& e);
 
-  static bool isSimpleFunction(const Expression& e);
+  static bool isSimpleFunction(const Expression& e, bool strict = true);
 
   static bool canBeNegative(const Expression& e);
 };
