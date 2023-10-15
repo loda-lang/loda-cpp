@@ -416,7 +416,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   Log::get().debug("Resolved simple functions: " + formula.toString());
 
   // resolve identities
-  formula.resolveIdentities(getCellName(0));
+  formula.resolveIdentities(getCellName(Program::OUTPUT_CELL));
   Log::get().debug("Resolved identities: " + formula.toString());
 
   // extract main formula (filter out irrelant memory cells)
