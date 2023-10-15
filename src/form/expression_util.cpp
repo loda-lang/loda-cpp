@@ -227,7 +227,7 @@ bool ExpressionUtil::isSimpleFunction(const Expression& e, bool strict) {
   if (e.type != Expression::Type::FUNCTION || e.children.size() != 1) {
     return false;
   }
-  const auto arg = e.children[0];
+  const auto arg = e.children.front();
   if (strict) {
     return arg->type == Expression::Type::PARAMETER;
   } else {
