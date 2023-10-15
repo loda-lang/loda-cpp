@@ -174,8 +174,8 @@ void Formula::collectEntries(const Expression& e, Formula& target) {
 void Formula::resolveIdentities(const std::string& main) {
   auto copy = entries;
   for (auto& e : copy) {
-    if (!ExpressionUtil::isSimpleFunction(e.first, false) ||
-        !ExpressionUtil::isSimpleFunction(e.second, true) ||
+    if (!ExpressionUtil::isSimpleFunction(e.first, true) ||
+        !ExpressionUtil::isSimpleFunction(e.second, false) ||
         e.first.name == main) {
       continue;
     }
