@@ -30,12 +30,7 @@ ApiClient::ApiClient()
     server += '/';
   }
   base_url = server + "miner/v1/";
-  auto fetch_direct = Setup::getSetupFlag("LODA_OEIS_FETCH_DIRECT", true);
-  if (fetch_direct) {
-    oeis_url = "https://www.oeis.org/";
-  } else {
-    oeis_url = base_url + "oeis/";
-  }
+  oeis_fetch_direct = Setup::getSetupFlag("LODA_OEIS_FETCH_DIRECT", true);
 }
 
 ApiClient& ApiClient::getDefaultInstance() {
@@ -108,14 +103,28 @@ void ApiClient::getOeisFile(const std::string& filename,
   }
 
   // fetch file
-  const std::string url = oeis_url + filename + ".gz";
+  std::string url, ext;
+  if (oeis_fetch_direct) {
+    url = "https://www.oeis.org/";
+    if (filename.front() == 'b') {
+      auto id = filename.substr(1, 6);
+      url += "A" + id + "/" + filename;
+    } else {
+      ext = ".gz";
+      url += filename + ext;
+    }
+  } else {
+    ext = ".gz";
+    url = base_url + "oeis/" + filename + ext;
+  }
+
   bool success = false;
   int64_t backoff_delay = OEIS_THROTTLING_SECS;
   for (int64_t i = 0; i < 5; i++) {
     if (i > 0) {
       Log::get().warn("Retrying fetch of " + url);
     }
-    success = WebClient::get(url, local_path + ".gz", false, false);
+    success = WebClient::get(url, local_path + ext, false, false);
     if (success) {
       break;
     }
@@ -123,7 +132,9 @@ void ApiClient::getOeisFile(const std::string& filename,
     backoff_delay *= 2;
   }
   if (success) {
-    Git::gunzip(local_path + ".gz");
+    if (ext == ".gz") {
+      Git::gunzip(local_path + ".gz");
+    }
     fetched_oeis_files++;
     last_oeis_time = std::chrono::steady_clock::now();
   } else {
