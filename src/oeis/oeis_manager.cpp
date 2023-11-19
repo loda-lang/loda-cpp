@@ -846,7 +846,7 @@ update_program_result_t OeisManager::updateProgram(
 }
 
 // returns false if the program was removed, otherwise true
-bool OeisManager::maintainProgram(size_t id) {
+bool OeisManager::maintainProgram(size_t id, bool check) {
   // check if the sequence exists
   if (id >= sequences.size()) {
     return true;
@@ -886,16 +886,20 @@ bool OeisManager::maintainProgram(size_t id) {
   auto num_required = OeisProgram::getNumRequiredTerms(program);
 
   // check correctness of the program
-  try {
-    auto check = evaluator.check(program, extended_seq, num_required, id);
-    if (Signals::HALT) {
-      return true;  // interrupted evaluation
+  if (check) {
+    try {
+      auto res = evaluator.check(program, extended_seq, num_required, id);
+      if (Signals::HALT) {
+        return true;  // interrupted evaluation
+      }
+      is_okay = (res.first != status_t::ERROR);  // we allow warnings
+    } catch (const std::exception &e) {
+      Log::get().error(
+          "Error checking " + file_name + ": " + std::string(e.what()), false);
+      return true;  // not clear what happened, so don't remove it
     }
-    is_okay = (check.first != status_t::ERROR);  // we allow warnings
-  } catch (const std::exception &e) {
-    Log::get().error(
-        "Error checking " + file_name + ": " + std::string(e.what()), false);
-    return true;  // not clear what happened, so don't remove it
+  } else {
+    is_okay = true;
   }
 
   if (!is_okay) {
