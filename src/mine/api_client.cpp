@@ -30,6 +30,12 @@ ApiClient::ApiClient()
     server += '/';
   }
   base_url = server + "miner/v1/";
+  auto fetch_direct = Setup::getSetupFlag("LODA_OEIS_FETCH_DIRECT", false);
+  if (fetch_direct) {
+    oeis_url = "https://www.oeis.org/";
+  } else {
+    oeis_url = base_url + "oeis/";
+  }
 }
 
 ApiClient& ApiClient::getDefaultInstance() {
@@ -102,7 +108,7 @@ void ApiClient::getOeisFile(const std::string& filename,
   }
 
   // fetch file
-  const std::string url = base_url + "oeis/" + filename + ".gz";
+  const std::string url = oeis_url + filename + ".gz";
   bool success = false;
   int64_t backoff_delay = OEIS_THROTTLING_SECS;
   for (int64_t i = 0; i < 5; i++) {

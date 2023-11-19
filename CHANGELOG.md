@@ -2,6 +2,12 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v23.11.19
+
+### Features
+
+* Support fetching resources directly from OEIS
+
 ## v23.10.8
 
 ### Bugfixes

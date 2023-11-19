@@ -25,6 +25,7 @@ class ApiClient {
   static constexpr int64_t OEIS_THROTTLING_SECS = 10;  // magic number
 
   std::string base_url;
+  std::string oeis_url;
   int64_t client_id;
   int64_t session_id;
   int64_t start;
