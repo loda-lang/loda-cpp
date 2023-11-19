@@ -30,7 +30,7 @@ ApiClient::ApiClient()
     server += '/';
   }
   base_url = server + "miner/v1/";
-  auto fetch_direct = Setup::getSetupFlag("LODA_OEIS_FETCH_DIRECT", false);
+  auto fetch_direct = Setup::getSetupFlag("LODA_OEIS_FETCH_DIRECT", true);
   if (fetch_direct) {
     oeis_url = "https://www.oeis.org/";
   } else {
