@@ -881,12 +881,11 @@ bool OeisManager::maintainProgram(size_t id, bool check) {
     program_file.close();
   }
 
-  // get the full number of terms
-  auto extended_seq = s.getTerms(OeisSequence::FULL_SEQ_LENGTH);
-  auto num_required = OeisProgram::getNumRequiredTerms(program);
-
   // check correctness of the program
+  auto num_required = OeisProgram::getNumRequiredTerms(program);
   if (check) {
+    // get the full number of terms
+    auto extended_seq = s.getTerms(OeisSequence::FULL_SEQ_LENGTH);
     try {
       auto res = evaluator.check(program, extended_seq, num_required, id);
       if (Signals::HALT) {
