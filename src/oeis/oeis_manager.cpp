@@ -903,11 +903,11 @@ bool OeisManager::maintainProgram(size_t id, bool check) {
   auto updated = program;
   const bool is_protected = (protect_list.find(s.id) != protect_list.end());
   if (is_okay && !is_protected && !Comments::isCodedManually(program)) {
-    ProgramUtil::removeOps(updated, Operation::Type::NOP);
-    OeisProgram::autoUnfold(updated);
-    auto num_minimize = OeisProgram::getNumMinimizationTerms(program);
-    // evaluation could still fail, so catch errors
+    // unfold and evaluation could still fail, so catch errors
     try {
+      ProgramUtil::removeOps(updated, Operation::Type::NOP);
+      OeisProgram::autoUnfold(updated);
+      auto num_minimize = OeisProgram::getNumMinimizationTerms(program);
       minimizer.optimizeAndMinimize(updated, num_minimize);
     } catch (const std::exception &e) {
       is_okay = false;
