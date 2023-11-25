@@ -883,7 +883,7 @@ bool OeisManager::maintainProgram(size_t id, bool check) {
 
   // check correctness of the program
   auto num_required = OeisProgram::getNumRequiredTerms(program);
-  if (check) {
+  if (is_okay && check) {
     // get the full number of terms
     auto extended_seq = s.getTerms(OeisSequence::FULL_SEQ_LENGTH);
     try {
@@ -897,27 +897,31 @@ bool OeisManager::maintainProgram(size_t id, bool check) {
           "Error checking " + file_name + ": " + std::string(e.what()), false);
       return true;  // not clear what happened, so don't remove it
     }
-  } else {
-    is_okay = true;
-  }
-
-  if (!is_okay) {
-    // send alert and remove file
-    alert(program, id, "Removed invalid", "danger", "");
-    remove(file_name.c_str());
-    return false;
   }
 
   // unfold, minimize and dump the program if it is not protected
+  auto updated = program;
   const bool is_protected = (protect_list.find(s.id) != protect_list.end());
-  if (!is_protected && !Comments::isCodedManually(program)) {
-    ProgramUtil::removeOps(program, Operation::Type::NOP);
-    auto m = program;
-    OeisProgram::autoUnfold(m);
-    minimizer.optimizeAndMinimize(m, num_required);
-    dumpProgram(s.id, m, file_name, submitted_by);
+  if (is_okay && !is_protected && !Comments::isCodedManually(program)) {
+    ProgramUtil::removeOps(updated, Operation::Type::NOP);
+    OeisProgram::autoUnfold(updated);
+    // evaluation could still fail, so catch errors
+    try {
+      minimizer.optimizeAndMinimize(updated, num_required);
+    } catch (const std::exception &e) {
+      is_okay = false;
+    }
   }
-  return true;
+
+  if (is_okay) {
+    dumpProgram(s.id, updated, file_name, submitted_by);
+  } else {
+    // send alert and remove file
+    alert(program, id, "Removed invalid", "danger", "");
+    remove(file_name.c_str());
+  }
+
+  return is_okay;
 }
 
 std::vector<Program> OeisManager::loadAllPrograms() {
