@@ -71,6 +71,10 @@ size_t OeisProgram::getNumRequiredTerms(const Program &p) {
   //            : OeisSequence::DEFAULT_SEQ_LENGTH;
 }
 
+size_t OeisProgram::getNumMinimizationTerms(const Program &p) {
+  return getNumRequiredTerms(p) * 2;  // magic number
+}
+
 void updateOperand(Operand &op, int64_t target, int64_t largest_used) {
   if (op.type != Operand::Type::DIRECT) {
     return;

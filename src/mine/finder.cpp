@@ -148,6 +148,7 @@ std::pair<std::string, Program> Finder::checkProgramExtended(
   // get the extended sequence and number of required terms
   auto num_check = OeisProgram::getNumCheckTerms(full_check);
   auto num_required = OeisProgram::getNumRequiredTerms(program);
+  auto num_minimize = OeisProgram::getNumMinimizationTerms(program);
   auto extended_seq = seq.getTerms(num_check);
 
   // check the program w/o minimization
@@ -165,7 +166,7 @@ std::pair<std::string, Program> Finder::checkProgramExtended(
   OeisProgram::autoUnfold(program);
 
   // minimize based on number of terminating terms
-  minimizer.optimizeAndMinimize(program, num_required);
+  minimizer.optimizeAndMinimize(program, num_minimize);
   if (program != result.second) {
     // minimization changed program => check the minimized program
     num_required = OeisProgram::getNumRequiredTerms(program);

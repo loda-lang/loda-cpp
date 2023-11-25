@@ -882,10 +882,10 @@ bool OeisManager::maintainProgram(size_t id, bool check) {
   }
 
   // check correctness of the program
-  auto num_required = OeisProgram::getNumRequiredTerms(program);
   if (is_okay && check) {
     // get the full number of terms
     auto extended_seq = s.getTerms(OeisSequence::FULL_SEQ_LENGTH);
+    auto num_required = OeisProgram::getNumRequiredTerms(program);
     try {
       auto res = evaluator.check(program, extended_seq, num_required, id);
       if (Signals::HALT) {
@@ -905,9 +905,10 @@ bool OeisManager::maintainProgram(size_t id, bool check) {
   if (is_okay && !is_protected && !Comments::isCodedManually(program)) {
     ProgramUtil::removeOps(updated, Operation::Type::NOP);
     OeisProgram::autoUnfold(updated);
+    auto num_minimize = OeisProgram::getNumMinimizationTerms(program);
     // evaluation could still fail, so catch errors
     try {
-      minimizer.optimizeAndMinimize(updated, num_required);
+      minimizer.optimizeAndMinimize(updated, num_minimize);
     } catch (const std::exception &e) {
       is_okay = false;
     }
