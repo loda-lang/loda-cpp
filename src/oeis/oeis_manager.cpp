@@ -900,23 +900,22 @@ bool OeisManager::maintainProgram(size_t id, bool check) {
   }
 
   // unfold, minimize and dump the program if it is not protected
-  auto updated = program;
   const bool is_protected = (protect_list.find(s.id) != protect_list.end());
   if (is_okay && !is_protected && !Comments::isCodedManually(program)) {
     // unfold and evaluation could still fail, so catch errors
     try {
+      auto updated = program;
       ProgramUtil::removeOps(updated, Operation::Type::NOP);
       OeisProgram::autoUnfold(updated);
       auto num_minimize = OeisProgram::getNumMinimizationTerms(program);
       minimizer.optimizeAndMinimize(updated, num_minimize);
+      dumpProgram(s.id, updated, file_name, submitted_by);
     } catch (const std::exception &e) {
       is_okay = false;
     }
   }
 
-  if (is_okay) {
-    dumpProgram(s.id, updated, file_name, submitted_by);
-  } else {
+  if (!is_okay) {
     // send alert and remove file
     alert(program, id, "Removed invalid", "danger", "");
     remove(file_name.c_str());
