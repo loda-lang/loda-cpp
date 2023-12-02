@@ -351,7 +351,12 @@ bool FormulaGenerator::generateSingle(const Program& p) {
 
     // evaluate program and add initial terms to formula
     for (int64_t offset = 0; offset < maxNumTerms; offset++) {
-      ie.next(true, true);  // skip final iteration and post loop code
+      try {
+        ie.next(true, true);  // skip final iteration and post loop code
+      } catch (const std::exception&) {
+        Log::get().debug("Cannot generate initial terms");
+        return false;
+      }
       const auto state = ie.getLoopStates().at(ie.getPreviousSlice());
       for (int64_t cell = 0; cell < numCells; cell++) {
         if (offset < numTerms[cell]) {
