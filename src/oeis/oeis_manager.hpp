@@ -46,7 +46,7 @@ class OeisManager {
   update_program_result_t updateProgram(size_t id, Program p,
                                         ValidationMode validation_mode);
 
-  bool maintainProgram(size_t id, bool check = true);
+  bool maintainProgram(size_t id, bool eval = true);
 
   void generateLists();
 

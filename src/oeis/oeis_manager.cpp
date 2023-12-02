@@ -846,7 +846,7 @@ update_program_result_t OeisManager::updateProgram(
 }
 
 // returns false if the program was removed, otherwise true
-bool OeisManager::maintainProgram(size_t id, bool check) {
+bool OeisManager::maintainProgram(size_t id, bool eval) {
   // check if the sequence exists
   if (id >= sequences.size()) {
     return true;
@@ -882,7 +882,7 @@ bool OeisManager::maintainProgram(size_t id, bool check) {
   }
 
   // check correctness of the program
-  if (is_okay && check) {
+  if (is_okay && eval) {
     // get the full number of terms
     auto extended_seq = s.getTerms(OeisSequence::FULL_SEQ_LENGTH);
     auto num_required = OeisProgram::getNumRequiredTerms(program);
@@ -907,8 +907,12 @@ bool OeisManager::maintainProgram(size_t id, bool check) {
       auto updated = program;
       ProgramUtil::removeOps(updated, Operation::Type::NOP);
       OeisProgram::autoUnfold(updated);
-      auto num_minimize = OeisProgram::getNumMinimizationTerms(program);
-      minimizer.optimizeAndMinimize(updated, num_minimize);
+      if (eval) {
+        auto num_minimize = OeisProgram::getNumMinimizationTerms(program);
+        minimizer.optimizeAndMinimize(updated, num_minimize);
+      } else {
+        optimizer.optimize(updated);
+      }
       dumpProgram(s.id, updated, file_name, submitted_by);
     } catch (const std::exception &e) {
       is_okay = false;
