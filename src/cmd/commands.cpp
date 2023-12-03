@@ -560,10 +560,20 @@ void Commands::migrate() {
 
 void Commands::maintain(const std::string& id) {
   initLog(false);
-  OeisSequence seq(id);
   OeisManager manager(settings);
   manager.load();
-  manager.maintainProgram(seq.id);
+  size_t start = 0;
+  size_t end = manager.getTotalCount() + 1;
+  bool check = false;
+  if (!id.empty()) {
+    OeisSequence seq(id);
+    start = seq.id;
+    end = seq.id + 1;
+    check = true;
+  }
+  for (size_t id = start; id < end; id++) {
+    manager.maintainProgram(id, check);
+  }
 }
 
 void Commands::iterate(const std::string& count) {

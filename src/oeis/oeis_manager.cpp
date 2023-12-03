@@ -846,7 +846,7 @@ update_program_result_t OeisManager::updateProgram(
 }
 
 // returns false if the program was removed, otherwise true
-bool OeisManager::maintainProgram(size_t id) {
+bool OeisManager::maintainProgram(size_t id, bool eval) {
   // check if the sequence exists
   if (id >= sequences.size()) {
     return true;
@@ -881,40 +881,51 @@ bool OeisManager::maintainProgram(size_t id) {
     program_file.close();
   }
 
-  // get the full number of terms
-  auto extended_seq = s.getTerms(OeisSequence::FULL_SEQ_LENGTH);
-  auto num_required = OeisProgram::getNumRequiredTerms(program);
-
   // check correctness of the program
-  try {
-    auto check = evaluator.check(program, extended_seq, num_required, id);
-    if (Signals::HALT) {
-      return true;  // interrupted evaluation
+  if (is_okay && eval) {
+    // get the full number of terms
+    auto extended_seq = s.getTerms(OeisSequence::FULL_SEQ_LENGTH);
+    auto num_required = OeisProgram::getNumRequiredTerms(program);
+    try {
+      auto res = evaluator.check(program, extended_seq, num_required, id);
+      if (Signals::HALT) {
+        return true;  // interrupted evaluation
+      }
+      is_okay = (res.first != status_t::ERROR);  // we allow warnings
+    } catch (const std::exception &e) {
+      Log::get().error(
+          "Error checking " + file_name + ": " + std::string(e.what()), false);
+      return true;  // not clear what happened, so don't remove it
     }
-    is_okay = (check.first != status_t::ERROR);  // we allow warnings
-  } catch (const std::exception &e) {
-    Log::get().error(
-        "Error checking " + file_name + ": " + std::string(e.what()), false);
-    return true;  // not clear what happened, so don't remove it
+  }
+
+  // unfold, minimize and dump the program if it is not protected
+  const bool is_protected = (protect_list.find(s.id) != protect_list.end());
+  if (is_okay && !is_protected && !Comments::isCodedManually(program)) {
+    // unfold and evaluation could still fail, so catch errors
+    try {
+      auto updated = program;
+      ProgramUtil::removeOps(updated, Operation::Type::NOP);
+      OeisProgram::autoUnfold(updated);
+      if (eval) {
+        auto num_minimize = OeisProgram::getNumMinimizationTerms(program);
+        minimizer.optimizeAndMinimize(updated, num_minimize);
+      } else {
+        optimizer.optimize(updated);
+      }
+      dumpProgram(s.id, updated, file_name, submitted_by);
+    } catch (const std::exception &e) {
+      is_okay = false;
+    }
   }
 
   if (!is_okay) {
     // send alert and remove file
     alert(program, id, "Removed invalid", "danger", "");
     remove(file_name.c_str());
-    return false;
   }
 
-  // unfold, minimize and dump the program if it is not protected
-  const bool is_protected = (protect_list.find(s.id) != protect_list.end());
-  if (!is_protected && !Comments::isCodedManually(program)) {
-    ProgramUtil::removeOps(program, Operation::Type::NOP);
-    auto m = program;
-    OeisProgram::autoUnfold(m);
-    minimizer.optimizeAndMinimize(m, num_required);
-    dumpProgram(s.id, m, file_name, submitted_by);
-  }
-  return true;
+  return is_okay;
 }
 
 std::vector<Program> OeisManager::loadAllPrograms() {

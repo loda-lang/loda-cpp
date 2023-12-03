@@ -66,7 +66,7 @@ void Test::all() {
   randomNumber(100);
   ackermann();
   stats();
-  apiClient();
+  // apiClient(); // requires API server
   oeisList();
   oeisSeq();
   iterator(100);
