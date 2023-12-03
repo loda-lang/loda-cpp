@@ -12,51 +12,37 @@ Expression ExpressionUtil::newFunction(const std::string& name) {
   return Expression(Expression::Type::FUNCTION, name, {newParameter()});
 }
 
-bool mergeTwoChildren(Expression& e) {
-  for (size_t i = 0; i + 1 < e.children.size(); i++) {
-    auto c = e.children[i];
-    auto d = e.children[i + 1];
-    bool merged = false;
-    if (c->type == Expression::Type::CONSTANT &&
-        d->type == Expression::Type::CONSTANT) {
-      switch (e.type) {
-        case Expression::Type::SUM: {
-          c->value += d->value;
-          merged = true;
-          break;
-        }
-        case Expression::Type::PRODUCT: {
-          c->value *= d->value;
-          merged = true;
-          break;
-        }
-        default:
-          break;
+bool mergeTwoChildren(Expression::Type t, Expression& c, const Expression& d) {
+  if (c.type == Expression::Type::CONSTANT &&
+      d.type == Expression::Type::CONSTANT) {
+    switch (t) {
+      case Expression::Type::SUM: {
+        c.value += d.value;
+        return true;
       }
-    } else if (*c == *d) {
-      switch (e.type) {
-        case Expression::Type::SUM: {
-          *c = Expression(Expression::Type::PRODUCT);
-          c->newChild(Expression::Type::CONSTANT, "", Number(2));
-          c->newChild(*d);
-          merged = true;
-          break;
-        }
-        case Expression::Type::PRODUCT: {
-          *c = Expression(Expression::Type::POWER);
-          c->newChild(*d);
-          c->newChild(Expression::Type::CONSTANT, "", Number(2));
-          merged = true;
-          break;
-        }
-        default:
-          break;
+      case Expression::Type::PRODUCT: {
+        c.value *= d.value;
+        return true;
       }
+      default:
+        return false;
     }
-    if (merged) {
-      delete d;
-      e.children.erase(e.children.begin() + i + 1);
-      return true;
+  } else if (c == d) {
+    switch (t) {
+      case Expression::Type::SUM: {
+        c = Expression(Expression::Type::PRODUCT);
+        c.newChild(Expression::Type::CONSTANT, "", Number(2));
+        c.newChild(d);
+        return true;
+      }
+      case Expression::Type::PRODUCT: {
+        c = Expression(Expression::Type::POWER);
+        c.newChild(d);
+        c.newChild(Expression::Type::CONSTANT, "", Number(2));
+        return true;
+      }
+      default:
+        return false;
     }
   }
   return false;
@@ -64,8 +50,15 @@ bool mergeTwoChildren(Expression& e) {
 
 bool mergeAllChildren(Expression& e) {
   bool changed = false;
-  while (mergeTwoChildren(e)) {
-    changed = true;
+  for (size_t i = 0; i < e.children.size(); i++) {
+    for (size_t j = 0; j < e.children.size(); j++) {
+      if (i != j && mergeTwoChildren(e.type, *e.children[i], *e.children[j])) {
+        delete e.children[j];
+        e.children.erase(e.children.begin() + j);
+        changed = true;
+        i = j = 0;
+      }
+    }
   }
   return changed;
 }
