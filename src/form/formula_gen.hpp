@@ -25,7 +25,9 @@ class FormulaGenerator {
   bool resolve(const Alternatives& alt, const Expression& left,
                Expression& right) const;
 
-  bool findAlternatives(Alternatives& alt) const;
+  bool findAlternatives1(Alternatives& alt) const;
+
+  bool findAlternatives2(Alternatives& alt) const;
 
   bool applyAlternatives(const Alternatives& alt, Formula& f) const;
 
