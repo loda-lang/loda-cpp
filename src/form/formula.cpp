@@ -1,5 +1,6 @@
 #include "form/formula.hpp"
 
+#include <iostream>
 #include <set>
 
 #include "form/expression_util.hpp"
@@ -138,6 +139,17 @@ void Formula::replaceName(const std::string& from, const std::string& to) {
   entries = newEntries;
 }
 
+void Formula::substituteFunction(const std::string& from,
+                                 const Expression& to) {
+  const auto param = ExpressionUtil::newParameter();
+  for (auto& e : entries) {
+    std::cout << "subst " << from << " -> " << to.toString() << " in "
+              << e.second.toString() << std::endl;
+    e.second.substituteFunction(from, to, param.name);
+    ExpressionUtil::normalize(e.second);
+  }
+}
+
 void Formula::collectEntries(const std::string& name, Formula& target) {
   for (auto& e : entries) {
     if (e.first.name == name) {
@@ -159,14 +171,21 @@ void Formula::collectEntries(const Expression& e, Formula& target) {
   }
 }
 
-void Formula::resolveIdentities() {
+void Formula::resolveIdentities(const std::string& main) {
   auto copy = entries;
   for (auto& e : copy) {
-    if (ExpressionUtil::isSimpleFunction(e.first) &&
-        ExpressionUtil::isSimpleFunction(e.second) &&
-        copy.find(e.second) != copy.end()) {
+    if (!ExpressionUtil::isSimpleFunction(e.first, true) ||
+        !ExpressionUtil::isSimpleFunction(e.second, false) ||
+        e.first.name == main) {
+      continue;
+    }
+    auto r = ExpressionUtil::newFunction(e.second.name);
+    if (copy.find(r) != copy.end()) {
+      std::cout << "candidate " << e.first.toString() << " = "
+                << e.second.toString() << std::endl;
       entries.erase(e.first);
-      replaceName(e.second.name, e.first.name);
+
+      substituteFunction(e.first.name, e.second);
     }
   }
 }

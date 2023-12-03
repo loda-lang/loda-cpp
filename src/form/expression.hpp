@@ -62,6 +62,9 @@ class Expression {
 
   void replaceName(const std::string& from, const std::string& to);
 
+  void substituteFunction(const std::string& from, const Expression& to,
+                          const std::string& param);
+
   friend std::ostream& operator<<(std::ostream& out, const Expression& e);
 
   std::string toString() const;

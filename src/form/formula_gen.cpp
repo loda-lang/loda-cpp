@@ -420,15 +420,15 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   formula.resolveSimpleFunctions();
   Log::get().debug("Resolved simple functions: " + formula.toString());
 
+  // resolve identities
+  formula.resolveIdentities(getCellName(Program::OUTPUT_CELL));
+  Log::get().debug("Resolved identities: " + formula.toString());
+
   // extract main formula (filter out irrelant memory cells)
   Formula tmp;
   formula.collectEntries(getCellName(Program::OUTPUT_CELL), tmp);
   formula = tmp;
   Log::get().debug("Pruned formula: " + formula.toString());
-
-  // resolve identities
-  formula.resolveIdentities();
-  Log::get().debug("Resolved identities: " + formula.toString());
 
   // success
   return true;

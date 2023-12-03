@@ -1,6 +1,7 @@
 #include "form/expression.hpp"
 
 #include <algorithm>
+#include <iostream>
 #include <sstream>
 
 Expression::Expression()
@@ -199,6 +200,28 @@ void Expression::replaceName(const std::string& from, const std::string& to) {
   }
   for (auto& c : children) {
     c->replaceName(from, to);
+  }
+}
+
+void Expression::substituteFunction(const std::string& from,
+                                    const Expression& to,
+                                    const std::string& param) {
+  if (type == Type::FUNCTION && name == from) {
+    // sanity check
+    if (to.type != Type::FUNCTION || to.children.size() != 1) {
+      throw std::runtime_error("invalid function substitution: " +
+                               to.toString());
+    }
+    name = to.name;
+    Expression& arg = *children.front();
+    Expression newArg = *to.children.front();  // copy
+    newArg.replaceAll(Expression(Type::PARAMETER, param), arg);
+    arg = newArg;
+    std::cout << "result " << toString() << std::endl;
+    return;
+  }
+  for (auto& c : children) {
+    c->substituteFunction(from, to, param);
   }
 }
 
