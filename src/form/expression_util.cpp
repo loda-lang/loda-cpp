@@ -12,38 +12,34 @@ Expression ExpressionUtil::newFunction(const std::string& name) {
   return Expression(Expression::Type::FUNCTION, name, {newParameter()});
 }
 
-bool mergeTwoChildren(Expression::Type t, Expression& c, const Expression& d) {
+bool mergeSum(Expression& c, Expression& d) {
   if (c.type == Expression::Type::CONSTANT &&
       d.type == Expression::Type::CONSTANT) {
-    switch (t) {
-      case Expression::Type::SUM: {
-        c.value += d.value;
-        return true;
-      }
-      case Expression::Type::PRODUCT: {
-        c.value *= d.value;
-        return true;
-      }
-      default:
-        return false;
-    }
+    c.value += d.value;
+    d.value = Number::ZERO;
+    return true;
   } else if (c == d) {
-    switch (t) {
-      case Expression::Type::SUM: {
-        c = Expression(Expression::Type::PRODUCT);
-        c.newChild(Expression::Type::CONSTANT, "", Number(2));
-        c.newChild(d);
-        return true;
-      }
-      case Expression::Type::PRODUCT: {
-        c = Expression(Expression::Type::POWER);
-        c.newChild(d);
-        c.newChild(Expression::Type::CONSTANT, "", Number(2));
-        return true;
-      }
-      default:
-        return false;
-    }
+    c = Expression(Expression::Type::PRODUCT);
+    c.newChild(Expression::Type::CONSTANT, "", Number(2));
+    c.newChild(d);
+    d.value = Number::ZERO;
+    return true;
+  }
+  return false;
+}
+
+bool mergeProduct(Expression& c, Expression& d) {
+  if (c.type == Expression::Type::CONSTANT &&
+      d.type == Expression::Type::CONSTANT) {
+    c.value *= d.value;
+    d.value = Number::ONE;
+    return true;
+  } else if (c == d) {
+    c = Expression(Expression::Type::POWER);
+    c.newChild(d);
+    c.newChild(Expression::Type::CONSTANT, "", Number(2));
+    d.value = Number::ONE;
+    return true;
   }
   return false;
 }
@@ -52,7 +48,16 @@ bool mergeAllChildren(Expression& e) {
   bool changed = false;
   for (size_t i = 0; i < e.children.size(); i++) {
     for (size_t j = 0; j < e.children.size(); j++) {
-      if (i != j && mergeTwoChildren(e.type, *e.children[i], *e.children[j])) {
+      if (i == j) {
+        continue;
+      }
+      bool merged = false;
+      if (e.type == Expression::Type::SUM) {
+        merged = mergeSum(*e.children[i], *e.children[j]);
+      } else if (e.type == Expression::Type::PRODUCT) {
+        merged = mergeProduct(*e.children[i], *e.children[j]);
+      }
+      if (merged) {
         delete e.children[j];
         e.children.erase(e.children.begin() + j);
         changed = true;
