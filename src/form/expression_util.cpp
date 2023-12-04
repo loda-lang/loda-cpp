@@ -20,7 +20,7 @@ bool mergeSum(Expression& c, Expression& d) {
     return true;
   } else if (c == d) {
     c = Expression(Expression::Type::PRODUCT);
-    c.newChild(Expression::Type::CONSTANT, "", Number(2));
+    c.newChild(ExpressionUtil::newConstant(2));
     c.newChild(d);
     d.value = Number::ZERO;
     return true;
@@ -37,7 +37,7 @@ bool mergeProduct(Expression& c, Expression& d) {
   } else if (c == d) {
     c = Expression(Expression::Type::POWER);
     c.newChild(d);
-    c.newChild(Expression::Type::CONSTANT, "", Number(2));
+    c.newChild(ExpressionUtil::newConstant(2));
     d.value = Number::ONE;
     return true;
   }
