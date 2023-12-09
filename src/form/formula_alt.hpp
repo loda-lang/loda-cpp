@@ -8,6 +8,8 @@ typedef std::multimap<Expression, Expression> Alternatives;
 
 bool findAlternativesByResolve(Alternatives& alt);
 
+bool findAlternativesByGaussElim(Alternatives& alt);
+
 bool applyAlternatives(const Alternatives& alt, Formula& formula);
 
 bool simplifyFormulaUsingAlternatives(Formula& formula);
