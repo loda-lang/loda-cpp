@@ -39,7 +39,7 @@ bool resolve(const Alternatives& alt, const Expression& left,
   return resolved;
 }
 
-bool findAlternatives(Alternatives& alt) {
+bool findAlternativesByResolve(Alternatives& alt) {
   auto newAlt = alt;  // copy
   bool found = false;
   for (auto& e : alt) {
@@ -82,4 +82,22 @@ bool applyAlternatives(const Alternatives& alt, Formula& f) {
     }
   }
   return applied;
+}
+
+bool simplifyFormulaUsingAlternatives(Formula& formula) {
+  // find and choose alternative function definitions
+  Alternatives alt;
+  bool updated = false;
+  alt.insert(formula.entries.begin(), formula.entries.end());
+  while (true) {
+    if (!findAlternativesByResolve(alt)) {
+      break;
+    }
+    if (!applyAlternatives(alt, formula)) {
+      break;
+    }
+    updated = true;
+    Log::get().debug("Updated formula: " + formula.toString());
+  }
+  return updated;
 }

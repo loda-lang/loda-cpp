@@ -248,17 +248,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   // additional work for IE programs
   if (use_ie) {
     // find and choose alternative function definitions
-    Alternatives alt;
-    alt.insert(formula.entries.begin(), formula.entries.end());
-    while (true) {
-      if (!findAlternatives(alt)) {
-        break;
-      }
-      if (!applyAlternatives(alt, formula)) {
-        break;
-      }
-      Log::get().debug("Updated formula: " + formula.toString());
-    };
+    simplifyFormulaUsingAlternatives(formula);
 
     // determine number of initial terms needed
     std::vector<int64_t> numTerms(numCells);
