@@ -24,6 +24,21 @@ bool mergeSum(Expression& c, Expression& d) {
     c.newChild(d);
     d.value = Number::ZERO;
     return true;
+  } else if (d.type == Expression::Type::PRODUCT && d.children.size() == 2 &&
+             d.children[0]->type == Expression::Type::CONSTANT &&
+             c == *d.children[1]) {
+    c = d;
+    c.children[0]->value += 1;
+    d = ExpressionUtil::newConstant(0);
+    return true;
+  } else if (c.type == Expression::Type::PRODUCT && c.children.size() == 2 &&
+             c.children[0]->type == Expression::Type::CONSTANT &&
+             d.type == Expression::Type::PRODUCT && d.children.size() == 2 &&
+             d.children[0]->type == Expression::Type::CONSTANT &&
+             *c.children[1] == *d.children[1]) {
+    c.children[0]->value += d.children[0]->value;
+    d = ExpressionUtil::newConstant(0);
+    return true;
   }
   return false;
 }
@@ -39,6 +54,21 @@ bool mergeProduct(Expression& c, Expression& d) {
     c.newChild(d);
     c.newChild(ExpressionUtil::newConstant(2));
     d.value = Number::ONE;
+    return true;
+  } else if (d.type == Expression::Type::POWER && d.children.size() == 2 &&
+             d.children[1]->type == Expression::Type::CONSTANT &&
+             c == *d.children[0]) {
+    c = d;
+    c.children[1]->value += 1;
+    d = ExpressionUtil::newConstant(1);
+    return true;
+  } else if (c.type == Expression::Type::POWER && c.children.size() == 2 &&
+             c.children[1]->type == Expression::Type::CONSTANT &&
+             d.type == Expression::Type::POWER && d.children.size() == 2 &&
+             d.children[1]->type == Expression::Type::CONSTANT &&
+             *c.children[0] == *d.children[0]) {
+    c.children[1]->value += d.children[1]->value;
+    d = ExpressionUtil::newConstant(1);
     return true;
   }
   return false;

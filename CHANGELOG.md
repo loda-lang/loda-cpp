@@ -4,6 +4,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Enhancements
 
+* Simplify sums and products in generated formulas
 * Extended internal maintenance command
 * Use more terms during minimization
 
