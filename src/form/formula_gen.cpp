@@ -4,6 +4,7 @@
 #include <stdexcept>
 
 #include "form/expression_util.hpp"
+#include "form/formula_alt.hpp"
 #include "lang/evaluator_inc.hpp"
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
@@ -148,42 +149,6 @@ bool FormulaGenerator::update(const Program& p) {
   return true;
 }
 
-bool FormulaGenerator::resolve(const Alternatives& alt, const Expression& left,
-                               Expression& right) const {
-  if (right.type == Expression::Type::FUNCTION) {
-    auto lookup = ExpressionUtil::newFunction(right.name);
-    if (lookup != left) {
-      auto range = alt.equal_range(lookup);
-      for (auto it = range.first; it != range.second; it++) {
-        auto replacement = it->second;
-        replacement.replaceAll(ExpressionUtil::newParameter(),
-                               *right.children[0]);
-        ExpressionUtil::normalize(replacement);
-        auto range2 = alt.equal_range(left);
-        bool exists = false;
-        for (auto it2 = range2.first; it2 != range2.second; it2++) {
-          if (it2->second == replacement) {
-            exists = true;
-            break;
-          }
-        }
-        if (!exists) {
-          right = replacement;
-          return true;  // must stop here
-        }
-      }
-    }
-  }
-  bool resolved = false;
-  for (auto c : right.children) {
-    if (resolve(alt, left, *c)) {
-      resolved = true;
-    }
-  }
-  ExpressionUtil::normalize(right);
-  return resolved;
-}
-
 int64_t getNumInitialTermsNeeded(int64_t cell, const IncrementalEvaluator& ie) {
   auto stateful = ie.getStatefulCells();
   for (const auto& out : ie.getOutputCells()) {
@@ -225,52 +190,6 @@ void FormulaGenerator::initFormula(int64_t numCells, bool use_ie,
                                  : ExpressionUtil::newConstant(0);
     }
   }
-}
-
-bool FormulaGenerator::findAlternatives(Alternatives& alt) const {
-  auto newAlt = alt;  // copy
-  bool found = false;
-  for (auto& e : alt) {
-    auto right = e.second;  // copy
-    if (resolve(newAlt, e.first, right)) {
-      std::pair<Expression, Expression> p(e.first, right);
-      Log::get().debug("Found alternative " + p.first.toString() + " = " +
-                       p.second.toString());
-      newAlt.insert(p);
-      found = true;
-    }
-  }
-  if (found) {
-    alt = newAlt;
-  }
-  return found;
-}
-
-bool FormulaGenerator::applyAlternatives(const Alternatives& alt,
-                                         Formula& f) const {
-  bool applied = false;
-  for (auto& e : f.entries) {
-    auto range = alt.equal_range(e.first);
-    for (auto it = range.first; it != range.second; it++) {
-      if (it->second == e.second) {
-        continue;
-      }
-      Formula g = f;  // copy
-      g.entries[e.first] = it->second;
-      auto depsOld = f.getFunctionDeps(true, true);
-      auto depsNew = g.getFunctionDeps(true, true);
-      std::string debugMsg =
-          " alternative " + e.first.toString() + " = " + it->second.toString();
-      if (depsNew.size() < depsOld.size()) {
-        e.second = it->second;
-        applied = true;
-        Log::get().debug("Applied" + debugMsg);
-      } else {
-        Log::get().debug("Skipped" + debugMsg);
-      }
-    }
-  }
-  return applied;
 }
 
 bool FormulaGenerator::generateSingle(const Program& p) {
