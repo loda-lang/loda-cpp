@@ -12,33 +12,50 @@ Expression ExpressionUtil::newFunction(const std::string& name) {
   return Expression(Expression::Type::FUNCTION, name, {newParameter()});
 }
 
+std::pair<Number, Expression> extractFactor(const Expression& e) {
+  std::pair<Number, Expression> result;
+  result.first = Number::ONE;
+  result.second.type = Expression::Type::PRODUCT;
+  if (e.type == Expression::Type::PRODUCT) {
+    for (auto c : e.children) {
+      if (c->type == Expression::Type::CONSTANT) {
+        result.first *= c->value;
+      } else {
+        result.second.newChild(*c);
+      }
+    }
+  } else {
+    result.second.newChild(e);
+  }
+  return result;
+}
+
 bool mergeSum(Expression& c, Expression& d) {
   if (c.type == Expression::Type::CONSTANT &&
       d.type == Expression::Type::CONSTANT) {
     c.value += d.value;
     d.value = Number::ZERO;
     return true;
-  } else if (c == d) {
-    c = Expression(Expression::Type::PRODUCT);
-    c.newChild(ExpressionUtil::newConstant(2));
-    c.newChild(d);
-    d.value = Number::ZERO;
-    return true;
-  } else if (d.type == Expression::Type::PRODUCT && d.children.size() == 2 &&
-             d.children[0]->type == Expression::Type::CONSTANT &&
-             c == *d.children[1]) {
-    c = d;
-    c.children[0]->value += 1;
-    d = ExpressionUtil::newConstant(0);
-    return true;
-  } else if (c.type == Expression::Type::PRODUCT && c.children.size() == 2 &&
-             c.children[0]->type == Expression::Type::CONSTANT &&
-             d.type == Expression::Type::PRODUCT && d.children.size() == 2 &&
-             d.children[0]->type == Expression::Type::CONSTANT &&
-             *c.children[1] == *d.children[1]) {
-    c.children[0]->value += d.children[0]->value;
-    d = ExpressionUtil::newConstant(0);
-    return true;
+  } else {
+    auto p1 = extractFactor(c);
+    auto p2 = extractFactor(d);
+    if (p1.second == p2.second) {
+      auto factor = Expression(Expression::Type::CONSTANT, "", p1.first);
+      factor.value += p2.first;
+      auto term = p1.second;
+      if (p1.second.children.size() == 1) {  // we know it's a product
+        term = *p1.second.children[0];
+      }
+      if (factor.value == Number::ZERO) {
+        c = factor;
+      } else if (factor.value == Number::ONE) {
+        c = term;
+      } else {
+        c = Expression(Expression::Type::PRODUCT, "", {factor, term});
+      }
+      d = ExpressionUtil::newConstant(0);
+      return true;
+    }
   }
   return false;
 }

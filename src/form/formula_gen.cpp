@@ -5,6 +5,7 @@
 
 #include "form/expression_util.hpp"
 #include "form/formula_alt.hpp"
+#include "form/formula_util.hpp"
 #include "lang/evaluator_inc.hpp"
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
@@ -149,7 +150,9 @@ bool FormulaGenerator::update(const Program& p) {
   return true;
 }
 
-int64_t getNumInitialTermsNeeded(int64_t cell, const IncrementalEvaluator& ie) {
+int64_t getNumInitialTermsNeeded(int64_t cell, const std::string fname,
+                                 const Formula& formula,
+                                 const IncrementalEvaluator& ie) {
   auto stateful = ie.getStatefulCells();
   for (const auto& out : ie.getOutputCells()) {
     if (ie.getInputDependentCells().find(out) ==
@@ -162,7 +165,9 @@ int64_t getNumInitialTermsNeeded(int64_t cell, const IncrementalEvaluator& ie) {
   if (stateful.find(cell) != stateful.end()) {
     terms_needed = (ie.getLoopCounterDecrement() * stateful.size());
   }
-  Log::get().debug("Cell $" + std::to_string(cell) + " requires " +
+  int64_t recursion_depth = FormulaUtil::getRecursionDepth(formula, fname);
+  terms_needed = std::max<int64_t>(terms_needed, recursion_depth);
+  Log::get().debug("Function " + fname + "(n) requires " +
                    std::to_string(terms_needed) + " intial terms");
   return terms_needed;
 }
@@ -254,7 +259,8 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     std::vector<int64_t> numTerms(numCells);
     int64_t maxNumTerms = 0;
     for (int64_t cell = 0; cell < numCells; cell++) {
-      numTerms[cell] = getNumInitialTermsNeeded(cell, ie);
+      numTerms[cell] =
+          getNumInitialTermsNeeded(cell, getCellName(cell), formula, ie);
       maxNumTerms = std::max(maxNumTerms, numTerms[cell]);
     }
 
@@ -322,11 +328,11 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   }
 
   // resolve linear functions
-  formula.resolveSimpleRecursions();
+  FormulaUtil::resolveSimpleRecursions(formula);
   Log::get().debug("Resolved simple recursions: " + formula.toString());
 
   // resolve linear functions
-  formula.resolveSimpleFunctions();
+  FormulaUtil::resolveSimpleFunctions(formula);
   Log::get().debug("Resolved simple functions: " + formula.toString());
 
   // extract main formula (filter out irrelant memory cells)
@@ -336,7 +342,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   Log::get().debug("Pruned formula: " + formula.toString());
 
   // resolve identities
-  formula.resolveIdentities();
+  FormulaUtil::resolveIdentities(formula);
   Log::get().debug("Resolved identities: " + formula.toString());
 
   // success

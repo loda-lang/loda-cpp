@@ -28,11 +28,5 @@ class Formula {
 
   void collectEntries(const Expression& e, Formula& target);
 
-  void resolveIdentities();
-
-  void resolveSimpleFunctions();
-
-  void resolveSimpleRecursions();
-
   std::map<Expression, Expression> entries;
 };
