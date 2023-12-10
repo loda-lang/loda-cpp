@@ -177,3 +177,33 @@ void FormulaUtil::resolveSimpleRecursions(Formula& formula) {
     formula.entries[func] = sum;
   }
 }
+
+int64_t getRecursionDepthInExpr(const Expression& expr, const std::string& fname) {
+  int64_t depth = 0;
+  if (expr.type == Expression::Type::FUNCTION && expr.name == fname &&
+      expr.children.size() == 1) {
+    const auto& arg = *expr.children[0];
+    if (arg.type == Expression::Type::SUM && arg.children.size() == 2 &&
+        arg.children[0]->type == Expression::Type::PARAMETER &&
+        arg.children[1]->type == Expression::Type::CONSTANT) {
+      depth = -arg.children[1]->value.asInt();
+    }
+  }
+  for (auto c : expr.children) {
+    depth = std::max<int64_t>(depth, getRecursionDepthInExpr(*c, fname));
+  }
+  return depth;
+}
+
+int64_t FormulaUtil::getRecursionDepth(const Formula& formula,
+                                       const std::string& fname) {
+  for (auto& e : formula.entries) {
+    const auto& left = e.first;
+    if (left.type == Expression::Type::FUNCTION && left.name == fname &&
+        left.children.size() == 1 &&
+        left.children[0]->type == Expression::Type::PARAMETER) {
+      return getRecursionDepthInExpr(e.second, fname);
+    }
+  }
+  return -1;
+}
