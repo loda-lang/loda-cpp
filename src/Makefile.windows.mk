@@ -11,7 +11,7 @@ CXXFLAGS = $(CXXFLAGS) /DLODA_PLATFORM=$(LODA_PLATFORM)
 !ENDIF
 
 SRCS = cmd/benchmark.cpp cmd/boinc.cpp cmd/commands.cpp cmd/main.cpp cmd/test.cpp \
-  form/expression_util.cpp form/expression.cpp form/formula_alt.cpp form/formula_gen.cpp form/formula.cpp form/pari.cpp \
+  form/expression_util.cpp form/expression.cpp form/formula_alt.cpp form/formula_gen.cpp form/formula_util.cpp form/formula.cpp form/pari.cpp \
   lang/analyzer.cpp lang/big_number.cpp lang/comments.cpp lang/evaluator.cpp lang/evaluator_inc.cpp lang/interpreter.cpp lang/memory.cpp lang/minimizer.cpp lang/number.cpp lang/optimizer.cpp lang/parser.cpp lang/program.cpp lang/program_util.cpp  lang/semantics.cpp lang/sequence.cpp \
   mine/api_client.cpp mine/blocks.cpp mine/config.cpp mine/distribution.cpp mine/extender.cpp mine/finder.cpp mine/generator.cpp mine/generator_v1.cpp mine/generator_v2.cpp mine/generator_v3.cpp mine/generator_v4.cpp mine/generator_v5.cpp mine/generator_v6.cpp mine/generator_v7.cpp mine/generator_v8.cpp mine/iterator.cpp mine/matcher.cpp mine/miner.cpp mine/mutator.cpp mine/reducer.cpp mine/stats.cpp \
   oeis/oeis_list.cpp oeis/oeis_manager.cpp oeis/oeis_program.cpp oeis/oeis_sequence.cpp \
