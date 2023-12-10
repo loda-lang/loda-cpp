@@ -5,6 +5,7 @@
 
 #include "form/expression_util.hpp"
 #include "form/formula_alt.hpp"
+#include "form/formula_util.hpp"
 #include "lang/evaluator_inc.hpp"
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
@@ -322,11 +323,11 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   }
 
   // resolve linear functions
-  formula.resolveSimpleRecursions();
+  FormulaUtil::resolveSimpleRecursions(formula);
   Log::get().debug("Resolved simple recursions: " + formula.toString());
 
   // resolve linear functions
-  formula.resolveSimpleFunctions();
+  FormulaUtil::resolveSimpleFunctions(formula);
   Log::get().debug("Resolved simple functions: " + formula.toString());
 
   // extract main formula (filter out irrelant memory cells)
@@ -336,7 +337,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   Log::get().debug("Pruned formula: " + formula.toString());
 
   // resolve identities
-  formula.resolveIdentities();
+  FormulaUtil::resolveIdentities(formula);
   Log::get().debug("Resolved identities: " + formula.toString());
 
   // success
