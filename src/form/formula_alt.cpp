@@ -46,8 +46,8 @@ bool findAlternativesByResolve(Alternatives& alt) {
     auto right = e.second;  // copy
     if (resolve(newAlt, e.first, right)) {
       std::pair<Expression, Expression> p(e.first, right);
-      Log::get().debug("Found alternative " + p.first.toString() + " = " +
-                       p.second.toString());
+      Log::get().debug("Found alternative by resolving: " + p.first.toString() +
+                       " = " + p.second.toString());
       newAlt.insert(p);
       found = true;
     }
@@ -71,10 +71,6 @@ bool findAlternativesByGaussElim(Alternatives& alt) {
       Expression replacement(Expression::Type::SUM, "",
                              {e1.second, negated, e2.first});
       ExpressionUtil::normalize(replacement);
-
-      // Log::get().info("Replacement: " + e1.first.toString() + "=" +
-      //                 replacement.toString());
-
       auto range = alt.equal_range(e1.first);
       bool exists = false;
       for (auto it = range.first; it != range.second; it++) {
@@ -85,8 +81,8 @@ bool findAlternativesByGaussElim(Alternatives& alt) {
       }
       if (!exists) {
         std::pair<Expression, Expression> p(e1.first, replacement);
-        Log::get().debug("Found alternative " + p.first.toString() + " = " +
-                         p.second.toString());
+        Log::get().debug("Found alternative by Gaussian elimination: " +
+                         p.first.toString() + " = " + p.second.toString());
         newAlt.insert(p);
         found = true;
       }
@@ -131,9 +127,8 @@ bool simplifyFormulaUsingAlternatives(Formula& formula) {
   alt.insert(formula.entries.begin(), formula.entries.end());
   while (true) {
     // TODO: also use gauss
-    if (!findAlternativesByResolve(alt)) {
-      break;
-    }
+    // findAlternativesByGaussElim(alt);
+    findAlternativesByResolve(alt);
     if (!applyAlternatives(alt, formula)) {
       break;
     }
