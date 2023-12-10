@@ -150,7 +150,9 @@ bool FormulaGenerator::update(const Program& p) {
   return true;
 }
 
-int64_t getNumInitialTermsNeeded(int64_t cell, const IncrementalEvaluator& ie) {
+int64_t getNumInitialTermsNeeded(int64_t cell, const std::string fname,
+                                 const Formula& formula,
+                                 const IncrementalEvaluator& ie) {
   auto stateful = ie.getStatefulCells();
   for (const auto& out : ie.getOutputCells()) {
     if (ie.getInputDependentCells().find(out) ==
@@ -163,7 +165,9 @@ int64_t getNumInitialTermsNeeded(int64_t cell, const IncrementalEvaluator& ie) {
   if (stateful.find(cell) != stateful.end()) {
     terms_needed = (ie.getLoopCounterDecrement() * stateful.size());
   }
-  Log::get().debug("Cell $" + std::to_string(cell) + " requires " +
+  int64_t recursion_depth = FormulaUtil::getRecursionDepth(formula, fname);
+  terms_needed = std::max<int64_t>(terms_needed, recursion_depth);
+  Log::get().debug("Function " + fname + "(n) requires " +
                    std::to_string(terms_needed) + " intial terms");
   return terms_needed;
 }
@@ -255,7 +259,8 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     std::vector<int64_t> numTerms(numCells);
     int64_t maxNumTerms = 0;
     for (int64_t cell = 0; cell < numCells; cell++) {
-      numTerms[cell] = getNumInitialTermsNeeded(cell, ie);
+      numTerms[cell] =
+          getNumInitialTermsNeeded(cell, getCellName(cell), formula, ie);
       maxNumTerms = std::max(maxNumTerms, numTerms[cell]);
     }
 

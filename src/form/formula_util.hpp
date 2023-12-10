@@ -9,4 +9,7 @@ class FormulaUtil {
   static void resolveSimpleFunctions(Formula& formula);
 
   static void resolveSimpleRecursions(Formula& formula);
+
+  static int64_t getRecursionDepth(const Formula& formula,
+                                   const std::string& fname);
 };
