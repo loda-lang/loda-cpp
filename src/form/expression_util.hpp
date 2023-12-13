@@ -1,5 +1,7 @@
 #pragma once
 
+#include <set>
+
 #include "form/expression.hpp"
 
 class ExpressionUtil {
@@ -15,4 +17,7 @@ class ExpressionUtil {
   static bool isSimpleFunction(const Expression& e, bool strict = true);
 
   static bool canBeNegative(const Expression& e);
+
+  static void collectNames(const Expression& e, Expression::Type type,
+                           std::set<std::string>& target);
 };

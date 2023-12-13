@@ -5,6 +5,7 @@
 #include "form/formula.hpp"
 
 typedef std::multimap<Expression, Expression> Alternatives;
+typedef std::pair<Expression, Expression> AltEntry;
 
 bool findAlternativesByResolve(Alternatives& alt);
 

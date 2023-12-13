@@ -3,35 +3,31 @@
 #include "form/expression_util.hpp"
 #include "sys/log.hpp"
 
-bool resolve(const Alternatives& alt, const Expression& left,
-             Expression& right) {
+bool altExists(const Alternatives& alt, const AltEntry& entry) {
+  auto range = alt.equal_range(entry.first);
+  for (auto it = range.first; it != range.second; it++) {
+    if (it->second == entry.second) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool resolve(const AltEntry& entry, const Expression& left, Expression& right) {
   if (right.type == Expression::Type::FUNCTION) {
     auto lookup = ExpressionUtil::newFunction(right.name);
-    if (lookup != left) {
-      auto range = alt.equal_range(lookup);
-      for (auto it = range.first; it != range.second; it++) {
-        auto replacement = it->second;
-        replacement.replaceAll(ExpressionUtil::newParameter(),
-                               *right.children[0]);
-        ExpressionUtil::normalize(replacement);
-        auto range2 = alt.equal_range(left);
-        bool exists = false;
-        for (auto it2 = range2.first; it2 != range2.second; it2++) {
-          if (it2->second == replacement) {
-            exists = true;
-            break;
-          }
-        }
-        if (!exists) {
-          right = replacement;
-          return true;  // must stop here
-        }
-      }
+    if (lookup != left && lookup == entry.first) {
+      auto replacement = entry.second;  // copy
+      replacement.replaceAll(ExpressionUtil::newParameter(),
+                             *right.children[0]);
+      ExpressionUtil::normalize(replacement);
+      right = replacement;
+      return true;  // must stop here
     }
   }
   bool resolved = false;
   for (auto c : right.children) {
-    if (resolve(alt, left, *c)) {
+    if (resolve(entry, left, *c)) {
       resolved = true;
     }
   }
@@ -43,13 +39,20 @@ bool findAlternativesByResolve(Alternatives& alt) {
   auto newAlt = alt;  // copy
   bool found = false;
   for (auto& e : alt) {
-    auto right = e.second;  // copy
-    if (resolve(newAlt, e.first, right)) {
-      std::pair<Expression, Expression> p(e.first, right);
-      Log::get().debug("Found alternative " + p.first.toString() + " = " +
-                       p.second.toString());
-      newAlt.insert(p);
-      found = true;
+    for (auto& lookup : alt) {
+      std::set<std::string> names_before, names_after;
+      auto right = e.second;  // copy
+      ExpressionUtil::collectNames(right, Expression::Type::FUNCTION, names_before);
+      if (resolve(lookup, e.first, right)) {
+        ExpressionUtil::collectNames(right, Expression::Type::FUNCTION, names_after);
+        std::pair<Expression, Expression> p(e.first, right);
+        if (names_after != names_before && !altExists(newAlt, p)) {
+          Log::get().debug("Found alternative " + p.first.toString() + " = " +
+                           p.second.toString());
+          newAlt.insert(p);
+          found = true;
+        }
+      }
     }
   }
   if (found) {
@@ -87,8 +90,8 @@ bool applyAlternatives(const Alternatives& alt, Formula& f) {
 bool simplifyFormulaUsingAlternatives(Formula& formula) {
   // find and choose alternative function definitions
   Alternatives alt;
-  bool updated = false;
   alt.insert(formula.entries.begin(), formula.entries.end());
+  bool updated = false;
   while (true) {
     if (!findAlternativesByResolve(alt)) {
       break;
