@@ -25,20 +25,20 @@ bool VariantsManager::update(const std::string& func, const Expression& expr) {
   Variant new_variant;
   new_variant.definition = expr;
   collectUsedFuncs(expr, new_variant.used_funcs);
+  if (new_variant.used_funcs.size() > 3) {  // magic number
+    return false;
+  }
   auto& vs = variants[func];
   for (size_t i = 0; i < vs.size(); i++) {
     if (vs[i].used_funcs == new_variant.used_funcs) {
       if (expr.numTerms() < vs[i].definition.numTerms()) {
-        // update existing variant
+        // update existing variant but don't report as new
         vs[i].definition = expr;
         Log::get().debug("Updated variant to " +
                          ExpressionUtil::newFunction(func).toString() + " = " +
                          expr.toString());
-        return true;
-      } else {
-        // not better than existing variant
-        return false;
       }
+      return false;
     }
   }
   // add new variant
