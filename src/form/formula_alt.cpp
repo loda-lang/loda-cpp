@@ -27,8 +27,18 @@ bool VariantsManager::update(const std::string& func, const Expression& expr) {
   collectUsedFuncs(expr, new_variant.used_funcs);
   auto& vs = variants[func];
   for (size_t i = 0; i < vs.size(); i++) {
-    if (vs[i].used_funcs.size() == new_variant.used_funcs.size()) {
-      return false;
+    if (vs[i].used_funcs == new_variant.used_funcs) {
+      if (expr.numTerms() < vs[i].definition.numTerms()) {
+        // update existing variant
+        vs[i].definition = expr;
+        Log::get().debug("Updated variant to " +
+                         ExpressionUtil::newFunction(func).toString() + " = " +
+                         expr.toString());
+        return true;
+      } else {
+        // not better than existing variant
+        return false;
+      }
     }
   }
   // add new variant
@@ -103,18 +113,20 @@ bool findVariants(VariantsManager& manager) {
 
 bool simplifyFormulaUsingVariants(Formula& formula) {
   VariantsManager manager(formula);
-  auto num_variants = manager.numVariants();
+  bool found = false;
   for (size_t it = 1; it <= 10; it++) {  // magic number
     Log::get().debug("Finding variants in iteration " + std::to_string(it));
-    if (!findVariants(manager)) {
+    if (findVariants(manager)) {
+      found = true;
+    } else {
       break;
     }
   }
-  num_variants = manager.numVariants() - num_variants;
-  Log::get().debug("Found " + std::to_string(num_variants) + " variants");
-  if (num_variants) {
+  if (!found) {
     return false;
   }
+  Log::get().debug("Found " + std::to_string(manager.numVariants()) +
+                   " variants");
   bool applied = false;
   for (auto& entry : formula.entries) {
     if (!ExpressionUtil::isSimpleFunction(entry.first, true)) {
