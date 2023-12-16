@@ -1,13 +1,30 @@
 #pragma once
 
 #include <map>
+#include <set>
+#include <vector>
 
 #include "form/formula.hpp"
 
-typedef std::multimap<Expression, Expression> Alternatives;
+class Variant {
+ public:
+  Expression definition;
+  std::set<std::string> used_funcs;
+};
 
-bool findAlternativesByResolve(Alternatives& alt);
+class VariantsManager {
+ public:
+  VariantsManager(const Formula& formula);
 
-bool applyAlternatives(const Alternatives& alt, Formula& formula);
+  bool update(const std::string& func, const Expression& expr);
 
-bool simplifyFormulaUsingAlternatives(Formula& formula);
+  std::map<std::string, std::vector<Variant>> variants;
+
+  size_t numVariants() const;
+
+ private:
+  void collectUsedFuncs(const Expression& expr,
+                        std::set<std::string>& used_funcs) const;
+};
+
+bool simplifyFormulaUsingVariants(Formula& formula);

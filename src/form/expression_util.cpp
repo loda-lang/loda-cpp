@@ -304,3 +304,13 @@ bool ExpressionUtil::canBeNegative(const Expression& e) {
   }
   return false;
 }
+
+void ExpressionUtil::collectNames(const Expression& e, Expression::Type type,
+                                  std::set<std::string>& target) {
+  if (e.type == type) {
+    target.insert(e.name);
+  }
+  for (auto c : e.children) {
+    collectNames(*c, type, target);
+  }
+}
