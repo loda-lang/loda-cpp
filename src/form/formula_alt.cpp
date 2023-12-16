@@ -1,7 +1,5 @@
 #include "form/formula_alt.hpp"
 
-#include <iostream>
-
 #include "form/expression_util.hpp"
 #include "sys/log.hpp"
 
@@ -27,12 +25,9 @@ bool VariantsManager::update(const std::string& func, const Expression& expr) {
   Variant new_variant;
   new_variant.definition = expr;
   collectUsedFuncs(expr, new_variant.used_funcs);
-  if (new_variant.used_funcs.size() > 4) {  // magic number
-    return false;
-  }
   auto& vs = variants[func];
   for (size_t i = 0; i < vs.size(); i++) {
-    if (vs[i].used_funcs == new_variant.used_funcs) {
+    if (vs[i].used_funcs.size() == new_variant.used_funcs.size()) {
       return false;
     }
   }
@@ -88,10 +83,10 @@ bool resolve(const std::string& lookup_name, const Expression& lookup_def,
 bool findVariants(VariantsManager& manager) {
   auto variants = manager.variants;  // copy
   bool updated = false;
-  for (auto& lookup : variants) {
-    for (auto& lookup_variant : lookup.second) {
-      for (auto& target : variants) {
-        for (auto& target_variant : target.second) {
+  for (auto& target : variants) {
+    for (auto& target_variant : target.second) {
+      for (auto& lookup : variants) {
+        for (auto& lookup_variant : lookup.second) {
           auto def = target_variant.definition;  // copy
           if (resolve(lookup.first, lookup_variant.definition, target.first,
                       def)) {
@@ -109,7 +104,7 @@ bool findVariants(VariantsManager& manager) {
 bool simplifyFormulaUsingVariants(Formula& formula) {
   VariantsManager manager(formula);
   auto num_variants = manager.numVariants();
-  for (size_t it = 1; it <= 5; it++) {  // magic number
+  for (size_t it = 1; it <= 10; it++) {  // magic number
     Log::get().debug("Finding variants in iteration " + std::to_string(it));
     if (!findVariants(manager)) {
       break;
