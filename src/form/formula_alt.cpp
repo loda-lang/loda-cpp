@@ -1,5 +1,7 @@
 #include "form/formula_alt.hpp"
 
+#include <iostream>
+
 #include "form/expression_util.hpp"
 #include "sys/log.hpp"
 
@@ -25,20 +27,13 @@ bool VariantsManager::update(const std::string& func, const Expression& expr) {
   Variant new_variant;
   new_variant.definition = expr;
   collectUsedFuncs(expr, new_variant.used_funcs);
+  if (new_variant.used_funcs.size() > 4) {  // magic number
+    return false;
+  }
   auto& vs = variants[func];
   for (size_t i = 0; i < vs.size(); i++) {
     if (vs[i].used_funcs == new_variant.used_funcs) {
-      if (expr.numTerms() < vs[i].definition.numTerms()) {
-        // update existing variant
-        vs[i].definition = expr;
-        Log::get().debug("Updated variant to " +
-                         ExpressionUtil::newFunction(func).toString() + " = " +
-                         expr.toString());
-        return true;
-      } else {
-        // not better than existing variant
-        return false;
-      }
+      return false;
     }
   }
   // add new variant
@@ -90,36 +85,6 @@ bool resolve(const std::string& lookup_name, const Expression& lookup_def,
   return resolved;
 }
 
-/*
-bool replace(const std::string& lookup_name, const Expression& lookup_def,
-             const std::string& target_name, Expression& target_def) {
-  if (!ExpressionUtil::isSimpleFunction(target_def, false)) {
-    return false;
-  }
-  if (lookup_name != target_def.name) {
-    return false;
-  }
-  // should only consider local functions
-  std::set<std::string> self, used_funcs;
-  self.insert(lookup_name);
-  ExpressionUtil::collectNames(lookup_def, Expression::Type::FUNCTION,
-                               used_funcs);
-  if (used_funcs != self) {
-    return false;
-  }
-  Log::get().debug("CANDIDATE: " + target_name +
-                   "(n)=" + target_def.toString() + " using " + lookup_name +
-                   "(n)=" + lookup_def.toString());
-  auto new_def = lookup_def;
-  new_def.replaceName(lookup_name, target_name);
-  new_def.replaceAll(ExpressionUtil::newParameter(), *target_def.children[0]);
-  ExpressionUtil::normalize(new_def);
-  Log::get().debug("NEW DEF: " + new_def.toString());
-  target_def = new_def;
-  return true;
-}
-*/
-
 bool findVariants(VariantsManager& manager) {
   auto variants = manager.variants;  // copy
   bool updated = false;
@@ -134,15 +99,6 @@ bool findVariants(VariantsManager& manager) {
               updated = true;
             }
           }
-          /*
-          def = target_variant.definition;  // copy
-          if (replace(lookup.first, lookup_variant.definition, target.first,
-                      def)) {
-            if (manager.update(target.first, def)) {
-              updated = true;
-            }
-          }
-          */
         }
       }
     }
@@ -152,18 +108,16 @@ bool findVariants(VariantsManager& manager) {
 
 bool simplifyFormulaUsingVariants(Formula& formula) {
   VariantsManager manager(formula);
-  size_t iteration = 1;
-  while (true) {
-    Log::get().debug("Finding variants in iteration " +
-                     std::to_string(iteration));
+  auto num_variants = manager.numVariants();
+  for (size_t it = 1; it <= 5; it++) {  // magic number
+    Log::get().debug("Finding variants in iteration " + std::to_string(it));
     if (!findVariants(manager)) {
       break;
     }
-    iteration++;
   }
-  Log::get().debug("Found " + std::to_string(manager.numVariants()) +
-                   " variants");
-  if (iteration == 1) {  // no varaints were found
+  num_variants = manager.numVariants() - num_variants;
+  Log::get().debug("Found " + std::to_string(num_variants) + " variants");
+  if (num_variants) {
     return false;
   }
   bool applied = false;
