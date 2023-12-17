@@ -193,16 +193,3 @@ int64_t getRecursionDepthInExpr(const Expression& expr) {
   }
   return depth;
 }
-
-int64_t FormulaUtil::getRecursionDepth(const Formula& formula,
-                                       const std::string& fname) {
-  for (auto& e : formula.entries) {
-    const auto& left = e.first;
-    if (left.type == Expression::Type::FUNCTION && left.name == fname &&
-        left.children.size() == 1 &&
-        left.children[0]->type == Expression::Type::PARAMETER) {
-      return getRecursionDepthInExpr(e.second);
-    }
-  }
-  return -1;
-}
