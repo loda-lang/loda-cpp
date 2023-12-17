@@ -1,5 +1,7 @@
 #include "form/expression_util.hpp"
 
+#include <exception>
+
 #include "lang/semantics.hpp"
 
 Expression ExpressionUtil::newConstant(int64_t value) {
