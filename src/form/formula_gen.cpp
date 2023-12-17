@@ -1,5 +1,6 @@
 #include "form/formula_gen.hpp"
 
+#include <map>
 #include <set>
 #include <stdexcept>
 
@@ -256,12 +257,12 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     simplifyFormulaUsingAlternatives(formula);
 
     // determine number of initial terms needed
-    std::vector<int64_t> numTerms(numCells);
+    std::map<std::string, int64_t> numTerms;
     int64_t maxNumTerms = 0;
     for (int64_t cell = 0; cell < numCells; cell++) {
-      numTerms[cell] =
-          getNumInitialTermsNeeded(cell, getCellName(cell), formula, ie);
-      maxNumTerms = std::max(maxNumTerms, numTerms[cell]);
+      auto name = getCellName(cell);
+      numTerms[name] = getNumInitialTermsNeeded(cell, name, formula, ie);
+      maxNumTerms = std::max(maxNumTerms, numTerms[name]);
     }
 
     // evaluate program and add initial terms to formula
@@ -274,8 +275,9 @@ bool FormulaGenerator::generateSingle(const Program& p) {
       }
       const auto state = ie.getLoopStates().at(ie.getPreviousSlice());
       for (int64_t cell = 0; cell < numCells; cell++) {
-        if (offset < numTerms[cell]) {
-          Expression func(Expression::Type::FUNCTION, getCellName(cell),
+        auto name = getCellName(cell);
+        if (offset < numTerms[name]) {
+          Expression func(Expression::Type::FUNCTION, name,
                           {ExpressionUtil::newConstant(offset)});
           Expression val(Expression::Type::CONSTANT, "", state.get(cell));
           formula.entries[func] = val;
