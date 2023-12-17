@@ -1,6 +1,6 @@
 #include "form/expression_util.hpp"
 
-#include <exception>
+#include <stdexcept>
 
 #include "lang/semantics.hpp"
 
