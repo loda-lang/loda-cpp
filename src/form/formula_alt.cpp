@@ -111,7 +111,7 @@ bool findVariants(VariantsManager& manager) {
   return updated;
 }
 
-bool simplifyFormulaUsingVariants(Formula& formula) {
+bool simplifyFormulaUsingAlternatives(Formula& formula) {
   VariantsManager manager(formula);
   bool found = false;
   for (size_t it = 1; it <= 10; it++) {  // magic number

@@ -27,4 +27,4 @@ class VariantsManager {
                         std::set<std::string>& used_funcs) const;
 };
 
-bool simplifyFormulaUsingVariants(Formula& formula);
+bool simplifyFormulaUsingAlternatives(Formula& formula);
