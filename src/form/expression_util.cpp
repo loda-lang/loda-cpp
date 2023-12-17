@@ -1,5 +1,7 @@
 #include "form/expression_util.hpp"
 
+#include "lang/semantics.hpp"
+
 Expression ExpressionUtil::newConstant(int64_t value) {
   return Expression(Expression::Type::CONSTANT, "", Number(value));
 }
@@ -312,5 +314,57 @@ void ExpressionUtil::collectNames(const Expression& e, Expression::Type type,
   }
   for (auto c : e.children) {
     collectNames(*c, type, target);
+  }
+}
+
+void assertNumChildren(const Expression& e, size_t num) {
+  if (e.children.size() != num) {
+    throw std::runtime_error("unexpected number of terms in " + e.toString());
+  }
+}
+
+Number ExpressionUtil::eval(const Expression& e,
+                            const std::map<std::string, Number> params) {
+  switch (e.type) {
+    case Expression::Type::CONSTANT: {
+      return e.value;
+    }
+    case Expression::Type::PARAMETER: {
+      return params.at(e.name);
+    }
+    case Expression::Type::SUM: {
+      auto result = Number::ZERO;
+      for (auto c : e.children) {
+        result = Semantics::add(result, eval(*c, params));
+      }
+      return result;
+    }
+    case Expression::Type::PRODUCT: {
+      auto result = Number::ONE;
+      for (auto c : e.children) {
+        result = Semantics::mul(result, eval(*c, params));
+      }
+      return result;
+    }
+    case Expression::Type::FRACTION: {
+      assertNumChildren(e, 2);
+      auto a = eval(*e.children[0], params);
+      auto b = eval(*e.children[1], params);
+      return Semantics::div(a, b);
+    }
+    case Expression::Type::POWER: {
+      assertNumChildren(e, 2);
+      auto a = eval(*e.children[0], params);
+      auto b = eval(*e.children[1], params);
+      return Semantics::pow(a, b);
+    }
+    case Expression::Type::MODULUS: {
+      assertNumChildren(e, 2);
+      auto a = eval(*e.children[0], params);
+      auto b = eval(*e.children[1], params);
+      return Semantics::mod(a, b);
+    }
+    default:
+      throw std::runtime_error("cannot evaluate " + e.toString());
   }
 }

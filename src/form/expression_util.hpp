@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <set>
 
 #include "form/expression.hpp"
@@ -20,4 +21,7 @@ class ExpressionUtil {
 
   static void collectNames(const Expression& e, Expression::Type type,
                            std::set<std::string>& target);
+
+  static Number eval(const Expression& e,
+                     const std::map<std::string, Number> params);
 };
