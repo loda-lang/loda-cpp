@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Bugfixes
+
+* Fix memory leak in expression util
+
 ### Enhancements
 
 * Simplify sums and products in generated formulas

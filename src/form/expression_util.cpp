@@ -123,19 +123,22 @@ bool pullUpChildren(Expression& e) {
   if (e.type != Expression::Type::SUM && e.type != Expression::Type::PRODUCT) {
     return false;
   }
-  std::vector<Expression*> collected;
-  auto it = e.children.begin();
-  while (it != e.children.end()) {
-    if ((*it)->type == e.type) {
-      collected.insert(collected.end(), (*it)->children.begin(),
-                       (*it)->children.end());
-      it = e.children.erase(it);
+  Expression result(e.type, e.name);
+  bool changed = false;
+  for (auto c : e.children) {
+    if (c->type == e.type) {
+      for (auto d : c->children) {
+        result.newChild(*d);
+      }
+      changed = true;
     } else {
-      it++;
+      result.newChild(*c);
     }
   }
-  e.children.insert(e.children.begin(), collected.begin(), collected.end());
-  return !collected.empty();
+  if (changed) {
+    e = result;
+  }
+  return changed;
 }
 
 bool multiplyThrough(Expression& e) {
