@@ -19,8 +19,8 @@ void FormulaUtil::resolveIdentities(Formula& formula) {
 void replaceFunction(Expression& target, const std::string& func,
                      const Expression& param, const Expression& val) {
   // bottom-up
-  for (const auto& c : target.children) {
-    replaceFunction(*c, func, param, val);
+  for (auto& c : target.children) {
+    replaceFunction(c, func, param, val);
   }
   ExpressionUtil::normalize(target);
   if (target.type != Expression::Type::FUNCTION ||
@@ -28,7 +28,7 @@ void replaceFunction(Expression& target, const std::string& func,
     return;
   }
   auto updated = val;
-  updated.replaceAll(param, *target.children.front());
+  updated.replaceAll(param, target.children.front());
   ExpressionUtil::normalize(updated);
   target = updated;
 }
@@ -40,7 +40,7 @@ void FormulaUtil::resolveSimpleFunctions(Formula& formula) {
   for (auto& e : formula.entries) {
     if (ExpressionUtil::isSimpleFunction(e.first)) {
       simple_funcs.insert(e.first.name);
-      params[e.first.name] = *e.first.children.front();
+      params[e.first.name] = e.first.children.front();
       defs[e.first.name] = e.second;
     }
   }
@@ -96,15 +96,15 @@ void FormulaUtil::resolveSimpleRecursions(Formula& formula) {
       if (e.first.name != f) {
         continue;
       }
-      auto arg_type = e.first.children.front()->type;
+      auto arg_type = e.first.children.front().type;
       if (arg_type == Expression::Type::CONSTANT) {
         if (e.second.type != Expression::Type::CONSTANT) {
           constants.clear();
           break;
         }
-        constants[e.first.children.front()->value] = e.second.value;
+        constants[e.first.children.front().value] = e.second.value;
       } else if (arg_type == Expression::Type::PARAMETER) {
-        params[f] = *e.first.children.front();
+        params[f] = e.first.children.front();
         auto val = e.second;
         if (val.type != Expression::Type::SUM) {
           found_slope = false;
@@ -114,7 +114,7 @@ void FormulaUtil::resolveSimpleRecursions(Formula& formula) {
           found_slope = false;
           break;
         }
-        if (val.children.at(1)->type != Expression::Type::CONSTANT) {
+        if (val.children.at(1).type != Expression::Type::CONSTANT) {
           found_slope = false;
           break;
         }
@@ -123,11 +123,11 @@ void FormulaUtil::resolveSimpleRecursions(Formula& formula) {
             {params[f],
              Expression(Expression::Type::CONSTANT, "", Number(-1))});
         Expression prevTerm(Expression::Type::FUNCTION, f, {predecessor});
-        if (*val.children.at(0) != prevTerm) {
+        if (val.children.at(0) != prevTerm) {
           found_slope = false;
           break;
         }
-        slope = val.children.at(1)->value;
+        slope = val.children.at(1).value;
         found_slope = true;
       } else {
         found_slope = false;
@@ -178,19 +178,20 @@ void FormulaUtil::resolveSimpleRecursions(Formula& formula) {
   }
 }
 
-int64_t getRecursionDepthInExpr(const Expression& expr, const std::string& fname) {
+int64_t getRecursionDepthInExpr(const Expression& expr,
+                                const std::string& fname) {
   int64_t depth = 0;
   if (expr.type == Expression::Type::FUNCTION && expr.name == fname &&
       expr.children.size() == 1) {
-    const auto& arg = *expr.children[0];
+    const auto& arg = expr.children[0];
     if (arg.type == Expression::Type::SUM && arg.children.size() == 2 &&
-        arg.children[0]->type == Expression::Type::PARAMETER &&
-        arg.children[1]->type == Expression::Type::CONSTANT) {
-      depth = -arg.children[1]->value.asInt();
+        arg.children[0].type == Expression::Type::PARAMETER &&
+        arg.children[1].type == Expression::Type::CONSTANT) {
+      depth = -arg.children[1].value.asInt();
     }
   }
   for (auto c : expr.children) {
-    depth = std::max<int64_t>(depth, getRecursionDepthInExpr(*c, fname));
+    depth = std::max<int64_t>(depth, getRecursionDepthInExpr(c, fname));
   }
   return depth;
 }
@@ -201,7 +202,7 @@ int64_t FormulaUtil::getRecursionDepth(const Formula& formula,
     const auto& left = e.first;
     if (left.type == Expression::Type::FUNCTION && left.name == fname &&
         left.children.size() == 1 &&
-        left.children[0]->type == Expression::Type::PARAMETER) {
+        left.children[0].type == Expression::Type::PARAMETER) {
       return getRecursionDepthInExpr(e.second, fname);
     }
   }

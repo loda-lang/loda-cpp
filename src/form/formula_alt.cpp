@@ -12,7 +12,7 @@ bool resolve(const Alternatives& alt, const Expression& left,
       for (auto it = range.first; it != range.second; it++) {
         auto replacement = it->second;
         replacement.replaceAll(ExpressionUtil::newParameter(),
-                               *right.children[0]);
+                               right.children.front());
         ExpressionUtil::normalize(replacement);
         auto range2 = alt.equal_range(left);
         bool exists = false;
@@ -30,8 +30,8 @@ bool resolve(const Alternatives& alt, const Expression& left,
     }
   }
   bool resolved = false;
-  for (auto c : right.children) {
-    if (resolve(alt, left, *c)) {
+  for (auto& c : right.children) {  // must be by reference!
+    if (resolve(alt, left, c)) {
       resolved = true;
     }
   }
