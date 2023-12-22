@@ -166,8 +166,6 @@ int64_t getNumInitialTermsNeeded(int64_t cell, const std::string fname,
   if (stateful.find(cell) != stateful.end()) {
     terms_needed = (ie.getLoopCounterDecrement() * stateful.size());
   }
-  int64_t recursion_depth = FormulaUtil::getRecursionDepth(formula, fname);
-  terms_needed = std::max<int64_t>(terms_needed, recursion_depth);
   Log::get().debug("Function " + fname + "(n) requires " +
                    std::to_string(terms_needed) + " intial terms");
   return terms_needed;
@@ -253,16 +251,19 @@ bool FormulaGenerator::generateSingle(const Program& p) {
 
   // additional work for IE programs
   if (use_ie) {
-    // find and choose alternative function definitions
-    simplifyFormulaUsingAlternatives(formula);
-
     // determine number of initial terms needed
     std::map<std::string, int64_t> numTerms;
-    int64_t maxNumTerms = 0;
     for (int64_t cell = 0; cell < numCells; cell++) {
       auto name = getCellName(cell);
       numTerms[name] = getNumInitialTermsNeeded(cell, name, formula, ie);
-      maxNumTerms = std::max(maxNumTerms, numTerms[name]);
+    }
+
+    // find and choose alternative function definitions
+    simplifyFormulaUsingVariants(formula, numTerms);
+
+    int64_t maxNumTerms = 0;
+    for (auto it : numTerms) {
+      maxNumTerms = std::max(maxNumTerms, it.second);
     }
 
     // evaluate program and add initial terms to formula
