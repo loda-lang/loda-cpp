@@ -6,12 +6,6 @@
 Expression::Expression()
     : type(Expression::Type::CONSTANT), value(Number::ZERO){};
 
-Expression::~Expression() {
-  for (auto c : children) {
-    delete c;
-  }
-}
-
 Expression::Expression(Type type, const std::string& name, const Number& value)
     : type(type), name(name), value(value){};
 
@@ -29,31 +23,20 @@ Expression::Expression(Expression&& e) { *this = std::move(e); }
 
 Expression& Expression::operator=(const Expression& e) {
   if (this != &e) {
-    for (auto c : children) {
-      delete c;
-    }
     type = e.type;
     name = e.name;
     value = e.value;
-    const size_t s = e.children.size();
-    children.resize(s);
-    for (size_t i = 0; i < s; i++) {
-      children[i] = new Expression(*e.children[i]);
-    }
+    children = e.children;
   }
   return *this;
 }
 
 Expression& Expression::operator=(Expression&& e) {
   if (this != &e) {
-    for (auto c : children) {
-      delete c;
-    }
     type = e.type;
     name = std::move(e.name);
     value = std::move(e.value);
     children = std::move(e.children);
-    e.children.clear();
   }
   return *this;
 }
@@ -122,8 +105,8 @@ bool Expression::contains(const Expression& e) const {
   if (*this == e) {
     return true;
   }
-  for (auto c : children) {
-    if (c->contains(e)) {
+  for (auto& c : children) {
+    if (c.contains(e)) {
       return true;
     }
   }
@@ -134,8 +117,8 @@ bool Expression::contains(Type t) const {
   if (type == t) {
     return true;
   }
-  for (auto c : children) {
-    if (c->contains(t)) {
+  for (auto& c : children) {
+    if (c.contains(t)) {
       return true;
     }
   }
@@ -144,8 +127,8 @@ bool Expression::contains(Type t) const {
 
 size_t Expression::numTerms() const {
   size_t result = 1;
-  for (auto c : children) {
-    result += c->numTerms();
+  for (auto& c : children) {
+    result += c.numTerms();
   }
   return result;
 }
@@ -164,7 +147,7 @@ int Expression::compareChildren(const Expression& e) const {
   }
   // same number of children => compare them one by one
   for (size_t i = 0; i < children.size(); i++) {
-    auto r = children[i]->compare(*e.children[i]);
+    auto r = children[i].compare(e.children[i]);
     if (r != 0) {
       return r;
     }
@@ -173,14 +156,13 @@ int Expression::compareChildren(const Expression& e) const {
 }
 
 Expression& Expression::newChild(const Expression& e) {
-  children.emplace_back(new Expression(e));
-  return *children.back();
+  children.push_back(e);
+  return children.back();
 }
 
 Expression& Expression::newChild(Expression::Type type, const std::string& name,
                                  const Number& value) {
-  children.emplace_back(new Expression(type, name, value));
-  return *children.back();
+  return children.emplace_back(Expression(type, name, value));
 }
 
 void Expression::replaceAll(const Expression& from, const Expression& to) {
@@ -188,7 +170,7 @@ void Expression::replaceAll(const Expression& from, const Expression& to) {
     *this = to;
   } else {
     for (auto& c : children) {
-      c->replaceAll(from, to);
+      c.replaceAll(from, to);
     }
   }
 }
@@ -198,7 +180,7 @@ void Expression::replaceName(const std::string& from, const std::string& to) {
     name = to;
   }
   for (auto& c : children) {
-    c->replaceName(from, to);
+    c.replaceName(from, to);
   }
 }
 
@@ -228,16 +210,16 @@ std::pair<Expression, bool> extractSign(const Expression& e) {
     case Expression::Type::PRODUCT:
       result.first.type = Expression::Type::PRODUCT;
       result.second = false;
-      for (auto c : e.children) {
-        if (c->type == Expression::Type::CONSTANT && c->value < Number::ZERO) {
-          auto constant = *c;
+      for (auto& c : e.children) {
+        if (c.type == Expression::Type::CONSTANT && c.value < Number::ZERO) {
+          auto constant = c;  // copy
           constant.value.negate();
           if (constant.value != Number::ONE) {
             result.first.newChild(constant);
           }
           result.second = !result.second;
         } else {
-          result.first.newChild(*c);
+          result.first.newChild(c);
         }
       }
       if (result.first.children.empty()) {
@@ -350,10 +332,10 @@ bool Expression::needsBrackets(size_t index, bool isRoot,
 void Expression::printChildren(std::ostream& out, const std::string& op,
                                bool isRoot, Expression::Type parentType) const {
   for (size_t i = 0; i < children.size(); i++) {
-    auto extracted = extractSign(*children[i]);
+    auto extracted = extractSign(children[i]);
     if (i > 0 && (op != "+" || !extracted.second)) {
       out << op;
     }
-    children[i]->print(out, i, false, type);
+    children[i].print(out, i, false, type);
   }
 }

@@ -54,8 +54,8 @@ void collectDeps(const std::string& fname, const Expression& e,
       !containsPair(deps, fname, e.name)) {
     deps.insert({fname, e.name});
   }
-  for (auto c : e.children) {
-    collectDeps(fname, *c, deps);
+  for (auto& c : e.children) {
+    collectDeps(fname, c, deps);
   }
 }
 
@@ -154,7 +154,7 @@ void Formula::collectEntries(const Expression& e, Formula& target) {
   if (e.type == Expression::Type::FUNCTION && !e.name.empty()) {
     collectEntries(e.name, target);
   }
-  for (auto c : e.children) {
-    collectEntries(*c, target);
+  for (auto& c : e.children) {
+    collectEntries(c, target);
   }
 }

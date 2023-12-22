@@ -21,8 +21,6 @@ class Expression {
 
   Expression();
 
-  ~Expression();
-
   explicit Expression(Type type, const std::string& name = "",
                       const Number& value = Number::ZERO);
 
@@ -69,7 +67,7 @@ class Expression {
   Type type;
   std::string name;
   Number value;
-  std::vector<Expression*> children;
+  std::vector<Expression> children;
 
  private:
   void assertNumChildren(size_t num) const;
