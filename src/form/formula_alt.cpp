@@ -67,8 +67,8 @@ void VariantsManager::collectUsedFuncs(
       variants.find(expr.name) != variants.end()) {
     used_funcs.insert(expr.name);
   }
-  for (auto c : expr.children) {
-    collectUsedFuncs(*c, used_funcs);
+  for (auto& c : expr.children) {
+    collectUsedFuncs(c, used_funcs);
   }
 }
 
@@ -81,10 +81,11 @@ size_t VariantsManager::numVariants() const {
 }
 
 bool resolve(const Variant& lookup, Variant& target, Expression& target_def) {
-  if (target_def.type == Expression::Type::FUNCTION) {
+  if (target_def.type == Expression::Type::FUNCTION &&
+      target_def.children.size() == 1) {
     if (target_def.name != target.func && target_def.name == lookup.func) {
       auto replacement = lookup.definition;  // copy
-      auto arg = *target_def.children[0];    // copy
+      auto arg = target_def.children[0];     // copy
       // resolve function
       replacement.replaceAll(ExpressionUtil::newParameter(), arg);
       ExpressionUtil::normalize(replacement);
@@ -100,8 +101,8 @@ bool resolve(const Variant& lookup, Variant& target, Expression& target_def) {
     }
   }
   bool resolved = false;
-  for (auto c : target_def.children) {
-    if (resolve(lookup, target, *c)) {
+  for (auto& c : target_def.children) {
+    if (resolve(lookup, target, c)) {
       resolved = true;
     }
   }
