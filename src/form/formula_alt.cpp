@@ -85,19 +85,16 @@ bool resolve(const Variant& lookup, Variant& target, Expression& target_def) {
     if (target_def.name != target.func && target_def.name == lookup.func) {
       auto replacement = lookup.definition;  // copy
       auto arg = *target_def.children[0];    // copy
+      // resolve function
       replacement.replaceAll(ExpressionUtil::newParameter(), arg);
       ExpressionUtil::normalize(replacement);
       target_def = replacement;
+      // update number of required initial terms
       int64_t min_initial_terms =
           lookup.num_initial_terms -
           ExpressionUtil::eval(arg, {{"n", 0}}).asInt() - 1;
       target.num_initial_terms =
           std::max(target.num_initial_terms, min_initial_terms);
-      // Log::get().debug("TARGET: " + std::to_string(target_initial_terms) +
-      //                  ", LOOKUP: " + std::to_string(lookup_initial_terms) +
-      //                  ", EXPR: " + arg.toString() +
-      //                  ", RESULT: " + std::to_string(result.second));
-
       // stop here, because else we would replace inside the replacement!
       return true;
     }
