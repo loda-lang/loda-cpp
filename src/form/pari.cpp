@@ -14,11 +14,11 @@ void convertInitialTermsToIf(Formula& formula) {
                        {Expression(Expression::Type::PARAMETER, "n")});
     auto general_it = formula.entries.find(general);
     if (left.type == Expression::Type::FUNCTION && left.children.size() == 1 &&
-        left.children.front()->type == Expression::Type::CONSTANT &&
+        left.children.front().type == Expression::Type::CONSTANT &&
         general_it != formula.entries.end()) {
       general_it->second =
           Expression(Expression::Type::IF, "",
-                     {*left.children.front(), it->second, general_it->second});
+                     {left.children.front(), it->second, general_it->second});
       it = formula.entries.erase(it);
     } else {
       it++;
@@ -28,8 +28,8 @@ void convertInitialTermsToIf(Formula& formula) {
 
 void convertFracToPari(Expression& frac) {
   std::string func = "floor";
-  if (ExpressionUtil::canBeNegative(*frac.children.at(0)) ||
-      ExpressionUtil::canBeNegative(*frac.children.at(1))) {
+  if (ExpressionUtil::canBeNegative(frac.children.at(0)) ||
+      ExpressionUtil::canBeNegative(frac.children.at(1))) {
     func = "truncate";
   }
   Expression wrapper(Expression::Type::FUNCTION, func, {frac});
@@ -39,20 +39,20 @@ void convertFracToPari(Expression& frac) {
 bool convertExprToPari(Expression& expr) {
   // convert bottom-up!
   for (auto& c : expr.children) {
-    if (!convertExprToPari(*c)) {
+    if (!convertExprToPari(c)) {
       return false;
     }
   }
   if (expr.type == Expression::Type::FRACTION) {
     convertFracToPari(expr);
   } else if (expr.type == Expression::Type::POWER) {
-    if (ExpressionUtil::canBeNegative(*expr.children.at(1))) {
+    if (ExpressionUtil::canBeNegative(expr.children.at(1))) {
       Expression wrapper(Expression::Type::FUNCTION, "truncate", {expr});
       expr = wrapper;
     }
   } else if (expr.type == Expression::Type::MODULUS) {
-    auto c1 = *expr.children.at(0);
-    auto c2 = *expr.children.at(1);
+    auto c1 = expr.children.at(0);
+    auto c2 = expr.children.at(1);
     if (ExpressionUtil::canBeNegative(c1) ||
         ExpressionUtil::canBeNegative(c2)) {
       Expression wrapper(Expression::Type::SUM);
@@ -60,16 +60,16 @@ bool convertExprToPari(Expression& expr) {
       wrapper.newChild(Expression::Type::PRODUCT);
       Expression frac(Expression::Type::FRACTION, "", {c1, c2});
       convertFracToPari(frac);
-      wrapper.children[1]->newChild(
+      wrapper.children[1].newChild(
           Expression(Expression::Type::CONSTANT, "", Number(-1)));
-      wrapper.children[1]->newChild(c2);
-      wrapper.children[1]->newChild(frac);
+      wrapper.children[1].newChild(c2);
+      wrapper.children[1].newChild(frac);
       expr = wrapper;
     }
   } else if (expr.type == Expression::Type::FUNCTION &&
              expr.name == "binomial") {
     // TODO: check feedback from PARI team to avoid this limitation
-    if (ExpressionUtil::canBeNegative(*expr.children.at(1))) {
+    if (ExpressionUtil::canBeNegative(expr.children.at(1))) {
       return false;
     }
   }
@@ -85,8 +85,8 @@ void countFuncs(const Formula& f, const Expression& e,
       count[e]++;
     }
   }
-  for (auto c : e.children) {
-    countFuncs(f, *c, count);
+  for (auto& c : e.children) {
+    countFuncs(f, c, count);
   }
 }
 

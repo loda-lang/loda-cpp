@@ -21,11 +21,11 @@ std::pair<Number, Expression> extractFactor(const Expression& e) {
   result.first = Number::ONE;
   result.second.type = Expression::Type::PRODUCT;
   if (e.type == Expression::Type::PRODUCT) {
-    for (auto c : e.children) {
-      if (c->type == Expression::Type::CONSTANT) {
-        result.first *= c->value;
+    for (auto& c : e.children) {
+      if (c.type == Expression::Type::CONSTANT) {
+        result.first *= c.value;
       } else {
-        result.second.newChild(*c);
+        result.second.newChild(c);
       }
     }
   } else {
@@ -48,7 +48,7 @@ bool mergeSum(Expression& c, Expression& d) {
       factor.value += p2.first;
       auto term = p1.second;
       if (p1.second.children.size() == 1) {  // we know it's a product
-        term = *p1.second.children[0];
+        term = p1.second.children[0];
       }
       if (factor.value == Number::ZERO) {
         c = factor;
@@ -77,18 +77,18 @@ bool mergeProduct(Expression& c, Expression& d) {
     d.value = Number::ONE;
     return true;
   } else if (d.type == Expression::Type::POWER && d.children.size() == 2 &&
-             d.children[1]->type == Expression::Type::CONSTANT &&
-             c == *d.children[0]) {
+             d.children[1].type == Expression::Type::CONSTANT &&
+             c == d.children[0]) {
     c = d;
-    c.children[1]->value += 1;
+    c.children[1].value += 1;
     d = ExpressionUtil::newConstant(1);
     return true;
   } else if (c.type == Expression::Type::POWER && c.children.size() == 2 &&
-             c.children[1]->type == Expression::Type::CONSTANT &&
+             c.children[1].type == Expression::Type::CONSTANT &&
              d.type == Expression::Type::POWER && d.children.size() == 2 &&
-             d.children[1]->type == Expression::Type::CONSTANT &&
-             *c.children[0] == *d.children[0]) {
-    c.children[1]->value += d.children[1]->value;
+             d.children[1].type == Expression::Type::CONSTANT &&
+             c.children[0] == d.children[0]) {
+    c.children[1].value += d.children[1].value;
     d = ExpressionUtil::newConstant(1);
     return true;
   }
@@ -104,12 +104,11 @@ bool mergeAllChildren(Expression& e) {
       }
       bool merged = false;
       if (e.type == Expression::Type::SUM) {
-        merged = mergeSum(*e.children[i], *e.children[j]);
+        merged = mergeSum(e.children[i], e.children[j]);
       } else if (e.type == Expression::Type::PRODUCT) {
-        merged = mergeProduct(*e.children[i], *e.children[j]);
+        merged = mergeProduct(e.children[i], e.children[j]);
       }
       if (merged) {
-        delete e.children[j];
         e.children.erase(e.children.begin() + j);
         changed = true;
         i = j = 0;
@@ -123,16 +122,16 @@ bool pullUpChildren(Expression& e) {
   if (e.type != Expression::Type::SUM && e.type != Expression::Type::PRODUCT) {
     return false;
   }
-  Expression result(e.type, e.name);
+  Expression result(e.type, e.name, e.value);
   bool changed = false;
-  for (auto c : e.children) {
-    if (c->type == e.type) {
-      for (auto d : c->children) {
-        result.newChild(*d);
+  for (auto& c : e.children) {
+    if (c.type == e.type) {
+      for (auto& d : c.children) {
+        result.newChild(d);
       }
       changed = true;
     } else {
-      result.newChild(*c);
+      result.newChild(c);
     }
   }
   if (changed) {
@@ -148,24 +147,24 @@ bool multiplyThrough(Expression& e) {
   if (e.children.size() != 2) {
     return false;
   }
-  if (e.children[0]->type != Expression::Type::CONSTANT) {
+  if (e.children[0].type != Expression::Type::CONSTANT) {
     return false;
   }
-  if (e.children[1]->type != Expression::Type::SUM) {
+  if (e.children[1].type != Expression::Type::SUM) {
     return false;
   }
-  auto constant = *e.children[0];
-  auto sum = *e.children[1];
+  auto constant = e.children[0];  // copy
+  auto sum = e.children[1];       // copy
   e.type = Expression::Type::SUM;
   e.children.clear();
-  for (auto c : sum.children) {
+  for (auto& c : sum.children) {
     Expression prod(Expression::Type::PRODUCT, "", {constant});
-    if (c->type == Expression::Type::PRODUCT) {
-      for (auto d : c->children) {
-        prod.newChild(*d);
+    if (c.type == Expression::Type::PRODUCT) {
+      for (auto d : c.children) {
+        prod.newChild(d);
       }
     } else {
-      prod.newChild(*c);
+      prod.newChild(c);
     }
     e.newChild(prod);
   }
@@ -195,8 +194,7 @@ bool removeNeutral(Expression& e) {
   auto it = e.children.begin() + start;
   bool changed = false;
   while (it != e.children.end()) {
-    if (*(*it) == neutralExpr) {
-      delete *it;
+    if (*it == neutralExpr) {
       it = e.children.erase(it);
       changed = true;
     } else {
@@ -207,7 +205,7 @@ bool removeNeutral(Expression& e) {
     e = neutralExpr;
     changed = true;
   } else if (e.children.size() == 1) {
-    e = Expression(*e.children[0]);
+    e = Expression(e.children[0]);  // copy first
     changed = true;
   }
   return changed;
@@ -219,8 +217,8 @@ bool zeroProduct(Expression& e) {
   }
   const Expression zero(Expression::Type::CONSTANT, "", Number::ZERO);
   bool found = false;
-  for (auto c : e.children) {
-    if (*c == zero) {
+  for (auto& c : e.children) {
+    if (c == zero) {
       found = true;
       break;
     }
@@ -231,34 +229,34 @@ bool zeroProduct(Expression& e) {
   return found;
 }
 
-bool lessExprPtr(const Expression* lhs, const Expression* rhs) {
-  return *lhs < *rhs;
+bool lessExpr(const Expression& lhs, const Expression& rhs) {
+  return lhs < rhs;
 }
 
-bool greaterExprPtr(const Expression* lhs, const Expression* rhs) {
-  return *lhs > *rhs;
+bool greaterExpr(const Expression& lhs, const Expression& rhs) {
+  return lhs > rhs;
 }
 
 bool ExpressionUtil::normalize(Expression& e) {
-  for (const auto& c : e.children) {
-    normalize(*c);
+  for (auto& c : e.children) {
+    normalize(c);
   }
   switch (e.type) {
     case Expression::Type::SUM:
       if (e.children.size() > 1) {  // at least two elements
-        std::sort(e.children.begin(), e.children.end(), greaterExprPtr);
+        std::sort(e.children.begin(), e.children.end(), greaterExpr);
         mergeAllChildren(e);
       }
       break;
     case Expression::Type::PRODUCT:
       if (e.children.size() > 1) {  // at least two elements
-        std::sort(e.children.begin(), e.children.end(), lessExprPtr);
+        std::sort(e.children.begin(), e.children.end(), lessExpr);
         mergeAllChildren(e);
       }
       break;
     case Expression::Type::FRACTION:
       if (e.children.size() > 2) {  // at least three elements
-        std::sort(e.children.begin() + 1, e.children.end(), greaterExprPtr);
+        std::sort(e.children.begin() + 1, e.children.end(), greaterExpr);
         mergeAllChildren(e);
       }
       break;
@@ -281,9 +279,9 @@ bool ExpressionUtil::isSimpleFunction(const Expression& e, bool strict) {
   }
   const auto arg = e.children.front();
   if (strict) {
-    return arg->type == Expression::Type::PARAMETER;
+    return arg.type == Expression::Type::PARAMETER;
   } else {
-    return !arg->contains(Expression::Type::FUNCTION);
+    return !arg.contains(Expression::Type::FUNCTION);
   }
 }
 
@@ -302,8 +300,8 @@ bool ExpressionUtil::canBeNegative(const Expression& e) {
     case Expression::Type::POWER:
     case Expression::Type::MODULUS:
     case Expression::Type::IF:
-      for (auto c : e.children) {
-        if (canBeNegative(*c)) {
+      for (auto& c : e.children) {
+        if (canBeNegative(c)) {
           return true;
         }
       }
@@ -317,8 +315,8 @@ void ExpressionUtil::collectNames(const Expression& e, Expression::Type type,
   if (e.type == type) {
     target.insert(e.name);
   }
-  for (auto c : e.children) {
-    collectNames(*c, type, target);
+  for (auto& c : e.children) {
+    collectNames(c, type, target);
   }
 }
 
@@ -340,33 +338,33 @@ Number ExpressionUtil::eval(const Expression& e,
     case Expression::Type::SUM: {
       auto result = Number::ZERO;
       for (auto c : e.children) {
-        result = Semantics::add(result, eval(*c, params));
+        result = Semantics::add(result, eval(c, params));
       }
       return result;
     }
     case Expression::Type::PRODUCT: {
       auto result = Number::ONE;
       for (auto c : e.children) {
-        result = Semantics::mul(result, eval(*c, params));
+        result = Semantics::mul(result, eval(c, params));
       }
       return result;
     }
     case Expression::Type::FRACTION: {
       assertNumChildren(e, 2);
-      auto a = eval(*e.children[0], params);
-      auto b = eval(*e.children[1], params);
+      auto a = eval(e.children[0], params);
+      auto b = eval(e.children[1], params);
       return Semantics::div(a, b);
     }
     case Expression::Type::POWER: {
       assertNumChildren(e, 2);
-      auto a = eval(*e.children[0], params);
-      auto b = eval(*e.children[1], params);
+      auto a = eval(e.children[0], params);
+      auto b = eval(e.children[1], params);
       return Semantics::pow(a, b);
     }
     case Expression::Type::MODULUS: {
       assertNumChildren(e, 2);
-      auto a = eval(*e.children[0], params);
-      auto b = eval(*e.children[1], params);
+      auto a = eval(e.children[0], params);
+      auto b = eval(e.children[1], params);
       return Semantics::mod(a, b);
     }
     default:
