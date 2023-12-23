@@ -32,6 +32,10 @@ void debugUpdate(const std::string& prefix, const Variant& variant) {
 }
 
 bool VariantsManager::update(Variant new_variant) {
+  // ignore trivial variants
+  if (new_variant.definition == ExpressionUtil::newFunction(new_variant.func)) {
+    return false;
+  }
   new_variant.used_funcs.clear();
   collectUsedFuncs(new_variant.definition, new_variant.used_funcs);
   const auto num_terms = new_variant.definition.numTerms();
@@ -114,6 +118,21 @@ bool resolve(const Variant& lookup, Variant& target) {
   return resolve(lookup, target, target.definition);
 }
 
+bool gaussElim(const Variant& lookup, Variant& target) {
+  if (target.definition.type != Expression::Type::SUM &&
+      lookup.definition.type != Expression::Type::SUM) {
+    return false;
+  }
+  Expression negated(Expression::Type::PRODUCT, "",
+                     {ExpressionUtil::newConstant(-1), lookup.definition});
+  Expression replacement(
+      Expression::Type::SUM, "",
+      {target.definition, negated, ExpressionUtil::newFunction(lookup.func)});
+  ExpressionUtil::normalize(replacement);
+  target.definition = replacement;
+  return true;
+}
+
 bool findVariants(VariantsManager& manager) {
   auto variants = manager.variants;  // copy
   bool updated = false;
@@ -123,6 +142,11 @@ bool findVariants(VariantsManager& manager) {
         for (auto& lookup_variant : lookup.second) {
           auto new_variant = target_variant;  // copy
           if (resolve(lookup_variant, new_variant) &&
+              manager.update(new_variant)) {
+            updated = true;
+          }
+          new_variant = target_variant;  // copy
+          if (gaussElim(lookup_variant, new_variant) &&
               manager.update(new_variant)) {
             updated = true;
           }
