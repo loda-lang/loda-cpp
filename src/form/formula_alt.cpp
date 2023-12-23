@@ -33,7 +33,8 @@ void debugUpdate(const std::string& prefix, const Variant& variant) {
 
 bool VariantsManager::update(Variant new_variant) {
   // ignore trivial variants
-  if (new_variant.definition == ExpressionUtil::newFunction(new_variant.func)) {
+  if (ExpressionUtil::isSimpleFunction(new_variant.definition) &&
+      new_variant.definition.name == new_variant.func) {
     return false;
   }
   new_variant.used_funcs.clear();
