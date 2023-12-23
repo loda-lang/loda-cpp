@@ -123,6 +123,9 @@ bool gaussElim(const Variant& lookup, Variant& target) {
       lookup.definition.type != Expression::Type::SUM) {
     return false;
   }
+  if (target.func == lookup.func) {
+    return false;
+  }
   Expression negated(Expression::Type::PRODUCT, "",
                      {ExpressionUtil::newConstant(-1), lookup.definition});
   Expression replacement(
@@ -130,6 +133,11 @@ bool gaussElim(const Variant& lookup, Variant& target) {
       {target.definition, negated, ExpressionUtil::newFunction(lookup.func)});
   ExpressionUtil::normalize(replacement);
   target.definition = replacement;
+  // Log::get().debug("Gaussian elimination: " + lookup.func +
+  //                  "(n)=" + lookup.definition.toString() + "  " + target.func
+  //                  +
+  //                  "(n)=" + target.definition.toString() + "  =>  " +
+  //                  target.func + "(n)=" + replacement.toString());
   return true;
 }
 
