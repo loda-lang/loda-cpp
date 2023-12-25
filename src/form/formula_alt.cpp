@@ -127,6 +127,9 @@ bool gaussElim(const Variant& lookup, Variant& target) {
   if (target.func == lookup.func) {
     return false;
   }
+  if (!target.definition.contains(Expression::Type::FUNCTION, lookup.func)) {
+    return false;
+  }
   Expression negated(Expression::Type::PRODUCT, "",
                      {ExpressionUtil::newConstant(-1), lookup.definition});
   Expression replacement(
