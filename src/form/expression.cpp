@@ -105,24 +105,24 @@ bool Expression::contains(const Expression& e) const {
   if (*this == e) {
     return true;
   }
-  for (auto& c : children) {
-    if (c.contains(e)) {
-      return true;
-    }
-  }
-  return false;
+  return std::any_of(children.begin(), children.end(),
+                     [&](const Expression& c) { return c.contains(e); });
 }
 
 bool Expression::contains(Type t) const {
   if (type == t) {
     return true;
   }
-  for (auto& c : children) {
-    if (c.contains(t)) {
-      return true;
-    }
+  return std::any_of(children.begin(), children.end(),
+                     [&](const Expression& c) { return c.contains(t); });
+}
+
+bool Expression::contains(Type t, const std::string& name) const {
+  if (type == t && this->name == name) {
+    return true;
   }
-  return false;
+  return std::any_of(children.begin(), children.end(),
+                     [&](const Expression& c) { return c.contains(t, name); });
 }
 
 size_t Expression::numTerms() const {
