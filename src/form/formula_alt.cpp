@@ -19,7 +19,7 @@ VariantsManager::VariantsManager(
       variant.func = entry.first.name;
       variant.definition = entry.second;
       variant.num_initial_terms = num_initial_terms.at(entry.first.name);
-      collectUsedFuncs(variant.definition, variant.used_funcs);
+      collectFuncs(variant);
       variants[entry.first.name].push_back(variant);
     }
   }
@@ -37,8 +37,7 @@ bool VariantsManager::update(Variant new_variant) {
       new_variant.definition.name == new_variant.func) {
     return false;
   }
-  new_variant.used_funcs.clear();
-  collectUsedFuncs(new_variant.definition, new_variant.used_funcs);
+  collectFuncs(new_variant);
   const auto num_terms = new_variant.definition.numTerms();
   // if (new_variant.used_funcs.size() > 3) {  // magic number
   //   return false;
@@ -66,14 +65,24 @@ bool VariantsManager::update(Variant new_variant) {
   return true;
 }
 
-void VariantsManager::collectUsedFuncs(
-    const Expression& expr, std::set<std::string>& used_funcs) const {
+void VariantsManager::collectFuncs(Variant& variant) const {
+  variant.used_funcs.clear();
+  variant.required_funcs.clear();
+  collectFuncs(variant, variant.definition);
+}
+
+void VariantsManager::collectFuncs(Variant& variant,
+                                   const Expression& expr) const {
   if (expr.type == Expression::Type::FUNCTION &&
       variants.find(expr.name) != variants.end()) {
-    used_funcs.insert(expr.name);
+    variant.used_funcs.insert(expr.name);
+    if (expr.children.size() == 1 &&
+        expr.children.front().type == Expression::Type::PARAMETER) {
+      variant.required_funcs.insert(expr.name);
+    }
   }
   for (auto& c : expr.children) {
-    collectUsedFuncs(c, used_funcs);
+    collectFuncs(variant, c);
   }
 }
 
@@ -133,10 +142,7 @@ bool gaussElim(const Variant& lookup, Variant& target) {
   if (!lookup.definition.contains(Expression::Type::FUNCTION, target.func)) {
     return false;
   }
-  if (lookup.definition.contains(ExpressionUtil::newFunction(target.func))) {
-    return false;
-  }
-  if (target.definition.contains(ExpressionUtil::newFunction(lookup.func))) {
+  if (!lookup.required_funcs.empty()) {
     return false;
   }
   Expression negated(Expression::Type::PRODUCT, "",
@@ -144,11 +150,14 @@ bool gaussElim(const Variant& lookup, Variant& target) {
   Expression replacement(
       Expression::Type::SUM, "",
       {target.definition, negated, ExpressionUtil::newFunction(lookup.func)});
+  target.num_initial_terms =
+      std::max(target.num_initial_terms, lookup.num_initial_terms);
   ExpressionUtil::normalize(replacement);
-  Log::get().debug("Gaussian elimination: " + target.func +
-                   "(n)=" + target.definition.toString() + " & " + lookup.func +
-                   "(n)=" + lookup.definition.toString() + " => " +
-                   target.func + "(n)=" + replacement.toString());
+  // Log::get().debug("Gaussian elimination: " + target.func +
+  //                  "(n)=" + target.definition.toString() + " & " +
+  //                  lookup.func +
+  //                  "(n)=" + lookup.definition.toString() + " => " +
+  //                  target.func + "(n)=" + replacement.toString());
   target.definition = replacement;
   return true;
 }
@@ -201,6 +210,9 @@ bool simplifyFormulaUsingVariants(
     }
     for (auto& variant : manager.variants[entry.first.name]) {
       if (variant.definition == entry.second) {
+        continue;
+      }
+      if (!variant.required_funcs.empty()) {
         continue;
       }
       Formula copy = formula;

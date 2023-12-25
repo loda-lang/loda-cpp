@@ -11,6 +11,7 @@ class Variant {
   std::string func;
   Expression definition;
   std::set<std::string> used_funcs;
+  std::set<std::string> required_funcs;
   int64_t num_initial_terms;
 };
 
@@ -26,8 +27,9 @@ class VariantsManager {
   size_t numVariants() const;
 
  private:
-  void collectUsedFuncs(const Expression& expr,
-                        std::set<std::string>& used_funcs) const;
+  void collectFuncs(Variant& variant) const;
+
+  void collectFuncs(Variant& variant, const Expression& expr) const;
 };
 
 bool simplifyFormulaUsingVariants(
