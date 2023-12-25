@@ -49,6 +49,8 @@ class Expression {
 
   bool contains(Type t) const;
 
+  bool contains(Type t, const std::string& name) const;
+
   size_t numTerms() const;
 
   Expression& newChild(const Expression& e);
