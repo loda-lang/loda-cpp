@@ -26,9 +26,10 @@ VariantsManager::VariantsManager(
 }
 
 void debugUpdate(const std::string& prefix, const Variant& variant) {
-  Log::get().debug(prefix +
-                   ExpressionUtil::newFunction(variant.func).toString() +
-                   " = " + variant.definition.toString());
+  Log::get().debug(
+      prefix + ExpressionUtil::newFunction(variant.func).toString() + " = " +
+      variant.definition.toString() + " with " +
+      std::to_string(variant.num_initial_terms) + " initial terms");
 }
 
 bool VariantsManager::update(Variant new_variant) {
@@ -219,15 +220,11 @@ bool simplifyFormulaUsingVariants(
       copy.entries[entry.first] = variant.definition;
       auto deps_old = formula.getFunctionDeps(true, true);
       auto deps_new = copy.getFunctionDeps(true, true);
-      std::string debugMsg = " variant " + entry.first.toString() + " = " +
-                             variant.definition.toString();
       if (deps_new.size() < deps_old.size()) {
         entry.second = variant.definition;
         num_initial_terms[entry.first.name] = variant.num_initial_terms;
         applied = true;
-        Log::get().debug("Applied" + debugMsg);
-      } else {
-        // Log::get().debug("Skipped" + debugMsg);
+        debugUpdate("Applied variant ", variant);
       }
     }
   }
