@@ -152,7 +152,7 @@ bool gaussElim(const Variant& lookup, Variant& target) {
       Expression::Type::SUM, "",
       {target.definition, negated, ExpressionUtil::newFunction(lookup.func)});
   target.num_initial_terms =
-      std::max(target.num_initial_terms, lookup.num_initial_terms);
+      std::max(target.num_initial_terms, lookup.num_initial_terms) + 1;
   ExpressionUtil::normalize(replacement);
   // Log::get().debug("Gaussian elimination: " + target.func +
   //                  "(n)=" + target.definition.toString() + " & " +

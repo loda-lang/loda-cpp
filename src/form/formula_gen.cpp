@@ -166,8 +166,6 @@ int64_t getNumInitialTermsNeeded(int64_t cell, const std::string fname,
   if (stateful.find(cell) != stateful.end()) {
     terms_needed = (ie.getLoopCounterDecrement() * stateful.size());
   }
-  Log::get().debug("Function " + fname + "(n) requires " +
-                   std::to_string(terms_needed) + " intial terms");
   return terms_needed;
 }
 
@@ -263,6 +261,8 @@ bool FormulaGenerator::generateSingle(const Program& p) {
 
     int64_t maxNumTerms = 0;
     for (auto it : numTerms) {
+      Log::get().debug("Function " + it.first + "(n) requires " +
+                       std::to_string(it.second) + " intial terms");
       maxNumTerms = std::max(maxNumTerms, it.second);
     }
 
