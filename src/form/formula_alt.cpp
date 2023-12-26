@@ -191,8 +191,7 @@ bool simplifyFormulaUsingVariants(
     Formula& formula, std::map<std::string, int64_t>& num_initial_terms) {
   VariantsManager manager(formula, num_initial_terms);
   bool found = false;
-  for (size_t it = 1; it <= 10; it++) {  // magic number
-    Log::get().debug("Finding variants in iteration " + std::to_string(it));
+  while (manager.numVariants() < 200) {  // magic number
     if (findVariants(manager)) {
       found = true;
     } else {
