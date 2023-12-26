@@ -8,11 +8,12 @@
 
 class Variant {
  public:
-  std::string func;
-  Expression definition;
-  std::set<std::string> used_funcs;
-  std::set<std::string> required_funcs;
-  int64_t num_initial_terms;
+  std::string func;           // function name
+  Expression definition;      // function definition
+  int64_t num_initial_terms;  // number of required initial terms
+
+  std::set<std::string> used_funcs;      // derived from definition
+  std::set<std::string> required_funcs;  // derived from definition
 };
 
 class VariantsManager {
