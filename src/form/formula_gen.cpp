@@ -396,6 +396,9 @@ bool addProgramIds(const Program& p, std::set<int64_t>& ids) {
 
 bool FormulaGenerator::generate(const Program& p, int64_t id, Formula& result,
                                 bool withDeps) {
+  if (id > 0) {
+    Log::get().debug("Generating formula for " + OeisSequence(id).id_str());
+  }
   formula.clear();
   freeNameIndex = 0;
   if (!generateSingle(p)) {
