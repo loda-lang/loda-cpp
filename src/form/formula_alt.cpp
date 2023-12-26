@@ -19,7 +19,7 @@ VariantsManager::VariantsManager(
       variant.func = entry.first.name;
       variant.definition = entry.second;
       variant.num_initial_terms = num_initial_terms.at(entry.first.name);
-      collectUsedFuncs(variant.definition, variant.used_funcs);
+      collectFuncs(variant);
       variants[entry.first.name].push_back(variant);
     }
   }
@@ -32,8 +32,7 @@ void debugUpdate(const std::string& prefix, const Variant& variant) {
 }
 
 bool VariantsManager::update(Variant new_variant) {
-  new_variant.used_funcs.clear();
-  collectUsedFuncs(new_variant.definition, new_variant.used_funcs);
+  collectFuncs(new_variant);
   const auto num_terms = new_variant.definition.numTerms();
   // if (new_variant.used_funcs.size() > 3) {  // magic number
   //   return false;
@@ -61,14 +60,24 @@ bool VariantsManager::update(Variant new_variant) {
   return true;
 }
 
-void VariantsManager::collectUsedFuncs(
-    const Expression& expr, std::set<std::string>& used_funcs) const {
+void VariantsManager::collectFuncs(Variant& variant) const {
+  variant.used_funcs.clear();
+  variant.required_funcs.clear();
+  collectFuncs(variant, variant.definition);
+}
+
+void VariantsManager::collectFuncs(Variant& variant,
+                                   const Expression& expr) const {
   if (expr.type == Expression::Type::FUNCTION &&
       variants.find(expr.name) != variants.end()) {
-    used_funcs.insert(expr.name);
+    variant.used_funcs.insert(expr.name);
+    if (expr.children.size() == 1 &&
+        expr.children.front().type == Expression::Type::PARAMETER) {
+      variant.required_funcs.insert(expr.name);
+    }
   }
   for (auto& c : expr.children) {
-    collectUsedFuncs(c, used_funcs);
+    collectFuncs(variant, c);
   }
 }
 
@@ -163,15 +172,11 @@ bool simplifyFormulaUsingVariants(
       copy.entries[entry.first] = variant.definition;
       auto deps_old = formula.getFunctionDeps(true, true);
       auto deps_new = copy.getFunctionDeps(true, true);
-      std::string debugMsg = " variant " + entry.first.toString() + " = " +
-                             variant.definition.toString();
       if (deps_new.size() < deps_old.size()) {
         entry.second = variant.definition;
         num_initial_terms[entry.first.name] = variant.num_initial_terms;
         applied = true;
-        Log::get().debug("Applied" + debugMsg);
-      } else {
-        // Log::get().debug("Skipped" + debugMsg);
+        debugUpdate("Applied variant ", variant);
       }
     }
   }

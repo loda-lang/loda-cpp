@@ -8,10 +8,12 @@
 
 class Variant {
  public:
-  std::string func;
-  Expression definition;
-  std::set<std::string> used_funcs;
-  int64_t num_initial_terms;
+  std::string func;           // function name
+  Expression definition;      // function definition
+  int64_t num_initial_terms;  // number of required initial terms
+
+  std::set<std::string> used_funcs;      // derived from definition
+  std::set<std::string> required_funcs;  // derived from definition
 };
 
 class VariantsManager {
@@ -26,8 +28,9 @@ class VariantsManager {
   size_t numVariants() const;
 
  private:
-  void collectUsedFuncs(const Expression& expr,
-                        std::set<std::string>& used_funcs) const;
+  void collectFuncs(Variant& variant) const;
+
+  void collectFuncs(Variant& variant, const Expression& expr) const;
 };
 
 bool simplifyFormulaUsingVariants(

@@ -166,8 +166,6 @@ int64_t getNumInitialTermsNeeded(int64_t cell, const std::string fname,
   if (stateful.find(cell) != stateful.end()) {
     terms_needed = (ie.getLoopCounterDecrement() * stateful.size());
   }
-  Log::get().debug("Function " + fname + "(n) requires " +
-                   std::to_string(terms_needed) + " intial terms");
   return terms_needed;
 }
 
@@ -263,6 +261,8 @@ bool FormulaGenerator::generateSingle(const Program& p) {
 
     int64_t maxNumTerms = 0;
     for (auto it : numTerms) {
+      Log::get().debug("Function " + it.first + "(n) requires " +
+                       std::to_string(it.second) + " intial terms");
       maxNumTerms = std::max(maxNumTerms, it.second);
     }
 
@@ -396,6 +396,9 @@ bool addProgramIds(const Program& p, std::set<int64_t>& ids) {
 
 bool FormulaGenerator::generate(const Program& p, int64_t id, Formula& result,
                                 bool withDeps) {
+  if (id > 0) {
+    Log::get().debug("Generating formula for " + OeisSequence(id).id_str());
+  }
   formula.clear();
   freeNameIndex = 0;
   if (!generateSingle(p)) {
