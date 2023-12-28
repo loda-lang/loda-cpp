@@ -32,6 +32,11 @@ void debugUpdate(const std::string& prefix, const Variant& variant) {
 }
 
 bool VariantsManager::update(Variant new_variant) {
+  // ignore trivial variants
+  if (ExpressionUtil::isSimpleFunction(new_variant.definition) &&
+      new_variant.definition.name == new_variant.func) {
+    return false;
+  }
   collectFuncs(new_variant);
   const auto num_terms = new_variant.definition.numTerms();
   // if (new_variant.used_funcs.size() > 3) {  // magic number
@@ -123,6 +128,40 @@ bool resolve(const Variant& lookup, Variant& target) {
   return resolve(lookup, target, target.definition);
 }
 
+bool gaussElim(const Variant& lookup, Variant& target) {
+  if (target.definition.type != Expression::Type::SUM &&
+      lookup.definition.type != Expression::Type::SUM) {
+    return false;
+  }
+  if (target.func == lookup.func) {
+    return false;
+  }
+  if (!target.definition.contains(Expression::Type::FUNCTION, lookup.func)) {
+    return false;
+  }
+  if (!lookup.definition.contains(Expression::Type::FUNCTION, target.func)) {
+    return false;
+  }
+  if (!lookup.required_funcs.empty()) {
+    return false;
+  }
+  Expression negated(Expression::Type::PRODUCT, "",
+                     {ExpressionUtil::newConstant(-1), lookup.definition});
+  Expression replacement(
+      Expression::Type::SUM, "",
+      {target.definition, negated, ExpressionUtil::newFunction(lookup.func)});
+  target.num_initial_terms =
+      std::max(target.num_initial_terms, lookup.num_initial_terms) + 1;
+  ExpressionUtil::normalize(replacement);
+  // Log::get().debug("Gaussian elimination: " + target.func +
+  //                  "(n)=" + target.definition.toString() + " & " +
+  //                  lookup.func +
+  //                  "(n)=" + lookup.definition.toString() + " => " +
+  //                  target.func + "(n)=" + replacement.toString());
+  target.definition = replacement;
+  return true;
+}
+
 bool findVariants(VariantsManager& manager) {
   auto variants = manager.variants;  // copy
   bool updated = false;
@@ -132,6 +171,11 @@ bool findVariants(VariantsManager& manager) {
         for (auto& lookup_variant : lookup.second) {
           auto new_variant = target_variant;  // copy
           if (resolve(lookup_variant, new_variant) &&
+              manager.update(new_variant)) {
+            updated = true;
+          }
+          new_variant = target_variant;  // copy
+          if (gaussElim(lookup_variant, new_variant) &&
               manager.update(new_variant)) {
             updated = true;
           }
@@ -165,6 +209,9 @@ bool simplifyFormulaUsingVariants(
     }
     for (auto& variant : manager.variants[entry.first.name]) {
       if (variant.definition == entry.second) {
+        continue;
+      }
+      if (!variant.required_funcs.empty()) {
         continue;
       }
       Formula copy = formula;
