@@ -5,8 +5,8 @@
 #include <stdexcept>
 
 #include "form/expression_util.hpp"
-#include "form/formula_alt.hpp"
 #include "form/formula_util.hpp"
+#include "form/variant.hpp"
 #include "lang/evaluator_inc.hpp"
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
