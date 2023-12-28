@@ -26,10 +26,9 @@ VariantsManager::VariantsManager(
 }
 
 void debugUpdate(const std::string& prefix, const Variant& variant) {
-  Log::get().debug(
-      prefix + ExpressionUtil::newFunction(variant.func).toString() + " = " +
-      variant.definition.toString() + " with " +
-      std::to_string(variant.num_initial_terms) + " initial terms");
+  Log::get().debug(prefix +
+                   ExpressionUtil::newFunction(variant.func).toString() +
+                   " = " + variant.definition.toString());
 }
 
 bool VariantsManager::update(Variant new_variant) {
