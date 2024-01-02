@@ -4,6 +4,14 @@
 
 #include "lang/number.hpp"
 
+/**
+ * Arithmitic expression representation. An expression is an n-ary tree
+ * where every node has a type, an optional name and an optional value.
+ * The name attribute is used for functions and variables. The value
+ * attribute is used for constants.
+ *
+ * Example: max(3+b(n),7/4)
+ */
 class Expression {
  public:
   enum class Type {

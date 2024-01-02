@@ -6,6 +6,23 @@
 #include "lang/evaluator_inc.hpp"
 #include "lang/program.hpp"
 
+/**
+ * Formula generator. It takes a LODA program as input and generates
+ * a formula as output. This works only for a subclass of programs.
+ * The programs must either have no loops or consist only of simple
+ * loops, which support incremental evaluation.
+ *
+ * Example program:
+ * mov $1,1
+ * lpb $0
+ *   mul $1,$0
+ *   sub $0,1
+ * lpe
+ * mov $0,$1
+ *
+ * Generated formula:
+ * a(n) = n*a(n-1), a(0) = 1
+ */
 class FormulaGenerator {
  public:
   bool generate(const Program& p, int64_t id, Formula& result, bool withDeps);

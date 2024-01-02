@@ -6,6 +6,10 @@
 
 #include "form/formula.hpp"
 
+/**
+ * Variant representation. Variants are used to derive alternative
+ * formula representations and thereby to simplify formulas.
+ */
 class Variant {
  public:
   std::string func;           // function name
@@ -16,6 +20,10 @@ class Variant {
   std::set<std::string> required_funcs;  // derived from definition
 };
 
+/**
+ * Variants manager. Keeps a collection of variants and iteratively
+ * generates new variants to simplify formulas.
+ */
 class VariantsManager {
  public:
   VariantsManager(const Formula& formula,

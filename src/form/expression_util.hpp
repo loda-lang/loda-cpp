@@ -5,6 +5,9 @@
 
 #include "form/expression.hpp"
 
+/**
+ * Expression utility functions.
+ */
 class ExpressionUtil {
  public:
   static Expression newConstant(int64_t value);
