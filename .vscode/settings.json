@@ -79,7 +79,8 @@
         "queue": "cpp",
         "functional": "cpp",
         "__verbose_abort": "cpp",
-        "bit": "cpp"
+        "bit": "cpp",
+        "charconv": "cpp"
     },
     "makefile.makeDirectory": "src",
     "c-cpp-flylint.clang.includePaths": [
