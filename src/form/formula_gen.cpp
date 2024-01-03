@@ -13,6 +13,9 @@
 #include "oeis/oeis_sequence.hpp"
 #include "sys/log.hpp"
 
+FormulaGenerator::FormulaGenerator()
+    : interpreter(settings), incEval(interpreter) {}
+
 std::string FormulaGenerator::newName() {
   std::string name = "a" + std::to_string(freeNameIndex);
   freeNameIndex++;
@@ -169,21 +172,20 @@ int64_t getNumInitialTermsNeeded(int64_t cell, const std::string fname,
   return terms_needed;
 }
 
-void FormulaGenerator::initFormula(int64_t numCells, bool use_ie,
-                                   const IncrementalEvaluator& ie) {
+void FormulaGenerator::initFormula(int64_t numCells, bool useIncEval) {
   formula.clear();
   for (int64_t cell = 0; cell < numCells; cell++) {
     auto key = operandToExpression(Operand(Operand::Type::DIRECT, cell));
-    if (use_ie) {
-      if (cell == ie.getSimpleLoop().counter) {
+    if (useIncEval) {
+      if (cell == incEval.getSimpleLoop().counter) {
         formula.entries[key] = ExpressionUtil::newParameter();
-      } else if (ie.getInputDependentCells().find(cell) ==
-                 ie.getInputDependentCells().end()) {
+      } else if (incEval.getInputDependentCells().find(cell) ==
+                 incEval.getInputDependentCells().end()) {
         formula.entries[key] = key;
         Expression prev(
             Expression::Type::SUM, "",
             {ExpressionUtil::newParameter(),
-             ExpressionUtil::newConstant(-ie.getLoopCounterDecrement())});
+             ExpressionUtil::newConstant(-incEval.getLoopCounterDecrement())});
         formula.entries[key].replaceAll(ExpressionUtil::newParameter(), prev);
       }
     } else {
@@ -200,11 +202,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     return false;
   }
   const int64_t numCells = ProgramUtil::getLargestDirectMemoryCell(p) + 1;
-
-  Settings settings;
-  Interpreter interpreter(settings);
-  IncrementalEvaluator ie(interpreter);
-  const bool use_ie = ie.init(p, true);  // skip input transformations
+  const bool useIncEval = incEval.init(p, true);  // skip input transformations
 
   // initialize function names for memory cells
   cellNames.clear();
@@ -213,32 +211,32 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   }
 
   // initialize expressions for memory cells
-  initFormula(numCells, false, ie);
-  std::map<int64_t, Expression> preloop_exprs;
-  if (use_ie) {
+  initFormula(numCells, false);
+  std::map<int64_t, Expression> preloopExprs;
+  if (useIncEval) {
     // TODO: remove this limitation
-    if (ie.getInputDependentCells().size() > 1 &&
-        ProgramUtil::numOps(ie.getSimpleLoop().body, Operation::Type::MOV) >
-            0) {
+    if (incEval.getInputDependentCells().size() > 1 &&
+        ProgramUtil::numOps(incEval.getSimpleLoop().body,
+                            Operation::Type::MOV) > 0) {
       return false;
     }
     // update formula based on pre-loop code
-    if (!update(ie.getSimpleLoop().pre_loop)) {
+    if (!update(incEval.getSimpleLoop().pre_loop)) {
       return false;
     }
-    for (auto cell : ie.getInputDependentCells()) {
+    for (auto cell : incEval.getInputDependentCells()) {
       auto op = Operand(Operand::Type::DIRECT, Number(cell));
       auto param = operandToExpression(op);
-      preloop_exprs[cell] = formula.entries[param];
+      preloopExprs[cell] = formula.entries[param];
     }
-    initFormula(numCells, true, ie);
+    initFormula(numCells, true);
   }
   Log::get().debug("Initialized formula to " + formula.toString());
 
   // update formula based on main program / loop body
   Program main;
-  if (use_ie) {
-    main = ie.getSimpleLoop().body;
+  if (useIncEval) {
+    main = incEval.getSimpleLoop().body;
   } else {
     main = p;
   }
@@ -248,93 +246,38 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   Log::get().debug("Updated formula:  " + formula.toString());
 
   // additional work for IE programs
-  if (use_ie) {
+  if (useIncEval) {
     // determine number of initial terms needed
     std::map<std::string, int64_t> numTerms;
     for (int64_t cell = 0; cell < numCells; cell++) {
       auto name = getCellName(cell);
-      numTerms[name] = getNumInitialTermsNeeded(cell, name, formula, ie);
+      numTerms[name] = getNumInitialTermsNeeded(cell, name, formula, incEval);
     }
 
     // find and choose alternative function definitions
     simplifyFormulaUsingVariants(formula, numTerms);
 
-    int64_t maxNumTerms = 0;
-    for (auto it : numTerms) {
-      Log::get().debug("Function " + it.first + "(n) requires " +
-                       std::to_string(it.second) + " intial terms");
-      maxNumTerms = std::max(maxNumTerms, it.second);
-    }
-
     // evaluate program and add initial terms to formula
-    for (int64_t offset = 0; offset < maxNumTerms; offset++) {
-      try {
-        ie.next(true, true);  // skip final iteration and post loop code
-      } catch (const std::exception&) {
-        Log::get().debug("Cannot generate initial terms");
-        return false;
-      }
-      const auto state = ie.getLoopStates().at(ie.getPreviousSlice());
-      for (int64_t cell = 0; cell < numCells; cell++) {
-        auto name = getCellName(cell);
-        if (offset < numTerms[name]) {
-          Expression func(Expression::Type::FUNCTION, name,
-                          {ExpressionUtil::newConstant(offset)});
-          Expression val(Expression::Type::CONSTANT, "", state.get(cell));
-          formula.entries[func] = val;
-          Log::get().debug("Added intial term: " + func.toString() + " = " +
-                           val.toString());
-        }
-      }
+    if (!addInitialTerms(numCells, numTerms)) {
+      return false;
     }
 
     // prepare post-loop processing
-    auto preloop_counter = preloop_exprs.at(ie.getSimpleLoop().counter);
-    for (int64_t cell = 0; cell < numCells; cell++) {
-      auto name = newName();
-      auto left = ExpressionUtil::newFunction(name);
-      Expression right;
-      if (cell == ie.getSimpleLoop().counter) {
-        auto last = ExpressionUtil::newConstant(0);
-        if (ie.getLoopCounterDecrement() > 1) {
-          auto loop_dec =
-              ExpressionUtil::newConstant(ie.getLoopCounterDecrement());
-          last = Expression(Expression::Type::MODULUS, "",
-                            {preloop_counter, loop_dec});
-        }
-        right = Expression(Expression::Type::FUNCTION, "min",
-                           {preloop_counter, last});
-      } else if (ie.getInputDependentCells().find(cell) !=
-                 ie.getInputDependentCells().end()) {
-        right = preloop_exprs.at(cell);
-      } else {
-        auto safe_param = preloop_counter;
-        if (ExpressionUtil::canBeNegative(safe_param)) {
-          auto tmp = safe_param;
-          safe_param = Expression(Expression::Type::FUNCTION, "max",
-                                  {tmp, ExpressionUtil::newConstant(0)});
-        }
-        right = Expression(Expression::Type::FUNCTION, getCellName(cell),
-                           {safe_param});
-      }
-      formula.entries[left] = right;
-      cellNames[cell] = name;
-    }
+    prepareForPostLoop(numCells, preloopExprs);
     Log::get().debug("Prepared post-loop: " + formula.toString());
 
     // handle post-loop code
-    auto post = ie.getSimpleLoop().post_loop;
-    if (!update(post)) {
+    if (!update(incEval.getSimpleLoop().post_loop)) {
       return false;
     }
     Log::get().debug("Processed post-loop: " + formula.toString());
   }
 
-  // resolve linear functions
+  // resolve simple recursions
   FormulaUtil::resolveSimpleRecursions(formula);
   Log::get().debug("Resolved simple recursions: " + formula.toString());
 
-  // resolve linear functions
+  // resolve simple functions
   FormulaUtil::resolveSimpleFunctions(formula);
   Log::get().debug("Resolved simple functions: " + formula.toString());
 
@@ -349,6 +292,75 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   Log::get().debug("Resolved identities: " + formula.toString());
 
   // success
+  return true;
+}
+
+void FormulaGenerator::prepareForPostLoop(
+    int64_t numCells, const std::map<int64_t, Expression>& preloopExprs) {
+  // prepare post-loop processing
+  auto preloopCounter = preloopExprs.at(incEval.getSimpleLoop().counter);
+  for (int64_t cell = 0; cell < numCells; cell++) {
+    auto name = newName();
+    auto left = ExpressionUtil::newFunction(name);
+    Expression right;
+    if (cell == incEval.getSimpleLoop().counter) {
+      auto last = ExpressionUtil::newConstant(0);
+      if (incEval.getLoopCounterDecrement() > 1) {
+        auto loop_dec =
+            ExpressionUtil::newConstant(incEval.getLoopCounterDecrement());
+        last = Expression(Expression::Type::MODULUS, "",
+                          {preloopCounter, loop_dec});
+      }
+      right =
+          Expression(Expression::Type::FUNCTION, "min", {preloopCounter, last});
+    } else if (incEval.getInputDependentCells().find(cell) !=
+               incEval.getInputDependentCells().end()) {
+      right = preloopExprs.at(cell);
+    } else {
+      auto safe_param = preloopCounter;
+      if (ExpressionUtil::canBeNegative(safe_param)) {
+        auto tmp = safe_param;
+        safe_param = Expression(Expression::Type::FUNCTION, "max",
+                                {tmp, ExpressionUtil::newConstant(0)});
+      }
+      right = Expression(Expression::Type::FUNCTION, getCellName(cell),
+                         {safe_param});
+    }
+    formula.entries[left] = right;
+    cellNames[cell] = name;
+  }
+}
+
+bool FormulaGenerator::addInitialTerms(
+    int64_t numCells, const std::map<std::string, int64_t>& numTerms) {
+  // calculate maximum offset
+  int64_t maxNumTerms = 0;
+  for (auto it : numTerms) {
+    Log::get().debug("Function " + it.first + "(n) requires " +
+                     std::to_string(it.second) + " intial terms");
+    maxNumTerms = std::max(maxNumTerms, it.second);
+  }
+  // evaluate program and add initial terms to formula
+  for (int64_t offset = 0; offset < maxNumTerms; offset++) {
+    try {
+      incEval.next(true, true);  // skip final iteration and post loop code
+    } catch (const std::exception&) {
+      Log::get().debug("Cannot generate initial terms");
+      return false;
+    }
+    const auto state = incEval.getLoopStates().at(incEval.getPreviousSlice());
+    for (int64_t cell = 0; cell < numCells; cell++) {
+      auto name = getCellName(cell);
+      if (offset < numTerms.at(name)) {
+        Expression func(Expression::Type::FUNCTION, name,
+                        {ExpressionUtil::newConstant(offset)});
+        Expression val(Expression::Type::CONSTANT, "", state.get(cell));
+        formula.entries[func] = val;
+        Log::get().debug("Added intial term: " + func.toString() + " = " +
+                         val.toString());
+      }
+    }
+  }
   return true;
 }
 
