@@ -25,13 +25,14 @@
  */
 class FormulaGenerator {
  public:
+  FormulaGenerator();
+
   bool generate(const Program& p, int64_t id, Formula& result, bool withDeps);
 
  private:
   bool generateSingle(const Program& p);
 
-  void initFormula(int64_t numCells, bool use_ie,
-                   const IncrementalEvaluator& ie);
+  void initFormula(int64_t numCells, bool useIncEval);
 
   bool update(const Operation& op);
 
@@ -44,6 +45,10 @@ class FormulaGenerator {
   Expression operandToExpression(Operand op) const;
 
   void simplifyFunctionNames();
+
+  Settings settings;
+  Interpreter interpreter;
+  IncrementalEvaluator incEval;
 
   Formula formula;
   std::map<int64_t, std::string> cellNames;
