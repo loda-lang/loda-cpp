@@ -212,7 +212,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
 
   // initialize expressions for memory cells
   initFormula(numCells, false);
-  std::map<int64_t, Expression> preloop_exprs;
+  std::map<int64_t, Expression> preloopExprs;
   if (useIncEval) {
     // TODO: remove this limitation
     if (incEval.getInputDependentCells().size() > 1 &&
@@ -227,7 +227,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     for (auto cell : incEval.getInputDependentCells()) {
       auto op = Operand(Operand::Type::DIRECT, Number(cell));
       auto param = operandToExpression(op);
-      preloop_exprs[cell] = formula.entries[param];
+      preloopExprs[cell] = formula.entries[param];
     }
     initFormula(numCells, true);
   }
@@ -287,37 +287,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     }
 
     // prepare post-loop processing
-    auto preloop_counter = preloop_exprs.at(incEval.getSimpleLoop().counter);
-    for (int64_t cell = 0; cell < numCells; cell++) {
-      auto name = newName();
-      auto left = ExpressionUtil::newFunction(name);
-      Expression right;
-      if (cell == incEval.getSimpleLoop().counter) {
-        auto last = ExpressionUtil::newConstant(0);
-        if (incEval.getLoopCounterDecrement() > 1) {
-          auto loop_dec =
-              ExpressionUtil::newConstant(incEval.getLoopCounterDecrement());
-          last = Expression(Expression::Type::MODULUS, "",
-                            {preloop_counter, loop_dec});
-        }
-        right = Expression(Expression::Type::FUNCTION, "min",
-                           {preloop_counter, last});
-      } else if (incEval.getInputDependentCells().find(cell) !=
-                 incEval.getInputDependentCells().end()) {
-        right = preloop_exprs.at(cell);
-      } else {
-        auto safe_param = preloop_counter;
-        if (ExpressionUtil::canBeNegative(safe_param)) {
-          auto tmp = safe_param;
-          safe_param = Expression(Expression::Type::FUNCTION, "max",
-                                  {tmp, ExpressionUtil::newConstant(0)});
-        }
-        right = Expression(Expression::Type::FUNCTION, getCellName(cell),
-                           {safe_param});
-      }
-      formula.entries[left] = right;
-      cellNames[cell] = name;
-    }
+    prepareForPostLoop(numCells, preloopExprs);
     Log::get().debug("Prepared post-loop: " + formula.toString());
 
     // handle post-loop code
@@ -327,11 +297,11 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     Log::get().debug("Processed post-loop: " + formula.toString());
   }
 
-  // resolve linear functions
+  // resolve simple recursions
   FormulaUtil::resolveSimpleRecursions(formula);
   Log::get().debug("Resolved simple recursions: " + formula.toString());
 
-  // resolve linear functions
+  // resolve simple functions
   FormulaUtil::resolveSimpleFunctions(formula);
   Log::get().debug("Resolved simple functions: " + formula.toString());
 
@@ -347,6 +317,42 @@ bool FormulaGenerator::generateSingle(const Program& p) {
 
   // success
   return true;
+}
+
+void FormulaGenerator::prepareForPostLoop(
+    int64_t numCells, const std::map<int64_t, Expression> preloopExprs) {
+  // prepare post-loop processing
+  auto preloopCounter = preloopExprs.at(incEval.getSimpleLoop().counter);
+  for (int64_t cell = 0; cell < numCells; cell++) {
+    auto name = newName();
+    auto left = ExpressionUtil::newFunction(name);
+    Expression right;
+    if (cell == incEval.getSimpleLoop().counter) {
+      auto last = ExpressionUtil::newConstant(0);
+      if (incEval.getLoopCounterDecrement() > 1) {
+        auto loop_dec =
+            ExpressionUtil::newConstant(incEval.getLoopCounterDecrement());
+        last = Expression(Expression::Type::MODULUS, "",
+                          {preloopCounter, loop_dec});
+      }
+      right =
+          Expression(Expression::Type::FUNCTION, "min", {preloopCounter, last});
+    } else if (incEval.getInputDependentCells().find(cell) !=
+               incEval.getInputDependentCells().end()) {
+      right = preloopExprs.at(cell);
+    } else {
+      auto safe_param = preloopCounter;
+      if (ExpressionUtil::canBeNegative(safe_param)) {
+        auto tmp = safe_param;
+        safe_param = Expression(Expression::Type::FUNCTION, "max",
+                                {tmp, ExpressionUtil::newConstant(0)});
+      }
+      right = Expression(Expression::Type::FUNCTION, getCellName(cell),
+                         {safe_param});
+    }
+    formula.entries[left] = right;
+    cellNames[cell] = name;
+  }
 }
 
 void FormulaGenerator::simplifyFunctionNames() {

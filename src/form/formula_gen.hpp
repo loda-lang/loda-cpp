@@ -38,6 +38,9 @@ class FormulaGenerator {
 
   bool update(const Program& p);
 
+  void prepareForPostLoop(int64_t numCells,
+                          const std::map<int64_t, Expression> preloopExprs);
+
   std::string newName();
 
   std::string getCellName(int64_t cell) const;
