@@ -66,12 +66,6 @@ bool convertExprToPari(Expression& expr) {
       wrapper.children[1].newChild(frac);
       expr = wrapper;
     }
-  } else if (expr.type == Expression::Type::FUNCTION &&
-             expr.name == "binomial") {
-    // TODO: check feedback from PARI team to avoid this limitation
-    if (ExpressionUtil::canBeNegative(expr.children.at(1))) {
-      return false;
-    }
   }
   return true;
 }
