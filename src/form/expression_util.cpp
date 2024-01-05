@@ -291,23 +291,30 @@ bool ExpressionUtil::canBeNegative(const Expression& e) {
       return e.value < Number::ZERO;
     case Expression::Type::PARAMETER:
       return false;
-    case Expression::Type::FUNCTION:
     case Expression::Type::LOCAL:
       return true;
+    case Expression::Type::FUNCTION:
+      if (e.name == "max" &&
+          std::any_of(e.children.begin(), e.children.end(),
+                      [](const Expression& c) { return !canBeNegative(c); })) {
+        return false;
+      } else {
+        return true;
+      }
+    case Expression::Type::POWER:
+      if (e.children.size() == 2 &&
+          e.children[1].type == Expression::Type::CONSTANT) {
+        return e.children[1].value.odd();
+      }
     case Expression::Type::SUM:
     case Expression::Type::PRODUCT:
     case Expression::Type::FRACTION:
-    case Expression::Type::POWER:
     case Expression::Type::MODULUS:
     case Expression::Type::IF:
-      for (auto& c : e.children) {
-        if (canBeNegative(c)) {
-          return true;
-        }
-      }
-      return false;
+      break;  // infer from children
   }
-  return false;
+  return std::any_of(e.children.begin(), e.children.end(),
+                     [](const Expression& c) { return canBeNegative(c); });
 }
 
 void ExpressionUtil::collectNames(const Expression& e, Expression::Type type,
