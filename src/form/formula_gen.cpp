@@ -113,7 +113,6 @@ bool FormulaGenerator::update(const Operation& op) {
       break;
     }
     case Operation::Type::MOD: {
-      res = Expression(Expression::Type::MODULUS, "", {prevTarget, source});
       auto c1 = prevTarget;
       auto c2 = source;
       if (ExpressionUtil::canBeNegative(c1) ||
@@ -127,6 +126,8 @@ bool FormulaGenerator::update(const Operation& op) {
         wrapper.children[1].newChild(c2);
         wrapper.children[1].newChild(frac);
         res = wrapper;
+      } else {
+        res = Expression(Expression::Type::MODULUS, "", {c1, c2});
       }
       break;
     }
