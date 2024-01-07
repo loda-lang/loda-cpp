@@ -8,6 +8,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Enhancements
 
+* Use floor/truncate functions in plain formulas
 * Simplify formulas using Gaussian elimination
 * Simplify sums and products in formulas
 * Extended internal maintenance command

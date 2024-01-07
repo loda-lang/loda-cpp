@@ -57,6 +57,18 @@ Expression FormulaGenerator::operandToExpression(Operand op) const {
   throw std::runtime_error("internal error");  // unreachable
 }
 
+Expression divToFraction(const Expression& numerator,
+                         const Expression& denominator) {
+  Expression frac(Expression::Type::FRACTION, "", {numerator, denominator});
+  std::string func = "floor";
+  if (ExpressionUtil::canBeNegative(numerator) ||
+      ExpressionUtil::canBeNegative(denominator)) {
+    func = "truncate";
+  }
+  Expression wrapper(Expression::Type::FUNCTION, func, {frac});
+  return wrapper;
+}
+
 bool FormulaGenerator::update(const Operation& op) {
   auto source = operandToExpression(op.source);
   auto target = operandToExpression(op.target);
@@ -89,15 +101,34 @@ bool FormulaGenerator::update(const Operation& op) {
       break;
     }
     case Operation::Type::DIV: {
-      res = Expression(Expression::Type::FRACTION, "", {prevTarget, source});
+      res = divToFraction(prevTarget, source);
       break;
     }
     case Operation::Type::POW: {
       res = Expression(Expression::Type::POWER, "", {prevTarget, source});
+      if (ExpressionUtil::canBeNegative(source)) {
+        Expression wrapper(Expression::Type::FUNCTION, "truncate", {res});
+        res = wrapper;
+      }
       break;
     }
     case Operation::Type::MOD: {
-      res = Expression(Expression::Type::MODULUS, "", {prevTarget, source});
+      auto c1 = prevTarget;
+      auto c2 = source;
+      if (ExpressionUtil::canBeNegative(c1) ||
+          ExpressionUtil::canBeNegative(c2)) {
+        Expression wrapper(Expression::Type::SUM);
+        wrapper.newChild(c1);
+        wrapper.newChild(Expression::Type::PRODUCT);
+        auto frac = divToFraction(c1, c2);
+        wrapper.children[1].newChild(
+            Expression(Expression::Type::CONSTANT, "", Number(-1)));
+        wrapper.children[1].newChild(c2);
+        wrapper.children[1].newChild(frac);
+        res = wrapper;
+      } else {
+        res = Expression(Expression::Type::MODULUS, "", {c1, c2});
+      }
       break;
     }
     case Operation::Type::BIN: {

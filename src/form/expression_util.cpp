@@ -298,8 +298,10 @@ bool ExpressionUtil::canBeNegative(const Expression& e) {
           std::any_of(e.children.begin(), e.children.end(),
                       [](const Expression& c) { return !canBeNegative(c); })) {
         return false;
+      } else if (e.name == "binomial") {
+        break;  // infer from children
       } else {
-        return true;
+        return true;  // unknown function
       }
     case Expression::Type::POWER:
       if (e.children.size() == 2 &&
