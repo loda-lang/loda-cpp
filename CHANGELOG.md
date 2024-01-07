@@ -2,6 +2,8 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v24.1.7
+
 ### Bugfixes
 
 * Fix memory leak in expression util
