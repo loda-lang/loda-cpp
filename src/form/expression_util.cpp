@@ -298,15 +298,20 @@ bool ExpressionUtil::canBeNegative(const Expression& e) {
           std::any_of(e.children.begin(), e.children.end(),
                       [](const Expression& c) { return !canBeNegative(c); })) {
         return false;
-      } else if (e.name == "binomial") {
+      } else if (e.name == "binomial" || e.name == "floor" ||
+                 e.name == "truncate") {
         break;  // infer from children
       } else {
         return true;  // unknown function
       }
     case Expression::Type::POWER:
-      if (e.children.size() == 2 &&
-          e.children[1].type == Expression::Type::CONSTANT) {
-        return e.children[1].value.odd();
+      if (e.children.size() == 2) {
+        if (e.children[0].type == Expression::Type::CONSTANT) {
+          return e.children[0].value < Number::ZERO;
+        }
+        if (e.children[1].type == Expression::Type::CONSTANT) {
+          return e.children[1].value.odd();
+        }
       }
     case Expression::Type::SUM:
     case Expression::Type::PRODUCT:
