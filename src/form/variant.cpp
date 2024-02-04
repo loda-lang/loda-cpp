@@ -166,9 +166,25 @@ bool replaceSimple(const Variant& lookup, Variant& target) {
   if (!ExpressionUtil::isSimpleFunction(target.definition, false)) {
     return false;
   }
-  if (target.definition.name != lookup.func) {
+  if (target.definition.name == target.func ||
+      target.definition.name != lookup.func) {
     return false;
   }
+
+  // TODO: we should also make sure that exactly it's one parameter entry
+  /*
+    if (target.definition.type != Expression::Type::SUM) {
+      return false;
+    }
+    const auto& summands = target.definition.children.front().children;
+    if (std::any_of(summands.begin(), summands.end(), [&](const Expression& c) {
+          return c.type != Expression::Type::CONSTANT &&
+                 c.type != Expression::Type::PARAMETER;
+        })) {
+      return false;
+    }
+    */
+
   std::set<std::string> names;
   std::set<std::string> singleton = {lookup.func};
   ExpressionUtil::collectNames(lookup.definition, Expression::Type::FUNCTION,
@@ -177,8 +193,6 @@ bool replaceSimple(const Variant& lookup, Variant& target) {
     return false;
   }
   auto replacement = lookup.definition;  // copy
-  replacement.replaceAll(ExpressionUtil::newParameter(),
-                         target.definition.children.front());
   replacement.replaceName(lookup.func, target.func);
   ExpressionUtil::normalize(replacement);
   Log::get().debug("Replace simple: " + target.func +
