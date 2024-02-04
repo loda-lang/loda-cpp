@@ -495,18 +495,10 @@ bool Optimizer::fixSandwich(Program &p) const {
 }
 
 bool Optimizer::canChangeVariableOrder(const Program &p) const {
-  for (const auto &op : p.ops) {
-    if (op.source.type == Operand::Type::INDIRECT ||
-        op.target.type == Operand::Type::INDIRECT) {
-      return false;
-    }
-    if (op.type == Operation::Type::LPB) {
-      if (op.source.type != Operand::Type::CONSTANT || op.source.value != 1) {
-        return false;
-      }
-    }
-  }
-  return true;
+  return (std::none_of(p.ops.begin(), p.ops.end(), [&](const Operation &op) {
+    return ProgramUtil::hasIndirectOperand(op) ||
+           ProgramUtil::isNonTrivialLoopBegin(op);
+  }));
 }
 
 bool Optimizer::reduceMemoryCells(Program &p) const {

@@ -216,17 +216,12 @@ bool zeroProduct(Expression& e) {
     return false;
   }
   const Expression zero(Expression::Type::CONSTANT, "", Number::ZERO);
-  bool found = false;
-  for (auto& c : e.children) {
-    if (c == zero) {
-      found = true;
-      break;
-    }
-  }
-  if (found) {
+  bool hasZero = std::any_of(e.children.begin(), e.children.end(),
+                             [&](const Expression& c) { return c == zero; });
+  if (hasZero) {
     e = zero;
   }
-  return found;
+  return hasZero;
 }
 
 bool lessExpr(const Expression& lhs, const Expression& rhs) {

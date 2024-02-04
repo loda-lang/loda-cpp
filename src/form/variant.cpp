@@ -165,10 +165,10 @@ bool gaussElim(const Variant& lookup, Variant& target) {
 bool findVariants(VariantsManager& manager) {
   auto variants = manager.variants;  // copy
   bool updated = false;
-  for (auto& target : variants) {
-    for (auto& target_variant : target.second) {
-      for (auto& lookup : variants) {
-        for (auto& lookup_variant : lookup.second) {
+  for (const auto& target : variants) {
+    for (const auto& target_variant : target.second) {
+      for (const auto& lookup : variants) {
+        for (const auto& lookup_variant : lookup.second) {
           auto new_variant = target_variant;  // copy
           if (resolve(lookup_variant, new_variant) &&
               manager.update(new_variant)) {
