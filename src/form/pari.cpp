@@ -43,31 +43,7 @@ bool convertExprToPari(Expression& expr) {
       return false;
     }
   }
-  if (expr.type == Expression::Type::FRACTION) {
-    convertFracToPari(expr);
-  } else if (expr.type == Expression::Type::POWER) {
-    if (ExpressionUtil::canBeNegative(expr.children.at(1))) {
-      Expression wrapper(Expression::Type::FUNCTION, "truncate", {expr});
-      expr = wrapper;
-    }
-  } else if (expr.type == Expression::Type::MODULUS) {
-    auto c1 = expr.children.at(0);
-    auto c2 = expr.children.at(1);
-    if (ExpressionUtil::canBeNegative(c1) ||
-        ExpressionUtil::canBeNegative(c2)) {
-      Expression wrapper(Expression::Type::SUM);
-      wrapper.newChild(c1);
-      wrapper.newChild(Expression::Type::PRODUCT);
-      Expression frac(Expression::Type::FRACTION, "", {c1, c2});
-      convertFracToPari(frac);
-      wrapper.children[1].newChild(
-          Expression(Expression::Type::CONSTANT, "", Number(-1)));
-      wrapper.children[1].newChild(c2);
-      wrapper.children[1].newChild(frac);
-      expr = wrapper;
-    }
-  } else if (expr.type == Expression::Type::FUNCTION &&
-             expr.name == "binomial") {
+  if (expr.type == Expression::Type::FUNCTION && expr.name == "binomial") {
     // TODO: check feedback from PARI team to avoid this limitation
     if (ExpressionUtil::canBeNegative(expr.children.at(1))) {
       return false;

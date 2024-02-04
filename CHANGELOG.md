@@ -2,12 +2,19 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Enhancements
+
+* Simplify generated formulas
+
+## v24.1.7
+
 ### Bugfixes
 
 * Fix memory leak in expression util
 
 ### Enhancements
 
+* Use floor/truncate functions in plain formulas
 * Simplify formulas using Gaussian elimination
 * Simplify sums and products in formulas
 * Extended internal maintenance command

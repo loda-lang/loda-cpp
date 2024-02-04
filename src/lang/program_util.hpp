@@ -34,6 +34,8 @@ class ProgramUtil {
 
   static bool isAdditive(Operation::Type t);
 
+  static bool isNonTrivialLoopBegin(const Operation &op);
+
   static bool hasIndirectOperand(const Operation &op);
 
   static bool hasIndirectOperand(const Program &p);

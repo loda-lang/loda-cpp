@@ -20,21 +20,19 @@ std::string Formula::toString() const {
 void Formula::clear() { entries.clear(); }
 
 bool Formula::contains(const Expression& search) const {
-  for (auto& e : entries) {
-    if (e.first.contains(search) || e.second.contains(search)) {
-      return true;
-    }
-  }
-  return false;
+  return std::any_of(entries.begin(), entries.end(),
+                     [&](const std::pair<Expression, Expression>& e) {
+                       return e.first.contains(search) ||
+                              e.second.contains(search);
+                     });
 }
 
 bool Formula::containsFunctionDef(const std::string& fname) const {
-  for (const auto& e : entries) {
-    if (e.first.type == Expression::Type::FUNCTION && e.first.name == fname) {
-      return true;
-    }
-  }
-  return false;
+  return std::any_of(entries.begin(), entries.end(),
+                     [&](const std::pair<Expression, Expression>& e) {
+                       return e.first.type == Expression::Type::FUNCTION &&
+                              e.first.name == fname;
+                     });
 }
 
 bool containsPair(std::multimap<std::string, std::string>& deps,
@@ -54,7 +52,7 @@ void collectDeps(const std::string& fname, const Expression& e,
       !containsPair(deps, fname, e.name)) {
     deps.insert({fname, e.name});
   }
-  for (auto& c : e.children) {
+  for (const auto& c : e.children) {
     collectDeps(fname, c, deps);
   }
 }

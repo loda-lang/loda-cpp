@@ -216,17 +216,12 @@ bool zeroProduct(Expression& e) {
     return false;
   }
   const Expression zero(Expression::Type::CONSTANT, "", Number::ZERO);
-  bool found = false;
-  for (auto& c : e.children) {
-    if (c == zero) {
-      found = true;
-      break;
-    }
-  }
-  if (found) {
+  bool hasZero = std::any_of(e.children.begin(), e.children.end(),
+                             [&](const Expression& c) { return c == zero; });
+  if (hasZero) {
     e = zero;
   }
-  return found;
+  return hasZero;
 }
 
 bool lessExpr(const Expression& lhs, const Expression& rhs) {
@@ -291,23 +286,37 @@ bool ExpressionUtil::canBeNegative(const Expression& e) {
       return e.value < Number::ZERO;
     case Expression::Type::PARAMETER:
       return false;
-    case Expression::Type::FUNCTION:
     case Expression::Type::LOCAL:
       return true;
+    case Expression::Type::FUNCTION:
+      if (e.name == "max" &&
+          std::any_of(e.children.begin(), e.children.end(),
+                      [](const Expression& c) { return !canBeNegative(c); })) {
+        return false;
+      } else if (e.name == "binomial" || e.name == "floor" ||
+                 e.name == "truncate") {
+        break;  // infer from children
+      } else {
+        return true;  // unknown function
+      }
+    case Expression::Type::POWER:
+      if (e.children.size() == 2) {
+        if (e.children[0].type == Expression::Type::CONSTANT) {
+          return e.children[0].value < Number::ZERO;
+        }
+        if (e.children[1].type == Expression::Type::CONSTANT) {
+          return e.children[1].value.odd();
+        }
+      }
     case Expression::Type::SUM:
     case Expression::Type::PRODUCT:
     case Expression::Type::FRACTION:
-    case Expression::Type::POWER:
     case Expression::Type::MODULUS:
     case Expression::Type::IF:
-      for (auto& c : e.children) {
-        if (canBeNegative(c)) {
-          return true;
-        }
-      }
-      return false;
+      break;  // infer from children
   }
-  return false;
+  return std::any_of(e.children.begin(), e.children.end(),
+                     [](const Expression& c) { return canBeNegative(c); });
 }
 
 void ExpressionUtil::collectNames(const Expression& e, Expression::Type type,
