@@ -202,6 +202,10 @@ void Commands::minimize(const std::string& path) {
   ProgramUtil::print(program, std::cout);
 }
 
+void throwConversionError(const std::string& format) {
+  throw std::runtime_error("program cannot be converted to " + format);
+}
+
 void Commands::export_(const std::string& path) {
   initLog(true);
   Program program = OeisProgram::getProgramAndSeqId(path).first;
@@ -210,13 +214,19 @@ void Commands::export_(const std::string& path) {
   FormulaGenerator generator;
   if (format.empty() || format == "formula") {
     if (!generator.generate(program, -1, formula, settings.with_deps)) {
-      throw std::runtime_error("program cannot be converted to formula");
+      throwConversionError(format);
     }
     std::cout << formula.toString() << std::endl;
   } else if (format == "pari") {
     if (!generator.generate(program, -1, formula, settings.with_deps) ||
-        !Pari::convertToPari(formula)) {
-      throw std::runtime_error("program cannot be converted to pari");
+        !Pari::convertToPari(formula, false)) {
+      throwConversionError(format);
+    }
+    std::cout << Pari::toString(formula) << std::endl;
+  } else if (format == "pari-vector") {
+    if (!generator.generate(program, -1, formula, settings.with_deps) ||
+        !Pari::convertToPari(formula, true)) {
+      throwConversionError(format);
     }
     std::cout << Pari::toString(formula) << std::endl;
   } else if (format == "loda") {

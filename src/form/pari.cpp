@@ -26,20 +26,10 @@ void convertInitialTermsToIf(Formula& formula) {
   }
 }
 
-void convertFracToPari(Expression& frac) {
-  std::string func = "floor";
-  if (ExpressionUtil::canBeNegative(frac.children.at(0)) ||
-      ExpressionUtil::canBeNegative(frac.children.at(1))) {
-    func = "truncate";
-  }
-  Expression wrapper(Expression::Type::FUNCTION, func, {frac});
-  frac = wrapper;
-}
-
-bool convertExprToPari(Expression& expr) {
+bool convertExprToPari(Expression& expr, const Formula& f, bool as_vector) {
   // convert bottom-up!
   for (auto& c : expr.children) {
-    if (!convertExprToPari(c)) {
+    if (!convertExprToPari(c, f, as_vector)) {
       return false;
     }
   }
@@ -48,6 +38,10 @@ bool convertExprToPari(Expression& expr) {
     if (ExpressionUtil::canBeNegative(expr.children.at(1))) {
       return false;
     }
+  }
+  if (expr.type == Expression::Type::FUNCTION && as_vector &&
+      f.containsFunctionDef(expr.name)) {
+    expr.type = Expression::Type::VECTOR;
   }
   return true;
 }
@@ -90,12 +84,20 @@ bool addLocalVars(Formula& f) {
   return changed;
 }
 
-bool Pari::convertToPari(Formula& f) {
+bool Pari::convertToPari(Formula& f, bool as_vector) {
+  Formula tmp;
   for (auto& entry : f.entries) {
-    if (!convertExprToPari(entry.second)) {
+    auto left = entry.first;
+    auto right = entry.second;
+    if (as_vector && left.type == Expression::Type::FUNCTION) {
+      left.type = Expression::Type::VECTOR;
+    }
+    if (!convertExprToPari(right, f, as_vector)) {
       return false;
     }
+    tmp.entries[left] = right;
   }
+  f = tmp;
   addLocalVars(f);
   convertInitialTermsToIf(f);
   return true;
