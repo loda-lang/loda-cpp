@@ -299,6 +299,8 @@ bool ExpressionUtil::canBeNegative(const Expression& e) {
       } else {
         return true;  // unknown function
       }
+    case Expression::Type::VECTOR:
+      return true;
     case Expression::Type::POWER:
       if (e.children.size() == 2) {
         if (e.children[0].type == Expression::Type::CONSTANT) {

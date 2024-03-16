@@ -18,6 +18,7 @@ class Expression {
     CONSTANT,
     PARAMETER,
     FUNCTION,
+    VECTOR,
     LOCAL,
     SUM,
     PRODUCT,
@@ -92,6 +93,11 @@ class Expression {
 
   void printChildren(std::ostream& out, const std::string& op, bool isRoot,
                      Expression::Type parentType) const;
+
+  void printChildrenWrapped(std::ostream& out, const std::string& op,
+                            bool isRoot, Expression::Type parentType,
+                            const std::string& prefix,
+                            const std::string& suffix) const;
 
   bool needsBrackets(size_t index, bool isRoot,
                      Expression::Type parentType) const;

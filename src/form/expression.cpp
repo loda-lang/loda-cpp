@@ -66,7 +66,8 @@ int Expression::compare(const Expression& e) const {
         return 0;
       }
     case Expression::Type::FUNCTION:
-      // custom sorting for function names
+    case Expression::Type::VECTOR:
+      // custom sorting for function/vector names
       if (name == e.name) {
         return compareChildren(e);
       } else if (name.empty()) {
@@ -261,13 +262,14 @@ void Expression::printExtracted(std::ostream& out, size_t index, bool isRoot,
       out << name;
       break;
     case Expression::Type::FUNCTION:
-      out << name << "(";
-      printChildren(out, ",", isRoot, parentType);
-      out << ")";
+      printChildrenWrapped(out, ",", isRoot, parentType, name + "(", ")");
+      break;
+    case Expression::Type::VECTOR:
+      printChildrenWrapped(out, ",", isRoot, parentType, name + "[", "]");
       break;
     case Expression::Type::LOCAL:
-      out << "local(" << name << "=";
-      printChildren(out, "); ", isRoot, parentType);
+      printChildrenWrapped(out, "); ", isRoot, parentType,
+                           "local(" + name + "=", "");
       break;
     case Expression::Type::SUM:
       printChildren(out, "+", isRoot, parentType);
@@ -286,9 +288,7 @@ void Expression::printExtracted(std::ostream& out, size_t index, bool isRoot,
       break;
     case Expression::Type::IF:
       assertNumChildren(3);
-      out << name << "if(n==";
-      printChildren(out, ",", isRoot, parentType);
-      out << ")";
+      printChildrenWrapped(out, ",", isRoot, parentType, "if(n==", ")");
       break;
   }
 }
@@ -307,6 +307,10 @@ bool Expression::needsBrackets(size_t index, bool isRoot,
   }
   if (type == Expression::Type::FUNCTION ||
       parentType == Expression::Type::FUNCTION) {
+    return false;
+  }
+  if (type == Expression::Type::VECTOR ||
+      parentType == Expression::Type::VECTOR) {
     return false;
   }
   if (type == Expression::Type::LOCAL ||
@@ -338,4 +342,13 @@ void Expression::printChildren(std::ostream& out, const std::string& op,
     }
     children[i].print(out, i, false, type);
   }
+}
+
+void Expression::printChildrenWrapped(std::ostream& out, const std::string& op,
+                                      bool isRoot, Expression::Type parentType,
+                                      const std::string& prefix,
+                                      const std::string& suffix) const {
+  out << prefix;
+  printChildren(out, op, isRoot, parentType);
+  out << suffix;
 }
