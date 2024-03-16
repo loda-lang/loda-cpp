@@ -16,7 +16,8 @@
  */
 class Formula {
  public:
-  std::string toString() const;
+  std::string toString(const std::string& sep = ", ",
+                       bool brackets = false) const;
 
   void clear();
 

@@ -222,13 +222,13 @@ void Commands::export_(const std::string& path) {
         !Pari::convertToPari(formula, false)) {
       throwConversionError(format);
     }
-    std::cout << Pari::toString(formula) << std::endl;
+    std::cout << formula.toString("; ", true) << std::endl;
   } else if (format == "pari-vector") {
     if (!generator.generate(program, -1, formula, settings.with_deps) ||
         !Pari::convertToPari(formula, true)) {
       throwConversionError(format);
     }
-    std::cout << Pari::toString(formula) << std::endl;
+    std::cout << formula.toString("; ", true) << std::endl;
   } else if (format == "loda") {
     ProgramUtil::print(program, std::cout);
   } else {
@@ -483,7 +483,7 @@ void Commands::testPari(const std::string& test_id) {
             true);
       }
     }
-    auto pariCode = Pari::toString(formula);
+    auto pariCode = formula.toString("; ", true);
 
     // determine number of terms for testing
     size_t numTerms = seq.existingNumTerms();

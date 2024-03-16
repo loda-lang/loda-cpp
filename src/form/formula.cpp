@@ -4,14 +4,20 @@
 
 #include "form/expression_util.hpp"
 
-std::string Formula::toString() const {
+std::string Formula::toString(const std::string& sep, bool brackets) const {
   std::string result;
   bool first = true;
   for (auto it = entries.rbegin(); it != entries.rend(); it++) {
     if (!first) {
-      result += ", ";
+      result += sep;
+    }
+    if (brackets && entries.size() > 1) {
+      result += "(";
     }
     result += it->first.toString() + " = " + it->second.toString();
+    if (brackets && entries.size() > 1) {
+      result += ")";
+    }
     first = false;
   }
   return result;

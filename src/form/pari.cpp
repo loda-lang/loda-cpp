@@ -103,25 +103,6 @@ bool Pari::convertToPari(Formula& f, bool as_vector) {
   return true;
 }
 
-std::string Pari::toString(const Formula& f) {
-  std::string result;
-  bool first = true;
-  for (auto it = f.entries.rbegin(); it != f.entries.rend(); it++) {
-    if (!first) {
-      result += "; ";
-    }
-    if (f.entries.size() > 1) {
-      result += "(";
-    }
-    result += it->first.toString() + " = " + it->second.toString();
-    if (f.entries.size() > 1) {
-      result += ")";
-    }
-    first = false;
-  }
-  return result;
-}
-
 Sequence Pari::eval(const Formula& f, int64_t start, int64_t end) {
   const std::string gpPath("pari-loda.gp");
   const std::string gpResult("pari-result.txt");
@@ -130,7 +111,7 @@ Sequence Pari::eval(const Formula& f, int64_t start, int64_t end) {
   if (!gp) {
     throw std::runtime_error("error generating gp file");
   }
-  gp << toString(f) << std::endl;
+  gp << f.toString("; ", true) << std::endl;
   gp << "for (n = " << start << ", " << end << ", print(a(n)))" << std::endl;
   gp << "quit" << std::endl;
   gp.close();
