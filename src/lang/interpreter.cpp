@@ -230,7 +230,7 @@ size_t Interpreter::run(const Program& p, Memory& mem) {
       std::stringstream buf;
       buf << "Executing ";
       ProgramUtil::print(op, buf);
-      buf << " " << old_mem << " => " << mem;
+      buf << ": " << old_mem << " => " << mem;
       Log::get().debug(buf.str());
     }
 

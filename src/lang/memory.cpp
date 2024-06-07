@@ -150,13 +150,23 @@ bool Memory::operator==(const Memory &m) const {
 bool Memory::operator!=(const Memory &m) const { return !(*this == m); }
 
 std::ostream &operator<<(std::ostream &out, const Memory &m) {
-  out << "[";
-  for (size_t i = 0; i < MEMORY_CACHE_SIZE; ++i) {
-    if (i > 0) out << ",";
-    out << m.cache[i];
+  // find last non-zero entry
+  int64_t max_index = -1;
+  for (size_t i = 0; i < MEMORY_CACHE_SIZE; i++) {
+    if (m.cache[i] != Number::ZERO) {
+      max_index = std::max<int64_t>(max_index, i);
+    }
   }
-  if (!m.full.empty()) {
-    out << "...";
+  for (const auto &it : m.full) {
+    if (it.second != Number::ZERO) {
+      max_index = std::max(max_index, it.first);
+    }
+  }
+  // print all entries from zero to max_index
+  out << "[";
+  for (int64_t i = 0; i <= max_index; ++i) {
+    if (i != 0) out << ",";
+    out << m.get(i);
   }
   out << "]";
   return out;
