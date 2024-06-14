@@ -177,7 +177,7 @@ bool FormulaGenerator::update(const Operation& op) {
 }
 
 bool FormulaGenerator::update(const Program& p) {
-  for (auto& op : p.ops) {
+  for (const auto& op : p.ops) {
     if (!update(op)) {
       return false;  // operation not supported
     }
@@ -185,7 +185,7 @@ bool FormulaGenerator::update(const Program& p) {
   return true;
 }
 
-int64_t getNumInitialTermsNeeded(int64_t cell, const std::string fname,
+int64_t getNumInitialTermsNeeded(int64_t cell, const std::string& fname,
                                  const Formula& formula,
                                  const IncrementalEvaluator& ie) {
   auto stateful = ie.getStatefulCells();
@@ -406,7 +406,7 @@ void FormulaGenerator::simplifyFunctionNames() {
   }
   formula.replaceName(getCellName(0), canonicalName(0));
   size_t cell = 1;
-  for (auto& n : names) {
+  for (const auto& n : names) {
     if (n == getCellName(0)) {
       continue;
     }
@@ -419,7 +419,7 @@ void FormulaGenerator::simplifyFunctionNames() {
 bool addProgramIds(const Program& p, std::set<int64_t>& ids) {
   // TODO: check for recursion
   Parser parser;
-  for (auto op : p.ops) {
+  for (const auto& op : p.ops) {
     if (op.type == Operation::Type::SEQ) {
       auto id = op.source.value.asInt();
       if (ids.find(id) == ids.end()) {

@@ -55,7 +55,7 @@ void countFuncs(const Formula& f, const Expression& e,
       count[e]++;
     }
   }
-  for (auto& c : e.children) {
+  for (const auto& c : e.children) {
     countFuncs(f, c, count);
   }
 }

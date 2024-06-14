@@ -54,7 +54,7 @@ std::string Comments::getSequenceIdFromProgram(const Program &p) {
   if (p.ops.empty()) {
     return id_str;  // not found
   }
-  auto &c = p.ops[0].comment;
+  const auto &c = p.ops[0].comment;
   if (c.length() > 1 && c[0] == 'A' && std::isdigit(c[1])) {
     id_str = c.substr(0, 2);
     for (size_t i = 2; i < c.length() && std::isdigit(c[i]); i++) {

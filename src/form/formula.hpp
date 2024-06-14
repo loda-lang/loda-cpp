@@ -28,7 +28,7 @@ class Formula {
   std::multimap<std::string, std::string> getFunctionDeps(
       bool transitive, bool ignoreSelf) const;
 
-  bool isRecursive(std::string funcName) const;
+  bool isRecursive(const std::string& funcName) const;
 
   void replaceAll(const Expression& from, const Expression& to);
 

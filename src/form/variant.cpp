@@ -7,13 +7,13 @@ VariantsManager::VariantsManager(
     const Formula& formula,
     const std::map<std::string, int64_t>& num_initial_terms) {
   // step 1: collect function names
-  for (auto& entry : formula.entries) {
+  for (const auto& entry : formula.entries) {
     if (ExpressionUtil::isSimpleFunction(entry.first, true)) {
       variants[entry.first.name] = {};
     }
   }
   // step 2: initialize function variants
-  for (auto& entry : formula.entries) {
+  for (const auto& entry : formula.entries) {
     if (ExpressionUtil::isSimpleFunction(entry.first, true)) {
       Variant variant;
       variant.func = entry.first.name;
@@ -81,7 +81,7 @@ void VariantsManager::collectFuncs(Variant& variant,
       variant.required_funcs.insert(expr.name);
     }
   }
-  for (auto& c : expr.children) {
+  for (const auto& c : expr.children) {
     collectFuncs(variant, c);
   }
 }

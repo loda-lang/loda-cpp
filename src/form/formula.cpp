@@ -108,7 +108,7 @@ std::multimap<std::string, std::string> Formula::getFunctionDeps(
   return deps;
 }
 
-bool Formula::isRecursive(std::string funcName) const {
+bool Formula::isRecursive(const std::string& funcName) const {
   auto deps = getFunctionDeps(false, false);
   for (auto it : deps) {
     if (it.first == funcName && it.second == funcName) {
@@ -158,7 +158,7 @@ void Formula::collectEntries(const Expression& e, Formula& target) {
   if (e.type == Expression::Type::FUNCTION && !e.name.empty()) {
     collectEntries(e.name, target);
   }
-  for (auto& c : e.children) {
+  for (const auto& c : e.children) {
     collectEntries(c, target);
   }
 }

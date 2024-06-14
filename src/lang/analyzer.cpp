@@ -66,7 +66,7 @@ bool Analyzer::hasLogarithmicComplexity(const Program& program) {
   }
   // check updates of loop counter cell in loop body
   bool loop_counter_updated = false;
-  for (auto& op : simple_loop.body.ops) {
+  for (const auto& op : simple_loop.body.ops) {
     const auto target = op.target.value.asInt();
     if (target == simple_loop.counter) {
       // loop counter must be updated using division
@@ -104,7 +104,7 @@ bool isExponentialPreLoop(const Program& pre_loop, int64_t counter) {
     return false;
   }
   int64_t phase = 0;
-  for (auto& op : pre_loop.ops) {
+  for (const auto& op : pre_loop.ops) {
     auto target = op.target.value.asInt();
     // loop counter update
     if (target == counter) {

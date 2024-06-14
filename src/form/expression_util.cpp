@@ -124,9 +124,9 @@ bool pullUpChildren(Expression& e) {
   }
   Expression result(e.type, e.name, e.value);
   bool changed = false;
-  for (auto& c : e.children) {
+  for (const auto& c : e.children) {
     if (c.type == e.type) {
-      for (auto& d : c.children) {
+      for (const auto& d : c.children) {
         result.newChild(d);
       }
       changed = true;
@@ -157,10 +157,10 @@ bool multiplyThrough(Expression& e) {
   auto sum = e.children[1];       // copy
   e.type = Expression::Type::SUM;
   e.children.clear();
-  for (auto& c : sum.children) {
+  for (const auto& c : sum.children) {
     Expression prod(Expression::Type::PRODUCT, "", {constant});
     if (c.type == Expression::Type::PRODUCT) {
-      for (auto d : c.children) {
+      for (const auto& d : c.children) {
         prod.newChild(d);
       }
     } else {
@@ -326,7 +326,7 @@ void ExpressionUtil::collectNames(const Expression& e, Expression::Type type,
   if (e.type == type) {
     target.insert(e.name);
   }
-  for (auto& c : e.children) {
+  for (const auto& c : e.children) {
     collectNames(c, type, target);
   }
 }
@@ -348,14 +348,14 @@ Number ExpressionUtil::eval(const Expression& e,
     }
     case Expression::Type::SUM: {
       auto result = Number::ZERO;
-      for (auto c : e.children) {
+      for (const auto& c : e.children) {
         result = Semantics::add(result, eval(c, params));
       }
       return result;
     }
     case Expression::Type::PRODUCT: {
       auto result = Number::ONE;
-      for (auto c : e.children) {
+      for (const auto& c : e.children) {
         result = Semantics::mul(result, eval(c, params));
       }
       return result;

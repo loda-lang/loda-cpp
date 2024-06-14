@@ -128,7 +128,7 @@ bool Expression::contains(Type t, const std::string& name) const {
 
 size_t Expression::numTerms() const {
   size_t result = 1;
-  for (auto& c : children) {
+  for (const auto& c : children) {
     result += c.numTerms();
   }
   return result;
