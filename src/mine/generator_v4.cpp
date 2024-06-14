@@ -7,7 +7,6 @@
 #include <iostream>
 #include <sstream>
 
-#include "generator_v4.hpp"
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
 #include "mine/generator.hpp"
