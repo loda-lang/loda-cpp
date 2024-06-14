@@ -9,12 +9,8 @@
 #include "sys/util.hpp"
 
 bool ProgramUtil::hasOp(const Program &p, Operation::Type type) {
-  for (auto &op : p.ops) {
-    if (op.type == type) {
-      return true;
-    }
-  }
-  return false;
+  return std::any_of(p.ops.begin(), p.ops.end(),
+                     [&](const Operation &op) { return op.type == type; });
 }
 
 void ProgramUtil::removeOps(Program &p, Operation::Type type) {
@@ -82,7 +78,7 @@ size_t ProgramUtil::numOps(const Program &p, Operation::Type type) {
 
 size_t ProgramUtil::numOps(const Program &p, Operand::Type type) {
   size_t num_ops = 0;
-  for (auto &op : p.ops) {
+  for (const auto &op : p.ops) {
     const auto &m = Operation::Metadata::get(op.type);
     if (m.num_operands == 1 && op.target.type == type) {
       num_ops++;
@@ -108,7 +104,7 @@ bool ProgramUtil::isCommutative(Operation::Type t) {
 
 bool ProgramUtil::isCommutative(const Program &p, int64_t cell) {
   auto update_type = Operation::Type::NOP;
-  for (auto &op : p.ops) {
+  for (const auto &op : p.ops) {
     const auto meta = Operation::Metadata::get(op.type);
     const auto target = op.target.value.asInt();
     if (target == cell) {
@@ -133,12 +129,8 @@ bool ProgramUtil::isCommutative(const Program &p, int64_t cell) {
 
 bool ProgramUtil::isCommutative(const Program &p,
                                 const std::set<int64_t> &cells) {
-  for (auto c : cells) {
-    if (!isCommutative(p, c)) {
-      return false;
-    }
-  }
-  return true;
+  return std::all_of(cells.begin(), cells.end(),
+                     [&](int64_t c) { return isCommutative(p, c); });
 }
 
 bool ProgramUtil::isAdditive(Operation::Type t) {
@@ -158,12 +150,9 @@ bool ProgramUtil::hasIndirectOperand(const Operation &op) {
 }
 
 bool ProgramUtil::hasIndirectOperand(const Program &p) {
-  for (auto &op : p.ops) {
-    if (hasIndirectOperand(op)) {
-      return true;
-    }
-  }
-  return false;
+  return std::any_of(p.ops.begin(), p.ops.end(), [&](const Operation &op) {
+    return hasIndirectOperand(op);
+  });
 }
 
 bool ProgramUtil::areIndependent(const Operation &op1, const Operation &op2) {
@@ -196,7 +185,7 @@ bool ProgramUtil::getUsedMemoryCells(const Program &p,
                                      std::unordered_set<int64_t> &used_cells,
                                      int64_t &largest_used,
                                      int64_t max_memory) {
-  for (auto &op : p.ops) {
+  for (const auto &op : p.ops) {
     int64_t region_length = 1;
     if (op.source.type == Operand::Type::INDIRECT ||
         op.target.type == Operand::Type::INDIRECT) {
@@ -232,7 +221,7 @@ bool ProgramUtil::getUsedMemoryCells(const Program &p,
 
 int64_t ProgramUtil::getLargestDirectMemoryCell(const Program &p) {
   int64_t largest = 0;
-  for (auto &op : p.ops) {
+  for (const auto &op : p.ops) {
     if (op.source.type == Operand::Type::DIRECT) {
       largest = std::max<int64_t>(largest, op.source.value.asInt());
     }
@@ -402,9 +391,9 @@ void ProgramUtil::print(const Operation &op, std::ostream &out, int indent) {
 }
 
 void ProgramUtil::print(const Program &p, std::ostream &out,
-                        std::string newline) {
+                        const std::string &newline) {
   int indent = 0;
-  for (auto &op : p.ops) {
+  for (const auto &op : p.ops) {
     if (op.type == Operation::Type::LPE) {
       indent -= 2;
     }
@@ -492,7 +481,7 @@ void ProgramUtil::exportToDot(const Program &p, std::ostream &out) {
       }
       if (!targets.empty()) {
         out << "  " << src << " -> {";
-        for (auto t : targets) {
+        for (const auto &t : targets) {
           out << " " << t;
         }
         out << " }" << std::endl;
@@ -507,7 +496,7 @@ void ProgramUtil::exportToDot(const Program &p, std::ostream &out) {
 
 size_t ProgramUtil::hash(const Program &p) {
   size_t h = 0;
-  for (auto &op : p.ops) {
+  for (const auto &op : p.ops) {
     if (op.type != Operation::Type::NOP) {
       h = (h * 3) + hash(op);
     }

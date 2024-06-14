@@ -166,6 +166,10 @@ std::ostream &operator<<(std::ostream &out, const Memory &m) {
   out << "[";
   for (int64_t i = 0; i <= max_index; ++i) {
     if (i != 0) out << ",";
+    if (i >= 100) {  // limit output
+      out << "...";
+      break;
+    }
     out << m.get(i);
   }
   out << "]";

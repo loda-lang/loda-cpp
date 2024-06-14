@@ -70,7 +70,7 @@ class ProgramUtil {
   static std::string operationToString(const Operation &op);
 
   static void print(const Program &p, std::ostream &out,
-                    std::string newline = std::string("\n"));
+                    const std::string &newline = "\n");
 
   static void print(const Operation &op, std::ostream &out, int indent = 0);
 
