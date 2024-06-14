@@ -106,7 +106,7 @@ GeneratorV1::GeneratorV1(const Config &config, const Stats &stats)
   // load program templates
   Parser parser;
   Program p;
-  for (auto &t : config.templates) {
+  for (const auto &t : config.templates) {
     try {
       p = parser.parse(t);
       ProgramUtil::removeOps(p, Operation::Type::NOP);

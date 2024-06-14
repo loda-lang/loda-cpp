@@ -7,6 +7,7 @@
 #include <iostream>
 #include <sstream>
 
+#include "generator_v4.hpp"
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
 #include "mine/generator.hpp"
@@ -23,6 +24,10 @@ void ProgramState::validate() const {
     throw std::runtime_error("invalid program state index: " +
                              std::to_string(index));
   }
+}
+
+void throwProgramStateLoadError() {
+  throw std::runtime_error("program state load error");
 }
 
 void ProgramState::load(const std::string& path) {
@@ -44,7 +49,7 @@ void ProgramState::load(const std::string& path) {
       } else if (op.comment == "end") {
         step = 3;
       } else {
-        std::runtime_error("program state load error");
+        throwProgramStateLoadError();
       }
       continue;
     }
@@ -59,7 +64,7 @@ void ProgramState::load(const std::string& path) {
         end.ops.push_back(op);
         break;
       default:
-        std::runtime_error("program state load error");
+        throwProgramStateLoadError();
     }
   }
 }

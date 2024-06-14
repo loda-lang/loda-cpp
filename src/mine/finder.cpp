@@ -205,9 +205,9 @@ std::pair<std::string, Program> Finder::checkProgramExtended(
 }
 
 std::pair<std::string, Program> Finder::checkProgramBasic(
-    Program program, Program existing, bool is_new, const OeisSequence &seq,
-    const std::string &change_type, size_t previous_hash, bool full_check,
-    size_t num_usages) {
+    const Program &program, const Program &existing, bool is_new,
+    const OeisSequence &seq, const std::string &change_type,
+    size_t previous_hash, bool full_check, size_t num_usages) {
   static const std::string first = "Found";
   std::pair<std::string, Program> result;  // empty string indicates no update
 

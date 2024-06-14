@@ -28,9 +28,9 @@ class Finder {
       bool full_check, size_t num_usages);
 
   std::pair<std::string, Program> checkProgramBasic(
-      Program program, Program existing, bool is_new, const OeisSequence &seq,
-      const std::string &change_type, size_t previous_hash, bool full_check,
-      size_t num_usages);
+      const Program &program, const Program &existing, bool is_new,
+      const OeisSequence &seq, const std::string &change_type,
+      size_t previous_hash, bool full_check, size_t num_usages);
 
   std::vector<std::unique_ptr<Matcher>> &getMatchers() { return matchers; }
 
