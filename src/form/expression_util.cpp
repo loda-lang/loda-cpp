@@ -280,6 +280,14 @@ bool ExpressionUtil::isSimpleFunction(const Expression& e, bool strict) {
   }
 }
 
+bool ExpressionUtil::isInitialTerm(const Expression& e) {
+  if (e.type != Expression::Type::FUNCTION || e.children.size() != 1) {
+    return false;
+  }
+  const auto arg = e.children.front();
+  return arg.type == Expression::Type::CONSTANT;
+}
+
 bool ExpressionUtil::canBeNegative(const Expression& e) {
   switch (e.type) {
     case Expression::Type::CONSTANT:

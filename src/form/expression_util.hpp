@@ -20,6 +20,8 @@ class ExpressionUtil {
 
   static bool isSimpleFunction(const Expression& e, bool strict = true);
 
+  static bool isInitialTerm(const Expression& e);
+
   static bool canBeNegative(const Expression& e);
 
   static void collectNames(const Expression& e, Expression::Type type,

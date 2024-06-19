@@ -177,3 +177,35 @@ void FormulaUtil::resolveSimpleRecursions(Formula& formula) {
     formula.entries[func] = sum;
   }
 }
+
+void FormulaUtil::convertInitialTermsToIf(Formula& formula) {
+  auto it = formula.entries.begin();
+  while (it != formula.entries.end()) {
+    auto left = it->first;
+    auto general = ExpressionUtil::newFunction(left.name);
+    auto general_it = formula.entries.find(general);
+    if (ExpressionUtil::isInitialTerm(left) &&
+        general_it != formula.entries.end()) {
+      general_it->second =
+          Expression(Expression::Type::IF, "",
+                     {left.children.front(), it->second, general_it->second});
+      it = formula.entries.erase(it);
+    } else {
+      it++;
+    }
+  }
+}
+
+Formula FormulaUtil::extractInitialTerms(Formula& formula) {
+  Formula initial_terms;
+  auto it = formula.entries.begin();
+  while (it != formula.entries.end()) {
+    if (ExpressionUtil::isInitialTerm(it->first)) {
+      initial_terms.entries[it->first] = it->second;
+      it = formula.entries.erase(it);
+    } else {
+      it++;
+    }
+  }
+  return initial_terms;
+}

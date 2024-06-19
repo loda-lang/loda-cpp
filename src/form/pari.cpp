@@ -4,27 +4,8 @@
 #include <sstream>
 
 #include "form/expression_util.hpp"
+#include "form/formula_util.hpp"
 #include "sys/log.hpp"
-
-void convertInitialTermsToIf(Formula& formula) {
-  auto it = formula.entries.begin();
-  while (it != formula.entries.end()) {
-    auto left = it->first;
-    Expression general(Expression::Type::FUNCTION, left.name,
-                       {Expression(Expression::Type::PARAMETER, "n")});
-    auto general_it = formula.entries.find(general);
-    if (left.type == Expression::Type::FUNCTION && left.children.size() == 1 &&
-        left.children.front().type == Expression::Type::CONSTANT &&
-        general_it != formula.entries.end()) {
-      general_it->second =
-          Expression(Expression::Type::IF, "",
-                     {left.children.front(), it->second, general_it->second});
-      it = formula.entries.erase(it);
-    } else {
-      it++;
-    }
-  }
-}
 
 bool convertExprToPari(Expression& expr, const Formula& f, bool as_vector) {
   // convert bottom-up!
@@ -99,7 +80,7 @@ bool Pari::convertToPari(Formula& f, bool as_vector) {
   }
   f = tmp;
   addLocalVars(f);
-  convertInitialTermsToIf(f);
+  FormulaUtil::convertInitialTermsToIf(f);
   return true;
 }
 
