@@ -281,7 +281,9 @@ bool ExpressionUtil::isSimpleFunction(const Expression& e, bool strict) {
 }
 
 bool ExpressionUtil::isInitialTerm(const Expression& e) {
-  if (e.type != Expression::Type::FUNCTION || e.children.size() != 1) {
+  if ((e.type != Expression::Type::FUNCTION &&
+       e.type != Expression::Type::VECTOR) ||
+      e.children.size() != 1) {
     return false;
   }
   const auto arg = e.children.front();
