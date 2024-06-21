@@ -70,23 +70,6 @@ bool addLocalVars(Formula& f) {
   return changed;
 }
 
-void PariFormula::extractInitialTerms() {
-  initial_terms.clear();
-  auto it = main_formula.entries.begin();
-  while (it != main_formula.entries.end()) {
-    if (ExpressionUtil::isInitialTerm(it->first)) {
-      auto key = it->first;
-      key.children.front().value += Number::ONE;
-      initial_terms.entries[key] = it->second;
-      max_initial_terms[key.name] = std::max(
-          max_initial_terms[key.name], key.children.front().value.asInt());
-      it = main_formula.entries.erase(it);
-    } else {
-      it++;
-    }
-  }
-}
-
 bool PariFormula::convert(const Formula& formula, bool as_vector,
                           PariFormula& pari_formula) {
   pari_formula = PariFormula();
@@ -103,10 +86,12 @@ bool PariFormula::convert(const Formula& formula, bool as_vector,
     pari_formula.main_formula.entries[left] = right;
   }
   if (as_vector) {
-    pari_formula.extractInitialTerms();
+    FormulaUtil::convertInitialTermsToIf(pari_formula.main_formula, 1,
+                                         Expression::Type::VECTOR);
   } else {
     addLocalVars(pari_formula.main_formula);
-    FormulaUtil::convertInitialTermsToIf(pari_formula.main_formula);
+    FormulaUtil::convertInitialTermsToIf(pari_formula.main_formula, 0,
+                                         Expression::Type::FUNCTION);
   }
   return true;
 }
@@ -122,12 +107,7 @@ std::string PariFormula::toString() const {
       if (i > 0) {
         buf << "; ";
       }
-      if (max_initial_terms.find(f) != max_initial_terms.end()) {
-        buf << "if(n>" << max_initial_terms.at(f) << ", ";
-        buf << f << "[n] = " << main_formula.entries.at(key).toString() << ")";
-      } else {
-        buf << f << "[n] = " << main_formula.entries.at(key).toString() << "";
-      }
+      buf << f << "[n] = " << main_formula.entries.at(key).toString();
     }
     return buf.str();
   } else {
@@ -142,8 +122,6 @@ void PariFormula::printEvalCode(int64_t numTerms, std::ostream& out) const {
     for (const auto& f : functions) {
       out << f << " = vector(" << numTerms << ")" << std::endl;
     }
-    // initial terms only
-    out << initial_terms.toString("\n", false) << std::endl;
   } else {
     // main function
     out << toString() << std::endl;

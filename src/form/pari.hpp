@@ -29,9 +29,5 @@ class PariFormula {
 
  private:
   Formula main_formula;
-  Formula initial_terms;
   bool as_vector;
-  std::map<std::string, int64_t> max_initial_terms;
-
-  void extractInitialTerms();
 };

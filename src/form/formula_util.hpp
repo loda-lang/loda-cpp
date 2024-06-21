@@ -10,5 +10,7 @@ class FormulaUtil {
 
   static void resolveSimpleRecursions(Formula& formula);
 
-  static void convertInitialTermsToIf(Formula& formula);
+  static void convertInitialTermsToIf(
+      Formula& formula, int64_t offset = 0,
+      Expression::Type type = Expression::Type::FUNCTION);
 };

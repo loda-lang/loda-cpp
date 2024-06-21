@@ -180,17 +180,21 @@ void FormulaUtil::resolveSimpleRecursions(Formula& formula) {
   }
 }
 
-void FormulaUtil::convertInitialTermsToIf(Formula& formula) {
+void FormulaUtil::convertInitialTermsToIf(Formula& formula, int64_t offset,
+                                          Expression::Type type) {
   auto it = formula.entries.begin();
   while (it != formula.entries.end()) {
     auto left = it->first;
     auto general = ExpressionUtil::newFunction(left.name);
+    general.type = type;
     auto general_it = formula.entries.find(general);
     if (ExpressionUtil::isInitialTerm(left) &&
         general_it != formula.entries.end()) {
+      auto index_expr = left.children.front();
+      index_expr.value += Number(offset);
       general_it->second =
           Expression(Expression::Type::IF, "",
-                     {left.children.front(), it->second, general_it->second});
+                     {index_expr, it->second, general_it->second});
       it = formula.entries.erase(it);
     } else {
       it++;
