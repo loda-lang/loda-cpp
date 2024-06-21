@@ -80,7 +80,8 @@
         "functional": "cpp",
         "__verbose_abort": "cpp",
         "bit": "cpp",
-        "charconv": "cpp"
+        "charconv": "cpp",
+        "execution": "cpp"
     },
     "makefile.makeDirectory": "src",
     "c-cpp-flylint.clang.includePaths": [

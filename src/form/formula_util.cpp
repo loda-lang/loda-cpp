@@ -45,7 +45,7 @@ void FormulaUtil::resolveSimpleFunctions(Formula& formula) {
     }
   }
   // filter out non-simple functions
-  auto deps = formula.getFunctionDeps(false, false);
+  auto deps = formula.getDependencies(Expression::Type::FUNCTION, false, false);
   for (auto& e : formula.entries) {
     if (e.first.type != Expression::Type::FUNCTION) {
       continue;  // should not happen
@@ -56,7 +56,9 @@ void FormulaUtil::resolveSimpleFunctions(Formula& formula) {
       is_simple = false;
     }
     for (auto it : deps) {
-      if (it.first == f && formula.containsFunctionDef(it.second)) {
+      auto functions = formula.getDefinitions();
+      if (it.first == f && std::find(functions.begin(), functions.end(),
+                                     it.second) != functions.end()) {
         is_simple = false;
         break;
       }
@@ -194,18 +196,4 @@ void FormulaUtil::convertInitialTermsToIf(Formula& formula) {
       it++;
     }
   }
-}
-
-Formula FormulaUtil::extractInitialTerms(Formula& formula) {
-  Formula initial_terms;
-  auto it = formula.entries.begin();
-  while (it != formula.entries.end()) {
-    if (ExpressionUtil::isInitialTerm(it->first)) {
-      initial_terms.entries[it->first] = it->second;
-      it = formula.entries.erase(it);
-    } else {
-      it++;
-    }
-  }
-  return initial_terms;
 }

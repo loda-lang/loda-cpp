@@ -216,8 +216,10 @@ bool simplifyFormulaUsingVariants(
       }
       Formula copy = formula;
       copy.entries[entry.first] = variant.definition;
-      auto deps_old = formula.getFunctionDeps(true, true);
-      auto deps_new = copy.getFunctionDeps(true, true);
+      auto deps_old =
+          formula.getDependencies(Expression::Type::FUNCTION, true, true);
+      auto deps_new =
+          copy.getDependencies(Expression::Type::FUNCTION, true, true);
       if (deps_new.size() < deps_old.size()) {
         entry.second = variant.definition;
         num_initial_terms[entry.first.name] = variant.num_initial_terms;

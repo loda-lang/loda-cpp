@@ -11,6 +11,4 @@ class FormulaUtil {
   static void resolveSimpleRecursions(Formula& formula);
 
   static void convertInitialTermsToIf(Formula& formula);
-
-  static Formula extractInitialTerms(Formula& formula);
 };

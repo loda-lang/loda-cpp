@@ -33,12 +33,30 @@ bool Formula::contains(const Expression& search) const {
                      });
 }
 
-bool Formula::containsFunctionDef(const std::string& fname) const {
-  return std::any_of(entries.begin(), entries.end(),
-                     [&](const std::pair<Expression, Expression>& e) {
-                       return e.first.type == Expression::Type::FUNCTION &&
-                              e.first.name == fname;
-                     });
+std::vector<std::string> Formula::getDefinitions(
+    Expression::Type type, bool sortByDependencies) const {
+  std::vector<std::string> result;
+  for (const auto& e : entries) {
+    if (e.first.type == type &&
+        std::find(result.begin(), result.end(), e.first.name) == result.end()) {
+      result.push_back(e.first.name);
+    }
+  }
+  if (sortByDependencies) {
+    const auto deps = getDependencies(type, true, true);
+    std::sort(result.begin(), result.end(),
+              [&](const std::string& a, const std::string& b) {
+                auto depsA = deps.equal_range(a);
+                return !std::any_of(
+                    depsA.first, depsA.second,
+                    [&](const std::pair<std::string, std::string>& e) {
+                      return e.second == b;
+                    });
+              });
+  } else {
+    std::sort(result.begin(), result.end());
+  }
+  return result;
 }
 
 bool containsPair(std::multimap<std::string, std::string>& deps,
@@ -53,13 +71,13 @@ bool containsPair(std::multimap<std::string, std::string>& deps,
 }
 
 void collectDeps(const std::string& fname, const Expression& e,
+                 Expression::Type type,
                  std::multimap<std::string, std::string>& deps) {
-  if (e.type == Expression::Type::FUNCTION && !e.name.empty() &&
-      !containsPair(deps, fname, e.name)) {
+  if (e.type == type && !e.name.empty() && !containsPair(deps, fname, e.name)) {
     deps.insert({fname, e.name});
   }
   for (const auto& c : e.children) {
-    collectDeps(fname, c, deps);
+    collectDeps(fname, c, type, deps);
   }
 }
 
@@ -78,12 +96,12 @@ std::pair<std::string, std::string> findMissingPair(
   return result;
 }
 
-std::multimap<std::string, std::string> Formula::getFunctionDeps(
-    bool transitive, bool ignoreSelf) const {
+std::multimap<std::string, std::string> Formula::getDependencies(
+    Expression::Type type, bool transitive, bool ignoreSelf) const {
   std::multimap<std::string, std::string> deps;
   for (auto& e : entries) {
-    if (e.first.type == Expression::Type::FUNCTION && !e.first.name.empty()) {
-      collectDeps(e.first.name, e.second, deps);
+    if (e.first.type == type && !e.first.name.empty()) {
+      collectDeps(e.first.name, e.second, type, deps);
     }
   }
   if (transitive) {
@@ -108,8 +126,9 @@ std::multimap<std::string, std::string> Formula::getFunctionDeps(
   return deps;
 }
 
-bool Formula::isRecursive(const std::string& funcName) const {
-  auto deps = getFunctionDeps(false, false);
+bool Formula::isRecursive(const std::string& funcName,
+                          Expression::Type type) const {
+  auto deps = getDependencies(type, false, false);
   for (auto it : deps) {
     if (it.first == funcName && it.second == funcName) {
       return true;

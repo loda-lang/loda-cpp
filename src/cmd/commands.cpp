@@ -211,6 +211,7 @@ void Commands::export_(const std::string& path) {
   Program program = OeisProgram::getProgramAndSeqId(path).first;
   const auto& format = settings.export_format;
   Formula formula;
+  PariFormula pari_formula;
   FormulaGenerator generator;
   if (format.empty() || format == "formula") {
     if (!generator.generate(program, -1, formula, settings.with_deps)) {
@@ -219,16 +220,18 @@ void Commands::export_(const std::string& path) {
     std::cout << formula.toString() << std::endl;
   } else if (format == "pari") {
     if (!generator.generate(program, -1, formula, settings.with_deps) ||
-        !Pari::convertToPari(formula, false)) {
+        !PariFormula::convert(formula, false, pari_formula)) {
       throwConversionError(format);
     }
-    std::cout << formula.toString("; ", true) << std::endl;
+    std::cout << pari_formula.toString() << std::endl;
+    // pari_formula.printEvalCode(10, std::cout);
   } else if (format == "pari-vector") {
     if (!generator.generate(program, -1, formula, settings.with_deps) ||
-        !Pari::convertToPari(formula, true)) {
+        !PariFormula::convert(formula, true, pari_formula)) {
       throwConversionError(format);
     }
-    std::cout << formula.toString("; ", true) << std::endl;
+    std::cout << pari_formula.toString() << std::endl;
+    // pari_formula.printEvalCode(10, std::cout);
   } else if (format == "loda") {
     ProgramUtil::print(program, std::cout);
   } else {
@@ -462,10 +465,12 @@ void Commands::testPari(const std::string& test_id) {
     // generate PARI code
     FormulaGenerator generator;
     Formula formula;
+    PariFormula pari_formula;
+    const bool as_vector = true;
     Sequence expSeq;
     try {
       if (!generator.generate(program, id, formula, true) ||
-          !Pari::convertToPari(formula)) {
+          !PariFormula::convert(formula, as_vector, pari_formula)) {
         continue;
       }
     } catch (const std::exception& e) {
@@ -483,7 +488,6 @@ void Commands::testPari(const std::string& test_id) {
             true);
       }
     }
-    auto pariCode = formula.toString("; ", true);
 
     // determine number of terms for testing
     size_t numTerms = seq.existingNumTerms();
@@ -513,7 +517,7 @@ void Commands::testPari(const std::string& test_id) {
       }
     }
     Log::get().info("Checking " + std::to_string(numTerms) + " terms of " +
-                    seq.id_str() + ": " + pariCode);
+                    seq.id_str() + ": " + pari_formula.toString());
 
     if (numTerms == 0) {
       Log::get().warn("Skipping " + seq.id_str());
@@ -532,7 +536,7 @@ void Commands::testPari(const std::string& test_id) {
     }
 
     // evaluate PARI program
-    auto genSeq = Pari::eval(formula, 0, numTerms - 1);
+    auto genSeq = pari_formula.eval(numTerms);
 
     // compare results
     if (genSeq != expSeq) {
