@@ -68,6 +68,8 @@ class Test {
 
   void formula();
 
+  void pariEval();
+
  private:
   std::vector<std::pair<Program, Program>> loadInOutTests(
       const std::string &prefix);
@@ -80,6 +82,8 @@ class Test {
   void testMatcherSet(Matcher &matcher, const std::vector<size_t> &ids);
 
   void testMatcherPair(Matcher &matcher, size_t id1, size_t id2);
+
+  void testPariEval(const std::string &testFile, bool asVector);
 
   OeisManager &getManager();
 

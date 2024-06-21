@@ -7,6 +7,7 @@
 #include <stdexcept>
 
 #include "form/formula_gen.hpp"
+#include "form/pari.hpp"
 #include "lang/big_number.hpp"
 #include "lang/comments.hpp"
 #include "lang/evaluator.hpp"
@@ -60,6 +61,7 @@ void Test::all() {
   checkpoint();
   knownPrograms();
   formula();
+  pariEval();
 
   // slow tests
   number();
@@ -904,6 +906,71 @@ void Test::formula() {
     if (f.toString() != e.second) {
       Log::get().error("Unexpected formula: " + f.toString(), true);
     }
+  }
+}
+
+void Test::pariEval() {
+  auto base_path =
+      std::string("tests") + FILE_SEP + std::string("formula") + FILE_SEP;
+  testPariEval(base_path + "program-pari-recursive.txt", false);
+  testPariEval(base_path + "program-pari-vector.txt", true);
+}
+
+void testPariEvalCode(const std::string& seq_id,
+                      const std::string& expected_eval_code, bool asVector) {
+  Log::get().info("Testing PARI/GP " +
+                  std::string((asVector ? "vector" : "recursive")) +
+                  " code for " + seq_id);
+  Parser parser;
+  FormulaGenerator generator;
+  OeisSequence seq(seq_id);
+  auto program = parser.parse(seq.getProgramPath());
+  Formula f;
+  PariFormula pari;
+  if (!generator.generate(program, seq.id, f, true)) {
+    Log::get().error("Cannot generate formula from program", true);
+  }
+  if (!PariFormula::convert(f, asVector, pari)) {
+    Log::get().error("Cannot convert formula to PARI/GP", true);
+  }
+  std::stringstream eval_code;
+  pari.printEvalCode(10, eval_code);
+  if (eval_code.str() != expected_eval_code) {
+    Log::get().error("Unexpected PARI/GP code: " + eval_code.str(), true);
+  }
+}
+
+void Test::testPariEval(const std::string& testFile, bool asVector) {
+  std::ifstream file(testFile);
+  if (!file.is_open()) {
+    Log::get().error("Cannot open test file: " + testFile, true);
+  }
+  std::string line, seq_id, expected_eval_code;
+  Parser parser;
+  FormulaGenerator generator;
+  size_t num_tests = 0;
+  while (std::getline(file, line)) {
+    if (line.empty()) {
+      if (!seq_id.empty()) {
+        testPariEvalCode(seq_id, expected_eval_code, asVector);
+        seq_id.clear();
+        expected_eval_code.clear();
+        num_tests++;
+      }
+    } else if (line.substr(0, 2) == "\\\\") {
+      seq_id = line.substr(2);
+      trimString(seq_id);
+      expected_eval_code.clear();
+    } else {
+      expected_eval_code += line + "\n";
+    }
+  }
+  if (!seq_id.empty()) {
+    testPariEvalCode(seq_id, expected_eval_code, asVector);
+    num_tests++;
+  }
+  if (num_tests == 0) {
+    Log::get().error("No tests found in file: " + testFile, true);
   }
 }
 

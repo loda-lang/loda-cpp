@@ -70,37 +70,85 @@ bool addLocalVars(Formula& f) {
   return changed;
 }
 
-bool Pari::convertToPari(Formula& f, bool as_vector) {
-  Formula tmp;
-  for (auto& entry : f.entries) {
+void PariFormula::extractInitialTerms() {
+  initial_terms.clear();
+  auto it = main_formula.entries.begin();
+  while (it != main_formula.entries.end()) {
+    if (ExpressionUtil::isInitialTerm(it->first)) {
+      auto key = it->first;
+      key.children.front().value += Number::ONE;
+      initial_terms.entries[key] = it->second;
+      max_initial_terms[key.name] = std::max(
+          max_initial_terms[key.name], key.children.front().value.asInt());
+      it = main_formula.entries.erase(it);
+    } else {
+      it++;
+    }
+  }
+}
+
+bool PariFormula::convert(const Formula& formula, bool as_vector,
+                          PariFormula& pari_formula) {
+  pari_formula = PariFormula();
+  pari_formula.as_vector = as_vector;
+  for (const auto& entry : formula.entries) {
     auto left = entry.first;
     auto right = entry.second;
     if (as_vector && left.type == Expression::Type::FUNCTION) {
       left.type = Expression::Type::VECTOR;
     }
-    if (!convertExprToPari(right, f, as_vector)) {
+    if (!convertExprToPari(right, formula, as_vector)) {
       return false;
     }
-    tmp.entries[left] = right;
+    pari_formula.main_formula.entries[left] = right;
   }
-  f = tmp;
-  if (!as_vector) {
-    addLocalVars(f);
-    FormulaUtil::convertInitialTermsToIf(f);
+  if (as_vector) {
+    pari_formula.extractInitialTerms();
+  } else {
+    addLocalVars(pari_formula.main_formula);
+    FormulaUtil::convertInitialTermsToIf(pari_formula.main_formula);
   }
   return true;
 }
 
-void Pari::printEvalCode(const Formula& f, int64_t start, int64_t end,
-                         std::ostream& out, bool as_vector) {
+std::string PariFormula::toString() const {
   if (as_vector) {
-    // TODO: print initial terms
+    return main_formula.toString("; ", false) + "; " +
+           initial_terms.toString("; ", false);
   } else {
-    out << f.toString("; ", true) << std::endl;
+    return main_formula.toString("; ", true);
   }
-  out << "for (n = " << start << ", " << end << ", ";
+}
+
+void PariFormula::printEvalCode(int64_t numTerms, std::ostream& out) const {
   if (as_vector) {
-    // TODO: print function definition
+    // declare vectors
+    auto functions = main_formula.getDefinitions(Expression::Type::VECTOR);
+    for (const auto& f : functions) {
+      out << f << " = vector(" << numTerms << ")" << std::endl;
+    }
+    // initial terms only
+    out << initial_terms.toString("\n", false) << std::endl;
+  } else {
+    // main function
+    out << main_formula.toString("; ", true) << std::endl;
+  }
+  const int64_t start = as_vector ? 1 : 0;
+  const int64_t end = numTerms + start - 1;
+  out << "for(n=" << start << "," << end << ",";
+  if (as_vector) {
+    auto sorted = main_formula.getDefinitions(Expression::Type::VECTOR, true);
+    for (const auto& f : sorted) {
+      auto key = ExpressionUtil::newFunction(f);
+      key.type = Expression::Type::VECTOR;
+      if (max_initial_terms.find(f) != max_initial_terms.end()) {
+        out << "if(n>" << max_initial_terms.at(f) << ", ";
+        out << f << "[n] = " << main_formula.entries.at(key).toString()
+            << "); ";
+      } else {
+        out << f << "[n] = " << main_formula.entries.at(key).toString() << "; ";
+      }
+    }
     out << "print(a[n])";
   } else {
     out << "print(a(n))";
@@ -108,8 +156,7 @@ void Pari::printEvalCode(const Formula& f, int64_t start, int64_t end,
   out << ")" << std::endl << "quit" << std::endl;
 }
 
-Sequence Pari::eval(const Formula& f, int64_t start, int64_t end,
-                    bool as_vector) {
+Sequence PariFormula::eval(int64_t numTerms) const {
   const std::string gpPath("pari-loda.gp");
   const std::string gpResult("pari-result.txt");
   const int64_t maxparisize = 256;  // in MB
@@ -117,7 +164,7 @@ Sequence Pari::eval(const Formula& f, int64_t start, int64_t end,
   if (!gp) {
     throw std::runtime_error("error generating gp file");
   }
-  printEvalCode(f, start, end, gp, as_vector);
+  printEvalCode(numTerms, gp);
   gp.close();
   std::string cmd = "gp -s " + std::to_string(maxparisize) + "M -q " + gpPath +
                     " > " + gpResult;

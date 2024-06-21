@@ -14,13 +14,24 @@
  * Generated PARI/GP code:
  * a(n) = if(n==0,1,n*a(n-1))
  */
-class Pari {
+class PariFormula {
  public:
-  static bool convertToPari(Formula& f, bool as_vector = false);
+  PariFormula() : as_vector(false){};
 
-  static void printEvalCode(const Formula& f, int64_t start, int64_t end,
-                            std::ostream& out, bool as_vector = false);
+  static bool convert(const Formula& formula, bool as_vector,
+                      PariFormula& pari_formula);
 
-  static Sequence eval(const Formula& f, int64_t start, int64_t end,
-                       bool as_vector = false);
+  void printEvalCode(int64_t numTerms, std::ostream& out) const;
+
+  std::string toString() const;
+
+  Sequence eval(int64_t numTerms) const;
+
+ private:
+  Formula main_formula;
+  Formula initial_terms;
+  bool as_vector;
+  std::map<std::string, int64_t> max_initial_terms;
+
+  void extractInitialTerms();
 };

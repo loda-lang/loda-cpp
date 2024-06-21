@@ -197,17 +197,3 @@ void FormulaUtil::convertInitialTermsToIf(Formula& formula) {
     }
   }
 }
-
-Formula FormulaUtil::extractInitialTerms(Formula& formula) {
-  Formula initial_terms;
-  auto it = formula.entries.begin();
-  while (it != formula.entries.end()) {
-    if (ExpressionUtil::isInitialTerm(it->first)) {
-      initial_terms.entries[it->first] = it->second;
-      it = formula.entries.erase(it);
-    } else {
-      it++;
-    }
-  }
-  return initial_terms;
-}
