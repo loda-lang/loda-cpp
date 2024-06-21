@@ -224,14 +224,12 @@ void Commands::export_(const std::string& path) {
       throwConversionError(format);
     }
     std::cout << pari_formula.toString() << std::endl;
-    // pari_formula.printEvalCode(10, std::cout);
   } else if (format == "pari-vector") {
     if (!generator.generate(program, -1, formula, settings.with_deps) ||
         !PariFormula::convert(formula, true, pari_formula)) {
       throwConversionError(format);
     }
     std::cout << pari_formula.toString() << std::endl;
-    // pari_formula.printEvalCode(10, std::cout);
   } else if (format == "loda") {
     ProgramUtil::print(program, std::cout);
   } else {
@@ -466,7 +464,7 @@ void Commands::testPari(const std::string& test_id) {
     FormulaGenerator generator;
     Formula formula;
     PariFormula pari_formula;
-    const bool as_vector = true;
+    const bool as_vector = false;  // TODO: switch to true
     Sequence expSeq;
     try {
       if (!generator.generate(program, id, formula, true) ||
