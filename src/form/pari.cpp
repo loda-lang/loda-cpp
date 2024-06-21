@@ -113,8 +113,23 @@ bool PariFormula::convert(const Formula& formula, bool as_vector,
 
 std::string PariFormula::toString() const {
   if (as_vector) {
-    return main_formula.toString("; ", false) + "; " +
-           initial_terms.toString("; ", false);
+    std::stringstream buf;
+    auto sorted = main_formula.getDefinitions(Expression::Type::VECTOR, true);
+    for (size_t i = 0; i < sorted.size(); i++) {
+      const auto& f = sorted.at(i);
+      auto key = ExpressionUtil::newFunction(f);
+      key.type = Expression::Type::VECTOR;
+      if (i > 0) {
+        buf << "; ";
+      }
+      if (max_initial_terms.find(f) != max_initial_terms.end()) {
+        buf << "if(n>" << max_initial_terms.at(f) << ", ";
+        buf << f << "[n] = " << main_formula.entries.at(key).toString() << ")";
+      } else {
+        buf << f << "[n] = " << main_formula.entries.at(key).toString() << "";
+      }
+    }
+    return buf.str();
   } else {
     return main_formula.toString("; ", true);
   }
@@ -131,24 +146,13 @@ void PariFormula::printEvalCode(int64_t numTerms, std::ostream& out) const {
     out << initial_terms.toString("\n", false) << std::endl;
   } else {
     // main function
-    out << main_formula.toString("; ", true) << std::endl;
+    out << toString() << std::endl;
   }
   const int64_t start = as_vector ? 1 : 0;
   const int64_t end = numTerms + start - 1;
   out << "for(n=" << start << "," << end << ",";
   if (as_vector) {
-    auto sorted = main_formula.getDefinitions(Expression::Type::VECTOR, true);
-    for (const auto& f : sorted) {
-      auto key = ExpressionUtil::newFunction(f);
-      key.type = Expression::Type::VECTOR;
-      if (max_initial_terms.find(f) != max_initial_terms.end()) {
-        out << "if(n>" << max_initial_terms.at(f) << ", ";
-        out << f << "[n] = " << main_formula.entries.at(key).toString()
-            << "); ";
-      } else {
-        out << f << "[n] = " << main_formula.entries.at(key).toString() << "; ";
-      }
-    }
+    out << toString() << "; ";
     out << "print(a[n])";
   } else {
     out << "print(a(n))";

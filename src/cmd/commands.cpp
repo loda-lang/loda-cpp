@@ -100,7 +100,8 @@ void Commands::help() {
   std::cout << "  -B <number>          Print result in b-file format from a "
                "custom offset"
             << std::endl;
-  std::cout << "  -o <string>          Export format (formula,loda,pari)"
+  std::cout << "  -o <string>          Export format "
+               "(formula,loda,pari-function,pari-vector)"
             << std::endl;
   std::cout
       << "  -d                   Export with dependencies to other programs"
@@ -218,7 +219,7 @@ void Commands::export_(const std::string& path) {
       throwConversionError(format);
     }
     std::cout << formula.toString() << std::endl;
-  } else if (format == "pari") {
+  } else if (format == "pari-function" || format == "pari") {
     if (!generator.generate(program, -1, formula, settings.with_deps) ||
         !PariFormula::convert(formula, false, pari_formula)) {
       throwConversionError(format);

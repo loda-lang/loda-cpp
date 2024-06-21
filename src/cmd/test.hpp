@@ -68,7 +68,9 @@ class Test {
 
   void formula();
 
-  void pariEval();
+  enum class FormulaType { FORMULA, PARI_FUNCTION, PARI_VECTOR };
+
+  void checkFormulas(const std::string &testFile, FormulaType type);
 
  private:
   std::vector<std::pair<Program, Program>> loadInOutTests(
