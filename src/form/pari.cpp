@@ -20,8 +20,10 @@ bool convertExprToPari(Expression& expr, const Formula& f, bool as_vector) {
       return false;
     }
   }
+  auto functions = f.getDefinitions(Expression::Type::FUNCTION);
   if (expr.type == Expression::Type::FUNCTION && as_vector &&
-      f.containsFunctionDef(expr.name)) {
+      std::find(functions.begin(), functions.end(), expr.name) !=
+          functions.end()) {
     expr.type = Expression::Type::VECTOR;
   }
   return true;
@@ -29,7 +31,10 @@ bool convertExprToPari(Expression& expr, const Formula& f, bool as_vector) {
 
 void countFuncs(const Formula& f, const Expression& e,
                 std::map<Expression, size_t>& count) {
-  if (e.type == Expression::Type::FUNCTION && f.containsFunctionDef(e.name)) {
+  auto functions = f.getDefinitions(Expression::Type::FUNCTION);
+  if (e.type == Expression::Type::FUNCTION &&
+      std::find(functions.begin(), functions.end(), e.name) !=
+          functions.end()) {
     if (count.find(e) == count.end()) {
       count[e] = 1;
     } else {

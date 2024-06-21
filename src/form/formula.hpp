@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <vector>
 
 #include "form/expression.hpp"
 
@@ -23,12 +24,16 @@ class Formula {
 
   bool contains(const Expression& search) const;
 
-  bool containsFunctionDef(const std::string& fname) const;
+  std::vector<std::string> getDefinitions(
+      Expression::Type type = Expression::Type::FUNCTION,
+      bool sortByDependencies = false) const;
 
-  std::multimap<std::string, std::string> getFunctionDeps(
-      bool transitive, bool ignoreSelf) const;
+  std::multimap<std::string, std::string> getDependencies(
+      Expression::Type type = Expression::Type::FUNCTION,
+      bool transitive = false, bool ignoreSelf = false) const;
 
-  bool isRecursive(const std::string& funcName) const;
+  bool isRecursive(const std::string& funcName,
+                   Expression::Type type = Expression::Type::FUNCTION) const;
 
   void replaceAll(const Expression& from, const Expression& to);
 
