@@ -176,6 +176,17 @@ void Expression::replaceAll(const Expression& from, const Expression& to) {
   }
 }
 
+void Expression::replaceInside(const Expression& from, const Expression& to,
+                               const Expression::Type type) {
+  for (auto& c : children) {
+    if (this->type == type) {
+      c.replaceAll(from, to);
+    } else {
+      c.replaceInside(from, to, type);
+    }
+  }
+}
+
 void Expression::replaceName(const std::string& from, const std::string& to) {
   if (name == from) {
     name = to;

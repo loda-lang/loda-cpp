@@ -69,6 +69,9 @@ class Expression {
 
   void replaceAll(const Expression& from, const Expression& to);
 
+  void replaceInside(const Expression& from, const Expression& to,
+                     const Expression::Type type);
+
   void replaceName(const std::string& from, const std::string& to);
 
   friend std::ostream& operator<<(std::ostream& out, const Expression& e);

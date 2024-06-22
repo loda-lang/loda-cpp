@@ -1,6 +1,7 @@
 #include "form/variant.hpp"
 
 #include "form/expression_util.hpp"
+#include "form/formula_util.hpp"
 #include "sys/log.hpp"
 
 VariantsManager::VariantsManager(
@@ -216,10 +217,10 @@ bool simplifyFormulaUsingVariants(
       }
       Formula copy = formula;
       copy.entries[entry.first] = variant.definition;
-      auto deps_old =
-          formula.getDependencies(Expression::Type::FUNCTION, true, true);
-      auto deps_new =
-          copy.getDependencies(Expression::Type::FUNCTION, true, true);
+      auto deps_old = FormulaUtil::getDependencies(
+          formula, Expression::Type::FUNCTION, true, true);
+      auto deps_new = FormulaUtil::getDependencies(
+          copy, Expression::Type::FUNCTION, true, true);
       if (deps_new.size() < deps_old.size()) {
         entry.second = variant.definition;
         num_initial_terms[entry.first.name] = variant.num_initial_terms;

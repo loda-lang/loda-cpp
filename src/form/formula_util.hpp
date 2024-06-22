@@ -10,6 +10,19 @@ class FormulaUtil {
 
   static void resolveSimpleRecursions(Formula& formula);
 
+  static std::vector<std::string> getDefinitions(
+      const Formula& formula,
+      const Expression::Type type = Expression::Type::FUNCTION,
+      bool sortByDependencies = false);
+
+  static std::multimap<std::string, std::string> getDependencies(
+      const Formula& formula,
+      const Expression::Type type = Expression::Type::FUNCTION,
+      bool transitive = false, bool ignoreSelf = false);
+
+  static bool isRecursive(const Formula& formula, const std::string& funcName,
+                          Expression::Type type = Expression::Type::FUNCTION);
+
   static void convertInitialTermsToIf(
       Formula& formula, int64_t offset = 0,
       Expression::Type type = Expression::Type::FUNCTION);

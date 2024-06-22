@@ -24,18 +24,10 @@ class Formula {
 
   bool contains(const Expression& search) const;
 
-  std::vector<std::string> getDefinitions(
-      Expression::Type type = Expression::Type::FUNCTION,
-      bool sortByDependencies = false) const;
-
-  std::multimap<std::string, std::string> getDependencies(
-      Expression::Type type = Expression::Type::FUNCTION,
-      bool transitive = false, bool ignoreSelf = false) const;
-
-  bool isRecursive(const std::string& funcName,
-                   Expression::Type type = Expression::Type::FUNCTION) const;
-
   void replaceAll(const Expression& from, const Expression& to);
+
+  void replaceInside(const Expression& from, const Expression& to,
+                     const Expression::Type type);
 
   void replaceName(const std::string& from, const std::string& to);
 

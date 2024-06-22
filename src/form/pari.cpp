@@ -20,7 +20,7 @@ bool convertExprToPari(Expression& expr, const Formula& f, bool as_vector) {
       return false;
     }
   }
-  auto functions = f.getDefinitions(Expression::Type::FUNCTION);
+  auto functions = FormulaUtil::getDefinitions(f, Expression::Type::FUNCTION);
   if (expr.type == Expression::Type::FUNCTION && as_vector &&
       std::find(functions.begin(), functions.end(), expr.name) !=
           functions.end()) {
@@ -31,7 +31,7 @@ bool convertExprToPari(Expression& expr, const Formula& f, bool as_vector) {
 
 void countFuncs(const Formula& f, const Expression& e,
                 std::map<Expression, size_t>& count) {
-  auto functions = f.getDefinitions(Expression::Type::FUNCTION);
+  auto functions = FormulaUtil::getDefinitions(f, Expression::Type::FUNCTION);
   if (e.type == Expression::Type::FUNCTION &&
       std::find(functions.begin(), functions.end(), e.name) !=
           functions.end()) {
@@ -99,7 +99,8 @@ bool PariFormula::convert(const Formula& formula, bool as_vector,
 std::string PariFormula::toString() const {
   if (as_vector) {
     std::stringstream buf;
-    auto sorted = main_formula.getDefinitions(Expression::Type::VECTOR, true);
+    auto sorted = FormulaUtil::getDefinitions(main_formula,
+                                              Expression::Type::VECTOR, true);
     for (size_t i = 0; i < sorted.size(); i++) {
       const auto& f = sorted.at(i);
       auto key = ExpressionUtil::newFunction(f);
@@ -118,7 +119,8 @@ std::string PariFormula::toString() const {
 void PariFormula::printEvalCode(int64_t numTerms, std::ostream& out) const {
   if (as_vector) {
     // declare vectors
-    auto functions = main_formula.getDefinitions(Expression::Type::VECTOR);
+    auto functions =
+        FormulaUtil::getDefinitions(main_formula, Expression::Type::VECTOR);
     for (const auto& f : functions) {
       out << f << " = vector(" << numTerms << ")" << std::endl;
     }
