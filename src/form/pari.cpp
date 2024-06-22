@@ -86,11 +86,11 @@ bool PariFormula::convert(const Formula& formula, bool as_vector,
     pari_formula.main_formula.entries[left] = right;
   }
   if (as_vector) {
-    FormulaUtil::convertInitialTermsToIf(pari_formula.main_formula, 1,
+    FormulaUtil::convertInitialTermsToIf(pari_formula.main_formula,
                                          Expression::Type::VECTOR);
   } else {
     addLocalVars(pari_formula.main_formula);
-    FormulaUtil::convertInitialTermsToIf(pari_formula.main_formula, 0,
+    FormulaUtil::convertInitialTermsToIf(pari_formula.main_formula,
                                          Expression::Type::FUNCTION);
   }
   return true;
@@ -108,7 +108,14 @@ std::string PariFormula::toString() const {
       if (i > 0) {
         buf << "; ";
       }
-      buf << f << "[n] = " << main_formula.entries.at(key).toString();
+      auto expr = main_formula.entries.at(key);
+      expr.replaceInside(ExpressionUtil::newParameter(),
+                         Expression(Expression::Type::SUM, "",
+                                    {ExpressionUtil::newParameter(),
+                                     ExpressionUtil::newConstant(1)}),
+                         Expression::Type::VECTOR);
+      ExpressionUtil::normalize(expr);
+      buf << f << "[n+1] = " << expr.toString();
     }
     return buf.str();
   } else {
@@ -128,12 +135,12 @@ void PariFormula::printEvalCode(int64_t numTerms, std::ostream& out) const {
     // main function
     out << toString() << std::endl;
   }
-  const int64_t start = as_vector ? 1 : 0;
-  const int64_t end = numTerms + start - 1;
+  const int64_t start = 0;
+  const int64_t end = numTerms - 1;
   out << "for(n=" << start << "," << end << ",";
   if (as_vector) {
     out << toString() << "; ";
-    out << "print(a[n])";
+    out << "print(a[n+1])";
   } else {
     out << "print(a(n))";
   }

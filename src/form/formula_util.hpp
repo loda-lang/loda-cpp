@@ -24,6 +24,6 @@ class FormulaUtil {
                           Expression::Type type = Expression::Type::FUNCTION);
 
   static void convertInitialTermsToIf(
-      Formula& formula, int64_t offset = 0,
-      Expression::Type type = Expression::Type::FUNCTION);
+      Formula& formula,
+      const Expression::Type type = Expression::Type::FUNCTION);
 };

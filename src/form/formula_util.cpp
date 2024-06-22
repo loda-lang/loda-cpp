@@ -288,8 +288,8 @@ bool FormulaUtil::isRecursive(const Formula& formula,
   return false;
 }
 
-void FormulaUtil::convertInitialTermsToIf(Formula& formula, int64_t offset,
-                                          Expression::Type type) {
+void FormulaUtil::convertInitialTermsToIf(Formula& formula,
+                                          const Expression::Type type) {
   auto it = formula.entries.begin();
   while (it != formula.entries.end()) {
     auto left = it->first;
@@ -299,7 +299,6 @@ void FormulaUtil::convertInitialTermsToIf(Formula& formula, int64_t offset,
     if (ExpressionUtil::isInitialTerm(left) &&
         general_it != formula.entries.end()) {
       auto index_expr = left.children.front();
-      index_expr.value += Number(offset);
       general_it->second =
           Expression(Expression::Type::IF, "",
                      {index_expr, it->second, general_it->second});
