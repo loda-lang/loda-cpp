@@ -48,6 +48,7 @@ void Test::all() {
   // fast tests
   sequence();
   memory();
+  operationMetadata();
   programUtil();
   semantics();
   config();
@@ -396,6 +397,27 @@ void checkEnclosingLoop(const Program& p, int64_t begin, int64_t end,
             std::to_string(loop.second) +
             "; expected: " + std::to_string(begin) + "-" + std::to_string(end),
         true);
+  }
+}
+
+void Test::operationMetadata() {
+  Log::get().info("Testing operation metadata");
+  std::set<std::string> names;
+  std::set<char> short_names;
+  for (auto type : Operation::Types) {
+    auto& meta = Operation::Metadata::get(type);
+    if (type != meta.type) {
+      Log::get().error("Unexpected type: " + meta.name, true);
+    }
+    if (names.count(meta.name)) {
+      Log::get().error("Duplicate name: " + meta.name, true);
+    }
+    if (short_names.count(meta.short_name)) {
+      Log::get().error(
+          "Duplicate short name: " + std::string(1, meta.short_name), true);
+    }
+    names.insert(meta.name);
+    short_names.insert(meta.short_name);
   }
 }
 
