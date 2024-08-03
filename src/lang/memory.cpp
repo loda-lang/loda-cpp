@@ -49,6 +49,8 @@ void Memory::clear(int64_t start, int64_t length) {
   int64_t end = start + length;
   if (start > end) {
     std::swap(start, end);
+    start++;
+    end++;
   }
   for (int64_t i = 0; i < MEMORY_CACHE_SIZE; i++) {
     if (i >= start && i < end) {
