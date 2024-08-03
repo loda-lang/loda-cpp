@@ -46,27 +46,23 @@ void Memory::clear() {
 }
 
 void Memory::clear(int64_t start, int64_t length) {
-  if (length <= 0) {
-    return;
+  int64_t end = start + length;  // exclusive
+  if (start > end) {
+    std::swap(start, end);
+    start++;
+    end++;
   }
-  auto end = start + length;
-  if (length < MEMORY_CACHE_SIZE) {
-    for (int64_t i = start; i < end; i++) {
-      set(i, Number::ZERO);
+  for (int64_t i = 0; i < MEMORY_CACHE_SIZE; i++) {
+    if (i >= start && i < end) {
+      cache[i] = Number::ZERO;
     }
-  } else {
-    for (int64_t i = 0; i < (int64_t)MEMORY_CACHE_SIZE; i++) {
-      if (i >= start && i < end) {
-        cache[i] = Number::ZERO;
-      }
-    }
-    auto i = full.begin();
-    while (i != full.end()) {
-      if (i->first >= start && i->first < end) {
-        i = full.erase(i);
-      } else {
-        i++;
-      }
+  }
+  auto i = full.begin();
+  while (i != full.end()) {
+    if (i->first >= start && i->first < end) {
+      i = full.erase(i);
+    } else {
+      i++;
     }
   }
 }

@@ -92,10 +92,9 @@ bool Extender::delta_one(Program &p, const bool sum) {
   }
   prefix.push_back(Operation::Type::LPB, Operand::Type::DIRECT,
                    loop_counter_cell, Operand::Type::CONSTANT, 1);
-  for (int64_t cell = Program::INPUT_CELL; cell <= largest_used; cell++) {
-    prefix.push_back(Operation::Type::MOV, Operand::Type::DIRECT, cell,
-                     Operand::Type::CONSTANT, 0);
-  }
+  prefix.push_back(Operation::Type::CLR, Operand::Type::DIRECT,
+                   Program::INPUT_CELL, Operand::Type::CONSTANT,
+                   largest_used + 1);
   prefix.push_back(Operation::Type::SUB, Operand::Type::DIRECT,
                    loop_counter_cell, Operand::Type::CONSTANT, 1);
   prefix.push_back(Operation::Type::MOV, Operand::Type::DIRECT,
