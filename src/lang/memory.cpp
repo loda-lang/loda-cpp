@@ -46,7 +46,7 @@ void Memory::clear() {
 }
 
 void Memory::clear(int64_t start, int64_t length) {
-  int64_t end = start + length;
+  int64_t end = start + length;  // exclusive
   if (start > end) {
     std::swap(start, end);
     start++;
