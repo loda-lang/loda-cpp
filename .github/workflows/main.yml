@@ -28,7 +28,7 @@ jobs:
       - name: Test
         run: ./loda test
   build-macos:
-    runs-on: macos-11
+    runs-on: macos-13
     steps:
       - uses: actions/checkout@v2
       - name: Build
