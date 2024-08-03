@@ -4,7 +4,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Features
 
-* Add `clr`,`neq` operations
+* Add operations: `clr`,`neq`
 
 ### Enhancements
 
