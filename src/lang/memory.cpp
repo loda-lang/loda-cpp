@@ -46,10 +46,10 @@ void Memory::clear() {
 }
 
 void Memory::clear(int64_t start, int64_t length) {
-  if (length <= 0) {
-    return;
+  int64_t end = start + length;
+  if (start > end) {
+    std::swap(start, end);
   }
-  auto end = start + length;
   if (length < MEMORY_CACHE_SIZE) {
     for (int64_t i = start; i < end; i++) {
       set(i, Number::ZERO);
