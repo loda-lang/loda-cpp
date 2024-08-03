@@ -169,7 +169,7 @@ bool Minimizer::replaceClr(Program& p) const {
         op.target.type == Operand::Type::DIRECT &&
         op.source.type == Operand::Type::CONSTANT) {
       const int64_t length = op.source.value.asInt();
-      if (length <= 0) {
+      if (length == 0) {
         p.ops.erase(p.ops.begin() + i);
         replaced = true;
       } else if (length <= 100) {  // magic number

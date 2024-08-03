@@ -501,7 +501,8 @@ bool Optimizer::canChangeVariableOrder(const Program &p) const {
     return ProgramUtil::hasIndirectOperand(op) ||
            ProgramUtil::isNonTrivialLoopBegin(op) ||
            (op.type == Operation::Type::CLR &&
-            (op.source.type != Operand::Type::CONSTANT || op.source.value != 1))
+            (op.source.type != Operand::Type::CONSTANT ||
+             op.source.value != Number::ONE));
   }));
 }
 

@@ -44,12 +44,13 @@ bool ProgramUtil::isNop(const Operation &op) {
                                         op.type == Operation::Type::MAX)) {
     return true;
   } else if (op.source.type == Operand::Type::CONSTANT &&
-             op.source.value == 0 &&
+             op.source.value == Number::ZERO &&
              (op.type == Operation::Type::ADD ||
-              op.type == Operation::Type::SUB)) {
+              op.type == Operation::Type::SUB ||
+              op.type == Operation::Type::CLR)) {
     return true;
   } else if (op.source.type == Operand::Type::CONSTANT &&
-             op.source.value == 1 &&
+             op.source.value == Number::ONE &&
              ((op.type == Operation::Type::MUL ||
                op.type == Operation::Type::DIV ||
                op.type == Operation::Type::DIF ||

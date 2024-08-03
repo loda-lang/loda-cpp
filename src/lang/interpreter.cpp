@@ -206,9 +206,7 @@ size_t Interpreter::run(const Program& p, Memory& mem) {
       case Operation::Type::CLR: {
         length = get(op.source, mem).asInt();
         start = get(op.target, mem, true).asInt();
-        if (length > 0) {
-          mem.clear(start, length);
-        }
+        mem.clear(start, length);
         break;
       }
       case Operation::Type::DBG: {
