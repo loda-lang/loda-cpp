@@ -2,10 +2,13 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Features
+
+* Add `clr` operation
+
 ### Enhancements
 
 * Simplify generated formulas
-* Re-add `clr`-operation
 
 ## v24.1.7
 
