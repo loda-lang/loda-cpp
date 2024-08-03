@@ -16,17 +16,17 @@ jobs:
         run: cd src && make -f Makefile.linux-x86.mk
       - name: Test
         run: ./loda test
-#  build-linux-arm64:
-#    runs-on:
-#      - self-hosted
-#      - Linux
-#      - ARM64
-#    steps:
-#      - uses: actions/checkout@v2
-#      - name: Build
-#        run: cd src && make -f Makefile.linux-arm64.mk
-#      - name: Test
-#        run: ./loda test
+  build-linux-arm64:
+    runs-on:
+      - self-hosted
+      - Linux
+      - ARM64
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        run: cd src && make -f Makefile.linux-arm64.mk
+      - name: Test
+        run: ./loda test
   build-macos:
     runs-on: macos-11
     steps:
