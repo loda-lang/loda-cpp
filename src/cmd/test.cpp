@@ -48,6 +48,7 @@ void Test::all() {
   // fast tests
   sequence();
   memory();
+  operationMetadata();
   programUtil();
   semantics();
   config();
@@ -399,6 +400,27 @@ void checkEnclosingLoop(const Program& p, int64_t begin, int64_t end,
   }
 }
 
+void Test::operationMetadata() {
+  Log::get().info("Testing operation metadata");
+  std::set<std::string> names;
+  std::set<char> short_names;
+  for (auto type : Operation::Types) {
+    auto& meta = Operation::Metadata::get(type);
+    if (type != meta.type) {
+      Log::get().error("Unexpected type: " + meta.name, true);
+    }
+    if (names.count(meta.name)) {
+      Log::get().error("Duplicate name: " + meta.name, true);
+    }
+    if (short_names.count(meta.short_name)) {
+      Log::get().error(
+          "Duplicate short name: " + std::string(1, meta.short_name), true);
+    }
+    names.insert(meta.name);
+    short_names.insert(meta.short_name);
+  }
+}
+
 void Test::programUtil() {
   Log::get().info("Testing program util");
   Parser parser;
@@ -417,13 +439,13 @@ void Test::programUtil() {
     Log::get().error("Unexpected contant loop in primes_var_loop.asm", true);
   }
   auto p = parser.parse(OeisSequence(1041).getProgramPath());
-  checkEnclosingLoop(p, 7, 14, 12);
-  checkEnclosingLoop(p, 7, 14, 7);
-  checkEnclosingLoop(p, 7, 14, 14);
-  checkEnclosingLoop(p, 5, 18, 5);
-  checkEnclosingLoop(p, 5, 18, 6);
-  checkEnclosingLoop(p, 5, 18, 15);
-  checkEnclosingLoop(p, 5, 18, 18);
+  checkEnclosingLoop(p, 7, 13, 12);
+  checkEnclosingLoop(p, 7, 13, 7);
+  checkEnclosingLoop(p, 7, 13, 13);
+  checkEnclosingLoop(p, 5, 17, 5);
+  checkEnclosingLoop(p, 5, 17, 6);
+  checkEnclosingLoop(p, 5, 17, 15);
+  checkEnclosingLoop(p, 5, 17, 17);
   checkEnclosingLoop(p, -1, -1, 4);
   checkEnclosingLoop(p, -1, -1, 19);
   std::string com_in =
@@ -448,7 +470,7 @@ void Test::programUtil() {
   }
   p = parser.parse(OeisSequence(45).getProgramPath());
   auto h = ProgramUtil::hash(p);
-  size_t expected_hash = 12279585564253127838ULL;
+  size_t expected_hash = 12279585564253153356ULL;
   if (h != expected_hash) {
     Log::get().error("Unexpected program hash: " + std::to_string(h), true);
   }

@@ -164,6 +164,13 @@ Number Semantics::equ(const Number& a, const Number& b) {
   return (a == b) ? 1 : 0;
 }
 
+Number Semantics::neq(const Number& a, const Number& b) {
+  if (a == Number::INF || b == Number::INF) {
+    return Number::INF;
+  }
+  return (a != b) ? 1 : 0;
+}
+
 Number Semantics::min(const Number& a, const Number& b) {
   if (a == Number::INF || b == Number::INF) {
     return Number::INF;

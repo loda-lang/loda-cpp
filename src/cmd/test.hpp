@@ -23,6 +23,8 @@ class Test {
 
   void memory();
 
+  void operationMetadata();
+
   void programUtil();
 
   void iterator(size_t tests);

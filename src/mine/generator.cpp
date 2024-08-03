@@ -264,6 +264,7 @@ void Generator::ensureMeaningfulLoops(Program &p) {
       case Operation::Type::GCD:
       case Operation::Type::BIN:
       case Operation::Type::EQU:
+      case Operation::Type::NEQ:
         num_ops++;
         if (p.ops[i].target == mem) {
           can_descent = true;

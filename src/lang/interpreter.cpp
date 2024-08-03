@@ -72,6 +72,9 @@ Number Interpreter::calc(const Operation::Type type, const Number& target,
     case Operation::Type::EQU: {
       return Semantics::equ(target, source);
     }
+    case Operation::Type::NEQ: {
+      return Semantics::neq(target, source);
+    }
     case Operation::Type::MIN: {
       return Semantics::min(target, source);
     }
