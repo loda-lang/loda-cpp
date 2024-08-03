@@ -42,7 +42,7 @@ const Operation::Metadata& Operation::Metadata::get(Type t) {
   static Operation::Metadata equ{
       Operation::Type::EQU, "equ", 'f', 2, true, true, true};
   static Operation::Metadata neq{
-      Operation::Type::EQU, "neq", 'f', 2, true, true, true};
+      Operation::Type::EQU, "neq", 'g', 2, true, true, true};
   static Operation::Metadata min{
       Operation::Type::MIN, "min", 'v', 2, true, true, true};
   static Operation::Metadata max{
