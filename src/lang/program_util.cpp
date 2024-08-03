@@ -100,7 +100,8 @@ bool ProgramUtil::isArithmetic(Operation::Type t) {
 bool ProgramUtil::isCommutative(Operation::Type t) {
   return (t == Operation::Type::ADD || t == Operation::Type::MUL ||
           t == Operation::Type::MIN || t == Operation::Type::MAX ||
-          t == Operation::Type::GCD || t == Operation::Type::EQU);
+          t == Operation::Type::GCD || t == Operation::Type::EQU ||
+          t == Operation::Type::NEQ);
 }
 
 bool ProgramUtil::isCommutative(const Program &p, int64_t cell) {

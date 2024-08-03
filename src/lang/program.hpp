@@ -45,6 +45,7 @@ class Operation {
     GCD,
     BIN,
     EQU,
+    NEQ,
     MIN,
     MAX,
     LPB,
@@ -54,7 +55,7 @@ class Operation {
     DBG,
   };
 
-  static const std::array<Type, 20> Types;
+  static const std::array<Type, 21> Types;
 
   class Metadata {
    public:

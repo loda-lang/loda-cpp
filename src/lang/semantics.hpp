@@ -26,6 +26,8 @@ class Semantics {
 
   static Number equ(const Number& a, const Number& b);
 
+  static Number neq(const Number& a, const Number& b);
+
   static Number min(const Number& a, const Number& b);
 
   static Number max(const Number& a, const Number& b);
