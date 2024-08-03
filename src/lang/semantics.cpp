@@ -157,7 +157,7 @@ Number Semantics::bin(const Number& nn, const Number& kk) {
   return mul(sign, r);
 }
 
-Number Semantics::cmp(const Number& a, const Number& b) {
+Number Semantics::equ(const Number& a, const Number& b) {
   if (a == Number::INF || b == Number::INF) {
     return Number::INF;
   }

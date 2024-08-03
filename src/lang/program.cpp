@@ -9,7 +9,7 @@ const std::array<Operation::Type, 20> Operation::Types = {
     Operation::Type::SUB, Operation::Type::TRN, Operation::Type::MUL,
     Operation::Type::DIV, Operation::Type::DIF, Operation::Type::MOD,
     Operation::Type::POW, Operation::Type::GCD, Operation::Type::BIN,
-    Operation::Type::CMP, Operation::Type::MIN, Operation::Type::MAX,
+    Operation::Type::EQU, Operation::Type::MIN, Operation::Type::MAX,
     Operation::Type::LPB, Operation::Type::LPE, Operation::Type::CLR,
     Operation::Type::SEQ, Operation::Type::DBG,
 };
@@ -39,8 +39,8 @@ const Operation::Metadata& Operation::Metadata::get(Type t) {
       Operation::Type::GCD, "gcd", 'g', 2, true, true, true};
   static Operation::Metadata bin{
       Operation::Type::BIN, "bin", 'b', 2, true, true, true};
-  static Operation::Metadata cmp{
-      Operation::Type::CMP, "cmp", 'f', 2, true, true, true};
+  static Operation::Metadata equ{
+      Operation::Type::EQU, "equ", 'f', 2, true, true, true};
   static Operation::Metadata min{
       Operation::Type::MIN, "min", 'v', 2, true, true, true};
   static Operation::Metadata max{
@@ -80,8 +80,8 @@ const Operation::Metadata& Operation::Metadata::get(Type t) {
       return gcd;
     case Operation::Type::BIN:
       return bin;
-    case Operation::Type::CMP:
-      return cmp;
+    case Operation::Type::EQU:
+      return equ;
     case Operation::Type::MIN:
       return min;
     case Operation::Type::MAX:
@@ -106,6 +106,9 @@ const Operation::Metadata& Operation::Metadata::get(const std::string& name) {
     if (m.name == name) {
       return m;
     }
+  }
+  if (name == "cmp") {  // backwards compatibility
+    return get(Operation::Type::EQU);
   }
   throw std::runtime_error("invalid operation: " + name);
 }

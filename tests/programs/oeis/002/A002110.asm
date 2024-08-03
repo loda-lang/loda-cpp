@@ -11,16 +11,16 @@ lpb $0 ;  Loop from n to 1, to find the n-th primorial, we start from the "zerot
     add $2,1 ;  First increment the prime past previous
     mov $4,$1 ;  And make temp. copy of it
     gcd $4,$2 ;  Take the greatest common divisor with the primorial constructed so far
-    cmp $4,1 ;  $4 is now 1 if $2 was coprime to all previous primes, thus a new prime
-    cmp $4,0 ;  ... and now $4 is zero if a new prime was found, otherwise 1
+    equ $4,1 ;  $4 is now 1 if $2 was coprime to all previous primes, thus a new prime
+    equ $4,0 ;  ... and now $4 is zero if a new prime was found, otherwise 1
     sub $3,$4 ;  Thus we will fall out from loop if a new prime was found.
   lpe
   add $2,1 ;  Has to increment again, because the results of the last iteration of the inner loop were lost (is there a better way to do this?)
   ;  The following four instructions are just a kludge so that we could obtain that term A002110(15) without throwing an overflow:
   ;  Now commented out for program cleanliness, and for the eventual migration to bignum-implementation of LODA.
   ; mov $3,$0
-  ; cmp $3,0
-  ; cmp $3,0
+  ; equ $3,0
+  ; equ $3,0
   ; mul $2,$3 ;; namely, if the $0 had come to zero, then this would force to multiply by zero instead, to avoid an overflow
   mul $1,$2 ;  Update the primorial
   sub $0,1 ;  and decrement the main loop counter.

@@ -69,8 +69,8 @@ Number Interpreter::calc(const Operation::Type type, const Number& target,
     case Operation::Type::BIN: {
       return Semantics::bin(target, source);
     }
-    case Operation::Type::CMP: {
-      return Semantics::cmp(target, source);
+    case Operation::Type::EQU: {
+      return Semantics::equ(target, source);
     }
     case Operation::Type::MIN: {
       return Semantics::min(target, source);
