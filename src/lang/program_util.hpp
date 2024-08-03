@@ -36,6 +36,8 @@ class ProgramUtil {
 
   static bool isNonTrivialLoopBegin(const Operation &op);
 
+  static bool isNonTrivialClear(const Operation &op);
+
   static bool hasIndirectOperand(const Operation &op);
 
   static bool hasIndirectOperand(const Program &p);

@@ -144,6 +144,13 @@ bool ProgramUtil::isNonTrivialLoopBegin(const Operation &op) {
            op.source.value != Number::ONE));
 }
 
+bool ProgramUtil::isNonTrivialClear(const Operation &op) {
+  return (
+      op.type == Operation::Type::CLR &&
+      (op.source.type != Operand::Type::CONSTANT ||
+       (Number::ONE < op.source.value || op.source.value < Number::MINUS_ONE)));
+}
+
 bool ProgramUtil::hasIndirectOperand(const Operation &op) {
   const auto num_ops = Operation::Metadata::get(op.type).num_operands;
   return (num_ops > 0 && op.target.type == Operand::Type::INDIRECT) ||
