@@ -60,7 +60,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
   build-macos:
     needs: create-release
-    runs-on: macos-11
+    runs-on: macos-13
     steps:
       - uses: actions/checkout@v2
       - name: Build
