@@ -149,7 +149,7 @@ void Generator::fixSingularities(Program &p) {
       p.ops.insert(p.ops.begin() + i,
                    Operation(Operation::Type::MOV, tmp, divisor));
       p.ops.insert(p.ops.begin() + i + 1,
-                   Operation(Operation::Type::CMP, tmp,
+                   Operation(Operation::Type::EQU, tmp,
                              Operand(Operand::Type::CONSTANT, 0)));
       p.ops.insert(p.ops.begin() + i + 2,
                    Operation(Operation::Type::ADD, divisor, tmp));
@@ -263,7 +263,7 @@ void Generator::ensureMeaningfulLoops(Program &p) {
       case Operation::Type::MOD:
       case Operation::Type::GCD:
       case Operation::Type::BIN:
-      case Operation::Type::CMP:
+      case Operation::Type::EQU:
         num_ops++;
         if (p.ops[i].target == mem) {
           can_descent = true;

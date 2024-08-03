@@ -118,7 +118,7 @@ bool Extender::delta_one(Program &p, const bool sum) {
   } else {
     p.push_back(Operation::Type::MOV, Operand::Type::DIRECT, tmp_counter_cell,
                 Operand::Type::DIRECT, loop_counter_cell);
-    p.push_back(Operation::Type::CMP, Operand::Type::DIRECT, tmp_counter_cell,
+    p.push_back(Operation::Type::EQU, Operand::Type::DIRECT, tmp_counter_cell,
                 Operand::Type::CONSTANT, 1);
     p.push_back(Operation::Type::MUL, Operand::Type::DIRECT, tmp_counter_cell,
                 Operand::Type::DIRECT, Program::OUTPUT_CELL);

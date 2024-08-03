@@ -44,7 +44,7 @@ class Operation {
     POW,
     GCD,
     BIN,
-    CMP,
+    EQU,
     MIN,
     MAX,
     LPB,

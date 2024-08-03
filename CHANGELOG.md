@@ -8,6 +8,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Enhancements
 
+* Rename `cmp` operation to `equ`
 * Simplify generated formulas
 
 ## v24.1.7

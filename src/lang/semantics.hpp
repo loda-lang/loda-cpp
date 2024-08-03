@@ -24,7 +24,7 @@ class Semantics {
 
   static Number bin(const Number& n, const Number& k);
 
-  static Number cmp(const Number& a, const Number& b);
+  static Number equ(const Number& a, const Number& b);
 
   static Number min(const Number& a, const Number& b);
 
