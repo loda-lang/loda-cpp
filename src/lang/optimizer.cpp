@@ -215,7 +215,8 @@ bool Optimizer::mergeOps(Program &p) const {
       if (!do_merge && o2.type == Operation::Type::MOV &&
           o2.source.type == Operand::Type::CONSTANT) {
         // first operation writing target?
-        if (Operation::Metadata::get(o1.type).is_writing_target) {
+        if (Operation::Metadata::get(o1.type).is_writing_target &&
+            o1.type != Operation::Type::CLR) {
           // second mov overwrites first operation
           o1 = o2;
           do_merge = true;
@@ -332,6 +333,7 @@ bool Optimizer::simplifyOperations(Program &p) const {
 
       case Operation::Type::LPB:
       case Operation::Type::LPE:
+      case Operation::Type::CLR:
       case Operation::Type::SEQ:
         can_simplify = false;
         break;
@@ -497,7 +499,9 @@ bool Optimizer::fixSandwich(Program &p) const {
 bool Optimizer::canChangeVariableOrder(const Program &p) const {
   return (std::none_of(p.ops.begin(), p.ops.end(), [&](const Operation &op) {
     return ProgramUtil::hasIndirectOperand(op) ||
-           ProgramUtil::isNonTrivialLoopBegin(op);
+           ProgramUtil::isNonTrivialLoopBegin(op) ||
+           (op.type == Operation::Type::CLR &&
+            (op.source.type != Operand::Type::CONSTANT || op.source.value != 1))
   }));
 }
 
@@ -595,7 +599,8 @@ bool Optimizer::doPartialEval(Program &p, size_t op_index,
       // remove values from cells that are modified in the loop
       auto loop = ProgramUtil::getEnclosingLoop(p, op_index);
       for (int64_t i = loop.first + 1; i < loop.second; i++) {
-        if (ProgramUtil::hasIndirectOperand(p.ops[i])) {
+        if (p.ops[i].type == Operation::Type::CLR ||
+            ProgramUtil::hasIndirectOperand(p.ops[i])) {
           values.clear();
           break;
         }
@@ -604,6 +609,10 @@ bool Optimizer::doPartialEval(Program &p, size_t op_index,
           removeReferences(p.ops[i].target, values);
         }
       }
+      return false;
+    }
+    case Operation::Type::CLR: {
+      values.clear();
       return false;
     }
 
