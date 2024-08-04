@@ -28,6 +28,10 @@ class Semantics {
 
   static Number neq(const Number& a, const Number& b);
 
+  static Number leq(const Number& a, const Number& b);
+
+  static Number geq(const Number& a, const Number& b);
+
   static Number min(const Number& a, const Number& b);
 
   static Number max(const Number& a, const Number& b);

@@ -108,12 +108,14 @@ bool Iterator::inc(Operation& op) {
       op.type = Operation::Type::LPB;
       return true;
 
+    case Operation::Type::LEQ:  // excluded
+    case Operation::Type::GEQ:  // excluded
+    case Operation::Type::MIN:  // excluded
+    case Operation::Type::MAX:  // excluded
     case Operation::Type::NOP:  // excluded
     case Operation::Type::DBG:  // excluded
     case Operation::Type::CLR:  // excluded
     case Operation::Type::SEQ:  // excluded
-    case Operation::Type::MIN:  // excluded
-    case Operation::Type::MAX:  // excluded
 
     case Operation::Type::LPB:
       op.type = Operation::Type::LPE;

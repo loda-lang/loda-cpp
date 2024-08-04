@@ -409,11 +409,19 @@ bool Optimizer::simplifyOperations(Program &p) const {
             op.source = Operand(Operand::Type::CONSTANT, 2);
             simplified = true;
           }
-          // equ $n,$n / bin $n,$n => mov $n,1
+          // equ $n,$n / leq $n,$n / geq $n,$n / bin $n,$n => mov $n,1
           else if (op.type == Operation::Type::EQU ||
+                   op.type == Operation::Type::LEQ ||
+                   op.type == Operation::Type::GEQ ||
                    op.type == Operation::Type::BIN) {
             op.type = Operation::Type::MOV;
             op.source = Operand(Operand::Type::CONSTANT, 1);
+            simplified = true;
+          }
+          // neq $n,$n => mov $n,0
+          else if (op.type == Operation::Type::NEQ) {
+            op.type = Operation::Type::MOV;
+            op.source = Operand(Operand::Type::CONSTANT, 0);
             simplified = true;
           }
         }

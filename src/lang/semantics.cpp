@@ -171,6 +171,20 @@ Number Semantics::neq(const Number& a, const Number& b) {
   return (a != b) ? 1 : 0;
 }
 
+Number Semantics::leq(const Number& a, const Number& b) {
+  if (a == Number::INF || b == Number::INF) {
+    return Number::INF;
+  }
+  return (a < b || a == b) ? 1 : 0;
+}
+
+Number Semantics::geq(const Number& a, const Number& b) {
+  if (a == Number::INF || b == Number::INF) {
+    return Number::INF;
+  }
+  return (b < a || a == b) ? 1 : 0;
+}
+
 Number Semantics::min(const Number& a, const Number& b) {
   if (a == Number::INF || b == Number::INF) {
     return Number::INF;
