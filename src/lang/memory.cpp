@@ -1,11 +1,31 @@
 #include "lang/memory.hpp"
 
+#include <map>
 #include <stdexcept>
 #include <string>
 
 #include "lang/number.hpp"
 
 Memory::Memory() { cache.fill(0); }
+
+Memory::Memory(const std::string &s) {
+  cache.fill(0);
+  size_t pos = 0;
+  while (pos < s.size()) {
+    size_t next = s.find(',', pos);
+    if (next == std::string::npos) {
+      next = s.size();
+    }
+    size_t colon = s.find(':', pos);
+    if (colon == std::string::npos || colon >= next) {
+      throw std::runtime_error("Invalid memory string: " + s);
+    }
+    int64_t index = std::stoll(s.substr(pos, colon - pos));
+    Number value = Number(s.substr(colon + 1, next - colon - 1));
+    set(index, value);
+    pos = next + 1;
+  }
+}
 
 void throwNegativeIndexError(int64_t index) {
   throw std::runtime_error("Memory access with negative index: " +
@@ -146,28 +166,22 @@ bool Memory::operator==(const Memory &m) const {
 bool Memory::operator!=(const Memory &m) const { return !(*this == m); }
 
 std::ostream &operator<<(std::ostream &out, const Memory &m) {
-  // find last non-zero entry
-  int64_t max_index = -1;
+  std::map<int64_t, Number> sorted;
   for (size_t i = 0; i < MEMORY_CACHE_SIZE; i++) {
     if (m.cache[i] != Number::ZERO) {
-      max_index = std::max<int64_t>(max_index, i);
+      sorted[i] = m.cache[i];
     }
   }
   for (const auto &it : m.full) {
     if (it.second != Number::ZERO) {
-      max_index = std::max(max_index, it.first);
+      sorted[it.first] = it.second;
     }
   }
-  // print all entries from zero to max_index
-  out << "[";
-  for (int64_t i = 0; i <= max_index; ++i) {
-    if (i != 0) out << ",";
-    if (i >= 100) {  // limit output
-      out << "...";
-      break;
+  for (const auto &it : sorted) {
+    out << it.first << ":" << it.second;
+    if (it != *sorted.rbegin()) {
+      out << ",";
     }
-    out << m.get(i);
   }
-  out << "]";
   return out;
 }

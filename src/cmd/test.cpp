@@ -341,6 +341,19 @@ void checkMemory(const Memory& mem, int64_t index, const Number& value) {
   }
 }
 
+void checkMemoryString(const std::string& in, const std::string& out) {
+  Memory mem(in);
+  std::stringstream buf;
+  buf << mem;
+  auto buf_str = buf.str();
+  if (buf_str != out) {
+    Log::get().error(
+        "Unexpected memory string: " + buf_str + " - expected: " + out, true);
+  }
+}
+
+void checkMemoryString(const std::string& s) { checkMemoryString(s, s); }
+
 void Test::memory() {
   Log::get().info("Testing memory");
 
@@ -363,6 +376,15 @@ void Test::memory() {
         "unexpected behavior for memory access with negative index");
   }
   checkMemory(base, size + 1, 0);
+
+  // parsing and printing
+  checkMemoryString("1:1,2:2,6:6,7:7,10:10");
+  checkMemoryString("1:9,14:8,37:3");
+  checkMemoryString("187:-4131239,3114:98234234234225211,374441:-98234");
+  checkMemoryString("37:31,14:8,17:-3,1:9,21:458",
+                    "1:9,14:8,17:-3,21:458,37:31");
+  checkMemoryString("98:-17,54:99,73:-313,14:-72",
+                    "14:-72,54:99,73:-313,98:-17");
 
   // fragments
   int64_t max_frag_length = 50;

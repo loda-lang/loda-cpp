@@ -2,6 +2,7 @@
 
 #include <array>
 #include <iostream>
+#include <string>
 #include <unordered_map>
 
 #include "lang/number.hpp"
@@ -11,6 +12,8 @@
 class Memory {
  public:
   Memory();
+
+  Memory(const std::string &s);
 
   Number get(int64_t index) const;
 
