@@ -94,7 +94,8 @@ size_t ProgramUtil::numOps(const Program &p, Operand::Type type) {
 bool ProgramUtil::isArithmetic(Operation::Type t) {
   return (t != Operation::Type::NOP && t != Operation::Type::DBG &&
           t != Operation::Type::LPB && t != Operation::Type::LPE &&
-          t != Operation::Type::CLR && t != Operation::Type::SEQ);
+          t != Operation::Type::CLR && t != Operation::Type::SRT &&
+          t != Operation::Type::SEQ);
 }
 
 bool ProgramUtil::isCommutative(Operation::Type t) {

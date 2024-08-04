@@ -87,6 +87,53 @@ void Memory::clear(int64_t start, int64_t length) {
   }
 }
 
+void Memory::sort(int64_t start, int64_t length) {
+  // check for negative range
+  int64_t end = start + length;  // exclusive
+  if (start > end) {
+    std::swap(start, end);
+    start++;
+    end++;
+  }
+  // collect positive and negative values
+  std::vector<Number> positive, negative;
+  for (int64_t i = 0; i < MEMORY_CACHE_SIZE; i++) {
+    if (i >= start && i < end) {
+      const auto &value = cache[i];
+      if (Number::ZERO < value) {
+        positive.push_back(value);
+      } else if (value < Number::ZERO) {
+        negative.push_back(value);
+      }
+    }
+  }
+  auto it = full.begin();
+  while (it != full.end()) {
+    if (it->first >= start && it->first < end) {
+      const auto &value = it->second;
+      if (Number::ZERO < value) {
+        positive.push_back(value);
+      } else if (value < Number::ZERO) {
+        negative.push_back(value);
+      }
+      it = full.erase(it);
+    } else {
+      it++;
+    }
+  }
+  // sort positive and negative values
+  std::sort(positive.begin(), positive.end());
+  std::sort(negative.begin(), negative.end());
+  // write sorted values back
+  size_t i;
+  for (i = 0; i < positive.size(); i++) {
+    set(end - positive.size() + i, positive[i]);
+  }
+  for (i = 0; i < negative.size(); i++) {
+    set(start + i, negative[i]);
+  }
+}
+
 Memory Memory::fragment(int64_t start, int64_t length) const {
   Memory frag;
   if (length <= 0) {

@@ -354,6 +354,20 @@ void checkMemoryString(const std::string& in, const std::string& out) {
 
 void checkMemoryString(const std::string& s) { checkMemoryString(s, s); }
 
+void checkMemorySort(const std::string& in, int64_t start, int64_t length,
+                     const std::string& out) {
+  Memory mem(in);
+  mem.sort(start, length);
+  std::stringstream buf;
+  buf << mem;
+  auto buf_str = buf.str();
+  if (buf_str != out) {
+    Log::get().error("Unexpected memory string after sorting: " + buf_str +
+                         " - expected: " + out,
+                     true);
+  }
+}
+
 void Test::memory() {
   Log::get().info("Testing memory");
 
@@ -400,6 +414,10 @@ void Test::memory() {
       checkMemory(frag, length + 1, 0);
     }
   }
+
+  // sorting
+  checkMemorySort("1:9,2:7,3:8", 1, 3, "1:7,2:8,3:9");
+  checkMemorySort("1:9,2:7,3:8", 0, 3, "1:7,2:9,3:8");
 }
 
 void checkEnclosingLoop(const Program& p, int64_t begin, int64_t end,
