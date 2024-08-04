@@ -4,14 +4,15 @@
 
 #include "lang/number.hpp"
 
-const std::array<Operation::Type, 21> Operation::Types = {
+const std::array<Operation::Type, 23> Operation::Types = {
     Operation::Type::NOP, Operation::Type::MOV, Operation::Type::ADD,
     Operation::Type::SUB, Operation::Type::TRN, Operation::Type::MUL,
     Operation::Type::DIV, Operation::Type::DIF, Operation::Type::MOD,
     Operation::Type::POW, Operation::Type::GCD, Operation::Type::BIN,
-    Operation::Type::EQU, Operation::Type::NEQ, Operation::Type::MIN,
-    Operation::Type::MAX, Operation::Type::LPB, Operation::Type::LPE,
-    Operation::Type::CLR, Operation::Type::SEQ, Operation::Type::DBG,
+    Operation::Type::EQU, Operation::Type::NEQ, Operation::Type::LEQ,
+    Operation::Type::GEQ, Operation::Type::MIN, Operation::Type::MAX,
+    Operation::Type::LPB, Operation::Type::LPE, Operation::Type::CLR,
+    Operation::Type::SEQ, Operation::Type::DBG,
 };
 
 const Operation::Metadata& Operation::Metadata::get(Type t) {
@@ -43,6 +44,10 @@ const Operation::Metadata& Operation::Metadata::get(Type t) {
       Operation::Type::EQU, "equ", 'f', 2, true, true, true};
   static Operation::Metadata neq{
       Operation::Type::NEQ, "neq", 'h', 2, true, true, true};
+  static Operation::Metadata leq{
+      Operation::Type::LEQ, "leq", 'j', 2, true, true, true};
+  static Operation::Metadata geq{
+      Operation::Type::GEQ, "geq", 'k', 2, true, true, true};
   static Operation::Metadata min{
       Operation::Type::MIN, "min", 'v', 2, true, true, true};
   static Operation::Metadata max{
@@ -86,6 +91,10 @@ const Operation::Metadata& Operation::Metadata::get(Type t) {
       return equ;
     case Operation::Type::NEQ:
       return neq;
+    case Operation::Type::LEQ:
+      return leq;
+    case Operation::Type::GEQ:
+      return geq;
     case Operation::Type::MIN:
       return min;
     case Operation::Type::MAX:
