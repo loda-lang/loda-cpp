@@ -154,6 +154,11 @@ bool ProgramUtil::isNonTrivialClear(const Operation &op) {
        (Number::ONE < op.source.value || op.source.value < Number::MINUS_ONE)));
 }
 
+bool ProgramUtil::isWritingRange(Operation::Type t) {
+  // clear and sort operations write memory ranges
+  return (t == Operation::Type::CLR || t == Operation::Type::SRT);
+}
+
 bool ProgramUtil::hasIndirectOperand(const Operation &op) {
   const auto num_ops = Operation::Metadata::get(op.type).num_operands;
   return (num_ops > 0 && op.target.type == Operand::Type::INDIRECT) ||
@@ -202,8 +207,8 @@ bool ProgramUtil::getUsedMemoryCells(const Program &p,
         op.target.type == Operand::Type::INDIRECT) {
       return false;
     }
-    if (op.type == Operation::Type::LPB || op.type == Operation::Type::CLR ||
-        op.type == Operation::Type::SRT) {
+    if (op.type == Operation::Type::LPB ||
+        ProgramUtil::isWritingRange(op.type)) {
       if (op.source.type == Operand::Type::CONSTANT) {
         region_length = op.source.value.asInt();
       } else {

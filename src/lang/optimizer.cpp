@@ -216,8 +216,7 @@ bool Optimizer::mergeOps(Program &p) const {
           o2.source.type == Operand::Type::CONSTANT) {
         // first operation writing target?
         if (Operation::Metadata::get(o1.type).is_writing_target &&
-            o1.type != Operation::Type::CLR &&
-            o1.type != Operation::Type::SRT) {
+            !ProgramUtil::isWritingRange(o1.type)) {
           // second mov overwrites first operation
           o1 = o2;
           do_merge = true;
@@ -608,8 +607,7 @@ bool Optimizer::doPartialEval(Program &p, size_t op_index,
       // remove values from cells that are modified in the loop
       auto loop = ProgramUtil::getEnclosingLoop(p, op_index);
       for (int64_t i = loop.first + 1; i < loop.second; i++) {
-        if (p.ops[i].type == Operation::Type::CLR ||
-            p.ops[i].type == Operation::Type::SRT ||
+        if (ProgramUtil::isWritingRange(p.ops[i].type) ||
             ProgramUtil::hasIndirectOperand(p.ops[i])) {
           values.clear();
           break;

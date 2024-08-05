@@ -165,8 +165,8 @@ std::pair<Operation, double> GeneratorV1::generateOperation() {
   // use constants distribution from stats
   if (op.source.type == Operand::Type::CONSTANT) {
     op.source.value = constants.at(constants_dist(Random::get().gen));
-    if (op.type == Operation::Type::LPB || op.type == Operation::Type::CLR ||
-        op.type == Operation::Type::SRT) {
+    if (op.type == Operation::Type::LPB ||
+        ProgramUtil::isWritingRange(op.type)) {
       op.source.value = Semantics::mod(
           Semantics::max(op.source.value, Number::ONE), 10);  // magic number
     }

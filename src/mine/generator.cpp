@@ -2,6 +2,7 @@
 
 #include <algorithm>
 
+#include "lang/program_util.hpp"
 #include "lang/semantics.hpp"
 #include "mine/config.hpp"
 #include "mine/generator_v1.hpp"
@@ -193,8 +194,8 @@ void Generator::ensureSourceNotOverwritten(Program &p) {
     if (op.target.type == Operand::Type::DIRECT &&
         op.target.value == Program::INPUT_CELL) {
       resets = false;
-      if (op.type == Operation::Type::MOV || op.type == Operation::Type::CLR ||
-          op.type == Operation::Type::SRT) {
+      if (op.type == Operation::Type::MOV ||
+          ProgramUtil::isWritingRange(op.type)) {
         resets = true;
       } else if ((op.source == op.target) &&
                  (op.type == Operation::Type::SUB ||

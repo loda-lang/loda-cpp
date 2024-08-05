@@ -527,14 +527,15 @@ void validateIterated(const Program& p) {
     throw std::runtime_error("Iterator generated indirect memory access");
   }
   for (size_t i = 0; i < p.ops.size(); i++) {
-    auto& op = p.ops[i];
+    const auto& op = p.ops[i];
     if (op.type == Operation::Type::LPB &&
         (op.source.type != Operand::Type::CONSTANT ||
          !(Number::ZERO < op.source.value))) {
       throw std::runtime_error("Iterator generated wrong loop");
     }
-    if (op.type == Operation::Type::CLR || op.type == Operation::Type::SEQ ||
-        op.type == Operation::Type::MIN || op.type == Operation::Type::MAX) {
+    if (ProgramUtil::isWritingRange(op.type) ||
+        op.type == Operation::Type::SEQ || op.type == Operation::Type::MIN ||
+        op.type == Operation::Type::MAX) {
       throw std::runtime_error("Unsupported operation type");
     }
   }
