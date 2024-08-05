@@ -47,7 +47,8 @@ bool ProgramUtil::isNop(const Operation &op) {
              op.source.value == Number::ZERO &&
              (op.type == Operation::Type::ADD ||
               op.type == Operation::Type::SUB ||
-              op.type == Operation::Type::CLR)) {
+              op.type == Operation::Type::CLR ||
+              op.type == Operation::Type::SRT)) {
     return true;
   } else if (op.source.type == Operand::Type::CONSTANT &&
              op.source.value == Number::ONE &&
@@ -201,7 +202,8 @@ bool ProgramUtil::getUsedMemoryCells(const Program &p,
         op.target.type == Operand::Type::INDIRECT) {
       return false;
     }
-    if (op.type == Operation::Type::LPB || op.type == Operation::Type::CLR) {
+    if (op.type == Operation::Type::LPB || op.type == Operation::Type::CLR ||
+        op.type == Operation::Type::SRT) {
       if (op.source.type == Operand::Type::CONSTANT) {
         region_length = op.source.value.asInt();
       } else {
