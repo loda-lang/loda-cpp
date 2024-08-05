@@ -87,6 +87,22 @@ void Memory::clear(int64_t start, int64_t length) {
   }
 }
 
+inline bool collectPositiveAndNegativeValues(int64_t index, const Number &value,
+                                             int64_t start, int64_t end,
+                                             std::vector<Number> &positive,
+                                             std::vector<Number> &negative) {
+  if (index >= start && index < end) {
+    if (Number::ZERO < value) {
+      positive.push_back(value);
+    } else if (value < Number::ZERO) {
+      negative.push_back(value);
+    }
+    return true;
+  } else {
+    return false;
+  }
+}
+
 void Memory::sort(int64_t start, int64_t length) {
   // check for negative range
   int64_t end = start + length;  // exclusive
@@ -98,24 +114,15 @@ void Memory::sort(int64_t start, int64_t length) {
   // collect positive and negative values
   std::vector<Number> positive, negative;
   for (int64_t i = 0; i < MEMORY_CACHE_SIZE; i++) {
-    if (i >= start && i < end) {
-      const auto &value = cache[i];
-      if (Number::ZERO < value) {
-        positive.push_back(value);
-      } else if (value < Number::ZERO) {
-        negative.push_back(value);
-      }
+    if (collectPositiveAndNegativeValues(i, cache[i], start, end, positive,
+                                         negative)) {
+      cache[i] = Number::ZERO;
     }
   }
   auto it = full.begin();
   while (it != full.end()) {
-    if (it->first >= start && it->first < end) {
-      const auto &value = it->second;
-      if (Number::ZERO < value) {
-        positive.push_back(value);
-      } else if (value < Number::ZERO) {
-        negative.push_back(value);
-      }
+    if (collectPositiveAndNegativeValues(it->first, it->second, start, end,
+                                         positive, negative)) {
       it = full.erase(it);
     } else {
       it++;
