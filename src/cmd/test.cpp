@@ -416,8 +416,30 @@ void Test::memory() {
   }
 
   // sorting
+  checkMemorySort("7:1", 7, 0, "7:1");
+  checkMemorySort("7:1", 7, 1, "7:1");
+  checkMemorySort("7:1", 6, 2, "7:1");
+  checkMemorySort("7:1", 5, 3, "7:1");
+  checkMemorySort("7:1", 7, 2, "8:1");
+  checkMemorySort("7:1", 7, 3, "9:1");
+
+  checkMemorySort("7:-1", 7, 0, "7:-1");
+  checkMemorySort("7:-1", 7, 1, "7:-1");
+  checkMemorySort("7:-1", 6, 2, "6:-1");
+  checkMemorySort("7:-1", 7, 2, "7:-1");
+
+  checkMemorySort("5:2,6:1", 5, 0, "5:2,6:1");
+  checkMemorySort("5:2,6:1", 5, 1, "5:2,6:1");
+  checkMemorySort("5:2,6:1", 5, 2, "5:1,6:2");
+  checkMemorySort("5:2,6:1", 5, 3, "6:1,7:2");
+  checkMemorySort("5:2,6:1", 4, 3, "5:1,6:2");
+  checkMemorySort("5:2,6:1", 4, 2, "5:2,6:1");
+
   checkMemorySort("1:9,2:7,3:8", 1, 3, "1:7,2:8,3:9");
   checkMemorySort("1:9,2:7,3:8", 0, 3, "1:7,2:9,3:8");
+  checkMemorySort("1:9,2:7,3:8", 2, 3, "1:9,3:7,4:8");
+
+  // TODO: test reverse sort
 }
 
 void checkEnclosingLoop(const Program& p, int64_t begin, int64_t end,
