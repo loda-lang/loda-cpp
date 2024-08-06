@@ -12,7 +12,7 @@ const std::array<Operation::Type, 24> Operation::Types = {
     Operation::Type::EQU, Operation::Type::NEQ, Operation::Type::LEQ,
     Operation::Type::GEQ, Operation::Type::MIN, Operation::Type::MAX,
     Operation::Type::LPB, Operation::Type::LPE, Operation::Type::CLR,
-    Operation::Type::SRT, Operation::Type::SEQ, Operation::Type::DBG,
+    Operation::Type::SOR, Operation::Type::SEQ, Operation::Type::DBG,
 };
 
 const Operation::Metadata& Operation::Metadata::get(Type t) {
@@ -58,8 +58,8 @@ const Operation::Metadata& Operation::Metadata::get(Type t) {
       Operation::Type::LPE, "lpe", 'e', 0, true, false, false};
   static Operation::Metadata clr{
       Operation::Type::CLR, "clr", 'r', 2, true, false, true};
-  static Operation::Metadata srt{
-      Operation::Type::SRT, "srt", 'y', 2, true, true, true};
+  static Operation::Metadata sor{
+      Operation::Type::SOR, "sor", 'y', 2, true, true, true};
   static Operation::Metadata seq{
       Operation::Type::SEQ, "seq", 'q', 2, true, true, true};
   static Operation::Metadata dbg{
@@ -107,8 +107,8 @@ const Operation::Metadata& Operation::Metadata::get(Type t) {
       return lpe;
     case Operation::Type::CLR:
       return clr;
-    case Operation::Type::SRT:
-      return srt;
+    case Operation::Type::SOR:
+      return sor;
     case Operation::Type::SEQ:
       return seq;
     case Operation::Type::DBG:

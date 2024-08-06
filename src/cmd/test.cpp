@@ -428,6 +428,8 @@ void Test::memory() {
   checkMemorySort("7:-1", 6, 2, "6:-1");
   checkMemorySort("7:-1", 7, 2, "7:-1");
 
+  checkMemorySort("7:1", 7, -2, "6:1");
+
   checkMemorySort("5:2,6:1", 5, 0, "5:2,6:1");
   checkMemorySort("5:2,6:1", 5, 1, "5:2,6:1");
   checkMemorySort("5:2,6:1", 5, 2, "5:1,6:2");

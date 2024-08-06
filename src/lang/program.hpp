@@ -53,7 +53,7 @@ class Operation {
     LPB,
     LPE,
     CLR,
-    SRT,
+    SOR,
     SEQ,
     DBG,
   };

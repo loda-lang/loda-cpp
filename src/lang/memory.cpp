@@ -106,10 +106,12 @@ inline bool collectPositiveAndNegativeValues(int64_t index, const Number &value,
 void Memory::sort(int64_t start, int64_t length) {
   // check for negative range
   int64_t end = start + length;  // exclusive
+  bool reverse = false;
   if (start > end) {
     std::swap(start, end);
     start++;
     end++;
+    reverse = true;
   }
   // collect positive and negative values
   std::vector<Number> positive, negative;
@@ -133,11 +135,20 @@ void Memory::sort(int64_t start, int64_t length) {
   std::sort(negative.begin(), negative.end());
   // write sorted values back
   size_t i;
-  for (i = 0; i < positive.size(); i++) {
-    set(end - positive.size() + i, positive[i]);
-  }
-  for (i = 0; i < negative.size(); i++) {
-    set(start + i, negative[i]);
+  if (reverse) {
+    for (i = 0; i < positive.size(); i++) {
+      set(start + i, positive[i]);
+    }
+    for (i = 0; i < negative.size(); i++) {
+      set(end - negative.size() + i, negative[i]);
+    }
+  } else {
+    for (i = 0; i < positive.size(); i++) {
+      set(end - positive.size() + i, positive[i]);
+    }
+    for (i = 0; i < negative.size(); i++) {
+      set(start + i, negative[i]);
+    }
   }
 }
 

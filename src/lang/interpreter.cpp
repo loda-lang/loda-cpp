@@ -92,7 +92,7 @@ Number Interpreter::calc(const Operation::Type type, const Number& target,
     case Operation::Type::LPB:
     case Operation::Type::LPE:
     case Operation::Type::CLR:
-    case Operation::Type::SRT:
+    case Operation::Type::SOR:
     case Operation::Type::SEQ:
       Log::get().error(
           "non-arithmetic operation: " + Operation::Metadata::get(type).name,
@@ -219,7 +219,7 @@ size_t Interpreter::run(const Program& p, Memory& mem) {
         mem.clear(start, length);
         break;
       }
-      case Operation::Type::SRT: {
+      case Operation::Type::SOR: {
         length = get(op.source, mem).asInt();
         start = get(op.target, mem, true).asInt();
         mem.sort(start, length);
