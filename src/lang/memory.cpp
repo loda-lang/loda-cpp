@@ -137,10 +137,10 @@ void Memory::sort(int64_t start, int64_t length) {
   size_t i;
   if (reverse) {
     for (i = 0; i < positive.size(); i++) {
-      set(start + i, positive[i]);
+      set(start + positive.size() - i - 1, positive[i]);
     }
     for (i = 0; i < negative.size(); i++) {
-      set(end - negative.size() + i, negative[i]);
+      set(end - i - 1, negative[i]);
     }
   } else {
     for (i = 0; i < positive.size(); i++) {
