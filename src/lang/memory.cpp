@@ -87,6 +87,71 @@ void Memory::clear(int64_t start, int64_t length) {
   }
 }
 
+inline bool collectPositiveAndNegativeValues(int64_t index, const Number &value,
+                                             int64_t start, int64_t end,
+                                             std::vector<Number> &positive,
+                                             std::vector<Number> &negative) {
+  if (index >= start && index < end) {
+    if (Number::ZERO < value) {
+      positive.push_back(value);
+    } else if (value < Number::ZERO) {
+      negative.push_back(value);
+    }
+    return true;
+  } else {
+    return false;
+  }
+}
+
+void Memory::sort(int64_t start, int64_t length) {
+  // check for negative range
+  int64_t end = start + length;  // exclusive
+  bool reverse = false;
+  if (start > end) {
+    std::swap(start, end);
+    start++;
+    end++;
+    reverse = true;
+  }
+  // collect positive and negative values
+  std::vector<Number> positive, negative;
+  for (int64_t i = 0; i < MEMORY_CACHE_SIZE; i++) {
+    if (collectPositiveAndNegativeValues(i, cache[i], start, end, positive,
+                                         negative)) {
+      cache[i] = Number::ZERO;
+    }
+  }
+  auto it = full.begin();
+  while (it != full.end()) {
+    if (collectPositiveAndNegativeValues(it->first, it->second, start, end,
+                                         positive, negative)) {
+      it = full.erase(it);
+    } else {
+      it++;
+    }
+  }
+  // sort positive and negative values
+  std::sort(positive.begin(), positive.end());
+  std::sort(negative.begin(), negative.end());
+  // write sorted values back
+  size_t i;
+  if (reverse) {
+    for (i = 0; i < positive.size(); i++) {
+      set(start + positive.size() - i - 1, positive[i]);
+    }
+    for (i = 0; i < negative.size(); i++) {
+      set(end - i - 1, negative[i]);
+    }
+  } else {
+    for (i = 0; i < positive.size(); i++) {
+      set(end - positive.size() + i, positive[i]);
+    }
+    for (i = 0; i < negative.size(); i++) {
+      set(start + i, negative[i]);
+    }
+  }
+}
+
 Memory Memory::fragment(int64_t start, int64_t length) const {
   Memory frag;
   if (length <= 0) {

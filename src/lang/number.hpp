@@ -38,6 +38,8 @@ class Number {
 
   bool operator<(const Number& n) const;
 
+  bool operator>(const Number& n) const;
+
   Number& negate();
 
   Number& operator+=(const Number& n);

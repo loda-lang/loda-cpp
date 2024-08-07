@@ -53,11 +53,12 @@ class Operation {
     LPB,
     LPE,
     CLR,
+    SOR,
     SEQ,
     DBG,
   };
 
-  static const std::array<Type, 23> Types;
+  static const std::array<Type, 24> Types;
 
   class Metadata {
    public:

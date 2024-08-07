@@ -47,7 +47,8 @@ bool ProgramUtil::isNop(const Operation &op) {
              op.source.value == Number::ZERO &&
              (op.type == Operation::Type::ADD ||
               op.type == Operation::Type::SUB ||
-              op.type == Operation::Type::CLR)) {
+              op.type == Operation::Type::CLR ||
+              op.type == Operation::Type::SOR)) {
     return true;
   } else if (op.source.type == Operand::Type::CONSTANT &&
              op.source.value == Number::ONE &&
@@ -94,7 +95,8 @@ size_t ProgramUtil::numOps(const Program &p, Operand::Type type) {
 bool ProgramUtil::isArithmetic(Operation::Type t) {
   return (t != Operation::Type::NOP && t != Operation::Type::DBG &&
           t != Operation::Type::LPB && t != Operation::Type::LPE &&
-          t != Operation::Type::CLR && t != Operation::Type::SEQ);
+          t != Operation::Type::CLR && t != Operation::Type::SOR &&
+          t != Operation::Type::SEQ);
 }
 
 bool ProgramUtil::isCommutative(Operation::Type t) {
@@ -152,6 +154,11 @@ bool ProgramUtil::isNonTrivialClear(const Operation &op) {
        (Number::ONE < op.source.value || op.source.value < Number::MINUS_ONE)));
 }
 
+bool ProgramUtil::isWritingRange(Operation::Type t) {
+  // clear and sort operations write memory ranges
+  return (t == Operation::Type::CLR || t == Operation::Type::SOR);
+}
+
 bool ProgramUtil::hasIndirectOperand(const Operation &op) {
   const auto num_ops = Operation::Metadata::get(op.type).num_operands;
   return (num_ops > 0 && op.target.type == Operand::Type::INDIRECT) ||
@@ -200,7 +207,8 @@ bool ProgramUtil::getUsedMemoryCells(const Program &p,
         op.target.type == Operand::Type::INDIRECT) {
       return false;
     }
-    if (op.type == Operation::Type::LPB || op.type == Operation::Type::CLR) {
+    if (op.type == Operation::Type::LPB ||
+        ProgramUtil::isWritingRange(op.type)) {
       if (op.source.type == Operand::Type::CONSTANT) {
         region_length = op.source.value.asInt();
       } else {

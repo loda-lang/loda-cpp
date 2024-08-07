@@ -115,6 +115,8 @@ bool Number::operator<(const Number& n) const {
   }
 }
 
+bool Number::operator>(const Number& n) const { return (n < *this); }
+
 Number& Number::negate() {
   if (big == INF_PTR) {
     return *this;
