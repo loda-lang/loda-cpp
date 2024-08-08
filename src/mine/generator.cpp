@@ -195,7 +195,7 @@ void Generator::ensureSourceNotOverwritten(Program &p) {
         op.target.value == Program::INPUT_CELL) {
       resets = false;
       if (op.type == Operation::Type::MOV ||
-          ProgramUtil::isWritingRange(op.type)) {
+          ProgramUtil::isWritingRegion(op.type)) {
         resets = true;
       } else if ((op.source == op.target) &&
                  (op.type == Operation::Type::SUB ||

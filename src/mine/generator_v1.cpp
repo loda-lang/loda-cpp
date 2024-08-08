@@ -23,59 +23,21 @@ GeneratorV1::GeneratorV1(const Config &config, const Stats &stats)
     : Generator(config, stats), current_template(0), mutator(stats) {
   // the post processing adds operations, so we reduce the target length here
   num_operations = std::max<int64_t>(config.length / 2, 1);
-
-  std::string operation_types =
-      "^";  // negate operation types (exclusion pattern)
-  if (!config.loops) {
-    operation_types += "l";
-  }
-  if (!config.calls) {
-    operation_types += "q";
-  }
   std::string operand_types = config.indirect_access ? "cdi" : "cd";
 
-  // parse operation types
-  bool negate = false;
-  for (char c : operation_types) {
-    c = tolower(c);
-    if (c == '^') {
-      negate = true;
-    } else {
-      auto type = Operation::Type::NOP;
-      for (auto &t : Operation::Types) {
-        const auto &m = Operation::Metadata::get(t);
-        if (m.is_public && m.short_name == c) {
-          type = t;
-          break;
-        }
-      }
-      if (type == Operation::Type::NOP) {
-        Log::get().error("Unknown operation type: " + std::string(1, c), true);
-      }
-      if (type != Operation::Type::LPE) {
-        this->operation_types.push_back(type);
-      }
+  // add operation types
+  for (auto t : Operation::Types) {
+    auto &metadata = Operation::Metadata::get(t);
+    if (!metadata.is_public || t == Operation::Type::LPE) {
+      continue;
     }
-  }
-  if (negate) {
-    std::vector<Operation::Type> tmp_types;
-    for (auto t : Operation::Types) {
-      bool found = false;
-      for (auto o : this->operation_types) {
-        if (o == t) {
-          found = true;
-          break;
-        }
-      }
-      if (!found && Operation::Metadata::get(t).is_public &&
-          t != Operation::Type::LPE) {
-        tmp_types.push_back(t);
-      }
+    if (t == Operation::Type::LPB && !config.loops) {
+      continue;
     }
-    this->operation_types = tmp_types;
-  }
-  if (operation_types.empty()) {
-    Log::get().error("No operation types", true);
+    if (t == Operation::Type::SEQ && !config.calls) {
+      continue;
+    }
+    this->operation_types.push_back(t);
   }
 
   std::vector<double> source_type_rates;
@@ -166,7 +128,7 @@ std::pair<Operation, double> GeneratorV1::generateOperation() {
   if (op.source.type == Operand::Type::CONSTANT) {
     op.source.value = constants.at(constants_dist(Random::get().gen));
     if (op.type == Operation::Type::LPB ||
-        ProgramUtil::isWritingRange(op.type)) {
+        ProgramUtil::isWritingRegion(op.type)) {
       op.source.value = Semantics::mod(
           Semantics::max(op.source.value, Number::ONE), 10);  // magic number
     }

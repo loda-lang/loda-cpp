@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <numeric>
 #include <sstream>
 #include <stack>
 
@@ -154,8 +155,8 @@ bool ProgramUtil::isNonTrivialClear(const Operation &op) {
        (Number::ONE < op.source.value || op.source.value < Number::MINUS_ONE)));
 }
 
-bool ProgramUtil::isWritingRange(Operation::Type t) {
-  // clear and sort operations write memory ranges
+bool ProgramUtil::isWritingRegion(Operation::Type t) {
+  // clear and sort operations write memory regions
   return (t == Operation::Type::CLR || t == Operation::Type::SOR);
 }
 
@@ -171,14 +172,23 @@ bool ProgramUtil::hasIndirectOperand(const Program &p) {
   });
 }
 
+bool isIndependentCandidate(const Operation &op) {
+  // must be an arithmetic operation or a sequence, and must not have indirect
+  // operands
+  return (
+      (ProgramUtil::isArithmetic(op.type) || op.type == Operation::Type::SEQ) &&
+      !ProgramUtil::hasIndirectOperand(op));
+}
+
+bool haveOverlappingOperands(const Operation &op1, const Operation &op2) {
+  // source of the second operand is the same as the target of the first operand
+  return (op2.source.type == Operand::Type::DIRECT &&
+          op1.target.type == Operand::Type::DIRECT &&
+          op1.target.value == op2.source.value);
+}
+
 bool ProgramUtil::areIndependent(const Operation &op1, const Operation &op2) {
-  if (!isArithmetic(op1.type) && op1.type != Operation::Type::SEQ) {
-    return false;
-  }
-  if (!isArithmetic(op2.type) && op2.type != Operation::Type::SEQ) {
-    return false;
-  }
-  if (hasIndirectOperand(op1) || hasIndirectOperand(op2)) {
+  if (!isIndependentCandidate(op1) || !isIndependentCandidate(op2)) {
     return false;
   }
   if (op1.target.value == op2.target.value &&
@@ -186,12 +196,7 @@ bool ProgramUtil::areIndependent(const Operation &op1, const Operation &op2) {
         !(op1.type == op2.type && isCommutative(op1.type)))) {
     return false;
   }
-  if (op1.source.type == Operand::Type::DIRECT &&
-      op2.target.value == op1.source.value) {
-    return false;
-  }
-  if (op2.source.type == Operand::Type::DIRECT &&
-      op1.target.value == op2.source.value) {
+  if (haveOverlappingOperands(op1, op2) || haveOverlappingOperands(op2, op1)) {
     return false;
   }
   return true;
@@ -208,7 +213,7 @@ bool ProgramUtil::getUsedMemoryCells(const Program &p,
       return false;
     }
     if (op.type == Operation::Type::LPB ||
-        ProgramUtil::isWritingRange(op.type)) {
+        ProgramUtil::isWritingRegion(op.type)) {
       if (op.source.type == Operand::Type::CONSTANT) {
         region_length = op.source.value.asInt();
       } else {
@@ -229,10 +234,8 @@ bool ProgramUtil::getUsedMemoryCells(const Program &p,
       }
     }
   }
-  largest_used = used_cells.empty() ? 0 : *used_cells.begin();
-  for (int64_t used : used_cells) {
-    largest_used = std::max(largest_used, used);
-  }
+  const auto max = [](int64_t a, int64_t b) { return std::max(a, b); };
+  largest_used = std::accumulate(used_cells.begin(), used_cells.end(), 0, max);
   return true;
 }
 

@@ -17,53 +17,53 @@ const std::array<Operation::Type, 24> Operation::Types = {
 
 const Operation::Metadata& Operation::Metadata::get(Type t) {
   static Operation::Metadata nop{
-      Operation::Type::NOP, "nop", 'n', 0, false, false, false};
+      Operation::Type::NOP, "nop", 0, false, false, false};
   static Operation::Metadata mov{
-      Operation::Type::MOV, "mov", 'm', 2, true, false, true};
+      Operation::Type::MOV, "mov", 2, true, false, true};
   static Operation::Metadata add{
-      Operation::Type::ADD, "add", 'a', 2, true, true, true};
+      Operation::Type::ADD, "add", 2, true, true, true};
   static Operation::Metadata sub{
-      Operation::Type::SUB, "sub", 's', 2, true, true, true};
+      Operation::Type::SUB, "sub", 2, true, true, true};
   static Operation::Metadata trn{
-      Operation::Type::TRN, "trn", 't', 2, true, true, true};
+      Operation::Type::TRN, "trn", 2, true, true, true};
   static Operation::Metadata mul{
-      Operation::Type::MUL, "mul", 'u', 2, true, true, true};
+      Operation::Type::MUL, "mul", 2, true, true, true};
   static Operation::Metadata div{
-      Operation::Type::DIV, "div", 'd', 2, true, true, true};
+      Operation::Type::DIV, "div", 2, true, true, true};
   static Operation::Metadata dif{
-      Operation::Type::DIF, "dif", 'i', 2, true, true, true};
+      Operation::Type::DIF, "dif", 2, true, true, true};
   static Operation::Metadata mod{
-      Operation::Type::MOD, "mod", 'o', 2, true, true, true};
+      Operation::Type::MOD, "mod", 2, true, true, true};
   static Operation::Metadata pow{
-      Operation::Type::POW, "pow", 'p', 2, true, true, true};
+      Operation::Type::POW, "pow", 2, true, true, true};
   static Operation::Metadata gcd{
-      Operation::Type::GCD, "gcd", 'g', 2, true, true, true};
+      Operation::Type::GCD, "gcd", 2, true, true, true};
   static Operation::Metadata bin{
-      Operation::Type::BIN, "bin", 'b', 2, true, true, true};
+      Operation::Type::BIN, "bin", 2, true, true, true};
   static Operation::Metadata equ{
-      Operation::Type::EQU, "equ", 'f', 2, true, true, true};
+      Operation::Type::EQU, "equ", 2, true, true, true};
   static Operation::Metadata neq{
-      Operation::Type::NEQ, "neq", 'h', 2, true, true, true};
+      Operation::Type::NEQ, "neq", 2, true, true, true};
   static Operation::Metadata leq{
-      Operation::Type::LEQ, "leq", 'j', 2, true, true, true};
+      Operation::Type::LEQ, "leq", 2, true, true, true};
   static Operation::Metadata geq{
-      Operation::Type::GEQ, "geq", 'k', 2, true, true, true};
+      Operation::Type::GEQ, "geq", 2, true, true, true};
   static Operation::Metadata min{
-      Operation::Type::MIN, "min", 'v', 2, true, true, true};
+      Operation::Type::MIN, "min", 2, true, true, true};
   static Operation::Metadata max{
-      Operation::Type::MAX, "max", 'w', 2, true, true, true};
+      Operation::Type::MAX, "max", 2, true, true, true};
   static Operation::Metadata lpb{
-      Operation::Type::LPB, "lpb", 'l', 2, true, true, false};
+      Operation::Type::LPB, "lpb", 2, true, true, false};
   static Operation::Metadata lpe{
-      Operation::Type::LPE, "lpe", 'e', 0, true, false, false};
+      Operation::Type::LPE, "lpe", 0, true, false, false};
   static Operation::Metadata clr{
-      Operation::Type::CLR, "clr", 'r', 2, true, false, true};
+      Operation::Type::CLR, "clr", 2, true, false, true};
   static Operation::Metadata sor{
-      Operation::Type::SOR, "sor", 'y', 2, true, true, true};
+      Operation::Type::SOR, "sor", 2, true, true, true};
   static Operation::Metadata seq{
-      Operation::Type::SEQ, "seq", 'q', 2, true, true, true};
+      Operation::Type::SEQ, "seq", 2, true, true, true};
   static Operation::Metadata dbg{
-      Operation::Type::DBG, "dbg", 'x', 0, false, false, false};
+      Operation::Type::DBG, "dbg", 0, false, false, false};
   switch (t) {
     case Operation::Type::NOP:
       return nop;

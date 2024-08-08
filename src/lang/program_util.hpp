@@ -38,7 +38,7 @@ class ProgramUtil {
 
   static bool isNonTrivialClear(const Operation &op);
 
-  static bool isWritingRange(Operation::Type t);
+  static bool isWritingRegion(Operation::Type t);
 
   static bool hasIndirectOperand(const Operation &op);
 

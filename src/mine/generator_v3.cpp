@@ -83,7 +83,7 @@ Program GeneratorV3::generateProgram() {
     }
   }
   while (num_loops > 0) {
-    p.ops.push_back(Operation::Type::LPE);
+    p.ops.push_back(Operation(Operation::Type::LPE));
     num_loops--;
   }
   applyPostprocessing(p);

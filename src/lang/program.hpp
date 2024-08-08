@@ -32,30 +32,30 @@ class Operand {
 class Operation {
  public:
   enum class Type {
-    NOP,
-    MOV,
-    ADD,
-    SUB,
-    TRN,
-    MUL,
-    DIV,
-    DIF,
-    MOD,
-    POW,
-    GCD,
-    BIN,
-    EQU,
-    NEQ,
-    LEQ,
-    GEQ,
-    MIN,
-    MAX,
-    LPB,
-    LPE,
-    CLR,
-    SOR,
-    SEQ,
-    DBG,
+    NOP,  // no operation
+    MOV,  // assignment
+    ADD,  // addition
+    SUB,  // subtraction
+    TRN,  // truncated subtraction
+    MUL,  // multiplication
+    DIV,  // division
+    DIF,  // conditional division
+    MOD,  // modulo
+    POW,  // power
+    GCD,  // greatest common divisor
+    BIN,  // binomial coefficient
+    EQU,  // equality
+    NEQ,  // inequality
+    LEQ,  // less or equal
+    GEQ,  // greater or equal
+    MIN,  // minimum
+    MAX,  // maximum
+    LPB,  // loop begin
+    LPE,  // loop end
+    CLR,  // clear
+    SOR,  // sort
+    SEQ,  // sequence
+    DBG,  // debug
   };
 
   static const std::array<Type, 24> Types;
@@ -68,7 +68,6 @@ class Operation {
 
     Type type;
     std::string name;
-    char short_name;
     size_t num_operands;
     bool is_public;
     bool is_reading_target;
@@ -77,7 +76,7 @@ class Operation {
 
   Operation() : Operation(Type::NOP) {}
 
-  Operation(Type y)
+  explicit Operation(Type y)
       : Operation(y, {Operand::Type::DIRECT, 0}, {Operand::Type::CONSTANT, 0}) {
   }
 
