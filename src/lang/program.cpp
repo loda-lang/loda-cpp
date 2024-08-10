@@ -71,8 +71,6 @@ const Operation::Metadata& Operation::Metadata::get(Type t) {
       Operation::Type::SEQ, "seq", 2, true, true, true};
   static Operation::Metadata dbg{
       Operation::Type::DBG, "dbg", 0, false, false, false};
-  static Operation::Metadata __count{
-      Operation::Type::__COUNT, "__count", 0, false, false, false};
   switch (t) {
     case Operation::Type::NOP:
       return nop;
@@ -129,7 +127,7 @@ const Operation::Metadata& Operation::Metadata::get(Type t) {
     case Operation::Type::DBG:
       return dbg;
     case Operation::Type::__COUNT:
-      return __count;
+      throw std::runtime_error("not an operation type");
   }
   return nop;
 }
