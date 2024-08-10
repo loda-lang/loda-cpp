@@ -4,13 +4,14 @@
 
 #include "lang/number.hpp"
 
-const std::array<Operation::Type, 24> Operation::Types = {
+const std::array<Operation::Type, 27> Operation::Types = {
     Operation::Type::NOP, Operation::Type::MOV, Operation::Type::ADD,
     Operation::Type::SUB, Operation::Type::TRN, Operation::Type::MUL,
     Operation::Type::DIV, Operation::Type::DIF, Operation::Type::MOD,
     Operation::Type::POW, Operation::Type::GCD, Operation::Type::BIN,
     Operation::Type::EQU, Operation::Type::NEQ, Operation::Type::LEQ,
     Operation::Type::GEQ, Operation::Type::MIN, Operation::Type::MAX,
+    Operation::Type::BAN, Operation::Type::BOR, Operation::Type::BXO,
     Operation::Type::LPB, Operation::Type::LPE, Operation::Type::CLR,
     Operation::Type::SOR, Operation::Type::SEQ, Operation::Type::DBG,
 };
@@ -70,6 +71,8 @@ const Operation::Metadata& Operation::Metadata::get(Type t) {
       Operation::Type::SEQ, "seq", 2, true, true, true};
   static Operation::Metadata dbg{
       Operation::Type::DBG, "dbg", 0, false, false, false};
+  static Operation::Metadata __count{
+      Operation::Type::__COUNT, "__count", 0, false, false, false};
   switch (t) {
     case Operation::Type::NOP:
       return nop;
@@ -125,6 +128,8 @@ const Operation::Metadata& Operation::Metadata::get(Type t) {
       return seq;
     case Operation::Type::DBG:
       return dbg;
+    case Operation::Type::__COUNT:
+      return __count;
   }
   return nop;
 }

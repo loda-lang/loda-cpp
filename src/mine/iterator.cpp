@@ -108,18 +108,19 @@ bool Iterator::inc(Operation& op) {
       op.type = Operation::Type::LPB;
       return true;
 
-    case Operation::Type::LEQ:  // excluded
-    case Operation::Type::GEQ:  // excluded
-    case Operation::Type::MIN:  // excluded
-    case Operation::Type::MAX:  // excluded
-    case Operation::Type::BAN:  // excluded
-    case Operation::Type::BOR:  // excluded
-    case Operation::Type::BXO:  // excluded
-    case Operation::Type::NOP:  // excluded
-    case Operation::Type::DBG:  // excluded
-    case Operation::Type::CLR:  // excluded
-    case Operation::Type::SOR:  // excluded
-    case Operation::Type::SEQ:  // excluded
+    case Operation::Type::LEQ:      // skipped
+    case Operation::Type::GEQ:      // skipped
+    case Operation::Type::MIN:      // skipped
+    case Operation::Type::MAX:      // skipped
+    case Operation::Type::BAN:      // skipped
+    case Operation::Type::BOR:      // skipped
+    case Operation::Type::BXO:      // skipped
+    case Operation::Type::NOP:      // skipped
+    case Operation::Type::DBG:      // skipped
+    case Operation::Type::CLR:      // skipped
+    case Operation::Type::SOR:      // skipped
+    case Operation::Type::SEQ:      // skipped
+    case Operation::Type::__COUNT:  // skipped
 
     case Operation::Type::LPB:
       op.type = Operation::Type::LPE;
@@ -129,6 +130,15 @@ bool Iterator::inc(Operation& op) {
       return false;
   }
   return false;
+}
+
+bool Iterator::supportsOperationType(Operation::Type t) {
+  return t != Operation::Type::LEQ && t != Operation::Type::GEQ &&
+         t != Operation::Type::MIN && t != Operation::Type::MAX &&
+         t != Operation::Type::BAN && t != Operation::Type::BOR &&
+         t != Operation::Type::BXO && t != Operation::Type::NOP &&
+         t != Operation::Type::DBG && t != Operation::Type::CLR &&
+         t != Operation::Type::SOR && t != Operation::Type::SEQ;
 }
 
 bool Iterator::incWithSkip(Operation& op) {

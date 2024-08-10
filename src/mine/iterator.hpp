@@ -11,6 +11,8 @@ class Iterator {
 
   int64_t getSkipped() const { return skipped; }
 
+  static bool supportsOperationType(Operation::Type t);
+
  private:
   static const Operand CONSTANT_ZERO;
   static const Operand CONSTANT_ONE;
