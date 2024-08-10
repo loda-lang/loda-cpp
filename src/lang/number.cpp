@@ -360,7 +360,6 @@ Number& Number::operator&=(const Number& n) {
     (*big) &= (*n.big);
   } else {
     const int64_t sign = (value < 0 && n.value < 0) ? -1 : 1;
-    // TODO: check for MAX / MIN values in the tests!
     value = sign * (std::abs(value) & std::abs(n.value));
   }
   return *this;
@@ -381,7 +380,6 @@ Number& Number::operator|=(const Number& n) {
     (*big) |= (*n.big);
   } else {
     const int64_t sign = (value < 0 || n.value < 0) ? -1 : 1;
-    // TODO: check for MAX / MIN values in the tests!
     value = sign * (std::abs(value) | std::abs(n.value));
   }
   return *this;
@@ -402,7 +400,6 @@ Number& Number::operator^=(const Number& n) {
     (*big) ^= (*n.big);
   } else {
     const int64_t sign = ((value < 0) == (n.value >= 0)) ? -1 : 1;
-    // TODO: check for MAX / MIN values in the tests!
     value = sign * (std::abs(value) ^ std::abs(n.value));
   }
   return *this;
