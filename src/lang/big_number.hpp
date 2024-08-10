@@ -31,6 +31,12 @@ class BigNumber {
 
   BigNumber& operator%=(const BigNumber& n);
 
+  BigNumber& operator&=(const BigNumber& n);
+
+  BigNumber& operator|=(const BigNumber& n);
+
+  BigNumber& operator^=(const BigNumber& n);
+
   std::size_t hash() const;
 
   std::string toString() const;

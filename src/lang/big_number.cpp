@@ -367,6 +367,42 @@ BigNumber &BigNumber::operator%=(const BigNumber &n) {
   return *this;
 }
 
+BigNumber &BigNumber::operator&=(const BigNumber &n) {
+  if (is_infinite || n.is_infinite) {
+    makeInfinite();
+    return *this;
+  }
+  for (size_t i = 0; i < NUM_WORDS; i++) {
+    words[i] &= n.words[i];
+  }
+  is_negative = is_negative && n.is_negative;
+  return (*this);
+}
+
+BigNumber &BigNumber::operator|=(const BigNumber &n) {
+  if (is_infinite || n.is_infinite) {
+    makeInfinite();
+    return *this;
+  }
+  for (size_t i = 0; i < NUM_WORDS; i++) {
+    words[i] |= n.words[i];
+  }
+  is_negative = is_negative || n.is_negative;
+  return (*this);
+}
+
+BigNumber &BigNumber::operator^=(const BigNumber &n) {
+  if (is_infinite || n.is_infinite) {
+    makeInfinite();
+    return *this;
+  }
+  for (size_t i = 0; i < NUM_WORDS; i++) {
+    words[i] ^= n.words[i];
+  }
+  is_negative = is_negative != n.is_negative;
+  return (*this);
+}
+
 std::size_t BigNumber::hash() const {
   if (is_infinite) {
     return std::numeric_limits<std::size_t>::max();

@@ -515,6 +515,10 @@ void checkEnclosingLoop(const Program& p, int64_t begin, int64_t end,
 
 void Test::operationMetadata() {
   Log::get().info("Testing operation metadata");
+  if (static_cast<size_t>(Operation::Type::__COUNT) !=
+      Operation::Types.size()) {
+    Log::get().error("Unexpected number of operation types", true);
+  }
   std::set<std::string> names;
   for (auto type : Operation::Types) {
     auto& meta = Operation::Metadata::get(type);
@@ -577,7 +581,7 @@ void Test::programUtil() {
   }
   p = parser.parse(OeisSequence(45).getProgramPath());
   auto h = ProgramUtil::hash(p);
-  size_t expected_hash = 12279585564253204392ULL;
+  size_t expected_hash = 12279585564253280946ULL;
   if (h != expected_hash) {
     Log::get().error("Unexpected program hash: " + std::to_string(h), true);
   }
@@ -601,8 +605,7 @@ void validateIterated(const Program& p) {
       throw std::runtime_error("Iterator generated wrong loop");
     }
     if (ProgramUtil::isWritingRegion(op.type) ||
-        op.type == Operation::Type::SEQ || op.type == Operation::Type::MIN ||
-        op.type == Operation::Type::MAX) {
+        !Iterator::supportsOperationType(op.type)) {
       throw std::runtime_error("Unsupported operation type");
     }
   }
@@ -902,7 +905,8 @@ void Test::oeisSeq() {
   checkSeq(s.getTerms(250), 250, 235, 38);
   checkSeq(s.getTerms(2000), 2000, 1240, 100);
   checkSeq(s.getTerms(10000), 10000, 9840, 320);
-  checkSeq(s.getTerms(100000), 10000, 9840, 320);  // only 10000 terms available
+  checkSeq(s.getTerms(100000), 10000, 9840,
+           320);  // only 10000 terms available
   checkSeq(s.getTerms(10000), 10000, 9840,
            320);  // from here on, the b-file should not get re-loaded
   checkSeq(s.getTerms(2000), 2000, 1240, 100);

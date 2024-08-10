@@ -4,13 +4,14 @@
 
 #include "lang/number.hpp"
 
-const std::array<Operation::Type, 24> Operation::Types = {
+const std::array<Operation::Type, 27> Operation::Types = {
     Operation::Type::NOP, Operation::Type::MOV, Operation::Type::ADD,
     Operation::Type::SUB, Operation::Type::TRN, Operation::Type::MUL,
     Operation::Type::DIV, Operation::Type::DIF, Operation::Type::MOD,
     Operation::Type::POW, Operation::Type::GCD, Operation::Type::BIN,
     Operation::Type::EQU, Operation::Type::NEQ, Operation::Type::LEQ,
     Operation::Type::GEQ, Operation::Type::MIN, Operation::Type::MAX,
+    Operation::Type::BAN, Operation::Type::BOR, Operation::Type::BXO,
     Operation::Type::LPB, Operation::Type::LPE, Operation::Type::CLR,
     Operation::Type::SOR, Operation::Type::SEQ, Operation::Type::DBG,
 };
@@ -52,6 +53,12 @@ const Operation::Metadata& Operation::Metadata::get(Type t) {
       Operation::Type::MIN, "min", 2, true, true, true};
   static Operation::Metadata max{
       Operation::Type::MAX, "max", 2, true, true, true};
+  static Operation::Metadata ban{
+      Operation::Type::BAN, "ban", 2, true, true, true};
+  static Operation::Metadata bor{
+      Operation::Type::BOR, "bor", 2, true, true, true};
+  static Operation::Metadata bxo{
+      Operation::Type::BXO, "bxo", 2, true, true, true};
   static Operation::Metadata lpb{
       Operation::Type::LPB, "lpb", 2, true, true, false};
   static Operation::Metadata lpe{
@@ -101,6 +108,12 @@ const Operation::Metadata& Operation::Metadata::get(Type t) {
       return min;
     case Operation::Type::MAX:
       return max;
+    case Operation::Type::BAN:
+      return ban;
+    case Operation::Type::BOR:
+      return bor;
+    case Operation::Type::BXO:
+      return bxo;
     case Operation::Type::LPB:
       return lpb;
     case Operation::Type::LPE:
@@ -113,6 +126,8 @@ const Operation::Metadata& Operation::Metadata::get(Type t) {
       return seq;
     case Operation::Type::DBG:
       return dbg;
+    case Operation::Type::__COUNT:
+      throw std::runtime_error("not an operation type");
   }
   return nop;
 }

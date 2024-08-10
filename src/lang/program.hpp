@@ -32,33 +32,37 @@ class Operand {
 class Operation {
  public:
   enum class Type {
-    NOP,  // no operation
-    MOV,  // assignment
-    ADD,  // addition
-    SUB,  // subtraction
-    TRN,  // truncated subtraction
-    MUL,  // multiplication
-    DIV,  // division
-    DIF,  // conditional division
-    MOD,  // modulo
-    POW,  // power
-    GCD,  // greatest common divisor
-    BIN,  // binomial coefficient
-    EQU,  // equality
-    NEQ,  // inequality
-    LEQ,  // less or equal
-    GEQ,  // greater or equal
-    MIN,  // minimum
-    MAX,  // maximum
-    LPB,  // loop begin
-    LPE,  // loop end
-    CLR,  // clear
-    SOR,  // sort
-    SEQ,  // sequence
-    DBG,  // debug
+    NOP,     // no operation
+    MOV,     // assignment
+    ADD,     // addition
+    SUB,     // subtraction
+    TRN,     // truncated subtraction
+    MUL,     // multiplication
+    DIV,     // division
+    DIF,     // conditional division
+    MOD,     // modulo
+    POW,     // power
+    GCD,     // greatest common divisor
+    BIN,     // binomial coefficient
+    EQU,     // equality
+    NEQ,     // inequality
+    LEQ,     // less or equal
+    GEQ,     // greater or equal
+    MIN,     // minimum
+    MAX,     // maximum
+    BAN,     // bitwise and
+    BOR,     // bitwise or
+    BXO,     // bitwise xor
+    LPB,     // loop begin
+    LPE,     // loop end
+    CLR,     // clear
+    SOR,     // sort
+    SEQ,     // sequence
+    DBG,     // debug
+    __COUNT  // number of operation types
   };
 
-  static const std::array<Type, 24> Types;
+  static const std::array<Type, 27> Types;
 
   class Metadata {
    public:

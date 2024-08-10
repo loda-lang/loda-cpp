@@ -87,6 +87,15 @@ Number Interpreter::calc(const Operation::Type type, const Number& target,
     case Operation::Type::MAX: {
       return Semantics::max(target, source);
     }
+    case Operation::Type::BAN: {
+      return Semantics::ban(target, source);
+    }
+    case Operation::Type::BOR: {
+      return Semantics::bor(target, source);
+    }
+    case Operation::Type::BXO: {
+      return Semantics::bxo(target, source);
+    }
     case Operation::Type::NOP:
     case Operation::Type::DBG:
     case Operation::Type::LPB:
@@ -94,6 +103,7 @@ Number Interpreter::calc(const Operation::Type type, const Number& target,
     case Operation::Type::CLR:
     case Operation::Type::SOR:
     case Operation::Type::SEQ:
+    case Operation::Type::__COUNT:
       Log::get().error(
           "non-arithmetic operation: " + Operation::Metadata::get(type).name,
           true);

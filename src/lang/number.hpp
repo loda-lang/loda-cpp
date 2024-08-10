@@ -52,6 +52,12 @@ class Number {
 
   Number& operator%=(const Number& n);
 
+  Number& operator&=(const Number& n);
+
+  Number& operator|=(const Number& n);
+
+  Number& operator^=(const Number& n);
+
   int64_t asInt() const;
 
   int64_t getNumUsedWords() const;

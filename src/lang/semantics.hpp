@@ -36,6 +36,12 @@ class Semantics {
 
   static Number max(const Number& a, const Number& b);
 
+  static Number ban(const Number& a, const Number& b);
+
+  static Number bor(const Number& a, const Number& b);
+
+  static Number bxo(const Number& a, const Number& b);
+
   static Number abs(const Number& a);
 
   static Number getPowerOf(Number value, const Number& base);

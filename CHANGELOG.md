@@ -4,12 +4,12 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Features
 
-* Add comparison operations: `neq`,`leq`,`geq`,`sor`
+* Add comparison operations: `equ` (formerly `cmp`),`neq`,`leq`,`geq`
+* Add bitwise operations: `ban`, `bor`, `bxo`
 * Add region operations: `clr` (clear), `sor` (sort)
 
 ### Enhancements
 
-* Rename `cmp` operation to `equ`
 * Simplify generated formulas
 
 ## v24.1.7
