@@ -50,6 +50,9 @@ class Operation {
     GEQ,  // greater or equal
     MIN,  // minimum
     MAX,  // maximum
+    BAN,  // bitwise and
+    BOR,  // bitwise or
+    BXO,  // bitwise xor
     LPB,  // loop begin
     LPE,  // loop end
     CLR,  // clear

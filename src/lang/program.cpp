@@ -52,6 +52,12 @@ const Operation::Metadata& Operation::Metadata::get(Type t) {
       Operation::Type::MIN, "min", 2, true, true, true};
   static Operation::Metadata max{
       Operation::Type::MAX, "max", 2, true, true, true};
+  static Operation::Metadata ban{
+      Operation::Type::BAN, "ban", 2, true, true, true};
+  static Operation::Metadata bor{
+      Operation::Type::BOR, "bor", 2, true, true, true};
+  static Operation::Metadata bxo{
+      Operation::Type::BXO, "bxo", 2, true, true, true};
   static Operation::Metadata lpb{
       Operation::Type::LPB, "lpb", 2, true, true, false};
   static Operation::Metadata lpe{
@@ -101,6 +107,12 @@ const Operation::Metadata& Operation::Metadata::get(Type t) {
       return min;
     case Operation::Type::MAX:
       return max;
+    case Operation::Type::BAN:
+      return ban;
+    case Operation::Type::BOR:
+      return bor;
+    case Operation::Type::BXO:
+      return bxo;
     case Operation::Type::LPB:
       return lpb;
     case Operation::Type::LPE:

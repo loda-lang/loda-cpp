@@ -112,6 +112,9 @@ bool Iterator::inc(Operation& op) {
     case Operation::Type::GEQ:  // excluded
     case Operation::Type::MIN:  // excluded
     case Operation::Type::MAX:  // excluded
+    case Operation::Type::BAN:  // excluded
+    case Operation::Type::BOR:  // excluded
+    case Operation::Type::BXO:  // excluded
     case Operation::Type::NOP:  // excluded
     case Operation::Type::DBG:  // excluded
     case Operation::Type::CLR:  // excluded

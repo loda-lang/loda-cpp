@@ -199,6 +199,24 @@ Number Semantics::max(const Number& a, const Number& b) {
   return (a < b) ? b : a;
 }
 
+Number Semantics::ban(const Number& a, const Number& b) {
+  auto r = a;
+  r &= b;
+  return r;
+}
+
+Number Semantics::bor(const Number& a, const Number& b) {
+  auto r = a;
+  r |= b;
+  return r;
+}
+
+Number Semantics::bxo(const Number& a, const Number& b) {
+  auto r = a;
+  r ^= b;
+  return r;
+}
+
 Number Semantics::abs(const Number& a) {
   if (a == Number::INF) {
     return Number::INF;

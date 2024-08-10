@@ -345,6 +345,69 @@ Number& Number::operator%=(const Number& n) {
   return *this;
 }
 
+Number& Number::operator&=(const Number& n) {
+  if (checkInfArgs(n)) {
+    return *this;
+  }
+  // First check if one of the operands is big. If not, perform the operation
+  // on the small numbers. No need to check for INF after the operation, as the
+  // result always fits in a Number. No need to check for USE_BIG_NUMBER, as we
+  // never get a big number if both operands are small.
+  if (big) {
+    (*big) &= (n.big ? (*n.big) : BigNumber(n.value));
+  } else if (n.big) {
+    convertToBig();
+    (*big) &= (*n.big);
+  } else {
+    const int64_t sign = (value < 0 && n.value < 0) ? -1 : 1;
+    // TODO: check for MAX / MIN values in the tests!
+    value = sign * (std::abs(value) & std::abs(n.value));
+  }
+  return *this;
+}
+
+Number& Number::operator|=(const Number& n) {
+  if (checkInfArgs(n)) {
+    return *this;
+  }
+  // First check if one of the operands is big. If not, perform the operation
+  // on the small numbers. No need to check for INF after the operation, as the
+  // result always fits in a Number. No need to check for USE_BIG_NUMBER, as we
+  // never get a big number if both operands are small.
+  if (big) {
+    (*big) |= (n.big ? (*n.big) : BigNumber(n.value));
+  } else if (n.big) {
+    convertToBig();
+    (*big) |= (*n.big);
+  } else {
+    const int64_t sign = (value < 0 || n.value < 0) ? -1 : 1;
+    // TODO: check for MAX / MIN values in the tests!
+    value = sign * (std::abs(value) | std::abs(n.value));
+  }
+  return *this;
+}
+
+Number& Number::operator^=(const Number& n) {
+  if (checkInfArgs(n)) {
+    return *this;
+  }
+  // First check if one of the operands is big. If not, perform the operation
+  // on the small numbers. No need to check for INF after the operation, as the
+  // result always fits in a Number. No need to check for USE_BIG_NUMBER, as we
+  // never get a big number if both operands are small.
+  if (big) {
+    (*big) ^= (n.big ? (*n.big) : BigNumber(n.value));
+  } else if (n.big) {
+    convertToBig();
+    (*big) ^= (*n.big);
+  } else {
+    const int64_t sign = ((value < 0) == (n.value >= 0)) ? -1 : 1;
+    // TODO: check for MAX / MIN values in the tests!
+    value = sign * (std::abs(value) ^ std::abs(n.value));
+  }
+  return *this;
+}
+
 int64_t Number::asInt() const {
   if (big == INF_PTR) {
     throw std::runtime_error("Infinity error");
