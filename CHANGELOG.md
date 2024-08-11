@@ -6,6 +6,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Add comparison operations: `equ` (formerly `cmp`),`neq`,`leq`,`geq`
 * Add bitwise operations: `ban`, `bor`, `bxo`
+* Add digit operations: `dis` (digit sum), `dir` (digital root)
 * Add region operations: `clr` (clear), `sor` (sort)
 
 ### Enhancements

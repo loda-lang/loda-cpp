@@ -69,6 +69,12 @@ Number Interpreter::calc(const Operation::Type type, const Number& target,
     case Operation::Type::BIN: {
       return Semantics::bin(target, source);
     }
+    case Operation::Type::DIS: {
+      return Semantics::dis(target, source);
+    }
+    case Operation::Type::DIR: {
+      return Semantics::dir(target, source);
+    }
     case Operation::Type::EQU: {
       return Semantics::equ(target, source);
     }

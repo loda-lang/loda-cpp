@@ -4,16 +4,17 @@
 
 #include "lang/number.hpp"
 
-const std::array<Operation::Type, 27> Operation::Types = {
+const std::array<Operation::Type, 29> Operation::Types = {
     Operation::Type::NOP, Operation::Type::MOV, Operation::Type::ADD,
     Operation::Type::SUB, Operation::Type::TRN, Operation::Type::MUL,
     Operation::Type::DIV, Operation::Type::DIF, Operation::Type::MOD,
     Operation::Type::POW, Operation::Type::GCD, Operation::Type::BIN,
-    Operation::Type::EQU, Operation::Type::NEQ, Operation::Type::LEQ,
-    Operation::Type::GEQ, Operation::Type::MIN, Operation::Type::MAX,
-    Operation::Type::BAN, Operation::Type::BOR, Operation::Type::BXO,
-    Operation::Type::LPB, Operation::Type::LPE, Operation::Type::CLR,
-    Operation::Type::SOR, Operation::Type::SEQ, Operation::Type::DBG,
+    Operation::Type::DIS, Operation::Type::DIR, Operation::Type::EQU,
+    Operation::Type::NEQ, Operation::Type::LEQ, Operation::Type::GEQ,
+    Operation::Type::MIN, Operation::Type::MAX, Operation::Type::BAN,
+    Operation::Type::BOR, Operation::Type::BXO, Operation::Type::LPB,
+    Operation::Type::LPE, Operation::Type::CLR, Operation::Type::SOR,
+    Operation::Type::SEQ, Operation::Type::DBG,
 };
 
 const Operation::Metadata& Operation::Metadata::get(Type t) {
@@ -41,6 +42,10 @@ const Operation::Metadata& Operation::Metadata::get(Type t) {
       Operation::Type::GCD, "gcd", 2, true, true, true};
   static Operation::Metadata bin{
       Operation::Type::BIN, "bin", 2, true, true, true};
+  static Operation::Metadata dis{
+      Operation::Type::DIS, "dis", 2, true, true, true};
+  static Operation::Metadata dir{
+      Operation::Type::DIR, "dir", 2, true, true, true};
   static Operation::Metadata equ{
       Operation::Type::EQU, "equ", 2, true, true, true};
   static Operation::Metadata neq{
@@ -96,6 +101,10 @@ const Operation::Metadata& Operation::Metadata::get(Type t) {
       return gcd;
     case Operation::Type::BIN:
       return bin;
+    case Operation::Type::DIS:
+      return dis;
+    case Operation::Type::DIR:
+      return dir;
     case Operation::Type::EQU:
       return equ;
     case Operation::Type::NEQ:

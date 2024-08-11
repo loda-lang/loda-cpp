@@ -97,6 +97,14 @@ bool Iterator::inc(Operation& op) {
       return true;
 
     case Operation::Type::BIN:
+      op.type = Operation::Type::DIS;
+      return true;
+
+    case Operation::Type::DIS:
+      op.type = Operation::Type::DIR;
+      return true;
+
+    case Operation::Type::DIR:
       op.type = Operation::Type::EQU;
       return true;
 
