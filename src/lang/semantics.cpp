@@ -158,8 +158,7 @@ Number Semantics::bin(const Number& nn, const Number& kk) {
 }
 
 Number Semantics::dis(const Number& a, const Number& b) {
-  if (a == Number::INF || b == Number::INF || b < Number::ONE ||
-      b == Number::ONE) {
+  if (a == Number::INF || b == Number::INF || b < Number::TWO) {
     return Number::INF;
   }
   const int64_t sign = a < Number::ZERO ? -1 : 1;
@@ -173,8 +172,7 @@ Number Semantics::dis(const Number& a, const Number& b) {
 }
 
 Number Semantics::dir(const Number& a, const Number& b) {
-  if (a == Number::INF || b == Number::INF || b < Number::ONE ||
-      b == Number::ONE) {
+  if (a == Number::INF || b == Number::INF || b < Number::TWO) {
     return Number::INF;
   }
   if (a == Number::ZERO) {
@@ -256,7 +254,7 @@ Number Semantics::getPowerOf(Number value, const Number& base) {
   if (value == Number::INF || base == Number::INF) {
     return Number::INF;
   }
-  if (value < Number::ONE || base < Number(2)) {
+  if (value < Number::ONE || base < Number::TWO) {
     return Number::INF;
   }
   int64_t result = 0;

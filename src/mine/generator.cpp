@@ -157,7 +157,7 @@ void Generator::fixSingularities(Program &p) {
       i += 3;
     } else if (p.ops[i].type == Operation::Type::POW) {
       if (p.ops[i].source.type == Operand::Type::CONSTANT &&
-          (p.ops[i].source.value < Number(2) ||
+          (p.ops[i].source.value < Number::TWO ||
            Number(max_exponent) < p.ops[i].source.value)) {
         p.ops[i].source.value = (Random::get().gen() % (max_exponent - 2)) + 2;
       } else if (p.ops[i].source.type == Operand::Type::DIRECT &&

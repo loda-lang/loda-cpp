@@ -137,7 +137,7 @@ void Test::number() {
   check_num(std::numeric_limits<int64_t>::min(),
             std::to_string(std::numeric_limits<int64_t>::min()));
   Number o(1);
-  o += Number(2);
+  o += Number::TWO;
   check_num(o, "3");
   o += Number(-5);
   check_num(o, "-2");
