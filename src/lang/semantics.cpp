@@ -157,6 +157,32 @@ Number Semantics::bin(const Number& nn, const Number& kk) {
   return mul(sign, r);
 }
 
+Number Semantics::dis(const Number& a, const Number& b) {
+  if (a == Number::INF || b == Number::INF || b < Number::TWO) {
+    return Number::INF;
+  }
+  const int64_t sign = a < Number::ZERO ? -1 : 1;
+  auto aa = abs(a);
+  auto r = Number::ZERO;
+  while (aa > Number::ZERO && r != Number::INF && aa != Number::INF) {
+    r += mod(aa, b);
+    aa /= b;
+  }
+  return mul(sign, r);
+}
+
+Number Semantics::dir(const Number& a, const Number& b) {
+  if (a == Number::INF || b == Number::INF || b < Number::TWO) {
+    return Number::INF;
+  }
+  if (a == Number::ZERO) {
+    return Number::ZERO;
+  }
+  return mul(
+      a < Number::ZERO ? Number::MINUS_ONE : Number::ONE,  // sign
+      add(Number::ONE, mod(sub(abs(a), Number::ONE), sub(b, Number::ONE))));
+}
+
 Number Semantics::equ(const Number& a, const Number& b) {
   if (a == Number::INF || b == Number::INF) {
     return Number::INF;
@@ -228,7 +254,7 @@ Number Semantics::getPowerOf(Number value, const Number& base) {
   if (value == Number::INF || base == Number::INF) {
     return Number::INF;
   }
-  if (value < Number::ONE || base < Number(2)) {
+  if (value < Number::ONE || base < Number::TWO) {
     return Number::INF;
   }
   int64_t result = 0;

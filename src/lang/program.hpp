@@ -44,6 +44,8 @@ class Operation {
     POW,     // power
     GCD,     // greatest common divisor
     BIN,     // binomial coefficient
+    DIS,     // digit sum
+    DIR,     // digital root
     EQU,     // equality
     NEQ,     // inequality
     LEQ,     // less or equal
@@ -62,7 +64,7 @@ class Operation {
     __COUNT  // number of operation types
   };
 
-  static const std::array<Type, 27> Types;
+  static const std::array<Type, 29> Types;
 
   class Metadata {
    public:

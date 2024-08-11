@@ -15,6 +15,7 @@ class Number {
  public:
   static const Number ZERO;
   static const Number ONE;
+  static const Number TWO;
   static const Number MINUS_ONE;
   static const Number MIN;
   static const Number MAX;

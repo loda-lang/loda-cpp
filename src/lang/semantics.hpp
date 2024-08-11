@@ -24,6 +24,10 @@ class Semantics {
 
   static Number bin(const Number& n, const Number& k);
 
+  static Number dis(const Number& a, const Number& b);
+
+  static Number dir(const Number& a, const Number& b);
+
   static Number equ(const Number& a, const Number& b);
 
   static Number neq(const Number& a, const Number& b);
