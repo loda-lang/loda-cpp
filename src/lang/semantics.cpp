@@ -157,6 +157,53 @@ Number Semantics::bin(const Number& nn, const Number& kk) {
   return mul(sign, r);
 }
 
+Number Semantics::log(const Number& a, const Number& b) {
+  if (a == Number::INF || b == Number::INF || a < Number::ONE ||
+      b < Number::TWO) {
+    return Number::INF;
+  }
+  if (a == Number::ONE) {
+    return Number::ZERO;
+  }
+  auto m = Number::ONE;
+  auto res = Number::ZERO;
+  while (m < a) {
+    m = mul(m, b);
+    res += Number::ONE;
+  }
+  return (m == a) ? res : sub(res, 1);
+}
+
+Number Semantics::nrt(const Number& a, const Number& b) {
+  if (a == Number::INF || b == Number::INF || a < Number::ZERO ||
+      b < Number::TWO) {
+    return Number::INF;
+  }
+  if (a == Number::ONE) {
+    return Number::ONE;
+  }
+  auto r = Number::ONE;
+  auto l = Number::ZERO;
+  auto h = a;
+  while (l < h) {
+    auto m = div(add(l, h), 2);
+    auto p = pow(m, b);
+    if (p == a) {
+      return m;
+    }
+    if (p < a) {
+      l = add(m, Number::ONE);
+    } else {
+      h = m;
+    }
+    if (r == m) {
+      break;
+    }
+    r = m;
+  }
+  return r;
+}
+
 Number Semantics::dis(const Number& a, const Number& b) {
   if (a == Number::INF || b == Number::INF || b < Number::TWO) {
     return Number::INF;

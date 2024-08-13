@@ -116,6 +116,8 @@ bool Iterator::inc(Operation& op) {
       op.type = Operation::Type::LPB;
       return true;
 
+    case Operation::Type::LOG:      // skipped
+    case Operation::Type::NRT:      // skipped
     case Operation::Type::LEQ:      // skipped
     case Operation::Type::GEQ:      // skipped
     case Operation::Type::MIN:      // skipped
@@ -141,7 +143,8 @@ bool Iterator::inc(Operation& op) {
 }
 
 bool Iterator::supportsOperationType(Operation::Type t) {
-  return t != Operation::Type::LEQ && t != Operation::Type::GEQ &&
+  return t != Operation::Type::LOG && t != Operation::Type::NRT &&
+         t != Operation::Type::LEQ && t != Operation::Type::GEQ &&
          t != Operation::Type::MIN && t != Operation::Type::MAX &&
          t != Operation::Type::BAN && t != Operation::Type::BOR &&
          t != Operation::Type::BXO && t != Operation::Type::NOP &&
