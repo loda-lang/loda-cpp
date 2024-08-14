@@ -49,7 +49,7 @@ bool ProgramUtil::isNop(const Operation &op) {
              (op.type == Operation::Type::ADD ||
               op.type == Operation::Type::SUB ||
               op.type == Operation::Type::CLR ||
-              op.type == Operation::Type::SOR)) {
+              op.type == Operation::Type::SRT)) {
     return true;
   } else if (op.source.type == Operand::Type::CONSTANT &&
              op.source.value == Number::ONE &&
@@ -96,7 +96,7 @@ size_t ProgramUtil::numOps(const Program &p, Operand::Type type) {
 bool ProgramUtil::isArithmetic(Operation::Type t) {
   return (t != Operation::Type::NOP && t != Operation::Type::DBG &&
           t != Operation::Type::LPB && t != Operation::Type::LPE &&
-          t != Operation::Type::CLR && t != Operation::Type::SOR &&
+          t != Operation::Type::CLR && t != Operation::Type::SRT &&
           t != Operation::Type::SEQ);
 }
 
@@ -157,7 +157,7 @@ bool ProgramUtil::isNonTrivialClear(const Operation &op) {
 
 bool ProgramUtil::isWritingRegion(Operation::Type t) {
   // clear and sort operations write memory regions
-  return (t == Operation::Type::CLR || t == Operation::Type::SOR);
+  return (t == Operation::Type::CLR || t == Operation::Type::SRT);
 }
 
 bool ProgramUtil::hasIndirectOperand(const Operation &op) {

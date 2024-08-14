@@ -113,7 +113,7 @@ Number Interpreter::calc(const Operation::Type type, const Number& target,
     case Operation::Type::LPB:
     case Operation::Type::LPE:
     case Operation::Type::CLR:
-    case Operation::Type::SOR:
+    case Operation::Type::SRT:
     case Operation::Type::SEQ:
     case Operation::Type::__COUNT:
       Log::get().error(
@@ -241,7 +241,7 @@ size_t Interpreter::run(const Program& p, Memory& mem) {
         mem.clear(start, length);
         break;
       }
-      case Operation::Type::SOR: {
+      case Operation::Type::SRT: {
         length = get(op.source, mem).asInt();
         start = get(op.target, mem, true).asInt();
         mem.sort(start, length);

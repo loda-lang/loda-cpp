@@ -60,7 +60,7 @@ class Operation {
     LPB,     // loop begin
     LPE,     // loop end
     CLR,     // clear
-    SOR,     // sort
+    SRT,     // sort
     SEQ,     // sequence
     DBG,     // debug
     __COUNT  // number of operation types

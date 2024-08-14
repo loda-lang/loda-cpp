@@ -334,7 +334,7 @@ bool Optimizer::simplifyOperations(Program &p) const {
       case Operation::Type::LPB:
       case Operation::Type::LPE:
       case Operation::Type::CLR:
-      case Operation::Type::SOR:
+      case Operation::Type::SRT:
       case Operation::Type::SEQ:
         can_simplify = false;
         break;
@@ -620,7 +620,7 @@ bool Optimizer::doPartialEval(Program &p, size_t op_index,
       return false;
     }
     case Operation::Type::CLR:
-    case Operation::Type::SOR: {
+    case Operation::Type::SRT: {
       values.clear();
       return false;
     }
