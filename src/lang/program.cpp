@@ -4,17 +4,18 @@
 
 #include "lang/number.hpp"
 
-const std::array<Operation::Type, 29> Operation::Types = {
+const std::array<Operation::Type, 31> Operation::Types = {
     Operation::Type::NOP, Operation::Type::MOV, Operation::Type::ADD,
     Operation::Type::SUB, Operation::Type::TRN, Operation::Type::MUL,
     Operation::Type::DIV, Operation::Type::DIF, Operation::Type::MOD,
     Operation::Type::POW, Operation::Type::GCD, Operation::Type::BIN,
-    Operation::Type::DIS, Operation::Type::DIR, Operation::Type::EQU,
-    Operation::Type::NEQ, Operation::Type::LEQ, Operation::Type::GEQ,
-    Operation::Type::MIN, Operation::Type::MAX, Operation::Type::BAN,
-    Operation::Type::BOR, Operation::Type::BXO, Operation::Type::LPB,
-    Operation::Type::LPE, Operation::Type::CLR, Operation::Type::SOR,
-    Operation::Type::SEQ, Operation::Type::DBG,
+    Operation::Type::LOG, Operation::Type::NRT, Operation::Type::DIS,
+    Operation::Type::DIR, Operation::Type::EQU, Operation::Type::NEQ,
+    Operation::Type::LEQ, Operation::Type::GEQ, Operation::Type::MIN,
+    Operation::Type::MAX, Operation::Type::BAN, Operation::Type::BOR,
+    Operation::Type::BXO, Operation::Type::LPB, Operation::Type::LPE,
+    Operation::Type::CLR, Operation::Type::SOR, Operation::Type::SEQ,
+    Operation::Type::DBG,
 };
 
 const Operation::Metadata& Operation::Metadata::get(Type t) {
@@ -42,6 +43,10 @@ const Operation::Metadata& Operation::Metadata::get(Type t) {
       Operation::Type::GCD, "gcd", 2, true, true, true};
   static Operation::Metadata bin{
       Operation::Type::BIN, "bin", 2, true, true, true};
+  static Operation::Metadata log{
+      Operation::Type::LOG, "log", 2, true, true, true};
+  static Operation::Metadata nrt{
+      Operation::Type::NRT, "nrt", 2, true, true, true};
   static Operation::Metadata dis{
       Operation::Type::DIS, "dis", 2, true, true, true};
   static Operation::Metadata dir{
@@ -101,6 +106,10 @@ const Operation::Metadata& Operation::Metadata::get(Type t) {
       return gcd;
     case Operation::Type::BIN:
       return bin;
+    case Operation::Type::LOG:
+      return log;
+    case Operation::Type::NRT:
+      return nrt;
     case Operation::Type::DIS:
       return dis;
     case Operation::Type::DIR:
@@ -164,17 +173,7 @@ void Program::push_back(Operation::Type t, Operand::Type tt, const Number& tv,
   ops.insert(ops.end(), Operation(t, Operand(tt, tv), Operand(st, sv)));
 }
 
-bool Program::operator==(const Program& p) const {
-  if (p.ops.size() != ops.size()) {
-    return false;
-  }
-  for (size_t i = 0; i < ops.size(); ++i) {
-    if (!(ops[i] == p.ops[i])) {
-      return false;
-    }
-  }
-  return true;
-}
+bool Program::operator==(const Program& p) const { return (ops == p.ops); }
 
 bool Program::operator!=(const Program& p) const { return !(*this == p); }
 

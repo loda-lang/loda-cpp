@@ -8,6 +8,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 * Add bitwise operations: `ban`, `bor`, `bxo`
 * Add digit operations: `dis` (digit sum), `dir` (digital root)
 * Add region operations: `clr` (clear), `sor` (sort)
+* Add `nrt` (n-th root) and `log` (logarithm) operations
 
 ### Enhancements
 
