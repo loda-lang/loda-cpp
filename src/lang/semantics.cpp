@@ -176,11 +176,11 @@ Number Semantics::log(const Number& a, const Number& b) {
 
 Number Semantics::nrt(const Number& a, const Number& b) {
   if (a == Number::INF || b == Number::INF || a < Number::ZERO ||
-      b < Number::TWO) {
+      b < Number::ONE) {
     return Number::INF;
   }
-  if (a == Number::ONE) {
-    return Number::ONE;
+  if (a == Number::ZERO || a == Number::ONE || b == Number::ONE) {
+    return a;
   }
   auto r = Number::ONE;
   auto l = Number::ZERO;
@@ -192,7 +192,7 @@ Number Semantics::nrt(const Number& a, const Number& b) {
       return m;
     }
     if (p < a) {
-      l = add(m, Number::ONE);
+      l = m;
     } else {
       h = m;
     }
