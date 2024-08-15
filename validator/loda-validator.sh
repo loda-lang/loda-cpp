@@ -1,9 +1,9 @@
 #!/bin/bash
 
 export PATH=$PATH:/usr/local/bin:$HOME/loda/bin
-export SLACK_CLI_TOKEN=...
+# export SLACK_CLI_TOKEN=...
 
-for cmd in loda slack git rainbowstream; do
+for cmd in loda git; do
   if ! [ -x "$(command -v $cmd)" ]; then
     echo "Error: $cmd is not installed" >&2
     exit 1

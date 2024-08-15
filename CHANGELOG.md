@@ -2,6 +2,12 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v24.8.15
+
+### Bugfixes
+
+* Fix default OEIS fetch setting
+
 ## v24.8.14
 
 ### Features

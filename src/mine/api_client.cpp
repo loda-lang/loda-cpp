@@ -30,7 +30,7 @@ ApiClient::ApiClient()
     server += '/';
   }
   base_url = server + "miner/v1/";
-  oeis_fetch_direct = Setup::getSetupFlag("LODA_OEIS_FETCH_DIRECT", true);
+  oeis_fetch_direct = Setup::getSetupFlag("LODA_OEIS_FETCH_DIRECT", false);
 }
 
 ApiClient& ApiClient::getDefaultInstance() {
