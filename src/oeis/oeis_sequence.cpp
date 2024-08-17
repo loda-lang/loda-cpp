@@ -94,55 +94,73 @@ std::string OeisSequence::getBFilePath() const {
          id_str("b") + ".txt";
 }
 
+void removeInvalidBFile(const OeisSequence& oeis_seq,
+                        const std::string& error = "invalid") {
+  auto path = oeis_seq.getBFilePath();
+  Log::get().warn("Removing " + error + " b-file " + path);
+  std::remove(path.c_str());
+}
+
 Sequence loadBFile(size_t id, const Sequence& seq_full) {
   const OeisSequence oeis_seq(id);
   Sequence result;
 
   // try to read b-file
-  std::ifstream big_file(oeis_seq.getBFilePath());
-  std::string buf;
-  if (big_file.good()) {
-    std::string l;
-    int64_t expected_index = -1, index = 0;
-    while (std::getline(big_file, l)) {
-      l.erase(l.begin(), std::find_if(l.begin(), l.end(), [](int ch) {
-                return !std::isspace(ch);
-              }));
-      if (l.empty() || l[0] == '#') {
-        continue;
+  try {
+    std::ifstream big_file(oeis_seq.getBFilePath());
+    std::string buf;
+    if (big_file.good()) {
+      std::string l;
+      int64_t expected_index = -1, index = 0;
+      while (std::getline(big_file, l)) {
+        l.erase(l.begin(), std::find_if(l.begin(), l.end(), [](int ch) {
+                  return !std::isspace(ch);
+                }));
+        if (l.empty() || l[0] == '#') {
+          continue;
+        }
+        // TODO: avoid extra buffer
+        std::stringstream ss(l);
+        ss >> index;
+        if (expected_index == -1) {
+          expected_index = index;
+        }
+        if (index != expected_index) {
+          Log::get().error("Unexpected index " + std::to_string(index) +
+                               " in b-file " + oeis_seq.getBFilePath(),
+                           false);
+          removeInvalidBFile(oeis_seq);
+          result.clear();
+          return result;
+        }
+        ss >> std::ws;
+        Number::readIntString(ss, buf);
+        Number value(buf);
+        if (!ss || OeisSequence::isTooBig(value)) {
+          break;
+        }
+        result.push_back(value);
+        ++expected_index;
       }
-      // TODO: avoid extra buffer
-      std::stringstream ss(l);
-      ss >> index;
-      if (expected_index == -1) {
-        expected_index = index;
+      if (Log::get().level == Log::Level::DEBUG) {
+        Log::get().debug("Read b-file for " + oeis_seq.id_str() + " with " +
+                         std::to_string(result.size()) + " terms");
       }
-      if (index != expected_index) {
-        Log::get().warn("Unexpected index " + std::to_string(index) +
-                        " in b-file " + oeis_seq.getBFilePath());
-        result.clear();
-        return result;
-      }
-      ss >> std::ws;
-      Number::readIntString(ss, buf);
-      Number value(buf);
-      if (!ss || OeisSequence::isTooBig(value)) {
-        break;
-      }
-      result.push_back(value);
-      ++expected_index;
     }
-    if (Log::get().level == Log::Level::DEBUG) {
-      Log::get().debug("Read b-file for " + oeis_seq.id_str() + " with " +
-                       std::to_string(result.size()) + " terms");
-    }
+  } catch (const std::exception& e) {
+    Log::get().error(
+        "Error reading b-file " + oeis_seq.getBFilePath() + ": " + e.what(),
+        false);
+    removeInvalidBFile(oeis_seq);
+    result.clear();
+    return result;
   }
 
-  // not found?
+  // not found or empty?
   if (result.empty()) {
-    if (Log::get().level == Log::Level::DEBUG) {
-      Log::get().debug("b-file not found or empty: " + oeis_seq.id_str());
-    }
+    Log::get().error("b-file not found or empty: " + oeis_seq.getBFilePath(),
+                     false);
+    removeInvalidBFile(oeis_seq, "empty");
     return result;
   }
 
@@ -176,9 +194,8 @@ Sequence loadBFile(size_t id, const Sequence& seq_full) {
   if (!error_state.empty()) {
     // TODO: also re-fetch old files, see getFileAgeInDays(
     // oeis_seq.getBFilePath() )
-    Log::get().warn("Removing " + error_state + " b-file " +
-                    oeis_seq.getBFilePath());
-    std::remove(oeis_seq.getBFilePath().c_str());
+    removeInvalidBFile(oeis_seq, error_state);
+    result.clear();
     return result;
   }
 

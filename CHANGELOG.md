@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Bugfixes
+
+* Remove invalid b-files from cache
+
 ## v24.8.15
 
 ### Bugfixes
