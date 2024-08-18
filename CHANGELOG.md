@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Enhancements
+
+* Improve BOINC progress monitoring
+
 ## v24.8.18
 
 ### Bugfixes

@@ -62,17 +62,12 @@ void Miner::reload() {
 }
 
 void Miner::mine() {
-  // load manager
-  if (!manager) {
-    reload();
-  }
-
   if (progress_monitor) {
     // start background thread for progress monitoring
     auto monitor = progress_monitor;
     std::thread thread([monitor]() {
       const auto delay = std::chrono::seconds(36);  // 1% steps (magic number)
-      while (!monitor->isTargetReached()) {
+      while (!monitor->isTargetReached() && !Signals::HALT) {
         monitor->writeProgress();
         std::this_thread::sleep_for(delay);
       }
@@ -81,16 +76,22 @@ void Miner::mine() {
       Signals::HALT = true;
     });
 
-    // run main mining loop
     try {
+      // load manager
+      if (!manager) {
+        reload();
+      }
+      // run main mining loop
       runMineLoop();
       auto mins = std::to_string(monitor->getElapsedSeconds() / 60);
       Log::get().info("Finished mining after " + mins + " minutes");
     } catch (const std::exception &e) {
-      Log::get().error(
-          "Caught exception during mining: " + std::string(e.what()), false);
+      Log::get().error("Caught exception during initialization or mining: " +
+                           std::string(e.what()),
+                       false);
     } catch (...) {
-      Log::get().error("Caught unknown exception during mining", false);
+      Log::get().error(
+          "Caught unknown exception during initialization or mining", false);
     }
     try {
       thread.join();
@@ -98,6 +99,10 @@ void Miner::mine() {
       Log::get().warn("Error joining progress monitoring thread");
     }
   } else {
+    // load manager
+    if (!manager) {
+      reload();
+    }
     // run mining loop w/o monitoring
     runMineLoop();
     Log::get().info("Finished mining");
