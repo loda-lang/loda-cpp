@@ -97,8 +97,10 @@ std::string OeisSequence::getBFilePath() const {
 void removeInvalidBFile(const OeisSequence& oeis_seq,
                         const std::string& error = "invalid") {
   auto path = oeis_seq.getBFilePath();
-  Log::get().warn("Removing " + error + " b-file " + path);
-  std::remove(path.c_str());
+  if (isFile(path)) {
+    Log::get().warn("Removing " + error + " b-file " + path);
+    std::remove(path.c_str());
+  }
 }
 
 Sequence loadBFile(size_t id, const Sequence& seq_full) {
@@ -158,8 +160,7 @@ Sequence loadBFile(size_t id, const Sequence& seq_full) {
 
   // not found or empty?
   if (result.empty()) {
-    Log::get().error("b-file not found or empty: " + oeis_seq.getBFilePath(),
-                     false);
+    Log::get().debug("b-file not found or empty: " + oeis_seq.getBFilePath());
     removeInvalidBFile(oeis_seq, "empty");
     return result;
   }
