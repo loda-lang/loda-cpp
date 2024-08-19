@@ -28,9 +28,12 @@ class Log {
   bool silent;
   bool loaded_alerts_config;
   bool slack_alerts;
+  std::string discord_webhook;
 
  private:
   void slack(const std::string &msg, AlertDetails details);
+
+  void discord(const std::string &msg, AlertDetails details);
 
   void log(Level level, const std::string &msg);
 };

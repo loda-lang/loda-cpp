@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Features
+
+* Send miner alerts to Discord channel
+
 ## v24.8.19
 
 ### Enhancements

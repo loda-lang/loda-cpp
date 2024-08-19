@@ -728,11 +728,12 @@ void OeisManager::alert(Program p, size_t id, const std::string &prefix,
   details.title_link = seq.url_str();
   details.color = color;
   std::stringstream buf;
-  buf << full << "\\n\\`\\`\\`\\n";
+  // TODO: code block markers must be escaped for Slack, but not for Discord
+  buf << full << "\\n```\\n";
   ProgramUtil::removeOps(p, Operation::Type::NOP);
   addSeqComments(p);
   ProgramUtil::print(p, buf, "\\n");
-  buf << "\\`\\`\\`";
+  buf << "```";
   details.text = buf.str();
   Log::get().alert(msg, details);
 }

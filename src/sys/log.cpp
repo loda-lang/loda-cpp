@@ -7,6 +7,8 @@
 
 #include "sys/file.hpp"
 #include "sys/setup.hpp"
+#include "sys/util.hpp"
+#include "sys/web_client.hpp"
 
 Log::Log()
     : level(Level::INFO),
@@ -36,10 +38,12 @@ void Log::alert(const std::string &msg, AlertDetails details) {
   log(Log::Level::ALERT, msg);
   if (!loaded_alerts_config) {
     slack_alerts = Setup::getSetupFlag("LODA_SLACK_ALERTS", false);
+    discord_webhook = Setup::getSetupValue("LODA_DISCORD_WEBHOOK");
+    trimString(discord_webhook);
     loaded_alerts_config = true;
   }
   std::string copy = msg;
-  if (slack_alerts) {
+  if (slack_alerts || !discord_webhook.empty()) {
     std::replace(copy.begin(), copy.end(), '"', ' ');
     std::replace(copy.begin(), copy.end(), '\'', ' ');
     if (copy.length() > 140) {
@@ -57,6 +61,9 @@ void Log::alert(const std::string &msg, AlertDetails details) {
   if (!copy.empty()) {
     if (slack_alerts) {
       slack(copy, details);
+    }
+    if (!discord_webhook.empty()) {
+      discord(copy, details);
     }
   }
 }
@@ -97,6 +104,30 @@ void Log::slack(const std::string &msg, AlertDetails details) {
     out << cmd;
     out.close();
   }
+}
+
+void Log::discord(const std::string &msg, AlertDetails details) {
+  if (discord_webhook.empty()) {
+    Log::get().warn(
+        "Cannot send message to Discord because webhook is not set");
+    return;
+  }
+  const auto tmp_file_id = Random::get().gen() % 1000;
+  // attention: curl sometimes has problems with absolute paths.
+  // so we use a relative path here!
+  // TODO: extend WebClient::postFile to support content directly
+  const std::string tmp_file =
+      "loda_discord_" + std::to_string(tmp_file_id) + ".json";
+  std::ofstream out(tmp_file);
+  out << "{\"content\":\"" << details.text << "\"}";
+  out.close();
+  const std::vector<std::string> headers = {"Content-Type: application/json"};
+  if (!WebClient::postFile(discord_webhook, tmp_file, {}, headers)) {
+    WebClient::postFile(discord_webhook, tmp_file, {}, headers,
+                        true);  // for debugging
+    Log::get().error("Error sending message to Discord", false);
+  }
+  std::remove(tmp_file.c_str());
 }
 
 void Log::log(Level level, const std::string &msg) {
