@@ -66,7 +66,7 @@ bool ApiClient::postProgram(const std::string& path, bool fail_on_error) {
   if (!WebClient::postFile(url, path)) {
     const std::string msg("Cannot submit program to API server");
     if (fail_on_error) {
-      if (!WebClient::postFile(url, path, "", true)) {
+      if (!WebClient::postFile(url, path, {}, {}, true)) {
         Log::get().error(msg, true);
       }
     } else {
@@ -80,8 +80,8 @@ bool ApiClient::postProgram(const std::string& path, bool fail_on_error) {
 void ApiClient::postCPUHour() {
   const std::string url = base_url + "cpuhours";
   if (!WebClient::postFile(url, {}) &&
-      !WebClient::postFile(url, {}, {}, true)) {
-    Log::get().warn("Error reporting CPU hour");
+      !WebClient::postFile(url, {}, {}, {}, true)) {
+    Log::get().warn("Cannot report CPU hour");
   }
 }
 

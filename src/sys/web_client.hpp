@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 class WebClient {
  public:
@@ -10,6 +11,7 @@ class WebClient {
 
   static bool postFile(const std::string &url, const std::string &file_path,
                        const std::string &auth = std::string(),
+                       const std::vector<std::string> &headers = {},
                        bool enable_debug = false);
 
  private:

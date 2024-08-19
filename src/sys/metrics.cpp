@@ -50,7 +50,7 @@ void Metrics::write(const std::vector<Entry> &entries) const {
   out.close();
   const std::string url = host + "/write?db=loda";
   if (!WebClient::postFile(url, tmp_file, auth)) {
-    WebClient::postFile(url, tmp_file, auth, true);  // for debugging
+    WebClient::postFile(url, tmp_file, auth, {}, true);  // for debugging
     Log::get().error("Error publishing metrics", false);
   }
   std::remove(tmp_file.c_str());

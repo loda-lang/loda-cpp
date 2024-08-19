@@ -57,7 +57,9 @@ bool WebClient::get(const std::string &url, const std::string &local_path,
 }
 
 bool WebClient::postFile(const std::string &url, const std::string &file_path,
-                         const std::string &auth, bool enable_debug) {
+                         const std::string &auth,
+                         const std::vector<std::string> &headers,
+                         bool enable_debug) {
   initWebClient();
   std::string cmd;
   switch (WEB_CLIENT_TYPE) {
@@ -70,6 +72,9 @@ bool WebClient::postFile(const std::string &url, const std::string &file_path,
         cmd += " -X POST";
       } else {
         cmd += " --data-binary \"@" + file_path + "\"";
+      }
+      for (const auto &header : headers) {
+        cmd += " -H \"" + header + "\"";
       }
       break;
     }
@@ -84,6 +89,9 @@ bool WebClient::postFile(const std::string &url, const std::string &file_path,
         cmd += " --post-data \"\"";
       } else {
         cmd += " --post-file \"" + file_path + "\"";
+      }
+      for (const auto &header : headers) {
+        cmd += " --header \"" + header + "\"";
       }
       break;
     }
