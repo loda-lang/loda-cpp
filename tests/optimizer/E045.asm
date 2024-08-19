@@ -1,0 +1,13 @@
+; in
+mov $1,$0
+sub $1,5
+add $0,7
+equ $0,$1
+equ $0,0
+mul $0,3
+; out
+mov $1,$0
+sub $1,5
+add $0,7
+neq $0,$1
+mul $0,3

@@ -222,12 +222,21 @@ bool Optimizer::mergeOps(Program &p) const {
           do_merge = true;
         }
       }
+
+      // equ X,Y ; equ X,0 => neq X,Y
+      if (!do_merge && o1.type == Operation::Type::EQU &&
+          o2.type == Operation::Type::EQU &&
+          o2.source.type == Operand::Type::CONSTANT &&
+          o2.source.value == Number::ZERO) {
+        o1.type = Operation::Type::NEQ;
+        do_merge = true;
+      }
     }
 
     // merge (erase second operation)
     if (do_merge) {
       if (Log::get().level == Log::Level::DEBUG) {
-        Log::get().debug("Merging similar consecutive operation");
+        Log::get().debug("Merging similar consecutive operations");
       }
       p.ops.erase(p.ops.begin() + i + 1, p.ops.begin() + i + 2);
       --i;
