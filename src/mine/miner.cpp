@@ -61,19 +61,25 @@ void Miner::reload() {
   manager->releaseStats();  // not needed anymore
 }
 
+void shutdown() {
+  if (!Signals::HALT) {
+    Log::get().info("Signaling shutdown");
+    Signals::HALT = true;
+  }
+}
+
 void Miner::mine() {
   if (progress_monitor) {
     // start background thread for progress monitoring
     auto monitor = progress_monitor;
-    std::thread thread([monitor]() {
+    std::thread monitor_thread([monitor]() {
       const auto delay = std::chrono::seconds(36);  // 1% steps (magic number)
       while (!monitor->isTargetReached() && !Signals::HALT) {
         monitor->writeProgress();
         std::this_thread::sleep_for(delay);
       }
       monitor->writeProgress();  // final write
-      Log::get().info("Initiating shutdown");
-      Signals::HALT = true;
+      shutdown();
     });
 
     try {
@@ -86,15 +92,16 @@ void Miner::mine() {
       auto mins = std::to_string(monitor->getElapsedSeconds() / 60);
       Log::get().info("Finished mining after " + mins + " minutes");
     } catch (const std::exception &e) {
-      Log::get().error("Caught exception during initialization or mining: " +
-                           std::string(e.what()),
-                       false);
-    } catch (...) {
       Log::get().error(
-          "Caught unknown exception during initialization or mining", false);
+          "Error during initialization or mining: " + std::string(e.what()),
+          false);
+      shutdown();
+    } catch (...) {
+      Log::get().error("Unknown error during initialization or mining", false);
+      shutdown();
     }
     try {
-      thread.join();
+      monitor_thread.join();
     } catch (...) {
       Log::get().warn("Error joining progress monitoring thread");
     }
