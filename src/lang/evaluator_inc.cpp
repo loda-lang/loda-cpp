@@ -19,6 +19,7 @@ void IncrementalEvaluator::reset() {
   input_dependent_cells.clear();
   loop_counter_dependent_cells.clear();
   loop_counter_decrement = 0;
+  loop_counter_lower_bound = 0;
   loop_counter_type = Operation::Type::NOP;
   initialized = false;
 
@@ -130,19 +131,19 @@ bool IncrementalEvaluator::checkLoopBody() {
     const auto meta = Operation::Metadata::get(op.type);
     const auto target = op.target.value.asInt();
     if (target == simple_loop.counter) {
-      // must be subtraction by one (stepwise decrease)
-      if (op.type != Operation::Type::SUB && op.type != Operation::Type::TRN) {
+      if ((op.type == Operation::Type::SUB ||
+           op.type == Operation::Type::TRN) &&
+          op.source.type == Operand::Type::CONSTANT && !loop_counter_updated) {
+        loop_counter_type = op.type;
+        loop_counter_updated = true;
+        loop_counter_decrement = op.source.value.asInt();
+      } else if (op.type == Operation::Type::MAX &&
+                 op.source.type == Operand::Type::CONSTANT) {
+        loop_counter_lower_bound =
+            std::max(loop_counter_lower_bound, op.source.value.asInt());
+      } else {
         return false;
       }
-      loop_counter_type = op.type;
-      if (op.source.type != Operand::Type::CONSTANT) {
-        return false;
-      }
-      if (loop_counter_updated) {
-        return false;
-      }
-      loop_counter_updated = true;
-      loop_counter_decrement = op.source.value.asInt();
     } else if (meta.num_operands > 0 && isInputDependent(op.target) &&
                meta.is_reading_target) {
       return false;
