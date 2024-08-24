@@ -309,7 +309,8 @@ std::pair<Number, size_t> IncrementalEvaluator::next(bool skip_final_iter,
   // derive loop count and slice
   const int64_t loop_counter_before =
       tmp_state.get(simple_loop.counter).asInt();
-  const int64_t new_loop_count = std::max<int64_t>(loop_counter_before, 0);
+  const int64_t new_loop_count =
+      std::max<int64_t>(loop_counter_before - loop_counter_lower_bound, 0);
   const int64_t slice = new_loop_count % loop_counter_decrement;
 
   // calculate number of additional loops
