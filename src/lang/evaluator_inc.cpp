@@ -137,10 +137,12 @@ bool IncrementalEvaluator::checkLoopBody() {
         loop_counter_type = op.type;
         loop_counter_updated = true;
         loop_counter_decrement = op.source.value.asInt();
+        loop_counter_lower_bound = std::max<int64_t>(
+            loop_counter_lower_bound - loop_counter_decrement, 0);
       } else if (op.type == Operation::Type::MAX &&
                  op.source.type == Operand::Type::CONSTANT) {
-        loop_counter_lower_bound =
-            std::max(loop_counter_lower_bound, op.source.value.asInt());
+        loop_counter_lower_bound = std::max<int64_t>(loop_counter_lower_bound,
+                                                     op.source.value.asInt());
       } else {
         return false;
       }
