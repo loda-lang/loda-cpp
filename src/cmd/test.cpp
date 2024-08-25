@@ -772,6 +772,8 @@ bool Test::checkIncEval(const Settings& settings, size_t id, std::string path,
     }
   }
   if (seq_reg != seq_inc) {
+    Log::get().info("Incremental eval result: " + seq_inc.to_string());
+    Log::get().info("Regular eval result:     " + seq_reg.to_string());
     Log::get().error("Unexpected result of " + msg, true);
   }
   if (steps_reg.total != steps_inc.total) {
