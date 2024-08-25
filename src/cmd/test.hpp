@@ -13,6 +13,10 @@ class Test {
 
   void all();
 
+  void fast();
+
+  void slow();
+
   void number();
 
   void randomNumber(size_t tests);

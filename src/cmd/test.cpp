@@ -45,7 +45,11 @@ Test::Test() {
 }
 
 void Test::all() {
-  // fast tests
+  fast();
+  slow();
+}
+
+void Test::fast() {
   sequence();
   memory();
   operationMetadata();
@@ -62,8 +66,9 @@ void Test::all() {
   checkpoint();
   knownPrograms();
   formula();
+}
 
-  // slow tests
+void Test::slow() {
   number();
   randomNumber(100);
   ackermann();
@@ -698,6 +703,21 @@ void Test::incEval() {
       79309, 80493, 122593, 130487, 247309, 302643};
   for (auto id : ids) {
     checkIncEval(settings, id, "", true);
+  }
+
+  size_t i = 1;
+  auto dir = std::string("tests") + FILE_SEP + "programs" + FILE_SEP +
+             "inceval" + FILE_SEP;
+  std::stringstream s;
+  while (true) {
+    s.str("");
+    s << dir << "I" << std::setw(3) << std::setfill('0') << i << ".asm";
+    auto path = s.str();
+    if (!isFile(path)) {
+      break;
+    }
+    checkIncEval(settings, 0, path, true);
+    i++;
   }
 }
 

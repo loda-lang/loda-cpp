@@ -44,7 +44,11 @@ class Commands {
 
   void boinc();
 
-  void test();
+  void testAll();
+
+  void testFast();
+
+  void testSlow();
 
   void testIncEval(const std::string& id);
 
