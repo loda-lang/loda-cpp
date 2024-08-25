@@ -697,36 +697,41 @@ void Test::incEval() {
       8581,  10362, 11218,  12866,  14979,  22564, 25774, 49349, 57552,
       79309, 80493, 122593, 130487, 247309, 302643};
   for (auto id : ids) {
-    checkIncEval(settings, id, true);
+    checkIncEval(settings, id, "", true);
   }
 }
 
-bool Test::checkIncEval(const Settings& settings, size_t id,
+bool Test::checkIncEval(const Settings& settings, size_t id, std::string path,
                         bool mustSupportIncEval) {
-  OeisSequence s(id);
+  auto name = path;
+  if (path.empty()) {
+    OeisSequence s(id);
+    name = s.id_str();
+    path = s.getProgramPath();
+  }
   Parser parser;
   Program p;
   try {
-    p = parser.parse(s.getProgramPath());
+    p = parser.parse(path);
   } catch (const std::exception& e) {
     if (mustSupportIncEval) {
-      throw e;
+      std::rethrow_exception(std::current_exception());
     } else {
       Log::get().warn(std::string(e.what()));
       return false;
     }
   }
+  const std::string msg = "incremental evaluator for " + name;
   Evaluator eval_reg(settings, false);
   Evaluator eval_inc(settings, true);
   if (!eval_inc.supportsIncEval(p)) {
     if (mustSupportIncEval) {
-      Log::get().error(
-          "Error initializing incremental evaluator for " + s.id_str(), true);
+      Log::get().error("Error initializing " + msg, true);
     } else {
       return false;
     }
   }
-  Log::get().info("Testing incremental evaluator for " + s.id_str());
+  Log::get().info("Testing " + msg);
   // std::cout << ProgramUtil::operationToString(p.ops.front()) << std::endl;
   Sequence seq_reg, seq_inc;
   steps_t steps_reg, steps_inc;
@@ -739,7 +744,7 @@ bool Test::checkIncEval(const Settings& settings, size_t id,
       steps_inc = eval_inc.eval(p, seq_inc, 10, true);
     } catch (const std::exception& e) {
       if (mustSupportIncEval) {
-        throw e;
+        std::rethrow_exception(std::current_exception());
       } else {
         Log::get().warn(std::string(e.what()));
         return false;
@@ -747,12 +752,10 @@ bool Test::checkIncEval(const Settings& settings, size_t id,
     }
   }
   if (seq_reg != seq_inc) {
-    Log::get().error(
-        "Unexpected result of incremental evaluator for " + s.id_str(), true);
+    Log::get().error("Unexpected result of " + msg, true);
   }
   if (steps_reg.total != steps_inc.total) {
-    Log::get().error(
-        "Unexpected steps of incremental evaluator for " + s.id_str(), true);
+    Log::get().error("Unexpected steps of " + msg, true);
   }
   return true;
 }

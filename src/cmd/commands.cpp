@@ -380,7 +380,7 @@ void Commands::testIncEval(const std::string& test_id) {
     if (!stats.all_program_ids[id] || (target_id > 0 && id != target_id)) {
       continue;
     }
-    if (Test::checkIncEval(settings, id, false)) {
+    if (Test::checkIncEval(settings, id, "", false)) {
       count++;
     }
   }
