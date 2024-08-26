@@ -77,6 +77,7 @@ class IncrementalEvaluator {
   int64_t loop_counter_lower_bound;
   Operation::Type loop_counter_type;
   bool initialized;
+  const bool is_debug;
 
   // runtime data
   int64_t argument;
