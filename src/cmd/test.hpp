@@ -13,6 +13,10 @@ class Test {
 
   void all();
 
+  void fast();
+
+  void slow();
+
   void number();
 
   void randomNumber(size_t tests);
@@ -34,7 +38,8 @@ class Test {
   void incEval();
 
   static bool checkIncEval(const Settings &settings, size_t id,
-                           bool mustSupportIncEval);
+                           std::string path = "",
+                           bool mustSupportIncEval = true);
 
   void apiClient();
 

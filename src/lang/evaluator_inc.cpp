@@ -6,7 +6,8 @@
 #include "sys/util.hpp"
 
 IncrementalEvaluator::IncrementalEvaluator(Interpreter& interpreter)
-    : interpreter(interpreter) {
+    : interpreter(interpreter),
+      is_debug(Log::get().level == Log::Level::DEBUG) {
   reset();
 }
 
@@ -19,6 +20,7 @@ void IncrementalEvaluator::reset() {
   input_dependent_cells.clear();
   loop_counter_dependent_cells.clear();
   loop_counter_decrement = 0;
+  loop_counter_lower_bound = 0;
   loop_counter_type = Operation::Type::NOP;
   initialized = false;
 
@@ -38,26 +40,36 @@ bool IncrementalEvaluator::init(const Program& program,
   reset();
   simple_loop = Analyzer::extractSimpleLoop(program);
   if (!simple_loop.is_simple_loop) {
-    Log::get().debug("[IE] simple loop check failed");
+    if (is_debug) {
+      Log::get().debug("[IE] Simple loop check failed");
+    }
     return false;
   }
   // now the program fragments and the loop counter cell are initialized
   if (!checkPreLoop(skip_input_transform)) {
-    Log::get().debug("[IE] pre-loop check failed");
+    if (is_debug) {
+      Log::get().debug("[IE] Pre-loop check failed");
+    }
     return false;
   }
   if (!checkPostLoop()) {
-    Log::get().debug("[IE] post-loop check failed");
+    if (is_debug) {
+      Log::get().debug("[IE] Post-loop check failed");
+    }
     return false;
   }
   // now the output cells are initialized
   if (!checkLoopBody()) {
-    Log::get().debug("[IE] loop body check failed");
+    if (is_debug) {
+      Log::get().debug("[IE] Loop body check failed");
+    }
     return false;
   }
   initRuntimeData();
   initialized = true;
-  Log::get().debug("[IE] initialization successful");
+  if (is_debug) {
+    Log::get().debug("[IE] Initialization successful");
+  }
   return true;
 }
 
@@ -130,19 +142,21 @@ bool IncrementalEvaluator::checkLoopBody() {
     const auto meta = Operation::Metadata::get(op.type);
     const auto target = op.target.value.asInt();
     if (target == simple_loop.counter) {
-      // must be subtraction by one (stepwise decrease)
-      if (op.type != Operation::Type::SUB && op.type != Operation::Type::TRN) {
+      if ((op.type == Operation::Type::SUB ||
+           op.type == Operation::Type::TRN) &&
+          op.source.type == Operand::Type::CONSTANT && !loop_counter_updated) {
+        loop_counter_type = op.type;
+        loop_counter_updated = true;
+        loop_counter_decrement = op.source.value.asInt();
+        loop_counter_lower_bound = std::max<int64_t>(
+            loop_counter_lower_bound - loop_counter_decrement, 0);
+      } else if (op.type == Operation::Type::MAX &&
+                 op.source.type == Operand::Type::CONSTANT) {
+        loop_counter_lower_bound = std::max<int64_t>(loop_counter_lower_bound,
+                                                     op.source.value.asInt());
+      } else {
         return false;
       }
-      loop_counter_type = op.type;
-      if (op.source.type != Operand::Type::CONSTANT) {
-        return false;
-      }
-      if (loop_counter_updated) {
-        return false;
-      }
-      loop_counter_updated = true;
-      loop_counter_decrement = op.source.value.asInt();
     } else if (meta.num_operands > 0 && isInputDependent(op.target) &&
                meta.is_reading_target) {
       return false;
@@ -170,6 +184,19 @@ bool IncrementalEvaluator::checkLoopBody() {
   bool is_commutative =
       ProgramUtil::isCommutative(simple_loop.body, stateful_cells) &&
       ProgramUtil::isCommutative(simple_loop.body, output_cells);
+
+  if (is_debug) {
+    Log::get().debug(
+        "[IE] Loop counter decrement: " +
+        std::to_string(loop_counter_decrement) +
+        ", lower bound: " + std::to_string(loop_counter_lower_bound) +
+        ", type: " + Operation::Metadata::get(loop_counter_type).name);
+    Log::get().debug(
+        "[IE] Num stateful cells: " + std::to_string(stateful_cells.size()) +
+        ", num loop counter dependent cells: " +
+        std::to_string(loop_counter_dependent_cells.size()) +
+        ", is commutative: " + std::to_string(is_commutative));
+  }
 
   // ================================================= //
   // === from now on, we check for positive cases ==== //
@@ -299,6 +326,9 @@ std::pair<Number, size_t> IncrementalEvaluator::next(bool skip_final_iter,
   if (!initialized) {
     throw std::runtime_error("incremental evaluator not initialized");
   }
+  if (is_debug) {
+    Log::get().debug("[IE] Computing value for n=" + std::to_string(argument));
+  }
 
   // execute pre-loop code
   tmp_state.clear();
@@ -308,18 +338,25 @@ std::pair<Number, size_t> IncrementalEvaluator::next(bool skip_final_iter,
   // derive loop count and slice
   const int64_t loop_counter_before =
       tmp_state.get(simple_loop.counter).asInt();
-  const int64_t new_loop_count = std::max<int64_t>(loop_counter_before, 0);
+  const int64_t new_loop_count =
+      std::max<int64_t>(loop_counter_before - loop_counter_lower_bound, 0);
   const int64_t slice = new_loop_count % loop_counter_decrement;
 
   // calculate number of additional loops
   int64_t additional_loops =
       (new_loop_count - previous_loop_counts[slice]) / loop_counter_decrement;
 
-  // one more iteration may be needed when using trn
+  // one more iteration may be needed when using trn or max
   if (previous_loop_counts[slice] == 0 &&
-      loop_counter_type == Operation::Type::TRN &&
-      new_loop_count % loop_counter_decrement) {
+      new_loop_count % loop_counter_decrement &&
+      (loop_counter_type == Operation::Type::TRN || loop_counter_lower_bound)) {
     additional_loops++;
+  }
+
+  if (is_debug) {
+    Log::get().debug("[IE] New loop count: " + std::to_string(new_loop_count) +
+                     ", additional loops: " + std::to_string(additional_loops) +
+                     ", slice: " + std::to_string(slice));
   }
 
   // init or update loop state

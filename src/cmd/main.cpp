@@ -194,7 +194,11 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
 #ifndef LODA_VERSION
   // hidden commands (only in development versions)
   else if (cmd == "test") {
-    commands.test();
+    commands.testAll();
+  } else if (cmd == "test-fast") {
+    commands.testFast();
+  } else if (cmd == "test-slow") {
+    commands.testSlow();
   } else if (cmd == "test-inceval") {
     std::string id;
     if (args.size() > 1) {

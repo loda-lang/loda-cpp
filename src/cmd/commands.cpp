@@ -360,10 +360,22 @@ void Commands::boinc() {
   boinc.run();
 }
 
-void Commands::test() {
+void Commands::testAll() {
   initLog(false);
   Test test;
   test.all();
+}
+
+void Commands::testFast() {
+  initLog(false);
+  Test test;
+  test.fast();
+}
+
+void Commands::testSlow() {
+  initLog(false);
+  Test test;
+  test.slow();
 }
 
 void Commands::testIncEval(const std::string& test_id) {
@@ -380,7 +392,7 @@ void Commands::testIncEval(const std::string& test_id) {
     if (!stats.all_program_ids[id] || (target_id > 0 && id != target_id)) {
       continue;
     }
-    if (Test::checkIncEval(settings, id, false)) {
+    if (Test::checkIncEval(settings, id, "", false)) {
       count++;
     }
   }

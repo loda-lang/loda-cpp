@@ -251,6 +251,10 @@ bool FormulaGenerator::generateSingle(const Program& p) {
                             Operation::Type::MOV) > 0) {
       return false;
     }
+    // TODO: remove this limitation
+    if (incEval.getLoopCounterLowerBound()) {
+      return false;
+    }
     // update formula based on pre-loop code
     if (!update(incEval.getSimpleLoop().pre_loop)) {
       return false;
