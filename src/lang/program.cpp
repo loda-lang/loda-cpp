@@ -79,8 +79,8 @@ const Operation::Metadata& Operation::Metadata::get(Type t) {
       Operation::Type::SRT, "srt", 2, true, true, true};
   static Operation::Metadata seq{
       Operation::Type::SEQ, "seq", 2, true, true, true};
-  static Operation::Metadata fun{
-      Operation::Type::FUN, "fun", 2, true, true, true};
+  static Operation::Metadata prg{
+      Operation::Type::PRG, "prg", 2, true, true, true};
   static Operation::Metadata dbg{
       Operation::Type::DBG, "dbg", 0, false, false, false};
   switch (t) {
@@ -144,8 +144,8 @@ const Operation::Metadata& Operation::Metadata::get(Type t) {
       return srt;
     case Operation::Type::SEQ:
       return seq;
-    case Operation::Type::FUN:
-      return fun;
+    case Operation::Type::PRG:
+      return prg;
     case Operation::Type::DBG:
       return dbg;
     case Operation::Type::__COUNT:

@@ -115,7 +115,7 @@ Number Interpreter::calc(const Operation::Type type, const Number& target,
     case Operation::Type::CLR:
     case Operation::Type::SRT:
     case Operation::Type::SEQ:
-    case Operation::Type::FUN:
+    case Operation::Type::PRG:
     case Operation::Type::__COUNT:
       Log::get().error(
           "non-arithmetic operation: " + Operation::Metadata::get(type).name,
@@ -231,18 +231,15 @@ size_t Interpreter::run(const Program& p, Memory& mem) {
       case Operation::Type::SEQ: {
         target = get(op.target, mem);
         source = get(op.source, mem);
-        auto result = call(source.asInt(), target);
+        auto result = callSeq(source.asInt(), target);
         set(op.target, result.first, mem, op);
         cycles += result.second;
         break;
       }
-      case Operation::Type::FUN: {
-        target = get(op.target, mem);
+      case Operation::Type::PRG: {
+        target = get(op.target, mem, true);
         source = get(op.source, mem);
-        // TODO implement function calls
-        // auto result = call(source.asInt(), target);
-        // set(op.target, result.first, mem, op);
-        // cycles += result.second;
+        cycles += callPrg(source.asInt(), target.asInt(), mem);
         break;
       }
 
@@ -386,7 +383,7 @@ void Interpreter::set(const Operand& a, const Number& v, Memory& mem,
   mem.set(index, v);
 }
 
-std::pair<Number, size_t> Interpreter::call(int64_t id, const Number& arg) {
+std::pair<Number, size_t> Interpreter::callSeq(int64_t id, const Number& arg) {
   if (arg < 0) {
     throw std::runtime_error("seq using negative argument: " +
                              std::to_string(id));
@@ -430,6 +427,11 @@ std::pair<Number, size_t> Interpreter::call(int64_t id, const Number& arg) {
     terms_cache[key] = result;
   }
   return result;
+}
+
+size_t Interpreter::callPrg(int64_t id, int64_t start, Memory& mem) {
+  // TODO
+  return 0;
 }
 
 const Program& Interpreter::getProgram(int64_t id) {

@@ -22,7 +22,7 @@ class Parser {
 
   Operand readOperand();
 
-  void readOperationType(Operation &op);
+  Operation::Type readOperationType();
 
   std::istream *in;
   std::shared_ptr<std::ifstream> file_in;
