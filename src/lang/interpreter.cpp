@@ -13,6 +13,7 @@
 #include "lang/program_util.hpp"
 #include "lang/semantics.hpp"
 #include "oeis/oeis_sequence.hpp"
+#include "sys/filehpp"
 #include "sys/log.hpp"
 #include "sys/setup.hpp"
 
@@ -440,7 +441,14 @@ const Program& Interpreter::getProgram(int64_t id) {
   }
   if (program_cache.find(id) == program_cache.end()) {
     Parser parser;
-    auto path = OeisSequence(id).getProgramPath();
+    std::string path;
+    if (id < 0) {
+      std::stringstream s;
+      s << "P" << std::setw(3) << std::setfill('0') << -id;
+      path = Setup::getProgramsHome() + "prg" + FILE_SEP + s.str() + ".asm";
+    } else {
+      path = OeisSequence(id).getProgramPath();
+    }
     try {
       program_cache[id] = parser.parse(path);
     } catch (...) {
