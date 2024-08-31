@@ -62,6 +62,7 @@ class Operation {
     CLR,     // clear
     SRT,     // sort
     SEQ,     // sequence
+    FUN,     // function
     DBG,     // debug
     __COUNT  // number of operation types
   };
@@ -88,8 +89,14 @@ class Operation {
       : Operation(y, {Operand::Type::DIRECT, 0}, {Operand::Type::CONSTANT, 0}) {
   }
 
-  Operation(Type y, Operand t, Operand s, const std::string &c = "")
-      : type(y), target(t), source(s), comment(c) {}
+  Operation(Type y, Operand t, Operand s, int8_t num_inputs = 0,
+            int8_t num_outputs = 0, const std::string &c = "")
+      : type(y),
+        target(t),
+        source(s),
+        num_inputs(num_inputs),
+        num_outputs(num_outputs),
+        comment(c) {}
 
   inline bool operator==(const Operation &op) const {
     return (type == op.type) && (source == op.source) && (target == op.target);
@@ -107,6 +114,8 @@ class Operation {
   Type type;
   Operand target;
   Operand source;
+  int8_t num_inputs;
+  int8_t num_outputs;
   std::string comment;
 };
 

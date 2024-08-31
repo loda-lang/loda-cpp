@@ -33,7 +33,7 @@ Program Parser::parse(std::istream &in_) {
     o = Operation();
     if (c != ';') {
       // read normal operation
-      o.type = readOperationType();
+      readOperationType(o);
       switch (Operation::Metadata::get(o.type).num_operands) {
         case 0:
           o.target = Operand(Operand::Type::CONSTANT, Number::ZERO);
@@ -160,6 +160,14 @@ Operand Parser::readOperand() {
   }
 }
 
-Operation::Type Parser::readOperationType() {
-  return Operation::Metadata::get(readIdentifier()).type;
+void Parser::readOperationType(Operation &op) {
+  auto name = readIdentifier();
+  if (name.size() == 3 && name[0] == 'f' && std::isdigit(name[1]) &&
+      std::isdigit(name[2])) {
+    op.type = Operation::Type::FUN;
+    op.num_inputs = name[1] - '0';
+    op.num_outputs = name[2] - '0';
+  } else {
+    op.type = Operation::Metadata::get(name).type;
+  }
 }

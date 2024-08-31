@@ -115,6 +115,7 @@ Number Interpreter::calc(const Operation::Type type, const Number& target,
     case Operation::Type::CLR:
     case Operation::Type::SRT:
     case Operation::Type::SEQ:
+    case Operation::Type::FUN:
     case Operation::Type::__COUNT:
       Log::get().error(
           "non-arithmetic operation: " + Operation::Metadata::get(type).name,
@@ -235,6 +236,16 @@ size_t Interpreter::run(const Program& p, Memory& mem) {
         cycles += result.second;
         break;
       }
+      case Operation::Type::FUN: {
+        target = get(op.target, mem);
+        source = get(op.source, mem);
+        // TODO implement function calls
+        // auto result = call(source.asInt(), target);
+        // set(op.target, result.first, mem, op);
+        // cycles += result.second;
+        break;
+      }
+
       case Operation::Type::CLR: {
         length = get(op.source, mem).asInt();
         start = get(op.target, mem, true).asInt();
