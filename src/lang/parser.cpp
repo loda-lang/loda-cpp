@@ -33,7 +33,7 @@ Program Parser::parse(std::istream &in_) {
     o = Operation();
     if (c != ';') {
       // read normal operation
-      readOperationType(o);
+      o.type = readOperationType();
       switch (Operation::Metadata::get(o.type).num_operands) {
         case 0:
           o.target = Operand(Operand::Type::CONSTANT, Number::ZERO);
