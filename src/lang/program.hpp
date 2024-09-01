@@ -1,6 +1,8 @@
 #pragma once
 
 #include <array>
+#include <map>
+#include <string>
 #include <vector>
 
 #include "lang/number.hpp"
@@ -128,4 +130,5 @@ class Program {
   bool operator<(const Program &p) const;
 
   std::vector<Operation> ops;
+  std::map<std::string, int64_t> directives;
 };

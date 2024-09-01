@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <set>
 #include <stdexcept>
 
 #include "lang/number.hpp"
@@ -20,10 +21,12 @@ Program Parser::parse(const std::string &file) {
 }
 
 Program Parser::parse(std::istream &in_) {
+  const static std::set<std::string> valid_directives = {};
   in = &in_;
   Program p;
   Operation o;
   std::string l;
+  int64_t v;
   while (true) {
     *in >> std::ws;
     auto c = in->peek();
@@ -31,7 +34,16 @@ Program Parser::parse(std::istream &in_) {
       break;
     }
     o = Operation();
-    if (c != ';') {
+    if (c == '#') {
+      in->get();
+      l = readIdentifier();
+      *in >> std::ws;
+      *in >> v;
+      if (valid_directives.find(l) == valid_directives.end()) {
+        throw std::runtime_error("invalid directive: " + l);
+      }
+      p.directives[l] = v;
+    } else if (c != ';') {
       // read normal operation
       o.type = readOperationType();
       switch (Operation::Metadata::get(o.type).num_operands) {
