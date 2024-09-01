@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## Featues
+
+* Support for program directives
+
 ### Enhancements
 
 * Incremental evaluator supports `max` on loop counter

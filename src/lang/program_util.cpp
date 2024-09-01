@@ -412,8 +412,25 @@ void ProgramUtil::print(const Operation &op, std::ostream &out, int indent) {
 
 void ProgramUtil::print(const Program &p, std::ostream &out,
                         const std::string &newline) {
+  size_t i = 0;
+  bool last_has_comment = false;
+  for (i = 0; i < p.ops.size() && p.ops[i].type == Operation::Type::NOP; i++) {
+    print(p.ops[i], out, 0);
+    out << newline;
+    last_has_comment = !p.ops[i].comment.empty();
+  }
+  if (!p.directives.empty()) {
+    if (i > 0 && last_has_comment) {
+      out << newline;
+    }
+    for (const auto &d : p.directives) {
+      out << "#" << d.first << " " << d.second << newline;
+    }
+    out << newline;
+  }
   int indent = 0;
-  for (const auto &op : p.ops) {
+  for (; i < p.ops.size(); i++) {
+    const auto &op = p.ops[i];
     if (op.type == Operation::Type::LPE) {
       indent -= 2;
     }
