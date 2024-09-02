@@ -150,7 +150,8 @@ bool Iterator::supportsOperationType(Operation::Type t) {
          t != Operation::Type::BAN && t != Operation::Type::BOR &&
          t != Operation::Type::BXO && t != Operation::Type::NOP &&
          t != Operation::Type::DBG && t != Operation::Type::CLR &&
-         t != Operation::Type::SRT && t != Operation::Type::SEQ;
+         t != Operation::Type::SRT && t != Operation::Type::SEQ &&
+         t != Operation::Type::PRG;
 }
 
 bool Iterator::incWithSkip(Operation& op) {
