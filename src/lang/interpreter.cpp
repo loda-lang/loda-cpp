@@ -383,6 +383,14 @@ void Interpreter::set(const Operand& a, const Number& v, Memory& mem,
   mem.set(index, v);
 }
 
+std::string getProgramPath(int64_t id) {
+  if (id < 0) {
+    return OeisSequence(-id).getProgramPath("prg", "P");
+  } else {
+    return OeisSequence(id).getProgramPath();
+  }
+}
+
 std::pair<Number, size_t> Interpreter::callSeq(int64_t id, const Number& arg) {
   if (arg < 0) {
     throw std::runtime_error("seq using negative argument: " +
@@ -431,13 +439,12 @@ std::pair<Number, size_t> Interpreter::callSeq(int64_t id, const Number& arg) {
 
 size_t Interpreter::callPrg(int64_t id, int64_t start, Memory& mem) {
   // load program
-  id = -id;  // negative IDs for internal programs
+  id = -id;  // internally use negative IDs for prg calls
   auto& call_program = getProgram(id);
 
   // check for recursive calls
   if (running_programs.find(id) != running_programs.end()) {
-    throw std::runtime_error("Recursion detected: " +
-                             OeisSequence(id).id_str());
+    throw std::runtime_error("Recursion detected: " + getProgramPath(id));
   }
 
   // get number of inputs and outputs
@@ -466,14 +473,6 @@ size_t Interpreter::callPrg(int64_t id, int64_t start, Memory& mem) {
     mem.set(start + i, tmp.get(i));
   }
   return steps;
-}
-
-std::string getProgramPath(int64_t id) {
-  if (id < 0) {
-    return OeisSequence(-id).getProgramPath("prg", "P");
-  } else {
-    return OeisSequence(id).getProgramPath();
-  }
 }
 
 const Program& Interpreter::getProgram(int64_t id) {
