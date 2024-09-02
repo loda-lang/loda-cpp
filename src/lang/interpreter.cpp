@@ -115,6 +115,7 @@ Number Interpreter::calc(const Operation::Type type, const Number& target,
     case Operation::Type::CLR:
     case Operation::Type::SRT:
     case Operation::Type::SEQ:
+    case Operation::Type::PRG:
     case Operation::Type::__COUNT:
       Log::get().error(
           "non-arithmetic operation: " + Operation::Metadata::get(type).name,
@@ -230,11 +231,18 @@ size_t Interpreter::run(const Program& p, Memory& mem) {
       case Operation::Type::SEQ: {
         target = get(op.target, mem);
         source = get(op.source, mem);
-        auto result = call(source.asInt(), target);
+        auto result = callSeq(source.asInt(), target);
         set(op.target, result.first, mem, op);
         cycles += result.second;
         break;
       }
+      case Operation::Type::PRG: {
+        target = get(op.target, mem, true);
+        source = get(op.source, mem);
+        cycles += callPrg(source.asInt(), target.asInt(), mem);
+        break;
+      }
+
       case Operation::Type::CLR: {
         length = get(op.source, mem).asInt();
         start = get(op.target, mem, true).asInt();
@@ -375,7 +383,15 @@ void Interpreter::set(const Operand& a, const Number& v, Memory& mem,
   mem.set(index, v);
 }
 
-std::pair<Number, size_t> Interpreter::call(int64_t id, const Number& arg) {
+std::string getProgramPath(int64_t id) {
+  if (id < 0) {
+    return OeisSequence(-id).getProgramPath("prg", "P");
+  } else {
+    return OeisSequence(id).getProgramPath();
+  }
+}
+
+std::pair<Number, size_t> Interpreter::callSeq(int64_t id, const Number& arg) {
   if (arg < 0) {
     throw std::runtime_error("seq using negative argument: " +
                              std::to_string(id));
@@ -421,15 +437,52 @@ std::pair<Number, size_t> Interpreter::call(int64_t id, const Number& arg) {
   return result;
 }
 
+size_t Interpreter::callPrg(int64_t id, int64_t start, Memory& mem) {
+  // load program
+  id = -id;  // internally use negative IDs for prg calls
+  auto& call_program = getProgram(id);
+
+  // check for recursive calls
+  if (running_programs.find(id) != running_programs.end()) {
+    throw std::runtime_error("Recursion detected: " + getProgramPath(id));
+  }
+
+  // get number of inputs and outputs
+  auto inputs = call_program.getDirective("inputs");
+  auto outputs = call_program.getDirective("outputs");
+
+  // set inputs for program
+  Memory tmp;
+  for (int64_t i = 0; i < inputs; i++) {
+    tmp.set(i, mem.get(start + i));
+  }
+
+  // evaluate program
+  size_t steps = 0;
+  running_programs.insert(id);
+  try {
+    steps = run(call_program, tmp);
+    running_programs.erase(id);
+  } catch (...) {
+    running_programs.erase(id);
+    std::rethrow_exception(std::current_exception());
+  }
+
+  // set outputs for program
+  for (int64_t i = 0; i < outputs; i++) {
+    mem.set(start + i, tmp.get(i));
+  }
+  return steps;
+}
+
 const Program& Interpreter::getProgram(int64_t id) {
   if (missing_programs.find(id) != missing_programs.end()) {
-    throw std::runtime_error("Program not found: " + OeisSequence(id).id_str());
+    throw std::runtime_error("Program not found: " + getProgramPath(id));
   }
   if (program_cache.find(id) == program_cache.end()) {
-    Parser parser;
-    auto path = OeisSequence(id).getProgramPath();
     try {
-      program_cache[id] = parser.parse(path);
+      Parser parser;
+      program_cache[id] = parser.parse(getProgramPath(id));
     } catch (...) {
       missing_programs.insert(id);
       std::rethrow_exception(std::current_exception());

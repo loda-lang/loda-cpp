@@ -84,9 +84,14 @@ std::string OeisSequence::getProgramPath(bool local) const {
   if (local) {
     return Setup::getProgramsHome() + "local" + FILE_SEP + id_str() + ".asm";
   } else {
-    return Setup::getProgramsHome() + "oeis" + FILE_SEP + dir_str() + FILE_SEP +
-           id_str() + ".asm";
+    return getProgramPath("oeis", "A");
   }
+}
+
+std::string OeisSequence::getProgramPath(const std::string& dir,
+                                         const std::string& prefix) const {
+  return Setup::getProgramsHome() + dir + FILE_SEP + dir_str() + FILE_SEP +
+         id_str(prefix) + ".asm";
 }
 
 std::string OeisSequence::getBFilePath() const {

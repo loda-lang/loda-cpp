@@ -2,9 +2,11 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v24.9.2
+
 ## Featues
 
-* Support for program directives
+* Support for directives and `prg` instruction
 
 ### Enhancements
 

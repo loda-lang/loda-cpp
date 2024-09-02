@@ -35,7 +35,9 @@ class Interpreter {
   void set(const Operand &a, const Number &v, Memory &mem,
            const Operation &last_op) const;
 
-  std::pair<Number, size_t> call(int64_t id, const Number &arg);
+  std::pair<Number, size_t> callSeq(int64_t id, const Number &arg);
+
+  size_t callPrg(int64_t id, int64_t start, Memory &mem);
 
   const Program &getProgram(int64_t id);
 
