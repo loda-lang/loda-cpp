@@ -130,6 +130,7 @@ bool Iterator::inc(Operation& op) {
     case Operation::Type::CLR:      // skipped
     case Operation::Type::SRT:      // skipped
     case Operation::Type::SEQ:      // skipped
+    case Operation::Type::PRG:      // skipped
     case Operation::Type::__COUNT:  // skipped
 
     case Operation::Type::LPB:

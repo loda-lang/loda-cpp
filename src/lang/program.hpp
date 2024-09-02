@@ -69,7 +69,7 @@ class Operation {
     __COUNT  // number of operation types
   };
 
-  static const std::array<Type, 31> Types;
+  static const std::array<Type, 32> Types;
 
   class Metadata {
    public:
@@ -123,6 +123,8 @@ class Program {
 
   void push_back(Operation::Type t, Operand::Type tt, const Number &tv,
                  Operand::Type st, const Number &sv);
+
+  int64_t getDirective(const std::string &name) const;
 
   bool operator==(const Program &p) const;
 

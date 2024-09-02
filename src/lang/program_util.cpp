@@ -97,7 +97,7 @@ bool ProgramUtil::isArithmetic(Operation::Type t) {
   return (t != Operation::Type::NOP && t != Operation::Type::DBG &&
           t != Operation::Type::LPB && t != Operation::Type::LPE &&
           t != Operation::Type::CLR && t != Operation::Type::SRT &&
-          t != Operation::Type::SEQ);
+          t != Operation::Type::SEQ && t != Operation::Type::PRG);
 }
 
 bool ProgramUtil::isCommutative(Operation::Type t) {

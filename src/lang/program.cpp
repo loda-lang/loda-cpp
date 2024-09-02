@@ -4,7 +4,7 @@
 
 #include "lang/number.hpp"
 
-const std::array<Operation::Type, 31> Operation::Types = {
+const std::array<Operation::Type, 32> Operation::Types = {
     Operation::Type::NOP, Operation::Type::MOV, Operation::Type::ADD,
     Operation::Type::SUB, Operation::Type::TRN, Operation::Type::MUL,
     Operation::Type::DIV, Operation::Type::DIF, Operation::Type::MOD,
@@ -15,7 +15,7 @@ const std::array<Operation::Type, 31> Operation::Types = {
     Operation::Type::MAX, Operation::Type::BAN, Operation::Type::BOR,
     Operation::Type::BXO, Operation::Type::LPB, Operation::Type::LPE,
     Operation::Type::CLR, Operation::Type::SRT, Operation::Type::SEQ,
-    Operation::Type::DBG,
+    Operation::Type::PRG, Operation::Type::DBG,
 };
 
 const Operation::Metadata& Operation::Metadata::get(Type t) {
@@ -175,6 +175,14 @@ void Program::push_front(Operation::Type t, Operand::Type tt, const Number& tv,
 void Program::push_back(Operation::Type t, Operand::Type tt, const Number& tv,
                         Operand::Type st, const Number& sv) {
   ops.insert(ops.end(), Operation(t, Operand(tt, tv), Operand(st, sv)));
+}
+
+int64_t Program::getDirective(const std::string& name) const {
+  auto d = directives.find(name);
+  if (d == directives.end()) {
+    throw std::runtime_error("directive not found: " + name);
+  }
+  return d->second;
 }
 
 bool Program::operator==(const Program& p) const { return (ops == p.ops); }

@@ -431,26 +431,60 @@ std::pair<Number, size_t> Interpreter::callSeq(int64_t id, const Number& arg) {
 }
 
 size_t Interpreter::callPrg(int64_t id, int64_t start, Memory& mem) {
-  // TODO
-  return 0;
+  // load program
+  id = -id;  // negative IDs for internal programs
+  auto& call_program = getProgram(id);
+
+  // check for recursive calls
+  if (running_programs.find(id) != running_programs.end()) {
+    throw std::runtime_error("Recursion detected: " +
+                             OeisSequence(id).id_str());
+  }
+
+  // get number of inputs and outputs
+  auto inputs = call_program.getDirective("inputs");
+  auto outputs = call_program.getDirective("outputs");
+
+  // set inputs for program
+  Memory tmp;
+  for (int64_t i = 0; i < inputs; i++) {
+    tmp.set(i, mem.get(start + i));
+  }
+
+  // evaluate program
+  size_t steps = 0;
+  running_programs.insert(id);
+  try {
+    steps = run(call_program, tmp);
+    running_programs.erase(id);
+  } catch (...) {
+    running_programs.erase(id);
+    std::rethrow_exception(std::current_exception());
+  }
+
+  // set outputs for program
+  for (int64_t i = 0; i < outputs; i++) {
+    mem.set(start + i, tmp.get(i));
+  }
+  return steps;
+}
+
+std::string getProgramPath(int64_t id) {
+  if (id < 0) {
+    return OeisSequence(-id).getProgramPath("prg", "P");
+  } else {
+    return OeisSequence(id).getProgramPath();
+  }
 }
 
 const Program& Interpreter::getProgram(int64_t id) {
   if (missing_programs.find(id) != missing_programs.end()) {
-    throw std::runtime_error("Program not found: " + OeisSequence(id).id_str());
+    throw std::runtime_error("Program not found: " + getProgramPath(id));
   }
   if (program_cache.find(id) == program_cache.end()) {
-    Parser parser;
-    std::string path;
-    if (id < 0) {
-      std::stringstream s;
-      s << "P" << std::setw(3) << std::setfill('0') << -id;
-      path = Setup::getProgramsHome() + "prg" + FILE_SEP + s.str() + ".asm";
-    } else {
-      path = OeisSequence(id).getProgramPath();
-    }
     try {
-      program_cache[id] = parser.parse(path);
+      Parser parser;
+      program_cache[id] = parser.parse(getProgramPath(id));
     } catch (...) {
       missing_programs.insert(id);
       std::rethrow_exception(std::current_exception());

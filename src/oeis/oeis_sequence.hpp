@@ -32,6 +32,9 @@ class OeisSequence {
 
   std::string getProgramPath(bool local = false) const;
 
+  std::string getProgramPath(const std::string& dir,
+                             const std::string& prefix) const;
+
   std::string getBFilePath() const;
 
   Sequence getTerms(int64_t max_num_terms = EXTENDED_SEQ_LENGTH) const;
