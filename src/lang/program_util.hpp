@@ -16,6 +16,9 @@ class ProgramUtil {
   static bool replaceOps(Program &p, Operation::Type oldType,
                          Operation::Type newType);
 
+  static size_t replaceSubprogams(Program &p, const Program &search,
+                                  const Program &replace);
+
   static bool isNop(const Operation &op);
 
   static size_t numOps(const Program &p, bool withNops);
@@ -49,6 +52,10 @@ class ProgramUtil {
   static bool getUsedMemoryCells(const Program &p,
                                  std::unordered_set<int64_t> &used_cells,
                                  int64_t &larged_used, int64_t max_memory);
+
+  static bool getUsedUninitializedCells(const Program &p,
+                                        std::set<int64_t> &initialized,
+                                        std::set<int64_t> &uninitialized);
 
   static int64_t getLargestDirectMemoryCell(const Program &p);
 

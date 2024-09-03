@@ -37,6 +37,31 @@ bool ProgramUtil::replaceOps(Program &p, Operation::Type oldType,
   return result;
 }
 
+size_t ProgramUtil::replaceSubprogams(Program &p, const Program &search,
+                                      const Program &replace) {
+  if (p.ops.empty() || search.ops.empty() || search.ops.size() > p.ops.size()) {
+    return 0;
+  }
+  size_t count = 0;
+  const size_t max_start = p.ops.size() - search.ops.size();
+  for (size_t i = 0; i < max_start; i++) {
+    bool matches = true;
+    for (size_t j = 0; j < search.ops.size(); j++) {
+      if (p.ops[i + j] != search.ops[j]) {
+        matches = false;
+        break;
+      }
+    }
+    if (matches) {
+      p.ops.erase(p.ops.begin() + i, p.ops.begin() + i + search.ops.size());
+      p.ops.insert(p.ops.begin() + i, replace.ops.begin(), replace.ops.end());
+      i += replace.ops.size() - 1;
+      count++;
+    }
+  }
+  return count;
+}
+
 bool ProgramUtil::isNop(const Operation &op) {
   if (op.type == Operation::Type::NOP || op.type == Operation::Type::DBG) {
     return true;
@@ -236,6 +261,52 @@ bool ProgramUtil::getUsedMemoryCells(const Program &p,
   }
   const auto max = [](int64_t a, int64_t b) { return std::max(a, b); };
   largest_used = std::accumulate(used_cells.begin(), used_cells.end(), 0, max);
+  return true;
+}
+
+bool ProgramUtil::getUsedUninitializedCells(const Program &p,
+                                            std::set<int64_t> &initialized,
+                                            std::set<int64_t> &uninitialized) {
+  // find cells that are read and uninitialized
+  for (const auto &op : p.ops) {
+    // undecidable if there are indirect operands
+    if (hasIndirectOperand(p)) {
+      return false;
+    }
+    const auto &meta = Operation::Metadata::get(op.type);
+    // check target memory cell
+    if (meta.num_operands > 0 && op.target.type == Operand::Type::DIRECT) {
+      auto t = op.target.value.asInt();
+      if (meta.is_reading_target && initialized.find(t) == initialized.end()) {
+        uninitialized.insert(t);
+      }
+      if (meta.is_writing_target) {
+        initialized.insert(t);
+      }
+    }
+    // check source memory cell
+    if (meta.num_operands > 1 && op.source.type == Operand::Type::DIRECT) {
+      auto s = op.source.value.asInt();
+      if (initialized.find(s) == initialized.end()) {
+        uninitialized.insert(s);
+      }
+    }
+    if (op.type == Operation::Type::CLR) {
+      if (op.source.type == Operand::Type::CONSTANT) {
+        // start of region (direct memory cell)
+        const auto t = op.target.value.asInt();
+        // region length (constant value)
+        const auto s = op.source.value.asInt();
+        for (int64_t i = 0; i < s; i++) {
+          initialized.insert(t + i);
+        }
+      } else {
+        // undecidable if the region length it not constant
+        return false;
+      }
+    }
+    // TODO: handle prg operations
+  }
   return true;
 }
 

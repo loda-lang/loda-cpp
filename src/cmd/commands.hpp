@@ -40,6 +40,8 @@ class Commands {
 
   // hidden commands
 
+  void replace(const std::string& search_path, const std::string& replace_path);
+
   void autoFold();
 
   void boinc();
