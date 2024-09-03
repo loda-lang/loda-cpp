@@ -270,7 +270,7 @@ bool ProgramUtil::getUsedUninitializedCells(const Program &p,
   // find cells that are read and uninitialized
   for (const auto &op : p.ops) {
     // undecidable if there are indirect operands
-    if (hasIndirectOperand(p)) {
+    if (hasIndirectOperand(op)) {
       return false;
     }
     const auto &meta = Operation::Metadata::get(op.type);
