@@ -291,6 +291,7 @@ bool ProgramUtil::getUsedUninitializedCells(const Program &p,
         uninitialized.insert(s);
       }
     }
+    // check region operations
     if (op.type == Operation::Type::CLR) {
       if (op.source.type == Operand::Type::CONSTANT) {
         // start of region (direct memory cell)
@@ -304,8 +305,10 @@ bool ProgramUtil::getUsedUninitializedCells(const Program &p,
         // undecidable if the region length it not constant
         return false;
       }
+    } else if (op.type == Operation::Type::PRG) {
+      // TODO: handle prg operations
+      return false;
     }
-    // TODO: handle prg operations
   }
   return true;
 }
