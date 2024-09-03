@@ -5,7 +5,6 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Enhancements
 
 * Internal `replace` command
-* Enhanced `unfold` command
 
 ## v24.9.2
 
