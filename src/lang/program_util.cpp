@@ -181,8 +181,8 @@ bool ProgramUtil::isNonTrivialClear(const Operation &op) {
 }
 
 bool ProgramUtil::isWritingRegion(Operation::Type t) {
-  // clear and sort operations write memory regions
-  return (t == Operation::Type::CLR || t == Operation::Type::SRT);
+  return (t == Operation::Type::CLR || t == Operation::Type::PRG ||
+          t == Operation::Type::SRT);
 }
 
 bool ProgramUtil::hasIndirectOperand(const Operation &op) {

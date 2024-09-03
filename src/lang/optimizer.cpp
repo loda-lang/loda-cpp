@@ -344,6 +344,7 @@ bool Optimizer::simplifyOperations(Program &p) const {
       case Operation::Type::LPE:
       case Operation::Type::CLR:
       case Operation::Type::SRT:
+      case Operation::Type::PRG:
       case Operation::Type::SEQ:
         can_simplify = false;
         break;
@@ -518,7 +519,8 @@ bool Optimizer::canChangeVariableOrder(const Program &p) const {
   return (std::none_of(p.ops.begin(), p.ops.end(), [&](const Operation &op) {
     return ProgramUtil::hasIndirectOperand(op) ||
            ProgramUtil::isNonTrivialLoopBegin(op) ||
-           ProgramUtil::isNonTrivialClear(op);
+           ProgramUtil::isNonTrivialClear(op) ||
+           ProgramUtil::isWritingRegion(op.type);
   }));
 }
 
@@ -629,6 +631,7 @@ bool Optimizer::doPartialEval(Program &p, size_t op_index,
       return false;
     }
     case Operation::Type::CLR:
+    case Operation::Type::PRG:
     case Operation::Type::SRT: {
       values.clear();
       return false;
