@@ -284,6 +284,35 @@ void Commands::unfold(const std::string& path) {
   ProgramUtil::print(p, std::cout);
 }
 
+void Commands::replace(const std::string& search_path,
+                       const std::string& replace_path) {
+  initLog(false);
+  Parser parser;
+  Program search = parser.parse(search_path);
+  Program replace = parser.parse(replace_path);
+  ProgramUtil::removeOps(search, Operation::Type::NOP);
+  ProgramUtil::removeOps(replace, Operation::Type::NOP);
+  OeisManager manager(settings);
+  auto progs = manager.loadAllPrograms();
+  AdaptiveScheduler log_scheduler(30);
+  size_t count = 0;
+  for (size_t id = 0; id < progs.size(); id++) {
+    auto p = progs[id];
+    ProgramUtil::removeOps(p, Operation::Type::NOP);
+    if (ProgramUtil::replaceSubprogams(p, search, replace)) {
+      manager.updateProgram(id, p, ValidationMode::BASIC);
+      Log::get().info("Replaced in " + OeisSequence(id).id_str());
+      count++;
+    }
+    if (log_scheduler.isTargetReached()) {
+      log_scheduler.reset();
+      Log::get().info("Processed " + std::to_string(id) + " programs");
+    }
+  }
+  Log::get().info("Finished replacing in " + std::to_string(count) +
+                  " programs (" + std::to_string(progs.size()) + " total)");
+}
+
 void Commands::autoFold() {
   initLog(false);
   OeisManager manager(settings);
