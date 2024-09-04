@@ -37,31 +37,6 @@ bool ProgramUtil::replaceOps(Program &p, Operation::Type oldType,
   return result;
 }
 
-size_t ProgramUtil::replaceSubprogams(Program &p, const Program &search,
-                                      const Program &replace) {
-  if (p.ops.empty() || search.ops.empty() || search.ops.size() > p.ops.size()) {
-    return 0;
-  }
-  size_t count = 0;
-  const size_t max_start = p.ops.size() - search.ops.size();
-  for (size_t i = 0; i < max_start; i++) {
-    bool matches = true;
-    for (size_t j = 0; j < search.ops.size(); j++) {
-      if (p.ops[i + j] != search.ops[j]) {
-        matches = false;
-        break;
-      }
-    }
-    if (matches) {
-      p.ops.erase(p.ops.begin() + i, p.ops.begin() + i + search.ops.size());
-      p.ops.insert(p.ops.begin() + i, replace.ops.begin(), replace.ops.end());
-      i += replace.ops.size() - 1;
-      count++;
-    }
-  }
-  return count;
-}
-
 bool ProgramUtil::isNop(const Operation &op) {
   if (op.type == Operation::Type::NOP || op.type == Operation::Type::DBG) {
     return true;

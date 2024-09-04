@@ -15,6 +15,7 @@
 #include "lang/comments.hpp"
 #include "lang/optimizer.hpp"
 #include "lang/program_util.hpp"
+#include "lang/subprogram.hpp"
 #include "mine/iterator.hpp"
 #include "mine/miner.hpp"
 #include "mine/mutator.hpp"
@@ -299,7 +300,7 @@ void Commands::replace(const std::string& search_path,
   for (size_t id = 0; id < progs.size(); id++) {
     auto p = progs[id];
     ProgramUtil::removeOps(p, Operation::Type::NOP);
-    if (ProgramUtil::replaceSubprogams(p, search, replace)) {
+    if (Subprogram::replaceAllExact(p, search, replace)) {
       manager.updateProgram(id, p, ValidationMode::BASIC);
       Log::get().info("Replaced in " + OeisSequence(id).id_str());
       count++;
