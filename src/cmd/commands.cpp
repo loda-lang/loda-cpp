@@ -302,7 +302,7 @@ void Commands::replace(const std::string& search_path,
     ProgramUtil::removeOps(p, Operation::Type::NOP);
     if (Subprogram::replaceAllExact(p, search, replace)) {
       manager.updateProgram(id, p, ValidationMode::BASIC);
-      Log::get().info("Replaced in " + OeisSequence(id).id_str());
+      Log::get().info("Replaced in " + OeisSequence(id).idStr());
       count++;
     }
     if (log_scheduler.isTargetReached()) {
@@ -345,8 +345,8 @@ void Commands::autoFold() {
       }
     }
     if (folded) {
-      Log::get().info("Folded " + OeisSequence(main_id).id_str() + " using " +
-                      OeisSequence(sub_id).id_str());
+      Log::get().info("Folded " + OeisSequence(main_id).idStr() + " using " +
+                      OeisSequence(sub_id).idStr());
     }
   }
 }
@@ -443,7 +443,7 @@ void Commands::testAnalyzer() {
       continue;
     }
     OeisSequence seq(id);
-    auto id_str = seq.id_str();
+    auto id_str = seq.idStr();
     std::ifstream in(seq.getProgramPath());
     if (!in) {
       continue;
@@ -525,7 +525,7 @@ void Commands::testPari(const std::string& test_id) {
       }
       if (!hasEvalError) {
         Log::get().error(
-            "Expected evaluation error for " + seq.id_str() + ": " + e.what(),
+            "Expected evaluation error for " + seq.idStr() + ": " + e.what(),
             true);
       }
     }
@@ -558,10 +558,10 @@ void Commands::testPari(const std::string& test_id) {
       }
     }
     Log::get().info("Checking " + std::to_string(numTerms) + " terms of " +
-                    seq.id_str() + ": " + pari_formula.toString());
+                    seq.idStr() + ": " + pari_formula.toString());
 
     if (numTerms == 0) {
-      Log::get().warn("Skipping " + seq.id_str());
+      Log::get().warn("Skipping " + seq.idStr());
       continue;
     }
 
@@ -569,7 +569,7 @@ void Commands::testPari(const std::string& test_id) {
     try {
       evaluator.eval(program, expSeq, numTerms);
     } catch (const std::exception&) {
-      Log::get().warn("Cannot evaluate " + seq.id_str());
+      Log::get().warn("Cannot evaluate " + seq.idStr());
       continue;
     }
     if (expSeq.empty()) {

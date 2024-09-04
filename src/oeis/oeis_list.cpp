@@ -157,7 +157,7 @@ void OeisList::mergeMap(const std::string& file_name,
   }
   std::ofstream out(getListsHome() + file_name);
   for (auto it : map) {
-    out << OeisSequence(it.first).id_str() << ": " << it.second
+    out << OeisSequence(it.first).idStr() << ": " << it.second
         << std::endl;  // flush at every line to avoid corrupt data
   }
   out.close();

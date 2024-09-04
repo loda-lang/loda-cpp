@@ -24,11 +24,11 @@ class OeisSequence {
 
   OeisSequence(size_t id, const std::string& name, const Sequence& full);
 
-  std::string id_str(const std::string& prefix = "A") const;
+  std::string idStr(const std::string& prefix = "A") const;
 
-  std::string dir_str() const;
+  std::string dirStr() const;
 
-  std::string url_str() const;
+  std::string urlStr() const;
 
   std::string getProgramPath(bool local = false) const;
 

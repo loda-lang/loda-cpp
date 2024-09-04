@@ -150,7 +150,7 @@ bool FormulaGenerator::update(const Operation& op) {
     case Operation::Type::SEQ: {
       res =
           Expression(Expression::Type::FUNCTION,
-                     OeisSequence(source.value.asInt()).id_str(), {prevTarget});
+                     OeisSequence(source.value.asInt()).idStr(), {prevTarget});
       break;
     }
     case Operation::Type::TRN: {
@@ -443,7 +443,7 @@ bool addProgramIds(const Program& p, std::set<int64_t>& ids) {
 bool FormulaGenerator::generate(const Program& p, int64_t id, Formula& result,
                                 bool withDeps) {
   if (id > 0) {
-    Log::get().debug("Generating formula for " + OeisSequence(id).id_str());
+    Log::get().debug("Generating formula for " + OeisSequence(id).idStr());
   }
   formula.clear();
   freeNameIndex = 0;
@@ -461,7 +461,7 @@ bool FormulaGenerator::generate(const Program& p, int64_t id, Formula& result,
     Parser parser;
     for (auto id2 : ids) {
       OeisSequence seq(id2);
-      Log::get().debug("Adding dependency " + seq.id_str());
+      Log::get().debug("Adding dependency " + seq.idStr());
       Program p2;
       try {
         p2 = parser.parse(seq.getProgramPath());
@@ -474,7 +474,7 @@ bool FormulaGenerator::generate(const Program& p, int64_t id, Formula& result,
         return false;
       }
       auto from = getCellName(Program::INPUT_CELL);
-      auto to = seq.id_str();
+      auto to = seq.idStr();
       Log::get().debug("Replacing " + from + " by " + to);
       formula.replaceName(from, to);
       result.entries.insert(formula.entries.begin(), formula.entries.end());

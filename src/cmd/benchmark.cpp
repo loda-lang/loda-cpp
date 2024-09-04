@@ -104,7 +104,7 @@ void Benchmark::program(size_t id, size_t num_terms) {
   auto program = parser.parse(seq.getProgramPath());
   auto speed_reg = programEval(program, false, num_terms);
   auto speed_inc = programEval(program, true, num_terms);
-  std::cout << "| " << seq.id_str() << "  | "
+  std::cout << "| " << seq.idStr() << "  | "
             << fillString(std::to_string(num_terms), 6) << " | "
             << fillString(speed_reg, 8) << " | " << fillString(speed_inc, 8)
             << " |" << std::endl;
@@ -158,7 +158,7 @@ void Benchmark::findSlow(int64_t num_terms, Operation::Type type) {
     try {
       program = parser.parse(in);
     } catch (std::exception& e) {
-      Log::get().warn("Skipping " + oeisSeq.id_str() + ": " + e.what());
+      Log::get().warn("Skipping " + oeisSeq.idStr() + ": " + e.what());
       continue;
     }
     if (type != Operation::Type::NOP && !ProgramUtil::hasOp(program, type)) {
@@ -169,7 +169,7 @@ void Benchmark::findSlow(int64_t num_terms, Operation::Type type) {
     auto end_time = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
         end_time - start_time);
-    Log::get().info(oeisSeq.id_str() + ": " + std::to_string(duration.count()) +
+    Log::get().info(oeisSeq.idStr() + ": " + std::to_string(duration.count()) +
                     "µs");
     queue.push(std::pair<int64_t, int64_t>(duration.count(), oeisSeq.id));
   }
@@ -178,7 +178,7 @@ void Benchmark::findSlow(int64_t num_terms, Operation::Type type) {
     auto entry = queue.top();
     queue.pop();
     OeisSequence oeisSeq(entry.second);
-    std::cout << "[" << oeisSeq.id_str()
+    std::cout << "[" << oeisSeq.idStr()
               << "](https://loda-lang.org/edit/?oeis=" << entry.second
               << "): " << (entry.first / 1000) << "ms" << std::endl;
   }

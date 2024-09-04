@@ -408,8 +408,7 @@ std::pair<Number, size_t> Interpreter::callSeq(int64_t id, const Number& arg) {
 
   // check for recursive calls
   if (running_programs.find(id) != running_programs.end()) {
-    throw std::runtime_error("Recursion detected: " +
-                             OeisSequence(id).id_str());
+    throw std::runtime_error("Recursion detected: " + OeisSequence(id).idStr());
   }
 
   // evaluate program

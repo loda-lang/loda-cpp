@@ -257,12 +257,12 @@ std::vector<bool> OeisProgram::collectLatestProgramIds(
           OeisSequence seq(id_str);
           if (isFile(seq.getProgramPath())) {
             if (status == "A" && num_added_ids < max_added_programs) {
-              Log::get().debug("Added program for " + seq.id_str());
+              Log::get().debug("Added program for " + seq.idStr());
               ids.insert(seq.id);
               num_added_ids++;
             } else if (status == "M" &&
                        num_modified_ids < max_modified_programs) {
-              Log::get().debug("Modified program for " + seq.id_str());
+              Log::get().debug("Modified program for " + seq.idStr());
               ids.insert(seq.id);
               num_modified_ids++;
             }

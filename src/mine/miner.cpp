@@ -402,7 +402,7 @@ void Miner::submit(const std::string &path, std::string id) {
   OeisSequence seq(id);
   Settings settings(this->settings);
   settings.print_as_b_file = false;
-  Log::get().info("Validating program for " + seq.id_str());
+  Log::get().info("Validating program for " + seq.idStr());
   Evaluator evaluator(settings);
   auto terms = seq.getTerms(OeisSequence::FULL_SEQ_LENGTH);
   auto num_required = OeisProgram::getNumRequiredTerms(program);

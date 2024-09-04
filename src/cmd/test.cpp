@@ -732,7 +732,7 @@ bool Test::checkIncEval(const Settings& settings, size_t id, std::string path,
   auto name = path;
   if (path.empty()) {
     OeisSequence s(id);
-    name = s.id_str();
+    name = s.idStr();
     path = s.getProgramPath();
   }
   Parser parser;
@@ -881,7 +881,7 @@ void checkSeqAgainstTestBFile(int64_t seq_id, int64_t offset,
   std::stringstream buf;
   t.getTerms(max_num_terms).to_b_file(buf, offset);
   std::ifstream bfile(std::string("tests") + FILE_SEP + "sequence" + FILE_SEP +
-                      t.id_str("b") + ".txt");
+                      t.idStr("b") + ".txt");
   std::string x, y;
   while (std::getline(bfile, x)) {
     if (!std::getline(buf, y)) {
@@ -1068,7 +1068,7 @@ void Test::checkFormulas(const std::string& testFile, FormulaType type) {
   FormulaGenerator generator;
   for (const auto& e : map) {
     OeisSequence seq(e.first);
-    Log::get().info("Testing formula for " + seq.id_str() + ": " + e.second);
+    Log::get().info("Testing formula for " + seq.idStr() + ": " + e.second);
     auto p = parser.parse(seq.getProgramPath());
     Formula f;
     if (!generator.generate(p, seq.id, f, true)) {
@@ -1371,8 +1371,8 @@ void eval(const Program& p, Evaluator& evaluator, Sequence& s) {
 
 void Test::testMatcherPair(Matcher& matcher, size_t id1, size_t id2) {
   Log::get().info("Testing " + matcher.getName() + " matcher for " +
-                  OeisSequence(id1).id_str() + " -> " +
-                  OeisSequence(id2).id_str());
+                  OeisSequence(id1).idStr() + " -> " +
+                  OeisSequence(id2).idStr());
   Parser parser;
   Evaluator evaluator(settings);
   auto p1 = parser.parse(OeisSequence(id1).getProgramPath());
@@ -1399,7 +1399,7 @@ void Test::testMatcherPair(Matcher& matcher, size_t id1, size_t id2) {
     ProgramUtil::print(result[0].second, std::cout);
     Log::get().error(matcher.getName() +
                          " matcher generated wrong program for " +
-                         OeisSequence(id2).id_str(),
+                         OeisSequence(id2).idStr(),
                      true);
   }
 }

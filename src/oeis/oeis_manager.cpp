@@ -510,12 +510,12 @@ void OeisManager::generateLists() {
       replaceAll(buf, "_", "\\_");
       replaceAll(buf, "|", "\\|");
       list_files.at(list_index)
-          << "* [" << s.id_str() << "](https://oeis.org/" << s.id_str()
+          << "* [" << s.idStr() << "](https://oeis.org/" << s.idStr()
           << ") ([program](/edit/?oeis=" << s.id << ")): " << buf << "\n";
 
       num_processed++;
     } else {
-      no_loda << s.id_str() << ": " << s.name << "\n";
+      no_loda << s.idStr() << ": " << s.name << "\n";
     }
   }
 
@@ -531,8 +531,8 @@ void OeisManager::generateLists() {
       std::ofstream list_file(list_path);
       list_file << "---\n";
       list_file << "layout: page\n";
-      list_file << "title: Programs for " << start.id_str() << "-"
-                << end.id_str() << "\n";
+      list_file << "title: Programs for " << start.idStr() << "-" << end.idStr()
+                << "\n";
       list_file << "permalink: /list" << i << "/\n";
       list_file << "---\n";
       list_file << "List of integer sequences with links to LODA programs."
@@ -723,8 +723,8 @@ void OeisManager::alert(Program p, size_t id, const std::string &prefix,
     full += ". " + sub;
   }
   Log::AlertDetails details;
-  details.title = seq.id_str();
-  details.title_link = seq.url_str();
+  details.title = seq.idStr();
+  details.title_link = seq.urlStr();
   details.color = color;
   std::stringstream buf;
   // TODO: code block markers must be escaped for Slack, but not for Discord
@@ -951,7 +951,7 @@ std::vector<Program> OeisManager::loadAllPrograms() {
       programs[id] = parser.parse(in);
       loaded++;
     } catch (const std::exception &e) {
-      Log::get().warn("Skipping " + seq.id_str() + ": " + e.what());
+      Log::get().warn("Skipping " + seq.idStr() + ": " + e.what());
       continue;
     }
     if (scheduler.isTargetReached() || loaded == num_programs) {
