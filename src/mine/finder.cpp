@@ -175,7 +175,8 @@ std::pair<std::string, Program> Finder::checkProgramExtended(
     if (check_minimized.first == status_t::ERROR) {
       if (check_vanilla.first == status_t::OK) {
         // looks like the minimization changed the semantics of the program
-        notifyUnfoldOrMinimizeProblem(result.second, seq.idStr());
+        notifyUnfoldOrMinimizeProblem(result.second,
+                                      OeisSequence::idStr(seq.id));
       }
       // we ignore the case where the base program has a warning and minimized
       // program an error, because it indicates a problem in the base program
@@ -215,7 +216,7 @@ std::pair<std::string, Program> Finder::checkProgramBasic(
   if (!is_new) {
     // check if another miner already submitted a program for this sequence
     if (change_type == first) {
-      Log::get().debug("Skipping update of " + seq.idStr() +
+      Log::get().debug("Skipping update of " + OeisSequence::idStr(seq.id) +
                        " because program is not new");
       return result;
     }
@@ -228,7 +229,7 @@ std::pair<std::string, Program> Finder::checkProgramBasic(
     }
     // compare with hash of existing program
     if (previous_hash != OeisProgram::getTransitiveProgramHash(existing)) {
-      Log::get().debug("Skipping update of " + seq.idStr() +
+      Log::get().debug("Skipping update of " + OeisSequence::idStr(seq.id) +
                        " because of hash mismatch");
       return result;
     }
@@ -370,7 +371,8 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
   auto num_check = OeisProgram::getNumCheckTerms(full_check);
   auto terms = seq.getTerms(num_check);
   if (terms.empty()) {
-    Log::get().error("Error fetching b-file for " + seq.idStr(), true);
+    Log::get().error("Error fetching b-file for " + OeisSequence::idStr(seq.id),
+                     true);
   }
 
   // evaluate optimized program for fixed number of terms
