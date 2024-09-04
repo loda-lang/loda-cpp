@@ -15,9 +15,6 @@ class ProgramUtil {
   static bool replaceOps(Program &p, Operation::Type oldType,
                          Operation::Type newType);
 
-  static size_t replaceSubprogams(Program &p, const Program &search,
-                                  const Program &replace);
-
   static bool isNop(const Operation &op);
 
   static size_t numOps(const Program &p, bool withNops);

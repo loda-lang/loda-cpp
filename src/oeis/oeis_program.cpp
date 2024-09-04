@@ -6,6 +6,7 @@
 #include "lang/comments.hpp"
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
+#include "lang/subprogram.hpp"
 #include "oeis/oeis_sequence.hpp"
 #include "sys/file.hpp"
 #include "sys/git.hpp"
@@ -187,36 +188,6 @@ bool OeisProgram::autoUnfold(Program &p) {
   return changed;
 }
 
-bool updateOperandFold(const Operand &src, const Operand &trg,
-                       std::map<int64_t, int64_t> &cell_map) {
-  if (src.type != trg.type) {
-    return false;
-  }
-  switch (src.type) {
-    case Operand::Type::CONSTANT: {
-      if (src.value != trg.value) {
-        return false;
-      }
-      break;
-    }
-    case Operand::Type::DIRECT: {
-      auto s = src.value.asInt();
-      auto t = trg.value.asInt();
-      auto it = cell_map.find(s);
-      if (it == cell_map.end()) {
-        cell_map[s] = t;
-      } else if (it->second != t) {
-        return false;
-      }
-      break;
-    }
-    case Operand::Type::INDIRECT: {
-      return false;
-    }
-  }
-  return true;
-}
-
 bool OeisProgram::fold(Program &main, Program sub, size_t subId,
                        std::map<int64_t, int64_t> &cell_map) {
   // prepare and check subprogram
@@ -232,32 +203,7 @@ bool OeisProgram::fold(Program &main, Program sub, size_t subId,
     output_cell = last.source.value.asInt();
     sub.ops.pop_back();
   }
-  // find a match
-  size_t main_pos = 0, sub_pos = 0;
-  while (sub_pos < sub.ops.size() && main_pos < main.ops.size()) {
-    bool reset = false;
-    if (sub.ops[sub_pos].type != main.ops[main_pos].type) {
-      reset = true;
-    } else if (!updateOperandFold(sub.ops[sub_pos].target,
-                                  main.ops[main_pos].target, cell_map)) {
-      reset = true;
-    } else if (!updateOperandFold(sub.ops[sub_pos].source,
-                                  main.ops[main_pos].source, cell_map)) {
-      reset = true;
-    }
-    if (reset) {
-      main_pos = main_pos - sub_pos + 1;
-      sub_pos = 0;
-      cell_map.clear();
-    } else {
-      main_pos++;
-      sub_pos++;
-    }
-  }
-  // ensure we matched full subprogram
-  if (sub_pos < sub.ops.size()) {
-    return false;
-  }
+  auto main_pos = Subprogram::search(main, sub, cell_map);
   // no indirect ops allowed
   if (ProgramUtil::hasIndirectOperand(main) ||
       ProgramUtil::hasIndirectOperand(sub)) {
@@ -266,13 +212,13 @@ bool OeisProgram::fold(Program &main, Program sub, size_t subId,
   // perform folding on main program
   const Number mapped_input(cell_map.at(Program::INPUT_CELL));
   const Number mapped_output(cell_map.at(output_cell));
-  main.ops.erase(main.ops.begin() + main_pos - sub.ops.size(),
-                 main.ops.begin() + main_pos);
-  main.ops.insert(main.ops.begin() + main_pos - sub.ops.size(),
+  main.ops.erase(main.ops.begin() + main_pos,
+                 main.ops.begin() + main_pos + sub.ops.size());
+  main.ops.insert(main.ops.begin() + main_pos,
                   Operation(Operation::Type::SEQ,
                             Operand(Operand::Type::DIRECT, mapped_input),
                             Operand(Operand::Type::CONSTANT, Number(subId))));
-  main.ops.insert(main.ops.begin() + main_pos - sub.ops.size() + 1,
+  main.ops.insert(main.ops.begin() + main_pos + 1,
                   Operation(Operation::Type::MOV,
                             Operand(Operand::Type::DIRECT, mapped_output),
                             Operand(Operand::Type::DIRECT, mapped_input)));
