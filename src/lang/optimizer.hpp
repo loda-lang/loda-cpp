@@ -1,6 +1,5 @@
 #pragma once
 
-#include "lang/number.hpp"
 #include "lang/program.hpp"
 #include "sys/util.hpp"
 

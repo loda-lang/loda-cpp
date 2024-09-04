@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "lang/number.hpp"
+#include "math/number.hpp"
 
 class Operand {
  public:

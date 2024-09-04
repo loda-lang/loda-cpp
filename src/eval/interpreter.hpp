@@ -3,15 +3,9 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "lang/memory.hpp"
+#include "eval/memory.hpp"
 #include "lang/program.hpp"
 #include "sys/util.hpp"
-
-struct pair_hasher {
-  std::size_t operator()(const std::pair<int64_t, Number> &p) const {
-    return (p.first << 32) ^ p.second.hash();
-  }
-};
 
 class Interpreter {
  public:
@@ -51,6 +45,6 @@ class Interpreter {
   std::unordered_set<int64_t> missing_programs;
   std::unordered_set<int64_t> running_programs;
   std::unordered_map<std::pair<int64_t, Number>, std::pair<Number, size_t>,
-                     pair_hasher>
+                     IntNumberPairHasher>
       terms_cache;
 };

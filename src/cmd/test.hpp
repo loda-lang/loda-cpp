@@ -2,7 +2,6 @@
 
 #include <memory>
 
-#include "lang/number.hpp"
 #include "mine/matcher.hpp"
 #include "oeis/oeis_manager.hpp"
 #include "sys/util.hpp"

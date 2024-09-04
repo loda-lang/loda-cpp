@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-#include "lang/semantics.hpp"
+#include "eval/semantics.hpp"
 
 Expression ExpressionUtil::newConstant(int64_t value) {
   return Expression(Expression::Type::CONSTANT, "", Number(value));

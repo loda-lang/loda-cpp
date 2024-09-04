@@ -6,18 +6,18 @@
 #include <sstream>
 #include <stdexcept>
 
+#include "eval/evaluator.hpp"
+#include "eval/interpreter.hpp"
+#include "eval/minimizer.hpp"
+#include "eval/semantics.hpp"
 #include "form/formula_gen.hpp"
 #include "form/pari.hpp"
-#include "lang/big_number.hpp"
 #include "lang/comments.hpp"
-#include "lang/evaluator.hpp"
-#include "lang/interpreter.hpp"
-#include "lang/minimizer.hpp"
-#include "lang/number.hpp"
+#include "lang/constants.hpp"
 #include "lang/optimizer.hpp"
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
-#include "lang/semantics.hpp"
+#include "math/big_number.hpp"
 #include "mine/api_client.hpp"
 #include "mine/blocks.hpp"
 #include "mine/config.hpp"
@@ -545,8 +545,8 @@ void Test::programUtil() {
                    "util" + FILE_SEP;
   primes_const_loop = parser.parse(base_path + "primes_const_loop.asm");
   primes_var_loop = parser.parse(base_path + "primes_var_loop.asm");
-  auto const_info = ProgramUtil::findConstantLoop(primes_const_loop);
-  auto var_info = ProgramUtil::findConstantLoop(primes_var_loop);
+  auto const_info = Constants::findConstantLoop(primes_const_loop);
+  auto var_info = Constants::findConstantLoop(primes_var_loop);
   if (!const_info.has_constant_loop || const_info.index_lpb != 3 ||
       const_info.constant_value.asInt() != 7776) {
     Log::get().error("Expected contant loop in primes_const_loop.asm", true);

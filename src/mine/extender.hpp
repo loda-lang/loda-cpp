@@ -1,7 +1,7 @@
 #pragma once
 
 #include "lang/program.hpp"
-#include "lang/sequence.hpp"
+#include "math/sequence.hpp"
 
 struct line_t {
   Number offset;

@@ -5,7 +5,7 @@
 #include <string>
 #include <unordered_map>
 
-#include "lang/number.hpp"
+#include "math/number.hpp"
 
 #define MEMORY_CACHE_SIZE 16
 

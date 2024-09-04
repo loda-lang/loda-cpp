@@ -1,6 +1,6 @@
 #include "mine/reducer.hpp"
 
-#include "lang/semantics.hpp"
+#include "eval/semantics.hpp"
 #include "sys/util.hpp"
 
 Number Reducer::truncate(Sequence &seq) {

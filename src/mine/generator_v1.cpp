@@ -7,12 +7,11 @@
 #include <set>
 #include <stdexcept>
 
-#include "lang/interpreter.hpp"
-#include "lang/number.hpp"
+#include "eval/interpreter.hpp"
+#include "eval/semantics.hpp"
 #include "lang/optimizer.hpp"
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
-#include "lang/semantics.hpp"
 #include "mine/distribution.hpp"
 #include "mine/stats.hpp"
 #include "sys/log.hpp"

@@ -2,9 +2,8 @@
 
 #include <memory>
 
-#include "lang/evaluator.hpp"
-#include "lang/minimizer.hpp"
-#include "lang/number.hpp"
+#include "eval/evaluator.hpp"
+#include "eval/minimizer.hpp"
 #include "mine/matcher.hpp"
 
 class OeisSequence;

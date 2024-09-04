@@ -1,6 +1,6 @@
 #pragma once
 
-#include "lang/evaluator.hpp"
+#include "eval/evaluator.hpp"
 #include "lang/optimizer.hpp"
 #include "lang/program.hpp"
 #include "sys/util.hpp"

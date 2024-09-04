@@ -4,8 +4,8 @@
 #include <queue>
 #include <sstream>
 
-#include "lang/evaluator.hpp"
-#include "lang/evaluator_inc.hpp"
+#include "eval/evaluator.hpp"
+#include "eval/evaluator_inc.hpp"
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
 #include "oeis/oeis_sequence.hpp"

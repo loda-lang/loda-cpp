@@ -7,7 +7,6 @@
 #include "form/expression_util.hpp"
 #include "form/formula_util.hpp"
 #include "form/variant.hpp"
-#include "lang/evaluator_inc.hpp"
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
 #include "oeis/oeis_sequence.hpp"

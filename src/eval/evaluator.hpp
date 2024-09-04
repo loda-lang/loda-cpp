@@ -2,9 +2,9 @@
 
 #include <chrono>
 
-#include "lang/evaluator_inc.hpp"
-#include "lang/interpreter.hpp"
-#include "lang/sequence.hpp"
+#include "eval/evaluator_inc.hpp"
+#include "eval/interpreter.hpp"
+#include "math/sequence.hpp"
 
 class steps_t {
  public:

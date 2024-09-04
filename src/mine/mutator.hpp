@@ -2,9 +2,8 @@
 
 #include <stack>
 
-#include "mine/distribution.hpp"
-#include "lang/number.hpp"
 #include "lang/program.hpp"
+#include "mine/distribution.hpp"
 #include "mine/stats.hpp"
 
 class Mutator {

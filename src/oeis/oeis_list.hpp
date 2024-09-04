@@ -5,8 +5,6 @@
 #include <string>
 #include <unordered_set>
 
-#include "lang/number.hpp"
-
 class OeisList {
  public:
   static const std::string& getListsHome();
