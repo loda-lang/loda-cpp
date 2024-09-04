@@ -1,9 +1,7 @@
-#include "lang/sequence.hpp"
+#include "math/sequence.hpp"
 
 #include <sstream>
 #include <unordered_set>
-
-#include "lang/semantics.hpp"
 
 Sequence::Sequence(const std::vector<int64_t> &s) {
   const auto t = s.size();
@@ -29,9 +27,12 @@ bool Sequence::is_linear(size_t start) const {
   if (start + 3 > size()) {
     return false;
   }
-  auto d = Semantics::sub((*this)[start + 1], (*this)[start]);
+  auto d = (*this)[start + 1];
+  d -= (*this)[start];
   for (size_t i = start + 2; i < size(); ++i) {
-    if (Semantics::add((*this)[i - 1], d) != (*this)[i]) {
+    auto a = (*this)[i - 1];
+    a += d;
+    if (a != (*this)[i]) {
       return false;
     }
   }
@@ -40,7 +41,8 @@ bool Sequence::is_linear(size_t start) const {
 
 int64_t Sequence::get_first_delta_lt(const Number &d) const {
   for (size_t i = 1; i < size(); i++) {
-    const auto delta = Semantics::sub((*this)[i], (*this)[i - 1]);
+    auto delta = (*this)[i];
+    delta -= (*this)[i - 1];
     if (delta < d) {
       return i;
     }

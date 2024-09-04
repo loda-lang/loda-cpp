@@ -1,7 +1,7 @@
-#include "lang/evaluator_inc.hpp"
+#include "eval/evaluator_inc.hpp"
 
+#include "eval/semantics.hpp"
 #include "lang/program_util.hpp"
-#include "lang/semantics.hpp"
 #include "sys/log.hpp"
 #include "sys/util.hpp"
 

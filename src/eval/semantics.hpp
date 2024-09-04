@@ -1,6 +1,6 @@
 #pragma once
 
-#include "lang/number.hpp"
+#include "math/number.hpp"
 
 class Semantics {
  public:

@@ -15,8 +15,10 @@ You need the `make` (`nmake` on Windows) tool and a standard C++ compiler. It is
 The source code is organized into these modules:
 
 * [cmd](cmd): Commands, tests and main.
+* [eval](eval): Interpreter and evaluation of programs.
 * [form](form): Formula generation from programs.
 * [lang](lang): LODA language core including interpreter.
+* [math](math): Internal maths library.
 * [mine](mine): Mining programs for OEIS sequences.
 * [oeis](oeis): Utils for managing OEIS data.
 * [sys](sys): System utils.

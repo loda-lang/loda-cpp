@@ -1,4 +1,4 @@
-#include "lang/interpreter.hpp"
+#include "eval/interpreter.hpp"
 
 #include <array>
 #include <exception>
@@ -7,11 +7,10 @@
 #include <sstream>
 #include <stack>
 
-#include "lang/number.hpp"
+#include "eval/semantics.hpp"
 #include "lang/parser.hpp"
 #include "lang/program.hpp"
 #include "lang/program_util.hpp"
-#include "lang/semantics.hpp"
 #include "oeis/oeis_sequence.hpp"
 #include "sys/log.hpp"
 #include "sys/setup.hpp"

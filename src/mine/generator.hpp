@@ -2,8 +2,8 @@
 
 #include <memory>
 
-#include "lang/number.hpp"
 #include "lang/program.hpp"
+#include "math/number.hpp"
 #include "mine/stats.hpp"
 #include "sys/util.hpp"
 

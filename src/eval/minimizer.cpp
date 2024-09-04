@@ -1,11 +1,12 @@
-#include "lang/minimizer.hpp"
+#include "eval/minimizer.hpp"
 
 #include <fstream>
 #include <set>
 
+#include "eval/semantics.hpp"
+#include "lang/constants.hpp"
 #include "lang/optimizer.hpp"
 #include "lang/program_util.hpp"
-#include "lang/semantics.hpp"
 #include "sys/file.hpp"
 #include "sys/log.hpp"
 #include "sys/setup.hpp"
@@ -187,7 +188,7 @@ bool Minimizer::replaceClr(Program& p) const {
 bool Minimizer::replaceConstantLoop(Program& p, const Sequence& seq,
                                     int64_t exp) const {
   // check pre-conditions
-  auto info = ProgramUtil::findConstantLoop(p);
+  auto info = Constants::findConstantLoop(p);
   if (!info.has_constant_loop) {
     return false;
   }

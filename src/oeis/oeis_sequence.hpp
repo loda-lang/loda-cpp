@@ -2,7 +2,7 @@
 
 #include <unordered_set>
 
-#include "lang/sequence.hpp"
+#include "math/sequence.hpp"
 
 class OeisSequence {
  public:

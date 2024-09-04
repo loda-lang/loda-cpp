@@ -6,7 +6,7 @@
 #include <sstream>
 
 #include "lang/analyzer.hpp"
-#include "lang/number.hpp"
+#include "lang/constants.hpp"
 #include "lang/program_util.hpp"
 #include "mine/config.hpp"
 #include "oeis/oeis_list.hpp"
@@ -252,7 +252,7 @@ std::pair<std::string, Program> Finder::checkProgramBasic(
 }
 
 bool hasBadConstant(const Program &p) {
-  auto constants = ProgramUtil::getAllConstants(p, true);
+  auto constants = Constants::getAllConstants(p, true);
   return std::any_of(constants.begin(), constants.end(), [](const Number &c) {
     return (Minimizer::getPowerOf(c) != 0 ||
             Number(100000) < c);  // magic number
@@ -276,8 +276,8 @@ bool isSimpler(const Program &existing, const Program &optimized) {
   if (hasBadLoop(existing) && !hasBadLoop(optimized) && !optimized_has_seq) {
     return true;
   }
-  auto info_existing = ProgramUtil::findConstantLoop(existing);
-  auto info_optimized = ProgramUtil::findConstantLoop(optimized);
+  auto info_existing = Constants::findConstantLoop(existing);
+  auto info_optimized = Constants::findConstantLoop(optimized);
   if (info_existing.has_constant_loop && !info_optimized.has_constant_loop &&
       !optimized_has_seq) {
     return true;

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "form/formula.hpp"
-#include "lang/sequence.hpp"
+#include "math/sequence.hpp"
 
 /**
  * PARI/GP generator. Takes a formula as input and generates
@@ -16,7 +16,7 @@
  */
 class PariFormula {
  public:
-  PariFormula() : as_vector(false){};
+  PariFormula() : as_vector(false) {};
 
   static bool convert(const Formula& formula, bool as_vector,
                       PariFormula& pari_formula);

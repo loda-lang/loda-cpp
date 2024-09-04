@@ -1,7 +1,7 @@
 #include "mine/matcher.hpp"
 
+#include "eval/semantics.hpp"
 #include "lang/optimizer.hpp"
-#include "lang/semantics.hpp"
 #include "mine/reducer.hpp"
 #include "sys/log.hpp"
 

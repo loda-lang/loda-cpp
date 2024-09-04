@@ -2,8 +2,8 @@
 
 #include <algorithm>
 
+#include "eval/semantics.hpp"
 #include "lang/program_util.hpp"
-#include "lang/semantics.hpp"
 #include "mine/config.hpp"
 #include "mine/generator_v1.hpp"
 #include "mine/generator_v2.hpp"

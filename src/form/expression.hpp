@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "lang/number.hpp"
+#include "math/number.hpp"
 
 /**
  * Arithmitic expression representation. An expression is an n-ary tree

@@ -1,6 +1,4 @@
-#include "lang/semantics.hpp"
-
-#include "lang/number.hpp"
+#include "eval/semantics.hpp"
 
 Number Semantics::add(const Number& a, const Number& b) {
   auto r = a;

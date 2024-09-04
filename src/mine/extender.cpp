@@ -1,7 +1,7 @@
 #include "mine/extender.hpp"
 
+#include "eval/semantics.hpp"
 #include "lang/program_util.hpp"
-#include "lang/semantics.hpp"
 #include "sys/util.hpp"
 
 void add_or_sub(Program &p, const Number &c) {

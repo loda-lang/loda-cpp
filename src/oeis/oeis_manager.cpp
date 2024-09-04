@@ -11,10 +11,9 @@
 #include <limits>
 #include <sstream>
 
+#include "eval/interpreter.hpp"
 #include "form/formula_gen.hpp"
 #include "lang/comments.hpp"
-#include "lang/interpreter.hpp"
-#include "lang/number.hpp"
 #include "lang/optimizer.hpp"
 #include "lang/program_util.hpp"
 #include "mine/config.hpp"

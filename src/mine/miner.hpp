@@ -3,9 +3,9 @@
 #include <map>
 #include <memory>
 
-#include "lang/number.hpp"
 #include "lang/optimizer.hpp"
 #include "lang/program.hpp"
+#include "math/number.hpp"
 #include "mine/api_client.hpp"
 #include "mine/generator.hpp"
 #include "mine/matcher.hpp"

@@ -4,7 +4,6 @@
 #include <set>
 #include <unordered_set>
 
-#include "lang/number.hpp"
 #include "lang/program.hpp"
 
 class ProgramUtil {
@@ -58,20 +57,6 @@ class ProgramUtil {
                                         std::set<int64_t> &uninitialized);
 
   static int64_t getLargestDirectMemoryCell(const Program &p);
-
-  static std::set<Number> getAllConstants(const Program &p,
-                                          bool arithmetic_only);
-
-  static Number getLargestConstant(const Program &p);
-
-  class ConstantLoopInfo {
-   public:
-    bool has_constant_loop;
-    size_t index_lpb;
-    Number constant_value;
-  };
-
-  static ConstantLoopInfo findConstantLoop(const Program &p);
 
   static std::pair<int64_t, int64_t> getEnclosingLoop(const Program &p,
                                                       int64_t op_index);

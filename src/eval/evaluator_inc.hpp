@@ -2,8 +2,8 @@
 
 #include <set>
 
+#include "eval/interpreter.hpp"
 #include "lang/analyzer.hpp"
-#include "lang/interpreter.hpp"
 
 // Incremental Evaluator (IE) class for simple loop programs. It does not work
 // as a general evaluator for LODA programs, but only for a certain set of

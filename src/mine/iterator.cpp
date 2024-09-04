@@ -2,8 +2,8 @@
 
 #include <iostream>
 
+#include "eval/semantics.hpp"
 #include "lang/program_util.hpp"
-#include "lang/semantics.hpp"
 
 const Operand Iterator::CONSTANT_ZERO(Operand::Type::CONSTANT, 0);
 const Operand Iterator::CONSTANT_ONE(Operand::Type::CONSTANT, 1);

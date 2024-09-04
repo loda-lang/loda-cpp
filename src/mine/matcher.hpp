@@ -3,7 +3,6 @@
 #include <memory>
 #include <unordered_set>
 
-#include "lang/number.hpp"
 #include "lang/program.hpp"
 #include "mine/extender.hpp"
 #include "mine/reducer.hpp"

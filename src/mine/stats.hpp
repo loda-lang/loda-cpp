@@ -4,9 +4,7 @@
 #include <set>
 #include <unordered_set>
 
-#include "lang/evaluator.hpp"
-#include "lang/number.hpp"
-#include "lang/program.hpp"
+#include "eval/evaluator.hpp"
 #include "mine/blocks.hpp"
 
 class OpPos {
