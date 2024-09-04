@@ -554,7 +554,7 @@ void Test::programUtil() {
   if (var_info.has_constant_loop) {
     Log::get().error("Unexpected contant loop in primes_var_loop.asm", true);
   }
-  auto p = parser.parse(OeisSequence(1041).getProgramPath());
+  auto p = parser.parse(OeisSequence::getProgramPath(1041));
   checkEnclosingLoop(p, 7, 13, 12);
   checkEnclosingLoop(p, 7, 13, 7);
   checkEnclosingLoop(p, 7, 13, 13);
@@ -584,7 +584,7 @@ void Test::programUtil() {
     Log::get().error("Unexpected program after removing comment: " + buf.str(),
                      true);
   }
-  p = parser.parse(OeisSequence(45).getProgramPath());
+  p = parser.parse(OeisSequence::getProgramPath(45));
   auto h = ProgramUtil::hash(p);
   size_t expected_hash = 12279585564253383018ULL;
   if (h != expected_hash) {
@@ -731,9 +731,8 @@ bool Test::checkIncEval(const Settings& settings, size_t id, std::string path,
                         bool mustSupportIncEval) {
   auto name = path;
   if (path.empty()) {
-    OeisSequence s(id);
-    name = s.idStr();
-    path = s.getProgramPath();
+    name = OeisSequence::idStr(id);
+    path = OeisSequence::getProgramPath(id);
   }
   Parser parser;
   Program p;
@@ -820,7 +819,7 @@ void Test::checkpoint() {
 }
 
 void Test::steps() {
-  auto file = OeisSequence(12).getProgramPath();
+  auto file = OeisSequence::getProgramPath(12);
   Log::get().info("Testing steps for " + file);
   Parser parser;
   Interpreter interpreter(settings);
@@ -877,11 +876,11 @@ void checkSeq(const Sequence& s, size_t expected_size, size_t index,
 
 void checkSeqAgainstTestBFile(int64_t seq_id, int64_t offset,
                               int64_t max_num_terms) {
-  OeisSequence t(seq_id);
   std::stringstream buf;
+  OeisSequence t(seq_id);
   t.getTerms(max_num_terms).to_b_file(buf, offset);
   std::ifstream bfile(std::string("tests") + FILE_SEP + "sequence" + FILE_SEP +
-                      t.idStr("b") + ".txt");
+                      OeisSequence::idStr(seq_id, "b") + ".txt");
   std::string x, y;
   while (std::getline(bfile, x)) {
     if (!std::getline(buf, y)) {
@@ -1067,11 +1066,12 @@ void Test::checkFormulas(const std::string& testFile, FormulaType type) {
   Parser parser;
   FormulaGenerator generator;
   for (const auto& e : map) {
-    OeisSequence seq(e.first);
-    Log::get().info("Testing formula for " + seq.idStr() + ": " + e.second);
-    auto p = parser.parse(seq.getProgramPath());
+    auto id = e.first;
+    Log::get().info("Testing formula for " + OeisSequence::idStr(id) + ": " +
+                    e.second);
+    auto p = parser.parse(OeisSequence::getProgramPath(id));
     Formula f;
-    if (!generator.generate(p, seq.id, f, true)) {
+    if (!generator.generate(p, id, f, true)) {
       Log::get().error("Cannot generate formula from program", true);
     }
     if (type == FormulaType::FORMULA) {
@@ -1337,7 +1337,7 @@ std::vector<std::pair<Program, Program>> Test::loadInOutTests(
 }
 
 void Test::testSeq(size_t id, const Sequence& expected) {
-  auto file = OeisSequence(id).getProgramPath();
+  auto file = OeisSequence::getProgramPath(id);
   Log::get().info("Testing " + file);
   Parser parser;
   Settings settings;  // special settings
@@ -1371,12 +1371,11 @@ void eval(const Program& p, Evaluator& evaluator, Sequence& s) {
 
 void Test::testMatcherPair(Matcher& matcher, size_t id1, size_t id2) {
   Log::get().info("Testing " + matcher.getName() + " matcher for " +
-                  OeisSequence(id1).idStr() + " -> " +
-                  OeisSequence(id2).idStr());
+                  OeisSequence::idStr(id1) + " -> " + OeisSequence::idStr(id2));
   Parser parser;
   Evaluator evaluator(settings);
-  auto p1 = parser.parse(OeisSequence(id1).getProgramPath());
-  auto p2 = parser.parse(OeisSequence(id2).getProgramPath());
+  auto p1 = parser.parse(OeisSequence::getProgramPath(id1));
+  auto p2 = parser.parse(OeisSequence::getProgramPath(id2));
   ProgramUtil::removeOps(p1, Operation::Type::NOP);
   ProgramUtil::removeOps(p2, Operation::Type::NOP);
   Sequence s1, s2, s3;
@@ -1399,7 +1398,7 @@ void Test::testMatcherPair(Matcher& matcher, size_t id1, size_t id2) {
     ProgramUtil::print(result[0].second, std::cout);
     Log::get().error(matcher.getName() +
                          " matcher generated wrong program for " +
-                         OeisSequence(id2).idStr(),
+                         OeisSequence::idStr(id2),
                      true);
   }
 }

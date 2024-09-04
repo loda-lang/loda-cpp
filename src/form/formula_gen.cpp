@@ -148,9 +148,8 @@ bool FormulaGenerator::update(const Operation& op) {
       break;
     }
     case Operation::Type::SEQ: {
-      res =
-          Expression(Expression::Type::FUNCTION,
-                     OeisSequence(source.value.asInt()).idStr(), {prevTarget});
+      res = Expression(Expression::Type::FUNCTION,
+                       OeisSequence::idStr(source.value.asInt()), {prevTarget});
       break;
     }
     case Operation::Type::TRN: {
@@ -427,9 +426,8 @@ bool addProgramIds(const Program& p, std::set<int64_t>& ids) {
       auto id = op.source.value.asInt();
       if (ids.find(id) == ids.end()) {
         ids.insert(id);
-        OeisSequence seq(id);
         try {
-          auto q = parser.parse(seq.getProgramPath());
+          auto q = parser.parse(OeisSequence::getProgramPath(id));
           addProgramIds(q, ids);
         } catch (const std::exception&) {
           return false;
@@ -443,7 +441,7 @@ bool addProgramIds(const Program& p, std::set<int64_t>& ids) {
 bool FormulaGenerator::generate(const Program& p, int64_t id, Formula& result,
                                 bool withDeps) {
   if (id > 0) {
-    Log::get().debug("Generating formula for " + OeisSequence(id).idStr());
+    Log::get().debug("Generating formula for " + OeisSequence::idStr(id));
   }
   formula.clear();
   freeNameIndex = 0;
@@ -460,11 +458,10 @@ bool FormulaGenerator::generate(const Program& p, int64_t id, Formula& result,
     }
     Parser parser;
     for (auto id2 : ids) {
-      OeisSequence seq(id2);
-      Log::get().debug("Adding dependency " + seq.idStr());
+      Log::get().debug("Adding dependency " + OeisSequence::idStr(id2));
       Program p2;
       try {
-        p2 = parser.parse(seq.getProgramPath());
+        p2 = parser.parse(OeisSequence::getProgramPath(id2));
       } catch (const std::exception&) {
         result.clear();
         return false;
@@ -474,7 +471,7 @@ bool FormulaGenerator::generate(const Program& p, int64_t id, Formula& result,
         return false;
       }
       auto from = getCellName(Program::INPUT_CELL);
-      auto to = seq.idStr();
+      auto to = OeisSequence::idStr(id2);
       Log::get().debug("Replacing " + from + " by " + to);
       formula.replaceName(from, to);
       result.entries.insert(formula.entries.begin(), formula.entries.end());

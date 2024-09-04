@@ -302,7 +302,7 @@ void Commands::replace(const std::string& search_path,
     ProgramUtil::removeOps(p, Operation::Type::NOP);
     if (Subprogram::replaceAllExact(p, search, replace)) {
       manager.updateProgram(id, p, ValidationMode::BASIC);
-      Log::get().info("Replaced in " + OeisSequence(id).idStr());
+      Log::get().info("Replaced in " + OeisSequence::idStr(id));
       count++;
     }
     if (log_scheduler.isTargetReached()) {
@@ -345,8 +345,8 @@ void Commands::autoFold() {
       }
     }
     if (folded) {
-      Log::get().info("Folded " + OeisSequence(main_id).idStr() + " using " +
-                      OeisSequence(sub_id).idStr());
+      Log::get().info("Folded " + OeisSequence::idStr(main_id) + " using " +
+                      OeisSequence::idStr(sub_id));
     }
   }
 }
@@ -442,9 +442,8 @@ void Commands::testAnalyzer() {
     if (!stats.all_program_ids[id]) {
       continue;
     }
-    OeisSequence seq(id);
-    auto id_str = seq.idStr();
-    std::ifstream in(seq.getProgramPath());
+    auto id_str = OeisSequence::idStr(id);
+    std::ifstream in(OeisSequence::getProgramPath(id));
     if (!in) {
       continue;
     }
@@ -495,9 +494,10 @@ void Commands::testPari(const std::string& test_id) {
       continue;
     }
     auto seq = manager.getSequences().at(id);
+    auto idStr = OeisSequence::idStr(id);
     Program program;
     try {
-      program = parser.parse(seq.getProgramPath());
+      program = parser.parse(OeisSequence::getProgramPath(id));
     } catch (std::exception& e) {
       Log::get().warn(std::string(e.what()));
       continue;
@@ -525,8 +525,7 @@ void Commands::testPari(const std::string& test_id) {
       }
       if (!hasEvalError) {
         Log::get().error(
-            "Expected evaluation error for " + seq.idStr() + ": " + e.what(),
-            true);
+            "Expected evaluation error for " + idStr + ": " + e.what(), true);
       }
     }
 
@@ -558,10 +557,10 @@ void Commands::testPari(const std::string& test_id) {
       }
     }
     Log::get().info("Checking " + std::to_string(numTerms) + " terms of " +
-                    seq.idStr() + ": " + pari_formula.toString());
+                    idStr + ": " + pari_formula.toString());
 
     if (numTerms == 0) {
-      Log::get().warn("Skipping " + seq.idStr());
+      Log::get().warn("Skipping " + idStr);
       continue;
     }
 
@@ -569,7 +568,7 @@ void Commands::testPari(const std::string& test_id) {
     try {
       evaluator.eval(program, expSeq, numTerms);
     } catch (const std::exception&) {
-      Log::get().warn("Cannot evaluate " + seq.idStr());
+      Log::get().warn("Cannot evaluate " + idStr);
       continue;
     }
     if (expSeq.empty()) {

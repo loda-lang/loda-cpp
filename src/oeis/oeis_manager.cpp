@@ -447,7 +447,7 @@ void OeisManager::generateStats(int64_t age_in_days) {
     if (s.id == 0) {
       continue;
     }
-    file_name = s.getProgramPath();
+    file_name = OeisSequence::getProgramPath(s.id);
     std::ifstream program_file(file_name);
     has_program = false;
     has_formula = false;
@@ -510,12 +510,13 @@ void OeisManager::generateLists() {
       replaceAll(buf, "_", "\\_");
       replaceAll(buf, "|", "\\|");
       list_files.at(list_index)
-          << "* [" << s.idStr() << "](https://oeis.org/" << s.idStr()
-          << ") ([program](/edit/?oeis=" << s.id << ")): " << buf << "\n";
+          << "* [" << OeisSequence::idStr(s.id) << "](https://oeis.org/"
+          << OeisSequence::idStr(s.id) << ") ([program](/edit/?oeis=" << s.id
+          << ")): " << buf << "\n";
 
       num_processed++;
     } else {
-      no_loda << s.idStr() << ": " << s.name << "\n";
+      no_loda << OeisSequence::idStr(s.id) << ": " << s.name << "\n";
     }
   }
 
@@ -531,8 +532,8 @@ void OeisManager::generateLists() {
       std::ofstream list_file(list_path);
       list_file << "---\n";
       list_file << "layout: page\n";
-      list_file << "title: Programs for " << start.idStr() << "-" << end.idStr()
-                << "\n";
+      list_file << "title: Programs for " << OeisSequence::idStr(start.id)
+                << "-" << OeisSequence::idStr(end.id) << "\n";
       list_file << "permalink: /list" << i << "/\n";
       list_file << "---\n";
       list_file << "List of integer sequences with links to LODA programs."
@@ -556,7 +557,7 @@ void OeisManager::migrate() {
   IncrementalEvaluator ie(interpreter);
   for (size_t id = 0; id < 400000; id++) {
     OeisSequence s(id);
-    std::ifstream f(s.getProgramPath());
+    std::ifstream f(OeisSequence::getProgramPath(id));
     Program p, out;
     if (f.good()) {
       p = parser.parse(f);
@@ -578,9 +579,10 @@ void OeisManager::migrate() {
               loop_started = false;
             } else if (loop_started && op.type == Operation::Type::SUB &&
                        op.source == Operand(Operand::Type::CONSTANT, 1)) {
-              Log::get().warn("Migrating " + s.getProgramPath());
+              Log::get().warn("Migrating " +
+                              OeisSequence::getProgramPath(s.id));
               op.type = Operation::Type::TRN;
-              std::ofstream out(s.getProgramPath());
+              std::ofstream out(OeisSequence::getProgramPath(s.id));
               ProgramUtil::print(p, out);
               out.close();
               loop_started = false;
@@ -723,8 +725,8 @@ void OeisManager::alert(Program p, size_t id, const std::string &prefix,
     full += ". " + sub;
   }
   Log::AlertDetails details;
-  details.title = seq.idStr();
-  details.title_link = seq.urlStr();
+  details.title = OeisSequence::idStr(seq.id);
+  details.title_link = OeisSequence::urlStr(seq.id);
   details.color = color;
   std::stringstream buf;
   // TODO: code block markers must be escaped for Slack, but not for Discord
@@ -857,7 +859,7 @@ bool OeisManager::maintainProgram(size_t id, bool eval) {
   }
 
   // try to open the program file
-  const std::string file_name = s.getProgramPath();
+  const std::string file_name = OeisSequence::getProgramPath(s.id);
   std::ifstream program_file(file_name);
   if (!program_file.good()) {
     return true;  // program does not exist
@@ -943,7 +945,7 @@ std::vector<Program> OeisManager::loadAllPrograms() {
       continue;
     }
     OeisSequence seq(id);
-    std::ifstream in(seq.getProgramPath());
+    std::ifstream in(OeisSequence::getProgramPath(seq.id));
     if (!in) {
       continue;
     }
@@ -951,7 +953,8 @@ std::vector<Program> OeisManager::loadAllPrograms() {
       programs[id] = parser.parse(in);
       loaded++;
     } catch (const std::exception &e) {
-      Log::get().warn("Skipping " + seq.idStr() + ": " + e.what());
+      Log::get().warn("Skipping " + OeisSequence::idStr(seq.id) + ": " +
+                      e.what());
       continue;
     }
     if (scheduler.isTargetReached() || loaded == num_programs) {
