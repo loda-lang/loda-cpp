@@ -213,8 +213,6 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
       id = args.at(1);
     }
     commands.testPari(id);
-  } else if (cmd == "dot") {
-    commands.dot(args.at(1));
   } else if (cmd == "generate" || cmd == "gen") {
     commands.generate();
   } else if (cmd == "migrate") {

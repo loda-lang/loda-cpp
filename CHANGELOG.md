@@ -10,6 +10,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Enhancements
 
 * Internal `replace` command
+* Remove deprecated dot export
 
 ## v24.9.2
 

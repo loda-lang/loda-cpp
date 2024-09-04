@@ -593,12 +593,6 @@ void Commands::testPari(const std::string& test_id) {
                   " failed PARI check");
 }
 
-void Commands::dot(const std::string& path) {
-  initLog(true);
-  Program program = OeisProgram::getProgramAndSeqId(path).first;
-  ProgramUtil::exportToDot(program, std::cout);
-}
-
 void Commands::generate() {
   initLog(true);
   OeisManager manager(settings);

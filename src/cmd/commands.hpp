@@ -58,8 +58,6 @@ class Commands {
 
   void testPari(const std::string& id);
 
-  void dot(const std::string& path);
-
   void generate();
 
   void migrate();
