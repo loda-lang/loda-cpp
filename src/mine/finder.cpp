@@ -8,6 +8,7 @@
 #include "lang/analyzer.hpp"
 #include "lang/constants.hpp"
 #include "lang/program_util.hpp"
+#include "lang/subprogram.hpp"
 #include "mine/config.hpp"
 #include "oeis/oeis_list.hpp"
 #include "oeis/oeis_program.hpp"
@@ -163,7 +164,7 @@ std::pair<std::string, Program> Finder::checkProgramExtended(
   result.second = program;
 
   // auto-unfold seq operations
-  OeisProgram::autoUnfold(program);
+  Subprogram::autoUnfold(program);
 
   // minimize based on number of terminating terms
   minimizer.optimizeAndMinimize(program, num_minimize);
