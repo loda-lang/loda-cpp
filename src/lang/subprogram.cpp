@@ -126,7 +126,7 @@ bool prepareEmbedding(int64_t id, Program &sub) {
   for (auto cell : uninitialized) {
     sub.ops.insert(
         sub.ops.begin(),
-        Operation(Operation::Type::MOV, Operand(Operand::Type::CONSTANT, cell),
+        Operation(Operation::Type::MOV, Operand(Operand::Type::DIRECT, cell),
                   Operand(Operand::Type::CONSTANT, 0)));
   }
   return true;

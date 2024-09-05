@@ -1,0 +1,10 @@
+; in
+mul $0,2
+seq $0,7
+add $0,4
+; out
+mul $0,2
+mov $1,0
+pow $1,$0
+mov $0,$1
+add $0,4

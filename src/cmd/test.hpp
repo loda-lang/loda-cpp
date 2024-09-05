@@ -34,6 +34,8 @@ class Test {
 
   void knownPrograms();
 
+  void unfold();
+
   void incEval();
 
   static bool checkIncEval(const Settings &settings, size_t id,

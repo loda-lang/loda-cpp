@@ -17,6 +17,7 @@
 #include "lang/optimizer.hpp"
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
+#include "lang/subprogram.hpp"
 #include "math/big_number.hpp"
 #include "mine/api_client.hpp"
 #include "mine/blocks.hpp"
@@ -58,6 +59,7 @@ void Test::fast() {
   config();
   steps();
   blocks();
+  unfold();
   incEval();
   linearMatcher();
   deltaMatcher();
@@ -697,6 +699,24 @@ void Test::knownPrograms() {
                     12,    24,    24,    144,    144,    720,    720,
                     720,   720,   1440,  1440,   1440,   4320,   60480,
                     60480, 60480, 60480, 120960, 120960, 241920, 1209600}));
+}
+
+void Test::unfold() {
+  auto tests = loadInOutTests(std::string("tests") + FILE_SEP + "programs" +
+                              FILE_SEP + "unfold" + FILE_SEP + "U");
+  size_t i = 1;
+  for (const auto& t : tests) {
+    Log::get().info("Testing unfold " + std::to_string(i));
+    auto p = t.first;
+    if (!Subprogram::unfold(p)) {
+      Log::get().error("Unfolding not supported", true);
+    }
+    if (p != t.second) {
+      ProgramUtil::print(p, std::cout);
+      Log::get().error("Unexpected result", true);
+    }
+    i++;
+  }
 }
 
 void Test::incEval() {
