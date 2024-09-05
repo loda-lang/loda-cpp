@@ -76,4 +76,13 @@ class ProgramUtil {
   static void validate(const Program &p);
 
   static void avoidNopOrOverflow(Operation &op);
+
+  static std::string idStr(int64_t id, const std::string &prefix = "A");
+
+  static std::string dirStr(int64_t id);
+
+  static std::string getProgramPath(int64_t id, bool local = false);
+
+  static std::string getProgramPath(int64_t id, const std::string &dir,
+                                    const std::string &prefix);
 };

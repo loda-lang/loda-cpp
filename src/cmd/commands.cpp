@@ -302,7 +302,7 @@ void Commands::replace(const std::string& search_path,
     ProgramUtil::removeOps(p, Operation::Type::NOP);
     if (Subprogram::replaceAllExact(p, search, replace)) {
       manager.updateProgram(id, p, ValidationMode::BASIC);
-      Log::get().info("Replaced in " + OeisSequence::idStr(id));
+      Log::get().info("Replaced in " + ProgramUtil::idStr(id));
       count++;
     }
     if (log_scheduler.isTargetReached()) {
@@ -345,8 +345,8 @@ void Commands::autoFold() {
       }
     }
     if (folded) {
-      Log::get().info("Folded " + OeisSequence::idStr(main_id) + " using " +
-                      OeisSequence::idStr(sub_id));
+      Log::get().info("Folded " + ProgramUtil::idStr(main_id) + " using " +
+                      ProgramUtil::idStr(sub_id));
     }
   }
 }
@@ -442,8 +442,8 @@ void Commands::testAnalyzer() {
     if (!stats.all_program_ids[id]) {
       continue;
     }
-    auto id_str = OeisSequence::idStr(id);
-    std::ifstream in(OeisSequence::getProgramPath(id));
+    auto id_str = ProgramUtil::idStr(id);
+    std::ifstream in(ProgramUtil::getProgramPath(id));
     if (!in) {
       continue;
     }
@@ -494,10 +494,10 @@ void Commands::testPari(const std::string& test_id) {
       continue;
     }
     auto seq = manager.getSequences().at(id);
-    auto idStr = OeisSequence::idStr(id);
+    auto idStr = ProgramUtil::idStr(id);
     Program program;
     try {
-      program = parser.parse(OeisSequence::getProgramPath(id));
+      program = parser.parse(ProgramUtil::getProgramPath(id));
     } catch (std::exception& e) {
       Log::get().warn(std::string(e.what()));
       continue;

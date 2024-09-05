@@ -7,6 +7,8 @@
 #include <stack>
 
 #include "lang/program.hpp"
+#include "sys/file.hpp"
+#include "sys/setup.hpp"
 #include "sys/util.hpp"
 
 bool ProgramUtil::hasOp(const Program &p, Operation::Type type) {
@@ -510,4 +512,30 @@ void ProgramUtil::avoidNopOrOverflow(Operation &op) {
       op.target.value += Number::ONE;
     }
   }
+}
+
+std::string ProgramUtil::idStr(int64_t id, const std::string &prefix) {
+  std::stringstream s;
+  s << prefix << std::setw(6) << std::setfill('0') << id;
+  return s.str();
+}
+
+std::string ProgramUtil::dirStr(int64_t id) {
+  std::stringstream s;
+  s << std::setw(3) << std::setfill('0') << (id / 1000);
+  return s.str();
+}
+
+std::string ProgramUtil::getProgramPath(int64_t id, bool local) {
+  if (local) {
+    return Setup::getProgramsHome() + "local" + FILE_SEP + idStr(id) + ".asm";
+  } else {
+    return getProgramPath(id, "oeis", "A");
+  }
+}
+
+std::string ProgramUtil::getProgramPath(int64_t id, const std::string &dir,
+                                        const std::string &prefix) {
+  return Setup::getProgramsHome() + dir + FILE_SEP + dirStr(id) + FILE_SEP +
+         idStr(id, prefix) + ".asm";
 }

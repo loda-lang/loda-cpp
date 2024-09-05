@@ -2,6 +2,7 @@
 
 #include <fstream>
 
+#include "lang/program_util.hpp"
 #include "oeis/oeis_sequence.hpp"
 #include "sys/file.hpp"
 #include "sys/log.hpp"
@@ -157,7 +158,7 @@ void OeisList::mergeMap(const std::string& file_name,
   }
   std::ofstream out(getListsHome() + file_name);
   for (auto it : map) {
-    out << OeisSequence::idStr(it.first) << ": " << it.second
+    out << ProgramUtil::idStr(it.first) << ": " << it.second
         << std::endl;  // flush at every line to avoid corrupt data
   }
   out.close();

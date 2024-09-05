@@ -554,7 +554,7 @@ void Test::programUtil() {
   if (var_info.has_constant_loop) {
     Log::get().error("Unexpected contant loop in primes_var_loop.asm", true);
   }
-  auto p = parser.parse(OeisSequence::getProgramPath(1041));
+  auto p = parser.parse(ProgramUtil::getProgramPath(1041));
   checkEnclosingLoop(p, 7, 13, 12);
   checkEnclosingLoop(p, 7, 13, 7);
   checkEnclosingLoop(p, 7, 13, 13);
@@ -584,7 +584,7 @@ void Test::programUtil() {
     Log::get().error("Unexpected program after removing comment: " + buf.str(),
                      true);
   }
-  p = parser.parse(OeisSequence::getProgramPath(45));
+  p = parser.parse(ProgramUtil::getProgramPath(45));
   auto h = ProgramUtil::hash(p);
   size_t expected_hash = 12279585564253383018ULL;
   if (h != expected_hash) {
@@ -731,8 +731,8 @@ bool Test::checkIncEval(const Settings& settings, size_t id, std::string path,
                         bool mustSupportIncEval) {
   auto name = path;
   if (path.empty()) {
-    name = OeisSequence::idStr(id);
-    path = OeisSequence::getProgramPath(id);
+    name = ProgramUtil::idStr(id);
+    path = ProgramUtil::getProgramPath(id);
   }
   Parser parser;
   Program p;
@@ -819,7 +819,7 @@ void Test::checkpoint() {
 }
 
 void Test::steps() {
-  auto file = OeisSequence::getProgramPath(12);
+  auto file = ProgramUtil::getProgramPath(12);
   Log::get().info("Testing steps for " + file);
   Parser parser;
   Interpreter interpreter(settings);
@@ -880,7 +880,7 @@ void checkSeqAgainstTestBFile(int64_t seq_id, int64_t offset,
   OeisSequence t(seq_id);
   t.getTerms(max_num_terms).to_b_file(buf, offset);
   std::ifstream bfile(std::string("tests") + FILE_SEP + "sequence" + FILE_SEP +
-                      OeisSequence::idStr(seq_id, "b") + ".txt");
+                      ProgramUtil::idStr(seq_id, "b") + ".txt");
   std::string x, y;
   while (std::getline(bfile, x)) {
     if (!std::getline(buf, y)) {
@@ -1067,9 +1067,9 @@ void Test::checkFormulas(const std::string& testFile, FormulaType type) {
   FormulaGenerator generator;
   for (const auto& e : map) {
     auto id = e.first;
-    Log::get().info("Testing formula for " + OeisSequence::idStr(id) + ": " +
+    Log::get().info("Testing formula for " + ProgramUtil::idStr(id) + ": " +
                     e.second);
-    auto p = parser.parse(OeisSequence::getProgramPath(id));
+    auto p = parser.parse(ProgramUtil::getProgramPath(id));
     Formula f;
     if (!generator.generate(p, id, f, true)) {
       Log::get().error("Cannot generate formula from program", true);
@@ -1337,7 +1337,7 @@ std::vector<std::pair<Program, Program>> Test::loadInOutTests(
 }
 
 void Test::testSeq(size_t id, const Sequence& expected) {
-  auto file = OeisSequence::getProgramPath(id);
+  auto file = ProgramUtil::getProgramPath(id);
   Log::get().info("Testing " + file);
   Parser parser;
   Settings settings;  // special settings
@@ -1371,11 +1371,11 @@ void eval(const Program& p, Evaluator& evaluator, Sequence& s) {
 
 void Test::testMatcherPair(Matcher& matcher, size_t id1, size_t id2) {
   Log::get().info("Testing " + matcher.getName() + " matcher for " +
-                  OeisSequence::idStr(id1) + " -> " + OeisSequence::idStr(id2));
+                  ProgramUtil::idStr(id1) + " -> " + ProgramUtil::idStr(id2));
   Parser parser;
   Evaluator evaluator(settings);
-  auto p1 = parser.parse(OeisSequence::getProgramPath(id1));
-  auto p2 = parser.parse(OeisSequence::getProgramPath(id2));
+  auto p1 = parser.parse(ProgramUtil::getProgramPath(id1));
+  auto p2 = parser.parse(ProgramUtil::getProgramPath(id2));
   ProgramUtil::removeOps(p1, Operation::Type::NOP);
   ProgramUtil::removeOps(p2, Operation::Type::NOP);
   Sequence s1, s2, s3;
@@ -1398,7 +1398,7 @@ void Test::testMatcherPair(Matcher& matcher, size_t id1, size_t id2) {
     ProgramUtil::print(result[0].second, std::cout);
     Log::get().error(matcher.getName() +
                          " matcher generated wrong program for " +
-                         OeisSequence::idStr(id2),
+                         ProgramUtil::idStr(id2),
                      true);
   }
 }

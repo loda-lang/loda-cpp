@@ -384,9 +384,9 @@ void Interpreter::set(const Operand& a, const Number& v, Memory& mem,
 
 std::string getProgramPath(int64_t id) {
   if (id < 0) {
-    return OeisSequence::getProgramPath(-id, "prg", "P");
+    return ProgramUtil::getProgramPath(-id, "prg", "P");
   } else {
-    return OeisSequence::getProgramPath(id);
+    return ProgramUtil::getProgramPath(id);
   }
 }
 
@@ -408,7 +408,7 @@ std::pair<Number, size_t> Interpreter::callSeq(int64_t id, const Number& arg) {
 
   // check for recursive calls
   if (running_programs.find(id) != running_programs.end()) {
-    throw std::runtime_error("Recursion detected: " + OeisSequence::idStr(id));
+    throw std::runtime_error("Recursion detected: " + ProgramUtil::idStr(id));
   }
 
   // evaluate program

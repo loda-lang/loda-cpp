@@ -19,7 +19,7 @@ std::pair<Program, size_t> OeisProgram::getProgramAndSeqId(
   std::pair<Program, size_t> result;
   try {
     OeisSequence s(arg);
-    result.first = parser.parse(OeisSequence::getProgramPath(s.id));
+    result.first = parser.parse(ProgramUtil::getProgramPath(s.id));
     result.second = s.id;
   } catch (...) {
     // not an ID string
@@ -38,7 +38,7 @@ void collectPrograms(const Program &p, std::set<Program> &collected) {
     if (op.type == Operation::Type::SEQ &&
         op.source.type == Operand::Type::CONSTANT) {
       auto id = op.source.value.asInt();
-      auto path = OeisSequence::getProgramPath(id);
+      auto path = ProgramUtil::getProgramPath(id);
       try {
         Parser parser;
         auto p2 = parser.parse(path);
@@ -106,7 +106,7 @@ bool OeisProgram::unfold(Program &p) {
   // load and check program to be embedded
   Parser parser;
   int64_t id = p.ops[seq_index].source.value.asInt();
-  auto p2 = parser.parse(OeisSequence::getProgramPath(id));
+  auto p2 = parser.parse(ProgramUtil::getProgramPath(id));
   if (ProgramUtil::hasIndirectOperand(p2)) {
     return false;
   }
@@ -255,16 +255,16 @@ std::vector<bool> OeisProgram::collectLatestProgramIds(
         auto id_str = path.substr(path.size() - 11, 7);
         try {
           OeisSequence seq(id_str);
-          if (isFile(OeisSequence::getProgramPath(seq.id))) {
+          if (isFile(ProgramUtil::getProgramPath(seq.id))) {
             if (status == "A" && num_added_ids < max_added_programs) {
               Log::get().debug("Added program for " +
-                               OeisSequence::idStr(seq.id));
+                               ProgramUtil::idStr(seq.id));
               ids.insert(seq.id);
               num_added_ids++;
             } else if (status == "M" &&
                        num_modified_ids < max_modified_programs) {
               Log::get().debug("Modified program for " +
-                               OeisSequence::idStr(seq.id));
+                               ProgramUtil::idStr(seq.id));
               ids.insert(seq.id);
               num_modified_ids++;
             }

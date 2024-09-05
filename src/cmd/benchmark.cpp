@@ -100,10 +100,10 @@ void Benchmark::programs() {
 
 void Benchmark::program(size_t id, size_t num_terms) {
   Parser parser;
-  auto program = parser.parse(OeisSequence::getProgramPath(id));
+  auto program = parser.parse(ProgramUtil::getProgramPath(id));
   auto speed_reg = programEval(program, false, num_terms);
   auto speed_inc = programEval(program, true, num_terms);
-  std::cout << "| " << OeisSequence::idStr(id) << "  | "
+  std::cout << "| " << ProgramUtil::idStr(id) << "  | "
             << fillString(std::to_string(num_terms), 6) << " | "
             << fillString(speed_reg, 8) << " | " << fillString(speed_inc, 8)
             << " |" << std::endl;
@@ -149,14 +149,14 @@ void Benchmark::findSlow(int64_t num_terms, Operation::Type type) {
   Program program;
   std::priority_queue<std::pair<int64_t, int64_t> > queue;
   for (size_t id = 0; id < 400000; id++) {
-    std::ifstream in(OeisSequence::getProgramPath(id));
+    std::ifstream in(ProgramUtil::getProgramPath(id));
     if (!in) {
       continue;
     }
     try {
       program = parser.parse(in);
     } catch (std::exception& e) {
-      Log::get().warn("Skipping " + OeisSequence::idStr(id) + ": " + e.what());
+      Log::get().warn("Skipping " + ProgramUtil::idStr(id) + ": " + e.what());
       continue;
     }
     if (type != Operation::Type::NOP && !ProgramUtil::hasOp(program, type)) {
@@ -167,7 +167,7 @@ void Benchmark::findSlow(int64_t num_terms, Operation::Type type) {
     auto end_time = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
         end_time - start_time);
-    Log::get().info(OeisSequence::idStr(id) + ": " +
+    Log::get().info(ProgramUtil::idStr(id) + ": " +
                     std::to_string(duration.count()) + "µs");
     queue.push(std::pair<int64_t, int64_t>(duration.count(), id));
   }
@@ -175,7 +175,7 @@ void Benchmark::findSlow(int64_t num_terms, Operation::Type type) {
   for (size_t i = 0; i < 20; i++) {
     auto entry = queue.top();
     queue.pop();
-    std::cout << "[" << OeisSequence::idStr(entry.second)
+    std::cout << "[" << ProgramUtil::idStr(entry.second)
               << "](https://loda-lang.org/edit/?oeis=" << entry.second
               << "): " << (entry.first / 1000) << "ms" << std::endl;
   }
