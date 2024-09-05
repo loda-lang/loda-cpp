@@ -103,33 +103,17 @@ void updateOperand(Operand &op, int64_t target, int64_t largest_used) {
   }
 }
 
-bool Subprogram::unfold(Program &p) {
-  if (ProgramUtil::hasIndirectOperand(p)) {
-    return false;
-  }
-  // TODO unfold prg instructions, too
-  // find first seq operation
-  int64_t seq_index = -1;
-  for (size_t i = 0; i < p.ops.size(); i++) {
-    if (p.ops[i].type == Operation::Type::SEQ) {
-      seq_index = i;
-      break;
-    }
-  }
-  if (seq_index < 0) {
-    return false;
-  }
+bool prepareEmbedding(int64_t id, Program &sub) {
   // load and check program to be embedded
   Parser parser;
-  int64_t id = p.ops[seq_index].source.value.asInt();
-  auto p2 = parser.parse(ProgramUtil::getProgramPath(id));
-  if (ProgramUtil::hasIndirectOperand(p2)) {
+  sub = parser.parse(ProgramUtil::getProgramPath(id));
+  if (ProgramUtil::hasIndirectOperand(sub)) {
     return false;
   }
   // prepare program for embedding
   // remove nops and comments
-  ProgramUtil::removeOps(p2, Operation::Type::NOP);
-  for (auto &op : p2.ops) {
+  ProgramUtil::removeOps(sub, Operation::Type::NOP);
+  for (auto &op : sub.ops) {
     if (op.type != Operation::Type::SEQ) {
       op.comment.clear();
     }
@@ -137,34 +121,57 @@ bool Subprogram::unfold(Program &p) {
   // find cells that are read and uninitialized
   std::set<int64_t> initialized, uninitialized;
   initialized.insert(Program::INPUT_CELL);
-  ProgramUtil::getUsedUninitializedCells(p2, initialized, uninitialized);
-
+  ProgramUtil::getUsedUninitializedCells(sub, initialized, uninitialized);
   // initialize cells that are read and were uninitialized
   for (auto cell : uninitialized) {
-    p2.ops.insert(
-        p2.ops.begin(),
+    sub.ops.insert(
+        sub.ops.begin(),
         Operation(Operation::Type::MOV, Operand(Operand::Type::CONSTANT, cell),
                   Operand(Operand::Type::CONSTANT, 0)));
   }
+  return true;
+}
+
+bool Subprogram::unfold(Program &main) {
+  if (ProgramUtil::hasIndirectOperand(main)) {
+    return false;
+  }
+  // TODO unfold prg instructions, too
+  // find first seq operation
+  int64_t seq_index = -1;
+  for (size_t i = 0; i < main.ops.size(); i++) {
+    if (main.ops[i].type == Operation::Type::SEQ) {
+      seq_index = i;
+      break;
+    }
+  }
+  if (seq_index < 0) {
+    return false;
+  }
+  auto sub_id = main.ops[seq_index].source.value.asInt();
+  Program sub;
+  if (!prepareEmbedding(sub_id, sub)) {
+    return false;
+  }
   // shift used operands
-  int64_t target = p.ops[seq_index].target.value.asInt();
-  int64_t largest_used = ProgramUtil::getLargestDirectMemoryCell(p);
-  for (auto &op : p2.ops) {
+  auto target = main.ops[seq_index].target.value.asInt();
+  auto largest_used = ProgramUtil::getLargestDirectMemoryCell(main);
+  for (auto &op : sub.ops) {
     updateOperand(op.target, target, largest_used);
     updateOperand(op.source, target, largest_used);
   }
   // delete seq operation
-  p.ops.erase(p.ops.begin() + seq_index);
+  main.ops.erase(main.ops.begin() + seq_index);
   // embed program
-  p.ops.insert(p.ops.begin() + seq_index, p2.ops.begin(), p2.ops.end());
+  main.ops.insert(main.ops.begin() + seq_index, sub.ops.begin(), sub.ops.end());
   return true;
 }
 
-bool Subprogram::autoUnfold(Program &p) {
+bool Subprogram::autoUnfold(Program &main) {
   bool changed = false;
   while (true) {
     // try to unfold
-    auto copy = p;
+    auto copy = main;
     if (!unfold(copy)) {
       break;
     }
@@ -173,17 +180,17 @@ bool Subprogram::autoUnfold(Program &p) {
       break;
     }
     // ok, update program!
-    p = copy;
+    main = copy;
     changed = true;
   }
   return changed;
 }
 
-bool Subprogram::shouldFold(const Program &p) {
+bool Subprogram::shouldFold(const Program &main) {
   int64_t level = 0;
   int64_t numLoops = 0;
   bool hasRootSeq = false;
-  for (const auto &op : p.ops) {
+  for (const auto &op : main.ops) {
     switch (op.type) {
       case Operation::Type::LPB:
         level++;
