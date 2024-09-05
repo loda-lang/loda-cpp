@@ -702,8 +702,8 @@ void Test::knownPrograms() {
 }
 
 void Test::unfold() {
-  auto tests = loadInOutTests(std::string("tests") + FILE_SEP + "programs" +
-                              FILE_SEP + "unfold" + FILE_SEP + "U");
+  auto tests = loadInOutTests(std::string("tests") + FILE_SEP + "unfold" +
+                              FILE_SEP + "U");
   size_t i = 1;
   for (const auto& t : tests) {
     Log::get().info("Testing unfold " + std::to_string(i));
@@ -722,8 +722,7 @@ void Test::unfold() {
 void Test::incEval() {
   // manually written test cases
   size_t i = 1;
-  auto dir = std::string("tests") + FILE_SEP + "programs" + FILE_SEP +
-             "inceval" + FILE_SEP;
+  auto dir = std::string("tests") + FILE_SEP + "inceval" + FILE_SEP;
   std::stringstream s;
   while (true) {
     s.str("");
