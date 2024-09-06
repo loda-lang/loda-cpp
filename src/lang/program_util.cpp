@@ -243,7 +243,8 @@ bool ProgramUtil::getUsedMemoryCells(const Program &p,
     }
   }
   const auto max = [](int64_t a, int64_t b) { return std::max(a, b); };
-  largest_used = std::accumulate(used_cells.begin(), used_cells.end(), 0, max);
+  largest_used =
+      std::accumulate(used_cells.begin(), used_cells.end(), (int64_t)0, max);
   return true;
 }
 

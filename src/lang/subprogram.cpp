@@ -1,5 +1,7 @@
 #include "lang/subprogram.hpp"
 
+#include <exception>
+
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
 
@@ -238,6 +240,11 @@ bool Subprogram::shouldFold(const Program &main) {
 
 bool Subprogram::fold(Program &main, Program sub, size_t subId,
                       std::map<int64_t, int64_t> &cellMap) {
+  // no indirect operands  allowed
+  if (ProgramUtil::hasIndirectOperand(main) ||
+      ProgramUtil::hasIndirectOperand(sub)) {
+    return false;
+  }
   // prepare and check subprogram
   ProgramUtil::removeOps(sub, Operation::Type::NOP);
   if (sub.ops.empty()) {
@@ -252,9 +259,7 @@ bool Subprogram::fold(Program &main, Program sub, size_t subId,
     sub.ops.pop_back();
   }
   auto mainPos = Subprogram::search(main, sub, cellMap);
-  // no indirect operands  allowed
-  if (ProgramUtil::hasIndirectOperand(main) ||
-      ProgramUtil::hasIndirectOperand(sub)) {
+  if (mainPos < 0) {
     return false;
   }
   // perform folding on main program
