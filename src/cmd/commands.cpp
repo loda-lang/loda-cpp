@@ -322,6 +322,7 @@ void Commands::autoFold() {
   Log::get().info("Folding programs");
   bool folded;
   Program main;
+  Evaluator evaluator(settings);
   std::map<int64_t, int64_t> cell_map;
   size_t main_id, sub_id, main_loops, sub_loops;
   for (main_id = 0; main_id < num_ids; main_id++) {
@@ -347,6 +348,12 @@ void Commands::autoFold() {
     if (folded) {
       Log::get().info("Folded " + ProgramUtil::idStr(main_id) + " using " +
                       ProgramUtil::idStr(sub_id));
+      auto seq = manager.getSequences().at(main_id);
+      auto terms = seq.getTerms(OeisSequence::DEFAULT_SEQ_LENGTH);
+      auto result = evaluator.check(main, terms, -1, main_id);
+      if (result.first == status_t::ERROR) {
+        Log::get().error("Error in folded program", true);
+      }
     }
   }
 }
