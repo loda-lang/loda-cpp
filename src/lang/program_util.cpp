@@ -250,9 +250,11 @@ bool ProgramUtil::getUsedMemoryCells(const Program &p,
 
 bool ProgramUtil::getUsedUninitializedCells(const Program &p,
                                             std::set<int64_t> &initialized,
-                                            std::set<int64_t> &uninitialized) {
+                                            std::set<int64_t> &uninitialized,
+                                            size_t start_pos) {
   // find cells that are read and uninitialized
-  for (const auto &op : p.ops) {
+  for (size_t i = start_pos; i < p.ops.size(); i++) {
+    const auto &op = p.ops[i];
     // undecidable if there are indirect operands
     if (hasIndirectOperand(op)) {
       return false;

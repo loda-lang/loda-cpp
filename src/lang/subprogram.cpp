@@ -262,6 +262,11 @@ bool Subprogram::fold(Program &main, Program sub, size_t subId,
   if (mainPos < 0) {
     return false;
   }
+  // TODO: check if folding is safe: loda fold A001497 A002262
+  // std::set<int64_t> initialized, uninitialized;
+  // ProgramUtil::getUsedUninitializedCells(main, initialized, uninitialized,
+  //                                        mainPos + sub.ops.size());
+
   // perform folding on main program
   const Number mappedInput(cellMap.at(Program::INPUT_CELL));
   const Number mappedOutput(cellMap.at(outputCell));
