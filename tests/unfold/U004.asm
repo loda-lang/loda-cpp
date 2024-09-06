@@ -1,0 +1,13 @@
+; in
+mov $1,$0
+mov $2,4
+prg $1,2
+add $1,$2
+; out
+mov $1,$0
+mov $2,4
+mov $3,$1
+add $3,2
+bin $3,$1
+mov $1,$3
+add $1,$2

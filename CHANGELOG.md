@@ -9,6 +9,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Enhancements
 
+* Support `prg` in `unfold` command
 * Internal `replace` command
 * Remove deprecated dot export
 

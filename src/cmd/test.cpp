@@ -59,6 +59,7 @@ void Test::fast() {
   config();
   steps();
   blocks();
+  fold();
   unfold();
   incEval();
   linearMatcher();
@@ -701,10 +702,57 @@ void Test::knownPrograms() {
                     60480, 60480, 60480, 120960, 120960, 241920, 1209600}));
 }
 
+void Test::fold() {
+  auto tests =
+      loadInOutTests(std::string("tests") + FILE_SEP + "fold" + FILE_SEP + "F");
+  size_t i = 1;
+  Parser parser;
+  Evaluator evaluator(settings, false);
+  std::map<int64_t, int64_t> cellMap;
+  for (const auto& t : tests) {
+    Log::get().info("Testing fold " + std::to_string(i));
+    Operation seqOrPrg;
+    for (const auto& op : t.second.ops) {
+      if (op.type == Operation::Type::SEQ || op.type == Operation::Type::PRG) {
+        seqOrPrg = op;
+        break;
+      }
+    }
+    if (seqOrPrg.type == Operation::Type::NOP) {
+      Log::get().error("No seq or prg in output found", true);
+    }
+    int64_t subId = seqOrPrg.source.value.asInt();
+    std::string path;
+    if (seqOrPrg.type == Operation::Type::SEQ) {
+      path = ProgramUtil::getProgramPath(subId);
+    } else {
+      path = ProgramUtil::getProgramPath(subId, "prg", "P");
+    }
+    auto sub = parser.parse(path);
+    auto p = t.first;
+    cellMap.clear();
+    if (!Subprogram::fold(p, sub, subId, cellMap)) {
+      Log::get().error("Folding not supported", true);
+    }
+    if (p != t.second) {
+      ProgramUtil::print(p, std::cout);
+      Log::get().error("Unexpected program", true);
+    }
+    Sequence expected, got;
+    evaluator.eval(t.first, expected, 20);
+    evaluator.eval(t.second, got, 20);
+    if (expected != got) {
+      Log::get().error("Unexpected sequence", true);
+    }
+    i++;
+  }
+}
+
 void Test::unfold() {
   auto tests = loadInOutTests(std::string("tests") + FILE_SEP + "unfold" +
                               FILE_SEP + "U");
   size_t i = 1;
+  Evaluator evaluator(settings, false);
   for (const auto& t : tests) {
     Log::get().info("Testing unfold " + std::to_string(i));
     auto p = t.first;
@@ -713,7 +761,13 @@ void Test::unfold() {
     }
     if (p != t.second) {
       ProgramUtil::print(p, std::cout);
-      Log::get().error("Unexpected result", true);
+      Log::get().error("Unexpected program", true);
+    }
+    Sequence expected, got;
+    evaluator.eval(t.first, expected, 20);
+    evaluator.eval(t.second, got, 20);
+    if (expected != got) {
+      Log::get().error("Unexpected sequence", true);
     }
     i++;
   }

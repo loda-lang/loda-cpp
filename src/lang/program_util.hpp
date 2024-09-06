@@ -39,6 +39,8 @@ class ProgramUtil {
 
   static bool isWritingRegion(Operation::Type t);
 
+  static bool hasRegionOperation(const Program &p);
+
   static bool hasIndirectOperand(const Operation &op);
 
   static bool hasIndirectOperand(const Program &p);

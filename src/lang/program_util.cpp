@@ -162,6 +162,12 @@ bool ProgramUtil::isWritingRegion(Operation::Type t) {
           t == Operation::Type::SRT);
 }
 
+bool ProgramUtil::hasRegionOperation(const Program &p) {
+  return std::any_of(p.ops.begin(), p.ops.end(), [](const Operation &op) {
+    return isWritingRegion(op.type);
+  });
+}
+
 bool ProgramUtil::hasIndirectOperand(const Operation &op) {
   const auto num_ops = Operation::Metadata::get(op.type).num_operands;
   return (num_ops > 0 && op.target.type == Operand::Type::INDIRECT) ||

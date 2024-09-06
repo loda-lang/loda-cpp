@@ -34,6 +34,8 @@ class Test {
 
   void knownPrograms();
 
+  void fold();
+
   void unfold();
 
   void incEval();
