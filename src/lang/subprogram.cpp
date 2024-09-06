@@ -1,6 +1,6 @@
 #include "lang/subprogram.hpp"
 
-#include <exception>
+#include <stdexcept>
 
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
