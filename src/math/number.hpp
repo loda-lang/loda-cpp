@@ -1,8 +1,7 @@
 #pragma once
 
-#include <stdlib.h>
-
 #include <algorithm>
+#include <cstdint>
 #include <limits>
 #include <random>
 
