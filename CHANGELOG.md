@@ -2,9 +2,11 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v24.9.7
+
 ### Bugfixes
 
-* Fix optimizer `prg`-handling
+* Fix optimizer `prg` handling
 * Fix max memory option `-m`
 * Fix program folding
 
@@ -13,6 +15,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 * Support `prg` in `unfold` command
 * Internal `replace` command
 * Remove deprecated dot export
+* Collapse `mov` loops in optimizer
 
 ## v24.9.2
 

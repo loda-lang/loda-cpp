@@ -217,11 +217,12 @@ bool ProgramUtil::getUsedMemoryCells(const Program &p,
   for (const auto &op : p.ops) {
     int64_t region_length = 1;
     if (op.source.type == Operand::Type::INDIRECT ||
-        op.target.type == Operand::Type::INDIRECT) {
+        op.target.type == Operand::Type::INDIRECT ||
+        op.type == Operation::Type::PRG) {
       return false;
     }
-    if (op.type == Operation::Type::LPB ||
-        ProgramUtil::isWritingRegion(op.type)) {
+    if (op.type == Operation::Type::LPB || op.type == Operation::Type::CLR ||
+        op.type == Operation::Type::SRT) {
       if (op.source.type == Operand::Type::CONSTANT) {
         region_length = op.source.value.asInt();
       } else {

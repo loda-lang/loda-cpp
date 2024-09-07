@@ -31,7 +31,9 @@ class Optimizer {
 
   bool mergeLoops(Program &p) const;
 
-  bool collapseLoops(Program &p) const;
+  bool collapseMovLoops(Program &p) const;
+
+  bool collapseArithmeticLoops(Program &p) const;
 
   bool pullUpMov(Program &p) const;
 

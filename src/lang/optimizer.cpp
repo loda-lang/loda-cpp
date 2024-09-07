@@ -52,7 +52,10 @@ bool Optimizer::optimize(Program &p) const {
     if (mergeLoops(p)) {
       changed = true;
     }
-    if (collapseLoops(p)) {
+    if (collapseMovLoops(p)) {
+      changed = true;
+    }
+    if (collapseArithmeticLoops(p)) {
       changed = true;
     }
     if (pullUpMov(p)) {
@@ -768,7 +771,42 @@ bool Optimizer::mergeLoops(Program &p) const {
   return false;
 }
 
-bool Optimizer::collapseLoops(Program &p) const {
+bool Optimizer::collapseMovLoops(Program &p) const {
+  bool changed = false;
+  for (size_t i = 0; i + 2 < p.ops.size(); i++) {
+    if (p.ops[i].type != Operation::Type::LPB ||
+        p.ops[i + 1].type != Operation::Type::MOV ||
+        p.ops[i + 2].type != Operation::Type::LPE) {
+      continue;
+    }
+    const auto &lpb = p.ops[i];
+    const auto &mov = p.ops[i + 1];
+    if (lpb.source != Operand(Operand::Type::CONSTANT, 1) ||
+        lpb.target.type != Operand::Type::DIRECT ||
+        mov.source.type != Operand::Type::CONSTANT ||
+        mov.target != lpb.target) {
+      continue;
+    }
+    auto val = mov.source.value;
+    if (val < Number::ZERO) {
+      p.ops.erase(p.ops.begin() + i, p.ops.begin() + i + 3);
+      changed = true;
+    } else if (val == Number::ZERO) {
+      p.ops.erase(p.ops.begin() + i + 1, p.ops.begin() + i + 3);
+      p.ops[i] = Operation(Operation::Type::MOV, lpb.target,
+                           Operand(Operand::Type::CONSTANT, 0));
+      changed = true;
+    } else {
+      p.ops.erase(p.ops.begin() + i + 1, p.ops.begin() + i + 3);
+      p.ops[i] = Operation(Operation::Type::MIN, lpb.target,
+                           Operand(Operand::Type::CONSTANT, val));
+      changed = true;
+    }
+  }
+  return changed;
+}
+
+bool Optimizer::collapseArithmeticLoops(Program &p) const {
   if (ProgramUtil::hasIndirectOperand(p)) {
     return false;
   }
