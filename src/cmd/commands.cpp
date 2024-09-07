@@ -333,6 +333,8 @@ void Commands::autoFold() {
     }
     folded = false;
     main = programs[main_id];
+    auto submitted_by =
+        Comments::getCommentField(main, Comments::PREFIX_SUBMITTED_BY);
     main_loops = ProgramUtil::numOps(programs[main_id], Operation::Type::LPB);
     for (sub_id = 0; sub_id < num_ids; sub_id++) {
       sub_loops = ProgramUtil::numOps(programs[sub_id], Operation::Type::LPB);
@@ -356,6 +358,8 @@ void Commands::autoFold() {
       if (result.first == status_t::ERROR) {
         Log::get().error("Error in folded program", true);
       }
+      auto path = ProgramUtil::getProgramPath(main_id);
+      manager.dumpProgram(main_id, main, path, submitted_by);
     }
   }
 }

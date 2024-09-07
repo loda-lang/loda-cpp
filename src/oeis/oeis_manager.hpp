@@ -47,6 +47,9 @@ class OeisManager {
 
   bool maintainProgram(size_t id, bool eval = true);
 
+  void dumpProgram(size_t id, Program& p, const std::string& file,
+                   const std::string& submitted_by) const;
+
   void generateLists();
 
   std::vector<Program> loadAllPrograms();
@@ -61,9 +64,6 @@ class OeisManager {
   void generateStats(int64_t age_in_days);
 
   void addSeqComments(Program& p) const;
-
-  void dumpProgram(size_t id, Program& p, const std::string& file,
-                   const std::string& submitted_by) const;
 
   void alert(Program p, size_t id, const std::string& prefix,
              const std::string& color, const std::string& submitted_by) const;
