@@ -1,8 +1,7 @@
 #pragma once
 
-#include <stdlib.h>
-
 #include <array>
+#include <cstdint>
 #include <iostream>
 
 class BigNumber {
