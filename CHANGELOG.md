@@ -5,7 +5,8 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Bugfixes
 
 * Fix optimizer `prg`-handling
-* Fix max memory option`-m`
+* Fix max memory option `-m`
+* Fix program folding
 
 ### Enhancements
 

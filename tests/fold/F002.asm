@@ -6,11 +6,9 @@ lpb $2
   div $3,10
   sub $2,$3
 lpe
-add $0,$3
 div $0,3
 ; out
 mul $0,5
 mov $3,$0
 seq $3,30
-add $0,$3
 div $0,3

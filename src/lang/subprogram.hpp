@@ -19,5 +19,5 @@ class Subprogram {
   static bool shouldFold(const Program &main);
 
   static bool fold(Program &main, Program sub, size_t subId,
-                   std::map<int64_t, int64_t> &cell_map);
+                   std::map<int64_t, int64_t> &cell_map, int64_t maxMemory);
 };

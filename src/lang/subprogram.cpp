@@ -239,7 +239,7 @@ bool Subprogram::shouldFold(const Program &main) {
 }
 
 bool Subprogram::fold(Program &main, Program sub, size_t subId,
-                      std::map<int64_t, int64_t> &cellMap) {
+                      std::map<int64_t, int64_t> &cellMap, int64_t maxMemory) {
   // no indirect operands  allowed
   if (ProgramUtil::hasIndirectOperand(main) ||
       ProgramUtil::hasIndirectOperand(sub)) {
@@ -258,15 +258,32 @@ bool Subprogram::fold(Program &main, Program sub, size_t subId,
     outputCell = last.source.value.asInt();
     sub.ops.pop_back();
   }
+  // search for subprogram in main program
   auto mainPos = Subprogram::search(main, sub, cellMap);
   if (mainPos < 0) {
     return false;
   }
-  // TODO: check if folding is safe: loda fold A001497 A002262
-  // std::set<int64_t> initialized, uninitialized;
-  // ProgramUtil::getUsedUninitializedCells(main, initialized, uninitialized,
-  //                                        mainPos + sub.ops.size());
-
+  // get used memory cells of subprogram
+  std::unordered_set<int64_t> used_cells;
+  int64_t tmp_larged_used;
+  if (!ProgramUtil::getUsedMemoryCells(sub, used_cells, tmp_larged_used,
+                                       maxMemory)) {
+    return false;
+  }
+  // get used and uninitialized cells of main program after subprogram
+  std::set<int64_t> initialized, uninitialized;
+  initialized.insert(Program::INPUT_CELL);
+  if (!ProgramUtil::getUsedUninitializedCells(main, initialized, uninitialized,
+                                              mainPos + sub.ops.size())) {
+    return false;
+  }
+  // check if used cells are initialized after subprogram
+  for (auto cell : used_cells) {
+    auto t = cellMap.find(cell);
+    if (t != cellMap.end() && uninitialized.count(t->second)) {
+      return false;
+    }
+  }
   // perform folding on main program
   const Number mappedInput(cellMap.at(Program::INPUT_CELL));
   const Number mappedOutput(cellMap.at(outputCell));

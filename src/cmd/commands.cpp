@@ -270,7 +270,8 @@ void Commands::fold(const std::string& main_path, const std::string& sub_id) {
     throw std::runtime_error("subprogram must be given by ID");
   }
   std::map<int64_t, int64_t> cell_map;
-  if (!Subprogram::fold(main, sub.first, sub.second, cell_map)) {
+  if (!Subprogram::fold(main, sub.first, sub.second, cell_map,
+                        settings.max_memory)) {
     throw std::runtime_error("cannot fold program");
   }
   ProgramUtil::print(main, std::cout);
@@ -340,7 +341,8 @@ void Commands::autoFold() {
         continue;
       }
       cell_map.clear();
-      if (Subprogram::fold(main, programs[sub_id], sub_id, cell_map)) {
+      if (Subprogram::fold(main, programs[sub_id], sub_id, cell_map,
+                           settings.max_memory)) {
         folded = true;
         break;
       }

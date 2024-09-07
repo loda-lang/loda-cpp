@@ -731,7 +731,7 @@ void Test::fold() {
     auto sub = parser.parse(path);
     auto p = t.first;
     cellMap.clear();
-    if (!Subprogram::fold(p, sub, subId, cellMap)) {
+    if (!Subprogram::fold(p, sub, subId, cellMap, settings.max_memory)) {
       Log::get().error("Folding not supported", true);
     }
     if (p != t.second) {
