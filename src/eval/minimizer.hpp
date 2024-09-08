@@ -1,7 +1,7 @@
 #pragma once
 
 #include "eval/evaluator.hpp"
-#include "lang/optimizer.hpp"
+#include "eval/optimizer.hpp"
 #include "lang/program.hpp"
 #include "sys/util.hpp"
 

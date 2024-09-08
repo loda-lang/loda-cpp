@@ -2,7 +2,7 @@
 
 #include "eval/evaluator.hpp"
 #include "eval/minimizer.hpp"
-#include "lang/optimizer.hpp"
+#include "eval/optimizer.hpp"
 #include "lang/parser.hpp"
 #include "lang/program.hpp"
 #include "mine/finder.hpp"

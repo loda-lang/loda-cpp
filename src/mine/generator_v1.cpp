@@ -8,8 +8,8 @@
 #include <stdexcept>
 
 #include "eval/interpreter.hpp"
+#include "eval/optimizer.hpp"
 #include "eval/semantics.hpp"
-#include "lang/optimizer.hpp"
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
 #include "mine/distribution.hpp"

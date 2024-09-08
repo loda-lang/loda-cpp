@@ -12,9 +12,9 @@
 #include <sstream>
 
 #include "eval/interpreter.hpp"
+#include "eval/optimizer.hpp"
 #include "form/formula_gen.hpp"
 #include "lang/comments.hpp"
-#include "lang/optimizer.hpp"
 #include "lang/program_util.hpp"
 #include "lang/subprogram.hpp"
 #include "mine/config.hpp"

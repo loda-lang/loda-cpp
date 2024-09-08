@@ -3,9 +3,9 @@
 #include <fstream>
 #include <set>
 
+#include "eval/optimizer.hpp"
 #include "eval/semantics.hpp"
 #include "lang/constants.hpp"
-#include "lang/optimizer.hpp"
 #include "lang/program_util.hpp"
 #include "sys/file.hpp"
 #include "sys/log.hpp"
