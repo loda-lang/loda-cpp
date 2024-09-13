@@ -793,11 +793,6 @@ bool Optimizer::collapseMovLoops(Program &p) const {
     if (val < Number::ZERO) {
       p.ops.erase(p.ops.begin() + i, p.ops.begin() + i + 3);
       changed = true;
-    } else if (val == Number::ZERO) {
-      p.ops.erase(p.ops.begin() + i + 1, p.ops.begin() + i + 3);
-      p.ops[i] = Operation(Operation::Type::MOV, lpb.target,
-                           Operand(Operand::Type::CONSTANT, 0));
-      changed = true;
     } else {
       p.ops.erase(p.ops.begin() + i + 1, p.ops.begin() + i + 3);
       p.ops[i] = Operation(Operation::Type::MIN, lpb.target,
