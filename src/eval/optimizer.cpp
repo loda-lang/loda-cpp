@@ -582,6 +582,17 @@ void removeReferences(const Operand &op, std::map<int64_t, Operand> &values) {
   }
 }
 
+Operand resolveOperand(const Operand &op,
+                       const std::map<int64_t, Operand> &values) {
+  if (op.type == Operand::Type::DIRECT) {
+    auto it = values.find(op.value.asInt());
+    if (it != values.end()) {
+      return it->second;
+    }
+  }
+  return op;
+}
+
 bool Optimizer::doPartialEval(Program &p, size_t op_index,
                               std::map<int64_t, Operand> &values) const {
   // make sure there is not indirect memory access
@@ -591,19 +602,9 @@ bool Optimizer::doPartialEval(Program &p, size_t op_index,
     return false;
   }
 
-  // deduce source value
-  auto source = op.source;
-  if (op.source.type == Operand::Type::DIRECT &&
-      values.find(op.source.value.asInt()) != values.end()) {
-    source = values[op.source.value.asInt()];
-  }
-
-  // deduce target value
-  auto target = op.target;
-  if (op.target.type == Operand::Type::DIRECT &&
-      values.find(op.target.value.asInt()) != values.end()) {
-    target = values[op.target.value.asInt()];
-  }
+  // resolve source and target operands
+  auto source = resolveOperand(op.source, values);
+  auto target = resolveOperand(op.target, values);
 
   // calculate new value
   bool has_result = false;
@@ -655,29 +656,30 @@ bool Optimizer::doPartialEval(Program &p, size_t op_index,
     }
   }
 
+  // update target value
+  if (num_ops > 0) {
+    if (has_result) {
+      values[op.target.value.asInt()] = target;
+    } else {
+      values.erase(op.target.value.asInt());
+    }
+    // remove references to target because they are out-dated now
+    removeReferences(op.target, values);
+  }
+
   bool changed = false;
 
-  // update source value
+  // update source operand
   if (num_ops == 2 && op.source != source) {
     op.source = source;
     changed = true;
   }
 
-  if (num_ops > 0) {
-    // update target value
-    if (has_result) {
-      values[op.target.value.asInt()] = target;
-      if (op.type != Operation::Type::MOV) {
-        op.type = Operation::Type::MOV;
-        op.source = target;
-        changed = true;
-      }
-    } else {
-      values.erase(op.target.value.asInt());
-    }
-
-    // remove references to target because they are out-dated now
-    removeReferences(op.target, values);
+  // update target operand
+  if (num_ops > 0 && has_result && op.type != Operation::Type::MOV) {
+    op.type = Operation::Type::MOV;
+    op.source = target;
+    changed = true;
   }
 
   return changed;
