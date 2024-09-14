@@ -291,7 +291,8 @@ bool Subprogram::fold(Program &main, Program sub, size_t subId,
       const Operand mapped(Operand::Type::DIRECT, t->second);
       // check if main program is reading cells that are used by subprogram
       int64_t ii = static_cast<int64_t>(i);
-      if (ii < mainPos || ii >= mainPos + sub.ops.size()) {
+      if (ii < mainPos ||
+          ii >= mainPos + static_cast<int64_t>(sub.ops.size())) {
         if (meta.num_operands > 0 && meta.is_reading_target &&
             op.target == mapped) {
           return false;
