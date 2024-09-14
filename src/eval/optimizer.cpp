@@ -4,6 +4,7 @@
 #include <set>
 #include <stack>
 
+#include "eval/evaluator_par.hpp"
 #include "eval/interpreter.hpp"
 #include "eval/semantics.hpp"
 #include "lang/program_util.hpp"
@@ -570,105 +571,6 @@ bool Optimizer::reduceMemoryCells(Program &p) const {
   return false;
 }
 
-void removeReferences(const Operand &op, std::map<int64_t, Operand> &values) {
-  auto it = values.begin();
-  // do we need to do this transitively?
-  while (it != values.end()) {
-    if (it->second == op) {
-      it = values.erase(it);
-    } else {
-      it++;
-    }
-  }
-}
-
-Operand resolveOperand(const Operand &op,
-                       const std::map<int64_t, Operand> &values) {
-  if (op.type == Operand::Type::DIRECT) {
-    auto it = values.find(op.value.asInt());
-    if (it != values.end()) {
-      return it->second;
-    }
-  }
-  return op;
-}
-
-bool Optimizer::doPartialEval(Program &p, size_t op_index,
-                              std::map<int64_t, Operand> &values) const {
-  // make sure there is not indirect memory access
-  Operation &op = p.ops[op_index];
-  if (ProgramUtil::hasIndirectOperand(op)) {
-    values.clear();
-    return false;
-  }
-
-  // resolve source and target operands
-  auto source = resolveOperand(op.source, values);
-  auto target = resolveOperand(op.target, values);
-
-  // calculate new value
-  bool has_result = false;
-  auto num_ops = Operation::Metadata::get(op.type).num_operands;
-  switch (op.type) {
-    case Operation::Type::NOP:
-    case Operation::Type::DBG:
-    case Operation::Type::SEQ: {
-      break;
-    }
-
-    case Operation::Type::LPB:
-    case Operation::Type::LPE: {
-      // remove values from cells that are modified in the loop
-      auto loop = ProgramUtil::getEnclosingLoop(p, op_index);
-      for (int64_t i = loop.first + 1; i < loop.second; i++) {
-        if (ProgramUtil::isWritingRegion(p.ops[i].type) ||
-            ProgramUtil::hasIndirectOperand(p.ops[i])) {
-          values.clear();
-          break;
-        }
-        if (Operation::Metadata::get(p.ops[i].type).is_writing_target) {
-          values.erase(p.ops[i].target.value.asInt());
-          removeReferences(p.ops[i].target, values);
-        }
-      }
-      return false;
-    }
-    case Operation::Type::CLR:
-    case Operation::Type::PRG:
-    case Operation::Type::SRT: {
-      values.clear();
-      return false;
-    }
-
-    case Operation::Type::MOV: {
-      target = source;
-      has_result = true;
-      break;
-    }
-
-    default: {
-      if (target.type == Operand::Type::CONSTANT &&
-          (num_ops == 1 || source.type == Operand::Type::CONSTANT)) {
-        target.value = Interpreter::calc(op.type, target.value, source.value);
-        has_result = true;
-      }
-      break;
-    }
-  }
-
-  // update target value
-  if (num_ops > 0) {
-    if (has_result) {
-      values[op.target.value.asInt()] = target;
-    } else {
-      values.erase(op.target.value.asInt());
-    }
-    // remove references to target because they are out-dated now
-    removeReferences(op.target, values);
-  }
-  return has_result;
-}
-
 bool Optimizer::partialEval(Program &p) const {
   std::unordered_set<int64_t> used_cells;
   int64_t largest_used = 0;
@@ -676,16 +578,14 @@ bool Optimizer::partialEval(Program &p) const {
                                        settings.max_memory)) {
     return false;
   }
-  std::map<int64_t, Operand> values;
-  for (int64_t i = NUM_INITIALIZED_CELLS; i <= largest_used; i++) {
-    values[i] = Operand(Operand::Type::CONSTANT, 0);
-  }
+  PartialEvaluator eval(settings);
+  eval.initZeros(NUM_INITIALIZED_CELLS, largest_used);
   bool changed = false;
   for (size_t i = 0; i < p.ops.size(); i++) {
-    bool has_result = doPartialEval(p, i, values);
+    bool has_result = eval.doPartialEval(p, i);
     auto &op = p.ops[i];
-    auto source = resolveOperand(op.source, values);
-    auto target = resolveOperand(op.target, values);
+    auto source = eval.resolveOperand(op.source);
+    auto target = eval.resolveOperand(op.target);
     auto num_ops = Operation::Metadata::get(op.type).num_operands;
     // update source operand
     if (num_ops > 1 && op.source != source) {
