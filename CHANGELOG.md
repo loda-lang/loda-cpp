@@ -5,6 +5,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Bugfixes
 
 * Fix optimizer bug
+* Fix program folding bug
 
 ## v24.9.7
 
