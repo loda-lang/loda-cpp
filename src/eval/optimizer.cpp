@@ -666,23 +666,7 @@ bool Optimizer::doPartialEval(Program &p, size_t op_index,
     // remove references to target because they are out-dated now
     removeReferences(op.target, values);
   }
-
-  bool changed = false;
-
-  // update source operand
-  if (num_ops == 2 && op.source != source) {
-    op.source = source;
-    changed = true;
-  }
-
-  // update target operand
-  if (num_ops > 0 && has_result && op.type != Operation::Type::MOV) {
-    op.type = Operation::Type::MOV;
-    op.source = target;
-    changed = true;
-  }
-
-  return changed;
+  return has_result;
 }
 
 bool Optimizer::partialEval(Program &p) const {
@@ -698,7 +682,20 @@ bool Optimizer::partialEval(Program &p) const {
   }
   bool changed = false;
   for (size_t i = 0; i < p.ops.size(); i++) {
-    if (doPartialEval(p, i, values)) {
+    bool has_result = doPartialEval(p, i, values);
+    auto &op = p.ops[i];
+    auto source = resolveOperand(op.source, values);
+    auto target = resolveOperand(op.target, values);
+    auto num_ops = Operation::Metadata::get(op.type).num_operands;
+    // update source operand
+    if (num_ops > 1 && op.source != source) {
+      op.source = source;
+      changed = true;
+    }
+    // update target operand
+    if (num_ops > 0 && has_result && op.type != Operation::Type::MOV) {
+      op.type = Operation::Type::MOV;
+      op.source = target;
       changed = true;
     }
   }
