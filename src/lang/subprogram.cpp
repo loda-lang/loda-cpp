@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 
+#include "eval/evaluator_par.hpp"
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
 
@@ -263,26 +264,44 @@ bool Subprogram::fold(Program &main, Program sub, size_t subId,
   if (mainPos < 0) {
     return false;
   }
-  // get used memory cells of subprogram
-  std::unordered_set<int64_t> used_cells;
+  // get used memory cells
+  std::unordered_set<int64_t> used_sub_cells;
   int64_t tmp_larged_used;
-  if (!ProgramUtil::getUsedMemoryCells(sub, used_cells, tmp_larged_used,
+  if (!ProgramUtil::getUsedMemoryCells(sub, used_sub_cells, tmp_larged_used,
                                        maxMemory)) {
     return false;
   }
-  // get used and uninitialized cells of main program after subprogram
-  std::set<int64_t> initialized, uninitialized;
-  initialized.insert(Program::INPUT_CELL);
-  if (!ProgramUtil::getUsedUninitializedCells(main, initialized, uninitialized,
-                                              mainPos + sub.ops.size())) {
-    return false;
-  }
-  // check if used cells are initialized after subprogram
-  for (auto cell : used_cells) {
-    auto t = cellMap.find(cell);
-    if (t != cellMap.end() && uninitialized.count(t->second)) {
-      return false;
+  int64_t largest_used_main = ProgramUtil::getLargestDirectMemoryCell(main);
+  // initialize partial evaluator for main program
+  Settings settings;
+  PartialEvaluator eval(settings);
+  eval.initZeros(Program::INPUT_CELL + 1, largest_used_main);
+  // check usage of sub cells in main program
+  for (size_t i = 0; i < main.ops.size(); i++) {
+    const auto &op = main.ops[i];
+    for (auto cell : used_sub_cells) {
+      if (cell == Program::OUTPUT_CELL) {
+        continue;
+      }
+      auto t = cellMap.find(cell);
+      if (t == cellMap.end()) {
+        continue;
+      }
+      const int64_t mapped = t->second;
+      // check if main program is reading cells that are used by subprogram
+      const int64_t ii = static_cast<int64_t>(i);
+      const int64_t end = mainPos + sub.ops.size();
+      if ((ii < mainPos || ii >= end) &&
+          ProgramUtil::isReadingCell(op, mapped)) {
+        return false;
+      }
+      // ensure that cells used by subprogram are initialized with zero before
+      // subprogram is executed
+      if (ii == mainPos && !eval.checkValue(mapped, 0)) {
+        return false;
+      }
     }
+    eval.doPartialEval(main, i);
   }
   // perform folding on main program
   const Number mappedInput(cellMap.at(Program::INPUT_CELL));

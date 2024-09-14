@@ -31,6 +31,14 @@ void PartialEvaluator::initZeros(size_t from, size_t to) {
   }
 }
 
+bool PartialEvaluator::checkValue(int64_t cell, int64_t expected_value) const {
+  auto it = values.find(cell);
+  if (it == values.end()) {
+    return false;
+  }
+  return it->second.value.asInt() == expected_value;
+}
+
 bool PartialEvaluator::doPartialEval(Program &p, size_t op_index) {
   // make sure there is not indirect memory access
   Operation &op = p.ops[op_index];

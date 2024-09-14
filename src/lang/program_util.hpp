@@ -37,6 +37,8 @@ class ProgramUtil {
 
   static bool isNonTrivialClear(const Operation &op);
 
+  static bool isReadingCell(const Operation &op, int64_t cell);
+
   static bool isWritingRegion(Operation::Type t);
 
   static bool hasRegionOperation(const Program &p);

@@ -157,6 +157,13 @@ bool ProgramUtil::isNonTrivialClear(const Operation &op) {
        (Number::ONE < op.source.value || op.source.value < Number::MINUS_ONE)));
 }
 
+bool ProgramUtil::isReadingCell(const Operation &op, int64_t cell) {
+  const auto &m = Operation::Metadata::get(op.type);
+  const Operand c(Operand::Type::DIRECT, cell);
+  return (m.num_operands > 0 && op.target == c && m.is_reading_target) ||
+         (m.num_operands > 1 && op.source == c);
+}
+
 bool ProgramUtil::isWritingRegion(Operation::Type t) {
   return (t == Operation::Type::CLR || t == Operation::Type::PRG ||
           t == Operation::Type::SRT);
