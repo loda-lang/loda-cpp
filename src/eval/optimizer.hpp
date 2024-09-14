@@ -65,7 +65,4 @@ class Optimizer {
 
   Settings settings;
   mutable OperationMover opMover;
-
-  bool doPartialEval(Program &p, size_t op_index,
-                     std::map<int64_t, Operand> &values) const;
 };
