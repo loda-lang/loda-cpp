@@ -279,7 +279,6 @@ bool Subprogram::fold(Program &main, Program sub, size_t subId,
   // check usage of sub cells in main program
   for (size_t i = 0; i < main.ops.size(); i++) {
     const auto &op = main.ops[i];
-    const auto &meta = Operation::Metadata::get(op.type);
     for (auto cell : used_sub_cells) {
       if (cell == Program::OUTPUT_CELL) {
         continue;
@@ -288,23 +287,17 @@ bool Subprogram::fold(Program &main, Program sub, size_t subId,
       if (t == cellMap.end()) {
         continue;
       }
-      const Operand mapped(Operand::Type::DIRECT, t->second);
+      const int64_t mapped = t->second;
       // check if main program is reading cells that are used by subprogram
-      int64_t ii = static_cast<int64_t>(i);
-      if (ii < mainPos ||
-          ii >= mainPos + static_cast<int64_t>(sub.ops.size())) {
-        if (meta.num_operands > 0 && meta.is_reading_target &&
-            op.target == mapped) {
-          return false;
-        }
-        if (meta.num_operands > 1 && op.source == mapped) {
-          return false;
-        }
+      const int64_t ii = static_cast<int64_t>(i);
+      const int64_t end = mainPos + sub.ops.size();
+      if ((ii < mainPos || ii >= end) &&
+          ProgramUtil::isReadingCell(op, mapped)) {
+        return false;
       }
       // ensure that cells used by subprogram are initialized with zero before
       // subprogram is executed
-      if (static_cast<int64_t>(i) == mainPos &&
-          !eval.checkValue(t->second, 0)) {
+      if (ii == mainPos && !eval.checkValue(mapped, 0)) {
         return false;
       }
     }
