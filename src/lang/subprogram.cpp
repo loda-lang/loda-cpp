@@ -251,14 +251,6 @@ bool Subprogram::fold(Program &main, Program sub, size_t subId,
   if (sub.ops.empty()) {
     return false;
   }
-  int64_t outputCell = Program::OUTPUT_CELL;
-  auto last = sub.ops.back();
-  if (sub.ops.size() > 1 && last.type == Operation::Type::MOV &&
-      last.target == Operand(Operand::Type::DIRECT, Program::OUTPUT_CELL) &&
-      last.source.type == Operand::Type::DIRECT) {
-    outputCell = last.source.value.asInt();
-    sub.ops.pop_back();
-  }
   // search for subprogram in main program
   auto mainPos = Subprogram::search(main, sub, cellMap);
   if (mainPos < 0) {
@@ -304,19 +296,12 @@ bool Subprogram::fold(Program &main, Program sub, size_t subId,
     eval.doPartialEval(main, i);
   }
   // perform folding on main program
-  const Number mappedInput(cellMap.at(Program::INPUT_CELL));
-  const Number mappedOutput(cellMap.at(outputCell));
+  auto mappedInput = cellMap.at(Program::INPUT_CELL);
   main.ops.erase(main.ops.begin() + mainPos,
                  main.ops.begin() + mainPos + sub.ops.size());
   main.ops.insert(main.ops.begin() + mainPos,
                   Operation(Operation::Type::SEQ,
-                            Operand(Operand::Type::DIRECT, mappedInput),
+                            Operand(Operand::Type::DIRECT, Number(mappedInput)),
                             Operand(Operand::Type::CONSTANT, Number(subId))));
-  if (mappedOutput != mappedInput) {
-    main.ops.insert(main.ops.begin() + mainPos + 1,
-                    Operation(Operation::Type::MOV,
-                              Operand(Operand::Type::DIRECT, mappedOutput),
-                              Operand(Operand::Type::DIRECT, mappedInput)));
-  }
   return true;
 }
