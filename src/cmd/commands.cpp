@@ -321,6 +321,7 @@ void Commands::autoFold() {
   const auto programs = manager.loadAllPrograms();
   const auto num_ids = manager.getStats().all_program_ids.size();
   Log::get().info("Folding programs");
+  AdaptiveScheduler log_scheduler(30);
   bool folded;
   Program main;
   Evaluator evaluator(settings);
@@ -360,6 +361,10 @@ void Commands::autoFold() {
       }
       auto path = ProgramUtil::getProgramPath(main_id);
       manager.dumpProgram(main_id, main, path, submitted_by);
+    }
+    if (log_scheduler.isTargetReached()) {
+      log_scheduler.reset();
+      Log::get().info("Processed " + std::to_string(main_id) + " programs");
     }
   }
 }
