@@ -114,10 +114,11 @@ Number Semantics::lex(const Number& a, const Number& b) {
     return Number::ZERO;
   }
   auto r = Number::ZERO;
-  auto aa = a;
+  auto aa = abs(a);
+  auto bb = abs(b);
   while (true) {
-    auto aaa = dif(aa, b);
-    if (abs(aaa) == abs(aa)) {
+    auto aaa = dif(aa, bb);
+    if (aaa == aa) {
       break;
     }
     aa = aaa;
