@@ -2,18 +2,18 @@
 
 #include <stdexcept>
 
-const std::array<Operation::Type, 32> Operation::Types = {
+const std::array<Operation::Type, 33> Operation::Types = {
     Operation::Type::NOP, Operation::Type::MOV, Operation::Type::ADD,
     Operation::Type::SUB, Operation::Type::TRN, Operation::Type::MUL,
     Operation::Type::DIV, Operation::Type::DIF, Operation::Type::MOD,
-    Operation::Type::POW, Operation::Type::GCD, Operation::Type::BIN,
-    Operation::Type::LOG, Operation::Type::NRT, Operation::Type::DIS,
-    Operation::Type::DIR, Operation::Type::EQU, Operation::Type::NEQ,
-    Operation::Type::LEQ, Operation::Type::GEQ, Operation::Type::MIN,
-    Operation::Type::MAX, Operation::Type::BAN, Operation::Type::BOR,
-    Operation::Type::BXO, Operation::Type::LPB, Operation::Type::LPE,
-    Operation::Type::CLR, Operation::Type::SRT, Operation::Type::SEQ,
-    Operation::Type::PRG, Operation::Type::DBG,
+    Operation::Type::POW, Operation::Type::GCD, Operation::Type::LEX,
+    Operation::Type::BIN, Operation::Type::LOG, Operation::Type::NRT,
+    Operation::Type::DIS, Operation::Type::DIR, Operation::Type::EQU,
+    Operation::Type::NEQ, Operation::Type::LEQ, Operation::Type::GEQ,
+    Operation::Type::MIN, Operation::Type::MAX, Operation::Type::BAN,
+    Operation::Type::BOR, Operation::Type::BXO, Operation::Type::LPB,
+    Operation::Type::LPE, Operation::Type::CLR, Operation::Type::SRT,
+    Operation::Type::SEQ, Operation::Type::PRG, Operation::Type::DBG,
 };
 
 const Operation::Metadata& Operation::Metadata::get(Type t) {
@@ -39,6 +39,8 @@ const Operation::Metadata& Operation::Metadata::get(Type t) {
       Operation::Type::POW, "pow", 2, true, true, true};
   static Operation::Metadata gcd{
       Operation::Type::GCD, "gcd", 2, true, true, true};
+  static Operation::Metadata lex{
+      Operation::Type::LEX, "lex", 2, true, true, true};
   static Operation::Metadata bin{
       Operation::Type::BIN, "bin", 2, true, true, true};
   static Operation::Metadata log{
@@ -104,6 +106,8 @@ const Operation::Metadata& Operation::Metadata::get(Type t) {
       return pow;
     case Operation::Type::GCD:
       return gcd;
+    case Operation::Type::LEX:
+      return lex;
     case Operation::Type::BIN:
       return bin;
     case Operation::Type::LOG:

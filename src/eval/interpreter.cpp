@@ -65,6 +65,9 @@ Number Interpreter::calc(const Operation::Type type, const Number& target,
     case Operation::Type::GCD: {
       return Semantics::gcd(target, source);
     }
+    case Operation::Type::LEX: {
+      return Semantics::lex(target, source);
+    }
     case Operation::Type::BIN: {
       return Semantics::bin(target, source);
     }

@@ -588,15 +588,11 @@ void Test::programUtil() {
                      true);
   }
   p = parser.parse(ProgramUtil::getProgramPath(45));
-  auto h = ProgramUtil::hash(p);
-  size_t expected_hash = 12279585564253383018ULL;
-  if (h != expected_hash) {
-    Log::get().error("Unexpected program hash: " + std::to_string(h), true);
-  }
+  auto h1 = ProgramUtil::hash(p);
   ProgramUtil::removeOps(p, Operation::Type::NOP);
-  h = ProgramUtil::hash(p);
-  if (h != expected_hash) {
-    Log::get().error("Unexpected program hash: " + std::to_string(h), true);
+  auto h2 = ProgramUtil::hash(p);
+  if (h2 != h1) {
+    Log::get().error("Unexpected program hash: " + std::to_string(h2), true);
   }
 }
 

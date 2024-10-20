@@ -106,6 +106,26 @@ Number Semantics::gcd(const Number& a, const Number& b) {
   return aa;
 }
 
+Number Semantics::lex(const Number& a, const Number& b) {
+  if (a == Number::INF || b == Number::INF) {
+    return Number::INF;
+  }
+  if (b == Number::ZERO || b == Number::ONE) {
+    return Number::ZERO;
+  }
+  auto r = Number::ZERO;
+  auto aa = a;
+  while (true) {
+    auto aaa = dif(aa, b);
+    if (abs(aaa) == abs(aa)) {
+      break;
+    }
+    aa = aaa;
+    r += Number::ONE;
+  }
+  return r;
+}
+
 Number Semantics::bin(const Number& nn, const Number& kk) {
   if (nn == Number::INF || kk == Number::INF) {
     return Number::INF;

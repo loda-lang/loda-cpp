@@ -2,12 +2,18 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v24.10.20
+
+### Features
+
+* Added `lex` operation (largest exponent)
+
 ## v24.9.15
 
 ### Bugfixes
 
-* Fix optimizer bug
-* Fix program folding bug
+* Fix optimizer bugs
+* Fix program folding bugs
 
 ## v24.9.7
 

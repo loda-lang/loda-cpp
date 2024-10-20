@@ -93,6 +93,10 @@ bool Iterator::inc(Operation& op) {
       return true;
 
     case Operation::Type::GCD:
+      op.type = Operation::Type::LEX;
+      return true;
+
+    case Operation::Type::LEX:
       op.type = Operation::Type::BIN;
       return true;
 
@@ -173,20 +177,22 @@ bool Iterator::shouldSkip(const Operation& op) {
        op.type == Operation::Type::TRN || op.type == Operation::Type::MUL ||
        op.type == Operation::Type::DIV || op.type == Operation::Type::DIF ||
        op.type == Operation::Type::MOD || op.type == Operation::Type::GCD ||
-       op.type == Operation::Type::BIN || op.type == Operation::Type::EQU ||
-       op.type == Operation::Type::NEQ)) {
+       op.type == Operation::Type::LEX || op.type == Operation::Type::BIN ||
+       op.type == Operation::Type::EQU || op.type == Operation::Type::NEQ)) {
     return true;
   }
   if (op.source == CONSTANT_ZERO &&
       (op.type == Operation::Type::MUL || op.type == Operation::Type::DIV ||
        op.type == Operation::Type::DIF || op.type == Operation::Type::MOD ||
        op.type == Operation::Type::POW || op.type == Operation::Type::GCD ||
-       op.type == Operation::Type::BIN || op.type == Operation::Type::LPB)) {
+       op.type == Operation::Type::LEX || op.type == Operation::Type::BIN ||
+       op.type == Operation::Type::LPB)) {
     return true;
   }
   if (op.source == CONSTANT_ONE &&
       (op.type == Operation::Type::MOD || op.type == Operation::Type::POW ||
-       op.type == Operation::Type::GCD || op.type == Operation::Type::BIN)) {
+       op.type == Operation::Type::GCD || op.type == Operation::Type::LEX ||
+       op.type == Operation::Type::BIN)) {
     return true;
   }
 
