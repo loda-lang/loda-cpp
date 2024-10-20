@@ -45,6 +45,7 @@ class Operation {
     MOD,     // modulo
     POW,     // power
     GCD,     // greatest common divisor
+    LEX,     // largest exponent
     BIN,     // binomial coefficient
     LOG,     // logarithm
     NRT,     // n-th root
@@ -69,7 +70,7 @@ class Operation {
     __COUNT  // number of operation types
   };
 
-  static const std::array<Type, 32> Types;
+  static const std::array<Type, 33> Types;
 
   class Metadata {
    public:

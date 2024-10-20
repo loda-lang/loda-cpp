@@ -22,6 +22,8 @@ class Semantics {
 
   static Number gcd(const Number& a, const Number& b);
 
+  static Number lex(const Number& a, const Number& b);
+
   static Number bin(const Number& n, const Number& k);
 
   static Number log(const Number& a, const Number& b);

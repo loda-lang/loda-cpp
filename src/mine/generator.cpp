@@ -264,6 +264,7 @@ void Generator::ensureMeaningfulLoops(Program &p) {
       case Operation::Type::DIF:
       case Operation::Type::MOD:
       case Operation::Type::GCD:
+      case Operation::Type::LEX:
       case Operation::Type::BIN:
       case Operation::Type::EQU:
       case Operation::Type::NEQ:
