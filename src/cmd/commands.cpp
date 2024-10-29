@@ -357,10 +357,23 @@ void Commands::autoFold() {
       auto terms = seq.getTerms(OeisSequence::DEFAULT_SEQ_LENGTH);
       auto result = evaluator.check(main, terms, -1, main_id);
       if (result.first == status_t::ERROR) {
-        Log::get().error("Error in folded program", true);
+        Sequence tmp;
+        std::string error_msg;
+        try {
+          evaluator.eval(main, tmp, terms.size(), true);
+        } catch (std::exception& e) {
+          error_msg = e.what();
+        }
+        if (error_msg.find(Interpreter::ERROR_SEQ_USING_NEGATIVE_ARG) !=
+            std::string::npos) {
+          Log::get().warn("Ignoring invalid folded program");
+        } else {
+          Log::get().error("Unknown error in folded program", true);
+        }
+      } else {
+        auto path = ProgramUtil::getProgramPath(main_id);
+        manager.dumpProgram(main_id, main, path, submitted_by);
       }
-      auto path = ProgramUtil::getProgramPath(main_id);
-      manager.dumpProgram(main_id, main, path, submitted_by);
     }
     if (log_scheduler.isTargetReached()) {
       log_scheduler.reset();

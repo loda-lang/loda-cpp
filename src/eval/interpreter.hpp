@@ -9,6 +9,8 @@
 
 class Interpreter {
  public:
+  static const std::string ERROR_SEQ_USING_NEGATIVE_ARG;
+
   explicit Interpreter(const Settings &settings);
 
   static Number calc(const Operation::Type type, const Number &target,

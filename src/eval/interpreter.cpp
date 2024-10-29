@@ -21,6 +21,9 @@
 #include <unistd.h>
 #endif
 
+const std::string Interpreter::ERROR_SEQ_USING_NEGATIVE_ARG =
+    "seq using negative argument";
+
 using MemStack = std::stack<Memory>;
 using IntStack = std::stack<int64_t>;
 using NumStack = std::stack<Number>;
@@ -395,8 +398,7 @@ std::string getProgramPath(int64_t id) {
 
 std::pair<Number, size_t> Interpreter::callSeq(int64_t id, const Number& arg) {
   if (arg < 0) {
-    throw std::runtime_error("seq using negative argument: " +
-                             std::to_string(id));
+    throw std::runtime_error(ERROR_SEQ_USING_NEGATIVE_ARG);
   }
 
   // check if already cached
