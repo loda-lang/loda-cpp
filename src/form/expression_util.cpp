@@ -290,6 +290,44 @@ bool ExpressionUtil::isInitialTerm(const Expression& e) {
   return arg.type == Expression::Type::CONSTANT;
 }
 
+bool ExpressionUtil::isRecursionArgument(const Expression& e,
+                                         int64_t max_offset) {
+  Number offset;
+  if (e.type == Expression::Type::PARAMETER) {
+    offset = Number::ZERO;
+  } else if (e.type == Expression::Type::SUM && e.children.size() == 2 &&
+             e.children[0].type == Expression::Type::PARAMETER &&
+             e.children[1].type == Expression::Type::CONSTANT) {
+    offset = e.children[1].value;
+  } else {
+    return false;
+  }
+  return offset < Number(max_offset + 1);
+}
+
+bool ExpressionUtil::isNonRecursiveFunctionReference(
+    const Expression& e, const std::vector<std::string>& names,
+    int64_t max_offset) {
+  if (e.type != Expression::Type::FUNCTION || e.children.size() != 1 ||
+      std::find(names.begin(), names.end(), e.name) == names.end()) {
+    return false;
+  }
+  return !isRecursionArgument(e.children.front(), max_offset);
+}
+
+bool ExpressionUtil::hasNonRecursiveFunctionReference(
+    const Expression& e, const std::vector<std::string>& names,
+    int64_t max_offset) {
+  if (isNonRecursiveFunctionReference(e, names, max_offset)) {
+    return true;
+  } else {
+    return std::any_of(
+        e.children.begin(), e.children.end(), [&](const Expression& c) {
+          return hasNonRecursiveFunctionReference(c, names, max_offset);
+        });
+  }
+}
+
 bool ExpressionUtil::canBeNegative(const Expression& e) {
   switch (e.type) {
     case Expression::Type::CONSTANT:

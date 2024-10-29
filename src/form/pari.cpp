@@ -74,11 +74,17 @@ bool PariFormula::convert(const Formula& formula, bool as_vector,
                           PariFormula& pari_formula) {
   pari_formula = PariFormula();
   pari_formula.as_vector = as_vector;
+  auto defs = FormulaUtil::getDefinitions(formula, Expression::Type::FUNCTION);
   for (const auto& entry : formula.entries) {
     auto left = entry.first;
     auto right = entry.second;
     if (as_vector && left.type == Expression::Type::FUNCTION) {
       left.type = Expression::Type::VECTOR;
+    }
+    // TODO: remove this limitation
+    if (as_vector &&
+        ExpressionUtil::hasNonRecursiveFunctionReference(right, defs, 0)) {
+      return false;
     }
     if (!convertExprToPari(right, formula, as_vector)) {
       return false;

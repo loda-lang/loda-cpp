@@ -22,6 +22,16 @@ class ExpressionUtil {
 
   static bool isInitialTerm(const Expression& e);
 
+  static bool isRecursionArgument(const Expression& e, int64_t max_offset);
+
+  static bool isNonRecursiveFunctionReference(
+      const Expression& e, const std::vector<std::string>& names,
+      int64_t max_offset);
+
+  static bool hasNonRecursiveFunctionReference(
+      const Expression& e, const std::vector<std::string>& names,
+      int64_t max_offset);
+
   static bool canBeNegative(const Expression& e);
 
   static void collectNames(const Expression& e, Expression::Type type,
