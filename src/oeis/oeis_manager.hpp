@@ -87,6 +87,7 @@ class OeisManager {
   std::unordered_set<size_t> ignore_list;
   std::unordered_set<size_t> full_check_list;
   std::map<size_t, int64_t> invalid_matches_map;
+  std::vector<int64_t> offsets;
 
   size_t loaded_count;
   size_t total_count;

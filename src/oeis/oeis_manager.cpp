@@ -308,7 +308,7 @@ bool OeisManager::shouldMatch(const OeisSequence &seq) const {
 }
 
 void OeisManager::update(bool force) {
-  std::vector<std::string> files = {"stripped", "names"};
+  std::vector<std::string> files = {"stripped", "names", "offsets"};
 
   // check whether oeis files need to be updated
   update_oeis = false;
@@ -364,9 +364,8 @@ void OeisManager::update(bool force) {
       Log::get().info("Updating OEIS index (last update " +
                       std::to_string(oeis_age_in_days) + " days ago)");
     }
-    std::string cmd, path;
-    for (auto &file : files) {
-      path = Setup::getOeisHome() + file;
+    for (const auto &file : files) {
+      auto path = Setup::getOeisHome() + file;
       ApiClient::getDefaultInstance().getOeisFile(file, path);
     }
   }
@@ -400,9 +399,9 @@ void OeisManager::update(bool force) {
         Setup::getMiningMode() == MiningMode::MINING_MODE_CLIENT) {
       Log::get().info("Cleaning up local programs directory");
       int64_t num_removed = 0;
-      for (const auto &it : std::filesystem::directory_iterator(local_dir)) {
-        const auto stem = it.path().filename().stem().string();
-        const auto ext = it.path().filename().extension().string();
+      for (const auto &f : std::filesystem::directory_iterator(local_dir)) {
+        const auto stem = f.path().filename().stem().string();
+        const auto ext = f.path().filename().extension().string();
         bool is_program;
         try {
           OeisSequence s(stem);
@@ -411,10 +410,10 @@ void OeisManager::update(bool force) {
           is_program = stem.rfind("api-", 0) == 0;
         }
         is_program = is_program && (ext == ".asm");
-        const auto p = it.path().string();
+        const auto p = f.path().string();
         if (is_program && getFileAgeInDays(p) > max_age) {
           Log::get().debug("Removing \"" + p + "\"");
-          std::filesystem::remove(it.path());
+          std::filesystem::remove(f.path());
           num_removed++;
         }
       }
