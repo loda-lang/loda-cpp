@@ -140,7 +140,6 @@ void OeisManager::loadData() {
       throwParseError(line);
     }
     total_count++;
-    pos = 1;
     id = 0;
     for (pos = 1; pos < line.length() && line[pos] >= '0' && line[pos] <= '9';
          ++pos) {
@@ -203,7 +202,6 @@ void OeisManager::loadNames() {
     if (line[0] != 'A') {
       throwParseError(line);
     }
-    pos = 1;
     id = 0;
     for (pos = 1; pos < line.length() && line[pos] >= '0' && line[pos] <= '9';
          ++pos) {
@@ -273,8 +271,7 @@ bool OeisManager::shouldMatch(const OeisSequence &seq) const {
   }
 
   // check if program exists
-  const bool prog_exists = (seq.id >= 0) &&
-                           (seq.id < stats->all_program_ids.size()) &&
+  const bool prog_exists = (seq.id < stats->all_program_ids.size()) &&
                            stats->all_program_ids[seq.id];
 
   // program exists and protected?
@@ -365,7 +362,7 @@ void OeisManager::update(bool force) {
                       std::to_string(oeis_age_in_days) + " days ago)");
     }
     for (const auto &file : files) {
-      auto path = Setup::getOeisHome() + file;
+      const auto path = Setup::getOeisHome() + file;
       ApiClient::getDefaultInstance().getOeisFile(file, path);
     }
   }
@@ -443,7 +440,7 @@ void OeisManager::generateStats(int64_t age_in_days) {
   bool has_program, has_formula;
 
   AdaptiveScheduler notify(20);  // magic number
-  for (auto &s : sequences) {
+  for (const auto &s : sequences) {
     if (s.id == 0) {
       continue;
     }
@@ -523,8 +520,8 @@ void OeisManager::generateLists() {
   // write lists
   ensureDir(lists_home);
   for (size_t i = 0; i < list_files.size(); i++) {
-    auto buf = list_files[i].str();
-    if (!buf.empty()) {
+    const auto f = list_files[i].str();
+    if (!f.empty()) {
       const std::string list_path =
           lists_home + "list" + std::to_string(i) + ".markdown";
       OeisSequence start(std::max<int64_t>(i * list_file_size, 1));
@@ -538,7 +535,7 @@ void OeisManager::generateLists() {
       list_file << "---\n";
       list_file << "List of integer sequences with links to LODA programs."
                 << "\n\n";
-      list_file << buf;
+      list_file << f;
       list_file << "\n\n[License Info](https://github.com/loda-lang/"
                    "loda-programs#license)\n";
     }
@@ -552,7 +549,6 @@ void OeisManager::generateLists() {
 }
 
 void OeisManager::migrate() {
-  Settings settings;
   Interpreter interpreter(settings);
   IncrementalEvaluator ie(interpreter);
   for (size_t id = 0; id < 400000; id++) {
@@ -581,9 +577,9 @@ void OeisManager::migrate() {
                        op.source == Operand(Operand::Type::CONSTANT, 1)) {
               Log::get().warn("Migrating " + ProgramUtil::getProgramPath(s.id));
               op.type = Operation::Type::TRN;
-              std::ofstream out(ProgramUtil::getProgramPath(s.id));
-              ProgramUtil::print(p, out);
-              out.close();
+              std::ofstream fout(ProgramUtil::getProgramPath(s.id));
+              ProgramUtil::print(p, fout);
+              fout.close();
               loop_started = false;
             }
           }
@@ -672,7 +668,7 @@ void OeisManager::dumpProgram(size_t id, Program &p, const std::string &file,
   Comments::removeComments(p);
   addSeqComments(p);
   ensureDir(file);
-  auto &seq = sequences.at(id);
+  const auto &seq = sequences.at(id);
   Program tmp;
   Operation nop(Operation::Type::NOP);
   nop.comment = seq.to_string();
@@ -709,7 +705,7 @@ void OeisManager::dumpProgram(size_t id, Program &p, const std::string &file,
 void OeisManager::alert(Program p, size_t id, const std::string &prefix,
                         const std::string &color,
                         const std::string &submitted_by) const {
-  auto &seq = sequences.at(id);
+  const auto &seq = sequences.at(id);
   std::string msg, full;
   msg = prefix + " program for " + seq.to_string();
   full = msg + " Terms: " + seq.getTerms(settings.num_terms).to_string();
@@ -935,7 +931,6 @@ std::vector<Program> OeisManager::loadAllPrograms() {
   const auto num_ids = program_ids.size();
   const auto num_programs = getStats().num_programs;
   std::vector<Program> programs(num_ids);
-  Parser parser;
   Log::get().info("Loading " + std::to_string(num_programs) + " programs");
   AdaptiveScheduler scheduler(20);
   int64_t loaded = 0;
