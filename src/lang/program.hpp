@@ -127,6 +127,8 @@ class Program {
 
   int64_t getDirective(const std::string &name) const;
 
+  int64_t getDirective(const std::string &name, int64_t defaultValue) const;
+
   bool operator==(const Program &p) const;
 
   bool operator!=(const Program &p) const;
