@@ -41,7 +41,7 @@ class FormulaGenerator {
   void prepareForPostLoop(int64_t numCells,
                           const std::map<int64_t, Expression>& preloopExprs);
 
-  bool addInitialTerms(int64_t numCells,
+  bool addInitialTerms(int64_t numCells, int64_t offset,
                        const std::map<std::string, int64_t>& numTerms);
 
   std::string newName();
