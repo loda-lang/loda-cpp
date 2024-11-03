@@ -59,11 +59,15 @@ class OeisManager {
 
   void loadNames();
 
+  void loadOffsets();
+
   bool shouldMatch(const OeisSequence& seq) const;
 
   void generateStats(int64_t age_in_days);
 
   void addSeqComments(Program& p) const;
+
+  void updateProgramOffset(size_t id, Program& p) const;
 
   void alert(Program p, size_t id, const std::string& prefix,
              const std::string& color, const std::string& submitted_by) const;
@@ -87,7 +91,6 @@ class OeisManager {
   std::unordered_set<size_t> ignore_list;
   std::unordered_set<size_t> full_check_list;
   std::map<size_t, int64_t> invalid_matches_map;
-  std::vector<int64_t> offsets;
 
   size_t loaded_count;
   size_t total_count;

@@ -87,6 +87,7 @@ void OeisManager::load() {
     start_time = std::chrono::steady_clock::now();
     loadData();
     loadNames();
+    loadOffsets();
 
     // lock released at the end of this block
   }
@@ -218,6 +219,19 @@ void OeisManager::loadNames() {
         buf << "Loaded sequence " << sequences[id];
         Log::get().debug(buf.str());
       }
+    }
+  }
+}
+
+void OeisManager::loadOffsets() {
+  Log::get().debug("Loading offsets from the OEIS index");
+  const std::string path = Setup::getOeisHome() + "offsets";
+  std::map<size_t, std::string> entries;
+  OeisList::loadMapWithComments(path, entries);
+  for (const auto &entry : entries) {
+    const size_t id = entry.first;
+    if (id < sequences.size() && sequences[id].id == id) {
+      sequences[id].offset = std::stoll(entry.second);
     }
   }
 }
@@ -662,11 +676,21 @@ void OeisManager::addSeqComments(Program &p) const {
   }
 }
 
+void OeisManager::updateProgramOffset(size_t id, Program &p) const {
+  if (id >= sequences.size() || sequences[id].id != id) {
+    return;
+  }
+  Log::get().info("Setting offset of " + ProgramUtil::idStr(id) + " to " +
+                  std::to_string(sequences[id].offset));
+  ProgramUtil::setOffset(p, sequences[id].offset);
+}
+
 void OeisManager::dumpProgram(size_t id, Program &p, const std::string &file,
                               const std::string &submitted_by) const {
   ProgramUtil::removeOps(p, Operation::Type::NOP);
   Comments::removeComments(p);
   addSeqComments(p);
+  updateProgramOffset(id, p);
   ensureDir(file);
   const auto &seq = sequences.at(id);
   Program tmp;
