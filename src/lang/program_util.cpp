@@ -558,12 +558,8 @@ std::string ProgramUtil::getProgramPath(int64_t id, const std::string &dir,
 }
 
 void ProgramUtil::setOffset(Program &p, int64_t offset) {
-  int64_t current = 0;
-  auto it = p.directives.find("offset");
-  if (it != p.directives.end()) {
-    current = it->second;
-  }
-  int64_t delta = offset - current;
+  const int64_t current = p.getDirective("offset", 0);
+  const int64_t delta = offset - current;
   if (delta > 0) {
     p.ops.insert(p.ops.begin(),
                  Operation(Operation::Type::ADD,
