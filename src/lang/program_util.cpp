@@ -566,12 +566,12 @@ void ProgramUtil::setOffset(Program &p, int64_t offset) {
   const int64_t delta = offset - current;
   if (delta > 0) {
     p.ops.insert(p.ops.begin(),
-                 Operation(Operation::Type::ADD,
+                 Operation(Operation::Type::SUB,
                            Operand(Operand::Type::DIRECT, Program::INPUT_CELL),
                            Operand(Operand::Type::CONSTANT, delta)));
   } else if (delta < 0) {
     p.ops.insert(p.ops.begin(),
-                 Operation(Operation::Type::SUB,
+                 Operation(Operation::Type::ADD,
                            Operand(Operand::Type::DIRECT, Program::INPUT_CELL),
                            Operand(Operand::Type::CONSTANT, -delta)));
   }

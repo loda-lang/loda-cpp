@@ -20,7 +20,8 @@ Program Parser::parse(const std::string &file) {
 }
 
 Program Parser::parse(std::istream &in_) {
-  const static std::set<std::string> valid_directives = {"inputs", "outputs"};
+  const static std::set<std::string> valid_directives = {"inputs", "outputs",
+                                                         "offset"};
   in = &in_;
   Program p;
   Operation o;
