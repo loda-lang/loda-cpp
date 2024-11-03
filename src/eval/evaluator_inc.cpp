@@ -67,7 +67,7 @@ bool IncrementalEvaluator::init(const Program& program,
     return false;
   }
   // extract offset from program directive
-  offset = program.getDirective("offset", 0);
+  offset = ProgramUtil::getOffset(program);
 
   // initialue the runtime data
   initRuntimeData();

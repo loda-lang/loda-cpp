@@ -557,6 +557,10 @@ std::string ProgramUtil::getProgramPath(int64_t id, const std::string &dir,
          idStr(id, prefix) + ".asm";
 }
 
+int64_t ProgramUtil::getOffset(const Program &p) {
+  return p.getDirective("offset", 0);
+}
+
 void ProgramUtil::setOffset(Program &p, int64_t offset) {
   const int64_t current = p.getDirective("offset", 0);
   const int64_t delta = offset - current;

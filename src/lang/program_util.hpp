@@ -91,5 +91,7 @@ class ProgramUtil {
   static std::string getProgramPath(int64_t id, const std::string &dir,
                                     const std::string &prefix);
 
+  static int64_t getOffset(const Program &p);
+
   static void setOffset(Program &p, int64_t offset);
 };
