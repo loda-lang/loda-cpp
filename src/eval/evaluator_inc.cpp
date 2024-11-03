@@ -22,6 +22,7 @@ void IncrementalEvaluator::reset() {
   loop_counter_decrement = 0;
   loop_counter_lower_bound = 0;
   loop_counter_type = Operation::Type::NOP;
+  offset = 0;
   initialized = false;
 
   // runtime data
@@ -65,6 +66,10 @@ bool IncrementalEvaluator::init(const Program& program,
     }
     return false;
   }
+  // extract offset from program directive
+  offset = program.getDirective("offset", 0);
+
+  // initialue the runtime data
   initRuntimeData();
   initialized = true;
   if (is_debug) {
@@ -317,6 +322,7 @@ void IncrementalEvaluator::initRuntimeData() {
   loop_states.resize(loop_counter_decrement);
   previous_loop_counts.resize(loop_counter_decrement, 0);
   total_loop_steps.resize(loop_counter_decrement, 0);
+  argument = offset;
   previous_slice = 0;
 }
 

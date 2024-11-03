@@ -42,6 +42,7 @@ steps_t Evaluator::eval(const Program &p, Sequence &seq, int64_t num_terms,
   size_t s;
   const bool use_inc = use_inc_eval && inc_evaluator.init(p);
   std::pair<Number, size_t> inc_result;
+  const int64_t offset = p.getDirective("offset", 0);
   for (int64_t i = 0; i < num_terms; i++) {
     try {
       if (use_inc) {
@@ -50,7 +51,7 @@ steps_t Evaluator::eval(const Program &p, Sequence &seq, int64_t num_terms,
         s = inc_result.second;
       } else {
         mem.clear();
-        mem.set(Program::INPUT_CELL, i);
+        mem.set(Program::INPUT_CELL, i + offset);
         s = interpreter.run(p, mem);
         seq[i] = mem.get(Program::OUTPUT_CELL);
       }
