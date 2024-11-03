@@ -680,8 +680,6 @@ void OeisManager::updateProgramOffset(size_t id, Program &p) const {
   if (id >= sequences.size() || sequences[id].id != id) {
     return;
   }
-  Log::get().info("Setting offset of " + ProgramUtil::idStr(id) + " to " +
-                  std::to_string(sequences[id].offset));
   ProgramUtil::setOffset(p, sequences[id].offset);
 }
 
