@@ -187,6 +187,12 @@ int64_t Program::getDirective(const std::string& name) const {
   return d->second;
 }
 
+int64_t Program::getDirective(const std::string& name,
+                              int64_t defaultValue) const {
+  auto d = directives.find(name);
+  return d != directives.end() ? d->second : defaultValue;
+}
+
 bool Program::operator==(const Program& p) const { return (ops == p.ops); }
 
 bool Program::operator!=(const Program& p) const { return !(*this == p); }
