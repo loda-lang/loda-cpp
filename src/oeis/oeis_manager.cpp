@@ -923,7 +923,8 @@ bool OeisManager::maintainProgram(size_t id, bool eval) {
   if (is_okay && !is_protected && !Comments::isCodedManually(program)) {
     // unfold and evaluation could still fail, so catch errors
     try {
-      auto updated = program;
+      auto updated = program;  // copy program
+      updateProgramOffset(id, updated);
       ProgramUtil::removeOps(updated, Operation::Type::NOP);
       Subprogram::autoUnfold(updated);
       if (eval) {
