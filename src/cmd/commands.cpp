@@ -607,7 +607,8 @@ void Commands::testPari(const std::string& test_id) {
     }
 
     // evaluate PARI program
-    auto genSeq = pari_formula.eval(numTerms);
+    auto offset = ProgramUtil::getOffset(program);
+    auto genSeq = pari_formula.eval(offset, numTerms);
 
     // compare results
     if (genSeq != expSeq) {

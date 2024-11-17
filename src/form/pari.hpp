@@ -21,11 +21,11 @@ class PariFormula {
   static bool convert(const Formula& formula, bool as_vector,
                       PariFormula& pari_formula);
 
-  void printEvalCode(int64_t numTerms, std::ostream& out) const;
+  void printEvalCode(int64_t offset, int64_t numTerms, std::ostream& out) const;
 
   std::string toString() const;
 
-  Sequence eval(int64_t numTerms) const;
+  Sequence eval(int64_t offset, int64_t numTerms) const;
 
  private:
   Formula main_formula;

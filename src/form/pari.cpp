@@ -129,7 +129,8 @@ std::string PariFormula::toString() const {
   }
 }
 
-void PariFormula::printEvalCode(int64_t numTerms, std::ostream& out) const {
+void PariFormula::printEvalCode(int64_t offset, int64_t numTerms,
+                                std::ostream& out) const {
   if (as_vector) {
     // declare vectors
     auto functions =
@@ -141,9 +142,8 @@ void PariFormula::printEvalCode(int64_t numTerms, std::ostream& out) const {
     // main function
     out << toString() << std::endl;
   }
-  const int64_t start = 0;
-  const int64_t end = numTerms - 1;
-  out << "for(n=" << start << "," << end << ",";
+  const int64_t end = offset + numTerms - 1;
+  out << "for(n=" << offset << "," << end << ",";
   if (as_vector) {
     out << toString() << "; ";
     out << "print(a[n+1])";
@@ -153,7 +153,7 @@ void PariFormula::printEvalCode(int64_t numTerms, std::ostream& out) const {
   out << ")" << std::endl << "quit" << std::endl;
 }
 
-Sequence PariFormula::eval(int64_t numTerms) const {
+Sequence PariFormula::eval(int64_t offset, int64_t numTerms) const {
   const std::string gpPath("pari-loda.gp");
   const std::string gpResult("pari-result.txt");
   const int64_t maxparisize = 256;  // in MB
@@ -161,7 +161,7 @@ Sequence PariFormula::eval(int64_t numTerms) const {
   if (!gp) {
     throw std::runtime_error("error generating gp file");
   }
-  printEvalCode(numTerms, gp);
+  printEvalCode(offset, numTerms, gp);
   gp.close();
   std::string cmd = "gp -s " + std::to_string(maxparisize) + "M -q " + gpPath +
                     " > " + gpResult;
