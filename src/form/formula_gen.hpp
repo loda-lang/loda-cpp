@@ -38,7 +38,7 @@ class FormulaGenerator {
 
   bool update(const Program& p);
 
-  void prepareForPostLoop(int64_t numCells,
+  void prepareForPostLoop(int64_t numCells, int64_t offset,
                           const std::map<int64_t, Expression>& preloopExprs);
 
   bool addInitialTerms(int64_t numCells, int64_t offset,

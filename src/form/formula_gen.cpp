@@ -297,7 +297,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     }
 
     // prepare post-loop processing
-    prepareForPostLoop(numCells, preloopExprs);
+    prepareForPostLoop(numCells, offset, preloopExprs);
     Log::get().debug("Prepared post-loop: " + formula.toString());
 
     // handle post-loop code
@@ -330,7 +330,8 @@ bool FormulaGenerator::generateSingle(const Program& p) {
 }
 
 void FormulaGenerator::prepareForPostLoop(
-    int64_t numCells, const std::map<int64_t, Expression>& preloopExprs) {
+    int64_t numCells, int64_t offset,
+    const std::map<int64_t, Expression>& preloopExprs) {
   // prepare post-loop processing
   auto preloopCounter = preloopExprs.at(incEval.getSimpleLoop().counter);
   for (int64_t cell = 0; cell < numCells; cell++) {
@@ -355,7 +356,7 @@ void FormulaGenerator::prepareForPostLoop(
       if (ExpressionUtil::canBeNegative(safe_param)) {
         auto tmp = safe_param;
         safe_param = Expression(Expression::Type::FUNCTION, "max",
-                                {tmp, ExpressionUtil::newConstant(0)});
+                                {tmp, ExpressionUtil::newConstant(offset)});
       }
       right = Expression(Expression::Type::FUNCTION, getCellName(cell),
                          {safe_param});
