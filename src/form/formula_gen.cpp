@@ -231,7 +231,8 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     return false;
   }
   const int64_t numCells = ProgramUtil::getLargestDirectMemoryCell(p) + 1;
-  const bool useIncEval = incEval.init(p, true);  // skip input transformations
+  const bool useIncEval =
+      incEval.init(p, true, true);  // skip input transformations and offset
 
   // initialize function names for memory cells
   cellNames.clear();
@@ -356,7 +357,7 @@ void FormulaGenerator::prepareForPostLoop(
       if (ExpressionUtil::canBeNegative(safe_param)) {
         auto tmp = safe_param;
         safe_param = Expression(Expression::Type::FUNCTION, "max",
-                                {tmp, ExpressionUtil::newConstant(offset)});
+                                {tmp, ExpressionUtil::newConstant(0)});
       }
       right = Expression(Expression::Type::FUNCTION, getCellName(cell),
                          {safe_param});
@@ -388,8 +389,12 @@ bool FormulaGenerator::addInitialTerms(
     for (int64_t cell = 0; cell < numCells; cell++) {
       auto name = getCellName(cell);
       if (n < numTerms.at(name)) {
+        auto arg = n;
+        if (cell == Program::INPUT_CELL) {
+          arg += offset;
+        }
         Expression func(Expression::Type::FUNCTION, name,
-                        {ExpressionUtil::newConstant(n + offset)});
+                        {ExpressionUtil::newConstant(arg)});
         Expression val(Expression::Type::CONSTANT, "", state.get(cell));
         formula.entries[func] = val;
         Log::get().debug("Added intial term: " + func.toString() + " = " +

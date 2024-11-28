@@ -37,7 +37,7 @@ void IncrementalEvaluator::reset() {
 // ====== Initialization functions (static code analysis) =========
 
 bool IncrementalEvaluator::init(const Program& program,
-                                bool skip_input_transform) {
+                                bool skip_input_transform, bool skip_offset) {
   reset();
   simple_loop = Analyzer::extractSimpleLoop(program);
   if (!simple_loop.is_simple_loop) {
@@ -67,7 +67,7 @@ bool IncrementalEvaluator::init(const Program& program,
     return false;
   }
   // extract offset from program directive
-  offset = ProgramUtil::getOffset(program);
+  offset = skip_offset ? 0 : ProgramUtil::getOffset(program);
 
   // initialue the runtime data
   initRuntimeData();

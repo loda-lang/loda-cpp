@@ -1145,7 +1145,7 @@ void Test::checkFormulas(const std::string& testFile, FormulaType type) {
     }
     if (type == FormulaType::FORMULA) {
       if (f.toString() != e.second) {
-        Log::get().error("Unexpected formula: " + f.toString(), true);
+        Log::get().error("         Unexpected formula: " + f.toString(), true);
       }
     } else {
       PariFormula pari;

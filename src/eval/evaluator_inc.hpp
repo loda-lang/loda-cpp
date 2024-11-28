@@ -27,7 +27,8 @@ class IncrementalEvaluator {
 
   // Initialize the IE using a program. IE can be applied only if this function
   // returns true.
-  bool init(const Program& program, bool skip_input_transform = false);
+  bool init(const Program& program, bool skip_input_transform = false,
+            bool skip_offset = false);
 
   // Compute the next term and step count.
   std::pair<Number, size_t> next(bool skip_final_iter = false,
