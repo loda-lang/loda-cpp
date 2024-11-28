@@ -676,15 +676,25 @@ void OeisManager::addSeqComments(Program &p) const {
   }
 }
 
-void OeisManager::updateProgramOffset(size_t id, Program &p) const {
+void OeisManager::updateProgramOffset(size_t id, Program &p) {
   if (id >= sequences.size() || sequences[id].id != id) {
     return;
   }
-  ProgramUtil::setOffset(p, sequences[id].offset);
+  auto delta = ProgramUtil::setOffset(p, sequences[id].offset);
+  if (delta) {
+    const auto &call_graph = getStats().call_graph;
+    for (const auto &entry : call_graph) {
+      if (entry.second == static_cast<int64_t>(id)) {
+        Log::get().info("Updating offset in " +
+                        ProgramUtil::idStr(entry.first));
+        // TODO: update seqs and dump program
+      }
+    }
+  }
 }
 
 void OeisManager::dumpProgram(size_t id, Program &p, const std::string &file,
-                              const std::string &submitted_by) const {
+                              const std::string &submitted_by) {
   ProgramUtil::removeOps(p, Operation::Type::NOP);
   Comments::removeComments(p);
   addSeqComments(p);

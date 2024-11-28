@@ -561,7 +561,7 @@ int64_t ProgramUtil::getOffset(const Program &p) {
   return p.getDirective("offset", 0);
 }
 
-void ProgramUtil::setOffset(Program &p, int64_t offset) {
+int64_t ProgramUtil::setOffset(Program &p, int64_t offset) {
   const int64_t current = p.getDirective("offset", 0);
   const int64_t delta = offset - current;
   if (delta > 0) {
@@ -580,4 +580,5 @@ void ProgramUtil::setOffset(Program &p, int64_t offset) {
   } else {
     p.directives.erase("offset");
   }
+  return delta;
 }
