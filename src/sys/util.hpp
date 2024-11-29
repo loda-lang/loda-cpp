@@ -35,9 +35,8 @@ class Settings {
   std::string miner_profile;
   std::string export_format;
 
-  // flag and offset for printing evaluation results in b-file format
+  // flag for printing evaluation results in b-file format
   bool print_as_b_file;
-  int64_t print_as_b_file_offset;
 
   Settings();
 

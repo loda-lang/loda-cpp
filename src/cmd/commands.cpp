@@ -95,11 +95,7 @@ void Commands::help() {
   std::cout << std::endl << "Options:" << std::endl;
   std::cout << "  -t <number>          Number of sequence terms (default: "
             << settings.num_terms << ")" << std::endl;
-  std::cout
-      << "  -b                   Print result in b-file format from offset 0"
-      << std::endl;
-  std::cout << "  -B <number>          Print result in b-file format from a "
-               "custom offset"
+  std::cout << "  -b                   Print result in the OEIS b-file format"
             << std::endl;
   std::cout << "  -o <string>          Export format "
                "(formula,loda,pari-function,pari-vector)"

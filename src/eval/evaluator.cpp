@@ -73,8 +73,7 @@ steps_t Evaluator::eval(const Program &p, Sequence &seq, int64_t num_terms,
       seq[i] = s;
     }
     if (settings.print_as_b_file) {
-      std::cout << (settings.print_as_b_file_offset + i) << " " << seq[i]
-                << std::endl;
+      std::cout << (offset + i) << " " << seq[i] << std::endl;
     }
   }
   if (is_debug) {
@@ -156,15 +155,14 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
     }
     if (out != expected_seq[i]) {
       if (settings.print_as_b_file) {
-        std::cout << (settings.print_as_b_file_offset + i) << " " << out
-                  << " -> expected " << expected_seq[i] << std::endl;
+        std::cout << (offset + i) << " " << out << " -> expected "
+                  << expected_seq[i] << std::endl;
       }
       result.first = status_t::ERROR;
       return result;
     }
     if (settings.print_as_b_file) {
-      std::cout << (settings.print_as_b_file_offset + i) << " "
-                << expected_seq[i] << std::endl;
+      std::cout << (offset + i) << " " << expected_seq[i] << std::endl;
     }
   }
   result.first = status_t::OK;
