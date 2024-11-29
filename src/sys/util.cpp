@@ -38,8 +38,7 @@ Settings::Settings()
       report_cpu_hours(true),
       num_miner_instances(0),
       num_mine_hours(0),
-      print_as_b_file(false),
-      print_as_b_file_offset(0) {}
+      print_as_b_file(false) {}
 
 enum class Option {
   NONE,
@@ -47,7 +46,6 @@ enum class Option {
   MAX_MEMORY,
   MAX_CYCLES,
   MAX_EVAL_SECS,
-  B_FILE_OFFSET,
   NUM_INSTANCES,
   NUM_MINE_HOURS,
   MINER_PROFILE,
@@ -62,23 +60,18 @@ std::vector<std::string> Settings::parseArgs(int argc, char *argv[]) {
     std::string arg(argv[i]);
     if (option == Option::NUM_TERMS || option == Option::MAX_MEMORY ||
         option == Option::MAX_CYCLES || option == Option::MAX_EVAL_SECS ||
-        option == Option::B_FILE_OFFSET || option == Option::NUM_INSTANCES ||
-        option == Option::NUM_MINE_HOURS) {
+        option == Option::NUM_INSTANCES || option == Option::NUM_MINE_HOURS) {
       std::stringstream s(arg);
       int64_t val;
       s >> val;
       if (option != Option::MAX_CYCLES && option != Option::MAX_MEMORY &&
-          option != Option::MAX_EVAL_SECS && option != Option::B_FILE_OFFSET &&
-          val < 1) {
+          option != Option::MAX_EVAL_SECS && val < 1) {
         Log::get().error("Invalid value for option: " + std::to_string(val),
                          true);
       }
       switch (option) {
         case Option::NUM_TERMS:
           num_terms = val;
-          break;
-        case Option::B_FILE_OFFSET:
-          print_as_b_file_offset = val;
           break;
         case Option::MAX_MEMORY:
           max_memory = val;
@@ -150,9 +143,6 @@ std::vector<std::string> Settings::parseArgs(int argc, char *argv[]) {
         option = Option::NUM_MINE_HOURS;
       } else if (opt == "b") {
         print_as_b_file = true;
-      } else if (opt == "B") {
-        print_as_b_file = true;
-        option = Option::B_FILE_OFFSET;
       } else if (opt == "-no-report-cpu-hours") {
         report_cpu_hours = false;
       } else if (opt == "l") {
@@ -202,7 +192,6 @@ void Settings::printArgs(std::vector<std::string> &args) {
   }
   if (print_as_b_file) {
     args.push_back("-b");
-    args.push_back(std::to_string(print_as_b_file_offset));
   }
 }
 

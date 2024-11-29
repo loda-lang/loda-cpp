@@ -231,7 +231,8 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     return false;
   }
   const int64_t numCells = ProgramUtil::getLargestDirectMemoryCell(p) + 1;
-  const bool useIncEval = incEval.init(p, true);  // skip input transformations
+  const bool useIncEval =
+      incEval.init(p, true, true);  // skip input transformations and offset
 
   // initialize function names for memory cells
   cellNames.clear();
@@ -291,12 +292,13 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     simplifyFormulaUsingVariants(formula, numTerms);
 
     // evaluate program and add initial terms to formula
-    if (!addInitialTerms(numCells, numTerms)) {
+    const int64_t offset = ProgramUtil::getOffset(p);
+    if (!addInitialTerms(numCells, offset, numTerms)) {
       return false;
     }
 
     // prepare post-loop processing
-    prepareForPostLoop(numCells, preloopExprs);
+    prepareForPostLoop(numCells, offset, preloopExprs);
     Log::get().debug("Prepared post-loop: " + formula.toString());
 
     // handle post-loop code
@@ -329,7 +331,8 @@ bool FormulaGenerator::generateSingle(const Program& p) {
 }
 
 void FormulaGenerator::prepareForPostLoop(
-    int64_t numCells, const std::map<int64_t, Expression>& preloopExprs) {
+    int64_t numCells, int64_t offset,
+    const std::map<int64_t, Expression>& preloopExprs) {
   // prepare post-loop processing
   auto preloopCounter = preloopExprs.at(incEval.getSimpleLoop().counter);
   for (int64_t cell = 0; cell < numCells; cell++) {
@@ -365,7 +368,8 @@ void FormulaGenerator::prepareForPostLoop(
 }
 
 bool FormulaGenerator::addInitialTerms(
-    int64_t numCells, const std::map<std::string, int64_t>& numTerms) {
+    int64_t numCells, int64_t offset,
+    const std::map<std::string, int64_t>& numTerms) {
   // calculate maximum offset
   int64_t maxNumTerms = 0;
   for (auto it : numTerms) {
@@ -374,7 +378,7 @@ bool FormulaGenerator::addInitialTerms(
     maxNumTerms = std::max(maxNumTerms, it.second);
   }
   // evaluate program and add initial terms to formula
-  for (int64_t offset = 0; offset < maxNumTerms; offset++) {
+  for (int64_t n = 0; n < maxNumTerms; n++) {
     try {
       incEval.next(true, true);  // skip final iteration and post loop code
     } catch (const std::exception&) {
@@ -384,9 +388,13 @@ bool FormulaGenerator::addInitialTerms(
     const auto state = incEval.getLoopStates().at(incEval.getPreviousSlice());
     for (int64_t cell = 0; cell < numCells; cell++) {
       auto name = getCellName(cell);
-      if (offset < numTerms.at(name)) {
+      if (n < numTerms.at(name)) {
+        auto arg = n;
+        if (cell == Program::INPUT_CELL) {
+          arg += offset;
+        }
         Expression func(Expression::Type::FUNCTION, name,
-                        {ExpressionUtil::newConstant(offset)});
+                        {ExpressionUtil::newConstant(arg)});
         Expression val(Expression::Type::CONSTANT, "", state.get(cell));
         formula.entries[func] = val;
         Log::get().debug("Added intial term: " + func.toString() + " = " +

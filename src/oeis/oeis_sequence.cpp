@@ -35,9 +35,9 @@ bool OeisSequence::isTooBig(const Number& n) {
   }
 }
 
-OeisSequence::OeisSequence(size_t id) : id(id), num_bfile_terms(0) {}
+OeisSequence::OeisSequence(size_t id) : id(id), offset(0), num_bfile_terms(0) {}
 
-OeisSequence::OeisSequence(std::string id_str) : num_bfile_terms(0) {
+OeisSequence::OeisSequence(std::string id_str) : offset(0), num_bfile_terms(0) {
   if (id_str.empty() || id_str[0] != 'A') {
     throw std::invalid_argument(id_str);
   }
@@ -52,7 +52,7 @@ OeisSequence::OeisSequence(std::string id_str) : num_bfile_terms(0) {
 
 OeisSequence::OeisSequence(size_t id, const std::string& name,
                            const Sequence& full)
-    : id(id), name(name), terms(full), num_bfile_terms(0) {}
+    : id(id), name(name), offset(0), terms(full), num_bfile_terms(0) {}
 
 std::ostream& operator<<(std::ostream& out, const OeisSequence& s) {
   out << ProgramUtil::idStr(s.id) << ": " << s.name;

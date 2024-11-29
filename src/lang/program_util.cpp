@@ -556,3 +556,29 @@ std::string ProgramUtil::getProgramPath(int64_t id, const std::string &dir,
   return Setup::getProgramsHome() + dir + FILE_SEP + dirStr(id) + FILE_SEP +
          idStr(id, prefix) + ".asm";
 }
+
+int64_t ProgramUtil::getOffset(const Program &p) {
+  return p.getDirective("offset", 0);
+}
+
+int64_t ProgramUtil::setOffset(Program &p, int64_t offset) {
+  const int64_t current = p.getDirective("offset", 0);
+  const int64_t delta = offset - current;
+  if (delta > 0) {
+    p.ops.insert(p.ops.begin(),
+                 Operation(Operation::Type::SUB,
+                           Operand(Operand::Type::DIRECT, Program::INPUT_CELL),
+                           Operand(Operand::Type::CONSTANT, delta)));
+  } else if (delta < 0) {
+    p.ops.insert(p.ops.begin(),
+                 Operation(Operation::Type::ADD,
+                           Operand(Operand::Type::DIRECT, Program::INPUT_CELL),
+                           Operand(Operand::Type::CONSTANT, -delta)));
+  }
+  if (offset != 0) {
+    p.directives["offset"] = offset;
+  } else {
+    p.directives.erase("offset");
+  }
+  return delta;
+}

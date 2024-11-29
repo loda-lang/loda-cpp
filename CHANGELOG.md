@@ -2,6 +2,12 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v24.11.29
+
+### Features
+
+* Support for sequence offsets (extracted from the OEIS)
+
 ## v24.10.20
 
 ### Features

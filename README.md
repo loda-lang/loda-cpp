@@ -44,8 +44,7 @@ Targets:
 
 Options:
   -t <number>          Number of sequence terms (default: 8)
-  -b                   Print result in b-file format from offset 0
-  -B <number>          Print result in b-file format from a custom offset
+  -b                   Print result in the OEIS b-file format
   -o <string>          Export format (formula,loda,pari-function,pari-vector)
   -d                   Export with dependencies to other programs
   -s                   Evaluate program to number of execution steps

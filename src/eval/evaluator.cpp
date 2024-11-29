@@ -2,6 +2,7 @@
 
 #include <sstream>
 
+#include "lang/program_util.hpp"
 #include "sys/log.hpp"
 
 steps_t::steps_t() : min(0), max(0), total(0), runs(0) {}
@@ -42,6 +43,7 @@ steps_t Evaluator::eval(const Program &p, Sequence &seq, int64_t num_terms,
   size_t s;
   const bool use_inc = use_inc_eval && inc_evaluator.init(p);
   std::pair<Number, size_t> inc_result;
+  const int64_t offset = ProgramUtil::getOffset(p);
   for (int64_t i = 0; i < num_terms; i++) {
     try {
       if (use_inc) {
@@ -50,7 +52,7 @@ steps_t Evaluator::eval(const Program &p, Sequence &seq, int64_t num_terms,
         s = inc_result.second;
       } else {
         mem.clear();
-        mem.set(Program::INPUT_CELL, i);
+        mem.set(Program::INPUT_CELL, i + offset);
         s = interpreter.run(p, mem);
         seq[i] = mem.get(Program::OUTPUT_CELL);
       }
@@ -71,8 +73,7 @@ steps_t Evaluator::eval(const Program &p, Sequence &seq, int64_t num_terms,
       seq[i] = s;
     }
     if (settings.print_as_b_file) {
-      std::cout << (settings.print_as_b_file_offset + i) << " " << seq[i]
-                << std::endl;
+      std::cout << (offset + i) << " " << seq[i] << std::endl;
     }
   }
   if (is_debug) {
@@ -97,9 +98,10 @@ steps_t Evaluator::eval(const Program &p, std::vector<Sequence> &seqs,
   Memory mem;
   steps_t steps;
   // note: we can't use the incremental evaluator here
+  const int64_t offset = ProgramUtil::getOffset(p);
   for (int64_t i = 0; i < num_terms; i++) {
     mem.clear();
-    mem.set(Program::INPUT_CELL, i);
+    mem.set(Program::INPUT_CELL, i + offset);
     steps.add(interpreter.run(p, mem));
     for (size_t s = 0; s < seqs.size(); s++) {
       seqs[s][i] = mem.get(s);
@@ -128,6 +130,7 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
   const bool use_inc = use_inc_eval && inc_evaluator.init(p);
   std::pair<Number, size_t> inc_result;
   Number out;
+  const int64_t offset = ProgramUtil::getOffset(p);
   for (size_t i = 0; i < expected_seq.size(); i++) {
     try {
       if (use_inc) {
@@ -135,7 +138,7 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
         out = inc_result.first;
       } else {
         mem.clear();
-        mem.set(Program::INPUT_CELL, i);
+        mem.set(Program::INPUT_CELL, i + offset);
         result.second.add(interpreter.run(p, mem, id));
         out = mem.get(Program::OUTPUT_CELL);
       }
@@ -152,15 +155,14 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
     }
     if (out != expected_seq[i]) {
       if (settings.print_as_b_file) {
-        std::cout << (settings.print_as_b_file_offset + i) << " " << out
-                  << " -> expected " << expected_seq[i] << std::endl;
+        std::cout << (offset + i) << " " << out << " -> expected "
+                  << expected_seq[i] << std::endl;
       }
       result.first = status_t::ERROR;
       return result;
     }
     if (settings.print_as_b_file) {
-      std::cout << (settings.print_as_b_file_offset + i) << " "
-                << expected_seq[i] << std::endl;
+      std::cout << (offset + i) << " " << expected_seq[i] << std::endl;
     }
   }
   result.first = status_t::OK;

@@ -95,11 +95,7 @@ void Commands::help() {
   std::cout << std::endl << "Options:" << std::endl;
   std::cout << "  -t <number>          Number of sequence terms (default: "
             << settings.num_terms << ")" << std::endl;
-  std::cout
-      << "  -b                   Print result in b-file format from offset 0"
-      << std::endl;
-  std::cout << "  -B <number>          Print result in b-file format from a "
-               "custom offset"
+  std::cout << "  -b                   Print result in the OEIS b-file format"
             << std::endl;
   std::cout << "  -o <string>          Export format "
                "(formula,loda,pari-function,pari-vector)"
@@ -607,7 +603,8 @@ void Commands::testPari(const std::string& test_id) {
     }
 
     // evaluate PARI program
-    auto genSeq = pari_formula.eval(numTerms);
+    auto offset = ProgramUtil::getOffset(program);
+    auto genSeq = pari_formula.eval(offset, numTerms);
 
     // compare results
     if (genSeq != expSeq) {

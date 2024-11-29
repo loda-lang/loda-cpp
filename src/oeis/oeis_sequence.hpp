@@ -34,6 +34,7 @@ class OeisSequence {
 
   size_t id;
   std::string name;
+  int64_t offset;
 
   friend std::ostream& operator<<(std::ostream& out, const OeisSequence& s);
 

@@ -59,11 +59,19 @@ class OeisManager {
 
   void loadNames();
 
+  void loadOffsets();
+
   bool shouldMatch(const OeisSequence& seq) const;
 
   void generateStats(int64_t age_in_days);
 
   void addSeqComments(Program& p) const;
+
+  int64_t updateProgramOffset(size_t id, Program& p) const;
+
+  void updateDependentOffset(size_t id, size_t used_id, int64_t delta);
+
+  void updateAllDependentOffset(size_t id, int64_t delta);
 
   void alert(Program p, size_t id, const std::string& prefix,
              const std::string& color, const std::string& submitted_by) const;
