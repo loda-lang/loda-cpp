@@ -676,29 +676,60 @@ void OeisManager::addSeqComments(Program &p) const {
   }
 }
 
-void OeisManager::updateProgramOffset(size_t id, Program &p) {
+int64_t OeisManager::updateProgramOffset(size_t id, Program &p) const {
   if (id >= sequences.size() || sequences[id].id != id) {
+    return 0;
+  }
+  return ProgramUtil::setOffset(p, sequences[id].offset);
+}
+
+void OeisManager::updateDependentOffset(size_t id, size_t used_id,
+                                        int64_t delta) {
+  const auto path = ProgramUtil::getProgramPath(id);
+  Program p;
+  try {
+    p = parser.parse(path);
+  } catch (const std::exception &) {
+    return;  // ignore this dependent program
+  }
+  auto submitted_by =
+      Comments::getCommentField(p, Comments::PREFIX_SUBMITTED_BY);
+  bool updated = false;
+  for (size_t i = 0; i < p.ops.size(); i++) {
+    const auto &op = p.ops[i];
+    if (op.type == Operation::Type::SEQ &&
+        op.source.type == Operand::Type::CONSTANT &&
+        op.source.value == Number(used_id)) {
+      Operation add(Operation::Type::ADD, op.target,
+                    Operand(Operand::Type::CONSTANT, delta));
+      p.ops.insert(p.ops.begin() + i, add);
+      updated = true;
+      i++;
+    }
+  }
+  if (updated) {
+    optimizer.optimize(p);
+    dumpProgram(id, p, path, submitted_by);
+  }
+}
+
+void OeisManager::updateAllDependentOffset(size_t id, int64_t delta) {
+  if (delta == 0) {
     return;
   }
-  auto delta = ProgramUtil::setOffset(p, sequences[id].offset);
-  if (delta) {
-    const auto &call_graph = getStats().call_graph;
-    for (const auto &entry : call_graph) {
-      if (entry.second == static_cast<int64_t>(id)) {
-        Log::get().info("Updating offset in " +
-                        ProgramUtil::idStr(entry.first));
-        // TODO: update seqs and dump program
-      }
+  const auto &call_graph = getStats().call_graph;
+  for (const auto &entry : call_graph) {
+    if (entry.second == static_cast<int64_t>(id)) {
+      updateDependentOffset(entry.first, entry.second, delta);
     }
   }
 }
 
 void OeisManager::dumpProgram(size_t id, Program &p, const std::string &file,
-                              const std::string &submitted_by) {
+                              const std::string &submitted_by) const {
   ProgramUtil::removeOps(p, Operation::Type::NOP);
   Comments::removeComments(p);
   addSeqComments(p);
-  updateProgramOffset(id, p);
   ensureDir(file);
   const auto &seq = sequences.at(id);
   Program tmp;
@@ -855,7 +886,9 @@ update_program_result_t OeisManager::updateProgram(
   // write new or better program version
   const bool is_server = (Setup::getMiningMode() == MINING_MODE_SERVER);
   const std::string target_file = is_server ? global_file : local_file;
+  auto delta = updateProgramOffset(id, result.program);
   dumpProgram(id, result.program, target_file, submitted_by);
+  updateAllDependentOffset(id, delta);
 
   // if not updating, ignore this sequence for future matches;
   // this is important for performance: it is likly that we
@@ -934,7 +967,7 @@ bool OeisManager::maintainProgram(size_t id, bool eval) {
     // unfold and evaluation could still fail, so catch errors
     try {
       auto updated = program;  // copy program
-      updateProgramOffset(id, updated);
+      auto delta = updateProgramOffset(id, updated);
       ProgramUtil::removeOps(updated, Operation::Type::NOP);
       Subprogram::autoUnfold(updated);
       if (eval) {
@@ -944,6 +977,7 @@ bool OeisManager::maintainProgram(size_t id, bool eval) {
         optimizer.optimize(updated);
       }
       dumpProgram(s.id, updated, file_name, submitted_by);
+      updateAllDependentOffset(s.id, delta);
     } catch (const std::exception &e) {
       is_okay = false;
     }

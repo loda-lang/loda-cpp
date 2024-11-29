@@ -48,7 +48,7 @@ class OeisManager {
   bool maintainProgram(size_t id, bool eval = true);
 
   void dumpProgram(size_t id, Program& p, const std::string& file,
-                   const std::string& submitted_by);
+                   const std::string& submitted_by) const;
 
   void generateLists();
 
@@ -67,7 +67,11 @@ class OeisManager {
 
   void addSeqComments(Program& p) const;
 
-  void updateProgramOffset(size_t id, Program& p);
+  int64_t updateProgramOffset(size_t id, Program& p) const;
+
+  void updateDependentOffset(size_t id, size_t used_id, int64_t delta);
+
+  void updateAllDependentOffset(size_t id, int64_t delta);
 
   void alert(Program p, size_t id, const std::string& prefix,
              const std::string& color, const std::string& submitted_by) const;
