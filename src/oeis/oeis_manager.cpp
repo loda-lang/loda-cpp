@@ -564,6 +564,7 @@ void OeisManager::generateLists() {
 
 void OeisManager::migrate() {
   load();
+  AdaptiveScheduler scheduler(20);
   for (const auto &s : getSequences()) {
     if (s.id == 0) {
       continue;
@@ -594,6 +595,10 @@ void OeisManager::migrate() {
         }
         break;
       }
+    }
+    if (scheduler.isTargetReached()) {
+      scheduler.reset();
+      Log::get().info("Processed " + std::to_string(s.id) + " programs");
     }
   }
 }
