@@ -563,41 +563,35 @@ void OeisManager::generateLists() {
 }
 
 void OeisManager::migrate() {
-  Interpreter interpreter(settings);
-  IncrementalEvaluator ie(interpreter);
-  for (size_t id = 0; id < 400000; id++) {
-    OeisSequence s(id);
-    std::ifstream f(ProgramUtil::getProgramPath(id));
-    Program p, out;
-    if (f.good()) {
-      p = parser.parse(f);
-      f.close();
-      if (!ie.init(p)) {
-        continue;
-      }
-      try {
-        Memory mem;
-        interpreter.run(p, mem);
-      } catch (const std::exception &e) {
-        std::string msg(e.what());
-        if (msg.find("seq using negative argument") != std::string::npos) {
-          bool loop_started = false;
-          for (auto &op : p.ops) {
-            if (op.type == Operation::Type::LPB) {
-              loop_started = true;
-            } else if (op.type == Operation::Type::LPE) {
-              loop_started = false;
-            } else if (loop_started && op.type == Operation::Type::SUB &&
-                       op.source == Operand(Operand::Type::CONSTANT, 1)) {
-              Log::get().warn("Migrating " + ProgramUtil::getProgramPath(s.id));
-              op.type = Operation::Type::TRN;
-              std::ofstream fout(ProgramUtil::getProgramPath(s.id));
-              ProgramUtil::print(p, fout);
-              fout.close();
-              loop_started = false;
-            }
-          }
+  load();
+  for (const auto &s : getSequences()) {
+    if (s.id == 0) {
+      continue;
+    }
+    const auto path = ProgramUtil::getProgramPath(s.id);
+    std::ifstream f(path);
+    if (!f.good()) {
+      continue;
+    }
+    Program p;
+    p = parser.parse(f);
+    f.close();
+    const auto submitted_by =
+        Comments::getCommentField(p, Comments::PREFIX_SUBMITTED_BY);
+    ProgramUtil::removeOps(p, Operation::Type::NOP);
+    for (size_t i = 0; i < 3 && i < p.ops.size(); i++) {
+      auto &op = p.ops[i];
+      if (op.type == Operation::Type::MOD &&
+          op.source.type == Operand::Type::CONSTANT &&
+          op.source.value.asInt() >= 45) {
+        p.ops.erase(p.ops.begin() + i);
+        auto terms = s.getTerms(100);
+        auto result = evaluator.check(p, terms, -1, s.id);
+        if (result.first != status_t::ERROR) {
+          Log::get().info("Migrating " + ProgramUtil::idStr(s.id));
+          dumpProgram(s.id, p, path, submitted_by);
         }
+        break;
       }
     }
   }
