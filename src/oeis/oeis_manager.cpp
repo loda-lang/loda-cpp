@@ -581,7 +581,8 @@ void OeisManager::migrate() {
     ProgramUtil::removeOps(p, Operation::Type::NOP);
     for (size_t i = 0; i < 3 && i < p.ops.size(); i++) {
       auto &op = p.ops[i];
-      if (op.type == Operation::Type::MOD &&
+      if ((op.type == Operation::Type::MOD ||
+           op.type == Operation::Type::MIN) &&
           op.source.type == Operand::Type::CONSTANT &&
           op.source.value.asInt() >= 45) {
         p.ops.erase(p.ops.begin() + i);
