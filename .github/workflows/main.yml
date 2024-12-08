@@ -27,21 +27,20 @@ jobs:
         run: cd src && make -f Makefile.linux-arm64.mk
       - name: Test
         run: ./loda test-fast
-  build-macos:
+  build-macos-x86:
     runs-on: macos-13
     steps:
       - uses: actions/checkout@v2
       - name: Build
-        run: |
-          cd src
-          make -f Makefile.macos-x86.mk
-          mv loda loda-x86
-          make clean
-          make -f Makefile.macos-arm64.mk
-          mv loda loda-arm64
-          lipo -create -output loda loda-x86 loda-arm64
-          rm loda-x86 loda-arm64
-          file loda
+        run: cd src && make -f Makefile.macos-x86.mk
+      - name: Test
+        run: ./loda test
+  build-macos-arm64:
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        run: cd src && make -f Makefile.macos-arm64.mk
       - name: Test
         run: ./loda test
   build-windows:
