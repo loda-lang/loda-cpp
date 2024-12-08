@@ -11,7 +11,12 @@ if [[ "$OSTYPE" == linux* ]]; then
     LODA_EXEC="loda-linux-arm64"
   fi
 elif [[ "$OSTYPE" == darwin* ]]; then
-  LODA_EXEC="loda-macos"
+  arch=$(uname -m)
+  if [[ "$arch" == "x86_64" ]] || [[ "$arch" == "i686" ]]; then
+    LODA_EXEC="loda-macos-x86"
+  elif [[ "$arch" == "arm64" ]]; then
+    LODA_EXEC="loda-macos-arm64"
+  fi
 fi
 
 if [ -z ${LODA_EXEC+x} ]; then

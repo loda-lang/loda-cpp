@@ -2,9 +2,11 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v24.12.8
+
 ### Enhancements
 
-* Separate binaries for MacOS ARM64 (Apple silicon)
+* Separate binaries for MacOS arm64
 * Support `log` and `nrt` operation in formula generation
 * Internal command to clean up unused `mod` instructions
 
