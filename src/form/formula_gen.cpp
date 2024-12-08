@@ -135,6 +135,11 @@ bool FormulaGenerator::update(const Operation& op) {
                        {prevTarget, source});
       break;
     }
+    case Operation::Type::LOG: {
+      res = Expression(Expression::Type::FUNCTION, "logint",
+                       {prevTarget, source});
+      break;
+    }
     case Operation::Type::NRT: {
       res = Expression(Expression::Type::FUNCTION, "sqrtnint",
                        {prevTarget, source});
