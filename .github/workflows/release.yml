@@ -89,7 +89,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build
-        run: cd src && make -f Makefile.macos-x86.mk loda LODA_PLATFORM=macos LODA_VERSION=${{ needs.create-release.outputs.version }}
+        run: cd src && make -f Makefile.macos-x86.mk loda LODA_PLATFORM=macos-x86 LODA_VERSION=${{ needs.create-release.outputs.version }}
       - name: Upload
         uses: actions/upload-release-asset@v1
         with:
@@ -105,7 +105,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build
-        run: cd src && make -f Makefile.macos-arm64.mk loda LODA_PLATFORM=macos LODA_VERSION=${{ needs.create-release.outputs.version }}
+        run: cd src && make -f Makefile.macos-arm64.mk loda LODA_PLATFORM=macos-arm64 LODA_VERSION=${{ needs.create-release.outputs.version }}
       - name: Upload
         uses: actions/upload-release-asset@v1
         with:
