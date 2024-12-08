@@ -4,7 +4,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Enhancements
 
-* Support `nrt` operation in formula generation
+* Support `log` and `nrt` operation in formula generation
 * Internal command to clean up unused `mod` instructions
 
 ## v24.11.29
