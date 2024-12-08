@@ -28,7 +28,7 @@ jobs:
       - name: Test
         run: ./loda test-fast
   build-macos-x86:
-    runs-on: macos-13
+    runs-on: macos-14
     steps:
       - uses: actions/checkout@v2
       - name: Build
@@ -36,7 +36,7 @@ jobs:
       - name: Test
         run: ./loda test
   build-macos-arm64:
-    runs-on: macos-13
+    runs-on: macos-14
     steps:
       - uses: actions/checkout@v2
       - name: Build
