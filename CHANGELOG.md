@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Enhancements
+
+* Improve negativity check in formula generation
+
 ## v24.12.8
 
 ### Enhancements

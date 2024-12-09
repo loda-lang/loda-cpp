@@ -34,6 +34,9 @@ class FormulaGenerator {
 
   void initFormula(int64_t numCells, bool useIncEval);
 
+  Expression divToFraction(const Expression& numerator,
+                           const Expression& denominator) const;
+
   bool update(const Operation& op);
 
   bool update(const Program& p);
@@ -59,4 +62,5 @@ class FormulaGenerator {
   Formula formula;
   std::map<int64_t, std::string> cellNames;
   size_t freeNameIndex;
+  int64_t offset;
 };

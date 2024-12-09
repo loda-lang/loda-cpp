@@ -56,12 +56,12 @@ Expression FormulaGenerator::operandToExpression(Operand op) const {
   throw std::runtime_error("internal error");  // unreachable
 }
 
-Expression divToFraction(const Expression& numerator,
-                         const Expression& denominator) {
+Expression FormulaGenerator::divToFraction(
+    const Expression& numerator, const Expression& denominator) const {
   Expression frac(Expression::Type::FRACTION, "", {numerator, denominator});
   std::string func = "floor";
-  if (ExpressionUtil::canBeNegative(numerator) ||
-      ExpressionUtil::canBeNegative(denominator)) {
+  if (ExpressionUtil::canBeNegative(numerator, offset) ||
+      ExpressionUtil::canBeNegative(denominator, offset)) {
     func = "truncate";
   }
   Expression wrapper(Expression::Type::FUNCTION, func, {frac});
@@ -105,7 +105,7 @@ bool FormulaGenerator::update(const Operation& op) {
     }
     case Operation::Type::POW: {
       res = Expression(Expression::Type::POWER, "", {prevTarget, source});
-      if (ExpressionUtil::canBeNegative(source)) {
+      if (ExpressionUtil::canBeNegative(source, offset)) {
         Expression wrapper(Expression::Type::FUNCTION, "truncate", {res});
         res = wrapper;
       }
@@ -114,8 +114,8 @@ bool FormulaGenerator::update(const Operation& op) {
     case Operation::Type::MOD: {
       auto c1 = prevTarget;
       auto c2 = source;
-      if (ExpressionUtil::canBeNegative(c1) ||
-          ExpressionUtil::canBeNegative(c2)) {
+      if (ExpressionUtil::canBeNegative(c1, offset) ||
+          ExpressionUtil::canBeNegative(c2, offset)) {
         Expression wrapper(Expression::Type::SUM);
         wrapper.newChild(c1);
         wrapper.newChild(Expression::Type::PRODUCT);
@@ -165,10 +165,13 @@ bool FormulaGenerator::update(const Operation& op) {
     case Operation::Type::TRN: {
       Expression negated(Expression::Type::PRODUCT, "",
                          {ExpressionUtil::newConstant(-1), source});
-      res = Expression(
-          Expression::Type::FUNCTION, "max",
-          {Expression(Expression::Type::SUM, "", {prevTarget, negated}),
-           ExpressionUtil::newConstant(0)});
+      Expression diff(Expression::Type::SUM, "", {prevTarget, negated});
+      if (ExpressionUtil::canBeNegative(source, offset)) {
+        res = Expression(Expression::Type::FUNCTION, "max",
+                         {diff, ExpressionUtil::newConstant(0)});
+      } else {
+        res = diff;
+      }
       break;
     }
     default: {
@@ -364,7 +367,7 @@ void FormulaGenerator::prepareForPostLoop(
       right = preloopExprs.at(cell);
     } else {
       auto safe_param = preloopCounter;
-      if (ExpressionUtil::canBeNegative(safe_param)) {
+      if (ExpressionUtil::canBeNegative(safe_param, offset)) {
         auto tmp = safe_param;
         safe_param = Expression(Expression::Type::FUNCTION, "max",
                                 {tmp, ExpressionUtil::newConstant(0)});
@@ -463,6 +466,7 @@ bool FormulaGenerator::generate(const Program& p, int64_t id, Formula& result,
   }
   formula.clear();
   freeNameIndex = 0;
+  offset = ProgramUtil::getOffset(p);
   if (!generateSingle(p)) {
     return false;
   }
