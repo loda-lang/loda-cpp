@@ -16,7 +16,8 @@ bool convertExprToPari(Expression& expr, const Formula& f, bool as_vector) {
   }
   if (expr.type == Expression::Type::FUNCTION && expr.name == "binomial") {
     // TODO: check feedback from PARI team to avoid this limitation
-    if (ExpressionUtil::canBeNegative(expr.children.at(1))) {
+    // note also that we should use the proper offset here
+    if (ExpressionUtil::canBeNegative(expr.children.at(1), 0)) {
       return false;
     }
   }
