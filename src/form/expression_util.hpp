@@ -32,7 +32,7 @@ class ExpressionUtil {
       const Expression& e, const std::vector<std::string>& names,
       int64_t max_offset);
 
-  static bool canBeNegative(const Expression& e);
+  static bool canBeNegative(const Expression& e, int64_t offset);
 
   static void collectNames(const Expression& e, Expression::Type type,
                            std::set<std::string>& target);

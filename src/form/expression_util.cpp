@@ -328,18 +328,19 @@ bool ExpressionUtil::hasNonRecursiveFunctionReference(
   }
 }
 
-bool ExpressionUtil::canBeNegative(const Expression& e) {
+bool ExpressionUtil::canBeNegative(const Expression& e, int64_t offset) {
   switch (e.type) {
     case Expression::Type::CONSTANT:
       return e.value < Number::ZERO;
     case Expression::Type::PARAMETER:
-      return false;
+      return offset < 0;
     case Expression::Type::LOCAL:
       return true;
     case Expression::Type::FUNCTION:
-      if (e.name == "max" &&
-          std::any_of(e.children.begin(), e.children.end(),
-                      [](const Expression& c) { return !canBeNegative(c); })) {
+      if (e.name == "max" && std::any_of(e.children.begin(), e.children.end(),
+                                         [&](const Expression& c) {
+                                           return !canBeNegative(c, offset);
+                                         })) {
         return false;
       } else if (e.name == "binomial" || e.name == "floor" ||
                  e.name == "truncate") {
@@ -358,15 +359,23 @@ bool ExpressionUtil::canBeNegative(const Expression& e) {
           return e.children[1].value.odd();
         }
       }
-    case Expression::Type::SUM:
+    case Expression::Type::SUM: {
+      if (e.children.size() == 2 &&
+          e.children[0].type == Expression::Type::PARAMETER &&
+          e.children[1].type == Expression::Type::CONSTANT) {
+        return Number(-offset) > e.children[1].value;
+      }
+      break;  // infer from children
+    }
     case Expression::Type::PRODUCT:
     case Expression::Type::FRACTION:
     case Expression::Type::MODULUS:
     case Expression::Type::IF:
       break;  // infer from children
   }
-  return std::any_of(e.children.begin(), e.children.end(),
-                     [](const Expression& c) { return canBeNegative(c); });
+  return std::any_of(
+      e.children.begin(), e.children.end(),
+      [&](const Expression& c) { return canBeNegative(c, offset); });
 }
 
 void ExpressionUtil::collectNames(const Expression& e, Expression::Type type,
