@@ -165,13 +165,10 @@ bool FormulaGenerator::update(const Operation& op) {
     case Operation::Type::TRN: {
       Expression negated(Expression::Type::PRODUCT, "",
                          {ExpressionUtil::newConstant(-1), source});
-      Expression diff(Expression::Type::SUM, "", {prevTarget, negated});
-      if (ExpressionUtil::canBeNegative(source, offset)) {
-        res = Expression(Expression::Type::FUNCTION, "max",
-                         {diff, ExpressionUtil::newConstant(0)});
-      } else {
-        res = diff;
-      }
+      res = Expression(
+          Expression::Type::FUNCTION, "max",
+          {Expression(Expression::Type::SUM, "", {prevTarget, negated}),
+           ExpressionUtil::newConstant(0)});
       break;
     }
     default: {
