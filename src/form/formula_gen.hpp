@@ -37,6 +37,9 @@ class FormulaGenerator {
   Expression divToFraction(const Expression& numerator,
                            const Expression& denominator) const;
 
+  bool bitfunc(const std::string& name, const Expression& a,
+               const Expression& b, Expression& res) const;
+
   bool update(const Operation& op);
 
   bool update(const Program& p);
