@@ -58,31 +58,6 @@ jobs:
           asset_content_type: application/octet-stream
         env:
           GITHUB_TOKEN: ${{ github.token }}
-  build-macos:
-    needs: create-release
-    runs-on: macos-14
-    steps:
-      - uses: actions/checkout@v2
-      - name: Build
-        run: |
-          cd src
-          make -f Makefile.macos-x86.mk loda LODA_PLATFORM=macos LODA_VERSION=${{ needs.create-release.outputs.version }}
-          mv loda loda-x86
-          make clean
-          make -f Makefile.macos-arm64.mk loda LODA_PLATFORM=macos LODA_VERSION=${{ needs.create-release.outputs.version }}
-          mv loda loda-arm64
-          lipo -create -output loda loda-x86 loda-arm64
-          rm loda-x86 loda-arm64
-          file loda
-      - name: Upload
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./loda
-          asset_name: loda-macos
-          asset_content_type: application/octet-stream
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
   build-macos-x86:
     needs: create-release
     runs-on: macos-14
