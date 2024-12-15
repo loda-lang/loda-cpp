@@ -81,12 +81,11 @@ void ensureDir(const std::string &path) {
 
 void rmDirRecursive(const std::string &path) {
 #ifdef _WIN64
-  auto cmd = "rmdir /s /q \"" + path +
-             "\""
+  auto cmd = "rmdir /s /q \"" + path + "\"";
 #else
   auto cmd = "rm -rf \"" + path + "\"";
 #endif
-             execCmd(cmd);
+  execCmd(cmd);
 }
 
 bool execCmd(const std::string &cmd, bool fail_on_error) {
