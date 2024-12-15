@@ -130,7 +130,8 @@ void Boinc::run() {
       Log::get().error("Failed to update programs repository", false);
       if (getFileAgeInDays(progs_dir) >= 7) {
         Log::get().warn("Deleting corrupt programs directory");
-            }
+        rmDirRecursive(progs_dir);
+      }
     }
   }
 
