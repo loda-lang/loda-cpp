@@ -123,6 +123,22 @@ void Boinc::run() {
                           checkpoint_key);
   monitor.writeProgress();
 
+  // check programs dir consistency by updating it
+  if (Setup::existsProgramsHome()) {
+    const auto progs_dir = Setup::getProgramsHome();
+    FolderLock lock(project_dir);
+    if (Setup::existsProgramsHome() &&  // need to check again here
+        !Git::git(progs_dir, "pull origin main -q --ff-only", false)) {
+      Log::get().error("Failed to update programs repository", false);
+      const auto age = getFileAgeInDays(progs_dir);
+      if (age >= 7) {
+        Log::get().warn("Deleting corrupt programs directory (age: " +
+                        std::to_string(age) + " days)");
+        rmDirRecursive(progs_dir);
+      }
+    }
+  }
+
   // clone programs repository if necessary
   if (!Setup::existsProgramsHome()) {
     FolderLock lock(project_dir);
