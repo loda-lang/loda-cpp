@@ -2,11 +2,14 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v24.12.15
+
 ### Enhancements
 
 * Improve negativity check in formula generation
 * Simplify formulas generated from `nrt` operations
 * Limited support for bit-wise operations in formulas
+* Delete corrupt programs directory in BOINC
 
 ## v24.12.8
 

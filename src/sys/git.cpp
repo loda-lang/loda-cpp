@@ -112,7 +112,8 @@ void Git::fixWindowsEnv(std::string project_dir) {
 }
 #endif
 
-void Git::git(const std::string &folder, const std::string &args) {
+bool Git::git(const std::string &folder, const std::string &args,
+              bool fail_on_error) {
   std::string a;
   if (!folder.empty()) {
     a = "-C \"" + folder;
@@ -130,7 +131,7 @@ void Git::git(const std::string &folder, const std::string &args) {
     fixWindowsEnv();
   }
 #endif
-  execCmd("git " + a);
+  return execCmd("git " + a, fail_on_error);
 }
 
 void Git::clone(const std::string &url, const std::string &folder) {

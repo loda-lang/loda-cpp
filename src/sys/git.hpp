@@ -11,7 +11,8 @@ class Git {
   static void fixWindowsEnv(std::string project_dir = "");
 #endif
 
-  static void git(const std::string &folder, const std::string &args);
+  static bool git(const std::string &folder, const std::string &args,
+                  bool fail_on_error = true);
 
   static void clone(const std::string &url, const std::string &folder);
 

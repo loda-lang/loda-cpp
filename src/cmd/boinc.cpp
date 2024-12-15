@@ -123,6 +123,17 @@ void Boinc::run() {
                           checkpoint_key);
   monitor.writeProgress();
 
+  // check programs dir consistency by updating it
+  if (Setup::existsProgramsHome()) {
+    auto progs_dir = Setup::getProgramsHome();
+    if (!Git::git(progs_dir, "pull origin main -q --ff-only", false)) {
+      Log::get().error("Failed to update programs repository", false);
+      if (getFileAgeInDays(progs_dir) >= 7) {
+        Log::get().warn("Deleting corrupt programs directory");
+            }
+    }
+  }
+
   // clone programs repository if necessary
   if (!Setup::existsProgramsHome()) {
     FolderLock lock(project_dir);

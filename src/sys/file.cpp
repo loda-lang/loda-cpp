@@ -79,13 +79,25 @@ void ensureDir(const std::string &path) {
   }
 }
 
-void execCmd(const std::string &cmd, bool fail_on_error) {
+void rmDirRecursive(const std::string &path) {
+#ifdef _WIN64
+  auto cmd = "rmdir /s /q \"" + path +
+             "\""
+#else
+  auto cmd = "rm -rf \"" + path + "\"";
+#endif
+             execCmd(cmd);
+}
+
+bool execCmd(const std::string &cmd, bool fail_on_error) {
   auto exit_code = system(cmd.c_str());
   if (exit_code != 0) {
     Log::get().error("Error executing command (exit code " +
                          std::to_string(exit_code) + "): " + cmd,
                      fail_on_error);
+    return false;
   }
+  return true;
 }
 
 void moveFile(const std::string &from, const std::string &to) {

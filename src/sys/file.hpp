@@ -21,9 +21,11 @@ bool isDir(const std::string &path);
 
 void ensureDir(const std::string &path);
 
+void rmDirRecursive(const std::string &path);
+
 void moveFile(const std::string &from, const std::string &to);
 
-void execCmd(const std::string &cmd, bool fail_on_error = true);
+bool execCmd(const std::string &cmd, bool fail_on_error = true);
 
 void makeExecutable(const std::string &path);
 
