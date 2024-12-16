@@ -131,9 +131,10 @@ void Boinc::run() {
         !Git::git(progs_dir, "pull origin main -q --ff-only", false)) {
       Log::get().error("Failed to update programs repository", false);
       const auto age = getFileAgeInDays(progs_dir);
-      if (age >= 7) {
-        Log::get().warn("Deleting corrupt programs directory (age: " +
-                        std::to_string(age) + " days)");
+      Log::get().info("Programs directory age: " + std::to_string(age) +
+                      " days");
+      if (age >= 3) {  // magic number
+        Log::get().warn("Deleting corrupt programs directory");
         rmDirRecursive(progs_dir);
       }
     }

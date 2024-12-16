@@ -61,7 +61,7 @@ void Miner::reload() {
   manager->releaseStats();  // not needed anymore
 }
 
-void shutdown() {
+void signalShutdown() {
   if (!Signals::HALT) {
     Log::get().info("Signaling shutdown");
     Signals::HALT = true;
@@ -79,9 +79,10 @@ void Miner::mine() {
         std::this_thread::sleep_for(delay);
       }
       monitor->writeProgress();  // final write
-      shutdown();
+      signalShutdown();
     });
 
+    bool error = false;
     try {
       // load manager
       if (!manager) {
@@ -95,15 +96,20 @@ void Miner::mine() {
       Log::get().error(
           "Error during initialization or mining: " + std::string(e.what()),
           false);
-      shutdown();
+      signalShutdown();
+      error = true;
     } catch (...) {
       Log::get().error("Unknown error during initialization or mining", false);
-      shutdown();
+      signalShutdown();
+      error = true;
     }
     try {
       monitor_thread.join();
     } catch (...) {
       Log::get().warn("Error joining progress monitoring thread");
+    }
+    if (error) {
+      Log::get().error("Exiting due to error", true);  // exit with error
     }
   } else {
     // load manager
