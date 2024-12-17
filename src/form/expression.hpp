@@ -88,20 +88,15 @@ class Expression {
 
   int compareChildren(const Expression& e) const;
 
-  void print(std::ostream& out, size_t index, bool isRoot,
-             Expression::Type parentType) const;
+  void print(std::ostream& out, bool isRoot, Expression::Type parentType) const;
 
-  void printExtracted(std::ostream& out, size_t index, bool isRoot,
-                      Expression::Type parentType) const;
+  void printExtracted(std::ostream& out) const;
 
-  void printChildren(std::ostream& out, const std::string& op, bool isRoot,
-                     Expression::Type parentType) const;
+  void printChildren(std::ostream& out, const std::string& op) const;
 
   void printChildrenWrapped(std::ostream& out, const std::string& op,
-                            bool isRoot, Expression::Type parentType,
                             const std::string& prefix,
                             const std::string& suffix) const;
 
-  bool needsBrackets(size_t index, bool isRoot,
-                     Expression::Type parentType) const;
+  bool needsBrackets(bool isRoot, Expression::Type parentType) const;
 };
