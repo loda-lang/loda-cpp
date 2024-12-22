@@ -634,21 +634,29 @@ void Commands::migrate() {
   manager.migrate();
 }
 
-void Commands::maintain(const std::string& id) {
+void Commands::maintain(const std::string& ids) {
   initLog(false);
   OeisManager manager(settings);
   manager.load();
   size_t start = 0;
   size_t end = manager.getTotalCount() + 1;
-  bool check = false;
-  if (!id.empty()) {
-    OeisSequence seq(id);
-    start = seq.id;
-    end = seq.id + 1;
-    check = true;
+  bool eval = false;
+  if (!ids.empty()) {
+    auto pos = ids.find('-');
+    if (pos != std::string::npos) {
+      OeisSequence seq_start(ids.substr(0, pos));
+      OeisSequence seq_end(ids.substr(pos + 1));
+      start = seq_start.id;
+      end = seq_end.id + 1;
+    } else {
+      OeisSequence seq(ids);
+      start = seq.id;
+      end = seq.id + 1;
+      eval = true;
+    }
   }
   for (size_t id = start; id < end; id++) {
-    manager.maintainProgram(id, check);
+    manager.maintainProgram(id, eval);
   }
 }
 
