@@ -752,7 +752,7 @@ void Test::unfold() {
   for (const auto& t : tests) {
     Log::get().info("Testing unfold " + std::to_string(i));
     auto p = t.first;
-    if (!Subprogram::unfold(p)) {
+    if (!Subprogram::autoUnfold(p)) {
       Log::get().error("Unfolding not supported", true);
     }
     if (p != t.second) {

@@ -153,20 +153,25 @@ bool prepareEmbedding(int64_t id, Program &sub, Operation::Type embeddingType) {
   return true;
 }
 
-bool Subprogram::unfold(Program &main) {
+bool Subprogram::canUnfold(Operation::Type type) {
+  return type == Operation::Type::SEQ || type == Operation::Type::PRG;
+}
+
+bool Subprogram::unfold(Program &main, int64_t pos) {
   if (ProgramUtil::hasIndirectOperand(main)) {
     return false;
   }
-  // find first seq or prg operation
-  int64_t pos = -1;
-  for (size_t i = 0; i < main.ops.size(); i++) {
-    if (main.ops[i].type == Operation::Type::SEQ ||
-        main.ops[i].type == Operation::Type::PRG) {
-      pos = i;
-      break;
+  if (pos < 0) {
+    // find first operation that can be unfolded
+    for (size_t i = 0; i < main.ops.size(); i++) {
+      if (canUnfold(main.ops[i].type)) {
+        pos = i;
+        break;
+      }
     }
   }
-  if (pos < 0) {
+  if (pos < 0 || static_cast<size_t>(pos) >= main.ops.size() ||
+      !canUnfold(main.ops[pos].type)) {
     return false;
   }
   const auto &emb_op = main.ops[pos];
@@ -187,7 +192,7 @@ bool Subprogram::unfold(Program &main) {
     updateOperand(op.target, start, shared_region_length, largest_used);
     updateOperand(op.source, start, shared_region_length, largest_used);
   }
-  // delete seq operation
+  // delete old operation
   main.ops.erase(main.ops.begin() + pos);
   // embed program
   main.ops.insert(main.ops.begin() + pos, sub.ops.begin(), sub.ops.end());
@@ -197,18 +202,28 @@ bool Subprogram::unfold(Program &main) {
 bool Subprogram::autoUnfold(Program &main) {
   bool changed = false;
   while (true) {
-    // try to unfold
     auto copy = main;
-    if (!unfold(copy)) {
+    bool unfolded = false;
+    for (size_t i = 0; i < copy.ops.size(); i++) {
+      // try to unfold
+      if (!unfold(copy, i)) {
+        continue;
+      }
+      // revert if unfolded program is too complex
+      if (shouldFold(copy)) {
+        copy = main;
+      } else {
+        unfolded = true;
+        break;
+      }
+    }
+    // update main program if unfolding was successful
+    if (unfolded) {
+      main = copy;
+      changed = true;
+    } else {
       break;
     }
-    // abort if unfolded program is too complex
-    if (shouldFold(copy)) {
-      break;
-    }
-    // ok, update program!
-    main = copy;
-    changed = true;
   }
   return changed;
 }
