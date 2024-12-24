@@ -57,32 +57,32 @@ Number Semantics::pow(const Number& base, const Number& exp) {
     } else {
       return Number::INF;  // 0^(negative number)
     }
-  } else if (base == Number::ONE) {
+  }
+  if (base == Number::ONE) {
     return 1;  // 1^x is always 1
-  } else if (base == -1) {
+  }
+  if (base == -1) {
     return exp.odd() ? -1 : 1;  // (-1)^x
-  } else {
-    if (exp < Number::ZERO) {
-      return 0;
-    } else {
-      Number r = 1;
-      Number b = base;
-      Number e = exp;
-      while (r != Number::INF && e != Number::ZERO) {
-        if (e.odd()) {
-          r = mul(r, b);
-        }
-        e = div(e, 2);
-        if (e != Number::ZERO) {
-          b = mul(b, b);
-          if (b == Number::INF) {
-            r = Number::INF;
-          }
-        }
+  }
+  if (exp < Number::ZERO) {
+    return 0;
+  }
+  Number r = 1;
+  Number b = base;
+  Number e = exp;
+  while (r != Number::INF && e != Number::ZERO) {
+    if (e.odd()) {
+      r = mul(r, b);
+    }
+    e = div(e, 2);
+    if (e != Number::ZERO) {
+      b = mul(b, b);
+      if (b == Number::INF) {
+        r = Number::INF;
       }
-      return r;
     }
   }
+  return r;
 }
 
 Number Semantics::gcd(const Number& a, const Number& b) {
