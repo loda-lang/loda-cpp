@@ -49,6 +49,12 @@ Number Semantics::pow(const Number& base, const Number& exp) {
   if (base == Number::INF || exp == Number::INF) {
     return Number::INF;
   }
+  if (base == Number::ONE) {
+    return 1;  // 1^x is always 1
+  }
+  if (base == -1) {
+    return exp.odd() ? -1 : 1;  // (-1)^x
+  }
   if (base == Number::ZERO) {
     if (Number::ZERO < exp) {
       return 0;  // 0^(positive number)
@@ -57,12 +63,6 @@ Number Semantics::pow(const Number& base, const Number& exp) {
       return 1;  // 0^0
     }
     return Number::INF;  // 0^(negative number)
-  }
-  if (base == Number::ONE) {
-    return 1;  // 1^x is always 1
-  }
-  if (base == -1) {
-    return exp.odd() ? -1 : 1;  // (-1)^x
   }
   if (exp < Number::ZERO) {
     return 0;
