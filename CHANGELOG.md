@@ -2,6 +2,8 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v24.12.28
+
 ### Bugfixes
 
 * Fix empty programs directory error in BOINC

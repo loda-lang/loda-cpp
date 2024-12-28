@@ -129,10 +129,10 @@ void Boinc::run() {
     FolderLock lock(project_dir);
     if (Setup::existsProgramsHome() &&  // need to check again here
         !Setup::pullProgramsHome(false)) {
-      Log::get().error("Failed to update programs repository", false);
       const auto age = getFileAgeInDays(progs_dir);
-      Log::get().info("Programs directory age: " + std::to_string(age) +
-                      " days");
+      Log::get().error("Failed to update programs repository (age: " +
+                           std::to_string(age) + " days)",
+                       false);
       if (age >= 3) {  // magic number
         Log::get().warn("Deleting corrupt programs directory");
         rmDirRecursive(progs_dir);
