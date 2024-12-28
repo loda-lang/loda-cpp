@@ -160,6 +160,11 @@ void Setup::cloneProgramsHome(const std::string& git_url) {
   Git::clone(git_url, getLodaHome() + "programs");
 }
 
+bool Setup::pullProgramsHome(bool fail_on_error) {
+  return Git::git(getProgramsHome(), "pull origin main -q --ff-only",
+                  fail_on_error);
+}
+
 void Setup::checkDir(const std::string& home) {
   if (!isDir(home)) {
     Log::get().error(

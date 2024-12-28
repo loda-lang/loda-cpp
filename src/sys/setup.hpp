@@ -46,6 +46,8 @@ class Setup {
       const std::string& git_url =
           "https://github.com/loda-lang/loda-programs.git");
 
+  static bool pullProgramsHome(bool fail_on_error = true);
+
   static std::string getSetupValue(const std::string& key);
 
   static bool getSetupFlag(const std::string& key, bool default_value);
