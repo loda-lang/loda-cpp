@@ -150,6 +150,16 @@ void Setup::setProgramsHome(const std::string& home) {
   checkDir(PROGRAMS_HOME);
 }
 
+bool Setup::existsProgramsHome() {
+  // We cannot use getProgramsHome() here because it checks for existence
+  return isDir(getLodaHome() + "programs");
+}
+
+void Setup::cloneProgramsHome(const std::string& git_url) {
+  // We cannot use getProgramsHome() here because it checks for existence
+  Git::clone(git_url, getLodaHome() + "programs");
+}
+
 void Setup::checkDir(const std::string& home) {
   if (!isDir(home)) {
     Log::get().error(
@@ -422,14 +432,6 @@ bool Setup::checkEnvVars() {
                "Add LODA command-line tool to path", false);
 #endif
   return true;
-}
-
-bool Setup::existsProgramsHome() {
-  return isDir(LODA_HOME + "programs" + FILE_SEP + ".git");
-}
-
-void Setup::cloneProgramsHome(std::string git_url) {
-  Git::clone(git_url, getLodaHome() + "programs");
 }
 
 bool Setup::checkProgramsHome() {

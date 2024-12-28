@@ -36,14 +36,15 @@ class Setup {
 
   static const std::string& getOeisHome();
 
-  static bool existsProgramsHome();
-
-  static void cloneProgramsHome(
-      std::string git_url = "https://github.com/loda-lang/loda-programs.git");
-
   static const std::string& getProgramsHome();
 
   static void setProgramsHome(const std::string& home);
+
+  static bool existsProgramsHome();
+
+  static void cloneProgramsHome(
+      const std::string& git_url =
+          "https://github.com/loda-lang/loda-programs.git");
 
   static std::string getSetupValue(const std::string& key);
 
