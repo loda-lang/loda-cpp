@@ -85,9 +85,9 @@
     },
     {
       "name": "hard",
-      "overwrite": "none",
+      "overwrite": "auto",
       "enabled": true,
-      "backoff": true,
+      "backoff": false,
       "generators": [
         "v1",
         "v2",
@@ -156,9 +156,9 @@
     {
       "name": "v1",
       "version": 1,
-      "length": 40,
+      "length": 80,
       "maxConstant": 25,
-      "maxIndex": 8,
+      "maxIndex": 14,
       "loops": false,
       "calls": false,
       "indirectAccess": false,
@@ -166,7 +166,9 @@
         "$LODA_HOME/programs/templates/call2.asm",
         "$LODA_HOME/programs/templates/loop.asm",
         "$LODA_HOME/programs/templates/loop2.asm",
-        "$LODA_HOME/programs/templates/loop_call.asm"
+        "$LODA_HOME/programs/templates/loop_call.asm",
+        "$LODA_HOME/programs/oeis/002/A002654.asm",
+        "$LODA_HOME/programs/oeis/004/A004018.asm"
       ]
     },
     {
