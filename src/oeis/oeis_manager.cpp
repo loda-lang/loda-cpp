@@ -392,7 +392,7 @@ void OeisManager::update(bool force) {
       }
       Log::get().info(msg);
       // update programs repository using git pull
-      Git::git(progs_dir, "pull origin main -q --ff-only");
+      Setup::pullProgramsHome();
     }
 
     // touch marker file to track the age (even in server mode)

@@ -128,7 +128,7 @@ void Boinc::run() {
     const auto progs_dir = Setup::getProgramsHome();
     FolderLock lock(project_dir);
     if (Setup::existsProgramsHome() &&  // need to check again here
-        !Git::git(progs_dir, "pull origin main -q --ff-only", false)) {
+        !Setup::pullProgramsHome(false)) {
       Log::get().error("Failed to update programs repository", false);
       const auto age = getFileAgeInDays(progs_dir);
       Log::get().info("Programs directory age: " + std::to_string(age) +
