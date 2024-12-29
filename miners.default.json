@@ -87,7 +87,7 @@
       "name": "hard",
       "overwrite": "auto",
       "enabled": true,
-      "backoff": false,
+      "backoff": true,
       "generators": [
         "v1",
         "v2",
