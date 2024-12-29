@@ -97,9 +97,6 @@ Number Semantics::gcd(const Number& a, const Number& b) {
   Number r;
   while (bb != Number::ZERO) {
     r = mod(aa, bb);
-    if (r == Number::INF) {
-      return Number::INF;
-    }
     aa = bb;
     bb = r;
   }
