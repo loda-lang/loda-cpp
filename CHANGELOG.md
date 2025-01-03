@@ -2,6 +2,8 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v25.1.3
+
 ### Bugfixes
 
 * Fail on recently corrupted programs directory in BOINC
