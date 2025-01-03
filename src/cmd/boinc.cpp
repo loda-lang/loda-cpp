@@ -136,6 +136,8 @@ void Boinc::run() {
       if (age >= 3) {  // magic number
         Log::get().warn("Deleting corrupt programs directory");
         rmDirRecursive(progs_dir);
+      } else {
+        Log::get().error("Exiting due to corrupt programs directory", true);
       }
     }
   }
