@@ -321,7 +321,7 @@ void BigNumber::divBig(const BigNumber &n) {
   BigNumber f(n);
   BigNumber g(1);
   while (f < *this || f == *this) {
-    d.push_back(std::pair<BigNumber, BigNumber>(f, g));
+    d.emplace_back(f, g);
     f += f;
     g += g;
     if (f.is_infinite || g.is_infinite) {
