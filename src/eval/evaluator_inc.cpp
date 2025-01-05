@@ -144,7 +144,7 @@ bool IncrementalEvaluator::checkLoopBody() {
   // check loop counter cell
   bool loop_counter_updated = false;
   for (const auto& op : simple_loop.body.ops) {
-    const auto meta = Operation::Metadata::get(op.type);
+    const auto& meta = Operation::Metadata::get(op.type);
     const auto target = op.target.value.asInt();
     if (target == simple_loop.counter) {
       if ((op.type == Operation::Type::SUB ||
@@ -224,7 +224,7 @@ void IncrementalEvaluator::computeStatefulCells() {
   std::set<int64_t> write;
   stateful_cells.clear();
   for (const auto& op : simple_loop.body.ops) {
-    const auto meta = Operation::Metadata::get(op.type);
+    const auto& meta = Operation::Metadata::get(op.type);
     if (meta.num_operands == 0) {
       continue;
     }
@@ -255,7 +255,7 @@ void IncrementalEvaluator::computeLoopCounterDependentCells() {
   while (changed) {
     changed = false;
     for (const auto& op : simple_loop.body.ops) {
-      const auto meta = Operation::Metadata::get(op.type);
+      const auto& meta = Operation::Metadata::get(op.type);
       const auto target = op.target.value.asInt();
       if (loop_counter_dependent_cells.find(target) !=
           loop_counter_dependent_cells.end()) {
@@ -286,7 +286,7 @@ bool IncrementalEvaluator::checkPostLoop() {
   // by the post-loop fragment are output cells.
   std::set<int64_t> write;
   for (const auto& op : simple_loop.post_loop.ops) {
-    const auto meta = Operation::Metadata::get(op.type);
+    const auto& meta = Operation::Metadata::get(op.type);
     if (meta.num_operands < 1) {
       continue;
     }
