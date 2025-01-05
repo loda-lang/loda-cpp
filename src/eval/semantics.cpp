@@ -223,7 +223,7 @@ Number Semantics::nrt(const Number& a, const Number& b) {
   return r;
 }
 
-Number Semantics::dis(const Number& a, const Number& b) {
+Number Semantics::dgs(const Number& a, const Number& b) {
   if (a == Number::INF || b == Number::INF || b < Number::TWO) {
     return Number::INF;
   }
@@ -237,7 +237,7 @@ Number Semantics::dis(const Number& a, const Number& b) {
   return mul(sign, r);
 }
 
-Number Semantics::dir(const Number& a, const Number& b) {
+Number Semantics::dgr(const Number& a, const Number& b) {
   if (a == Number::INF || b == Number::INF || b < Number::TWO) {
     return Number::INF;
   }

@@ -8,7 +8,7 @@ const std::array<Operation::Type, 33> Operation::Types = {
     Operation::Type::DIV, Operation::Type::DIF, Operation::Type::MOD,
     Operation::Type::POW, Operation::Type::GCD, Operation::Type::LEX,
     Operation::Type::BIN, Operation::Type::LOG, Operation::Type::NRT,
-    Operation::Type::DIS, Operation::Type::DIR, Operation::Type::EQU,
+    Operation::Type::DGS, Operation::Type::DGR, Operation::Type::EQU,
     Operation::Type::NEQ, Operation::Type::LEQ, Operation::Type::GEQ,
     Operation::Type::MIN, Operation::Type::MAX, Operation::Type::BAN,
     Operation::Type::BOR, Operation::Type::BXO, Operation::Type::LPB,
@@ -47,10 +47,10 @@ const Operation::Metadata& Operation::Metadata::get(Type t) {
       Operation::Type::LOG, "log", 2, true, true, true};
   static Operation::Metadata nrt{
       Operation::Type::NRT, "nrt", 2, true, true, true};
-  static Operation::Metadata dis{
-      Operation::Type::DIS, "dis", 2, true, true, true};
-  static Operation::Metadata dir{
-      Operation::Type::DIR, "dir", 2, true, true, true};
+  static Operation::Metadata dgs{
+      Operation::Type::DGS, "dgs", 2, true, true, true};
+  static Operation::Metadata dgr{
+      Operation::Type::DGR, "dgr", 2, true, true, true};
   static Operation::Metadata equ{
       Operation::Type::EQU, "equ", 2, true, true, true};
   static Operation::Metadata neq{
@@ -114,10 +114,10 @@ const Operation::Metadata& Operation::Metadata::get(Type t) {
       return log;
     case Operation::Type::NRT:
       return nrt;
-    case Operation::Type::DIS:
-      return dis;
-    case Operation::Type::DIR:
-      return dir;
+    case Operation::Type::DGS:
+      return dgs;
+    case Operation::Type::DGR:
+      return dgr;
     case Operation::Type::EQU:
       return equ;
     case Operation::Type::NEQ:
@@ -163,8 +163,15 @@ const Operation::Metadata& Operation::Metadata::get(const std::string& name) {
       return m;
     }
   }
-  if (name == "cmp") {  // backwards compatibility
+  // for backwards compatibility
+  if (name == "cmp") {
     return get(Operation::Type::EQU);
+  }
+  if (name == "dis") {
+    return get(Operation::Type::DGS);
+  }
+  if (name == "dir") {
+    return get(Operation::Type::DGR);
   }
   throw std::runtime_error("invalid operation: " + name);
 }

@@ -30,9 +30,9 @@ class Semantics {
 
   static Number nrt(const Number& a, const Number& b);
 
-  static Number dis(const Number& a, const Number& b);
+  static Number dgs(const Number& a, const Number& b);
 
-  static Number dir(const Number& a, const Number& b);
+  static Number dgr(const Number& a, const Number& b);
 
   static Number equ(const Number& a, const Number& b);
 

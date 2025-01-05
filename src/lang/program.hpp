@@ -49,8 +49,8 @@ class Operation {
     BIN,     // binomial coefficient
     LOG,     // logarithm
     NRT,     // n-th root
-    DIS,     // digit sum
-    DIR,     // digital root
+    DGS,     // digit sum
+    DGR,     // digital root
     EQU,     // equality
     NEQ,     // inequality
     LEQ,     // less or equal

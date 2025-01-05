@@ -80,11 +80,11 @@ Number Interpreter::calc(const Operation::Type type, const Number& target,
     case Operation::Type::NRT: {
       return Semantics::nrt(target, source);
     }
-    case Operation::Type::DIS: {
-      return Semantics::dis(target, source);
+    case Operation::Type::DGS: {
+      return Semantics::dgs(target, source);
     }
-    case Operation::Type::DIR: {
-      return Semantics::dir(target, source);
+    case Operation::Type::DGR: {
+      return Semantics::dgr(target, source);
     }
     case Operation::Type::EQU: {
       return Semantics::equ(target, source);
