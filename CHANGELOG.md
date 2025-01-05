@@ -5,6 +5,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Enhancements
 
 * Rename digit operations
+* Improve offset handling
 
 ## v25.1.3
 

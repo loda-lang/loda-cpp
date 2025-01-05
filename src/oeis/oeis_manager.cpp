@@ -887,8 +887,11 @@ update_program_result_t OeisManager::updateProgram(
   const bool is_server = (Setup::getMiningMode() == MINING_MODE_SERVER);
   const std::string target_file = is_server ? global_file : local_file;
   auto delta = updateProgramOffset(id, result.program);
+  optimizer.optimize(result.program);
   dumpProgram(id, result.program, target_file, submitted_by);
-  updateAllDependentOffset(id, delta);
+  if (is_server) {
+    updateAllDependentOffset(id, delta);
+  }
 
   // if not updating, ignore this sequence for future matches;
   // this is important for performance: it is likly that we
