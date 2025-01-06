@@ -135,7 +135,7 @@ bool Git::git(const std::string &folder, const std::string &args,
 }
 
 void Git::clone(const std::string &url, const std::string &folder) {
-  git("", "clone " + url + " \"" + folder + "\"");
+  git("", "clone --depth=1 " + url + " \"" + folder + "\"");
 }
 
 std::string getTmpFile() {
