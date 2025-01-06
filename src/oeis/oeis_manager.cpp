@@ -182,7 +182,7 @@ void OeisManager::loadData() {
     }
 
     // add sequence to index
-    sequences.push_back(OeisSequence(id, "", seq_full));
+    sequences[id] = OeisSequence(id, "", seq_full);
     loaded_count++;
   }
 }
