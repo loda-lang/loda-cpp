@@ -50,6 +50,7 @@ OeisManager::OeisManager(const Settings &settings,
                      ? (Setup::getLodaHome() + "stats" + FILE_SEP)
                      : stats_home) {
   sequences.reserve(400000);
+  sequences.resize(400000);
 }
 
 void OeisManager::load() {
