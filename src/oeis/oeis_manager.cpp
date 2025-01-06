@@ -101,6 +101,7 @@ void OeisManager::load() {
       }
     }
     sequences.resize(i + 1);
+    sequences.shrink_to_fit();
   }
 
   // print summary
