@@ -48,7 +48,9 @@ OeisManager::OeisManager(const Settings &settings,
       total_count(0),
       stats_home(stats_home.empty()
                      ? (Setup::getLodaHome() + "stats" + FILE_SEP)
-                     : stats_home) {}
+                     : stats_home) {
+  sequences.reserve(400000);
+}
 
 void OeisManager::load() {
   // check if already loaded
@@ -179,10 +181,7 @@ void OeisManager::loadData() {
     }
 
     // add sequence to index
-    if (id >= sequences.size()) {
-      sequences.resize(2 * id);
-    }
-    sequences[id] = OeisSequence(id, "", seq_full);
+    sequences.push_back(OeisSequence(id, "", seq_full));
     loaded_count++;
   }
 }
