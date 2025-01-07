@@ -187,9 +187,6 @@ void OeisManager::loadData() {
     }
 
     // add sequence to index
-    if (id >= sequences.size()) {
-      sequences.resize(2 * id);
-    }
     sequences[id] = OeisSequence(id, "", seq_full);
     loaded_count++;
   }
