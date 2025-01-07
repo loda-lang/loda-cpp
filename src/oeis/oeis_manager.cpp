@@ -119,6 +119,15 @@ void OeisManager::load() {
 }
 
 void OeisManager::loadData() {
+  std::string names_path = Setup::getOeisHome() + "names";
+  std::ifstream names(names_path);
+  auto line_count = std::count_if(std::istreambuf_iterator<char>{names}, {},
+                                  [](char c) { return c == '\n'; });
+  line_count++;
+  sequences.reserve(line_count);
+  sequences.resize(line_count);
+  names.close();
+
   std::string path = Setup::getOeisHome() + "stripped";
   std::ifstream stripped(path);
   if (!stripped.good()) {
