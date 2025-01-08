@@ -76,7 +76,7 @@ void Test::slow() {
   randomNumber(100);
   ackermann();
   stats();
-  // apiClient(); // requires API server
+  apiClient();  // requires API server
   oeisList();
   oeisSeq();
   iterator(100);

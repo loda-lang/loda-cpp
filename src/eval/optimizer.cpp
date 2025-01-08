@@ -111,7 +111,7 @@ bool Optimizer::removeEmptyLoops(Program &p) const {
 }
 
 bool Optimizer::mergeOps(Program &p) const {
-  bool merged = false;
+  bool updated = false;
   for (size_t i = 0; i + 1 < p.ops.size(); i++) {
     bool do_merge = false;
 
@@ -161,17 +161,22 @@ bool Optimizer::mergeOps(Program &p) const {
           do_merge = true;
         }
 
-        // first mul, second div?
-        else if (o1.type == Operation::Type::MUL &&
-                 o2.type == Operation::Type::DIV &&
-                 o1.source.value != Number::ZERO &&
-                 o2.source.value != Number::ZERO) {
+        // first mul(pow), second div(nrt)?
+        else if ((o1.type == Operation::Type::MUL &&
+                  o2.type == Operation::Type::DIV &&
+                  o1.source.value != Number::ZERO &&
+                  o2.source.value != Number::ZERO) ||
+                 (o1.type == Operation::Type::POW &&
+                  o2.type == Operation::Type::NRT &&
+                  o1.source.value > Number::ONE &&
+                  o2.source.value > Number::ONE)) {
           auto gcd = Semantics::gcd(o1.source.value, o2.source.value);
           o1.source.value = Semantics::div(o1.source.value, gcd);
           if (gcd == o2.source.value) {
             do_merge = true;
-          } else {
+          } else if (gcd != Number::ONE) {
             o2.source.value = Semantics::div(o2.source.value, gcd);
+            updated = true;
           }
         }
 
@@ -243,11 +248,11 @@ bool Optimizer::mergeOps(Program &p) const {
       }
       p.ops.erase(p.ops.begin() + i + 1, p.ops.begin() + i + 2);
       --i;
-      merged = true;
+      updated = true;
     }
   }
 
-  return merged;
+  return updated;
 }
 
 std::pair<int64_t, int64_t> findRepeatedOps(const Program &p,
