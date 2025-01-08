@@ -167,9 +167,9 @@
         "$LODA_HOME/programs/templates/loop.asm",
         "$LODA_HOME/programs/templates/loop2.asm",
         "$LODA_HOME/programs/templates/loop_call.asm",
-        "$LODA_HOME/programs/oeis/002/A002193.asm",
         "$LODA_HOME/programs/oeis/002/A002654.asm",
-        "$LODA_HOME/programs/oeis/004/A004018.asm"
+        "$LODA_HOME/programs/oeis/004/A004018.asm",
+        "$LODA_HOME/programs/oeis/365/A365605.asm"
       ]
     },
     {
