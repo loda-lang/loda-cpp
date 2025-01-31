@@ -2,6 +2,12 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v25.1.31
+
+### Enhancements
+
+* Use SSL connection to API server
+
 ## v25.1.8
 
 ### Enhancements

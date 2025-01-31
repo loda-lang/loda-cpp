@@ -22,7 +22,7 @@ ApiClient::ApiClient()
       printed_throttling_warning(false) {
   auto server = Setup::getSetupValue("LODA_API_SERVER");
   if (server.empty()) {
-    server = "http://api.loda-lang.org/";
+    server = "https://api.loda-lang.org/";
   } else {
     Log::get().info("Using configured API server: " + server);
   }
