@@ -661,8 +661,6 @@ const Stats &OeisManager::getStats() {
   return *stats;
 }
 
-void OeisManager::releaseStats() { stats.reset(); }
-
 void OeisManager::addSeqComments(Program &p) const {
   for (auto &op : p.ops) {
     if (op.type == Operation::Type::SEQ &&

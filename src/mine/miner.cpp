@@ -58,7 +58,6 @@ void Miner::reload() {
     }
   }
   mutator.reset(new Mutator(manager->getStats()));
-  manager->releaseStats();  // not needed anymore
 }
 
 void signalShutdown() {

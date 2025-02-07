@@ -36,8 +36,6 @@ class OeisManager {
 
   const Stats& getStats();
 
-  void releaseStats();
-
   Finder& getFinder();
 
   size_t getTotalCount() const { return total_count; }
