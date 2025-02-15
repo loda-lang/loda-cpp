@@ -2,6 +2,8 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v25.2.15
+
 ### Bugfixes
 
 * Fix duplicate stats regeneration
