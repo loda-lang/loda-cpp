@@ -59,6 +59,9 @@ Number Interpreter::calc(const Operation::Type type, const Number& target,
     case Operation::Type::DIF: {
       return Semantics::dif(target, source);
     }
+    case Operation::Type::DIR: {
+      return Semantics::dir(target, source);
+    }
     case Operation::Type::MOD: {
       return Semantics::mod(target, source);
     }

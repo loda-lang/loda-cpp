@@ -39,6 +39,21 @@ Number Semantics::dif(const Number& a, const Number& b) {
   return (a == mul(b, d)) ? d : a;
 }
 
+Number Semantics::dir(const Number& a, const Number& b) {
+  if (a == Number::INF || b == Number::INF) {
+    return Number::INF;
+  }
+  auto aa = a;
+  while (true) {
+    auto r = dif(aa, b);
+    if (abs(r) == abs(aa)) {
+      break;
+    }
+    aa = r;
+  }
+  return aa;
+}
+
 Number Semantics::mod(const Number& a, const Number& b) {
   auto r = a;
   r %= b;

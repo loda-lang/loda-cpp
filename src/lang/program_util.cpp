@@ -58,6 +58,7 @@ bool ProgramUtil::isNop(const Operation &op) {
              ((op.type == Operation::Type::MUL ||
                op.type == Operation::Type::DIV ||
                op.type == Operation::Type::DIF ||
+               op.type == Operation::Type::DIR ||
                op.type == Operation::Type::POW ||
                op.type == Operation::Type::BIN))) {
     return true;
@@ -516,16 +517,17 @@ void ProgramUtil::avoidNopOrOverflow(Operation &op) {
     }
     if ((op.source.value == 0 || op.source.value == 1) &&
         (op.type == Operation::Type::MUL || op.type == Operation::Type::DIV ||
-         op.type == Operation::Type::DIF || op.type == Operation::Type::MOD ||
-         op.type == Operation::Type::POW || op.type == Operation::Type::GCD ||
-         op.type == Operation::Type::BIN)) {
+         op.type == Operation::Type::DIF || op.type == Operation::Type::DIR ||
+         op.type == Operation::Type::MOD || op.type == Operation::Type::POW ||
+         op.type == Operation::Type::GCD || op.type == Operation::Type::BIN)) {
       op.source.value = 2;
     }
   } else if (op.source.type == Operand::Type::DIRECT) {
     if ((op.source.value == op.target.value) &&
         (op.type == Operation::Type::MOV || op.type == Operation::Type::DIV ||
-         op.type == Operation::Type::DIF || op.type == Operation::Type::MOD ||
-         op.type == Operation::Type::GCD || op.type == Operation::Type::BIN)) {
+         op.type == Operation::Type::DIF || op.type == Operation::Type::DIR ||
+         op.type == Operation::Type::MOD || op.type == Operation::Type::GCD ||
+         op.type == Operation::Type::BIN)) {
       op.target.value += Number::ONE;
     }
   }

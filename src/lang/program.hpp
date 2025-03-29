@@ -42,6 +42,7 @@ class Operation {
     MUL,     // multiplication
     DIV,     // division
     DIF,     // conditional division
+    DIR,     // repeated division
     MOD,     // modulo
     POW,     // power
     GCD,     // greatest common divisor
@@ -70,7 +71,7 @@ class Operation {
     __COUNT  // number of operation types
   };
 
-  static const std::array<Type, 33> Types;
+  static const std::array<Type, 34> Types;
 
   class Metadata {
    public:

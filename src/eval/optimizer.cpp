@@ -56,6 +56,9 @@ bool Optimizer::optimize(Program &p) const {
     if (collapseMovLoops(p)) {
       changed = true;
     }
+    if (collapseDifLoops(p)) {
+      changed = true;
+    }
     if (collapseArithmeticLoops(p)) {
       changed = true;
     }
@@ -701,6 +704,31 @@ bool Optimizer::collapseMovLoops(Program &p) const {
                            Operand(Operand::Type::CONSTANT, val));
       changed = true;
     }
+  }
+  return changed;
+}
+
+bool Optimizer::collapseDifLoops(Program &p) const {
+  bool changed = false;
+  for (size_t i = 0; i + 2 < p.ops.size(); i++) {
+    if (p.ops[i].type != Operation::Type::LPB ||
+        p.ops[i + 1].type != Operation::Type::DIF ||
+        p.ops[i + 2].type != Operation::Type::LPE) {
+      continue;
+    }
+    const auto &lpb = p.ops[i];
+    const auto &dif = p.ops[i + 1];
+    if (lpb.source != Operand(Operand::Type::CONSTANT, 1) ||
+        lpb.target.type != Operand::Type::DIRECT ||
+        dif.source.type != Operand::Type::CONSTANT ||
+        dif.target != lpb.target) {
+      continue;
+    }
+    const auto val = dif.source.value;
+    p.ops.erase(p.ops.begin() + i + 1, p.ops.begin() + i + 3);
+    p.ops[i] = Operation(Operation::Type::DIR, lpb.target,
+                         Operand(Operand::Type::CONSTANT, val));
+    changed = true;
   }
   return changed;
 }

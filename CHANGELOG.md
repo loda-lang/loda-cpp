@@ -2,6 +2,12 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v25.3.29
+
+### Features
+
+* Added `dir` operation for repeated division
+
 ## v25.2.15
 
 ### Bugfixes

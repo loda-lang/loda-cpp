@@ -2,18 +2,19 @@
 
 #include <stdexcept>
 
-const std::array<Operation::Type, 33> Operation::Types = {
+const std::array<Operation::Type, 34> Operation::Types = {
     Operation::Type::NOP, Operation::Type::MOV, Operation::Type::ADD,
     Operation::Type::SUB, Operation::Type::TRN, Operation::Type::MUL,
-    Operation::Type::DIV, Operation::Type::DIF, Operation::Type::MOD,
-    Operation::Type::POW, Operation::Type::GCD, Operation::Type::LEX,
-    Operation::Type::BIN, Operation::Type::LOG, Operation::Type::NRT,
-    Operation::Type::DGS, Operation::Type::DGR, Operation::Type::EQU,
-    Operation::Type::NEQ, Operation::Type::LEQ, Operation::Type::GEQ,
-    Operation::Type::MIN, Operation::Type::MAX, Operation::Type::BAN,
-    Operation::Type::BOR, Operation::Type::BXO, Operation::Type::LPB,
-    Operation::Type::LPE, Operation::Type::CLR, Operation::Type::SRT,
-    Operation::Type::SEQ, Operation::Type::PRG, Operation::Type::DBG,
+    Operation::Type::DIV, Operation::Type::DIF, Operation::Type::DIR,
+    Operation::Type::MOD, Operation::Type::POW, Operation::Type::GCD,
+    Operation::Type::LEX, Operation::Type::BIN, Operation::Type::LOG,
+    Operation::Type::NRT, Operation::Type::DGS, Operation::Type::DGR,
+    Operation::Type::EQU, Operation::Type::NEQ, Operation::Type::LEQ,
+    Operation::Type::GEQ, Operation::Type::MIN, Operation::Type::MAX,
+    Operation::Type::BAN, Operation::Type::BOR, Operation::Type::BXO,
+    Operation::Type::LPB, Operation::Type::LPE, Operation::Type::CLR,
+    Operation::Type::SRT, Operation::Type::SEQ, Operation::Type::PRG,
+    Operation::Type::DBG,
 };
 
 const Operation::Metadata& Operation::Metadata::get(Type t) {
@@ -33,6 +34,8 @@ const Operation::Metadata& Operation::Metadata::get(Type t) {
       Operation::Type::DIV, "div", 2, true, true, true};
   static Operation::Metadata dif{
       Operation::Type::DIF, "dif", 2, true, true, true};
+  static Operation::Metadata dir{
+      Operation::Type::DIR, "dir", 2, true, true, true};
   static Operation::Metadata mod{
       Operation::Type::MOD, "mod", 2, true, true, true};
   static Operation::Metadata pow{
@@ -100,6 +103,8 @@ const Operation::Metadata& Operation::Metadata::get(Type t) {
       return div;
     case Operation::Type::DIF:
       return dif;
+    case Operation::Type::DIR:
+      return dir;
     case Operation::Type::MOD:
       return mod;
     case Operation::Type::POW:
@@ -166,12 +171,6 @@ const Operation::Metadata& Operation::Metadata::get(const std::string& name) {
   // for backwards compatibility
   if (name == "cmp") {
     return get(Operation::Type::EQU);
-  }
-  if (name == "dis") {
-    return get(Operation::Type::DGS);
-  }
-  if (name == "dir") {
-    return get(Operation::Type::DGR);
   }
   throw std::runtime_error("invalid operation: " + name);
 }

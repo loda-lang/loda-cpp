@@ -16,6 +16,8 @@ class Semantics {
 
   static Number dif(const Number& a, const Number& b);
 
+  static Number dir(const Number& a, const Number& b);
+
   static Number mod(const Number& a, const Number& b);
 
   static Number pow(const Number& base, const Number& exp);
