@@ -17,16 +17,10 @@ OBJS = cmd/benchmark.o cmd/boinc.o cmd/commands.o cmd/main.o cmd/test.o \
   oeis/oeis_list.o oeis/oeis_manager.o oeis/oeis_program.o oeis/oeis_sequence.o \
   sys/file.o sys/git.o sys/jute.o sys/log.o sys/metrics.o sys/process.o sys/setup.o sys/util.o sys/web_client.o
 
-loda: sys/jute.h sys/jute.cpp $(OBJS)
+loda: $(OBJS)
 	$(CXX) $(LDFLAGS) -o loda $(OBJS)
 	[ -L ../loda ] || ( cd .. && ln -s src/loda loda )
 	du -sh loda
 
-sys/jute.h:
-	curl -sS -o sys/jute.h https://raw.githubusercontent.com/ckrause/jute/master/jute.h
-
-sys/jute.cpp:
-	curl -sS -o sys/jute.cpp https://raw.githubusercontent.com/ckrause/jute/master/jute.cpp
-
 clean:
-	rm -R -f $(OBJS) loda ../loda sys/jute.h sys/jute.cpp
+	rm -R -f $(OBJS) loda ../loda

@@ -19,15 +19,9 @@ SRCS = cmd/benchmark.cpp cmd/boinc.cpp cmd/commands.cpp cmd/main.cpp cmd/test.cp
   oeis/oeis_list.cpp oeis/oeis_manager.cpp oeis/oeis_program.cpp oeis/oeis_sequence.cpp \
   sys/file.cpp sys/git.cpp sys/jute.cpp sys/log.cpp sys/metrics.cpp sys/process.cpp sys/setup.cpp sys/util.cpp sys/web_client.cpp
 
-loda: sys/jute.h sys/jute.cpp $(SRCS)
+loda: $(SRCS)
 	cl /EHsc /Feloda.exe $(CXXFLAGS) $(SRCS)
 	copy loda.exe ..
 
-sys/jute.h:
-	curl -sS -o sys/jute.h https://raw.githubusercontent.com/amir-s/jute/master/jute.h
-
-sys/jute.cpp:
-	curl -sS -o sys/jute.cpp https://raw.githubusercontent.com/amir-s/jute/master/jute.cpp
-
 clean:
-	del /f $(OBJS) loda ../loda sys/jute.h sys/jute.cpp
+	del /f $(OBJS) loda.exe ../loda.exe

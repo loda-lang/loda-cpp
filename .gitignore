@@ -1,3 +1,6 @@
+*.gcda
+*.gcno
+*.gcov
 *.ilk
 *.log
 *.o
@@ -5,7 +8,6 @@
 *.pdb
 /src/loda
 /src/loda.exe
-/src/sys/jute.*
 /tests/programs/local/
 /loda
 /loda.exe
