@@ -22,5 +22,17 @@ loda: $(OBJS)
 	[ -L ../loda ] || ( cd .. && ln -s src/loda loda )
 	du -sh loda
 
+coverage: CXXFLAGS += -fprofile-arcs -ftest-coverage -O0
+coverage: LDFLAGS += --coverage
+coverage: $(OBJS)
+	$(CXX) $(LDFLAGS) -o loda $(OBJS)
+	[ -L ../loda ] || ( cd .. && ln -s src/loda loda )
+	pushd .. && ./loda test && popd
+	gcov $(OBJS:.o=.cpp)
+	mkdir coverage
+	lcov --ignore-errors format,inconsistent -c -d . -o coverage/coverage.info
+	lcov --ignore-errors format,inconsistent -r coverage/coverage.info '/Library/*' -o coverage/coverage-clean.info
+	genhtml --ignore-errors category,inconsistent coverage/coverage-clean.info -o coverage
+
 clean:
-	rm -R -f $(OBJS) loda ../loda
+	rm -R -f $(OBJS) $(OBJS:.o=.gcda) $(OBJS:.o=.gcno) *.gcov coverage loda ../loda

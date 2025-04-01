@@ -6,6 +6,7 @@
 *.o
 *.obj
 *.pdb
+/src/coverage/
 /src/loda
 /src/loda.exe
 /tests/programs/local/
