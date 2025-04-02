@@ -56,9 +56,9 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v2
-      - name: Build
-        run: cd src && make -f Makefile.linux-x86.mk coverage
-      - name: HTML Preview
+      - name: Coverage
+        run: sudo apt install lcov && cd src && make -f Makefile.linux-x86.mk coverage
+      - name: Report
         uses: pavi2410/html-preview-action@v4
         with:
           html_file: src/coverage/index.html
