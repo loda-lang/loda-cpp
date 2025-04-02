@@ -1,4 +1,4 @@
-CXXFLAGS += -I. -O2 -g -Wall -Werror -fmessage-length=0 -std=c++17
+CXXFLAGS += -I. -g -Wall -Werror -fmessage-length=0 -std=c++17
 
 ifdef LODA_VERSION
 CXXFLAGS += -DLODA_VERSION=$(LODA_VERSION)
@@ -17,10 +17,23 @@ OBJS = cmd/benchmark.o cmd/boinc.o cmd/commands.o cmd/main.o cmd/test.o \
   oeis/oeis_list.o oeis/oeis_manager.o oeis/oeis_program.o oeis/oeis_sequence.o \
   sys/file.o sys/git.o sys/jute.o sys/log.o sys/metrics.o sys/process.o sys/setup.o sys/util.o sys/web_client.o
 
+loda: CXXFLAGS += -O2
 loda: $(OBJS)
 	$(CXX) $(LDFLAGS) -o loda $(OBJS)
 	[ -L ../loda ] || ( cd .. && ln -s src/loda loda )
 	du -sh loda
 
+coverage: CXXFLAGS += -O0 -fprofile-arcs -ftest-coverage
+coverage: LDFLAGS += --coverage
+coverage: $(OBJS)
+	$(CXX) $(LDFLAGS) -o loda $(OBJS)
+	[ -L ../loda ] || ( cd .. && ln -s src/loda loda )
+	cd .. && ./loda test && cd src
+	gcov $(OBJS:.o=.cpp)
+	mkdir coverage
+	lcov -c -d . -o coverage/coverage.info
+	lcov -r coverage/coverage.info '/Library/*' '/usr/*' -o coverage/coverage-clean.info
+	genhtml coverage/coverage-clean.info -o coverage
+
 clean:
-	rm -R -f $(OBJS) loda ../loda
+	rm -R -f $(OBJS) $(OBJS:.o=.gcda) $(OBJS:.o=.gcno) *.gcov coverage loda ../loda

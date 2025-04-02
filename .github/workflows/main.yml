@@ -52,3 +52,14 @@ jobs:
         run: cd src && nmake.exe /F Makefile.windows.mk
       - name: Test
         run: ./loda.exe test
+  code-coverage:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Generate
+        run: sudo apt install lcov && cd src && make -f Makefile.linux-x86.mk coverage
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-coverage-report
+          path: src/coverage/
