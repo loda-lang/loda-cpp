@@ -52,3 +52,14 @@ jobs:
         run: cd src && nmake.exe /F Makefile.windows.mk
       - name: Test
         run: ./loda.exe test
+  code-coverage:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        run: cd src && make -f Makefile.linux-x86.mk coverage
+      - name: HTML Preview
+        uses: pavi2410/html-preview-action@v4
+        with:
+          html_file: src/coverage/index.html
+          job_summary: true
