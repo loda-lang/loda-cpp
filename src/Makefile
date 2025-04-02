@@ -31,9 +31,9 @@ coverage: $(OBJS)
 	cd .. && ./loda test && cd src
 	gcov $(OBJS:.o=.cpp)
 	mkdir coverage
-	lcov --ignore-errors inconsistent -c -d . -o coverage/coverage.info
-	lcov --ignore-errors inconsistent,unused -r coverage/coverage.info '/Library/*' '/usr/*' -o coverage/coverage-clean.info
-	genhtml --ignore-errors inconsistent coverage/coverage-clean.info -o coverage
+	lcov -c -d . -o coverage/coverage.info
+	lcov -r coverage/coverage.info '/Library/*' '/usr/*' -o coverage/coverage-clean.info
+	genhtml coverage/coverage-clean.info -o coverage
 
 clean:
 	rm -R -f $(OBJS) $(OBJS:.o=.gcda) $(OBJS:.o=.gcno) *.gcov coverage loda ../loda
