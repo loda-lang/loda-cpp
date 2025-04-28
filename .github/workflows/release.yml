@@ -5,7 +5,7 @@ on:
 
 jobs:
   create-release:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Generate Version
         id: generate-version
@@ -25,7 +25,7 @@ jobs:
       upload_url: ${{ steps.create-release.outputs.upload_url }}
   build-linux-x86:
     needs: create-release
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v2
       - name: Build
