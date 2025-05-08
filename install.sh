@@ -38,8 +38,6 @@ fi
 # download loda and start setup
 mkdir -p $LODA_HOME/bin
 cd $LODA_HOME/bin
-if ! [ -x "./loda" ]; then
-  curl -fsSLo loda https://github.com/loda-lang/loda-cpp/releases/latest/download/$LODA_EXEC
-  chmod u+x loda
-fi
+curl -fsSLo loda https://github.com/loda-lang/loda-cpp/releases/latest/download/$LODA_EXEC
+chmod u+x loda
 ./loda setup
