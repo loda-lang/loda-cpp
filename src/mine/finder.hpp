@@ -8,6 +8,11 @@
 
 class OeisSequence;
 
+struct check_result_t {
+  std::string status;
+  Program program;
+};
+
 class Finder {
  public:
   Finder(const Settings &settings, Evaluator &evaluator);
@@ -22,14 +27,16 @@ class Finder {
       const Program &p, Sequence &norm_seq,
       const std::vector<OeisSequence> &sequences);
 
-  std::pair<std::string, Program> checkProgramExtended(
-      Program program, Program existing, bool is_new, const OeisSequence &seq,
-      bool full_check, size_t num_usages);
+  check_result_t checkProgramExtended(Program program, Program existing,
+                                      bool is_new, const OeisSequence &seq,
+                                      bool full_check, size_t num_usages);
 
-  std::pair<std::string, Program> checkProgramBasic(
-      const Program &program, const Program &existing, bool is_new,
-      const OeisSequence &seq, const std::string &change_type,
-      size_t previous_hash, bool full_check, size_t num_usages);
+  check_result_t checkProgramBasic(const Program &program,
+                                   const Program &existing, bool is_new,
+                                   const OeisSequence &seq,
+                                   const std::string &change_type,
+                                   size_t previous_hash, bool full_check,
+                                   size_t num_usages);
 
   std::vector<std::unique_ptr<Matcher>> &getMatchers() { return matchers; }
 
@@ -38,6 +45,10 @@ class Finder {
   std::string isOptimizedBetter(Program existing, Program optimized,
                                 const OeisSequence &seq, bool full_check,
                                 size_t num_usages);
+
+  std::string compare(Program p1, Program p2, const std::string &name1,
+                      const std::string &name2, const OeisSequence &seq,
+                      size_t num_terms, size_t num_usages);
 
  private:
   static constexpr double THRESHOLD_BETTER = 1.05;

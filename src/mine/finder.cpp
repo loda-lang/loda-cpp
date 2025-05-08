@@ -141,10 +141,12 @@ void Finder::notifyUnfoldOrMinimizeProblem(const Program &p,
   ProgramUtil::print(p, out);
 }
 
-std::pair<std::string, Program> Finder::checkProgramExtended(
-    Program program, Program existing, bool is_new, const OeisSequence &seq,
-    bool full_check, size_t num_usages) {
-  std::pair<std::string, Program> result;
+check_result_t Finder::checkProgramExtended(Program program, Program existing,
+                                            bool is_new,
+                                            const OeisSequence &seq,
+                                            bool full_check,
+                                            size_t num_usages) {
+  check_result_t result;
 
   // get the extended sequence and number of required terms
   auto num_check = OeisProgram::getNumCheckTerms(full_check);
@@ -161,14 +163,14 @@ std::pair<std::string, Program> Finder::checkProgramExtended(
   }
 
   // the program is correct => update result
-  result.second = program;
+  result.program = program;
 
   // auto-unfold seq operations
   Subprogram::autoUnfold(program);
 
   // minimize based on number of terminating terms
   minimizer.optimizeAndMinimize(program, num_minimize);
-  if (program != result.second) {
+  if (program != result.program) {
     // minimization changed program => check the minimized program
     num_required = OeisProgram::getNumRequiredTerms(program);
     auto check_minimized =
@@ -176,42 +178,44 @@ std::pair<std::string, Program> Finder::checkProgramExtended(
     if (check_minimized.first == status_t::ERROR) {
       if (check_vanilla.first == status_t::OK) {
         // looks like the minimization changed the semantics of the program
-        notifyUnfoldOrMinimizeProblem(result.second,
+        notifyUnfoldOrMinimizeProblem(result.program,
                                       ProgramUtil::idStr(seq.id));
       }
       // we ignore the case where the base program has a warning and minimized
       // program an error, because it indicates a problem in the base program
-      result.second.ops.clear();
+      result.program.ops.clear();
       return result;  // program not ok
     }
   }
 
   // update result with minimized program
-  result.second = program;
+  result.program = program;
 
   if (is_new) {
     // no additional checks needed for new programs
-    result.first = "Found";
+    result.status = "Found";
   } else {
     // now we are in the "update" case
     // compare (minimized) program with existing programs
-    result.first = isOptimizedBetter(existing, result.second, seq.id,
-                                     full_check, num_usages);
+    result.status = isOptimizedBetter(existing, result.program, seq.id,
+                                      full_check, num_usages);
   }
 
   // clear result program if it's no good
-  if (result.first.empty()) {
-    result.second.ops.clear();
+  if (result.status.empty()) {
+    result.program.ops.clear();
   }
   return result;
 }
 
-std::pair<std::string, Program> Finder::checkProgramBasic(
-    const Program &program, const Program &existing, bool is_new,
-    const OeisSequence &seq, const std::string &change_type,
-    size_t previous_hash, bool full_check, size_t num_usages) {
+check_result_t Finder::checkProgramBasic(const Program &program,
+                                         const Program &existing, bool is_new,
+                                         const OeisSequence &seq,
+                                         const std::string &change_type,
+                                         size_t previous_hash, bool full_check,
+                                         size_t num_usages) {
   static const std::string first = "Found";
-  std::pair<std::string, Program> result;  // empty string indicates no update
+  check_result_t result;  // empty string indicates no update
 
   // additional metadata checks for program update
   if (!is_new) {
@@ -248,8 +252,8 @@ std::pair<std::string, Program> Finder::checkProgramBasic(
   }
 
   // the program is correct => update result
-  result.first = is_new ? first : change_type;
-  result.second = program;
+  result.status = is_new ? first : change_type;
+  result.program = program;
   return result;
 }
 
@@ -421,6 +425,22 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
   }
 
   return not_better;  // not better or worse => no change
+}
+
+std::string Finder::compare(Program p1, Program p2, const std::string &name1,
+                            const std::string &name2, const OeisSequence &seq,
+                            size_t num_terms, size_t num_usages) {
+  auto result = isOptimizedBetter(p1, p2, seq, num_terms, num_usages);
+  if (!result.empty()) {
+    lowerString(result);
+    return name2 + " program is " + result;
+  }
+  result = isOptimizedBetter(p2, p1, seq, num_terms, num_usages);
+  if (!result.empty()) {
+    lowerString(result);
+    return name1 + " program is " + result;
+  }
+  return "Both programs are equivalent";
 }
 
 void Finder::notifyInvalidMatch(size_t id) {

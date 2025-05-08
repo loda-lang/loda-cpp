@@ -33,6 +33,18 @@ void throwParseError(const std::string &line) {
   Log::get().error("error parsing OEIS line: " + line, true);
 }
 
+std::string OverrideModeToString(OverwriteMode mode) {
+  switch (mode) {
+    case OverwriteMode::NONE:
+      return "none";
+    case OverwriteMode::ALL:
+      return "all";
+    case OverwriteMode::AUTO:
+      return "auto";
+  }
+  return "unknown";
+}
+
 OeisManager::OeisManager(const Settings &settings,
                          const std::string &stats_home)
     : settings(settings),
@@ -241,6 +253,11 @@ Finder &OeisManager::getFinder() {
     // generate stats is needed
     getStats();
 
+    const auto config = ConfigLoader::load(settings);
+    Log::get().info(
+        "Using miner profile \"" + config.name + "\", override: \"" +
+        OverrideModeToString(config.overwrite_mode) +
+        "\", backoff: " + (config.usesBackoff() ? "true" : "false"));
     ignore_list.clear();
     for (auto &seq : sequences) {
       if (seq.id == 0) {
@@ -795,6 +812,24 @@ void OeisManager::alert(Program p, size_t id, const std::string &prefix,
   Log::get().alert(msg, details);
 }
 
+Program OeisManager::getExistingProgram(size_t id) {
+  const std::string global_file = ProgramUtil::getProgramPath(id, false);
+  const std::string local_file = ProgramUtil::getProgramPath(id, true);
+  const bool has_global = isFile(global_file);
+  const bool has_local = isFile(local_file);
+  Program existing;
+  if (has_global || has_local) {
+    const std::string file_name = has_local ? local_file : global_file;
+    try {
+      existing = parser.parse(file_name);
+    } catch (const std::exception &) {
+      Log::get().error("Error parsing " + file_name, false);
+      existing.ops.clear();
+    }
+  }
+  return existing;
+}
+
 update_program_result_t OeisManager::updateProgram(
     size_t id, Program p, ValidationMode validation_mode) {
   update_program_result_t result;
@@ -807,10 +842,6 @@ update_program_result_t OeisManager::updateProgram(
       ignore_list.find(id) != ignore_list.end()) {
     return result;
   }
-
-  auto &seq = sequences[id];
-  const std::string global_file = ProgramUtil::getProgramPath(id, false);
-  const std::string local_file = ProgramUtil::getProgramPath(id, true);
 
   // get metadata from comments
   const std::string submitted_by =
@@ -826,20 +857,9 @@ update_program_result_t OeisManager::updateProgram(
   }
 
   // check if there is an existing program already
-  const bool has_global = isFile(global_file);
-  const bool has_local = isFile(local_file);
-  bool is_new = true;
-  Program existing;
-  if (has_global || has_local) {
-    const std::string file_name = has_local ? local_file : global_file;
-    try {
-      existing = parser.parse(file_name);
-      is_new = false;
-    } catch (const std::exception &) {
-      Log::get().error("Error parsing " + file_name, false);
-      existing.ops.clear();
-    }
-  }
+  auto &seq = sequences[id];
+  auto existing = getExistingProgram(id);
+  bool is_new = existing.ops.empty();
 
   if (!is_new) {
     // if the programs are exactly the same, no need to evaluate them
@@ -851,7 +871,7 @@ update_program_result_t OeisManager::updateProgram(
   }
 
   // minimize and check the program
-  std::pair<std::string, Program> checked;
+  check_result_t checked;
   bool full_check = full_check_list.find(seq.id) != full_check_list.end();
   size_t num_usages = 0;
   if (seq.id < getStats().program_usages.size()) {
@@ -868,22 +888,22 @@ update_program_result_t OeisManager::updateProgram(
       break;
   }
   // not better or the same after optimization?
-  if (checked.first.empty() || (!is_new && checked.second == existing)) {
+  if (checked.status.empty() || (!is_new && checked.program == existing)) {
     return result;
   }
 
   // update result
   result.updated = true;
   result.is_new = is_new;
-  result.program = checked.second;
-  result.change_type = checked.first;
+  result.program = checked.program;
+  result.change_type = checked.status;
   if (!is_new) {
     result.previous_hash = OeisProgram::getTransitiveProgramHash(existing);
   }
 
   // write new or better program version
   const bool is_server = (Setup::getMiningMode() == MINING_MODE_SERVER);
-  const std::string target_file = is_server ? global_file : local_file;
+  const std::string target_file = ProgramUtil::getProgramPath(id, !is_server);
   auto delta = updateProgramOffset(id, result.program);
   optimizer.optimize(result.program);
   dumpProgram(id, result.program, target_file, submitted_by);
@@ -903,7 +923,7 @@ update_program_result_t OeisManager::updateProgram(
 
   // send alert
   std::string color = is_new ? "good" : "warning";
-  alert(result.program, id, checked.first, color, submitted_by);
+  alert(result.program, id, checked.status, color, submitted_by);
 
   return result;
 }

@@ -13,6 +13,8 @@
 enum class OverwriteMode { NONE, ALL, AUTO };
 enum class ValidationMode { BASIC, EXTENDED };
 
+std::string OverrideModeToString(OverwriteMode mode);
+
 struct update_program_result_t {
   bool updated;
   bool is_new;
@@ -40,6 +42,8 @@ class OeisManager {
 
   size_t getTotalCount() const { return total_count; }
 
+  Program getExistingProgram(size_t id);
+
   update_program_result_t updateProgram(size_t id, Program p,
                                         ValidationMode validation_mode);
 
@@ -51,6 +55,10 @@ class OeisManager {
   void generateLists();
 
   std::vector<Program> loadAllPrograms();
+
+  bool isIgnored(size_t id) const {
+    return ignore_list.find(id) != ignore_list.end();
+  }
 
  private:
   void loadData();
