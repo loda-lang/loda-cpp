@@ -698,7 +698,7 @@ void Commands::lists() {
 }
 
 void Commands::compare(const std::string& path1, const std::string& path2) {
-  initLog(true);
+  initLog(false);
   Program p1 = OeisProgram::getProgramAndSeqId(path1).first;
   Program p2 = OeisProgram::getProgramAndSeqId(path2).first;
   auto id_str = Comments::getSequenceIdFromProgram(p1);
@@ -709,10 +709,7 @@ void Commands::compare(const std::string& path1, const std::string& path2) {
   if (seq.id < manager.getStats().program_usages.size()) {
     num_usages = manager.getStats().program_usages[seq.id];
   }
-  auto result = manager.getFinder().isOptimizedBetter(
-      p1, p2, seq, OeisSequence::EXTENDED_SEQ_LENGTH, num_usages);
-  if (result.empty()) {
-    result = "Worse or Equal";
-  }
-  std::cout << result << std::endl;
+  Log::get().info(manager.getFinder().compare(p1, p2, "First", "Second", seq,
+                                              OeisSequence::EXTENDED_SEQ_LENGTH,
+                                              num_usages));
 }

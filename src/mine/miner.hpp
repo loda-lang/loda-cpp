@@ -23,6 +23,11 @@ class Miner {
     ValidationMode validation_mode;
     std::vector<Generator::Config> generators;
     std::vector<Matcher::Config> matchers;
+
+    bool usesBackoff() const {
+      return std::any_of(matchers.begin(), matchers.end(),
+                         [](const auto &m) { return m.backoff; });
+    }
   };
 
   explicit Miner(const Settings &settings,
@@ -30,7 +35,7 @@ class Miner {
 
   void mine();
 
-  void submit(const std::string &path, std::string id);
+  void submit(const std::string &path, std::string id_str);
 
   void setBaseProgram(const Program &p) { base_program = p; }
 

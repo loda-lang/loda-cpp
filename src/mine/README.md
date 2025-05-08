@@ -9,6 +9,12 @@ the [Matcher](matcher.hpp) class. If a generated program matches a sequence and 
 ![Mining architecture](../../images/mining-arch.svg)
 
 There are multiple generator and matcher implementations available. They are configured and combined in the central mining configuration file [miners.json](../../miners.default.json).
+A miner profile has the following basic properties:
+
+- "enabled": Boolean to easily enable or disable a profile.
+- "backoff": Boolean to control the back-off strategy during sequence matching.
+- "overwrite": Controls whether existing programs should be overwritten. Possible values are "none", "auto" or "all".
+
 See below for further details on the [program generation](#program-generation) and [sequence matching](#sequence-matching).
 
 ## Program Generation
@@ -115,8 +121,8 @@ Matchers are used to match generated programs to integer sequences. They include
 
 Matchers perform two operations:
 
-* **Reduce Sequences:** extract parameters from sequences and reduce sequences to more basic sequences.
-* **Extend Programs:** extend generated programs using the extracted sequence parameters so that they match a target sequence.
+- **Reduce Sequences:** extract parameters from sequences and reduce sequences to more basic sequences.
+- **Extend Programs:** extend generated programs using the extracted sequence parameters so that they match a target sequence.
 
 See the examples in the following sections for better understanding of the process.
 

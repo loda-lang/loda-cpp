@@ -104,3 +104,4 @@ class Signals {
 };
 
 void trimString(std::string &str);
+void lowerString(std::string &str);

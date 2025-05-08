@@ -82,7 +82,9 @@
         "bit": "cpp",
         "charconv": "cpp",
         "execution": "cpp",
-        "numbers": "cpp"
+        "numbers": "cpp",
+        "forward_list": "cpp",
+        "print": "cpp"
     },
     "makefile.makeDirectory": "src",
     "c-cpp-flylint.clang.includePaths": [

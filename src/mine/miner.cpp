@@ -396,21 +396,33 @@ void Miner::reportCPUHour() {
   num_reported_hours++;
 }
 
-void Miner::submit(const std::string &path, std::string id) {
+void Miner::submit(const std::string &path, std::string id_str) {
+  reload();
   Parser parser;
   auto program = parser.parse(path);
   submit_mode = true;
-  reload();
-  if (id.empty()) {
-    id = Comments::getSequenceIdFromProgram(program);
+  if (id_str.empty()) {
+    id_str = Comments::getSequenceIdFromProgram(program);
+  }
+  if (id_str.empty()) {
+    Log::get().error("Missing sequence ID in program", true);
+  }
+  auto id = OeisSequence(id_str).id;
+  id_str = ProgramUtil::idStr(id);
+  Log::get().info("Loaded program for " + id_str);
+  if (manager->isIgnored(id)) {
+    Log::get().error(
+        "Sequence " + id_str + " is ignored by the active miner profile", true);
   }
   OeisSequence seq(id);
   Settings settings(this->settings);
   settings.print_as_b_file = false;
-  Log::get().info("Validating program for " + ProgramUtil::idStr(seq.id));
   Evaluator evaluator(settings);
   auto terms = seq.getTerms(OeisSequence::FULL_SEQ_LENGTH);
   auto num_required = OeisProgram::getNumRequiredTerms(program);
+  Log::get().info(
+      "Validating program against " + std::to_string(terms.size()) + " (>=" +
+      std::to_string(std::min(num_required, terms.size())) + ") terms");
   auto result = evaluator.check(program, terms, num_required, seq.id);
   if (result.first == status_t::ERROR) {
     Log::get().error("Validation failed", false);
@@ -425,8 +437,17 @@ void Miner::submit(const std::string &path, std::string id) {
   const auto mode = Setup::getMiningMode();
   auto seq_programs = manager->getFinder().findSequence(
       program, norm_seq, manager->getSequences());
-  size_t matches = 0;
+  Log::get().info("Found " + std::to_string(seq_programs.size()) +
+                  " potential matches");
+  size_t num_updated = 0;
+  std::unordered_set<size_t> updated_ids;
   for (auto s : seq_programs) {
+    const std::string skip_msg =
+        "Skipping submission for " + ProgramUtil::idStr(s.first);
+    if (updated_ids.find(s.first) != updated_ids.end()) {
+      Log::get().info(skip_msg + ": already updated");
+      continue;
+    }
     program = s.second;
     updateSubmittedBy(program);
     auto r = manager->updateProgram(s.first, program, ValidationMode::EXTENDED);
@@ -438,21 +459,35 @@ void Miner::submit(const std::string &path, std::string id) {
         Comments::addComment(program,
                              Comments::PREFIX_MINER_PROFILE + " manual");
         api_client->postProgram(program);
+      } else {
+        Log::get().info(skip_msg + ": not in client mode");
       }
-      matches++;
+      updated_ids.insert(s.first);
+      num_updated++;
+    } else {
+      size_t num_usages = 0;
+      if (seq.id < manager->getStats().program_usages.size()) {
+        num_usages = manager->getStats().program_usages[seq.id];
+      }
+      auto existing = manager->getExistingProgram(s.first);
+      auto msg = manager->getFinder().compare(
+          program, existing, "new", "existing", seq,
+          OeisSequence::EXTENDED_SEQ_LENGTH, num_usages);
+      lowerString(msg);
+      Log::get().info(skip_msg + ": " + msg);
     }
   }
-  if (matches > 0) {
+  if (num_updated > 0) {
     if (mode == MINING_MODE_LOCAL) {
-      Log::get().info("Stored programs for " + std::to_string(matches) +
-                      " matched sequences in local programs directory");
-      Log::get().warn("Skipping submission to server due to local mode");
+      Log::get().info("Stored " + std::to_string(num_updated) +
+                      " programs in local programs directory");
+      Log::get().warn("Skipping submissions to server due to local mode");
     } else {
-      Log::get().info("Submitted programs for " + std::to_string(matches) +
-                      " matched sequences");
+      Log::get().info("Submitted " + std::to_string(num_updated) +
+                      " programs to server");
     }
   } else {
-    Log::get().info("No matches or existing programs are better");
+    Log::get().info("No programs submitted to server");
   }
 }
 
