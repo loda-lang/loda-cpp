@@ -307,13 +307,6 @@ bool isBetterIncEval(const Program &existing, const Program &optimized,
           evaluator.supportsIncEval(optimized) && !optimized_has_seq);
 }
 
-bool isBetterLogEval(const Program &existing, const Program &optimized) {
-  // optimized version has log complexity, existing does not
-  return (ProgramUtil::hasOp(existing, Operation::Type::LPB) &&
-          !Analyzer::hasLogarithmicComplexity(existing) &&
-          Analyzer::hasLogarithmicComplexity(optimized));
-}
-
 std::string Finder::isOptimizedBetter(Program existing, Program optimized,
                                       const OeisSequence &seq, bool full_check,
                                       size_t num_usages) {
@@ -348,13 +341,6 @@ std::string Finder::isOptimizedBetter(Program existing, Program optimized,
   if (isSimpler(existing, optimized)) {
     return "Simpler";
   } else if (isSimpler(optimized, existing)) {
-    return not_better;  // worse
-  }
-
-  // check if the optimized program has logarithmic complexity
-  if (isBetterLogEval(existing, optimized)) {
-    return "Faster (log)";
-  } else if (isBetterLogEval(optimized, existing)) {
     return not_better;  // worse
   }
 
