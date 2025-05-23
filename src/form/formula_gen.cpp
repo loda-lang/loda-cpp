@@ -432,7 +432,7 @@ bool FormulaGenerator::addInitialTerms(
       auto name = getCellName(cell);
       if (n < numTerms.at(name)) {
         auto arg = n;
-        if (cell == Program::INPUT_CELL) {
+        if (cell == incEval.getSimpleLoop().counter) {
           arg += offset;
         }
         Expression func(Expression::Type::FUNCTION, name,
