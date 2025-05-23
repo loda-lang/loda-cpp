@@ -19,8 +19,10 @@
 #include "mine/iterator.hpp"
 #include "mine/miner.hpp"
 #include "mine/mutator.hpp"
+#include "oeis/oeis_list.hpp"
 #include "oeis/oeis_manager.hpp"
 #include "oeis/oeis_program.hpp"
+#include "sys/file.hpp"
 #include "sys/log.hpp"
 #include "sys/setup.hpp"
 #include "sys/util.hpp"
@@ -407,6 +409,41 @@ void Commands::submit(const std::string& path, const std::string& id) {
   initLog(false);
   Miner miner(settings);
   miner.submit(path, id);
+}
+
+void Commands::addToList(const std::string& seq_id,
+                         const std::string& list_filename) {
+  initLog(false);
+  // Load the list (ID -> name)
+  std::map<size_t, std::string> list;
+  std::string list_path = list_filename;
+  if (list_path.find(FILE_SEP) == std::string::npos) {
+    const std::string oeis_dir = Setup::getProgramsHome() + "oeis" + FILE_SEP;
+    list_path = oeis_dir + list_path;
+  }
+  OeisList::loadMapWithComments(list_path, list);
+
+  // Always obtain the sequence from the manager
+  OeisManager manager(settings);
+  manager.load();
+  const auto& sequences = manager.getSequences();
+  OeisSequence seq(seq_id);
+  if (seq.id == 0) {
+    Log::get().error("Invalid sequence ID: " + seq_id, true);
+    return;
+  }
+  if (seq.id < sequences.size()) {
+    seq.name = sequences[seq.id].name;
+  }
+  // Insert if not present
+  if (list.find(seq.id) == list.end()) {
+    list[seq.id] = seq.name;
+    // Write back using OeisList helper
+    OeisList::saveMapWithComments(list_path, list);
+    Log::get().info("Added " + ProgramUtil::idStr(seq.id) + " to " + list_path);
+  } else {
+    Log::get().info("Sequence already in list: " + ProgramUtil::idStr(seq.id));
+  }
 }
 
 // hidden commands

@@ -4,7 +4,11 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Features
 
-* Support factorial to formula generation
+* Support factorial in formula generation
+
+### Enhancements
+
+* Internal command to add sequences to lists such as `protect.txt`
 
 ## v25.5.18
 

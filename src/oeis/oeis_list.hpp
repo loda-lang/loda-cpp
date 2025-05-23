@@ -22,5 +22,8 @@ class OeisList {
   static void mergeMap(const std::string& file_name,
                        std::map<size_t, int64_t>& map);
 
+  static void saveMapWithComments(const std::string& path,
+                                  const std::map<size_t, std::string>& map);
+
   static const std::string INVALID_MATCHES_FILE;
 };
