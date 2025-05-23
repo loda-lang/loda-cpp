@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Features
+
+* Support factorial to formula generation
+
 ## v25.5.18
 
 ### Enhancements

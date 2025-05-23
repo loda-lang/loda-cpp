@@ -372,6 +372,8 @@ bool ExpressionUtil::canBeNegative(const Expression& e, int64_t offset) {
     case Expression::Type::MODULUS:
     case Expression::Type::IF:
       break;  // infer from children
+    case Expression::Type::FACTORIAL:
+      return false;  // factorial is always >= 0
   }
   return std::any_of(
       e.children.begin(), e.children.end(),

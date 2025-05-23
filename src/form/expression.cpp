@@ -97,6 +97,7 @@ int Expression::compare(const Expression& e) const {
     case Expression::Type::POWER:
     case Expression::Type::MODULUS:
     case Expression::Type::IF:
+    case Expression::Type::FACTORIAL:
       return compareChildren(e);
   }
   return 0;  // equal
@@ -193,6 +194,17 @@ void Expression::replaceName(const std::string& from, const std::string& to) {
   }
   for (auto& c : children) {
     c.replaceName(from, to);
+  }
+}
+
+void Expression::replaceType(Type currentType, const std::string& matchName,
+                             size_t arity, Type newType) {
+  if (type == currentType && name == matchName && children.size() == arity) {
+    type = newType;
+    name.clear();
+  }
+  for (auto& child : children) {
+    child.replaceType(currentType, matchName, arity, newType);
   }
 }
 
@@ -299,6 +311,11 @@ void Expression::printExtracted(std::ostream& out) const {
       assertNumChildren(3);
       printChildrenWrapped(out, ",", "if(n==", ")");
       break;
+    case Expression::Type::FACTORIAL:
+      assertNumChildren(1);
+      children[0].print(out, false, Expression::Type::FACTORIAL);
+      out << "!";
+      break;
   }
 }
 
@@ -337,6 +354,19 @@ bool Expression::needsBrackets(bool isRoot, Expression::Type parentType) const {
   if (type == Expression::Type::POWER &&
       parentType == Expression::Type::PRODUCT) {
     return false;
+  }
+  if (type == Expression::Type::FACTORIAL &&
+      parentType == Expression::Type::FACTORIAL) {
+    return false;
+  }
+  if (parentType == Expression::Type::FACTORIAL && !isRoot) {
+    if (!(type == Expression::Type::CONSTANT ||
+          type == Expression::Type::PARAMETER ||
+          type == Expression::Type::FUNCTION)) {
+      return true;
+    } else {
+      return false;
+    }
   }
   return true;
 }
