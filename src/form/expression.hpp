@@ -25,7 +25,8 @@ class Expression {
     FRACTION,
     POWER,
     MODULUS,
-    IF
+    IF,
+    FACTORIAL  // n! (factorial)
   };
 
   Expression();
@@ -73,6 +74,11 @@ class Expression {
                      const Expression::Type type);
 
   void replaceName(const std::string& from, const std::string& to);
+
+  // Replace all sub-expressions of a given type, name, and arity with a new
+  // type
+  void replaceType(Type currentType, const std::string& name, size_t arity,
+                   Type newType);
 
   friend std::ostream& operator<<(std::ostream& out, const Expression& e);
 

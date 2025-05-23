@@ -1,5 +1,9 @@
 #include "form/formula_gen.hpp"
 
+namespace {
+constexpr int64_t FACTORIAL_SEQ_ID = 142;
+}
+
 #include <map>
 #include <set>
 #include <stdexcept>
@@ -505,6 +509,9 @@ bool FormulaGenerator::generate(const Program& p, int64_t id, Formula& result,
     }
     Parser parser;
     for (auto id2 : ids) {
+      if (id2 == FACTORIAL_SEQ_ID) {
+        continue;  // Skip dependency for A000142 (factorial)
+      }
       Log::get().debug("Adding dependency " + ProgramUtil::idStr(id2));
       Program p2;
       try {
@@ -529,5 +536,13 @@ bool FormulaGenerator::generate(const Program& p, int64_t id, Formula& result,
   simplifyFunctionNames();
   formula.replaceName(mainName, canonicalName(0));
   result = formula;
+
+  // replace functions A000142(n) by n! in all formula definitions
+  const std::string factorialSeqName = ProgramUtil::idStr(FACTORIAL_SEQ_ID);
+  for (auto& entry : result.entries) {
+    entry.second.replaceType(Expression::Type::FUNCTION, factorialSeqName, 1,
+                             Expression::Type::FACTORIAL);
+  }
+
   return true;
 }
