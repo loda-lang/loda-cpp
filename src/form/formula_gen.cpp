@@ -203,6 +203,23 @@ bool FormulaGenerator::update(const Operation& op) {
            ExpressionUtil::newConstant(0)});
       break;
     }
+    case Operation::Type::EQU: {
+      res = Expression(Expression::Type::EQUAL, "", {prevTarget, source});
+      break;
+    }
+    case Operation::Type::NEQ: {
+      res = Expression(Expression::Type::NOT_EQUAL, "", {prevTarget, source});
+      break;
+    }
+    case Operation::Type::LEQ: {
+      res = Expression(Expression::Type::LESS_EQUAL, "", {prevTarget, source});
+      break;
+    }
+    case Operation::Type::GEQ: {
+      res =
+          Expression(Expression::Type::GREATER_EQUAL, "", {prevTarget, source});
+      break;
+    }
     default: {
       okay = false;
       break;

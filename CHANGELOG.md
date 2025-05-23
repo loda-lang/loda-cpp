@@ -8,6 +8,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Features
 
+* Support comparision operators in formula generation
 * Support factorial in formula generation
 
 ### Enhancements

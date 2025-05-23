@@ -98,6 +98,10 @@ int Expression::compare(const Expression& e) const {
     case Expression::Type::MODULUS:
     case Expression::Type::IF:
     case Expression::Type::FACTORIAL:
+    case Expression::Type::EQUAL:
+    case Expression::Type::NOT_EQUAL:
+    case Expression::Type::LESS_EQUAL:
+    case Expression::Type::GREATER_EQUAL:
       return compareChildren(e);
   }
   return 0;  // equal
@@ -316,6 +320,16 @@ void Expression::printExtracted(std::ostream& out) const {
       children[0].print(out, false, Expression::Type::FACTORIAL);
       out << "!";
       break;
+    case Type::EQUAL:
+    case Type::NOT_EQUAL:
+    case Type::LESS_EQUAL:
+    case Type::GREATER_EQUAL:
+      assertNumChildren(2);
+      printChildren(out, (type == Type::EQUAL        ? "=="
+                          : type == Type::NOT_EQUAL  ? "!="
+                          : type == Type::LESS_EQUAL ? "<="
+                                                     : ">="));
+      break;
   }
 }
 
@@ -368,7 +382,16 @@ bool Expression::needsBrackets(bool isRoot, Expression::Type parentType) const {
       return false;
     }
   }
-  return true;
+  switch (type) {
+    case Type::EQUAL:
+    case Type::NOT_EQUAL:
+    case Type::LESS_EQUAL:
+    case Type::GREATER_EQUAL:
+      // Comparison expressions need brackets unless at root or parent is IF
+      return !isRoot && parentType != Type::IF;
+    default:
+      return true;
+  }
 }
 
 void Expression::printChildren(std::ostream& out, const std::string& op) const {

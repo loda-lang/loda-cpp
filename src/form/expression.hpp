@@ -26,7 +26,11 @@ class Expression {
     POWER,
     MODULUS,
     IF,
-    FACTORIAL  // n! (factorial)
+    EQUAL,          // ==
+    NOT_EQUAL,      // !=
+    LESS_EQUAL,     // <=
+    GREATER_EQUAL,  // >=
+    FACTORIAL       // n! (factorial)
   };
 
   Expression();
