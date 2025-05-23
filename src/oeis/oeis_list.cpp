@@ -164,3 +164,12 @@ void OeisList::mergeMap(const std::string& file_name,
   out.close();
   map.clear();
 }
+
+void OeisList::saveMapWithComments(const std::string& path,
+                                   const std::map<size_t, std::string>& map) {
+  std::ofstream out(path);
+  for (const auto& entry : map) {
+    out << ProgramUtil::idStr(entry.first) << ": " << entry.second << "\n";
+  }
+  out.close();
+}

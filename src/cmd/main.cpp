@@ -169,6 +169,13 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
       std::cout << "invalid number of arguments" << std::endl;
       return 1;
     }
+  } else if (cmd == "add-to-list") {
+    if (args.size() < 3) {
+      std::cerr << "Usage: loda add-to-list <sequence_id> <list_filename>"
+                << std::endl;
+      return 1;
+    }
+    commands.addToList(args.at(1), args.at(2));
   }
   // hidden boinc command
   else if (cmd == "boinc") {
