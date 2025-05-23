@@ -17,7 +17,10 @@ constexpr int64_t FACTORIAL_SEQ_ID = 142;
 #include "sys/log.hpp"
 
 FormulaGenerator::FormulaGenerator()
-    : interpreter(settings), incEval(interpreter) {}
+    : interpreter(settings),
+      incEval(interpreter),
+      freeNameIndex(0),
+      offset(0) {}
 
 std::string FormulaGenerator::newName() {
   std::string name = "a" + std::to_string(freeNameIndex);
@@ -218,6 +221,23 @@ bool FormulaGenerator::update(const Operation& op) {
     case Operation::Type::GEQ: {
       res =
           Expression(Expression::Type::GREATER_EQUAL, "", {prevTarget, source});
+      break;
+    }
+    case Operation::Type::DGR: {
+      // Digital root: ((abs(x)-1)%(y-1)+1)*sign(x)
+      // x = prevTarget, y = source
+      auto abs_x = Expression(Expression::Type::FUNCTION, "abs", {prevTarget});
+      auto abs_x_minus_1 = Expression(Expression::Type::SUM, "",
+                                      {abs_x, ExpressionUtil::newConstant(-1)});
+      auto y_minus_1 = Expression(Expression::Type::SUM, "",
+                                  {source, ExpressionUtil::newConstant(-1)});
+      auto plus_1 = Expression(Expression::Type::SUM, "",
+                               {Expression(Expression::Type::MODULUS, "",
+                                           {abs_x_minus_1, y_minus_1}),
+                                ExpressionUtil::newConstant(1)});
+      res = Expression(Expression::Type::PRODUCT, "",
+                       {plus_1, Expression(Expression::Type::FUNCTION, "sign",
+                                           {prevTarget})});
       break;
     }
     default: {
