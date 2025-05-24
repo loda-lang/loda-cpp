@@ -2,6 +2,8 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v25.5.24
+
 ### Bugfixes
 
 * Fix in formula generation
