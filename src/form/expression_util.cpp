@@ -345,7 +345,7 @@ bool ExpressionUtil::canBeNegative(const Expression& e, int64_t offset) {
       } else if (e.name == "binomial" || e.name == "floor" ||
                  e.name == "truncate" || e.name == "sign") {
         break;  // infer from children
-      } else if (e.name == "sumdigits") {
+      } else if (e.name == "abs" || e.name == "sumdigits") {
         return false;  // always >= 0 (we use PARI/GP semantics)
       } else {
         return true;  // unknown function

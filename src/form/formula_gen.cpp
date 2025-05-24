@@ -224,10 +224,13 @@ bool FormulaGenerator::update(const Operation& op) {
       break;
     }
     case Operation::Type::DGR: {
-      // Digital root: ((abs(x)-1)%(y-1)+1)*sign(x)
-      // x = prevTarget, y = source
-      // TODO:apply sign and abs only if the argument can be negative
-      auto abs_x = Expression(Expression::Type::FUNCTION, "abs", {prevTarget});
+      // Digital root: ((abs(x)-1)%(y-1)+1)*sign(x) if x can be negative, else
+      // ((x-1)%(y-1)+1)*sign(x)
+      auto x = prevTarget;
+      auto abs_x = x;
+      if (ExpressionUtil::canBeNegative(x, offset)) {
+        abs_x = Expression(Expression::Type::FUNCTION, "abs", {x});
+      }
       auto abs_x_minus_1 = Expression(Expression::Type::SUM, "",
                                       {abs_x, ExpressionUtil::newConstant(-1)});
       auto y_minus_1 = Expression(Expression::Type::SUM, "",
@@ -236,9 +239,8 @@ bool FormulaGenerator::update(const Operation& op) {
                                {Expression(Expression::Type::MODULUS, "",
                                            {abs_x_minus_1, y_minus_1}),
                                 ExpressionUtil::newConstant(1)});
-      res = Expression(Expression::Type::PRODUCT, "",
-                       {plus_1, Expression(Expression::Type::FUNCTION, "sign",
-                                           {prevTarget})});
+      auto sign_x = Expression(Expression::Type::FUNCTION, "sign", {x});
+      res = Expression(Expression::Type::PRODUCT, "", {plus_1, sign_x});
       break;
     }
     case Operation::Type::DGS: {
