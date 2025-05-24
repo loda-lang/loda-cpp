@@ -8,20 +8,18 @@
 #include <windows.h>
 #else
 #include <fcntl.h>
-#include <sys/time.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
 #include <csignal>
+#include <ctime>
 #endif
 
-namespace Process {
-
-const int ERROR_TIMEOUT = 124;
+const int Process::ERROR_TIMEOUT = 124;
 
 #ifdef _WIN64
 
-HANDLE createWindowsProcess(const std::string& command) {
+HANDLE Process::createWindowsProcess(const std::string& command) {
   STARTUPINFO si;
   PROCESS_INFORMATION pi;
   ZeroMemory(&si, sizeof(si));
@@ -39,7 +37,7 @@ HANDLE createWindowsProcess(const std::string& command) {
 
 #endif
 
-bool isChildProcessAlive(HANDLE pid) {
+bool Process::isChildProcessAlive(HANDLE pid) {
   if (pid == 0) {
     return false;
   }
@@ -56,8 +54,8 @@ bool isChildProcessAlive(HANDLE pid) {
 #endif
 }
 
-int runWithTimeout(const std::vector<std::string>& args, int timeoutSeconds,
-                   const std::string& outputFile) {
+int Process::runWithTimeout(const std::vector<std::string>& args,
+                            int timeoutSeconds, const std::string& outputFile) {
 #if defined(_WIN32) || defined(_WIN64)
   throw std::runtime_error(
       "Process::runWithTimeout is only supported on Unix-like systems");
@@ -105,5 +103,3 @@ int runWithTimeout(const std::vector<std::string>& args, int timeoutSeconds,
   return -1;
 #endif
 }
-
-}  // namespace Process

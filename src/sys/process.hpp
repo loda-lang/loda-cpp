@@ -15,21 +15,22 @@ typedef int64_t HANDLE;
 
 #endif
 
-namespace Process {
-
-extern const int ERROR_TIMEOUT;
+class Process {
+ public:
+  static const int ERROR_TIMEOUT;
 
 #ifdef _WIN64
-HANDLE createWindowsProcess(const std::string& command);
+  static HANDLE createWindowsProcess(const std::string& command);
 #else
 
 #endif
 
-bool isChildProcessAlive(HANDLE pid);
+  static bool isChildProcessAlive(HANDLE pid);
 
-// Runs a process with arguments and optional output redirection, kills after
-// timeoutSeconds. Returns exit code, or ERROR_TIMEOUT if killed due to timeout.
-int runWithTimeout(const std::vector<std::string>& args, int timeoutSeconds,
-                   const std::string& outputFile = "");
-
-}  // namespace Process
+  // Runs a process with arguments and optional output redirection, kills after
+  // timeoutSeconds. Returns exit code, or ERROR_TIMEOUT if killed due to
+  // timeout.
+  static int runWithTimeout(const std::vector<std::string>& args,
+                            int timeoutSeconds,
+                            const std::string& outputFile = "");
+};
