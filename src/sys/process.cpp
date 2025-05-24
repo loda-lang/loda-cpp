@@ -1,12 +1,23 @@
 #include "sys/process.hpp"
 
 #include <stdexcept>
+#include <string>
+#include <vector>
 
 #ifdef _WIN64
 #include <windows.h>
 #else
+#include <fcntl.h>
+#include <sys/time.h>
+#include <sys/wait.h>
 #include <unistd.h>
+
+#include <csignal>
 #endif
+
+namespace Process {
+
+const int ERROR_TIMEOUT = 124;
 
 #ifdef _WIN64
 
@@ -44,3 +55,55 @@ bool isChildProcessAlive(HANDLE pid) {
   return (waitpid(pid, nullptr, WNOHANG) == 0);
 #endif
 }
+
+int runWithTimeout(const std::vector<std::string>& args, int timeoutSeconds,
+                   const std::string& outputFile) {
+#if defined(_WIN32) || defined(_WIN64)
+  throw std::runtime_error(
+      "Process::runWithTimeout is only supported on Unix-like systems");
+#else
+  // Unix implementation
+  int pid = fork();
+  if (pid < 0) {
+    throw std::runtime_error("fork failed");
+  }
+  if (pid == 0) {
+    // Child
+    if (!outputFile.empty()) {
+      int fd = open(outputFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
+      if (fd < 0) _exit(127);
+      dup2(fd, STDOUT_FILENO);
+      dup2(fd, STDERR_FILENO);
+      close(fd);
+    }
+    std::vector<char*> argv;
+    for (const auto& arg : args) argv.push_back(const_cast<char*>(arg.c_str()));
+    argv.push_back(nullptr);
+    alarm(timeoutSeconds);
+    execvp(argv[0], argv.data());
+    _exit(127);
+  }
+  // Parent
+  int status = 0;
+  time_t start = time(nullptr);
+  while (true) {
+    pid_t result = waitpid(pid, &status, WNOHANG);
+    if (result == pid) break;
+    if (result == -1) {
+      throw std::runtime_error("waitpid failed");
+    }
+    if (difftime(time(nullptr), start) > timeoutSeconds) {
+      kill(pid, SIGKILL);
+      waitpid(pid, &status, 0);
+      return ERROR_TIMEOUT;
+    }
+    usleep(100000);  // Sleep for 100 ms
+  }
+  if (WIFEXITED(status)) {
+    return WEXITSTATUS(status);
+  }
+  return -1;
+#endif
+}
+
+}  // namespace Process

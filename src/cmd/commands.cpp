@@ -612,17 +612,13 @@ void Commands::testPari(const std::string& test_id) {
     }
     for (const auto& op : program.ops) {
       if (op.type == Operation::Type::SEQ) {
-        numTerms = std::min<size_t>(numTerms, 5);
+        numTerms = std::min<size_t>(numTerms, 10);
       }
       if ((op.type == Operation::Type::POW ||
            op.type == Operation::Type::BIN) &&
           op.source.type == Operand::Type::DIRECT) {
-        numTerms = std::min<size_t>(numTerms, 5);
+        numTerms = std::min<size_t>(numTerms, 10);
       }
-    }
-    if (numTerms < 5) {
-      Log::get().warn("Skipping " + idStr);
-      continue;
     }
     Log::get().info("Checking " + std::to_string(numTerms) + " terms of " +
                     idStr + ": " + pari_formula.toString());
@@ -640,7 +636,11 @@ void Commands::testPari(const std::string& test_id) {
 
     // evaluate PARI program
     auto offset = ProgramUtil::getOffset(program);
-    auto genSeq = pari_formula.eval(offset, numTerms);
+    Sequence genSeq;
+    if (!pari_formula.eval(offset, numTerms, 1, genSeq)) {
+      Log::get().warn("PARI evaluation timeout for " + idStr);
+      continue;
+    }
 
     // compare results
     if (genSeq != expSeq) {
