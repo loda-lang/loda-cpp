@@ -620,13 +620,12 @@ void Commands::testPari(const std::string& test_id) {
         numTerms = std::min<size_t>(numTerms, 5);
       }
     }
-    Log::get().info("Checking " + std::to_string(numTerms) + " terms of " +
-                    idStr + ": " + pari_formula.toString());
-
-    if (numTerms == 0) {
+    if (numTerms <= 5) {
       Log::get().warn("Skipping " + idStr);
       continue;
     }
+    Log::get().info("Checking " + std::to_string(numTerms) + " terms of " +
+                    idStr + ": " + pari_formula.toString());
 
     // evaluate LODA program
     try {
