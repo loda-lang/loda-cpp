@@ -4,7 +4,8 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Bugfixes
 
-* Fix formula generation
+* Fix in formula generation
+* Fix in optimizer
 
 ### Features
 

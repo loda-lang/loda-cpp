@@ -721,7 +721,7 @@ bool Optimizer::collapseDifLoops(Program &p) const {
     if (lpb.source != Operand(Operand::Type::CONSTANT, 1) ||
         lpb.target.type != Operand::Type::DIRECT ||
         dif.source.type != Operand::Type::CONSTANT ||
-        dif.target != lpb.target) {
+        dif.source.value < Number::ZERO || dif.target != lpb.target) {
       continue;
     }
     const auto val = dif.source.value;
