@@ -620,7 +620,7 @@ void Commands::testPari(const std::string& test_id) {
         numTerms = std::min<size_t>(numTerms, 5);
       }
     }
-    if (numTerms <= 5) {
+    if (numTerms < 5) {
       Log::get().warn("Skipping " + idStr);
       continue;
     }
