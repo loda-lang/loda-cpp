@@ -25,7 +25,11 @@ class PariFormula {
 
   std::string toString() const;
 
-  Sequence eval(int64_t offset, int64_t numTerms) const;
+  // Evaluates the formula for the given offset and number of terms, with a
+  // timeout in seconds. Returns true if successful, false if a timeout
+  // occurred. The result sequence is written to 'result'.
+  bool eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
+            Sequence& result) const;
 
  private:
   Formula main_formula;

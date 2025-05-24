@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Enhancements
+
+* Add PARI evaluation timeout
+
 ## v25.5.24
 
 ### Bugfixes
