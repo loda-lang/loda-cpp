@@ -69,7 +69,7 @@ void mineParallel(const Settings& settings,
     finished = true;
     for (size_t i = 0; i < children_pids.size(); i++) {
       const auto pid = children_pids[i];
-      if (pid != 0 && Process::isChildProcessAlive(pid)) {
+      if (pid != 0 && isChildProcessAlive(pid)) {
         // still alive
         finished = false;
       } else if (pid == 0 || restart_miners) {

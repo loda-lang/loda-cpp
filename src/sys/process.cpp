@@ -17,7 +17,7 @@
 
 #ifdef _WIN64
 
-HANDLE Process::createWindowsProcess(const std::string& command) {
+HANDLE createWindowsProcess(const std::string& command) {
   STARTUPINFO si;
   PROCESS_INFORMATION pi;
   ZeroMemory(&si, sizeof(si));
@@ -35,7 +35,7 @@ HANDLE Process::createWindowsProcess(const std::string& command) {
 
 #endif
 
-bool Process::isChildProcessAlive(HANDLE pid) {
+bool isChildProcessAlive(HANDLE pid) {
   if (pid == 0) {
     return false;
   }
@@ -52,11 +52,11 @@ bool Process::isChildProcessAlive(HANDLE pid) {
 #endif
 }
 
-int Process::runWithTimeout(const std::vector<std::string>& args,
-                            int timeoutSeconds, const std::string& outputFile) {
+int execWithTimeout(const std::vector<std::string>& args, int timeoutSeconds,
+                    const std::string& outputFile) {
 #if defined(_WIN32) || defined(_WIN64)
   throw std::runtime_error(
-      "Process::runWithTimeout is only supported on Unix-like systems");
+      "execWithTimeout is only supported on Unix-like systems");
 #else
   // Unix implementation
   int pid = fork();
@@ -91,7 +91,7 @@ int Process::runWithTimeout(const std::vector<std::string>& args,
     if (difftime(time(nullptr), start) > timeoutSeconds) {
       kill(pid, SIGKILL);
       waitpid(pid, &status, 0);
-      return ERROR_TIMEOUT;
+      return PROCESS_ERROR_TIMEOUT;
     }
     usleep(100000);  // Sleep for 100 ms
   }

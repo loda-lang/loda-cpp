@@ -169,11 +169,11 @@ bool PariFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
 
   std::vector<std::string> args = {
       "gp", "-s", std::to_string(maxparisize) + "M", "-q", gpPath};
-  int exitCode = Process::runWithTimeout(args, timeoutSeconds, gpResult);
+  int exitCode = execWithTimeout(args, timeoutSeconds, gpResult);
   if (exitCode != 0) {
     std::remove(gpPath.c_str());
     std::remove(gpResult.c_str());
-    if (exitCode == Process::ERROR_TIMEOUT) {
+    if (exitCode == PROCESS_ERROR_TIMEOUT) {
       return false;  // timeout
     } else {
       Log::get().error("Error evaluating PARI code: gp exited with code " +
