@@ -642,7 +642,7 @@ void Commands::testPari(const std::string& test_id) {
     // evaluate PARI program
     auto offset = ProgramUtil::getOffset(program);
     Sequence genSeq;
-    if (!pari_formula.eval(offset, numTerms, 1, genSeq)) {
+    if (!pari_formula.eval(offset, numTerms, 10, genSeq)) {
       Log::get().warn("PARI evaluation timeout for " + idStr);
       skipped++;
       continue;
