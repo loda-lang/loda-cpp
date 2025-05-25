@@ -17,6 +17,7 @@ typedef int64_t HANDLE;
 
 class Process {
  public:
+  static const int ERROR_TIMEOUT = 124;
 #ifdef _WIN64
   static HANDLE createWindowsProcess(const std::string& command);
 #else
@@ -31,5 +32,4 @@ class Process {
   static int runWithTimeout(const std::vector<std::string>& args,
                             int timeoutSeconds,
                             const std::string& outputFile = "");
-  static const int ERROR_TIMEOUT;
 };

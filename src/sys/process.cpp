@@ -15,8 +15,6 @@
 #include <ctime>
 #endif
 
-const int Process::ERROR_TIMEOUT = 124;
-
 #ifdef _WIN64
 
 HANDLE Process::createWindowsProcess(const std::string& command) {
