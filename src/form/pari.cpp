@@ -6,6 +6,7 @@
 #include "form/expression_util.hpp"
 #include "form/formula_util.hpp"
 #include "sys/log.hpp"
+#include "sys/process.hpp"
 
 bool convertExprToPari(Expression& expr, const Formula& f, bool as_vector) {
   // convert bottom-up!
@@ -154,36 +155,47 @@ void PariFormula::printEvalCode(int64_t offset, int64_t numTerms,
   out << ")" << std::endl << "quit" << std::endl;
 }
 
-Sequence PariFormula::eval(int64_t offset, int64_t numTerms) const {
+bool PariFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
+                       Sequence& result) const {
   const std::string gpPath("pari-loda.gp");
   const std::string gpResult("pari-result.txt");
   const int64_t maxparisize = 256;  // in MB
   std::ofstream gp(gpPath);
   if (!gp) {
-    throw std::runtime_error("error generating gp file");
+    Log::get().error("Error generating gp file", true);
   }
   printEvalCode(offset, numTerms, gp);
   gp.close();
-  std::string cmd = "gp -s " + std::to_string(maxparisize) + "M -q " + gpPath +
-                    " > " + gpResult;
-  if (system(cmd.c_str()) != 0) {
-    Log::get().error("Error evaluating PARI code: " + gpPath, true);
+
+  std::vector<std::string> args = {
+      "gp", "-s", std::to_string(maxparisize) + "M", "-q", gpPath};
+  int exitCode = execWithTimeout(args, timeoutSeconds, gpResult);
+  if (exitCode != 0) {
+    std::remove(gpPath.c_str());
+    std::remove(gpResult.c_str());
+    if (exitCode == PROCESS_ERROR_TIMEOUT) {
+      return false;  // timeout
+    } else {
+      Log::get().error("Error evaluating PARI code: gp exited with code " +
+                           std::to_string(exitCode),
+                       true);
+    }
   }
 
   // read result from file
-  Sequence seq;
+  result.clear();
   std::ifstream resultIn(gpResult);
   std::string buf;
   if (!resultIn) {
     Log::get().error("Error reading PARI output", true);
   }
   while (std::getline(resultIn, buf)) {
-    seq.push_back(Number(buf));
+    result.push_back(Number(buf));
   }
 
   // clean up
   std::remove(gpPath.c_str());
   std::remove(gpResult.c_str());
 
-  return seq;
+  return true;
 }
