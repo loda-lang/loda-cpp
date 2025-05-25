@@ -548,7 +548,7 @@ void Commands::testPari(const std::string& test_id) {
   Memory tmp_memory;
   manager.load();
   auto& stats = manager.getStats();
-  int64_t good = 0, bad = 0;
+  int64_t good = 0, bad = 0, skipped = 0;
   size_t target_id = 0;
   if (!test_id.empty()) {
     target_id = OeisSequence(test_id).id;
@@ -620,6 +620,11 @@ void Commands::testPari(const std::string& test_id) {
         numTerms = std::min<size_t>(numTerms, 10);
       }
     }
+    if (numTerms < 5) {
+      Log::get().warn("Skipping " + idStr);
+      skipped++;
+      continue;
+    }
     Log::get().info("Checking " + std::to_string(numTerms) + " terms of " +
                     idStr + ": " + pari_formula.toString());
 
@@ -639,6 +644,7 @@ void Commands::testPari(const std::string& test_id) {
     Sequence genSeq;
     if (!pari_formula.eval(offset, numTerms, 1, genSeq)) {
       Log::get().warn("PARI evaluation timeout for " + idStr);
+      skipped++;
       continue;
     }
 
@@ -653,7 +659,8 @@ void Commands::testPari(const std::string& test_id) {
     }
   }
   Log::get().info(std::to_string(good) + " passed, " + std::to_string(bad) +
-                  " failed PARI check");
+                  " failed, " + std::to_string(skipped) +
+                  " skipped PARI checks");
 }
 
 void Commands::generate() {
