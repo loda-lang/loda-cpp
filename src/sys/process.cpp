@@ -90,7 +90,6 @@ int execWithTimeout(const std::vector<std::string>& args, int timeoutSeconds,
     }
     if (difftime(time(nullptr), start) > timeoutSeconds) {
       kill(pid, SIGKILL);
-      waitpid(pid, &status, 0);
       return PROCESS_ERROR_TIMEOUT;
     }
     usleep(100000);  // Sleep for 100 ms
