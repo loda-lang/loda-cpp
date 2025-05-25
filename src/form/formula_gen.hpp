@@ -66,4 +66,5 @@ class FormulaGenerator {
   std::map<int64_t, std::string> cellNames;
   size_t freeNameIndex;
   int64_t offset;
+  int64_t maxInitialTerms;
 };

@@ -20,7 +20,8 @@ FormulaGenerator::FormulaGenerator()
     : interpreter(settings),
       incEval(interpreter),
       freeNameIndex(0),
-      offset(0) {}
+      offset(0),
+      maxInitialTerms(10) {}
 
 std::string FormulaGenerator::newName() {
   std::string name = "a" + std::to_string(freeNameIndex);
@@ -464,12 +465,17 @@ void FormulaGenerator::prepareForPostLoop(
 bool FormulaGenerator::addInitialTerms(
     int64_t numCells, int64_t offset,
     const std::map<std::string, int64_t>& numTerms) {
-  // calculate maximum offset
+  // calculate maximum number of initial terms needed
   int64_t maxNumTerms = 0;
   for (auto it : numTerms) {
     Log::get().debug("Function " + it.first + "(n) requires " +
                      std::to_string(it.second) + " intial terms");
     maxNumTerms = std::max(maxNumTerms, it.second);
+  }
+  if (maxNumTerms > maxInitialTerms) {
+    Log::get().debug("Exceeded the maximum number of " +
+                     std::to_string(maxInitialTerms) + " initial terms");
+    return false;  // too many initial terms
   }
   // evaluate program and add initial terms to formula
   for (int64_t n = 0; n < maxNumTerms; n++) {
