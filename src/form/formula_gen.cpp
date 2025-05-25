@@ -76,12 +76,26 @@ Expression FormulaGenerator::divToFraction(
   return wrapper;
 }
 
-bool FormulaGenerator::bitfunc(const std::string& name, const Expression& a,
+bool FormulaGenerator::bitfunc(Operation::Type type, const Expression& a,
                                const Expression& b, Expression& res) const {
   if (ExpressionUtil::canBeNegative(a, offset) ||
       ExpressionUtil::canBeNegative(b, offset)) {
     // TODO: remove this limitation
     return false;
+  }
+  std::string name;
+  switch (type) {
+    case Operation::Type::BAN:
+      name = "bitand";
+      break;
+    case Operation::Type::BOR:
+      name = "bitor";
+      break;
+    case Operation::Type::BXO:
+      name = "bitxor";
+      break;
+    default:
+      return false;
   }
   res = Expression(Expression::Type::FUNCTION, name, {a, b});
   return true;
@@ -181,16 +195,10 @@ bool FormulaGenerator::update(const Operation& op) {
       res = Expression(Expression::Type::FUNCTION, "max", {prevTarget, source});
       break;
     }
-    case Operation::Type::BAN: {
-      okay = bitfunc("bitand", prevTarget, source, res);
-      break;
-    }
-    case Operation::Type::BOR: {
-      okay = bitfunc("bitor", prevTarget, source, res);
-      break;
-    }
+    case Operation::Type::BAN:
+    case Operation::Type::BOR:
     case Operation::Type::BXO: {
-      okay = bitfunc("bitxor", prevTarget, source, res);
+      okay = bitfunc(op.type, prevTarget, source, res);
       break;
     }
     case Operation::Type::SEQ: {
