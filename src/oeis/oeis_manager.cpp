@@ -364,22 +364,10 @@ void OeisManager::update(bool force) {
     update_programs = true;
   }
 
-  // figure out if we should check for loda update
-  bool check_loda_update = (update_oeis && (Random::get().gen() % 5 == 0));
-
   // force update?
   if (force) {
     update_oeis = true;
     update_programs = true;
-    check_loda_update = true;
-  }
-
-  // check and perform loda update
-  if (check_loda_update) {
-    auto latest_version = Setup::checkLatestedVersion(false);
-    if (force && !latest_version.empty()) {
-      Setup::performUpdate(latest_version, false);
-    }
   }
 
   // perform oeis update

@@ -80,9 +80,11 @@ void Commands::help() {
   std::cout << std::endl << "Admin Commands:" << std::endl;
   std::cout << "  setup                Run interactive setup to configure LODA"
             << std::endl;
-  std::cout << "  update               Run non-interactive update of LODA and "
-               "its data"
+  std::cout << "  update               Update OEIS and program data (no "
+               "version upgrade)"
             << std::endl;
+  std::cout << "  upgrade              Check for and install the latest LODA "
+            << "version" << std::endl;
 
   std::cout << std::endl << "Targets:" << std::endl;
   std::cout
@@ -143,10 +145,22 @@ void Commands::setup() {
 
 void Commands::update() {
   initLog(false);
+  // Only update OEIS and program data, do not check/install new version
   OeisManager manager(settings);
   manager.update(true);
   manager.getStats();
   manager.generateLists();
+}
+
+void Commands::upgrade() {
+  initLog(false);
+  // Check for and install a new program version if available
+  auto latest_version = Setup::checkLatestedVersion(false);
+  if (!latest_version.empty()) {
+    Setup::performUpgrade(latest_version, false);
+  } else {
+    Log::get().info("Latest version of LODA is already installed");
+  }
 }
 
 void Commands::evaluate(const std::string& path) {

@@ -4,6 +4,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Features
 
+* Added `upgrade` command
 * Support bitwise operators with negative values in formula generation
 * Support binomial with negative args in PARI code generation
 

@@ -334,7 +334,7 @@ void Setup::runWizard() {
 
   loadSetup();
 
-  if (!checkUpdate()) {
+  if (!checkUpgrade()) {
     return;
   }
   if (!checkEnvVars()) {
@@ -497,7 +497,7 @@ std::string Setup::getExecutable(const std::string& suffix) {
   return LODA_HOME + "bin" + FILE_SEP + "loda" + suffix + exe;
 }
 
-void Setup::performUpdate(const std::string& new_version, bool silent) {
+void Setup::performUpgrade(const std::string& new_version, bool silent) {
   std::string exe;
 #ifdef _WIN64
   exe = ".exe";
@@ -525,12 +525,12 @@ void Setup::performUpdate(const std::string& new_version, bool silent) {
   makeExecutable(exec_tmp);
   moveFile(exec_tmp, exec_local);
   if (!silent) {
-    Log::get().info("Installed update to LODA " + new_version);
+    Log::get().info("Installed upgrade to LODA " + new_version);
   }
 #endif
 }
 
-bool Setup::checkUpdate() {
+bool Setup::checkUpgrade() {
   auto latest_version = checkLatestedVersion(true);
   if (latest_version.empty()) {
     return true;
@@ -540,7 +540,7 @@ bool Setup::checkUpdate() {
   std::string line;
   std::getline(std::cin, line);
   if (line.empty() || line == "y" || line == "Y") {
-    performUpdate(latest_version, true);
+    performUpgrade(latest_version, true);
 #ifndef _WIN64
     std::cout << "Update installed. Restarting setup... " << std::endl
               << std::endl;

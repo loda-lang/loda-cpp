@@ -76,7 +76,7 @@ class Setup {
 
   static void runWizard();
 
-  static void performUpdate(const std::string& new_version, bool silent);
+  static void performUpgrade(const std::string& new_version, bool silent);
 
  private:
   static constexpr int64_t UNDEFINED_INT = -2;                  // cannot use -1
@@ -108,7 +108,7 @@ class Setup {
 
   static void checkLodaHome();
   static bool checkProgramsHome();
-  static bool checkUpdate();
+  static bool checkUpgrade();
   static bool checkEnvVars();
   static bool checkMiningMode();
   static bool checkSubmittedBy();

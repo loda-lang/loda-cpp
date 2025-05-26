@@ -16,6 +16,8 @@ class Commands {
 
   void update();
 
+  void upgrade();
+
   void evaluate(const std::string& path);
 
   void check(const std::string& path);
