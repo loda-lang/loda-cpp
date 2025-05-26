@@ -49,6 +49,23 @@ std::string canonicalName(int64_t index) {
   return std::string(1, 'a' + static_cast<char>(index));
 }
 
+// Helper functions
+static Expression sign(const Expression& e) {
+  return Expression(Expression::Type::FUNCTION, "sign", {e});
+}
+static Expression abs(const Expression& e) {
+  return Expression(Expression::Type::FUNCTION, "abs", {e});
+}
+static Expression sum(const std::initializer_list<Expression>& exprs) {
+  return Expression(Expression::Type::SUM, "", exprs);
+}
+static Expression product(const std::initializer_list<Expression>& exprs) {
+  return Expression(Expression::Type::PRODUCT, "", exprs);
+}
+static Expression constant(int64_t value) {
+  return Expression(Expression::Type::CONSTANT, "", Number(value));
+}
+
 Expression FormulaGenerator::operandToExpression(Operand op) const {
   switch (op.type) {
     case Operand::Type::CONSTANT: {
@@ -78,26 +95,50 @@ Expression FormulaGenerator::divToFraction(
 
 bool FormulaGenerator::bitfunc(Operation::Type type, const Expression& a,
                                const Expression& b, Expression& res) const {
-  if (ExpressionUtil::canBeNegative(a, offset) ||
-      ExpressionUtil::canBeNegative(b, offset)) {
-    // TODO: remove this limitation
-    return false;
-  }
   std::string name;
+  auto argA = a;
+  auto argB = b;
+  auto signExpr = constant(1);
+  bool canBeNegative = ExpressionUtil::canBeNegative(a, offset) ||
+                       ExpressionUtil::canBeNegative(b, offset);
+  if (canBeNegative) {
+    argA = abs(a);
+    argB = abs(b);
+  }
   switch (type) {
     case Operation::Type::BAN:
       name = "bitand";
+      if (canBeNegative) {
+        // sign((sign($0)+sign($1))*2+3)
+        signExpr = sign(sum(
+            {product({sum({sign(a), sign(b)}), constant(2)}), constant(3)}));
+      }
       break;
     case Operation::Type::BOR:
       name = "bitor";
+      if (canBeNegative) {
+        // sign((sign($0)+sign($1))*2-1)
+        signExpr = sign(sum(
+            {product({sum({sign(a), sign(b)}), constant(2)}), constant(-1)}));
+      }
       break;
     case Operation::Type::BXO:
       name = "bitxor";
+      if (canBeNegative) {
+        // sign(sign($0)+sign($1)+sign($0)*sign($1)*3)
+        signExpr = sign(
+            sum({sign(a), sign(b), product({sign(a), sign(b), constant(3)})}));
+      }
       break;
     default:
       return false;
   }
-  res = Expression(Expression::Type::FUNCTION, name, {a, b});
+  Expression bitop(Expression::Type::FUNCTION, name, {argA, argB});
+  if (canBeNegative) {
+    res = product({bitop, signExpr});
+  } else {
+    res = bitop;
+  }
   return true;
 }
 

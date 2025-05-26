@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Features
+
+* Support bitwise operators with negative values in formula generation
+
 ### Enhancements
 
 * Add PARI evaluation timeout
