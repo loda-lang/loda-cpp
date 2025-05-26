@@ -50,11 +50,9 @@ std::string canonicalName(int64_t index) {
 }
 
 // Helper functions
-static Expression sign(const Expression& e) {
-  return Expression(Expression::Type::FUNCTION, "sign", {e});
-}
-static Expression abs(const Expression& e) {
-  return Expression(Expression::Type::FUNCTION, "abs", {e});
+static Expression func(const std::string& name,
+                       const std::initializer_list<Expression>& args) {
+  return Expression(Expression::Type::FUNCTION, name, args);
 }
 static Expression sum(const std::initializer_list<Expression>& exprs) {
   return Expression(Expression::Type::SUM, "", exprs);
@@ -65,11 +63,16 @@ static Expression product(const std::initializer_list<Expression>& exprs) {
 static Expression constant(int64_t value) {
   return Expression(Expression::Type::CONSTANT, "", Number(value));
 }
+static Expression mod(const Expression& a, const Expression& b) {
+  return Expression(Expression::Type::MODULUS, "", {a, b});
+}
+static Expression sign(const Expression& e) { return func("sign", {e}); }
+static Expression abs(const Expression& e) { return func("abs", {e}); }
 
 Expression FormulaGenerator::operandToExpression(Operand op) const {
   switch (op.type) {
     case Operand::Type::CONSTANT: {
-      return Expression(Expression::Type::CONSTANT, "", op.value);
+      return constant(op.value.asInt());
     }
     case Operand::Type::DIRECT: {
       return ExpressionUtil::newFunction(getCellName(op.value.asInt()));
@@ -84,13 +87,12 @@ Expression FormulaGenerator::operandToExpression(Operand op) const {
 Expression FormulaGenerator::divToFraction(
     const Expression& numerator, const Expression& denominator) const {
   Expression frac(Expression::Type::FRACTION, "", {numerator, denominator});
-  std::string func = "floor";
+  std::string funcName = "floor";
   if (ExpressionUtil::canBeNegative(numerator, offset) ||
       ExpressionUtil::canBeNegative(denominator, offset)) {
-    func = "truncate";
+    funcName = "truncate";
   }
-  Expression wrapper(Expression::Type::FUNCTION, func, {frac});
-  return wrapper;
+  return func(funcName, {frac});
 }
 
 bool FormulaGenerator::bitfunc(Operation::Type type, const Expression& a,
@@ -133,7 +135,7 @@ bool FormulaGenerator::bitfunc(Operation::Type type, const Expression& a,
     default:
       return false;
   }
-  Expression bitop(Expression::Type::FUNCTION, name, {argA, argB});
+  auto bitop = func(name, {argA, argB});
   if (canBeNegative) {
     res = product({bitop, signExpr});
   } else {
@@ -160,17 +162,15 @@ bool FormulaGenerator::update(const Operation& op) {
       break;
     }
     case Operation::Type::ADD: {
-      res = Expression(Expression::Type::SUM, "", {prevTarget, source});
+      res = sum({prevTarget, source});
       break;
     }
     case Operation::Type::SUB: {
-      Expression negated(Expression::Type::PRODUCT, "",
-                         {ExpressionUtil::newConstant(-1), source});
-      res = Expression(Expression::Type::SUM, "", {prevTarget, negated});
+      res = sum({prevTarget, product({constant(-1), source})});
       break;
     }
     case Operation::Type::MUL: {
-      res = Expression(Expression::Type::PRODUCT, "", {prevTarget, source});
+      res = product({prevTarget, source});
       break;
     }
     case Operation::Type::DIV: {
@@ -180,8 +180,7 @@ bool FormulaGenerator::update(const Operation& op) {
     case Operation::Type::POW: {
       res = Expression(Expression::Type::POWER, "", {prevTarget, source});
       if (ExpressionUtil::canBeNegative(source, offset)) {
-        Expression wrapper(Expression::Type::FUNCTION, "truncate", {res});
-        res = wrapper;
+        res = func("truncate", {res});
       }
       break;
     }
@@ -190,50 +189,39 @@ bool FormulaGenerator::update(const Operation& op) {
       auto c2 = source;
       if (ExpressionUtil::canBeNegative(c1, offset) ||
           ExpressionUtil::canBeNegative(c2, offset)) {
-        Expression wrapper(Expression::Type::SUM);
-        wrapper.newChild(c1);
-        wrapper.newChild(Expression::Type::PRODUCT);
-        auto frac = divToFraction(c1, c2);
-        wrapper.children[1].newChild(
-            Expression(Expression::Type::CONSTANT, "", Number(-1)));
-        wrapper.children[1].newChild(c2);
-        wrapper.children[1].newChild(frac);
-        res = wrapper;
+        res = sum({c1, product({constant(-1), c2, divToFraction(c1, c2)})});
       } else {
-        res = Expression(Expression::Type::MODULUS, "", {c1, c2});
+        res = mod(c1, c2);
       }
       break;
     }
     case Operation::Type::BIN: {
-      res = Expression(Expression::Type::FUNCTION, "binomial",
-                       {prevTarget, source});
+      res = func("binomial", {prevTarget, source});
       break;
     }
     case Operation::Type::LOG: {
-      res = Expression(Expression::Type::FUNCTION, "logint",
-                       {prevTarget, source});
+      res = func("logint", {prevTarget, source});
       break;
     }
     case Operation::Type::NRT: {
       if (source.type == Expression::Type::CONSTANT &&
           source.value == Number(2)) {
-        res = Expression(Expression::Type::FUNCTION, "sqrtint", {prevTarget});
+        res = func("sqrtint", {prevTarget});
       } else {
-        res = Expression(Expression::Type::FUNCTION, "sqrtnint",
-                         {prevTarget, source});
+        res = func("sqrtnint", {prevTarget, source});
       }
       break;
     }
     case Operation::Type::GCD: {
-      res = Expression(Expression::Type::FUNCTION, "gcd", {prevTarget, source});
+      res = func("gcd", {prevTarget, source});
       break;
     }
     case Operation::Type::MIN: {
-      res = Expression(Expression::Type::FUNCTION, "min", {prevTarget, source});
+      res = func("min", {prevTarget, source});
       break;
     }
     case Operation::Type::MAX: {
-      res = Expression(Expression::Type::FUNCTION, "max", {prevTarget, source});
+      res = func("max", {prevTarget, source});
       break;
     }
     case Operation::Type::BAN:
@@ -243,17 +231,12 @@ bool FormulaGenerator::update(const Operation& op) {
       break;
     }
     case Operation::Type::SEQ: {
-      res = Expression(Expression::Type::FUNCTION,
-                       ProgramUtil::idStr(source.value.asInt()), {prevTarget});
+      res = func(ProgramUtil::idStr(source.value.asInt()), {prevTarget});
       break;
     }
     case Operation::Type::TRN: {
-      Expression negated(Expression::Type::PRODUCT, "",
-                         {ExpressionUtil::newConstant(-1), source});
-      res = Expression(
-          Expression::Type::FUNCTION, "max",
-          {Expression(Expression::Type::SUM, "", {prevTarget, negated}),
-           ExpressionUtil::newConstant(0)});
+      res = func("max", {sum({prevTarget, product({constant(-1), source})}),
+                         constant(0)});
       break;
     }
     case Operation::Type::EQU: {
@@ -279,27 +262,18 @@ bool FormulaGenerator::update(const Operation& op) {
       auto x = prevTarget;
       auto abs_x = x;
       if (ExpressionUtil::canBeNegative(x, offset)) {
-        abs_x = Expression(Expression::Type::FUNCTION, "abs", {x});
+        abs_x = abs(x);
       }
-      auto abs_x_minus_1 = Expression(Expression::Type::SUM, "",
-                                      {abs_x, ExpressionUtil::newConstant(-1)});
-      auto y_minus_1 = Expression(Expression::Type::SUM, "",
-                                  {source, ExpressionUtil::newConstant(-1)});
-      auto plus_1 = Expression(Expression::Type::SUM, "",
-                               {Expression(Expression::Type::MODULUS, "",
-                                           {abs_x_minus_1, y_minus_1}),
-                                ExpressionUtil::newConstant(1)});
-      auto sign_x = Expression(Expression::Type::FUNCTION, "sign", {x});
-      res = Expression(Expression::Type::PRODUCT, "", {plus_1, sign_x});
+      auto abs_x_minus_1 = sum({abs_x, constant(-1)});
+      auto y_minus_1 = sum({source, constant(-1)});
+      auto plus_1 = sum({mod(abs_x_minus_1, y_minus_1), constant(1)});
+      res = product({plus_1, sign(x)});
       break;
     }
     case Operation::Type::DGS: {
-      auto sumdigits = Expression(Expression::Type::FUNCTION, "sumdigits",
-                                  {prevTarget, source});
+      auto sumdigits = func("sumdigits", {prevTarget, source});
       if (ExpressionUtil::canBeNegative(prevTarget, offset)) {
-        auto sign_x =
-            Expression(Expression::Type::FUNCTION, "sign", {prevTarget});
-        res = Expression(Expression::Type::PRODUCT, "", {sumdigits, sign_x});
+        res = product({sumdigits, sign(prevTarget)});
       } else {
         res = sumdigits;
       }
