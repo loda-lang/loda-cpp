@@ -15,13 +15,6 @@ bool convertExprToPari(Expression& expr, const Formula& f, bool as_vector) {
       return false;
     }
   }
-  if (expr.type == Expression::Type::FUNCTION && expr.name == "binomial") {
-    // TODO: check feedback from PARI team to avoid this limitation
-    // note also that we should use the proper offset here
-    if (ExpressionUtil::canBeNegative(expr.children.at(1), 0)) {
-      return false;
-    }
-  }
   auto functions = FormulaUtil::getDefinitions(f, Expression::Type::FUNCTION);
   if (expr.type == Expression::Type::FUNCTION && as_vector &&
       std::find(functions.begin(), functions.end(), expr.name) !=
