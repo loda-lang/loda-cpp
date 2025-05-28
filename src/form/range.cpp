@@ -1,15 +1,51 @@
 #include "form/range.hpp"
 
+#include "eval/semantics.hpp"
+
 Range& Range::operator+=(const Range& r) {
   lower_bound += r.lower_bound;
   upper_bound += r.upper_bound;
   return *this;
 }
 
-void RangeSet::prune() {
+Range& Range::operator-=(const Range& r) {
+  lower_bound -= r.upper_bound;
+  upper_bound -= r.lower_bound;
+  return *this;
+}
+
+Range& Range::operator%=(const Range& r) {
+  // TODO: suport more cases
+  if (r.isFinite()) {
+    auto abs_lower = Semantics::abs(r.lower_bound);
+    auto abs_upper = Semantics::abs(r.upper_bound);
+    auto max_abs = Semantics::max(abs_lower, abs_upper);
+    if (lower_bound != Number::INF && Number::MINUS_ONE < lower_bound) {
+      lower_bound = Number::ZERO;
+      upper_bound = Semantics::sub(max_abs, Number::ONE);
+    } else {
+      lower_bound = Number::INF;
+      upper_bound = Number::INF;
+    }
+  }
+  return *this;
+}
+
+bool Range::isFinite() const {
+  return lower_bound != Number::INF && upper_bound != Number::INF;
+}
+
+bool Range::isConstant() const {
+  return isFinite() && lower_bound == upper_bound;
+}
+
+bool Range::isUnbounded() const {
+  return lower_bound == Number::INF && upper_bound == Number::INF;
+}
+
+void RangeMap::prune() {
   for (auto it = begin(); it != end();) {
-    if (it->second.lower_bound == Number::INF &&
-        it->second.upper_bound == Number::INF) {
+    if (it->second.isUnbounded()) {
       it = erase(it);
     } else {
       ++it;
@@ -17,17 +53,17 @@ void RangeSet::prune() {
   }
 }
 
-std::string RangeSet::toString() const {
+std::string RangeMap::toString() const {
   std::string result;
   for (const auto& it : *this) {
     const auto& r = it.second;
-    if (r.lower_bound == Number::INF && r.upper_bound == Number::INF) {
+    if (r.isUnbounded()) {
       continue;
     }
     if (!result.empty()) {
       result += ", ";
     }
-    if (r.lower_bound == r.upper_bound) {
+    if (r.isConstant()) {
       result +=
           "$" + std::to_string(it.first) + " = " + r.lower_bound.to_string();
     } else {

@@ -12,14 +12,20 @@ class Range {
       : lower_bound(lower), upper_bound(upper) {}
 
   Range& operator+=(const Range& r);
+  Range& operator-=(const Range& r);
+  Range& operator%=(const Range& r);
+
+  bool isFinite() const;
+  bool isConstant() const;
+  bool isUnbounded() const;
 
   Number lower_bound;
   Number upper_bound;
 };
 
-class RangeSet : public std::map<int64_t, Range> {
+class RangeMap : public std::map<int64_t, Range> {
  public:
-  RangeSet() = default;
+  RangeMap() = default;
 
   void prune();
 

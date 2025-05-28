@@ -6,7 +6,7 @@
 #include "lang/program_util.hpp"
 #include "sys/log.hpp"
 
-bool RangeGenerator::init(const Program& program, RangeSet& ranges) const {
+bool RangeGenerator::init(const Program& program, RangeMap& ranges) const {
   ranges.clear();
   if (ProgramUtil::hasIndirectOperand(program)) {
     return false;
@@ -27,7 +27,7 @@ bool RangeGenerator::init(const Program& program, RangeSet& ranges) const {
   return true;
 }
 
-bool RangeGenerator::generate(const Program& program, RangeSet& ranges) const {
+bool RangeGenerator::generate(const Program& program, RangeMap& ranges) const {
   if (!init(program, ranges)) {
     return false;
   }
@@ -40,7 +40,7 @@ bool RangeGenerator::generate(const Program& program, RangeSet& ranges) const {
   return true;
 }
 
-bool RangeGenerator::update(const Operation& op, RangeSet& ranges) const {
+bool RangeGenerator::update(const Operation& op, RangeMap& ranges) const {
   Range source;
   if (op.source.type == Operand::Type::CONSTANT) {
     source = Range(op.source.value, op.source.value);
@@ -58,14 +58,22 @@ bool RangeGenerator::update(const Operation& op, RangeSet& ranges) const {
   }
   auto& target = it->second;
   switch (op.type) {
+    case Operation::Type::NOP:
+      break;  // no operation, nothing to do
     case Operation::Type::MOV:
       target = source;
       break;
     case Operation::Type::ADD:
       target += source;
       break;
+    case Operation::Type::SUB:
+      target -= source;
+      break;
+    case Operation::Type::MOD:
+      target %= source;
+      break;
     default:
-      return false;  // Unsupported operation type for range generation
+      return false;  // unsupported operation type for range generation
   }
   return true;
 }

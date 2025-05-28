@@ -78,9 +78,13 @@ class Test {
 
   void formula();
 
+  void range();
+
   enum class FormulaType { FORMULA, PARI_FUNCTION, PARI_VECTOR };
 
   void checkFormulas(const std::string &testFile, FormulaType type);
+
+  void checkRanges(int64_t id, const std::string &expected);
 
  private:
   std::vector<std::pair<Program, Program>> loadInOutTests(

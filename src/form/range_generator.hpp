@@ -18,9 +18,9 @@ class RangeGenerator {
    * @param ranges The output range set.
    * @return True if the generation was successful, false otherwise.
    */
-  bool generate(const Program& program, RangeSet& ranges) const;
+  bool generate(const Program& program, RangeMap& ranges) const;
 
  private:
-  bool init(const Program& program, RangeSet& ranges) const;
-  bool update(const Operation& op, RangeSet& ranges) const;
+  bool init(const Program& program, RangeMap& ranges) const;
+  bool update(const Operation& op, RangeMap& ranges) const;
 };
