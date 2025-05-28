@@ -5,7 +5,7 @@
 
 /**
  * Range generator. It takes a LODA program as input and generates
- * a range set as output. The range set contains the ranges of memory cells
+ * a range map as output. The range map contains the ranges of memory cells
  * used in the program.
  */
 class RangeGenerator {
@@ -13,9 +13,9 @@ class RangeGenerator {
   RangeGenerator() = default;
 
   /**
-   * Generates a range set for the given program.
+   * Generates a range map for the given program.
    * @param program The LODA program to analyze.
-   * @param ranges The output range set.
+   * @param ranges The output range map.
    * @return True if the generation was successful, false otherwise.
    */
   bool generate(const Program& program, RangeMap& ranges) const;
