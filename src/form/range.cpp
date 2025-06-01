@@ -16,12 +16,17 @@ Range& Range::operator-=(const Range& r) {
 
 Range& Range::operator*=(const Range& r) {
   // TODO: suport more cases
-  Number u;
+  auto l = Number::INF;
+  auto u = Number::INF;
+  if (lower_bound != Number::INF && lower_bound >= Number::ZERO &&
+      r.lower_bound != Number::INF && r.lower_bound >= Number::ZERO) {
+    l = Semantics::mul(lower_bound, r.lower_bound);
+  }
   if (lower_bound != Number::INF && lower_bound >= Number::ZERO &&
       r.lower_bound != Number::INF && r.lower_bound <= Number::ZERO) {
     u = Semantics::mul(lower_bound, r.lower_bound);
   }
-  lower_bound = Number::INF;
+  lower_bound = l;
   upper_bound = u;
   return *this;
 }

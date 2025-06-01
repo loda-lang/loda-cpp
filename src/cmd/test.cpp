@@ -1169,6 +1169,7 @@ void Test::range() {
   checkRanges(35, "0 <= $0 <= 1");
   checkRanges(1478, "$0 <= -1, $1 <= -1");
   checkRanges(1489, "$0 <= 0");
+  checkRanges(5408, "1 <= $0");
 }
 
 void Test::checkRanges(int64_t id, const std::string& expected) {
