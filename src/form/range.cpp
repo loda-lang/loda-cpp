@@ -14,13 +14,25 @@ Range& Range::operator-=(const Range& r) {
   return *this;
 }
 
+Range& Range::operator*=(const Range& r) {
+  // TODO: suport more cases
+  Number u;
+  if (lower_bound != Number::INF && lower_bound >= Number::ZERO &&
+      r.lower_bound != Number::INF && r.lower_bound <= Number::ZERO) {
+    u = Semantics::mul(lower_bound, r.lower_bound);
+  }
+  lower_bound = Number::INF;
+  upper_bound = u;
+  return *this;
+}
+
 Range& Range::operator%=(const Range& r) {
   // TODO: suport more cases
   if (r.isFinite()) {
     auto abs_lower = Semantics::abs(r.lower_bound);
     auto abs_upper = Semantics::abs(r.upper_bound);
     auto max_abs = Semantics::max(abs_lower, abs_upper);
-    if (lower_bound != Number::INF && Number::MINUS_ONE < lower_bound) {
+    if (lower_bound != Number::INF && lower_bound >= Number::ZERO) {
       lower_bound = Number::ZERO;
       upper_bound = Semantics::sub(max_abs, Number::ONE);
     } else {

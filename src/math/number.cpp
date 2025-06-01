@@ -118,6 +118,14 @@ bool Number::operator<(const Number& n) const {
 
 bool Number::operator>(const Number& n) const { return (n < *this); }
 
+bool Number::operator<=(const Number& n) const {
+  return (*this < n || *this == n);
+}
+
+bool Number::operator>=(const Number& n) const {
+  return (n < *this || *this == n);
+}
+
 Number& Number::negate() {
   if (big == INF_PTR) {
     return *this;

@@ -13,6 +13,7 @@ class Range {
 
   Range& operator+=(const Range& r);
   Range& operator-=(const Range& r);
+  Range& operator*=(const Range& r);
   Range& operator%=(const Range& r);
 
   bool isFinite() const;

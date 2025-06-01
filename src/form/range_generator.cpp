@@ -69,6 +69,9 @@ bool RangeGenerator::update(const Operation& op, RangeMap& ranges) const {
     case Operation::Type::SUB:
       target -= source;
       break;
+    case Operation::Type::MUL:
+      target *= source;
+      break;
     case Operation::Type::MOD:
       target %= source;
       break;
