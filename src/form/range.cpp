@@ -23,7 +23,8 @@ Range& Range::operator*=(const Range& r) {
     l = Semantics::mul(lower_bound, r.lower_bound);
   }
   if (lower_bound != Number::INF && lower_bound >= Number::ZERO &&
-      r.lower_bound != Number::INF && r.lower_bound <= Number::ZERO) {
+      r.lower_bound != Number::INF && r.lower_bound <= Number::ZERO &&
+      r.upper_bound != Number::INF) {
     u = Semantics::mul(lower_bound, r.lower_bound);
   }
   lower_bound = l;
