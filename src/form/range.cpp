@@ -18,6 +18,21 @@ Range& Range::operator*=(const Range& r) {
   // TODO: suport more cases
   auto l = Number::INF;
   auto u = Number::INF;
+  
+  if (lower_bound != Number::INF && upper_bound != Number::INF && r.lower_bound != Number::INF && r.upper_bound != Number::INF){
+auto a1 = Semantics::mul(lower_bound, r.lower_bound);
+auto a2 = Semantics::mul(lower_bound, r.upper_bound);
+auto a3 = Semantics::mul(upper_bound, r.lower_bound);
+auto a4 = Semantics::mul(upper_bound, r.upper_bound);
+l = a1;u = a1;
+if(l > a2)l = a2;if(u < a2)u = a2;
+if(l > a3)l = a3;if(u < a3)u = a3;
+if(l > a4)l = a4;if(u < a4)u = a4;
+  lower_bound = l;
+  upper_bound = u;
+  return *this;
+  }
+  
   if (lower_bound != Number::INF && lower_bound >= Number::ZERO &&
       r.lower_bound != Number::INF && r.lower_bound >= Number::ZERO) {
     l = Semantics::mul(lower_bound, r.lower_bound);
@@ -46,6 +61,12 @@ Range& Range::operator%=(const Range& r) {
       upper_bound = Number::INF;
     }
   }
+  return *this;
+}
+
+Range& Range::concat(const Range& r) {
+  lower_bound = Semantics::min(lower_bound, r.lower_bound);
+  upper_bound = Semantics::max(upper_bound, r.upper_bound);
   return *this;
 }
 
