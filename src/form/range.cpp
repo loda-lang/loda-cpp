@@ -74,15 +74,13 @@ Range& Range::gcd(const Range& r) {
   auto l = Number::ZERO;
   auto u = Number::INF;
   
-  if (lower_bound != Number::INF && lower_bound >= Number::ONE &&
-      r.lower_bound != Number::INF && r.lower_bound >= Number::ONE) {
-    l = Number::ONE;
-  }
   if (lower_bound != Number::INF && lower_bound >= Number::ONE) {
+  	l = Number::ONE;
     if(u == Number::INF)u = upper_bound;
     else if(u > upper_bound)u = upper_bound;
   }
   if (r.lower_bound != Number::INF && r.lower_bound >= Number::ONE) {
+  	l = Number::ONE;
     if(u == Number::INF)u = r.upper_bound;
     else if(u > r.upper_bound)u = r.upper_bound;
   }
