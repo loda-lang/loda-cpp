@@ -15,6 +15,7 @@ class Range {
   Range& operator-=(const Range& r);
   Range& operator*=(const Range& r);
   Range& operator%=(const Range& r);
+  Range& gcd(const Range& r);
 
   bool isFinite() const;
   bool isConstant() const;

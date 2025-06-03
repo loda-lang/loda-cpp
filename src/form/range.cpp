@@ -18,29 +18,29 @@ Range& Range::operator*=(const Range& r) {
   // TODO: suport more cases
   auto l = Number::INF;
   auto u = Number::INF;
-  
-  if (lower_bound != Number::INF && upper_bound != Number::INF && r.lower_bound != Number::INF && r.upper_bound != Number::INF){
-auto a1 = Semantics::mul(lower_bound, r.lower_bound);
-auto a2 = Semantics::mul(lower_bound, r.upper_bound);
-auto a3 = Semantics::mul(upper_bound, r.lower_bound);
-auto a4 = Semantics::mul(upper_bound, r.upper_bound);
-l = a1;u = a1;
-if(l > a2)l = a2;if(u < a2)u = a2;
-if(l > a3)l = a3;if(u < a3)u = a3;
-if(l > a4)l = a4;if(u < a4)u = a4;
-  lower_bound = l;
-  upper_bound = u;
-  return *this;
-  }
-  
-  if (lower_bound != Number::INF && lower_bound >= Number::ZERO &&
-      r.lower_bound != Number::INF && r.lower_bound >= Number::ZERO) {
-    l = Semantics::mul(lower_bound, r.lower_bound);
-  }
-  if (lower_bound != Number::INF && lower_bound >= Number::ZERO &&
-      r.lower_bound != Number::INF && r.lower_bound <= Number::ZERO &&
-      r.upper_bound != Number::INF) {
-    u = Semantics::mul(lower_bound, r.lower_bound);
+  if (isFinite() && r.isFinite()) {
+    auto a1 = Semantics::mul(lower_bound, r.lower_bound);
+    auto a2 = Semantics::mul(lower_bound, r.upper_bound);
+    auto a3 = Semantics::mul(upper_bound, r.lower_bound);
+    auto a4 = Semantics::mul(upper_bound, r.upper_bound);
+    l = a1;
+    u = a1;
+    if (l > a2) l = a2;
+    if (u < a2) u = a2;
+    if (l > a3) l = a3;
+    if (u < a3) u = a3;
+    if (l > a4) l = a4;
+    if (u < a4) u = a4;
+  } else {
+    if (lower_bound != Number::INF && lower_bound >= Number::ZERO &&
+        r.lower_bound != Number::INF && r.lower_bound >= Number::ZERO) {
+      l = Semantics::mul(lower_bound, r.lower_bound);
+    }
+    if (lower_bound != Number::INF && lower_bound >= Number::ZERO &&
+        r.lower_bound != Number::INF && r.lower_bound <= Number::ZERO &&
+        r.upper_bound != Number::INF) {
+      u = Semantics::mul(lower_bound, r.lower_bound);
+    }
   }
   lower_bound = l;
   upper_bound = u;
@@ -64,25 +64,20 @@ Range& Range::operator%=(const Range& r) {
   return *this;
 }
 
-Range& Range::concat(const Range& r) {
-  lower_bound = Semantics::min(lower_bound, r.lower_bound);
-  upper_bound = Semantics::max(upper_bound, r.upper_bound);
-  return *this;
-}
-
 Range& Range::gcd(const Range& r) {
   auto l = Number::ZERO;
   auto u = Number::INF;
-  
   if (lower_bound != Number::INF && lower_bound >= Number::ONE) {
-  	l = Number::ONE;
-    if(u == Number::INF)u = upper_bound;
-    else if(u > upper_bound)u = upper_bound;
+    l = Number::ONE;
+    if (u == Number::INF || u > upper_bound) {
+      u = upper_bound;
+    }
   }
   if (r.lower_bound != Number::INF && r.lower_bound >= Number::ONE) {
-  	l = Number::ONE;
-    if(u == Number::INF)u = r.upper_bound;
-    else if(u > r.upper_bound)u = r.upper_bound;
+    l = Number::ONE;
+    if (u == Number::INF || u > r.upper_bound) {
+      u = r.upper_bound;
+    }
   }
   lower_bound = l;
   upper_bound = u;
