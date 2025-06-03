@@ -13,6 +13,7 @@
 #include "eval/semantics.hpp"
 #include "form/formula_gen.hpp"
 #include "form/pari.hpp"
+#include "form/range_generator.hpp"
 #include "lang/comments.hpp"
 #include "lang/constants.hpp"
 #include "lang/parser.hpp"
@@ -69,6 +70,7 @@ void Test::fast() {
   checkpoint();
   knownPrograms();
   formula();
+  range();
 }
 
 void Test::slow() {
@@ -1156,6 +1158,35 @@ void Test::checkFormulas(const std::string& testFile, FormulaType type) {
         Log::get().error("Unexpected PARI/GP code: " + pari.toString(), true);
       }
     }
+  }
+}
+
+void Test::range() {
+  checkRanges(4, "$0 = 0");
+  checkRanges(12, "$0 = 1");
+  checkRanges(27, "1 <= $0");
+  checkRanges(34, "1 <= $0 <= 2");
+  checkRanges(35, "0 <= $0 <= 1");
+  checkRanges(1478, "$0 <= -1, $1 <= -1");
+  checkRanges(1489, "$0 <= 0");
+  checkRanges(2378, "0 <= $0, 0 <= $1");
+  checkRanges(5408, "1 <= $0");
+  checkRanges(105397, "2 <= $0 <= 4");
+  checkRanges(109008, "1 <= $0 <= 4");
+}
+
+void Test::checkRanges(int64_t id, const std::string& expected) {
+  Log::get().info("Testing ranges for " + ProgramUtil::idStr(id) + ": " +
+                  expected);
+  Parser parser;
+  auto p = parser.parse(ProgramUtil::getProgramPath(id));
+  RangeGenerator generator;
+  RangeMap ranges;
+  if (!generator.generate(p, ranges)) {
+    Log::get().error("Cannot generate range from program", true);
+  }
+  if (ranges.toString() != expected) {
+    Log::get().error("Unexpected ranges: " + ranges.toString(), true);
   }
 }
 
