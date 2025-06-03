@@ -92,7 +92,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
   build-windows:
     needs: create-release
-    runs-on: windows-2019
+    runs-on: windows-2022
     steps:
       - uses: actions/checkout@v2
       - uses: ilammy/msvc-dev-cmd@v1
