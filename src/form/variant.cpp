@@ -163,6 +163,47 @@ bool gaussElim(const Variant& lookup, Variant& target) {
   return true;
 }
 
+bool replaceSimple(const Variant& lookup, Variant& target) {
+  if (!ExpressionUtil::isSimpleFunction(target.definition, false)) {
+    return false;
+  }
+  if (target.definition.name == target.func ||
+      target.definition.name != lookup.func) {
+    return false;
+  }
+
+  // TODO: we should also make sure that exactly it's one parameter entry
+  /*
+    if (target.definition.type != Expression::Type::SUM) {
+      return false;
+    }
+    const auto& summands = target.definition.children.front().children;
+    if (std::any_of(summands.begin(), summands.end(), [&](const Expression& c) {
+          return c.type != Expression::Type::CONSTANT &&
+                 c.type != Expression::Type::PARAMETER;
+        })) {
+      return false;
+    }
+    */
+
+  std::set<std::string> names;
+  std::set<std::string> singleton = {lookup.func};
+  ExpressionUtil::collectNames(lookup.definition, Expression::Type::FUNCTION,
+                               names);
+  if (names != singleton) {
+    return false;
+  }
+  auto replacement = lookup.definition;  // copy
+  replacement.replaceName(lookup.func, target.func);
+  ExpressionUtil::normalize(replacement);
+  Log::get().debug("Replace simple: " + target.func +
+                   "(n)=" + target.definition.toString() + " & " + lookup.func +
+                   "(n)=" + lookup.definition.toString() + " => " +
+                   target.func + "(n)=" + replacement.toString());
+  target.definition = replacement;
+  return true;
+}
+
 bool findVariants(VariantsManager& manager) {
   auto variants = manager.variants;  // copy
   bool updated = false;
@@ -177,6 +218,11 @@ bool findVariants(VariantsManager& manager) {
           }
           new_variant = target_variant;  // copy
           if (gaussElim(lookup_variant, new_variant) &&
+              manager.update(new_variant)) {
+            updated = true;
+          }
+          new_variant = target_variant;  // copy
+          if (replaceSimple(lookup_variant, new_variant) &&
               manager.update(new_variant)) {
             updated = true;
           }
