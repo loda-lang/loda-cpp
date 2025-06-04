@@ -4,6 +4,7 @@
 #include <string>
 
 #include "math/number.hpp"
+#include "math/sequence.hpp"
 
 class Range {
  public:
@@ -20,6 +21,8 @@ class Range {
   bool isFinite() const;
   bool isConstant() const;
   bool isUnbounded() const;
+
+  int64_t check(const Sequence& seq) const;
 
   Number lower_bound;
   Number upper_bound;

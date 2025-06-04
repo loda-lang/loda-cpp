@@ -12,6 +12,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Add PARI evaluation timeout
 * Limit maximum number of initial terms in formula generation
+* Initial coding for range generation
 
 ## v25.5.24
 

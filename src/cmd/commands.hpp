@@ -60,6 +60,8 @@ class Commands {
 
   void testPari(const std::string& id);
 
+  void testRange(const std::string& id);
+
   void generate();
 
   void migrate();

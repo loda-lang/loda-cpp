@@ -96,6 +96,17 @@ bool Range::isUnbounded() const {
   return lower_bound == Number::INF && upper_bound == Number::INF;
 }
 
+int64_t Range::check(const Sequence& seq) const {
+  int64_t numTerms = seq.size();
+  for (int64_t i = 0; i < numTerms; ++i) {
+    if ((lower_bound != Number::INF && seq[i] < lower_bound) ||
+        (upper_bound != Number::INF && seq[i] > upper_bound)) {
+      return i;
+    }
+  }
+  return -1;
+}
+
 void RangeMap::prune() {
   for (auto it = begin(); it != end();) {
     if (it->second.isUnbounded()) {

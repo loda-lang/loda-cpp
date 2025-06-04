@@ -12,6 +12,7 @@
 #include "eval/optimizer.hpp"
 #include "form/formula_gen.hpp"
 #include "form/pari.hpp"
+#include "form/range_generator.hpp"
 #include "lang/analyzer.hpp"
 #include "lang/comments.hpp"
 #include "lang/program_util.hpp"
@@ -675,6 +676,68 @@ void Commands::testPari(const std::string& test_id) {
   Log::get().info(std::to_string(good) + " passed, " + std::to_string(bad) +
                   " failed, " + std::to_string(skipped) +
                   " skipped PARI checks");
+}
+
+bool checkRange(const OeisSequence& seq, const Program& program,
+                bool failOnError) {
+  RangeGenerator generator;
+  RangeMap ranges;
+  if (!generator.generate(program, ranges)) {
+    return true;  // okay because range generation is not supported
+  }
+  auto idStr = ProgramUtil::idStr(seq.id);
+  auto numTerms = seq.existingNumTerms();
+  auto terms = seq.getTerms(numTerms);
+  auto it = ranges.find(Program::OUTPUT_CELL);
+  if (it != ranges.end()) {
+    Log::get().info("Checking " + std::to_string(numTerms) + " terms of " +
+                    idStr + ": " + ranges.toString());
+    auto& range = it->second;
+    auto index = range.check(terms);
+    if (index != -1) {
+      Log::get().error("Range check failed for " + idStr + " for a(" +
+                           std::to_string(index) +
+                           ") = " + terms[index].to_string(),
+                       failOnError);
+      return false;
+    }
+  }
+  return true;
+}
+
+void Commands::testRange(const std::string& id) {
+  initLog(false);
+  Parser parser;
+  int64_t numChecked = 0, numFailed = 0;
+  OeisManager manager(settings);
+  manager.load();
+  auto& stats = manager.getStats();
+  std::vector<OeisSequence> seqs;
+  if (id.empty()) {
+    seqs = manager.getSequences();
+  } else {
+    OeisSequence seq(id);
+    seqs.push_back(manager.getSequences().at(seq.id));
+  }
+  for (const auto& seq : seqs) {
+    if (seq.id == 0 || !stats.all_program_ids[seq.id]) {
+      continue;
+    }
+    Program program;
+    try {
+      program = parser.parse(ProgramUtil::getProgramPath(seq.id));
+    } catch (const std::exception& e) {
+      Log::get().warn(std::string(e.what()));
+      continue;
+    }
+    if (!checkRange(seq, program, true)) {
+      numFailed++;
+    }
+    numChecked++;
+  }
+  Log::get().info(
+      "Rinished range check; checked: " + std::to_string(numChecked) +
+      ", failed: " + std::to_string(numFailed));
 }
 
 void Commands::generate() {

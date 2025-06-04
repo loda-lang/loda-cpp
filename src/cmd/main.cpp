@@ -222,6 +222,12 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
       id = args.at(1);
     }
     commands.testPari(id);
+  } else if (cmd == "test-range") {
+    std::string id;
+    if (args.size() > 1) {
+      id = args.at(1);
+    }
+    commands.testRange(id);
   } else if (cmd == "generate" || cmd == "gen") {
     commands.generate();
   } else if (cmd == "migrate") {
