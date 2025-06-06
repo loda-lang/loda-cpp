@@ -64,6 +64,9 @@ void Commands::help() {
   std::cout << "  unfold    <program>  Unfold the first seq operation of a "
                "program"
             << std::endl;
+  std::cout << "  range     <program>  Compute the ranges of a program"
+               " and print it"
+            << std::endl;
 
   std::cout << std::endl << "OEIS Commands:" << std::endl;
   std::cout << "  mine                 Mine programs for OEIS sequences (see "
@@ -297,6 +300,15 @@ void Commands::unfold(const std::string& path) {
     throw std::runtime_error("cannot unfold program");
   }
   ProgramUtil::print(p, std::cout);
+}
+
+void Commands::range(const std::string& path) {
+  initLog(true);
+  Program program = OeisProgram::getProgramAndSeqId(path).first;
+  RangeGenerator generator;
+  RangeMap ranges;
+  generator.generate(program, ranges, true);
+  ProgramUtil::print(program, std::cout);
 }
 
 void Commands::replace(const std::string& search_path,

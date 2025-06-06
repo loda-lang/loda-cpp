@@ -19,6 +19,7 @@ class RangeGenerator {
    * @return True if the generation was successful, false otherwise.
    */
   bool generate(const Program& program, RangeMap& ranges) const;
+  void generate(Program& program, RangeMap& ranges, bool annotate) const;
 
  private:
   bool init(const Program& program, RangeMap& ranges) const;

@@ -5,6 +5,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Features
 
 * Added `upgrade` command
+* Added `range` command
 * Support bitwise operators with negative values in formula generation
 * Support binomial with negative args in PARI code generation
 
@@ -12,7 +13,6 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Add PARI evaluation timeout
 * Limit maximum number of initial terms in formula generation
-* Initial coding for range generation
 
 ## v25.5.24
 

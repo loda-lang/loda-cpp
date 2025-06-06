@@ -34,6 +34,8 @@ class Commands {
 
   void unfold(const std::string& path);
 
+  void range(const std::string& path);
+
   void mine();
 
   void submit(const std::string& path, const std::string& id);

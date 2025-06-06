@@ -154,6 +154,12 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
     commands.fold(args.at(1), args.at(2));
   } else if (cmd == "unfold") {
     commands.unfold(args.at(1));
+  } else if (cmd == "range") {
+    if (args.size() < 2) {
+      std::cerr << "Usage: loda range <program>" << std::endl;
+      return 1;
+    }
+    commands.range(args.at(1));
   } else if (cmd == "mine") {
     if (settings.parallel_mining) {
       mineParallel(settings, args);

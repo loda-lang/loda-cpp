@@ -2,6 +2,12 @@
 
 #include "eval/semantics.hpp"
 
+// Helper function to update min and max
+static void update_min_max(Number val, Number& min, Number& max) {
+  if (val < min) min = val;
+  if (val > max) max = val;
+}
+
 Range& Range::operator+=(const Range& r) {
   lower_bound += r.lower_bound;
   upper_bound += r.upper_bound;
@@ -15,7 +21,7 @@ Range& Range::operator-=(const Range& r) {
 }
 
 Range& Range::operator*=(const Range& r) {
-  // TODO: suport more cases
+  // TODO: support more cases
   auto l = Number::INF;
   auto u = Number::INF;
   if (isFinite() && r.isFinite()) {
@@ -25,12 +31,9 @@ Range& Range::operator*=(const Range& r) {
     auto a4 = Semantics::mul(upper_bound, r.upper_bound);
     l = a1;
     u = a1;
-    if (l > a2) l = a2;
-    if (u < a2) u = a2;
-    if (l > a3) l = a3;
-    if (u < a3) u = a3;
-    if (l > a4) l = a4;
-    if (u < a4) u = a4;
+    update_min_max(a2, l, u);
+    update_min_max(a3, l, u);
+    update_min_max(a4, l, u);
   } else {
     if (lower_bound != Number::INF && lower_bound >= Number::ZERO &&
         r.lower_bound != Number::INF && r.lower_bound >= Number::ZERO) {
@@ -135,14 +138,26 @@ std::string RangeMap::toString() const {
     if (!result.empty()) {
       result += ", ";
     }
+    result += toString(it.first);
+  }
+  return result;
+}
+
+std::string RangeMap::toString(int64_t index) const {
+  auto it = find(index);
+  std::string result;
+  if (it != end()) {
+    auto& r = it->second;
+    if (r.isUnbounded()) {
+      return result;
+    }
     if (r.isConstant()) {
-      result +=
-          "$" + std::to_string(it.first) + " = " + r.lower_bound.to_string();
+      result += "$" + std::to_string(index) + " = " + r.lower_bound.to_string();
     } else {
       if (r.lower_bound != Number::INF) {
         result += r.lower_bound.to_string() + " <= ";
       }
-      result += "$" + std::to_string(it.first);
+      result += "$" + std::to_string(index);
       if (r.upper_bound != Number::INF) {
         result += " <= " + r.upper_bound.to_string();
       }

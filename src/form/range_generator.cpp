@@ -40,6 +40,22 @@ bool RangeGenerator::generate(const Program& program, RangeMap& ranges) const {
   return true;
 }
 
+void RangeGenerator::generate(Program& program, RangeMap& ranges,
+                              bool annotate) const {
+  if (!init(program, ranges)) {
+    return;
+  }
+  for (auto& op : program.ops) {
+    if (!update(op, ranges)) {
+      return;
+    }
+    if (op.type != Operation::Type::NOP && annotate) {
+      op.comment = ranges.toString(op.target.value.asInt());
+    }
+  }
+  ranges.prune();
+}
+
 bool RangeGenerator::update(const Operation& op, RangeMap& ranges) const {
   Range source;
   if (op.source.type == Operand::Type::CONSTANT) {
