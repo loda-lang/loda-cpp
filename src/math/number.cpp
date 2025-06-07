@@ -96,10 +96,7 @@ bool Number::operator==(const Number& n) const {
 bool Number::operator!=(const Number& n) const { return !(*this == n); }
 
 bool Number::operator<(const Number& n) const {
-  if (n.big == INF_PTR) {
-    return (big != INF_PTR);
-  }
-  if (big == INF_PTR) {
+  if (n.big == INF_PTR || big == INF_PTR) {
     return false;
   }
   if (big) {

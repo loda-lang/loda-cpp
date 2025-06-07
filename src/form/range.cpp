@@ -2,12 +2,6 @@
 
 #include "eval/semantics.hpp"
 
-// Helper function to update min and max
-static void update_min_max(Number val, Number& min, Number& max) {
-  if (val < min) min = val;
-  if (val > max) max = val;
-}
-
 Range& Range::operator+=(const Range& r) {
   lower_bound += r.lower_bound;
   upper_bound += r.upper_bound;
@@ -20,57 +14,62 @@ Range& Range::operator-=(const Range& r) {
   return *this;
 }
 
+void updateMinMax(const Number& val, Number& min, Number& max) {
+  if (val < min) min = val;
+  if (val > max) max = val;
+}
+
 Range& Range::operator*=(const Range& r) {
-  // TODO: support more cases
-  auto l = Number::INF;
-  auto u = Number::INF;
+  auto l1 = lower_bound;
+  auto l2 = r.lower_bound;
+  auto u1 = upper_bound;
+  auto u2 = r.upper_bound;
   if (isFinite() && r.isFinite()) {
-    auto a1 = Semantics::mul(lower_bound, r.lower_bound);
-    auto a2 = Semantics::mul(lower_bound, r.upper_bound);
-    auto a3 = Semantics::mul(upper_bound, r.lower_bound);
-    auto a4 = Semantics::mul(upper_bound, r.upper_bound);
-    l = a1;
-    u = a1;
-    update_min_max(a2, l, u);
-    update_min_max(a3, l, u);
-    update_min_max(a4, l, u);
+    // both finite
+    auto a1 = Semantics::mul(l1, l2);
+    auto a2 = Semantics::mul(l1, u2);
+    auto a3 = Semantics::mul(u1, l2);
+    auto a4 = Semantics::mul(u1, u2);
+    lower_bound = a1;
+    upper_bound = a1;
+    updateMinMax(a2, lower_bound, upper_bound);
+    updateMinMax(a3, lower_bound, upper_bound);
+    updateMinMax(a4, lower_bound, upper_bound);
   } else {
-    if (lower_bound != Number::INF && lower_bound >= Number::ZERO &&
-        r.lower_bound != Number::INF && r.lower_bound >= Number::ZERO) {
-      l = Semantics::mul(lower_bound, r.lower_bound);
+    // at least one is infinite
+    if (l1 >= 0 && l2 >= 0) {
+      lower_bound = Semantics::mul(l1, l2);
+    } else if (u1 <= 0 && u2 <= 0) {
+      lower_bound = Semantics::mul(u1, u2);
+    } else {
+      lower_bound = Number::INF;
     }
-    if (lower_bound != Number::INF && lower_bound >= Number::ZERO &&
-        r.upper_bound != Number::INF && r.upper_bound <= Number::ZERO) {
-      u = Semantics::mul(lower_bound, r.upper_bound);
-    }
-    if (upper_bound != Number::INF && upper_bound >= Number::ZERO &&
-        r.upper_bound != Number::INF && r.upper_bound >= Number::ZERO &&
-        ((lower_bound != Number::INF && lower_bound >= Number::ZERO) ||
-         (r.lower_bound != Number::INF && r.lower_bound >= Number::ZERO))) {
-      u = Semantics::mul(upper_bound, r.upper_bound);
+    if (l1 >= 0 && u2 <= 0) {
+      upper_bound = Semantics::mul(l1, u2);
+    } else if (l2 >= 0 && u1 <= 0) {
+      upper_bound = Semantics::mul(l2, u1);
+    } else if (u1 >= 0 && u2 >= 0 && (l1 >= 0 || l2 >= 0)) {
+      upper_bound = Semantics::mul(u1, u2);
+    } else {
+      upper_bound = Number::INF;
     }
   }
-  lower_bound = l;
-  upper_bound = u;
   return *this;
 }
 
 Range& Range::operator%=(const Range& r) {
   // TODO: suport more cases
-  bool updated = false;
-  if (lower_bound != Number::INF && lower_bound >= Number::ZERO) {
-    lower_bound = Number::ZERO;
+  if (lower_bound >= 0) {
+    lower_bound = 0;
     if (r.upper_bound != Number::INF) {
       auto abs_lower = Semantics::abs(r.lower_bound);
       auto abs_upper = Semantics::abs(r.upper_bound);
       auto max_abs = Semantics::max(abs_lower, abs_upper);
-      upper_bound = Semantics::sub(max_abs, Number::ONE);
+      upper_bound = Semantics::sub(max_abs, 1);
     } else {
       upper_bound = Number::INF;
     }
-    updated = true;
-  }
-  if (!updated) {
+  } else {
     lower_bound = Number::INF;
     upper_bound = Number::INF;
   }
@@ -112,8 +111,7 @@ bool Range::isUnbounded() const {
 int64_t Range::check(const Sequence& seq) const {
   int64_t numTerms = seq.size();
   for (int64_t i = 0; i < numTerms; ++i) {
-    if ((lower_bound != Number::INF && seq[i] < lower_bound) ||
-        (upper_bound != Number::INF && seq[i] > upper_bound)) {
+    if (seq[i] < lower_bound || seq[i] > upper_bound) {
       return i;
     }
   }

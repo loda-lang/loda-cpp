@@ -141,7 +141,6 @@ void Test::number() {
   check_num(Number("-4 "), "-4");
   check_inf(Number::INF);
   check_less(Number::ZERO, Number::ONE);
-  check_less(Number::ONE, Number::INF);
   check_num(std::numeric_limits<int64_t>::max(),
             std::to_string(std::numeric_limits<int64_t>::max()));
   check_num(std::numeric_limits<int64_t>::min(),
