@@ -59,20 +59,18 @@ Range& Range::operator*=(const Range& r) {
 }
 
 Range& Range::operator%=(const Range& r) {
-  // TODO: suport more cases
+  auto abs_lower = Semantics::abs(r.lower_bound);
+  auto abs_upper = Semantics::abs(r.upper_bound);
+  auto max_abs = Semantics::max(abs_lower, abs_upper);
   if (lower_bound >= Number::ZERO) {
     lower_bound = Number::ZERO;
-    if (r.upper_bound != Number::INF) {
-      auto abs_lower = Semantics::abs(r.lower_bound);
-      auto abs_upper = Semantics::abs(r.upper_bound);
-      auto max_abs = Semantics::max(abs_lower, abs_upper);
-      upper_bound = Semantics::sub(max_abs, 1);
-    } else {
-      upper_bound = Number::INF;
-    }
+    upper_bound = Semantics::sub(max_abs, Number::ONE);
+  } else if (upper_bound <= Number::ZERO) {
+    upper_bound = Number::ZERO;
+    lower_bound = Semantics::sub(Number::MINUS_ONE, max_abs);
   } else {
-    lower_bound = Number::INF;
-    upper_bound = Number::INF;
+    lower_bound = Semantics::sub(Number::MINUS_ONE, max_abs);
+    upper_bound = Semantics::sub(max_abs, Number::ONE);
   }
   return *this;
 }
