@@ -69,7 +69,7 @@
     },
     {
       "name": "pattern",
-      "overwrite": "none",
+      "overwrite": "auto",
       "enabled": true,
       "backoff": true,
       "generators": [
