@@ -92,7 +92,7 @@ bool RangeGenerator::update(const Operation& op, RangeMap& ranges) const {
       target %= source;
       break;
     case Operation::Type::GCD:
-      target = target.gcd(source);
+      target.gcd(source);
       break;
     default:
       return false;  // unsupported operation type for range generation

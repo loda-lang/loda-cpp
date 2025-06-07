@@ -16,7 +16,8 @@ class Range {
   Range& operator-=(const Range& r);
   Range& operator*=(const Range& r);
   Range& operator%=(const Range& r);
-  Range& gcd(const Range& r);
+
+  void gcd(const Range& r);
 
   bool isFinite() const;
   bool isConstant() const;
@@ -26,6 +27,9 @@ class Range {
 
   Number lower_bound;
   Number upper_bound;
+
+ private:
+  void updateGcdBounds(const Range& r);
 };
 
 class RangeMap : public std::map<int64_t, Range> {

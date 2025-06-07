@@ -37,18 +37,19 @@ Range& Range::operator*=(const Range& r) {
     updateMinMax(a4, lower_bound, upper_bound);
   } else {
     // at least one is infinite
-    if (l1 >= 0 && l2 >= 0) {
+    if (l1 >= Number::ZERO && l2 >= Number::ZERO) {
       lower_bound = Semantics::mul(l1, l2);
-    } else if (u1 <= 0 && u2 <= 0) {
+    } else if (u1 <= Number::ZERO && u2 <= Number::ZERO) {
       lower_bound = Semantics::mul(u1, u2);
     } else {
       lower_bound = Number::INF;
     }
-    if (l1 >= 0 && u2 <= 0) {
+    if (l1 >= Number::ZERO && u2 <= Number::ZERO) {
       upper_bound = Semantics::mul(l1, u2);
-    } else if (l2 >= 0 && u1 <= 0) {
+    } else if (l2 >= Number::ZERO && u1 <= Number::ZERO) {
       upper_bound = Semantics::mul(l2, u1);
-    } else if (u1 >= 0 && u2 >= 0 && (l1 >= 0 || l2 >= 0)) {
+    } else if (u1 >= Number::ZERO && u2 >= Number::ZERO &&
+               (l1 >= Number::ZERO || l2 >= Number::ZERO)) {
       upper_bound = Semantics::mul(u1, u2);
     } else {
       upper_bound = Number::INF;
@@ -59,8 +60,8 @@ Range& Range::operator*=(const Range& r) {
 
 Range& Range::operator%=(const Range& r) {
   // TODO: suport more cases
-  if (lower_bound >= 0) {
-    lower_bound = 0;
+  if (lower_bound >= Number::ZERO) {
+    lower_bound = Number::ZERO;
     if (r.upper_bound != Number::INF) {
       auto abs_lower = Semantics::abs(r.lower_bound);
       auto abs_upper = Semantics::abs(r.upper_bound);
@@ -76,24 +77,28 @@ Range& Range::operator%=(const Range& r) {
   return *this;
 }
 
-Range& Range::gcd(const Range& r) {
-  auto l = Number::ZERO;
-  auto u = Number::INF;
-  if (lower_bound != Number::INF && lower_bound >= Number::ONE) {
-    l = Number::ONE;
-    if (u == Number::INF || u > upper_bound) {
-      u = upper_bound;
+void Range::gcd(const Range& r) {
+  auto copy = *this;
+  lower_bound = Number::ZERO;
+  upper_bound = Number::INF;
+  updateGcdBounds(copy);
+  updateGcdBounds(r);
+}
+
+void Range::updateGcdBounds(const Range& r) {
+  if (r.lower_bound > Number::ZERO) {
+    lower_bound = Number::ONE;
+    if (upper_bound == Number::INF || upper_bound > r.upper_bound) {
+      upper_bound = r.upper_bound;
     }
   }
-  if (r.lower_bound != Number::INF && r.lower_bound >= Number::ONE) {
-    l = Number::ONE;
-    if (u == Number::INF || u > r.upper_bound) {
-      u = r.upper_bound;
+  if (r.upper_bound < Number::ZERO) {
+    lower_bound = Number::ONE;
+    auto abs = Semantics::abs(r.lower_bound);
+    if (upper_bound == Number::INF || upper_bound > abs) {
+      upper_bound = abs;
     }
   }
-  lower_bound = l;
-  upper_bound = u;
-  return *this;
 }
 
 bool Range::isFinite() const {
