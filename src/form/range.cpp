@@ -44,7 +44,9 @@ Range& Range::operator*=(const Range& r) {
       u = Semantics::mul(lower_bound, r.upper_bound);
     }
     if (upper_bound != Number::INF && upper_bound >= Number::ZERO &&
-        r.upper_bound != Number::INF && r.upper_bound >= Number::ZERO) {
+        r.upper_bound != Number::INF && r.upper_bound >= Number::ZERO &&
+        ((lower_bound != Number::INF && lower_bound >= Number::ZERO) ||
+         (r.lower_bound != Number::INF && r.lower_bound >= Number::ZERO))) {
       u = Semantics::mul(upper_bound, r.upper_bound);
     }
   }
