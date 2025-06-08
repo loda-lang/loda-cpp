@@ -15,6 +15,7 @@ class Range {
   Range& operator+=(const Range& r);
   Range& operator-=(const Range& r);
   Range& operator*=(const Range& r);
+  Range& operator/=(const Range& r);
   Range& operator%=(const Range& r);
 
   void gcd(const Range& r);

@@ -14,9 +14,15 @@ Range& Range::operator-=(const Range& r) {
   return *this;
 }
 
-void updateMinMax(const Number& val, Number& min, Number& max) {
-  if (val < min) min = val;
-  if (val > max) max = val;
+// Helper to find min and max from a list of candidates
+static void findMinMax(const Number* candidates, size_t n, Number& min,
+                       Number& max) {
+  min = candidates[0];
+  max = candidates[0];
+  for (size_t i = 1; i < n; ++i) {
+    if (candidates[i] < min) min = candidates[i];
+    if (candidates[i] > max) max = candidates[i];
+  }
 }
 
 Range& Range::operator*=(const Range& r) {
@@ -26,15 +32,9 @@ Range& Range::operator*=(const Range& r) {
   auto u2 = r.upper_bound;
   if (isFinite() && r.isFinite()) {
     // both finite
-    auto a1 = Semantics::mul(l1, l2);
-    auto a2 = Semantics::mul(l1, u2);
-    auto a3 = Semantics::mul(u1, l2);
-    auto a4 = Semantics::mul(u1, u2);
-    lower_bound = a1;
-    upper_bound = a1;
-    updateMinMax(a2, lower_bound, upper_bound);
-    updateMinMax(a3, lower_bound, upper_bound);
-    updateMinMax(a4, lower_bound, upper_bound);
+    Number candidates[4] = {Semantics::mul(l1, l2), Semantics::mul(l1, u2),
+                            Semantics::mul(u1, l2), Semantics::mul(u1, u2)};
+    findMinMax(candidates, 4, lower_bound, upper_bound);
   } else {
     // at least one is infinite
     if (l1 >= Number::ZERO && l2 >= Number::ZERO) {
@@ -54,6 +54,30 @@ Range& Range::operator*=(const Range& r) {
     } else {
       upper_bound = Number::INF;
     }
+  }
+  return *this;
+}
+
+Range& Range::operator/=(const Range& r) {
+  auto l1 = lower_bound;
+  auto l2 = r.lower_bound;
+  auto u1 = upper_bound;
+  auto u2 = r.upper_bound;
+  if (isFinite() && r.isFinite()) {
+    // both finite, integer division
+    std::vector<Number> candidates;
+    if (l2 <= Number::ZERO && u2 >= Number::ZERO) {
+      candidates.push_back(u1);
+      candidates.push_back(Semantics::mul(u1, Number::MINUS_ONE));
+    } else {
+      candidates = {Semantics::div(l1, l2), Semantics::div(l1, u2),
+                    Semantics::div(u1, l2), Semantics::div(u1, u2)};
+    }
+    findMinMax(candidates.data(), candidates.size(), lower_bound, upper_bound);
+  } else {
+    // at least one is infinite
+    lower_bound = Number::INF;
+    upper_bound = Number::INF;
   }
   return *this;
 }

@@ -1169,7 +1169,9 @@ void Test::range() {
   checkRanges(1478, "$0 <= -1, $1 <= -1");
   checkRanges(1489, "$0 <= 0");
   checkRanges(2378, "0 <= $0, 0 <= $1");
+  checkRanges(3079, "1 <= $0 <= 24, 46 <= $1 <= 84");
   checkRanges(5408, "1 <= $0");
+  checkRanges(14025, "-4 <= $0 <= 4, -11 <= $1 <= 4");
   checkRanges(34927, "2 <= $0, 0 <= $1");
   checkRanges(63462, "0 <= $0, 0 <= $1 <= 9");
   checkRanges(105397, "2 <= $0 <= 4");
