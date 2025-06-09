@@ -703,8 +703,9 @@ bool checkRange(const OeisSequence& seq, const Program& program) {
   if (it == ranges.end()) {
     return false;
   }
+  auto result = ranges.toString(Program::OUTPUT_CELL, "a(n)");
   Log::get().info("Checking " + std::to_string(numTerms) + " terms of " +
-                  idStr + ": " + ranges.toString(Program::OUTPUT_CELL));
+                  idStr + ": " + result);
   auto& range = it->second;
   auto index = range.check(terms);
   if (index != -1) {
