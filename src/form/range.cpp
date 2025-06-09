@@ -30,13 +30,12 @@ Range& Range::operator*=(const Range& r) {
   auto l2 = r.lower_bound;
   auto u1 = upper_bound;
   auto u2 = r.upper_bound;
-  if (isFinite() && r.isFinite()) {
-    // both finite
+  if (isFinite() && r.isFinite()) {  // both arguments are finite
     Number candidates[4] = {Semantics::mul(l1, l2), Semantics::mul(l1, u2),
                             Semantics::mul(u1, l2), Semantics::mul(u1, u2)};
     findMinMax(candidates, 4, lower_bound, upper_bound);
-  } else {
-    // at least one is infinite
+  } else {  // at least one argument is infinite
+    // update lower bound
     if (l1 >= Number::ZERO && l2 >= Number::ZERO) {
       lower_bound = Semantics::mul(l1, l2);
     } else if (u1 <= Number::ZERO && u2 <= Number::ZERO) {
@@ -44,6 +43,7 @@ Range& Range::operator*=(const Range& r) {
     } else {
       lower_bound = Number::INF;
     }
+    // update upper bound
     if (l1 >= Number::ZERO && u2 <= Number::ZERO) {
       upper_bound = Semantics::mul(l1, u2);
     } else if (l2 >= Number::ZERO && u1 <= Number::ZERO) {
@@ -64,8 +64,8 @@ Range& Range::operator/=(const Range& r) {
   auto l2 = r.lower_bound;
   auto u1 = upper_bound;
   auto u2 = r.upper_bound;
-  if (r.isFinite()) {
-    if (isFinite()) {
+  if (r.isFinite()) {  // divisor is finite
+    if (isFinite()) {  // dividend is also finite
       std::vector<Number> candidates;
       if (l2 <= Number::ZERO && u2 >= Number::ZERO) {
         candidates.push_back(u1);
@@ -76,8 +76,11 @@ Range& Range::operator/=(const Range& r) {
       }
       findMinMax(candidates.data(), candidates.size(), lower_bound,
                  upper_bound);
-    } else if (l1 >= Number::ZERO && l2 >= Number::ZERO) {
+    }
+    // dividend is infinte
+    else if (l1 >= Number::ZERO && l2 >= Number::ZERO) {
       lower_bound = Semantics::div(l1, u2);
+      // upper bound remains infinite
     } else {
       lower_bound = Number::INF;
       upper_bound = Number::INF;
