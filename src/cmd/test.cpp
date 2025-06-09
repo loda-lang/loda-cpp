@@ -1184,8 +1184,9 @@ void Test::checkRanges(int64_t id, const std::string& expected) {
   if (!generator.generate(p, ranges)) {
     Log::get().error("Cannot generate range from program", true);
   }
-  if (ranges.toString() != expected) {
-    Log::get().error("Unexpected ranges: " + ranges.toString(), true);
+  auto result = ranges.toString(Program::OUTPUT_CELL, "a(n)");
+  if (result != expected) {
+    Log::get().error("Unexpected ranges: " + result, true);
   }
 }
 

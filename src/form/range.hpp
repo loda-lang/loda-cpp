@@ -40,5 +40,5 @@ class RangeMap : public std::map<int64_t, Range> {
   void prune();
 
   std::string toString() const;
-  std::string toString(int64_t index) const;
+  std::string toString(int64_t index, std::string name = "") const;
 };
