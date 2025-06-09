@@ -137,6 +137,8 @@ void Range::pow(const Range& r) {
   const auto l2 = r.lower_bound;
   const auto u1 = upper_bound;
   const auto u2 = r.upper_bound;
+  const bool is_even_exp =
+      r.isConstant() && Semantics::mod(l2, 2) == Number::ZERO;
   // update lower bound
   if (l1 >= Number::ZERO) {
     if (l2 >= Number::ZERO) {
@@ -144,17 +146,22 @@ void Range::pow(const Range& r) {
     } else {
       lower_bound = Number::ZERO;
     }
-  } else if (l1 <= Number::ZERO && u2 >= Number::ZERO) {
+  } else if (l1 <= Number::ZERO && u1 <= Number::ZERO && u2 >= Number::ZERO) {
     auto odd_exp = u2;
     if (u2 > Number::ONE && Semantics::mod(u2, 2) == Number::ZERO) {
       odd_exp -= Number::ONE;
     }
     lower_bound = Semantics::pow(u1, odd_exp);
+  } else if (is_even_exp) {
+    lower_bound = Number::ZERO;
   } else {
     lower_bound = Number::INF;
   }
   // update upper bound
-  if (l1 >= Number::ZERO && u1 >= 0 && u2 >= 0) {
+  if (isFinite() && is_even_exp) {
+    upper_bound =
+        Semantics::max(Semantics::pow(l1, l2), Semantics::pow(u1, l2));
+  } else if (l1 >= Number::ZERO && u1 >= 0 && u2 >= 0) {
     upper_bound = Semantics::pow(u1, u2);
   } else {
     upper_bound = Number::INF;
