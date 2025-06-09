@@ -59,23 +59,30 @@ Range& Range::operator*=(const Range& r) {
 }
 
 Range& Range::operator/=(const Range& r) {
+  // TODO: support more cases
   auto l1 = lower_bound;
   auto l2 = r.lower_bound;
   auto u1 = upper_bound;
   auto u2 = r.upper_bound;
-  if (isFinite() && r.isFinite()) {
-    // both finite, integer division
-    std::vector<Number> candidates;
-    if (l2 <= Number::ZERO && u2 >= Number::ZERO) {
-      candidates.push_back(u1);
-      candidates.push_back(Semantics::mul(u1, Number::MINUS_ONE));
+  if (r.isFinite()) {
+    if (isFinite()) {
+      std::vector<Number> candidates;
+      if (l2 <= Number::ZERO && u2 >= Number::ZERO) {
+        candidates.push_back(u1);
+        candidates.push_back(Semantics::mul(u1, Number::MINUS_ONE));
+      } else {
+        candidates = {Semantics::div(l1, l2), Semantics::div(l1, u2),
+                      Semantics::div(u1, l2), Semantics::div(u1, u2)};
+      }
+      findMinMax(candidates.data(), candidates.size(), lower_bound,
+                 upper_bound);
+    } else if (l2 >= Number::ZERO && l1 >= Number::ZERO) {
+      lower_bound = Semantics::div(lower_bound, l2);
     } else {
-      candidates = {Semantics::div(l1, l2), Semantics::div(l1, u2),
-                    Semantics::div(u1, l2), Semantics::div(u1, u2)};
+      lower_bound = Number::INF;
+      upper_bound = Number::INF;
     }
-    findMinMax(candidates.data(), candidates.size(), lower_bound, upper_bound);
   } else {
-    // at least one is infinite
     lower_bound = Number::INF;
     upper_bound = Number::INF;
   }
@@ -174,7 +181,7 @@ std::string RangeMap::toString(int64_t index) const {
   auto it = find(index);
   std::string result;
   if (it != end()) {
-    auto& r = it->second;
+    auto& r = it->second;  // FIX: use it->second, not it.second
     if (r.isUnbounded()) {
       return result;
     }
