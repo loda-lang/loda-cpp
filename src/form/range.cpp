@@ -76,8 +76,8 @@ Range& Range::operator/=(const Range& r) {
       }
       findMinMax(candidates.data(), candidates.size(), lower_bound,
                  upper_bound);
-    } else if (l2 >= Number::ZERO && l1 >= Number::ZERO) {
-      lower_bound = Semantics::div(lower_bound, l2);
+    } else if (l1 >= Number::ZERO && l2 >= Number::ZERO) {
+      lower_bound = Semantics::div(l1, u2);
     } else {
       lower_bound = Number::INF;
       upper_bound = Number::INF;
