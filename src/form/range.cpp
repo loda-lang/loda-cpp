@@ -132,6 +132,35 @@ Range& Range::operator%=(const Range& r) {
   return *this;
 }
 
+void Range::pow(const Range& r) {
+  const auto l1 = lower_bound;
+  const auto l2 = r.lower_bound;
+  const auto u1 = upper_bound;
+  const auto u2 = r.upper_bound;
+  // update lower bound
+  if (l1 >= Number::ZERO) {
+    if (l2 >= Number::ZERO) {
+      lower_bound = Semantics::pow(l1, l2);
+    } else {
+      lower_bound = Number::ONE;
+    }
+  } else if (l1 <= Number::ZERO && u2 >= Number::ZERO) {
+    auto odd_exp = u2;
+    if (u2 > Number::ONE && Semantics::mod(u2, 2) == Number::ZERO) {
+      odd_exp -= Number::ONE;
+    }
+    lower_bound = Semantics::pow(u1, odd_exp);
+  } else {
+    lower_bound = Number::INF;
+  }
+  // update upper bound
+  if (l1 >= Number::ZERO && u1 >= 0 && u2 >= 0) {
+    upper_bound = Semantics::pow(u1, u2);
+  } else {
+    upper_bound = Number::INF;
+  }
+}
+
 void Range::gcd(const Range& r) {
   auto copy = *this;
   lower_bound = Number::ZERO;
