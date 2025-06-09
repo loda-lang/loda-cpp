@@ -1161,19 +1161,17 @@ void Test::checkFormulas(const std::string& testFile, FormulaType type) {
 }
 
 void Test::range() {
-  checkRanges(4, "$0 = 0");
-  checkRanges(12, "$0 = 1");
-  checkRanges(27, "1 <= $0");
-  checkRanges(34, "1 <= $0 <= 2");
-  checkRanges(35, "0 <= $0 <= 1");
-  checkRanges(1478, "$0 <= -1, $1 <= -1");
-  checkRanges(1489, "$0 <= 0");
-  checkRanges(2378, "0 <= $0, 0 <= $1");
-  checkRanges(5408, "1 <= $0");
-  checkRanges(34927, "2 <= $0, 0 <= $1");
-  checkRanges(63462, "0 <= $0, 0 <= $1 <= 9");
-  checkRanges(105397, "2 <= $0 <= 4");
-  checkRanges(109008, "1 <= $0 <= 4");
+  std::string path = std::string("tests") + FILE_SEP + std::string("formula") +
+                     FILE_SEP + "range.txt";
+  std::map<size_t, std::string> map;
+  OeisList::loadMapWithComments(path, map);
+  if (map.empty()) {
+    Log::get().error("Unexpected map content", true);
+  }
+  Parser parser;
+  for (const auto& e : map) {
+    checkRanges(OeisSequence(e.first).id, e.second);
+  }
 }
 
 void Test::checkRanges(int64_t id, const std::string& expected) {
@@ -1186,8 +1184,9 @@ void Test::checkRanges(int64_t id, const std::string& expected) {
   if (!generator.generate(p, ranges)) {
     Log::get().error("Cannot generate range from program", true);
   }
-  if (ranges.toString() != expected) {
-    Log::get().error("Unexpected ranges: " + ranges.toString(), true);
+  auto result = ranges.toString(Program::OUTPUT_CELL, "a(n)");
+  if (result != expected) {
+    Log::get().error("Unexpected ranges: " + result, true);
   }
 }
 

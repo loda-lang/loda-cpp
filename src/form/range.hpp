@@ -15,6 +15,7 @@ class Range {
   Range& operator+=(const Range& r);
   Range& operator-=(const Range& r);
   Range& operator*=(const Range& r);
+  Range& operator/=(const Range& r);
   Range& operator%=(const Range& r);
 
   void gcd(const Range& r);
@@ -39,5 +40,5 @@ class RangeMap : public std::map<int64_t, Range> {
   void prune();
 
   std::string toString() const;
-  std::string toString(int64_t index) const;
+  std::string toString(int64_t index, std::string name = "") const;
 };
