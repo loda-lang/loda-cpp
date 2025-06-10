@@ -146,7 +146,8 @@ void Range::pow(const Range& r) {
     } else {
       lower_bound = Number::ZERO;
     }
-  } else if (l1 <= Number::ZERO && u1 <= Number::ZERO && u2 >= Number::ZERO) {
+  } else if (l1 <= Number::ZERO && u1 <= Number::ZERO && l2 >= Number::ZERO &&
+             u2 >= Number::ZERO) {
     auto odd_exp = u2;
     if (u2 > Number::ONE && Semantics::mod(u2, 2) == Number::ZERO) {
       odd_exp -= Number::ONE;
