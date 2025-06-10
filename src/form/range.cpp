@@ -141,7 +141,7 @@ void Range::pow(const Range& r) {
       r.isConstant() && Semantics::mod(l2, 2) == Number::ZERO;
   // update lower bound
   if (l1 >= Number::ZERO) {
-    if (l2 >= Number::ZERO) {
+    if (l2 >= Number::ONE) {
       lower_bound = Semantics::pow(l1, l2);
     } else {
       lower_bound = Number::ZERO;
