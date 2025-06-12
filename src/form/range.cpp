@@ -133,34 +133,48 @@ Range& Range::operator%=(const Range& r) {
 }
 
 void Range::pow(const Range& r) {
-  const auto l1 = lower_bound;
-  const auto l2 = r.lower_bound;
-  const auto u1 = upper_bound;
-  const auto u2 = r.upper_bound;
+  const auto l1 = lower_bound;    // lower bound of exponent
+  const auto u1 = upper_bound;    // upper bound of exponent
+  const auto l2 = r.lower_bound;  // lower bound of base
+  const auto u2 = r.upper_bound;  // upper bound of base
   const bool is_even_exp =
       r.isConstant() && Semantics::mod(l2, 2) == Number::ZERO;
+  const bool is_odd_exp =
+      r.isConstant() && Semantics::mod(l2, 2) == Number::ONE;
   // update lower bound
-  if (l1 >= Number::ZERO) {
-    if (l2 >= Number::ONE) {
+  if (l1 > Number::ZERO) {
+    if (l2 >= Number::ZERO) {
       lower_bound = Semantics::pow(l1, l2);
     } else {
-      lower_bound = Number::ZERO;  // needed for nagative exponents
+      lower_bound = Number::ZERO;
     }
-    // TODO: separate handling for exponent = 0 vs. < 0
-  } else if (l1 <= Number::ZERO && u1 <= Number::ZERO && l2 >= Number::ZERO &&
-             u2 >= Number::ZERO) {
-    auto odd_exp = u2;
-    if (u2 > Number::ONE && Semantics::mod(u2, 2) == Number::ZERO) {
-      odd_exp -= Number::ONE;
+  } else if (l1 == Number::ZERO) {
+    if (l2 == Number::ZERO && u2 == Number::ZERO) {
+      lower_bound = Number::ONE;
+    } else {
+      lower_bound = Number::ZERO;
     }
-    lower_bound = Semantics::pow(u1, odd_exp);
+  } else if (l1 < Number::ZERO) {
+    if (is_even_exp) {
+      lower_bound = Number::ZERO;
+    } else if (u1 <= Number::ZERO && l2 >= Number::ZERO && u2 >= Number::ZERO) {
+      auto odd_exp = u2;
+      if (u2 > Number::ONE && Semantics::mod(u2, 2) == Number::ZERO) {
+        odd_exp -= Number::ONE;
+      }
+      lower_bound = Semantics::pow(u1, odd_exp);
+    } else {
+      lower_bound = Number::INF;
+    }
   } else if (is_even_exp) {
     lower_bound = Number::ZERO;
   } else {
     lower_bound = Number::INF;
   }
   // update upper bound
-  if (isFinite() && is_even_exp) {
+  if (u1 >= 0 && is_odd_exp) {
+    upper_bound = Semantics::pow(u1, u2);
+  } else if (isFinite() && is_even_exp) {
     upper_bound =
         Semantics::max(Semantics::pow(l1, l2), Semantics::pow(u1, l2));
   } else if (l1 >= Number::ZERO && u1 >= Number::ZERO && u2 >= Number::ZERO) {
