@@ -144,8 +144,9 @@ void Range::pow(const Range& r) {
     if (l2 >= Number::ONE) {
       lower_bound = Semantics::pow(l1, l2);
     } else {
-      lower_bound = Number::ZERO;
+      lower_bound = Number::ZERO;  // needed for nagative exponents
     }
+    // TODO: separate handling for exponent = 0 vs. < 0
   } else if (l1 <= Number::ZERO && u1 <= Number::ZERO && l2 >= Number::ZERO &&
              u2 >= Number::ZERO) {
     auto odd_exp = u2;
@@ -162,8 +163,10 @@ void Range::pow(const Range& r) {
   if (isFinite() && is_even_exp) {
     upper_bound =
         Semantics::max(Semantics::pow(l1, l2), Semantics::pow(u1, l2));
-  } else if (l1 >= Number::ZERO && u1 >= 0 && u2 >= 0) {
-    upper_bound = Semantics::pow(u1, u2);
+  } else if (l1 >= Number::ZERO && u1 >= Number::ZERO && u2 >= Number::ZERO) {
+    upper_bound = Semantics::max(
+        Semantics::pow(u1, u2),
+        Number::ONE);  // lower bound needed because 0^1 = 0 but 0^0 = 1
   } else {
     upper_bound = Number::INF;
   }
