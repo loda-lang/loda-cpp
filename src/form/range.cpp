@@ -172,15 +172,20 @@ void Range::pow(const Range& r) {
     lower_bound = Number::INF;
   }
   // update upper bound
-  if (u1 >= 0 && is_odd_exp) {
-    upper_bound = Semantics::pow(u1, u2);
+  if (u1 >= Number::ZERO) {
+    if (Semantics::abs(l1) <= u1 || is_odd_exp) {
+      if (l2 > Number::ZERO) {
+        upper_bound = Semantics::pow(u1, u2);
+      } else {
+        upper_bound =
+            Semantics::max(Semantics::pow(u1, u2), Number::ONE);  // 0^0 = 1
+      }
+    } else {
+      upper_bound = Number::INF;
+    }
   } else if (isFinite() && is_even_exp) {
     upper_bound =
         Semantics::max(Semantics::pow(l1, l2), Semantics::pow(u1, l2));
-  } else if (l1 >= Number::ZERO && u1 >= Number::ZERO && u2 >= Number::ZERO) {
-    upper_bound = Semantics::max(
-        Semantics::pow(u1, u2),
-        Number::ONE);  // lower bound needed because 0^1 = 0 but 0^0 = 1
   } else {
     upper_bound = Number::INF;
   }
