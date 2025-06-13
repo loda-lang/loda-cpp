@@ -709,8 +709,9 @@ bool checkRange(const OeisSequence& seq, const Program& program) {
   auto& range = it->second;
   auto index = range.check(terms);
   if (index != -1) {
+    auto offset = ProgramUtil::getOffset(program);
     Log::get().error("Range check failed for " + idStr + " for a(" +
-                         std::to_string(index) +
+                         std::to_string(index + offset) +
                          ") = " + terms[index].to_string(),
                      true);
     return false;
@@ -747,8 +748,8 @@ void Commands::testRange(const std::string& id) {
       numChecked++;
     }
   }
-  Log::get().info("Rinished range check; checked: " +
-                  std::to_string(numChecked));
+  Log::get().info("Successfully finished range check for " +
+                  std::to_string(numChecked) + " programs");
 }
 
 void Commands::generate() {
