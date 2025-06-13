@@ -132,6 +132,16 @@ Range& Range::operator%=(const Range& r) {
   return *this;
 }
 
+void Range::trn(const Range& r) {
+  *this -= r;
+  if (lower_bound < Number::ZERO || lower_bound == Number::INF) {
+    lower_bound = Number::ZERO;
+  }
+  if (upper_bound < Number::ZERO) {
+    upper_bound = Number::ZERO;
+  }
+}
+
 void Range::pow(const Range& r) {
   const auto l1 = lower_bound;    // lower bound of exponent
   const auto u1 = upper_bound;    // upper bound of exponent
