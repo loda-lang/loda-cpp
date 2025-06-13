@@ -100,6 +100,12 @@ bool RangeGenerator::update(const Operation& op, RangeMap& ranges) const {
     case Operation::Type::GCD:
       target.gcd(source);
       break;
+    case Operation::Type::MIN:
+      target.min(source);
+      break;
+    case Operation::Type::MAX:
+      target.max(source);
+      break;
     default:
       return false;  // unsupported operation type for range generation
   }

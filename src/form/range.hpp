@@ -20,6 +20,8 @@ class Range {
 
   void pow(const Range& r);
   void gcd(const Range& r);
+  void min(const Range& r);
+  void max(const Range& r);
 
   bool isFinite() const;
   bool isConstant() const;

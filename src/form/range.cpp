@@ -215,6 +215,16 @@ void Range::updateGcdBounds(const Range& r) {
   }
 }
 
+void Range::min(const Range& r) {
+  lower_bound = Semantics::min(lower_bound, r.lower_bound);
+  upper_bound = Semantics::min(upper_bound, r.upper_bound);
+}
+
+void Range::max(const Range& r) {
+  lower_bound = Semantics::max(lower_bound, r.lower_bound);
+  upper_bound = Semantics::max(upper_bound, r.upper_bound);
+}
+
 bool Range::isFinite() const {
   return lower_bound != Number::INF && upper_bound != Number::INF;
 }
