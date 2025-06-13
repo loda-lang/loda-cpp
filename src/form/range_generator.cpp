@@ -100,6 +100,12 @@ bool RangeGenerator::update(const Operation& op, RangeMap& ranges) const {
     case Operation::Type::GCD:
       target.gcd(source);
       break;
+    case Operation::Type::EQU:
+    case Operation::Type::NEQ:
+    case Operation::Type::LEQ:
+    case Operation::Type::GEQ:
+      target = Range(Number::ZERO, Number::ONE);
+      break;
     case Operation::Type::MIN:
       target.min(source);
       break;

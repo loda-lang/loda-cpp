@@ -696,13 +696,13 @@ bool checkRange(const OeisSequence& seq, const Program& program) {
   if (!generator.generate(program, ranges)) {
     return false;
   }
-  auto idStr = ProgramUtil::idStr(seq.id);
-  auto numTerms = seq.existingNumTerms();
-  auto terms = seq.getTerms(numTerms);
   auto it = ranges.find(Program::OUTPUT_CELL);
   if (it == ranges.end()) {
     return false;
   }
+  auto idStr = ProgramUtil::idStr(seq.id);
+  auto numTerms = seq.existingNumTerms();
+  auto terms = seq.getTerms(numTerms);
   auto result = ranges.toString(Program::OUTPUT_CELL, "a(n)");
   Log::get().info("Checking " + std::to_string(numTerms) + " terms of " +
                   idStr + ": " + result);
