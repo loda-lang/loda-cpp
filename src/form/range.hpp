@@ -19,6 +19,8 @@ class Range {
   Range& operator%=(const Range& r);
 
   void trn(const Range& r);
+  void dif(const Range& r);
+  void dir(const Range& r);
   void pow(const Range& r);
   void gcd(const Range& r);
   void min(const Range& r);

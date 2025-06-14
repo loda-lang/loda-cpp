@@ -94,6 +94,12 @@ bool RangeGenerator::update(const Operation& op, RangeMap& ranges) const {
     case Operation::Type::DIV:
       target /= source;
       break;
+    case Operation::Type::DIF:
+      target.dif(source);
+      break;
+    case Operation::Type::DIR:
+      target.dir(source);
+      break;
     case Operation::Type::MOD:
       target %= source;
       break;

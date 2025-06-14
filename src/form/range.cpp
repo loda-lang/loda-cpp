@@ -142,6 +142,29 @@ void Range::trn(const Range& r) {
   }
 }
 
+void Range::dif(const Range& r) {
+  const auto l1 = lower_bound;
+  const auto l2 = r.lower_bound;
+  const auto u1 = upper_bound;
+  const auto u2 = r.upper_bound;
+  // update lower bound
+  if (l1 >= Number::ZERO && l2 >= Number::ZERO) {
+    lower_bound = Number::ZERO;
+  } else {
+    lower_bound = Number::INF;
+  }
+  // update upper bound
+  if (isFinite()) {
+    upper_bound = Semantics::max(Semantics::abs(l1), Semantics::abs(u1));
+  } else if (u1 <= Number::ZERO && l2 >= Number::ZERO) {
+    upper_bound = Number::ZERO;
+  } else {
+    upper_bound = Number::INF;
+  }
+}
+
+void Range::dir(const Range& r) { dif(r); }
+
 void Range::pow(const Range& r) {
   const auto l1 = lower_bound;    // lower bound of exponent
   const auto u1 = upper_bound;    // upper bound of exponent
@@ -226,11 +249,13 @@ void Range::updateGcdBounds(const Range& r) {
 }
 
 void Range::min(const Range& r) {
+  // TODO: handle cases where one of the bounds is infinite
   lower_bound = Semantics::min(lower_bound, r.lower_bound);
   upper_bound = Semantics::min(upper_bound, r.upper_bound);
 }
 
 void Range::max(const Range& r) {
+  // TODO: handle cases where one of the bounds is infinite
   lower_bound = Semantics::max(lower_bound, r.lower_bound);
   upper_bound = Semantics::max(upper_bound, r.upper_bound);
 }
