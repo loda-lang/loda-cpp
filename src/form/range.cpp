@@ -249,15 +249,21 @@ void Range::updateGcdBounds(const Range& r) {
 }
 
 void Range::min(const Range& r) {
-  // TODO: handle cases where one of the bounds is infinite
   lower_bound = Semantics::min(lower_bound, r.lower_bound);
-  upper_bound = Semantics::min(upper_bound, r.upper_bound);
+  if (upper_bound == Number::INF) {
+    upper_bound = r.upper_bound;
+  } else if (r.upper_bound != Number::INF) {
+    upper_bound = Semantics::min(upper_bound, r.upper_bound);
+  }  // otherwise, upper bound remains unchanged
 }
 
 void Range::max(const Range& r) {
-  // TODO: handle cases where one of the bounds is infinite
-  lower_bound = Semantics::max(lower_bound, r.lower_bound);
   upper_bound = Semantics::max(upper_bound, r.upper_bound);
+  if (lower_bound == Number::INF) {
+    lower_bound = r.lower_bound;
+  } else if (r.lower_bound != Number::INF) {
+    lower_bound = Semantics::max(lower_bound, r.lower_bound);
+  }  // otherwise, lower bound remains unchanged
 }
 
 bool Range::isFinite() const {
