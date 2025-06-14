@@ -109,6 +109,9 @@ bool RangeGenerator::update(const Operation& op, RangeMap& ranges) const {
     case Operation::Type::GCD:
       target.gcd(source);
       break;
+    case Operation::Type::LOG:
+      target.log(source);
+      break;
     case Operation::Type::EQU:
     case Operation::Type::NEQ:
     case Operation::Type::LEQ:

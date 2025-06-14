@@ -248,6 +248,14 @@ void Range::updateGcdBounds(const Range& r) {
   }
 }
 
+void Range::log(const Range& r) {
+  lower_bound = Semantics::log(lower_bound, r.upper_bound);
+  if (lower_bound == Number::INF) {
+    lower_bound = Number::ZERO;
+  }
+  upper_bound = Semantics::log(upper_bound, r.lower_bound);
+}
+
 void Range::min(const Range& r) {
   lower_bound = Semantics::min(lower_bound, r.lower_bound);
   if (upper_bound == Number::INF) {

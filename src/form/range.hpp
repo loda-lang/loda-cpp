@@ -23,6 +23,7 @@ class Range {
   void dir(const Range& r);
   void pow(const Range& r);
   void gcd(const Range& r);
+  void log(const Range& r);
   void min(const Range& r);
   void max(const Range& r);
 
