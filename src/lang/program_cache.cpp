@@ -1,5 +1,6 @@
 #include "lang/program_cache.hpp"
 
+#include <exception>
 #include <unordered_set>
 #include <vector>
 
