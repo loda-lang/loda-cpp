@@ -391,14 +391,6 @@ void Interpreter::set(const Operand& a, const Number& v, Memory& mem,
   mem.set(index, v);
 }
 
-std::string getProgramPath(int64_t id) {
-  if (id < 0) {
-    return ProgramUtil::getProgramPath(-id, "prg", "P");
-  } else {
-    return ProgramUtil::getProgramPath(id);
-  }
-}
-
 std::pair<Number, size_t> Interpreter::callSeq(int64_t id, const Number& arg) {
   if (arg < 0) {
     throw std::runtime_error(ERROR_SEQ_USING_NEGATIVE_ARG);
@@ -412,7 +404,7 @@ std::pair<Number, size_t> Interpreter::callSeq(int64_t id, const Number& arg) {
   }
 
   // check if program exists
-  auto& call_program = getProgram(id);
+  auto& call_program = program_cache.get(id);
 
   // check for recursive calls
   if (running_programs.find(id) != running_programs.end()) {
@@ -446,11 +438,12 @@ std::pair<Number, size_t> Interpreter::callSeq(int64_t id, const Number& arg) {
 size_t Interpreter::callPrg(int64_t id, int64_t start, Memory& mem) {
   // load program
   id = -id;  // internally use negative IDs for prg calls
-  auto& call_program = getProgram(id);
+  auto& call_program = program_cache.get(id);
 
   // check for recursive calls
   if (running_programs.find(id) != running_programs.end()) {
-    throw std::runtime_error("Recursion detected: " + getProgramPath(id));
+    throw std::runtime_error("Recursion detected: " +
+                             ProgramCache::getProgramPath(id));
   }
 
   // get number of inputs and outputs
@@ -481,29 +474,12 @@ size_t Interpreter::callPrg(int64_t id, int64_t start, Memory& mem) {
   return steps;
 }
 
-const Program& Interpreter::getProgram(int64_t id) {
-  if (missing_programs.find(id) != missing_programs.end()) {
-    throw std::runtime_error("Program not found: " + getProgramPath(id));
-  }
-  if (program_cache.find(id) == program_cache.end()) {
-    try {
-      Parser parser;
-      program_cache[id] = parser.parse(getProgramPath(id));
-    } catch (...) {
-      missing_programs.insert(id);
-      std::rethrow_exception(std::current_exception());
-    }
-  }
-  return program_cache[id];
-}
-
 size_t Interpreter::getMaxCycles() const {
   return (settings.max_cycles >= 0) ? settings.max_cycles
                                     : std::numeric_limits<size_t>::max();
 }
 
 void Interpreter::clearCaches() {
-  missing_programs.clear();
   program_cache.clear();
   terms_cache.clear();
 }

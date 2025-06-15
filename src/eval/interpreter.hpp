@@ -4,7 +4,7 @@
 #include <unordered_set>
 
 #include "eval/memory.hpp"
-#include "lang/program.hpp"
+#include "lang/program_cache.hpp"
 #include "sys/util.hpp"
 
 class Interpreter {
@@ -35,16 +35,13 @@ class Interpreter {
 
   size_t callPrg(int64_t id, int64_t start, Memory &mem);
 
-  const Program &getProgram(int64_t id);
-
   const Settings &settings;
 
   const bool is_debug;
   bool has_memory;
   size_t num_memory_checks;
 
-  std::unordered_map<int64_t, Program> program_cache;
-  std::unordered_set<int64_t> missing_programs;
+  ProgramCache program_cache;
   std::unordered_set<int64_t> running_programs;
   std::unordered_map<std::pair<int64_t, Number>, std::pair<Number, size_t>,
                      IntNumberPairHasher>
