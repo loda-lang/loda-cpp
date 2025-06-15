@@ -1,7 +1,7 @@
 #pragma once
 
 #include "form/range.hpp"
-#include "lang/program.hpp"
+#include "lang/program_cache.hpp"
 
 /**
  * Range generator. It takes a LODA program as input and generates
@@ -18,10 +18,12 @@ class RangeGenerator {
    * @param ranges The output range map.
    * @return True if the generation was successful, false otherwise.
    */
-  bool generate(const Program& program, RangeMap& ranges) const;
-  void generate(Program& program, RangeMap& ranges, bool annotate) const;
+  bool generate(const Program& program, RangeMap& ranges);
+  void generate(Program& program, RangeMap& ranges, bool annotate);
 
  private:
-  bool init(const Program& program, RangeMap& ranges) const;
-  bool update(const Operation& op, RangeMap& ranges) const;
+  static bool init(const Program& program, RangeMap& ranges);
+  bool update(const Operation& op, RangeMap& ranges);
+
+  ProgramCache program_cache;
 };

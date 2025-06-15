@@ -693,8 +693,15 @@ void Commands::testPari(const std::string& test_id) {
 bool checkRange(const OeisSequence& seq, const Program& program) {
   RangeGenerator generator;
   RangeMap ranges;
-  if (!generator.generate(program, ranges)) {
-    return false;
+  try {
+    if (!generator.generate(program, ranges)) {
+      return false;
+    }
+  } catch (const std::exception& e) {
+    Log::get().error("Error during range generation for " +
+                         ProgramUtil::idStr(seq.id) + ": " +
+                         std::string(e.what()),
+                     true);
   }
   auto it = ranges.find(Program::OUTPUT_CELL);
   if (it == ranges.end()) {

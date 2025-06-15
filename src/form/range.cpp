@@ -248,12 +248,89 @@ void Range::updateGcdBounds(const Range& r) {
   }
 }
 
+void Range::lex(const Range& r) {
+  lower_bound = Number::ZERO;
+  upper_bound = Number::INF;
+}
+
+void Range::bin(const Range& r) {
+  // update lower bound
+  if (lower_bound >= Number::ZERO && r.lower_bound >= Number::ZERO) {
+    lower_bound = Number::ZERO;
+  } else {
+    lower_bound = Number::INF;
+  }
+  // update upper bound
+  upper_bound = Number::INF;
+}
+
 void Range::log(const Range& r) {
+  // update lwer bound
   lower_bound = Semantics::log(lower_bound, r.upper_bound);
   if (lower_bound == Number::INF) {
     lower_bound = Number::ZERO;
   }
+  // update upper bound
   upper_bound = Semantics::log(upper_bound, r.lower_bound);
+}
+
+void Range::nrt(const Range& r) {
+  // update lower bound
+  lower_bound = Number::ZERO;
+  // update upper bound
+  if (upper_bound >= Number::ZERO && r.lower_bound > Number::ZERO) {
+    upper_bound = Semantics::nrt(upper_bound, r.lower_bound);
+  } else {
+    upper_bound = Number::INF;
+  }
+}
+
+void Range::dgs(const Range& r) {
+  const auto l1 = lower_bound;
+  const auto u1 = upper_bound;
+  const auto l2 = r.lower_bound;
+  const auto u2 = r.upper_bound;
+  // update lower bound
+  if (l1 >= Number::ZERO) {
+    lower_bound = Number::ZERO;
+  } else if (u1 <= Number::ZERO) {
+    // TODO: refine lower bound
+    lower_bound = Number::INF;
+  } else {
+    lower_bound = Number::INF;
+  }
+  // update upper bound
+  if (l1 >= Number::ZERO) {
+    // TODO: refine upper bound
+    upper_bound = Number::INF;
+  } else if (u1 <= Number::ZERO) {
+    upper_bound = Number::ZERO;
+  } else {
+    upper_bound = Number::INF;
+  }
+}
+
+void Range::dgr(const Range& r) {
+  const auto l1 = lower_bound;
+  const auto u1 = upper_bound;
+  const auto l2 = r.lower_bound;
+  const auto u2 = r.upper_bound;
+  // update lower bound
+  if (l1 >= Number::ZERO) {
+    lower_bound = Number::ZERO;
+  } else if (u1 <= Number::ZERO) {
+    lower_bound = Semantics::mul(Number::MINUS_ONE, u1);
+  } else {
+    lower_bound = Number::INF;
+  }
+  // update upper bound
+  if (l1 >= Number::ZERO) {
+    upper_bound = u2;
+  } else if (upper_bound <= Number::ZERO) {
+    upper_bound = Number::ZERO;
+  } else {
+    upper_bound = Number::INF;
+  }
 }
 
 void Range::min(const Range& r) {
@@ -272,6 +349,15 @@ void Range::max(const Range& r) {
   } else if (r.lower_bound != Number::INF) {
     lower_bound = Semantics::max(lower_bound, r.lower_bound);
   }  // otherwise, lower bound remains unchanged
+}
+
+void Range::binary(const Range& r) {
+  if (lower_bound >= Number::ZERO && r.lower_bound >= Number::ZERO) {
+    lower_bound = Number::ZERO;
+  } else {
+    lower_bound = Number::INF;
+  }
+  upper_bound = Number::INF;
 }
 
 bool Range::isFinite() const {

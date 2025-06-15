@@ -23,9 +23,15 @@ class Range {
   void dir(const Range& r);
   void pow(const Range& r);
   void gcd(const Range& r);
+  void lex(const Range& r);
+  void bin(const Range& r);
   void log(const Range& r);
+  void nrt(const Range& r);
+  void dgs(const Range& r);
+  void dgr(const Range& r);
   void min(const Range& r);
   void max(const Range& r);
+  void binary(const Range& r);
 
   bool isFinite() const;
   bool isConstant() const;

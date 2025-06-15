@@ -6,7 +6,7 @@
 #include "lang/program_util.hpp"
 #include "sys/log.hpp"
 
-bool RangeGenerator::init(const Program& program, RangeMap& ranges) const {
+bool RangeGenerator::init(const Program& program, RangeMap& ranges) {
   ranges.clear();
   if (ProgramUtil::hasIndirectOperand(program)) {
     return false;
@@ -27,7 +27,7 @@ bool RangeGenerator::init(const Program& program, RangeMap& ranges) const {
   return true;
 }
 
-bool RangeGenerator::generate(const Program& program, RangeMap& ranges) const {
+bool RangeGenerator::generate(const Program& program, RangeMap& ranges) {
   if (!init(program, ranges)) {
     return false;
   }
@@ -41,7 +41,7 @@ bool RangeGenerator::generate(const Program& program, RangeMap& ranges) const {
 }
 
 void RangeGenerator::generate(Program& program, RangeMap& ranges,
-                              bool annotate) const {
+                              bool annotate) {
   if (!init(program, ranges)) {
     return;
   }
@@ -56,7 +56,7 @@ void RangeGenerator::generate(Program& program, RangeMap& ranges,
   ranges.prune();
 }
 
-bool RangeGenerator::update(const Operation& op, RangeMap& ranges) const {
+bool RangeGenerator::update(const Operation& op, RangeMap& ranges) {
   Range source;
   if (op.source.type == Operand::Type::CONSTANT) {
     source = Range(op.source.value, op.source.value);
@@ -75,6 +75,7 @@ bool RangeGenerator::update(const Operation& op, RangeMap& ranges) const {
   auto& target = it->second;
   switch (op.type) {
     case Operation::Type::NOP:
+    case Operation::Type::DBG:
       break;  // no operation, nothing to do
     case Operation::Type::MOV:
       target = source;
@@ -109,8 +110,23 @@ bool RangeGenerator::update(const Operation& op, RangeMap& ranges) const {
     case Operation::Type::GCD:
       target.gcd(source);
       break;
+    case Operation::Type::LEX:
+      target.lex(source);
+      break;
+    case Operation::Type::BIN:
+      target.bin(source);
+      break;
     case Operation::Type::LOG:
       target.log(source);
+      break;
+    case Operation::Type::NRT:
+      target.nrt(source);
+      break;
+    case Operation::Type::DGS:
+      target.dgs(source);
+      break;
+    case Operation::Type::DGR:
+      target.dgr(source);
       break;
     case Operation::Type::EQU:
     case Operation::Type::NEQ:
@@ -124,7 +140,35 @@ bool RangeGenerator::update(const Operation& op, RangeMap& ranges) const {
     case Operation::Type::MAX:
       target.max(source);
       break;
-    default:
+    case Operation::Type::BAN:
+    case Operation::Type::BOR:
+    case Operation::Type::BXO:
+      target.binary(source);
+      break;
+    case Operation::Type::SEQ: {
+      if (op.source.type != Operand::Type::CONSTANT) {
+        return false;  // sequence operation requires a constant source
+      }
+      auto id = op.source.value.asInt();
+      program_cache.collect(id);  // ensures that there is no recursion
+      RangeMap tmp;
+      if (!generate(program_cache.get(id), tmp)) {
+        return false;
+      }
+      auto tmp_it = tmp.find(Program::OUTPUT_CELL);
+      if (tmp_it != tmp.end()) {
+        target = tmp_it->second;
+      } else {
+        target = Range(Number::INF, Number::INF);
+      }
+      break;
+    }
+    case Operation::Type::LPB:
+    case Operation::Type::LPE:
+    case Operation::Type::CLR:
+    case Operation::Type::SRT:
+    case Operation::Type::PRG:
+    case Operation::Type::__COUNT:
       return false;  // unsupported operation type for range generation
   }
   return true;
