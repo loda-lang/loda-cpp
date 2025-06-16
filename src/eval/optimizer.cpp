@@ -183,15 +183,15 @@ bool Optimizer::mergeOps(Program &p) const {
           }
         }
 
-        // both sources same memory cell?
-        else if (o1.source.type == Operand::Type::DIRECT &&
-                 o1.source == o2.source) {
-          // add with inverse sub?
-          if (o1.type == Operation::Type::ADD &&
-              o2.type == Operation::Type::SUB) {
-            o1.source = Operand(Operand::Type::CONSTANT, 0);
-            do_merge = true;
-          }
+        // first mul, second dgs?
+        else if (o1.type == Operation::Type::MUL &&
+                 o2.type == Operation::Type::DGS &&
+                 o1.source.value > Number::ZERO &&
+                 o2.source.value > Number::ZERO &&
+                 Semantics::getPowerOf(o1.source.value, o2.source.value) !=
+                     Number::ZERO) {
+          o1 = o2;
+          do_merge = true;
         }
 
       }
