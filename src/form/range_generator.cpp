@@ -40,6 +40,14 @@ bool RangeGenerator::generate(const Program& program, RangeMap& ranges) {
   return true;
 }
 
+int64_t getTargetCell(const Program& program, int64_t index) {
+  if (program.ops[index].type == Operation::Type::LPE) {
+    index = ProgramUtil::getEnclosingLoop(program, index).first;
+  }
+  const auto& op = program.ops[index];
+  return op.target.value.asInt();
+}
+
 void RangeGenerator::generate(Program& program, RangeMap& ranges,
                               bool annotate) {
   if (!init(program, ranges)) {
@@ -51,7 +59,7 @@ void RangeGenerator::generate(Program& program, RangeMap& ranges,
     }
     auto& op = program.ops[i];
     if (op.type != Operation::Type::NOP && annotate) {
-      op.comment = ranges.toString(op.target.value.asInt());
+      op.comment = ranges.toString(getTargetCell(program, i));
     }
   }
   ranges.prune();
@@ -71,13 +79,7 @@ bool RangeGenerator::update(const Program& program, int64_t index,
       source = Range(Number::INF, Number::INF);  // unknown source
     }
   }
-  int64_t targetCell;
-  if (op.type == Operation::Type::LPE) {
-    auto loop = ProgramUtil::getEnclosingLoop(program, index);
-    targetCell = program.ops[loop.first].target.value.asInt();
-  } else {
-    targetCell = op.target.value.asInt();
-  }
+  auto targetCell = getTargetCell(program, index);
   auto it = ranges.find(targetCell);
   if (it == ranges.end()) {
     return false;  // should not happen, but just in case
