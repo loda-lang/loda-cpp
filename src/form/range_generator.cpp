@@ -34,7 +34,7 @@ bool RangeGenerator::generate(const Program& program, RangeMap& ranges) {
   if (!init(program, ranges)) {
     return false;
   }
-  for (auto& op : program.ops) {
+  for (const auto& op : program.ops) {
     if (!update(op, ranges)) {
       return false;
     }
