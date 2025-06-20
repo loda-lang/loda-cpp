@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stack>
+#include <vector>
 
 #include "form/range.hpp"
 #include "lang/program_cache.hpp"
@@ -21,7 +22,7 @@ class RangeGenerator {
    * @return True if the generation was successful, false otherwise.
    */
   bool generate(const Program& program, RangeMap& ranges);
-  void generate(Program& program, RangeMap& ranges, bool annotate);
+  bool annotate(Program& program);
 
  private:
   struct LoopState {
@@ -31,7 +32,9 @@ class RangeGenerator {
 
   bool init(const Program& program, RangeMap& ranges);
   bool update(const Operation& op, RangeMap& ranges);
+  bool collect(const Program& program, std::vector<RangeMap>& collected);
 
+  int64_t getTargetCell(const Program& program, size_t index) const;
   int64_t getTargetCell(const Operation& op) const;
 
   ProgramCache program_cache;
