@@ -189,10 +189,20 @@ bool RangeGenerator::update(const Operation& op, RangeMap& ranges) {
     case Operation::Type::__COUNT:
       return false;  // unsupported operation type for range generation
   }
-  // the loop counter value inside loops is bounded below by zero
-  if ((ProgramUtil::isArithmetic(op.type) || op.type == Operation::Type::SEQ) &&
-      !loop_states.empty() && targetCell == loop_states.top().counterCell) {
-    target.lower_bound = Number::ZERO;
+  // extra work inside loops
+  if (!loop_states.empty() &&
+      (ProgramUtil::isArithmetic(op.type) || op.type == Operation::Type::SEQ)) {
+    auto rangeBefore = loop_states.top().rangesBefore.at(targetCell);
+    if (targetCell == loop_states.top().counterCell) {
+      target.lower_bound = Number::ZERO;
+    } else {
+      if (target.lower_bound < rangeBefore.lower_bound) {
+        target.lower_bound = Number::INF;
+      }
+      if (target.upper_bound > rangeBefore.upper_bound) {
+        target.upper_bound = Number::INF;
+      }
+    }
   }
   return true;
 }
