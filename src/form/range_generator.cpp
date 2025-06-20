@@ -3,6 +3,7 @@
 #include <set>
 #include <unordered_set>
 
+#include "eval/semantics.hpp"
 #include "lang/program_util.hpp"
 #include "sys/log.hpp"
 
@@ -17,6 +18,7 @@ bool RangeGenerator::init(const Program& program, RangeMap& ranges) {
     return false;
   }
   ranges.clear();
+  loop_states = {};
   int64_t offset = ProgramUtil::getOffset(program);
   for (auto cell : used_cells) {
     if (cell == Program::INPUT_CELL) {
@@ -44,6 +46,7 @@ bool RangeGenerator::annotate(Program& program) {
     auto& op = program.ops[i];
     if (op.type != Operation::Type::NOP) {
       op.comment = collected[i].toString(getTargetCell(program, i));
+      // op.comment = collected[i].toString();
     }
   }
   return ok;
@@ -51,18 +54,38 @@ bool RangeGenerator::annotate(Program& program) {
 
 bool RangeGenerator::collect(const Program& program,
                              std::vector<RangeMap>& collected) {
+  // compute ranges for the program
   RangeMap ranges;
   if (!init(program, ranges)) {
     return false;
   }
-  bool ok = true;
+  bool ok = true, hasLoops = false;
   for (auto& op : program.ops) {
     if (!update(op, ranges)) {
       ok = false;
       break;
     }
     collected.push_back(ranges);
+    hasLoops = hasLoops || op.type == Operation::Type::LPB;
   }
+  // compute fixed point if the program has loops
+  for (size_t i = 0; i < program.ops.size() && ok && hasLoops; ++i) {
+    ranges = {};
+    init(program, ranges);
+    for (size_t j = 0; j < program.ops.size(); ++j) {
+      auto& op = program.ops[j];
+      if (op.type == Operation::Type::LPB) {
+        auto loop = ProgramUtil::getEnclosingLoop(program, j);
+        ranges = collected[loop.second];
+      }
+      if (!update(op, ranges)) {
+        ok = false;
+        break;
+      }
+      collected[j] = ranges;
+    }
+  }
+  // remove unbounded ranges
   for (auto& ranges : collected) {
     ranges.prune();
   }
@@ -177,21 +200,61 @@ bool RangeGenerator::update(const Operation& op, RangeMap& ranges) {
       }
       break;
     }
-    case Operation::Type::LPB:
-    case Operation::Type::LPE:
+    case Operation::Type::LPB: {
+      if (op.source.type != Operand::Type::CONSTANT ||
+          op.source.value != Number::ONE) {
+        return false;
+      }
+      loop_states.push({targetCell, ranges});
+      target.lower_bound = Number::ZERO;
+      break;
+    }
+    case Operation::Type::LPE: {
+      auto rangeBefore = loop_states.top().rangesBefore.at(targetCell);
+      target.lower_bound =
+          Semantics::min(rangeBefore.lower_bound, Number::ZERO);
+      loop_states.pop();
+      break;
+    }
     case Operation::Type::CLR:
     case Operation::Type::PRG:
     case Operation::Type::__COUNT:
       return false;  // unsupported operation type for range generation
+  }
+  // extra work inside loops
+  if (!loop_states.empty() &&
+      (ProgramUtil::isArithmetic(op.type) || op.type == Operation::Type::SEQ)) {
+    auto rangeBefore = loop_states.top().rangesBefore.at(targetCell);
+    if (targetCell == loop_states.top().counterCell) {
+      target.lower_bound = Number::ZERO;
+    } else {
+      if (target.lower_bound > rangeBefore.lower_bound) {
+        target.lower_bound = rangeBefore.lower_bound;
+      } else if (target.lower_bound < rangeBefore.lower_bound) {
+        target.lower_bound = Number::INF;
+      }
+      if (target.upper_bound > rangeBefore.upper_bound) {
+        target.upper_bound = Number::INF;
+      }
+    }
   }
   return true;
 }
 
 int64_t RangeGenerator::getTargetCell(const Program& program,
                                       size_t index) const {
-  return getTargetCell(program.ops[index]);
+  auto op = program.ops[index];
+  if (op.type == Operation::Type::LPE) {
+    auto loop = ProgramUtil::getEnclosingLoop(program, index);
+    op = program.ops[loop.first];
+  }
+  return op.target.value.asInt();
 }
 
 int64_t RangeGenerator::getTargetCell(const Operation& op) const {
-  return op.target.value.asInt();
+  if (op.type == Operation::Type::LPE) {
+    return loop_states.top().counterCell;
+  } else {
+    return op.target.value.asInt();
+  }
 }

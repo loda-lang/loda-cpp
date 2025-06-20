@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stack>
 #include <vector>
 
 #include "form/range.hpp"
@@ -24,6 +25,11 @@ class RangeGenerator {
   bool annotate(Program& program);
 
  private:
+  struct LoopState {
+    int64_t counterCell;
+    RangeMap rangesBefore;
+  };
+
   bool init(const Program& program, RangeMap& ranges);
   bool update(const Operation& op, RangeMap& ranges);
   bool collect(const Program& program, std::vector<RangeMap>& collected);
@@ -32,4 +38,5 @@ class RangeGenerator {
   int64_t getTargetCell(const Operation& op) const;
 
   ProgramCache program_cache;
+  std::stack<LoopState> loop_states;
 };
