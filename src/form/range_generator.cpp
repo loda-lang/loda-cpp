@@ -166,7 +166,6 @@ bool RangeGenerator::update(const Operation& op, RangeMap& ranges) {
     case Operation::Type::LPB:
     case Operation::Type::LPE:
     case Operation::Type::CLR:
-    case Operation::Type::SRT:
     case Operation::Type::PRG:
     case Operation::Type::__COUNT:
       return false;  // unsupported operation type for range generation

@@ -64,14 +64,13 @@ class Operation {
     LPB,     // loop begin
     LPE,     // loop end
     CLR,     // clear
-    SRT,     // sort
     SEQ,     // sequence
     PRG,     // program
     DBG,     // debug
     __COUNT  // number of operation types
   };
 
-  static const std::array<Type, 34> Types;
+  static const std::array<Type, 33> Types;
 
   class Metadata {
    public:

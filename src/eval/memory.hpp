@@ -23,8 +23,6 @@ class Memory {
 
   void clear(int64_t start, int64_t length);
 
-  void sort(int64_t start, int64_t length);
-
   Memory fragment(int64_t start, int64_t length) const;
 
   size_t approximate_size() const;

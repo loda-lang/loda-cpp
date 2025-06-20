@@ -363,20 +363,6 @@ void checkMemoryString(const std::string& in, const std::string& out) {
 
 void checkMemoryString(const std::string& s) { checkMemoryString(s, s); }
 
-void checkMemorySort(const std::string& in, int64_t start, int64_t length,
-                     const std::string& out) {
-  Memory mem(in);
-  mem.sort(start, length);
-  std::stringstream buf;
-  buf << mem;
-  auto buf_str = buf.str();
-  if (buf_str != out) {
-    Log::get().error("Unexpected memory string after sorting: " + buf_str +
-                         " - expected: " + out,
-                     true);
-  }
-}
-
 void Test::memory() {
   Log::get().info("Testing memory");
 
@@ -423,83 +409,6 @@ void Test::memory() {
       checkMemory(frag, length + 1, 0);
     }
   }
-
-  // sorting
-  checkMemorySort("7:1", 7, 0, "7:1");
-  checkMemorySort("7:1", 7, 1, "7:1");
-  checkMemorySort("7:1", 6, 2, "7:1");
-  checkMemorySort("7:1", 5, 3, "7:1");
-  checkMemorySort("7:1", 7, 2, "8:1");
-  checkMemorySort("7:1", 7, 3, "9:1");
-
-  checkMemorySort("7:-1", 7, 0, "7:-1");
-  checkMemorySort("7:-1", 7, 1, "7:-1");
-  checkMemorySort("7:-1", 6, 2, "6:-1");
-  checkMemorySort("7:-1", 7, 2, "7:-1");
-
-  checkMemorySort("7:1", 7, -2, "6:1");
-  checkMemorySort("7:1", 7, -3, "5:1");
-  checkMemorySort("7:1", 8, -2, "7:1");
-
-  checkMemorySort("5:2,6:1", 5, 0, "5:2,6:1");
-  checkMemorySort("5:2,6:1", 5, 1, "5:2,6:1");
-  checkMemorySort("5:2,6:1", 5, 2, "5:1,6:2");
-  checkMemorySort("5:2,6:1", 5, 3, "6:1,7:2");
-  checkMemorySort("5:2,6:1", 4, 3, "5:1,6:2");
-  checkMemorySort("5:2,6:1", 4, 2, "5:2,6:1");
-
-  checkMemorySort("5:1,6:-2", 5, 0, "5:1,6:-2");
-  checkMemorySort("5:1,6:-2", 5, 1, "5:1,6:-2");
-  checkMemorySort("5:1,6:-2", 5, 2, "5:-2,6:1");
-  checkMemorySort("5:1,6:-2", 5, 3, "5:-2,7:1");
-  checkMemorySort("5:1,6:-2", 4, 4, "4:-2,7:1");
-
-  checkMemorySort("5:1,6:2", 6, 0, "5:1,6:2");
-  checkMemorySort("5:1,6:2", 6, -1, "5:1,6:2");
-  checkMemorySort("5:1,6:2", 6, -2, "5:2,6:1");
-  checkMemorySort("5:1,6:2", 6, -3, "4:2,5:1");
-  checkMemorySort("5:1,6:2", 7, -3, "5:2,6:1");
-
-  checkMemorySort("5:-1,6:2", 6, -1, "5:-1,6:2");
-  checkMemorySort("5:-1,6:2", 6, -2, "5:2,6:-1");
-  checkMemorySort("5:-1,6:2", 6, -3, "4:2,6:-1");
-  checkMemorySort("5:-1,6:2", 7, -4, "4:2,7:-1");
-
-  checkMemorySort("1:9,2:7,3:8", 1, 3, "1:7,2:8,3:9");
-  checkMemorySort("1:9,2:7,3:8", 0, 3, "1:7,2:9,3:8");
-  checkMemorySort("1:9,2:7,3:8", 2, 3, "1:9,3:7,4:8");
-
-  checkMemorySort("1:9,3:7,5:8", 1, 2, "2:9,3:7,5:8");
-  checkMemorySort("1:9,3:7,5:8", 1, 3, "2:7,3:9,5:8");
-  checkMemorySort("1:9,3:7,5:8", 1, 4, "3:7,4:9,5:8");
-  checkMemorySort("1:9,3:7,5:8", 1, 5, "3:7,4:8,5:9");
-
-  checkMemorySort("1:10,3:-30,5:50", 1, 1, "1:10,3:-30,5:50");
-  checkMemorySort("1:10,3:-30,5:50", 1, 2, "2:10,3:-30,5:50");
-  checkMemorySort("1:10,3:-30,5:50", 1, 3, "1:-30,3:10,5:50");
-  checkMemorySort("1:10,3:-30,5:50", 1, 4, "1:-30,4:10,5:50");
-  checkMemorySort("1:10,3:-30,5:50", 1, 5, "1:-30,4:10,5:50");
-  checkMemorySort("1:10,3:-30,5:50", 1, 6, "1:-30,5:10,6:50");
-
-  checkMemorySort("1:10,3:-30,5:50", 5, -1, "1:10,3:-30,5:50");
-  checkMemorySort("1:10,3:-30,5:50", 5, -2, "1:10,3:-30,4:50");
-  checkMemorySort("1:10,3:-30,5:50", 5, -3, "1:10,3:50,5:-30");
-  checkMemorySort("1:10,3:-30,5:50", 5, -4, "1:10,2:50,5:-30");
-  checkMemorySort("1:10,3:-30,5:50", 5, -5, "1:50,2:10,5:-30");
-
-  checkMemorySort("10:10,20:20,30:-10,40:-20", 10, 10,
-                  "19:10,20:20,30:-10,40:-20");
-  checkMemorySort("10:10,20:20,30:-10,40:-20", 10, 11,
-                  "19:10,20:20,30:-10,40:-20");
-  checkMemorySort("10:10,20:20,30:-10,40:-20", 10, 12,
-                  "20:10,21:20,30:-10,40:-20");
-  checkMemorySort("10:10,20:20,30:-10,40:-20", 10, 21,
-                  "10:-10,29:10,30:20,40:-20");
-  checkMemorySort("10:10,20:20,30:-10,40:-20", 10, 31,
-                  "10:-20,11:-10,39:10,40:20");
-
-  checkMemorySort("10:10,20:20,30:-10,40:-20", 40, -31,
-                  "10:20,11:10,39:-10,40:-20");
 }
 
 void checkEnclosingLoop(const Program& p, int64_t begin, int64_t end,

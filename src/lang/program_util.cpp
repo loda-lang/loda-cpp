@@ -50,8 +50,7 @@ bool ProgramUtil::isNop(const Operation &op) {
              op.source.value == Number::ZERO &&
              (op.type == Operation::Type::ADD ||
               op.type == Operation::Type::SUB ||
-              op.type == Operation::Type::CLR ||
-              op.type == Operation::Type::SRT)) {
+              op.type == Operation::Type::CLR)) {
     return true;
   } else if (op.source.type == Operand::Type::CONSTANT &&
              op.source.value == Number::ONE &&
@@ -99,8 +98,8 @@ size_t ProgramUtil::numOps(const Program &p, Operand::Type type) {
 bool ProgramUtil::isArithmetic(Operation::Type t) {
   return (t != Operation::Type::NOP && t != Operation::Type::DBG &&
           t != Operation::Type::LPB && t != Operation::Type::LPE &&
-          t != Operation::Type::CLR && t != Operation::Type::SRT &&
-          t != Operation::Type::SEQ && t != Operation::Type::PRG);
+          t != Operation::Type::CLR && t != Operation::Type::SEQ &&
+          t != Operation::Type::PRG);
 }
 
 bool ProgramUtil::isCommutative(Operation::Type t) {
@@ -166,8 +165,7 @@ bool ProgramUtil::isReadingCell(const Operation &op, int64_t cell) {
 }
 
 bool ProgramUtil::isWritingRegion(Operation::Type t) {
-  return (t == Operation::Type::CLR || t == Operation::Type::PRG ||
-          t == Operation::Type::SRT);
+  return (t == Operation::Type::CLR || t == Operation::Type::PRG);
 }
 
 bool ProgramUtil::hasRegionOperation(const Program &p) {
@@ -229,8 +227,7 @@ bool ProgramUtil::getUsedMemoryCells(const Program &p,
         op.type == Operation::Type::PRG) {
       return false;
     }
-    if (op.type == Operation::Type::LPB || op.type == Operation::Type::CLR ||
-        op.type == Operation::Type::SRT) {
+    if (op.type == Operation::Type::LPB || op.type == Operation::Type::CLR) {
       if (op.source.type == Operand::Type::CONSTANT) {
         region_length = op.source.value.asInt();
       } else {

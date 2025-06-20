@@ -121,7 +121,6 @@ Number Interpreter::calc(const Operation::Type type, const Number& target,
     case Operation::Type::LPB:
     case Operation::Type::LPE:
     case Operation::Type::CLR:
-    case Operation::Type::SRT:
     case Operation::Type::SEQ:
     case Operation::Type::PRG:
     case Operation::Type::__COUNT:
@@ -255,12 +254,6 @@ size_t Interpreter::run(const Program& p, Memory& mem) {
         length = get(op.source, mem).asInt();
         start = get(op.target, mem, true).asInt();
         mem.clear(start, length);
-        break;
-      }
-      case Operation::Type::SRT: {
-        length = get(op.source, mem).asInt();
-        start = get(op.target, mem, true).asInt();
-        mem.sort(start, length);
         break;
       }
       case Operation::Type::DBG: {

@@ -354,7 +354,6 @@ bool Optimizer::simplifyOperations(Program &p) const {
       case Operation::Type::LPB:
       case Operation::Type::LPE:
       case Operation::Type::CLR:
-      case Operation::Type::SRT:
       case Operation::Type::PRG:
       case Operation::Type::SEQ:
         can_simplify = false;

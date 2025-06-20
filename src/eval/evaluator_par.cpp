@@ -79,8 +79,7 @@ bool PartialEvaluator::doPartialEval(Program &p, size_t op_index) {
       return false;
     }
     case Operation::Type::CLR:
-    case Operation::Type::PRG:
-    case Operation::Type::SRT: {
+    case Operation::Type::PRG: {
       values.clear();
       return false;
     }

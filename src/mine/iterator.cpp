@@ -136,7 +136,6 @@ bool Iterator::inc(Operation& op) {
     case Operation::Type::NOP:      // skipped
     case Operation::Type::DBG:      // skipped
     case Operation::Type::CLR:      // skipped
-    case Operation::Type::SRT:      // skipped
     case Operation::Type::SEQ:      // skipped
     case Operation::Type::PRG:      // skipped
     case Operation::Type::__COUNT:  // skipped
@@ -158,8 +157,7 @@ bool Iterator::supportsOperationType(Operation::Type t) {
          t != Operation::Type::BAN && t != Operation::Type::BOR &&
          t != Operation::Type::BXO && t != Operation::Type::NOP &&
          t != Operation::Type::DBG && t != Operation::Type::CLR &&
-         t != Operation::Type::SRT && t != Operation::Type::SEQ &&
-         t != Operation::Type::PRG;
+         t != Operation::Type::SEQ && t != Operation::Type::PRG;
 }
 
 bool Iterator::incWithSkip(Operation& op) {
