@@ -31,8 +31,8 @@ bool RangeGenerator::generate(const Program& program, RangeMap& ranges) {
   if (!init(program, ranges)) {
     return false;
   }
-  for (const auto& op : program.ops) {
-    if (!update(op, ranges)) {
+  for (size_t i = 0; i < program.ops.size(); ++i) {
+    if (!update(program, i, ranges)) {
       return false;
     }
   }
@@ -45,10 +45,11 @@ void RangeGenerator::generate(Program& program, RangeMap& ranges,
   if (!init(program, ranges)) {
     return;
   }
-  for (auto& op : program.ops) {
-    if (!update(op, ranges)) {
+  for (size_t i = 0; i < program.ops.size(); ++i) {
+    if (!update(program, i, ranges)) {
       return;
     }
+    auto& op = program.ops[i];
     if (op.type != Operation::Type::NOP && annotate) {
       op.comment = ranges.toString(op.target.value.asInt());
     }
@@ -56,7 +57,9 @@ void RangeGenerator::generate(Program& program, RangeMap& ranges,
   ranges.prune();
 }
 
-bool RangeGenerator::update(const Operation& op, RangeMap& ranges) {
+bool RangeGenerator::update(const Program& program, int64_t index,
+                            RangeMap& ranges) {
+  const auto& op = program.ops[index];
   Range source;
   if (op.source.type == Operand::Type::CONSTANT) {
     source = Range(op.source.value, op.source.value);
@@ -68,7 +71,14 @@ bool RangeGenerator::update(const Operation& op, RangeMap& ranges) {
       source = Range(Number::INF, Number::INF);  // unknown source
     }
   }
-  auto it = ranges.find(op.target.value.asInt());
+  int64_t targetCell;
+  if (op.type == Operation::Type::LPE) {
+    auto loop = ProgramUtil::getEnclosingLoop(program, index);
+    targetCell = program.ops[loop.first].target.value.asInt();
+  } else {
+    targetCell = op.target.value.asInt();
+  }
+  auto it = ranges.find(targetCell);
   if (it == ranges.end()) {
     return false;  // should not happen, but just in case
   }
@@ -163,8 +173,22 @@ bool RangeGenerator::update(const Operation& op, RangeMap& ranges) {
       }
       break;
     }
-    case Operation::Type::LPB:
-    case Operation::Type::LPE:
+    case Operation::Type::LPB: {
+      if (op.source.type != Operand::Type::CONSTANT ||
+          op.source.value != Number::ONE) {
+        return false;
+      }
+      if (target.lower_bound > Number::ZERO) {
+        target.lower_bound = Number::ZERO;
+      }
+      break;
+    }
+    case Operation::Type::LPE: {
+      if (target.lower_bound > Number::ZERO) {
+        target.lower_bound = Number::ZERO;
+      }
+      break;
+    }
     case Operation::Type::CLR:
     case Operation::Type::PRG:
     case Operation::Type::__COUNT:

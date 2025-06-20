@@ -23,7 +23,7 @@ class RangeGenerator {
 
  private:
   static bool init(const Program& program, RangeMap& ranges);
-  bool update(const Operation& op, RangeMap& ranges);
+  bool update(const Program& program, int64_t index, RangeMap& ranges);
 
   ProgramCache program_cache;
 };
