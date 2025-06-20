@@ -306,8 +306,7 @@ void Commands::range(const std::string& path) {
   initLog(true);
   Program program = OeisProgram::getProgramAndSeqId(path).first;
   RangeGenerator generator;
-  RangeMap ranges;
-  generator.generate(program, ranges, true);
+  generator.annotate(program);
   ProgramUtil::print(program, std::cout);
 }
 

@@ -7,7 +7,7 @@
 #include "sys/log.hpp"
 
 bool RangeGenerator::init(const Program& program, RangeMap& ranges) {
-  ranges.clear();
+  ProgramUtil::validate(program);
   if (ProgramUtil::hasIndirectOperand(program)) {
     return false;
   }
@@ -16,6 +16,7 @@ bool RangeGenerator::init(const Program& program, RangeMap& ranges) {
   if (!ProgramUtil::getUsedMemoryCells(program, used_cells, largest_used, -1)) {
     return false;
   }
+  ranges.clear();
   int64_t offset = ProgramUtil::getOffset(program);
   for (auto cell : used_cells) {
     if (cell == Program::INPUT_CELL) {
@@ -28,32 +29,44 @@ bool RangeGenerator::init(const Program& program, RangeMap& ranges) {
 }
 
 bool RangeGenerator::generate(const Program& program, RangeMap& ranges) {
-  if (!init(program, ranges)) {
+  std::vector<RangeMap> collected;
+  if (!collect(program, collected)) {
     return false;
   }
-  for (const auto& op : program.ops) {
-    if (!update(op, ranges)) {
-      return false;
-    }
-  }
-  ranges.prune();
+  ranges = collected.back();
   return true;
 }
 
-void RangeGenerator::generate(Program& program, RangeMap& ranges,
-                              bool annotate) {
-  if (!init(program, ranges)) {
-    return;
+bool RangeGenerator::annotate(Program& program) {
+  std::vector<RangeMap> collected;
+  bool ok = collect(program, collected);
+  for (size_t i = 0; i < collected.size(); ++i) {
+    auto& op = program.ops[i];
+    if (op.type != Operation::Type::NOP) {
+      op.comment = collected[i].toString(getTargetCell(program, i));
+    }
   }
+  return ok;
+}
+
+bool RangeGenerator::collect(const Program& program,
+                             std::vector<RangeMap>& collected) {
+  RangeMap ranges;
+  if (!init(program, ranges)) {
+    return false;
+  }
+  bool ok = true;
   for (auto& op : program.ops) {
     if (!update(op, ranges)) {
-      return;
+      ok = false;
+      break;
     }
-    if (op.type != Operation::Type::NOP && annotate) {
-      op.comment = ranges.toString(op.target.value.asInt());
-    }
+    collected.push_back(ranges);
   }
-  ranges.prune();
+  for (auto& ranges : collected) {
+    ranges.prune();
+  }
+  return ok;
 }
 
 bool RangeGenerator::update(const Operation& op, RangeMap& ranges) {
@@ -68,7 +81,8 @@ bool RangeGenerator::update(const Operation& op, RangeMap& ranges) {
       source = Range(Number::INF, Number::INF);  // unknown source
     }
   }
-  auto it = ranges.find(op.target.value.asInt());
+  auto targetCell = getTargetCell(op);
+  auto it = ranges.find(targetCell);
   if (it == ranges.end()) {
     return false;  // should not happen, but just in case
   }
@@ -171,4 +185,13 @@ bool RangeGenerator::update(const Operation& op, RangeMap& ranges) {
       return false;  // unsupported operation type for range generation
   }
   return true;
+}
+
+int64_t RangeGenerator::getTargetCell(const Program& program,
+                                      size_t index) const {
+  return getTargetCell(program.ops[index]);
+}
+
+int64_t RangeGenerator::getTargetCell(const Operation& op) const {
+  return op.target.value.asInt();
 }
