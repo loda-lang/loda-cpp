@@ -45,7 +45,8 @@ bool RangeGenerator::annotate(Program& program) {
   for (size_t i = 0; i < collected.size(); ++i) {
     auto& op = program.ops[i];
     if (op.type != Operation::Type::NOP) {
-      op.comment = collected[i].toString(getTargetCell(program, i));
+      // op.comment = collected[i].toString(getTargetCell(program, i));
+      op.comment = collected[i].toString();
     }
   }
   return ok;
@@ -57,13 +58,29 @@ bool RangeGenerator::collect(const Program& program,
   if (!init(program, ranges)) {
     return false;
   }
-  bool ok = true;
+  bool ok = true, hasLoops = false;
   for (auto& op : program.ops) {
     if (!update(op, ranges)) {
       ok = false;
       break;
     }
     collected.push_back(ranges);
+    hasLoops = hasLoops || op.type == Operation::Type::LPB;
+  }
+  if (ok && hasLoops) {
+    ranges = {};
+    init(program, ranges);
+    for (size_t i = 0; i < program.ops.size(); ++i) {
+      auto& op = program.ops[i];
+      if (op.type == Operation::Type::LPB) {
+        auto loop = ProgramUtil::getEnclosingLoop(program, i);
+        ranges = collected[loop.second];
+      }
+      if (!update(op, ranges)) {
+        ok = false;
+        break;
+      }
+    }
   }
   for (auto& ranges : collected) {
     ranges.prune();
