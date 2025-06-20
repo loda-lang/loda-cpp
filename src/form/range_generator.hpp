@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stack>
+
 #include "form/range.hpp"
 #include "lang/program_cache.hpp"
 
@@ -22,8 +24,16 @@ class RangeGenerator {
   void generate(Program& program, RangeMap& ranges, bool annotate);
 
  private:
-  static bool init(const Program& program, RangeMap& ranges);
-  bool update(const Program& program, int64_t index, RangeMap& ranges);
+  struct LoopState {
+    int64_t counterCell;
+    RangeMap rangesBefore;
+  };
+
+  bool init(const Program& program, RangeMap& ranges);
+  bool update(const Operation& op, RangeMap& ranges);
+
+  int64_t getTargetCell(const Operation& op) const;
 
   ProgramCache program_cache;
+  std::stack<LoopState> loop_states;
 };

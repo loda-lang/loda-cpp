@@ -3,11 +3,12 @@
 #include <set>
 #include <unordered_set>
 
+#include "eval/semantics.hpp"
 #include "lang/program_util.hpp"
 #include "sys/log.hpp"
 
 bool RangeGenerator::init(const Program& program, RangeMap& ranges) {
-  ranges.clear();
+  ProgramUtil::validate(program);
   if (ProgramUtil::hasIndirectOperand(program)) {
     return false;
   }
@@ -16,6 +17,8 @@ bool RangeGenerator::init(const Program& program, RangeMap& ranges) {
   if (!ProgramUtil::getUsedMemoryCells(program, used_cells, largest_used, -1)) {
     return false;
   }
+  ranges.clear();
+  loop_states = {};
   int64_t offset = ProgramUtil::getOffset(program);
   for (auto cell : used_cells) {
     if (cell == Program::INPUT_CELL) {
@@ -31,8 +34,8 @@ bool RangeGenerator::generate(const Program& program, RangeMap& ranges) {
   if (!init(program, ranges)) {
     return false;
   }
-  for (size_t i = 0; i < program.ops.size(); ++i) {
-    if (!update(program, i, ranges)) {
+  for (auto& op : program.ops) {
+    if (!update(op, ranges)) {
       return false;
     }
   }
@@ -40,34 +43,24 @@ bool RangeGenerator::generate(const Program& program, RangeMap& ranges) {
   return true;
 }
 
-int64_t getTargetCell(const Program& program, int64_t index) {
-  if (program.ops[index].type == Operation::Type::LPE) {
-    index = ProgramUtil::getEnclosingLoop(program, index).first;
-  }
-  const auto& op = program.ops[index];
-  return op.target.value.asInt();
-}
-
 void RangeGenerator::generate(Program& program, RangeMap& ranges,
                               bool annotate) {
   if (!init(program, ranges)) {
     return;
   }
-  for (size_t i = 0; i < program.ops.size(); ++i) {
-    if (!update(program, i, ranges)) {
+  for (auto& op : program.ops) {
+    auto targetCell = getTargetCell(op);
+    if (!update(op, ranges)) {
       return;
     }
-    auto& op = program.ops[i];
     if (op.type != Operation::Type::NOP && annotate) {
-      op.comment = ranges.toString(getTargetCell(program, i));
+      op.comment = ranges.toString(targetCell);
     }
   }
   ranges.prune();
 }
 
-bool RangeGenerator::update(const Program& program, int64_t index,
-                            RangeMap& ranges) {
-  const auto& op = program.ops[index];
+bool RangeGenerator::update(const Operation& op, RangeMap& ranges) {
   Range source;
   if (op.source.type == Operand::Type::CONSTANT) {
     source = Range(op.source.value, op.source.value);
@@ -79,7 +72,7 @@ bool RangeGenerator::update(const Program& program, int64_t index,
       source = Range(Number::INF, Number::INF);  // unknown source
     }
   }
-  auto targetCell = getTargetCell(program, index);
+  auto targetCell = getTargetCell(op);
   auto it = ranges.find(targetCell);
   if (it == ranges.end()) {
     return false;  // should not happen, but just in case
@@ -180,15 +173,15 @@ bool RangeGenerator::update(const Program& program, int64_t index,
           op.source.value != Number::ONE) {
         return false;
       }
-      if (target.lower_bound > Number::ZERO) {
-        target.lower_bound = Number::ZERO;
-      }
+      loop_states.push({targetCell, ranges});
+      target.lower_bound = Number::ZERO;
       break;
     }
     case Operation::Type::LPE: {
-      if (target.lower_bound > Number::ZERO) {
-        target.lower_bound = Number::ZERO;
-      }
+      auto rangeBefore = loop_states.top().rangesBefore.at(targetCell);
+      target.lower_bound =
+          Semantics::min(rangeBefore.lower_bound, Number::ZERO);
+      loop_states.pop();
       break;
     }
     case Operation::Type::CLR:
@@ -196,5 +189,15 @@ bool RangeGenerator::update(const Program& program, int64_t index,
     case Operation::Type::__COUNT:
       return false;  // unsupported operation type for range generation
   }
+  // the loop counter value inside loops is bounded below by zero
+  if ((ProgramUtil::isArithmetic(op.type) || op.type == Operation::Type::SEQ) &&
+      !loop_states.empty() && targetCell == loop_states.top().counterCell) {
+    target.lower_bound = Number::ZERO;
+  }
   return true;
+}
+
+int64_t RangeGenerator::getTargetCell(const Operation& op) const {
+  return op.type == Operation::Type::LPE ? loop_states.top().counterCell
+                                         : op.target.value.asInt();
 }
