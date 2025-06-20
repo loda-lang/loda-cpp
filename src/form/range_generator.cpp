@@ -45,8 +45,8 @@ bool RangeGenerator::annotate(Program& program) {
   for (size_t i = 0; i < collected.size(); ++i) {
     auto& op = program.ops[i];
     if (op.type != Operation::Type::NOP) {
-      // op.comment = collected[i].toString(getTargetCell(program, i));
-      op.comment = collected[i].toString();
+      op.comment = collected[i].toString(getTargetCell(program, i));
+      // op.comment = collected[i].toString();
     }
   }
   return ok;
@@ -54,6 +54,7 @@ bool RangeGenerator::annotate(Program& program) {
 
 bool RangeGenerator::collect(const Program& program,
                              std::vector<RangeMap>& collected) {
+  // compute ranges for the program
   RangeMap ranges;
   if (!init(program, ranges)) {
     return false;
@@ -67,21 +68,24 @@ bool RangeGenerator::collect(const Program& program,
     collected.push_back(ranges);
     hasLoops = hasLoops || op.type == Operation::Type::LPB;
   }
-  if (ok && hasLoops) {
+  // compute fixed point if the program has loops
+  for (size_t i = 0; i < program.ops.size() && ok && hasLoops; ++i) {
     ranges = {};
     init(program, ranges);
-    for (size_t i = 0; i < program.ops.size(); ++i) {
-      auto& op = program.ops[i];
+    for (size_t j = 0; j < program.ops.size(); ++j) {
+      auto& op = program.ops[j];
       if (op.type == Operation::Type::LPB) {
-        auto loop = ProgramUtil::getEnclosingLoop(program, i);
+        auto loop = ProgramUtil::getEnclosingLoop(program, j);
         ranges = collected[loop.second];
       }
       if (!update(op, ranges)) {
         ok = false;
         break;
       }
+      collected[j] = ranges;
     }
   }
+  // remove unbounded ranges
   for (auto& ranges : collected) {
     ranges.prune();
   }
@@ -224,7 +228,9 @@ bool RangeGenerator::update(const Operation& op, RangeMap& ranges) {
     if (targetCell == loop_states.top().counterCell) {
       target.lower_bound = Number::ZERO;
     } else {
-      if (target.lower_bound < rangeBefore.lower_bound) {
+      if (target.lower_bound > rangeBefore.lower_bound) {
+        target.lower_bound = rangeBefore.lower_bound;
+      } else if (target.lower_bound < rangeBefore.lower_bound) {
         target.lower_bound = Number::INF;
       }
       if (target.upper_bound > rangeBefore.upper_bound) {
