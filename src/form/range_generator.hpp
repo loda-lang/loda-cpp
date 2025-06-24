@@ -30,7 +30,7 @@ class RangeGenerator {
     RangeMap rangesBefore;
   };
 
-  bool init(const Program& program, RangeMap& ranges);
+  static bool init(const Program& program, RangeMap& ranges);
   bool update(const Operation& op, RangeMap& ranges);
   bool collect(const Program& program, std::vector<RangeMap>& collected);
 

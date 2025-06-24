@@ -18,7 +18,6 @@ bool RangeGenerator::init(const Program& program, RangeMap& ranges) {
     return false;
   }
   ranges.clear();
-  loop_states = {};
   int64_t offset = ProgramUtil::getOffset(program);
   for (auto cell : used_cells) {
     if (cell == Program::INPUT_CELL) {
@@ -253,6 +252,9 @@ int64_t RangeGenerator::getTargetCell(const Program& program,
 
 int64_t RangeGenerator::getTargetCell(const Operation& op) const {
   if (op.type == Operation::Type::LPE) {
+    if (loop_states.empty()) {
+      throw std::runtime_error("No loop state available for LPE operation");
+    }
     return loop_states.top().counterCell;
   } else {
     return op.target.value.asInt();
