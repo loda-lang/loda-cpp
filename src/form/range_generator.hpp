@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <stack>
 #include <vector>
 
@@ -39,5 +40,6 @@ class RangeGenerator {
   void adjustRangeInLoop(int64_t targetCell, Range& target) const;
 
   ProgramCache program_cache;
+  std::map<int64_t, Range> seq_range_cache;
   std::stack<LoopState> loop_states;
 };

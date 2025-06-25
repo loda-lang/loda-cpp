@@ -108,6 +108,7 @@ bool RangeGenerator::update(const Operation& op, RangeMap& ranges) {
     return false;  // should not happen, but just in case
   }
   auto& target = it->second;
+  bool fixedRange = false;
   switch (op.type) {
     case Operation::Type::NOP:
     case Operation::Type::DBG:
@@ -168,6 +169,7 @@ bool RangeGenerator::update(const Operation& op, RangeMap& ranges) {
     case Operation::Type::LEQ:
     case Operation::Type::GEQ:
       target = Range(Number::ZERO, Number::ONE);
+      fixedRange = true;
       break;
     case Operation::Type::MIN:
       target.min(source);
@@ -185,13 +187,19 @@ bool RangeGenerator::update(const Operation& op, RangeMap& ranges) {
         return false;  // sequence operation requires a constant source
       }
       auto id = op.source.value.asInt();
-      program_cache.collect(id);  // ensures that there is no recursion
-      RangeGenerator gen;
-      RangeMap tmp;
-      if (!gen.generate(program_cache.get(id), tmp)) {
-        return false;
+      auto it = seq_range_cache.find(id);
+      if (it != seq_range_cache.end()) {
+        target = it->second;
+      } else {
+        program_cache.collect(id);  // ensures that there is no recursion
+        RangeGenerator gen;
+        RangeMap tmp;
+        if (!gen.generate(program_cache.get(id), tmp)) {
+          return false;
+        }
+        target = tmp.get(Program::OUTPUT_CELL);
+        seq_range_cache[id] = target;
       }
-      target = tmp.get(Program::OUTPUT_CELL);
       break;
     }
     case Operation::Type::LPB: {
@@ -216,7 +224,7 @@ bool RangeGenerator::update(const Operation& op, RangeMap& ranges) {
       return false;  // unsupported operation type for range generation
   }
   // extra work inside loops
-  if (!loop_states.empty()) {
+  if (!loop_states.empty() && !fixedRange) {
     adjustRangeInLoop(targetCell, target);
   }
   return true;
@@ -225,21 +233,17 @@ bool RangeGenerator::update(const Operation& op, RangeMap& ranges) {
 void RangeGenerator::adjustRangeInLoop(int64_t targetCell,
                                        Range& target) const {
   auto rangeBefore = loop_states.top().rangesBefore.get(targetCell);
-  if (targetCell == loop_states.top().counterCell) {
-    target.lower_bound = Number::ZERO;
-  } else {
-    if (target.lower_bound > rangeBefore.lower_bound) {
-      target.lower_bound = rangeBefore.lower_bound;
-    } else if (target.lower_bound < rangeBefore.lower_bound ||
-               rangeBefore.lower_bound == Number::INF) {
-      target.lower_bound = Number::INF;
-    }
-    if (target.upper_bound > rangeBefore.upper_bound ||
-        rangeBefore.upper_bound == Number::INF) {
-      target.upper_bound = Number::INF;
-    } else if (target.upper_bound < rangeBefore.upper_bound) {
-      target.upper_bound = rangeBefore.upper_bound;
-    }
+  if (target.lower_bound > rangeBefore.lower_bound) {
+    target.lower_bound = rangeBefore.lower_bound;
+  } else if (target.lower_bound < rangeBefore.lower_bound ||
+             rangeBefore.lower_bound == Number::INF) {
+    target.lower_bound = Number::INF;
+  }
+  if (target.upper_bound > rangeBefore.upper_bound ||
+      rangeBefore.upper_bound == Number::INF) {
+    target.upper_bound = Number::INF;
+  } else if (target.upper_bound < rangeBefore.upper_bound) {
+    target.upper_bound = rangeBefore.upper_bound;
   }
 }
 
