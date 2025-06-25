@@ -18,6 +18,7 @@ bool RangeGenerator::init(const Program& program, RangeMap& ranges) {
   if (!ProgramUtil::getUsedMemoryCells(program, used_cells, largest_used, -1)) {
     return false;
   }
+  loop_states = {};
   ranges.clear();
   int64_t offset = ProgramUtil::getOffset(program);
   for (auto cell : used_cells) {
@@ -188,16 +189,12 @@ bool RangeGenerator::update(const Operation& op, RangeMap& ranges) {
       }
       auto id = op.source.value.asInt();
       program_cache.collect(id);  // ensures that there is no recursion
+      RangeGenerator gen;
       RangeMap tmp;
-      if (!generate(program_cache.get(id), tmp)) {
+      if (!gen.generate(program_cache.get(id), tmp)) {
         return false;
       }
-      auto tmp_it = tmp.find(Program::OUTPUT_CELL);
-      if (tmp_it != tmp.end()) {
-        target = tmp_it->second;
-      } else {
-        target = Range(Number::INF, Number::INF);
-      }
+      target = tmp.get(Program::OUTPUT_CELL);
       break;
     }
     case Operation::Type::LPB: {
