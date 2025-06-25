@@ -108,7 +108,6 @@ bool RangeGenerator::update(const Operation& op, RangeMap& ranges) {
     return false;  // should not happen, but just in case
   }
   auto& target = it->second;
-  bool fixedRange = false;
   switch (op.type) {
     case Operation::Type::NOP:
     case Operation::Type::DBG:
@@ -169,7 +168,6 @@ bool RangeGenerator::update(const Operation& op, RangeMap& ranges) {
     case Operation::Type::LEQ:
     case Operation::Type::GEQ:
       target = Range(Number::ZERO, Number::ONE);
-      fixedRange = true;
       break;
     case Operation::Type::MIN:
       target.min(source);
@@ -224,26 +222,25 @@ bool RangeGenerator::update(const Operation& op, RangeMap& ranges) {
       return false;  // unsupported operation type for range generation
   }
   // extra work inside loops
-  if (!loop_states.empty() && !fixedRange) {
-    adjustRangeInLoop(targetCell, target);
+  if (!loop_states.empty()) {
+    auto before = loop_states.top().rangesBefore.get(targetCell);
+    mergeLoopRange(before, target);
   }
   return true;
 }
 
-void RangeGenerator::adjustRangeInLoop(int64_t targetCell,
-                                       Range& target) const {
-  auto rangeBefore = loop_states.top().rangesBefore.get(targetCell);
-  if (target.lower_bound > rangeBefore.lower_bound) {
-    target.lower_bound = rangeBefore.lower_bound;
-  } else if (target.lower_bound < rangeBefore.lower_bound ||
-             rangeBefore.lower_bound == Number::INF) {
+void RangeGenerator::mergeLoopRange(const Range& before, Range& target) const {
+  if (target.lower_bound > before.lower_bound) {
+    target.lower_bound = before.lower_bound;
+  } else if (target.lower_bound < before.lower_bound ||
+             before.lower_bound == Number::INF) {
     target.lower_bound = Number::INF;
   }
-  if (target.upper_bound > rangeBefore.upper_bound ||
-      rangeBefore.upper_bound == Number::INF) {
+  if (target.upper_bound > before.upper_bound ||
+      before.upper_bound == Number::INF) {
     target.upper_bound = Number::INF;
-  } else if (target.upper_bound < rangeBefore.upper_bound) {
-    target.upper_bound = rangeBefore.upper_bound;
+  } else if (target.upper_bound < before.upper_bound) {
+    target.upper_bound = before.upper_bound;
   }
 }
 
