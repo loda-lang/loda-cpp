@@ -1,6 +1,7 @@
 #include "form/range_generator.hpp"
 
 #include <set>
+#include <stdexcept>
 #include <unordered_set>
 
 #include "eval/semantics.hpp"
@@ -209,7 +210,7 @@ bool RangeGenerator::update(const Operation& op, RangeMap& ranges) {
       break;
     }
     case Operation::Type::LPE: {
-      auto rangeBefore = loop_states.top().rangesBefore.at(targetCell);
+      auto rangeBefore = loop_states.top().rangesBefore.get(targetCell);
       target.lower_bound =
           Semantics::min(rangeBefore.lower_bound, Number::ZERO);
       loop_states.pop();
@@ -223,7 +224,7 @@ bool RangeGenerator::update(const Operation& op, RangeMap& ranges) {
   // extra work inside loops
   if (!loop_states.empty() &&
       (ProgramUtil::isArithmetic(op.type) || op.type == Operation::Type::SEQ)) {
-    auto rangeBefore = loop_states.top().rangesBefore.at(targetCell);
+    auto rangeBefore = loop_states.top().rangesBefore.get(targetCell);
     if (targetCell == loop_states.top().counterCell) {
       target.lower_bound = Number::ZERO;
     } else {
@@ -234,6 +235,8 @@ bool RangeGenerator::update(const Operation& op, RangeMap& ranges) {
       }
       if (target.upper_bound > rangeBefore.upper_bound) {
         target.upper_bound = Number::INF;
+      } else if (target.upper_bound < rangeBefore.upper_bound) {
+        target.upper_bound = rangeBefore.upper_bound;
       }
     }
   }

@@ -382,6 +382,14 @@ int64_t Range::check(const Sequence& seq) const {
   return -1;
 }
 
+Range RangeMap::get(int64_t index) const {
+  auto it = find(index);
+  if (it != end()) {
+    return it->second;
+  }
+  return Range(Number::INF, Number::INF);  // default range for missing cells
+}
+
 void RangeMap::prune() {
   for (auto it = begin(); it != end();) {
     if (it->second.isUnbounded()) {
