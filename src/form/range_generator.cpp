@@ -95,14 +95,11 @@ bool RangeGenerator::collect(const Program& program,
 
 bool RangeGenerator::update(const Operation& op, RangeMap& ranges) {
   Range source;
-  if (op.source.type == Operand::Type::CONSTANT) {
-    source = Range(op.source.value, op.source.value);
-  } else {  // direct memory access
-    auto it = ranges.find(op.source.value.asInt());
-    if (it != ranges.end()) {
-      source = it->second;
-    } else {
-      source = Range(Number::INF, Number::INF);  // unknown source
+  if (Operation::Metadata::get(op.type).num_operands > 1) {
+    if (op.source.type == Operand::Type::CONSTANT) {
+      source = Range(op.source.value, op.source.value);
+    } else {  // direct memory access
+      source = ranges.get(op.source.value.asInt());
     }
   }
   auto targetCell = getTargetCell(op);
@@ -114,7 +111,7 @@ bool RangeGenerator::update(const Operation& op, RangeMap& ranges) {
   switch (op.type) {
     case Operation::Type::NOP:
     case Operation::Type::DBG:
-      break;  // no operation, nothing to do
+      return true;  // no operation, nothing to do
     case Operation::Type::MOV:
       target = source;
       break;
@@ -219,25 +216,29 @@ bool RangeGenerator::update(const Operation& op, RangeMap& ranges) {
       return false;  // unsupported operation type for range generation
   }
   // extra work inside loops
-  if (!loop_states.empty() &&
-      (ProgramUtil::isArithmetic(op.type) || op.type == Operation::Type::SEQ)) {
-    auto rangeBefore = loop_states.top().rangesBefore.get(targetCell);
-    if (targetCell == loop_states.top().counterCell) {
-      target.lower_bound = Number::ZERO;
-    } else {
-      if (target.lower_bound > rangeBefore.lower_bound) {
-        target.lower_bound = rangeBefore.lower_bound;
-      } else if (target.lower_bound < rangeBefore.lower_bound) {
-        target.lower_bound = Number::INF;
-      }
-      if (target.upper_bound > rangeBefore.upper_bound) {
-        target.upper_bound = Number::INF;
-      } else if (target.upper_bound < rangeBefore.upper_bound) {
-        target.upper_bound = rangeBefore.upper_bound;
-      }
-    }
+  if (!loop_states.empty()) {
+    adjustRangeInLoop(targetCell, target);
   }
   return true;
+}
+
+void RangeGenerator::adjustRangeInLoop(int64_t targetCell,
+                                       Range& target) const {
+  auto rangeBefore = loop_states.top().rangesBefore.get(targetCell);
+  if (targetCell == loop_states.top().counterCell) {
+    target.lower_bound = Number::ZERO;
+  } else {
+    if (target.lower_bound > rangeBefore.lower_bound) {
+      target.lower_bound = rangeBefore.lower_bound;
+    } else if (target.lower_bound < rangeBefore.lower_bound) {
+      target.lower_bound = Number::INF;
+    }
+    if (target.upper_bound > rangeBefore.upper_bound) {
+      target.upper_bound = Number::INF;
+    } else if (target.upper_bound < rangeBefore.upper_bound) {
+      target.upper_bound = rangeBefore.upper_bound;
+    }
+  }
 }
 
 int64_t RangeGenerator::getTargetCell(const Program& program,

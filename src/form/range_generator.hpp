@@ -36,6 +36,7 @@ class RangeGenerator {
 
   int64_t getTargetCell(const Program& program, size_t index) const;
   int64_t getTargetCell(const Operation& op) const;
+  void adjustRangeInLoop(int64_t targetCell, Range& target) const;
 
   ProgramCache program_cache;
   std::stack<LoopState> loop_states;
