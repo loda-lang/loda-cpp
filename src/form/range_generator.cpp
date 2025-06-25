@@ -230,10 +230,12 @@ void RangeGenerator::adjustRangeInLoop(int64_t targetCell,
   } else {
     if (target.lower_bound > rangeBefore.lower_bound) {
       target.lower_bound = rangeBefore.lower_bound;
-    } else if (target.lower_bound < rangeBefore.lower_bound) {
+    } else if (target.lower_bound < rangeBefore.lower_bound ||
+               rangeBefore.lower_bound == Number::INF) {
       target.lower_bound = Number::INF;
     }
-    if (target.upper_bound > rangeBefore.upper_bound) {
+    if (target.upper_bound > rangeBefore.upper_bound ||
+        rangeBefore.upper_bound == Number::INF) {
       target.upper_bound = Number::INF;
     } else if (target.upper_bound < rangeBefore.upper_bound) {
       target.upper_bound = rangeBefore.upper_bound;
