@@ -28,6 +28,7 @@ class Settings {
   int64_t max_eval_secs;
   bool use_steps;
   bool with_deps;
+  bool custom_num_terms;
   bool parallel_mining;
   bool report_cpu_hours;
   int64_t num_miner_instances;

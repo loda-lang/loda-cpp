@@ -50,8 +50,9 @@ void Commands::help() {
                "sequence (see "
                "-t,-b,-s)"
             << std::endl;
-  std::cout << "  export    <program>  Export a program print result (see -o)"
-            << std::endl;
+  std::cout
+      << "  export    <program>  Export a program print result (see -o,-t)"
+      << std::endl;
   std::cout << "  optimize  <program>  Optimize a program and print it"
             << std::endl;
   std::cout << "  minimize  <program>  Minimize a program and print it (see -t)"
@@ -249,7 +250,12 @@ void Commands::export_(const std::string& path) {
     ProgramUtil::print(program, std::cout);
   } else if (format == "range") {
     RangeGenerator generator;
-    generator.annotate(program);
+    Number inputUpperBound = Number::INF;
+    if (settings.custom_num_terms) {
+      auto offset = ProgramUtil::getOffset(program);
+      inputUpperBound = Number(offset + settings.num_terms - 1);
+    }
+    generator.annotate(program, inputUpperBound);
     ProgramUtil::print(program, std::cout);
   } else {
     throw std::runtime_error("unknown format");

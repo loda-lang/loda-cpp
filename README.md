@@ -20,7 +20,7 @@ Usage: loda <command> <options>
 
 Core Commands:
   evaluate  <program>  Evaluate a program to an integer sequence (see -t,-b,-s)
-  export    <program>  Export a program print result (see -o)
+  export    <program>  Export a program print result (see -o,-t)
   optimize  <program>  Optimize a program and print it
   minimize  <program>  Minimize a program and print it (see -t)
   profile   <program>  Measure program evaluation time (see -t)

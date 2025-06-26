@@ -34,6 +34,7 @@ Settings::Settings()
       max_eval_secs(-1),
       use_steps(false),
       with_deps(false),
+      custom_num_terms(false),
       parallel_mining(false),
       report_cpu_hours(true),
       num_miner_instances(0),
@@ -120,6 +121,7 @@ std::vector<std::string> Settings::parseArgs(int argc, char *argv[]) {
       std::string opt = arg.substr(1);
       if (opt == "t") {
         option = Option::NUM_TERMS;
+        custom_num_terms = true;
       } else if (opt == "m") {
         option = Option::MAX_MEMORY;
       } else if (opt == "c") {
