@@ -4,8 +4,8 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Features
 
-* Added `upgrade` command
-* Added `range` command (w/o loops)
+* Added `upgrade` command and speed up `update`
+* Added `range` output format for export
 * Support bitwise operators with negative values in formula generation
 * Support binomial with negative args in PARI code generation
 
