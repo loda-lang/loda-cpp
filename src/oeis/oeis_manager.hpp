@@ -47,8 +47,7 @@ class OeisManager {
   update_program_result_t updateProgram(size_t id, Program p,
                                         ValidationMode validation_mode);
 
-  bool maintainProgram(ProgramCache& program_cache, size_t id,
-                       bool eval = true);
+  bool maintainProgram(size_t id, bool eval = true);
 
   void dumpProgram(size_t id, Program& p, const std::string& file,
                    const std::string& submitted_by) const;

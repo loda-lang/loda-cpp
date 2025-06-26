@@ -294,9 +294,7 @@ void Miner::runMineLoop() {
     } else {
       // we are in server mode and have no programs to process
       // => lets do maintenance work!
-      ProgramCache program_cache;
-      auto id = mutator->random_program_ids.getFromAll();
-      if (!manager->maintainProgram(program_cache, id)) {
+      if (!manager->maintainProgram(mutator->random_program_ids.getFromAll())) {
         num_removed++;
       }
     }
