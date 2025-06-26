@@ -786,8 +786,9 @@ void Commands::maintain(const std::string& ids) {
       eval = true;
     }
   }
+  ProgramCache program_cache;
   for (size_t id = start; id < end; id++) {
-    manager.maintainProgram(id, eval);
+    manager.maintainProgram(program_cache, id, eval);
   }
 }
 

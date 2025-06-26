@@ -917,7 +917,8 @@ update_program_result_t OeisManager::updateProgram(
 }
 
 // returns false if the program was removed, otherwise true
-bool OeisManager::maintainProgram(size_t id, bool eval) {
+bool OeisManager::maintainProgram(ProgramCache &program_cache, size_t id,
+                                  bool eval) {
   // check if the sequence exists
   if (id >= sequences.size()) {
     return true;
@@ -955,8 +956,7 @@ bool OeisManager::maintainProgram(size_t id, bool eval) {
   // check if dependent programs are available and there are no recursions
   if (is_okay) {
     try {
-      ProgramCache cache;
-      cache.collect(s.id);
+      program_cache.collect(s.id);
     } catch (const std::exception &) {
       is_okay = false;
     }
