@@ -60,8 +60,8 @@ static Expression sum(const std::initializer_list<Expression>& exprs) {
 static Expression product(const std::initializer_list<Expression>& exprs) {
   return Expression(Expression::Type::PRODUCT, "", exprs);
 }
-static Expression constant(int64_t value) {
-  return Expression(Expression::Type::CONSTANT, "", Number(value));
+static Expression constant(Number value) {
+  return Expression(Expression::Type::CONSTANT, "", value);
 }
 static Expression mod(const Expression& a, const Expression& b) {
   return Expression(Expression::Type::MODULUS, "", {a, b});
@@ -72,7 +72,7 @@ static Expression abs(const Expression& e) { return func("abs", {e}); }
 Expression FormulaGenerator::operandToExpression(Operand op) const {
   switch (op.type) {
     case Operand::Type::CONSTANT: {
-      return constant(op.value.asInt());
+      return constant(op.value);
     }
     case Operand::Type::DIRECT: {
       return ExpressionUtil::newFunction(getCellName(op.value.asInt()));
