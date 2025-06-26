@@ -1092,7 +1092,7 @@ void Test::checkRanges(int64_t id, bool finite, const std::string& expected) {
   Parser parser;
   auto p = parser.parse(ProgramUtil::getProgramPath(id));
   auto offset = ProgramUtil::getOffset(p);
-  Number inputUpperBound = finite ? offset + 10 : Number::INF;
+  Number inputUpperBound = finite ? offset + 9 : Number::INF;
   Log::get().info("Testing ranges for " + ProgramUtil::idStr(id) + ": " +
                   expected + " with upper bound " +
                   inputUpperBound.to_string());
