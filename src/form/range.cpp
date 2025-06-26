@@ -195,7 +195,7 @@ void Range::pow(const Range& r) {
       if (u2 > Number::ONE && Semantics::mod(u2, 2) == Number::ZERO) {
         odd_exp -= Number::ONE;
       }
-      lower_bound = Semantics::pow(u1, odd_exp);
+      lower_bound = Semantics::pow(l1, odd_exp);
     } else {
       lower_bound = Number::INF;
     }

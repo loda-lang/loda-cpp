@@ -1070,8 +1070,13 @@ void Test::checkFormulas(const std::string& testFile, FormulaType type) {
 }
 
 void Test::range() {
+  testRanges("range.txt", false);
+  testRanges("range-finite.txt", true);
+}
+
+void Test::testRanges(const std::string& filename, bool finite) {
   std::string path = std::string("tests") + FILE_SEP + std::string("formula") +
-                     FILE_SEP + "range.txt";
+                     FILE_SEP + filename;
   std::map<size_t, std::string> map;
   OeisList::loadMapWithComments(path, map);
   if (map.empty()) {
@@ -1079,18 +1084,21 @@ void Test::range() {
   }
   Parser parser;
   for (const auto& e : map) {
-    checkRanges(OeisSequence(e.first).id, e.second);
+    checkRanges(OeisSequence(e.first).id, finite, e.second);
   }
 }
 
-void Test::checkRanges(int64_t id, const std::string& expected) {
-  Log::get().info("Testing ranges for " + ProgramUtil::idStr(id) + ": " +
-                  expected);
+void Test::checkRanges(int64_t id, bool finite, const std::string& expected) {
   Parser parser;
   auto p = parser.parse(ProgramUtil::getProgramPath(id));
+  auto offset = ProgramUtil::getOffset(p);
+  Number inputUpperBound = finite ? offset + 9 : Number::INF;
+  Log::get().info("Testing ranges for " + ProgramUtil::idStr(id) + ": " +
+                  expected + " with upper bound " +
+                  inputUpperBound.to_string());
   RangeGenerator generator;
   RangeMap ranges;
-  if (!generator.generate(p, ranges)) {
+  if (!generator.generate(p, ranges, inputUpperBound)) {
     Log::get().error("Cannot generate range from program", true);
   }
   auto result = ranges.toString(Program::OUTPUT_CELL, "a(n)");
