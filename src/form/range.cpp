@@ -387,7 +387,7 @@ Range RangeMap::get(int64_t index) const {
   if (it != end()) {
     return it->second;
   }
-  return Range(Number::INF, Number::INF);  // default range for missing cells
+  return Range(Number::INF, Number::INF);
 }
 
 void RangeMap::prune() {

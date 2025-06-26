@@ -47,7 +47,6 @@ bool RangeGenerator::annotate(Program& program) {
     auto& op = program.ops[i];
     if (op.type != Operation::Type::NOP) {
       op.comment = collected[i].toString(getTargetCell(program, i));
-      // op.comment = collected[i].toString();
     }
   }
   return ok;
@@ -260,7 +259,7 @@ int64_t RangeGenerator::getTargetCell(const Program& program,
 int64_t RangeGenerator::getTargetCell(const Operation& op) const {
   if (op.type == Operation::Type::LPE) {
     if (loop_states.empty()) {
-      throw std::runtime_error("No loop state available for LPE operation");
+      throw std::runtime_error("no loop state available at lpe");
     }
     return loop_states.top().counterCell;
   } else {
