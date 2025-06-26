@@ -45,7 +45,7 @@ Targets:
 Options:
   -t <number>          Number of sequence terms (default: 8)
   -b                   Print result in the OEIS b-file format
-  -o <string>          Export format (formula,loda,pari-function,pari-vector)
+  -o <string>          Export format (formula,loda,pari,range)
   -d                   Export with dependencies to other programs
   -s                   Evaluate program to number of execution steps
   -c <number>          Maximum number of interpreter cycles (no limit: -1)

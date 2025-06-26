@@ -64,9 +64,6 @@ void Commands::help() {
   std::cout << "  unfold    <program>  Unfold the first seq operation of a "
                "program"
             << std::endl;
-  std::cout << "  range     <program>  Compute the ranges of a program"
-               " and print it"
-            << std::endl;
 
   std::cout << std::endl << "OEIS Commands:" << std::endl;
   std::cout << "  mine                 Mine programs for OEIS sequences (see "
@@ -106,7 +103,7 @@ void Commands::help() {
   std::cout << "  -b                   Print result in the OEIS b-file format"
             << std::endl;
   std::cout << "  -o <string>          Export format "
-               "(formula,loda,pari-function,pari-vector)"
+               "(formula,loda,pari,range)"
             << std::endl;
   std::cout
       << "  -d                   Export with dependencies to other programs"
@@ -250,6 +247,10 @@ void Commands::export_(const std::string& path) {
     std::cout << pari_formula.toString() << std::endl;
   } else if (format == "loda") {
     ProgramUtil::print(program, std::cout);
+  } else if (format == "range") {
+    RangeGenerator generator;
+    generator.annotate(program);
+    ProgramUtil::print(program, std::cout);
   } else {
     throw std::runtime_error("unknown format");
   }
@@ -300,14 +301,6 @@ void Commands::unfold(const std::string& path) {
     throw std::runtime_error("cannot unfold program");
   }
   ProgramUtil::print(p, std::cout);
-}
-
-void Commands::range(const std::string& path) {
-  initLog(true);
-  Program program = OeisProgram::getProgramAndSeqId(path).first;
-  RangeGenerator generator;
-  generator.annotate(program);
-  ProgramUtil::print(program, std::cout);
 }
 
 void Commands::replace(const std::string& search_path,
