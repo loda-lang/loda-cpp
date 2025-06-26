@@ -682,11 +682,17 @@ void Commands::testPari(const std::string& test_id) {
                   " skipped PARI checks");
 }
 
-bool checkRange(const OeisSequence& seq, const Program& program) {
+bool checkRange(const OeisSequence& seq, const Program& program,
+                bool finiteInput) {
+  auto idStr = ProgramUtil::idStr(seq.id);
+  auto offset = ProgramUtil::getOffset(program);
+  auto numTerms = seq.existingNumTerms();
+  auto terms = seq.getTerms(numTerms);
+  Number inputUpperBound = finiteInput ? offset + numTerms - 1 : Number::INF;
   RangeGenerator generator;
   RangeMap ranges;
   try {
-    if (!generator.generate(program, ranges)) {
+    if (!generator.generate(program, ranges, inputUpperBound)) {
       return false;
     }
   } catch (const std::exception& e) {
@@ -699,19 +705,16 @@ bool checkRange(const OeisSequence& seq, const Program& program) {
   if (it == ranges.end()) {
     return false;
   }
-  auto idStr = ProgramUtil::idStr(seq.id);
-  auto numTerms = seq.existingNumTerms();
-  auto terms = seq.getTerms(numTerms);
   auto result = ranges.toString(Program::OUTPUT_CELL, "a(n)");
   Log::get().info("Checking " + std::to_string(numTerms) + " terms of " +
                   idStr + ": " + result);
   auto& range = it->second;
   auto index = range.check(terms);
   if (index != -1) {
-    auto offset = ProgramUtil::getOffset(program);
     Log::get().error("Range check failed for " + idStr + " for a(" +
                          std::to_string(index + offset) +
-                         ") = " + terms[index].to_string(),
+                         ") = " + terms[index].to_string() +
+                         " with upper bound " + inputUpperBound.to_string(),
                      true);
     return false;
   }
@@ -743,7 +746,7 @@ void Commands::testRange(const std::string& id) {
       Log::get().warn(std::string(e.what()));
       continue;
     }
-    if (checkRange(seq, program)) {
+    if (checkRange(seq, program, false) && checkRange(seq, program, true)) {
       numChecked++;
     }
   }

@@ -22,8 +22,9 @@ class RangeGenerator {
    * @param ranges The output range map.
    * @return True if the generation was successful, false otherwise.
    */
-  bool generate(const Program& program, RangeMap& ranges);
-  bool annotate(Program& program);
+  bool generate(const Program& program, RangeMap& ranges,
+                Number inputUpperBound = Number::INF);
+  bool annotate(Program& program, Number inputUpperBound = Number::INF);
 
  private:
   struct LoopState {
@@ -31,9 +32,10 @@ class RangeGenerator {
     RangeMap rangesBefore;
   };
 
-  bool init(const Program& program, RangeMap& ranges);
+  bool init(const Program& program, RangeMap& ranges, Number inputUpperBound);
   bool update(const Operation& op, RangeMap& ranges);
-  bool collect(const Program& program, std::vector<RangeMap>& collected);
+  bool collect(const Program& program, std::vector<RangeMap>& collected,
+               Number inputUpperBound);
 
   int64_t getTargetCell(const Program& program, size_t index) const;
   int64_t getTargetCell(const Operation& op) const;

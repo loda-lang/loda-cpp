@@ -8,7 +8,8 @@
 #include "lang/program_util.hpp"
 #include "sys/log.hpp"
 
-bool RangeGenerator::init(const Program& program, RangeMap& ranges) {
+bool RangeGenerator::init(const Program& program, RangeMap& ranges,
+                          Number inputUpperBound) {
   ProgramUtil::validate(program);
   if (ProgramUtil::hasIndirectOperand(program)) {
     return false;
@@ -23,7 +24,7 @@ bool RangeGenerator::init(const Program& program, RangeMap& ranges) {
   int64_t offset = ProgramUtil::getOffset(program);
   for (auto cell : used_cells) {
     if (cell == Program::INPUT_CELL) {
-      ranges[cell] = Range(Number(offset), Number::INF);
+      ranges[cell] = Range(Number(offset), inputUpperBound);
     } else {
       ranges[cell] = Range(Number::ZERO, Number::ZERO);
     }
@@ -31,18 +32,19 @@ bool RangeGenerator::init(const Program& program, RangeMap& ranges) {
   return true;
 }
 
-bool RangeGenerator::generate(const Program& program, RangeMap& ranges) {
+bool RangeGenerator::generate(const Program& program, RangeMap& ranges,
+                              Number inputUpperBound) {
   std::vector<RangeMap> collected;
-  if (!collect(program, collected)) {
+  if (!collect(program, collected, inputUpperBound)) {
     return false;
   }
   ranges = collected.back();
   return true;
 }
 
-bool RangeGenerator::annotate(Program& program) {
+bool RangeGenerator::annotate(Program& program, Number inputUpperBound) {
   std::vector<RangeMap> collected;
-  bool ok = collect(program, collected);
+  bool ok = collect(program, collected, inputUpperBound);
   for (size_t i = 0; i < collected.size(); ++i) {
     auto& op = program.ops[i];
     if (op.type != Operation::Type::NOP) {
@@ -53,10 +55,11 @@ bool RangeGenerator::annotate(Program& program) {
 }
 
 bool RangeGenerator::collect(const Program& program,
-                             std::vector<RangeMap>& collected) {
+                             std::vector<RangeMap>& collected,
+                             Number inputUpperBound) {
   // compute ranges for the program
   RangeMap ranges;
-  if (!init(program, ranges)) {
+  if (!init(program, ranges, inputUpperBound)) {
     return false;
   }
   bool ok = true, hasLoops = false;
@@ -71,7 +74,7 @@ bool RangeGenerator::collect(const Program& program,
   // compute fixed point if the program has loops
   for (size_t i = 0; i < program.ops.size() && ok && hasLoops; ++i) {
     ranges = {};
-    init(program, ranges);
+    init(program, ranges, inputUpperBound);
     for (size_t j = 0; j < program.ops.size(); ++j) {
       auto& op = program.ops[j];
       if (op.type == Operation::Type::LPB) {
