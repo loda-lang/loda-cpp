@@ -1,8 +1,10 @@
 #include "form/range_generator.hpp"
 
 #include <set>
+#include <stdexcept>
 #include <unordered_set>
 
+#include "eval/semantics.hpp"
 #include "lang/program_util.hpp"
 #include "sys/log.hpp"
 
@@ -16,6 +18,7 @@ bool RangeGenerator::init(const Program& program, RangeMap& ranges) {
   if (!ProgramUtil::getUsedMemoryCells(program, used_cells, largest_used, -1)) {
     return false;
   }
+  loop_states = {};
   ranges.clear();
   int64_t offset = ProgramUtil::getOffset(program);
   for (auto cell : used_cells) {
@@ -51,18 +54,41 @@ bool RangeGenerator::annotate(Program& program) {
 
 bool RangeGenerator::collect(const Program& program,
                              std::vector<RangeMap>& collected) {
+  // compute ranges for the program
   RangeMap ranges;
   if (!init(program, ranges)) {
     return false;
   }
-  bool ok = true;
+  bool ok = true, hasLoops = false;
   for (auto& op : program.ops) {
     if (!update(op, ranges)) {
       ok = false;
       break;
     }
     collected.push_back(ranges);
+    hasLoops = hasLoops || op.type == Operation::Type::LPB;
   }
+  // compute fixed point if the program has loops
+  for (size_t i = 0; i < program.ops.size() && ok && hasLoops; ++i) {
+    ranges = {};
+    init(program, ranges);
+    for (size_t j = 0; j < program.ops.size(); ++j) {
+      auto& op = program.ops[j];
+      if (op.type == Operation::Type::LPB) {
+        auto loop = ProgramUtil::getEnclosingLoop(program, j);
+        auto end = collected[loop.second];
+        for (auto& it : ranges) {
+          mergeLoopRange(end.get(it.first), it.second);
+        }
+      }
+      if (!update(op, ranges)) {
+        ok = false;
+        break;
+      }
+      collected[j] = ranges;
+    }
+  }
+  // remove unbounded ranges
   for (auto& ranges : collected) {
     ranges.prune();
   }
@@ -71,14 +97,11 @@ bool RangeGenerator::collect(const Program& program,
 
 bool RangeGenerator::update(const Operation& op, RangeMap& ranges) {
   Range source;
-  if (op.source.type == Operand::Type::CONSTANT) {
-    source = Range(op.source.value, op.source.value);
-  } else {  // direct memory access
-    auto it = ranges.find(op.source.value.asInt());
-    if (it != ranges.end()) {
-      source = it->second;
-    } else {
-      source = Range(Number::INF, Number::INF);  // unknown source
+  if (Operation::Metadata::get(op.type).num_operands > 1) {
+    if (op.source.type == Operand::Type::CONSTANT) {
+      source = Range(op.source.value, op.source.value);
+    } else {  // direct memory access
+      source = ranges.get(op.source.value.asInt());
     }
   }
   auto targetCell = getTargetCell(op);
@@ -90,7 +113,7 @@ bool RangeGenerator::update(const Operation& op, RangeMap& ranges) {
   switch (op.type) {
     case Operation::Type::NOP:
     case Operation::Type::DBG:
-      break;  // no operation, nothing to do
+      return true;  // no operation, nothing to do
     case Operation::Type::MOV:
       target = source;
       break;
@@ -164,34 +187,82 @@ bool RangeGenerator::update(const Operation& op, RangeMap& ranges) {
         return false;  // sequence operation requires a constant source
       }
       auto id = op.source.value.asInt();
-      program_cache.collect(id);  // ensures that there is no recursion
-      RangeMap tmp;
-      if (!generate(program_cache.get(id), tmp)) {
-        return false;
-      }
-      auto tmp_it = tmp.find(Program::OUTPUT_CELL);
-      if (tmp_it != tmp.end()) {
-        target = tmp_it->second;
+      auto it = seq_range_cache.find(id);
+      if (it != seq_range_cache.end()) {
+        target = it->second;
       } else {
-        target = Range(Number::INF, Number::INF);
+        program_cache.collect(id);  // ensures that there is no recursion
+        RangeGenerator gen;
+        RangeMap tmp;
+        if (!gen.generate(program_cache.get(id), tmp)) {
+          return false;
+        }
+        target = tmp.get(Program::OUTPUT_CELL);
+        seq_range_cache[id] = target;
       }
       break;
     }
-    case Operation::Type::LPB:
-    case Operation::Type::LPE:
+    case Operation::Type::LPB: {
+      if (op.source.type != Operand::Type::CONSTANT ||
+          op.source.value != Number::ONE) {
+        return false;
+      }
+      loop_states.push({targetCell, ranges});
+      target.lower_bound = Number::ZERO;
+      break;
+    }
+    case Operation::Type::LPE: {
+      auto rangeBefore = loop_states.top().rangesBefore.get(targetCell);
+      target.lower_bound =
+          Semantics::min(rangeBefore.lower_bound, Number::ZERO);
+      loop_states.pop();
+      break;
+    }
     case Operation::Type::CLR:
     case Operation::Type::PRG:
     case Operation::Type::__COUNT:
       return false;  // unsupported operation type for range generation
   }
+  // extra work inside loops
+  if (!loop_states.empty()) {
+    auto before = loop_states.top().rangesBefore.get(targetCell);
+    mergeLoopRange(before, target);
+  }
   return true;
+}
+
+void RangeGenerator::mergeLoopRange(const Range& before, Range& target) const {
+  if (target.lower_bound > before.lower_bound) {
+    target.lower_bound = before.lower_bound;
+  } else if (target.lower_bound < before.lower_bound ||
+             before.lower_bound == Number::INF) {
+    target.lower_bound = Number::INF;
+  }
+  if (target.upper_bound > before.upper_bound ||
+      before.upper_bound == Number::INF) {
+    target.upper_bound = Number::INF;
+  } else if (target.upper_bound < before.upper_bound) {
+    target.upper_bound = before.upper_bound;
+  }
 }
 
 int64_t RangeGenerator::getTargetCell(const Program& program,
                                       size_t index) const {
-  return getTargetCell(program.ops[index]);
+  auto op = program.ops[index];
+  if (op.type == Operation::Type::LPE) {
+    auto loop = ProgramUtil::getEnclosingLoop(program, index);
+    op = program.ops[loop.first];
+  }
+  return op.target.value.asInt();
 }
 
 int64_t RangeGenerator::getTargetCell(const Operation& op) const {
-  return op.target.value.asInt();
+  if (op.type == Operation::Type::LPE) {
+    if (loop_states.empty()) {
+      throw std::runtime_error("no loop state available at lpe");
+    }
+    return loop_states.top().counterCell;
+  } else {
+    return op.target.value.asInt();
+  }
 }

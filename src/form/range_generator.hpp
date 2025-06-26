@@ -1,5 +1,7 @@
 #pragma once
 
+#include <map>
+#include <stack>
 #include <vector>
 
 #include "form/range.hpp"
@@ -24,12 +26,20 @@ class RangeGenerator {
   bool annotate(Program& program);
 
  private:
+  struct LoopState {
+    int64_t counterCell;
+    RangeMap rangesBefore;
+  };
+
   bool init(const Program& program, RangeMap& ranges);
   bool update(const Operation& op, RangeMap& ranges);
   bool collect(const Program& program, std::vector<RangeMap>& collected);
 
   int64_t getTargetCell(const Program& program, size_t index) const;
   int64_t getTargetCell(const Operation& op) const;
+  void mergeLoopRange(const Range& before, Range& target) const;
 
   ProgramCache program_cache;
+  std::map<int64_t, Range> seq_range_cache;
+  std::stack<LoopState> loop_states;
 };

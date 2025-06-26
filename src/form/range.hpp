@@ -50,6 +50,7 @@ class RangeMap : public std::map<int64_t, Range> {
  public:
   RangeMap() = default;
 
+  Range get(int64_t index) const;
   void prune();
 
   std::string toString() const;
