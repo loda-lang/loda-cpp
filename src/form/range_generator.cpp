@@ -77,7 +77,10 @@ bool RangeGenerator::collect(const Program& program,
       auto& op = program.ops[j];
       if (op.type == Operation::Type::LPB) {
         auto loop = ProgramUtil::getEnclosingLoop(program, j);
-        ranges = collected[loop.second];
+        auto end = collected[loop.second];
+        for (auto& it : ranges) {
+          mergeLoopRange(end.get(it.first), it.second);
+        }
       }
       if (!update(op, ranges)) {
         ok = false;
