@@ -952,6 +952,16 @@ bool OeisManager::maintainProgram(size_t id, bool eval) {
     program_file.close();
   }
 
+  // check if dependent programs are available and there are no recursions
+  if (is_okay) {
+    try {
+      ProgramCache cache;
+      cache.collect(s.id);
+    } catch (const std::exception &) {
+      is_okay = false;
+    }
+  }
+
   // check correctness of the program
   if (is_okay && eval) {
     // get the full number of terms

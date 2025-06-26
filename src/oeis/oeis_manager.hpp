@@ -4,7 +4,7 @@
 #include "eval/minimizer.hpp"
 #include "eval/optimizer.hpp"
 #include "lang/parser.hpp"
-#include "lang/program.hpp"
+#include "lang/program_cache.hpp"
 #include "mine/finder.hpp"
 #include "mine/stats.hpp"
 #include "oeis/oeis_sequence.hpp"
