@@ -84,11 +84,13 @@ class Test {
 
   void checkFormulas(const std::string &testFile, FormulaType type);
 
-  void checkRanges(int64_t id, const std::string &expected);
+  void checkRanges(int64_t id, bool finite, const std::string &expected);
 
  private:
   std::vector<std::pair<Program, Program>> loadInOutTests(
       const std::string &prefix);
+
+  void testRanges(const std::string &filename, bool finite);
 
   void testSeq(size_t id, const Sequence &values);
 
