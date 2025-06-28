@@ -318,8 +318,8 @@ void Range::dgr(const Range& r) {
   // update lower bound
   if (l1 >= Number::ZERO) {
     lower_bound = Number::ZERO;
-  } else if (u1 <= Number::ZERO) {
-    lower_bound = Semantics::mul(Number::MINUS_ONE, u1);
+  } else if (l1 <= Number::ZERO && u2 >= Number::ZERO) {
+    lower_bound = Semantics::mul(Number::MINUS_ONE, u2);
   } else {
     lower_bound = Number::INF;
   }

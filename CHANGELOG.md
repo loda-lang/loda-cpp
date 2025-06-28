@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Bugfixes
+
+* Fix range issue for `dgr`
+
 ## v25.6.27
 
 ### Bugfixes
