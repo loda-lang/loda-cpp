@@ -9,7 +9,7 @@
 
 class Interpreter {
  public:
-  static const std::string ERROR_SEQ_USING_NEGATIVE_ARG;
+  static const std::string ERROR_SEQ_USING_INVALID_ARG;
 
   explicit Interpreter(const Settings &settings);
 

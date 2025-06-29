@@ -83,6 +83,7 @@ void Test::slow() {
   oeisSeq();
   iterator(100);
   minimizer(100);
+  randomRange(100);
   miner();
   memUsage();
 }
@@ -1260,6 +1261,73 @@ void Test::minimizer(size_t tests) {
       ProgramUtil::print(minimized, std::cout);
       Log::get().error(
           "Program evaluated to different sequence after minimization", true);
+    }
+  }
+}
+
+bool checkRange(const Sequence& seq, const Program& program, bool finiteInput) {
+  auto offset = ProgramUtil::getOffset(program);
+  Number inputUpperBound = finiteInput ? offset + seq.size() - 1 : Number::INF;
+  RangeGenerator generator;
+  RangeMap ranges;
+  try {
+    if (!generator.generate(program, ranges, inputUpperBound)) {
+      return false;
+    }
+  } catch (const std::exception& e) {
+    ProgramUtil::print(program, std::cout);
+    Log::get().error(
+        "Error during range generation for program " + std::string(e.what()),
+        true);
+  }
+  auto it = ranges.find(Program::OUTPUT_CELL);
+  if (it == ranges.end()) {
+    return false;
+  }
+  auto result = ranges.toString(Program::OUTPUT_CELL, "a(n)");
+  auto& range = it->second;
+  Log::get().info("Checking " + std::to_string(seq.size()) + " terms" + ": " +
+                  result);
+  auto index = range.check(seq);
+  if (index != -1) {
+    ProgramUtil::print(program, std::cout);
+    Log::get().error("Range check failed for a(" +
+                         std::to_string(index + offset) +
+                         ") = " + seq[index].to_string() +
+                         " with upper bound " + inputUpperBound.to_string(),
+                     true);
+  }
+  return true;
+}
+
+void Test::randomRange(size_t tests) {
+  Evaluator evaluator(settings);
+  Minimizer minimizer(settings);
+  MultiGenerator multi_generator(settings, getManager().getStats(), false);
+  Sequence seq;
+  Program program;
+  RangeGenerator range_generator;
+  RangeMap ranges;
+  const int64_t num_tests = tests;
+  for (int64_t i = 0; i < num_tests; i++) {
+    if (i % (num_tests / 10) == 0) {
+      Log::get().info("Testing random range " + std::to_string(i));
+    }
+    program = multi_generator.generateProgram();
+    ProgramUtil::setOffset(program, i % 3);
+    try {
+      evaluator.eval(program, seq, OeisSequence::DEFAULT_SEQ_LENGTH);
+      if (seq.size() != OeisSequence::DEFAULT_SEQ_LENGTH) {
+        i--;
+        continue;
+      }
+    } catch (const std::exception& e) {
+      i--;
+      continue;
+    }
+    if (!checkRange(seq, program, true)) {
+      i--;
+      continue;
     }
   }
 }

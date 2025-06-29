@@ -8,20 +8,20 @@
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
 
-const Program& ProgramCache::get(int64_t id) {
+const Program& ProgramCache::getProgram(int64_t id) {
   if (missing.find(id) != missing.end()) {
     throw std::runtime_error("Program not found: " + getProgramPath(id));
   }
-  if (cache.find(id) == cache.end()) {
+  if (programs.find(id) == programs.end()) {
     try {
       Parser parser;
-      cache[id] = parser.parse(getProgramPath(id));
+      programs[id] = parser.parse(getProgramPath(id));
     } catch (...) {
       missing.insert(id);
       std::rethrow_exception(std::current_exception());
     }
   }
-  return cache[id];
+  return programs[id];
 }
 
 std::string ProgramCache::getProgramPath(int64_t id) {
@@ -49,7 +49,7 @@ std::unordered_map<int64_t, Program> ProgramCache::collect(int64_t id) {
           std::to_string(cur_id));
     }
     visiting.insert(cur_id);
-    const Program& prog = get(cur_id);
+    const Program& prog = getProgram(cur_id);
     result[cur_id] = prog;
     for (const auto& op : prog.ops) {
       if (op.type == Operation::Type::SEQ &&
@@ -65,7 +65,21 @@ std::unordered_map<int64_t, Program> ProgramCache::collect(int64_t id) {
   return result;
 }
 
+int64_t ProgramCache::getOffset(int64_t id) {
+  if (offsets.find(id) == offsets.end()) {
+    try {
+      const Program& prog = getProgram(id);
+      offsets[id] = ProgramUtil::getOffset(prog);
+    } catch (...) {
+      missing.insert(id);
+      std::rethrow_exception(std::current_exception());
+    }
+  }
+  return offsets[id];
+}
+
 void ProgramCache::clear() {
-  cache.clear();
+  programs.clear();
+  offsets.clear();
   missing.clear();
 }

@@ -21,8 +21,8 @@
 #include <unistd.h>
 #endif
 
-const std::string Interpreter::ERROR_SEQ_USING_NEGATIVE_ARG =
-    "seq using negative argument";
+const std::string Interpreter::ERROR_SEQ_USING_INVALID_ARG =
+    "seq using invalid argument";
 
 using MemStack = std::stack<Memory>;
 using IntStack = std::stack<int64_t>;
@@ -385,10 +385,6 @@ void Interpreter::set(const Operand& a, const Number& v, Memory& mem,
 }
 
 std::pair<Number, size_t> Interpreter::callSeq(int64_t id, const Number& arg) {
-  if (arg < 0) {
-    throw std::runtime_error(ERROR_SEQ_USING_NEGATIVE_ARG);
-  }
-
   // check if already cached
   std::pair<int64_t, Number> key(id, arg);
   auto it = terms_cache.find(key);
@@ -397,7 +393,12 @@ std::pair<Number, size_t> Interpreter::callSeq(int64_t id, const Number& arg) {
   }
 
   // check if program exists
-  auto& call_program = program_cache.get(id);
+  auto& call_program = program_cache.getProgram(id);
+
+  // check for invalid arguments
+  if (arg < program_cache.getOffset(id)) {
+    throw std::runtime_error(ERROR_SEQ_USING_INVALID_ARG);
+  }
 
   // check for recursive calls
   if (running_programs.find(id) != running_programs.end()) {
@@ -431,7 +432,7 @@ std::pair<Number, size_t> Interpreter::callSeq(int64_t id, const Number& arg) {
 size_t Interpreter::callPrg(int64_t id, int64_t start, Memory& mem) {
   // load program
   id = -id;  // internally use negative IDs for prg calls
-  auto& call_program = program_cache.get(id);
+  auto& call_program = program_cache.getProgram(id);
 
   // check for recursive calls
   if (running_programs.find(id) != running_programs.end()) {
