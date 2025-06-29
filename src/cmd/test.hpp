@@ -62,6 +62,8 @@ class Test {
 
   void minimizer(size_t tests);
 
+  void randomRange(size_t tests);
+
   void miner();
 
   void linearMatcher();

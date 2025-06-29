@@ -387,7 +387,7 @@ void Commands::autoFold() {
         } catch (std::exception& e) {
           error_msg = e.what();
         }
-        if (error_msg.find(Interpreter::ERROR_SEQ_USING_NEGATIVE_ARG) !=
+        if (error_msg.find(Interpreter::ERROR_SEQ_USING_INVALID_ARG) !=
             std::string::npos) {
           Log::get().warn("Ignoring invalid folded program");
         } else {

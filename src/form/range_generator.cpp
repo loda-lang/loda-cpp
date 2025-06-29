@@ -197,7 +197,7 @@ bool RangeGenerator::update(const Operation& op, RangeMap& ranges) {
         program_cache.collect(id);  // ensures that there is no recursion
         RangeGenerator gen;
         RangeMap tmp;
-        if (!gen.generate(program_cache.get(id), tmp)) {
+        if (!gen.generate(program_cache.getProgram(id), tmp)) {
           return false;
         }
         target = tmp.get(Program::OUTPUT_CELL);

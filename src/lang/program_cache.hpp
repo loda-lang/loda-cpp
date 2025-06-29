@@ -7,7 +7,9 @@
 
 class ProgramCache {
  public:
-  const Program &get(int64_t id);
+  const Program &getProgram(int64_t id);
+
+  int64_t getOffset(int64_t id);
 
   std::unordered_map<int64_t, Program> collect(int64_t id);
 
@@ -16,6 +18,7 @@ class ProgramCache {
   void clear();
 
  private:
-  std::unordered_map<int64_t, Program> cache;
+  std::unordered_map<int64_t, Program> programs;
+  std::unordered_map<int64_t, int64_t> offsets;
   std::unordered_set<int64_t> missing;
 };
