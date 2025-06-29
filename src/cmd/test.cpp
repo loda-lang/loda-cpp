@@ -1318,15 +1318,15 @@ void Test::randomRange(size_t tests) {
     try {
       evaluator.eval(program, seq, OeisSequence::DEFAULT_SEQ_LENGTH);
       if (seq.size() != OeisSequence::DEFAULT_SEQ_LENGTH) {
-        i--;
+        i--;  // try another program
         continue;
       }
     } catch (const std::exception& e) {
-      i--;
+      i--;  // try another program
       continue;
     }
-    if (!checkRange(seq, program, true)) {
-      i--;
+    if (!checkRange(seq, program, true) || !checkRange(seq, program, false)) {
+      i--;  // try another program
       continue;
     }
   }
