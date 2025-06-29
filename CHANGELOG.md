@@ -5,6 +5,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Bugfixes
 
 * Fix range issue for `dgr`
+* Fix IE bug occuring when using step count > 1 and `max` on loop counter
 
 ## v25.6.27
 

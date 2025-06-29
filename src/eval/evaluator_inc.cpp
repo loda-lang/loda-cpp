@@ -387,10 +387,12 @@ std::pair<Number, size_t> IncrementalEvaluator::next(bool skip_final_iter,
   steps += total_loop_steps[slice] + 1;  // +1 for lpb of zero-th iteration
 
   // determine final loop counter value
-  const Number final_counter_value = Semantics::min(
-      Number(loop_counter_before), (loop_counter_type == Operation::Type::TRN)
-                                       ? Number::ZERO
-                                       : Number(slice));
+  auto final_counter_value = Number(slice);
+  if (loop_counter_type == Operation::Type::TRN || loop_counter_lower_bound) {
+    final_counter_value = Number(loop_counter_lower_bound);
+  }
+  final_counter_value =
+      Semantics::min(final_counter_value, Number(loop_counter_before));
 
   // one more iteration is needed for the correct step count
   if (!skip_final_iter) {
