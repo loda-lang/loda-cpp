@@ -1306,8 +1306,6 @@ void Test::randomRange(size_t tests) {
   MultiGenerator multi_generator(settings, getManager().getStats(), false);
   Sequence seq;
   Program program;
-  RangeGenerator range_generator;
-  RangeMap ranges;
   const int64_t num_tests = tests;
   for (int64_t i = 0; i < num_tests; i++) {
     if (i % (num_tests / 10) == 0) {
