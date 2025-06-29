@@ -1303,7 +1303,6 @@ bool checkRange(const Sequence& seq, const Program& program, bool finiteInput) {
 
 void Test::randomRange(size_t tests) {
   Evaluator evaluator(settings);
-  Minimizer minimizer(settings);
   MultiGenerator multi_generator(settings, getManager().getStats(), false);
   Sequence seq;
   Program program;
