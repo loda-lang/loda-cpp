@@ -1286,8 +1286,9 @@ bool checkRange(const Sequence& seq, const Program& program, bool finiteInput) {
   }
   auto result = ranges.toString(Program::OUTPUT_CELL, "a(n)");
   auto& range = it->second;
-  Log::get().info("Checking " + std::to_string(seq.size()) + " terms" + ": " +
-                  result);
+  // Log::get().info("Checking " + std::to_string(seq.size()) + " terms" + ": "
+  // +
+  //                result);
   auto index = range.check(seq);
   if (index != -1) {
     ProgramUtil::print(program, std::cout);
