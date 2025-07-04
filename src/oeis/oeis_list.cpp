@@ -9,8 +9,6 @@
 #include "sys/setup.hpp"
 #include "sys/util.hpp"
 
-const std::string OeisList::INVALID_MATCHES_FILE("invalid_matches.txt");
-
 const std::string& OeisList::getListsHome() {
   static std::string lists_home;
   if (lists_home.empty()) {

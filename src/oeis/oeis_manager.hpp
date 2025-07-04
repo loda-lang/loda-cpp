@@ -7,6 +7,7 @@
 #include "lang/program_cache.hpp"
 #include "mine/finder.hpp"
 #include "mine/stats.hpp"
+#include "oeis/invalid_matches.hpp"
 #include "oeis/oeis_sequence.hpp"
 #include "sys/util.hpp"
 
@@ -100,7 +101,7 @@ class OeisManager {
   std::unordered_set<size_t> protect_list;
   std::unordered_set<size_t> ignore_list;
   std::unordered_set<size_t> full_check_list;
-  std::map<size_t, int64_t> invalid_matches_map;
+  InvalidMatches invalid_matches;
 
   size_t loaded_count;
   size_t total_count;

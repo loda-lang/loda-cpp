@@ -10,6 +10,7 @@
 #include "lang/program_util.hpp"
 #include "lang/subprogram.hpp"
 #include "mine/config.hpp"
+#include "oeis/invalid_matches.hpp"
 #include "oeis/oeis_list.hpp"
 #include "oeis/oeis_program.hpp"
 #include "oeis/oeis_sequence.hpp"
@@ -23,9 +24,7 @@ Finder::Finder(const Settings &settings, Evaluator &evaluator)
       evaluator(evaluator),
       optimizer(settings),
       minimizer(settings),
-      num_find_attempts(0),
-      scheduler(1800)  // 30 minutes
-{
+      num_find_attempts(0) {
   auto config = ConfigLoader::load(settings);
   if (config.matchers.empty()) {
     Log::get().error("No matchers defined", true);
@@ -121,7 +120,7 @@ void Finder::findAll(const Program &p, const Sequence &norm_seq,
       auto num_required = OeisProgram::getNumRequiredTerms(t.second);
       auto res = evaluator.check(t.second, expected_seq, num_required, t.first);
       if (res.first == status_t::ERROR) {
-        notifyInvalidMatch(t.first);
+        invalid_matches.insert(t.first);
         // Log::get().warn( "Ignoring invalid match for " + s.id_str() );
       } else {
         result.push_back(t);
@@ -158,7 +157,7 @@ check_result_t Finder::checkProgramExtended(Program program, Program existing,
   auto check_vanilla =
       evaluator.check(program, extended_seq, num_required, seq.id);
   if (check_vanilla.first == status_t::ERROR) {
-    notifyInvalidMatch(seq.id);
+    invalid_matches.insert(seq.id);
     return result;  // not correct
   }
 
@@ -247,7 +246,7 @@ check_result_t Finder::checkProgramBasic(const Program &program,
   // check the program
   auto check = evaluator.check(program, terms, num_required, seq.id);
   if (check.first == status_t::ERROR) {
-    notifyInvalidMatch(seq.id);
+    invalid_matches.insert(seq.id);
     return result;  // not correct
   }
 
@@ -427,20 +426,6 @@ std::string Finder::compare(Program p1, Program p2, const std::string &name1,
     return name1 + " program is " + result;
   }
   return "Both programs are equivalent";
-}
-
-void Finder::notifyInvalidMatch(size_t id) {
-  if (invalid_matches.find(id) == invalid_matches.end()) {
-    invalid_matches[id] = 1;
-  } else {
-    invalid_matches[id]++;
-  }
-  if (scheduler.isTargetReached()) {
-    scheduler.reset();
-    Log::get().info("Saving invalid matches stats for " +
-                    std::to_string(invalid_matches.size()) + " sequences");
-    OeisList::mergeMap(OeisList::INVALID_MATCHES_FILE, invalid_matches);
-  }
 }
 
 void Finder::logSummary(size_t loaded_count) {

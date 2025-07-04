@@ -5,6 +5,7 @@
 #include "eval/evaluator.hpp"
 #include "eval/minimizer.hpp"
 #include "mine/matcher.hpp"
+#include "oeis/invalid_matches.hpp"
 
 class OeisSequence;
 
@@ -58,8 +59,6 @@ class Finder {
                const std::vector<OeisSequence> &sequences,
                Matcher::seq_programs_t &result);
 
-  void notifyInvalidMatch(size_t id);
-
   void notifyUnfoldOrMinimizeProblem(const Program &p, const std::string &id);
 
   const Settings &settings;
@@ -68,9 +67,7 @@ class Finder {
   Minimizer minimizer;
   std::vector<std::unique_ptr<Matcher>> matchers;
   mutable size_t num_find_attempts;
-
-  std::map<size_t, int64_t> invalid_matches;
-  AdaptiveScheduler scheduler;
+  InvalidMatches invalid_matches;
 
   // temporary containers (cached as members)
   mutable std::unordered_set<int64_t> tmp_used_cells;

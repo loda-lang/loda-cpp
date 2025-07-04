@@ -76,15 +76,7 @@ void OeisManager::load() {
   OeisList::loadList(oeis_dir + "protect.txt", protect_list);
 
   // load invalid matches map
-  const std::string invalid_matches_file =
-      OeisList::getListsHome() + OeisList::INVALID_MATCHES_FILE;
-  try {
-    OeisList::loadMap(invalid_matches_file, invalid_matches_map);
-  } catch (const std::exception &) {
-    Log::get().warn("Resetting corrupt file " + invalid_matches_file);
-    invalid_matches_map.clear();
-    std::remove(invalid_matches_file.c_str());
-  }
+  invalid_matches.load();
 
   std::chrono::steady_clock::time_point start_time;
   {
@@ -293,13 +285,7 @@ bool OeisManager::shouldMatch(const OeisSequence &seq) const {
   }
 
   // too many invalid matches already?
-  bool too_many_matches = false;
-  auto it = invalid_matches_map.find(seq.id);
-  if (it != invalid_matches_map.end() && it->second > 0 &&
-      (Random::get().gen() % it->second) >= 100)  // magic number
-  {
-    too_many_matches = true;
-  }
+  bool too_many_matches = invalid_matches.hasTooMany(seq.id);
 
   // check if program exists
   const bool prog_exists = (seq.id < stats->all_program_ids.size()) &&

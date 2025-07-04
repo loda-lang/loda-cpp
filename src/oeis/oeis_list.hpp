@@ -24,6 +24,4 @@ class OeisList {
 
   static void saveMapWithComments(const std::string& path,
                                   const std::map<size_t, std::string>& map);
-
-  static const std::string INVALID_MATCHES_FILE;
 };

@@ -103,8 +103,7 @@ void Boinc::run() {
     const bool deleteInvalidMatches =
         getJBool(input, "deleteInvalidMatches", false);
     if (deleteInvalidMatches) {
-      auto f = OeisList::getListsHome() + OeisList::INVALID_MATCHES_FILE;
-      std::remove(f.c_str());
+      InvalidMatches::deleteFile();
     }
   }
 
