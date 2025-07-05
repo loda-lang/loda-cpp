@@ -849,7 +849,7 @@ void Commands::compare(const std::string& path1, const std::string& path2) {
   if (seq.id < manager.getStats().program_usages.size()) {
     num_usages = manager.getStats().program_usages[seq.id];
   }
-  Log::get().info(manager.getFinder().compare(p1, p2, "First", "Second", seq,
-                                              OeisSequence::EXTENDED_SEQ_LENGTH,
-                                              num_usages));
+  Log::get().info(manager.getFinder().getChecker().compare(
+      p1, p2, "First", "Second", seq, OeisSequence::EXTENDED_SEQ_LENGTH,
+      num_usages));
 }

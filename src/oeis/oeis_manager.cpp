@@ -269,7 +269,6 @@ Finder &OeisManager::getFinder() {
                     std::to_string(finder.getMatchers().size()) +
                     " matchers (ignoring " +
                     std::to_string(ignore_list.size()) + " sequences)");
-    finder.logSummary(loaded_count);
   }
   return finder;
 }
@@ -853,12 +852,13 @@ update_program_result_t OeisManager::updateProgram(
   }
   switch (validation_mode) {
     case ValidationMode::BASIC:
-      checked = finder.checkProgramBasic(p, existing, is_new, seq, change_type,
-                                         previous_hash, full_check, num_usages);
+      checked = finder.getChecker().checkProgramBasic(
+          p, existing, is_new, seq, change_type, previous_hash, full_check,
+          num_usages);
       break;
     case ValidationMode::EXTENDED:
-      checked = finder.checkProgramExtended(p, existing, is_new, seq,
-                                            full_check, num_usages);
+      checked = finder.getChecker().checkProgramExtended(
+          p, existing, is_new, seq, full_check, num_usages);
       break;
   }
   // not better or the same after optimization?

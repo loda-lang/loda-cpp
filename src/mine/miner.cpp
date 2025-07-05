@@ -470,7 +470,7 @@ void Miner::submit(const std::string &path, std::string id_str) {
         num_usages = manager->getStats().program_usages[seq.id];
       }
       auto existing = manager->getExistingProgram(s.first);
-      auto msg = manager->getFinder().compare(
+      auto msg = manager->getFinder().getChecker().compare(
           program, existing, "new", "existing", seq,
           OeisSequence::EXTENDED_SEQ_LENGTH, num_usages);
       lowerString(msg);
