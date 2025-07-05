@@ -11,8 +11,6 @@
 #include "oeis/oeis_sequence.hpp"
 #include "sys/log.hpp"
 
-namespace {
-
 bool hasBadConstant(const Program& p) {
   auto constants = Constants::getAllConstants(p, true);
   return std::any_of(constants.begin(), constants.end(), [](const Number& c) {
@@ -61,8 +59,6 @@ bool isBetterIncEval(const Program& existing, const Program& optimized,
           evaluator.supportsIncEval(optimized) && !optimized_has_seq);
 }
 
-}  // namespace
-
 Checker::Checker(const Settings& settings, Evaluator& evaluator,
                  Minimizer& minimizer, InvalidMatches& invalid_matches)
     : evaluator(evaluator),
@@ -76,39 +72,60 @@ check_result_t Checker::checkProgramExtended(Program program, Program existing,
                                              bool full_check,
                                              size_t num_usages) {
   check_result_t result;
+
+  // get the extended sequence and number of required terms
   auto num_check = OeisProgram::getNumCheckTerms(full_check);
   auto num_required = OeisProgram::getNumRequiredTerms(program);
   auto num_minimize = OeisProgram::getNumMinimizationTerms(program);
   auto extended_seq = seq.getTerms(num_check);
+
+  // check the program w/o minimization
   auto check_vanilla =
       evaluator.check(program, extended_seq, num_required, seq.id);
   if (check_vanilla.first == status_t::ERROR) {
     invalid_matches.insert(seq.id);
-    return result;
+    return result;  // not correct
   }
+
+  // the program is correct => update result
   result.program = program;
+
+  // auto-unfold seq operations
   Subprogram::autoUnfold(program);
+
+  // minimize based on number of terminating terms
   minimizer.optimizeAndMinimize(program, num_minimize);
   if (program != result.program) {
+    // minimization changed program => check the minimized program
     num_required = OeisProgram::getNumRequiredTerms(program);
     auto check_minimized =
         evaluator.check(program, extended_seq, num_required, seq.id);
     if (check_minimized.first == status_t::ERROR) {
       if (check_vanilla.first == status_t::OK) {
+        // looks like the minimization changed the semantics of the program
         Log::get().warn("Program for " + ProgramUtil::idStr(seq.id) +
                         " generates wrong result after unfold/minimize");
       }
+      // we ignore the case where the base program has a warning and minimized
+      // program an error, because it indicates a problem in the base program
       result.program.ops.clear();
       return result;
     }
   }
+
+  // update result with minimized program
   result.program = program;
   if (is_new) {
+    // no additional checks needed for new programs
     result.status = "Found";
   } else {
+    // now we are in the "update" case
+    // compare (minimized) program with existing programs
     result.status = isOptimizedBetter(existing, result.program, seq, full_check,
                                       num_usages);
   }
+
+  // clear result program if it's no good
   if (result.status.empty()) {
     result.program.ops.clear();
   }
