@@ -7,6 +7,7 @@
 
 class InvalidMatches {
  public:
+  InvalidMatches();
   void load();
   void insert(size_t id);
   static void deleteFile();
@@ -14,5 +15,5 @@ class InvalidMatches {
 
  private:
   std::map<size_t, int64_t> invalid_matches;
-  AdaptiveScheduler scheduler{1800};
+  AdaptiveScheduler scheduler;
 };

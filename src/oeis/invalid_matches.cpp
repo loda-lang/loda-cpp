@@ -3,6 +3,10 @@
 #include "oeis/oeis_list.hpp"
 #include "sys/log.hpp"
 
+InvalidMatches::InvalidMatches()
+    : scheduler(1800)  // 30 minutes
+{}
+
 std::string getFileName() {
   return OeisList::getListsHome() + "invalid_matches.txt";
 }
