@@ -183,6 +183,9 @@ std::string Checker::isOptimizedBetter(Program existing, Program optimized,
   static const std::string not_better;
 
   // ====== STATIC CODE CHECKS ========
+
+  // check if there are illegal recursions
+  // why is this not detected by the interpreter?
   for (const auto& op : optimized.ops) {
     if (op.type == Operation::Type::SEQ &&
         (op.source.type != Operand::Type::CONSTANT ||
@@ -190,12 +193,17 @@ std::string Checker::isOptimizedBetter(Program existing, Program optimized,
       return not_better;
     }
   }
+
   // remove nops...
   optimizer.removeNops(existing);
   optimizer.removeNops(optimized);
+
+  // we want at least one operation (avoid empty program for A000004)
   if (optimized.ops.empty()) {
     return not_better;
   }
+
+  // if the programs are the same, no need to evaluate them
   if (optimized == existing) {
     return not_better;
   }
@@ -204,20 +212,29 @@ std::string Checker::isOptimizedBetter(Program existing, Program optimized,
   } else if (isSimpler(optimized, existing)) {
     return not_better;
   }
+
+  // consider incremental evaluation only for programs that are not
+  // used by other programs and that don't require a full check
   if (!full_check && num_usages < 5) {
+    // check if the optimized program supports incremental evaluation
     if (isBetterIncEval(existing, optimized, evaluator)) {
       return "Faster (IE)";
     } else if (isBetterIncEval(optimized, existing, evaluator)) {
       return not_better;
     }
   }
+
   // ======= EVALUATION CHECKS =========
+
+  // get extended sequence
   auto num_check = OeisProgram::getNumCheckTerms(full_check);
   auto terms = seq.getTerms(num_check);
   if (terms.empty()) {
     Log::get().error("Error fetching b-file for " + ProgramUtil::idStr(seq.id),
                      true);
   }
+
+  // evaluate optimized program for fixed number of terms
   num_check = std::min<size_t>(num_check, terms.size());
   num_check = std::max<size_t>(num_check, OeisSequence::EXTENDED_SEQ_LENGTH);
   Sequence tmp;
@@ -226,31 +243,42 @@ std::string Checker::isOptimizedBetter(Program existing, Program optimized,
   if (Signals::HALT) {
     return not_better;
   }
+
+  // check if the first decreasing/non-increasing term is beyond the known
+  // sequence terms => fake "better" program
   const int64_t s = terms.size();
-  if (tmp.get_first_delta_lt(Number::ZERO) >= s ||
-      tmp.get_first_delta_lt(Number::ONE) >= s) {
-    return not_better;
+  if (tmp.get_first_delta_lt(Number::ZERO) >= s ||  // decreasing
+      tmp.get_first_delta_lt(Number::ONE) >= s) {   // non-increasing
+    return not_better;                              // => fake "better" program
   }
+
+  // evaluate existing program for same number of terms
   evaluator.clearCaches();
   const auto existing_steps = evaluator.eval(existing, tmp, num_check, false);
   if (Signals::HALT) {
-    return not_better;
+    return not_better;  // interrupted evaluation
   }
+
+  // check number of successfully computed terms
+  // we don't try to optimize for number of terms
   double existing_terms = existing_steps.runs;
   double optimized_terms = optimized_steps.runs;
   if (optimized_terms > (existing_terms * THRESHOLD_BETTER)) {
     return "Better";
-  } else if (existing_steps.runs > optimized_steps.runs) {
+  } else if (existing_steps.runs > optimized_steps.runs) {  // no threshold
     return not_better;
   }
+
+  //  compare number of execution steps
   double existing_total = existing_steps.total;
   double optimized_total = optimized_steps.total;
   if (existing_total > (optimized_total * THRESHOLD_FASTER)) {
     return "Faster";
-  } else if (optimized_steps.total > existing_steps.total) {
+  } else if (optimized_steps.total > existing_steps.total) {  // no threshold
     return not_better;
   }
-  return not_better;
+
+  return not_better;  // not better or worse => no change
 }
 
 std::string Checker::compare(Program p1, Program p2, const std::string& name1,
