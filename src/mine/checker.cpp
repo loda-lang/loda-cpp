@@ -9,7 +9,9 @@
 #include "lang/subprogram.hpp"
 #include "oeis/oeis_program.hpp"
 #include "oeis/oeis_sequence.hpp"
+#include "sys/file.hpp"
 #include "sys/log.hpp"
+#include "sys/setup.hpp"
 
 bool hasBadConstant(const Program& p) {
   auto constants = Constants::getAllConstants(p, true);
@@ -265,4 +267,14 @@ std::string Checker::compare(Program p1, Program p2, const std::string& name1,
     return name1 + " program is " + result;
   }
   return "Both programs are equivalent";
+}
+
+void Checker::notifyUnfoldOrMinimizeProblem(const Program& p,
+                                            const std::string& id) {
+  Log::get().warn("Program for " + id +
+                  " generates wrong result after unfold/minimize");
+  const std::string f = Setup::getLodaHome() + "debug/minimizer/" + id + ".asm";
+  ensureDir(f);
+  std::ofstream out(f);
+  ProgramUtil::print(p, out);
 }

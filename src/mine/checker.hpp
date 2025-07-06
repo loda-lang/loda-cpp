@@ -44,4 +44,6 @@ class Checker {
   Minimizer& minimizer;
   InvalidMatches& invalid_matches;
   Optimizer optimizer;
+
+  void notifyUnfoldOrMinimizeProblem(const Program& p, const std::string& id);
 };
