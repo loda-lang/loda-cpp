@@ -269,6 +269,7 @@ Finder &OeisManager::getFinder() {
                     std::to_string(finder.getMatchers().size()) +
                     " matchers (ignoring " +
                     std::to_string(ignore_list.size()) + " sequences)");
+    finder.logSummary(loaded_count);
   }
   return finder;
 }

@@ -28,10 +28,9 @@ class Finder {
 
   Checker &getChecker() { return checker; }
 
- private:
-  static constexpr double THRESHOLD_BETTER = 1.05;
-  static constexpr double THRESHOLD_FASTER = 1.1;
+  void logSummary(size_t loaded_count);
 
+ private:
   void findAll(const Program &p, const Sequence &norm_seq,
                const std::vector<OeisSequence> &sequences,
                Matcher::seq_programs_t &result);

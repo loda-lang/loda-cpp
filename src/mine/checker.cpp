@@ -16,7 +16,8 @@
 bool hasBadConstant(const Program& p) {
   auto constants = Constants::getAllConstants(p, true);
   return std::any_of(constants.begin(), constants.end(), [](const Number& c) {
-    return (Minimizer::getPowerOf(c) != 0 || Number(100000) < c);
+    return (Minimizer::getPowerOf(c) != 0 ||
+            Number(100000) < c);  // magic number
   });
 }
 
@@ -52,6 +53,7 @@ bool isSimpler(const Program& existing, const Program& optimized) {
 
 bool isBetterIncEval(const Program& existing, const Program& optimized,
                      Evaluator& evaluator) {
+  // avoid overwriting programs w/o loops
   if (!ProgramUtil::hasOp(existing, Operation::Type::LPB) &&
       !ProgramUtil::hasOp(existing, Operation::Type::SEQ)) {
     return false;
@@ -105,8 +107,8 @@ check_result_t Checker::checkProgramExtended(Program program, Program existing,
     if (check_minimized.first == status_t::ERROR) {
       if (check_vanilla.first == status_t::OK) {
         // looks like the minimization changed the semantics of the program
-        Log::get().warn("Program for " + ProgramUtil::idStr(seq.id) +
-                        " generates wrong result after unfold/minimize");
+        notifyUnfoldOrMinimizeProblem(result.program,
+                                      ProgramUtil::idStr(seq.id));
       }
       // we ignore the case where the base program has a warning and minimized
       // program an error, because it indicates a problem in the base program
@@ -141,7 +143,9 @@ check_result_t Checker::checkProgramBasic(const Program& program,
                                           size_t previous_hash, bool full_check,
                                           size_t num_usages) {
   static const std::string first = "Found";
-  check_result_t result;
+  check_result_t result;  // empty string indicates no update
+
+  // additional metadata checks for program update
   if (!is_new) {
     // check if another miner already submitted a program for this sequence
     if (change_type == first) {
@@ -163,13 +167,19 @@ check_result_t Checker::checkProgramBasic(const Program& program,
       return result;
     }
   }
+
+  // get the number of required terms and the sequence
   auto num_required = OeisProgram::getNumRequiredTerms(program);
   auto terms = seq.getTerms(num_required);
+
+  // check the program
   auto check = evaluator.check(program, terms, num_required, seq.id);
   if (check.first == status_t::ERROR) {
-    invalid_matches.insert(seq.id);
+    invalid_matches.insert(seq.id);  // not correct
     return result;
   }
+
+  // the program is correct => update result
   result.status = is_new ? first : change_type;
   result.program = program;
   return result;
@@ -207,6 +217,7 @@ std::string Checker::isOptimizedBetter(Program existing, Program optimized,
   if (optimized == existing) {
     return not_better;
   }
+
   if (isSimpler(existing, optimized)) {
     return "Simpler";
   } else if (isSimpler(optimized, existing)) {
@@ -215,7 +226,7 @@ std::string Checker::isOptimizedBetter(Program existing, Program optimized,
 
   // consider incremental evaluation only for programs that are not
   // used by other programs and that don't require a full check
-  if (!full_check && num_usages < 5) {
+  if (!full_check && num_usages < 5) {  // magic number
     // check if the optimized program supports incremental evaluation
     if (isBetterIncEval(existing, optimized, evaluator)) {
       return "Faster (IE)";
@@ -241,7 +252,7 @@ std::string Checker::isOptimizedBetter(Program existing, Program optimized,
   evaluator.clearCaches();
   auto optimized_steps = evaluator.eval(optimized, tmp, num_check, false);
   if (Signals::HALT) {
-    return not_better;
+    return not_better;  // interrupted evaluation
   }
 
   // check if the first decreasing/non-increasing term is beyond the known

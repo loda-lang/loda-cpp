@@ -131,3 +131,14 @@ void Finder::findAll(const Program &p, const Sequence &norm_seq,
     }
   }
 }
+
+void Finder::logSummary(size_t loaded_count) {
+  std::stringstream buf;
+  buf << "Matcher compaction ratios: ";
+  for (size_t i = 0; i < matchers.size(); i++) {
+    if (i > 0) buf << ", ";
+    buf << matchers[i]->getName() << ": " << std::setprecision(3)
+        << matchers[i]->getCompationRatio() << "%";
+  }
+  Log::get().debug(buf.str());
+}
