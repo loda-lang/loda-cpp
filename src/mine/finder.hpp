@@ -4,15 +4,11 @@
 
 #include "eval/evaluator.hpp"
 #include "eval/minimizer.hpp"
+#include "mine/checker.hpp"
 #include "mine/matcher.hpp"
 #include "oeis/invalid_matches.hpp"
 
 class OeisSequence;
-
-struct check_result_t {
-  std::string status;
-  Program program;
-};
 
 class Finder {
  public:
@@ -28,33 +24,13 @@ class Finder {
       const Program &p, Sequence &norm_seq,
       const std::vector<OeisSequence> &sequences);
 
-  check_result_t checkProgramExtended(Program program, Program existing,
-                                      bool is_new, const OeisSequence &seq,
-                                      bool full_check, size_t num_usages);
-
-  check_result_t checkProgramBasic(const Program &program,
-                                   const Program &existing, bool is_new,
-                                   const OeisSequence &seq,
-                                   const std::string &change_type,
-                                   size_t previous_hash, bool full_check,
-                                   size_t num_usages);
-
   std::vector<std::unique_ptr<Matcher>> &getMatchers() { return matchers; }
+
+  Checker &getChecker() { return checker; }
 
   void logSummary(size_t loaded_count);
 
-  std::string isOptimizedBetter(Program existing, Program optimized,
-                                const OeisSequence &seq, bool full_check,
-                                size_t num_usages);
-
-  std::string compare(Program p1, Program p2, const std::string &name1,
-                      const std::string &name2, const OeisSequence &seq,
-                      size_t num_terms, size_t num_usages);
-
  private:
-  static constexpr double THRESHOLD_BETTER = 1.05;
-  static constexpr double THRESHOLD_FASTER = 1.1;
-
   void findAll(const Program &p, const Sequence &norm_seq,
                const std::vector<OeisSequence> &sequences,
                Matcher::seq_programs_t &result);
@@ -68,6 +44,7 @@ class Finder {
   std::vector<std::unique_ptr<Matcher>> matchers;
   mutable size_t num_find_attempts;
   InvalidMatches invalid_matches;
+  Checker checker;
 
   // temporary containers (cached as members)
   mutable std::unordered_set<int64_t> tmp_used_cells;
