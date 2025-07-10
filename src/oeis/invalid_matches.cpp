@@ -3,19 +3,18 @@
 #include "oeis/oeis_list.hpp"
 #include "sys/log.hpp"
 
+const std::string FILENAME = "invalid_matches.txt";
+
 InvalidMatches::InvalidMatches()
     : scheduler(1800)  // 30 minutes
 {}
 
-std::string getFileName() {
-  return OeisList::getListsHome() + "invalid_matches.txt";
-}
-
 void InvalidMatches::load() {
+  auto path = OeisList::getListsHome() + FILENAME;
   try {
-    OeisList::loadMap(getFileName(), invalid_matches);
+    OeisList::loadMap(path, invalid_matches);
   } catch (const std::exception&) {
-    Log::get().warn("Resetting corrupt file " + getFileName());
+    Log::get().warn("Resetting corrupt file " + path);
     invalid_matches.clear();
     deleteFile();
   }
@@ -36,11 +35,11 @@ void InvalidMatches::insert(size_t id) {
     scheduler.reset();
     Log::get().info("Saving invalid matches stats for " +
                     std::to_string(invalid_matches.size()) + " sequences");
-    OeisList::mergeMap(getFileName(), invalid_matches);
+    OeisList::mergeMap(FILENAME, invalid_matches);
   }
 }
 
 void InvalidMatches::deleteFile() {
-  auto filename = getFileName();
-  std::remove(filename.c_str());
+  auto path = OeisList::getListsHome() + FILENAME;
+  std::remove(path.c_str());
 }
