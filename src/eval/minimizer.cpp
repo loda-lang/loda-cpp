@@ -195,13 +195,17 @@ bool Minimizer::replaceConstantLoop(Program& p, const Sequence& seq,
   if (info.constant_value < Number(100)) {  // magic number
     return false;
   }
+  // limitations:
+  // 1) mov operation with a constant must be directly before the loop
+  // 2) input cell must not be overwritten
   if (info.index_lpb == 0) {
     return false;
   }
   const Operation& old_mov = p.ops[info.index_lpb - 1];
   const Operation& lpb = p.ops[info.index_lpb];
   if (old_mov.type != Operation::Type::MOV || old_mov.target != lpb.target ||
-      old_mov.source.type != Operand::Type::CONSTANT) {
+      old_mov.source.type != Operand::Type::CONSTANT ||
+      info.is_input_overwritten) {
     return false;
   }
 

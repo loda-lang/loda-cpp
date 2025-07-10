@@ -29,6 +29,8 @@ Number Constants::getLargestConstant(const Program &p) {
 Constants::LoopInfo Constants::findConstantLoop(const Program &p) {
   // assumes that the program is optimized already
   Constants::LoopInfo info;
+  info.has_constant_loop = false;
+  info.is_input_overwritten = false;
   std::map<Number, Number> values;
   for (size_t i = 0; i < p.ops.size(); i++) {
     auto &op = p.ops[i];
@@ -39,6 +41,9 @@ Constants::LoopInfo Constants::findConstantLoop(const Program &p) {
     if (op.type == Operation::Type::MOV) {
       if (op.source.type == Operand::Type::CONSTANT) {
         values[op.target.value] = op.source.value;
+        if (op.target.value == Number(Program::INPUT_CELL)) {
+          info.is_input_overwritten = true;
+        }
       } else {
         values.erase(op.target.value);
       }

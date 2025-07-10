@@ -9,6 +9,7 @@ class Constants {
   class LoopInfo {
    public:
     bool has_constant_loop;
+    bool is_input_overwritten;
     size_t index_lpb;
     Number constant_value;
   };
