@@ -196,8 +196,8 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
     }
     if (check_range && !range.check(expected_seq[i])) {
       if (settings.print_as_b_file) {
-        printb(index,
-               out.to_string() + " -> expected " + expected_seq[i].to_string());
+        printb(index, expected_seq[i].to_string() + " -> violates " +
+                          rangeStr(range, index));
       }
       result.first = status_t::ERROR;
       return result;
@@ -205,7 +205,7 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
     if (settings.print_as_b_file) {
       std::string val_str = (result.first == status_t::OK)
                                 ? expected_seq[i].to_string()
-                                : rangeStr(range, offset + i);
+                                : rangeStr(range, index);
       printb(index, val_str);
     }
   }
