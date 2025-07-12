@@ -21,11 +21,13 @@ void steps_t::add(const steps_t &s) {
   runs += s.runs;
 }
 
-Evaluator::Evaluator(const Settings &settings, const bool use_inc_eval)
+Evaluator::Evaluator(const Settings &settings, const bool use_inc_eval,
+                     bool check_range)
     : settings(settings),
       interpreter(settings),
       inc_evaluator(interpreter),
       use_inc_eval(use_inc_eval),
+      check_range(check_range),
       check_eval_time(settings.max_eval_secs >= 0),
       is_debug(Log::get().level == Log::Level::DEBUG) {}
 
@@ -113,6 +115,22 @@ steps_t Evaluator::eval(const Program &p, std::vector<Sequence> &seqs,
   return steps;
 }
 
+std::string rangeStr(const Range &r, int64_t n) {
+  return r.toString("a(" + std::to_string(n) + ")");
+}
+
+Range Evaluator::generateRange(const Program &p, int64_t inputUpperBound) {
+  RangeMap ranges;
+  if (!range_generator.generate(p, ranges, Number(inputUpperBound))) {
+    ranges.clear();
+  }
+  return ranges.get(Program::OUTPUT_CELL);
+}
+
+void printb(int64_t index, const std::string &val) {
+  std::cout << index << " " << val << std::endl;
+}
+
 std::pair<status_t, steps_t> Evaluator::check(const Program &p,
                                               const Sequence &expected_seq,
                                               int64_t num_required_terms,
@@ -123,49 +141,74 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
   if (check_eval_time) {
     start_time = std::chrono::steady_clock::now();
   }
-  std::pair<status_t, steps_t> result;
-  Memory mem;
+  // compute range
+  Range range;
+  const int64_t offset = ProgramUtil::getOffset(p);
+  if (check_range) {
+    range = generateRange(p, offset + expected_seq.size() - 1);
+  }
   // clear cache to correctly detect recursion errors
   interpreter.clearCaches();
   const bool use_inc = use_inc_eval && inc_evaluator.init(p);
   std::pair<Number, size_t> inc_result;
+  std::pair<status_t, steps_t> result;
+  result.first = status_t::OK;
+  Memory mem;
   Number out;
-  const int64_t offset = ProgramUtil::getOffset(p);
   for (size_t i = 0; i < expected_seq.size(); i++) {
-    try {
-      if (use_inc) {
-        inc_result = inc_evaluator.next();
-        out = inc_result.first;
-      } else {
-        mem.clear();
-        mem.set(Program::INPUT_CELL, i + offset);
-        result.second.add(interpreter.run(p, mem, id));
-        out = mem.get(Program::OUTPUT_CELL);
+    if (result.first == status_t::OK) {
+      try {
+        if (use_inc) {
+          inc_result = inc_evaluator.next();
+          out = inc_result.first;
+        } else {
+          mem.clear();
+          mem.set(Program::INPUT_CELL, i + offset);
+          result.second.add(interpreter.run(p, mem, id));
+          out = mem.get(Program::OUTPUT_CELL);
+        }
+        if (check_eval_time) {
+          checkEvalTime();
+        }
+      } catch (const std::exception &e) {
+        if (static_cast<int64_t>(i) < num_required_terms) {
+          result.first = status_t::ERROR;
+          if (settings.print_as_b_file) {
+            printb(offset + i, "-> " + std::string(e.what()));
+            std::cout << std::string(e.what()) << std::endl;
+          }
+          return result;
+        } else {
+          result.first = status_t::WARNING;
+          if (!check_range || range.isUnbounded()) {
+            return result;
+          }
+        }
       }
-      if (check_eval_time) {
-        checkEvalTime();
+      if (out != expected_seq[i]) {
+        if (settings.print_as_b_file) {
+          printb(offset + i, out.to_string() + " -> expected " +
+                                 expected_seq[i].to_string());
+        }
+        result.first = status_t::ERROR;
+        return result;
       }
-    } catch (const std::exception &e) {
-      if (settings.print_as_b_file) {
-        std::cout << std::string(e.what()) << std::endl;
-      }
-      result.first = ((int64_t)i >= num_required_terms) ? status_t::WARNING
-                                                        : status_t::ERROR;
-      return result;
     }
-    if (out != expected_seq[i]) {
+    if (check_range && !range.check(expected_seq[i])) {
       if (settings.print_as_b_file) {
-        std::cout << (offset + i) << " " << out << " -> expected "
-                  << expected_seq[i] << std::endl;
+        printb(offset + i, rangeStr(range, offset + i) + " -> expected " +
+                               expected_seq[i].to_string());
       }
       result.first = status_t::ERROR;
       return result;
     }
     if (settings.print_as_b_file) {
-      std::cout << (offset + i) << " " << expected_seq[i] << std::endl;
+      std::string val_str = (result.first == status_t::OK)
+                                ? expected_seq[i].to_string()
+                                : rangeStr(range, offset + i);
+      printb(offset + i, val_str);
     }
   }
-  result.first = status_t::OK;
   return result;
 }
 

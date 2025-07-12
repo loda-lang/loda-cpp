@@ -10,6 +10,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 * Fix minimization/optimization loop
 * Fix program submission bug
 
+### Enhancements
+
+* Check range in program validation
+
 ## v25.6.27
 
 ### Bugfixes
