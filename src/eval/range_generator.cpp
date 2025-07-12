@@ -35,7 +35,7 @@ bool RangeGenerator::init(const Program& program, RangeMap& ranges,
 bool RangeGenerator::generate(const Program& program, RangeMap& ranges,
                               Number inputUpperBound) {
   std::vector<RangeMap> collected;
-  if (!collect(program, collected, inputUpperBound)) {
+  if (!collect(program, collected, inputUpperBound) || collected.empty()) {
     return false;
   }
   ranges = collected.back();
