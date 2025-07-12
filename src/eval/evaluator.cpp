@@ -121,8 +121,13 @@ std::string rangeStr(const Range &r, int64_t n) {
 
 Range Evaluator::generateRange(const Program &p, int64_t inputUpperBound) {
   RangeMap ranges;
-  if (!range_generator.generate(p, ranges, Number(inputUpperBound))) {
-    ranges.clear();
+  try {
+    if (!range_generator.generate(p, ranges, Number(inputUpperBound))) {
+      ranges.clear();
+    }
+  } catch (const std::exception &e) {
+    Log::get().error("Error during range generation: " + std::string(e.what()),
+                     true);
   }
   return ranges.get(Program::OUTPUT_CELL);
 }
