@@ -2,6 +2,8 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v25.7.12
+
 ### Bugfixes
 
 * Fix range computation for `dgr`
@@ -9,6 +11,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 * Fix argument check for `seq` for programs with offset
 * Fix minimization/optimization loop
 * Fix program submission bug
+
+### Enhancements
+
+* Check range in program validation
 
 ## v25.6.27
 

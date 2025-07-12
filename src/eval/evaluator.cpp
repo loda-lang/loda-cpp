@@ -21,11 +21,13 @@ void steps_t::add(const steps_t &s) {
   runs += s.runs;
 }
 
-Evaluator::Evaluator(const Settings &settings, const bool use_inc_eval)
+Evaluator::Evaluator(const Settings &settings, const bool use_inc_eval,
+                     bool check_range)
     : settings(settings),
       interpreter(settings),
       inc_evaluator(interpreter),
       use_inc_eval(use_inc_eval),
+      check_range(check_range),
       check_eval_time(settings.max_eval_secs >= 0),
       is_debug(Log::get().level == Log::Level::DEBUG) {}
 
@@ -113,6 +115,23 @@ steps_t Evaluator::eval(const Program &p, std::vector<Sequence> &seqs,
   return steps;
 }
 
+std::string rangeStr(const Range &r, int64_t n) {
+  return r.toString("a(" + std::to_string(n) + ")");
+}
+
+Range Evaluator::generateRange(const Program &p, int64_t inputUpperBound) {
+  RangeMap ranges;
+  try {
+    if (!range_generator.generate(p, ranges, Number(inputUpperBound))) {
+      ranges.clear();
+    }
+  } catch (const std::exception &e) {
+    Log::get().error("Error during range generation: " + std::string(e.what()),
+                     true);
+  }
+  return ranges.get(Program::OUTPUT_CELL);
+}
+
 void printb(int64_t index, const std::string &val) {
   std::cout << index << " " << val << std::endl;
 }
@@ -127,7 +146,12 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
   if (check_eval_time) {
     start_time = std::chrono::steady_clock::now();
   }
+  // compute range
+  Range range;
   const int64_t offset = ProgramUtil::getOffset(p);
+  if (check_range) {
+    range = generateRange(p, offset + expected_seq.size() - 1);
+  }
   // clear cache to correctly detect recursion errors
   interpreter.clearCaches();
   const bool use_inc = use_inc_eval && inc_evaluator.init(p);
@@ -153,15 +177,20 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
           checkEvalTime();
         }
       } catch (const std::exception &e) {
+        bool exit;
         if (static_cast<int64_t>(i) < num_required_terms) {
           result.first = status_t::ERROR;
+          exit = true;
         } else {
           result.first = status_t::WARNING;
+          exit = !check_range || range.isUnbounded();
         }
-        if (settings.print_as_b_file) {
-          printb(index, "-> " + std::string(e.what()));
+        if (exit) {
+          if (settings.print_as_b_file) {
+            printb(index, "-> " + std::string(e.what()));
+          }
+          return result;
         }
-        return result;
       }
       if (out != expected_seq[i]) {
         if (settings.print_as_b_file) {
@@ -172,8 +201,16 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
         return result;
       }
     }
-    if (settings.print_as_b_file) {
-      printb(index, expected_seq[i].to_string());
+    if (check_range && !range.check(expected_seq[i])) {
+      if (settings.print_as_b_file) {
+        printb(index, expected_seq[i].to_string() + " -> violates " +
+                          rangeStr(range, index));
+      }
+      result.first = status_t::ERROR;
+      return result;
+    }
+    if (result.first == status_t::OK && settings.print_as_b_file) {
+      printb(index, out.to_string());
     }
   }
   return result;

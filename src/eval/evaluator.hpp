@@ -4,6 +4,7 @@
 
 #include "eval/evaluator_inc.hpp"
 #include "eval/interpreter.hpp"
+#include "eval/range_generator.hpp"
 #include "math/sequence.hpp"
 
 class steps_t {
@@ -21,7 +22,8 @@ enum class status_t { OK, WARNING, ERROR };
 
 class Evaluator {
  public:
-  explicit Evaluator(const Settings &settings, bool use_inc_eval = true);
+  explicit Evaluator(const Settings &settings, bool use_inc_eval = true,
+                     bool check_rangge = true);
 
   steps_t eval(const Program &p, Sequence &seq, int64_t num_terms = -1,
                const bool throw_on_error = true);
@@ -44,10 +46,14 @@ class Evaluator {
   const Settings &settings;
   Interpreter interpreter;
   IncrementalEvaluator inc_evaluator;
+  RangeGenerator range_generator;
   const bool use_inc_eval;
+  const bool check_range;
   const bool check_eval_time;
   const bool is_debug;
   std::chrono::time_point<std::chrono::steady_clock> start_time;
+
+  Range generateRange(const Program &p, int64_t inputUpperBound);
 
   void checkEvalTime() const;
 };
