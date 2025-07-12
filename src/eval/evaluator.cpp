@@ -127,53 +127,55 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
   if (check_eval_time) {
     start_time = std::chrono::steady_clock::now();
   }
-  std::pair<status_t, steps_t> result;
-  Memory mem;
+  const int64_t offset = ProgramUtil::getOffset(p);
   // clear cache to correctly detect recursion errors
   interpreter.clearCaches();
   const bool use_inc = use_inc_eval && inc_evaluator.init(p);
   std::pair<Number, size_t> inc_result;
+  std::pair<status_t, steps_t> result;
+  result.first = status_t::OK;
+  Memory mem;
   Number out;
-  const int64_t offset = ProgramUtil::getOffset(p);
   for (size_t i = 0; i < expected_seq.size(); i++) {
     const int64_t index = i + offset;
-    try {
-      if (use_inc) {
-        inc_result = inc_evaluator.next();
-        out = inc_result.first;
-      } else {
-        mem.clear();
-        mem.set(Program::INPUT_CELL, index);
-        result.second.add(interpreter.run(p, mem, id));
-        out = mem.get(Program::OUTPUT_CELL);
+    if (result.first == status_t::OK) {
+      try {
+        if (use_inc) {
+          inc_result = inc_evaluator.next();
+          out = inc_result.first;
+        } else {
+          mem.clear();
+          mem.set(Program::INPUT_CELL, index);
+          result.second.add(interpreter.run(p, mem, id));
+          out = mem.get(Program::OUTPUT_CELL);
+        }
+        if (check_eval_time) {
+          checkEvalTime();
+        }
+      } catch (const std::exception &e) {
+        if (static_cast<int64_t>(i) < num_required_terms) {
+          result.first = status_t::ERROR;
+        } else {
+          result.first = status_t::WARNING;
+        }
+        if (settings.print_as_b_file) {
+          printb(index, "-> " + std::string(e.what()));
+        }
+        return result;
       }
-      if (check_eval_time) {
-        checkEvalTime();
-      }
-    } catch (const std::exception &e) {
-      if (static_cast<int64_t>(i) < num_required_terms) {
+      if (out != expected_seq[i]) {
+        if (settings.print_as_b_file) {
+          printb(index, out.to_string() + " -> expected " +
+                            expected_seq[i].to_string());
+        }
         result.first = status_t::ERROR;
-      } else {
-        result.first = status_t::WARNING;
+        return result;
       }
-      if (settings.print_as_b_file) {
-        printb(index, "-> " + std::string(e.what()));
-      }
-      return result;
-    }
-    if (out != expected_seq[i]) {
-      if (settings.print_as_b_file) {
-        printb(index,
-               out.to_string() + " -> expected " + expected_seq[i].to_string());
-      }
-      result.first = status_t::ERROR;
-      return result;
     }
     if (settings.print_as_b_file) {
       printb(index, expected_seq[i].to_string());
     }
   }
-  result.first = status_t::OK;
   return result;
 }
 
