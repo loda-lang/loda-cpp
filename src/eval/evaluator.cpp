@@ -113,6 +113,10 @@ steps_t Evaluator::eval(const Program &p, std::vector<Sequence> &seqs,
   return steps;
 }
 
+void printb(int64_t index, const std::string &val) {
+  std::cout << index << " " << val << std::endl;
+}
+
 std::pair<status_t, steps_t> Evaluator::check(const Program &p,
                                               const Sequence &expected_seq,
                                               int64_t num_required_terms,
@@ -132,13 +136,14 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
   Number out;
   const int64_t offset = ProgramUtil::getOffset(p);
   for (size_t i = 0; i < expected_seq.size(); i++) {
+    const int64_t index = i + offset;
     try {
       if (use_inc) {
         inc_result = inc_evaluator.next();
         out = inc_result.first;
       } else {
         mem.clear();
-        mem.set(Program::INPUT_CELL, i + offset);
+        mem.set(Program::INPUT_CELL, index);
         result.second.add(interpreter.run(p, mem, id));
         out = mem.get(Program::OUTPUT_CELL);
       }
@@ -146,23 +151,26 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
         checkEvalTime();
       }
     } catch (const std::exception &e) {
-      if (settings.print_as_b_file) {
-        std::cout << std::string(e.what()) << std::endl;
+      if (static_cast<int64_t>(i) < num_required_terms) {
+        result.first = status_t::ERROR;
+      } else {
+        result.first = status_t::WARNING;
       }
-      result.first = ((int64_t)i >= num_required_terms) ? status_t::WARNING
-                                                        : status_t::ERROR;
+      if (settings.print_as_b_file) {
+        printb(index, "-> " + std::string(e.what()));
+      }
       return result;
     }
     if (out != expected_seq[i]) {
       if (settings.print_as_b_file) {
-        std::cout << (offset + i) << " " << out << " -> expected "
-                  << expected_seq[i] << std::endl;
+        printb(index,
+               out.to_string() + " -> expected " + expected_seq[i].to_string());
       }
       result.first = status_t::ERROR;
       return result;
     }
     if (settings.print_as_b_file) {
-      std::cout << (offset + i) << " " << expected_seq[i] << std::endl;
+      printb(index, expected_seq[i].to_string());
     }
   }
   result.first = status_t::OK;
