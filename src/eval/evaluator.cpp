@@ -175,7 +175,6 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
           result.first = status_t::ERROR;
           if (settings.print_as_b_file) {
             printb(offset + i, "-> " + std::string(e.what()));
-            std::cout << std::string(e.what()) << std::endl;
           }
           return result;
         } else {
