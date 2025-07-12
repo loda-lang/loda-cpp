@@ -141,6 +141,7 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
   if (check_eval_time) {
     start_time = std::chrono::steady_clock::now();
   }
+  const int64_t offset = ProgramUtil::getOffset(p);
   // compute range
   Range range;
   const int64_t offset = ProgramUtil::getOffset(p);
@@ -164,7 +165,7 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
           out = inc_result.first;
         } else {
           mem.clear();
-          mem.set(Program::INPUT_CELL, i + offset);
+          mem.set(Program::INPUT_CELL, index);
           result.second.add(interpreter.run(p, mem, id));
           out = mem.get(Program::OUTPUT_CELL);
         }
