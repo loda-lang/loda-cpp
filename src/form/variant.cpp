@@ -38,8 +38,13 @@ bool VariantsManager::update(Variant new_variant) {
       new_variant.definition.name == new_variant.func) {
     return false;
   }
-  collectFuncs(new_variant);
   const auto num_terms = new_variant.definition.numTerms();
+  if (num_terms > 500) {  // magic number
+    Log::get().debug("Skipping variant with " + std::to_string(num_terms) +
+                     " terms");
+    return false;  // too many terms
+  }
+  collectFuncs(new_variant);
   // if (new_variant.used_funcs.size() > 3) {  // magic number
   //   return false;
   // }
