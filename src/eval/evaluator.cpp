@@ -156,6 +156,7 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
   Memory mem;
   Number out;
   for (size_t i = 0; i < expected_seq.size(); i++) {
+    const int64_t index = i + offset;
     if (result.first == status_t::OK) {
       try {
         if (use_inc) {
@@ -174,7 +175,7 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
         if (static_cast<int64_t>(i) < num_required_terms) {
           result.first = status_t::ERROR;
           if (settings.print_as_b_file) {
-            printb(offset + i, "-> " + std::string(e.what()));
+            printb(index, "-> " + std::string(e.what()));
           }
           return result;
         } else {
@@ -186,8 +187,8 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
       }
       if (out != expected_seq[i]) {
         if (settings.print_as_b_file) {
-          printb(offset + i, out.to_string() + " -> expected " +
-                                 expected_seq[i].to_string());
+          printb(index, out.to_string() + " -> expected " +
+                            expected_seq[i].to_string());
         }
         result.first = status_t::ERROR;
         return result;
@@ -195,8 +196,8 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
     }
     if (check_range && !range.check(expected_seq[i])) {
       if (settings.print_as_b_file) {
-        printb(offset + i, rangeStr(range, offset + i) + " -> expected " +
-                               expected_seq[i].to_string());
+        printb(index,
+               out.to_string() + " -> expected " + expected_seq[i].to_string());
       }
       result.first = status_t::ERROR;
       return result;
@@ -205,7 +206,7 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
       std::string val_str = (result.first == status_t::OK)
                                 ? expected_seq[i].to_string()
                                 : rangeStr(range, offset + i);
-      printb(offset + i, val_str);
+      printb(index, val_str);
     }
   }
   return result;
