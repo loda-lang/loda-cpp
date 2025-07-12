@@ -172,17 +172,19 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
           checkEvalTime();
         }
       } catch (const std::exception &e) {
+        bool exit;
         if (static_cast<int64_t>(i) < num_required_terms) {
           result.first = status_t::ERROR;
+          exit = true;
+        } else {
+          result.first = status_t::WARNING;
+          exit = !check_range || range.isUnbounded();
+        }
+        if (exit) {
           if (settings.print_as_b_file) {
             printb(index, "-> " + std::string(e.what()));
           }
           return result;
-        } else {
-          result.first = status_t::WARNING;
-          if (!check_range || range.isUnbounded()) {
-            return result;
-          }
         }
       }
       if (out != expected_seq[i]) {
