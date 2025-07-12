@@ -37,7 +37,10 @@ class Range {
   bool isConstant() const;
   bool isUnbounded() const;
 
+  bool check(const Number& n) const;
   int64_t check(const Sequence& seq) const;
+
+  std::string toString(const std::string& name) const;
 
   Number lower_bound;
   Number upper_bound;

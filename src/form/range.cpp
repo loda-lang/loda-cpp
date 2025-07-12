@@ -372,6 +372,10 @@ bool Range::isUnbounded() const {
   return lower_bound == Number::INF && upper_bound == Number::INF;
 }
 
+bool Range::check(const Number& n) const {
+  return !(n < lower_bound || n > upper_bound);  // considers infinity
+}
+
 int64_t Range::check(const Sequence& seq) const {
   int64_t numTerms = seq.size();
   for (int64_t i = 0; i < numTerms; ++i) {
@@ -380,6 +384,23 @@ int64_t Range::check(const Sequence& seq) const {
     }
   }
   return -1;
+}
+
+std::string Range::toString(const std::string& name) const {
+  std::string result;
+  if (!isUnbounded()) {
+    if (isConstant()) {
+      result += name + " = " + lower_bound.to_string();
+    } else if (lower_bound == Number::INF) {
+      result += name + " <= " + upper_bound.to_string();
+    } else if (upper_bound == Number::INF) {
+      result += name + " >= " + lower_bound.to_string();
+    } else {
+      result += lower_bound.to_string() + " <= " + name +
+                " <= " + upper_bound.to_string();
+    }
+  }
+  return result;
 }
 
 Range RangeMap::get(int64_t index) const {
@@ -420,21 +441,8 @@ std::string RangeMap::toString(int64_t index, std::string name) const {
     name = "$" + std::to_string(index);
   }
   auto it = find(index);
-  std::string result;
   if (it != end()) {
-    auto& r = it->second;  // FIX: use it->second, not it.second
-    if (!r.isUnbounded()) {
-      if (r.isConstant()) {
-        result += name + " = " + r.lower_bound.to_string();
-      } else if (r.lower_bound == Number::INF) {
-        result += name + " <= " + r.upper_bound.to_string();
-      } else if (r.upper_bound == Number::INF) {
-        result += name + " >= " + r.lower_bound.to_string();
-      } else {
-        result += r.lower_bound.to_string() + " <= " + name +
-                  " <= " + r.upper_bound.to_string();
-      }
-    }
+    return it->second.toString(name);
   }
-  return result;
+  return {};
 }
