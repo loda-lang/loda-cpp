@@ -7,6 +7,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Bugfixes
 
 * Fix segmentation fault during mining
+* Fix `upgrade` command
 
 ## v25.7.12
 

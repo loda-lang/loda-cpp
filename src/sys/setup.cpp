@@ -494,7 +494,7 @@ std::string Setup::getExecutable(const std::string& suffix) {
 #ifdef _WIN64
   exe = ".exe";
 #endif
-  return LODA_HOME + "bin" + FILE_SEP + "loda" + suffix + exe;
+  return getLodaHome() + "bin" + FILE_SEP + "loda" + suffix + exe;
 }
 
 void Setup::performUpgrade(const std::string& new_version, bool silent) {
@@ -502,7 +502,7 @@ void Setup::performUpgrade(const std::string& new_version, bool silent) {
 #ifdef _WIN64
   exe = ".exe";
 #endif
-  ensureDir(LODA_HOME + "bin" + FILE_SEP);
+  ensureDir(getLodaHome() + "bin" + FILE_SEP);
   const std::string exec_local = getExecutable("");
   const std::string exec_tmp = getExecutable("-" + Version::PLATFORM);
 #ifdef _WIN64
