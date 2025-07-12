@@ -37,7 +37,7 @@ class Checker {
 
   std::string compare(Program p1, Program p2, const std::string& name1,
                       const std::string& name2, const OeisSequence& seq,
-                      size_t num_terms, size_t num_usages);
+                      bool full_check, size_t num_usages);
 
  private:
   Evaluator& evaluator;

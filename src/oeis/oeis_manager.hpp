@@ -61,6 +61,10 @@ class OeisManager {
     return ignore_list.find(id) != ignore_list.end();
   }
 
+  bool isFullCheck(size_t id) const {
+    return full_check_list.find(id) != full_check_list.end();
+  }
+
  private:
   void loadData();
 

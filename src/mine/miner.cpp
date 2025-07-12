@@ -469,10 +469,10 @@ void Miner::submit(const std::string &path, std::string id_str) {
       if (seq.id < manager->getStats().program_usages.size()) {
         num_usages = manager->getStats().program_usages[seq.id];
       }
+      bool full_check = manager->isFullCheck(seq.id);
       auto existing = manager->getExistingProgram(s.first);
       auto msg = manager->getFinder().getChecker().compare(
-          program, existing, "new", "existing", seq,
-          OeisSequence::EXTENDED_SEQ_LENGTH, num_usages);
+          program, existing, "new", "existing", seq, full_check, num_usages);
       lowerString(msg);
       Log::get().info(skip_msg + ": " + msg);
     }

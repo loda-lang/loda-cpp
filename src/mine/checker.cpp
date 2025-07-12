@@ -294,13 +294,13 @@ std::string Checker::isOptimizedBetter(Program existing, Program optimized,
 
 std::string Checker::compare(Program p1, Program p2, const std::string& name1,
                              const std::string& name2, const OeisSequence& seq,
-                             size_t num_terms, size_t num_usages) {
-  auto result = isOptimizedBetter(p1, p2, seq, num_terms, num_usages);
+                             bool full_check, size_t num_usages) {
+  auto result = isOptimizedBetter(p1, p2, seq, full_check, num_usages);
   if (!result.empty()) {
     lowerString(result);
     return name2 + " program is " + result;
   }
-  result = isOptimizedBetter(p2, p1, seq, num_terms, num_usages);
+  result = isOptimizedBetter(p2, p1, seq, full_check, num_usages);
   if (!result.empty()) {
     lowerString(result);
     return name1 + " program is " + result;
