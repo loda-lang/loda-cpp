@@ -162,6 +162,7 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
   Number out;
   for (size_t i = 0; i < expected_seq.size(); i++) {
     const int64_t index = i + offset;
+    // evaluate if no error occurred so far
     if (result.first == status_t::OK) {
       try {
         if (use_inc) {
@@ -192,7 +193,8 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
           return result;
         }
       }
-      if (out != expected_seq[i]) {
+      // check the result if the evaluation was successful
+      if (result.first == status_t::OK && out != expected_seq[i]) {
         if (settings.print_as_b_file) {
           printb(index, out.to_string() + " -> expected " +
                             expected_seq[i].to_string());
@@ -201,6 +203,7 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
         return result;
       }
     }
+    // check the range
     if (check_range && !range.check(expected_seq[i])) {
       if (settings.print_as_b_file) {
         printb(index, expected_seq[i].to_string() + " -> violates " +
