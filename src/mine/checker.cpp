@@ -1,10 +1,12 @@
 #include "mine/checker.hpp"
 
 #include <algorithm>
+#include <limits>
 #include <sstream>
 
 #include "eval/minimizer.hpp"
 #include "lang/constants.hpp"
+#include "lang/program_cache.hpp"
 #include "lang/program_util.hpp"
 #include "lang/subprogram.hpp"
 #include "oeis/oeis_program.hpp"
@@ -29,6 +31,21 @@ bool hasBadLoop(const Program& p) {
   });
 }
 
+bool hasIndirectOperand(const Program& p) {
+  if (ProgramUtil::hasIndirectOperand(p)) {
+    return true;
+  }
+  // check if the program uses a sequence operation with an indirect operand
+  ProgramCache cache;
+  constexpr int64_t dummy_id = std::numeric_limits<int>::max();
+  cache.insert(dummy_id, p);
+  auto collected = cache.collect(dummy_id);
+  return std::any_of(collected.begin(), collected.end(), [](const auto& entry) {
+    const Program& prog = entry.second;
+    return ProgramUtil::hasIndirectOperand(prog);
+  });
+}
+
 bool isSimpler(const Program& existing, const Program& optimized) {
   bool optimized_has_seq = ProgramUtil::hasOp(optimized, Operation::Type::SEQ);
   if (hasBadConstant(existing) && !hasBadConstant(optimized) &&
@@ -44,8 +61,7 @@ bool isSimpler(const Program& existing, const Program& optimized) {
       !optimized_has_seq) {
     return true;
   }
-  if (ProgramUtil::hasIndirectOperand(existing) &&
-      !ProgramUtil::hasIndirectOperand(optimized) && !optimized_has_seq) {
+  if (hasIndirectOperand(existing) && !hasIndirectOperand(optimized)) {
     return true;
   }
   return false;

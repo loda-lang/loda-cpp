@@ -78,6 +78,12 @@ int64_t ProgramCache::getOffset(int64_t id) {
   return offsets[id];
 }
 
+void ProgramCache::insert(int64_t id, const Program& p) {
+  programs[id] = p;
+  missing.erase(id);
+  offsets.erase(id);
+}
+
 void ProgramCache::clear() {
   programs.clear();
   offsets.clear();
