@@ -2,19 +2,19 @@
 
 #include <stdexcept>
 
-const std::array<Operation::Type, 33> Operation::Types = {
+const std::array<Operation::Type, 34> Operation::Types = {
     Operation::Type::NOP, Operation::Type::MOV, Operation::Type::ADD,
     Operation::Type::SUB, Operation::Type::TRN, Operation::Type::MUL,
     Operation::Type::DIV, Operation::Type::DIF, Operation::Type::DIR,
     Operation::Type::MOD, Operation::Type::POW, Operation::Type::GCD,
-    Operation::Type::LEX, Operation::Type::BIN, Operation::Type::LOG,
-    Operation::Type::NRT, Operation::Type::DGS, Operation::Type::DGR,
-    Operation::Type::EQU, Operation::Type::NEQ, Operation::Type::LEQ,
-    Operation::Type::GEQ, Operation::Type::MIN, Operation::Type::MAX,
-    Operation::Type::BAN, Operation::Type::BOR, Operation::Type::BXO,
-    Operation::Type::LPB, Operation::Type::LPE, Operation::Type::CLR,
-    Operation::Type::SEQ, Operation::Type::PRG, Operation::Type::DBG,
-};
+    Operation::Type::LEX, Operation::Type::BIN, Operation::Type::FAC,
+    Operation::Type::LOG, Operation::Type::NRT, Operation::Type::DGS,
+    Operation::Type::DGR, Operation::Type::EQU, Operation::Type::NEQ,
+    Operation::Type::LEQ, Operation::Type::GEQ, Operation::Type::MIN,
+    Operation::Type::MAX, Operation::Type::BAN, Operation::Type::BOR,
+    Operation::Type::BXO, Operation::Type::LPB, Operation::Type::LPE,
+    Operation::Type::CLR, Operation::Type::SEQ, Operation::Type::PRG,
+    Operation::Type::DBG};
 
 const Operation::Metadata& Operation::Metadata::get(Type t) {
   static Operation::Metadata nop{
@@ -45,6 +45,8 @@ const Operation::Metadata& Operation::Metadata::get(Type t) {
       Operation::Type::LEX, "lex", 2, true, true, true};
   static Operation::Metadata bin{
       Operation::Type::BIN, "bin", 2, true, true, true};
+  static Operation::Metadata fac{
+      Operation::Type::FAC, "fac", 2, true, true, true};
   static Operation::Metadata log{
       Operation::Type::LOG, "log", 2, true, true, true};
   static Operation::Metadata nrt{
@@ -112,6 +114,8 @@ const Operation::Metadata& Operation::Metadata::get(Type t) {
       return lex;
     case Operation::Type::BIN:
       return bin;
+    case Operation::Type::FAC:
+      return fac;
     case Operation::Type::LOG:
       return log;
     case Operation::Type::NRT:
