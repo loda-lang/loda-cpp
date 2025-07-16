@@ -48,6 +48,7 @@ class Operation {
     GCD,     // greatest common divisor
     LEX,     // largest exponent
     BIN,     // binomial coefficient
+    FAC,     // falling and rising factorial
     LOG,     // logarithm
     NRT,     // n-th root
     DGS,     // digit sum
@@ -70,7 +71,7 @@ class Operation {
     __COUNT  // number of operation types
   };
 
-  static const std::array<Type, 33> Types;
+  static const std::array<Type, 34> Types;
 
   class Metadata {
    public:

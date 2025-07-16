@@ -25,6 +25,7 @@ class Range {
   void gcd(const Range& r);
   void lex(const Range& r);
   void bin(const Range& r);
+  void fac(const Range& r);
   void log(const Range& r);
   void nrt(const Range& r);
   void dgs(const Range& r);

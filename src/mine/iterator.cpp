@@ -124,6 +124,7 @@ bool Iterator::inc(Operation& op) {
       op.type = Operation::Type::LPB;
       return true;
 
+    case Operation::Type::FAC:      // skipped
     case Operation::Type::LOG:      // skipped
     case Operation::Type::NRT:      // skipped
     case Operation::Type::LEQ:      // skipped
