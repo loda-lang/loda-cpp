@@ -199,9 +199,7 @@ Number Semantics::fac(const Number& nn, const Number& kk) {
   auto k = kk;
   auto d = Number::ONE;
   auto res = Number::ONE;
-  if (k == Number::ZERO) {
-    return Number::ONE;
-  } else if (k < Number::ZERO) {
+  if (k < Number::ZERO) {
     k.negate();
     d.negate();
   }
