@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+# Enhancements
+
+* Use two-complement representation for bitwise operations
+
 ## v25.7.14
 
 ### Bugfixes
