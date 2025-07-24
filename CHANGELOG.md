@@ -2,6 +2,12 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v25.7.24
+
+### Features
+
+* Added `fac` operation for falling/rising factorial
+
 # Enhancements
 
 * Use two-complement representation for bitwise operations

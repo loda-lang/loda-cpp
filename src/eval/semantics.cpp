@@ -191,6 +191,28 @@ Number Semantics::bin(const Number& nn, const Number& kk) {
   return mul(sign, r);
 }
 
+Number Semantics::fac(const Number& nn, const Number& kk) {
+  if (nn == Number::INF || kk == Number::INF) {
+    return Number::INF;
+  }
+  auto n = nn;
+  auto k = kk;
+  auto d = Number::ONE;
+  auto res = Number::ONE;
+  if (k < Number::ZERO) {
+    k.negate();
+    d.negate();
+  }
+  for (auto i = Number::ZERO; i < k; i += Number::ONE) {
+    res *= n;
+    if (res == Number::INF) {
+      return res;
+    }
+    n += d;
+  }
+  return res;
+}
+
 Number Semantics::log(const Number& a, const Number& b) {
   if (a == Number::INF || b == Number::INF || a < Number::ONE ||
       b < Number::TWO) {
