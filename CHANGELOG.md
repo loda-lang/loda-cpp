@@ -10,7 +10,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 # Enhancements
 
-* Use two-complement representation for bitwise operations
+* Use two's-complement representation for bitwise operations
 
 ## v25.7.14
 
