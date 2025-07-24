@@ -76,6 +76,9 @@ class BigNumber {
 
   void divBig(const BigNumber& n);
 
+  friend BigNumber toTwosComplement(const BigNumber& n);
+  friend void fromTwosComplement(BigNumber& n, bool negative);
+
   std::array<uint64_t, NUM_WORDS> words;
   bool is_negative;  // we don't want to expose this
   bool is_infinite;
