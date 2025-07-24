@@ -365,8 +365,7 @@ Number& Number::operator&=(const Number& n) {
     convertToBig();
     (*big) &= (*n.big);
   } else {
-    const int64_t sign = (value < 0 && n.value < 0) ? -1 : 1;
-    value = sign * (std::abs(value) & std::abs(n.value));
+    value &= n.value;
   }
   return *this;
 }
@@ -385,8 +384,7 @@ Number& Number::operator|=(const Number& n) {
     convertToBig();
     (*big) |= (*n.big);
   } else {
-    const int64_t sign = (value < 0 || n.value < 0) ? -1 : 1;
-    value = sign * (std::abs(value) | std::abs(n.value));
+    value |= n.value;
   }
   return *this;
 }
@@ -405,8 +403,7 @@ Number& Number::operator^=(const Number& n) {
     convertToBig();
     (*big) ^= (*n.big);
   } else {
-    const int64_t sign = ((value < 0) == (n.value >= 0)) ? -1 : 1;
-    value = sign * (std::abs(value) ^ std::abs(n.value));
+    value ^= n.value;
   }
   return *this;
 }

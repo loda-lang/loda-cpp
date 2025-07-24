@@ -367,28 +367,38 @@ BigNumber &BigNumber::operator%=(const BigNumber &n) {
   return *this;
 }
 
-BigNumber &BigNumber::operator&=(const BigNumber &n) {
-  if (is_infinite || n.is_infinite) {
-    makeInfinite();
-    return *this;
+BigNumber toTwosComplement(const BigNumber &n) {
+  BigNumber result = n;
+  if (n.is_negative && !n.isZero()) {
+    // Invert all bits and add 1
+    for (size_t i = 0; i < BigNumber::NUM_WORDS; i++) {
+      result.words[i] = ~result.words[i];
+    }
+    // Add 1
+    uint64_t carry = 1;
+    for (size_t i = 0; i < BigNumber::NUM_WORDS; i++) {
+      uint64_t sum = result.words[i] + carry;
+      carry = (sum < result.words[i]);
+      result.words[i] = sum;
+    }
   }
-  for (size_t i = 0; i < NUM_WORDS; i++) {
-    words[i] &= n.words[i];
-  }
-  is_negative = is_negative && n.is_negative;
-  return (*this);
+  return result;
 }
 
-BigNumber &BigNumber::operator|=(const BigNumber &n) {
-  if (is_infinite || n.is_infinite) {
-    makeInfinite();
-    return *this;
+void fromTwosComplement(BigNumber &n, bool negative) {
+  if (negative && !n.isZero()) {
+    // Subtract 1 and invert all bits
+    uint64_t borrow = 1;
+    for (size_t i = 0; i < BigNumber::NUM_WORDS; i++) {
+      uint64_t tmp = n.words[i];
+      n.words[i] = tmp - borrow;
+      borrow = (tmp < borrow);
+    }
+    for (size_t i = 0; i < BigNumber::NUM_WORDS; i++) {
+      n.words[i] = ~n.words[i];
+    }
   }
-  for (size_t i = 0; i < NUM_WORDS; i++) {
-    words[i] |= n.words[i];
-  }
-  is_negative = is_negative || n.is_negative;
-  return (*this);
+  n.is_negative = negative;
 }
 
 BigNumber &BigNumber::operator^=(const BigNumber &n) {
@@ -396,11 +406,47 @@ BigNumber &BigNumber::operator^=(const BigNumber &n) {
     makeInfinite();
     return *this;
   }
+  BigNumber a = toTwosComplement(*this);
+  BigNumber b = toTwosComplement(n);
   for (size_t i = 0; i < NUM_WORDS; i++) {
-    words[i] ^= n.words[i];
+    a.words[i] ^= b.words[i];
   }
-  is_negative = is_negative != n.is_negative;
-  return (*this);
+  bool negative = is_negative != n.is_negative;
+  fromTwosComplement(a, negative);
+  *this = a;
+  return *this;
+}
+
+BigNumber &BigNumber::operator&=(const BigNumber &n) {
+  if (is_infinite || n.is_infinite) {
+    makeInfinite();
+    return *this;
+  }
+  BigNumber a = toTwosComplement(*this);
+  BigNumber b = toTwosComplement(n);
+  for (size_t i = 0; i < NUM_WORDS; i++) {
+    a.words[i] &= b.words[i];
+  }
+  bool negative = is_negative && n.is_negative;
+  fromTwosComplement(a, negative);
+  *this = a;
+  return *this;
+}
+
+BigNumber &BigNumber::operator|=(const BigNumber &n) {
+  if (is_infinite || n.is_infinite) {
+    makeInfinite();
+    return *this;
+  }
+  BigNumber a = toTwosComplement(*this);
+  BigNumber b = toTwosComplement(n);
+  for (size_t i = 0; i < NUM_WORDS; i++) {
+    a.words[i] |= b.words[i];
+  }
+  bool negative = is_negative || n.is_negative;
+  fromTwosComplement(a, negative);
+  *this = a;
+  return *this;
 }
 
 std::size_t BigNumber::hash() const {
