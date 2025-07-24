@@ -1,6 +1,4 @@
-#RisingandfallingfactorialtestcasesforLODAoperation"fac"
-#n,k,result
-#Risingfactorial(k>0)
+Op1,Op2,Result
 5,3,210
 7,1,7
 7,2,56
@@ -9,13 +7,11 @@
 3,5,2520
 0,1,0
 -3,2,6
-#Fallingfactorial(k<0)
 5,-3,60
 3,-4,0
 0,-3,0
 -2,-3,-24
 2,-1,2
 -2,-1,-2
-#k=0(bothcases)
 7,0,1
 0,0,1
