@@ -98,49 +98,20 @@ Expression FormulaGenerator::divToFraction(
 bool FormulaGenerator::bitfunc(Operation::Type type, const Expression& a,
                                const Expression& b, Expression& res) const {
   std::string name;
-  auto argA = a;
-  auto argB = b;
-  auto signExpr = constant(1);
-  bool canBeNegative = ExpressionUtil::canBeNegative(a, offset) ||
-                       ExpressionUtil::canBeNegative(b, offset);
-  if (canBeNegative) {
-    argA = abs(a);
-    argB = abs(b);
-  }
   switch (type) {
     case Operation::Type::BAN:
       name = "bitand";
-      if (canBeNegative) {
-        // sign((sign($0)+sign($1))*2+3)
-        signExpr = sign(sum(
-            {product({sum({sign(a), sign(b)}), constant(2)}), constant(3)}));
-      }
       break;
     case Operation::Type::BOR:
       name = "bitor";
-      if (canBeNegative) {
-        // sign((sign($0)+sign($1))*2-1)
-        signExpr = sign(sum(
-            {product({sum({sign(a), sign(b)}), constant(2)}), constant(-1)}));
-      }
       break;
     case Operation::Type::BXO:
       name = "bitxor";
-      if (canBeNegative) {
-        // sign(sign($0)+sign($1)+sign($0)*sign($1)*3)
-        signExpr = sign(
-            sum({sign(a), sign(b), product({sign(a), sign(b), constant(3)})}));
-      }
       break;
     default:
       return false;
   }
-  auto bitop = func(name, {argA, argB});
-  if (canBeNegative) {
-    res = product({bitop, signExpr});
-  } else {
-    res = bitop;
-  }
+  res = func(name, {a, b});
   return true;
 }
 
