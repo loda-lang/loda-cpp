@@ -264,6 +264,22 @@ void Range::bin(const Range& r) {
   upper_bound = Number::INF;
 }
 
+void Range::fac(const Range& r) {
+  // update lower bound
+  if (lower_bound >= Number::ZERO && r.lower_bound >= Number::ZERO) {
+    lower_bound = Semantics::fac(lower_bound, r.lower_bound);
+  } else {
+    lower_bound = Number::INF;
+  }
+  // update upper bound
+  if (lower_bound >= Number::ZERO && r.lower_bound >= Number::ZERO &&
+      upper_bound >= Number::ZERO && r.upper_bound >= Number::ZERO) {
+    upper_bound = Semantics::fac(upper_bound, r.upper_bound);
+  } else {
+    upper_bound = Number::INF;
+  }
+}
+
 void Range::log(const Range& r) {
   // update lwer bound
   lower_bound = Semantics::log(lower_bound, r.upper_bound);

@@ -77,6 +77,9 @@ Number Interpreter::calc(const Operation::Type type, const Number& target,
     case Operation::Type::BIN: {
       return Semantics::bin(target, source);
     }
+    case Operation::Type::FAC: {
+      return Semantics::fac(target, source);
+    }
     case Operation::Type::LOG: {
       return Semantics::log(target, source);
     }

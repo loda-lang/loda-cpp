@@ -18,7 +18,7 @@
     },
     {
       "name": "update",
-      "overwrite": "auto",
+      "overwrite": "all",
       "enabled": true,
       "backoff": true,
       "generators": [

@@ -156,6 +156,10 @@ bool RangeGenerator::update(const Operation& op, RangeMap& ranges) {
     case Operation::Type::BIN:
       target.bin(source);
       break;
+    case Operation::Type::FAC: {
+      target.fac(source);
+      break;
+    }
     case Operation::Type::LOG:
       target.log(source);
       break;
