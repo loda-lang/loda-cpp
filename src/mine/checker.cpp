@@ -40,9 +40,8 @@ bool hasIndirectOperand(const Program& p) {
   constexpr int64_t dummy_id = std::numeric_limits<int>::max();
   cache.insert(dummy_id, p);
   auto collected = cache.collect(dummy_id);
-  return std::any_of(collected.begin(), collected.end(), [](const auto& entry) {
-    const Program& prog = entry.second;
-    return ProgramUtil::hasIndirectOperand(prog);
+  return std::any_of(collected.begin(), collected.end(), [](const auto& it) {
+    return ProgramUtil::hasIndirectOperand(it.second);
   });
 }
 
