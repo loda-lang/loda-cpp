@@ -15,6 +15,8 @@ class ProgramCache {
 
   static std::string getProgramPath(int64_t id);
 
+  void insert(int64_t id, const Program &p);
+
   void clear();
 
  private:
