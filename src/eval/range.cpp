@@ -266,7 +266,9 @@ void Range::bin(const Range& r) {
 
 void Range::fac(const Range& r) {
   // update lower bound
-  if (lower_bound >= Number::ZERO && r.lower_bound >= Number::ZERO) {
+  if (lower_bound == Number::ZERO && r.lower_bound >= Number::ZERO) {
+    lower_bound = Number::ZERO;
+  } else if (lower_bound >= Number::ZERO && r.lower_bound >= Number::ZERO) {
     lower_bound = Semantics::fac(lower_bound, r.lower_bound);
   } else {
     lower_bound = Number::INF;
