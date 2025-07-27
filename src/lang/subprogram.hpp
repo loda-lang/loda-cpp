@@ -4,6 +4,11 @@
 
 #include "lang/program.hpp"
 
+struct EmbeddedSequenceProgram {
+  int64_t start_pos, end_pos;
+  int64_t input_cell, output_cell;
+};
+
 class Subprogram {
  public:
   static size_t replaceAllExact(Program &main, const Program &search,
@@ -22,4 +27,7 @@ class Subprogram {
 
   static bool fold(Program &main, Program sub, size_t subId,
                    std::map<int64_t, int64_t> &cell_map, int64_t maxMemory);
+
+  static std::vector<EmbeddedSequenceProgram> findEmbeddedSequencePrograms(
+      const Program &p, int64_t min_length);
 };

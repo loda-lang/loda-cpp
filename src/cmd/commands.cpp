@@ -104,7 +104,7 @@ void Commands::help() {
   std::cout << "  -b                   Print result in the OEIS b-file format"
             << std::endl;
   std::cout << "  -o <string>          Export format "
-               "(formula,loda,pari,range)"
+               "(embseq,formula,loda,pari,range)"
             << std::endl;
   std::cout
       << "  -d                   Export with dependencies to other programs"
@@ -256,6 +256,21 @@ void Commands::export_(const std::string& path) {
       inputUpperBound = Number(offset + settings.num_terms - 1);
     }
     generator.annotate(program, inputUpperBound);
+    ProgramUtil::print(program, std::cout);
+  } else if (format == "embseq") {
+    auto embedded_programs =
+        Subprogram::findEmbeddedSequencePrograms(program, 3);
+    Comments::removeComments(program);
+    for (const auto& esp : embedded_programs) {
+      program.ops.at(esp.start_pos).comment =
+          "begin of embedded sequence with input " +
+          ProgramUtil::operandToString(
+              Operand(Operand::Type::DIRECT, esp.input_cell));
+      program.ops.at(esp.end_pos).comment =
+          "end of embedded sequence with output " +
+          ProgramUtil::operandToString(
+              Operand(Operand::Type::DIRECT, esp.output_cell));
+    }
     ProgramUtil::print(program, std::cout);
   } else {
     throw std::runtime_error("unknown format");
