@@ -258,16 +258,20 @@ void Commands::export_(const std::string& path) {
     generator.annotate(program, inputUpperBound);
     ProgramUtil::print(program, std::cout);
   } else if (format == "embseq") {
+    ProgramUtil::removeOps(program, Operation::Type::NOP);
+    Comments::removeComments(program);
     auto embedded_programs =
         Subprogram::findEmbeddedSequencePrograms(program, 3);
-    Comments::removeComments(program);
-    for (const auto& esp : embedded_programs) {
+    for (size_t i = 0; i < embedded_programs.size(); i++) {
+      auto& esp = embedded_programs[i];
       program.ops.at(esp.start_pos).comment =
-          "begin of embedded sequence with input " +
+          "begin of embedded sequence " + std::to_string(i + 1) +
+          " with input " +
           ProgramUtil::operandToString(
               Operand(Operand::Type::DIRECT, esp.input_cell));
       program.ops.at(esp.end_pos).comment =
-          "end of embedded sequence with output " +
+          "end of embedded sequence " + std::to_string(i + 1) +
+          " with output " +
           ProgramUtil::operandToString(
               Operand(Operand::Type::DIRECT, esp.output_cell));
     }

@@ -1,5 +1,6 @@
 #include "lang/subprogram.hpp"
 
+#include <iostream>
 #include <stdexcept>
 
 #include "eval/evaluator_par.hpp"
@@ -350,10 +351,12 @@ class CellTracker {
   }
 
   bool update(const Operation &op, bool after) {
-    if (op.type == Operation::Type::LPB) {
-      open_loops++;
-    } else if (op.type == Operation::Type::LPE) {
-      open_loops--;
+    if (!after) {
+      if (op.type == Operation::Type::LPB) {
+        open_loops++;
+      } else if (op.type == Operation::Type::LPE) {
+        open_loops--;
+      }
     }
     const auto meta = Operation::Metadata::get(op.type);
     // check the source cell
@@ -381,6 +384,7 @@ class CellTracker {
       written_cells.clear();
     }
     output_cell = -1;
+    open_loops = 0;
   }
 };
 
@@ -393,27 +397,33 @@ std::vector<EmbeddedSequenceProgram> Subprogram::findEmbeddedSequencePrograms(
   }
   CellTracker tracker;
   for (int64_t start = 0; start + 1 < num_ops; start++) {
+    std::cout << "start at " << start << std::endl;
     tracker.reset(false);
     int64_t end = start - 1;
     for (int64_t i = start; i < num_ops; i++) {
       bool ok = tracker.update(p.ops[i], false) && tracker.open_loops == 0;
+      std::cout << "pos " << i << " - "
+                << ProgramUtil::operationToString(p.ops[i]) << ": " << ok
+                << std::endl;
       if (ok) {
         // check rest of program
         tracker.reset(true);
         for (int64_t j = i + 1; j < num_ops; j++) {
-          if (!tracker.update(p.ops[i], true)) {
+          if (!tracker.update(p.ops[j], true)) {
+            std::cout << "after check failed at " << j << ": "
+                      << ProgramUtil::operationToString(p.ops[j]) << std::endl;
             ok = false;
             break;
           }
         }
       }
       if (ok) {
-        end++;
-      } else {
-        break;
+        end = i;
       }
     }
-    if (start + min_length <= end) {
+    if (start + min_length <= end && tracker.input_cell != -1 &&
+        tracker.output_cell != -1 &&
+        (result.empty() || result.back().end_pos != end)) {
       EmbeddedSequenceProgram esp;
       esp.start_pos = start;
       esp.end_pos = end;
