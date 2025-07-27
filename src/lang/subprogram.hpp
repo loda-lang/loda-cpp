@@ -29,5 +29,6 @@ class Subprogram {
                    std::map<int64_t, int64_t> &cell_map, int64_t maxMemory);
 
   static std::vector<EmbeddedSequenceProgram> findEmbeddedSequencePrograms(
-      const Program &p, int64_t min_length);
+      const Program &p, int64_t min_length, int64_t min_loops_outside,
+      int64_t min_loops_inside);
 };

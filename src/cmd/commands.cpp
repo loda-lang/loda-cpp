@@ -261,7 +261,7 @@ void Commands::export_(const std::string& path) {
     ProgramUtil::removeOps(program, Operation::Type::NOP);
     Comments::removeComments(program);
     auto embedded_programs =
-        Subprogram::findEmbeddedSequencePrograms(program, 3);
+        Subprogram::findEmbeddedSequencePrograms(program, 3, 1, 1);
     for (size_t i = 0; i < embedded_programs.size(); i++) {
       auto& esp = embedded_programs[i];
       program.ops.at(esp.start_pos).comment =

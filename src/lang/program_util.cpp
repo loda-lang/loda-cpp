@@ -581,3 +581,15 @@ int64_t ProgramUtil::setOffset(Program &p, int64_t offset) {
   }
   return delta;
 }
+
+int64_t ProgramUtil::getLoopDepth(const Program &p, int64_t pos) {
+  int64_t depth = 0;
+  for (int64_t i = 0; i < pos; i++) {
+    if (p.ops[i].type == Operation::Type::LPB) {
+      depth++;
+    } else if (p.ops[i].type == Operation::Type::LPE) {
+      depth--;
+    }
+  }
+  return depth;
+}

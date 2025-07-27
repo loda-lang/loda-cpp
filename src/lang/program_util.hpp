@@ -94,4 +94,6 @@ class ProgramUtil {
   static int64_t getOffset(const Program &p);
 
   static int64_t setOffset(Program &p, int64_t offset);
+
+  static int64_t getLoopDepth(const Program &p, int64_t pos);
 };

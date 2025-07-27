@@ -327,6 +327,7 @@ class CellTracker {
  public:
   int64_t input_cell = -1;
   int64_t output_cell = -1;
+  int64_t loops = 0;
   int64_t open_loops = 0;
   std::set<int64_t> written_cells;
 
@@ -353,6 +354,7 @@ class CellTracker {
   bool update(const Operation &op, bool after) {
     if (!after) {
       if (op.type == Operation::Type::LPB) {
+        loops++;
         open_loops++;
       } else if (op.type == Operation::Type::LPE) {
         open_loops--;
@@ -382,14 +384,16 @@ class CellTracker {
     if (!after) {
       input_cell = -1;
       written_cells.clear();
+      loops = 0;
+      open_loops = 0;
     }
     output_cell = -1;
-    open_loops = 0;
   }
 };
 
 std::vector<EmbeddedSequenceProgram> Subprogram::findEmbeddedSequencePrograms(
-    const Program &p, int64_t min_length) {
+    const Program &p, int64_t min_length, int64_t min_loops_outside,
+    int64_t min_loops_inside) {
   std::vector<EmbeddedSequenceProgram> result;
   const int64_t num_ops = p.ops.size();
   if (num_ops == 0 || ProgramUtil::hasIndirectOperand(p)) {
@@ -397,11 +401,15 @@ std::vector<EmbeddedSequenceProgram> Subprogram::findEmbeddedSequencePrograms(
   }
   CellTracker tracker;
   for (int64_t start = 0; start + 1 < num_ops; start++) {
+    if (ProgramUtil::getLoopDepth(p, start) < min_loops_outside) {
+      continue;  // skip if not enough loops outside
+    }
     std::cout << "start at " << start << std::endl;
     tracker.reset(false);
     int64_t end = start - 1;
     for (int64_t i = start; i < num_ops; i++) {
-      bool ok = tracker.update(p.ops[i], false) && tracker.open_loops == 0;
+      bool ok = tracker.update(p.ops[i], false) &&
+                tracker.loops >= min_loops_inside && tracker.open_loops == 0;
       std::cout << "pos " << i << " - "
                 << ProgramUtil::operationToString(p.ops[i]) << ": " << ok
                 << std::endl;
