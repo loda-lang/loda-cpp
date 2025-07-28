@@ -407,8 +407,11 @@ std::vector<EmbeddedSequenceProgram> Subprogram::findEmbeddedSequencePrograms(
     tracker.reset(false);
     int64_t end = start - 1;
     for (int64_t i = start; i < num_ops; i++) {
-      bool ok = tracker.update(p.ops[i], false) &&
-                tracker.loops >= min_loops_inside && tracker.open_loops == 0;
+      bool ok = tracker.update(p.ops[i], false);
+      if (tracker.open_loops < 0) {
+        break;  // unmatched loop end
+      }
+      ok = ok && tracker.loops >= min_loops_inside && tracker.open_loops == 0;
       if (ok) {
         // check rest of program
         tracker.reset(true);
