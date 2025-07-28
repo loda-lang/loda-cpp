@@ -259,22 +259,7 @@ void Commands::export_(const std::string& path) {
     ProgramUtil::print(program, std::cout);
   } else if (format == "embseq") {
     ProgramUtil::removeOps(program, Operation::Type::NOP);
-    Comments::removeComments(program);
-    auto embedded_programs =
-        Subprogram::findEmbeddedSequencePrograms(program, 3, 1, 1);
-    for (size_t i = 0; i < embedded_programs.size(); i++) {
-      auto& esp = embedded_programs[i];
-      program.ops.at(esp.start_pos).comment =
-          "begin of embedded sequence " + std::to_string(i + 1) +
-          " with input " +
-          ProgramUtil::operandToString(
-              Operand(Operand::Type::DIRECT, esp.input_cell));
-      program.ops.at(esp.end_pos).comment =
-          "end of embedded sequence " + std::to_string(i + 1) +
-          " with output " +
-          ProgramUtil::operandToString(
-              Operand(Operand::Type::DIRECT, esp.output_cell));
-    }
+    Subprogram::annotateEmbeddedSequencePrograms(program, 3, 1, 1);
     ProgramUtil::print(program, std::cout);
   } else {
     throw std::runtime_error("unknown format");

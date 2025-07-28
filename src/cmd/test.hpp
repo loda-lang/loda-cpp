@@ -82,6 +82,8 @@ class Test {
 
   void range();
 
+  void embseq();
+
   enum class FormulaType { FORMULA, PARI_FUNCTION, PARI_VECTOR };
 
   void checkFormulas(const std::string &testFile, FormulaType type);

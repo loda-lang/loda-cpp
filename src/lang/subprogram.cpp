@@ -1,9 +1,9 @@
 #include "lang/subprogram.hpp"
 
-#include <iostream>
 #include <stdexcept>
 
 #include "eval/evaluator_par.hpp"
+#include "lang/comments.hpp"
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
 
@@ -322,7 +322,7 @@ bool Subprogram::fold(Program &main, Program sub, size_t subId,
   return true;
 }
 
-// Helper class for tracking cell usage in a subprogram
+// Helper class for tracking cell usage in embedded sequence programs
 class CellTracker {
  public:
   int64_t input_cell = -1;
@@ -404,22 +404,16 @@ std::vector<EmbeddedSequenceProgram> Subprogram::findEmbeddedSequencePrograms(
     if (ProgramUtil::getLoopDepth(p, start) < min_loops_outside) {
       continue;  // skip if not enough loops outside
     }
-    std::cout << "start at " << start << std::endl;
     tracker.reset(false);
     int64_t end = start - 1;
     for (int64_t i = start; i < num_ops; i++) {
       bool ok = tracker.update(p.ops[i], false) &&
                 tracker.loops >= min_loops_inside && tracker.open_loops == 0;
-      std::cout << "pos " << i << " - "
-                << ProgramUtil::operationToString(p.ops[i]) << ": " << ok
-                << std::endl;
       if (ok) {
         // check rest of program
         tracker.reset(true);
         for (int64_t j = i + 1; j < num_ops; j++) {
           if (!tracker.update(p.ops[j], true)) {
-            std::cout << "after check failed at " << j << ": "
-                      << ProgramUtil::operationToString(p.ops[j]) << std::endl;
             ok = false;
             break;
           }
@@ -441,4 +435,25 @@ std::vector<EmbeddedSequenceProgram> Subprogram::findEmbeddedSequencePrograms(
     }
   }
   return result;
+}
+
+int64_t Subprogram::annotateEmbeddedSequencePrograms(Program &main,
+                                                     int64_t min_length,
+                                                     int64_t min_loops_outside,
+                                                     int64_t min_loops_inside) {
+  Comments::removeComments(main);
+  auto embs = findEmbeddedSequencePrograms(main, min_length, min_loops_outside,
+                                           min_loops_outside);
+  for (size_t i = 0; i < embs.size(); i++) {
+    auto &esp = embs[i];
+    main.ops.at(esp.start_pos).comment =
+        "begin of embedded sequence " + std::to_string(i + 1) + " with input " +
+        ProgramUtil::operandToString(
+            Operand(Operand::Type::DIRECT, esp.input_cell));
+    main.ops.at(esp.end_pos).comment =
+        "end of embedded sequence " + std::to_string(i + 1) + " with output " +
+        ProgramUtil::operandToString(
+            Operand(Operand::Type::DIRECT, esp.output_cell));
+  }
+  return embs.size();
 }
