@@ -104,7 +104,7 @@ void Commands::help() {
   std::cout << "  -b                   Print result in the OEIS b-file format"
             << std::endl;
   std::cout << "  -o <string>          Export format "
-               "(formula,loda,pari,range)"
+               "(embseq,formula,loda,pari,range)"
             << std::endl;
   std::cout
       << "  -d                   Export with dependencies to other programs"
@@ -256,6 +256,10 @@ void Commands::export_(const std::string& path) {
       inputUpperBound = Number(offset + settings.num_terms - 1);
     }
     generator.annotate(program, inputUpperBound);
+    ProgramUtil::print(program, std::cout);
+  } else if (format == "embseq") {
+    ProgramUtil::removeOps(program, Operation::Type::NOP);
+    Subprogram::annotateEmbeddedSequencePrograms(program, 3, 1, 1);
     ProgramUtil::print(program, std::cout);
   } else {
     throw std::runtime_error("unknown format");
@@ -828,6 +832,37 @@ void Commands::findSlow(int64_t num_terms, const std::string& type) {
   }
   Benchmark benchmark;
   benchmark.findSlow(num_terms, t);
+}
+
+void Commands::findEmbseqs() {
+  initLog(false);
+  Parser parser;
+  OeisManager manager(settings);
+  manager.load();
+  auto& stats = manager.getStats();
+  auto& seqs = manager.getSequences();
+  int64_t numFound = 0;
+  for (const auto& seq : seqs) {
+    if (seq.id == 0 || !stats.all_program_ids[seq.id]) {
+      continue;
+    }
+    Program program;
+    try {
+      program = parser.parse(ProgramUtil::getProgramPath(seq.id));
+    } catch (const std::exception& e) {
+      Log::get().warn(std::string(e.what()));
+      continue;
+    }
+    auto embseqs = Subprogram::findEmbeddedSequencePrograms(program, 3, 1, 1);
+    if (!embseqs.empty()) {
+      Log::get().info("Found " + std::to_string(embseqs.size()) +
+                      " embedded sequence programs in " +
+                      ProgramUtil::idStr(seq.id));
+      numFound += embseqs.size();
+    }
+  }
+  Log::get().info("Found " + std::to_string(numFound) +
+                  " embedded sequence programs");
 }
 
 void Commands::lists() {

@@ -74,6 +74,8 @@ class Commands {
 
   void findSlow(int64_t num_terms, const std::string& type);
 
+  void findEmbseqs();
+
   void lists();
 
   void compare(const std::string& path1, const std::string& path2);

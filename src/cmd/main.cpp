@@ -248,6 +248,8 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
       type = args.at(1);
     }
     commands.findSlow(settings.num_terms, type);
+  } else if (cmd == "find-embseqs") {
+    commands.findEmbseqs();
   } else if (cmd == "lists") {
     commands.lists();
   } else if (cmd == "compare") {

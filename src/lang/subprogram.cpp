@@ -3,6 +3,7 @@
 #include <stdexcept>
 
 #include "eval/evaluator_par.hpp"
+#include "lang/comments.hpp"
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
 
@@ -319,4 +320,143 @@ bool Subprogram::fold(Program &main, Program sub, size_t subId,
                             Operand(Operand::Type::DIRECT, Number(mappedInput)),
                             Operand(Operand::Type::CONSTANT, Number(subId))));
   return true;
+}
+
+// Helper class for tracking cell usage in embedded sequence programs
+class CellTracker {
+ public:
+  int64_t input_cell = -1;
+  int64_t output_cell = -1;
+  int64_t loops = 0;
+  int64_t open_loops = 0;
+  std::set<int64_t> written_cells;
+
+  bool read(int64_t cell, bool after) {
+    if (after) {
+      if (written_cells.find(cell) != written_cells.end()) {
+        if (output_cell == -1) {
+          output_cell = cell;
+        } else {
+          return false;  // multiple output cells found
+        }
+      }
+    } else {
+      if (input_cell == -1) {
+        input_cell = cell;
+      } else if (cell != input_cell &&
+                 written_cells.find(cell) == written_cells.end()) {
+        return false;  // multiple input cells found
+      }
+    }
+    return true;
+  }
+
+  bool update(const Operation &op, bool after) {
+    if (!after) {
+      if (op.type == Operation::Type::LPB) {
+        loops++;
+        open_loops++;
+      } else if (op.type == Operation::Type::LPE) {
+        open_loops--;
+      }
+    }
+    const auto meta = Operation::Metadata::get(op.type);
+    // check the source cell
+    if (meta.num_operands > 1 && op.source.type == Operand::Type::DIRECT) {
+      if (!read(op.source.value.asInt(), after)) {
+        return false;
+      }
+    }
+    // check the target cell
+    if (meta.num_operands > 0 && op.target.type == Operand::Type::DIRECT) {
+      auto target = op.target.value.asInt();
+      if (meta.is_reading_target && !read(op.target.value.asInt(), after)) {
+        return false;
+      }
+      if (!after && meta.is_writing_target) {
+        written_cells.insert(target);
+      }
+    }
+    return open_loops >= 0 || after;
+  }
+
+  void reset(bool after) {
+    if (!after) {
+      input_cell = -1;
+      written_cells.clear();
+      loops = 0;
+      open_loops = 0;
+    }
+    output_cell = -1;
+  }
+};
+
+std::vector<EmbeddedSequenceProgram> Subprogram::findEmbeddedSequencePrograms(
+    const Program &p, int64_t min_length, int64_t min_loops_outside,
+    int64_t min_loops_inside) {
+  std::vector<EmbeddedSequenceProgram> result;
+  const int64_t num_ops = p.ops.size();
+  if (num_ops == 0 || ProgramUtil::hasIndirectOperand(p)) {
+    return result;
+  }
+  CellTracker tracker;
+  for (int64_t start = 0; start + 1 < num_ops; start++) {
+    if (ProgramUtil::getLoopDepth(p, start) < min_loops_outside) {
+      continue;  // skip if not enough loops outside
+    }
+    tracker.reset(false);
+    int64_t end = start - 1;
+    for (int64_t i = start; i < num_ops; i++) {
+      bool ok = tracker.update(p.ops[i], false);
+      if (!ok) {
+        break;
+      }
+      ok = ok && tracker.loops >= min_loops_inside && tracker.open_loops == 0;
+      if (ok) {
+        // check rest of program
+        tracker.reset(true);
+        for (int64_t j = i + 1; j < num_ops; j++) {
+          if (!tracker.update(p.ops[j], true)) {
+            ok = false;
+            break;
+          }
+        }
+      }
+      if (ok) {
+        end = i;
+      }
+    }
+    if (start + min_length <= end && tracker.input_cell != -1 &&
+        tracker.output_cell != -1 &&
+        (result.empty() || result.back().end_pos != end)) {
+      EmbeddedSequenceProgram esp;
+      esp.start_pos = start;
+      esp.end_pos = end;
+      esp.input_cell = tracker.input_cell;
+      esp.output_cell = tracker.output_cell;
+      result.emplace_back(esp);
+    }
+  }
+  return result;
+}
+
+int64_t Subprogram::annotateEmbeddedSequencePrograms(Program &main,
+                                                     int64_t min_length,
+                                                     int64_t min_loops_outside,
+                                                     int64_t min_loops_inside) {
+  Comments::removeComments(main);
+  auto embs = findEmbeddedSequencePrograms(main, min_length, min_loops_outside,
+                                           min_loops_outside);
+  for (size_t i = 0; i < embs.size(); i++) {
+    auto &esp = embs[i];
+    main.ops.at(esp.start_pos).comment =
+        "begin of embedded sequence " + std::to_string(i + 1) + " with input " +
+        ProgramUtil::operandToString(
+            Operand(Operand::Type::DIRECT, esp.input_cell));
+    main.ops.at(esp.end_pos).comment =
+        "end of embedded sequence " + std::to_string(i + 1) + " with output " +
+        ProgramUtil::operandToString(
+            Operand(Operand::Type::DIRECT, esp.output_cell));
+  }
+  return embs.size();
 }

@@ -71,6 +71,7 @@ void Test::fast() {
   knownPrograms();
   formula();
   range();
+  embseq();
 }
 
 void Test::slow() {
@@ -1108,6 +1109,33 @@ void Test::checkRanges(int64_t id, bool finite, const std::string& expected) {
   }
 }
 
+void Test::embseq() {
+  Parser parser;
+  size_t i = 1;
+  const std::string dir = std::string("tests") + FILE_SEP + "embseq" + FILE_SEP;
+  while (true) {
+    std::stringstream s;
+    s << dir << "E" << std::setw(3) << std::setfill('0') << i << ".asm";
+    std::ifstream file(s.str());
+    if (!file.good()) {
+      break;
+    }
+    Log::get().info("Testing embedding sequences in " + s.str());
+    auto p = parser.parse(file);
+    std::stringstream expected;
+    ProgramUtil::print(p, expected);
+    Comments::removeComments(p);
+    Subprogram::annotateEmbeddedSequencePrograms(p, 3, 1, 1);
+    std::stringstream got;
+    ProgramUtil::print(p, got);
+    if (expected.str() != got.str()) {
+      Log::get().error("Unexpected embedded sequence annotation:\n" + got.str(),
+                       true);
+    }
+    i++;
+  }
+}
+
 void Test::stats() {
   Log::get().info("Testing stats loading and saving");
 
@@ -1286,7 +1314,8 @@ bool checkRange(const Sequence& seq, const Program& program, bool finiteInput) {
   }
   auto result = ranges.toString(Program::OUTPUT_CELL, "a(n)");
   auto& range = it->second;
-  // Log::get().info("Checking " + std::to_string(seq.size()) + " terms" + ": "
+  // Log::get().info("Checking " + std::to_string(seq.size()) + " terms" + ":
+  // "
   // +
   //                result);
   auto index = range.check(seq);
