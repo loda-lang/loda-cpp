@@ -377,7 +377,7 @@ class CellTracker {
         written_cells.insert(target);
       }
     }
-    return true;
+    return open_loops >= 0 || after;
   }
 
   void reset(bool after) {
@@ -408,8 +408,8 @@ std::vector<EmbeddedSequenceProgram> Subprogram::findEmbeddedSequencePrograms(
     int64_t end = start - 1;
     for (int64_t i = start; i < num_ops; i++) {
       bool ok = tracker.update(p.ops[i], false);
-      if (tracker.open_loops < 0) {
-        break;  // unmatched loop end
+      if (!ok) {
+        break;
       }
       ok = ok && tracker.loops >= min_loops_inside && tracker.open_loops == 0;
       if (ok) {
