@@ -22,8 +22,7 @@ enum class status_t { OK, WARNING, ERROR };
 
 class Evaluator {
  public:
-  explicit Evaluator(const Settings &settings, bool use_inc_eval = true,
-                     bool check_rangge = true);
+  explicit Evaluator(const Settings &settings, bool use_inc_eval = true);
 
   steps_t eval(const Program &p, Sequence &seq, int64_t num_terms = -1,
                const bool throw_on_error = true);

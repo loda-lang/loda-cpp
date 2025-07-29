@@ -21,13 +21,12 @@ void steps_t::add(const steps_t &s) {
   runs += s.runs;
 }
 
-Evaluator::Evaluator(const Settings &settings, const bool use_inc_eval,
-                     bool check_range)
+Evaluator::Evaluator(const Settings &settings, bool use_inc_eval)
     : settings(settings),
       interpreter(settings),
       inc_evaluator(interpreter),
       use_inc_eval(use_inc_eval),
-      check_range(check_range),
+      check_range(true),
       check_eval_time(settings.max_eval_secs >= 0),
       is_debug(Log::get().level == Log::Level::DEBUG) {}
 
