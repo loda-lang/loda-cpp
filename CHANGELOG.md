@@ -8,6 +8,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Enhancements
 
+* Improve evaluation performance of embedded sequence programs
 * Improve check for simpler programs
 
 ## v25.7.24

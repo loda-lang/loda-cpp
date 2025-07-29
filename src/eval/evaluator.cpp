@@ -21,11 +21,14 @@ void steps_t::add(const steps_t &s) {
   runs += s.runs;
 }
 
-Evaluator::Evaluator(const Settings &settings, bool use_inc_eval)
+Evaluator::Evaluator(const Settings &settings, bool use_inc_eval,
+                     bool use_vir_eval)
     : settings(settings),
       interpreter(settings),
       inc_evaluator(interpreter),
+      vir_evaluator(settings),
       use_inc_eval(use_inc_eval),
+      use_vir_eval(use_vir_eval),
       check_range(true),
       check_eval_time(settings.max_eval_secs >= 0),
       is_debug(Log::get().level == Log::Level::DEBUG) {}
@@ -43,14 +46,19 @@ steps_t Evaluator::eval(const Program &p, Sequence &seq, int64_t num_terms,
   steps_t steps;
   size_t s;
   const bool use_inc = use_inc_eval && inc_evaluator.init(p);
-  std::pair<Number, size_t> inc_result;
+  const bool use_vir = !use_inc && use_vir_eval && vir_evaluator.init(p);
+  std::pair<Number, size_t> tmp_result;
   const int64_t offset = ProgramUtil::getOffset(p);
   for (int64_t i = 0; i < num_terms; i++) {
     try {
       if (use_inc) {
-        inc_result = inc_evaluator.next();
-        seq[i] = inc_result.first;
-        s = inc_result.second;
+        tmp_result = inc_evaluator.next();
+        seq[i] = tmp_result.first;
+        s = tmp_result.second;
+      } else if (use_vir) {
+        tmp_result = vir_evaluator.eval(i + offset);
+        seq[i] = tmp_result.first;
+        s = tmp_result.second;
       } else {
         mem.clear();
         mem.set(Program::INPUT_CELL, i + offset);
@@ -68,7 +76,6 @@ steps_t Evaluator::eval(const Program &p, Sequence &seq, int64_t num_terms,
         return steps;
       }
     }
-
     steps.add(s);
     if (settings.use_steps) {
       seq[i] = s;

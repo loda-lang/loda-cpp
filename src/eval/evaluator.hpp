@@ -3,6 +3,7 @@
 #include <chrono>
 
 #include "eval/evaluator_inc.hpp"
+#include "eval/evaluator_vir.hpp"
 #include "eval/interpreter.hpp"
 #include "eval/range_generator.hpp"
 #include "math/sequence.hpp"
@@ -22,7 +23,8 @@ enum class status_t { OK, WARNING, ERROR };
 
 class Evaluator {
  public:
-  explicit Evaluator(const Settings &settings, bool use_inc_eval = true);
+  explicit Evaluator(const Settings &settings, bool use_inc_eval = true,
+                     bool use_vir_eval = true);
 
   steps_t eval(const Program &p, Sequence &seq, int64_t num_terms = -1,
                const bool throw_on_error = true);
@@ -45,8 +47,10 @@ class Evaluator {
   const Settings &settings;
   Interpreter interpreter;
   IncrementalEvaluator inc_evaluator;
+  VirtualEvaluator vir_evaluator;
   RangeGenerator range_generator;
   const bool use_inc_eval;
+  const bool use_vir_eval;
   const bool check_range;
   const bool check_eval_time;
   const bool is_debug;
