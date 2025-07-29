@@ -62,7 +62,9 @@ void Test::fast() {
   blocks();
   fold();
   unfold();
+  embseq();
   incEval();
+  virEval();
   linearMatcher();
   deltaMatcher();
   digitMatcher();
@@ -71,7 +73,6 @@ void Test::fast() {
   knownPrograms();
   formula();
   range();
-  embseq();
 }
 
 void Test::slow() {
@@ -683,6 +684,7 @@ void Test::unfold() {
 
 void Test::incEval() {
   // manually written test cases
+  Log::get().info("Testing incremental evaluator");
   size_t i = 1;
   auto dir = std::string("tests") + FILE_SEP + "inceval" + FILE_SEP;
   std::stringstream s;
@@ -693,7 +695,7 @@ void Test::incEval() {
     if (!isFile(path)) {
       break;
     }
-    checkIncEval(settings, 0, path, true);
+    checkEvaluator(settings, 0, path, true, false);
     i++;
   }
   // OEIS sequence test cases
@@ -704,12 +706,21 @@ void Test::incEval() {
       8581,  10362, 11218,  12866,  14979,  22564, 25774, 49349, 57552,
       79309, 80493, 122593, 130487, 247309, 302643};
   for (auto id : ids) {
-    checkIncEval(settings, id, "", true);
+    checkEvaluator(settings, id, "", true, false);
   }
 }
 
-bool Test::checkIncEval(const Settings& settings, size_t id, std::string path,
-                        bool mustSupportIncEval) {
+void Test::virEval() {
+  // OEIS sequence test cases
+  Log::get().info("Testing virtual evaluator");
+  std::vector<size_t> ids = {40};
+  for (auto id : ids) {
+    checkEvaluator(settings, id, "", false, true);
+  }
+}
+
+bool Test::checkEvaluator(const Settings& settings, size_t id, std::string path,
+                          bool mustSupportIncEval, bool mustSupportVirEval) {
   auto name = path;
   if (path.empty()) {
     name = ProgramUtil::idStr(id);
@@ -720,36 +731,46 @@ bool Test::checkIncEval(const Settings& settings, size_t id, std::string path,
   try {
     p = parser.parse(path);
   } catch (const std::exception& e) {
-    if (mustSupportIncEval) {
+    if (mustSupportIncEval || mustSupportVirEval) {
       std::rethrow_exception(std::current_exception());
     } else {
       Log::get().warn(std::string(e.what()));
       return false;
     }
   }
-  const std::string msg = "incremental evaluator for " + name;
-  Evaluator eval_reg(settings, false);
-  Evaluator eval_inc(settings, true);
+  const std::string msg = "evaluator for " + name;
+  Evaluator eval_reg(settings, false, false);
+  Evaluator eval_inc(settings, true, false);
+  Evaluator eval_vir(settings, false, true);
   if (!eval_inc.supportsIncEval(p)) {
     if (mustSupportIncEval) {
-      Log::get().error("Error initializing " + msg, true);
-    } else {
+      Log::get().error("Error initializing incremental " + msg, true);
+    } else if (!mustSupportVirEval) {
+      return false;
+    }
+  }
+  if (!eval_vir.supportsVirEval(p)) {
+    if (mustSupportVirEval) {
+      Log::get().error("Error initializing virtual " + msg, true);
+    } else if (!mustSupportIncEval) {
       return false;
     }
   }
   Log::get().info("Testing " + msg);
   // std::cout << ProgramUtil::operationToString(p.ops.front()) << std::endl;
-  Sequence seq_reg, seq_inc;
-  steps_t steps_reg, steps_inc;
+  Sequence seq_reg, seq_inc, seq_vir;
+  steps_t steps_reg, steps_inc, steps_vir;
   try {
     steps_reg = eval_reg.eval(p, seq_reg, 100, true);
     steps_inc = eval_inc.eval(p, seq_inc, 100, true);
+    steps_vir = eval_vir.eval(p, seq_vir, 100, true);
   } catch (const std::exception&) {
     try {
       steps_reg = eval_reg.eval(p, seq_reg, 10, true);
       steps_inc = eval_inc.eval(p, seq_inc, 10, true);
+      steps_vir = eval_vir.eval(p, seq_vir, 10, true);
     } catch (const std::exception& e) {
-      if (mustSupportIncEval) {
+      if (mustSupportIncEval || mustSupportVirEval) {
         std::rethrow_exception(std::current_exception());
       } else {
         Log::get().warn(std::string(e.what()));
@@ -760,10 +781,18 @@ bool Test::checkIncEval(const Settings& settings, size_t id, std::string path,
   if (seq_reg != seq_inc) {
     Log::get().info("Incremental eval result: " + seq_inc.to_string());
     Log::get().info("Regular eval result:     " + seq_reg.to_string());
-    Log::get().error("Unexpected result of " + msg, true);
+    Log::get().error("Unexpected result of incremental " + msg, true);
+  }
+  if (seq_reg != seq_vir) {
+    Log::get().info("Virtual eval result:     " + seq_vir.to_string());
+    Log::get().info("Regular eval result:     " + seq_reg.to_string());
+    Log::get().error("Unexpected result of virtual " + msg, true);
   }
   if (steps_reg.total != steps_inc.total) {
-    Log::get().error("Unexpected steps of " + msg, true);
+    Log::get().error("Unexpected steps of incremental " + msg, true);
+  }
+  if (steps_reg.total != steps_vir.total) {
+    Log::get().error("Unexpected steps of virtual " + msg, true);
   }
   return true;
 }

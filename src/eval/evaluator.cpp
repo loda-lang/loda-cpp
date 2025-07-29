@@ -236,6 +236,12 @@ bool Evaluator::supportsIncEval(const Program &p) {
   return result;
 }
 
+bool Evaluator::supportsVirEval(const Program &p) {
+  bool result = vir_evaluator.init(p);
+  vir_evaluator.reset();
+  return result;
+}
+
 void Evaluator::clearCaches() { interpreter.clearCaches(); }
 
 void Evaluator::checkEvalTime() const {

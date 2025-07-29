@@ -72,3 +72,9 @@ std::pair<Number, size_t> VirtualEvaluator::eval(const Number &input) {
   auto output = tmp_memory.get(Program::OUTPUT_CELL);
   return {output, steps};
 }
+
+void VirtualEvaluator::reset() {
+  refactored = {};
+  interpreter.clearCaches();
+  tmp_memory.clear();
+}

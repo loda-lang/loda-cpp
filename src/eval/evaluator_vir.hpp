@@ -8,6 +8,8 @@ class VirtualEvaluator {
 
   std::pair<Number, size_t> eval(const Number &input);
 
+  void reset();
+
  private:
   Interpreter interpreter;
   Program refactored;
