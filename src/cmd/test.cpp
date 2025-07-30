@@ -684,7 +684,6 @@ void Test::unfold() {
 
 void Test::incEval() {
   // manually written test cases
-  Log::get().info("Testing incremental evaluator");
   size_t i = 1;
   auto dir = std::string("tests") + FILE_SEP + "inceval" + FILE_SEP;
   std::stringstream s;
@@ -712,7 +711,6 @@ void Test::incEval() {
 
 void Test::virEval() {
   // OEIS sequence test cases
-  Log::get().info("Testing virtual evaluator");
   std::vector<size_t> ids = {40};
   for (auto id : ids) {
     checkEvaluator(settings, id, "", false, true);
@@ -738,7 +736,12 @@ bool Test::checkEvaluator(const Settings& settings, size_t id, std::string path,
       return false;
     }
   }
-  const std::string msg = "evaluator for " + name;
+  std::string msg = "evaluator for " + name;
+  if (mustSupportIncEval && !mustSupportVirEval) {
+    msg = "incremental " + msg;
+  } else if (!mustSupportIncEval && mustSupportVirEval) {
+    msg = "virtual " + msg;
+  }
   Evaluator eval_reg(settings, false, false);
   Evaluator eval_inc(settings, true, false);
   Evaluator eval_vir(settings, false, true);
@@ -778,21 +781,15 @@ bool Test::checkEvaluator(const Settings& settings, size_t id, std::string path,
       }
     }
   }
-  if (seq_reg != seq_inc) {
+  if (seq_reg != seq_inc || seq_reg != seq_vir) {
     Log::get().info("Incremental eval result: " + seq_inc.to_string());
-    Log::get().info("Regular eval result:     " + seq_reg.to_string());
-    Log::get().error("Unexpected result of incremental " + msg, true);
-  }
-  if (seq_reg != seq_vir) {
     Log::get().info("Virtual eval result:     " + seq_vir.to_string());
     Log::get().info("Regular eval result:     " + seq_reg.to_string());
-    Log::get().error("Unexpected result of virtual " + msg, true);
+    Log::get().error("Unexpected result of " + msg, true);
   }
-  if (steps_reg.total != steps_inc.total) {
-    Log::get().error("Unexpected steps of incremental " + msg, true);
-  }
-  if (steps_reg.total != steps_vir.total) {
-    Log::get().error("Unexpected steps of virtual " + msg, true);
+  if (steps_reg.total != steps_inc.total ||
+      steps_reg.total != steps_vir.total) {
+    Log::get().error("Unexpected steps of " + msg, true);
   }
   return true;
 }

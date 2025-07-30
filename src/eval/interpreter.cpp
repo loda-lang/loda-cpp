@@ -414,7 +414,7 @@ std::pair<Number, size_t> Interpreter::callSeq(int64_t id, const Number& arg) {
   Memory tmp;
   tmp.set(Program::INPUT_CELL, arg);
   try {
-    result.second = run(call_program, tmp);
+    result.second = run(call_program, tmp) + program_cache.getOverhead(id);
     result.first = tmp.get(Program::OUTPUT_CELL);
     running_programs.erase(id);
   } catch (...) {
