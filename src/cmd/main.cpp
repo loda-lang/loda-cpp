@@ -213,7 +213,13 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
     if (args.size() > 1) {
       id = args.at(1);
     }
-    commands.testIncEval(id);
+    commands.testEval(id, EVAL_INCREMENTAL);
+  } else if (cmd == "test-vireval") {
+    std::string id;
+    if (args.size() > 1) {
+      id = args.at(1);
+    }
+    commands.testEval(id, EVAL_VIRTUAL);
   } else if (cmd == "test-analyzer") {
     commands.testAnalyzer();
   } else if (cmd == "test-pari") {

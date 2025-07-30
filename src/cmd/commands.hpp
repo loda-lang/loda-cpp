@@ -2,6 +2,7 @@
 
 #include <string>
 
+#include "eval/evaluator.hpp"
 #include "sys/util.hpp"
 
 class Commands {
@@ -54,7 +55,7 @@ class Commands {
 
   void testSlow();
 
-  void testIncEval(const std::string& id);
+  void testEval(const std::string& id, eval_mode_t mode);
 
   void testAnalyzer();
 
