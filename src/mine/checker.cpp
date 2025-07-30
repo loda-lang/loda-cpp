@@ -74,8 +74,9 @@ bool isBetterIncEval(const Program& existing, const Program& optimized,
     return false;
   }
   bool optimized_has_seq = ProgramUtil::hasOp(optimized, Operation::Type::SEQ);
-  return (!evaluator.supportsIncEval(existing) &&
-          evaluator.supportsIncEval(optimized) && !optimized_has_seq);
+  return (!evaluator.supportsEvalModes(existing, EVAL_INCREMENTAL) &&
+          evaluator.supportsEvalModes(optimized, EVAL_INCREMENTAL) &&
+          !optimized_has_seq);
 }
 
 Checker::Checker(const Settings& settings, Evaluator& evaluator,

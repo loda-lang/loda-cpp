@@ -43,8 +43,8 @@ class Test {
   void virEval();
 
   static bool checkEvaluator(const Settings &settings, size_t id,
-                             std::string path, bool mustSupportIncEval,
-                             bool mustSupportVirEval);
+                             std::string path, eval_mode_t evalMode,
+                             bool mustSupportEvalMode);
 
   void apiClient();
 

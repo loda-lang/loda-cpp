@@ -21,14 +21,13 @@ void steps_t::add(const steps_t &s) {
   runs += s.runs;
 }
 
-Evaluator::Evaluator(const Settings &settings, bool use_inc_eval,
-                     bool use_vir_eval)
+Evaluator::Evaluator(const Settings &settings, eval_mode_t eval_modes)
     : settings(settings),
       interpreter(settings),
       inc_evaluator(interpreter),
       vir_evaluator(settings),
-      use_inc_eval(use_inc_eval),
-      use_vir_eval(use_vir_eval),
+      use_inc_eval(eval_modes & EVAL_INCREMENTAL),
+      use_vir_eval(eval_modes & EVAL_VIRTUAL),
       check_range(true),
       check_eval_time(settings.max_eval_secs >= 0),
       is_debug(Log::get().level == Log::Level::DEBUG) {}
@@ -230,15 +229,16 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
   return result;
 }
 
-bool Evaluator::supportsIncEval(const Program &p) {
-  bool result = inc_evaluator.init(p);
-  inc_evaluator.reset();
-  return result;
-}
-
-bool Evaluator::supportsVirEval(const Program &p) {
-  bool result = vir_evaluator.init(p);
-  vir_evaluator.reset();
+bool Evaluator::supportsEvalModes(const Program &p, eval_mode_t eval_modes) {
+  bool result = true;
+  if (eval_modes & EVAL_INCREMENTAL) {
+    result = result && inc_evaluator.init(p);
+    inc_evaluator.reset();
+  }
+  if (eval_modes & EVAL_VIRTUAL) {
+    result = result && vir_evaluator.init(p);
+    vir_evaluator.reset();
+  }
   return result;
 }
 
