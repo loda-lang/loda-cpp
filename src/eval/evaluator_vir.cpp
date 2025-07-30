@@ -32,13 +32,13 @@ int64_t extractEmbedded(Program &refactored, Program &extracted,
   // insert seq operation to call the extracted program
   refactored.ops[info.start_pos] =
       Operation(Operation::Type::SEQ,
-                Operand(Operand::Type::DIRECT, Number(info.input_cell)),
+                Operand(Operand::Type::DIRECT, Number(info.output_cell)),
                 Operand(Operand::Type::CONSTANT, Number(dummy_id)));
   overhead -= 1;  // account for the seq operation
   // move the result to the output cell
   if (info.input_cell != info.output_cell) {
     refactored.ops.insert(
-        refactored.ops.begin() + info.start_pos + 1,
+        refactored.ops.begin() + info.start_pos,
         Operation(Operation::Type::MOV,
                   Operand(Operand::Type::DIRECT, Number(info.output_cell)),
                   Operand(Operand::Type::DIRECT, Number(info.input_cell))));
@@ -61,6 +61,11 @@ bool VirtualEvaluator::init(const Program &p) {
     }
     auto &info = found.front();
     auto overhead = extractEmbedded(refactored, extracted, dummy_id, info);
+    std::cout << "\nRefactored:" << std::endl;
+    ProgramUtil::print(refactored, std::cout);
+    std::cout << "\nExtracted:" << std::endl;
+    ProgramUtil::print(extracted, std::cout);
+
     program_cache.insert(dummy_id, extracted);
     program_cache.setOverhead(dummy_id, overhead);
     dummy_id--;
