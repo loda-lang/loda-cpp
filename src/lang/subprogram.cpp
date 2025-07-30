@@ -421,6 +421,7 @@ std::vector<EmbeddedSequenceProgram> Subprogram::findEmbeddedSequencePrograms(
             break;
           }
         }
+        // TODO: in loops we must also check earlier operations
       }
       if (ok) {
         end = i;
