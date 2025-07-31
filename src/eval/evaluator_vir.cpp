@@ -1,6 +1,6 @@
 #include "eval/evaluator_vir.hpp"
 
-#include <iostream>
+// #include <iostream>
 #include <limits>
 
 #include "lang/program_util.hpp"
@@ -61,11 +61,12 @@ bool VirtualEvaluator::init(const Program &p) {
     }
     auto &info = found.front();
     auto overhead = extractEmbedded(refactored, extracted, dummy_id, info);
+    /*
     std::cout << "\nRefactored:" << std::endl;
     ProgramUtil::print(refactored, std::cout);
     std::cout << "\nExtracted:" << std::endl;
     ProgramUtil::print(extracted, std::cout);
-
+    */
     program_cache.insert(dummy_id, extracted);
     program_cache.setOverhead(dummy_id, overhead);
     dummy_id--;

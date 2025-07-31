@@ -330,13 +330,14 @@ class CellTracker {
   int64_t loops = 0;
   int64_t open_loops = 0;
   std::set<int64_t> written_cells;
+  std::set<int64_t> overridden_cells;
 
   bool read(int64_t cell, bool after) {
     if (after) {
       if (written_cells.find(cell) != written_cells.end()) {
         if (output_cell == -1) {
           output_cell = cell;
-        } else {
+        } else if (overridden_cells.find(cell) == overridden_cells.end()) {
           return false;  // multiple output cells found
         }
       }
@@ -373,8 +374,12 @@ class CellTracker {
       if (meta.is_reading_target && !read(op.target.value.asInt(), after)) {
         return false;
       }
-      if (!after && meta.is_writing_target) {
-        written_cells.insert(target);
+      if (meta.is_writing_target) {
+        if (after) {
+          overridden_cells.insert(target);
+        } else {
+          written_cells.insert(target);
+        }
       }
     }
     return open_loops >= 0 || after;
@@ -388,17 +393,30 @@ class CellTracker {
       open_loops = 0;
     }
     output_cell = -1;
+    overridden_cells.clear();
   }
 };
 
 void collectAffectedOperations(const Program &p, int64_t start, int64_t end,
                                std::vector<Operation> &result) {
+  // std::cout << "Collecting affected operations from " << start << " to " <<
+  // end
+  //          << std::endl;
   result.clear();
   const int64_t num_ops = p.ops.size();
   for (int64_t i = end + 1; i < num_ops; i++) {
     result.push_back(p.ops[i]);
   }
-  // TODO: in loops we must also check earlier operations
+  const auto loop = ProgramUtil::getEnclosingLoop(p, start);
+  // std::cout << "Loop found from " << loop.first << " to " << loop.second
+  //          << std::endl;
+  for (int64_t i = loop.first; i < start; i++) {
+    result.push_back(p.ops[i]);
+  }
+  // for (auto &op : result) {
+  //   std::cout << "Affected operation: " << ProgramUtil::operationToString(op)
+  //             << std::endl;
+  // }
 }
 
 std::vector<EmbeddedSequenceProgram> Subprogram::findEmbeddedSequencePrograms(
@@ -429,6 +447,8 @@ std::vector<EmbeddedSequenceProgram> Subprogram::findEmbeddedSequencePrograms(
         collectAffectedOperations(p, start, i, affected_ops);
         for (const auto &op : affected_ops) {
           if (!tracker.update(op, true)) {
+            //  std::cout << "Failed to update tracker with operation: "
+            //            << ProgramUtil::operationToString(op) << std::endl;
             ok = false;
             break;
           }
