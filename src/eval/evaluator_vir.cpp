@@ -20,7 +20,8 @@ int64_t extractEmbedded(Program &refactored, Program &extracted,
   // update the input cell in the extracted program
   ProgramUtil::swapDirectOperandCells(extracted, info.input_cell,
                                       Program::INPUT_CELL);
-  if (info.output_cell != Program::OUTPUT_CELL) {
+  if (info.output_cell != Program::OUTPUT_CELL &&
+      info.output_cell != info.input_cell) {
     extracted.push_back(Operation::Type::MOV, Operand::Type::DIRECT,
                         Number(Program::OUTPUT_CELL), Operand::Type::DIRECT,
                         Number(info.output_cell));

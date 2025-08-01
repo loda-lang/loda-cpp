@@ -64,7 +64,6 @@ void Test::fast() {
   unfold();
   embseq();
   incEval();
-  virEval();
   linearMatcher();
   deltaMatcher();
   digitMatcher();
@@ -78,6 +77,7 @@ void Test::fast() {
 void Test::slow() {
   number();
   randomNumber(100);
+  virEval();
   ackermann();
   stats();
   apiClient();  // requires API server
@@ -711,7 +711,7 @@ void Test::incEval() {
 
 void Test::virEval() {
   // OEIS sequence test cases
-  std::vector<size_t> ids = {40, 394, 401, 2760, 3036};
+  std::vector<size_t> ids = {40, 394, 401, 2760, 3036, 3256};
   for (auto id : ids) {
     checkEvaluator(settings, id, "", EVAL_VIRTUAL, true);
   }
