@@ -334,16 +334,19 @@ class CellTracker {
 
   bool read(int64_t cell, bool after) {
     if (after) {
-      if (written_cells.find(cell) != written_cells.end()) {
+      if (written_cells.find(cell) != written_cells.end() &&
+          overridden_cells.find(cell) == overridden_cells.end()) {
         if (output_cell == -1) {
           output_cell = cell;
-        } else if (overridden_cells.find(cell) == overridden_cells.end()) {
+          // std::cout << "Output cell set to: " << output_cell << std::endl;
+        } else {
           return false;  // multiple output cells found
         }
       }
     } else {
       if (input_cell == -1) {
         input_cell = cell;
+        // std::cout << "Input cell set to: " << input_cell << std::endl;
       } else if (cell != input_cell &&
                  written_cells.find(cell) == written_cells.end()) {
         return false;  // multiple input cells found
@@ -404,13 +407,13 @@ void collectAffectedOperations(const Program &p, int64_t start, int64_t end,
   //          << std::endl;
   result.clear();
   const int64_t num_ops = p.ops.size();
-  for (int64_t i = end + 1; i < num_ops; i++) {
-    result.push_back(p.ops[i]);
-  }
   const auto loop = ProgramUtil::getEnclosingLoop(p, start);
   // std::cout << "Loop found from " << loop.first << " to " << loop.second
   //          << std::endl;
   for (int64_t i = loop.first; i < start; i++) {
+    result.push_back(p.ops[i]);
+  }
+  for (int64_t i = end + 1; i < num_ops; i++) {
     result.push_back(p.ops[i]);
   }
   // for (auto &op : result) {
@@ -433,8 +436,11 @@ std::vector<EmbeddedSequenceProgram> Subprogram::findEmbeddedSequencePrograms(
     if (ProgramUtil::getLoopDepth(p, start) < min_loops_outside) {
       continue;  // skip if not enough loops outside
     }
+    // std::cout << "\nStarting at " << start << ": "
+    //           << ProgramUtil::operationToString(p.ops[start]) << std::endl;
     tracker.reset(false);
     int64_t end = start - 1;
+    int64_t output_cell = -1;
     for (int64_t i = start; i < num_ops; i++) {
       bool ok = tracker.update(p.ops[i], false);
       if (!ok) {
@@ -456,16 +462,21 @@ std::vector<EmbeddedSequenceProgram> Subprogram::findEmbeddedSequencePrograms(
       }
       if (ok) {
         end = i;
+        output_cell = tracker.output_cell;
+        // std::cout << "End found at " << end << ": "
+        //           << ProgramUtil::operationToString(p.ops[end]) << std::endl;
       }
     }
     if (start + min_length <= end && tracker.input_cell != -1 &&
-        tracker.output_cell != -1 &&
-        (result.empty() || result.back().end_pos != end)) {
+        output_cell != -1 && (result.empty() || result.back().end_pos != end)) {
+      // std::cout << "Found embedded sequence program from " << start << " to "
+      //           << end << " with input cell " << tracker.input_cell
+      //           << " and output cell " << output_cell << std::endl;
       EmbeddedSequenceProgram esp;
       esp.start_pos = start;
       esp.end_pos = end;
       esp.input_cell = tracker.input_cell;
-      esp.output_cell = tracker.output_cell;
+      esp.output_cell = output_cell;
       result.emplace_back(esp);
     }
   }
