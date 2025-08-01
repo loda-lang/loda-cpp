@@ -401,25 +401,33 @@ class CellTracker {
 };
 
 void collectAffectedOperations(const Program &p, int64_t start, int64_t end,
-                               std::vector<Operation> &result) {
+                               std::vector<Operation> &before,
+                               std::vector<Operation> &after) {
   // std::cout << "Collecting affected operations from " << start << " to " <<
   // end
   //          << std::endl;
-  result.clear();
+  before.clear();
+  after.clear();
   const int64_t num_ops = p.ops.size();
   const auto loop = ProgramUtil::getEnclosingLoop(p, start);
   // std::cout << "Loop found from " << loop.first << " to " << loop.second
   //          << std::endl;
   for (int64_t i = loop.first; i < start; i++) {
-    result.push_back(p.ops[i]);
+    before.push_back(p.ops[i]);
   }
   for (int64_t i = end + 1; i < num_ops; i++) {
-    result.push_back(p.ops[i]);
+    after.push_back(p.ops[i]);
   }
-  // for (auto &op : result) {
-  //   std::cout << "Affected operation: " << ProgramUtil::operationToString(op)
-  //             << std::endl;
-  // }
+  /*
+  for (auto &op : before) {
+    std::cout << "Affected before operation: "
+              << ProgramUtil::operationToString(op) << std::endl;
+  }
+  for (auto &op : after) {
+    std::cout << "Affected after operation: "
+              << ProgramUtil::operationToString(op) << std::endl;
+  }
+  */
 }
 
 std::vector<EmbeddedSequenceProgram> Subprogram::findEmbeddedSequencePrograms(
@@ -431,7 +439,7 @@ std::vector<EmbeddedSequenceProgram> Subprogram::findEmbeddedSequencePrograms(
     return result;
   }
   CellTracker tracker;
-  std::vector<Operation> affected_ops;
+  std::vector<Operation> affected_before, affected_after;
   for (int64_t start = 0; start + 1 < num_ops; start++) {
     if (ProgramUtil::getLoopDepth(p, start) < min_loops_outside) {
       continue;  // skip if not enough loops outside
@@ -449,9 +457,24 @@ std::vector<EmbeddedSequenceProgram> Subprogram::findEmbeddedSequencePrograms(
       ok = ok && tracker.loops >= min_loops_inside && tracker.open_loops == 0;
       if (ok) {
         // check rest of the program
+        collectAffectedOperations(p, start, i, affected_before, affected_after);
         tracker.reset(true);
-        collectAffectedOperations(p, start, i, affected_ops);
-        for (const auto &op : affected_ops) {
+        for (const auto &op : affected_before) {
+          if (!tracker.update(op, true)) {
+            //  std::cout << "Failed to update tracker with operation: "
+            //            << ProgramUtil::operationToString(op) << std::endl;
+            ok = false;
+            break;
+          }
+        }
+        if (tracker.written_cells.find(tracker.input_cell) !=
+                tracker.written_cells.end() &&
+            tracker.overridden_cells.find(tracker.input_cell) ==
+                tracker.overridden_cells.end()) {
+          ok = false;
+        }
+        tracker.reset(true);
+        for (const auto &op : affected_after) {
           if (!tracker.update(op, true)) {
             //  std::cout << "Failed to update tracker with operation: "
             //            << ProgramUtil::operationToString(op) << std::endl;
