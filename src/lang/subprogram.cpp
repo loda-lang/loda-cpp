@@ -330,17 +330,27 @@ class CellTracker {
   int64_t loops = 0;
   int64_t open_loops = 0;
   std::set<int64_t> written_cells;
+  std::set<int64_t> safely_written_cells;
   std::set<int64_t> overridden_cells;
 
   bool read(int64_t cell, bool after) {
+    /*
+    std::cout << "Reading cell: " << cell << " after: " << after << std::endl;
+    std::cout << "Currently written cells: ";
+    for (const auto &c : written_cells) {
+      std::cout << c << " ";
+    }
+    std::cout << std::endl;
+    */
     if (after) {
       if (written_cells.find(cell) != written_cells.end() &&
           overridden_cells.find(cell) == overridden_cells.end()) {
-        if (output_cell == -1) {
+        if (output_cell == -1 &&
+            safely_written_cells.find(cell) != safely_written_cells.end()) {
           output_cell = cell;
           // std::cout << "Output cell set to: " << output_cell << std::endl;
         } else {
-          return false;  // multiple output cells found
+          return false;  // multiple output cells found or not safely written
         }
       }
     } else {
@@ -381,7 +391,12 @@ class CellTracker {
         if (after) {
           overridden_cells.insert(target);
         } else {
+          // std::cout << "Writing to cell: " << target << std::endl;
           written_cells.insert(target);
+          // safely written only if outside of loops
+          if (open_loops == 0) {
+            safely_written_cells.insert(target);
+          }
         }
       }
     }
@@ -392,6 +407,7 @@ class CellTracker {
     if (!after) {
       input_cell = -1;
       written_cells.clear();
+      safely_written_cells.clear();
       loops = 0;
       open_loops = 0;
     }
@@ -450,6 +466,8 @@ std::vector<EmbeddedSequenceProgram> Subprogram::findEmbeddedSequencePrograms(
     int64_t end = start - 1;
     int64_t output_cell = -1;
     for (int64_t i = start; i < num_ops; i++) {
+      // std::cout << "Checking operation at " << i << ": "
+      //           << ProgramUtil::operationToString(p.ops[i]) << std::endl;
       bool ok = tracker.update(p.ops[i], false);
       if (!ok) {
         break;
