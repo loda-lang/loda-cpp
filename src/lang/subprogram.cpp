@@ -403,7 +403,7 @@ class CellTracker {
     return open_loops >= 0 || after;
   }
 
-  void reset(bool after) {
+  void reset(bool after, bool output) {
     if (!after) {
       input_cell = -1;
       written_cells.clear();
@@ -411,7 +411,9 @@ class CellTracker {
       loops = 0;
       open_loops = 0;
     }
-    output_cell = -1;
+    if (output) {
+      output_cell = -1;
+    }
     overridden_cells.clear();
   }
 };
@@ -462,11 +464,12 @@ std::vector<EmbeddedSequenceProgram> Subprogram::findEmbeddedSequencePrograms(
     }
     // std::cout << "\nStarting at " << start << ": "
     //           << ProgramUtil::operationToString(p.ops[start]) << std::endl;
-    tracker.reset(false);
+    tracker.reset(false, true);
     int64_t end = start - 1;
     int64_t output_cell = -1;
     for (int64_t i = start; i < num_ops; i++) {
-      // std::cout << "Checking operation at " << i << ": "
+      // std::cout << std::endl
+      //           << "Checking operation at " << i << ": "
       //           << ProgramUtil::operationToString(p.ops[i]) << std::endl;
       bool ok = tracker.update(p.ops[i], false);
       if (!ok) {
@@ -476,7 +479,7 @@ std::vector<EmbeddedSequenceProgram> Subprogram::findEmbeddedSequencePrograms(
       if (ok) {
         // check rest of the program
         collectAffectedOperations(p, start, i, affected_before, affected_after);
-        tracker.reset(true);
+        tracker.reset(true, true);
         for (const auto &op : affected_before) {
           if (!tracker.update(op, true)) {
             //  std::cout << "Failed to update tracker with operation: "
@@ -491,7 +494,7 @@ std::vector<EmbeddedSequenceProgram> Subprogram::findEmbeddedSequencePrograms(
                 tracker.overridden_cells.end()) {
           ok = false;
         }
-        tracker.reset(true);
+        tracker.reset(true, false);
         for (const auto &op : affected_after) {
           if (!tracker.update(op, true)) {
             //  std::cout << "Failed to update tracker with operation: "
