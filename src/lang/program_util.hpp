@@ -65,6 +65,9 @@ class ProgramUtil {
   static std::pair<int64_t, int64_t> getEnclosingLoop(const Program &p,
                                                       int64_t op_index);
 
+  static std::pair<int64_t, int64_t> getOutermostLoop(const Program &p,
+                                                      int64_t op_index);
+
   static std::string operandToString(const Operand &op);
 
   static std::string operationToString(const Operation &op);

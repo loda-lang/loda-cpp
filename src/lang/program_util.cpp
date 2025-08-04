@@ -399,6 +399,34 @@ std::pair<int64_t, int64_t> ProgramUtil::getEnclosingLoop(const Program &p,
   return loop;
 }
 
+const int64_t MAX_LOOP_DEPTH = 100;  // magic number
+
+std::pair<int64_t, int64_t> ProgramUtil::getOutermostLoop(const Program &p,
+                                                          int64_t op_index) {
+  // find the first enclosing loop
+  std::pair<int64_t, int64_t> last_loop = getEnclosingLoop(p, op_index);
+  if (last_loop.first < 0 || last_loop.second < 0) {
+    return last_loop;
+  }
+  // check if the loop is nested
+  for (int64_t i = 1; i <= MAX_LOOP_DEPTH; i++) {
+    // check if we are already at the outermost loop
+    if (last_loop.first == 0) {
+      return last_loop;
+    }
+    auto loop = getEnclosingLoop(p, last_loop.first - 1);
+    if (loop.first < 0 || loop.second < 0) {
+      break;
+    }
+    if (loop.first >= last_loop.first || loop.second <= last_loop.second ||
+        i == MAX_LOOP_DEPTH) {
+      throw std::runtime_error("invalid loop nesting");
+    }
+    last_loop = loop;
+  }
+  return last_loop;
+}
+
 std::string getIndent(int indent) {
   std::string s;
   for (int i = 0; i < indent; i++) {

@@ -427,7 +427,7 @@ void collectAffectedOperations(const Program &p, int64_t start, int64_t end,
   before.clear();
   after.clear();
   const int64_t num_ops = p.ops.size();
-  const auto loop = ProgramUtil::getEnclosingLoop(p, start);
+  const auto loop = ProgramUtil::getOutermostLoop(p, start);
   // std::cout << "Loop found from " << loop.first << " to " << loop.second
   //          << std::endl;
   for (int64_t i = loop.first; i < start; i++) {
