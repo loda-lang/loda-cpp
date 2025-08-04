@@ -205,7 +205,7 @@ Number Semantics::fac(const Number& nn, const Number& kk) {
   }
   for (auto i = Number::ZERO; i < k; i += Number::ONE) {
     res *= n;
-    if (res == Number::INF) {
+    if (res == Number::ZERO || res == Number::INF) {
       return res;
     }
     n += d;

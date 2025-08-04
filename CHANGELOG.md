@@ -2,8 +2,11 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v25.8.4
+
 ### Bugfixes
 
+* Fix hanging `fac` operation
 * Fix range computation of `fac` operation
 
 ### Enhancements
