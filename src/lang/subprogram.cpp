@@ -396,8 +396,9 @@ class CellTracker {
         } else {
           // std::cout << "Writing to cell: " << target << std::endl;
           written_cells.insert(target);
-          // safely written only if outside of loops
-          if (open_loops == 0) {
+          // safely written only if mov and outside of loops
+          if (!meta.is_reading_target && !open_loops) {
+            // std::cout << "Safely writing to cell: " << target << std::endl;
             safely_written_cells.insert(target);
           }
         }
@@ -492,6 +493,8 @@ std::vector<EmbeddedSequenceProgram> Subprogram::findEmbeddedSequencePrograms(
           // std::endl;
           tracker.overridden_cells.clear();
           for (const auto &op : affected[t]) {
+            // std::cout << "Checking after: "
+            //           << ProgramUtil::operationToString(op) << std::endl;
             if (!tracker.update(op, true)) {
               //  std::cout << "Failed to update tracker with operation: "
               //            << ProgramUtil::operationToString(op) << std::endl;

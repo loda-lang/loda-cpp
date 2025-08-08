@@ -14,4 +14,5 @@ class VirtualEvaluator {
   Interpreter interpreter;
   Program refactored;
   Memory tmp_memory;
+  const bool is_debug;
 };

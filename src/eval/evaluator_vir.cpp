@@ -5,11 +5,12 @@
 
 #include "lang/program_util.hpp"
 #include "lang/subprogram.hpp"
+#include "sys/log.hpp"
 
 const int64_t MAX_EMBEDDED_PROGRAMS = 10;
 
 VirtualEvaluator::VirtualEvaluator(const Settings &settings)
-    : interpreter(settings) {}
+    : interpreter(settings), is_debug(Log::get().level == Log::Level::DEBUG) {}
 
 int64_t extractEmbedded(Program &refactored, Program &extracted,
                         int64_t dummy_id, const EmbeddedSequenceProgram &info) {
@@ -51,10 +52,10 @@ int64_t extractEmbedded(Program &refactored, Program &extracted,
 bool VirtualEvaluator::init(const Program &p) {
   interpreter.clearCaches();
   refactored = p;
-  bool changed = false;
   int64_t dummy_id = std::numeric_limits<int64_t>::max();
   Program extracted;
   auto &program_cache = interpreter.program_cache;
+  int64_t num_embedded_seqs = 0;
   for (int64_t i = 0; i < MAX_EMBEDDED_PROGRAMS; i++) {
     auto found = Subprogram::findEmbeddedSequencePrograms(refactored, 3, 1, 1);
     if (found.empty()) {
@@ -71,12 +72,21 @@ bool VirtualEvaluator::init(const Program &p) {
     program_cache.insert(dummy_id, extracted);
     program_cache.setOverhead(dummy_id, overhead);
     dummy_id--;
-    changed = true;
+    num_embedded_seqs++;
   }
-  if (!changed) {
+  if (num_embedded_seqs) {
+    if (is_debug) {
+      Log::get().debug("Successfully initialized virtual evaluator with " +
+                       std::to_string(num_embedded_seqs) +
+                       " embedded sequence program(s)");
+    }
+  } else {
     refactored = {};
+    if (is_debug) {
+      Log::get().debug("Virtual evaluation not supported");
+    }
   }
-  return changed;
+  return num_embedded_seqs > 0;
 }
 
 std::pair<Number, size_t> VirtualEvaluator::eval(const Number &input) {
