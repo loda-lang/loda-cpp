@@ -3,8 +3,8 @@
 // #include <iostream>
 #include <limits>
 
+#include "lang/embedded_seq.hpp"
 #include "lang/program_util.hpp"
-#include "lang/subprogram.hpp"
 #include "sys/log.hpp"
 
 const int64_t MAX_EMBEDDED_PROGRAMS = 10;
@@ -13,7 +13,7 @@ VirtualEvaluator::VirtualEvaluator(const Settings &settings)
     : interpreter(settings), is_debug(Log::get().level == Log::Level::DEBUG) {}
 
 int64_t extractEmbedded(Program &refactored, Program &extracted,
-                        int64_t dummy_id, EmbeddedSequenceProgram info) {
+                        int64_t dummy_id, EmbeddedSeq::Result info) {
   int64_t overhead = 0;
   // extract the embedded sequence program
   extracted.ops = {refactored.ops.begin() + info.start_pos,
@@ -67,7 +67,7 @@ bool VirtualEvaluator::init(const Program &p) {
   auto &program_cache = interpreter.program_cache;
   int64_t num_embedded_seqs = 0;
   for (int64_t i = 0; i < MAX_EMBEDDED_PROGRAMS; i++) {
-    auto found = Subprogram::findEmbeddedSequencePrograms(refactored, 3, 1, 1);
+    auto found = EmbeddedSeq::findEmbeddedSequencePrograms(refactored, 3, 1, 1);
     if (found.empty()) {
       break;
     }

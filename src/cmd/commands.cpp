@@ -14,6 +14,7 @@
 #include "form/pari.hpp"
 #include "lang/analyzer.hpp"
 #include "lang/comments.hpp"
+#include "lang/embedded_seq.hpp"
 #include "lang/program_util.hpp"
 #include "lang/subprogram.hpp"
 #include "mine/iterator.hpp"
@@ -258,7 +259,7 @@ void Commands::export_(const std::string& path) {
     ProgramUtil::print(program, std::cout);
   } else if (format == "embseq") {
     ProgramUtil::removeOps(program, Operation::Type::NOP);
-    Subprogram::annotateEmbeddedSequencePrograms(program, 3, 1, 1);
+    EmbeddedSeq::annotateEmbeddedSequencePrograms(program, 3, 1, 1);
     ProgramUtil::print(program, std::cout);
   } else {
     throw std::runtime_error("unknown format");
@@ -852,7 +853,7 @@ void Commands::findEmbseqs() {
       Log::get().warn(std::string(e.what()));
       continue;
     }
-    auto embseqs = Subprogram::findEmbeddedSequencePrograms(program, 3, 1, 1);
+    auto embseqs = EmbeddedSeq::findEmbeddedSequencePrograms(program, 3, 1, 1);
     if (!embseqs.empty()) {
       Log::get().info("Found " + std::to_string(embseqs.size()) +
                       " embedded sequence programs in " +

@@ -16,6 +16,7 @@
 #include "form/pari.hpp"
 #include "lang/comments.hpp"
 #include "lang/constants.hpp"
+#include "lang/embedded_seq.hpp"
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
 #include "lang/subprogram.hpp"
@@ -1141,7 +1142,7 @@ void Test::embseq() {
     std::stringstream expected;
     ProgramUtil::print(p, expected);
     Comments::removeComments(p);
-    Subprogram::annotateEmbeddedSequencePrograms(p, 3, 1, 1);
+    EmbeddedSeq::annotateEmbeddedSequencePrograms(p, 3, 1, 1);
     std::stringstream got;
     ProgramUtil::print(p, got);
     if (expected.str() != got.str()) {
