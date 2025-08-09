@@ -711,7 +711,7 @@ void Test::incEval() {
 
 void Test::virEval() {
   // OEIS sequence test cases
-  std::vector<size_t> ids = {40, 394, 401, 2760, 3036, 3256, 288730};
+  std::vector<size_t> ids = {40, 394, 401, 2760, 3036, 3256, 43472, 288730};
   for (auto id : ids) {
     checkEvaluator(settings, id, "", EVAL_VIRTUAL, true);
   }
