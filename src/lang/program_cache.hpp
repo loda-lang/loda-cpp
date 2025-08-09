@@ -11,6 +11,10 @@ class ProgramCache {
 
   int64_t getOffset(int64_t id);
 
+  bool shouldCheckOffset(int64_t id) const;
+
+  void setCheckOffset(int64_t id, bool check);
+
   int64_t getOverhead(int64_t id) const;
 
   void setOverhead(int64_t id, int64_t overhead);
@@ -28,4 +32,5 @@ class ProgramCache {
   std::unordered_map<int64_t, int64_t> offsets;
   std::unordered_map<int64_t, int64_t> overheads;
   std::unordered_set<int64_t> missing;
+  std::unordered_set<int64_t> skip_check_offsets;
 };

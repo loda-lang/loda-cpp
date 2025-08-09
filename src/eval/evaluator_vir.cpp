@@ -75,6 +75,7 @@ bool VirtualEvaluator::init(const Program &p) {
     auto &info = found.front();
     auto overhead = extractEmbedded(refactored, extracted, dummy_id, info);
     program_cache.insert(dummy_id, extracted);
+    program_cache.setCheckOffset(dummy_id, false);
     program_cache.setOverhead(dummy_id, overhead);
     dummy_id--;
     num_embedded_seqs++;

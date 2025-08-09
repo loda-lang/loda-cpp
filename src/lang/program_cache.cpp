@@ -78,6 +78,18 @@ int64_t ProgramCache::getOffset(int64_t id) {
   return offsets[id];
 }
 
+bool ProgramCache::shouldCheckOffset(int64_t id) const {
+  return skip_check_offsets.find(id) == skip_check_offsets.end();
+}
+
+void ProgramCache::setCheckOffset(int64_t id, bool check) {
+  if (check) {
+    skip_check_offsets.erase(id);  // check enabled per default
+  } else {
+    skip_check_offsets.insert(id);
+  }
+}
+
 int64_t ProgramCache::getOverhead(int64_t id) const {
   const auto it = overheads.find(id);
   return it != overheads.end() ? it->second : 0;
@@ -98,4 +110,5 @@ void ProgramCache::clear() {
   offsets.clear();
   overheads.clear();
   missing.clear();
+  skip_check_offsets.clear();
 }

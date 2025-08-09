@@ -399,7 +399,8 @@ std::pair<Number, size_t> Interpreter::callSeq(int64_t id, const Number& arg) {
   auto& call_program = program_cache.getProgram(id);
 
   // check for invalid arguments
-  if (arg < program_cache.getOffset(id)) {
+  if (program_cache.shouldCheckOffset(id) &&
+      arg < program_cache.getOffset(id)) {
     throw std::runtime_error(ERROR_SEQ_USING_INVALID_ARG);
   }
 
