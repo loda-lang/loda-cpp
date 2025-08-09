@@ -2,6 +2,12 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v25.8.9
+
+### Enhancements
+
+* Improve performance of embedded sequence programs (virtual evaluation)
+
 ## v25.8.4
 
 ### Bugfixes
@@ -9,9 +15,6 @@ To install or update LODA, please follow the [installation instructions](https:/
 * Fix hanging `fac` operation
 * Fix range computation of `fac` operation
 
-### Enhancements
-
-* Improve evaluation performance of embedded sequence programs
 * Improve check for simpler programs
 
 ## v25.7.24
