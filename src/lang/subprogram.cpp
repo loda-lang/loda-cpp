@@ -330,7 +330,7 @@ class CellTracker {
   int64_t loops = 0;
   int64_t open_loops = 0;
   std::set<int64_t> written_cells;
-  std::set<int64_t> safely_written_cells;
+  std::map<int64_t, int64_t> safely_written_cells;
   std::set<int64_t> overridden_cells;
 
   bool read(int64_t cell, bool after) {
@@ -359,9 +359,10 @@ class CellTracker {
       if (input_cell == -1) {
         input_cell = cell;
         // std::cout << "Input cell set to: " << input_cell << std::endl;
-      } else if (cell != input_cell &&
-                 written_cells.find(cell) == written_cells.end()) {
-        // std::cout << "Error 2" << std::endl;
+      } else if (cell != input_cell && safely_written_cells.find(cell) ==
+                                           safely_written_cells.end()) {
+        // std::cout << "Failed reading from non-safely written cell " << cell
+        //           << std::endl;
         return false;  // multiple input cells found
       }
     }
@@ -373,9 +374,29 @@ class CellTracker {
       if (op.type == Operation::Type::LPB) {
         loops++;
         open_loops++;
+        for (auto &it : safely_written_cells) {
+          it.second++;
+        }
       } else if (op.type == Operation::Type::LPE) {
         open_loops--;
+        for (auto it = safely_written_cells.begin();
+             it != safely_written_cells.end();) {
+          if (it->second > 0) {
+            it->second--;
+            it++;
+          } else {
+            it = safely_written_cells.erase(it);
+          }
+        }
       }
+      /*
+      std::cout << "Savely written cells after operation at "
+                << ProgramUtil::operationToString(op) << ": ";
+      for (const auto &it : safely_written_cells) {
+        std::cout << it.first << " (" << it.second << ") ";
+      }
+      std::cout << std::endl;
+      */
     }
     const auto meta = Operation::Metadata::get(op.type);
     // check the source cell
@@ -397,9 +418,12 @@ class CellTracker {
           // std::cout << "Writing to cell: " << target << std::endl;
           written_cells.insert(target);
           // safely written only if mov and outside of loops
-          if (!meta.is_reading_target && !open_loops) {
+          if (!meta.is_reading_target) {
             // std::cout << "Safely writing to cell: " << target << std::endl;
-            safely_written_cells.insert(target);
+            if (safely_written_cells.find(target) ==
+                safely_written_cells.end()) {
+              safely_written_cells[target] = 0;
+            }
           }
         }
       }
