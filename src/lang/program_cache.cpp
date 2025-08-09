@@ -78,6 +78,15 @@ int64_t ProgramCache::getOffset(int64_t id) {
   return offsets[id];
 }
 
+int64_t ProgramCache::getOverhead(int64_t id) const {
+  const auto it = overheads.find(id);
+  return it != overheads.end() ? it->second : 0;
+}
+
+void ProgramCache::setOverhead(int64_t id, int64_t overhead) {
+  overheads[id] = overhead;
+}
+
 void ProgramCache::insert(int64_t id, const Program& p) {
   programs[id] = p;
   missing.erase(id);
@@ -87,5 +96,6 @@ void ProgramCache::insert(int64_t id, const Program& p) {
 void ProgramCache::clear() {
   programs.clear();
   offsets.clear();
+  overheads.clear();
   missing.clear();
 }

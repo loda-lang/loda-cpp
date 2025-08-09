@@ -74,8 +74,22 @@ bool isBetterIncEval(const Program& existing, const Program& optimized,
     return false;
   }
   bool optimized_has_seq = ProgramUtil::hasOp(optimized, Operation::Type::SEQ);
-  return (!evaluator.supportsIncEval(existing) &&
-          evaluator.supportsIncEval(optimized) && !optimized_has_seq);
+  return (!evaluator.supportsEvalModes(existing, EVAL_INCREMENTAL) &&
+          evaluator.supportsEvalModes(optimized, EVAL_INCREMENTAL) &&
+          !optimized_has_seq);
+}
+
+bool isBetterVirEval(const Program& existing, const Program& optimized,
+                     Evaluator& evaluator) {
+  // avoid overwriting programs w/o nested loops
+  if (ProgramUtil::numOps(existing, Operation::Type::LPB) < 2) {
+    return false;
+  }
+  auto num_seq_existing = ProgramUtil::numOps(existing, Operation::Type::SEQ);
+  auto num_seq_optimized = ProgramUtil::numOps(optimized, Operation::Type::SEQ);
+  return (!evaluator.supportsEvalModes(existing, EVAL_VIRTUAL) &&
+          evaluator.supportsEvalModes(optimized, EVAL_VIRTUAL) &&
+          num_seq_existing <= num_seq_optimized);
 }
 
 Checker::Checker(const Settings& settings, Evaluator& evaluator,
@@ -240,7 +254,7 @@ std::string Checker::isOptimizedBetter(Program existing, Program optimized,
   }
 
   // consider incremental evaluation only for programs that are not
-  // used by other programs and that don't require a full check
+  // used by many other programs and that don't require a full check
   if (!full_check && num_usages < 5) {  // magic number
     // check if the optimized program supports incremental evaluation
     if (isBetterIncEval(existing, optimized, evaluator)) {
@@ -248,6 +262,13 @@ std::string Checker::isOptimizedBetter(Program existing, Program optimized,
     } else if (isBetterIncEval(optimized, existing, evaluator)) {
       return not_better;
     }
+  }
+
+  // check if the optimized program supports virtual evaluation
+  if (isBetterVirEval(existing, optimized, evaluator)) {
+    return "Faster (VE)";
+  } else if (isBetterVirEval(optimized, existing, evaluator)) {
+    return not_better;
   }
 
   // ======= EVALUATION CHECKS =========

@@ -21,11 +21,13 @@ void steps_t::add(const steps_t &s) {
   runs += s.runs;
 }
 
-Evaluator::Evaluator(const Settings &settings, bool use_inc_eval)
+Evaluator::Evaluator(const Settings &settings, eval_mode_t eval_modes)
     : settings(settings),
       interpreter(settings),
       inc_evaluator(interpreter),
-      use_inc_eval(use_inc_eval),
+      vir_evaluator(settings),
+      use_inc_eval(eval_modes & EVAL_INCREMENTAL),
+      use_vir_eval(eval_modes & EVAL_VIRTUAL),
       check_range(true),
       check_eval_time(settings.max_eval_secs >= 0),
       is_debug(Log::get().level == Log::Level::DEBUG) {}
@@ -43,17 +45,23 @@ steps_t Evaluator::eval(const Program &p, Sequence &seq, int64_t num_terms,
   steps_t steps;
   size_t s;
   const bool use_inc = use_inc_eval && inc_evaluator.init(p);
-  std::pair<Number, size_t> inc_result;
+  const bool use_vir = !use_inc && use_vir_eval && vir_evaluator.init(p);
+  std::pair<Number, size_t> tmp_result;
   const int64_t offset = ProgramUtil::getOffset(p);
   for (int64_t i = 0; i < num_terms; i++) {
+    const int64_t index = i + offset;
     try {
       if (use_inc) {
-        inc_result = inc_evaluator.next();
-        seq[i] = inc_result.first;
-        s = inc_result.second;
+        tmp_result = inc_evaluator.next();
+        seq[i] = tmp_result.first;
+        s = tmp_result.second;
+      } else if (use_vir) {
+        tmp_result = vir_evaluator.eval(index);
+        seq[i] = tmp_result.first;
+        s = tmp_result.second;
       } else {
         mem.clear();
-        mem.set(Program::INPUT_CELL, i + offset);
+        mem.set(Program::INPUT_CELL, index);
         s = interpreter.run(p, mem);
         seq[i] = mem.get(Program::OUTPUT_CELL);
       }
@@ -68,13 +76,12 @@ steps_t Evaluator::eval(const Program &p, Sequence &seq, int64_t num_terms,
         return steps;
       }
     }
-
     steps.add(s);
     if (settings.use_steps) {
       seq[i] = s;
     }
     if (settings.print_as_b_file) {
-      std::cout << (offset + i) << " " << seq[i] << std::endl;
+      std::cout << index << " " << seq[i] << std::endl;
     }
   }
   if (is_debug) {
@@ -154,7 +161,8 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
   // clear cache to correctly detect recursion errors
   interpreter.clearCaches();
   const bool use_inc = use_inc_eval && inc_evaluator.init(p);
-  std::pair<Number, size_t> inc_result;
+  const bool use_vir = !use_inc && use_vir_eval && vir_evaluator.init(p);
+  std::pair<Number, size_t> tmp_result;
   std::pair<status_t, steps_t> result;
   result.first = status_t::OK;
   Memory mem;
@@ -165,8 +173,11 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
     if (result.first == status_t::OK) {
       try {
         if (use_inc) {
-          inc_result = inc_evaluator.next();
-          out = inc_result.first;
+          tmp_result = inc_evaluator.next();
+          out = tmp_result.first;
+        } else if (use_vir) {
+          tmp_result = vir_evaluator.eval(index);
+          out = tmp_result.first;
         } else {
           mem.clear();
           mem.set(Program::INPUT_CELL, index);
@@ -218,9 +229,16 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
   return result;
 }
 
-bool Evaluator::supportsIncEval(const Program &p) {
-  bool result = inc_evaluator.init(p);
-  inc_evaluator.reset();
+bool Evaluator::supportsEvalModes(const Program &p, eval_mode_t eval_modes) {
+  bool result = true;
+  if (eval_modes & EVAL_INCREMENTAL) {
+    result = result && inc_evaluator.init(p);
+    inc_evaluator.reset();
+  }
+  if (eval_modes & EVAL_VIRTUAL) {
+    result = result && vir_evaluator.init(p);
+    vir_evaluator.reset();
+  }
   return result;
 }
 

@@ -5,7 +5,6 @@
 #include <sstream>
 
 #include "eval/evaluator.hpp"
-#include "eval/evaluator_inc.hpp"
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
 #include "oeis/oeis_sequence.hpp"
@@ -27,7 +26,7 @@ std::string fillString(std::string s, size_t n) {
 void Benchmark::operations() {
   std::cout << "| Operation |  Time     |" << std::endl;
   std::cout << "|-----------|-----------|" << std::endl;
-  std::vector<Number> ops(10000);
+  std::vector<Number> ops(1000);
   int64_t num_digits;
   std::string str;
   for (Number& n : ops) {
@@ -77,12 +76,18 @@ void Benchmark::operations() {
 
 void Benchmark::programs() {
   Setup::setProgramsHome("tests/programs");
-  std::cout << "| Sequence | Terms  | Reg Eval | Inc Eval |" << std::endl;
-  std::cout << "|----------|--------|----------|----------|" << std::endl;
+  std::cout << "| Sequence | Terms  | Reg Eval | Inc Eval | Vir Eval |"
+            << std::endl;
+  std::cout << "|----------|--------|----------|----------|----------|"
+            << std::endl;
+  program(40, 1000);
+  program(394, 1000);
+  program(401, 1000);
   program(796, 300);
   program(1041, 300);
   program(1113, 300);
   program(2110, 300);
+  program(2760, 200);
   program(57552, 300);
   program(79309, 300);
   program(2193, 400);
@@ -101,24 +106,23 @@ void Benchmark::programs() {
 void Benchmark::program(size_t id, size_t num_terms) {
   Parser parser;
   auto program = parser.parse(ProgramUtil::getProgramPath(id));
-  auto speed_reg = programEval(program, false, num_terms);
-  auto speed_inc = programEval(program, true, num_terms);
+  auto speed_reg = programEval(program, EVAL_REGULAR, num_terms);
+  auto speed_inc = programEval(program, EVAL_INCREMENTAL, num_terms);
+  auto speed_vir = programEval(program, EVAL_VIRTUAL, num_terms);
   std::cout << "| " << ProgramUtil::idStr(id) << "  | "
             << fillString(std::to_string(num_terms), 6) << " | "
             << fillString(speed_reg, 8) << " | " << fillString(speed_inc, 8)
-            << " |" << std::endl;
+            << " | " << fillString(speed_vir, 8) << " |" << std::endl;
 }
 
-std::string Benchmark::programEval(const Program& p, bool use_inc_eval,
+std::string Benchmark::programEval(const Program& p, eval_mode_t eval_mode,
                                    size_t num_terms) {
   Settings settings;
-  Interpreter interpreter(settings);
-  IncrementalEvaluator inc_eval(interpreter);
-  if (use_inc_eval && !inc_eval.init(p)) {
+  Evaluator evaluator(settings, eval_mode);
+  if (!evaluator.supportsEvalModes(p, eval_mode)) {
     return "-";
   }
   Sequence result;
-  Evaluator evaluator(settings, use_inc_eval);
   static const size_t runs = 4;
   auto start_time = std::chrono::steady_clock::now();
   for (size_t i = 0; i < runs; i++) {

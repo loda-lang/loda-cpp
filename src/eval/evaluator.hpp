@@ -3,6 +3,7 @@
 #include <chrono>
 
 #include "eval/evaluator_inc.hpp"
+#include "eval/evaluator_vir.hpp"
 #include "eval/interpreter.hpp"
 #include "eval/range_generator.hpp"
 #include "math/sequence.hpp"
@@ -20,9 +21,16 @@ class steps_t {
 
 enum class status_t { OK, WARNING, ERROR };
 
+typedef int64_t eval_mode_t;
+constexpr eval_mode_t EVAL_REGULAR = 1;
+constexpr eval_mode_t EVAL_INCREMENTAL = 2;
+constexpr eval_mode_t EVAL_VIRTUAL = 4;
+constexpr eval_mode_t EVAL_ALL = EVAL_REGULAR | EVAL_INCREMENTAL | EVAL_VIRTUAL;
+
 class Evaluator {
  public:
-  explicit Evaluator(const Settings &settings, bool use_inc_eval = true);
+  explicit Evaluator(const Settings &settings,
+                     eval_mode_t eval_modes = EVAL_ALL);
 
   steps_t eval(const Program &p, Sequence &seq, int64_t num_terms = -1,
                const bool throw_on_error = true);
@@ -35,7 +43,7 @@ class Evaluator {
                                      int64_t num_required_terms = -1,
                                      int64_t id = -1);
 
-  bool supportsIncEval(const Program &p);
+  bool supportsEvalModes(const Program &p, eval_mode_t eval_modes);
 
   IncrementalEvaluator &getIncEvaluator() { return inc_evaluator; }
 
@@ -45,8 +53,10 @@ class Evaluator {
   const Settings &settings;
   Interpreter interpreter;
   IncrementalEvaluator inc_evaluator;
+  VirtualEvaluator vir_evaluator;
   RangeGenerator range_generator;
   const bool use_inc_eval;
+  const bool use_vir_eval;
   const bool check_range;
   const bool check_eval_time;
   const bool is_debug;

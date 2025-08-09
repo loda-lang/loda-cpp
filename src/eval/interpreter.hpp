@@ -24,6 +24,8 @@ class Interpreter {
 
   void clearCaches();
 
+  ProgramCache program_cache;
+
  private:
   Number get(const Operand &a, const Memory &mem,
              bool get_address = false) const;
@@ -41,7 +43,6 @@ class Interpreter {
   bool has_memory;
   size_t num_memory_checks;
 
-  ProgramCache program_cache;
   std::unordered_set<int64_t> running_programs;
   std::unordered_map<std::pair<int64_t, Number>, std::pair<Number, size_t>,
                      IntNumberPairHasher>

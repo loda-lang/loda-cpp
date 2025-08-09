@@ -6,7 +6,6 @@
 #include "cmd/benchmark.hpp"
 #include "cmd/boinc.hpp"
 #include "cmd/test.hpp"
-#include "eval/evaluator.hpp"
 #include "eval/evaluator_inc.hpp"
 #include "eval/minimizer.hpp"
 #include "eval/optimizer.hpp"
@@ -104,7 +103,7 @@ void Commands::help() {
   std::cout << "  -b                   Print result in the OEIS b-file format"
             << std::endl;
   std::cout << "  -o <string>          Export format "
-               "(embseq,formula,loda,pari,range)"
+               "(formula,loda,pari,range)"
             << std::endl;
   std::cout
       << "  -d                   Export with dependencies to other programs"
@@ -501,7 +500,7 @@ void Commands::testSlow() {
   test.slow();
 }
 
-void Commands::testIncEval(const std::string& test_id) {
+void Commands::testEval(const std::string& test_id, eval_mode_t mode) {
   initLog(false);
   Settings settings;
   OeisManager manager(settings);
@@ -515,12 +514,12 @@ void Commands::testIncEval(const std::string& test_id) {
     if (!stats.all_program_ids[id] || (target_id > 0 && id != target_id)) {
       continue;
     }
-    if (Test::checkIncEval(settings, id, "", false)) {
+    if (Test::checkEvaluator(settings, id, "", mode, false)) {
       count++;
     }
   }
-  Log::get().info("Passed incremental evaluation check for " +
-                  std::to_string(count) + " programs");
+  Log::get().info("Passed evaluation check for " + std::to_string(count) +
+                  " programs");
 }
 
 void Commands::testAnalyzer() {

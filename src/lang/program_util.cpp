@@ -318,6 +318,38 @@ int64_t ProgramUtil::getLargestDirectMemoryCell(const Program &p) {
   return largest;
 }
 
+bool ProgramUtil::swapDirectOperandCells(Program &p, int64_t cell1,
+                                         int64_t cell2) {
+  if (cell1 == cell2) {
+    return false;
+  }
+  bool changed = false;
+  for (auto &op : p.ops) {
+    const auto &meta = Operation::Metadata::get(op.type);
+    if (meta.num_operands > 1 && op.source.type == Operand::Type::DIRECT) {
+      auto src = op.source.value.asInt();
+      if (src == cell1) {
+        op.source.value = Number(cell2);
+        changed = true;
+      } else if (src == cell2) {
+        op.source.value = Number(cell1);
+        changed = true;
+      }
+    }
+    if (meta.num_operands > 0 && op.target.type == Operand::Type::DIRECT) {
+      auto trg = op.target.value.asInt();
+      if (trg == cell1) {
+        op.target.value = Number(cell2);
+        changed = true;
+      } else if (trg == cell2) {
+        op.target.value = Number(cell1);
+        changed = true;
+      }
+    }
+  }
+  return changed;
+}
+
 std::pair<int64_t, int64_t> ProgramUtil::getEnclosingLoop(const Program &p,
                                                           int64_t op_index) {
   int64_t open_loops;
