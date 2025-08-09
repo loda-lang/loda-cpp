@@ -4,11 +4,11 @@
 #include <limits>
 #include <sstream>
 
+#include "eval/fold.hpp"
 #include "eval/minimizer.hpp"
 #include "lang/constants.hpp"
 #include "lang/program_cache.hpp"
 #include "lang/program_util.hpp"
-#include "lang/subprogram.hpp"
 #include "oeis/oeis_program.hpp"
 #include "oeis/oeis_sequence.hpp"
 #include "sys/file.hpp"
@@ -124,7 +124,7 @@ check_result_t Checker::checkProgramExtended(Program program, Program existing,
   result.program = program;
 
   // auto-unfold seq operations
-  Subprogram::autoUnfold(program);
+  Fold::autoUnfold(program);
 
   // minimize based on number of terminating terms
   minimizer.optimizeAndMinimize(program, num_minimize);

@@ -7,6 +7,8 @@
 #include "lang/program_util.hpp"
 #include "sys/log.hpp"
 
+// TODO: ensure that "seq using invalid arg" does not occur
+
 const int64_t MAX_EMBEDDED_PROGRAMS = 10;
 
 VirtualEvaluator::VirtualEvaluator(const Settings &settings)

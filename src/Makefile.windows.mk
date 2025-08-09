@@ -11,7 +11,7 @@ CXXFLAGS = $(CXXFLAGS) /DLODA_PLATFORM=$(LODA_PLATFORM)
 !ENDIF
 
 SRCS = cmd/benchmark.cpp cmd/boinc.cpp cmd/commands.cpp cmd/main.cpp cmd/test.cpp \
-  eval/evaluator.cpp eval/evaluator_inc.cpp eval/evaluator_par.cpp eval/evaluator_vir.cpp eval/interpreter.cpp eval/memory.cpp eval/minimizer.cpp eval/optimizer.cpp eval/range.cpp eval/range_generator.cpp eval/semantics.cpp \
+  eval/evaluator.cpp eval/evaluator_inc.cpp eval/evaluator_par.cpp eval/evaluator_vir.cpp eval/fold.cpp eval/interpreter.cpp eval/memory.cpp eval/minimizer.cpp eval/optimizer.cpp eval/range.cpp eval/range_generator.cpp eval/semantics.cpp \
   form/expression_util.cpp form/expression.cpp form/formula_gen.cpp form/formula_util.cpp form/formula.cpp form/pari.cpp form/variant.cpp \
   lang/analyzer.cpp lang/comments.cpp lang/constants.cpp lang/embedded_seq.cpp lang/parser.cpp lang/program.cpp lang/program_cache.cpp lang/program_util.cpp lang/subprogram.cpp \
   math/big_number.cpp math/number.cpp math/sequence.cpp \

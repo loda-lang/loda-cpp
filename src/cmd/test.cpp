@@ -7,6 +7,7 @@
 #include <stdexcept>
 
 #include "eval/evaluator.hpp"
+#include "eval/fold.hpp"
 #include "eval/interpreter.hpp"
 #include "eval/minimizer.hpp"
 #include "eval/optimizer.hpp"
@@ -641,7 +642,7 @@ void Test::fold() {
     auto sub = parser.parse(path);
     auto p = t.first;
     cellMap.clear();
-    if (!Subprogram::fold(p, sub, subId, cellMap, settings.max_memory)) {
+    if (!Fold::fold(p, sub, subId, cellMap, settings.max_memory)) {
       Log::get().error("Folding not supported", true);
     }
     if (p != t.second) {
@@ -666,7 +667,7 @@ void Test::unfold() {
   for (const auto& t : tests) {
     Log::get().info("Testing unfold " + std::to_string(i));
     auto p = t.first;
-    if (!Subprogram::autoUnfold(p)) {
+    if (!Fold::autoUnfold(p)) {
       Log::get().error("Unfolding not supported", true);
     }
     if (p != t.second) {
