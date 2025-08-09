@@ -1,5 +1,7 @@
 #include "lang/embedded_seq.hpp"
 
+#include <stdexcept>
+
 #include "lang/comments.hpp"
 #include "lang/program_util.hpp"
 
