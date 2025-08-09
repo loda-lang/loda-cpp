@@ -13,21 +13,12 @@ VirtualEvaluator::VirtualEvaluator(const Settings &settings)
     : interpreter(settings), is_debug(Log::get().level == Log::Level::DEBUG) {}
 
 int64_t extractEmbedded(Program &refactored, Program &extracted,
-                        int64_t dummy_id, const EmbeddedSequenceProgram &info) {
+                        int64_t dummy_id, EmbeddedSequenceProgram info) {
   int64_t overhead = 0;
   // extract the embedded sequence program
   extracted.ops = {refactored.ops.begin() + info.start_pos,
                    refactored.ops.begin() + info.end_pos + 1};
-  // update the input cell in the extracted program
-  ProgramUtil::swapDirectOperandCells(extracted, info.input_cell,
-                                      Program::INPUT_CELL);
-  if (info.output_cell != Program::OUTPUT_CELL &&
-      info.output_cell != info.input_cell) {
-    extracted.push_back(Operation::Type::MOV, Operand::Type::DIRECT,
-                        Number(Program::OUTPUT_CELL), Operand::Type::DIRECT,
-                        Number(info.output_cell));
-    overhead -= 1;  // account for the mov operation
-  }
+
   // remove the extracted program from the refactored program
   refactored.ops.erase(refactored.ops.begin() + info.start_pos,
                        refactored.ops.begin() + info.end_pos);
@@ -44,6 +35,25 @@ int64_t extractEmbedded(Program &refactored, Program &extracted,
         Operation(Operation::Type::MOV,
                   Operand(Operand::Type::DIRECT, Number(info.output_cell)),
                   Operand(Operand::Type::DIRECT, Number(info.input_cell))));
+    overhead -= 1;  // account for the mov operation
+  }
+
+  // update the input cell in the extracted program
+  if (info.input_cell != Program::INPUT_CELL) {
+    ProgramUtil::swapDirectOperandCells(extracted, info.input_cell,
+                                        Program::INPUT_CELL);
+    if (info.output_cell == Program::INPUT_CELL) {
+      info.output_cell = info.input_cell;
+    } else if (info.output_cell == info.input_cell) {
+      info.output_cell = Program::INPUT_CELL;
+    }
+    info.input_cell = Program::INPUT_CELL;
+  }
+  // copy the result into the output cell of the extracted program
+  if (info.output_cell != Program::OUTPUT_CELL) {
+    extracted.push_back(Operation::Type::MOV, Operand::Type::DIRECT,
+                        Number(Program::OUTPUT_CELL), Operand::Type::DIRECT,
+                        Number(info.output_cell));
     overhead -= 1;  // account for the mov operation
   }
   return overhead;
