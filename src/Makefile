@@ -9,7 +9,7 @@ CXXFLAGS += -DLODA_PLATFORM=$(LODA_PLATFORM)
 endif
 
 OBJS = cmd/benchmark.o cmd/boinc.o cmd/commands.o cmd/main.o cmd/test.o \
-  eval/evaluator.o eval/evaluator_inc.o eval/evaluator_par.o eval/evaluator_vir.o eval/interpreter.o eval/memory.o eval/minimizer.o eval/optimizer.o eval/range.o eval/range_generator.o eval/semantics.o \
+  eval/evaluator.o eval/evaluator_inc.o eval/evaluator_par.o eval/evaluator_vir.o eval/fold.o eval/interpreter.o eval/memory.o eval/minimizer.o eval/optimizer.o eval/range.o eval/range_generator.o eval/semantics.o \
   form/expression_util.o form/expression.o form/formula_gen.o form/formula_util.o form/formula.o form/pari.o form/variant.o \
   lang/analyzer.o lang/comments.o lang/constants.o lang/embedded_seq.o lang/parser.o lang/program.o lang/program_cache.o lang/program_util.o lang/subprogram.o \
   math/big_number.o math/number.o math/sequence.o \

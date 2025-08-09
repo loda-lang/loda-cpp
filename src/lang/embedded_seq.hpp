@@ -1,7 +1,5 @@
 #pragma once
 
-#include <map>
-
 #include "lang/program.hpp"
 
 class EmbeddedSeq {

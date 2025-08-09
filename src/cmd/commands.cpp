@@ -7,6 +7,7 @@
 #include "cmd/boinc.hpp"
 #include "cmd/test.hpp"
 #include "eval/evaluator_inc.hpp"
+#include "eval/fold.hpp"
 #include "eval/minimizer.hpp"
 #include "eval/optimizer.hpp"
 #include "eval/range_generator.hpp"
@@ -297,8 +298,7 @@ void Commands::fold(const std::string& main_path, const std::string& sub_id) {
     throw std::runtime_error("subprogram must be given by ID");
   }
   std::map<int64_t, int64_t> cell_map;
-  if (!Subprogram::fold(main, sub.first, sub.second, cell_map,
-                        settings.max_memory)) {
+  if (!Fold::fold(main, sub.first, sub.second, cell_map, settings.max_memory)) {
     throw std::runtime_error("cannot fold program");
   }
   ProgramUtil::print(main, std::cout);
@@ -307,7 +307,7 @@ void Commands::fold(const std::string& main_path, const std::string& sub_id) {
 void Commands::unfold(const std::string& path) {
   initLog(true);
   auto p = OeisProgram::getProgramAndSeqId(path).first;
-  if (!Subprogram::unfold(p)) {
+  if (!Fold::unfold(p)) {
     throw std::runtime_error("cannot unfold program");
   }
   ProgramUtil::print(p, std::cout);
@@ -355,8 +355,7 @@ void Commands::autoFold() {
   std::map<int64_t, int64_t> cell_map;
   size_t main_id, sub_id, main_loops, sub_loops;
   for (main_id = 0; main_id < num_ids; main_id++) {
-    if (programs[main_id].ops.empty() ||
-        !Subprogram::shouldFold(programs[main_id])) {
+    if (programs[main_id].ops.empty() || !Fold::shouldFold(programs[main_id])) {
       continue;
     }
     folded = false;
@@ -371,8 +370,8 @@ void Commands::autoFold() {
         continue;
       }
       cell_map.clear();
-      if (Subprogram::fold(main, programs[sub_id], sub_id, cell_map,
-                           settings.max_memory)) {
+      if (Fold::fold(main, programs[sub_id], sub_id, cell_map,
+                     settings.max_memory)) {
         folded = true;
         break;
       }

@@ -11,12 +11,12 @@
 #include <limits>
 #include <sstream>
 
+#include "eval/fold.hpp"
 #include "eval/interpreter.hpp"
 #include "eval/optimizer.hpp"
 #include "form/formula_gen.hpp"
 #include "lang/comments.hpp"
 #include "lang/program_util.hpp"
-#include "lang/subprogram.hpp"
 #include "mine/config.hpp"
 #include "mine/stats.hpp"
 #include "oeis/oeis_list.hpp"
@@ -975,7 +975,7 @@ bool OeisManager::maintainProgram(size_t id, bool eval) {
       auto updated = program;  // copy program
       auto delta = updateProgramOffset(id, updated);
       ProgramUtil::removeOps(updated, Operation::Type::NOP);
-      Subprogram::autoUnfold(updated);
+      Fold::autoUnfold(updated);
       if (eval) {
         auto num_minimize = OeisProgram::getNumMinimizationTerms(program);
         minimizer.optimizeAndMinimize(updated, num_minimize);
