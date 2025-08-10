@@ -17,10 +17,10 @@
 #include "form/pari.hpp"
 #include "lang/comments.hpp"
 #include "lang/constants.hpp"
-#include "lang/embedded_seq.hpp"
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
 #include "lang/subprogram.hpp"
+#include "lang/virtual_seq.hpp"
 #include "math/big_number.hpp"
 #include "mine/api_client.hpp"
 #include "mine/blocks.hpp"
@@ -64,7 +64,7 @@ void Test::fast() {
   blocks();
   fold();
   unfold();
-  embseq();
+  virtualSeq();
   incEval();
   linearMatcher();
   deltaMatcher();
@@ -79,7 +79,7 @@ void Test::fast() {
 void Test::slow() {
   number();
   randomNumber(100);
-  virEval();
+  virtualEval();
   ackermann();
   stats();
   apiClient();  // requires API server
@@ -711,7 +711,7 @@ void Test::incEval() {
   }
 }
 
-void Test::virEval() {
+void Test::virtualEval() {
   // OEIS sequence test cases
   std::vector<size_t> ids = {40, 394, 401, 2760, 3036, 3256, 43472, 288730};
   for (auto id : ids) {
@@ -1127,27 +1127,27 @@ void Test::checkRanges(int64_t id, bool finite, const std::string& expected) {
   }
 }
 
-void Test::embseq() {
+void Test::virtualSeq() {
   Parser parser;
   size_t i = 1;
-  const std::string dir = std::string("tests") + FILE_SEP + "embseq" + FILE_SEP;
+  const std::string dir = std::string("tests") + FILE_SEP + "virseq" + FILE_SEP;
   while (true) {
     std::stringstream s;
-    s << dir << "E" << std::setw(3) << std::setfill('0') << i << ".asm";
+    s << dir << "V" << std::setw(3) << std::setfill('0') << i << ".asm";
     std::ifstream file(s.str());
     if (!file.good()) {
       break;
     }
-    Log::get().info("Testing embedding sequences in " + s.str());
+    Log::get().info("Testing virtual sequences in " + s.str());
     auto p = parser.parse(file);
     std::stringstream expected;
     ProgramUtil::print(p, expected);
     Comments::removeComments(p);
-    EmbeddedSeq::annotateEmbeddedSequencePrograms(p, 3, 1, 1);
+    VirtualSequence::annotateVirtualSequencePrograms(p, 3, 1, 1);
     std::stringstream got;
     ProgramUtil::print(p, got);
     if (expected.str() != got.str()) {
-      Log::get().error("Unexpected embedded sequence annotation:\n" + got.str(),
+      Log::get().error("Unexpected virtual sequence annotation:\n" + got.str(),
                        true);
     }
     i++;

@@ -1,7 +1,7 @@
 mov $2,$0
 pow $2,2
 lpb $2
-  mov $5,0 ; begin of embedded sequence 1 with input $1
+  mov $5,0 ; begin of virtual sequence 1 with input $1
   mov $7,3
   mov $8,0
   mov $3,$1
@@ -18,7 +18,7 @@ lpb $2
     add $8,2
   lpe
   mov $3,$5
-  min $3,1 ; end of embedded sequence 1 with output $3
+  min $3,1 ; end of virtual sequence 1 with output $3
   sub $0,$3
   add $1,1
   mov $4,$0

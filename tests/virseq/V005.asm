@@ -3,7 +3,7 @@
 mov $1,$0
 pow $1,10
 lpb $1
-  mov $5,$3 ; begin of embedded sequence 1 with input $3
+  mov $5,$3 ; begin of virtual sequence 1 with input $3
   max $5,1
   log $5,10
   add $5,1
@@ -43,7 +43,7 @@ lpb $1
     mod $10,$6
   lpe
   mov $4,$9
-  equ $4,$3 ; end of embedded sequence 1 with output $4
+  equ $4,$3 ; end of virtual sequence 1 with output $4
   add $2,$4
   mov $4,$2
   geq $4,$0

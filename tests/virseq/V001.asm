@@ -7,7 +7,7 @@ mov $7,2
 mov $9,$0
 pow $9,5
 lpb $9
-  mov $2,5 ; begin of embedded sequence 1 with input $6
+  mov $2,5 ; begin of virtual sequence 1 with input $6
   mov $5,2
   mov $8,$6
   nrt $8,2
@@ -21,7 +21,7 @@ lpb $9
     mod $5,6
     sub $8,$3
   lpe
-  equ $8,0 ; end of embedded sequence 1 with output $8
+  equ $8,0 ; end of virtual sequence 1 with output $8
   sub $0,$8
   add $1,$7
   mov $6,$1

@@ -2,11 +2,9 @@
 
 #include <limits>
 
-#include "lang/embedded_seq.hpp"
 #include "lang/program_util.hpp"
+#include "lang/virtual_seq.hpp"
 #include "sys/log.hpp"
-
-// TODO: ensure that "seq using invalid arg" does not occur
 
 const int64_t MAX_EMBEDDED_PROGRAMS = 10;
 
@@ -14,7 +12,7 @@ VirtualEvaluator::VirtualEvaluator(const Settings &settings)
     : interpreter(settings), is_debug(Log::get().level == Log::Level::DEBUG) {}
 
 int64_t extractEmbedded(Program &refactored, Program &extracted,
-                        int64_t dummy_id, EmbeddedSeq::Result info) {
+                        int64_t dummy_id, VirtualSequence::Result info) {
   int64_t overhead = 0;
   // extract the embedded sequence program
   extracted.ops = {refactored.ops.begin() + info.start_pos,
@@ -68,7 +66,8 @@ bool VirtualEvaluator::init(const Program &p) {
   auto &program_cache = interpreter.program_cache;
   int64_t num_embedded_seqs = 0;
   for (int64_t i = 0; i < MAX_EMBEDDED_PROGRAMS; i++) {
-    auto found = EmbeddedSeq::findEmbeddedSequencePrograms(refactored, 3, 1, 1);
+    auto found =
+        VirtualSequence::findVirtualSequencePrograms(refactored, 3, 1, 1);
     if (found.empty()) {
       break;
     }
