@@ -1,11 +1,11 @@
-#include "lang/embedded_seq.hpp"
+#include "lang/virtual_seq.hpp"
 
 #include <stdexcept>
 
 #include "lang/comments.hpp"
 #include "lang/program_util.hpp"
 
-// Helper class for tracking cell usage in embedded sequence programs
+// Helper class for tracking cell usage in virtual sequence programs
 class CellTracker {
  public:
   int64_t input_cell = -1;
@@ -128,10 +128,12 @@ bool collectAffectedOperations(const Program &p, int64_t start, int64_t end,
   return true;
 }
 
-std::vector<EmbeddedSeq::Result> EmbeddedSeq::findEmbeddedSequencePrograms(
-    const Program &p, int64_t min_length, int64_t min_loops_outside,
-    int64_t min_loops_inside) {
-  std::vector<EmbeddedSeq::Result> result;
+std::vector<VirtualSequence::Result>
+VirtualSequence::findVirtualSequencePrograms(const Program &p,
+                                             int64_t min_length,
+                                             int64_t min_loops_outside,
+                                             int64_t min_loops_inside) {
+  std::vector<VirtualSequence::Result> result;
   const int64_t num_ops = p.ops.size();
   if (num_ops == 0 || ProgramUtil::hasIndirectOperand(p)) {
     return result;
@@ -180,7 +182,7 @@ std::vector<EmbeddedSeq::Result> EmbeddedSeq::findEmbeddedSequencePrograms(
     }
     if (start + min_length <= end && tracker.input_cell != -1 &&
         output_cell != -1 && (result.empty() || result.back().end_pos != end)) {
-      EmbeddedSeq::Result esp;
+      VirtualSequence::Result esp;
       esp.start_pos = start;
       esp.end_pos = end;
       esp.input_cell = tracker.input_cell;
@@ -191,20 +193,20 @@ std::vector<EmbeddedSeq::Result> EmbeddedSeq::findEmbeddedSequencePrograms(
   return result;
 }
 
-int64_t EmbeddedSeq::annotateEmbeddedSequencePrograms(
+int64_t VirtualSequence::annotateVirtualSequencePrograms(
     Program &main, int64_t min_length, int64_t min_loops_outside,
     int64_t min_loops_inside) {
   Comments::removeComments(main);
-  auto embs = findEmbeddedSequencePrograms(main, min_length, min_loops_outside,
-                                           min_loops_outside);
+  auto embs = findVirtualSequencePrograms(main, min_length, min_loops_outside,
+                                          min_loops_outside);
   for (size_t i = 0; i < embs.size(); i++) {
     auto &esp = embs[i];
     main.ops.at(esp.start_pos).comment =
-        "begin of embedded sequence " + std::to_string(i + 1) + " with input " +
+        "begin of virtual sequence " + std::to_string(i + 1) + " with input " +
         ProgramUtil::operandToString(
             Operand(Operand::Type::DIRECT, esp.input_cell));
     main.ops.at(esp.end_pos).comment =
-        "end of embedded sequence " + std::to_string(i + 1) + " with output " +
+        "end of virtual sequence " + std::to_string(i + 1) + " with output " +
         ProgramUtil::operandToString(
             Operand(Operand::Type::DIRECT, esp.output_cell));
   }

@@ -40,7 +40,7 @@ class Test {
 
   void incEval();
 
-  void virEval();
+  void virtualEval();
 
   static bool checkEvaluator(const Settings &settings, size_t id,
                              std::string path, eval_mode_t evalMode,
@@ -84,7 +84,7 @@ class Test {
 
   void range();
 
-  void embseq();
+  void virtualSeq();
 
   enum class FormulaType { FORMULA, PARI_FUNCTION, PARI_VECTOR };
 
