@@ -14,6 +14,7 @@ To build LODA, all you need is the `make` (`nmake` on Windows) tool and a standa
 
 The source code is organized into these modules:
 
+* [base](base): Basic common data structures.
 * [cmd](cmd): Commands, tests and main.
 * [eval](eval): Interpreter and evaluation of programs.
 * [form](form): Formula generation from programs.
