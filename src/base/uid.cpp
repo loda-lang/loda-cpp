@@ -1,6 +1,8 @@
 #include "base/uid.hpp"
 
 #include <functional>
+#include <iomanip>
+#include <sstream>
 #include <stdexcept>
 
 // Helper: throw an exception for invalid UID construction
@@ -44,8 +46,8 @@ int64_t UID::number() const {
 }
 
 std::string UID::string() const {
-  char buf[8];  // 1 for domain, 6 for number, 1 for null
-  std::snprintf(buf, sizeof(buf), "%c%06lld", domain(),
-                static_cast<long long>(number()));
-  return std::string(buf);
+  std::stringstream s;
+  s << std::string(1, domain()) << std::setw(6) << std::setfill('0')
+    << number();
+  return s.str();
 }
