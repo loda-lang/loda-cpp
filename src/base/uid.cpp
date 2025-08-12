@@ -1,0 +1,53 @@
+#include "base/uid.hpp"
+
+#include <functional>
+#include <iomanip>
+#include <sstream>
+#include <stdexcept>
+
+// Helper: throw an exception for invalid UID construction
+inline void invalidate(const std::string& key, const std::string& value) {
+  throw std::invalid_argument("Invalid UID " + key + ": " + value);
+}
+
+UID::UID(char domain, int64_t number) { set(domain, number); }
+
+UID::UID(const std::string& s) {
+  if (s.size() != 7 || s[0] < 'A' || s[0] > 'Z') {
+    invalidate("string", "'" + s + "'");
+  }
+  int64_t number = 0;
+  for (int64_t i = 1; i < 7; ++i) {
+    if (s[i] < '0' || s[i] > '9') {
+      invalidate("string", "'" + s + "'");
+    }
+    number = number * 10 + (s[i] - '0');
+  }
+  set(s[0], number);
+}
+
+void UID::set(char domain, int64_t number) {
+  if (domain < 'A' || domain > 'Z') {
+    invalidate("domain", "'" + std::string(1, domain) + "'");
+  }
+  if (number < 0 || number > 999999) {
+    invalidate("number", std::to_string(number));
+  }
+  value = (static_cast<uint64_t>(domain - 'A') << 48) |
+          (number & 0x0000FFFFFFFFFFFF);
+}
+
+char UID::domain() const {
+  return 'A' + static_cast<char>((value >> 48) & 0xFF);
+}
+
+int64_t UID::number() const {
+  return static_cast<int64_t>(value & 0x0000FFFFFFFFFFFF);
+}
+
+std::string UID::string() const {
+  std::stringstream s;
+  s << std::string(1, domain()) << std::setw(6) << std::setfill('0')
+    << number();
+  return s.str();
+}
