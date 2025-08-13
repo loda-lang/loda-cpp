@@ -329,7 +329,7 @@ void Commands::replace(const std::string& search_path,
     auto p = progs[id];
     ProgramUtil::removeOps(p, Operation::Type::NOP);
     if (Subprogram::replaceAllExact(p, search, replace)) {
-      manager.updateProgram(id, p, ValidationMode::BASIC);
+      manager.updateProgram(UID('A', id), p, ValidationMode::BASIC);
       Log::get().info("Replaced in " + ProgramUtil::idStr(id));
       count++;
     }
@@ -398,7 +398,7 @@ void Commands::autoFold() {
         }
       } else {
         auto path = ProgramUtil::getProgramPath(main_id);
-        manager.dumpProgram(main_id, main, path, submitted_by);
+        manager.dumpProgram(UID('A', main_id), main, path, submitted_by);
       }
     }
     if (log_scheduler.isTargetReached()) {
@@ -799,7 +799,7 @@ void Commands::maintain(const std::string& ids) {
     }
   }
   for (size_t id = start; id < end; id++) {
-    manager.maintainProgram(id, eval);
+    manager.maintainProgram(UID('A', id), eval);
   }
 }
 
@@ -884,7 +884,7 @@ void Commands::compare(const std::string& path1, const std::string& path2) {
   if (seq.id < manager.getStats().program_usages.size()) {
     num_usages = manager.getStats().program_usages[seq.id];
   }
-  bool full_check = manager.isFullCheck(seq.id);
+  bool full_check = manager.isFullCheck(UID('A', seq.id));
   Log::get().info(manager.getFinder().getChecker().compare(
       p1, p2, "First", "Second", seq, full_check, num_usages));
 }

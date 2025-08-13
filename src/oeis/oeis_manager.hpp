@@ -43,26 +43,26 @@ class OeisManager {
 
   size_t getTotalCount() const { return total_count; }
 
-  Program getExistingProgram(size_t id);
+  Program getExistingProgram(UID id);
 
-  update_program_result_t updateProgram(size_t id, Program p,
+  update_program_result_t updateProgram(UID id, Program p,
                                         ValidationMode validation_mode);
 
-  bool maintainProgram(size_t id, bool eval = true);
+  bool maintainProgram(UID id, bool eval = true);
 
-  void dumpProgram(size_t id, Program& p, const std::string& file,
+  void dumpProgram(UID id, Program& p, const std::string& file,
                    const std::string& submitted_by) const;
 
   void generateLists();
 
   std::vector<Program> loadAllPrograms();
 
-  bool isIgnored(size_t id) const {
-    return ignore_list.find(id) != ignore_list.end();
+  bool isIgnored(UID id) const {
+    return ignore_list.find(id.number()) != ignore_list.end();
   }
 
-  bool isFullCheck(size_t id) const {
-    return full_check_list.find(id) != full_check_list.end();
+  bool isFullCheck(UID id) const {
+    return full_check_list.find(id.number()) != full_check_list.end();
   }
 
  private:
@@ -78,13 +78,13 @@ class OeisManager {
 
   void addSeqComments(Program& p) const;
 
-  int64_t updateProgramOffset(size_t id, Program& p) const;
+  int64_t updateProgramOffset(UID id, Program& p) const;
 
-  void updateDependentOffset(size_t id, size_t used_id, int64_t delta);
+  void updateDependentOffset(UID id, UID used_id, int64_t delta);
 
-  void updateAllDependentOffset(size_t id, int64_t delta);
+  void updateAllDependentOffset(UID id, int64_t delta);
 
-  void alert(Program p, size_t id, const std::string& prefix,
+  void alert(Program p, UID id, const std::string& prefix,
              const std::string& color, const std::string& submitted_by) const;
 
   const Settings& settings;

@@ -582,7 +582,7 @@ void OeisManager::migrate() {
         auto result = evaluator.check(p, terms, -1, s.id);
         if (result.first != status_t::ERROR) {
           Log::get().info("Migrating " + ProgramUtil::idStr(s.id));
-          dumpProgram(s.id, p, path, submitted_by);
+          dumpProgram(UID('A', s.id), p, path, submitted_by);
         }
         break;
       }
@@ -665,16 +665,16 @@ void OeisManager::addSeqComments(Program &p) const {
   }
 }
 
-int64_t OeisManager::updateProgramOffset(size_t id, Program &p) const {
-  if (id >= sequences.size() || sequences[id].id != id) {
+int64_t OeisManager::updateProgramOffset(UID id, Program &p) const {
+  if (id.number() >= sequences.size() ||
+      sequences[id.number()].id != id.number()) {
     return 0;
   }
-  return ProgramUtil::setOffset(p, sequences[id].offset);
+  return ProgramUtil::setOffset(p, sequences[id.number()].offset);
 }
 
-void OeisManager::updateDependentOffset(size_t id, size_t used_id,
-                                        int64_t delta) {
-  const auto path = ProgramUtil::getProgramPath(id);
+void OeisManager::updateDependentOffset(UID id, UID used_id, int64_t delta) {
+  const auto path = ProgramUtil::getProgramPath(id.number());
   Program p;
   try {
     p = parser.parse(path);
@@ -688,7 +688,7 @@ void OeisManager::updateDependentOffset(size_t id, size_t used_id,
     const auto &op = p.ops[i];
     if (op.type == Operation::Type::SEQ &&
         op.source.type == Operand::Type::CONSTANT &&
-        op.source.value == Number(used_id)) {
+        op.source.value == Number(used_id.number())) {
       Operation add(Operation::Type::ADD, op.target,
                     Operand(Operand::Type::CONSTANT, delta));
       p.ops.insert(p.ops.begin() + i, add);
@@ -702,25 +702,26 @@ void OeisManager::updateDependentOffset(size_t id, size_t used_id,
   }
 }
 
-void OeisManager::updateAllDependentOffset(size_t id, int64_t delta) {
+void OeisManager::updateAllDependentOffset(UID id, int64_t delta) {
   if (delta == 0) {
     return;
   }
   const auto &call_graph = getStats().call_graph;
   for (const auto &entry : call_graph) {
-    if (entry.second == static_cast<int64_t>(id)) {
-      updateDependentOffset(entry.first, entry.second, delta);
+    if (entry.second == static_cast<int64_t>(id.number())) {
+      updateDependentOffset(UID('A', entry.first), UID('A', entry.second),
+                            delta);
     }
   }
 }
 
-void OeisManager::dumpProgram(size_t id, Program &p, const std::string &file,
+void OeisManager::dumpProgram(UID id, Program &p, const std::string &file,
                               const std::string &submitted_by) const {
   ProgramUtil::removeOps(p, Operation::Type::NOP);
   Comments::removeComments(p);
   addSeqComments(p);
   ensureDir(file);
-  const auto &seq = sequences.at(id);
+  const auto &seq = sequences.at(id.number());
   Program tmp;
   Operation nop(Operation::Type::NOP);
   nop.comment = seq.to_string();
@@ -742,7 +743,7 @@ void OeisManager::dumpProgram(size_t id, Program &p, const std::string &file,
   tmp.ops.push_back(nop);
   FormulaGenerator generator;
   Formula formula;
-  if (generator.generate(p, id, formula, false)) {
+  if (generator.generate(p, id.number(), formula, false)) {
     nop.comment = Comments::PREFIX_FORMULA + " " + formula.toString();
     tmp.ops.push_back(nop);
   }
@@ -754,16 +755,16 @@ void OeisManager::dumpProgram(size_t id, Program &p, const std::string &file,
   out.close();
 }
 
-void OeisManager::alert(Program p, size_t id, const std::string &prefix,
+void OeisManager::alert(Program p, UID id, const std::string &prefix,
                         const std::string &color,
                         const std::string &submitted_by) const {
-  const auto &seq = sequences.at(id);
+  const auto &seq = sequences.at(id.number());
   std::string msg, full;
   msg = prefix + " program for " + seq.to_string();
   full = msg + " Terms: " + seq.getTerms(settings.num_terms).to_string();
   FormulaGenerator generator;
   Formula formula;
-  if (generator.generate(p, id, formula, false)) {
+  if (generator.generate(p, id.number(), formula, false)) {
     full += ". " + Comments::PREFIX_FORMULA + " " + formula.toString();
   }
   if (!submitted_by.empty()) {
@@ -786,9 +787,10 @@ void OeisManager::alert(Program p, size_t id, const std::string &prefix,
   Log::get().alert(msg, details);
 }
 
-Program OeisManager::getExistingProgram(size_t id) {
-  const std::string global_file = ProgramUtil::getProgramPath(id, false);
-  const std::string local_file = ProgramUtil::getProgramPath(id, true);
+Program OeisManager::getExistingProgram(UID id) {
+  const std::string global_file =
+      ProgramUtil::getProgramPath(id.number(), false);
+  const std::string local_file = ProgramUtil::getProgramPath(id.number(), true);
   const bool has_global = isFile(global_file);
   const bool has_local = isFile(local_file);
   Program existing;
@@ -805,15 +807,16 @@ Program OeisManager::getExistingProgram(size_t id) {
 }
 
 update_program_result_t OeisManager::updateProgram(
-    size_t id, Program p, ValidationMode validation_mode) {
+    UID id, Program p, ValidationMode validation_mode) {
   update_program_result_t result;
   result.updated = false;
   result.is_new = false;
   result.previous_hash = 0;
 
   // ignore this sequence?
-  if (id == 0 || id >= sequences.size() || !sequences[id].id ||
-      ignore_list.find(id) != ignore_list.end()) {
+  if (id.number() == 0 || id.number() >= sequences.size() ||
+      !sequences[id.number()].id ||
+      ignore_list.find(id.number()) != ignore_list.end()) {
     return result;
   }
 
@@ -831,7 +834,7 @@ update_program_result_t OeisManager::updateProgram(
   }
 
   // check if there is an existing program already
-  auto &seq = sequences[id];
+  auto &seq = sequences[id.number()];
   auto existing = getExistingProgram(id);
   bool is_new = existing.ops.empty();
 
@@ -878,7 +881,8 @@ update_program_result_t OeisManager::updateProgram(
 
   // write new or better program version
   const bool is_server = (Setup::getMiningMode() == MINING_MODE_SERVER);
-  const std::string target_file = ProgramUtil::getProgramPath(id, !is_server);
+  const std::string target_file =
+      ProgramUtil::getProgramPath(id.number(), !is_server);
   auto delta = updateProgramOffset(id, result.program);
   optimizer.optimize(result.program);
   dumpProgram(id, result.program, target_file, submitted_by);
@@ -904,12 +908,12 @@ update_program_result_t OeisManager::updateProgram(
 }
 
 // returns false if the program was removed, otherwise true
-bool OeisManager::maintainProgram(size_t id, bool eval) {
+bool OeisManager::maintainProgram(UID id, bool eval) {
   // check if the sequence exists
-  if (id >= sequences.size()) {
+  if (id.number() >= sequences.size()) {
     return true;
   }
-  auto &s = sequences[id];
+  auto &s = sequences[id.number()];
   if (s.id == 0) {
     return true;
   }
@@ -955,7 +959,8 @@ bool OeisManager::maintainProgram(size_t id, bool eval) {
     auto extended_seq = s.getTerms(OeisSequence::FULL_SEQ_LENGTH);
     auto num_required = OeisProgram::getNumRequiredTerms(program);
     try {
-      auto res = evaluator.check(program, extended_seq, num_required, id);
+      auto res =
+          evaluator.check(program, extended_seq, num_required, id.number());
       if (Signals::HALT) {
         return true;  // interrupted evaluation
       }
@@ -982,8 +987,8 @@ bool OeisManager::maintainProgram(size_t id, bool eval) {
       } else {
         optimizer.optimize(updated);
       }
-      dumpProgram(s.id, updated, file_name, submitted_by);
-      updateAllDependentOffset(s.id, delta);
+      dumpProgram(UID('A', s.id), updated, file_name, submitted_by);
+      updateAllDependentOffset(UID('A', s.id), delta);
     } catch (const std::exception &e) {
       is_okay = false;
     }
