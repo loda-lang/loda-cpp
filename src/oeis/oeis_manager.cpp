@@ -666,8 +666,8 @@ void OeisManager::addSeqComments(Program &p) const {
 }
 
 int64_t OeisManager::updateProgramOffset(UID id, Program &p) const {
-  if (id.number() >= sequences.size() ||
-      sequences[id.number()].id != id.number()) {
+  if (id.number() >= static_cast<int64_t>(sequences.size()) ||
+      static_cast<int64_t>(sequences[id.number()].id) != id.number()) {
     return 0;
   }
   return ProgramUtil::setOffset(p, sequences[id.number()].offset);
@@ -814,7 +814,8 @@ update_program_result_t OeisManager::updateProgram(
   result.previous_hash = 0;
 
   // ignore this sequence?
-  if (id.number() == 0 || id.number() >= sequences.size() ||
+  if (id.number() == 0 ||
+      id.number() >= static_cast<int64_t>(sequences.size()) ||
       !sequences[id.number()].id ||
       ignore_list.find(id.number()) != ignore_list.end()) {
     return result;
@@ -910,7 +911,7 @@ update_program_result_t OeisManager::updateProgram(
 // returns false if the program was removed, otherwise true
 bool OeisManager::maintainProgram(UID id, bool eval) {
   // check if the sequence exists
-  if (id.number() >= sequences.size()) {
+  if (id.number() >= static_cast<int64_t>(sequences.size())) {
     return true;
   }
   auto &s = sequences[id.number()];
