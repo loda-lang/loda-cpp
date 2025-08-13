@@ -134,7 +134,7 @@ std::size_t SequenceHasher::operator()(const Sequence &s) const {
   return seed;
 }
 
-void SequenceToIdsMap::remove(Sequence seq, size_t id) {
+void SequenceToIdsMap::remove(const Sequence &seq, UID id) {
   auto ids = find(seq);
   if (ids != end()) {
     auto it = ids->second.begin();

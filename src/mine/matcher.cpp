@@ -34,7 +34,7 @@ void AbstractMatcher<T>::insert(const Sequence &norm_seq, size_t id) {
   auto reduced = reduce(norm_seq, false);
   if (!reduced.first.empty()) {
     data[id] = reduced.second;
-    ids[reduced.first].push_back(id);
+    ids[reduced.first].push_back(UID('A', id));
   }
 }
 
@@ -42,7 +42,7 @@ template <class T>
 void AbstractMatcher<T>::remove(const Sequence &norm_seq, size_t id) {
   auto reduced = reduce(norm_seq, false);
   if (!reduced.first.empty()) {
-    ids.remove(reduced.first, id);
+    ids.remove(reduced.first, UID('A', id));
     data.erase(id);
   }
 }
@@ -61,8 +61,8 @@ void AbstractMatcher<T>::match(const Program &p, const Sequence &norm_seq,
   if (it != ids.end()) {
     for (auto id : it->second) {
       Program copy = p;
-      if (extend(copy, data.at(id), reduced.second)) {
-        result.push_back(std::pair<size_t, Program>(id, copy));
+      if (extend(copy, data.at(id.number()), reduced.second)) {
+        result.push_back(std::pair<size_t, Program>(id.number(), copy));
         if (backoff && (Random::get().gen() % 10) == 0)  // magic number
         {
           // avoid to many matches for the same sequence

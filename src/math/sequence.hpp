@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "base/uid.hpp"
 #include "math/number.hpp"
 
 class Sequence : public std::vector<Number> {
@@ -37,7 +38,7 @@ struct SequenceHasher {
 };
 
 class SequenceToIdsMap
-    : public std::unordered_map<Sequence, std::vector<size_t>, SequenceHasher> {
+    : public std::unordered_map<Sequence, std::vector<UID>, SequenceHasher> {
  public:
-  void remove(Sequence seq, size_t id);
+  void remove(const Sequence &seq, UID id);
 };
