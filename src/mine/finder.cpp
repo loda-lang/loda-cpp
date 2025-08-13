@@ -123,7 +123,7 @@ void Finder::findAll(const Program &p, const Sequence &norm_seq,
       auto res = evaluator.check(t.second, expected_seq, num_required,
                                  t.first.number());
       if (res.first == status_t::ERROR) {
-        invalid_matches.insert(t.first.number());
+        invalid_matches.insert(t.first);
         // Log::get().warn( "Ignoring invalid match for " + s.id_str() );
       } else {
         result.push_back(t);

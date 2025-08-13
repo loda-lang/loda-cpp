@@ -3,15 +3,16 @@
 #include <map>
 #include <string>
 
+#include "base/uid.hpp"
 #include "sys/util.hpp"
 
 class InvalidMatches {
  public:
   InvalidMatches();
   void load();
-  void insert(size_t id);
+  void insert(UID id);
   static void deleteFile();
-  bool hasTooMany(size_t id) const;
+  bool hasTooMany(UID id) const;
 
  private:
   std::map<size_t, int64_t> invalid_matches;

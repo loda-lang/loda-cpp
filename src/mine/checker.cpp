@@ -116,7 +116,7 @@ check_result_t Checker::checkProgramExtended(Program program, Program existing,
   auto check_vanilla =
       evaluator.check(program, extended_seq, num_required, seq.id);
   if (check_vanilla.first == status_t::ERROR) {
-    invalid_matches.insert(seq.id);
+    invalid_matches.insert(UID('A', seq.id));
     return result;  // not correct
   }
 
@@ -204,7 +204,7 @@ check_result_t Checker::checkProgramBasic(const Program& program,
   // check the program
   auto check = evaluator.check(program, terms, num_required, seq.id);
   if (check.first == status_t::ERROR) {
-    invalid_matches.insert(seq.id);  // not correct
+    invalid_matches.insert(UID('A', seq.id));  // not correct
     return result;
   }
 

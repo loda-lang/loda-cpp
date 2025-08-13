@@ -285,7 +285,7 @@ bool OeisManager::shouldMatch(const OeisSequence &seq) const {
   }
 
   // too many invalid matches already?
-  bool too_many_matches = invalid_matches.hasTooMany(seq.id);
+  bool too_many_matches = invalid_matches.hasTooMany(UID('A', seq.id));
 
   // check if program exists
   const bool prog_exists = (seq.id < stats->all_program_ids.size()) &&
