@@ -1502,6 +1502,7 @@ void eval(const Program& p, Evaluator& evaluator, Sequence& s) {
 void Test::testMatcherPair(Matcher& matcher, size_t id1, size_t id2) {
   Log::get().info("Testing " + matcher.getName() + " matcher for " +
                   ProgramUtil::idStr(id1) + " -> " + ProgramUtil::idStr(id2));
+  UID uid1('A', id1), uid2('A', id2);
   Parser parser;
   Evaluator evaluator(settings);
   auto p1 = parser.parse(ProgramUtil::getProgramPath(id1));
@@ -1511,15 +1512,15 @@ void Test::testMatcherPair(Matcher& matcher, size_t id1, size_t id2) {
   Sequence s1, s2, s3;
   eval(p1, evaluator, s1);
   eval(p2, evaluator, s2);
-  matcher.insert(s2, id2);
+  matcher.insert(s2, uid2);
   Matcher::seq_programs_t result;
   matcher.match(p1, s1, result);
-  matcher.remove(s2, id2);
+  matcher.remove(s2, uid2);
   if (result.size() != 1) {
     Log::get().error(matcher.getName() + " matcher unable to match sequence",
                      true);
   }
-  if (result[0].first != id2) {
+  if (result[0].first != uid2) {
     Log::get().error(
         matcher.getName() + " matcher returned unexpected sequence ID", true);
   }

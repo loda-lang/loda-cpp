@@ -3,13 +3,14 @@
 #include <memory>
 #include <unordered_set>
 
+#include "base/uid.hpp"
 #include "lang/program.hpp"
 #include "mine/extender.hpp"
 #include "mine/reducer.hpp"
 
 class Matcher {
  public:
-  using seq_programs_t = std::vector<std::pair<size_t, Program>>;
+  using seq_programs_t = std::vector<std::pair<UID, Program>>;
 
   using UPtr = std::unique_ptr<Matcher>;
 
@@ -26,9 +27,9 @@ class Matcher {
 
   virtual ~Matcher() {}
 
-  virtual void insert(const Sequence &norm_seq, size_t id) = 0;
+  virtual void insert(const Sequence &norm_seq, UID id) = 0;
 
-  virtual void remove(const Sequence &norm_seq, size_t id) = 0;
+  virtual void remove(const Sequence &norm_seq, UID id) = 0;
 
   virtual void match(const Program &p, const Sequence &norm_seq,
                      seq_programs_t &result) const = 0;
@@ -48,9 +49,9 @@ class AbstractMatcher : public Matcher {
 
   virtual ~AbstractMatcher() {}
 
-  virtual void insert(const Sequence &norm_seq, size_t id) override;
+  virtual void insert(const Sequence &norm_seq, UID id) override;
 
-  virtual void remove(const Sequence &norm_seq, size_t id) override;
+  virtual void remove(const Sequence &norm_seq, UID id) override;
 
   virtual void match(const Program &p, const Sequence &norm_seq,
                      seq_programs_t &result) const override;
@@ -72,7 +73,7 @@ class AbstractMatcher : public Matcher {
 
   std::string name;
   SequenceToIdsMap ids;
-  std::unordered_map<size_t, T> data;
+  std::unordered_map<UID, T> data;
   mutable std::unordered_set<Sequence, SequenceHasher> match_attempts;
   bool backoff;
 };

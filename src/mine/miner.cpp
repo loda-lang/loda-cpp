@@ -234,7 +234,8 @@ void Miner::runMineLoop() {
       if (!id.empty()) {
         try {
           OeisSequence seq(id);
-          seq_programs.push_back(std::pair<size_t, Program>(seq.id, program));
+          seq_programs.push_back(
+              std::pair<UID, Program>(UID('A', seq.id), program));
         } catch (const std::exception &) {
           Log::get().warn("Invalid sequence ID: " + id);
         }
@@ -254,7 +255,7 @@ void Miner::runMineLoop() {
         program = s.second;
         updateSubmittedBy(program);
         update_result =
-            manager->updateProgram(s.first, program, validation_mode);
+            manager->updateProgram(s.first.number(), program, validation_mode);
         if (update_result.updated) {
           // update metrics
           submitted_by =
@@ -440,17 +441,18 @@ void Miner::submit(const std::string &path, std::string id_str) {
   Log::get().info("Found " + std::to_string(seq_programs.size()) +
                   " potential matches");
   size_t num_updated = 0;
-  std::unordered_set<size_t> updated_ids;
+  std::unordered_set<UID> updated_ids;
   for (auto s : seq_programs) {
     const std::string skip_msg =
-        "Skipping submission for " + ProgramUtil::idStr(s.first);
+        "Skipping submission for " + ProgramUtil::idStr(s.first.number());
     if (updated_ids.find(s.first) != updated_ids.end()) {
       Log::get().info(skip_msg + ": already updated");
       continue;
     }
     program = s.second;
     updateSubmittedBy(program);
-    auto r = manager->updateProgram(s.first, program, ValidationMode::EXTENDED);
+    auto r = manager->updateProgram(s.first.number(), program,
+                                    ValidationMode::EXTENDED);
     if (r.updated) {
       // in client mode: submit the program to the API server
       if (mode == MINING_MODE_CLIENT) {
@@ -470,7 +472,7 @@ void Miner::submit(const std::string &path, std::string id_str) {
         num_usages = manager->getStats().program_usages[seq.id];
       }
       bool full_check = manager->isFullCheck(seq.id);
-      auto existing = manager->getExistingProgram(s.first);
+      auto existing = manager->getExistingProgram(s.first.number());
       auto msg = manager->getFinder().getChecker().compare(
           program, existing, "new", "existing", seq, full_check, num_usages);
       lowerString(msg);

@@ -46,13 +46,13 @@ Finder::Finder(const Settings &settings, Evaluator &evaluator)
 
 void Finder::insert(const Sequence &norm_seq, size_t id) {
   for (auto &matcher : matchers) {
-    matcher->insert(norm_seq, id);
+    matcher->insert(norm_seq, UID('A', id));
   }
 }
 
 void Finder::remove(const Sequence &norm_seq, size_t id) {
   for (auto &matcher : matchers) {
-    matcher->remove(norm_seq, id);
+    matcher->remove(norm_seq, UID('A', id));
   }
 }
 
@@ -105,14 +105,14 @@ void Finder::findAll(const Program &p, const Sequence &norm_seq,
                      const std::vector<OeisSequence> &sequences,
                      Matcher::seq_programs_t &result) {
   // collect possible matches
-  std::pair<size_t, Program> last(0, Program());
+  std::pair<UID, Program> last(UID('A', 0), Program());
   for (size_t i = 0; i < matchers.size(); i++) {
     tmp_result.clear();
     matchers[i]->match(p, norm_seq, tmp_result);
 
     // validate the found matches
     for (auto t : tmp_result) {
-      auto &s = sequences.at(t.first);
+      auto &s = sequences.at(t.first.number());
       if (t == last) {
         // Log::get().warn("Ignoring duplicate match for " + s.id_str());
         continue;
@@ -120,9 +120,10 @@ void Finder::findAll(const Program &p, const Sequence &norm_seq,
       last = t;
       auto expected_seq = s.getTerms(s.existingNumTerms());
       auto num_required = OeisProgram::getNumRequiredTerms(t.second);
-      auto res = evaluator.check(t.second, expected_seq, num_required, t.first);
+      auto res = evaluator.check(t.second, expected_seq, num_required,
+                                 t.first.number());
       if (res.first == status_t::ERROR) {
-        invalid_matches.insert(t.first);
+        invalid_matches.insert(t.first.number());
         // Log::get().warn( "Ignoring invalid match for " + s.id_str() );
       } else {
         result.push_back(t);
