@@ -44,15 +44,15 @@ Finder::Finder(const Settings &settings, Evaluator &evaluator)
   }
 }
 
-void Finder::insert(const Sequence &norm_seq, size_t id) {
+void Finder::insert(const Sequence &norm_seq, UID id) {
   for (auto &matcher : matchers) {
-    matcher->insert(norm_seq, UID('A', id));
+    matcher->insert(norm_seq, id);
   }
 }
 
-void Finder::remove(const Sequence &norm_seq, size_t id) {
+void Finder::remove(const Sequence &norm_seq, UID id) {
   for (auto &matcher : matchers) {
-    matcher->remove(norm_seq, UID('A', id));
+    matcher->remove(norm_seq, id);
   }
 }
 

@@ -257,7 +257,7 @@ Finder &OeisManager::getFinder() {
       }
       if (shouldMatch(seq)) {
         auto seq_norm = seq.getTerms(settings.num_terms);
-        finder.insert(seq_norm, seq.id);
+        finder.insert(seq_norm, UID('A', seq.id));
       } else {
         ignore_list.insert(seq.id);
       }
@@ -892,7 +892,7 @@ update_program_result_t OeisManager::updateProgram(
   // expensive comparisons with the already found program
   if (is_new && overwrite_mode == OverwriteMode::NONE) {
     auto seq_norm = seq.getTerms(settings.num_terms);
-    finder.remove(seq_norm, seq.id);
+    finder.remove(seq_norm, UID('A', seq.id));
     ignore_list.insert(seq.id);
   }
 

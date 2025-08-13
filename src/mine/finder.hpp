@@ -2,6 +2,7 @@
 
 #include <memory>
 
+#include "base/uid.hpp"
 #include "eval/evaluator.hpp"
 #include "eval/minimizer.hpp"
 #include "mine/checker.hpp"
@@ -16,9 +17,9 @@ class Finder {
 
   virtual ~Finder() {}
 
-  void insert(const Sequence &norm_seq, size_t id);
+  void insert(const Sequence &norm_seq, UID id);
 
-  void remove(const Sequence &norm_seq, size_t id);
+  void remove(const Sequence &norm_seq, UID id);
 
   Matcher::seq_programs_t findSequence(
       const Program &p, Sequence &norm_seq,
