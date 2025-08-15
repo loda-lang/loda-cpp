@@ -203,7 +203,7 @@ void Stats::load(std::string path) {
       std::getline(s, k, ',');
       std::getline(s, v);
       call_graph.insert(
-          std::pair<int64_t, int64_t>(OeisSequence(k).id, OeisSequence(v).id));
+          std::pair<int64_t, int64_t>(UID(k).number(), UID(v).number()));
     }
     call.close();
   }
@@ -221,7 +221,9 @@ void Stats::load(std::string path) {
     num_formulas = std::stoll(w);
   }
 
-  { blocks.load(path + "blocks.asm"); }
+  {
+    blocks.load(path + "blocks.asm");
+  }
 
   // TODO: remaining stats
 
@@ -318,7 +320,9 @@ void Stats::save(std::string path) {
     steps_out.close();
   }
 
-  { blocks.save(path + "blocks.asm"); }
+  {
+    blocks.save(path + "blocks.asm");
+  }
 
   Log::get().debug("Finished saving program stats");
 }

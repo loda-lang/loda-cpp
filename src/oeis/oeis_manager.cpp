@@ -100,7 +100,7 @@ void OeisManager::load() {
   if (!sequences.empty()) {
     size_t i;
     for (i = sequences.size() - 1; i > 0; i--) {
-      if (sequences[i].id != 0) {
+      if (sequences[i].id.number() != 0) {
         break;
       }
     }
@@ -185,7 +185,7 @@ void OeisManager::loadData() {
     if (id >= sequences.size()) {
       sequences.resize(2 * id);
     }
-    sequences[id] = OeisSequence(id, "", seq_full);
+    sequences[id] = OeisSequence(UID('A', id), "", seq_full);
     loaded_count++;
   }
 }
@@ -216,7 +216,8 @@ void OeisManager::loadNames() {
       throwParseError(line);
     }
     ++pos;
-    if (id < sequences.size() && sequences[id].id == id) {
+    if (id < sequences.size() &&
+        sequences[id].id.number() == static_cast<int64_t>(id)) {
       sequences[id].name = line.substr(pos);
       if (Log::get().level == Log::Level::DEBUG) {
         std::stringstream buf;
@@ -234,7 +235,8 @@ void OeisManager::loadOffsets() {
   OeisList::loadMapWithComments(path, entries);
   for (const auto &entry : entries) {
     const size_t id = entry.first;
-    if (id < sequences.size() && sequences[id].id == id) {
+    if (id < sequences.size() &&
+        sequences[id].id.number() == static_cast<int64_t>(id)) {
       sequences[id].offset = std::stoll(entry.second);
     }
   }
@@ -252,14 +254,14 @@ Finder &OeisManager::getFinder() {
         "\", backoff: " + (config.usesBackoff() ? "true" : "false"));
     ignore_list.clear();
     for (auto &seq : sequences) {
-      if (seq.id == 0) {
+      if (seq.id.number() == 0) {
         continue;
       }
       if (shouldMatch(seq)) {
         auto seq_norm = seq.getTerms(settings.num_terms);
-        finder.insert(seq_norm, UID('A', seq.id));
+        finder.insert(seq_norm, seq.id);
       } else {
-        ignore_list.insert(seq.id);
+        ignore_list.insert(seq.id.number());
       }
     }
     finder_initialized = true;
@@ -275,24 +277,25 @@ Finder &OeisManager::getFinder() {
 }
 
 bool OeisManager::shouldMatch(const OeisSequence &seq) const {
-  if (seq.id == 0) {
+  if (seq.id.number() == 0) {
     return false;
   }
 
   // sequence on the deny list?
-  if (deny_list.find(seq.id) != deny_list.end()) {
+  if (deny_list.find(seq.id.number()) != deny_list.end()) {
     return false;
   }
 
   // too many invalid matches already?
-  bool too_many_matches = invalid_matches.hasTooMany(UID('A', seq.id));
+  bool too_many_matches = invalid_matches.hasTooMany(seq.id);
 
   // check if program exists
-  const bool prog_exists = (seq.id < stats->all_program_ids.size()) &&
-                           stats->all_program_ids[seq.id];
+  const bool prog_exists =
+      (static_cast<int64_t>(seq.id.number()) < stats->all_program_ids.size()) &&
+      stats->all_program_ids[seq.id.number()];
 
   // program exists and protected?
-  if (prog_exists && protect_list.find(seq.id) != protect_list.end()) {
+  if (prog_exists && protect_list.find(seq.id.number()) != protect_list.end()) {
     return false;
   }
 
@@ -312,9 +315,9 @@ bool OeisManager::shouldMatch(const OeisSequence &seq) const {
         return true;
       }
       const bool should_overwrite =
-          overwrite_list.find(seq.id) != overwrite_list.end();
+          overwrite_list.find(seq.id.number()) != overwrite_list.end();
       const bool is_complex =
-          stats->getTransitiveLength(seq.id) > 10;  // magic number
+          stats->getTransitiveLength(seq.id.number()) > 10;  // magic number
       return is_complex || should_overwrite;
     }
   }
@@ -406,7 +409,7 @@ void OeisManager::update(bool force) {
         const auto ext = f.path().filename().extension().string();
         bool is_program;
         try {
-          OeisSequence s(stem);
+          UID s(stem);
           is_program = true;
         } catch (const std::exception &) {
           is_program = stem.rfind("api-", 0) == 0;
@@ -446,10 +449,10 @@ void OeisManager::generateStats(int64_t age_in_days) {
 
   AdaptiveScheduler notify(20);  // magic number
   for (const auto &s : sequences) {
-    if (s.id == 0) {
+    if (s.id.number() == 0) {
       continue;
     }
-    file_name = ProgramUtil::getProgramPath(s.id);
+    file_name = ProgramUtil::getProgramPath(s.id.number());
     std::ifstream program_file(file_name);
     has_program = false;
     has_formula = false;
@@ -463,7 +466,7 @@ void OeisManager::generateStats(int64_t age_in_days) {
         ProgramUtil::removeOps(program, Operation::Type::NOP);
 
         // update stats
-        stats->updateProgramStats(s.id, program);
+        stats->updateProgramStats(s.id.number(), program);
         num_processed++;
       } catch (const std::exception &exc) {
         Log::get().error(
@@ -471,7 +474,7 @@ void OeisManager::generateStats(int64_t age_in_days) {
             false);
       }
     }
-    stats->updateSequenceStats(s.id, has_program, has_formula);
+    stats->updateSequenceStats(s.id.number(), has_program, has_formula);
     if (notify.isTargetReached()) {
       notify.reset();
       Log::get().info("Processed " + std::to_string(num_processed) +
@@ -499,12 +502,14 @@ void OeisManager::generateLists() {
   size_t num_processed = 0;
   std::string buf;
   for (auto &s : sequences) {
-    if (s.id == 0 || deny_list.find(s.id) != deny_list.end()) {
+    if (s.id.number() == 0 ||
+        deny_list.find(s.id.number()) != deny_list.end()) {
       continue;
     }
-    if (s.id < stats->all_program_ids.size() && stats->all_program_ids[s.id]) {
+    if (s.id.number() < static_cast<int64_t>(stats->all_program_ids.size()) &&
+        stats->all_program_ids[s.id.number()]) {
       // update program list
-      const size_t list_index = (s.id + 1) / list_file_size;
+      const size_t list_index = (s.id.number() + 1) / list_file_size;
       buf = s.name;
       replaceAll(buf, "{", "\\{");
       replaceAll(buf, "}", "\\}");
@@ -512,13 +517,13 @@ void OeisManager::generateLists() {
       replaceAll(buf, "_", "\\_");
       replaceAll(buf, "|", "\\|");
       list_files.at(list_index)
-          << "* [" << ProgramUtil::idStr(s.id) << "](https://oeis.org/"
-          << ProgramUtil::idStr(s.id) << ") ([program](/edit/?oeis=" << s.id
-          << ")): " << buf << "\n";
+          << "* [" << s.id.string() << "](https://oeis.org/" << s.id.string()
+          << ") ([program](/edit/?oeis=" << s.id.number() << ")): " << buf
+          << "\n";
 
       num_processed++;
     } else {
-      no_loda << ProgramUtil::idStr(s.id) << ": " << s.name << "\n";
+      no_loda << s.id.string() << ": " << s.name << "\n";
     }
   }
 
@@ -529,13 +534,13 @@ void OeisManager::generateLists() {
     if (!f.empty()) {
       const std::string list_path =
           lists_home + "list" + std::to_string(i) + ".markdown";
-      OeisSequence start(std::max<int64_t>(i * list_file_size, 1));
-      OeisSequence end(((i + 1) * list_file_size) - 1);
+      UID start('A', std::max<int64_t>(i * list_file_size, 1));
+      UID end('A', ((i + 1) * list_file_size) - 1);
       std::ofstream list_file(list_path);
       list_file << "---\n";
       list_file << "layout: page\n";
-      list_file << "title: Programs for " << ProgramUtil::idStr(start.id) << "-"
-                << ProgramUtil::idStr(end.id) << "\n";
+      list_file << "title: Programs for " << start.string() << "-"
+                << end.string() << "\n";
       list_file << "permalink: /list" << i << "/\n";
       list_file << "---\n";
       list_file << "List of integer sequences with links to LODA programs."
@@ -557,10 +562,10 @@ void OeisManager::migrate() {
   load();
   AdaptiveScheduler scheduler(20);
   for (const auto &s : getSequences()) {
-    if (s.id == 0) {
+    if (s.id.number() == 0) {
       continue;
     }
-    const auto path = ProgramUtil::getProgramPath(s.id);
+    const auto path = ProgramUtil::getProgramPath(s.id.number());
     std::ifstream f(path);
     if (!f.good()) {
       continue;
@@ -579,17 +584,18 @@ void OeisManager::migrate() {
           op.source.value.asInt() >= 45) {
         p.ops.erase(p.ops.begin() + i);
         auto terms = s.getTerms(100);
-        auto result = evaluator.check(p, terms, -1, s.id);
+        auto result = evaluator.check(p, terms, -1, s.id.number());
         if (result.first != status_t::ERROR) {
-          Log::get().info("Migrating " + ProgramUtil::idStr(s.id));
-          dumpProgram(UID('A', s.id), p, path, submitted_by);
+          Log::get().info("Migrating " + s.id.string());
+          dumpProgram(s.id, p, path, submitted_by);
         }
         break;
       }
     }
     if (scheduler.isTargetReached()) {
       scheduler.reset();
-      Log::get().info("Processed " + std::to_string(s.id) + " programs");
+      Log::get().info("Processed " + std::to_string(s.id.number()) +
+                      " programs");
     }
   }
 }
@@ -658,7 +664,7 @@ void OeisManager::addSeqComments(Program &p) const {
         op.source.type == Operand::Type::CONSTANT) {
       auto id = op.source.value.asInt();
       if (id >= 0 && id < static_cast<int64_t>(sequences.size()) &&
-          sequences[id].id) {
+          sequences[id].id.number()) {
         op.comment = sequences[id].name;
       }
     }
@@ -667,7 +673,7 @@ void OeisManager::addSeqComments(Program &p) const {
 
 int64_t OeisManager::updateProgramOffset(UID id, Program &p) const {
   if (id.number() >= static_cast<int64_t>(sequences.size()) ||
-      static_cast<int64_t>(sequences[id.number()].id) != id.number()) {
+      sequences[id.number()].id != id) {
     return 0;
   }
   return ProgramUtil::setOffset(p, sequences[id.number()].offset);
@@ -773,8 +779,8 @@ void OeisManager::alert(Program p, UID id, const std::string &prefix,
     full += ". " + sub;
   }
   Log::AlertDetails details;
-  details.title = ProgramUtil::idStr(seq.id);
-  details.title_link = OeisSequence::urlStr(seq.id);
+  details.title = seq.id.string();
+  details.title_link = OeisSequence::urlStr(seq.id.number());
   details.color = color;
   std::stringstream buf;
   // TODO: code block markers must be escaped for Slack, but not for Discord
@@ -816,7 +822,7 @@ update_program_result_t OeisManager::updateProgram(
   // ignore this sequence?
   if (id.number() == 0 ||
       id.number() >= static_cast<int64_t>(sequences.size()) ||
-      !sequences[id.number()].id ||
+      !sequences[id.number()].id.number() ||
       ignore_list.find(id.number()) != ignore_list.end()) {
     return result;
   }
@@ -850,10 +856,12 @@ update_program_result_t OeisManager::updateProgram(
 
   // minimize and check the program
   check_result_t checked;
-  bool full_check = full_check_list.find(seq.id) != full_check_list.end();
+  bool full_check =
+      full_check_list.find(seq.id.number()) != full_check_list.end();
   size_t num_usages = 0;
-  if (seq.id < getStats().program_usages.size()) {
-    num_usages = stats->program_usages[seq.id];
+  if (seq.id.number() <
+      static_cast<int64_t>(getStats().program_usages.size())) {
+    num_usages = stats->program_usages[seq.id.number()];
   }
   switch (validation_mode) {
     case ValidationMode::BASIC:
@@ -897,8 +905,8 @@ update_program_result_t OeisManager::updateProgram(
   // expensive comparisons with the already found program
   if (is_new && overwrite_mode == OverwriteMode::NONE) {
     auto seq_norm = seq.getTerms(settings.num_terms);
-    finder.remove(seq_norm, UID('A', seq.id));
-    ignore_list.insert(seq.id);
+    finder.remove(seq_norm, seq.id);
+    ignore_list.insert(seq.id.number());
   }
 
   // send alert
@@ -915,19 +923,19 @@ bool OeisManager::maintainProgram(UID id, bool eval) {
     return true;
   }
   auto &s = sequences[id.number()];
-  if (s.id == 0) {
+  if (s.id.number() == 0) {
     return true;
   }
 
   // try to open the program file
-  const std::string file_name = ProgramUtil::getProgramPath(s.id);
+  const std::string file_name = ProgramUtil::getProgramPath(s.id.number());
   std::ifstream program_file(file_name);
   if (!program_file.good()) {
     return true;  // program does not exist
   }
 
   // check if it is on the deny list
-  bool is_okay = (deny_list.find(s.id) == deny_list.end());
+  bool is_okay = (deny_list.find(s.id.number()) == deny_list.end());
 
   // try to load the program
   Program program;
@@ -948,7 +956,7 @@ bool OeisManager::maintainProgram(UID id, bool eval) {
   if (is_okay) {
     try {
       ProgramCache cache;
-      cache.collect(s.id);
+      cache.collect(s.id.number());
     } catch (const std::exception &) {
       is_okay = false;
     }
@@ -974,7 +982,8 @@ bool OeisManager::maintainProgram(UID id, bool eval) {
   }
 
   // unfold, minimize and dump the program if it is not protected
-  const bool is_protected = (protect_list.find(s.id) != protect_list.end());
+  const bool is_protected =
+      (protect_list.find(s.id.number()) != protect_list.end());
   if (is_okay && !is_protected && !Comments::isCodedManually(program)) {
     // unfold and evaluation could still fail, so catch errors
     try {
@@ -988,8 +997,8 @@ bool OeisManager::maintainProgram(UID id, bool eval) {
       } else {
         optimizer.optimize(updated);
       }
-      dumpProgram(UID('A', s.id), updated, file_name, submitted_by);
-      updateAllDependentOffset(UID('A', s.id), delta);
+      dumpProgram(s.id, updated, file_name, submitted_by);
+      updateAllDependentOffset(s.id, delta);
     } catch (const std::exception &e) {
       is_okay = false;
     }
@@ -1017,8 +1026,8 @@ std::vector<Program> OeisManager::loadAllPrograms() {
     if (!program_ids[id]) {
       continue;
     }
-    OeisSequence seq(id);
-    std::ifstream in(ProgramUtil::getProgramPath(seq.id));
+    UID uid('A', id);
+    std::ifstream in(ProgramUtil::getProgramPath(uid.number()));
     if (!in) {
       continue;
     }
@@ -1026,8 +1035,7 @@ std::vector<Program> OeisManager::loadAllPrograms() {
       programs[id] = parser.parse(in);
       loaded++;
     } catch (const std::exception &e) {
-      Log::get().warn("Skipping " + ProgramUtil::idStr(seq.id) + ": " +
-                      e.what());
+      Log::get().warn("Skipping " + uid.string() + ": " + e.what());
       continue;
     }
     if (scheduler.isTargetReached() || loaded == num_programs) {

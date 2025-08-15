@@ -114,9 +114,9 @@ check_result_t Checker::checkProgramExtended(Program program, Program existing,
 
   // check the program w/o minimization
   auto check_vanilla =
-      evaluator.check(program, extended_seq, num_required, seq.id);
+      evaluator.check(program, extended_seq, num_required, seq.id.number());
   if (check_vanilla.first == status_t::ERROR) {
-    invalid_matches.insert(UID('A', seq.id));
+    invalid_matches.insert(seq.id);
     return result;  // not correct
   }
 
@@ -132,12 +132,11 @@ check_result_t Checker::checkProgramExtended(Program program, Program existing,
     // minimization changed program => check the minimized program
     num_required = OeisProgram::getNumRequiredTerms(program);
     auto check_minimized =
-        evaluator.check(program, extended_seq, num_required, seq.id);
+        evaluator.check(program, extended_seq, num_required, seq.id.number());
     if (check_minimized.first == status_t::ERROR) {
       if (check_vanilla.first == status_t::OK) {
         // looks like the minimization changed the semantics of the program
-        notifyUnfoldOrMinimizeProblem(result.program,
-                                      ProgramUtil::idStr(seq.id));
+        notifyUnfoldOrMinimizeProblem(result.program, seq.id.string());
       }
       // we ignore the case where the base program has a warning and minimized
       // program an error, because it indicates a problem in the base program
@@ -178,7 +177,7 @@ check_result_t Checker::checkProgramBasic(const Program& program,
   if (!is_new) {
     // check if another miner already submitted a program for this sequence
     if (change_type == first) {
-      Log::get().debug("Skipping update of " + ProgramUtil::idStr(seq.id) +
+      Log::get().debug("Skipping update of " + seq.id.string() +
                        " because program is not new");
       return result;
     }
@@ -191,7 +190,7 @@ check_result_t Checker::checkProgramBasic(const Program& program,
     }
     // compare with hash of existing program
     if (previous_hash != OeisProgram::getTransitiveProgramHash(existing)) {
-      Log::get().debug("Skipping update of " + ProgramUtil::idStr(seq.id) +
+      Log::get().debug("Skipping update of " + seq.id.string() +
                        " because of hash mismatch");
       return result;
     }
@@ -202,9 +201,9 @@ check_result_t Checker::checkProgramBasic(const Program& program,
   auto terms = seq.getTerms(num_required);
 
   // check the program
-  auto check = evaluator.check(program, terms, num_required, seq.id);
+  auto check = evaluator.check(program, terms, num_required, seq.id.number());
   if (check.first == status_t::ERROR) {
-    invalid_matches.insert(UID('A', seq.id));  // not correct
+    invalid_matches.insert(seq.id);  // not correct
     return result;
   }
 
@@ -228,7 +227,7 @@ std::string Checker::isOptimizedBetter(Program existing, Program optimized,
   for (const auto& op : optimized.ops) {
     if (op.type == Operation::Type::SEQ &&
         (op.source.type != Operand::Type::CONSTANT ||
-         op.source.value == Number(seq.id))) {
+         op.source.value == Number(seq.id.number()))) {
       return not_better;
     }
   }
@@ -277,8 +276,7 @@ std::string Checker::isOptimizedBetter(Program existing, Program optimized,
   auto num_check = OeisProgram::getNumCheckTerms(full_check);
   auto terms = seq.getTerms(num_check);
   if (terms.empty()) {
-    Log::get().error("Error fetching b-file for " + ProgramUtil::idStr(seq.id),
-                     true);
+    Log::get().error("Error fetching b-file for " + seq.id.string(), true);
   }
 
   // evaluate optimized program for fixed number of terms

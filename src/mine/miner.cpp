@@ -233,9 +233,7 @@ void Miner::runMineLoop() {
       auto id = Comments::getSequenceIdFromProgram(program);
       if (!id.empty()) {
         try {
-          OeisSequence seq(id);
-          seq_programs.push_back(
-              std::pair<UID, Program>(UID('A', seq.id), program));
+          seq_programs.push_back(std::pair<UID, Program>(UID(id), program));
         } catch (const std::exception &) {
           Log::get().warn("Invalid sequence ID: " + id);
         }
@@ -409,14 +407,14 @@ void Miner::submit(const std::string &path, std::string id_str) {
   if (id_str.empty()) {
     Log::get().error("Missing sequence ID in program", true);
   }
-  auto id = OeisSequence(id_str).id;
-  id_str = ProgramUtil::idStr(id);
+  UID uid(id_str);
+  id_str = uid.string();
   Log::get().info("Loaded program for " + id_str);
-  if (manager->isIgnored(UID('A', id))) {
+  if (manager->isIgnored(uid)) {
     Log::get().error(
         "Sequence " + id_str + " is ignored by the active miner profile", true);
   }
-  OeisSequence seq(id);
+  auto seq = OeisSequence(uid);
   Settings settings(this->settings);
   settings.print_as_b_file = false;
   Evaluator evaluator(settings);
@@ -425,12 +423,12 @@ void Miner::submit(const std::string &path, std::string id_str) {
   Log::get().info(
       "Validating program against " + std::to_string(terms.size()) + " (>=" +
       std::to_string(std::min(num_required, terms.size())) + ") terms");
-  auto result = evaluator.check(program, terms, num_required, seq.id);
+  auto result = evaluator.check(program, terms, num_required, uid.number());
   if (result.first == status_t::ERROR) {
     Log::get().error("Validation failed", false);
     settings.print_as_b_file = true;
     Evaluator evaluator2(settings);
-    evaluator2.check(program, terms, num_required, seq.id);
+    evaluator2.check(program, terms, num_required, uid.number());
     return;  // error
   }
   Log::get().info("Validation successful");
@@ -468,10 +466,11 @@ void Miner::submit(const std::string &path, std::string id_str) {
       num_updated++;
     } else {
       size_t num_usages = 0;
-      if (seq.id < manager->getStats().program_usages.size()) {
-        num_usages = manager->getStats().program_usages[seq.id];
+      if (uid.number() <
+          static_cast<int64_t>(manager->getStats().program_usages.size())) {
+        num_usages = manager->getStats().program_usages[uid.number()];
       }
-      bool full_check = manager->isFullCheck(UID('A', seq.id));
+      bool full_check = manager->isFullCheck(uid);
       auto existing = manager->getExistingProgram(s.first);
       auto msg = manager->getFinder().getChecker().compare(
           program, existing, "new", "existing", seq, full_check, num_usages);
