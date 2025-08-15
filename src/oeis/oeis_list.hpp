@@ -5,12 +5,13 @@
 #include <string>
 #include <unordered_set>
 
+#include "base/uid.hpp"
+
 class OeisList {
  public:
   static const std::string& getListsHome();
 
-  static void loadList(const std::string& path,
-                       std::unordered_set<size_t>& list);
+  static void loadList(const std::string& path, std::unordered_set<UID>& list);
 
   static void loadMapWithComments(const std::string& path,
                                   std::map<size_t, std::string>& map);

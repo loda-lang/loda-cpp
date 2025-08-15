@@ -6,6 +6,9 @@
 // UID represents a unique identifier for sequences/programs, e.g., "A123456"
 class UID {
  public:
+  // Default constructor initializes to "A000000"
+  UID() : UID('A', 0) {}
+
   // Construct a UID from a domain character (A-Z) and a 6-digit number
   // (0-999999)
   explicit UID(char domain, int64_t number);
@@ -26,25 +29,12 @@ class UID {
   // Return the UID as a string, e.g., "A123456" (always 7 chars)
   std::string string() const;
 
-  inline bool operator==(const UID& other) const {
-    return value == other.value;
-  }
-
-  inline bool operator!=(const UID& other) const {
-    return value != other.value;
-  }
-
-  inline bool operator<(const UID& other) const { return value < other.value; }
-
-  inline bool operator>(const UID& other) const { return value > other.value; }
-
-  inline bool operator<=(const UID& other) const {
-    return value <= other.value;
-  }
-
-  inline bool operator>=(const UID& other) const {
-    return value >= other.value;
-  }
+  bool operator==(const UID& other) const { return value == other.value; }
+  bool operator!=(const UID& other) const { return value != other.value; }
+  bool operator<(const UID& other) const { return value < other.value; }
+  bool operator>(const UID& other) const { return value > other.value; }
+  bool operator<=(const UID& other) const { return value <= other.value; }
+  bool operator>=(const UID& other) const { return value >= other.value; }
 
   friend struct std::hash<UID>;
 

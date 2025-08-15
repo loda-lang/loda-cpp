@@ -261,7 +261,7 @@ Finder &OeisManager::getFinder() {
         auto seq_norm = seq.getTerms(settings.num_terms);
         finder.insert(seq_norm, seq.id);
       } else {
-        ignore_list.insert(seq.id.number());
+        ignore_list.insert(seq.id);
       }
     }
     finder_initialized = true;
@@ -282,7 +282,7 @@ bool OeisManager::shouldMatch(const OeisSequence &seq) const {
   }
 
   // sequence on the deny list?
-  if (deny_list.find(seq.id.number()) != deny_list.end()) {
+  if (deny_list.find(seq.id) != deny_list.end()) {
     return false;
   }
 
@@ -295,7 +295,7 @@ bool OeisManager::shouldMatch(const OeisSequence &seq) const {
       stats->all_program_ids[seq.id.number()];
 
   // program exists and protected?
-  if (prog_exists && protect_list.find(seq.id.number()) != protect_list.end()) {
+  if (prog_exists && protect_list.find(seq.id) != protect_list.end()) {
     return false;
   }
 
@@ -315,7 +315,7 @@ bool OeisManager::shouldMatch(const OeisSequence &seq) const {
         return true;
       }
       const bool should_overwrite =
-          overwrite_list.find(seq.id.number()) != overwrite_list.end();
+          overwrite_list.find(seq.id) != overwrite_list.end();
       const bool is_complex =
           stats->getTransitiveLength(seq.id.number()) > 10;  // magic number
       return is_complex || should_overwrite;
@@ -502,8 +502,7 @@ void OeisManager::generateLists() {
   size_t num_processed = 0;
   std::string buf;
   for (auto &s : sequences) {
-    if (s.id.number() == 0 ||
-        deny_list.find(s.id.number()) != deny_list.end()) {
+    if (s.id.number() == 0 || deny_list.find(s.id) != deny_list.end()) {
       continue;
     }
     if (s.id.number() < static_cast<int64_t>(stats->all_program_ids.size()) &&
@@ -823,7 +822,7 @@ update_program_result_t OeisManager::updateProgram(
   if (id.number() == 0 ||
       id.number() >= static_cast<int64_t>(sequences.size()) ||
       !sequences[id.number()].id.number() ||
-      ignore_list.find(id.number()) != ignore_list.end()) {
+      ignore_list.find(id) != ignore_list.end()) {
     return result;
   }
 
@@ -856,8 +855,7 @@ update_program_result_t OeisManager::updateProgram(
 
   // minimize and check the program
   check_result_t checked;
-  bool full_check =
-      full_check_list.find(seq.id.number()) != full_check_list.end();
+  bool full_check = full_check_list.find(seq.id) != full_check_list.end();
   size_t num_usages = 0;
   if (seq.id.number() <
       static_cast<int64_t>(getStats().program_usages.size())) {
@@ -906,7 +904,7 @@ update_program_result_t OeisManager::updateProgram(
   if (is_new && overwrite_mode == OverwriteMode::NONE) {
     auto seq_norm = seq.getTerms(settings.num_terms);
     finder.remove(seq_norm, seq.id);
-    ignore_list.insert(seq.id.number());
+    ignore_list.insert(seq.id);
   }
 
   // send alert
@@ -935,7 +933,7 @@ bool OeisManager::maintainProgram(UID id, bool eval) {
   }
 
   // check if it is on the deny list
-  bool is_okay = (deny_list.find(s.id.number()) == deny_list.end());
+  bool is_okay = (deny_list.find(s.id) == deny_list.end());
 
   // try to load the program
   Program program;
@@ -982,8 +980,7 @@ bool OeisManager::maintainProgram(UID id, bool eval) {
   }
 
   // unfold, minimize and dump the program if it is not protected
-  const bool is_protected =
-      (protect_list.find(s.id.number()) != protect_list.end());
+  const bool is_protected = (protect_list.find(s.id) != protect_list.end());
   if (is_okay && !is_protected && !Comments::isCodedManually(program)) {
     // unfold and evaluation could still fail, so catch errors
     try {

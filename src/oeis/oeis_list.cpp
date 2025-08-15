@@ -20,7 +20,7 @@ const std::string& OeisList::getListsHome() {
 }
 
 void OeisList::loadList(const std::string& path,
-                        std::unordered_set<size_t>& list) {
+                        std::unordered_set<UID>& list) {
   Log::get().debug("Loading list " + path);
   std::ifstream names(path);
   if (!names.good()) {
@@ -32,9 +32,6 @@ void OeisList::loadList(const std::string& path,
     if (line.empty() || line[0] == '#') {
       continue;
     }
-    if (line[0] != 'A') {
-      Log::get().error("Error parsing OEIS sequence ID: " + line, true);
-    }
     id = "";
     for (char ch : line) {
       if (ch == ':' || ch == ';' || ch == ' ' || ch == '\t' || ch == '\n') {
@@ -42,7 +39,7 @@ void OeisList::loadList(const std::string& path,
       }
       id += ch;
     }
-    list.insert(UID(id).number());
+    list.insert(UID(id));
   }
   Log::get().debug("Finished loading of list " + path + " with " +
                    std::to_string(list.size()) + " entries");

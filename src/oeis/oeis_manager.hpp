@@ -58,11 +58,11 @@ class OeisManager {
   std::vector<Program> loadAllPrograms();
 
   bool isIgnored(UID id) const {
-    return ignore_list.find(id.number()) != ignore_list.end();
+    return ignore_list.find(id) != ignore_list.end();
   }
 
   bool isFullCheck(UID id) const {
-    return full_check_list.find(id.number()) != full_check_list.end();
+    return full_check_list.find(id) != full_check_list.end();
   }
 
  private:
@@ -100,11 +100,11 @@ class OeisManager {
   Minimizer minimizer;
   std::vector<OeisSequence> sequences;
 
-  std::unordered_set<size_t> deny_list;
-  std::unordered_set<size_t> overwrite_list;
-  std::unordered_set<size_t> protect_list;
-  std::unordered_set<size_t> ignore_list;
-  std::unordered_set<size_t> full_check_list;
+  std::unordered_set<UID> deny_list;
+  std::unordered_set<UID> overwrite_list;
+  std::unordered_set<UID> protect_list;
+  std::unordered_set<UID> ignore_list;
+  std::unordered_set<UID> full_check_list;
   InvalidMatches invalid_matches;
 
   size_t loaded_count;
