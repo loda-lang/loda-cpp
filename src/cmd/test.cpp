@@ -876,7 +876,7 @@ void checkSeq(const Sequence& s, size_t expected_size, size_t index,
 void checkSeqAgainstTestBFile(int64_t seq_id, int64_t offset,
                               int64_t max_num_terms) {
   std::stringstream buf;
-  OeisSequence t(seq_id);
+  OeisSequence t(UID('A', seq_id));
   t.getTerms(max_num_terms).to_b_file(buf, offset);
   std::ifstream bfile(std::string("tests") + FILE_SEP + "sequence" + FILE_SEP +
                       ProgramUtil::idStr(seq_id, "b") + ".txt");
@@ -929,7 +929,7 @@ void Test::oeisList() {
 
 void Test::oeisSeq() {
   Log::get().info("Testing OEIS sequences");
-  OeisSequence s(6);
+  OeisSequence s(UID('A', 6));
   // std::remove( s.getBFilePath().c_str() );
   checkSeq(s.getTerms(20), 20, 18, 8);  // this should fetch the b-file
   checkSeq(s.getTerms(250), 250, 235, 38);
@@ -1104,7 +1104,7 @@ void Test::testRanges(const std::string& filename, bool finite) {
   }
   Parser parser;
   for (const auto& e : map) {
-    checkRanges(OeisSequence(e.first).id, finite, e.second);
+    checkRanges(e.first, finite, e.second);
   }
 }
 

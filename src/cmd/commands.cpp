@@ -181,15 +181,18 @@ void Commands::check(const std::string& path) {
   initLog(true);
   auto program_and_id = OeisProgram::getProgramAndSeqId(path);
   auto program = program_and_id.first;
-  OeisSequence seq(program_and_id.second);
-  if (seq.id == 0) {
+  auto uid = UID('A', 0);
+  if (program_and_id.second) {
+    uid = UID('A', program_and_id.second);
+  } else {
     auto id_str = Comments::getSequenceIdFromProgram(program);
-    seq = OeisSequence(id_str);
+    uid = UID(id_str);
   }
+  auto seq = OeisSequence(uid);
   Evaluator evaluator(settings);
   auto terms = seq.getTerms(OeisSequence::FULL_SEQ_LENGTH);
   auto num_required = OeisProgram::getNumRequiredTerms(program);
-  auto result = evaluator.check(program, terms, num_required, seq.id);
+  auto result = evaluator.check(program, terms, num_required, seq.id.number());
   switch (result.first) {
     case status_t::OK:
       std::cout << "ok" << std::endl;
@@ -455,22 +458,22 @@ void Commands::addToList(const std::string& seq_id,
   OeisManager manager(settings);
   manager.load();
   const auto& sequences = manager.getSequences();
-  OeisSequence seq(seq_id);
-  if (seq.id == 0) {
+  auto seq = OeisSequence(UID(seq_id));
+  if (seq.id.number() == 0) {
     Log::get().error("Invalid sequence ID: " + seq_id, true);
     return;
   }
-  if (seq.id < sequences.size()) {
-    seq.name = sequences[seq.id].name;
+  if (seq.id.number() < static_cast<int64_t>(sequences.size())) {
+    seq.name = sequences[seq.id.number()].name;
   }
   // Insert if not present
-  if (list.find(seq.id) == list.end()) {
-    list[seq.id] = seq.name;
+  if (list.find(seq.id.number()) == list.end()) {
+    list[seq.id.number()] = seq.name;
     // Write back using OeisList helper
     OeisList::saveMapWithComments(list_path, list);
-    Log::get().info("Added " + ProgramUtil::idStr(seq.id) + " to " + list_path);
+    Log::get().info("Added " + seq.id.string() + " to " + list_path);
   } else {
-    Log::get().info("Sequence already in list: " + ProgramUtil::idStr(seq.id));
+    Log::get().info("Sequence already in list: " + seq.id.string());
   }
 }
 
@@ -507,7 +510,7 @@ void Commands::testEval(const std::string& test_id, eval_mode_t mode) {
   auto& stats = manager.getStats();
   size_t target_id = 0;
   if (!test_id.empty()) {
-    target_id = OeisSequence(test_id).id;
+    target_id = UID(test_id).number();
   }
   int64_t count = 0;
   for (size_t id = 0; id < stats.all_program_ids.size(); id++) {
@@ -579,7 +582,7 @@ void Commands::testPari(const std::string& test_id) {
   int64_t good = 0, bad = 0, skipped = 0;
   size_t target_id = 0;
   if (!test_id.empty()) {
-    target_id = OeisSequence(test_id).id;
+    target_id = UID(test_id).number();
   }
   for (size_t id = 0; id < stats.all_program_ids.size(); id++) {
     if (!stats.all_program_ids[id] || (target_id > 0 && id != target_id)) {
@@ -693,7 +696,7 @@ void Commands::testPari(const std::string& test_id) {
 
 bool checkRange(const OeisSequence& seq, const Program& program,
                 bool finiteInput) {
-  auto idStr = ProgramUtil::idStr(seq.id);
+  auto idStr = seq.id.string();
   auto offset = ProgramUtil::getOffset(program);
   auto numTerms = seq.existingNumTerms();
   auto terms = seq.getTerms(numTerms);
@@ -705,9 +708,8 @@ bool checkRange(const OeisSequence& seq, const Program& program,
       return false;
     }
   } catch (const std::exception& e) {
-    Log::get().error("Error during range generation for " +
-                         ProgramUtil::idStr(seq.id) + ": " +
-                         std::string(e.what()),
+    Log::get().error("Error during range generation for " + seq.id.string() +
+                         ": " + std::string(e.what()),
                      true);
   }
   auto it = ranges.find(Program::OUTPUT_CELL);
@@ -741,16 +743,15 @@ void Commands::testRange(const std::string& id) {
   if (id.empty()) {
     seqs = manager.getSequences();
   } else {
-    OeisSequence seq(id);
-    seqs.push_back(manager.getSequences().at(seq.id));
+    seqs.push_back(manager.getSequences().at(UID(id).number()));
   }
   for (const auto& seq : seqs) {
-    if (seq.id == 0 || !stats.all_program_ids[seq.id]) {
+    if (seq.id.number() == 0 || !stats.all_program_ids[seq.id.number()]) {
       continue;
     }
     Program program;
     try {
-      program = parser.parse(ProgramUtil::getProgramPath(seq.id));
+      program = parser.parse(ProgramUtil::getProgramPath(seq.id.number()));
     } catch (const std::exception& e) {
       Log::get().warn(std::string(e.what()));
       continue;
@@ -787,14 +788,14 @@ void Commands::maintain(const std::string& ids) {
   if (!ids.empty()) {
     auto pos = ids.find('-');
     if (pos != std::string::npos) {
-      OeisSequence seq_start(ids.substr(0, pos));
-      OeisSequence seq_end(ids.substr(pos + 1));
-      start = seq_start.id;
-      end = seq_end.id + 1;
+      auto seq_start = UID(ids.substr(0, pos));
+      auto seq_end = UID(ids.substr(pos + 1));
+      start = seq_start.number();
+      end = seq_end.number() + 1;
     } else {
-      OeisSequence seq(ids);
-      start = seq.id;
-      end = seq.id + 1;
+      auto uid = UID(ids);
+      start = uid.number();
+      end = uid.number() + 1;
       eval = true;
     }
   }
@@ -842,12 +843,12 @@ void Commands::findEmbseqs() {
   auto& seqs = manager.getSequences();
   int64_t numFound = 0;
   for (const auto& seq : seqs) {
-    if (seq.id == 0 || !stats.all_program_ids[seq.id]) {
+    if (seq.id.number() == 0 || !stats.all_program_ids[seq.id.number()]) {
       continue;
     }
     Program program;
     try {
-      program = parser.parse(ProgramUtil::getProgramPath(seq.id));
+      program = parser.parse(ProgramUtil::getProgramPath(seq.id.number()));
     } catch (const std::exception& e) {
       Log::get().warn(std::string(e.what()));
       continue;
@@ -856,8 +857,7 @@ void Commands::findEmbseqs() {
         VirtualSequence::findVirtualSequencePrograms(program, 3, 1, 1);
     if (!embseqs.empty()) {
       Log::get().info("Found " + std::to_string(embseqs.size()) +
-                      " embedded sequence programs in " +
-                      ProgramUtil::idStr(seq.id));
+                      " embedded sequence programs in " + seq.id.string());
       numFound += embseqs.size();
     }
   }
@@ -877,14 +877,15 @@ void Commands::compare(const std::string& path1, const std::string& path2) {
   Program p1 = OeisProgram::getProgramAndSeqId(path1).first;
   Program p2 = OeisProgram::getProgramAndSeqId(path2).first;
   auto id_str = Comments::getSequenceIdFromProgram(p1);
-  OeisSequence seq(id_str);
+  auto seq = OeisSequence(UID(id_str));
   OeisManager manager(settings);
   manager.load();
   size_t num_usages = 0;
-  if (seq.id < manager.getStats().program_usages.size()) {
-    num_usages = manager.getStats().program_usages[seq.id];
+  if (seq.id.number() <
+      static_cast<int64_t>(manager.getStats().program_usages.size())) {
+    num_usages = manager.getStats().program_usages[seq.id.number()];
   }
-  bool full_check = manager.isFullCheck(UID('A', seq.id));
+  bool full_check = manager.isFullCheck(seq.id);
   Log::get().info(manager.getFinder().getChecker().compare(
       p1, p2, "First", "Second", seq, full_check, num_usages));
 }

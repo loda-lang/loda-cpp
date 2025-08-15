@@ -35,27 +35,14 @@ bool OeisSequence::isTooBig(const Number& n) {
   }
 }
 
-OeisSequence::OeisSequence(size_t id) : id(id), offset(0), num_bfile_terms(0) {}
+OeisSequence::OeisSequence(UID id) : id(id), offset(0), num_bfile_terms(0) {}
 
-OeisSequence::OeisSequence(std::string id_str) : offset(0), num_bfile_terms(0) {
-  if (id_str.empty() || id_str[0] != 'A') {
-    throw std::invalid_argument(id_str);
-  }
-  id_str = id_str.substr(1);
-  for (char c : id_str) {
-    if (!std::isdigit(c)) {
-      throw std::invalid_argument("A" + id_str);
-    }
-  }
-  id = std::stoll(id_str);
-}
-
-OeisSequence::OeisSequence(size_t id, const std::string& name,
+OeisSequence::OeisSequence(UID id, const std::string& name,
                            const Sequence& full)
     : id(id), name(name), offset(0), terms(full), num_bfile_terms(0) {}
 
 std::ostream& operator<<(std::ostream& out, const OeisSequence& s) {
-  out << ProgramUtil::idStr(s.id) << ": " << s.name;
+  out << s.id.string() << ": " << s.name;
   return out;
 }
 
@@ -70,8 +57,9 @@ std::string OeisSequence::urlStr(int64_t id) {
 }
 
 std::string OeisSequence::getBFilePath() const {
-  return Setup::getOeisHome() + "b" + FILE_SEP + ProgramUtil::dirStr(id) +
-         FILE_SEP + ProgramUtil::idStr(id, "b") + ".txt";
+  return Setup::getOeisHome() + "b" + FILE_SEP +
+         ProgramUtil::dirStr(id.number()) + FILE_SEP +
+         ProgramUtil::idStr(id.number(), "b") + ".txt";
 }
 
 void removeInvalidBFile(const OeisSequence& oeis_seq,
@@ -83,7 +71,7 @@ void removeInvalidBFile(const OeisSequence& oeis_seq,
   }
 }
 
-Sequence loadBFile(size_t id, const Sequence& seq_full) {
+Sequence loadBFile(UID id, const Sequence& seq_full) {
   const OeisSequence oeis_seq(id);
   Sequence result;
 
@@ -125,8 +113,8 @@ Sequence loadBFile(size_t id, const Sequence& seq_full) {
         ++expected_index;
       }
       if (Log::get().level == Log::Level::DEBUG) {
-        Log::get().debug("Read b-file for " + ProgramUtil::idStr(id) +
-                         " with " + std::to_string(result.size()) + " terms");
+        Log::get().debug("Read b-file for " + id.string() + " with " +
+                         std::to_string(result.size()) + " terms");
       }
     }
   } catch (const std::exception& e) {
@@ -163,7 +151,7 @@ Sequence loadBFile(size_t id, const Sequence& seq_full) {
     auto seq_test = result.subsequence(0, seq_full.size());
     if (seq_test != seq_full) {
       Log::get().warn("Unexpected terms in b-file or program for " +
-                      ProgramUtil::idStr(id));
+                      id.string());
       Log::get().warn("- expected: " + seq_full.to_string());
       Log::get().warn("- found:    " + seq_test.to_string());
       error_state = "invalid";
@@ -181,9 +169,8 @@ Sequence loadBFile(size_t id, const Sequence& seq_full) {
   }
 
   if (Log::get().level == Log::Level::DEBUG) {
-    Log::get().debug("Loaded long version of sequence " +
-                     ProgramUtil::idStr(id) + " with " +
-                     std::to_string(result.size()) + " terms");
+    Log::get().debug("Loaded long version of sequence " + id.string() +
+                     " with " + std::to_string(result.size()) + " terms");
   }
   return result;
 }
@@ -198,7 +185,7 @@ Sequence OeisSequence::getTerms(int64_t max_num_terms) const {
     return terms.subsequence(0, real_max_terms);
   }
 
-  if (id == 0) {
+  if (id.number() == 0) {
     Log::get().error("Invalid OEIS sequence ID", true);
   }
 
@@ -215,7 +202,7 @@ Sequence OeisSequence::getTerms(int64_t max_num_terms) const {
         ensureDir(path);
         std::remove(path.c_str());
         ApiClient::getDefaultInstance().getOeisFile(
-            ProgramUtil::idStr(id, "b") + ".txt", path);
+            ProgramUtil::idStr(id.number(), "b") + ".txt", path);
         big = loadBFile(id, terms);
       }
     }

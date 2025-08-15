@@ -2,6 +2,7 @@
 
 #include <unordered_set>
 
+#include "base/uid.hpp"
 #include "math/sequence.hpp"
 
 class OeisSequence {
@@ -18,11 +19,9 @@ class OeisSequence {
 
   static bool isTooBig(const Number& n);
 
-  OeisSequence(size_t id = 0);
+  OeisSequence(UID id = UID('A', 0));
 
-  OeisSequence(std::string id_str);
-
-  OeisSequence(size_t id, const std::string& name, const Sequence& full);
+  OeisSequence(UID id, const std::string& name, const Sequence& full);
 
   static std::string urlStr(int64_t id);
 
@@ -32,7 +31,7 @@ class OeisSequence {
 
   size_t existingNumTerms() const { return terms.size(); }
 
-  size_t id;
+  UID id;
   std::string name;
   int64_t offset;
 

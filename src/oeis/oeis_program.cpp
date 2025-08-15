@@ -18,9 +18,9 @@ std::pair<Program, size_t> OeisProgram::getProgramAndSeqId(
   Parser parser;
   std::pair<Program, size_t> result;
   try {
-    OeisSequence s(arg);
-    result.first = parser.parse(ProgramUtil::getProgramPath(s.id));
-    result.second = s.id;
+    UID uid(arg);
+    result.first = parser.parse(ProgramUtil::getProgramPath(uid.number()));
+    result.second = uid.number();
   } catch (...) {
     // not an ID string
     result.first = parser.parse(arg);
@@ -105,18 +105,16 @@ std::vector<bool> OeisProgram::collectLatestProgramIds(
       if (path.size() >= 11 && path.substr(path.size() - 4) == ".asm") {
         auto id_str = path.substr(path.size() - 11, 7);
         try {
-          OeisSequence seq(id_str);
-          if (isFile(ProgramUtil::getProgramPath(seq.id))) {
+          UID uid(id_str);
+          if (isFile(ProgramUtil::getProgramPath(uid.number()))) {
             if (status == "A" && num_added_ids < max_added_programs) {
-              Log::get().debug("Added program for " +
-                               ProgramUtil::idStr(seq.id));
-              ids.insert(seq.id);
+              Log::get().debug("Added program for " + uid.string());
+              ids.insert(uid.number());
               num_added_ids++;
             } else if (status == "M" &&
                        num_modified_ids < max_modified_programs) {
-              Log::get().debug("Modified program for " +
-                               ProgramUtil::idStr(seq.id));
-              ids.insert(seq.id);
+              Log::get().debug("Modified program for " + uid.string());
+              ids.insert(uid.number());
               num_modified_ids++;
             }
           }

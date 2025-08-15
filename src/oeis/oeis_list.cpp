@@ -42,7 +42,7 @@ void OeisList::loadList(const std::string& path,
       }
       id += ch;
     }
-    list.insert(OeisSequence(id).id);
+    list.insert(UID(id).number());
   }
   Log::get().debug("Finished loading of list " + path + " with " +
                    std::to_string(list.size()) + " entries");
@@ -79,7 +79,7 @@ void OeisList::loadMapWithComments(const std::string& path,
       }
     }
     trimString(comment);
-    map[OeisSequence(id).id] = comment;
+    map[UID(id).number()] = comment;
   }
   Log::get().debug("Finished loading of list " + path + " with " +
                    std::to_string(map.size()) + " entries");
@@ -129,12 +129,12 @@ void OeisList::addToMap(std::istream& in, std::map<size_t, int64_t>& map) {
     if (id.empty() || value.empty()) {
       Log::get().error("Error parsing line: " + line, true);
     }
-    seq = OeisSequence(id);
+    auto uid = UID(id);
     v = std::stoll(value);
-    if (map.find(seq.id) == map.end()) {
-      map[seq.id] = v;
+    if (map.find(uid.number()) == map.end()) {
+      map[uid.number()] = v;
     } else {
-      map[seq.id] += v;
+      map[uid.number()] += v;
     }
   }
 }
