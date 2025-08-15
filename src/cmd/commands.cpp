@@ -446,7 +446,7 @@ void Commands::addToList(const std::string& seq_id,
                          const std::string& list_filename) {
   initLog(false);
   // Load the list (ID -> name)
-  std::map<size_t, std::string> list;
+  std::map<UID, std::string> list;
   std::string list_path = list_filename;
   if (list_path.find(FILE_SEP) == std::string::npos) {
     const std::string oeis_dir = Setup::getProgramsHome() + "oeis" + FILE_SEP;
@@ -467,8 +467,8 @@ void Commands::addToList(const std::string& seq_id,
     seq.name = sequences[seq.id.number()].name;
   }
   // Insert if not present
-  if (list.find(seq.id.number()) == list.end()) {
-    list[seq.id.number()] = seq.name;
+  if (list.find(seq.id) == list.end()) {
+    list[seq.id] = seq.name;
     // Write back using OeisList helper
     OeisList::saveMapWithComments(list_path, list);
     Log::get().info("Added " + seq.id.string() + " to " + list_path);

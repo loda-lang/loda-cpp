@@ -21,7 +21,7 @@ void InvalidMatches::load() {
 }
 
 bool InvalidMatches::hasTooMany(UID id) const {
-  auto it = invalid_matches.find(id.number());
+  auto it = invalid_matches.find(id);
   if (it != invalid_matches.end() && it->second > 0) {
     int64_t r = Random::get().gen() % it->second;
     return r >= 100;
@@ -30,7 +30,7 @@ bool InvalidMatches::hasTooMany(UID id) const {
 }
 
 void InvalidMatches::insert(UID id) {
-  invalid_matches[id.number()]++;
+  invalid_matches[id]++;
   if (scheduler.isTargetReached()) {
     scheduler.reset();
     Log::get().info("Saving invalid matches stats for " +

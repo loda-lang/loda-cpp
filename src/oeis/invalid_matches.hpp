@@ -15,6 +15,6 @@ class InvalidMatches {
   bool hasTooMany(UID id) const;
 
  private:
-  std::map<size_t, int64_t> invalid_matches;
+  std::map<UID, int64_t> invalid_matches;
   AdaptiveScheduler scheduler;
 };

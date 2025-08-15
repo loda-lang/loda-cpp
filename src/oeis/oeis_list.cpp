@@ -46,7 +46,7 @@ void OeisList::loadList(const std::string& path,
 }
 
 void OeisList::loadMapWithComments(const std::string& path,
-                                   std::map<size_t, std::string>& map) {
+                                   std::map<UID, std::string>& map) {
   Log::get().debug("Loading map " + path);
   std::ifstream names(path);
   if (!names.good()) {
@@ -57,9 +57,6 @@ void OeisList::loadMapWithComments(const std::string& path,
   while (std::getline(names, line)) {
     if (line.empty() || line[0] == '#') {
       continue;
-    }
-    if (line[0] != 'A') {
-      Log::get().error("Error parsing OEIS sequence ID: " + line, true);
     }
     id = "";
     comment = "";
@@ -76,14 +73,13 @@ void OeisList::loadMapWithComments(const std::string& path,
       }
     }
     trimString(comment);
-    map[UID(id).number()] = comment;
+    map[UID(id)] = comment;
   }
   Log::get().debug("Finished loading of list " + path + " with " +
                    std::to_string(map.size()) + " entries");
 }
 
-bool OeisList::loadMap(const std::string& path,
-                       std::map<size_t, int64_t>& map) {
+bool OeisList::loadMap(const std::string& path, std::map<UID, int64_t>& map) {
   std::ifstream in(path);
   if (in.good()) {
     Log::get().debug("Loading map " + path);
@@ -97,7 +93,7 @@ bool OeisList::loadMap(const std::string& path,
   }
 }
 
-void OeisList::addToMap(std::istream& in, std::map<size_t, int64_t>& map) {
+void OeisList::addToMap(std::istream& in, std::map<UID, int64_t>& map) {
   std::string line, id, value;
   OeisSequence seq;
   bool is_value;
@@ -105,9 +101,6 @@ void OeisList::addToMap(std::istream& in, std::map<size_t, int64_t>& map) {
   while (std::getline(in, line)) {
     if (line.empty() || line[0] == '#') {
       continue;
-    }
-    if (line[0] != 'A') {
-      Log::get().error("Error parsing OEIS sequence ID: " + line, true);
     }
     id = "";
     value = "";
@@ -128,16 +121,16 @@ void OeisList::addToMap(std::istream& in, std::map<size_t, int64_t>& map) {
     }
     auto uid = UID(id);
     v = std::stoll(value);
-    if (map.find(uid.number()) == map.end()) {
-      map[uid.number()] = v;
+    if (map.find(uid) == map.end()) {
+      map[uid] = v;
     } else {
-      map[uid.number()] += v;
+      map[uid] += v;
     }
   }
 }
 
 void OeisList::mergeMap(const std::string& file_name,
-                        std::map<size_t, int64_t>& map) {
+                        std::map<UID, int64_t>& map) {
   if (file_name.find(FILE_SEP) != std::string::npos) {
     Log::get().error("Invalid file name for merging map: " + file_name, true);
   }
@@ -153,7 +146,7 @@ void OeisList::mergeMap(const std::string& file_name,
   }
   std::ofstream out(getListsHome() + file_name);
   for (auto it : map) {
-    out << ProgramUtil::idStr(it.first) << ": " << it.second
+    out << it.first.string() << ": " << it.second
         << std::endl;  // flush at every line to avoid corrupt data
   }
   out.close();
@@ -161,10 +154,10 @@ void OeisList::mergeMap(const std::string& file_name,
 }
 
 void OeisList::saveMapWithComments(const std::string& path,
-                                   const std::map<size_t, std::string>& map) {
+                                   const std::map<UID, std::string>& map) {
   std::ofstream out(path);
   for (const auto& entry : map) {
-    out << ProgramUtil::idStr(entry.first) << ": " << entry.second << "\n";
+    out << entry.first.string() << ": " << entry.second << "\n";
   }
   out.close();
 }

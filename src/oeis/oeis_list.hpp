@@ -14,15 +14,15 @@ class OeisList {
   static void loadList(const std::string& path, std::unordered_set<UID>& list);
 
   static void loadMapWithComments(const std::string& path,
-                                  std::map<size_t, std::string>& map);
+                                  std::map<UID, std::string>& map);
 
-  static bool loadMap(const std::string& path, std::map<size_t, int64_t>& map);
+  static bool loadMap(const std::string& path, std::map<UID, int64_t>& map);
 
-  static void addToMap(std::istream& in, std::map<size_t, int64_t>& map);
+  static void addToMap(std::istream& in, std::map<UID, int64_t>& map);
 
   static void mergeMap(const std::string& file_name,
-                       std::map<size_t, int64_t>& map);
+                       std::map<UID, int64_t>& map);
 
   static void saveMapWithComments(const std::string& path,
-                                  const std::map<size_t, std::string>& map);
+                                  const std::map<UID, std::string>& map);
 };

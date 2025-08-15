@@ -231,13 +231,13 @@ void OeisManager::loadNames() {
 void OeisManager::loadOffsets() {
   Log::get().debug("Loading offsets from the OEIS index");
   const std::string path = Setup::getOeisHome() + "offsets";
-  std::map<size_t, std::string> entries;
+  std::map<UID, std::string> entries;
   OeisList::loadMapWithComments(path, entries);
   for (const auto &entry : entries) {
-    const size_t id = entry.first;
-    if (id < sequences.size() &&
-        sequences[id].id.number() == static_cast<int64_t>(id)) {
-      sequences[id].offset = std::stoll(entry.second);
+    const UID id = entry.first;
+    if (id.number() < static_cast<int64_t>(sequences.size()) &&
+        sequences[id.number()].id == id) {
+      sequences[id.number()].offset = std::stoll(entry.second);
     }
   }
 }

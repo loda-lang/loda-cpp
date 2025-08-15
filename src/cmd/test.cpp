@@ -898,15 +898,15 @@ void checkSeqAgainstTestBFile(int64_t seq_id, int64_t offset,
 
 void Test::oeisList() {
   Log::get().info("Testing OEIS lists");
-  std::map<size_t, int64_t> map;
+  std::map<UID, int64_t> map;
   std::string path = OeisList::getListsHome() + "test.txt";
   OeisList::loadMap(path, map);
   if (!map.empty()) {
     Log::get().error("unexpected map content", true);
   }
-  map[3] = 5;
-  map[7] = 9;
-  map[8] = 4;
+  map[UID('A', 3)] = 5;
+  map[UID('A', 7)] = 9;
+  map[UID('A', 8)] = 4;
   auto copy = map;
   OeisList::mergeMap("test.txt", map);
   if (!map.empty()) {
@@ -916,11 +916,11 @@ void Test::oeisList() {
   if (map != copy) {
     Log::get().error("unexpected map content", true);
   }
-  std::map<size_t, int64_t> delta;
-  delta[7] = 6;
+  std::map<UID, int64_t> delta;
+  delta[UID('A', 7)] = 6;
   OeisList::mergeMap("test.txt", delta);
   OeisList::loadMap(path, map);
-  copy[7] = 15;
+  copy[UID('A', 7)] = 15;
   if (map != copy) {
     Log::get().error("unexpected map content", true);
   }
@@ -1057,7 +1057,7 @@ void Test::formula() {
 void Test::checkFormulas(const std::string& testFile, FormulaType type) {
   std::string path = std::string("tests") + FILE_SEP + std::string("formula") +
                      FILE_SEP + testFile;
-  std::map<size_t, std::string> map;
+  std::map<UID, std::string> map;
   OeisList::loadMapWithComments(path, map);
   if (map.empty()) {
     Log::get().error("Unexpected map content", true);
@@ -1066,11 +1066,10 @@ void Test::checkFormulas(const std::string& testFile, FormulaType type) {
   FormulaGenerator generator;
   for (const auto& e : map) {
     auto id = e.first;
-    Log::get().info("Testing formula for " + ProgramUtil::idStr(id) + ": " +
-                    e.second);
-    auto p = parser.parse(ProgramUtil::getProgramPath(id));
+    Log::get().info("Testing formula for " + id.string() + ": " + e.second);
+    auto p = parser.parse(ProgramUtil::getProgramPath(id.number()));
     Formula f;
-    if (!generator.generate(p, id, f, true)) {
+    if (!generator.generate(p, id.number(), f, true)) {
       Log::get().error("Cannot generate formula from program", true);
     }
     if (type == FormulaType::FORMULA) {
@@ -1097,14 +1096,14 @@ void Test::range() {
 void Test::testRanges(const std::string& filename, bool finite) {
   std::string path = std::string("tests") + FILE_SEP + std::string("formula") +
                      FILE_SEP + filename;
-  std::map<size_t, std::string> map;
+  std::map<UID, std::string> map;
   OeisList::loadMapWithComments(path, map);
   if (map.empty()) {
     Log::get().error("Unexpected map content", true);
   }
   Parser parser;
   for (const auto& e : map) {
-    checkRanges(e.first, finite, e.second);
+    checkRanges(e.first.number(), finite, e.second);
   }
 }
 
