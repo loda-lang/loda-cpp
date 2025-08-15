@@ -291,7 +291,7 @@ bool OeisManager::shouldMatch(const OeisSequence &seq) const {
 
   // check if program exists
   const bool prog_exists =
-      (static_cast<int64_t>(seq.id.number()) < stats->all_program_ids.size()) &&
+      (seq.id.number() < static_cast<int64_t>(stats->all_program_ids.size())) &&
       stats->all_program_ids[seq.id.number()];
 
   // program exists and protected?
