@@ -423,12 +423,12 @@ void Miner::submit(const std::string &path, std::string id_str) {
   Log::get().info(
       "Validating program against " + std::to_string(terms.size()) + " (>=" +
       std::to_string(std::min(num_required, terms.size())) + ") terms");
-  auto result = evaluator.check(program, terms, num_required, uid.number());
+  auto result = evaluator.check(program, terms, num_required, uid);
   if (result.first == status_t::ERROR) {
     Log::get().error("Validation failed", false);
     settings.print_as_b_file = true;
     Evaluator evaluator2(settings);
-    evaluator2.check(program, terms, num_required, uid.number());
+    evaluator2.check(program, terms, num_required, uid);
     return;  // error
   }
   Log::get().info("Validation successful");

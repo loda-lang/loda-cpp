@@ -583,7 +583,7 @@ void OeisManager::migrate() {
           op.source.value.asInt() >= 45) {
         p.ops.erase(p.ops.begin() + i);
         auto terms = s.getTerms(100);
-        auto result = evaluator.check(p, terms, -1, s.id.number());
+        auto result = evaluator.check(p, terms, -1, s.id);
         if (result.first != status_t::ERROR) {
           Log::get().info("Migrating " + s.id.string());
           dumpProgram(s.id, p, path, submitted_by);
@@ -966,8 +966,7 @@ bool OeisManager::maintainProgram(UID id, bool eval) {
     auto extended_seq = s.getTerms(OeisSequence::FULL_SEQ_LENGTH);
     auto num_required = OeisProgram::getNumRequiredTerms(program);
     try {
-      auto res =
-          evaluator.check(program, extended_seq, num_required, id.number());
+      auto res = evaluator.check(program, extended_seq, num_required, id);
       if (Signals::HALT) {
         return true;  // interrupted evaluation
       }

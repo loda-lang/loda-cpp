@@ -181,7 +181,7 @@ void Commands::check(const std::string& path) {
   initLog(true);
   auto program_and_id = OeisProgram::getProgramAndSeqId(path);
   auto program = program_and_id.first;
-  auto uid = UID('A', 0);
+  UID uid;
   if (program_and_id.second) {
     uid = UID('A', program_and_id.second);
   } else {
@@ -192,7 +192,7 @@ void Commands::check(const std::string& path) {
   Evaluator evaluator(settings);
   auto terms = seq.getTerms(OeisSequence::FULL_SEQ_LENGTH);
   auto num_required = OeisProgram::getNumRequiredTerms(program);
-  auto result = evaluator.check(program, terms, num_required, seq.id.number());
+  auto result = evaluator.check(program, terms, num_required, uid);
   switch (result.first) {
     case status_t::OK:
       std::cout << "ok" << std::endl;
@@ -358,6 +358,7 @@ void Commands::autoFold() {
   std::map<int64_t, int64_t> cell_map;
   size_t main_id, sub_id, main_loops, sub_loops;
   for (main_id = 0; main_id < num_ids; main_id++) {
+    const auto main_uid = UID('A', main_id);
     if (programs[main_id].ops.empty() || !Fold::shouldFold(programs[main_id])) {
       continue;
     }
@@ -380,11 +381,12 @@ void Commands::autoFold() {
       }
     }
     if (folded) {
-      Log::get().info("Folded " + ProgramUtil::idStr(main_id) + " using " +
-                      ProgramUtil::idStr(sub_id));
+      const auto sub_uid = UID('A', sub_id);
+      Log::get().info("Folded " + main_uid.string() + " using " +
+                      sub_uid.string());
       auto seq = manager.getSequences().at(main_id);
       auto terms = seq.getTerms(OeisSequence::DEFAULT_SEQ_LENGTH);
-      auto result = evaluator.check(main, terms, -1, main_id);
+      auto result = evaluator.check(main, terms, -1, main_uid);
       if (result.first == status_t::ERROR) {
         Sequence tmp;
         std::string error_msg;

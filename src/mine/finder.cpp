@@ -120,8 +120,7 @@ void Finder::findAll(const Program &p, const Sequence &norm_seq,
       last = t;
       auto expected_seq = s.getTerms(s.existingNumTerms());
       auto num_required = OeisProgram::getNumRequiredTerms(t.second);
-      auto res = evaluator.check(t.second, expected_seq, num_required,
-                                 t.first.number());
+      auto res = evaluator.check(t.second, expected_seq, num_required, t.first);
       if (res.first == status_t::ERROR) {
         invalid_matches.insert(t.first);
         // Log::get().warn( "Ignoring invalid match for " + s.id_str() );

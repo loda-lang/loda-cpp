@@ -114,7 +114,7 @@ check_result_t Checker::checkProgramExtended(Program program, Program existing,
 
   // check the program w/o minimization
   auto check_vanilla =
-      evaluator.check(program, extended_seq, num_required, seq.id.number());
+      evaluator.check(program, extended_seq, num_required, seq.id);
   if (check_vanilla.first == status_t::ERROR) {
     invalid_matches.insert(seq.id);
     return result;  // not correct
@@ -132,7 +132,7 @@ check_result_t Checker::checkProgramExtended(Program program, Program existing,
     // minimization changed program => check the minimized program
     num_required = OeisProgram::getNumRequiredTerms(program);
     auto check_minimized =
-        evaluator.check(program, extended_seq, num_required, seq.id.number());
+        evaluator.check(program, extended_seq, num_required, seq.id);
     if (check_minimized.first == status_t::ERROR) {
       if (check_vanilla.first == status_t::OK) {
         // looks like the minimization changed the semantics of the program
@@ -201,7 +201,7 @@ check_result_t Checker::checkProgramBasic(const Program& program,
   auto terms = seq.getTerms(num_required);
 
   // check the program
-  auto check = evaluator.check(program, terms, num_required, seq.id.number());
+  auto check = evaluator.check(program, terms, num_required, seq.id);
   if (check.first == status_t::ERROR) {
     invalid_matches.insert(seq.id);  // not correct
     return result;
