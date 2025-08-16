@@ -42,6 +42,6 @@ class RangeGenerator {
   void mergeLoopRange(const Range& before, Range& target) const;
 
   ProgramCache program_cache;
-  std::map<int64_t, Range> seq_range_cache;
+  std::map<UID, Range> seq_range_cache;
   std::stack<LoopState> loop_states;
 };

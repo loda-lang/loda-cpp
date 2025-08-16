@@ -193,12 +193,11 @@ bool RangeGenerator::update(const Operation& op, RangeMap& ranges) {
       if (op.source.type != Operand::Type::CONSTANT) {
         return false;  // sequence operation requires a constant source
       }
-      auto id = op.source.value.asInt();
-      auto it = seq_range_cache.find(id);
+      const auto uid = UID::castFromInt(op.source.value.asInt());
+      auto it = seq_range_cache.find(uid);
       if (it != seq_range_cache.end()) {
         target = it->second;
       } else {
-        auto uid = UID('A', id);
         program_cache.collect(uid);  // ensures that there is no recursion
         RangeGenerator gen;
         RangeMap tmp;
@@ -206,7 +205,7 @@ bool RangeGenerator::update(const Operation& op, RangeMap& ranges) {
           return false;
         }
         target = tmp.get(Program::OUTPUT_CELL);
-        seq_range_cache[id] = target;
+        seq_range_cache[uid] = target;
       }
       break;
     }
