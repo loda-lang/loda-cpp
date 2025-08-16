@@ -117,9 +117,10 @@ void OeisManager::load() {
   buf.setf(std::ios::fixed);
   buf.precision(2);
   buf << duration;
+  auto mem = getMemUsage() / (1024 * 1024);  // convert to MB
   Log::get().info("Loaded " + std::to_string(loaded_count) + "/" +
                   std::to_string(total_count) + " sequences in " + buf.str() +
-                  "s");
+                  "s; memory usage: " + std::to_string(mem) + " MiB");
 }
 
 void OeisManager::loadData() {
