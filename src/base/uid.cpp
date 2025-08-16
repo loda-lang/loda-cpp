@@ -17,7 +17,7 @@ UID::UID(const std::string& s) {
     invalidate("string", "'" + s + "'");
   }
   int64_t number = 0;
-  for (int64_t i = 1; i < s.size(); ++i) {
+  for (size_t i = 1; i < s.size(); ++i) {
     if (s[i] < '0' || s[i] > '9') {
       invalidate("string", "'" + s + "'");
     }
