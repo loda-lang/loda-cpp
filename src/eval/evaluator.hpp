@@ -41,7 +41,7 @@ class Evaluator {
   std::pair<status_t, steps_t> check(const Program &p,
                                      const Sequence &expected_seq,
                                      int64_t num_required_terms = -1,
-                                     int64_t id = -1);
+                                     int64_t id = 0);
 
   bool supportsEvalModes(const Program &p, eval_mode_t eval_modes);
 
