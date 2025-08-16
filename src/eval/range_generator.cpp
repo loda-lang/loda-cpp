@@ -198,10 +198,11 @@ bool RangeGenerator::update(const Operation& op, RangeMap& ranges) {
       if (it != seq_range_cache.end()) {
         target = it->second;
       } else {
-        program_cache.collect(id);  // ensures that there is no recursion
+        auto uid = UID('A', id);
+        program_cache.collect(uid);  // ensures that there is no recursion
         RangeGenerator gen;
         RangeMap tmp;
-        if (!gen.generate(program_cache.getProgram(id), tmp)) {
+        if (!gen.generate(program_cache.getProgram(uid), tmp)) {
           return false;
         }
         target = tmp.get(Program::OUTPUT_CELL);

@@ -37,9 +37,9 @@ bool hasIndirectOperand(const Program& p) {
   }
   // check if the program uses a sequence operation with an indirect operand
   ProgramCache cache;
-  constexpr int64_t dummy_id = std::numeric_limits<int>::max();
-  cache.insert(dummy_id, p);
-  auto collected = cache.collect(dummy_id);
+  const auto tmp_uid = UID('T', 1);
+  cache.insert(tmp_uid, p);
+  auto collected = cache.collect(tmp_uid);
   return std::any_of(collected.begin(), collected.end(), [](const auto& it) {
     return ProgramUtil::hasIndirectOperand(it.second);
   });

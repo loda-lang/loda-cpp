@@ -1,7 +1,7 @@
 ; in
 mov $1,$0
 mov $2,4
-prg $1,2
+prg $1,4222124650659842 ; TODO: support parsing "P000002"
 add $1,$2
 ; out
 mov $1,$0

@@ -93,9 +93,3 @@ class Number {
   int64_t value;
   BigNumber* big;
 };
-
-struct IntNumberPairHasher {
-  std::size_t operator()(const std::pair<int64_t, Number>& p) const {
-    return (p.first << 32) ^ p.second.hash();
-  }
-};
