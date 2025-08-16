@@ -16,6 +16,8 @@ class Test {
 
   void slow();
 
+  void uid();
+
   void number();
 
   void randomNumber(size_t tests);

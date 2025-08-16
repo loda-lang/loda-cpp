@@ -54,6 +54,7 @@ void Test::all() {
 }
 
 void Test::fast() {
+  uid();
   sequence();
   memory();
   operationMetadata();
@@ -97,6 +98,44 @@ OeisManager& Test::getManager() {
     manager_ptr.reset(new OeisManager(settings, getTmpDir() + "stats"));
   }
   return *manager_ptr;
+}
+
+void checkUID(UID uid, char domain, int64_t number, int64_t internal,
+              const std::string& str) {
+  if (uid.domain() != domain) {
+    Log::get().error("Unexpected UID domain: " + std::string(1, uid.domain()),
+                     true);
+  }
+  if (uid.number() != number) {
+    Log::get().error("Unexpected UID number: " + std::to_string(uid.number()),
+                     true);
+  }
+  if (uid.string() != str) {
+    Log::get().error("Unexpected UID string: " + uid.string(), true);
+  }
+  if (uid.castToInt() != internal) {
+    Log::get().error("Unexpected UID internal representation: " +
+                         std::to_string(uid.castToInt()),
+                     true);
+  }
+}
+
+void testUID(char domain, int64_t number, int64_t internal,
+             const std::string& str) {
+  checkUID(UID(domain, number), domain, number, internal, str);
+  checkUID(UID(str), domain, number, internal, str);
+  checkUID(UID::castFromInt(internal), domain, number, internal, str);
+}
+
+void Test::uid() {
+  Log::get().info("Testing UID");
+  testUID('A', 0, 0, "A000000");
+  testUID('A', 1, 1, "A000001");
+  testUID('A', 1247, 1247, "A001247");
+  testUID('P', 0, 0xF000000000000, "P000000");
+  testUID('P', 16, 0xF000000000010, "P000016");
+  testUID('V', 0, 0x15000000000000, "V000000");
+  testUID('V', 17, 0x15000000000011, "V000017");
 }
 
 void check_num(const Number& m, const std::string& s) {

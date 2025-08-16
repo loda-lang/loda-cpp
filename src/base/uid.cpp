@@ -45,6 +45,19 @@ int64_t UID::number() const {
   return static_cast<int64_t>(value & 0x0000FFFFFFFFFFFF);
 }
 
+int64_t UID::castToInt() const { return value; }
+
+UID UID::castFromInt(int64_t value) {
+  char domain = 'A' + static_cast<char>((value >> 48) & 0xFF);
+  int64_t number = static_cast<int64_t>(value & 0x0000FFFFFFFFFFFF);
+  return UID(domain, number);
+}
+
+UID& UID::operator++(int) {
+  set(domain(), number() + 1);
+  return *this;
+}
+
 std::string UID::string() const {
   std::stringstream s;
   s << std::string(1, domain()) << std::setw(6) << std::setfill('0')

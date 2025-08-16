@@ -26,6 +26,12 @@ class UID {
   // Get the 6-digit number part of the UID
   int64_t number() const;
 
+  // Return the internal integer representation of the UID
+  int64_t castToInt() const;
+
+  // Create a UID from its internal integer representation
+  static UID castFromInt(int64_t value);
+
   // Return the UID as a string, e.g., "A123456" (always 7 chars)
   std::string string() const;
 
@@ -35,6 +41,7 @@ class UID {
   bool operator>(const UID& other) const { return value > other.value; }
   bool operator<=(const UID& other) const { return value <= other.value; }
   bool operator>=(const UID& other) const { return value >= other.value; }
+  UID& operator++(int);
 
   friend struct std::hash<UID>;
 
