@@ -43,8 +43,14 @@ class Interpreter {
   bool has_memory;
   size_t num_memory_checks;
 
-  std::unordered_set<int64_t> running_programs;
-  std::unordered_map<std::pair<int64_t, Number>, std::pair<Number, size_t>,
-                     IntNumberPairHasher>
+  struct UIDNumberPairHasher {
+    std::size_t operator()(const std::pair<UID, Number> &p) const {
+      return (std::hash<UID>()(p.first) << 32) ^ p.second.hash();
+    }
+  };
+
+  std::unordered_set<UID> running_programs;
+  std::unordered_map<std::pair<UID, Number>, std::pair<Number, size_t>,
+                     UIDNumberPairHasher>
       terms_cache;
 };

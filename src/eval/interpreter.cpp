@@ -323,19 +323,20 @@ size_t Interpreter::run(const Program& p, Memory& mem) {
 
 size_t Interpreter::run(const Program& p, Memory& mem, int64_t id) {
   size_t result;
+  const auto uid = UID::castFromInt(id);
   if (id >= 0) {
-    running_programs.insert(id);
+    running_programs.insert(uid);
   }
   try {
     result = run(p, mem);
   } catch (...) {
     if (id >= 0) {
-      running_programs.erase(id);
+      running_programs.erase(uid);
     }
     std::rethrow_exception(std::current_exception());
   }
   if (id >= 0) {
-    running_programs.erase(id);
+    running_programs.erase(uid);
   }
   return result;
 }
@@ -389,37 +390,38 @@ void Interpreter::set(const Operand& a, const Number& v, Memory& mem,
 
 std::pair<Number, size_t> Interpreter::callSeq(int64_t id, const Number& arg) {
   // check if already cached
-  std::pair<int64_t, Number> key(id, arg);
+  const auto uid = UID::castFromInt(id);
+  std::pair<UID, Number> key(uid, arg);
   auto it = terms_cache.find(key);
   if (it != terms_cache.end()) {
     return it->second;
   }
 
   // check if program exists
-  auto& call_program = program_cache.getProgram(id);
+  auto& call_program = program_cache.getProgram(uid);
 
   // check for invalid arguments
-  if (program_cache.shouldCheckOffset(id) &&
-      arg < program_cache.getOffset(id)) {
+  if (program_cache.shouldCheckOffset(uid) &&
+      arg < program_cache.getOffset(uid)) {
     throw std::runtime_error(ERROR_SEQ_USING_INVALID_ARG);
   }
 
   // check for recursive calls
-  if (running_programs.find(id) != running_programs.end()) {
-    throw std::runtime_error("Recursion detected: " + ProgramUtil::idStr(id));
+  if (running_programs.find(uid) != running_programs.end()) {
+    throw std::runtime_error("Recursion detected: " + uid.string());
   }
 
   // evaluate program
   std::pair<Number, size_t> result;
-  running_programs.insert(id);
+  running_programs.insert(uid);
   Memory tmp;
   tmp.set(Program::INPUT_CELL, arg);
   try {
-    result.second = run(call_program, tmp) + program_cache.getOverhead(id);
+    result.second = run(call_program, tmp) + program_cache.getOverhead(uid);
     result.first = tmp.get(Program::OUTPUT_CELL);
-    running_programs.erase(id);
+    running_programs.erase(uid);
   } catch (...) {
-    running_programs.erase(id);
+    running_programs.erase(uid);
     std::rethrow_exception(std::current_exception());
   }
 
@@ -435,13 +437,17 @@ std::pair<Number, size_t> Interpreter::callSeq(int64_t id, const Number& arg) {
 
 size_t Interpreter::callPrg(int64_t id, int64_t start, Memory& mem) {
   // load program
-  id = -id;  // internally use negative IDs for prg calls
-  auto& call_program = program_cache.getProgram(id);
+  const auto uid = UID::castFromInt(id);
+  if (uid.domain() != 'P') {
+    throw std::invalid_argument("Unsupported program ID for prg operation: " +
+                                uid.string());
+  }
+  auto& call_program = program_cache.getProgram(uid);
 
   // check for recursive calls
-  if (running_programs.find(id) != running_programs.end()) {
+  if (running_programs.find(uid) != running_programs.end()) {
     throw std::runtime_error("Recursion detected: " +
-                             ProgramCache::getProgramPath(id));
+                             ProgramCache::getProgramPath(uid));
   }
 
   // get number of inputs and outputs
@@ -456,12 +462,12 @@ size_t Interpreter::callPrg(int64_t id, int64_t start, Memory& mem) {
 
   // evaluate program
   size_t steps = 0;
-  running_programs.insert(id);
+  running_programs.insert(uid);
   try {
     steps = run(call_program, tmp);
-    running_programs.erase(id);
+    running_programs.erase(uid);
   } catch (...) {
-    running_programs.erase(id);
+    running_programs.erase(uid);
     std::rethrow_exception(std::current_exception());
   }
 

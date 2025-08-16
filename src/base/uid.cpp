@@ -13,11 +13,11 @@ inline void invalidate(const std::string& key, const std::string& value) {
 UID::UID(char domain, int64_t number) { set(domain, number); }
 
 UID::UID(const std::string& s) {
-  if (s.size() != 7 || s[0] < 'A' || s[0] > 'Z') {
+  if (s.size() < 2 || s.size() > 7 || s[0] < 'A' || s[0] > 'Z') {
     invalidate("string", "'" + s + "'");
   }
   int64_t number = 0;
-  for (int64_t i = 1; i < 7; ++i) {
+  for (size_t i = 1; i < s.size(); ++i) {
     if (s[i] < '0' || s[i] > '9') {
       invalidate("string", "'" + s + "'");
     }

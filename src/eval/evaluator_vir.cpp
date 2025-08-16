@@ -11,8 +11,8 @@ const int64_t MAX_EMBEDDED_PROGRAMS = 10;
 VirtualEvaluator::VirtualEvaluator(const Settings &settings)
     : interpreter(settings), is_debug(Log::get().level == Log::Level::DEBUG) {}
 
-int64_t extractEmbedded(Program &refactored, Program &extracted,
-                        int64_t dummy_id, VirtualSequence::Result info) {
+int64_t extractEmbedded(Program &refactored, Program &extracted, UID vid,
+                        VirtualSequence::Result info) {
   int64_t overhead = 0;
   // extract the embedded sequence program
   extracted.ops = {refactored.ops.begin() + info.start_pos,
@@ -25,7 +25,7 @@ int64_t extractEmbedded(Program &refactored, Program &extracted,
   refactored.ops[info.start_pos] =
       Operation(Operation::Type::SEQ,
                 Operand(Operand::Type::DIRECT, Number(info.output_cell)),
-                Operand(Operand::Type::CONSTANT, Number(dummy_id)));
+                Operand(Operand::Type::CONSTANT, Number(vid.castToInt())));
   overhead -= 1;  // account for the seq operation
   // move the result to the output cell
   if (info.input_cell != info.output_cell) {
@@ -61,7 +61,7 @@ int64_t extractEmbedded(Program &refactored, Program &extracted,
 bool VirtualEvaluator::init(const Program &p) {
   interpreter.clearCaches();
   refactored = p;
-  int64_t dummy_id = std::numeric_limits<int64_t>::max();
+  auto vid = UID('V', 1);
   Program extracted;
   auto &program_cache = interpreter.program_cache;
   int64_t num_embedded_seqs = 0;
@@ -72,11 +72,11 @@ bool VirtualEvaluator::init(const Program &p) {
       break;
     }
     auto &info = found.front();
-    auto overhead = extractEmbedded(refactored, extracted, dummy_id, info);
-    program_cache.insert(dummy_id, extracted);
-    program_cache.setCheckOffset(dummy_id, false);
-    program_cache.setOverhead(dummy_id, overhead);
-    dummy_id--;
+    auto overhead = extractEmbedded(refactored, extracted, vid, info);
+    program_cache.insert(vid, extracted);
+    program_cache.setCheckOffset(vid, false);
+    program_cache.setOverhead(vid, overhead);
+    vid++;
     num_embedded_seqs++;
   }
   if (num_embedded_seqs) {

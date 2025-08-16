@@ -2,6 +2,7 @@
 
 #include "eval/evaluator_par.hpp"
 #include "lang/parser.hpp"
+#include "lang/program_cache.hpp"
 #include "lang/program_util.hpp"
 #include "lang/subprogram.hpp"
 
@@ -18,16 +19,9 @@ void updateOperand(Operand &op, int64_t start, int64_t shared_region_length,
   }
 }
 
-bool prepareEmbedding(int64_t id, Program &sub, Operation::Type embeddingType) {
+bool prepareEmbedding(UID id, Program &sub, Operation::Type embeddingType) {
   // load and check program to be embedded
-  std::string path;
-  if (embeddingType == Operation::Type::SEQ) {
-    path = ProgramUtil::getProgramPath(id);
-  } else if (embeddingType == Operation::Type::PRG) {
-    path = ProgramUtil::getProgramPath(id, "prg", "P");
-  } else {
-    throw std::runtime_error("Unsupported embedding type");
-  }
+  const auto path = ProgramCache::getProgramPath(id);
   Parser parser;
   sub = parser.parse(path);
   if (ProgramUtil::hasIndirectOperand(sub)) {
@@ -86,8 +80,9 @@ bool Fold::unfold(Program &main, int64_t pos) {
   }
   const auto &emb_op = main.ops[pos];
   auto sub_id = emb_op.source.value.asInt();
+  auto sub_uid = UID::castFromInt(sub_id);
   Program sub;
-  if (!prepareEmbedding(sub_id, sub, emb_op.type)) {
+  if (!prepareEmbedding(sub_uid, sub, emb_op.type)) {
     return false;
   }
   // shift used operands

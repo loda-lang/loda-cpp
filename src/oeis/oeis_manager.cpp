@@ -954,7 +954,7 @@ bool OeisManager::maintainProgram(UID id, bool eval) {
   if (is_okay) {
     try {
       ProgramCache cache;
-      cache.collect(s.id.number());
+      cache.collect(s.id);
     } catch (const std::exception &) {
       is_okay = false;
     }
