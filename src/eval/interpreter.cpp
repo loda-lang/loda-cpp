@@ -241,7 +241,8 @@ size_t Interpreter::run(const Program& p, Memory& mem) {
       case Operation::Type::SEQ: {
         target = get(op.target, mem);
         source = get(op.source, mem);
-        auto result = callSeq(source.asInt(), target);
+        auto uid = UID::castFromInt(source.asInt());
+        auto result = callSeq(uid, target);
         set(op.target, result.first, mem, op);
         cycles += result.second;
         break;
@@ -249,7 +250,8 @@ size_t Interpreter::run(const Program& p, Memory& mem) {
       case Operation::Type::PRG: {
         target = get(op.target, mem, true);
         source = get(op.source, mem);
-        cycles += callPrg(source.asInt(), target.asInt(), mem);
+        auto uid = UID::castFromInt(source.asInt());
+        cycles += callPrg(uid, target.asInt(), mem);
         break;
       }
 
@@ -321,23 +323,16 @@ size_t Interpreter::run(const Program& p, Memory& mem) {
   return cycles;
 }
 
-size_t Interpreter::run(const Program& p, Memory& mem, int64_t id) {
+size_t Interpreter::run(const Program& p, Memory& mem, UID id) {
   size_t result;
-  const auto uid = UID::castFromInt(id);
-  if (id >= 0) {
-    running_programs.insert(uid);
-  }
+  running_programs.insert(id);
   try {
     result = run(p, mem);
   } catch (...) {
-    if (id >= 0) {
-      running_programs.erase(uid);
-    }
+    running_programs.erase(id);
     std::rethrow_exception(std::current_exception());
   }
-  if (id >= 0) {
-    running_programs.erase(uid);
-  }
+  running_programs.erase(id);
   return result;
 }
 
@@ -388,40 +383,39 @@ void Interpreter::set(const Operand& a, const Number& v, Memory& mem,
   mem.set(index, v);
 }
 
-std::pair<Number, size_t> Interpreter::callSeq(int64_t id, const Number& arg) {
+std::pair<Number, size_t> Interpreter::callSeq(UID id, const Number& arg) {
   // check if already cached
-  const auto uid = UID::castFromInt(id);
-  std::pair<UID, Number> key(uid, arg);
+  std::pair<UID, Number> key(id, arg);
   auto it = terms_cache.find(key);
   if (it != terms_cache.end()) {
     return it->second;
   }
 
   // check if program exists
-  auto& call_program = program_cache.getProgram(uid);
+  auto& call_program = program_cache.getProgram(id);
 
   // check for invalid arguments
-  if (program_cache.shouldCheckOffset(uid) &&
-      arg < program_cache.getOffset(uid)) {
+  if (program_cache.shouldCheckOffset(id) &&
+      arg < program_cache.getOffset(id)) {
     throw std::runtime_error(ERROR_SEQ_USING_INVALID_ARG);
   }
 
   // check for recursive calls
-  if (running_programs.find(uid) != running_programs.end()) {
-    throw std::runtime_error("Recursion detected: " + uid.string());
+  if (running_programs.find(id) != running_programs.end()) {
+    throw std::runtime_error("Recursion detected: " + id.string());
   }
 
   // evaluate program
   std::pair<Number, size_t> result;
-  running_programs.insert(uid);
+  running_programs.insert(id);
   Memory tmp;
   tmp.set(Program::INPUT_CELL, arg);
   try {
-    result.second = run(call_program, tmp) + program_cache.getOverhead(uid);
+    result.second = run(call_program, tmp) + program_cache.getOverhead(id);
     result.first = tmp.get(Program::OUTPUT_CELL);
-    running_programs.erase(uid);
+    running_programs.erase(id);
   } catch (...) {
-    running_programs.erase(uid);
+    running_programs.erase(id);
     std::rethrow_exception(std::current_exception());
   }
 
@@ -435,19 +429,18 @@ std::pair<Number, size_t> Interpreter::callSeq(int64_t id, const Number& arg) {
   return result;
 }
 
-size_t Interpreter::callPrg(int64_t id, int64_t start, Memory& mem) {
+size_t Interpreter::callPrg(UID id, int64_t start, Memory& mem) {
   // load program
-  const auto uid = UID::castFromInt(id);
-  if (uid.domain() != 'P') {
+  if (id.domain() != 'P') {
     throw std::invalid_argument("Unsupported program ID for prg operation: " +
-                                uid.string());
+                                id.string());
   }
-  auto& call_program = program_cache.getProgram(uid);
+  auto& call_program = program_cache.getProgram(id);
 
   // check for recursive calls
-  if (running_programs.find(uid) != running_programs.end()) {
+  if (running_programs.find(id) != running_programs.end()) {
     throw std::runtime_error("Recursion detected: " +
-                             ProgramCache::getProgramPath(uid));
+                             ProgramCache::getProgramPath(id));
   }
 
   // get number of inputs and outputs
@@ -462,12 +455,12 @@ size_t Interpreter::callPrg(int64_t id, int64_t start, Memory& mem) {
 
   // evaluate program
   size_t steps = 0;
-  running_programs.insert(uid);
+  running_programs.insert(id);
   try {
     steps = run(call_program, tmp);
-    running_programs.erase(uid);
+    running_programs.erase(id);
   } catch (...) {
-    running_programs.erase(uid);
+    running_programs.erase(id);
     std::rethrow_exception(std::current_exception());
   }
 

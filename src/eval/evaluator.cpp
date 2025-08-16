@@ -146,6 +146,7 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
                                               const Sequence &expected_seq,
                                               int64_t num_required_terms,
                                               int64_t id) {
+  const auto uid = UID::castFromInt(id);
   if (num_required_terms < 0) {
     num_required_terms = expected_seq.size();
   }
@@ -181,7 +182,7 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
         } else {
           mem.clear();
           mem.set(Program::INPUT_CELL, index);
-          result.second.add(interpreter.run(p, mem, id));
+          result.second.add(interpreter.run(p, mem, uid));
           out = mem.get(Program::OUTPUT_CELL);
         }
         if (check_eval_time) {

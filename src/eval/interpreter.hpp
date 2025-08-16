@@ -18,7 +18,7 @@ class Interpreter {
 
   size_t run(const Program &p, Memory &mem);
 
-  size_t run(const Program &p, Memory &mem, int64_t id);
+  size_t run(const Program &p, Memory &mem, UID id);
 
   size_t getMaxCycles() const;
 
@@ -33,9 +33,9 @@ class Interpreter {
   void set(const Operand &a, const Number &v, Memory &mem,
            const Operation &last_op) const;
 
-  std::pair<Number, size_t> callSeq(int64_t id, const Number &arg);
+  std::pair<Number, size_t> callSeq(UID id, const Number &arg);
 
-  size_t callPrg(int64_t id, int64_t start, Memory &mem);
+  size_t callPrg(UID id, int64_t start, Memory &mem);
 
   const Settings &settings;
 
