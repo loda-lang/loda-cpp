@@ -52,9 +52,8 @@ std::string OeisSequence::to_string() const {
   return ss.str();
 }
 
-std::string OeisSequence::urlStr(int64_t id) {
-  UID uid('A', id);
-  return "https://oeis.org/" + uid.string();
+std::string OeisSequence::urlStr(UID id) {
+  return "https://oeis.org/" + id.string();
 }
 
 std::string OeisSequence::getBFilePath() const {

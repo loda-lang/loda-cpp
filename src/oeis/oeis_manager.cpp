@@ -769,7 +769,7 @@ void OeisManager::alert(Program p, UID id, const std::string &prefix,
   }
   Log::AlertDetails details;
   details.title = seq.id.string();
-  details.title_link = OeisSequence::urlStr(seq.id.number());
+  details.title_link = OeisSequence::urlStr(seq.id);
   details.color = color;
   std::stringstream buf;
   // TODO: code block markers must be escaped for Slack, but not for Discord

@@ -24,7 +24,7 @@ class OeisSequence {
 
   OeisSequence(UID id, const std::string& name, const Sequence& full);
 
-  static std::string urlStr(int64_t id);
+  static std::string urlStr(UID id);
 
   std::string getBFilePath() const;
 
