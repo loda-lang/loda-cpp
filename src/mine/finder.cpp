@@ -56,9 +56,9 @@ void Finder::remove(const Sequence &norm_seq, UID id) {
   }
 }
 
-Matcher::seq_programs_t Finder::findSequence(
-    const Program &p, Sequence &norm_seq,
-    const std::vector<OeisSequence> &sequences) {
+Matcher::seq_programs_t Finder::findSequence(const Program &p,
+                                             Sequence &norm_seq,
+                                             const OeisSeqList &sequences) {
   // update memory usage info
   if (num_find_attempts++ % 1000 == 0) {
     bool has_memory = Setup::hasMemory();
@@ -102,7 +102,7 @@ Matcher::seq_programs_t Finder::findSequence(
 }
 
 void Finder::findAll(const Program &p, const Sequence &norm_seq,
-                     const std::vector<OeisSequence> &sequences,
+                     const OeisSeqList &sequences,
                      Matcher::seq_programs_t &result) {
   // collect possible matches
   std::pair<UID, Program> last(UID('A', 0), Program());
@@ -112,7 +112,7 @@ void Finder::findAll(const Program &p, const Sequence &norm_seq,
 
     // validate the found matches
     for (auto t : tmp_result) {
-      auto &s = sequences.at(t.first.number());
+      auto &s = sequences.get(t.first);
       if (t == last) {
         // Log::get().warn("Ignoring duplicate match for " + s.id_str());
         continue;

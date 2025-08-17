@@ -8,6 +8,7 @@
 #include "mine/checker.hpp"
 #include "mine/matcher.hpp"
 #include "oeis/invalid_matches.hpp"
+#include "oeis/oeis_sequence.hpp"
 
 class OeisSequence;
 
@@ -21,9 +22,8 @@ class Finder {
 
   void remove(const Sequence &norm_seq, UID id);
 
-  Matcher::seq_programs_t findSequence(
-      const Program &p, Sequence &norm_seq,
-      const std::vector<OeisSequence> &sequences);
+  Matcher::seq_programs_t findSequence(const Program &p, Sequence &norm_seq,
+                                       const OeisSeqList &sequences);
 
   std::vector<std::unique_ptr<Matcher>> &getMatchers() { return matchers; }
 
@@ -33,8 +33,7 @@ class Finder {
 
  private:
   void findAll(const Program &p, const Sequence &norm_seq,
-               const std::vector<OeisSequence> &sequences,
-               Matcher::seq_programs_t &result);
+               const OeisSeqList &sequences, Matcher::seq_programs_t &result);
 
   void notifyUnfoldOrMinimizeProblem(const Program &p, const std::string &id);
 

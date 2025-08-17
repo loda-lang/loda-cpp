@@ -35,7 +35,7 @@ class OeisManager {
 
   void migrate();
 
-  const std::vector<OeisSequence>& getSequences() const;
+  const OeisSeqList& getSequences() const;
 
   const Stats& getStats();
 
@@ -98,7 +98,7 @@ class OeisManager {
 
   Optimizer optimizer;
   Minimizer minimizer;
-  std::vector<OeisSequence> sequences;
+  OeisSeqList sequences;
 
   std::unordered_set<UID> deny_list;
   std::unordered_set<UID> overwrite_list;
