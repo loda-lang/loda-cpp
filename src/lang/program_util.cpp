@@ -562,12 +562,6 @@ void ProgramUtil::avoidNopOrOverflow(Operation &op) {
   }
 }
 
-std::string ProgramUtil::idStr(int64_t id, const std::string &prefix) {
-  std::stringstream s;
-  s << prefix << std::setw(6) << std::setfill('0') << id;
-  return s.str();
-}
-
 std::string ProgramUtil::dirStr(int64_t id) {
   std::stringstream s;
   s << std::setw(3) << std::setfill('0') << (id / 1000);
@@ -576,7 +570,9 @@ std::string ProgramUtil::dirStr(int64_t id) {
 
 std::string ProgramUtil::getProgramPath(int64_t id, bool local) {
   if (local) {
-    return Setup::getProgramsHome() + "local" + FILE_SEP + idStr(id) + ".asm";
+    UID uid('A', id);
+    return Setup::getProgramsHome() + "local" + FILE_SEP + uid.string() +
+           ".asm";
   } else {
     return getProgramPath(id, "oeis", "A");
   }
@@ -584,8 +580,10 @@ std::string ProgramUtil::getProgramPath(int64_t id, bool local) {
 
 std::string ProgramUtil::getProgramPath(int64_t id, const std::string &dir,
                                         const std::string &prefix) {
+  auto id_str = UID('A', id).string();
+  id_str = prefix + id_str.substr(1);
   return Setup::getProgramsHome() + dir + FILE_SEP + dirStr(id) + FILE_SEP +
-         idStr(id, prefix) + ".asm";
+         id_str + ".asm";
 }
 
 int64_t ProgramUtil::getOffset(const Program &p) {

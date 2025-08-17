@@ -53,13 +53,14 @@ std::string OeisSequence::to_string() const {
 }
 
 std::string OeisSequence::urlStr(int64_t id) {
-  return "https://oeis.org/" + ProgramUtil::idStr(id);
+  UID uid('A', id);
+  return "https://oeis.org/" + uid.string();
 }
 
 std::string OeisSequence::getBFilePath() const {
+  std::string bfile = "b" + id.string().substr(1) + ".txt";
   return Setup::getOeisHome() + "b" + FILE_SEP +
-         ProgramUtil::dirStr(id.number()) + FILE_SEP +
-         ProgramUtil::idStr(id.number(), "b") + ".txt";
+         ProgramUtil::dirStr(id.number()) + FILE_SEP + bfile;
 }
 
 void removeInvalidBFile(const OeisSequence& oeis_seq,
@@ -201,8 +202,8 @@ Sequence OeisSequence::getTerms(int64_t max_num_terms) const {
           big_file.peek() == std::ifstream::traits_type::eof()) {
         ensureDir(path);
         std::remove(path.c_str());
-        ApiClient::getDefaultInstance().getOeisFile(
-            ProgramUtil::idStr(id.number(), "b") + ".txt", path);
+        std::string bfile = "b" + id.string().substr(1) + ".txt";
+        ApiClient::getDefaultInstance().getOeisFile(bfile, path);
         big = loadBFile(id, terms);
       }
     }

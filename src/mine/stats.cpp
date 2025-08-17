@@ -307,8 +307,9 @@ void Stats::save(std::string path) {
   std::ofstream cal(path + "call_graph.csv");
   cal << CALL_GRAPH_HEADER << "\n";
   for (auto it : call_graph) {
-    cal << ProgramUtil::idStr(it.first) << sep << ProgramUtil::idStr(it.second)
-        << "\n";
+    UID uid1('A', it.first);
+    UID uid2('A', it.second);
+    cal << uid1.string() << sep << uid2.string() << "\n";
   }
   cal.close();
 
@@ -419,17 +420,18 @@ void Stats::finalize() {
 }
 
 int64_t Stats::getTransitiveLength(size_t id) const {
+  UID uid('A', id);
   if (visited_programs.find(id) != visited_programs.end()) {
     visited_programs.clear();
     if (printed_recursion_warning.find(id) == printed_recursion_warning.end()) {
       printed_recursion_warning.insert(id);
-      Log::get().warn("Recursion detected: " + ProgramUtil::idStr(id));
+      Log::get().warn("Recursion detected: " + uid.string());
     }
     return -1;
   }
   visited_programs.insert(id);
   if (id >= program_lengths.size()) {
-    Log::get().warn("Invalid reference: " + ProgramUtil::idStr(id));
+    Log::get().warn("Invalid reference: " + uid.string());
     return -1;
   }
   int64_t length = program_lengths.at(id);

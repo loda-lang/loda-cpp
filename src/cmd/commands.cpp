@@ -332,8 +332,9 @@ void Commands::replace(const std::string& search_path,
     auto p = progs[id];
     ProgramUtil::removeOps(p, Operation::Type::NOP);
     if (Subprogram::replaceAllExact(p, search, replace)) {
-      manager.updateProgram(UID('A', id), p, ValidationMode::BASIC);
-      Log::get().info("Replaced in " + ProgramUtil::idStr(id));
+      UID uid('A', id);
+      manager.updateProgram(uid, p, ValidationMode::BASIC);
+      Log::get().info("Replaced in " + uid.string());
       count++;
     }
     if (log_scheduler.isTargetReached()) {
@@ -539,7 +540,8 @@ void Commands::testAnalyzer() {
     if (!stats.all_program_ids[id]) {
       continue;
     }
-    auto id_str = ProgramUtil::idStr(id);
+    const UID uid('A', id);
+    const auto id_str = uid.string();
     std::ifstream in(ProgramUtil::getProgramPath(id));
     if (!in) {
       continue;
