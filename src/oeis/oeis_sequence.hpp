@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <unordered_set>
 
 #include "base/uid.hpp"
@@ -42,4 +43,15 @@ class OeisSequence {
  private:
   mutable Sequence terms;
   mutable size_t num_bfile_terms;
+};
+
+class OeisSeqList : public std::map<char, std::vector<OeisSequence>> {
+ public:
+  bool exists(UID id) const;
+
+  const OeisSequence& get(UID id) const;
+
+  OeisSequence& get(UID id);
+
+  void add(OeisSequence&& seq);
 };
