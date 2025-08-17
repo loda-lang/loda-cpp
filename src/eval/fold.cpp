@@ -2,7 +2,6 @@
 
 #include "eval/evaluator_par.hpp"
 #include "lang/parser.hpp"
-#include "lang/program_cache.hpp"
 #include "lang/program_util.hpp"
 #include "lang/subprogram.hpp"
 
@@ -21,7 +20,7 @@ void updateOperand(Operand &op, int64_t start, int64_t shared_region_length,
 
 bool prepareEmbedding(UID id, Program &sub, Operation::Type embeddingType) {
   // load and check program to be embedded
-  const auto path = ProgramCache::getProgramPath(id);
+  const auto path = ProgramUtil::getProgramPath(id);
   Parser parser;
   sub = parser.parse(path);
   if (ProgramUtil::hasIndirectOperand(sub)) {

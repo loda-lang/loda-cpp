@@ -22,8 +22,6 @@ class ProgramCache {
 
   std::unordered_map<UID, Program> collect(UID id);
 
-  static std::string getProgramPath(UID id);
-
   void insert(UID id, const Program &p);
 
   void clear();

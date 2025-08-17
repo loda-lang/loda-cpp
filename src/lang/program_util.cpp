@@ -572,18 +572,20 @@ std::string ProgramUtil::getProgramPath(UID id, bool local) {
   if (local) {
     return Setup::getProgramsHome() + "local" + FILE_SEP + id.string() + ".asm";
   } else {
-    if (id.domain() != 'A') {
-      throw std::runtime_error("Cannot determine program path: " + id.string());
+    std::string dir;
+    switch (id.domain()) {
+      case 'A':
+        dir = "oeis";
+        break;
+      case 'P':
+        dir = "prg";
+        break;
+      default:
+        throw std::runtime_error("Unknown domain: " + id.string());
     }
-    return getProgramPath(id, "oeis", "A");
+    return Setup::getProgramsHome() + dir + FILE_SEP + dirStr(id) + FILE_SEP +
+           id.string() + ".asm";
   }
-}
-
-std::string ProgramUtil::getProgramPath(UID id, const std::string &dir,
-                                        const std::string &prefix) {
-  auto id_str = prefix + id.string().substr(1);
-  return Setup::getProgramsHome() + dir + FILE_SEP + dirStr(id) + FILE_SEP +
-         id_str + ".asm";
 }
 
 int64_t ProgramUtil::getOffset(const Program &p) {

@@ -439,8 +439,7 @@ size_t Interpreter::callPrg(UID id, int64_t start, Memory& mem) {
 
   // check for recursive calls
   if (running_programs.find(id) != running_programs.end()) {
-    throw std::runtime_error("Recursion detected: " +
-                             ProgramCache::getProgramPath(id));
+    throw std::runtime_error("Recursion detected: " + id.string());
   }
 
   // get number of inputs and outputs

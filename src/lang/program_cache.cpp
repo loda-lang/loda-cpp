@@ -10,29 +10,19 @@
 
 const Program& ProgramCache::getProgram(UID id) {
   if (missing.find(id) != missing.end()) {
-    throw std::runtime_error("Program not found: " + getProgramPath(id));
+    throw std::runtime_error("Program not found: " + id.string());
   }
   if (programs.find(id) == programs.end()) {
     try {
       Parser parser;
-      programs[id] = parser.parse(getProgramPath(id));
+      auto path = ProgramUtil::getProgramPath(id);
+      programs[id] = parser.parse(path);
     } catch (...) {
       missing.insert(id);
       std::rethrow_exception(std::current_exception());
     }
   }
   return programs[id];
-}
-
-std::string ProgramCache::getProgramPath(UID id) {
-  switch (id.domain()) {
-    case 'A':
-      return ProgramUtil::getProgramPath(id);
-    case 'P':
-      return ProgramUtil::getProgramPath(id, "prg", "P");
-    default:
-      throw std::runtime_error("Unknown program path for " + id.string());
-  }
 }
 
 std::unordered_map<UID, Program> ProgramCache::collect(UID id) {

@@ -672,12 +672,7 @@ void Test::fold() {
       Log::get().error("No seq or prg in output found", true);
     }
     auto subId = UID::castFromInt(seqOrPrg.source.value.asInt());
-    std::string path;
-    if (seqOrPrg.type == Operation::Type::SEQ) {
-      path = ProgramUtil::getProgramPath(subId);
-    } else {
-      path = ProgramUtil::getProgramPath(subId, "prg", "P");
-    }
+    auto path = ProgramUtil::getProgramPath(subId);
     auto sub = parser.parse(path);
     auto p = t.first;
     cellMap.clear();
