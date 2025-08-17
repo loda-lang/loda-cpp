@@ -105,11 +105,11 @@ void Benchmark::programs() {
 
 void Benchmark::program(size_t id, size_t num_terms) {
   Parser parser;
-  auto program = parser.parse(ProgramUtil::getProgramPath(id));
+  UID uid('A', id);
+  auto program = parser.parse(ProgramUtil::getProgramPath(uid));
   auto speed_reg = programEval(program, EVAL_REGULAR, num_terms);
   auto speed_inc = programEval(program, EVAL_INCREMENTAL, num_terms);
   auto speed_vir = programEval(program, EVAL_VIRTUAL, num_terms);
-  UID uid('A', id);
   std::cout << "| " << uid.string() << "  | "
             << fillString(std::to_string(num_terms), 6) << " | "
             << fillString(speed_reg, 8) << " | " << fillString(speed_inc, 8)
@@ -155,7 +155,7 @@ void Benchmark::findSlow(int64_t num_terms, Operation::Type type) {
   std::priority_queue<std::pair<int64_t, UID> > queue;
   for (size_t id = 0; id < 400000; id++) {
     UID uid('A', id);
-    std::ifstream in(ProgramUtil::getProgramPath(id));
+    std::ifstream in(ProgramUtil::getProgramPath(uid));
     if (!in) {
       continue;
     }

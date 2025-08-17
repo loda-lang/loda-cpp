@@ -403,8 +403,8 @@ void Commands::autoFold() {
           Log::get().error("Unknown error in folded program", true);
         }
       } else {
-        auto path = ProgramUtil::getProgramPath(main_id);
-        manager.dumpProgram(UID('A', main_id), main, path, submitted_by);
+        auto path = ProgramUtil::getProgramPath(main_uid);
+        manager.dumpProgram(main_uid, main, path, submitted_by);
       }
     }
     if (log_scheduler.isTargetReached()) {
@@ -542,7 +542,7 @@ void Commands::testAnalyzer() {
     }
     const UID uid('A', id);
     const auto id_str = uid.string();
-    std::ifstream in(ProgramUtil::getProgramPath(id));
+    std::ifstream in(ProgramUtil::getProgramPath(uid));
     if (!in) {
       continue;
     }
@@ -597,7 +597,7 @@ void Commands::testPari(const std::string& test_id) {
     auto idStr = uid.string();
     Program program;
     try {
-      program = parser.parse(ProgramUtil::getProgramPath(id));
+      program = parser.parse(ProgramUtil::getProgramPath(uid));
     } catch (std::exception& e) {
       Log::get().warn(std::string(e.what()));
       continue;
@@ -758,7 +758,7 @@ void Commands::testRange(const std::string& id) {
     }
     Program program;
     try {
-      program = parser.parse(ProgramUtil::getProgramPath(seq.id.number()));
+      program = parser.parse(ProgramUtil::getProgramPath(seq.id));
     } catch (const std::exception& e) {
       Log::get().warn(std::string(e.what()));
       continue;
@@ -855,7 +855,7 @@ void Commands::findEmbseqs() {
       }
       Program program;
       try {
-        program = parser.parse(ProgramUtil::getProgramPath(seq.id.number()));
+        program = parser.parse(ProgramUtil::getProgramPath(seq.id));
       } catch (const std::exception& e) {
         Log::get().warn(std::string(e.what()));
         continue;

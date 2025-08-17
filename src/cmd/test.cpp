@@ -511,7 +511,7 @@ void Test::programUtil() {
   if (var_info.has_constant_loop) {
     Log::get().error("Unexpected contant loop in primes_var_loop.asm", true);
   }
-  auto p = parser.parse(ProgramUtil::getProgramPath(1041));
+  auto p = parser.parse(ProgramUtil::getProgramPath(UID('A', 1041)));
   checkEnclosingLoop(p, 7, 13, 12);
   checkEnclosingLoop(p, 7, 13, 7);
   checkEnclosingLoop(p, 7, 13, 13);
@@ -541,7 +541,7 @@ void Test::programUtil() {
     Log::get().error("Unexpected program after removing comment: " + buf.str(),
                      true);
   }
-  p = parser.parse(ProgramUtil::getProgramPath(45));
+  p = parser.parse(ProgramUtil::getProgramPath(UID('A', 45)));
   auto h1 = ProgramUtil::hash(p);
   ProgramUtil::removeOps(p, Operation::Type::NOP);
   auto h2 = ProgramUtil::hash(p);
@@ -671,7 +671,7 @@ void Test::fold() {
     if (seqOrPrg.type == Operation::Type::NOP) {
       Log::get().error("No seq or prg in output found", true);
     }
-    int64_t subId = seqOrPrg.source.value.asInt();
+    auto subId = UID::castFromInt(seqOrPrg.source.value.asInt());
     std::string path;
     if (seqOrPrg.type == Operation::Type::SEQ) {
       path = ProgramUtil::getProgramPath(subId);
@@ -681,7 +681,7 @@ void Test::fold() {
     auto sub = parser.parse(path);
     auto p = t.first;
     cellMap.clear();
-    if (!Fold::fold(p, sub, subId, cellMap, settings.max_memory)) {
+    if (!Fold::fold(p, sub, subId.number(), cellMap, settings.max_memory)) {
       Log::get().error("Folding not supported", true);
     }
     if (p != t.second) {
@@ -764,7 +764,7 @@ bool Test::checkEvaluator(const Settings& settings, size_t id, std::string path,
   if (path.empty()) {
     UID uid('A', id);
     name = uid.string();
-    path = ProgramUtil::getProgramPath(id);
+    path = ProgramUtil::getProgramPath(uid);
   }
   Parser parser;
   Program p;
@@ -858,7 +858,7 @@ void Test::checkpoint() {
 }
 
 void Test::steps() {
-  auto file = ProgramUtil::getProgramPath(12);
+  auto file = ProgramUtil::getProgramPath(UID('A', 12));
   Log::get().info("Testing steps for " + file);
   Parser parser;
   Interpreter interpreter(settings);
@@ -1110,7 +1110,7 @@ void Test::checkFormulas(const std::string& testFile, FormulaType type) {
   for (const auto& e : map) {
     auto id = e.first;
     Log::get().info("Testing formula for " + id.string() + ": " + e.second);
-    auto p = parser.parse(ProgramUtil::getProgramPath(id.number()));
+    auto p = parser.parse(ProgramUtil::getProgramPath(id));
     Formula f;
     if (!generator.generate(p, id.number(), f, true)) {
       Log::get().error("Cannot generate formula from program", true);
@@ -1153,7 +1153,7 @@ void Test::testRanges(const std::string& filename, bool finite) {
 void Test::checkRanges(int64_t id, bool finite, const std::string& expected) {
   Parser parser;
   UID uid('A', id);
-  auto p = parser.parse(ProgramUtil::getProgramPath(id));
+  auto p = parser.parse(ProgramUtil::getProgramPath(uid));
   auto offset = ProgramUtil::getOffset(p);
   Number inputUpperBound = finite ? offset + 9 : Number::INF;
   Log::get().info("Testing ranges for " + uid.string() + ": " + expected +
@@ -1509,7 +1509,7 @@ std::vector<std::pair<Program, Program>> Test::loadInOutTests(
 }
 
 void Test::testSeq(size_t id, const Sequence& expected) {
-  auto file = ProgramUtil::getProgramPath(id);
+  auto file = ProgramUtil::getProgramPath(UID('A', id));
   Log::get().info("Testing " + file);
   Parser parser;
   Settings settings;  // special settings
@@ -1547,8 +1547,8 @@ void Test::testMatcherPair(Matcher& matcher, size_t id1, size_t id2) {
                   uid1.string() + " -> " + uid2.string());
   Parser parser;
   Evaluator evaluator(settings);
-  auto p1 = parser.parse(ProgramUtil::getProgramPath(id1));
-  auto p2 = parser.parse(ProgramUtil::getProgramPath(id2));
+  auto p1 = parser.parse(ProgramUtil::getProgramPath(uid1));
+  auto p2 = parser.parse(ProgramUtil::getProgramPath(uid2));
   ProgramUtil::removeOps(p1, Operation::Type::NOP);
   ProgramUtil::removeOps(p2, Operation::Type::NOP);
   Sequence s1, s2, s3;

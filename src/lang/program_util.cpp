@@ -568,21 +568,21 @@ std::string ProgramUtil::dirStr(UID id) {
   return s.str();
 }
 
-std::string ProgramUtil::getProgramPath(int64_t id, bool local) {
+std::string ProgramUtil::getProgramPath(UID id, bool local) {
   if (local) {
-    UID uid('A', id);
-    return Setup::getProgramsHome() + "local" + FILE_SEP + uid.string() +
-           ".asm";
+    return Setup::getProgramsHome() + "local" + FILE_SEP + id.string() + ".asm";
   } else {
+    if (id.domain() != 'A') {
+      throw std::runtime_error("Cannot determine program path: " + id.string());
+    }
     return getProgramPath(id, "oeis", "A");
   }
 }
 
-std::string ProgramUtil::getProgramPath(int64_t id, const std::string &dir,
+std::string ProgramUtil::getProgramPath(UID id, const std::string &dir,
                                         const std::string &prefix) {
-  auto uid = UID('A', id);
-  auto id_str = prefix + uid.string().substr(1);
-  return Setup::getProgramsHome() + dir + FILE_SEP + dirStr(uid) + FILE_SEP +
+  auto id_str = prefix + id.string().substr(1);
+  return Setup::getProgramsHome() + dir + FILE_SEP + dirStr(id) + FILE_SEP +
          id_str + ".asm";
 }
 

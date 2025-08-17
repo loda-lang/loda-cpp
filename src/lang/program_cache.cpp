@@ -27,9 +27,9 @@ const Program& ProgramCache::getProgram(UID id) {
 std::string ProgramCache::getProgramPath(UID id) {
   switch (id.domain()) {
     case 'A':
-      return ProgramUtil::getProgramPath(id.number());
+      return ProgramUtil::getProgramPath(id);
     case 'P':
-      return ProgramUtil::getProgramPath(id.number(), "prg", "P");
+      return ProgramUtil::getProgramPath(id, "prg", "P");
     default:
       throw std::runtime_error("Unknown program path for " + id.string());
   }

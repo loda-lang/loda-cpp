@@ -19,7 +19,7 @@ std::pair<Program, UID> OeisProgram::getProgramAndSeqId(
   std::pair<Program, UID> result;
   try {
     UID uid(id_or_path);
-    result.first = parser.parse(ProgramUtil::getProgramPath(uid.number()));
+    result.first = parser.parse(ProgramUtil::getProgramPath(uid));
     result.second = uid;
   } catch (...) {
     // not an ID string
@@ -37,7 +37,7 @@ void collectPrograms(const Program &p, std::set<Program> &collected) {
   for (auto &op : p.ops) {
     if (op.type == Operation::Type::SEQ &&
         op.source.type == Operand::Type::CONSTANT) {
-      auto id = op.source.value.asInt();
+      auto id = UID::castFromInt(op.source.value.asInt());
       auto path = ProgramUtil::getProgramPath(id);
       try {
         Parser parser;
@@ -106,7 +106,7 @@ std::vector<bool> OeisProgram::collectLatestProgramIds(
         auto id_str = path.substr(path.size() - 11, 7);
         try {
           UID uid(id_str);
-          if (isFile(ProgramUtil::getProgramPath(uid.number()))) {
+          if (isFile(ProgramUtil::getProgramPath(uid))) {
             if (status == "A" && num_added_ids < max_added_programs) {
               Log::get().debug("Added program for " + uid.string());
               ids.insert(uid.number());

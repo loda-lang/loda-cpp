@@ -528,7 +528,7 @@ bool addProgramIds(const Program& p, std::set<int64_t>& ids) {
       if (ids.find(id) == ids.end()) {
         ids.insert(id);
         try {
-          auto q = parser.parse(ProgramUtil::getProgramPath(id));
+          auto q = parser.parse(ProgramUtil::getProgramPath(UID('A', id)));
           addProgramIds(q, ids);
         } catch (const std::exception&) {
           return false;
@@ -568,7 +568,7 @@ bool FormulaGenerator::generate(const Program& p, int64_t id, Formula& result,
       Log::get().debug("Adding dependency " + uid2.string());
       Program p2;
       try {
-        p2 = parser.parse(ProgramUtil::getProgramPath(id2));
+        p2 = parser.parse(ProgramUtil::getProgramPath(uid2));
       } catch (const std::exception&) {
         result.clear();
         return false;

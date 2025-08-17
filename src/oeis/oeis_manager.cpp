@@ -441,7 +441,7 @@ void OeisManager::generateStats(int64_t age_in_days) {
       if (s.id.number() == 0) {
         continue;
       }
-      file_name = ProgramUtil::getProgramPath(s.id.number());
+      file_name = ProgramUtil::getProgramPath(s.id);
       std::ifstream program_file(file_name);
       has_program = false;
       has_formula = false;
@@ -557,7 +557,7 @@ void OeisManager::migrate() {
       if (s.id.number() == 0) {
         continue;
       }
-      const auto path = ProgramUtil::getProgramPath(s.id.number());
+      const auto path = ProgramUtil::getProgramPath(s.id);
       std::ifstream f(path);
       if (!f.good()) {
         continue;
@@ -669,7 +669,7 @@ int64_t OeisManager::updateProgramOffset(UID id, Program &p) const {
 }
 
 void OeisManager::updateDependentOffset(UID id, UID used_id, int64_t delta) {
-  const auto path = ProgramUtil::getProgramPath(id.number());
+  const auto path = ProgramUtil::getProgramPath(id);
   Program p;
   try {
     p = parser.parse(path);
@@ -783,9 +783,8 @@ void OeisManager::alert(Program p, UID id, const std::string &prefix,
 }
 
 Program OeisManager::getExistingProgram(UID id) {
-  const std::string global_file =
-      ProgramUtil::getProgramPath(id.number(), false);
-  const std::string local_file = ProgramUtil::getProgramPath(id.number(), true);
+  const std::string global_file = ProgramUtil::getProgramPath(id, false);
+  const std::string local_file = ProgramUtil::getProgramPath(id, true);
   const bool has_global = isFile(global_file);
   const bool has_local = isFile(local_file);
   Program existing;
@@ -876,8 +875,7 @@ update_program_result_t OeisManager::updateProgram(
 
   // write new or better program version
   const bool is_server = (Setup::getMiningMode() == MINING_MODE_SERVER);
-  const std::string target_file =
-      ProgramUtil::getProgramPath(id.number(), !is_server);
+  const std::string target_file = ProgramUtil::getProgramPath(id, !is_server);
   auto delta = updateProgramOffset(id, result.program);
   optimizer.optimize(result.program);
   dumpProgram(id, result.program, target_file, submitted_by);
@@ -911,7 +909,7 @@ bool OeisManager::maintainProgram(UID id, bool eval) {
   auto &s = sequences.get(id);
 
   // try to open the program file
-  const std::string file_name = ProgramUtil::getProgramPath(s.id.number());
+  const std::string file_name = ProgramUtil::getProgramPath(s.id);
   std::ifstream program_file(file_name);
   if (!program_file.good()) {
     return true;  // program does not exist
@@ -1008,7 +1006,7 @@ std::vector<Program> OeisManager::loadAllPrograms() {
       continue;
     }
     UID uid('A', id);
-    std::ifstream in(ProgramUtil::getProgramPath(uid.number()));
+    std::ifstream in(ProgramUtil::getProgramPath(uid));
     if (!in) {
       continue;
     }
