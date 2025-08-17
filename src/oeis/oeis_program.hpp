@@ -2,11 +2,13 @@
 
 #include <map>
 
+#include "base/uid.hpp"
 #include "lang/program.hpp"
 
 class OeisProgram {
  public:
-  static std::pair<Program, size_t> getProgramAndSeqId(const std::string& arg);
+  static std::pair<Program, UID> getProgramAndSeqId(
+      const std::string& id_or_path);
 
   static size_t getTransitiveProgramHash(const Program& p);
 

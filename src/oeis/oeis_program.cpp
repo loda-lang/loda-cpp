@@ -13,18 +13,18 @@
 #include "sys/log.hpp"
 #include "sys/setup.hpp"
 
-std::pair<Program, size_t> OeisProgram::getProgramAndSeqId(
-    const std::string &arg) {
+std::pair<Program, UID> OeisProgram::getProgramAndSeqId(
+    const std::string &id_or_path) {
   Parser parser;
-  std::pair<Program, size_t> result;
+  std::pair<Program, UID> result;
   try {
-    UID uid(arg);
+    UID uid(id_or_path);
     result.first = parser.parse(ProgramUtil::getProgramPath(uid.number()));
-    result.second = uid.number();
+    result.second = uid;
   } catch (...) {
     // not an ID string
-    result.first = parser.parse(arg);
-    result.second = 0;
+    result.first = parser.parse(id_or_path);
+    result.second = UID('T', 0);
   }
   return result;
 }

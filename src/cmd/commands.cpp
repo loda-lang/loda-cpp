@@ -182,11 +182,10 @@ void Commands::check(const std::string& path) {
   auto program_and_id = OeisProgram::getProgramAndSeqId(path);
   auto program = program_and_id.first;
   UID uid;
-  if (program_and_id.second) {
-    uid = UID('A', program_and_id.second);
+  if (program_and_id.second.number()) {
+    uid = program_and_id.second;
   } else {
-    auto id_str = Comments::getSequenceIdFromProgram(program);
-    uid = UID(id_str);
+    uid = UID(Comments::getSequenceIdFromProgram(program));
   }
   auto seq = OeisSequence(uid);
   Evaluator evaluator(settings);
@@ -297,11 +296,12 @@ void Commands::fold(const std::string& main_path, const std::string& sub_id) {
   initLog(true);
   auto main = OeisProgram::getProgramAndSeqId(main_path).first;
   auto sub = OeisProgram::getProgramAndSeqId(sub_id);
-  if (sub.second == 0) {
+  if (sub.second.number() == 0) {
     throw std::runtime_error("subprogram must be given by ID");
   }
   std::map<int64_t, int64_t> cell_map;
-  if (!Fold::fold(main, sub.first, sub.second, cell_map, settings.max_memory)) {
+  if (!Fold::fold(main, sub.first, sub.second.number(), cell_map,
+                  settings.max_memory)) {
     throw std::runtime_error("cannot fold program");
   }
   ProgramUtil::print(main, std::cout);
