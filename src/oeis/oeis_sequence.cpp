@@ -59,8 +59,8 @@ std::string OeisSequence::urlStr(int64_t id) {
 
 std::string OeisSequence::getBFilePath() const {
   std::string bfile = "b" + id.string().substr(1) + ".txt";
-  return Setup::getOeisHome() + "b" + FILE_SEP +
-         ProgramUtil::dirStr(id.number()) + FILE_SEP + bfile;
+  return Setup::getOeisHome() + "b" + FILE_SEP + ProgramUtil::dirStr(id) +
+         FILE_SEP + bfile;
 }
 
 void removeInvalidBFile(const OeisSequence& oeis_seq,

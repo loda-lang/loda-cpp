@@ -85,7 +85,7 @@ class ProgramUtil {
 
   static void avoidNopOrOverflow(Operation &op);
 
-  static std::string dirStr(int64_t id);
+  static std::string dirStr(UID id);
 
   static std::string getProgramPath(int64_t id, bool local = false);
 

@@ -562,9 +562,9 @@ void ProgramUtil::avoidNopOrOverflow(Operation &op) {
   }
 }
 
-std::string ProgramUtil::dirStr(int64_t id) {
+std::string ProgramUtil::dirStr(UID id) {
   std::stringstream s;
-  s << std::setw(3) << std::setfill('0') << (id / 1000);
+  s << std::setw(3) << std::setfill('0') << (id.number() / 1000);
   return s.str();
 }
 
@@ -580,9 +580,9 @@ std::string ProgramUtil::getProgramPath(int64_t id, bool local) {
 
 std::string ProgramUtil::getProgramPath(int64_t id, const std::string &dir,
                                         const std::string &prefix) {
-  auto id_str = UID('A', id).string();
-  id_str = prefix + id_str.substr(1);
-  return Setup::getProgramsHome() + dir + FILE_SEP + dirStr(id) + FILE_SEP +
+  auto uid = UID('A', id);
+  auto id_str = prefix + uid.string().substr(1);
+  return Setup::getProgramsHome() + dir + FILE_SEP + dirStr(uid) + FILE_SEP +
          id_str + ".asm";
 }
 
