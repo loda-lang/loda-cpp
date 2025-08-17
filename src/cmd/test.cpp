@@ -762,7 +762,8 @@ bool Test::checkEvaluator(const Settings& settings, size_t id, std::string path,
                           eval_mode_t evalMode, bool mustSupportEvalMode) {
   auto name = path;
   if (path.empty()) {
-    name = ProgramUtil::idStr(id);
+    UID uid('A', id);
+    name = uid.string();
     path = ProgramUtil::getProgramPath(id);
   }
   Parser parser;
@@ -915,10 +916,13 @@ void checkSeq(const Sequence& s, size_t expected_size, size_t index,
 void checkSeqAgainstTestBFile(int64_t seq_id, int64_t offset,
                               int64_t max_num_terms) {
   std::stringstream buf;
-  OeisSequence t(UID('A', seq_id));
+  UID uid('A', seq_id);
+  auto uid_str = uid.string();
+  std::string bname = "b" + uid_str.substr(1) + ".txt";
+  OeisSequence t(uid);
   t.getTerms(max_num_terms).to_b_file(buf, offset);
   std::ifstream bfile(std::string("tests") + FILE_SEP + "sequence" + FILE_SEP +
-                      ProgramUtil::idStr(seq_id, "b") + ".txt");
+                      bname);
   std::string x, y;
   while (std::getline(bfile, x)) {
     if (!std::getline(buf, y)) {
@@ -1148,12 +1152,12 @@ void Test::testRanges(const std::string& filename, bool finite) {
 
 void Test::checkRanges(int64_t id, bool finite, const std::string& expected) {
   Parser parser;
+  UID uid('A', id);
   auto p = parser.parse(ProgramUtil::getProgramPath(id));
   auto offset = ProgramUtil::getOffset(p);
   Number inputUpperBound = finite ? offset + 9 : Number::INF;
-  Log::get().info("Testing ranges for " + ProgramUtil::idStr(id) + ": " +
-                  expected + " with upper bound " +
-                  inputUpperBound.to_string());
+  Log::get().info("Testing ranges for " + uid.string() + ": " + expected +
+                  " with upper bound " + inputUpperBound.to_string());
   RangeGenerator generator;
   RangeMap ranges;
   if (!generator.generate(p, ranges, inputUpperBound)) {
@@ -1538,9 +1542,9 @@ void eval(const Program& p, Evaluator& evaluator, Sequence& s) {
 }
 
 void Test::testMatcherPair(Matcher& matcher, size_t id1, size_t id2) {
-  Log::get().info("Testing " + matcher.getName() + " matcher for " +
-                  ProgramUtil::idStr(id1) + " -> " + ProgramUtil::idStr(id2));
   UID uid1('A', id1), uid2('A', id2);
+  Log::get().info("Testing " + matcher.getName() + " matcher for " +
+                  uid1.string() + " -> " + uid2.string());
   Parser parser;
   Evaluator evaluator(settings);
   auto p1 = parser.parse(ProgramUtil::getProgramPath(id1));
@@ -1567,7 +1571,7 @@ void Test::testMatcherPair(Matcher& matcher, size_t id1, size_t id2) {
     ProgramUtil::print(result[0].second, std::cout);
     Log::get().error(matcher.getName() +
                          " matcher generated wrong program for " +
-                         ProgramUtil::idStr(id2),
+                         uid2.string(),
                      true);
   }
 }

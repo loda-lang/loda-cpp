@@ -442,8 +442,7 @@ void Miner::submit(const std::string &path, std::string id_str) {
   size_t num_updated = 0;
   std::unordered_set<UID> updated_ids;
   for (auto s : seq_programs) {
-    const std::string skip_msg =
-        "Skipping submission for " + ProgramUtil::idStr(s.first.number());
+    const std::string skip_msg = "Skipping submission for " + s.first.string();
     if (updated_ids.find(s.first) != updated_ids.end()) {
       Log::get().info(skip_msg + ": already updated");
       continue;

@@ -109,7 +109,8 @@ void Benchmark::program(size_t id, size_t num_terms) {
   auto speed_reg = programEval(program, EVAL_REGULAR, num_terms);
   auto speed_inc = programEval(program, EVAL_INCREMENTAL, num_terms);
   auto speed_vir = programEval(program, EVAL_VIRTUAL, num_terms);
-  std::cout << "| " << ProgramUtil::idStr(id) << "  | "
+  UID uid('A', id);
+  std::cout << "| " << uid.string() << "  | "
             << fillString(std::to_string(num_terms), 6) << " | "
             << fillString(speed_reg, 8) << " | " << fillString(speed_inc, 8)
             << " | " << fillString(speed_vir, 8) << " |" << std::endl;
@@ -151,8 +152,9 @@ void Benchmark::findSlow(int64_t num_terms, Operation::Type type) {
   Evaluator evaluator(settings);
   Sequence seq;
   Program program;
-  std::priority_queue<std::pair<int64_t, int64_t> > queue;
+  std::priority_queue<std::pair<int64_t, UID> > queue;
   for (size_t id = 0; id < 400000; id++) {
+    UID uid('A', id);
     std::ifstream in(ProgramUtil::getProgramPath(id));
     if (!in) {
       continue;
@@ -160,7 +162,7 @@ void Benchmark::findSlow(int64_t num_terms, Operation::Type type) {
     try {
       program = parser.parse(in);
     } catch (std::exception& e) {
-      Log::get().warn("Skipping " + ProgramUtil::idStr(id) + ": " + e.what());
+      Log::get().warn("Skipping " + uid.string() + ": " + e.what());
       continue;
     }
     if (type != Operation::Type::NOP && !ProgramUtil::hasOp(program, type)) {
@@ -171,16 +173,16 @@ void Benchmark::findSlow(int64_t num_terms, Operation::Type type) {
     auto end_time = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
         end_time - start_time);
-    Log::get().info(ProgramUtil::idStr(id) + ": " +
-                    std::to_string(duration.count()) + "µs");
-    queue.push(std::pair<int64_t, int64_t>(duration.count(), id));
+    Log::get().info(uid.string() + ": " + std::to_string(duration.count()) +
+                    "µs");
+    queue.push(std::pair<int64_t, UID>(duration.count(), uid));
   }
   std::cout << std::endl << "Slowest programs:" << std::endl;
   for (size_t i = 0; i < 20; i++) {
     auto entry = queue.top();
     queue.pop();
-    std::cout << "[" << ProgramUtil::idStr(entry.second)
-              << "](https://loda-lang.org/edit/?oeis=" << entry.second
+    std::cout << "[" << entry.second.string()
+              << "](https://loda-lang.org/edit/?oeis=" << entry.second.number()
               << "): " << (entry.first / 1000) << "ms" << std::endl;
   }
 }

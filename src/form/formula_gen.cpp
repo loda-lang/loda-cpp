@@ -1,8 +1,6 @@
 #include "form/formula_gen.hpp"
 
-namespace {
-constexpr int64_t FACTORIAL_SEQ_ID = 142;
-}
+const UID FACTORIAL_SEQ_ID('A', 142);
 
 #include <map>
 #include <set>
@@ -202,7 +200,8 @@ bool FormulaGenerator::update(const Operation& op) {
       break;
     }
     case Operation::Type::SEQ: {
-      res = func(ProgramUtil::idStr(source.value.asInt()), {prevTarget});
+      auto uid = UID::castFromInt(source.value.asInt());
+      res = func(uid.string(), {prevTarget});
       break;
     }
     case Operation::Type::TRN: {
@@ -543,7 +542,8 @@ bool addProgramIds(const Program& p, std::set<int64_t>& ids) {
 bool FormulaGenerator::generate(const Program& p, int64_t id, Formula& result,
                                 bool withDeps) {
   if (id > 0) {
-    Log::get().debug("Generating formula for " + ProgramUtil::idStr(id));
+    UID uid('A', id);
+    Log::get().debug("Generating formula for " + uid.string());
   }
   formula.clear();
   freeNameIndex = 0;
@@ -561,10 +561,11 @@ bool FormulaGenerator::generate(const Program& p, int64_t id, Formula& result,
     }
     Parser parser;
     for (auto id2 : ids) {
-      if (id2 == FACTORIAL_SEQ_ID) {
+      if (id2 == FACTORIAL_SEQ_ID.number()) {
         continue;  // Skip dependency for A000142 (factorial)
       }
-      Log::get().debug("Adding dependency " + ProgramUtil::idStr(id2));
+      UID uid2('A', id2);
+      Log::get().debug("Adding dependency " + uid2.string());
       Program p2;
       try {
         p2 = parser.parse(ProgramUtil::getProgramPath(id2));
@@ -577,7 +578,7 @@ bool FormulaGenerator::generate(const Program& p, int64_t id, Formula& result,
         return false;
       }
       auto from = getCellName(Program::INPUT_CELL);
-      auto to = ProgramUtil::idStr(id2);
+      auto to = uid2.string();
       Log::get().debug("Replacing " + from + " by " + to);
       formula.replaceName(from, to);
       result.entries.insert(formula.entries.begin(), formula.entries.end());
@@ -590,7 +591,7 @@ bool FormulaGenerator::generate(const Program& p, int64_t id, Formula& result,
   result = formula;
 
   // replace functions A000142(n) by n! in all formula definitions
-  const std::string factorialSeqName = ProgramUtil::idStr(FACTORIAL_SEQ_ID);
+  const auto factorialSeqName = FACTORIAL_SEQ_ID.string();
   for (auto& entry : result.entries) {
     entry.second.replaceType(Expression::Type::FUNCTION, factorialSeqName, 1,
                              Expression::Type::FACTORIAL);

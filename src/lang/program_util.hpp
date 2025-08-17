@@ -4,6 +4,7 @@
 #include <set>
 #include <unordered_set>
 
+#include "base/uid.hpp"
 #include "lang/program.hpp"
 
 class ProgramUtil {
@@ -83,8 +84,6 @@ class ProgramUtil {
   static void validate(const Program &p);
 
   static void avoidNopOrOverflow(Operation &op);
-
-  static std::string idStr(int64_t id, const std::string &prefix = "A");
 
   static std::string dirStr(int64_t id);
 
