@@ -60,12 +60,9 @@ struct hash<UID> {
 };
 }  // namespace std
 
-class UIDSet {
+class UIDSet : public std::map<char, std::vector<bool>> {
  public:
   bool exists(UID uid) const;
 
   void insert(UID uid);
-
- private:
-  std::map<char, std::vector<bool>> data;
 };

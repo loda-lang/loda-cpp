@@ -66,8 +66,8 @@ std::string UID::string() const {
 }
 
 bool UIDSet::exists(UID uid) const {
-  auto it = data.find(uid.domain());
-  if (it == data.end()) {
+  auto it = find(uid.domain());
+  if (it == end()) {
     return false;
   }
   const auto& flags = it->second;
@@ -78,7 +78,7 @@ bool UIDSet::exists(UID uid) const {
 }
 
 void UIDSet::insert(UID uid) {
-  auto& flags = data[uid.domain()];
+  auto& flags = (*this)[uid.domain()];
   if (uid.number() >= static_cast<int64_t>(flags.size())) {
     flags.resize(static_cast<int64_t>(1.5 * uid.number()) + 1, false);
   }
