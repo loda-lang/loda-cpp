@@ -703,9 +703,8 @@ void OeisManager::updateAllDependentOffset(UID id, int64_t delta) {
   }
   const auto &call_graph = getStats().call_graph;
   for (const auto &entry : call_graph) {
-    if (entry.second == static_cast<int64_t>(id.number())) {
-      updateDependentOffset(UID('A', entry.first), UID('A', entry.second),
-                            delta);
+    if (entry.second == id) {
+      updateDependentOffset(entry.first, entry.second, delta);
     }
   }
 }

@@ -204,8 +204,7 @@ void Stats::load(std::string path) {
       std::stringstream s(line);
       std::getline(s, k, ',');
       std::getline(s, v);
-      call_graph.insert(
-          std::pair<int64_t, int64_t>(UID(k).number(), UID(v).number()));
+      call_graph.insert(std::pair<UID, UID>(UID(k), UID(v)));
     }
     call.close();
   }
@@ -321,9 +320,7 @@ void Stats::save(std::string path) {
   std::ofstream cal(path + "call_graph.csv");
   cal << CALL_GRAPH_HEADER << "\n";
   for (auto it : call_graph) {
-    UID uid1('A', it.first);
-    UID uid2('A', it.second);
-    cal << uid1.string() << sep << uid2.string() << "\n";
+    cal << it.first.string() << sep << it.second.string() << "\n";
   }
   cal.close();
 
@@ -361,7 +358,7 @@ void Stats::updateProgramStats(size_t id, const Program &program) {
   o.pos = 0;
   for (auto &op : program.ops) {
     num_ops_per_type[static_cast<size_t>(op.type)]++;
-    if (op.type != Operation::Type::SEQ &&
+    if (op.type != Operation::Type::SEQ && op.type != Operation::Type::PRG &&
         Operation::Metadata::get(op.type).num_operands == 2 &&
         op.source.type == Operand::Type::CONSTANT) {
       if (num_constants.find(op.source.value) == num_constants.end()) {
@@ -382,12 +379,12 @@ void Stats::updateProgramStats(size_t id, const Program &program) {
         num_operation_positions[o]++;
       }
     }
-    if (op.type == Operation::Type::SEQ &&
+    if ((op.type == Operation::Type::SEQ || op.type == Operation::Type::PRG) &&
         op.source.type == Operand::Type::CONSTANT) {
-      auto called = op.source.value.asInt();
-      resizeProgramLists(called);
-      call_graph.insert(std::pair<int64_t, int64_t>(id, called));
-      program_usages[called]++;
+      auto called = UID::castFromInt(op.source.value.asInt());
+      resizeProgramLists(called.number());
+      call_graph.insert(std::pair<UID, UID>(UID('A', id), called));
+      program_usages[called.number()]++;
     }
     o.pos++;
   }
@@ -449,9 +446,9 @@ int64_t Stats::getTransitiveLength(size_t id) const {
     return -1;
   }
   int64_t length = program_lengths.at(id);
-  auto range = call_graph.equal_range(id);
+  auto range = call_graph.equal_range(uid);
   for (auto &it = range.first; it != range.second; it++) {
-    length += getTransitiveLength(it->second);
+    length += getTransitiveLength(it->second.number());
   }
   visited_programs.erase(id);
   return length;

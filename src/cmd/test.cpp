@@ -1240,7 +1240,7 @@ void Test::stats() {
   if (!s.program_lengths.at(7)) {
     Log::get().error("Error loading program lengths from stats", true);
   }
-  if (!s.call_graph.count(168380)) {
+  if (!s.call_graph.count(UID('A', 168380))) {
     Log::get().error("Unexpected call graph for A168380", true);
   }
   auto l = s.getTransitiveLength(168380);

@@ -4,6 +4,7 @@
 #include <set>
 #include <unordered_set>
 
+#include "base/uid.hpp"
 #include "eval/evaluator.hpp"
 #include "mine/blocks.hpp"
 
@@ -57,7 +58,7 @@ class Stats {
   std::map<Number, int64_t> num_constants;
   std::map<Operation, int64_t> num_operations;
   std::map<OpPos, int64_t> num_operation_positions;
-  std::multimap<int64_t, int64_t> call_graph;
+  std::multimap<UID, UID> call_graph;
   std::vector<int64_t> num_programs_per_length;
   std::vector<int64_t> num_ops_per_type;
   std::vector<int64_t> program_lengths;
