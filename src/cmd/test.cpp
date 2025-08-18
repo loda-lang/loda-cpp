@@ -144,6 +144,24 @@ void Test::uid() {
   if (set.exists(UID('A', 2))) {
     Log::get().error("UIDSet should not contain A000002", true);
   }
+  set.insert(UID('A', 7));
+  if (!set.exists(UID('A', 7))) {
+    Log::get().error("UIDSet should contain A000007", true);
+  }
+  set.insert(UID('P', 9));
+  size_t count = 0;
+  for (auto uid : set) {
+    if ((count == 0 && uid != UID('A', 1)) ||
+        (count == 1 && uid != UID('A', 7)) ||
+        (count == 2 && uid != UID('P', 9))) {
+      Log::get().error(
+          "UIDSet iterator returned unexpected UID: " + uid.string(), true);
+    }
+    count++;
+  }
+  if (count != 3) {
+    Log::get().error("UIDSet iterator should return exactly three UIDs", true);
+  }
 }
 
 void check_num(const Number& m, const std::string& s) {

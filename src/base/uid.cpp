@@ -66,8 +66,8 @@ std::string UID::string() const {
 }
 
 bool UIDSet::exists(UID uid) const {
-  auto it = find(uid.domain());
-  if (it == end()) {
+  auto it = data.find(uid.domain());
+  if (it == data.end()) {
     return false;
   }
   const auto& flags = it->second;
@@ -78,9 +78,63 @@ bool UIDSet::exists(UID uid) const {
 }
 
 void UIDSet::insert(UID uid) {
-  auto& flags = (*this)[uid.domain()];
+  auto& flags = data[uid.domain()];
   if (uid.number() >= static_cast<int64_t>(flags.size())) {
     flags.resize(static_cast<int64_t>(1.5 * uid.number()) + 1, false);
   }
   flags[uid.number()] = true;
+}
+
+UIDSet::const_iterator::const_iterator() = default;
+
+UIDSet::const_iterator::const_iterator(map_iter_t map_it, map_iter_t map_end)
+    : m_map_it(map_it), m_map_end(map_end) {
+  advance_to_next_valid();
+}
+
+UIDSet::const_iterator::reference UIDSet::const_iterator::operator*() const {
+  return UID(m_map_it->first, m_vec_idx);
+}
+
+UIDSet::const_iterator& UIDSet::const_iterator::operator++() {
+  ++m_vec_idx;
+  advance_to_next_valid();
+  return *this;
+}
+
+bool UIDSet::const_iterator::operator==(const const_iterator& other) const {
+  return m_map_it == other.m_map_it &&
+         (m_map_it == m_map_end || m_vec_idx == other.m_vec_idx);
+}
+
+bool UIDSet::const_iterator::operator!=(const const_iterator& other) const {
+  return !(*this == other);
+}
+
+void UIDSet::const_iterator::advance_to_next_valid() {
+  while (m_map_it != m_map_end) {
+    const auto& vec = m_map_it->second;
+    while (m_vec_idx < vec.size()) {
+      if (vec[m_vec_idx]) return;
+      ++m_vec_idx;
+    }
+    ++m_map_it;
+    m_vec_idx = 0;
+  }
+}
+
+UIDSet::const_iterator UIDSet::begin() const {
+  return const_iterator(data.cbegin(), data.cend());
+}
+
+UIDSet::const_iterator UIDSet::end() const {
+  return const_iterator(data.cend(), data.cend());
+}
+
+UIDSet::const_iterator UIDSet::cbegin() const {
+  return const_iterator(data.cbegin(), data.cend());
+}
+
+UIDSet::const_iterator UIDSet::cend() const {
+  return const_iterator(data.cend(), data.cend());
 }

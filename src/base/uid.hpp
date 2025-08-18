@@ -60,9 +60,39 @@ struct hash<UID> {
 };
 }  // namespace std
 
-class UIDSet : public std::map<char, std::vector<bool>> {
+class UIDSet {
  public:
-  bool exists(UID uid) const;
+  class const_iterator {
+   public:
+    using map_iter_t = std::map<char, std::vector<bool>>::const_iterator;
+    using value_type = UID;
+    using reference = UID;
+    using pointer = void;
+    using difference_type = std::ptrdiff_t;
+    using iterator_category = std::forward_iterator_tag;
 
+    const_iterator();
+    const_iterator(map_iter_t map_it, map_iter_t map_end);
+    reference operator*() const;
+    const_iterator& operator++();
+    bool operator==(const const_iterator& other) const;
+    bool operator!=(const const_iterator& other) const;
+
+   private:
+    map_iter_t m_map_it{};
+    map_iter_t m_map_end{};
+    size_t m_vec_idx = 0;
+    void advance_to_next_valid();
+  };
+
+  const_iterator begin() const;
+  const_iterator end() const;
+  const_iterator cbegin() const;
+  const_iterator cend() const;
+
+  bool exists(UID uid) const;
   void insert(UID uid);
+
+ private:
+  std::map<char, std::vector<bool>> data;
 };
