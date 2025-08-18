@@ -136,6 +136,14 @@ void Test::uid() {
   testUID('P', 16, 0xF000000000010, "P000016");
   testUID('V', 0, 0x15000000000000, "V000000");
   testUID('V', 17, 0x15000000000011, "V000017");
+  UIDSet set;
+  set.insert(UID('A', 1));
+  if (!set.exists(UID('A', 1))) {
+    Log::get().error("UIDSet should contain A000001", true);
+  }
+  if (set.exists(UID('A', 2))) {
+    Log::get().error("UIDSet should not contain A000002", true);
+  }
 }
 
 void check_num(const Number& m, const std::string& s) {

@@ -64,3 +64,23 @@ std::string UID::string() const {
     << number();
   return s.str();
 }
+
+bool UIDSet::exists(UID uid) const {
+  auto it = data.find(uid.domain());
+  if (it == data.end()) {
+    return false;
+  }
+  const auto& flags = it->second;
+  if (uid.number() < 0 || uid.number() >= static_cast<int64_t>(flags.size())) {
+    return false;
+  }
+  return flags[uid.number()];
+}
+
+void UIDSet::insert(UID uid) {
+  auto& flags = data[uid.domain()];
+  if (uid.number() >= static_cast<int64_t>(flags.size())) {
+    flags.resize(static_cast<int64_t>(1.5 * uid.number()) + 1, false);
+  }
+  flags[uid.number()] = true;
+}

@@ -1,7 +1,9 @@
 #pragma once
 
 #include <cstdint>
+#include <map>
 #include <string>
+#include <vector>
 
 // UID represents a unique identifier for sequences/programs, e.g., "A123456"
 class UID {
@@ -57,3 +59,13 @@ struct hash<UID> {
   }
 };
 }  // namespace std
+
+class UIDSet {
+ public:
+  bool exists(UID uid) const;
+
+  void insert(UID uid);
+
+ private:
+  std::map<char, std::vector<bool>> data;
+};
