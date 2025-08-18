@@ -87,7 +87,7 @@ void OeisManager::load() {
     update(false);
 
     // load sequence data, names and deny list
-    Log::get().info("Loading sequences from the OEIS index");
+    Log::get().debug("Loading sequences from the OEIS index");
     start_time = std::chrono::steady_clock::now();
     loadData();
     loadNames();

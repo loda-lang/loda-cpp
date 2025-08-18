@@ -1,5 +1,6 @@
 #include "mine/stats.hpp"
 
+#include <chrono>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -37,6 +38,7 @@ Stats::Stats()
 void Stats::load(std::string path) {
   ensureTrailingFileSep(path);
   Log::get().debug("Loading program stats from " + path);
+  auto start_time = std::chrono::steady_clock::now();
 
   const std::string sep(",");
   std::string full, line, k, l, m, v, w;
@@ -227,7 +229,19 @@ void Stats::load(std::string path) {
 
   // TODO: remaining stats
 
-  Log::get().debug("Finished loading program stats");
+  auto cur_time = std::chrono::steady_clock::now();
+  double duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+                        cur_time - start_time)
+                        .count() /
+                    1000.0;
+  std::stringstream buf;
+  buf.setf(std::ios::fixed);
+  buf.precision(2);
+  buf << duration;
+  auto mem = getMemUsage() / (1024 * 1024);  // convert to MB
+  Log::get().info("Loaded stats for " + std::to_string(num_programs) +
+                  " programs in " + buf.str() +
+                  "s; memory usage: " + std::to_string(mem) + " MiB");
 }
 
 void Stats::save(std::string path) {
