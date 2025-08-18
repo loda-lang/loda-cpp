@@ -92,6 +92,7 @@ class UIDSet {
 
   bool exists(UID uid) const;
   void insert(UID uid);
+  void clear();
 
  private:
   std::map<char, std::vector<bool>> data;

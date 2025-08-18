@@ -85,6 +85,8 @@ void UIDSet::insert(UID uid) {
   flags[uid.number()] = true;
 }
 
+void UIDSet::clear() { data.clear(); }
+
 UIDSet::const_iterator::const_iterator() = default;
 
 UIDSet::const_iterator::const_iterator(map_iter_t map_it, map_iter_t map_end)
