@@ -63,10 +63,10 @@ class Stats {
   std::vector<int64_t> num_ops_per_type;
   std::vector<int64_t> program_lengths;
   std::vector<int64_t> program_usages;
-  std::vector<bool> all_program_ids;
-  std::vector<bool> latest_program_ids;
-  std::vector<bool> supports_inceval;
-  std::vector<bool> supports_logeval;
+  UIDSet all_program_ids;
+  UIDSet latest_program_ids;
+  UIDSet supports_inceval;
+  UIDSet supports_logeval;
   Blocks blocks;
 
  private:
@@ -80,7 +80,7 @@ class Stats {
 
 class RandomProgramIds {
  public:
-  explicit RandomProgramIds(const std::vector<bool> &flags);
+  explicit RandomProgramIds(const UIDSet &ids);
 
   bool empty() const;
   bool exists(int64_t id) const;
