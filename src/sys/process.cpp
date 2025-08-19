@@ -5,6 +5,7 @@
 #include <vector>
 
 #ifdef _WIN64
+#include <DbgHelp.h>
 #include <windows.h>
 #else
 #include <fcntl.h>
@@ -31,6 +32,22 @@ HANDLE createWindowsProcess(const std::string& command) {
     throw std::runtime_error(msg);
   }
   return pi.hProcess;
+}
+
+LONG WINAPI UnhandledExceptionFilter(EXCEPTION_POINTERS* pExceptionPointers) {
+  HANDLE hDumpFile = CreateFile(L"CrashDump.dmp", GENERIC_WRITE, 0, NULL,
+                                CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+  if (hDumpFile != INVALID_HANDLE_VALUE) {
+    MINIDUMP_EXCEPTION_INFORMATION dumpInfo;
+    dumpInfo.ExceptionPointers = pExceptionPointers;
+    dumpInfo.ThreadId = GetCurrentThreadId();
+    dumpInfo.ClientPointers = TRUE;
+    MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hDumpFile,
+                      MiniDumpNormal, &dumpInfo, NULL, NULL);
+    CloseHandle(hDumpFile);
+    std::cout << "unhandled exception; generated crashdump" << std::endl;
+  }
+  return EXCEPTION_EXECUTE_HANDLER;
 }
 
 #endif
