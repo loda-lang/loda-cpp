@@ -50,8 +50,20 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
       - name: Build
         run: cd src && nmake.exe /F Makefile.windows.mk
+      - name: Enable Windows crash dumps
+        run: |
+          reg add "HKLM\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" /v DumpType /t REG_DWORD /d 2 /f
+          reg add "HKLM\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" /v DumpFolder /t REG_SZ /d "%cd%\\dumps" /f
+          mkdir dumps
+        shell: cmd
       - name: Test
         run: ./loda.exe test
+      - name: Upload crash dumps
+        uses: actions/upload-artifact@v4
+        with:
+          name: crash-dumps
+          path: dumps/*.dmp
+          if-no-files-found: ignore
   code-coverage:
     runs-on: ubuntu-22.04
     steps:
