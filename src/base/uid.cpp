@@ -65,6 +65,17 @@ std::string UID::string() const {
   return s.str();
 }
 
+bool UIDSet::empty() const {
+  for (const auto& domain : data) {
+    for (bool flag : domain.second) {
+      if (flag) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
 bool UIDSet::exists(UID uid) const {
   auto it = data.find(uid.domain());
   if (it == data.end()) {

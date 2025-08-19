@@ -90,6 +90,7 @@ class UIDSet {
   const_iterator cbegin() const;
   const_iterator cend() const;
 
+  bool empty() const;
   bool exists(UID uid) const;
   void insert(UID uid);
   void erase(UID uid);

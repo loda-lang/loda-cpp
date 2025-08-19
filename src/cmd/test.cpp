@@ -166,6 +166,13 @@ void Test::uid() {
   if (set.exists(UID('A', 1))) {
     Log::get().error("UIDSet should not contain A000001 after erase", true);
   }
+  if (set.empty()) {
+    Log::get().error("UIDSet should not be empty after removing one UID", true);
+  }
+  set.clear();
+  if (!set.empty()) {
+    Log::get().error("UIDSet should be empty after clear", true);
+  }
 }
 
 void check_num(const Number& m, const std::string& s) {
