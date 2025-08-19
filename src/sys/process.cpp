@@ -35,8 +35,9 @@ HANDLE createWindowsProcess(const std::string& command) {
 }
 
 LONG WINAPI UnhandledExceptionFilter(EXCEPTION_POINTERS* pExceptionPointers) {
-  HANDLE hDumpFile = CreateFile(L"CrashDump.dmp", GENERIC_WRITE, 0, NULL,
-                                CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+  LPSTR c = const_cast<LPSTR>("CrashDump.dmp");
+  HANDLE hDumpFile = CreateFile(c, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
+                                FILE_ATTRIBUTE_NORMAL, NULL);
   if (hDumpFile != INVALID_HANDLE_VALUE) {
     MINIDUMP_EXCEPTION_INFORMATION dumpInfo;
     dumpInfo.ExceptionPointers = pExceptionPointers;
@@ -45,7 +46,6 @@ LONG WINAPI UnhandledExceptionFilter(EXCEPTION_POINTERS* pExceptionPointers) {
     MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hDumpFile,
                       MiniDumpNormal, &dumpInfo, NULL, NULL);
     CloseHandle(hDumpFile);
-    std::cout << "unhandled exception; generated crashdump" << std::endl;
   }
   return EXCEPTION_EXECUTE_HANDLER;
 }
