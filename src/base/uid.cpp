@@ -85,6 +85,17 @@ void UIDSet::insert(UID uid) {
   flags[uid.number()] = true;
 }
 
+void UIDSet::erase(UID uid) {
+  auto it = data.find(uid.domain());
+  if (it == data.end()) {
+    return;
+  }
+  auto& flags = it->second;
+  if (uid.number() >= 0 && uid.number() < static_cast<int64_t>(flags.size())) {
+    flags[uid.number()] = false;
+  }
+}
+
 void UIDSet::clear() { data.clear(); }
 
 UIDSet::const_iterator::const_iterator() = default;

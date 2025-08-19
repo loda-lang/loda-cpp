@@ -92,6 +92,7 @@ class UIDSet {
 
   bool exists(UID uid) const;
   void insert(UID uid);
+  void erase(UID uid);
   void clear();
 
  private:

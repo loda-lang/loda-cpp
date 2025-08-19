@@ -162,6 +162,10 @@ void Test::uid() {
   if (count != 3) {
     Log::get().error("UIDSet iterator should return exactly three UIDs", true);
   }
+  set.erase(UID('A', 1));
+  if (set.exists(UID('A', 1))) {
+    Log::get().error("UIDSet should not contain A000001 after erase", true);
+  }
 }
 
 void check_num(const Number& m, const std::string& s) {
