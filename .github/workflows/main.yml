@@ -61,9 +61,13 @@ jobs:
       - name: Print crash dumps
         if: always()
         run: |
-          for %f in (dumps\*.dmp) do (
-            echo ==== Crash dump: %f ====
-            cdb -z %f -c ".ecxr; kb; q"
+          if exist dumps\*.dmp (
+            for %%f in (dumps\*.dmp) do (
+              echo ==== Crash dump: %%f ====
+              cdb -z %%f -c ".ecxr; kb; q"
+            )
+          ) else (
+            echo No crash dumps found
           )
         shell: cmd
       - name: Upload crash dumps
