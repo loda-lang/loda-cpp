@@ -275,7 +275,6 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
 }
 
 int main(int argc, char* argv[]) {
-  Log::get().error("for testing purposes only", true);
   Settings settings;
   auto args = settings.parseArgs(argc, argv);
   dispatch(settings, args);
