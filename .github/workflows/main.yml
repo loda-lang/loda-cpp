@@ -50,7 +50,7 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
       - name: Build
         run: cd src && nmake.exe /F Makefile.windows.mk
-      - name: Enable Windows crash dumps
+      - name: Enable crash dumps
         run: |
           reg add "HKLM\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" /v DumpType /t REG_DWORD /d 2 /f
           reg add "HKLM\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" /v DumpFolder /t REG_SZ /d "%cd%\\dumps" /f
@@ -58,7 +58,16 @@ jobs:
         shell: cmd
       - name: Test
         run: ./loda.exe test
+      - name: Print crash dumps
+        if: always()
+        run: |
+          for %f in (dumps\*.dmp) do (
+            echo ==== Crash dump: %f ====
+            cdb -z %f -c ".ecxr; kb; q"
+          )
+        shell: cmd
       - name: Upload crash dumps
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: crash-dumps
