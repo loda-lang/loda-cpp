@@ -453,7 +453,7 @@ void OeisManager::generateStats(int64_t age_in_days) {
           ProgramUtil::removeOps(program, Operation::Type::NOP);
 
           // update stats
-          stats->updateProgramStats(s.id.number(), program);
+          stats->updateProgramStats(s.id, program);
           num_processed++;
         } catch (const std::exception &exc) {
           Log::get().error(
@@ -461,7 +461,7 @@ void OeisManager::generateStats(int64_t age_in_days) {
               false);
         }
       }
-      stats->updateSequenceStats(s.id.number(), has_program, has_formula);
+      stats->updateSequenceStats(s.id, has_program, has_formula);
       if (notify.isTargetReached()) {
         notify.reset();
         Log::get().info("Processed " + std::to_string(num_processed) +

@@ -329,9 +329,9 @@ std::string Stats::getMainStatsFile(std::string path) const {
   return path;
 }
 
-void Stats::updateProgramStats(size_t id, const Program &program) {
+void Stats::updateProgramStats(UID id, const Program &program) {
   const size_t num_ops = ProgramUtil::numOps(program, false);
-  program_lengths[UID('A', id)] = num_ops;
+  program_lengths[id] = num_ops;
   if (num_ops >= num_programs_per_length.size()) {
     num_programs_per_length.resize(num_ops + 1);
   }
@@ -365,7 +365,7 @@ void Stats::updateProgramStats(size_t id, const Program &program) {
     if ((op.type == Operation::Type::SEQ || op.type == Operation::Type::PRG) &&
         op.source.type == Operand::Type::CONSTANT) {
       auto called = UID::castFromInt(op.source.value.asInt());
-      call_graph.insert(std::pair<UID, UID>(UID('A', id), called));
+      call_graph.insert(std::pair<UID, UID>(id, called));
       program_usages[called]++;
     }
     o.pos++;
@@ -374,23 +374,23 @@ void Stats::updateProgramStats(size_t id, const Program &program) {
   Interpreter interpreter(settings);
   IncrementalEvaluator inceval(interpreter);
   if (inceval.init(program)) {
-    supports_inceval.insert(UID('A', id));
+    supports_inceval.insert(id);
   }
   if (Analyzer::hasLogarithmicComplexity(program)) {
-    supports_logeval.insert(UID('A', id));
+    supports_logeval.insert(id);
   }
   blocks_collector.add(program);
 }
 
-void Stats::updateSequenceStats(size_t id, bool program_found,
+void Stats::updateSequenceStats(UID id, bool program_found,
                                 bool formula_found) {
   num_sequences++;
   num_programs += static_cast<int64_t>(program_found);
   num_formulas += static_cast<int64_t>(formula_found);
   if (program_found) {
-    all_program_ids.insert(UID('A', id));
+    all_program_ids.insert(id);
   } else {
-    all_program_ids.erase(UID('A', id));
+    all_program_ids.erase(id);
   }
 }
 

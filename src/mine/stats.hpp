@@ -43,9 +43,9 @@ class Stats {
 
   std::string getMainStatsFile(std::string path) const;
 
-  void updateProgramStats(size_t id, const Program &program);
+  void updateProgramStats(UID id, const Program &program);
 
-  void updateSequenceStats(size_t id, bool program_found, bool formula_found);
+  void updateSequenceStats(UID id, bool program_found, bool formula_found);
 
   void finalize();
 
