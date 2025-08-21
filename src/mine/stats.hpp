@@ -51,6 +51,8 @@ class Stats {
 
   int64_t getTransitiveLength(size_t id) const;
 
+  size_t getNumUsages(UID id) const;
+
   int64_t num_programs;
   int64_t num_sequences;
   int64_t num_formulas;
@@ -61,8 +63,8 @@ class Stats {
   std::multimap<UID, UID> call_graph;
   std::vector<int64_t> num_programs_per_length;
   std::vector<int64_t> num_ops_per_type;
-  std::vector<int64_t> program_lengths;
-  std::vector<int64_t> program_usages;
+  std::unordered_map<UID, int64_t> program_lengths;
+  std::unordered_map<UID, int64_t> program_usages;
   UIDSet all_program_ids;
   UIDSet latest_program_ids;
   UIDSet supports_inceval;
@@ -74,8 +76,6 @@ class Stats {
   mutable std::set<size_t>
       printed_recursion_warning;  // used for getTransitiveLength()
   Blocks::Collector blocks_collector;
-
-  void resizeProgramLists(size_t id);
 };
 
 class RandomProgramIds {

@@ -1266,7 +1266,7 @@ void Test::stats() {
   if (!s.all_program_ids.exists(UID('A', 5))) {
     Log::get().error("Error loading program summary from stats", true);
   }
-  if (!s.program_lengths.at(7)) {
+  if (!s.program_lengths.at(UID('A', 7))) {
     Log::get().error("Error loading program lengths from stats", true);
   }
   if (!s.call_graph.count(UID('A', 168380))) {

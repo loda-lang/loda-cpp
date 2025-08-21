@@ -463,11 +463,7 @@ void Miner::submit(const std::string &path, std::string id_str) {
       updated_ids.insert(s.first);
       num_updated++;
     } else {
-      size_t num_usages = 0;
-      if (uid.number() <
-          static_cast<int64_t>(manager->getStats().program_usages.size())) {
-        num_usages = manager->getStats().program_usages[uid.number()];
-      }
+      auto num_usages = manager->getStats().getNumUsages(uid);
       bool full_check = manager->isFullCheck(uid);
       auto existing = manager->getExistingProgram(s.first);
       auto msg = manager->getFinder().getChecker().compare(

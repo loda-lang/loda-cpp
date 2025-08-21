@@ -839,11 +839,7 @@ update_program_result_t OeisManager::updateProgram(
   // minimize and check the program
   check_result_t checked;
   bool full_check = full_check_list.find(seq.id) != full_check_list.end();
-  size_t num_usages = 0;
-  if (seq.id.number() <
-      static_cast<int64_t>(getStats().program_usages.size())) {
-    num_usages = stats->program_usages[seq.id.number()];
-  }
+  auto num_usages = stats->getNumUsages(seq.id);
   switch (validation_mode) {
     case ValidationMode::BASIC:
       checked = finder.getChecker().checkProgramBasic(

@@ -880,15 +880,11 @@ void Commands::compare(const std::string& path1, const std::string& path2) {
   initLog(false);
   Program p1 = OeisProgram::getProgramAndSeqId(path1).first;
   Program p2 = OeisProgram::getProgramAndSeqId(path2).first;
-  auto id_str = Comments::getSequenceIdFromProgram(p1);
-  auto seq = OeisSequence(UID(id_str));
+  auto id = UID(Comments::getSequenceIdFromProgram(p1));
+  auto seq = OeisSequence(id);
   OeisManager manager(settings);
   manager.load();
-  size_t num_usages = 0;
-  if (seq.id.number() <
-      static_cast<int64_t>(manager.getStats().program_usages.size())) {
-    num_usages = manager.getStats().program_usages[seq.id.number()];
-  }
+  auto num_usages = manager.getStats().getNumUsages(id);
   bool full_check = manager.isFullCheck(seq.id);
   Log::get().info(manager.getFinder().getChecker().compare(
       p1, p2, "First", "Second", seq, full_check, num_usages));
