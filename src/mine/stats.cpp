@@ -156,18 +156,17 @@ void Stats::load(std::string path) {
       std::getline(s, m, ',');
       std::getline(s, v, ',');
       std::getline(s, w);
-      int64_t id = std::stoll(k);
-      UID uid('A', id);
-      largest_id = std::max<int64_t>(largest_id, id);
-      resizeProgramLists(id);
-      all_program_ids.insert(uid);
-      program_lengths[id] = std::stoll(l);
-      program_usages[id] = std::stoll(m);
+      UID id(k);
+      largest_id = std::max<int64_t>(largest_id, id.number());
+      resizeProgramLists(id.number());
+      all_program_ids.insert(id);
+      program_lengths[id.number()] = std::stoll(l);
+      program_usages[id.number()] = std::stoll(m);
       if (std::stoll(v)) {
-        supports_inceval.insert(uid);
+        supports_inceval.insert(id);
       }
       if (std::stoll(w)) {
-        supports_logeval.insert(uid);
+        supports_logeval.insert(id);
       }
     }
     size_t new_size = largest_id + 1;
@@ -396,7 +395,11 @@ void Stats::updateSequenceStats(size_t id, bool program_found,
   num_programs += static_cast<int64_t>(program_found);
   num_formulas += static_cast<int64_t>(formula_found);
   resizeProgramLists(id);
-  all_program_ids[id] = program_found;
+  if (program_found) {
+    all_program_ids.insert(UID('A', id));
+  } else {
+    all_program_ids.erase(UID('A', id));
+  }
 }
 
 void Stats::resizeProgramLists(size_t id) {
@@ -445,12 +448,10 @@ int64_t Stats::getTransitiveLength(size_t id) const {
   return length;
 }
 
-RandomProgramIds::RandomProgramIds(const std::vector<bool> &flags) {
-  for (size_t id = 0; id < flags.size(); id++) {
-    if (flags[id]) {
-      ids_vector.push_back(id);
-      ids_set.insert(id);
-    }
+RandomProgramIds::RandomProgramIds(const UIDSet &ids) {
+  for (auto id : ids) {
+    ids_vector.push_back(id.number());
+    ids_set.insert(id.number());
   }
 }
 
