@@ -407,25 +407,24 @@ void Stats::finalize() {
   }
 }
 
-int64_t Stats::getTransitiveLength(size_t id) const {
-  UID uid('A', id);
+int64_t Stats::getTransitiveLength(UID id) const {
   if (visited_programs.find(id) != visited_programs.end()) {
     visited_programs.clear();
     if (printed_recursion_warning.find(id) == printed_recursion_warning.end()) {
       printed_recursion_warning.insert(id);
-      Log::get().warn("Recursion detected: " + uid.string());
+      Log::get().warn("Recursion detected: " + id.string());
     }
     return -1;
   }
   visited_programs.insert(id);
-  if (program_lengths.find(uid) == program_lengths.end()) {
-    Log::get().warn("Invalid reference: " + uid.string());
+  if (program_lengths.find(id) == program_lengths.end()) {
+    Log::get().warn("Invalid reference: " + id.string());
     return -1;
   }
-  int64_t length = program_lengths.at(uid);
-  auto range = call_graph.equal_range(uid);
+  int64_t length = program_lengths.at(id);
+  auto range = call_graph.equal_range(id);
   for (auto &it = range.first; it != range.second; it++) {
-    length += getTransitiveLength(it->second.number());
+    length += getTransitiveLength(it->second);
   }
   visited_programs.erase(id);
   return length;

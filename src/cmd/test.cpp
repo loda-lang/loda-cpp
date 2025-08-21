@@ -1272,7 +1272,7 @@ void Test::stats() {
   if (!s.call_graph.count(UID('A', 168380))) {
     Log::get().error("Unexpected call graph for A168380", true);
   }
-  auto l = s.getTransitiveLength(168380);
+  auto l = s.getTransitiveLength(UID('A', 168380));
   if (l != 13) {
     Log::get().error(
         "Unexpected transitive length of A168380: " + std::to_string(l), true);

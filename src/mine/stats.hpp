@@ -49,7 +49,7 @@ class Stats {
 
   void finalize();
 
-  int64_t getTransitiveLength(size_t id) const;
+  int64_t getTransitiveLength(UID id) const;
 
   size_t getNumUsages(UID id) const;
 
@@ -72,8 +72,8 @@ class Stats {
   Blocks blocks;
 
  private:
-  mutable std::set<size_t> visited_programs;  // used for getTransitiveLength()
-  mutable std::set<size_t>
+  mutable std::set<UID> visited_programs;  // used for getTransitiveLength()
+  mutable std::set<UID>
       printed_recursion_warning;  // used for getTransitiveLength()
   Blocks::Collector blocks_collector;
 };
