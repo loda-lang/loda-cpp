@@ -278,9 +278,7 @@ bool OeisManager::shouldMatch(const OeisSequence &seq) const {
   bool too_many_matches = invalid_matches.hasTooMany(seq.id);
 
   // check if program exists
-  const bool prog_exists =
-      (seq.id.number() < static_cast<int64_t>(stats->all_program_ids.size())) &&
-      stats->all_program_ids[seq.id.number()];
+  const bool prog_exists = stats->all_program_ids.exists(seq.id);
 
   // program exists and protected?
   if (prog_exists && protect_list.find(seq.id) != protect_list.end()) {
@@ -496,8 +494,7 @@ void OeisManager::generateLists() {
       if (s.id.number() == 0 || deny_list.find(s.id) != deny_list.end()) {
         continue;
       }
-      if (s.id.number() < static_cast<int64_t>(stats->all_program_ids.size()) &&
-          stats->all_program_ids[s.id.number()]) {
+      if (stats->all_program_ids.exists(s.id)) {
         // update program list
         const size_t list_index = (s.id.number() + 1) / list_file_size;
         buf = s.name;
@@ -994,26 +991,21 @@ bool OeisManager::maintainProgram(UID id, bool eval) {
 std::vector<Program> OeisManager::loadAllPrograms() {
   load();
   auto &program_ids = getStats().all_program_ids;
-  const auto num_ids = program_ids.size();
   const auto num_programs = getStats().num_programs;
-  std::vector<Program> programs(num_ids);
+  std::vector<Program> programs;
   Log::get().info("Loading " + std::to_string(num_programs) + " programs");
   AdaptiveScheduler scheduler(20);
   int64_t loaded = 0;
-  for (size_t id = 0; id < num_ids; id++) {
-    if (!program_ids[id]) {
-      continue;
-    }
-    UID uid('A', id);
-    std::ifstream in(ProgramUtil::getProgramPath(uid));
+  for (auto id : program_ids) {
+    std::ifstream in(ProgramUtil::getProgramPath(id));
     if (!in) {
       continue;
     }
     try {
-      programs[id] = parser.parse(in);
+      programs.push_back(parser.parse(in));
       loaded++;
     } catch (const std::exception &e) {
-      Log::get().warn("Skipping " + uid.string() + ": " + e.what());
+      Log::get().warn("Skipping " + id.string() + ": " + e.what());
       continue;
     }
     if (scheduler.isTargetReached() || loaded == num_programs) {

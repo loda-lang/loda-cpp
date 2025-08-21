@@ -96,6 +96,9 @@ class UIDSet {
   void erase(UID uid);
   void clear();
 
+  bool operator==(const UIDSet& other) const { return data == other.data; }
+  bool operator!=(const UIDSet& other) const { return data != other.data; }
+
  private:
   std::map<char, std::vector<bool>> data;
 };
