@@ -120,7 +120,8 @@ void Mutator::mutateOperation(Operation &op, int64_t num_cells,
     ProgramUtil::avoidNopOrOverflow(op);
   } else if (op.type == Operation::Type::SEQ) {
     // op.comment = "mutated from " + ProgramUtil::operationToString(op);
-    op.source.value = random_program_ids.get();
+    op.source =
+        Operand(Operand::Type::CONSTANT, random_program_ids.get().castToInt());
   }
 }
 

@@ -178,11 +178,22 @@ void Generator::fixSingularities(Program &p) {
 void Generator::fixCalls(Program &p) {
   for (auto &op : p.ops) {
     if (op.type == Operation::Type::SEQ) {
-      if (op.source.type != Operand::Type::CONSTANT ||
-          !random_program_ids.exists(op.source.value.asInt())) {
-        op.source =
-            Operand(Operand::Type::CONSTANT, Number(random_program_ids.get()));
+      continue;
+    }
+    bool reset = false;
+    if (op.source.type == Operand::Type::CONSTANT) {
+      try {
+        auto id = UID::castFromInt(op.source.value.asInt());
+        reset = !random_program_ids.exists(id);
+      } catch (const std::exception &e) {
+        reset = true;
       }
+    } else {
+      reset = true;
+    }
+    if (reset) {
+      auto id_num = random_program_ids.get().castToInt();
+      op.source = Operand(Operand::Type::CONSTANT, Number(id_num));
     }
   }
 }

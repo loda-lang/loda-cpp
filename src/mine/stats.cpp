@@ -449,34 +449,32 @@ int64_t Stats::getTransitiveLength(size_t id) const {
 }
 
 RandomProgramIds::RandomProgramIds(const UIDSet &ids) {
+  ids_set = ids;
   for (auto id : ids) {
-    ids_vector.push_back(id.number());
-    ids_set.insert(id.number());
+    ids_vector.push_back(id);
   }
 }
 
 bool RandomProgramIds::empty() const { return ids_set.empty(); }
 
-bool RandomProgramIds::exists(int64_t id) const {
-  return (id >= 0) && (ids_set.find(id) != ids_set.end());
-}
+bool RandomProgramIds::exists(UID id) const { return ids_set.exists(id); }
 
-int64_t RandomProgramIds::get() const {
+UID RandomProgramIds::get() const {
   if (!ids_vector.empty()) {
     return ids_vector[Random::get().gen() % ids_vector.size()];
   }
-  return 0;
+  return UID();
 }
 
 RandomProgramIds2::RandomProgramIds2(const Stats &stats)
     : all_program_ids(stats.all_program_ids),
       latest_program_ids(stats.latest_program_ids) {}
 
-bool RandomProgramIds2::exists(int64_t id) const {
+bool RandomProgramIds2::exists(UID id) const {
   return all_program_ids.exists(id) || latest_program_ids.exists(id);
 }
 
-int64_t RandomProgramIds2::get() const {
+UID RandomProgramIds2::get() const {
   if (Random::get().gen() % 2 == 0 ||
       latest_program_ids.empty()) {  // magic number
     return all_program_ids.get();
@@ -485,4 +483,4 @@ int64_t RandomProgramIds2::get() const {
   }
 }
 
-int64_t RandomProgramIds2::getFromAll() const { return all_program_ids.get(); }
+UID RandomProgramIds2::getFromAll() const { return all_program_ids.get(); }

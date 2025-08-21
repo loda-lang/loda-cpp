@@ -83,21 +83,21 @@ class RandomProgramIds {
   explicit RandomProgramIds(const UIDSet &ids);
 
   bool empty() const;
-  bool exists(int64_t id) const;
-  int64_t get() const;
+  bool exists(UID id) const;
+  UID get() const;
 
  private:
-  std::vector<int64_t> ids_vector;
-  std::unordered_set<int64_t> ids_set;
+  UIDSet ids_set;
+  std::vector<UID> ids_vector;
 };
 
 class RandomProgramIds2 {
  public:
   explicit RandomProgramIds2(const Stats &stats);
 
-  bool exists(int64_t id) const;
-  int64_t get() const;
-  int64_t getFromAll() const;
+  bool exists(UID id) const;
+  UID get() const;
+  UID getFromAll() const;
 
  private:
   RandomProgramIds all_program_ids;
