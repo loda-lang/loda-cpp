@@ -679,20 +679,8 @@ bool Setup::checkSubmittedBy() {
 }
 
 bool Setup::checkUsageStats() {
-  std::cout << "To estimate the required server capacity, the LODA miner"
-            << std::endl
-            << "can send basic, anonymous usage statistics. Specifically,"
-            << std::endl
-            << "a running miner instance would send the value 1 to the"
-            << std::endl
-            << "API server once per hour. This data is used to determine"
-            << std::endl
-            << "the total number of active miners. There are no IDs or other"
-            << std::endl
-            << "data sent to the server. You can still mine without it."
-            << std::endl
-            << std::endl
-            << "Do you want to send this basic usage statisics? ";
+  std::cout << "Do you agree to send anonymous statistics to support mining "
+               "capacity estimations?";
   bool flag = getSetupFlag(LODA_SUBMIT_CPU_HOURS, false);
   if (flag) {
     std::cout << "(Y/n) ";
