@@ -252,7 +252,7 @@ std::string Checker::isOptimizedBetter(Program existing, Program optimized,
     return not_better;
   }
 
-  // consider incremental evaluation only for programs that are not
+  // consider special evaluation modes only for programs that are not
   // used by many other programs and that don't require a full check
   if (!full_check && num_usages < 5) {  // magic number
     // check if the optimized program supports incremental evaluation
@@ -261,13 +261,12 @@ std::string Checker::isOptimizedBetter(Program existing, Program optimized,
     } else if (isBetterIncEval(optimized, existing, evaluator)) {
       return not_better;
     }
-  }
-
-  // check if the optimized program supports virtual evaluation
-  if (isBetterVirEval(existing, optimized, evaluator)) {
-    return "Faster (VE)";
-  } else if (isBetterVirEval(optimized, existing, evaluator)) {
-    return not_better;
+    // check if the optimized program supports virtual evaluation
+    if (isBetterVirEval(existing, optimized, evaluator)) {
+      return "Faster (VE)";
+    } else if (isBetterVirEval(optimized, existing, evaluator)) {
+      return not_better;
+    }
   }
 
   // ======= EVALUATION CHECKS =========
