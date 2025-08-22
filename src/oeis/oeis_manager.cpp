@@ -426,6 +426,7 @@ void OeisManager::generateStats(int64_t age_in_days) {
           std::to_string(age_in_days) + " days ago)";
   }
   Log::get().info(msg);
+  auto start_time = std::chrono::steady_clock::now();
   stats.reset(new Stats());
 
   size_t num_processed = 0;
@@ -474,16 +475,27 @@ void OeisManager::generateStats(int64_t age_in_days) {
   stats->finalize();
   stats->save(stats_home);
 
-  // done
-  Log::get().info("Finished stats generation for " +
-                  std::to_string(num_processed) + " programs");
+  // print summary
+  auto cur_time = std::chrono::steady_clock::now();
+  double duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+                        cur_time - start_time)
+                        .count() /
+                    1000.0;
+  std::stringstream buf;
+  buf.setf(std::ios::fixed);
+  buf.precision(2);
+  buf << duration;
+  auto mem = getMemUsage() / (1024 * 1024);  // convert to MB
+  Log::get().info("Generated stats for " + std::to_string(num_processed) +
+                  " programs in " + buf.str() +
+                  "s; memory usage: " + std::to_string(mem) + " MiB");
 }
 
 void OeisManager::generateLists() {
   load();
   getStats();
   const std::string lists_home = OeisList::getListsHome();
-  Log::get().info("Generating program lists at \"" + lists_home + "\"");
+  Log::get().debug("Generating program lists at \"" + lists_home + "\"");
   const size_t list_file_size = 50000;
   std::vector<std::stringstream> list_files(1000000 / list_file_size);
   std::stringstream no_loda;
@@ -542,8 +554,8 @@ void OeisManager::generateLists() {
   no_loda_file << no_loda.str();
   no_loda_file.close();
 
-  Log::get().info("Finished generation of lists for " +
-                  std::to_string(num_processed) + " programs");
+  Log::get().info("Generated lists for " + std::to_string(num_processed) +
+                  " programs");
 }
 
 void OeisManager::migrate() {
