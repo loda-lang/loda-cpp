@@ -951,7 +951,7 @@ void checkSeqAgainstTestBFile(int64_t seq_id, int64_t offset,
   UID uid('A', seq_id);
   auto uid_str = uid.string();
   std::string bname = "b" + uid_str.substr(1) + ".txt";
-  OeisSequence t(uid);
+  ManagedSequence t(uid);
   t.getTerms(max_num_terms).to_b_file(buf, offset);
   std::ifstream bfile(std::string("tests") + FILE_SEP + "sequence" + FILE_SEP +
                       bname);
@@ -1004,7 +1004,7 @@ void Test::oeisList() {
 
 void Test::oeisSeq() {
   Log::get().info("Testing OEIS sequences");
-  OeisSequence s(UID('A', 6));
+  ManagedSequence s(UID('A', 6));
   // std::remove( s.getBFilePath().c_str() );
   checkSeq(s.getTerms(20), 20, 18, 8);  // this should fetch the b-file
   checkSeq(s.getTerms(250), 250, 235, 38);
@@ -1351,8 +1351,8 @@ void Test::minimizer(size_t tests) {
     }
     program = multi_generator.generateProgram();
     try {
-      evaluator.eval(program, s1, OeisSequence::DEFAULT_SEQ_LENGTH);
-      if (s1.size() != OeisSequence::DEFAULT_SEQ_LENGTH) {
+      evaluator.eval(program, s1, ManagedSequence::DEFAULT_SEQ_LENGTH);
+      if (s1.size() != ManagedSequence::DEFAULT_SEQ_LENGTH) {
         i--;
         continue;
       }
@@ -1424,8 +1424,8 @@ void Test::randomRange(size_t tests) {
     program = multi_generator.generateProgram();
     ProgramUtil::setOffset(program, i % 3);
     try {
-      evaluator.eval(program, seq, OeisSequence::DEFAULT_SEQ_LENGTH);
-      if (seq.size() != OeisSequence::DEFAULT_SEQ_LENGTH) {
+      evaluator.eval(program, seq, ManagedSequence::DEFAULT_SEQ_LENGTH);
+      if (seq.size() != ManagedSequence::DEFAULT_SEQ_LENGTH) {
         i--;  // try another program
         continue;
       }

@@ -1,4 +1,4 @@
-#include "seq/sequence.hpp"
+#include "seq/managed_sequence.hpp"
 
 #include <fstream>
 #include <iomanip>
@@ -14,15 +14,15 @@
 #include "sys/util.hpp"
 #include "sys/web_client.hpp"
 
-const size_t OeisSequence::DEFAULT_SEQ_LENGTH = 80;  // magic number
+const size_t ManagedSequence::DEFAULT_SEQ_LENGTH = 80;  // magic number
 
-const size_t OeisSequence::EXTENDED_SEQ_LENGTH = 1000;  // magic number
+const size_t ManagedSequence::EXTENDED_SEQ_LENGTH = 1000;  // magic number
 
-const size_t OeisSequence::FULL_SEQ_LENGTH = 100000;  // magic number
+const size_t ManagedSequence::FULL_SEQ_LENGTH = 100000;  // magic number
 
-const size_t OeisSequence::MIN_NUM_EXP_TERMS = 16;  // magic number
+const size_t ManagedSequence::MIN_NUM_EXP_TERMS = 16;  // magic number
 
-bool OeisSequence::isTooBig(const Number& n) {
+bool ManagedSequence::isTooBig(const Number& n) {
   if (n == Number::INF) {
     return true;
   }
@@ -35,34 +35,35 @@ bool OeisSequence::isTooBig(const Number& n) {
   }
 }
 
-OeisSequence::OeisSequence(UID id) : id(id), offset(0), num_bfile_terms(0) {}
+ManagedSequence::ManagedSequence(UID id)
+    : id(id), offset(0), num_bfile_terms(0) {}
 
-OeisSequence::OeisSequence(UID id, const std::string& name,
-                           const Sequence& full)
+ManagedSequence::ManagedSequence(UID id, const std::string& name,
+                                 const Sequence& full)
     : id(id), name(name), offset(0), terms(full), num_bfile_terms(0) {}
 
-std::ostream& operator<<(std::ostream& out, const OeisSequence& s) {
+std::ostream& operator<<(std::ostream& out, const ManagedSequence& s) {
   out << s.id.string() << ": " << s.name;
   return out;
 }
 
-std::string OeisSequence::to_string() const {
+std::string ManagedSequence::to_string() const {
   std::stringstream ss;
   ss << (*this);
   return ss.str();
 }
 
-std::string OeisSequence::urlStr(UID id) {
+std::string ManagedSequence::urlStr(UID id) {
   return "https://oeis.org/" + id.string();
 }
 
-std::string OeisSequence::getBFilePath() const {
+std::string ManagedSequence::getBFilePath() const {
   std::string bfile = "b" + id.string().substr(1) + ".txt";
   return Setup::getOeisHome() + "b" + FILE_SEP + ProgramUtil::dirStr(id) +
          FILE_SEP + bfile;
 }
 
-void removeInvalidBFile(const OeisSequence& oeis_seq,
+void removeInvalidBFile(const ManagedSequence& oeis_seq,
                         const std::string& error = "invalid") {
   auto path = oeis_seq.getBFilePath();
   if (isFile(path)) {
@@ -72,7 +73,7 @@ void removeInvalidBFile(const OeisSequence& oeis_seq,
 }
 
 Sequence loadBFile(UID id, const Sequence& seq_full) {
-  const OeisSequence oeis_seq(id);
+  const ManagedSequence oeis_seq(id);
   Sequence result;
 
   // try to read b-file
@@ -106,7 +107,7 @@ Sequence loadBFile(UID id, const Sequence& seq_full) {
         ss >> std::ws;
         Number::readIntString(ss, buf);
         Number value(buf);
-        if (!ss || OeisSequence::isTooBig(value)) {
+        if (!ss || ManagedSequence::isTooBig(value)) {
           break;
         }
         result.push_back(value);
@@ -175,7 +176,7 @@ Sequence loadBFile(UID id, const Sequence& seq_full) {
   return result;
 }
 
-Sequence OeisSequence::getTerms(int64_t max_num_terms) const {
+Sequence ManagedSequence::getTerms(int64_t max_num_terms) const {
   // determine real number of terms
   size_t real_max_terms =
       (max_num_terms >= 0) ? max_num_terms : EXTENDED_SEQ_LENGTH;
@@ -236,15 +237,15 @@ bool OeisSeqList::exists(UID id) const {
   return seqs[index].id == id;
 }
 
-const OeisSequence& OeisSeqList::get(UID uid) const {
+const ManagedSequence& OeisSeqList::get(UID uid) const {
   return at(uid.domain()).at(uid.number());
 }
 
-OeisSequence& OeisSeqList::get(UID uid) {
+ManagedSequence& OeisSeqList::get(UID uid) {
   return (*this)[uid.domain()][uid.number()];
 }
 
-void OeisSeqList::add(OeisSequence&& seq) {
+void OeisSeqList::add(ManagedSequence&& seq) {
   auto& seqs = (*this)[seq.id.domain()];
   auto index = seq.id.number();
   if (index >= static_cast<int64_t>(seqs.size())) {

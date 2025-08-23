@@ -11,7 +11,7 @@ const UID FACTORIAL_SEQ_ID('A', 142);
 #include "form/variant.hpp"
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
-#include "seq/sequence.hpp"
+#include "seq/managed_sequence.hpp"
 #include "sys/log.hpp"
 
 FormulaGenerator::FormulaGenerator()

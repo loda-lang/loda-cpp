@@ -413,11 +413,11 @@ void Miner::submit(const std::string &path, std::string id_str) {
     Log::get().error(
         "Sequence " + id_str + " is ignored by the active miner profile", true);
   }
-  auto seq = OeisSequence(uid);
+  auto seq = ManagedSequence(uid);
   Settings settings(this->settings);
   settings.print_as_b_file = false;
   Evaluator evaluator(settings);
-  auto terms = seq.getTerms(OeisSequence::FULL_SEQ_LENGTH);
+  auto terms = seq.getTerms(ManagedSequence::FULL_SEQ_LENGTH);
   auto num_required = OeisProgram::getNumRequiredTerms(program);
   Log::get().info(
       "Validating program against " + std::to_string(terms.size()) + " (>=" +

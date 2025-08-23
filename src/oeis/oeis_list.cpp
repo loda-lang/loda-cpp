@@ -3,7 +3,7 @@
 #include <fstream>
 
 #include "lang/program_util.hpp"
-#include "seq/sequence.hpp"
+#include "seq/managed_sequence.hpp"
 #include "sys/file.hpp"
 #include "sys/log.hpp"
 #include "sys/setup.hpp"
@@ -95,7 +95,7 @@ bool OeisList::loadMap(const std::string& path, std::map<UID, int64_t>& map) {
 
 void OeisList::addToMap(std::istream& in, std::map<UID, int64_t>& map) {
   std::string line, id, value;
-  OeisSequence seq;
+  ManagedSequence seq;
   bool is_value;
   int64_t v;
   while (std::getline(in, line)) {

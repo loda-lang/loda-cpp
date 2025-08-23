@@ -8,7 +8,7 @@
 #include "mine/finder.hpp"
 #include "mine/stats.hpp"
 #include "oeis/invalid_matches.hpp"
-#include "seq/sequence.hpp"
+#include "seq/managed_sequence.hpp"
 #include "sys/util.hpp"
 
 enum class OverwriteMode { NONE, ALL, AUTO };
@@ -74,7 +74,7 @@ class OeisManager {
 
   void loadOffsets();
 
-  bool shouldMatch(const OeisSequence& seq) const;
+  bool shouldMatch(const ManagedSequence& seq) const;
 
   void generateStats(int64_t age_in_days);
 

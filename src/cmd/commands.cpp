@@ -187,9 +187,9 @@ void Commands::check(const std::string& path) {
   } else {
     uid = UID(Comments::getSequenceIdFromProgram(program));
   }
-  auto seq = OeisSequence(uid);
+  auto seq = ManagedSequence(uid);
   Evaluator evaluator(settings);
-  auto terms = seq.getTerms(OeisSequence::FULL_SEQ_LENGTH);
+  auto terms = seq.getTerms(ManagedSequence::FULL_SEQ_LENGTH);
   auto num_required = OeisProgram::getNumRequiredTerms(program);
   auto result = evaluator.check(program, terms, num_required, uid);
   switch (result.first) {
@@ -386,7 +386,7 @@ void Commands::autoFold() {
       Log::get().info("Folded " + main_id.string() + " using " +
                       sub_id.string());
       auto seq = manager.getSequences().get(main_id);
-      auto terms = seq.getTerms(OeisSequence::DEFAULT_SEQ_LENGTH);
+      auto terms = seq.getTerms(ManagedSequence::DEFAULT_SEQ_LENGTH);
       auto result = evaluator.check(main, terms, -1, main_id);
       if (result.first == status_t::ERROR) {
         Sequence tmp;
@@ -462,7 +462,7 @@ void Commands::addToList(const std::string& seq_id,
   OeisManager manager(settings);
   manager.load();
   const auto& sequences = manager.getSequences();
-  auto seq = OeisSequence(UID(seq_id));
+  auto seq = ManagedSequence(UID(seq_id));
   if (seq.id.number() == 0) {
     Log::get().error("Invalid sequence ID: " + seq_id, true);
     return;
@@ -695,7 +695,7 @@ void Commands::testPari(const std::string& test_id) {
                   " skipped PARI checks");
 }
 
-bool checkRange(const OeisSequence& seq, const Program& program,
+bool checkRange(const ManagedSequence& seq, const Program& program,
                 bool finiteInput) {
   auto idStr = seq.id.string();
   auto offset = ProgramUtil::getOffset(program);
@@ -740,7 +740,7 @@ void Commands::testRange(const std::string& id) {
   OeisManager manager(settings);
   manager.load();
   auto& stats = manager.getStats();
-  std::vector<OeisSequence> seqs;
+  std::vector<ManagedSequence> seqs;
   if (id.empty()) {
     for (auto& domain : manager.getSequences()) {
       seqs.insert(seqs.end(), domain.second.begin(), domain.second.end());
@@ -881,7 +881,7 @@ void Commands::compare(const std::string& path1, const std::string& path2) {
   Program p1 = OeisProgram::getProgramAndSeqId(path1).first;
   Program p2 = OeisProgram::getProgramAndSeqId(path2).first;
   auto id = UID(Comments::getSequenceIdFromProgram(p1));
-  auto seq = OeisSequence(id);
+  auto seq = ManagedSequence(id);
   OeisManager manager(settings);
   manager.load();
   auto num_usages = manager.getStats().getNumUsages(id);

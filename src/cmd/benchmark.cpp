@@ -7,7 +7,7 @@
 #include "eval/evaluator.hpp"
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
-#include "seq/sequence.hpp"
+#include "seq/managed_sequence.hpp"
 #include "sys/log.hpp"
 #include "sys/setup.hpp"
 
