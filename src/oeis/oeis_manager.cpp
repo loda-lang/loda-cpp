@@ -57,6 +57,8 @@ OeisManager::OeisManager(const Settings &settings,
                      ? (Setup::getLodaHome() + "stats" + FILE_SEP)
                      : stats_home) {}
 
+std::string getOeisHome() { return Setup::getSeqsHome() + "oeis" + FILE_SEP; }
+
 void OeisManager::load() {
   // check if already loaded
   if (getTotalCount() > 0) {
@@ -75,9 +77,15 @@ void OeisManager::load() {
 
   {
     // obtain lock
-    FolderLock lock(Setup::getOeisHome());
+    FolderLock lock(Setup::getLodaHome());
+    moveDirToParent(Setup::getLodaHome(), "oeis", "seqs");
+    // lock released at the end of this block
+  }
+  {
+    // obtain lock
+    FolderLock lock(getOeisHome());
     update(false);
-    loader.load(Setup::getOeisHome(), 'A');
+    loader.load(getOeisHome(), 'A');
     // lock released at the end of this block
   }
   loader.checkConsistency();
@@ -107,8 +115,8 @@ Finder &OeisManager::getFinder() {
     finder_initialized = true;
 
     // print summary
-    Log::get().info("Matching " + std::to_string(num_matching) + " sequences " +
-                    +"/" + std::to_string(getTotalCount()) + +" using " +
+    Log::get().info("Matching " + std::to_string(num_matching) + "/" +
+                    std::to_string(getTotalCount()) + " sequences using " +
                     std::to_string(finder.getMatchers().size()) + " matchers");
     finder.logSummary(loader.getNumLoaded());
   }
@@ -169,7 +177,7 @@ void OeisManager::update(bool force) {
   auto it = files.begin();
   int64_t oeis_age_in_days = -1;
   while (it != files.end()) {
-    auto path = Setup::getOeisHome() + *it;
+    auto path = getOeisHome() + *it;
     oeis_age_in_days = getFileAgeInDays(path);
     if (oeis_age_in_days < 0 ||
         oeis_age_in_days >= Setup::getOeisUpdateInterval()) {
@@ -199,15 +207,14 @@ void OeisManager::update(bool force) {
   // perform oeis update
   if (update_oeis) {
     if (oeis_age_in_days == -1) {
-      Log::get().info("Creating OEIS index at \"" + Setup::getOeisHome() +
-                      "\"");
-      ensureDir(Setup::getOeisHome());
+      Log::get().info("Creating OEIS index at \"" + getOeisHome() + "\"");
+      ensureDir(getOeisHome());
     } else {
       Log::get().info("Updating OEIS index (last update " +
                       std::to_string(oeis_age_in_days) + " days ago)");
     }
     for (const auto &file : files) {
-      const auto path = Setup::getOeisHome() + file;
+      const auto path = getOeisHome() + file;
       ApiClient::getDefaultInstance().getOeisFile(file, path);
     }
   }

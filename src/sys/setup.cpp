@@ -20,7 +20,7 @@ const std::string Setup::LODA_SUBMIT_CPU_HOURS("LODA_SUBMIT_CPU_HOURS");
 
 // TODO: use a singlton of Setup
 std::string Setup::LODA_HOME;
-std::string Setup::OEIS_HOME;
+std::string Setup::SEQS_HOME;
 std::string Setup::PROGRAMS_HOME;
 std::string Setup::MINERS_CONFIG;
 std::map<std::string, std::string> Setup::SETUP;
@@ -127,13 +127,13 @@ void Setup::setMinersConfig(const std::string& loda_config) {
   MINERS_CONFIG = loda_config;
 }
 
-const std::string& Setup::getOeisHome() {
-  if (OEIS_HOME.empty()) {
-    OEIS_HOME = getLodaHome() + "oeis" + FILE_SEP;
-    ensureTrailingFileSep(OEIS_HOME);
-    ensureDir(OEIS_HOME);
+const std::string& Setup::getSeqsHome() {
+  if (SEQS_HOME.empty()) {
+    SEQS_HOME = getLodaHome() + "seqs" + FILE_SEP;
+    ensureTrailingFileSep(SEQS_HOME);
+    ensureDir(SEQS_HOME);
   }
-  return OEIS_HOME;
+  return SEQS_HOME;
 }
 
 const std::string& Setup::getProgramsHome() {

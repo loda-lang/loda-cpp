@@ -34,8 +34,8 @@ std::string ManagedSequence::to_string() const {
 
 std::string ManagedSequence::getBFilePath() const {
   std::string bfile = "b" + id.string().substr(1) + ".txt";
-  return Setup::getOeisHome() + "b" + FILE_SEP + ProgramUtil::dirStr(id) +
-         FILE_SEP + bfile;
+  return Setup::getSeqsHome() + "oeis" + FILE_SEP + "b" + FILE_SEP +
+         ProgramUtil::dirStr(id) + FILE_SEP + bfile;
 }
 
 void removeInvalidBFile(const ManagedSequence& oeis_seq,

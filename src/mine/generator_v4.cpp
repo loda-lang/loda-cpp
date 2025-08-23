@@ -96,13 +96,7 @@ GeneratorV4::GeneratorV4(const Config& config, const Stats& stats)
   }
 
   const auto loda_home = Setup::getLodaHome();
-
-  if (isDir(loda_home + "gen_v4") && !isDir(loda_home + "cache")) {
-    Log::get().info("Migrating gen_v4 folder to cache folder");
-    ensureDir(loda_home + "cache" + FILE_SEP);
-    moveFile(loda_home + "gen_v4", loda_home + "cache" + FILE_SEP + "gen_v4");
-  }
-
+  moveDirToParent(loda_home, "gen_v4", "cache");
   home = loda_home + "cache" + FILE_SEP + "gen_v4" + FILE_SEP + config.miner;
   numfiles_path = home + FILE_SEP + "numfiles.txt";
 
