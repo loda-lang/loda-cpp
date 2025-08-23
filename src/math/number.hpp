@@ -78,7 +78,7 @@ class Number {
 
  private:
   // TODO: avoid this friend class
-  friend class OeisSequence;
+  friend class ManagedSequence;
 
   static Number infinity();
 

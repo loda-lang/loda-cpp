@@ -7,7 +7,7 @@
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
 #include "lang/subprogram.hpp"
-#include "oeis/oeis_sequence.hpp"
+#include "seq/managed_sequence.hpp"
 #include "sys/file.hpp"
 #include "sys/git.hpp"
 #include "sys/log.hpp"
@@ -61,12 +61,12 @@ size_t OeisProgram::getTransitiveProgramHash(const Program &program) {
 }
 
 size_t OeisProgram::getNumCheckTerms(bool full_check) {
-  return full_check ? OeisSequence::FULL_SEQ_LENGTH
-                    : OeisSequence::EXTENDED_SEQ_LENGTH;
+  return full_check ? ManagedSequence::FULL_SEQ_LENGTH
+                    : ManagedSequence::EXTENDED_SEQ_LENGTH;
 }
 
 size_t OeisProgram::getNumRequiredTerms(const Program &p) {
-  return OeisSequence::DEFAULT_SEQ_LENGTH;
+  return ManagedSequence::DEFAULT_SEQ_LENGTH;
   // return Analyzer::hasExponentialComplexity(p)
   //            ? OeisSequence::MIN_NUM_EXP_TERMS
   //            : OeisSequence::DEFAULT_SEQ_LENGTH;

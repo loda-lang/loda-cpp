@@ -8,9 +8,9 @@
 #include "mine/checker.hpp"
 #include "mine/matcher.hpp"
 #include "oeis/invalid_matches.hpp"
-#include "oeis/oeis_sequence.hpp"
+#include "seq/managed_sequence.hpp"
 
-class OeisSequence;
+class ManagedSequence;
 
 class Finder {
  public:

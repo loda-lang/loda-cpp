@@ -10,7 +10,7 @@
 #include "lang/program_cache.hpp"
 #include "lang/program_util.hpp"
 #include "oeis/oeis_program.hpp"
-#include "oeis/oeis_sequence.hpp"
+#include "seq/managed_sequence.hpp"
 #include "sys/file.hpp"
 #include "sys/log.hpp"
 #include "sys/setup.hpp"
@@ -101,7 +101,7 @@ Checker::Checker(const Settings& settings, Evaluator& evaluator,
 
 check_result_t Checker::checkProgramExtended(Program program, Program existing,
                                              bool is_new,
-                                             const OeisSequence& seq,
+                                             const ManagedSequence& seq,
                                              bool full_check,
                                              size_t num_usages) {
   check_result_t result;
@@ -166,7 +166,7 @@ check_result_t Checker::checkProgramExtended(Program program, Program existing,
 
 check_result_t Checker::checkProgramBasic(const Program& program,
                                           const Program& existing, bool is_new,
-                                          const OeisSequence& seq,
+                                          const ManagedSequence& seq,
                                           const std::string& change_type,
                                           size_t previous_hash, bool full_check,
                                           size_t num_usages) {
@@ -214,8 +214,8 @@ check_result_t Checker::checkProgramBasic(const Program& program,
 }
 
 std::string Checker::isOptimizedBetter(Program existing, Program optimized,
-                                       const OeisSequence& seq, bool full_check,
-                                       size_t num_usages) {
+                                       const ManagedSequence& seq,
+                                       bool full_check, size_t num_usages) {
   static constexpr double THRESHOLD_BETTER = 1.05;
   static constexpr double THRESHOLD_FASTER = 1.1;
   static const std::string not_better;
@@ -280,7 +280,7 @@ std::string Checker::isOptimizedBetter(Program existing, Program optimized,
 
   // evaluate optimized program for fixed number of terms
   num_check = std::min<size_t>(num_check, terms.size());
-  num_check = std::max<size_t>(num_check, OeisSequence::EXTENDED_SEQ_LENGTH);
+  num_check = std::max<size_t>(num_check, ManagedSequence::EXTENDED_SEQ_LENGTH);
   Sequence tmp;
   evaluator.clearCaches();
   auto optimized_steps = evaluator.eval(optimized, tmp, num_check, false);
@@ -326,8 +326,9 @@ std::string Checker::isOptimizedBetter(Program existing, Program optimized,
 }
 
 std::string Checker::compare(Program p1, Program p2, const std::string& name1,
-                             const std::string& name2, const OeisSequence& seq,
-                             bool full_check, size_t num_usages) {
+                             const std::string& name2,
+                             const ManagedSequence& seq, bool full_check,
+                             size_t num_usages) {
   auto result = isOptimizedBetter(p1, p2, seq, full_check, num_usages);
   if (!result.empty()) {
     lowerString(result);

@@ -6,7 +6,7 @@
 #include "base/uid.hpp"
 #include "math/sequence.hpp"
 
-class OeisSequence {
+class ManagedSequence {
  public:
   static const size_t DEFAULT_SEQ_LENGTH;
 
@@ -20,9 +20,9 @@ class OeisSequence {
 
   static bool isTooBig(const Number& n);
 
-  OeisSequence(UID id = UID('A', 0));
+  ManagedSequence(UID id = UID('A', 0));
 
-  OeisSequence(UID id, const std::string& name, const Sequence& full);
+  ManagedSequence(UID id, const std::string& name, const Sequence& full);
 
   static std::string urlStr(UID id);
 
@@ -36,7 +36,7 @@ class OeisSequence {
   std::string name;
   int64_t offset;
 
-  friend std::ostream& operator<<(std::ostream& out, const OeisSequence& s);
+  friend std::ostream& operator<<(std::ostream& out, const ManagedSequence& s);
 
   std::string to_string() const;
 
@@ -45,13 +45,13 @@ class OeisSequence {
   mutable size_t num_bfile_terms;
 };
 
-class OeisSeqList : public std::map<char, std::vector<OeisSequence>> {
+class OeisSeqList : public std::map<char, std::vector<ManagedSequence>> {
  public:
   bool exists(UID id) const;
 
-  const OeisSequence& get(UID id) const;
+  const ManagedSequence& get(UID id) const;
 
-  OeisSequence& get(UID id);
+  ManagedSequence& get(UID id);
 
-  void add(OeisSequence&& seq);
+  void add(ManagedSequence&& seq);
 };

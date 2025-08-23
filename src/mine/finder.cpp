@@ -13,7 +13,6 @@
 #include "oeis/invalid_matches.hpp"
 #include "oeis/oeis_list.hpp"
 #include "oeis/oeis_program.hpp"
-#include "oeis/oeis_sequence.hpp"
 #include "sys/file.hpp"
 #include "sys/log.hpp"
 #include "sys/setup.hpp"

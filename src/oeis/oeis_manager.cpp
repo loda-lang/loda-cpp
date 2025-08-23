@@ -96,6 +96,8 @@ void OeisManager::load() {
     // lock released at the end of this block
   }
 
+  checkConsistency();
+
   // print summary
   auto cur_time = std::chrono::steady_clock::now();
   double duration = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -153,7 +155,7 @@ void OeisManager::loadData() {
     while (pos < line.length()) {
       if (line[pos] == ',') {
         Number num(buf);
-        if (OeisSequence::isTooBig(num)) {
+        if (ManagedSequence::isTooBig(num)) {
           break;
         }
         seq_full.push_back(num);
@@ -172,7 +174,7 @@ void OeisManager::loadData() {
     }
 
     // add sequence to index
-    sequences.add(OeisSequence(UID('A', id), "", seq_full));
+    sequences.add(ManagedSequence(UID('A', id), "", seq_full));
     loaded_count++;
   }
 }
@@ -228,6 +230,36 @@ void OeisManager::loadOffsets() {
   }
 }
 
+void OeisManager::checkConsistency() const {
+  Log::get().debug("Checking sequence data consistency");
+  size_t num_seqs = 0;
+  for (const auto &domain : sequences) {
+    for (const auto &s : domain.second) {
+      if (s.id.number() == 0) {
+        continue;
+      }
+      Log::get().debug("Checking consistency of " + s.to_string());
+      if (s.name.empty()) {
+        Log::get().error("Missing name for sequence " + s.id.string(), true);
+      }
+      if (s.existingNumTerms() < settings.num_terms) {
+        Log::get().error("Not enough terms for sequence " + s.id.string() +
+                             " (" + std::to_string(s.existingNumTerms()) + "<" +
+                             std::to_string(settings.num_terms) + ")",
+                         true);
+      }
+      num_seqs++;
+    }
+  }
+  if (num_seqs != loaded_count) {
+    Log::get().error(
+        "Inconsistent number of sequences: " + std::to_string(num_seqs) +
+            "!=" + std::to_string(loaded_count),
+        true);
+  }
+  Log::get().debug("Sequence data consistency check passed");
+}
+
 Finder &OeisManager::getFinder() {
   if (!finder_initialized) {
     // generate stats is needed
@@ -264,7 +296,7 @@ Finder &OeisManager::getFinder() {
   return finder;
 }
 
-bool OeisManager::shouldMatch(const OeisSequence &seq) const {
+bool OeisManager::shouldMatch(const ManagedSequence &seq) const {
   if (seq.id.number() == 0) {
     return false;
   }
@@ -777,7 +809,7 @@ void OeisManager::alert(Program p, UID id, const std::string &prefix,
   }
   Log::AlertDetails details;
   details.title = seq.id.string();
-  details.title_link = OeisSequence::urlStr(seq.id);
+  details.title_link = ManagedSequence::urlStr(seq.id);
   details.color = color;
   std::stringstream buf;
   // TODO: code block markers must be escaped for Slack, but not for Discord
@@ -950,7 +982,7 @@ bool OeisManager::maintainProgram(UID id, bool eval) {
   // check correctness of the program
   if (is_okay && eval) {
     // get the full number of terms
-    auto extended_seq = s.getTerms(OeisSequence::FULL_SEQ_LENGTH);
+    auto extended_seq = s.getTerms(ManagedSequence::FULL_SEQ_LENGTH);
     auto num_required = OeisProgram::getNumRequiredTerms(program);
     try {
       auto res = evaluator.check(program, extended_seq, num_required, id);
