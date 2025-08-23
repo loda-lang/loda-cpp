@@ -22,7 +22,7 @@ SRCS = base/uid.cpp \
   sys/file.cpp sys/git.cpp sys/jute.cpp sys/log.cpp sys/metrics.cpp sys/process.cpp sys/setup.cpp sys/util.cpp sys/web_client.cpp
 
 loda: $(SRCS)
-	cl /EHsc /Feloda.exe $(CXXFLAGS) $(SRCS)
+  cl /EHsc /Feloda.exe $(CXXFLAGS) $(SRCS) Dbghelp.lib
 	copy loda.exe ..
 
 clean:
