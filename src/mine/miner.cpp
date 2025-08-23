@@ -293,8 +293,7 @@ void Miner::runMineLoop() {
     } else {
       // we are in server mode and have no programs to process
       // => lets do maintenance work!
-      if (!manager->maintainProgram(
-              UID('A', mutator->random_program_ids.getFromAll()))) {
+      if (!manager->maintainProgram(mutator->random_program_ids.getFromAll())) {
         num_removed++;
       }
     }
@@ -464,11 +463,7 @@ void Miner::submit(const std::string &path, std::string id_str) {
       updated_ids.insert(s.first);
       num_updated++;
     } else {
-      size_t num_usages = 0;
-      if (uid.number() <
-          static_cast<int64_t>(manager->getStats().program_usages.size())) {
-        num_usages = manager->getStats().program_usages[uid.number()];
-      }
+      auto num_usages = manager->getStats().getNumUsages(uid);
       bool full_check = manager->isFullCheck(uid);
       auto existing = manager->getExistingProgram(s.first);
       auto msg = manager->getFinder().getChecker().compare(

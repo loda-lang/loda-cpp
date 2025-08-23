@@ -1263,16 +1263,16 @@ void Test::stats() {
     Log::get().error("Error loading operation position counts from stats",
                      true);
   }
-  if (!s.all_program_ids.at(5)) {
+  if (!s.all_program_ids.exists(UID('A', 5))) {
     Log::get().error("Error loading program summary from stats", true);
   }
-  if (!s.program_lengths.at(7)) {
+  if (!s.program_lengths.at(UID('A', 7))) {
     Log::get().error("Error loading program lengths from stats", true);
   }
   if (!s.call_graph.count(UID('A', 168380))) {
     Log::get().error("Unexpected call graph for A168380", true);
   }
-  auto l = s.getTransitiveLength(168380);
+  auto l = s.getTransitiveLength(UID('A', 168380));
   if (l != 13) {
     Log::get().error(
         "Unexpected transitive length of A168380: " + std::to_string(l), true);
@@ -1314,19 +1314,8 @@ void Test::stats() {
       Log::get().error("Unexpected number of operation position count", true);
     }
   }
-  if (s.all_program_ids.size() != t.all_program_ids.size()) {
-    Log::get().error("Unexpected number of found programs: " +
-                         std::to_string(s.all_program_ids.size()) +
-                         "!=" + std::to_string(t.all_program_ids.size()),
-                     true);
-  }
-  for (size_t i = 0; i < s.all_program_ids.size(); i++) {
-    auto a = s.all_program_ids.at(i);
-    auto b = t.all_program_ids.at(i);
-    if (a != b) {
-      Log::get().error("Unexpected found programs for: " + std::to_string(i),
-                       true);
-    }
+  if (s.all_program_ids != t.all_program_ids) {
+    Log::get().error("Unexpected program IDs", true);
   }
 }
 

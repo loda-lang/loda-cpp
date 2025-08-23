@@ -278,9 +278,7 @@ bool OeisManager::shouldMatch(const OeisSequence &seq) const {
   bool too_many_matches = invalid_matches.hasTooMany(seq.id);
 
   // check if program exists
-  const bool prog_exists =
-      (seq.id.number() < static_cast<int64_t>(stats->all_program_ids.size())) &&
-      stats->all_program_ids[seq.id.number()];
+  const bool prog_exists = stats->all_program_ids.exists(seq.id);
 
   // program exists and protected?
   if (prog_exists && protect_list.find(seq.id) != protect_list.end()) {
@@ -305,7 +303,7 @@ bool OeisManager::shouldMatch(const OeisSequence &seq) const {
       const bool should_overwrite =
           overwrite_list.find(seq.id) != overwrite_list.end();
       const bool is_complex =
-          stats->getTransitiveLength(seq.id.number()) > 10;  // magic number
+          stats->getTransitiveLength(seq.id) > 10;  // magic number
       return is_complex || should_overwrite;
     }
   }
@@ -428,6 +426,7 @@ void OeisManager::generateStats(int64_t age_in_days) {
           std::to_string(age_in_days) + " days ago)";
   }
   Log::get().info(msg);
+  auto start_time = std::chrono::steady_clock::now();
   stats.reset(new Stats());
 
   size_t num_processed = 0;
@@ -455,7 +454,7 @@ void OeisManager::generateStats(int64_t age_in_days) {
           ProgramUtil::removeOps(program, Operation::Type::NOP);
 
           // update stats
-          stats->updateProgramStats(s.id.number(), program);
+          stats->updateProgramStats(s.id, program);
           num_processed++;
         } catch (const std::exception &exc) {
           Log::get().error(
@@ -463,7 +462,7 @@ void OeisManager::generateStats(int64_t age_in_days) {
               false);
         }
       }
-      stats->updateSequenceStats(s.id.number(), has_program, has_formula);
+      stats->updateSequenceStats(s.id, has_program, has_formula);
       if (notify.isTargetReached()) {
         notify.reset();
         Log::get().info("Processed " + std::to_string(num_processed) +
@@ -476,16 +475,27 @@ void OeisManager::generateStats(int64_t age_in_days) {
   stats->finalize();
   stats->save(stats_home);
 
-  // done
-  Log::get().info("Finished stats generation for " +
-                  std::to_string(num_processed) + " programs");
+  // print summary
+  auto cur_time = std::chrono::steady_clock::now();
+  double duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+                        cur_time - start_time)
+                        .count() /
+                    1000.0;
+  std::stringstream buf;
+  buf.setf(std::ios::fixed);
+  buf.precision(2);
+  buf << duration;
+  auto mem = getMemUsage() / (1024 * 1024);  // convert to MB
+  Log::get().info("Generated stats for " + std::to_string(num_processed) +
+                  " programs in " + buf.str() +
+                  "s; memory usage: " + std::to_string(mem) + " MiB");
 }
 
 void OeisManager::generateLists() {
   load();
   getStats();
   const std::string lists_home = OeisList::getListsHome();
-  Log::get().info("Generating program lists at \"" + lists_home + "\"");
+  Log::get().debug("Generating program lists at \"" + lists_home + "\"");
   const size_t list_file_size = 50000;
   std::vector<std::stringstream> list_files(1000000 / list_file_size);
   std::stringstream no_loda;
@@ -496,8 +506,7 @@ void OeisManager::generateLists() {
       if (s.id.number() == 0 || deny_list.find(s.id) != deny_list.end()) {
         continue;
       }
-      if (s.id.number() < static_cast<int64_t>(stats->all_program_ids.size()) &&
-          stats->all_program_ids[s.id.number()]) {
+      if (stats->all_program_ids.exists(s.id)) {
         // update program list
         const size_t list_index = (s.id.number() + 1) / list_file_size;
         buf = s.name;
@@ -545,8 +554,8 @@ void OeisManager::generateLists() {
   no_loda_file << no_loda.str();
   no_loda_file.close();
 
-  Log::get().info("Finished generation of lists for " +
-                  std::to_string(num_processed) + " programs");
+  Log::get().info("Generated lists for " + std::to_string(num_processed) +
+                  " programs");
 }
 
 void OeisManager::migrate() {
@@ -842,11 +851,7 @@ update_program_result_t OeisManager::updateProgram(
   // minimize and check the program
   check_result_t checked;
   bool full_check = full_check_list.find(seq.id) != full_check_list.end();
-  size_t num_usages = 0;
-  if (seq.id.number() <
-      static_cast<int64_t>(getStats().program_usages.size())) {
-    num_usages = stats->program_usages[seq.id.number()];
-  }
+  auto num_usages = stats->getNumUsages(seq.id);
   switch (validation_mode) {
     case ValidationMode::BASIC:
       checked = finder.getChecker().checkProgramBasic(
@@ -994,26 +999,21 @@ bool OeisManager::maintainProgram(UID id, bool eval) {
 std::vector<Program> OeisManager::loadAllPrograms() {
   load();
   auto &program_ids = getStats().all_program_ids;
-  const auto num_ids = program_ids.size();
   const auto num_programs = getStats().num_programs;
-  std::vector<Program> programs(num_ids);
+  std::vector<Program> programs;
   Log::get().info("Loading " + std::to_string(num_programs) + " programs");
   AdaptiveScheduler scheduler(20);
   int64_t loaded = 0;
-  for (size_t id = 0; id < num_ids; id++) {
-    if (!program_ids[id]) {
-      continue;
-    }
-    UID uid('A', id);
-    std::ifstream in(ProgramUtil::getProgramPath(uid));
+  for (auto id : program_ids) {
+    std::ifstream in(ProgramUtil::getProgramPath(id));
     if (!in) {
       continue;
     }
     try {
-      programs[id] = parser.parse(in);
+      programs.push_back(parser.parse(in));
       loaded++;
     } catch (const std::exception &e) {
-      Log::get().warn("Skipping " + uid.string() + ": " + e.what());
+      Log::get().warn("Skipping " + id.string() + ": " + e.what());
       continue;
     }
     if (scheduler.isTargetReached() || loaded == num_programs) {
