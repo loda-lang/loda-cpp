@@ -29,10 +29,6 @@
 #include "sys/util.hpp"
 #include "sys/web_client.hpp"
 
-void throwParseError(const std::string &line) {
-  Log::get().error("error parsing OEIS line: " + line, true);
-}
-
 std::string OverrideModeToString(OverwriteMode mode) {
   switch (mode) {
     case OverwriteMode::NONE:
@@ -56,15 +52,14 @@ OeisManager::OeisManager(const Settings &settings,
       update_programs(false),
       optimizer(settings),
       minimizer(settings),
-      loaded_count(0),
-      total_count(0),
+      loader(sequences, settings.num_terms),
       stats_home(stats_home.empty()
                      ? (Setup::getLodaHome() + "stats" + FILE_SEP)
                      : stats_home) {}
 
 void OeisManager::load() {
   // check if already loaded
-  if (total_count > 0) {
+  if (getTotalCount() > 0) {
     return;
   }
 
@@ -78,184 +73,13 @@ void OeisManager::load() {
   // load invalid matches map
   invalid_matches.load();
 
-  std::chrono::steady_clock::time_point start_time;
   {
     // obtain lock
     FolderLock lock(Setup::getOeisHome());
-
-    // update index if needed
     update(false);
-
-    // load sequence data, names and deny list
-    Log::get().debug("Loading sequences from the OEIS index");
-    start_time = std::chrono::steady_clock::now();
-    loadData();
-    loadNames();
-    loadOffsets();
-
+    loader.load();
     // lock released at the end of this block
   }
-
-  checkConsistency();
-
-  // print summary
-  auto cur_time = std::chrono::steady_clock::now();
-  double duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-                        cur_time - start_time)
-                        .count() /
-                    1000.0;
-  std::stringstream buf;
-  buf.setf(std::ios::fixed);
-  buf.precision(2);
-  buf << duration;
-  auto mem = getMemUsage() / (1024 * 1024);  // convert to MB
-  Log::get().info("Loaded " + std::to_string(loaded_count) + "/" +
-                  std::to_string(total_count) + " sequences in " + buf.str() +
-                  "s; memory usage: " + std::to_string(mem) + " MiB");
-}
-
-void OeisManager::loadData() {
-  std::string path = Setup::getOeisHome() + "stripped";
-  std::ifstream stripped(path);
-  if (!stripped.good()) {
-    Log::get().error("OEIS data not found: " + path, true);
-  }
-  std::string line;
-  std::string buf;
-  size_t pos;
-  size_t id;
-  Sequence seq_full, seq_big;
-
-  loaded_count = 0;
-  total_count = 0;
-
-  while (std::getline(stripped, line)) {
-    if (line.empty() || line[0] == '#') {
-      continue;
-    }
-    if (line[0] != 'A') {
-      throwParseError(line);
-    }
-    total_count++;
-    id = 0;
-    for (pos = 1; pos < line.length() && line[pos] >= '0' && line[pos] <= '9';
-         ++pos) {
-      id = (10 * id) + (line[pos] - '0');
-    }
-    if (pos >= line.length() || line[pos] != ' ' || id == 0) {
-      throwParseError(line);
-    }
-    ++pos;
-    if (pos >= line.length() || line[pos] != ',') {
-      throwParseError(line);
-    }
-    ++pos;
-    buf.clear();
-    seq_full.clear();
-    while (pos < line.length()) {
-      if (line[pos] == ',') {
-        Number num(buf);
-        if (SequenceUtil::isTooBig(num)) {
-          break;
-        }
-        seq_full.push_back(num);
-        buf.clear();
-      } else if ((line[pos] >= '0' && line[pos] <= '9') || line[pos] == '-') {
-        buf += line[pos];
-      } else {
-        throwParseError(line);
-      }
-      ++pos;
-    }
-
-    // check minimum number of terms
-    if (seq_full.size() < settings.num_terms) {
-      continue;
-    }
-
-    // add sequence to index
-    sequences.add(ManagedSequence(UID('A', id), "", seq_full));
-    loaded_count++;
-  }
-}
-
-void OeisManager::loadNames() {
-  Log::get().debug("Loading sequence names from the OEIS index");
-  std::string path = Setup::getOeisHome() + "names";
-  std::ifstream names(path);
-  if (!names.good()) {
-    Log::get().error("OEIS data not found: " + path, true);
-  }
-  std::string line;
-  size_t pos;
-  size_t id;
-  while (std::getline(names, line)) {
-    if (line.empty() || line[0] == '#') {
-      continue;
-    }
-    if (line[0] != 'A') {
-      throwParseError(line);
-    }
-    id = 0;
-    for (pos = 1; pos < line.length() && line[pos] >= '0' && line[pos] <= '9';
-         ++pos) {
-      id = (10 * id) + (line[pos] - '0');
-    }
-    if (pos >= line.length() || line[pos] != ' ' || id == 0) {
-      throwParseError(line);
-    }
-    ++pos;
-    const auto uid = UID('A', id);
-    if (sequences.exists(uid)) {
-      sequences.get(uid).name = line.substr(pos);
-      if (Log::get().level == Log::Level::DEBUG) {
-        std::stringstream buf;
-        buf << "Loaded sequence " << sequences.get(uid);
-        Log::get().debug(buf.str());
-      }
-    }
-  }
-}
-
-void OeisManager::loadOffsets() {
-  Log::get().debug("Loading offsets from the OEIS index");
-  const std::string path = Setup::getOeisHome() + "offsets";
-  std::map<UID, std::string> entries;
-  OeisList::loadMapWithComments(path, entries);
-  for (const auto &entry : entries) {
-    const UID id = entry.first;
-    if (sequences.exists(id)) {
-      sequences.get(id).offset = std::stoll(entry.second);
-    }
-  }
-}
-
-void OeisManager::checkConsistency() const {
-  Log::get().debug("Checking sequence data consistency");
-  size_t num_seqs = 0;
-  for (const auto &s : sequences) {
-    Log::get().debug("Checking consistency of " + s.to_string());
-    if (s.id.empty()) {
-      Log::get().error("Empty sequence ID", true);
-    }
-    if (s.name.empty()) {
-      Log::get().error("Missing name for sequence " + s.id.string(), true);
-    }
-    if (s.existingNumTerms() < settings.num_terms) {
-      Log::get().error("Not enough terms for sequence " + s.id.string() + " (" +
-                           std::to_string(s.existingNumTerms()) + "<" +
-                           std::to_string(settings.num_terms) + ")",
-                       true);
-    }
-    num_seqs++;
-  }
-  if (num_seqs != loaded_count) {
-    Log::get().error(
-        "Inconsistent number of sequences: " + std::to_string(num_seqs) +
-            "!=" + std::to_string(loaded_count),
-        true);
-  }
-  Log::get().debug("Sequence data consistency check passed");
 }
 
 Finder &OeisManager::getFinder() {
@@ -284,7 +108,7 @@ Finder &OeisManager::getFinder() {
                     std::to_string(finder.getMatchers().size()) +
                     " matchers (ignoring " +
                     std::to_string(ignore_list.size()) + " sequences)");
-    finder.logSummary(loaded_count);
+    finder.logSummary(loader.getNumLoaded());
   }
   return finder;
 }
@@ -653,7 +477,7 @@ const Stats &OeisManager::getStats() {
   std::map<std::string, std::string> labels;
   labels["kind"] = "total";
   entries.push_back({"programs", labels, (double)stats->num_programs});
-  entries.push_back({"sequences", labels, (double)total_count});
+  entries.push_back({"sequences", labels, (double)loader.getNumTotal()});
   entries.push_back({"formulas", labels, (double)stats->num_formulas});
   labels["kind"] = "used";
   entries.push_back({"sequences", labels, (double)stats->num_sequences});

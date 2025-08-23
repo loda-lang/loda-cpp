@@ -16,7 +16,7 @@ OBJS = base/uid.o \
   math/big_number.o math/number.o math/sequence.o \
   mine/api_client.o mine/blocks.o mine/checker.o mine/config.o mine/distribution.o mine/extender.o mine/finder.o mine/generator_v1.o mine/generator_v2.o mine/generator_v3.o mine/generator_v4.o mine/generator_v5.o mine/generator_v6.o mine/generator_v7.o mine/generator_v8.o mine/generator.o mine/iterator.o mine/matcher.o mine/miner.o mine/mutator.o mine/reducer.o mine/stats.o \
   oeis/invalid_matches.o oeis/oeis_list.o oeis/oeis_manager.o oeis/oeis_program.o \
-  seq/managed_sequence.o seq/sequence_index.o seq/sequence_util.o \
+  seq/managed_sequence.o seq/sequence_index.o seq/sequence_loader.o seq/sequence_util.o \
   sys/file.o sys/git.o sys/jute.o sys/log.o sys/metrics.o sys/process.o sys/setup.o sys/util.o sys/web_client.o
 
 loda: CXXFLAGS += -O2
