@@ -1361,15 +1361,12 @@ void Test::minimizer(size_t tests) {
       continue;
     }
     minimized = program;
-
-    std::cout << "\nOriginal program:" << std::endl;
-    ProgramUtil::print(program, std::cout);
     try {
       minimizer.optimizeAndMinimize(minimized, s1.size());
     } catch (const std::exception& e) {
-      Log::get().error(
-          "Error during minimization for program: " + std::string(e.what()),
-          true);
+      ProgramUtil::print(program, std::cerr);
+      Log::get().error("Error during minimization: " + std::string(e.what()),
+                       true);
     }
     evaluator.eval(minimized, s2, s1.size());
     if (s1.size() != s2.size() || (s1 != s2)) {
