@@ -45,6 +45,8 @@ int64_t UID::number() const {
   return static_cast<int64_t>(value & 0x0000FFFFFFFFFFFF);
 }
 
+bool UID::empty() const { return value == 0; }
+
 int64_t UID::castToInt() const { return value; }
 
 UID UID::castFromInt(int64_t value) {

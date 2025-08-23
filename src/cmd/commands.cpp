@@ -742,8 +742,8 @@ void Commands::testRange(const std::string& id) {
   auto& stats = manager.getStats();
   std::vector<ManagedSequence> seqs;
   if (id.empty()) {
-    for (auto& domain : manager.getSequences()) {
-      seqs.insert(seqs.end(), domain.second.begin(), domain.second.end());
+    for (auto& seq : manager.getSequences()) {
+      seqs.push_back(seq);
     }
   } else {
     seqs.push_back(manager.getSequences().get(UID(id)));
@@ -844,25 +844,23 @@ void Commands::findEmbseqs() {
   manager.load();
   auto& stats = manager.getStats();
   int64_t numFound = 0;
-  for (const auto& domain : manager.getSequences()) {
-    for (const auto& seq : domain.second) {
-      if (seq.id.number() == 0 || !stats.all_program_ids.exists(seq.id)) {
-        continue;
-      }
-      Program program;
-      try {
-        program = parser.parse(ProgramUtil::getProgramPath(seq.id));
-      } catch (const std::exception& e) {
-        Log::get().warn(std::string(e.what()));
-        continue;
-      }
-      auto embseqs =
-          VirtualSequence::findVirtualSequencePrograms(program, 3, 1, 1);
-      if (!embseqs.empty()) {
-        Log::get().info("Found " + std::to_string(embseqs.size()) +
-                        " embedded sequence programs in " + seq.id.string());
-        numFound += embseqs.size();
-      }
+  for (const auto& seq : manager.getSequences()) {
+    if (!stats.all_program_ids.exists(seq.id)) {
+      continue;
+    }
+    Program program;
+    try {
+      program = parser.parse(ProgramUtil::getProgramPath(seq.id));
+    } catch (const std::exception& e) {
+      Log::get().warn(std::string(e.what()));
+      continue;
+    }
+    auto embseqs =
+        VirtualSequence::findVirtualSequencePrograms(program, 3, 1, 1);
+    if (!embseqs.empty()) {
+      Log::get().info("Found " + std::to_string(embseqs.size()) +
+                      " embedded sequence programs in " + seq.id.string());
+      numFound += embseqs.size();
     }
   }
   Log::get().info("Found " + std::to_string(numFound) +

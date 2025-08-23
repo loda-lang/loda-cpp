@@ -28,6 +28,9 @@ class UID {
   // Get the 6-digit number part of the UID
   int64_t number() const;
 
+  // Check if the UID is empty (i.e., "A000000")
+  bool empty() const;
+
   // Return the internal integer representation of the UID
   int64_t castToInt() const;
 
