@@ -1341,7 +1341,7 @@ void Test::optimizer() {
 void Test::minimizer(size_t tests) {
   Evaluator evaluator(settings);
   Minimizer minimizer(settings);
-  MultiGenerator multi_generator(settings, getManager().getStats(), false);
+  MultiGenerator multi_generator(settings, getManager().getStats());
   Sequence s1, s2, s3;
   Program program, minimized;
   const int64_t num_tests = tests;
@@ -1413,7 +1413,7 @@ bool checkRange(const Sequence& seq, const Program& program, bool finiteInput) {
 
 void Test::randomRange(size_t tests) {
   Evaluator evaluator(settings);
-  MultiGenerator multi_generator(settings, getManager().getStats(), false);
+  MultiGenerator multi_generator(settings, getManager().getStats());
   Sequence seq;
   Program program;
   const int64_t num_tests = tests;
@@ -1445,7 +1445,7 @@ void Test::miner() {
   Git::git("", "--version");
   getManager().load();
   getManager().getFinder();
-  MultiGenerator multi_generator(settings, getManager().getStats(), true);
+  MultiGenerator multi_generator(settings, getManager().getStats());
 }
 
 void Test::linearMatcher() {

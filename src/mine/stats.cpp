@@ -224,10 +224,8 @@ void Stats::load(std::string path) {
   buf.setf(std::ios::fixed);
   buf.precision(2);
   buf << duration;
-  auto mem = getMemUsage() / (1024 * 1024);  // convert to MB
   Log::get().info("Loaded stats for " + std::to_string(num_programs) +
-                  " programs in " + buf.str() +
-                  "s; memory usage: " + std::to_string(mem) + " MiB");
+                  " programs in " + buf.str() + "s");
 }
 
 void Stats::save(std::string path) {

@@ -770,7 +770,7 @@ void Commands::testRange(const std::string& id) {
 void Commands::generate() {
   initLog(true);
   OeisManager manager(settings);
-  MultiGenerator multi_generator(settings, manager.getStats(), false);
+  MultiGenerator multi_generator(settings, manager.getStats());
   auto program = multi_generator.generateProgram();
   ProgramUtil::print(program, std::cout);
 }

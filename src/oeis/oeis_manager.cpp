@@ -94,10 +94,12 @@ Finder &OeisManager::getFinder() {
         OverrideModeToString(config.overwrite_mode) +
         "\", backoff: " + (config.usesBackoff() ? "true" : "false"));
     ignore_list.clear();
+    size_t num_matching = 0;
     for (auto &seq : sequences) {
       if (shouldMatch(seq)) {
         auto seq_norm = seq.getTerms(settings.num_terms);
         finder.insert(seq_norm, seq.id);
+        num_matching++;
       } else {
         ignore_list.insert(seq.id);
       }
@@ -105,10 +107,9 @@ Finder &OeisManager::getFinder() {
     finder_initialized = true;
 
     // print summary
-    Log::get().info("Initialized " +
-                    std::to_string(finder.getMatchers().size()) +
-                    " matchers (ignoring " +
-                    std::to_string(ignore_list.size()) + " sequences)");
+    Log::get().info("Matching " + std::to_string(num_matching) + " sequences " +
+                    +"/" + std::to_string(getTotalCount()) + +" using " +
+                    std::to_string(finder.getMatchers().size()) + " matchers");
     finder.logSummary(loader.getNumLoaded());
   }
   return finder;
@@ -330,10 +331,8 @@ void OeisManager::generateStats(int64_t age_in_days) {
   buf.setf(std::ios::fixed);
   buf.precision(2);
   buf << duration;
-  auto mem = getMemUsage() / (1024 * 1024);  // convert to MB
   Log::get().info("Generated stats for " + std::to_string(num_processed) +
-                  " programs in " + buf.str() +
-                  "s; memory usage: " + std::to_string(mem) + " MiB");
+                  " programs in " + buf.str() + "s");
 }
 
 void OeisManager::generateLists() {

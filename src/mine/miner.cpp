@@ -53,8 +53,7 @@ void Miner::reload() {
     multi_generator.reset();
   } else {
     if (!multi_generator || multi_generator->supportsRestart()) {
-      multi_generator.reset(
-          new MultiGenerator(settings, manager->getStats(), true));
+      multi_generator.reset(new MultiGenerator(settings, manager->getStats()));
     }
   }
   mutator.reset(new Mutator(manager->getStats()));
@@ -165,9 +164,9 @@ void Miner::runMineLoop() {
   // print info
   if (base_program.ops.empty()) {
     Log::get().info("Mining programs in " +
-                    convertMiningModeToStr(mining_mode) + " mode (" +
+                    convertMiningModeToStr(mining_mode) + " mode, " +
                     convertValidationModeToStr(validation_mode) +
-                    " validation mode)");
+                    " validation mode");
   } else {
     std::string msg = "Mutating program";
     if (!base_program_name.empty()) {

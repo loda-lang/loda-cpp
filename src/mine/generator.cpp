@@ -330,8 +330,7 @@ void Generator::ensureMeaningfulLoops(Program &p) {
   }
 }
 
-MultiGenerator::MultiGenerator(const Settings &settings, const Stats &stats,
-                               bool print_info)
+MultiGenerator::MultiGenerator(const Settings &settings, const Stats &stats)
     : Generator(Generator::Config(), stats) {
   const auto config = ConfigLoader::load(settings);
   configs.clear();
@@ -349,12 +348,6 @@ MultiGenerator::MultiGenerator(const Settings &settings, const Stats &stats,
     Log::get().error("No valid generators configurations found", true);
   }
   current_generator = Random::get().gen() % generators.size();
-
-  // print info
-  if (print_info) {
-    Log::get().info("Initialized " + std::to_string(generators.size()) +
-                    " generators");
-  }
 }
 
 Program MultiGenerator::generateProgram() {
