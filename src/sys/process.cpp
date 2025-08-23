@@ -5,6 +5,7 @@
 #include <vector>
 
 #ifdef _WIN64
+#include <DbgHelp.h>
 #include <windows.h>
 #else
 #include <fcntl.h>
@@ -33,6 +34,21 @@ HANDLE createWindowsProcess(const std::string& command) {
   return pi.hProcess;
 }
 
+LONG WINAPI windowsExceptionFilter(EXCEPTION_POINTERS* pExceptionPointers) {
+  LPSTR c = const_cast<LPSTR>("CrashDump.dmp");
+  HANDLE hDumpFile = CreateFile(c, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
+                                FILE_ATTRIBUTE_NORMAL, NULL);
+  if (hDumpFile != INVALID_HANDLE_VALUE) {
+    MINIDUMP_EXCEPTION_INFORMATION dumpInfo;
+    dumpInfo.ExceptionPointers = pExceptionPointers;
+    dumpInfo.ThreadId = GetCurrentThreadId();
+    dumpInfo.ClientPointers = TRUE;
+    MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hDumpFile,
+                      MiniDumpNormal, &dumpInfo, NULL, NULL);
+    CloseHandle(hDumpFile);
+  }
+  return EXCEPTION_EXECUTE_HANDLER;
+}
 #endif
 
 bool isChildProcessAlive(HANDLE pid) {

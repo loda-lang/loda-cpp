@@ -275,6 +275,10 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
 }
 
 int main(int argc, char* argv[]) {
+#ifdef _WIN64
+  // generate crashdumps on windows
+  SetUnhandledExceptionFilter(windowsExceptionFilter);
+#endif
   Settings settings;
   auto args = settings.parseArgs(argc, argv);
   dispatch(settings, args);
