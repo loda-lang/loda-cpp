@@ -634,7 +634,7 @@ void OeisManager::migrate() {
   }
 }
 
-const OeisSeqList &OeisManager::getSequences() const { return sequences; }
+const SequenceIndex &OeisManager::getSequences() const { return sequences; }
 
 const Stats &OeisManager::getStats() {
   if (!stats) {

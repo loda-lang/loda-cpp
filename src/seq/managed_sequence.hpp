@@ -32,14 +32,3 @@ class ManagedSequence {
   mutable Sequence terms;
   mutable size_t num_bfile_terms;
 };
-
-class OeisSeqList : public std::map<char, std::vector<ManagedSequence>> {
- public:
-  bool exists(UID id) const;
-
-  const ManagedSequence& get(UID id) const;
-
-  ManagedSequence& get(UID id);
-
-  void add(ManagedSequence&& seq);
-};
