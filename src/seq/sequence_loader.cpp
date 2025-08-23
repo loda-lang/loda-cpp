@@ -7,24 +7,26 @@
 #include "oeis/oeis_list.hpp"
 #include "sys/file.hpp"
 #include "sys/log.hpp"
-#include "sys/setup.hpp"
 #include "sys/util.hpp"
 
 void throwParseError(const std::string &line) {
-  Log::get().error("error parsing OEIS line: " + line, true);
+  Log::get().error("Error parse line: " + line, true);
 }
 
 SequenceLoader::SequenceLoader(SequenceIndex &index, size_t min_num_terms)
     : index(index), min_num_terms(min_num_terms), num_loaded(0), num_total(0) {}
 
-void SequenceLoader::load() {
-  Log::get().debug("Loading sequences from the OEIS index");
+void SequenceLoader::load(std::string folder, char domain) {
+  if (!checkFolderDomain(folder, domain)) {
+    return;  // already loaded
+  }
+  Log::get().debug("Loading sequences from folder " + folder +
+                   " with domain '" + std::string(1, domain) + "'");
   auto start_time = std::chrono::steady_clock::now();
 
-  loadData();
-  loadNames();
-  loadOffsets();
-  checkConsistency();
+  loadData(folder, domain);
+  loadNames(folder, domain);
+  loadOffsets(folder, domain);
 
   // print summary
   auto cur_time = std::chrono::steady_clock::now();
@@ -38,15 +40,17 @@ void SequenceLoader::load() {
   buf << duration;
   auto mem = getMemUsage() / (1024 * 1024);  // convert to MB
   Log::get().info("Loaded " + std::to_string(num_loaded) + "/" +
-                  std::to_string(num_total) + " sequences in " + buf.str() +
+                  std::to_string(num_total) + " \"" + std::string(1, domain) +
+                  "\"-sequences in " + buf.str() +
                   "s; memory usage: " + std::to_string(mem) + " MiB");
 }
 
-void SequenceLoader::loadData() {
-  std::string path = Setup::getOeisHome() + "stripped";
+void SequenceLoader::loadData(const std::string &folder, char domain) {
+  const std::string path = folder + "stripped";
+  Log::get().debug("Loading sequence data from \"" + path + "\"");
   std::ifstream stripped(path);
   if (!stripped.good()) {
-    Log::get().error("OEIS data not found: " + path, true);
+    Log::get().error("Sequence data not found: " + path, true);
   }
   std::string line;
   std::string buf;
@@ -57,7 +61,7 @@ void SequenceLoader::loadData() {
     if (line.empty() || line[0] == '#') {
       continue;
     }
-    if (line[0] != 'A') {
+    if (line[0] != domain) {
       throwParseError(line);
     }
     num_total++;
@@ -98,17 +102,17 @@ void SequenceLoader::loadData() {
     }
 
     // add sequence to index
-    index.add(ManagedSequence(UID('A', id), "", seq_full));
+    index.add(ManagedSequence(UID(domain, id), "", seq_full));
     num_loaded++;
   }
 }
 
-void SequenceLoader::loadNames() {
-  Log::get().debug("Loading sequence names");
-  std::string path = Setup::getOeisHome() + "names";
+void SequenceLoader::loadNames(const std::string &folder, char domain) {
+  const std::string path = folder + "names";
+  Log::get().debug("Loading sequence names from \"" + path + "\"");
   std::ifstream names(path);
   if (!names.good()) {
-    Log::get().error("Sequence data not found: " + path, true);
+    Log::get().error("Sequence names not found: " + path, true);
   }
   std::string line;
   size_t pos;
@@ -117,7 +121,7 @@ void SequenceLoader::loadNames() {
     if (line.empty() || line[0] == '#') {
       continue;
     }
-    if (line[0] != 'A') {
+    if (line[0] != domain) {
       throwParseError(line);
     }
     id = 0;
@@ -129,7 +133,7 @@ void SequenceLoader::loadNames() {
       throwParseError(line);
     }
     ++pos;
-    const auto uid = UID('A', id);
+    const auto uid = UID(domain, id);
     if (index.exists(uid)) {
       index.get(uid).name = line.substr(pos);
       if (Log::get().level == Log::Level::DEBUG) {
@@ -141,9 +145,9 @@ void SequenceLoader::loadNames() {
   }
 }
 
-void SequenceLoader::loadOffsets() {
-  Log::get().debug("Loading sequence offsets");
-  const std::string path = Setup::getOeisHome() + "offsets";
+void SequenceLoader::loadOffsets(const std::string &folder, char domain) {
+  const std::string path = folder + "offsets";
+  Log::get().debug("Loading sequence offsets from \"" + path + "\"");
   std::map<UID, std::string> entries;
   OeisList::loadMapWithComments(path, entries);
   for (const auto &entry : entries) {
@@ -152,6 +156,45 @@ void SequenceLoader::loadOffsets() {
       index.get(id).offset = std::stoll(entry.second);
     }
   }
+}
+
+bool SequenceLoader::checkFolderDomain(std::string &folder, char domain) {
+  if (folder.back() != '/' && folder.back() != '\\') {
+    folder += FILE_SEP;
+  }
+  if (!isDir(folder)) {
+    Log::get().error("Sequence folder not found: " + folder, true);
+  }
+  if (domain < 'A' || domain > 'Z') {
+    Log::get().error("Invalid sequence domain: " + std::string(1, domain),
+                     true);
+  }
+  bool found = false;
+  for (size_t i = 0; i < folders.size(); i++) {
+    if (folders[i] == folder) {
+      if (domains[i] != domain) {
+        Log::get().error("Conflicting domains for folder " + folder + ": " +
+                             std::string(1, domains[i]) + " vs. " +
+                             std::string(1, domain),
+                         true);
+      }
+      found = true;
+    }
+    if (domains[i] == domain) {
+      if (folders[i] != folder) {
+        Log::get().error("Conflicting folders for domain " +
+                             std::string(1, domain) + ": " + folders[i] +
+                             " vs. " + folder,
+                         true);
+      }
+      found = true;
+    }
+  }
+  if (!found) {
+    folders.push_back(folder);
+    domains.push_back(domain);
+  }
+  return !found;
 }
 
 void SequenceLoader::checkConsistency() const {

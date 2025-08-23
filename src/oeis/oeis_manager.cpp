@@ -77,9 +77,10 @@ void OeisManager::load() {
     // obtain lock
     FolderLock lock(Setup::getOeisHome());
     update(false);
-    loader.load();
+    loader.load(Setup::getOeisHome(), 'A');
     // lock released at the end of this block
   }
+  loader.checkConsistency();
 }
 
 Finder &OeisManager::getFinder() {
