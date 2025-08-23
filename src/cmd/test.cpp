@@ -1361,6 +1361,10 @@ void Test::minimizer(size_t tests) {
       continue;
     }
     minimized = program;
+
+    std::cout << "\nProgram before minimization: " << std::endl;
+    ProgramUtil::print(program, std::cout);
+
     try {
       minimizer.optimizeAndMinimize(minimized, s1.size());
     } catch (const std::exception& e) {
