@@ -422,7 +422,12 @@ int64_t Stats::getTransitiveLength(UID id) const {
   int64_t length = program_lengths.at(id);
   auto range = call_graph.equal_range(id);
   for (auto &it = range.first; it != range.second; it++) {
-    length += getTransitiveLength(it->second);
+    auto len = getTransitiveLength(it->second);
+    if (len < 0) {
+      length = -1;
+      break;
+    }
+    length += len;
   }
   visited_programs.erase(id);
   return length;

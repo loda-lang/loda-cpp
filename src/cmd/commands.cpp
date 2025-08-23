@@ -759,6 +759,10 @@ void Commands::testRange(const std::string& id) {
       Log::get().warn(std::string(e.what()));
       continue;
     }
+    if (manager.getStats().getTransitiveLength(seq.id) < 0) {
+      Log::get().warn("Skipping invalid program for " + seq.id.string());
+      continue;
+    }
     if (checkRange(seq, program, false) && checkRange(seq, program, true)) {
       numChecked++;
     }
