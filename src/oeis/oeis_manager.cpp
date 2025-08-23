@@ -96,6 +96,8 @@ void OeisManager::load() {
     // lock released at the end of this block
   }
 
+  checkConsistency();
+
   // print summary
   auto cur_time = std::chrono::steady_clock::now();
   double duration = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -226,6 +228,36 @@ void OeisManager::loadOffsets() {
       sequences.get(id).offset = std::stoll(entry.second);
     }
   }
+}
+
+void OeisManager::checkConsistency() const {
+  Log::get().debug("Checking sequence data consistency");
+  size_t num_seqs = 0;
+  for (const auto &domain : sequences) {
+    for (const auto &s : domain.second) {
+      if (s.id.number() == 0) {
+        continue;
+      }
+      Log::get().debug("Checking consistency of " + s.to_string());
+      if (s.name.empty()) {
+        Log::get().error("Missing name for sequence " + s.id.string(), true);
+      }
+      if (s.existingNumTerms() < settings.num_terms) {
+        Log::get().error("Not enough terms for sequence " + s.id.string() +
+                             " (" + std::to_string(s.existingNumTerms()) + "<" +
+                             std::to_string(settings.num_terms) + ")",
+                         true);
+      }
+      num_seqs++;
+    }
+  }
+  if (num_seqs != loaded_count) {
+    Log::get().error(
+        "Inconsistent number of sequences: " + std::to_string(num_seqs) +
+            "!=" + std::to_string(loaded_count),
+        true);
+  }
+  Log::get().debug("Sequence data consistency check passed");
 }
 
 Finder &OeisManager::getFinder() {

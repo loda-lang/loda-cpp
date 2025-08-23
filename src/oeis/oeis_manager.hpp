@@ -70,6 +70,8 @@ class OeisManager {
 
   void loadNames();
 
+  void checkConsistency() const;
+
   void loadOffsets();
 
   bool shouldMatch(const OeisSequence& seq) const;
