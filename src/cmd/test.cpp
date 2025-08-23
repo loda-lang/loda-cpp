@@ -1351,8 +1351,8 @@ void Test::minimizer(size_t tests) {
     }
     program = multi_generator.generateProgram();
     try {
-      evaluator.eval(program, s1, ManagedSequence::DEFAULT_SEQ_LENGTH);
-      if (s1.size() != ManagedSequence::DEFAULT_SEQ_LENGTH) {
+      evaluator.eval(program, s1, SequenceUtil::DEFAULT_SEQ_LENGTH);
+      if (s1.size() != SequenceUtil::DEFAULT_SEQ_LENGTH) {
         i--;
         continue;
       }
@@ -1424,8 +1424,8 @@ void Test::randomRange(size_t tests) {
     program = multi_generator.generateProgram();
     ProgramUtil::setOffset(program, i % 3);
     try {
-      evaluator.eval(program, seq, ManagedSequence::DEFAULT_SEQ_LENGTH);
-      if (seq.size() != ManagedSequence::DEFAULT_SEQ_LENGTH) {
+      evaluator.eval(program, seq, SequenceUtil::DEFAULT_SEQ_LENGTH);
+      if (seq.size() != SequenceUtil::DEFAULT_SEQ_LENGTH) {
         i--;  // try another program
         continue;
       }

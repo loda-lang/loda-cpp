@@ -14,27 +14,6 @@
 #include "sys/util.hpp"
 #include "sys/web_client.hpp"
 
-const size_t ManagedSequence::DEFAULT_SEQ_LENGTH = 80;  // magic number
-
-const size_t ManagedSequence::EXTENDED_SEQ_LENGTH = 1000;  // magic number
-
-const size_t ManagedSequence::FULL_SEQ_LENGTH = 100000;  // magic number
-
-const size_t ManagedSequence::MIN_NUM_EXP_TERMS = 16;  // magic number
-
-bool ManagedSequence::isTooBig(const Number& n) {
-  if (n == Number::INF) {
-    return true;
-  }
-  if (USE_BIG_NUMBER) {
-    return n.getNumUsedWords() >
-           static_cast<int64_t>(BigNumber::NUM_WORDS / 4);  // magic number
-  } else {
-    static const int64_t NUM_INF = std::numeric_limits<int64_t>::max();
-    return (n.value > (NUM_INF / 1000)) || (n.value < (NUM_INF / -1000));
-  }
-}
-
 ManagedSequence::ManagedSequence(UID id)
     : id(id), offset(0), num_bfile_terms(0) {}
 
@@ -51,10 +30,6 @@ std::string ManagedSequence::to_string() const {
   std::stringstream ss;
   ss << (*this);
   return ss.str();
-}
-
-std::string ManagedSequence::urlStr(UID id) {
-  return "https://oeis.org/" + id.string();
 }
 
 std::string ManagedSequence::getBFilePath() const {
@@ -107,7 +82,7 @@ Sequence loadBFile(UID id, const Sequence& seq_full) {
         ss >> std::ws;
         Number::readIntString(ss, buf);
         Number value(buf);
-        if (!ss || ManagedSequence::isTooBig(value)) {
+        if (!ss || SequenceUtil::isTooBig(value)) {
           break;
         }
         result.push_back(value);
@@ -179,7 +154,7 @@ Sequence loadBFile(UID id, const Sequence& seq_full) {
 Sequence ManagedSequence::getTerms(int64_t max_num_terms) const {
   // determine real number of terms
   size_t real_max_terms =
-      (max_num_terms >= 0) ? max_num_terms : EXTENDED_SEQ_LENGTH;
+      (max_num_terms >= 0) ? max_num_terms : SequenceUtil::EXTENDED_SEQ_LENGTH;
 
   // already have enough terms?
   if (real_max_terms <= terms.size()) {

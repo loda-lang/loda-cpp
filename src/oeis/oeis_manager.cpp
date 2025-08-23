@@ -155,7 +155,7 @@ void OeisManager::loadData() {
     while (pos < line.length()) {
       if (line[pos] == ',') {
         Number num(buf);
-        if (ManagedSequence::isTooBig(num)) {
+        if (SequenceUtil::isTooBig(num)) {
           break;
         }
         seq_full.push_back(num);
@@ -809,7 +809,7 @@ void OeisManager::alert(Program p, UID id, const std::string &prefix,
   }
   Log::AlertDetails details;
   details.title = seq.id.string();
-  details.title_link = ManagedSequence::urlStr(seq.id);
+  details.title_link = SequenceUtil::getOeisUrl(seq.id);
   details.color = color;
   std::stringstream buf;
   // TODO: code block markers must be escaped for Slack, but not for Discord
@@ -982,7 +982,7 @@ bool OeisManager::maintainProgram(UID id, bool eval) {
   // check correctness of the program
   if (is_okay && eval) {
     // get the full number of terms
-    auto extended_seq = s.getTerms(ManagedSequence::FULL_SEQ_LENGTH);
+    auto extended_seq = s.getTerms(SequenceUtil::FULL_SEQ_LENGTH);
     auto num_required = OeisProgram::getNumRequiredTerms(program);
     try {
       auto res = evaluator.check(program, extended_seq, num_required, id);

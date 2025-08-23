@@ -189,7 +189,7 @@ void Commands::check(const std::string& path) {
   }
   auto seq = ManagedSequence(uid);
   Evaluator evaluator(settings);
-  auto terms = seq.getTerms(ManagedSequence::FULL_SEQ_LENGTH);
+  auto terms = seq.getTerms(SequenceUtil::FULL_SEQ_LENGTH);
   auto num_required = OeisProgram::getNumRequiredTerms(program);
   auto result = evaluator.check(program, terms, num_required, uid);
   switch (result.first) {
@@ -386,7 +386,7 @@ void Commands::autoFold() {
       Log::get().info("Folded " + main_id.string() + " using " +
                       sub_id.string());
       auto seq = manager.getSequences().get(main_id);
-      auto terms = seq.getTerms(ManagedSequence::DEFAULT_SEQ_LENGTH);
+      auto terms = seq.getTerms(SequenceUtil::DEFAULT_SEQ_LENGTH);
       auto result = evaluator.check(main, terms, -1, main_id);
       if (result.first == status_t::ERROR) {
         Sequence tmp;

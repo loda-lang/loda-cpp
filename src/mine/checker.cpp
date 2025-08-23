@@ -280,7 +280,7 @@ std::string Checker::isOptimizedBetter(Program existing, Program optimized,
 
   // evaluate optimized program for fixed number of terms
   num_check = std::min<size_t>(num_check, terms.size());
-  num_check = std::max<size_t>(num_check, ManagedSequence::EXTENDED_SEQ_LENGTH);
+  num_check = std::max<size_t>(num_check, SequenceUtil::EXTENDED_SEQ_LENGTH);
   Sequence tmp;
   evaluator.clearCaches();
   auto optimized_steps = evaluator.eval(optimized, tmp, num_check, false);

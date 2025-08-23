@@ -61,15 +61,12 @@ size_t OeisProgram::getTransitiveProgramHash(const Program &program) {
 }
 
 size_t OeisProgram::getNumCheckTerms(bool full_check) {
-  return full_check ? ManagedSequence::FULL_SEQ_LENGTH
-                    : ManagedSequence::EXTENDED_SEQ_LENGTH;
+  return full_check ? SequenceUtil::FULL_SEQ_LENGTH
+                    : SequenceUtil::EXTENDED_SEQ_LENGTH;
 }
 
 size_t OeisProgram::getNumRequiredTerms(const Program &p) {
-  return ManagedSequence::DEFAULT_SEQ_LENGTH;
-  // return Analyzer::hasExponentialComplexity(p)
-  //            ? OeisSequence::MIN_NUM_EXP_TERMS
-  //            : OeisSequence::DEFAULT_SEQ_LENGTH;
+  return SequenceUtil::DEFAULT_SEQ_LENGTH;
 }
 
 size_t OeisProgram::getNumMinimizationTerms(const Program &p) {
