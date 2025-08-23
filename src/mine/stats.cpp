@@ -412,13 +412,13 @@ int64_t Stats::getTransitiveLength(UID id) const {
     visited_programs.clear();
     if (printed_recursion_warning.find(id) == printed_recursion_warning.end()) {
       printed_recursion_warning.insert(id);
-      Log::get().warn("Recursion detected: " + id.string());
+      Log::get().debug("Recursion detected: " + id.string());
     }
     return -1;
   }
   visited_programs.insert(id);
   if (program_lengths.find(id) == program_lengths.end()) {
-    Log::get().warn("Invalid reference: " + id.string());
+    Log::get().debug("Invalid reference: " + id.string());
     return -1;
   }
   int64_t length = program_lengths.at(id);
