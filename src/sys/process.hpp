@@ -19,6 +19,7 @@ typedef int64_t HANDLE;
 
 #ifdef _WIN64
 HANDLE createWindowsProcess(const std::string& command);
+LONG WINAPI windowsExceptionFilter(EXCEPTION_POINTERS* pExceptionPointers);
 #else
 
 #endif
