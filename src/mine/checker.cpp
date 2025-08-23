@@ -10,7 +10,7 @@
 #include "lang/program_cache.hpp"
 #include "lang/program_util.hpp"
 #include "oeis/oeis_program.hpp"
-#include "oeis/oeis_sequence.hpp"
+#include "seq/sequence.hpp"
 #include "sys/file.hpp"
 #include "sys/log.hpp"
 #include "sys/setup.hpp"

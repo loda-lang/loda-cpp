@@ -1,4 +1,4 @@
-#include "oeis/oeis_sequence.hpp"
+#include "seq/sequence.hpp"
 
 #include <fstream>
 #include <iomanip>

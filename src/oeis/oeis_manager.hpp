@@ -8,7 +8,7 @@
 #include "mine/finder.hpp"
 #include "mine/stats.hpp"
 #include "oeis/invalid_matches.hpp"
-#include "oeis/oeis_sequence.hpp"
+#include "seq/sequence.hpp"
 #include "sys/util.hpp"
 
 enum class OverwriteMode { NONE, ALL, AUTO };

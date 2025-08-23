@@ -7,7 +7,7 @@
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
 #include "lang/subprogram.hpp"
-#include "oeis/oeis_sequence.hpp"
+#include "seq/sequence.hpp"
 #include "sys/file.hpp"
 #include "sys/git.hpp"
 #include "sys/log.hpp"

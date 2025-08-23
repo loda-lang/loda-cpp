@@ -8,7 +8,7 @@
 #include "mine/checker.hpp"
 #include "mine/matcher.hpp"
 #include "oeis/invalid_matches.hpp"
-#include "oeis/oeis_sequence.hpp"
+#include "seq/sequence.hpp"
 
 class OeisSequence;
 
