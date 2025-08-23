@@ -87,7 +87,7 @@ void Test::slow() {
   oeisList();
   oeisSeq();
   iterator(100);
-  minimizer(100);
+  minimizer(10000);
   randomRange(100);
   miner();
   memUsage();
