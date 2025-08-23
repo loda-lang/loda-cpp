@@ -2,7 +2,7 @@
 
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
-#include "oeis/oeis_sequence.hpp"
+#include "seq/managed_sequence.hpp"
 #include "sys/log.hpp"
 
 GeneratorV6::GeneratorV6(const Config &config, const Stats &stats)
@@ -27,7 +27,7 @@ void GeneratorV6::nextProgram() {
   Parser parser;
   for (int64_t i = 0; i < 10; i++) {
     const auto id = random_program_ids.get();
-    const std::string path = ProgramUtil::getProgramPath(UID('A', id));
+    const std::string path = ProgramUtil::getProgramPath(id);
     try {
       program = parser.parse(path);
       ProgramUtil::removeOps(program, Operation::Type::NOP);

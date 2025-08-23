@@ -18,7 +18,7 @@ class OeisProgram {
 
   static size_t getNumMinimizationTerms(const Program& p);
 
-  static std::vector<bool> collectLatestProgramIds(
-      size_t max_commits, size_t max_added_programs,
-      size_t max_modified_programs);
+  static UIDSet collectLatestProgramIds(size_t max_commits,
+                                        size_t max_added_programs,
+                                        size_t max_modified_programs);
 };

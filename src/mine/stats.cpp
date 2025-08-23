@@ -10,7 +10,7 @@
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
 #include "oeis/oeis_program.hpp"
-#include "oeis/oeis_sequence.hpp"
+#include "seq/managed_sequence.hpp"
 #include "sys/file.hpp"
 #include "sys/log.hpp"
 #include "sys/setup.hpp"
@@ -146,7 +146,6 @@ void Stats::load(std::string path) {
     full = path + "programs.csv";
     Log::get().debug("Loading " + full);
     std::ifstream programs(full);
-    resizeProgramLists(100000);
     int64_t largest_id = 0;
     checkHeader(programs, PROGRAMS_HEADER, full);
     while (std::getline(programs, line)) {
@@ -156,20 +155,18 @@ void Stats::load(std::string path) {
       std::getline(s, m, ',');
       std::getline(s, v, ',');
       std::getline(s, w);
-      int64_t id = std::stoll(k);
-      largest_id = std::max<int64_t>(largest_id, id);
-      resizeProgramLists(id);
-      all_program_ids[id] = true;
+      UID id(k);
+      largest_id = std::max<int64_t>(largest_id, id.number());
+      all_program_ids.insert(id);
       program_lengths[id] = std::stoll(l);
       program_usages[id] = std::stoll(m);
-      supports_inceval[id] = std::stoll(v);
-      supports_logeval[id] = std::stoll(w);
+      if (std::stoll(v)) {
+        supports_inceval.insert(id);
+      }
+      if (std::stoll(w)) {
+        supports_logeval.insert(id);
+      }
     }
-    size_t new_size = largest_id + 1;
-    all_program_ids.resize(new_size);
-    program_lengths.resize(new_size);
-    supports_inceval.resize(new_size);
-    supports_logeval.resize(new_size);
     programs.close();
   }
 
@@ -179,17 +176,7 @@ void Stats::load(std::string path) {
     std::ifstream latest_programs(full);
     latest_program_ids.clear();
     while (std::getline(latest_programs, line)) {
-      int64_t id = std::stoll(line);
-      if (id < 0 || id > 1000000) {
-        throw std::runtime_error("unexpected latest program ID: " +
-                                 std::to_string(id));
-      }
-      if (id >= static_cast<int64_t>(latest_program_ids.size())) {
-        const size_t new_size =
-            std::max<size_t>(id + 1, 2 * latest_program_ids.size());
-        latest_program_ids.resize(new_size);
-      }
-      latest_program_ids[id] = true;
+      latest_program_ids.insert(UID(line));
     }
     latest_programs.close();
   }
@@ -237,10 +224,8 @@ void Stats::load(std::string path) {
   buf.setf(std::ios::fixed);
   buf.precision(2);
   buf << duration;
-  auto mem = getMemUsage() / (1024 * 1024);  // convert to MB
   Log::get().info("Loaded stats for " + std::to_string(num_programs) +
-                  " programs in " + buf.str() +
-                  "s; memory usage: " + std::to_string(mem) + " MiB");
+                  " programs in " + buf.str() + "s");
 }
 
 void Stats::save(std::string path) {
@@ -256,20 +241,17 @@ void Stats::save(std::string path) {
 
   std::ofstream programs(path + "programs.csv");
   programs << PROGRAMS_HEADER << "\n";
-  for (size_t id = 0; id < all_program_ids.size(); id++) {
-    if (all_program_ids[id]) {
-      programs << id << sep << program_lengths[id] << sep << program_usages[id]
-               << sep << supports_inceval[id] << sep << supports_logeval[id]
-               << "\n";
-    }
+  for (auto id : all_program_ids) {
+    const auto inceval = supports_inceval.exists(id);
+    const auto logeval = supports_logeval.exists(id);
+    programs << id.string() << sep << program_lengths[id] << sep
+             << program_usages[id] << sep << inceval << sep << logeval << "\n";
   }
   programs.close();
 
   std::ofstream latest_programs(path + "latest_programs.csv");
-  for (size_t id = 0; id < latest_program_ids.size(); id++) {
-    if (latest_program_ids[id]) {
-      latest_programs << id << "\n";
-    }
+  for (auto id : latest_program_ids) {
+    latest_programs << id.string() << "\n";
   }
   latest_programs.close();
 
@@ -345,9 +327,8 @@ std::string Stats::getMainStatsFile(std::string path) const {
   return path;
 }
 
-void Stats::updateProgramStats(size_t id, const Program &program) {
+void Stats::updateProgramStats(UID id, const Program &program) {
   const size_t num_ops = ProgramUtil::numOps(program, false);
-  resizeProgramLists(id);
   program_lengths[id] = num_ops;
   if (num_ops >= num_programs_per_length.size()) {
     num_programs_per_length.resize(num_ops + 1);
@@ -382,38 +363,32 @@ void Stats::updateProgramStats(size_t id, const Program &program) {
     if ((op.type == Operation::Type::SEQ || op.type == Operation::Type::PRG) &&
         op.source.type == Operand::Type::CONSTANT) {
       auto called = UID::castFromInt(op.source.value.asInt());
-      resizeProgramLists(called.number());
-      call_graph.insert(std::pair<UID, UID>(UID('A', id), called));
-      program_usages[called.number()]++;
+      call_graph.insert(std::pair<UID, UID>(id, called));
+      program_usages[called]++;
     }
     o.pos++;
   }
   Settings settings;
   Interpreter interpreter(settings);
   IncrementalEvaluator inceval(interpreter);
-  supports_inceval[id] = inceval.init(program);
-  supports_logeval[id] = Analyzer::hasLogarithmicComplexity(program);
+  if (inceval.init(program)) {
+    supports_inceval.insert(id);
+  }
+  if (Analyzer::hasLogarithmicComplexity(program)) {
+    supports_logeval.insert(id);
+  }
   blocks_collector.add(program);
 }
 
-void Stats::updateSequenceStats(size_t id, bool program_found,
+void Stats::updateSequenceStats(UID id, bool program_found,
                                 bool formula_found) {
   num_sequences++;
   num_programs += static_cast<int64_t>(program_found);
   num_formulas += static_cast<int64_t>(formula_found);
-  resizeProgramLists(id);
-  all_program_ids[id] = program_found;
-}
-
-void Stats::resizeProgramLists(size_t id) {
-  if (id >= all_program_ids.size()) {
-    const size_t new_size =
-        std::max<size_t>(id + 1, 2 * all_program_ids.size());
-    all_program_ids.resize(new_size);
-    program_lengths.resize(new_size);
-    program_usages.resize(new_size);
-    supports_inceval.resize(new_size);
-    supports_logeval.resize(new_size);
+  if (program_found) {
+    all_program_ids.insert(id);
+  } else {
+    all_program_ids.erase(id);
   }
 }
 
@@ -430,61 +405,64 @@ void Stats::finalize() {
   }
 }
 
-int64_t Stats::getTransitiveLength(size_t id) const {
-  UID uid('A', id);
+int64_t Stats::getTransitiveLength(UID id) const {
   if (visited_programs.find(id) != visited_programs.end()) {
     visited_programs.clear();
     if (printed_recursion_warning.find(id) == printed_recursion_warning.end()) {
       printed_recursion_warning.insert(id);
-      Log::get().warn("Recursion detected: " + uid.string());
+      Log::get().debug("Recursion detected: " + id.string());
     }
     return -1;
   }
   visited_programs.insert(id);
-  if (id >= program_lengths.size()) {
-    Log::get().warn("Invalid reference: " + uid.string());
+  if (program_lengths.find(id) == program_lengths.end()) {
+    Log::get().debug("Invalid reference: " + id.string());
     return -1;
   }
   int64_t length = program_lengths.at(id);
-  auto range = call_graph.equal_range(uid);
+  auto range = call_graph.equal_range(id);
   for (auto &it = range.first; it != range.second; it++) {
-    length += getTransitiveLength(it->second.number());
+    length += getTransitiveLength(it->second);
   }
   visited_programs.erase(id);
   return length;
 }
 
-RandomProgramIds::RandomProgramIds(const std::vector<bool> &flags) {
-  for (size_t id = 0; id < flags.size(); id++) {
-    if (flags[id]) {
-      ids_vector.push_back(id);
-      ids_set.insert(id);
-    }
+size_t Stats::getNumUsages(UID id) const {
+  auto it = program_usages.find(id);
+  if (it != program_usages.end()) {
+    return it->second;
+  }
+  return 0;
+}
+
+RandomProgramIds::RandomProgramIds(const UIDSet &ids) {
+  ids_set = ids;
+  for (auto id : ids) {
+    ids_vector.push_back(id);
   }
 }
 
 bool RandomProgramIds::empty() const { return ids_set.empty(); }
 
-bool RandomProgramIds::exists(int64_t id) const {
-  return (id >= 0) && (ids_set.find(id) != ids_set.end());
-}
+bool RandomProgramIds::exists(UID id) const { return ids_set.exists(id); }
 
-int64_t RandomProgramIds::get() const {
+UID RandomProgramIds::get() const {
   if (!ids_vector.empty()) {
     return ids_vector[Random::get().gen() % ids_vector.size()];
   }
-  return 0;
+  return UID();
 }
 
 RandomProgramIds2::RandomProgramIds2(const Stats &stats)
     : all_program_ids(stats.all_program_ids),
       latest_program_ids(stats.latest_program_ids) {}
 
-bool RandomProgramIds2::exists(int64_t id) const {
+bool RandomProgramIds2::exists(UID id) const {
   return all_program_ids.exists(id) || latest_program_ids.exists(id);
 }
 
-int64_t RandomProgramIds2::get() const {
+UID RandomProgramIds2::get() const {
   if (Random::get().gen() % 2 == 0 ||
       latest_program_ids.empty()) {  // magic number
     return all_program_ids.get();
@@ -493,4 +471,4 @@ int64_t RandomProgramIds2::get() const {
   }
 }
 
-int64_t RandomProgramIds2::getFromAll() const { return all_program_ids.get(); }
+UID RandomProgramIds2::getFromAll() const { return all_program_ids.get(); }

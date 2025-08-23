@@ -53,8 +53,7 @@ void Miner::reload() {
     multi_generator.reset();
   } else {
     if (!multi_generator || multi_generator->supportsRestart()) {
-      multi_generator.reset(
-          new MultiGenerator(settings, manager->getStats(), true));
+      multi_generator.reset(new MultiGenerator(settings, manager->getStats()));
     }
   }
   mutator.reset(new Mutator(manager->getStats()));
@@ -165,9 +164,9 @@ void Miner::runMineLoop() {
   // print info
   if (base_program.ops.empty()) {
     Log::get().info("Mining programs in " +
-                    convertMiningModeToStr(mining_mode) + " mode (" +
+                    convertMiningModeToStr(mining_mode) + " mode, " +
                     convertValidationModeToStr(validation_mode) +
-                    " validation mode)");
+                    " validation mode");
   } else {
     std::string msg = "Mutating program";
     if (!base_program_name.empty()) {
@@ -293,8 +292,7 @@ void Miner::runMineLoop() {
     } else {
       // we are in server mode and have no programs to process
       // => lets do maintenance work!
-      if (!manager->maintainProgram(
-              UID('A', mutator->random_program_ids.getFromAll()))) {
+      if (!manager->maintainProgram(mutator->random_program_ids.getFromAll())) {
         num_removed++;
       }
     }
@@ -414,11 +412,11 @@ void Miner::submit(const std::string &path, std::string id_str) {
     Log::get().error(
         "Sequence " + id_str + " is ignored by the active miner profile", true);
   }
-  auto seq = OeisSequence(uid);
+  auto seq = ManagedSequence(uid);
   Settings settings(this->settings);
   settings.print_as_b_file = false;
   Evaluator evaluator(settings);
-  auto terms = seq.getTerms(OeisSequence::FULL_SEQ_LENGTH);
+  auto terms = seq.getTerms(SequenceUtil::FULL_SEQ_LENGTH);
   auto num_required = OeisProgram::getNumRequiredTerms(program);
   Log::get().info(
       "Validating program against " + std::to_string(terms.size()) + " (>=" +
@@ -464,11 +462,7 @@ void Miner::submit(const std::string &path, std::string id_str) {
       updated_ids.insert(s.first);
       num_updated++;
     } else {
-      size_t num_usages = 0;
-      if (uid.number() <
-          static_cast<int64_t>(manager->getStats().program_usages.size())) {
-        num_usages = manager->getStats().program_usages[uid.number()];
-      }
+      auto num_usages = manager->getStats().getNumUsages(uid);
       bool full_check = manager->isFullCheck(uid);
       auto existing = manager->getExistingProgram(s.first);
       auto msg = manager->getFinder().getChecker().compare(

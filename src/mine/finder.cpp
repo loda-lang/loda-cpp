@@ -13,7 +13,6 @@
 #include "oeis/invalid_matches.hpp"
 #include "oeis/oeis_list.hpp"
 #include "oeis/oeis_program.hpp"
-#include "oeis/oeis_sequence.hpp"
 #include "sys/file.hpp"
 #include "sys/log.hpp"
 #include "sys/setup.hpp"
@@ -58,7 +57,7 @@ void Finder::remove(const Sequence &norm_seq, UID id) {
 
 Matcher::seq_programs_t Finder::findSequence(const Program &p,
                                              Sequence &norm_seq,
-                                             const OeisSeqList &sequences) {
+                                             const SequenceIndex &sequences) {
   // update memory usage info
   if (num_find_attempts++ % 1000 == 0) {
     bool has_memory = Setup::hasMemory();
@@ -102,7 +101,7 @@ Matcher::seq_programs_t Finder::findSequence(const Program &p,
 }
 
 void Finder::findAll(const Program &p, const Sequence &norm_seq,
-                     const OeisSeqList &sequences,
+                     const SequenceIndex &sequences,
                      Matcher::seq_programs_t &result) {
   // collect possible matches
   std::pair<UID, Program> last(UID('A', 0), Program());

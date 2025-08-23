@@ -8,7 +8,7 @@
 #include "mine/matcher.hpp"
 #include "oeis/invalid_matches.hpp"
 
-class OeisSequence;
+class ManagedSequence;
 
 struct check_result_t {
   std::string status;
@@ -21,22 +21,22 @@ class Checker {
           InvalidMatches& invalid_matches);
 
   check_result_t checkProgramExtended(Program program, Program existing,
-                                      bool is_new, const OeisSequence& seq,
+                                      bool is_new, const ManagedSequence& seq,
                                       bool full_check, size_t num_usages);
 
   check_result_t checkProgramBasic(const Program& program,
                                    const Program& existing, bool is_new,
-                                   const OeisSequence& seq,
+                                   const ManagedSequence& seq,
                                    const std::string& change_type,
                                    size_t previous_hash, bool full_check,
                                    size_t num_usages);
 
   std::string isOptimizedBetter(Program existing, Program optimized,
-                                const OeisSequence& seq, bool full_check,
+                                const ManagedSequence& seq, bool full_check,
                                 size_t num_usages);
 
   std::string compare(Program p1, Program p2, const std::string& name1,
-                      const std::string& name2, const OeisSequence& seq,
+                      const std::string& name2, const ManagedSequence& seq,
                       bool full_check, size_t num_usages);
 
  private:

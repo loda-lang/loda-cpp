@@ -28,6 +28,9 @@ class UID {
   // Get the 6-digit number part of the UID
   int64_t number() const;
 
+  // Check if the UID is empty (i.e., "A000000")
+  bool empty() const;
+
   // Return the internal integer representation of the UID
   int64_t castToInt() const;
 
@@ -95,6 +98,9 @@ class UIDSet {
   void insert(UID uid);
   void erase(UID uid);
   void clear();
+
+  bool operator==(const UIDSet& other) const { return data == other.data; }
+  bool operator!=(const UIDSet& other) const { return data != other.data; }
 
  private:
   std::map<char, std::vector<bool>> data;

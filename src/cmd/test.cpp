@@ -951,7 +951,7 @@ void checkSeqAgainstTestBFile(int64_t seq_id, int64_t offset,
   UID uid('A', seq_id);
   auto uid_str = uid.string();
   std::string bname = "b" + uid_str.substr(1) + ".txt";
-  OeisSequence t(uid);
+  ManagedSequence t(uid);
   t.getTerms(max_num_terms).to_b_file(buf, offset);
   std::ifstream bfile(std::string("tests") + FILE_SEP + "sequence" + FILE_SEP +
                       bname);
@@ -1004,7 +1004,7 @@ void Test::oeisList() {
 
 void Test::oeisSeq() {
   Log::get().info("Testing OEIS sequences");
-  OeisSequence s(UID('A', 6));
+  ManagedSequence s(UID('A', 6));
   // std::remove( s.getBFilePath().c_str() );
   checkSeq(s.getTerms(20), 20, 18, 8);  // this should fetch the b-file
   checkSeq(s.getTerms(250), 250, 235, 38);
@@ -1263,16 +1263,16 @@ void Test::stats() {
     Log::get().error("Error loading operation position counts from stats",
                      true);
   }
-  if (!s.all_program_ids.at(5)) {
+  if (!s.all_program_ids.exists(UID('A', 5))) {
     Log::get().error("Error loading program summary from stats", true);
   }
-  if (!s.program_lengths.at(7)) {
+  if (!s.program_lengths.at(UID('A', 7))) {
     Log::get().error("Error loading program lengths from stats", true);
   }
   if (!s.call_graph.count(UID('A', 168380))) {
     Log::get().error("Unexpected call graph for A168380", true);
   }
-  auto l = s.getTransitiveLength(168380);
+  auto l = s.getTransitiveLength(UID('A', 168380));
   if (l != 13) {
     Log::get().error(
         "Unexpected transitive length of A168380: " + std::to_string(l), true);
@@ -1314,19 +1314,8 @@ void Test::stats() {
       Log::get().error("Unexpected number of operation position count", true);
     }
   }
-  if (s.all_program_ids.size() != t.all_program_ids.size()) {
-    Log::get().error("Unexpected number of found programs: " +
-                         std::to_string(s.all_program_ids.size()) +
-                         "!=" + std::to_string(t.all_program_ids.size()),
-                     true);
-  }
-  for (size_t i = 0; i < s.all_program_ids.size(); i++) {
-    auto a = s.all_program_ids.at(i);
-    auto b = t.all_program_ids.at(i);
-    if (a != b) {
-      Log::get().error("Unexpected found programs for: " + std::to_string(i),
-                       true);
-    }
+  if (s.all_program_ids != t.all_program_ids) {
+    Log::get().error("Unexpected program IDs", true);
   }
 }
 
@@ -1352,7 +1341,7 @@ void Test::optimizer() {
 void Test::minimizer(size_t tests) {
   Evaluator evaluator(settings);
   Minimizer minimizer(settings);
-  MultiGenerator multi_generator(settings, getManager().getStats(), false);
+  MultiGenerator multi_generator(settings, getManager().getStats());
   Sequence s1, s2, s3;
   Program program, minimized;
   const int64_t num_tests = tests;
@@ -1362,8 +1351,8 @@ void Test::minimizer(size_t tests) {
     }
     program = multi_generator.generateProgram();
     try {
-      evaluator.eval(program, s1, OeisSequence::DEFAULT_SEQ_LENGTH);
-      if (s1.size() != OeisSequence::DEFAULT_SEQ_LENGTH) {
+      evaluator.eval(program, s1, SequenceUtil::DEFAULT_SEQ_LENGTH);
+      if (s1.size() != SequenceUtil::DEFAULT_SEQ_LENGTH) {
         i--;
         continue;
       }
@@ -1372,7 +1361,13 @@ void Test::minimizer(size_t tests) {
       continue;
     }
     minimized = program;
-    minimizer.optimizeAndMinimize(minimized, s1.size());
+    try {
+      minimizer.optimizeAndMinimize(minimized, s1.size());
+    } catch (const std::exception& e) {
+      ProgramUtil::print(program, std::cerr);
+      Log::get().error("Error during minimization: " + std::string(e.what()),
+                       true);
+    }
     evaluator.eval(minimized, s2, s1.size());
     if (s1.size() != s2.size() || (s1 != s2)) {
       std::cout << "before: " << s1 << std::endl;
@@ -1424,7 +1419,7 @@ bool checkRange(const Sequence& seq, const Program& program, bool finiteInput) {
 
 void Test::randomRange(size_t tests) {
   Evaluator evaluator(settings);
-  MultiGenerator multi_generator(settings, getManager().getStats(), false);
+  MultiGenerator multi_generator(settings, getManager().getStats());
   Sequence seq;
   Program program;
   const int64_t num_tests = tests;
@@ -1435,8 +1430,8 @@ void Test::randomRange(size_t tests) {
     program = multi_generator.generateProgram();
     ProgramUtil::setOffset(program, i % 3);
     try {
-      evaluator.eval(program, seq, OeisSequence::DEFAULT_SEQ_LENGTH);
-      if (seq.size() != OeisSequence::DEFAULT_SEQ_LENGTH) {
+      evaluator.eval(program, seq, SequenceUtil::DEFAULT_SEQ_LENGTH);
+      if (seq.size() != SequenceUtil::DEFAULT_SEQ_LENGTH) {
         i--;  // try another program
         continue;
       }
@@ -1456,7 +1451,7 @@ void Test::miner() {
   Git::git("", "--version");
   getManager().load();
   getManager().getFinder();
-  MultiGenerator multi_generator(settings, getManager().getStats(), true);
+  MultiGenerator multi_generator(settings, getManager().getStats());
 }
 
 void Test::linearMatcher() {

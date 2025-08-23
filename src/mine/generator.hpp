@@ -69,7 +69,7 @@ class Generator {
 
 class MultiGenerator : public Generator {
  public:
-  MultiGenerator(const Settings &settings, const Stats &stats, bool print_info);
+  MultiGenerator(const Settings &settings, const Stats &stats);
 
   virtual Program generateProgram() override;
 

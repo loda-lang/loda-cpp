@@ -43,13 +43,15 @@ class Stats {
 
   std::string getMainStatsFile(std::string path) const;
 
-  void updateProgramStats(size_t id, const Program &program);
+  void updateProgramStats(UID id, const Program &program);
 
-  void updateSequenceStats(size_t id, bool program_found, bool formula_found);
+  void updateSequenceStats(UID id, bool program_found, bool formula_found);
 
   void finalize();
 
-  int64_t getTransitiveLength(size_t id) const;
+  int64_t getTransitiveLength(UID id) const;
+
+  size_t getNumUsages(UID id) const;
 
   int64_t num_programs;
   int64_t num_sequences;
@@ -61,43 +63,41 @@ class Stats {
   std::multimap<UID, UID> call_graph;
   std::vector<int64_t> num_programs_per_length;
   std::vector<int64_t> num_ops_per_type;
-  std::vector<int64_t> program_lengths;
-  std::vector<int64_t> program_usages;
-  std::vector<bool> all_program_ids;
-  std::vector<bool> latest_program_ids;
-  std::vector<bool> supports_inceval;
-  std::vector<bool> supports_logeval;
+  std::unordered_map<UID, int64_t> program_lengths;
+  std::unordered_map<UID, int64_t> program_usages;
+  UIDSet all_program_ids;
+  UIDSet latest_program_ids;
+  UIDSet supports_inceval;
+  UIDSet supports_logeval;
   Blocks blocks;
 
  private:
-  mutable std::set<size_t> visited_programs;  // used for getTransitiveLength()
-  mutable std::set<size_t>
+  mutable std::set<UID> visited_programs;  // used for getTransitiveLength()
+  mutable std::set<UID>
       printed_recursion_warning;  // used for getTransitiveLength()
   Blocks::Collector blocks_collector;
-
-  void resizeProgramLists(size_t id);
 };
 
 class RandomProgramIds {
  public:
-  explicit RandomProgramIds(const std::vector<bool> &flags);
+  explicit RandomProgramIds(const UIDSet &ids);
 
   bool empty() const;
-  bool exists(int64_t id) const;
-  int64_t get() const;
+  bool exists(UID id) const;
+  UID get() const;
 
  private:
-  std::vector<int64_t> ids_vector;
-  std::unordered_set<int64_t> ids_set;
+  UIDSet ids_set;
+  std::vector<UID> ids_vector;
 };
 
 class RandomProgramIds2 {
  public:
   explicit RandomProgramIds2(const Stats &stats);
 
-  bool exists(int64_t id) const;
-  int64_t get() const;
-  int64_t getFromAll() const;
+  bool exists(UID id) const;
+  UID get() const;
+  UID getFromAll() const;
 
  private:
   RandomProgramIds all_program_ids;

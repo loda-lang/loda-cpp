@@ -25,6 +25,9 @@ void rmDirRecursive(const std::string &path);
 
 void moveFile(const std::string &from, const std::string &to);
 
+void moveDirToParent(const std::string &path, const std::string &dir,
+                     const std::string &new_parent);
+
 bool execCmd(const std::string &cmd, bool fail_on_error = true);
 
 void makeExecutable(const std::string &path);

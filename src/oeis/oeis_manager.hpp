@@ -8,7 +8,7 @@
 #include "mine/finder.hpp"
 #include "mine/stats.hpp"
 #include "oeis/invalid_matches.hpp"
-#include "oeis/oeis_sequence.hpp"
+#include "seq/sequence_loader.hpp"
 #include "sys/util.hpp"
 
 enum class OverwriteMode { NONE, ALL, AUTO };
@@ -35,13 +35,13 @@ class OeisManager {
 
   void migrate();
 
-  const OeisSeqList& getSequences() const;
+  const SequenceIndex& getSequences() const;
 
   const Stats& getStats();
 
   Finder& getFinder();
 
-  size_t getTotalCount() const { return total_count; }
+  size_t getTotalCount() const { return loader.getNumTotal(); }
 
   Program getExistingProgram(UID id);
 
@@ -66,13 +66,7 @@ class OeisManager {
   }
 
  private:
-  void loadData();
-
-  void loadNames();
-
-  void loadOffsets();
-
-  bool shouldMatch(const OeisSequence& seq) const;
+  bool shouldMatch(const ManagedSequence& seq) const;
 
   void generateStats(int64_t age_in_days);
 
@@ -98,7 +92,8 @@ class OeisManager {
 
   Optimizer optimizer;
   Minimizer minimizer;
-  OeisSeqList sequences;
+  SequenceIndex sequences;
+  SequenceLoader loader;
 
   std::unordered_set<UID> deny_list;
   std::unordered_set<UID> overwrite_list;
@@ -106,9 +101,6 @@ class OeisManager {
   std::unordered_set<UID> ignore_list;
   std::unordered_set<UID> full_check_list;
   InvalidMatches invalid_matches;
-
-  size_t loaded_count;
-  size_t total_count;
 
   std::unique_ptr<Stats> stats;
   std::string stats_home;

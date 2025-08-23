@@ -103,6 +103,15 @@ void moveFile(const std::string &from, const std::string &to) {
   execCmd("mv \"" + from + "\" \"" + to + "\"");
 }
 
+void moveDirToParent(const std::string &path, const std::string &dir,
+                     const std::string &new_parent) {
+  if (isDir(path + dir) && !isDir(path + new_parent + FILE_SEP + dir)) {
+    Log::get().info("Moving folder \"" + dir + "\" to \"" + new_parent + "\"");
+    ensureDir(path + new_parent + FILE_SEP);
+    moveFile(path + dir, path + new_parent + FILE_SEP + dir);
+  }
+}
+
 void makeExecutable(const std::string &path) {
 #ifndef _WIN64
   execCmd("chmod u+x \"" + path + "\"");

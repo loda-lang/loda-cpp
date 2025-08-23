@@ -20,7 +20,7 @@ const std::string Setup::LODA_SUBMIT_CPU_HOURS("LODA_SUBMIT_CPU_HOURS");
 
 // TODO: use a singlton of Setup
 std::string Setup::LODA_HOME;
-std::string Setup::OEIS_HOME;
+std::string Setup::SEQS_HOME;
 std::string Setup::PROGRAMS_HOME;
 std::string Setup::MINERS_CONFIG;
 std::map<std::string, std::string> Setup::SETUP;
@@ -127,13 +127,13 @@ void Setup::setMinersConfig(const std::string& loda_config) {
   MINERS_CONFIG = loda_config;
 }
 
-const std::string& Setup::getOeisHome() {
-  if (OEIS_HOME.empty()) {
-    OEIS_HOME = getLodaHome() + "oeis" + FILE_SEP;
-    ensureTrailingFileSep(OEIS_HOME);
-    ensureDir(OEIS_HOME);
+const std::string& Setup::getSeqsHome() {
+  if (SEQS_HOME.empty()) {
+    SEQS_HOME = getLodaHome() + "seqs" + FILE_SEP;
+    ensureTrailingFileSep(SEQS_HOME);
+    ensureDir(SEQS_HOME);
   }
-  return OEIS_HOME;
+  return SEQS_HOME;
 }
 
 const std::string& Setup::getProgramsHome() {
@@ -679,20 +679,8 @@ bool Setup::checkSubmittedBy() {
 }
 
 bool Setup::checkUsageStats() {
-  std::cout << "To estimate the required server capacity, the LODA miner"
-            << std::endl
-            << "can send basic, anonymous usage statistics. Specifically,"
-            << std::endl
-            << "a running miner instance would send the value 1 to the"
-            << std::endl
-            << "API server once per hour. This data is used to determine"
-            << std::endl
-            << "the total number of active miners. There are no IDs or other"
-            << std::endl
-            << "data sent to the server. You can still mine without it."
-            << std::endl
-            << std::endl
-            << "Do you want to send this basic usage statisics? ";
+  std::cout << "Do you agree to send anonymous statistics to support mining "
+               "capacity estimations?";
   bool flag = getSetupFlag(LODA_SUBMIT_CPU_HOURS, false);
   if (flag) {
     std::cout << "(Y/n) ";

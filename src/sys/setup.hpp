@@ -34,7 +34,7 @@ class Setup {
 
   static void setMinersConfig(const std::string& loda_config);
 
-  static const std::string& getOeisHome();
+  static const std::string& getSeqsHome();
 
   static const std::string& getProgramsHome();
 
@@ -87,7 +87,7 @@ class Setup {
   static constexpr int64_t DEFAULT_MAX_PHYSICAL_MEMORY = 1024;  // 1 GB
 
   static std::string LODA_HOME;
-  static std::string OEIS_HOME;
+  static std::string SEQS_HOME;
   static std::string PROGRAMS_HOME;
   static std::string MINERS_CONFIG;
   static std::map<std::string, std::string> SETUP;

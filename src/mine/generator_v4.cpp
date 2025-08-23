@@ -95,9 +95,10 @@ GeneratorV4::GeneratorV4(const Config& config, const Stats& stats)
                      true);
   }
 
-  // no trailing / here
-  home = Setup::getLodaHome() + "gen_v4/" + config.miner;
-  numfiles_path = home + "/numfiles.txt";
+  const auto loda_home = Setup::getLodaHome();
+  moveDirToParent(loda_home, "gen_v4", "cache");
+  home = loda_home + "cache" + FILE_SEP + "gen_v4" + FILE_SEP + config.miner;
+  numfiles_path = home + FILE_SEP + "numfiles.txt";
 
   // obtain lock
   FolderLock lock(home);
@@ -111,7 +112,8 @@ GeneratorV4::GeneratorV4(const Config& config, const Stats& stats)
 
 std::string GeneratorV4::getPath(int64_t index) const {
   std::stringstream s;
-  s << home << "/S" << std::setw(4) << std::setfill('0') << index << ".txt";
+  s << home << std::string(1, FILE_SEP) << "S" << std::setw(4)
+    << std::setfill('0') << index << ".txt";
   return s.str();
 }
 

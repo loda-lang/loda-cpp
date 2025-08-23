@@ -11,7 +11,7 @@
 #include "lang/parser.hpp"
 #include "lang/program.hpp"
 #include "lang/program_util.hpp"
-#include "oeis/oeis_sequence.hpp"
+#include "seq/managed_sequence.hpp"
 #include "sys/log.hpp"
 #include "sys/setup.hpp"
 

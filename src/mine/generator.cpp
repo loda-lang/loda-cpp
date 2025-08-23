@@ -177,12 +177,23 @@ void Generator::fixSingularities(Program &p) {
 
 void Generator::fixCalls(Program &p) {
   for (auto &op : p.ops) {
-    if (op.type == Operation::Type::SEQ) {
-      if (op.source.type != Operand::Type::CONSTANT ||
-          !random_program_ids.exists(op.source.value.asInt())) {
-        op.source =
-            Operand(Operand::Type::CONSTANT, Number(random_program_ids.get()));
+    if (op.type != Operation::Type::SEQ) {
+      continue;
+    }
+    bool reset = false;
+    if (op.source.type == Operand::Type::CONSTANT) {
+      try {
+        auto id = UID::castFromInt(op.source.value.asInt());
+        reset = !random_program_ids.exists(id);
+      } catch (const std::exception &e) {
+        reset = true;
       }
+    } else {
+      reset = true;
+    }
+    if (reset) {
+      auto id_num = random_program_ids.get().castToInt();
+      op.source = Operand(Operand::Type::CONSTANT, Number(id_num));
     }
   }
 }
@@ -319,8 +330,7 @@ void Generator::ensureMeaningfulLoops(Program &p) {
   }
 }
 
-MultiGenerator::MultiGenerator(const Settings &settings, const Stats &stats,
-                               bool print_info)
+MultiGenerator::MultiGenerator(const Settings &settings, const Stats &stats)
     : Generator(Generator::Config(), stats) {
   const auto config = ConfigLoader::load(settings);
   configs.clear();
@@ -338,12 +348,6 @@ MultiGenerator::MultiGenerator(const Settings &settings, const Stats &stats,
     Log::get().error("No valid generators configurations found", true);
   }
   current_generator = Random::get().gen() % generators.size();
-
-  // print info
-  if (print_info) {
-    Log::get().info("Initialized " + std::to_string(generators.size()) +
-                    " generators");
-  }
 }
 
 Program MultiGenerator::generateProgram() {

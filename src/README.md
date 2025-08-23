@@ -20,6 +20,7 @@ The source code is organized into these modules:
 * [form](form): Formula generation from programs.
 * [lang](lang): LODA language core.
 * [math](math): Internal math library.
-* [mine](mine): Mining programs for OEIS sequences.
+* [mine](mine): Program mining.
+* [seq](seq): Sequence data management.
 * [oeis](oeis): Utils for managing OEIS data.
 * [sys](sys): System utils.

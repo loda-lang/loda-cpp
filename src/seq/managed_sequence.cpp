@@ -1,4 +1,4 @@
-#include "oeis/oeis_sequence.hpp"
+#include "seq/managed_sequence.hpp"
 
 #include <fstream>
 #include <iomanip>
@@ -14,55 +14,31 @@
 #include "sys/util.hpp"
 #include "sys/web_client.hpp"
 
-const size_t OeisSequence::DEFAULT_SEQ_LENGTH = 80;  // magic number
+ManagedSequence::ManagedSequence(UID id)
+    : id(id), offset(0), num_bfile_terms(0) {}
 
-const size_t OeisSequence::EXTENDED_SEQ_LENGTH = 1000;  // magic number
-
-const size_t OeisSequence::FULL_SEQ_LENGTH = 100000;  // magic number
-
-const size_t OeisSequence::MIN_NUM_EXP_TERMS = 16;  // magic number
-
-bool OeisSequence::isTooBig(const Number& n) {
-  if (n == Number::INF) {
-    return true;
-  }
-  if (USE_BIG_NUMBER) {
-    return n.getNumUsedWords() >
-           static_cast<int64_t>(BigNumber::NUM_WORDS / 4);  // magic number
-  } else {
-    static const int64_t NUM_INF = std::numeric_limits<int64_t>::max();
-    return (n.value > (NUM_INF / 1000)) || (n.value < (NUM_INF / -1000));
-  }
-}
-
-OeisSequence::OeisSequence(UID id) : id(id), offset(0), num_bfile_terms(0) {}
-
-OeisSequence::OeisSequence(UID id, const std::string& name,
-                           const Sequence& full)
+ManagedSequence::ManagedSequence(UID id, const std::string& name,
+                                 const Sequence& full)
     : id(id), name(name), offset(0), terms(full), num_bfile_terms(0) {}
 
-std::ostream& operator<<(std::ostream& out, const OeisSequence& s) {
+std::ostream& operator<<(std::ostream& out, const ManagedSequence& s) {
   out << s.id.string() << ": " << s.name;
   return out;
 }
 
-std::string OeisSequence::to_string() const {
+std::string ManagedSequence::to_string() const {
   std::stringstream ss;
   ss << (*this);
   return ss.str();
 }
 
-std::string OeisSequence::urlStr(UID id) {
-  return "https://oeis.org/" + id.string();
-}
-
-std::string OeisSequence::getBFilePath() const {
+std::string ManagedSequence::getBFilePath() const {
   std::string bfile = "b" + id.string().substr(1) + ".txt";
-  return Setup::getOeisHome() + "b" + FILE_SEP + ProgramUtil::dirStr(id) +
-         FILE_SEP + bfile;
+  return Setup::getSeqsHome() + "oeis" + FILE_SEP + "b" + FILE_SEP +
+         ProgramUtil::dirStr(id) + FILE_SEP + bfile;
 }
 
-void removeInvalidBFile(const OeisSequence& oeis_seq,
+void removeInvalidBFile(const ManagedSequence& oeis_seq,
                         const std::string& error = "invalid") {
   auto path = oeis_seq.getBFilePath();
   if (isFile(path)) {
@@ -72,7 +48,7 @@ void removeInvalidBFile(const OeisSequence& oeis_seq,
 }
 
 Sequence loadBFile(UID id, const Sequence& seq_full) {
-  const OeisSequence oeis_seq(id);
+  const ManagedSequence oeis_seq(id);
   Sequence result;
 
   // try to read b-file
@@ -106,7 +82,7 @@ Sequence loadBFile(UID id, const Sequence& seq_full) {
         ss >> std::ws;
         Number::readIntString(ss, buf);
         Number value(buf);
-        if (!ss || OeisSequence::isTooBig(value)) {
+        if (!ss || SequenceUtil::isTooBig(value)) {
           break;
         }
         result.push_back(value);
@@ -175,10 +151,10 @@ Sequence loadBFile(UID id, const Sequence& seq_full) {
   return result;
 }
 
-Sequence OeisSequence::getTerms(int64_t max_num_terms) const {
+Sequence ManagedSequence::getTerms(int64_t max_num_terms) const {
   // determine real number of terms
   size_t real_max_terms =
-      (max_num_terms >= 0) ? max_num_terms : EXTENDED_SEQ_LENGTH;
+      (max_num_terms >= 0) ? max_num_terms : SequenceUtil::EXTENDED_SEQ_LENGTH;
 
   // already have enough terms?
   if (real_max_terms <= terms.size()) {
@@ -221,34 +197,4 @@ Sequence OeisSequence::getTerms(int64_t max_num_terms) const {
   }
 
   return terms;
-}
-
-bool OeisSeqList::exists(UID id) const {
-  auto it = find(id.domain());
-  if (it == end()) {
-    return false;
-  }
-  const auto& seqs = it->second;
-  auto index = id.number();
-  if (index < 0 || index >= static_cast<int64_t>(seqs.size())) {
-    return false;
-  }
-  return seqs[index].id == id;
-}
-
-const OeisSequence& OeisSeqList::get(UID uid) const {
-  return at(uid.domain()).at(uid.number());
-}
-
-OeisSequence& OeisSeqList::get(UID uid) {
-  return (*this)[uid.domain()][uid.number()];
-}
-
-void OeisSeqList::add(OeisSequence&& seq) {
-  auto& seqs = (*this)[seq.id.domain()];
-  auto index = seq.id.number();
-  if (index >= static_cast<int64_t>(seqs.size())) {
-    seqs.resize(static_cast<int64_t>(1.5 * index) + 1);
-  }
-  seqs[index] = std::move(seq);
 }
