@@ -6,6 +6,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Improve check for faster programs
 * Improve logs
+* Move `gen_v4` files to `cache` folder
 
 ## v25.8.9
 
