@@ -177,7 +177,7 @@ void Generator::fixSingularities(Program &p) {
 
 void Generator::fixCalls(Program &p) {
   for (auto &op : p.ops) {
-    if (op.type == Operation::Type::SEQ) {
+    if (op.type != Operation::Type::SEQ) {
       continue;
     }
     bool reset = false;
