@@ -51,7 +51,7 @@ jobs:
       - name: Build
         run: cd src && nmake.exe /F Makefile.windows.mk
       - name: Test
-        run: ./loda.exe test
+        run: ./loda.exe -l debug test
   code-coverage:
     runs-on: ubuntu-22.04
     steps:
