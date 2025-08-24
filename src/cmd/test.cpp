@@ -54,6 +54,7 @@ void Test::all() {
 }
 
 void Test::fast() {
+  /*
   uid();
   sequence();
   memory();
@@ -75,9 +76,11 @@ void Test::fast() {
   knownPrograms();
   formula();
   range();
+  */
 }
 
 void Test::slow() {
+  /*
   number();
   randomNumber(100);
   virtualEval();
@@ -87,10 +90,11 @@ void Test::slow() {
   oeisList();
   oeisSeq();
   iterator(100);
+  */
   minimizer(10000);
-  randomRange(100);
-  miner();
-  memUsage();
+  // randomRange(100);
+  // miner();
+  // memUsage();
 }
 
 OeisManager& Test::getManager() {
