@@ -169,7 +169,7 @@ void Commands::upgrade() {
 void Commands::evaluate(const std::string& path) {
   initLog(true);
   Program program = OeisProgram::getProgramAndSeqId(path).first;
-  Evaluator evaluator(settings);
+  Evaluator evaluator(settings, EVAL_ALL, false);
   Sequence seq;
   evaluator.eval(program, seq);
   if (!settings.print_as_b_file) {
@@ -188,7 +188,7 @@ void Commands::check(const std::string& path) {
     uid = UID(Comments::getSequenceIdFromProgram(program));
   }
   auto seq = ManagedSequence(uid);
-  Evaluator evaluator(settings);
+  Evaluator evaluator(settings, EVAL_ALL, true);
   auto terms = seq.getTerms(SequenceUtil::FULL_SEQ_LENGTH);
   auto num_required = OeisProgram::getNumRequiredTerms(program);
   auto result = evaluator.check(program, terms, num_required, uid);
@@ -273,7 +273,7 @@ void Commands::profile(const std::string& path) {
   initLog(true);
   Program program = OeisProgram::getProgramAndSeqId(path).first;
   Sequence res;
-  Evaluator evaluator(settings);
+  Evaluator evaluator(settings, EVAL_ALL, false);
   auto start_time = std::chrono::steady_clock::now();
   evaluator.eval(program, res);
   auto cur_time = std::chrono::steady_clock::now();
@@ -355,7 +355,7 @@ void Commands::autoFold() {
   AdaptiveScheduler log_scheduler(30);
   bool folded;
   Program main, sub;
-  Evaluator evaluator(settings);
+  Evaluator evaluator(settings, EVAL_ALL, false);
   std::map<int64_t, int64_t> cell_map;
   size_t main_loops, sub_loops;
   UID sub_id;
@@ -574,7 +574,7 @@ void Commands::testPari(const std::string& test_id) {
   initLog(false);
   Parser parser;
   Interpreter interpreter(settings);
-  Evaluator evaluator(settings);
+  Evaluator evaluator(settings, EVAL_ALL, false);
   IncrementalEvaluator inceval(interpreter);
   OeisManager manager(settings);
   Memory tmp_memory;
@@ -736,7 +736,8 @@ bool checkRange(const ManagedSequence& seq, const Program& program,
 void Commands::testRange(const std::string& id) {
   initLog(false);
   Parser parser;
-  int64_t numChecked = 0;
+  size_t numChecked = 0, numInvalid = 0;
+  std::vector<UID> failedIds;
   OeisManager manager(settings);
   manager.load();
   auto& stats = manager.getStats();
@@ -748,6 +749,7 @@ void Commands::testRange(const std::string& id) {
   } else {
     seqs.push_back(manager.getSequences().get(UID(id)));
   }
+  Evaluator evaluator(settings, EVAL_ALL, false);
   for (const auto& seq : seqs) {
     if (seq.id.number() == 0 || !stats.all_program_ids.exists(seq.id)) {
       continue;
@@ -757,18 +759,41 @@ void Commands::testRange(const std::string& id) {
       program = parser.parse(ProgramUtil::getProgramPath(seq.id));
     } catch (const std::exception& e) {
       Log::get().warn(std::string(e.what()));
+      numInvalid++;
       continue;
     }
-    if (manager.getStats().getTransitiveLength(seq.id) < 0) {
+    const auto initialTerms = seq.getTerms(8);
+    auto status = evaluator.check(program, initialTerms, -1, seq.id);
+    if (status.first == status_t::ERROR) {
       Log::get().warn("Skipping invalid program for " + seq.id.string());
+      numInvalid++;
       continue;
     }
-    if (checkRange(seq, program, false) && checkRange(seq, program, true)) {
-      numChecked++;
+    try {
+      if (checkRange(seq, program, false) && checkRange(seq, program, true)) {
+        numChecked++;
+      }
+    } catch (const std::exception& e) {
+      Log::get().error("Error during range check for " + seq.id.string() +
+                           ": " + std::string(e.what()),
+                       false);
+      failedIds.push_back(seq.id);
     }
   }
-  Log::get().info("Successfully finished range check for " +
-                  std::to_string(numChecked) + " programs");
+  if (!failedIds.empty()) {
+    std::stringstream ss;
+    for (const auto& id : failedIds) {
+      ss << id.string() << " ";
+    }
+    Log::get().error("Range check failed for " +
+                         std::to_string(failedIds.size()) +
+                         " programs: " + ss.str(),
+                     true);
+  } else {
+    Log::get().info("Successfully finished range check for " +
+                    std::to_string(numChecked) + " programs, ingnored " +
+                    std::to_string(numInvalid) + " invalid programs");
+  }
 }
 
 void Commands::generate() {

@@ -119,7 +119,7 @@ void Benchmark::program(size_t id, size_t num_terms) {
 std::string Benchmark::programEval(const Program& p, eval_mode_t eval_mode,
                                    size_t num_terms) {
   Settings settings;
-  Evaluator evaluator(settings, eval_mode);
+  Evaluator evaluator(settings, eval_mode, false);
   if (!evaluator.supportsEvalModes(p, eval_mode)) {
     return "-";
   }
@@ -149,7 +149,7 @@ void Benchmark::findSlow(int64_t num_terms, Operation::Type type) {
   Parser parser;
   Settings settings;
   Interpreter interpreter(settings);
-  Evaluator evaluator(settings);
+  Evaluator evaluator(settings, EVAL_ALL, false);
   Sequence seq;
   Program program;
   std::priority_queue<std::pair<int64_t, UID> > queue;
