@@ -694,7 +694,7 @@ void Test::fold() {
       loadInOutTests(std::string("tests") + FILE_SEP + "fold" + FILE_SEP + "F");
   size_t i = 1;
   Parser parser;
-  Evaluator evaluator(settings, false);
+  Evaluator evaluator(settings, EVAL_ALL, false);
   std::map<int64_t, int64_t> cellMap;
   for (const auto& t : tests) {
     Log::get().info("Testing fold " + std::to_string(i));
@@ -734,7 +734,7 @@ void Test::unfold() {
   auto tests = loadInOutTests(std::string("tests") + FILE_SEP + "unfold" +
                               FILE_SEP + "U");
   size_t i = 1;
-  Evaluator evaluator(settings, false);
+  Evaluator evaluator(settings, EVAL_ALL, false);
   for (const auto& t : tests) {
     Log::get().info("Testing unfold " + std::to_string(i));
     auto p = t.first;
@@ -818,8 +818,8 @@ bool Test::checkEvaluator(const Settings& settings, size_t id, std::string path,
   } else {
     Log::get().error("Unknown eval mode", true);
   }
-  Evaluator eval_reg(settings, EVAL_REGULAR);
-  Evaluator eval_other(settings, evalMode);
+  Evaluator eval_reg(settings, EVAL_REGULAR, false);
+  Evaluator eval_other(settings, evalMode, false);
   if (!eval_other.supportsEvalModes(p, evalMode)) {
     if (mustSupportEvalMode) {
       Log::get().error("Error initializing " + msg, true);
@@ -1339,7 +1339,7 @@ void Test::optimizer() {
 }
 
 void Test::minimizer(size_t tests) {
-  Evaluator evaluator(settings);
+  Evaluator evaluator(settings, EVAL_ALL, false);
   Minimizer minimizer(settings);
   MultiGenerator multi_generator(settings, getManager().getStats());
   Sequence s1, s2, s3;
@@ -1418,7 +1418,7 @@ bool checkRange(const Sequence& seq, const Program& program, bool finiteInput) {
 }
 
 void Test::randomRange(size_t tests) {
-  Evaluator evaluator(settings);
+  Evaluator evaluator(settings, EVAL_ALL, false);
   MultiGenerator multi_generator(settings, getManager().getStats());
   Sequence seq;
   Program program;
@@ -1541,7 +1541,7 @@ void Test::testSeq(size_t id, const Sequence& expected) {
   Parser parser;
   Settings settings;  // special settings
   settings.num_terms = expected.size();
-  Evaluator evaluator(settings);
+  Evaluator evaluator(settings, EVAL_ALL, false);
   auto p = parser.parse(file);
   Sequence result;
   evaluator.eval(p, result);
@@ -1573,7 +1573,7 @@ void Test::testMatcherPair(Matcher& matcher, size_t id1, size_t id2) {
   Log::get().info("Testing " + matcher.getName() + " matcher for " +
                   uid1.string() + " -> " + uid2.string());
   Parser parser;
-  Evaluator evaluator(settings);
+  Evaluator evaluator(settings, EVAL_ALL, false);
   auto p1 = parser.parse(ProgramUtil::getProgramPath(uid1));
   auto p2 = parser.parse(ProgramUtil::getProgramPath(uid2));
   ProgramUtil::removeOps(p1, Operation::Type::NOP);

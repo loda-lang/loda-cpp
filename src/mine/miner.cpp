@@ -415,7 +415,7 @@ void Miner::submit(const std::string &path, std::string id_str) {
   auto seq = ManagedSequence(uid);
   Settings settings(this->settings);
   settings.print_as_b_file = false;
-  Evaluator evaluator(settings);
+  Evaluator evaluator(settings, EVAL_ALL, true);
   auto terms = seq.getTerms(SequenceUtil::FULL_SEQ_LENGTH);
   auto num_required = OeisProgram::getNumRequiredTerms(program);
   Log::get().info(
@@ -425,7 +425,7 @@ void Miner::submit(const std::string &path, std::string id_str) {
   if (result.first == status_t::ERROR) {
     Log::get().error("Validation failed", false);
     settings.print_as_b_file = true;
-    Evaluator evaluator2(settings);
+    Evaluator evaluator2(settings, EVAL_ALL, true);
     evaluator2.check(program, terms, num_required, uid);
     return;  // error
   }

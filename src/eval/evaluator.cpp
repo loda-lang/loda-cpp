@@ -21,14 +21,15 @@ void steps_t::add(const steps_t &s) {
   runs += s.runs;
 }
 
-Evaluator::Evaluator(const Settings &settings, eval_mode_t eval_modes)
+Evaluator::Evaluator(const Settings &settings, eval_mode_t eval_modes,
+                     bool check_range)
     : settings(settings),
       interpreter(settings),
       inc_evaluator(interpreter),
       vir_evaluator(settings),
       use_inc_eval(eval_modes & EVAL_INCREMENTAL),
       use_vir_eval(eval_modes & EVAL_VIRTUAL),
-      check_range(true),
+      check_range(check_range),
       check_eval_time(settings.max_eval_secs >= 0),
       is_debug(Log::get().level == Log::Level::DEBUG) {}
 
@@ -155,15 +156,23 @@ std::pair<status_t, steps_t> Evaluator::check(const Program &p,
   // compute range
   Range range;
   const int64_t offset = ProgramUtil::getOffset(p);
+  std::pair<status_t, steps_t> result;
   if (check_range) {
-    range = generateRange(p, offset + expected_seq.size() - 1);
+    try {
+      range = generateRange(p, offset + expected_seq.size() - 1);
+    } catch (const std::exception &e) {
+      result.first = status_t::ERROR;
+      if (settings.print_as_b_file) {
+        std::cout << std::string(e.what()) << std::endl;
+      }
+      return result;
+    }
   }
   // clear cache to correctly detect recursion errors
   interpreter.clearCaches();
   const bool use_inc = use_inc_eval && inc_evaluator.init(p);
   const bool use_vir = !use_inc && use_vir_eval && vir_evaluator.init(p);
   std::pair<Number, size_t> tmp_result;
-  std::pair<status_t, steps_t> result;
   result.first = status_t::OK;
   Memory mem;
   Number out;

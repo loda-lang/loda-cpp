@@ -8,7 +8,9 @@
 class Minimizer {
  public:
   explicit Minimizer(const Settings &settings)
-      : settings(settings), optimizer(settings), evaluator(settings) {}
+      : settings(settings),
+        optimizer(settings),
+        evaluator(settings, EVAL_ALL, false) {}
 
   bool minimize(Program &p, size_t num_terms) const;
 

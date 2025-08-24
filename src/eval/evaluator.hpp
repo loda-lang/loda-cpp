@@ -29,8 +29,8 @@ constexpr eval_mode_t EVAL_ALL = EVAL_REGULAR | EVAL_INCREMENTAL | EVAL_VIRTUAL;
 
 class Evaluator {
  public:
-  explicit Evaluator(const Settings &settings,
-                     eval_mode_t eval_modes = EVAL_ALL);
+  explicit Evaluator(const Settings &settings, eval_mode_t eval_modes,
+                     bool check_range);
 
   steps_t eval(const Program &p, Sequence &seq, int64_t num_terms = -1,
                const bool throw_on_error = true);

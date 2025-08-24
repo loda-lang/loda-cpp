@@ -45,7 +45,7 @@ OeisManager::OeisManager(const Settings &settings,
                          const std::string &stats_home)
     : settings(settings),
       overwrite_mode(ConfigLoader::load(settings).overwrite_mode),
-      evaluator(settings),
+      evaluator(settings, EVAL_ALL, true),
       finder(settings, evaluator),
       finder_initialized(false),
       update_oeis(false),
