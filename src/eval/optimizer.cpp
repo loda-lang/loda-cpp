@@ -106,7 +106,7 @@ bool Optimizer::removeEmptyLoops(Program &p) const {
         Log::get().debug("Removing empty loop");
       }
       p.ops.erase(p.ops.begin() + i, p.ops.begin() + i + 2);
-      i = i - 2;
+      i = std::max<int64_t>(i - 2, 0);
       removed = true;
     }
   }

@@ -2,11 +2,15 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Bugfixes
+
+* Fix optimizer crash on Windows
+
 ### Enhancements
 
+* Reorganize folder structure
 * Improve check for faster programs
 * Improve logs
-* Reorganize folder structure
 
 ## v25.8.9
 
