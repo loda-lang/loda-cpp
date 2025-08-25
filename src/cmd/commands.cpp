@@ -626,7 +626,7 @@ void Commands::testPari(const std::string& test_id) {
     }
 
     // determine number of terms for testing
-    size_t numTerms = seq.existingNumTerms();
+    size_t numTerms = seq.numExistingTerms();
     if (inceval.init(program)) {
       const int64_t targetTerms = 15 * inceval.getLoopCounterDecrement();
       numTerms = std::min<size_t>(numTerms, targetTerms);
@@ -699,7 +699,7 @@ bool checkRange(const ManagedSequence& seq, const Program& program,
                 bool finiteInput) {
   auto idStr = seq.id.string();
   auto offset = ProgramUtil::getOffset(program);
-  auto numTerms = seq.existingNumTerms();
+  auto numTerms = seq.numExistingTerms();
   auto terms = seq.getTerms(numTerms);
   Number inputUpperBound = finiteInput ? offset + numTerms - 1 : Number::INF;
   RangeGenerator generator;

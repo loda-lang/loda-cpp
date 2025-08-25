@@ -199,7 +199,7 @@ void SequenceLoader::checkConsistency() const {
   Log::get().debug("Checking sequence data consistency");
   size_t num_seqs = 0, num_names = 0;
   for (const auto &s : index) {
-    Log::get().debug("Checking consistency of " + s.to_string());
+    Log::get().debug("Checking consistency of " + s.string());
     if (s.id.empty()) {
       Log::get().error("Empty sequence ID", true);
     }
@@ -209,9 +209,9 @@ void SequenceLoader::checkConsistency() const {
     } else {
       num_names++;
     }
-    if (s.existingNumTerms() < min_num_terms) {
+    if (s.numExistingTerms() < min_num_terms) {
       Log::get().error("Not enough terms for sequence " + s.id.string() + " (" +
-                           std::to_string(s.existingNumTerms()) + "<" +
+                           std::to_string(s.numExistingTerms()) + "<" +
                            std::to_string(min_num_terms) + ")",
                        true);
     }

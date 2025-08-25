@@ -27,7 +27,7 @@ std::ostream& operator<<(std::ostream& out, const ManagedSequence& s) {
   return out;
 }
 
-std::string ManagedSequence::to_string() const {
+std::string ManagedSequence::string() const {
   std::stringstream ss;
   ss << (*this);
   return ss.str();

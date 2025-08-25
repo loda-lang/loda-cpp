@@ -578,7 +578,7 @@ void OeisManager::dumpProgram(UID id, Program &p, const std::string &file,
   const auto &seq = sequences.get(id);
   Program tmp;
   Operation nop(Operation::Type::NOP);
-  nop.comment = seq.to_string();
+  nop.comment = seq.string();
   tmp.ops.push_back(nop);
   if (!submitted_by.empty()) {
     nop.comment = Comments::PREFIX_SUBMITTED_BY + " " + submitted_by;
@@ -614,7 +614,7 @@ void OeisManager::alert(Program p, UID id, const std::string &prefix,
                         const std::string &submitted_by) const {
   const auto &seq = sequences.get(id);
   std::string msg, full;
-  msg = prefix + " program for " + seq.to_string();
+  msg = prefix + " program for " + seq.string();
   full = msg + " Terms: " + seq.getTerms(settings.num_terms).to_string();
   FormulaGenerator generator;
   Formula formula;
@@ -777,7 +777,7 @@ bool OeisManager::maintainProgram(UID id, bool eval) {
   Program program;
   std::string submitted_by;
   if (is_okay) {
-    Log::get().info("Checking program for " + s.to_string());
+    Log::get().info("Checking program for " + s.string());
     try {
       program = parser.parse(program_file);
       submitted_by =

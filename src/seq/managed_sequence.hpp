@@ -9,7 +9,7 @@
 
 class ManagedSequence {
  public:
-  ManagedSequence(UID id = UID('A', 0));
+  ManagedSequence(UID id = UID());
 
   ManagedSequence(UID id, const std::string& name, const Sequence& full);
 
@@ -18,15 +18,15 @@ class ManagedSequence {
   Sequence getTerms(
       int64_t max_num_terms = SequenceUtil::EXTENDED_SEQ_LENGTH) const;
 
-  size_t existingNumTerms() const { return terms.size(); }
+  size_t numExistingTerms() const { return terms.size(); }
+
+  std::string string() const;
+
+  friend std::ostream& operator<<(std::ostream& out, const ManagedSequence& s);
 
   UID id;
   std::string name;
   int64_t offset;
-
-  friend std::ostream& operator<<(std::ostream& out, const ManagedSequence& s);
-
-  std::string to_string() const;
 
  private:
   mutable Sequence terms;
