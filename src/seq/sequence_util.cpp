@@ -1,6 +1,9 @@
 #include "seq/sequence_util.hpp"
 
 #include "math/big_number.hpp"
+#include "sys/file.hpp"
+#include "sys/log.hpp"
+#include "sys/setup.hpp"
 
 const size_t SequenceUtil::DEFAULT_SEQ_LENGTH = 80;  // magic number
 
@@ -23,4 +26,20 @@ bool SequenceUtil::isTooBig(const Number& n) {
 
 std::string SequenceUtil::getOeisUrl(UID id) {
   return "https://oeis.org/" + id.string();
+}
+
+std::string SequenceUtil::getSeqsFolder(char domain) {
+  std::string folder;
+  switch (domain) {
+    case 'A':
+      folder = "oeis";
+      break;
+    case 'U':
+      folder = "user";
+      break;
+    default:
+      Log::get().error("Unsupported sequence domain: " + std::string(1, domain),
+                       true);
+  }
+  return Setup::getSeqsHome() + folder + FILE_SEP;
 }

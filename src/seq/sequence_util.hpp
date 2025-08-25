@@ -14,4 +14,6 @@ class SequenceUtil {
   static bool isTooBig(const Number& n);
 
   static std::string getOeisUrl(UID id);
+
+  static std::string getSeqsFolder(char domain);
 };
