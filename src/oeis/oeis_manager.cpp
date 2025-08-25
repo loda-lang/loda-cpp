@@ -57,8 +57,6 @@ OeisManager::OeisManager(const Settings &settings,
                      ? (Setup::getLodaHome() + "stats" + FILE_SEP)
                      : stats_home) {}
 
-std::string getOeisHome() { return Setup::getSeqsHome() + "oeis" + FILE_SEP; }
-
 void OeisManager::load() {
   // check if already loaded
   if (getTotalCount() > 0) {
@@ -66,28 +64,36 @@ void OeisManager::load() {
   }
 
   // first load the custom sequences lists (needs no lock)
-  const std::string oeis_dir = Setup::getProgramsHome() + "oeis" + FILE_SEP;
-  OeisList::loadList(oeis_dir + "deny.txt", deny_list);
-  OeisList::loadList(oeis_dir + "full_check.txt", full_check_list);
-  OeisList::loadList(oeis_dir + "overwrite.txt", overwrite_list);
-  OeisList::loadList(oeis_dir + "protect.txt", protect_list);
+  const std::string oeis_progs = Setup::getProgramsHome() + "oeis" + FILE_SEP;
+  OeisList::loadList(oeis_progs + "deny.txt", deny_list);
+  OeisList::loadList(oeis_progs + "full_check.txt", full_check_list);
+  OeisList::loadList(oeis_progs + "overwrite.txt", overwrite_list);
+  OeisList::loadList(oeis_progs + "protect.txt", protect_list);
 
   // load invalid matches map
   invalid_matches.load();
 
+  // migrate oeis directory if needed
   {
     // obtain lock
     FolderLock lock(Setup::getLodaHome());
     moveDirToParent(Setup::getLodaHome(), "oeis", "seqs");
     // lock released at the end of this block
   }
+
+  // update and load oeis sequences
   {
     // obtain lock
-    FolderLock lock(getOeisHome());
+    const auto oeis_home = SequenceUtil::getSeqsFolder('A');
+    FolderLock lock(oeis_home);
     update(false);
-    loader.load(getOeisHome(), 'A');
+    loader.load(oeis_home, 'A');
     // lock released at the end of this block
   }
+
+  // TODO: load user sequences if user/stripped exists
+
+  // check consistency
   loader.checkConsistency();
 }
 
@@ -173,11 +179,12 @@ void OeisManager::update(bool force) {
   std::vector<std::string> files = {"stripped", "names", "offsets"};
 
   // check whether oeis files need to be updated
+  const auto oeis_home = SequenceUtil::getSeqsFolder('A');
   update_oeis = false;
   auto it = files.begin();
   int64_t oeis_age_in_days = -1;
   while (it != files.end()) {
-    auto path = getOeisHome() + *it;
+    auto path = oeis_home + *it;
     oeis_age_in_days = getFileAgeInDays(path);
     if (oeis_age_in_days < 0 ||
         oeis_age_in_days >= Setup::getOeisUpdateInterval()) {
@@ -207,14 +214,14 @@ void OeisManager::update(bool force) {
   // perform oeis update
   if (update_oeis) {
     if (oeis_age_in_days == -1) {
-      Log::get().info("Creating OEIS index at \"" + getOeisHome() + "\"");
-      ensureDir(getOeisHome());
+      Log::get().info("Creating OEIS index at \"" + oeis_home + "\"");
+      ensureDir(oeis_home);
     } else {
       Log::get().info("Updating OEIS index (last update " +
                       std::to_string(oeis_age_in_days) + " days ago)");
     }
     for (const auto &file : files) {
-      const auto path = getOeisHome() + file;
+      const auto path = oeis_home + file;
       ApiClient::getDefaultInstance().getOeisFile(file, path);
     }
   }

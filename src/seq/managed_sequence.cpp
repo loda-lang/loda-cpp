@@ -8,6 +8,7 @@
 #include "lang/program_util.hpp"
 #include "math/big_number.hpp"
 #include "mine/api_client.hpp"
+#include "seq/sequence_util.hpp"
 #include "sys/file.hpp"
 #include "sys/log.hpp"
 #include "sys/setup.hpp"
@@ -33,17 +34,20 @@ std::string ManagedSequence::to_string() const {
 }
 
 std::string ManagedSequence::getBFilePath() const {
-  std::string bfile = "b" + id.string().substr(1) + ".txt";
-  return Setup::getSeqsHome() + "oeis" + FILE_SEP + "b" + FILE_SEP +
-         ProgramUtil::dirStr(id) + FILE_SEP + bfile;
+  const std::string seqs_home = SequenceUtil::getSeqsFolder(id.domain());
+  const std::string dir = ProgramUtil::dirStr(id);
+  const std::string bfile = "b" + id.string().substr(1) + ".txt";
+  return seqs_home + "b" + FILE_SEP + dir + FILE_SEP + bfile;
 }
 
 void removeInvalidBFile(const ManagedSequence& oeis_seq,
                         const std::string& error = "invalid") {
-  auto path = oeis_seq.getBFilePath();
-  if (isFile(path)) {
-    Log::get().warn("Removing " + error + " b-file " + path);
-    std::remove(path.c_str());
+  if (oeis_seq.id.domain() == 'A') {  // only remove OEIS b-files
+    auto path = oeis_seq.getBFilePath();
+    if (isFile(path)) {
+      Log::get().warn("Removing " + error + " b-file " + path);
+      std::remove(path.c_str());
+    }
   }
 }
 
@@ -162,7 +166,7 @@ Sequence ManagedSequence::getTerms(int64_t max_num_terms) const {
   }
 
   if (id.number() == 0) {
-    Log::get().error("Invalid OEIS sequence ID", true);
+    Log::get().error("Invalid sequence ID: " + id.string(), true);
   }
 
   // try to (re-)load b-file if not loaded yet or if there are more terms
