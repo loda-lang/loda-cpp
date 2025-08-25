@@ -31,4 +31,7 @@ class ManagedSequence {
  private:
   mutable Sequence terms;
   mutable size_t num_bfile_terms;
+
+  Sequence loadBFile() const;
+  void removeInvalidBFile(const std::string& error = "invalid") const;
 };
