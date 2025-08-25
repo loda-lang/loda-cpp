@@ -39,8 +39,8 @@ void SequenceLoader::load(std::string folder, char domain) {
   buf.precision(2);
   buf << duration;
   Log::get().info("Loaded " + std::to_string(num_loaded) + "/" +
-                  std::to_string(num_total) + " \"" + std::string(1, domain) +
-                  "\"-sequences in " + buf.str() + "s");
+                  std::to_string(num_total) + " " + std::string(1, domain) +
+                  "-sequences in " + buf.str() + "s");
 }
 
 void SequenceLoader::loadData(const std::string &folder, char domain) {
@@ -197,14 +197,17 @@ bool SequenceLoader::checkFolderDomain(std::string &folder, char domain) {
 
 void SequenceLoader::checkConsistency() const {
   Log::get().debug("Checking sequence data consistency");
-  size_t num_seqs = 0;
+  size_t num_seqs = 0, num_names = 0;
   for (const auto &s : index) {
     Log::get().debug("Checking consistency of " + s.to_string());
     if (s.id.empty()) {
       Log::get().error("Empty sequence ID", true);
     }
     if (s.name.empty()) {
-      Log::get().error("Missing name for sequence " + s.id.string(), true);
+      // only a warning because some new sequences may not have a name yet
+      Log::get().warn("Missing name for sequence " + s.id.string());
+    } else {
+      num_names++;
     }
     if (s.existingNumTerms() < min_num_terms) {
       Log::get().error("Not enough terms for sequence " + s.id.string() + " (" +
@@ -213,6 +216,9 @@ void SequenceLoader::checkConsistency() const {
                        true);
     }
     num_seqs++;
+  }
+  if (num_seqs > 0 && num_names == 0) {
+    Log::get().error("No sequence names found", true);
   }
   if (num_seqs != num_loaded) {
     Log::get().error(
