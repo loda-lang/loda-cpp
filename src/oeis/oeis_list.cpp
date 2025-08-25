@@ -45,16 +45,17 @@ void OeisList::loadList(const std::string& path,
                    std::to_string(list.size()) + " entries");
 }
 
-void OeisList::loadMapWithComments(const std::string& path,
+bool OeisList::loadMapWithComments(const std::string& path,
                                    std::map<UID, std::string>& map) {
   Log::get().debug("Loading map " + path);
-  std::ifstream names(path);
-  if (!names.good()) {
+  std::ifstream file(path);
+  if (!file.good()) {
     Log::get().warn("Sequence list not found: " + path);
+    return false;
   }
   std::string line, id, comment;
   map.clear();
-  while (std::getline(names, line)) {
+  while (std::getline(file, line)) {
     if (line.empty() || line[0] == '#') {
       continue;
     }
@@ -77,6 +78,7 @@ void OeisList::loadMapWithComments(const std::string& path,
   }
   Log::get().debug("Finished loading of list " + path + " with " +
                    std::to_string(map.size()) + " entries");
+  return true;
 }
 
 bool OeisList::loadMap(const std::string& path, std::map<UID, int64_t>& map) {

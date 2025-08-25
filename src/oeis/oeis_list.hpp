@@ -13,7 +13,7 @@ class OeisList {
 
   static void loadList(const std::string& path, std::unordered_set<UID>& list);
 
-  static void loadMapWithComments(const std::string& path,
+  static bool loadMapWithComments(const std::string& path,
                                   std::map<UID, std::string>& map);
 
   static bool loadMap(const std::string& path, std::map<UID, int64_t>& map);
