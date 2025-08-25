@@ -5,19 +5,20 @@
 #include "eval/interpreter.hpp"
 #include "lang/analyzer.hpp"
 
-// Incremental Evaluator (IE) class for simple loop programs. It does not work
-// as a general evaluator for LODA programs, but only for a certain set of
-// programs that contain simple loops. IE is much faster than regular
-// evaluation, because the result is computed incrementally, i.e., for every
-// computing the next term of a sequence, the loop body needs to be executed
-// only once. This works by remembering the state of the previous iteration and
-// updating it, instead of computing it from scratch. The decision whether IA
-// works for a given program is made using a static code analysis of the program
-// to be executed.
+// Incremental Evaluator (IE) for simple loop programs. This class is designed
+// for a subset of LODA programs that contain simple loops, and is not a general
+// evaluator for all LODA programs. IE offers much faster evaluation by
+// computing each new sequence term incrementally: the loop body is executed
+// only a fixed number of times per term (typically just once), rather than
+// recomputing from scratch.
 //
-// To find out whether your program is supported by IE, use the init() function.
-// If it returns true, use successive calls to the next() function to compute
-// the next terms.
+// The evaluator achieves this by tracking and updating the state from the
+// previous iteration. Whether IE can be used for a given program is determined
+// by static code analysis.
+//
+// To check if your program is compatible with IE, call the init() function. If
+// it returns true, you can efficiently compute successive terms by repeatedly
+// calling next().
 //
 class IncrementalEvaluator {
  public:
