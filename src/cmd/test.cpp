@@ -31,7 +31,7 @@
 #include "mine/miner.hpp"
 #include "mine/stats.hpp"
 #include "oeis/oeis_manager.hpp"
-#include "seq/sequence_list.hpp"
+#include "seq/seq_list.hpp"
 #include "sys/file.hpp"
 #include "sys/git.hpp"
 #include "sys/log.hpp"

@@ -12,7 +12,7 @@
 #include "mine/config.hpp"
 #include "oeis/invalid_matches.hpp"
 #include "oeis/oeis_program.hpp"
-#include "seq/sequence_list.hpp"
+#include "seq/seq_list.hpp"
 #include "sys/file.hpp"
 #include "sys/log.hpp"
 #include "sys/setup.hpp"

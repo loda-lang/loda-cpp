@@ -1,10 +1,10 @@
-#include "seq/sequence_loader.hpp"
+#include "seq/seq_loader.hpp"
 
 #include <chrono>
 #include <fstream>
 #include <sstream>
 
-#include "seq/sequence_list.hpp"
+#include "seq/seq_list.hpp"
 #include "sys/file.hpp"
 #include "sys/log.hpp"
 #include "sys/util.hpp"

@@ -1,4 +1,4 @@
-#include "seq/sequence_index.hpp"
+#include "seq/seq_index.hpp"
 
 bool SequenceIndex::exists(UID id) const {
   auto it = data.find(id.domain());

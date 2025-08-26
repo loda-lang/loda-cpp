@@ -7,7 +7,7 @@
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
 #include "lang/subprogram.hpp"
-#include "seq/managed_sequence.hpp"
+#include "seq/managed_seq.hpp"
 #include "sys/file.hpp"
 #include "sys/git.hpp"
 #include "sys/log.hpp"

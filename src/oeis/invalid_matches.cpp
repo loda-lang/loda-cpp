@@ -1,6 +1,6 @@
 #include "oeis/invalid_matches.hpp"
 
-#include "seq/sequence_list.hpp"
+#include "seq/seq_list.hpp"
 #include "sys/log.hpp"
 
 const std::string FILENAME = "invalid_matches.txt";

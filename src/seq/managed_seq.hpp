@@ -5,7 +5,7 @@
 
 #include "base/uid.hpp"
 #include "math/sequence.hpp"
-#include "seq/sequence_util.hpp"
+#include "seq/seq_util.hpp"
 
 class ManagedSequence {
  public:

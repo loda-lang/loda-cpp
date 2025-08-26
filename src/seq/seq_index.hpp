@@ -3,7 +3,7 @@
 #include <map>
 #include <vector>
 
-#include "seq/managed_sequence.hpp"
+#include "seq/managed_seq.hpp"
 
 class SequenceIndex {
  public:

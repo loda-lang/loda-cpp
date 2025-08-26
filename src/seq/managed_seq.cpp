@@ -1,4 +1,4 @@
-#include "seq/managed_sequence.hpp"
+#include "seq/managed_seq.hpp"
 
 #include <fstream>
 #include <iomanip>
@@ -8,7 +8,7 @@
 #include "lang/program_util.hpp"
 #include "math/big_number.hpp"
 #include "mine/api_client.hpp"
-#include "seq/sequence_util.hpp"
+#include "seq/seq_util.hpp"
 #include "sys/file.hpp"
 #include "sys/log.hpp"
 #include "sys/setup.hpp"

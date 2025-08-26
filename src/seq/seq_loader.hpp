@@ -1,6 +1,6 @@
 #pragma once
 
-#include "seq/sequence_index.hpp"
+#include "seq/seq_index.hpp"
 
 class SequenceLoader {
  public:

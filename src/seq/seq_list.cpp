@@ -1,8 +1,8 @@
-#include "seq/sequence_list.hpp"
+#include "seq/seq_list.hpp"
 
 #include <fstream>
 
-#include "seq/managed_sequence.hpp"
+#include "seq/managed_seq.hpp"
 #include "sys/file.hpp"
 #include "sys/log.hpp"
 #include "sys/setup.hpp"

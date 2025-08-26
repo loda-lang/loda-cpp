@@ -2,7 +2,7 @@
 
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
-#include "seq/managed_sequence.hpp"
+#include "seq/managed_seq.hpp"
 #include "sys/log.hpp"
 
 GeneratorV6::GeneratorV6(const Config &config, const Stats &stats)
