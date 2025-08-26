@@ -40,10 +40,9 @@ std::string ManagedSequence::getBFilePath() const {
   return seqs_home + "b" + FILE_SEP + dir + FILE_SEP + bfile;
 }
 
-void removeInvalidBFile(const ManagedSequence& oeis_seq,
-                        const std::string& error = "invalid") {
-  if (oeis_seq.id.domain() == 'A') {  // only remove OEIS b-files
-    auto path = oeis_seq.getBFilePath();
+void ManagedSequence::removeInvalidBFile(const std::string& error) const {
+  if (id.domain() == 'A') {  // only remove OEIS b-files
+    auto path = getBFilePath();
     if (isFile(path)) {
       Log::get().warn("Removing " + error + " b-file " + path);
       std::remove(path.c_str());
@@ -51,13 +50,12 @@ void removeInvalidBFile(const ManagedSequence& oeis_seq,
   }
 }
 
-Sequence loadBFile(UID id, const Sequence& seq_full) {
-  const ManagedSequence oeis_seq(id);
+Sequence ManagedSequence::loadBFile() const {
   Sequence result;
 
   // try to read b-file
   try {
-    std::ifstream big_file(oeis_seq.getBFilePath());
+    std::ifstream big_file(getBFilePath());
     std::string buf;
     if (big_file.good()) {
       std::string l;
@@ -77,9 +75,9 @@ Sequence loadBFile(UID id, const Sequence& seq_full) {
         }
         if (index != expected_index) {
           Log::get().error("Unexpected index " + std::to_string(index) +
-                               " in b-file " + oeis_seq.getBFilePath(),
+                               " in b-file " + getBFilePath(),
                            false);
-          removeInvalidBFile(oeis_seq);
+          removeInvalidBFile();
           result.clear();
           return result;
         }
@@ -98,42 +96,41 @@ Sequence loadBFile(UID id, const Sequence& seq_full) {
       }
     }
   } catch (const std::exception& e) {
-    Log::get().error(
-        "Error reading b-file " + oeis_seq.getBFilePath() + ": " + e.what(),
-        false);
-    removeInvalidBFile(oeis_seq);
+    Log::get().error("Error reading b-file " + getBFilePath() + ": " + e.what(),
+                     false);
+    removeInvalidBFile();
     result.clear();
     return result;
   }
 
   // not found or empty?
   if (result.empty()) {
-    Log::get().debug("b-file not found or empty: " + oeis_seq.getBFilePath());
-    removeInvalidBFile(oeis_seq, "empty");
+    Log::get().debug("b-file not found or empty: " + getBFilePath());
+    removeInvalidBFile("empty");
     return result;
   }
 
   // align sequences on common prefix (will verify correctness below again!)
-  result.align(seq_full, 5);
+  result.align(terms, 5);
 
   // check length
   std::string error_state;
 
-  if (result.size() < seq_full.size()) {
+  if (result.size() < terms.size()) {
     // big should never be shorter (there can be parser issues causing this)
-    result = seq_full;
+    result = terms;
   }
 
   if (result.empty()) {
     error_state = "empty";
   } else {
     // check that the sequences agree on prefix
-    auto seq_test = result.subsequence(0, seq_full.size());
-    if (seq_test != seq_full) {
+    auto test = result.subsequence(0, terms.size());
+    if (test != terms) {
       Log::get().warn("Unexpected terms in b-file or program for " +
                       id.string());
-      Log::get().warn("- expected: " + seq_full.to_string());
-      Log::get().warn("- found:    " + seq_test.to_string());
+      Log::get().warn("- expected: " + terms.to_string());
+      Log::get().warn("- found:    " + test.to_string());
       error_state = "invalid";
     }
   }
@@ -143,7 +140,7 @@ Sequence loadBFile(UID id, const Sequence& seq_full) {
   if (!error_state.empty()) {
     // TODO: also re-fetch old files, see getFileAgeInDays(
     // oeis_seq.getBFilePath() )
-    removeInvalidBFile(oeis_seq, error_state);
+    removeInvalidBFile(error_state);
     result.clear();
     return result;
   }
@@ -173,7 +170,7 @@ Sequence ManagedSequence::getTerms(int64_t max_num_terms) const {
   // available
   if (num_bfile_terms == 0 || num_bfile_terms > terms.size()) {
     const auto path = getBFilePath();
-    auto big = loadBFile(id, terms);
+    auto big = loadBFile();
     if (big.empty()) {
       // fetch b-file
       std::ifstream big_file(path);
@@ -183,7 +180,7 @@ Sequence ManagedSequence::getTerms(int64_t max_num_terms) const {
         std::remove(path.c_str());
         std::string bfile = "b" + id.string().substr(1) + ".txt";
         ApiClient::getDefaultInstance().getOeisFile(bfile, path);
-        big = loadBFile(id, terms);
+        big = loadBFile();
       }
     }
     if (big.empty()) {
