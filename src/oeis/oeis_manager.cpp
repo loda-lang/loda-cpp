@@ -19,8 +19,8 @@
 #include "lang/program_util.hpp"
 #include "mine/config.hpp"
 #include "mine/stats.hpp"
-#include "oeis/oeis_list.hpp"
 #include "oeis/oeis_program.hpp"
+#include "seq/sequence_list.hpp"
 #include "sys/file.hpp"
 #include "sys/git.hpp"
 #include "sys/log.hpp"
@@ -65,10 +65,10 @@ void OeisManager::load() {
 
   // first load the custom sequences lists (needs no lock)
   const std::string oeis_progs = Setup::getProgramsHome() + "oeis" + FILE_SEP;
-  OeisList::loadList(oeis_progs + "deny.txt", deny_list);
-  OeisList::loadList(oeis_progs + "full_check.txt", full_check_list);
-  OeisList::loadList(oeis_progs + "overwrite.txt", overwrite_list);
-  OeisList::loadList(oeis_progs + "protect.txt", protect_list);
+  SequenceList::loadList(oeis_progs + "deny.txt", deny_list);
+  SequenceList::loadList(oeis_progs + "full_check.txt", full_check_list);
+  SequenceList::loadList(oeis_progs + "overwrite.txt", overwrite_list);
+  SequenceList::loadList(oeis_progs + "protect.txt", protect_list);
 
   // load invalid matches map
   invalid_matches.load();
@@ -352,7 +352,7 @@ void OeisManager::generateStats(int64_t age_in_days) {
 void OeisManager::generateLists() {
   load();
   getStats();
-  const std::string lists_home = OeisList::getListsHome();
+  const std::string lists_home = SequenceList::getListsHome();
   Log::get().debug("Generating program lists at \"" + lists_home + "\"");
   const size_t list_file_size = 50000;
   std::vector<std::stringstream> list_files(1000000 / list_file_size);

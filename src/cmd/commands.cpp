@@ -21,9 +21,9 @@
 #include "mine/iterator.hpp"
 #include "mine/miner.hpp"
 #include "mine/mutator.hpp"
-#include "oeis/oeis_list.hpp"
 #include "oeis/oeis_manager.hpp"
 #include "oeis/oeis_program.hpp"
+#include "seq/sequence_list.hpp"
 #include "sys/file.hpp"
 #include "sys/log.hpp"
 #include "sys/setup.hpp"
@@ -456,7 +456,7 @@ void Commands::addToList(const std::string& seq_id,
     const std::string oeis_dir = Setup::getProgramsHome() + "oeis" + FILE_SEP;
     list_path = oeis_dir + list_path;
   }
-  OeisList::loadMapWithComments(list_path, list);
+  SequenceList::loadMapWithComments(list_path, list);
 
   // Always obtain the sequence from the manager
   OeisManager manager(settings);
@@ -474,7 +474,7 @@ void Commands::addToList(const std::string& seq_id,
   if (list.find(seq.id) == list.end()) {
     list[seq.id] = seq.name;
     // Write back using OeisList helper
-    OeisList::saveMapWithComments(list_path, list);
+    SequenceList::saveMapWithComments(list_path, list);
     Log::get().info("Added " + seq.id.string() + " to " + list_path);
   } else {
     Log::get().info("Sequence already in list: " + seq.id.string());

@@ -1,15 +1,14 @@
-#include "oeis/oeis_list.hpp"
+#include "seq/sequence_list.hpp"
 
 #include <fstream>
 
-#include "lang/program_util.hpp"
 #include "seq/managed_sequence.hpp"
 #include "sys/file.hpp"
 #include "sys/log.hpp"
 #include "sys/setup.hpp"
 #include "sys/util.hpp"
 
-const std::string& OeisList::getListsHome() {
+const std::string& SequenceList::getListsHome() {
   static std::string lists_home;
   if (lists_home.empty()) {
     // don't remove the trailing /
@@ -19,8 +18,8 @@ const std::string& OeisList::getListsHome() {
   return lists_home;
 }
 
-void OeisList::loadList(const std::string& path,
-                        std::unordered_set<UID>& list) {
+void SequenceList::loadList(const std::string& path,
+                            std::unordered_set<UID>& list) {
   Log::get().debug("Loading list " + path);
   std::ifstream names(path);
   if (!names.good()) {
@@ -45,8 +44,8 @@ void OeisList::loadList(const std::string& path,
                    std::to_string(list.size()) + " entries");
 }
 
-bool OeisList::loadMapWithComments(const std::string& path,
-                                   std::map<UID, std::string>& map) {
+bool SequenceList::loadMapWithComments(const std::string& path,
+                                       std::map<UID, std::string>& map) {
   Log::get().debug("Loading map " + path);
   std::ifstream file(path);
   if (!file.good()) {
@@ -81,7 +80,8 @@ bool OeisList::loadMapWithComments(const std::string& path,
   return true;
 }
 
-bool OeisList::loadMap(const std::string& path, std::map<UID, int64_t>& map) {
+bool SequenceList::loadMap(const std::string& path,
+                           std::map<UID, int64_t>& map) {
   std::ifstream in(path);
   if (in.good()) {
     Log::get().debug("Loading map " + path);
@@ -95,7 +95,7 @@ bool OeisList::loadMap(const std::string& path, std::map<UID, int64_t>& map) {
   }
 }
 
-void OeisList::addToMap(std::istream& in, std::map<UID, int64_t>& map) {
+void SequenceList::addToMap(std::istream& in, std::map<UID, int64_t>& map) {
   std::string line, id, value;
   ManagedSequence seq;
   bool is_value;
@@ -131,8 +131,8 @@ void OeisList::addToMap(std::istream& in, std::map<UID, int64_t>& map) {
   }
 }
 
-void OeisList::mergeMap(const std::string& file_name,
-                        std::map<UID, int64_t>& map) {
+void SequenceList::mergeMap(const std::string& file_name,
+                            std::map<UID, int64_t>& map) {
   if (file_name.find(FILE_SEP) != std::string::npos) {
     Log::get().error("Invalid file name for merging map: " + file_name, true);
   }
@@ -155,8 +155,8 @@ void OeisList::mergeMap(const std::string& file_name,
   map.clear();
 }
 
-void OeisList::saveMapWithComments(const std::string& path,
-                                   const std::map<UID, std::string>& map) {
+void SequenceList::saveMapWithComments(const std::string& path,
+                                       const std::map<UID, std::string>& map) {
   std::ofstream out(path);
   for (const auto& entry : map) {
     out << entry.first.string() << ": " << entry.second << "\n";

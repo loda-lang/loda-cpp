@@ -7,7 +7,7 @@
 
 #include "base/uid.hpp"
 
-class OeisList {
+class SequenceList {
  public:
   static const std::string& getListsHome();
 

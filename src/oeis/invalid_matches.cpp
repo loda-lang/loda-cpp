@@ -1,6 +1,6 @@
 #include "oeis/invalid_matches.hpp"
 
-#include "oeis/oeis_list.hpp"
+#include "seq/sequence_list.hpp"
 #include "sys/log.hpp"
 
 const std::string FILENAME = "invalid_matches.txt";
@@ -10,9 +10,9 @@ InvalidMatches::InvalidMatches()
 {}
 
 void InvalidMatches::load() {
-  auto path = OeisList::getListsHome() + FILENAME;
+  auto path = SequenceList::getListsHome() + FILENAME;
   try {
-    OeisList::loadMap(path, invalid_matches);
+    SequenceList::loadMap(path, invalid_matches);
   } catch (const std::exception&) {
     Log::get().warn("Resetting corrupt file " + path);
     invalid_matches.clear();
@@ -35,11 +35,11 @@ void InvalidMatches::insert(UID id) {
     scheduler.reset();
     Log::get().info("Saving invalid matches stats for " +
                     std::to_string(invalid_matches.size()) + " sequences");
-    OeisList::mergeMap(FILENAME, invalid_matches);
+    SequenceList::mergeMap(FILENAME, invalid_matches);
   }
 }
 
 void InvalidMatches::deleteFile() {
-  auto path = OeisList::getListsHome() + FILENAME;
+  auto path = SequenceList::getListsHome() + FILENAME;
   std::remove(path.c_str());
 }

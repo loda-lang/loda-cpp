@@ -4,7 +4,7 @@
 #include <fstream>
 #include <sstream>
 
-#include "oeis/oeis_list.hpp"
+#include "seq/sequence_list.hpp"
 #include "sys/file.hpp"
 #include "sys/log.hpp"
 #include "sys/util.hpp"
@@ -147,7 +147,7 @@ void SequenceLoader::loadOffsets(const std::string &folder, char domain) {
   const std::string path = folder + "offsets";
   Log::get().debug("Loading sequence offsets from \"" + path + "\"");
   std::map<UID, std::string> entries;
-  OeisList::loadMapWithComments(path, entries);
+  SequenceList::loadMapWithComments(path, entries);
   for (const auto &entry : entries) {
     const UID id = entry.first;
     if (index.exists(id)) {

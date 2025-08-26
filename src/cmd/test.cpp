@@ -30,8 +30,8 @@
 #include "mine/matcher.hpp"
 #include "mine/miner.hpp"
 #include "mine/stats.hpp"
-#include "oeis/oeis_list.hpp"
 #include "oeis/oeis_manager.hpp"
+#include "seq/sequence_list.hpp"
 #include "sys/file.hpp"
 #include "sys/git.hpp"
 #include "sys/log.hpp"
@@ -974,8 +974,8 @@ void checkSeqAgainstTestBFile(int64_t seq_id, int64_t offset,
 void Test::oeisList() {
   Log::get().info("Testing OEIS lists");
   std::map<UID, int64_t> map;
-  std::string path = OeisList::getListsHome() + "test.txt";
-  OeisList::loadMap(path, map);
+  std::string path = SequenceList::getListsHome() + "test.txt";
+  SequenceList::loadMap(path, map);
   if (!map.empty()) {
     Log::get().error("unexpected map content", true);
   }
@@ -983,18 +983,18 @@ void Test::oeisList() {
   map[UID('A', 7)] = 9;
   map[UID('A', 8)] = 4;
   auto copy = map;
-  OeisList::mergeMap("test.txt", map);
+  SequenceList::mergeMap("test.txt", map);
   if (!map.empty()) {
     Log::get().error("unexpected map content", true);
   }
-  OeisList::loadMap(path, map);
+  SequenceList::loadMap(path, map);
   if (map != copy) {
     Log::get().error("unexpected map content", true);
   }
   std::map<UID, int64_t> delta;
   delta[UID('A', 7)] = 6;
-  OeisList::mergeMap("test.txt", delta);
-  OeisList::loadMap(path, map);
+  SequenceList::mergeMap("test.txt", delta);
+  SequenceList::loadMap(path, map);
   copy[UID('A', 7)] = 15;
   if (map != copy) {
     Log::get().error("unexpected map content", true);
@@ -1133,7 +1133,7 @@ void Test::checkFormulas(const std::string& testFile, FormulaType type) {
   std::string path = std::string("tests") + FILE_SEP + std::string("formula") +
                      FILE_SEP + testFile;
   std::map<UID, std::string> map;
-  OeisList::loadMapWithComments(path, map);
+  SequenceList::loadMapWithComments(path, map);
   if (map.empty()) {
     Log::get().error("Unexpected map content", true);
   }
@@ -1172,7 +1172,7 @@ void Test::testRanges(const std::string& filename, bool finite) {
   std::string path = std::string("tests") + FILE_SEP + std::string("formula") +
                      FILE_SEP + filename;
   std::map<UID, std::string> map;
-  OeisList::loadMapWithComments(path, map);
+  SequenceList::loadMapWithComments(path, map);
   if (map.empty()) {
     Log::get().error("Unexpected map content", true);
   }
