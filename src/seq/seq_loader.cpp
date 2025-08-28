@@ -10,7 +10,7 @@
 #include "sys/util.hpp"
 
 void throwParseError(const std::string &line) {
-  Log::get().error("Error parse line: " + line, true);
+  Log::get().error("Error parsing line: " + line, true);
 }
 
 SequenceLoader::SequenceLoader(SequenceIndex &index, size_t min_num_terms)
@@ -24,9 +24,13 @@ void SequenceLoader::load(std::string folder, char domain) {
                    " with domain '" + std::string(1, domain) + "'");
   auto start_time = std::chrono::steady_clock::now();
 
+  auto new_loaded = num_loaded;
+  auto new_total = num_total;
   loadData(folder, domain);
   loadNames(folder, domain);
   loadOffsets(folder, domain);
+  new_loaded = num_loaded - new_loaded;
+  new_total = num_total - new_total;
 
   // print summary
   auto cur_time = std::chrono::steady_clock::now();
@@ -38,8 +42,8 @@ void SequenceLoader::load(std::string folder, char domain) {
   buf.setf(std::ios::fixed);
   buf.precision(2);
   buf << duration;
-  Log::get().info("Loaded " + std::to_string(num_loaded) + "/" +
-                  std::to_string(num_total) + " " + std::string(1, domain) +
+  Log::get().info("Loaded " + std::to_string(new_loaded) + "/" +
+                  std::to_string(new_total) + " " + std::string(1, domain) +
                   "-sequences in " + buf.str() + "s");
 }
 

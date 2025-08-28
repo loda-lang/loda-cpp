@@ -91,7 +91,11 @@ void MineManager::load() {
     // lock released at the end of this block
   }
 
-  // TODO: load user sequences if user/stripped exists
+  // load user sequences
+  const auto user_home = SequenceUtil::getSeqsFolder('U');
+  if (isFile(user_home + "stripped")) {
+    loader.load(user_home, 'U');
+  }
 
   // check consistency
   loader.checkConsistency();
