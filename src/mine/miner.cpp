@@ -403,9 +403,12 @@ void Miner::submit(const std::string &path, std::string id_str) {
     id_str = Comments::getSequenceIdFromProgram(program);
   }
   if (id_str.empty()) {
-    Log::get().error("Missing sequence ID in program", true);
+    Log::get().error("Missing sequence ID", true);
   }
   UID uid(id_str);
+  if (uid.domain() != 'A') {  // only A-numbers allowed
+    Log::get().error("Invalid sequence domain: " + id_str, true);
+  }
   id_str = uid.string();
   Log::get().info("Loaded program for " + id_str);
   if (manager->isIgnored(uid)) {
@@ -443,6 +446,10 @@ void Miner::submit(const std::string &path, std::string id_str) {
     const std::string skip_msg = "Skipping submission for " + s.first.string();
     if (updated_ids.find(s.first) != updated_ids.end()) {
       Log::get().info(skip_msg + ": already updated");
+      continue;
+    }
+    if (s.first.domain() != 'A') {  // only A-numbers allowed
+      Log::get().info(skip_msg + ": invalid domain");
       continue;
     }
     program = s.second;
