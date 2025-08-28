@@ -229,12 +229,22 @@ void Miner::runMineLoop() {
 
       // try to extract A-number from comment (server mode)
       seq_programs.clear();
-      auto id = Comments::getSequenceIdFromProgram(program);
-      if (!id.empty()) {
+      auto id_str = Comments::getSequenceIdFromProgram(program);
+      if (!id_str.empty()) {
+        UID id;
+        bool ok = true;
         try {
-          seq_programs.push_back(std::pair<UID, Program>(UID(id), program));
+          id = UID(id_str);
         } catch (const std::exception &) {
-          Log::get().warn("Invalid sequence ID: " + id);
+          ok = false;
+        }
+        if (id.domain() != 'A' || id.number() == 0) {
+          ok = false;
+        }
+        if (ok) {
+          seq_programs.push_back({id, program});
+        } else {
+          Log::get().warn("Invalid sequence ID: " + id_str);
         }
       }
 
@@ -267,18 +277,23 @@ void Miner::runMineLoop() {
           }
           // in client mode: submit the program to the API server
           if (mining_mode == MINING_MODE_CLIENT) {
-            // add metadata as comments
-            program = update_result.program;
-            Comments::addComment(
-                program, Comments::PREFIX_MINER_PROFILE + " " + profile_name);
-            Comments::addComment(program, Comments::PREFIX_CHANGE_TYPE + " " +
-                                              update_result.change_type);
-            if (!update_result.is_new) {
+            if (s.first.domain() == 'A') {  // only A-numbers allowed
+              // add metadata as comments
+              program = update_result.program;
               Comments::addComment(
-                  program, Comments::PREFIX_PREVIOUS_HASH + " " +
-                               std::to_string(update_result.previous_hash));
+                  program, Comments::PREFIX_MINER_PROFILE + " " + profile_name);
+              Comments::addComment(program, Comments::PREFIX_CHANGE_TYPE + " " +
+                                                update_result.change_type);
+              if (!update_result.is_new) {
+                Comments::addComment(
+                    program, Comments::PREFIX_PREVIOUS_HASH + " " +
+                                 std::to_string(update_result.previous_hash));
+              }
+              api_client->postProgram(program, 10);  // magic number
+            } else {
+              Log::get().warn("Skipping submission program of " +
+                              s.first.string());
             }
-            api_client->postProgram(program, 10);  // magic number
           }
           // mutate successful program
           if (mining_mode != MINING_MODE_SERVER && progs.size() < MAX_BACKLOG) {
