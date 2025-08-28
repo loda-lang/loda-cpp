@@ -15,7 +15,7 @@
 #include "mine/generator.hpp"
 #include "mine/mutator.hpp"
 #include "oeis/oeis_manager.hpp"
-#include "oeis/oeis_program.hpp"
+#include "seq/seq_program.hpp"
 #include "sys/file.hpp"
 #include "sys/log.hpp"
 #include "sys/metrics.hpp"
@@ -417,7 +417,7 @@ void Miner::submit(const std::string &path, std::string id_str) {
   settings.print_as_b_file = false;
   Evaluator evaluator(settings, EVAL_ALL, true);
   auto terms = seq.getTerms(SequenceUtil::FULL_SEQ_LENGTH);
-  auto num_required = OeisProgram::getNumRequiredTerms(program);
+  auto num_required = SequenceProgram::getNumRequiredTerms(program);
   Log::get().info(
       "Validating program against " + std::to_string(terms.size()) + " (>=" +
       std::to_string(std::min(num_required, terms.size())) + ") terms");

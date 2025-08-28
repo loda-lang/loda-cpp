@@ -1,4 +1,4 @@
-#include "oeis/oeis_program.hpp"
+#include "seq/seq_program.hpp"
 
 #include <set>
 
@@ -13,7 +13,7 @@
 #include "sys/log.hpp"
 #include "sys/setup.hpp"
 
-std::pair<Program, UID> OeisProgram::getProgramAndSeqId(
+std::pair<Program, UID> SequenceProgram::getProgramAndSeqId(
     const std::string &id_or_path) {
   Parser parser;
   std::pair<Program, UID> result;
@@ -50,7 +50,7 @@ void collectPrograms(const Program &p, std::set<Program> &collected) {
   }
 }
 
-size_t OeisProgram::getTransitiveProgramHash(const Program &program) {
+size_t SequenceProgram::getTransitiveProgramHash(const Program &program) {
   std::set<Program> collected;
   collectPrograms(program, collected);
   size_t h = 0;
@@ -60,22 +60,22 @@ size_t OeisProgram::getTransitiveProgramHash(const Program &program) {
   return h;
 }
 
-size_t OeisProgram::getNumCheckTerms(bool full_check) {
+size_t SequenceProgram::getNumCheckTerms(bool full_check) {
   return full_check ? SequenceUtil::FULL_SEQ_LENGTH
                     : SequenceUtil::EXTENDED_SEQ_LENGTH;
 }
 
-size_t OeisProgram::getNumRequiredTerms(const Program &p) {
+size_t SequenceProgram::getNumRequiredTerms(const Program &p) {
   return SequenceUtil::DEFAULT_SEQ_LENGTH;
 }
 
-size_t OeisProgram::getNumMinimizationTerms(const Program &p) {
+size_t SequenceProgram::getNumMinimizationTerms(const Program &p) {
   return getNumRequiredTerms(p) * 2;  // magic number
 }
 
-UIDSet OeisProgram::collectLatestProgramIds(size_t max_commits,
-                                            size_t max_added_programs,
-                                            size_t max_modified_programs) {
+UIDSet SequenceProgram::collectLatestProgramIds(size_t max_commits,
+                                                size_t max_added_programs,
+                                                size_t max_modified_programs) {
   UIDSet latest_program_ids;
   auto progs_dir = Setup::getProgramsHome();
   if (!isDir(progs_dir + ".git")) {

@@ -9,8 +9,8 @@
 #include "lang/analyzer.hpp"
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
-#include "oeis/oeis_program.hpp"
 #include "seq/managed_seq.hpp"
+#include "seq/seq_program.hpp"
 #include "sys/file.hpp"
 #include "sys/log.hpp"
 #include "sys/setup.hpp"
@@ -401,7 +401,7 @@ void Stats::finalize() {
   }
   if (latest_program_ids.empty()) {
     latest_program_ids =
-        OeisProgram::collectLatestProgramIds(20, 200, 200);  // magic number
+        SequenceProgram::collectLatestProgramIds(20, 200, 200);  // magic number
   }
 }
 

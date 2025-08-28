@@ -6,8 +6,8 @@
 #include "lang/parser.hpp"
 #include "lang/program_cache.hpp"
 #include "mine/finder.hpp"
+#include "mine/invalid_matches.hpp"
 #include "mine/stats.hpp"
-#include "oeis/invalid_matches.hpp"
 #include "seq/seq_loader.hpp"
 #include "sys/util.hpp"
 

@@ -9,8 +9,8 @@
 #include "lang/constants.hpp"
 #include "lang/program_cache.hpp"
 #include "lang/program_util.hpp"
-#include "oeis/oeis_program.hpp"
 #include "seq/managed_seq.hpp"
+#include "seq/seq_program.hpp"
 #include "sys/file.hpp"
 #include "sys/log.hpp"
 #include "sys/setup.hpp"
@@ -107,9 +107,9 @@ check_result_t Checker::checkProgramExtended(Program program, Program existing,
   check_result_t result;
 
   // get the extended sequence and number of required terms
-  auto num_check = OeisProgram::getNumCheckTerms(full_check);
-  auto num_required = OeisProgram::getNumRequiredTerms(program);
-  auto num_minimize = OeisProgram::getNumMinimizationTerms(program);
+  auto num_check = SequenceProgram::getNumCheckTerms(full_check);
+  auto num_required = SequenceProgram::getNumRequiredTerms(program);
+  auto num_minimize = SequenceProgram::getNumMinimizationTerms(program);
   auto extended_seq = seq.getTerms(num_check);
 
   // check the program w/o minimization
@@ -130,7 +130,7 @@ check_result_t Checker::checkProgramExtended(Program program, Program existing,
   minimizer.optimizeAndMinimize(program, num_minimize);
   if (program != result.program) {
     // minimization changed program => check the minimized program
-    num_required = OeisProgram::getNumRequiredTerms(program);
+    num_required = SequenceProgram::getNumRequiredTerms(program);
     auto check_minimized =
         evaluator.check(program, extended_seq, num_required, seq.id);
     if (check_minimized.first == status_t::ERROR) {
@@ -189,7 +189,7 @@ check_result_t Checker::checkProgramBasic(const Program& program,
                                   num_usages);
     }
     // compare with hash of existing program
-    if (previous_hash != OeisProgram::getTransitiveProgramHash(existing)) {
+    if (previous_hash != SequenceProgram::getTransitiveProgramHash(existing)) {
       Log::get().debug("Skipping update of " + seq.id.string() +
                        " because of hash mismatch");
       return result;
@@ -197,7 +197,7 @@ check_result_t Checker::checkProgramBasic(const Program& program,
   }
 
   // get the number of required terms and the sequence
-  auto num_required = OeisProgram::getNumRequiredTerms(program);
+  auto num_required = SequenceProgram::getNumRequiredTerms(program);
   auto terms = seq.getTerms(num_required);
 
   // check the program
@@ -272,7 +272,7 @@ std::string Checker::isOptimizedBetter(Program existing, Program optimized,
   // ======= EVALUATION CHECKS =========
 
   // get extended sequence
-  auto num_check = OeisProgram::getNumCheckTerms(full_check);
+  auto num_check = SequenceProgram::getNumCheckTerms(full_check);
   auto terms = seq.getTerms(num_check);
   if (terms.empty()) {
     Log::get().error("Error fetching b-file for " + seq.id.string(), true);

@@ -2,6 +2,8 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+## v25.8.28
+
 ### Bugfixes
 
 * Fix missing sequence name error

@@ -19,8 +19,8 @@
 #include "lang/program_util.hpp"
 #include "mine/config.hpp"
 #include "mine/stats.hpp"
-#include "oeis/oeis_program.hpp"
 #include "seq/seq_list.hpp"
+#include "seq/seq_program.hpp"
 #include "sys/file.hpp"
 #include "sys/git.hpp"
 #include "sys/log.hpp"
@@ -725,7 +725,7 @@ update_program_result_t OeisManager::updateProgram(
   result.program = checked.program;
   result.change_type = checked.status;
   if (!is_new) {
-    result.previous_hash = OeisProgram::getTransitiveProgramHash(existing);
+    result.previous_hash = SequenceProgram::getTransitiveProgramHash(existing);
   }
 
   // write new or better program version
@@ -802,7 +802,7 @@ bool OeisManager::maintainProgram(UID id, bool eval) {
   if (is_okay && eval) {
     // get the full number of terms
     auto extended_seq = s.getTerms(SequenceUtil::FULL_SEQ_LENGTH);
-    auto num_required = OeisProgram::getNumRequiredTerms(program);
+    auto num_required = SequenceProgram::getNumRequiredTerms(program);
     try {
       auto res = evaluator.check(program, extended_seq, num_required, id);
       if (Signals::HALT) {
@@ -826,7 +826,7 @@ bool OeisManager::maintainProgram(UID id, bool eval) {
       ProgramUtil::removeOps(updated, Operation::Type::NOP);
       Fold::autoUnfold(updated);
       if (eval) {
-        auto num_minimize = OeisProgram::getNumMinimizationTerms(program);
+        auto num_minimize = SequenceProgram::getNumMinimizationTerms(program);
         minimizer.optimizeAndMinimize(updated, num_minimize);
       } else {
         optimizer.optimize(updated);

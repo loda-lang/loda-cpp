@@ -10,9 +10,9 @@
 #include "lang/program_util.hpp"
 #include "lang/subprogram.hpp"
 #include "mine/config.hpp"
-#include "oeis/invalid_matches.hpp"
-#include "oeis/oeis_program.hpp"
+#include "mine/invalid_matches.hpp"
 #include "seq/seq_list.hpp"
+#include "seq/seq_program.hpp"
 #include "sys/file.hpp"
 #include "sys/log.hpp"
 #include "sys/setup.hpp"
@@ -118,7 +118,7 @@ void Finder::findAll(const Program &p, const Sequence &norm_seq,
       }
       last = t;
       auto expected_seq = s.getTerms(s.numExistingTerms());
-      auto num_required = OeisProgram::getNumRequiredTerms(t.second);
+      auto num_required = SequenceProgram::getNumRequiredTerms(t.second);
       auto res = evaluator.check(t.second, expected_seq, num_required, t.first);
       if (res.first == status_t::ERROR) {
         invalid_matches.insert(t.first);

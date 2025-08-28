@@ -5,7 +5,7 @@
 #include "base/uid.hpp"
 #include "lang/program.hpp"
 
-class OeisProgram {
+class SequenceProgram {
  public:
   static std::pair<Program, UID> getProgramAndSeqId(
       const std::string& id_or_path);

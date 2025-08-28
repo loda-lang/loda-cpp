@@ -6,8 +6,8 @@
 #include "eval/evaluator.hpp"
 #include "eval/minimizer.hpp"
 #include "mine/checker.hpp"
+#include "mine/invalid_matches.hpp"
 #include "mine/matcher.hpp"
-#include "oeis/invalid_matches.hpp"
 #include "seq/seq_index.hpp"
 
 class ManagedSequence;

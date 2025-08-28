@@ -22,8 +22,8 @@
 #include "mine/miner.hpp"
 #include "mine/mutator.hpp"
 #include "oeis/oeis_manager.hpp"
-#include "oeis/oeis_program.hpp"
 #include "seq/seq_list.hpp"
+#include "seq/seq_program.hpp"
 #include "sys/file.hpp"
 #include "sys/log.hpp"
 #include "sys/setup.hpp"
@@ -168,7 +168,7 @@ void Commands::upgrade() {
 
 void Commands::evaluate(const std::string& path) {
   initLog(true);
-  Program program = OeisProgram::getProgramAndSeqId(path).first;
+  Program program = SequenceProgram::getProgramAndSeqId(path).first;
   Evaluator evaluator(settings, EVAL_ALL, false);
   Sequence seq;
   evaluator.eval(program, seq);
@@ -179,7 +179,7 @@ void Commands::evaluate(const std::string& path) {
 
 void Commands::check(const std::string& path) {
   initLog(true);
-  auto program_and_id = OeisProgram::getProgramAndSeqId(path);
+  auto program_and_id = SequenceProgram::getProgramAndSeqId(path);
   auto program = program_and_id.first;
   UID uid;
   if (program_and_id.second.number()) {
@@ -190,7 +190,7 @@ void Commands::check(const std::string& path) {
   auto seq = ManagedSequence(uid);
   Evaluator evaluator(settings, EVAL_ALL, true);
   auto terms = seq.getTerms(SequenceUtil::FULL_SEQ_LENGTH);
-  auto num_required = OeisProgram::getNumRequiredTerms(program);
+  auto num_required = SequenceProgram::getNumRequiredTerms(program);
   auto result = evaluator.check(program, terms, num_required, uid);
   switch (result.first) {
     case status_t::OK:
@@ -207,7 +207,7 @@ void Commands::check(const std::string& path) {
 
 void Commands::optimize(const std::string& path) {
   initLog(true);
-  Program program = OeisProgram::getProgramAndSeqId(path).first;
+  Program program = SequenceProgram::getProgramAndSeqId(path).first;
   Optimizer optimizer(settings);
   optimizer.optimize(program);
   ProgramUtil::print(program, std::cout);
@@ -215,7 +215,7 @@ void Commands::optimize(const std::string& path) {
 
 void Commands::minimize(const std::string& path) {
   initLog(true);
-  Program program = OeisProgram::getProgramAndSeqId(path).first;
+  Program program = SequenceProgram::getProgramAndSeqId(path).first;
   Minimizer minimizer(settings);
   minimizer.optimizeAndMinimize(program, settings.num_terms);
   ProgramUtil::print(program, std::cout);
@@ -227,7 +227,7 @@ void throwConversionError(const std::string& format) {
 
 void Commands::export_(const std::string& path) {
   initLog(true);
-  Program program = OeisProgram::getProgramAndSeqId(path).first;
+  Program program = SequenceProgram::getProgramAndSeqId(path).first;
   const auto& format = settings.export_format;
   Formula formula;
   PariFormula pari_formula;
@@ -271,7 +271,7 @@ void Commands::export_(const std::string& path) {
 
 void Commands::profile(const std::string& path) {
   initLog(true);
-  Program program = OeisProgram::getProgramAndSeqId(path).first;
+  Program program = SequenceProgram::getProgramAndSeqId(path).first;
   Sequence res;
   Evaluator evaluator(settings, EVAL_ALL, false);
   auto start_time = std::chrono::steady_clock::now();
@@ -294,8 +294,8 @@ void Commands::profile(const std::string& path) {
 
 void Commands::fold(const std::string& main_path, const std::string& sub_id) {
   initLog(true);
-  auto main = OeisProgram::getProgramAndSeqId(main_path).first;
-  auto sub = OeisProgram::getProgramAndSeqId(sub_id);
+  auto main = SequenceProgram::getProgramAndSeqId(main_path).first;
+  auto sub = SequenceProgram::getProgramAndSeqId(sub_id);
   if (sub.second.number() == 0) {
     throw std::runtime_error("subprogram must be given by ID");
   }
@@ -309,7 +309,7 @@ void Commands::fold(const std::string& main_path, const std::string& sub_id) {
 
 void Commands::unfold(const std::string& path) {
   initLog(true);
-  auto p = OeisProgram::getProgramAndSeqId(path).first;
+  auto p = SequenceProgram::getProgramAndSeqId(path).first;
   if (!Fold::unfold(p)) {
     throw std::runtime_error("cannot unfold program");
   }
@@ -433,7 +433,7 @@ void Commands::mine() {
 
 void Commands::mutate(const std::string& path) {
   initLog(false);
-  Program base_program = OeisProgram::getProgramAndSeqId(path).first;
+  Program base_program = SequenceProgram::getProgramAndSeqId(path).first;
   auto progress_monitor = makeProgressMonitor(settings);
   Miner miner(settings, progress_monitor.get());
   miner.setBaseProgram(base_program);
@@ -905,8 +905,8 @@ void Commands::lists() {
 
 void Commands::compare(const std::string& path1, const std::string& path2) {
   initLog(false);
-  Program p1 = OeisProgram::getProgramAndSeqId(path1).first;
-  Program p2 = OeisProgram::getProgramAndSeqId(path2).first;
+  Program p1 = SequenceProgram::getProgramAndSeqId(path1).first;
+  Program p2 = SequenceProgram::getProgramAndSeqId(path2).first;
   auto id = UID(Comments::getSequenceIdFromProgram(p1));
   auto seq = ManagedSequence(id);
   OeisManager manager(settings);
