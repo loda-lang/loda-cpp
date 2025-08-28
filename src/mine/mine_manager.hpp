@@ -24,9 +24,9 @@ struct update_program_result_t {
   Program program;
 };
 
-class OeisManager {
+class MineManager {
  public:
-  explicit OeisManager(const Settings& settings,
+  explicit MineManager(const Settings& settings,
                        const std::string& stats_home = "");
 
   void load();

@@ -1,4 +1,4 @@
-#include "oeis/oeis_manager.hpp"
+#include "mine/mine_manager.hpp"
 
 #include <stdlib.h>
 #include <time.h>
@@ -41,7 +41,7 @@ std::string OverrideModeToString(OverwriteMode mode) {
   return "unknown";
 }
 
-OeisManager::OeisManager(const Settings &settings,
+MineManager::MineManager(const Settings &settings,
                          const std::string &stats_home)
     : settings(settings),
       overwrite_mode(ConfigLoader::load(settings).overwrite_mode),
@@ -57,7 +57,7 @@ OeisManager::OeisManager(const Settings &settings,
                      ? (Setup::getLodaHome() + "stats" + FILE_SEP)
                      : stats_home) {}
 
-void OeisManager::load() {
+void MineManager::load() {
   // check if already loaded
   if (getTotalCount() > 0) {
     return;
@@ -97,7 +97,7 @@ void OeisManager::load() {
   loader.checkConsistency();
 }
 
-Finder &OeisManager::getFinder() {
+Finder &MineManager::getFinder() {
   if (!finder_initialized) {
     // generate stats is needed
     getStats();
@@ -129,7 +129,7 @@ Finder &OeisManager::getFinder() {
   return finder;
 }
 
-bool OeisManager::shouldMatch(const ManagedSequence &seq) const {
+bool MineManager::shouldMatch(const ManagedSequence &seq) const {
   if (seq.id.number() == 0) {
     return false;
   }
@@ -175,7 +175,7 @@ bool OeisManager::shouldMatch(const ManagedSequence &seq) const {
   return true;  // unreachable
 }
 
-void OeisManager::update(bool force) {
+void MineManager::update(bool force) {
   std::vector<std::string> files = {"stripped", "names", "offsets"};
 
   // check whether oeis files need to be updated
@@ -281,7 +281,7 @@ void OeisManager::update(bool force) {
   }
 }
 
-void OeisManager::generateStats(int64_t age_in_days) {
+void MineManager::generateStats(int64_t age_in_days) {
   load();
   std::string msg;
   if (age_in_days < 0) {
@@ -349,7 +349,7 @@ void OeisManager::generateStats(int64_t age_in_days) {
                   " programs in " + buf.str() + "s");
 }
 
-void OeisManager::generateLists() {
+void MineManager::generateLists() {
   load();
   getStats();
   const std::string lists_home = SequenceList::getListsHome();
@@ -414,7 +414,7 @@ void OeisManager::generateLists() {
                   " programs");
 }
 
-void OeisManager::migrate() {
+void MineManager::migrate() {
   load();
   AdaptiveScheduler scheduler(20);
   for (const auto &s : sequences) {
@@ -453,9 +453,9 @@ void OeisManager::migrate() {
   }
 }
 
-const SequenceIndex &OeisManager::getSequences() const { return sequences; }
+const SequenceIndex &MineManager::getSequences() const { return sequences; }
 
-const Stats &OeisManager::getStats() {
+const Stats &MineManager::getStats() {
   if (!stats) {
     // obtain lock
     FolderLock lock(stats_home);
@@ -509,7 +509,7 @@ const Stats &OeisManager::getStats() {
   return *stats;
 }
 
-void OeisManager::addSeqComments(Program &p) const {
+void MineManager::addSeqComments(Program &p) const {
   for (auto &op : p.ops) {
     if (op.type == Operation::Type::SEQ &&
         op.source.type == Operand::Type::CONSTANT) {
@@ -521,14 +521,14 @@ void OeisManager::addSeqComments(Program &p) const {
   }
 }
 
-int64_t OeisManager::updateProgramOffset(UID id, Program &p) const {
+int64_t MineManager::updateProgramOffset(UID id, Program &p) const {
   if (!sequences.exists(id)) {
     return 0;
   }
   return ProgramUtil::setOffset(p, sequences.get(id).offset);
 }
 
-void OeisManager::updateDependentOffset(UID id, UID used_id, int64_t delta) {
+void MineManager::updateDependentOffset(UID id, UID used_id, int64_t delta) {
   const auto path = ProgramUtil::getProgramPath(id);
   Program p;
   try {
@@ -557,7 +557,7 @@ void OeisManager::updateDependentOffset(UID id, UID used_id, int64_t delta) {
   }
 }
 
-void OeisManager::updateAllDependentOffset(UID id, int64_t delta) {
+void MineManager::updateAllDependentOffset(UID id, int64_t delta) {
   if (delta == 0) {
     return;
   }
@@ -569,7 +569,7 @@ void OeisManager::updateAllDependentOffset(UID id, int64_t delta) {
   }
 }
 
-void OeisManager::dumpProgram(UID id, Program &p, const std::string &file,
+void MineManager::dumpProgram(UID id, Program &p, const std::string &file,
                               const std::string &submitted_by) const {
   ProgramUtil::removeOps(p, Operation::Type::NOP);
   Comments::removeComments(p);
@@ -609,7 +609,7 @@ void OeisManager::dumpProgram(UID id, Program &p, const std::string &file,
   out.close();
 }
 
-void OeisManager::alert(Program p, UID id, const std::string &prefix,
+void MineManager::alert(Program p, UID id, const std::string &prefix,
                         const std::string &color,
                         const std::string &submitted_by) const {
   const auto &seq = sequences.get(id);
@@ -641,7 +641,7 @@ void OeisManager::alert(Program p, UID id, const std::string &prefix,
   Log::get().alert(msg, details);
 }
 
-Program OeisManager::getExistingProgram(UID id) {
+Program MineManager::getExistingProgram(UID id) {
   const std::string global_file = ProgramUtil::getProgramPath(id, false);
   const std::string local_file = ProgramUtil::getProgramPath(id, true);
   const bool has_global = isFile(global_file);
@@ -659,7 +659,7 @@ Program OeisManager::getExistingProgram(UID id) {
   return existing;
 }
 
-update_program_result_t OeisManager::updateProgram(
+update_program_result_t MineManager::updateProgram(
     UID id, Program p, ValidationMode validation_mode) {
   update_program_result_t result;
   result.updated = false;
@@ -756,7 +756,7 @@ update_program_result_t OeisManager::updateProgram(
 }
 
 // returns false if the program was removed, otherwise true
-bool OeisManager::maintainProgram(UID id, bool eval) {
+bool MineManager::maintainProgram(UID id, bool eval) {
   // check if the sequence exists
   if (id.number() == 0 || !sequences.exists(id)) {
     return true;
@@ -847,7 +847,7 @@ bool OeisManager::maintainProgram(UID id, bool eval) {
   return is_okay;
 }
 
-std::vector<Program> OeisManager::loadAllPrograms() {
+std::vector<Program> MineManager::loadAllPrograms() {
   load();
   auto &program_ids = getStats().all_program_ids;
   const auto num_programs = getStats().num_programs;

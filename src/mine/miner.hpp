@@ -9,8 +9,8 @@
 #include "mine/api_client.hpp"
 #include "mine/generator.hpp"
 #include "mine/matcher.hpp"
+#include "mine/mine_manager.hpp"
 #include "mine/mutator.hpp"
-#include "oeis/oeis_manager.hpp"
 #include "sys/setup.hpp"
 #include "sys/util.hpp"
 
@@ -64,7 +64,7 @@ class Miner {
   bool submit_mode;
   std::string profile_name;
   std::unique_ptr<ApiClient> api_client;
-  std::unique_ptr<OeisManager> manager;
+  std::unique_ptr<MineManager> manager;
   std::unique_ptr<MultiGenerator> multi_generator;
   std::unique_ptr<Mutator> mutator;
   AdaptiveScheduler log_scheduler;

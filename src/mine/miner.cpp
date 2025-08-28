@@ -13,8 +13,8 @@
 #include "lang/program_util.hpp"
 #include "mine/config.hpp"
 #include "mine/generator.hpp"
+#include "mine/mine_manager.hpp"
 #include "mine/mutator.hpp"
-#include "oeis/oeis_manager.hpp"
 #include "seq/seq_program.hpp"
 #include "sys/file.hpp"
 #include "sys/log.hpp"
@@ -43,7 +43,7 @@ Miner::Miner(const Settings &settings, ProgressMonitor *progress_monitor)
 
 void Miner::reload() {
   api_client.reset(new ApiClient());
-  manager.reset(new OeisManager(settings));
+  manager.reset(new MineManager(settings));
   manager->load();
   manager->getFinder();  // initializes stats and matchers
   const auto miner_config = ConfigLoader::load(settings);

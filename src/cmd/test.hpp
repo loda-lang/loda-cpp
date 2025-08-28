@@ -3,7 +3,7 @@
 #include <memory>
 
 #include "mine/matcher.hpp"
-#include "oeis/oeis_manager.hpp"
+#include "mine/mine_manager.hpp"
 #include "sys/util.hpp"
 
 class Test {
@@ -111,8 +111,8 @@ class Test {
 
   void testPariEval(const std::string &testFile, bool asVector);
 
-  OeisManager &getManager();
+  MineManager &getManager();
 
   Settings settings;
-  std::unique_ptr<OeisManager> manager_ptr;
+  std::unique_ptr<MineManager> manager_ptr;
 };

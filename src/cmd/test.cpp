@@ -28,9 +28,9 @@
 #include "mine/generator_v1.hpp"
 #include "mine/iterator.hpp"
 #include "mine/matcher.hpp"
+#include "mine/mine_manager.hpp"
 #include "mine/miner.hpp"
 #include "mine/stats.hpp"
-#include "oeis/oeis_manager.hpp"
 #include "seq/seq_list.hpp"
 #include "sys/file.hpp"
 #include "sys/git.hpp"
@@ -93,9 +93,9 @@ void Test::slow() {
   memUsage();
 }
 
-OeisManager& Test::getManager() {
+MineManager& Test::getManager() {
   if (!manager_ptr) {
-    manager_ptr.reset(new OeisManager(settings, getTmpDir() + "stats"));
+    manager_ptr.reset(new MineManager(settings, getTmpDir() + "stats"));
   }
   return *manager_ptr;
 }

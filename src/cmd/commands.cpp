@@ -19,9 +19,9 @@
 #include "lang/subprogram.hpp"
 #include "lang/virtual_seq.hpp"
 #include "mine/iterator.hpp"
+#include "mine/mine_manager.hpp"
 #include "mine/miner.hpp"
 #include "mine/mutator.hpp"
-#include "oeis/oeis_manager.hpp"
 #include "seq/seq_list.hpp"
 #include "seq/seq_program.hpp"
 #include "sys/file.hpp"
@@ -149,7 +149,7 @@ void Commands::setup() {
 void Commands::update() {
   initLog(false);
   // Only update OEIS and program data, do not check/install new version
-  OeisManager manager(settings);
+  MineManager manager(settings);
   manager.update(true);
   manager.getStats();
   manager.generateLists();
@@ -324,7 +324,7 @@ void Commands::replace(const std::string& search_path,
   Program replace = parser.parse(replace_path);
   ProgramUtil::removeOps(search, Operation::Type::NOP);
   ProgramUtil::removeOps(replace, Operation::Type::NOP);
-  OeisManager manager(settings);
+  MineManager manager(settings);
   auto progs = manager.loadAllPrograms();
   AdaptiveScheduler log_scheduler(30);
   size_t count = 0;
@@ -348,7 +348,7 @@ void Commands::replace(const std::string& search_path,
 
 void Commands::autoFold() {
   initLog(false);
-  OeisManager manager(settings);
+  MineManager manager(settings);
   const auto programs = manager.loadAllPrograms();
   const auto ids = manager.getStats().all_program_ids;
   Log::get().info("Folding programs");
@@ -459,7 +459,7 @@ void Commands::addToList(const std::string& seq_id,
   SequenceList::loadMapWithComments(list_path, list);
 
   // Always obtain the sequence from the manager
-  OeisManager manager(settings);
+  MineManager manager(settings);
   manager.load();
   const auto& sequences = manager.getSequences();
   auto seq = ManagedSequence(UID(seq_id));
@@ -510,7 +510,7 @@ void Commands::testSlow() {
 void Commands::testEval(const std::string& test_id, eval_mode_t mode) {
   initLog(false);
   Settings settings;
-  OeisManager manager(settings);
+  MineManager manager(settings);
   auto& stats = manager.getStats();
   UID target_id;
   if (!test_id.empty()) {
@@ -534,7 +534,7 @@ void Commands::testAnalyzer() {
   Log::get().info("Testing analyzer");
   Parser parser;
   Program program;
-  OeisManager manager(settings);
+  MineManager manager(settings);
   auto& stats = manager.getStats();
   int64_t log_count = 0, exp_count = 0;
   for (auto id : stats.all_program_ids) {
@@ -576,7 +576,7 @@ void Commands::testPari(const std::string& test_id) {
   Interpreter interpreter(settings);
   Evaluator evaluator(settings, EVAL_ALL, false);
   IncrementalEvaluator inceval(interpreter);
-  OeisManager manager(settings);
+  MineManager manager(settings);
   Memory tmp_memory;
   manager.load();
   auto& stats = manager.getStats();
@@ -738,7 +738,7 @@ void Commands::testRange(const std::string& id) {
   Parser parser;
   size_t numChecked = 0, numInvalid = 0;
   std::vector<UID> failedIds;
-  OeisManager manager(settings);
+  MineManager manager(settings);
   manager.load();
   auto& stats = manager.getStats();
   std::vector<ManagedSequence> seqs;
@@ -798,7 +798,7 @@ void Commands::testRange(const std::string& id) {
 
 void Commands::generate() {
   initLog(true);
-  OeisManager manager(settings);
+  MineManager manager(settings);
   MultiGenerator multi_generator(settings, manager.getStats());
   auto program = multi_generator.generateProgram();
   ProgramUtil::print(program, std::cout);
@@ -806,13 +806,13 @@ void Commands::generate() {
 
 void Commands::migrate() {
   initLog(false);
-  OeisManager manager(settings);
+  MineManager manager(settings);
   manager.migrate();
 }
 
 void Commands::maintain(const std::string& ids) {
   initLog(false);
-  OeisManager manager(settings);
+  MineManager manager(settings);
   manager.load();
   size_t start = 0;
   size_t end = manager.getTotalCount() + 1;
@@ -869,7 +869,7 @@ void Commands::findSlow(int64_t num_terms, const std::string& type) {
 void Commands::findEmbseqs() {
   initLog(false);
   Parser parser;
-  OeisManager manager(settings);
+  MineManager manager(settings);
   manager.load();
   auto& stats = manager.getStats();
   int64_t numFound = 0;
@@ -898,7 +898,7 @@ void Commands::findEmbseqs() {
 
 void Commands::lists() {
   initLog(false);
-  OeisManager manager(settings);
+  MineManager manager(settings);
   manager.load();
   manager.generateLists();
 }
@@ -909,7 +909,7 @@ void Commands::compare(const std::string& path1, const std::string& path2) {
   Program p2 = SequenceProgram::getProgramAndSeqId(path2).first;
   auto id = UID(Comments::getSequenceIdFromProgram(p1));
   auto seq = ManagedSequence(id);
-  OeisManager manager(settings);
+  MineManager manager(settings);
   manager.load();
   auto num_usages = manager.getStats().getNumUsages(id);
   bool full_check = manager.isFullCheck(seq.id);
