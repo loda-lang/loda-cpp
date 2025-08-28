@@ -628,6 +628,9 @@ void MineManager::alert(Program p, UID id, const std::string &prefix,
   const auto &seq = sequences.get(id);
   std::string msg, full;
   msg = prefix + " program for " + seq.string();
+  if (msg[msg.size() - 1] != '.') {
+    msg += ".";
+  }
   full = msg + " Terms: " + seq.getTerms(settings.num_terms).to_string();
   FormulaGenerator generator;
   Formula formula;
