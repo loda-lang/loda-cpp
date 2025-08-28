@@ -171,7 +171,7 @@ Sequence ManagedSequence::getTerms(int64_t max_num_terms) const {
   if (num_bfile_terms == 0 || num_bfile_terms > terms.size()) {
     const auto path = getBFilePath();
     auto big = loadBFile();
-    if (big.empty()) {
+    if (big.empty() && id.domain() == 'A') {
       // fetch b-file
       std::ifstream big_file(path);
       if (!big_file.good() ||
@@ -184,7 +184,12 @@ Sequence ManagedSequence::getTerms(int64_t max_num_terms) const {
       }
     }
     if (big.empty()) {
-      Log::get().error("Error loading b-file " + path, true);
+      if (id.domain() == 'A') {
+        Log::get().error("Error loading b-file " + path, true);
+      } else {
+        Log::get().warn("No b-file found for " + id.string());
+        big = terms;  // use what we have
+      }
     }
     num_bfile_terms = big.size();
 

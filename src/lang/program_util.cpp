@@ -569,7 +569,7 @@ std::string ProgramUtil::dirStr(UID id) {
 }
 
 std::string ProgramUtil::getProgramPath(UID id, bool local) {
-  if (local) {
+  if (local || id.domain() == 'U') {
     return Setup::getProgramsHome() + "local" + FILE_SEP + id.string() + ".asm";
   } else {
     std::string dir;
