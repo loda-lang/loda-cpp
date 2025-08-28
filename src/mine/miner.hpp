@@ -19,6 +19,7 @@ class Miner {
   class Config {
    public:
     std::string name;
+    std::string domains;
     OverwriteMode overwrite_mode;
     ValidationMode validation_mode;
     std::vector<Generator::Config> generators;

@@ -82,7 +82,8 @@ class MineManager {
              const std::string& color, const std::string& submitted_by) const;
 
   const Settings& settings;
-  const OverwriteMode overwrite_mode;
+  OverwriteMode overwrite_mode;
+  std::string domains;
   Parser parser;
   Evaluator evaluator;
   Finder finder;

@@ -121,6 +121,15 @@ Miner::Config ConfigLoader::load(const Settings &settings) {
       } else if (validation_mode == "basic") {
         config.validation_mode = ValidationMode::BASIC;
       }
+      config.domains = m["domains"].as_string();
+      if (config.domains.empty()) {
+        config.domains = "A";
+      }
+      for (char d : config.domains) {
+        if (d < 'A' || d > 'Z') {
+          throw std::runtime_error("Invalid domain: " + std::string(1, d));
+        }
+      }
 
       // load matcher configs
       bool backoff = getJBool(m, "backoff", true);

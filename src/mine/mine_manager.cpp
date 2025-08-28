@@ -44,7 +44,6 @@ std::string OverrideModeToString(OverwriteMode mode) {
 MineManager::MineManager(const Settings &settings,
                          const std::string &stats_home)
     : settings(settings),
-      overwrite_mode(ConfigLoader::load(settings).overwrite_mode),
       evaluator(settings, EVAL_ALL, true),
       finder(settings, evaluator),
       finder_initialized(false),
@@ -55,7 +54,11 @@ MineManager::MineManager(const Settings &settings,
       loader(sequences, settings.num_terms),
       stats_home(stats_home.empty()
                      ? (Setup::getLodaHome() + "stats" + FILE_SEP)
-                     : stats_home) {}
+                     : stats_home) {
+  auto config = ConfigLoader::load(settings);
+  overwrite_mode = config.overwrite_mode;
+  domains = config.domains;
+}
 
 void MineManager::load() {
   // check if already loaded
@@ -108,8 +111,8 @@ Finder &MineManager::getFinder() {
 
     const auto config = ConfigLoader::load(settings);
     Log::get().info(
-        "Using miner profile \"" + config.name + "\", override: \"" +
-        OverrideModeToString(config.overwrite_mode) +
+        "Using profile \"" + config.name + "\", domains: \"" + config.domains +
+        "\", override: \"" + OverrideModeToString(config.overwrite_mode) +
         "\", backoff: " + (config.usesBackoff() ? "true" : "false"));
     ignore_list.clear();
     size_t num_matching = 0;
@@ -134,7 +137,13 @@ Finder &MineManager::getFinder() {
 }
 
 bool MineManager::shouldMatch(const ManagedSequence &seq) const {
+  // ignore empty sequence ids
   if (seq.id.number() == 0) {
+    return false;
+  }
+
+  // sequence domain allowed?
+  if (domains.find(seq.id.domain()) == std::string::npos) {
     return false;
   }
 
