@@ -187,7 +187,7 @@ Sequence ManagedSequence::getTerms(int64_t max_num_terms) const {
       if (id.domain() == 'A') {
         Log::get().error("Error loading b-file " + path, true);
       } else {
-        Log::get().warn("No b-file found for " + id.string());
+        Log::get().warn("Missing b-file for " + id.string());
         big = terms;  // use what we have
       }
     }

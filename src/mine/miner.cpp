@@ -291,7 +291,7 @@ void Miner::runMineLoop() {
               }
               api_client->postProgram(program, 10);  // magic number
             } else {
-              Log::get().warn("Skipping submission program of " +
+              Log::get().warn("Skipping program submission for " +
                               s.first.string());
             }
           }

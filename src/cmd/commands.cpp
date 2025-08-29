@@ -71,13 +71,13 @@ void Commands::help() {
   std::cout << "  mine                 Mine programs for OEIS sequences (see "
                "-i,-p,-P,-H)"
             << std::endl;
-  std::cout << "  check  <program>     Check a program for an OEIS sequence "
+  std::cout << "  check     <program>  Check a program for an OEIS sequence "
                "(see -b)"
             << std::endl;
   std::cout
-      << "  mutate <program>     Mutate a program and mine for OEIS sequences"
+      << "  mutate    <program>  Mutate a program and mine for OEIS sequences"
       << std::endl;
-  std::cout << "  submit <file> [id]   Submit a program for an OEIS sequence"
+  std::cout << "  submit  <file> [id]  Submit a program for an OEIS sequence"
             << std::endl;
 
   std::cout << std::endl << "Admin Commands:" << std::endl;

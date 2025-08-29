@@ -1,17 +1,19 @@
 # LODA Interpreter and Miner (C++)
 
-[LODA](https://loda-lang.org) is an assembly language, a computational model and a tool for mining integer sequences.
-You can use it to mine programs that compute sequences from the [On-Line Encyclopedia of Integer Sequences®](http://oeis.org/) (OEIS®).
+[LODA](https://loda-lang.org) is an assembly language, a computational model, and toolset for discovering and analyzing integer sequences. It is especially useful for _mining_ programs that generate sequences from the [On-Line Encyclopedia of Integer Sequences® (OEIS®)](http://oeis.org/).
 
-This repository ([loda-cpp](https://github.com/loda-lang/loda-cpp)) contains an implementation of the [LODA language](https://loda-lang.org/spec) in C++ including an interpreter, an optimizer and a miner. The miner is used to generate LODA programs for integer sequences from the OEIS which are stored in [loda-programs](https://github.com/loda-lang/loda-programs).
+This repository, [loda-cpp](https://github.com/loda-lang/loda-cpp), provides a C++ implementation of the [LODA language](https://loda-lang.org/spec), including an interpreter, optimizer, and miner. The miner can automatically generate LODA programs for OEIS sequences, which are stored in the [loda-programs](https://github.com/loda-lang/loda-programs) repository.
 
 ## Getting Started
 
-To install LODA using binaries, please follow the [official installation instructions](http://loda-lang.org/install/). To do a simple test, you can run `loda eval A000045` to calculate the first terms of the Fibonacci sequence. Run `loda setup` to intialize the LODA home directory. To mine programs for OEIS sequences, you can run `loda mine` (single-core) or `loda mine -p` (multi-core).
+To install LODA, please follow the [official installation instructions](http://loda-lang.org/install/).
+For a quick test, run `loda eval A000045` to compute the first terms of the Fibonacci sequence.
+Initialize your LODA home directory with `loda setup`.
+To mine programs for OEIS sequences, use `loda mine` (single-core) or `loda mine -p` (multi-core).
 
 ## Usage
 
-The `loda` command-line tool provides the following commands and options:
+The `loda` command-line tool supports the following commands and options:
 
 ```
 Welcome to LODA developer version. More information at https://loda-lang.org/
@@ -29,13 +31,14 @@ Core Commands:
 
 OEIS Commands:
   mine                 Mine programs for OEIS sequences (see -i,-p,-P,-H)
-  check  <program>     Check a program for an OEIS sequence (see -b)
-  mutate <program>     Mutate a program and mine for OEIS sequences
-  submit <file> [id]   Submit a program for an OEIS sequence
+  check     <program>  Check a program for an OEIS sequence (see -b)
+  mutate    <program>  Mutate a program and mine for OEIS sequences
+  submit  <file> [id]  Submit a program for an OEIS sequence
 
 Admin Commands:
   setup                Run interactive setup to configure LODA
-  update               Run non-interactive update of LODA and its data
+  update               Update OEIS and program data (no version upgrade)
+  upgrade              Check for and install the latest LODA version
 
 Targets:
   <file>               Path to a LODA file (file extension: *.asm)
@@ -62,15 +65,19 @@ Options:
 
 #### evaluate (eval)
 
-Evaluate a LODA program to an integer sequence. Takes a path to a program (`.asm` file) or the ID an OEIS sequence as argument. For example, run `loda eval A000045` to generate the first terms of the Fibonacci sequence. You can use the option `-t` to set the number of terms, the option `-b <offset>` to generate it row-by-row in the OEIS b-file format, and `-c -1` to use an unbounded number of execution cycles (steps).
+Evaluate a LODA program to produce an integer sequence. You can specify either the path to a program file (`.asm`) or the ID of an integer sequence as the argument. For example, run `loda eval A000045` to generate the first terms of the Fibonacci sequence. Use the `-t` option to set the number of terms, `-b` to output the sequence row-by-row in the OEIS b-file format, and `-c -1` to allow unlimited execution cycles (steps).
 
 #### optimize (opt)
 
-Optimize a LODA program and print the optimized version. The optimization is based on a static code analysis and does not involve any program evaluation. It is guaranteed to be semantics preserving for the entire integer sequence.
+Optimize a LODA program and print the optimized version. Optimization is performed using static code analysis and does not require program execution. This process is guaranteed to preserve the semantics of the entire integer sequence.
 
 #### minimize (min)
 
-Minimize a LODA program and print the minimized version. The minimization includes an optimization and additionally a brute-force removal of operations based on trial and error. It guarantees that the generated integer sequence is preserved, but only up to the number of terms specified using `-t`. In contrast to optimization, minimization is not guaranteed to be semantics preserving for the entire sequences. In practice, it yields much shorter programs than optimization and we usually apply it with a larger number of terms to increase the probability of correctness.
+Minimize a LODA program and print the minimized version. Minimization first applies optimization, then attempts to further shorten the program by removing operations through brute-force trial and error. The resulting program is guaranteed to produce the same integer sequence, but only up to the number of terms specified with `-t`. Unlike optimization, minimization does not guarantee semantic preservation for the entire sequence, but it often yields much shorter programs. For best results, use a larger number of terms to increase the likelihood of correctness.
+
+#### profile
+
+Measure the evaluation time of a LODA program. The `profile` command runs the specified program and reports how long it takes to compute the sequence terms. This is useful for benchmarking program performance and identifying bottlenecks. You can use the `-t` option to set the number of terms to evaluate.
 
 #### setup
 
@@ -80,12 +87,16 @@ Run the interactive configuration wizard.
 
 #### mine
 
-To mine programs for OEIS integer sequences, use the `loda mine` command. It generates programs in a loop and tries to match them to integer sequences. If a match was found, an alert is printed and the program is automatically saved to the local programs folder. If you are running in client mode, the programs are also submitted to a central API server and integrated into the global [loda-programs](https://github.com/loda-lang/loda-programs) repository.
+Use the `loda mine` command to automatically search for LODA programs that generate OEIS integer sequences. The miner continuously generates and tests candidate programs, saving any successful matches to your local programs folder. In client mode, discovered programs are also submitted to a central API server and integrated into the global [loda-programs](https://github.com/loda-lang/loda-programs) repository.
 
-By default, every miner uses one CPU. If you want to use more CPUs, you can run `loda mine -p` which will spawn multiple miner instances, each running as a separate process. You can configure the number of miner instances by running `loda setup`.
+By default, mining uses a single CPU core. To utilize multiple cores, run `loda mine -p` to launch several miner instances in parallel. You can adjust the number of instances by running `loda setup` or using the `-P` option.
 
-There are multiple miner profiles defined in [miners.json](miners.default.json). You can choose a miner profile using the `-i` option, for example `loda mine -i mutate`.
+Several miner profiles are defined in [miners.json](miners.default.json). Select a profile with the `-i` option, for example: `loda mine -i mutate`.
 
 #### check
 
-Check if a program for an OEIS sequence is correct. For interactive output, use `-b 1` to enable b-file printing. Use `-c -1` to allow an unlimited number of execution cycles.
+Verify the correctness of a program for a given OEIS sequence. For interactive output, use `-b` to enable b-file printing. Use `-c -1` to allow unlimited execution cycles.
+
+#### submit
+
+Submit a LODA program for an integer sequence to the central repository. The `submit` command uploads your program file for review and inclusion in the global [loda-programs](https://github.com/loda-lang/loda-programs) collection. This helps share new or improved programs with the LODA community. The command automatically verifies your program for correctness before the submission.
