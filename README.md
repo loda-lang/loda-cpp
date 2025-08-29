@@ -20,29 +20,25 @@ Welcome to LODA developer version. More information at https://loda-lang.org/
 
 Usage: loda <command> <options>
 
-Core Commands:
-  evaluate  <program>  Evaluate a program to an integer sequence (see -t,-b,-s)
-  export    <program>  Export a program print result (see -o,-t)
-  optimize  <program>  Optimize a program and print it
-  minimize  <program>  Minimize a program and print it (see -t)
+Commands:
+  eval      <program>  Evaluate an integer sequence program (see -t,-b,-s)
+  check     <program>  Verify correctness of an integer sequence program (see -b)
+  mine                 Mine programs for integer sequences (see -i,-p,-P,-H)
+  submit  <file> [id]  Submit an integer sequence program to the central repository
+  export    <program>  Export a program and print the result (see -o,-t)
+  optimize  <program>  Optimize a program and print the result
+  minimize  <program>  Minimize a program and print the result (see -t)
   profile   <program>  Measure program evaluation time (see -t)
-  fold <program> <id>  Fold a subprogram given by ID into a seq operation
-  unfold    <program>  Unfold the first seq operation of a program
-
-OEIS Commands:
-  mine                 Mine programs for OEIS sequences (see -i,-p,-P,-H)
-  check     <program>  Check a program for an OEIS sequence (see -b)
-  mutate    <program>  Mutate a program and mine for OEIS sequences
-  submit  <file> [id]  Submit a program for an OEIS sequence
-
-Admin Commands:
+  fold <program> <id>  Fold a subprogram given by ID into a seq-operation
+  unfold    <program>  Unfold the first seq-operation of a program
+  mutate    <program>  Mutate a program to mine for integer sequences
   setup                Run interactive setup to configure LODA
-  update               Update OEIS and program data (no version upgrade)
+  update               Update integer sequence and program data
   upgrade              Check for and install the latest LODA version
 
 Targets:
   <file>               Path to a LODA file (file extension: *.asm)
-  <id>                 ID of an OEIS integer sequence (example: A000045)
+  <id>                 ID of an integer sequence (example: A000045)
   <program>            Either an <file> or an <id>
 
 Options:
@@ -50,8 +46,8 @@ Options:
   -b                   Print result in the OEIS b-file format
   -o <string>          Export format (formula,loda,pari,range)
   -d                   Export with dependencies to other programs
-  -s                   Evaluate program to number of execution steps
-  -c <number>          Maximum number of interpreter cycles (no limit: -1)
+  -s                   Evaluate program and return number of execution steps
+  -c <number>          Maximum number of execution steps (no limit: -1)
   -m <number>          Maximum number of used memory cells (no limit: -1)
   -z <number>          Maximum evaluation time in seconds (no limit: -1)
   -l <string>          Log level (values: debug,info,warn,error,alert)

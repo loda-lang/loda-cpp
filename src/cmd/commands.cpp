@@ -46,45 +46,41 @@ void Commands::help() {
             << ". More information at https://loda-lang.org/" << std::endl
             << std::endl;
   std::cout << "Usage: loda <command> <options>" << std::endl << std::endl;
-  std::cout << "Core Commands:" << std::endl;
-  std::cout << "  evaluate  <program>  Evaluate a program to an integer "
-               "sequence (see "
-               "-t,-b,-s)"
+  std::cout << "Commands:" << std::endl;
+  std::cout << "  eval      <program>  Evaluate an integer sequence program "
+               "(see -t,-b,-s)"
+            << std::endl;
+  std::cout << "  check     <program>  Verify correctness of an integer "
+            << "sequence program (see -b)" << std::endl;
+  std::cout << "  mine                 Mine programs for integer sequences "
+               "(see -i,-p,-P,-H)"
             << std::endl;
   std::cout
-      << "  export    <program>  Export a program print result (see -o,-t)"
+      << "  submit  <file> [id]  Submit an integer sequence program to the "
+         "central repository"
       << std::endl;
-  std::cout << "  optimize  <program>  Optimize a program and print it"
+  std::cout << "  export    <program>  Export a program and print the result "
+               "(see -o,-t)"
             << std::endl;
-  std::cout << "  minimize  <program>  Minimize a program and print it (see -t)"
+  std::cout << "  optimize  <program>  Optimize a program and print the result"
+            << std::endl;
+  std::cout << "  minimize  <program>  Minimize a program and print the result "
+               "(see -t)"
             << std::endl;
   std::cout << "  profile   <program>  Measure program evaluation time (see -t)"
             << std::endl;
   std::cout << "  fold <program> <id>  Fold a subprogram given by ID into a "
-               "seq operation"
+               "seq-operation"
             << std::endl;
-  std::cout << "  unfold    <program>  Unfold the first seq operation of a "
+  std::cout << "  unfold    <program>  Unfold the first seq-operation of a "
                "program"
             << std::endl;
-
-  std::cout << std::endl << "OEIS Commands:" << std::endl;
-  std::cout << "  mine                 Mine programs for OEIS sequences (see "
-               "-i,-p,-P,-H)"
+  std::cout << "  mutate    <program>  Mutate a program to mine for integer "
+               "sequences"
             << std::endl;
-  std::cout << "  check     <program>  Check a program for an OEIS sequence "
-               "(see -b)"
-            << std::endl;
-  std::cout
-      << "  mutate    <program>  Mutate a program and mine for OEIS sequences"
-      << std::endl;
-  std::cout << "  submit  <file> [id]  Submit a program for an OEIS sequence"
-            << std::endl;
-
-  std::cout << std::endl << "Admin Commands:" << std::endl;
   std::cout << "  setup                Run interactive setup to configure LODA"
             << std::endl;
-  std::cout << "  update               Update OEIS and program data (no "
-               "version upgrade)"
+  std::cout << "  update               Update integer sequence and program data"
             << std::endl;
   std::cout << "  upgrade              Check for and install the latest LODA "
             << "version" << std::endl;
@@ -93,9 +89,9 @@ void Commands::help() {
   std::cout
       << "  <file>               Path to a LODA file (file extension: *.asm)"
       << std::endl;
-  std::cout << "  <id>                 ID of an OEIS integer sequence "
-               "(example: A000045)"
-            << std::endl;
+  std::cout
+      << "  <id>                 ID of an integer sequence (example: A000045)"
+      << std::endl;
   std::cout << "  <program>            Either an <file> or an <id>"
             << std::endl;
 
@@ -110,10 +106,10 @@ void Commands::help() {
   std::cout
       << "  -d                   Export with dependencies to other programs"
       << std::endl;
-  std::cout << "  -s                   Evaluate program to number of "
+  std::cout << "  -s                   Evaluate program and return number of "
                "execution steps"
             << std::endl;
-  std::cout << "  -c <number>          Maximum number of interpreter cycles "
+  std::cout << "  -c <number>          Maximum number of execution steps "
                "(no limit: -1)"
             << std::endl;
   std::cout << "  -m <number>          Maximum number of used memory cells "
