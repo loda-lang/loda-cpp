@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Bugfixes
+
+* Fix optimizer bug
+
 ## v25.8.28
 
 ### Bugfixes

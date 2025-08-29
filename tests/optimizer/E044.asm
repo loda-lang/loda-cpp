@@ -1,7 +1,6 @@
 ; in
-sub $0,10
-div $0,2
-add $0,3
+mul $0,7
+add $0,14
+div $0,7
 ; out
-div $0,2
-sub $0,2
+add $0,2
