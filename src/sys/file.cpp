@@ -100,7 +100,12 @@ bool execCmd(const std::string &cmd, bool fail_on_error) {
 }
 
 void moveFile(const std::string &from, const std::string &to) {
-  execCmd("mv \"" + from + "\" \"" + to + "\"");
+#ifdef _WIN64
+  std::string cmd = "move";
+#else
+  std::string cmd = "mv";
+#endif
+  execCmd(cmd + " \"" + from + "\" \"" + to + "\"");
 }
 
 void moveDirToParent(const std::string &path, const std::string &dir,
