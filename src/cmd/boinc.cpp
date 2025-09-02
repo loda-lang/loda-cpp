@@ -55,7 +55,7 @@ void Boinc::run() {
   Setup::setLodaHome(project_dir);
   Setup::getMiningMode();
   Setup::setMiningMode(MINING_MODE_CLIENT);
-  Setup::setSubmittedBy(user_name);
+  Setup::setSubmitter(user_name);
   Setup::forceCPUHours();
 
   // check environment

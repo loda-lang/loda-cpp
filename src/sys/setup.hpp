@@ -28,9 +28,9 @@ class Setup {
 
   static std::string getMinersConfig();
 
-  static const std::string getSubmittedBy();
+  static const std::string getSubmitter();
 
-  static void setSubmittedBy(const std::string& submited_by);
+  static void setSubmitter(const std::string& submitter);
 
   static void setMinersConfig(const std::string& loda_config);
 

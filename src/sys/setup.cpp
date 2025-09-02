@@ -114,13 +114,13 @@ std::string Setup::getMinersConfig() {
   return default_config;
 }
 
-const std::string Setup::getSubmittedBy() {
+const std::string Setup::getSubmitter() {
   return getSetupValue("LODA_SUBMITTED_BY");
 }
 
-void Setup::setSubmittedBy(const std::string& submited_by) {
-  getSubmittedBy();
-  SETUP["LODA_SUBMITTED_BY"] = submited_by;
+void Setup::setSubmitter(const std::string& submitter) {
+  getSubmitter();
+  SETUP["LODA_SUBMITTED_BY"] = submitter;
 }
 
 void Setup::setMinersConfig(const std::string& loda_config) {
@@ -647,7 +647,7 @@ bool Setup::updateFile(const std::string& local_file, const std::string& url,
 }
 
 bool Setup::checkSubmittedBy() {
-  std::string submitted_by = getSubmittedBy();
+  std::string submitted_by = getSubmitter();
   if (submitted_by.empty()) {
     submitted_by = "none";
   }

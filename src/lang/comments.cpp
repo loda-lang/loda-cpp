@@ -64,6 +64,10 @@ std::string Comments::getSequenceIdFromProgram(const Program &p) {
   return id_str;
 }
 
+std::string Comments::getSubmitter(const Program &p) {
+  return getCommentField(p, PREFIX_SUBMITTED_BY);
+}
+
 // prefixes without colon
 const std::string Comments::PREFIX_SUBMITTED_BY = "Submitted by";
 const std::string Comments::PREFIX_CODED_MANUALLY = "Coded manually";

@@ -17,6 +17,8 @@ class Comments {
 
   static std::string getSequenceIdFromProgram(const Program &p);
 
+  static std::string getSubmitter(const Program &p);
+
   static const std::string PREFIX_SUBMITTED_BY;
   static const std::string PREFIX_CODED_MANUALLY;
   static const std::string PREFIX_FORMULA;

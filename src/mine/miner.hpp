@@ -47,9 +47,9 @@ class Miner {
 
   void reload();
 
-  void ensureSubmittedBy(Program &program);
+  void ensureSubmitter(Program &program);
 
-  void updateSubmittedBy(Program &program);
+  void updateSubmitter(Program &program);
 
   void logProgress(bool report_slow);
 

@@ -439,8 +439,7 @@ void MineManager::migrate() {
     Program p;
     p = parser.parse(f);
     f.close();
-    const auto submitted_by =
-        Comments::getCommentField(p, Comments::PREFIX_SUBMITTED_BY);
+    const auto submitter = Comments::getSubmitter(p);
     ProgramUtil::removeOps(p, Operation::Type::NOP);
     for (size_t i = 0; i < 3 && i < p.ops.size(); i++) {
       auto &op = p.ops[i];
@@ -453,7 +452,7 @@ void MineManager::migrate() {
         auto result = evaluator.check(p, terms, -1, s.id);
         if (result.first != status_t::ERROR) {
           Log::get().info("Migrating " + s.id.string());
-          dumpProgram(s.id, p, path, submitted_by);
+          dumpProgram(s.id, p, path, submitter);
         }
         break;
       }
@@ -549,8 +548,7 @@ void MineManager::updateDependentOffset(UID id, UID used_id, int64_t delta) {
   } catch (const std::exception &) {
     return;  // ignore this dependent program
   }
-  auto submitted_by =
-      Comments::getCommentField(p, Comments::PREFIX_SUBMITTED_BY);
+  auto submitter = Comments::getSubmitter(p);
   bool updated = false;
   for (size_t i = 0; i < p.ops.size(); i++) {
     const auto &op = p.ops[i];
@@ -566,7 +564,7 @@ void MineManager::updateDependentOffset(UID id, UID used_id, int64_t delta) {
   }
   if (updated) {
     optimizer.optimize(p);
-    dumpProgram(id, p, path, submitted_by);
+    dumpProgram(id, p, path, submitter);
   }
 }
 
@@ -583,7 +581,7 @@ void MineManager::updateAllDependentOffset(UID id, int64_t delta) {
 }
 
 void MineManager::dumpProgram(UID id, Program &p, const std::string &file,
-                              const std::string &submitted_by) const {
+                              const std::string &submitter) const {
   ProgramUtil::removeOps(p, Operation::Type::NOP);
   Comments::removeComments(p);
   addSeqComments(p);
@@ -593,8 +591,8 @@ void MineManager::dumpProgram(UID id, Program &p, const std::string &file,
   Operation nop(Operation::Type::NOP);
   nop.comment = seq.string();
   tmp.ops.push_back(nop);
-  if (!submitted_by.empty()) {
-    nop.comment = Comments::PREFIX_SUBMITTED_BY + " " + submitted_by;
+  if (!submitter.empty()) {
+    nop.comment = Comments::PREFIX_SUBMITTED_BY + " " + submitter;
     tmp.ops.push_back(nop);
   }
   static constexpr size_t MAX_PRINT_TERMS = 80;   // magic number
@@ -624,7 +622,7 @@ void MineManager::dumpProgram(UID id, Program &p, const std::string &file,
 
 void MineManager::alert(Program p, UID id, const std::string &prefix,
                         const std::string &color,
-                        const std::string &submitted_by) const {
+                        const std::string &submitter) const {
   const auto &seq = sequences.get(id);
   std::string msg, full;
   msg = prefix + " program for " + seq.string();
@@ -637,8 +635,8 @@ void MineManager::alert(Program p, UID id, const std::string &prefix,
   if (generator.generate(p, id.number(), formula, false)) {
     full += ". " + Comments::PREFIX_FORMULA + " " + formula.toString();
   }
-  if (!submitted_by.empty()) {
-    std::string sub = Comments::PREFIX_SUBMITTED_BY + " " + submitted_by;
+  if (!submitter.empty()) {
+    std::string sub = Comments::PREFIX_SUBMITTED_BY + " " + submitter;
     msg += " " + sub;
     full += ". " + sub;
   }
@@ -689,8 +687,7 @@ update_program_result_t MineManager::updateProgram(
   }
 
   // get metadata from comments
-  const std::string submitted_by =
-      Comments::getCommentField(p, Comments::PREFIX_SUBMITTED_BY);
+  const std::string submitter = Comments::getSubmitter(p);
   const std::string change_type =
       Comments::getCommentField(p, Comments::PREFIX_CHANGE_TYPE);
   const std::string previous_hash_str =
@@ -749,7 +746,7 @@ update_program_result_t MineManager::updateProgram(
   const std::string target_file = ProgramUtil::getProgramPath(id, !is_server);
   auto delta = updateProgramOffset(id, result.program);
   optimizer.optimize(result.program);
-  dumpProgram(id, result.program, target_file, submitted_by);
+  dumpProgram(id, result.program, target_file, submitter);
   if (is_server) {
     updateAllDependentOffset(id, delta);
   }
@@ -766,7 +763,7 @@ update_program_result_t MineManager::updateProgram(
 
   // send alert
   std::string color = is_new ? "good" : "warning";
-  alert(result.program, id, checked.status, color, submitted_by);
+  alert(result.program, id, checked.status, color, submitter);
 
   return result;
 }
@@ -791,13 +788,12 @@ bool MineManager::maintainProgram(UID id, bool eval) {
 
   // try to load the program
   Program program;
-  std::string submitted_by;
+  std::string submitter;
   if (is_okay) {
     Log::get().info("Checking program for " + s.string());
     try {
       program = parser.parse(program_file);
-      submitted_by =
-          Comments::getCommentField(program, Comments::PREFIX_SUBMITTED_BY);
+      submitter = Comments::getSubmitter(program);
     } catch (const std::exception &) {
       is_okay = false;
     }
@@ -847,7 +843,7 @@ bool MineManager::maintainProgram(UID id, bool eval) {
       } else {
         optimizer.optimize(updated);
       }
-      dumpProgram(s.id, updated, file_name, submitted_by);
+      dumpProgram(s.id, updated, file_name, submitter);
       updateAllDependentOffset(s.id, delta);
     } catch (const std::exception &e) {
       is_okay = false;

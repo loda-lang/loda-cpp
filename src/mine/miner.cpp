@@ -175,7 +175,7 @@ void Miner::runMineLoop() {
     Log::get().info(msg);
   }
 
-  std::string submitted_by;
+  std::string submitter;
   std::string submitted_profile;
   current_fetch = (mining_mode == MINING_MODE_SERVER) ? PROGRAMS_TO_FETCH : 0;
   num_processed = 0;
@@ -201,7 +201,7 @@ void Miner::runMineLoop() {
             }
             current_fetch--;
             // check metadata stored in program's comments
-            ensureSubmittedBy(program);
+            ensureSubmitter(program);
             progs.push(program);
             break;
           }
@@ -260,20 +260,19 @@ void Miner::runMineLoop() {
           break;
         }
         program = s.second;
-        updateSubmittedBy(program);
+        updateSubmitter(program);
         update_result =
             manager->updateProgram(s.first, program, validation_mode);
         if (update_result.updated) {
           // update metrics
-          submitted_by =
-              Comments::getCommentField(program, Comments::PREFIX_SUBMITTED_BY);
-          if (submitted_by.empty()) {
-            submitted_by = "unknown";
+          submitter = Comments::getSubmitter(program);
+          if (submitter.empty()) {
+            submitter = "unknown";
           }
           if (update_result.is_new) {
-            num_new_per_user[submitted_by]++;
+            num_new_per_user[submitter]++;
           } else {
-            num_updated_per_user[submitted_by]++;
+            num_updated_per_user[submitter]++;
           }
           // in client mode: submit the program to the API server
           if (mining_mode == MINING_MODE_CLIENT) {
@@ -468,7 +467,7 @@ void Miner::submit(const std::string &path, std::string id_str) {
       continue;
     }
     program = s.second;
-    updateSubmittedBy(program);
+    updateSubmitter(program);
     auto r = manager->updateProgram(s.first, program, ValidationMode::EXTENDED);
     if (r.updated) {
       // in client mode: submit the program to the API server
@@ -507,25 +506,23 @@ void Miner::submit(const std::string &path, std::string id_str) {
   }
 }
 
-void Miner::ensureSubmittedBy(Program &program) {
-  auto submitted_by =
-      Comments::getCommentField(program, Comments::PREFIX_SUBMITTED_BY);
-  if (submitted_by.empty()) {
+void Miner::ensureSubmitter(Program &program) {
+  auto submitter = Comments::getSubmitter(program);
+  if (submitter.empty()) {
     Comments::addComment(program,
                          Comments::PREFIX_SUBMITTED_BY + " " + ANONYMOUS);
   }
 }
 
-void Miner::updateSubmittedBy(Program &program) {
-  auto submitted_by =
-      Comments::getCommentField(program, Comments::PREFIX_SUBMITTED_BY);
-  if (submitted_by.empty()) {
-    submitted_by = Setup::getSubmittedBy();
-    if (!submitted_by.empty()) {
+void Miner::updateSubmitter(Program &program) {
+  auto submitter = Comments::getSubmitter(program);
+  if (submitter.empty()) {
+    submitter = Setup::getSubmitter();
+    if (!submitter.empty()) {
       Comments::addComment(program,
-                           Comments::PREFIX_SUBMITTED_BY + " " + submitted_by);
+                           Comments::PREFIX_SUBMITTED_BY + " " + submitter);
     }
-  } else if (submitted_by == ANONYMOUS) {
+  } else if (submitter == ANONYMOUS) {
     Comments::removeCommentField(program, Comments::PREFIX_SUBMITTED_BY);
   }
 }
