@@ -43,7 +43,8 @@ class Stats {
 
   std::string getMainStatsFile(std::string path) const;
 
-  void updateProgramStats(UID id, const Program &program);
+  void updateProgramStats(UID id, const Program &program,
+                          const std::string &submitter);
 
   void updateSequenceStats(UID id, bool program_found, bool formula_found);
 

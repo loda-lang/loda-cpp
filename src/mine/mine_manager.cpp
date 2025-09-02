@@ -309,7 +309,7 @@ void MineManager::generateStats(int64_t age_in_days) {
 
   size_t num_processed = 0;
   Program program;
-  std::string file_name;
+  std::string file_name, submitter;
   bool has_program, has_formula;
 
   AdaptiveScheduler notify(20);  // magic number
@@ -325,10 +325,11 @@ void MineManager::generateStats(int64_t age_in_days) {
         has_formula =
             !Comments::getCommentField(program, Comments::PREFIX_FORMULA)
                  .empty();
+        submitter = Comments::getSubmitter(program);
         ProgramUtil::removeOps(program, Operation::Type::NOP);
 
         // update stats
-        stats->updateProgramStats(s.id, program);
+        stats->updateProgramStats(s.id, program, submitter);
         num_processed++;
       } catch (const std::exception &exc) {
         Log::get().error(

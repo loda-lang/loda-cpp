@@ -7,7 +7,6 @@
 
 #include "eval/evaluator_inc.hpp"
 #include "lang/analyzer.hpp"
-#include "lang/comments.hpp"
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
 #include "seq/managed_seq.hpp"
@@ -21,7 +20,7 @@ const std::string Stats::PROGRAMS_HEADER("id,length,usages,inc_eval,log_eval");
 const std::string Stats::STEPS_HEADER("total,min,max,runs");
 const std::string Stats::SUMMARY_HEADER(
     "num_sequences,num_programs,num_formulas");
-const std::string SUBMITTERS_HEADER = "submitter,count";
+const std::string SUBMITTERS_HEADER = "submitter,id,count";
 
 void checkHeader(std::istream &in, const std::string &header,
                  const std::string &file) {
@@ -228,8 +227,9 @@ void Stats::load(std::string path) {
     while (std::getline(submitters, line)) {
       std::stringstream s(line);
       std::getline(s, k, ',');
-      std::getline(s, v);
-      num_programs_per_submitter[k] = std::stoll(v);
+      std::getline(s, v, ',');
+      std::getline(s, w);
+      num_programs_per_submitter[k] = std::stoll(w);
     }
     submitters.close();
   }
@@ -341,8 +341,9 @@ void Stats::save(std::string path) {
 
   std::ofstream submitters(path + "submitters.csv");
   submitters << SUBMITTERS_HEADER << "\n";
+  int64_t index = 1;
   for (const auto &e : num_programs_per_submitter) {
-    submitters << e.first << sep << e.second << "\n";
+    submitters << e.first << sep << (index++) << sep << e.second << "\n";
   }
   submitters.close();
 
@@ -355,14 +356,14 @@ std::string Stats::getMainStatsFile(std::string path) const {
   return path;
 }
 
-void Stats::updateProgramStats(UID id, const Program &program) {
+void Stats::updateProgramStats(UID id, const Program &program,
+                               const std::string &submitter) {
   const size_t num_ops = ProgramUtil::numOps(program, false);
   program_lengths[id] = num_ops;
   if (num_ops >= num_programs_per_length.size()) {
     num_programs_per_length.resize(num_ops + 1);
   }
   num_programs_per_length[num_ops]++;
-  auto submitter = Comments::getSubmitter(program);
   if (!submitter.empty()) {
     num_programs_per_submitter[submitter]++;
   }
