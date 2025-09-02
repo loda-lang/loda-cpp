@@ -7,6 +7,7 @@
 
 #include "eval/evaluator_inc.hpp"
 #include "lang/analyzer.hpp"
+#include "lang/comments.hpp"
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
 #include "seq/managed_seq.hpp"
@@ -20,6 +21,7 @@ const std::string Stats::PROGRAMS_HEADER("id,length,usages,inc_eval,log_eval");
 const std::string Stats::STEPS_HEADER("total,min,max,runs");
 const std::string Stats::SUMMARY_HEADER(
     "num_sequences,num_programs,num_formulas");
+const std::string SUBMITTERS_HEADER = "submitter,count";
 
 void checkHeader(std::istream &in, const std::string &header,
                  const std::string &file) {
@@ -213,6 +215,25 @@ void Stats::load(std::string path) {
     blocks.load(path + "blocks.asm");
   }
 
+  {
+    full = path + "submitters.csv";
+    Log::get().debug("Loading " + full);
+    std::ifstream submitters(full);
+    num_programs_per_submitter.clear();
+    if (std::getline(submitters, line)) {
+      if (line != SUBMITTERS_HEADER) {
+        throw std::runtime_error("unexpected header in " + full);
+      }
+    }
+    while (std::getline(submitters, line)) {
+      std::stringstream s(line);
+      std::getline(s, k, ',');
+      std::getline(s, v);
+      num_programs_per_submitter[k] = std::stoll(v);
+    }
+    submitters.close();
+  }
+
   // TODO: remaining stats
 
   auto cur_time = std::chrono::steady_clock::now();
@@ -318,6 +339,13 @@ void Stats::save(std::string path) {
     blocks.save(path + "blocks.asm");
   }
 
+  std::ofstream submitters(path + "submitters.csv");
+  submitters << SUBMITTERS_HEADER << "\n";
+  for (const auto &e : num_programs_per_submitter) {
+    submitters << e.first << sep << e.second << "\n";
+  }
+  submitters.close();
+
   Log::get().debug("Finished saving program stats");
 }
 
@@ -334,6 +362,10 @@ void Stats::updateProgramStats(UID id, const Program &program) {
     num_programs_per_length.resize(num_ops + 1);
   }
   num_programs_per_length[num_ops]++;
+  auto submitter = Comments::getSubmitter(program);
+  if (!submitter.empty()) {
+    num_programs_per_submitter[submitter]++;
+  }
   OpPos o;
   o.len = program.ops.size();
   o.pos = 0;

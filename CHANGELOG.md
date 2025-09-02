@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Enhancements
+
+* Generate submitter stats
+
 ### v25.8.30
 
 ### Bugfixes
