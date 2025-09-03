@@ -44,7 +44,7 @@ class Stats {
   std::string getMainStatsFile(std::string path) const;
 
   void updateProgramStats(UID id, const Program &program,
-                          const std::string &submitter);
+                          std::string submitter);
 
   void updateSequenceStats(UID id, bool program_found, bool formula_found);
 
@@ -61,12 +61,14 @@ class Stats {
   std::map<Number, int64_t> num_constants;
   std::map<Operation, int64_t> num_operations;
   std::map<OpPos, int64_t> num_operation_positions;
-  std::map<std::string, int64_t> num_programs_per_submitter;
+  std::map<std::string, int64_t> submitter_ref_ids;
   std::multimap<UID, UID> call_graph;
+  std::vector<int64_t> num_programs_per_submitter;
   std::vector<int64_t> num_programs_per_length;
   std::vector<int64_t> num_ops_per_type;
   std::unordered_map<UID, int64_t> program_lengths;
   std::unordered_map<UID, int64_t> program_usages;
+  std::unordered_map<UID, int64_t> program_submitter;
   UIDSet all_program_ids;
   UIDSet latest_program_ids;
   UIDSet supports_inceval;

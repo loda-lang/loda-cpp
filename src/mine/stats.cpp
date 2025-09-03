@@ -16,11 +16,12 @@
 #include "sys/setup.hpp"
 
 const std::string Stats::CALL_GRAPH_HEADER("caller,callee");
-const std::string Stats::PROGRAMS_HEADER("id,length,usages,inc_eval,log_eval");
+const std::string Stats::PROGRAMS_HEADER(
+    "id,submitter,length,usages,inc_eval,log_eval");
 const std::string Stats::STEPS_HEADER("total,min,max,runs");
 const std::string Stats::SUMMARY_HEADER(
     "num_sequences,num_programs,num_formulas");
-const std::string SUBMITTERS_HEADER = "submitter,id,count";
+const std::string SUBMITTERS_HEADER = "submitter,ref_id,num_programs";
 
 void checkHeader(std::istream &in, const std::string &header,
                  const std::string &file) {
@@ -42,7 +43,7 @@ void Stats::load(std::string path) {
   auto start_time = std::chrono::steady_clock::now();
 
   const std::string sep(",");
-  std::string full, line, k, l, m, v, w;
+  std::string full, line, k, l, m, v, w, u;
   Parser parser;
   Operation op;
   Operand count;
@@ -152,6 +153,7 @@ void Stats::load(std::string path) {
     while (std::getline(programs, line)) {
       std::stringstream s(line);
       std::getline(s, k, ',');
+      std::getline(s, u, ',');
       std::getline(s, l, ',');
       std::getline(s, m, ',');
       std::getline(s, v, ',');
@@ -159,6 +161,7 @@ void Stats::load(std::string path) {
       UID id(k);
       largest_id = std::max<int64_t>(largest_id, id.number());
       all_program_ids.insert(id);
+      program_submitter[id] = std::stoll(u);
       program_lengths[id] = std::stoll(l);
       program_usages[id] = std::stoll(m);
       if (std::stoll(v)) {
@@ -219,17 +222,18 @@ void Stats::load(std::string path) {
     Log::get().debug("Loading " + full);
     std::ifstream submitters(full);
     num_programs_per_submitter.clear();
-    if (std::getline(submitters, line)) {
-      if (line != SUBMITTERS_HEADER) {
-        throw std::runtime_error("unexpected header in " + full);
-      }
-    }
+    checkHeader(submitters, SUBMITTERS_HEADER, full);
     while (std::getline(submitters, line)) {
       std::stringstream s(line);
       std::getline(s, k, ',');
       std::getline(s, v, ',');
       std::getline(s, w);
-      num_programs_per_submitter[k] = std::stoll(w);
+      auto ref_id = std::stoll(v);
+      submitter_ref_ids[k] = ref_id;
+      if (ref_id >= static_cast<int64_t>(num_programs_per_submitter.size())) {
+        num_programs_per_submitter.resize(ref_id + 1);
+      }
+      num_programs_per_submitter[ref_id] = std::stoll(w);
     }
     submitters.close();
   }
@@ -265,8 +269,9 @@ void Stats::save(std::string path) {
   for (auto id : all_program_ids) {
     const auto inceval = supports_inceval.exists(id);
     const auto logeval = supports_logeval.exists(id);
-    programs << id.string() << sep << program_lengths[id] << sep
-             << program_usages[id] << sep << inceval << sep << logeval << "\n";
+    programs << id.string() << sep << program_submitter[id] << sep
+             << program_lengths[id] << sep << program_usages[id] << sep
+             << inceval << sep << logeval << "\n";
   }
   programs.close();
 
@@ -341,9 +346,9 @@ void Stats::save(std::string path) {
 
   std::ofstream submitters(path + "submitters.csv");
   submitters << SUBMITTERS_HEADER << "\n";
-  int64_t index = 1;
-  for (const auto &e : num_programs_per_submitter) {
-    submitters << e.first << sep << (index++) << sep << e.second << "\n";
+  for (const auto &e : submitter_ref_ids) {
+    submitters << e.first << sep << e.second << sep
+               << num_programs_per_submitter[e.second] << "\n";
   }
   submitters.close();
 
@@ -357,16 +362,27 @@ std::string Stats::getMainStatsFile(std::string path) const {
 }
 
 void Stats::updateProgramStats(UID id, const Program &program,
-                               const std::string &submitter) {
+                               std::string submitter) {
   const size_t num_ops = ProgramUtil::numOps(program, false);
   program_lengths[id] = num_ops;
   if (num_ops >= num_programs_per_length.size()) {
     num_programs_per_length.resize(num_ops + 1);
   }
   num_programs_per_length[num_ops]++;
-  if (!submitter.empty()) {
-    num_programs_per_submitter[submitter]++;
+  int64_t ref_id;
+  replaceAll(submitter, ",", "_");
+  auto it = submitter_ref_ids.find(submitter);
+  if (it != submitter_ref_ids.end()) {
+    ref_id = it->second;
+  } else {
+    ref_id = submitter_ref_ids.size() + 1;
+    submitter_ref_ids[submitter] = ref_id;
+    if (ref_id >= static_cast<int64_t>(num_programs_per_submitter.size())) {
+      num_programs_per_submitter.resize(ref_id + 1, 0);
+    }
   }
+  num_programs_per_submitter[ref_id]++;
+  program_submitter[id] = ref_id;
   OpPos o;
   o.len = program.ops.size();
   o.pos = 0;
