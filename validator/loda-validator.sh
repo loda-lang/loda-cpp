@@ -23,6 +23,9 @@ if [ -d $HOME/loda/programs/.git ]; then
   popd > /dev/null
 fi
 
+echo "Upgrading LODA"
+loda upgrade
+
 echo "Waiting for network"
 while ! ping -c 1 loda-lang.org &> /dev/null 2>&1; do
   sleep 5

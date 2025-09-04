@@ -481,7 +481,7 @@ std::string Setup::checkLatestedVersion(bool silent) {
     const auto latest_version = getLatestVersion();
     if (latest_version != Version::BRANCH) {
       if (!silent) {
-        Log::get().info("Update to LODA " + latest_version + " available");
+        Log::get().info("New LODA version available: " + latest_version);
       }
       return latest_version;
     }
