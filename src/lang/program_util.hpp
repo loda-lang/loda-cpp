@@ -87,6 +87,8 @@ class ProgramUtil {
 
   static std::string dirStr(UID id);
 
+  static std::string getProgramsDir(char domain);
+
   static std::string getProgramPath(UID id, bool local = false);
 
   static int64_t getOffset(const Program &p);

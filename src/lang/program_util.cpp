@@ -562,6 +562,21 @@ void ProgramUtil::avoidNopOrOverflow(Operation &op) {
   }
 }
 
+std::string ProgramUtil::getProgramsDir(char domain) {
+  std::string dir;
+  switch (domain) {
+    case 'A':
+      dir = "oeis";
+      break;
+    case 'P':
+      dir = "prg";
+      break;
+    default:
+      throw std::runtime_error("Unknown domain: " + std::string(1, domain));
+  }
+  return Setup::getProgramsHome() + dir + FILE_SEP;
+}
+
 std::string ProgramUtil::dirStr(UID id) {
   std::stringstream s;
   s << std::setw(3) << std::setfill('0') << (id.number() / 1000);
@@ -572,19 +587,8 @@ std::string ProgramUtil::getProgramPath(UID id, bool local) {
   if (local || id.domain() == 'U') {
     return Setup::getProgramsHome() + "local" + FILE_SEP + id.string() + ".asm";
   } else {
-    std::string dir;
-    switch (id.domain()) {
-      case 'A':
-        dir = "oeis";
-        break;
-      case 'P':
-        dir = "prg";
-        break;
-      default:
-        throw std::runtime_error("Unknown domain: " + id.string());
-    }
-    return Setup::getProgramsHome() + dir + FILE_SEP + dirStr(id) + FILE_SEP +
-           id.string() + ".asm";
+    auto dir = getProgramsDir(id.domain());
+    return dir + dirStr(id) + FILE_SEP + id.string() + ".asm";
   }
 }
 
