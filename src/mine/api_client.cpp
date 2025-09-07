@@ -104,7 +104,8 @@ void ApiClient::getOeisFile(const std::string& filename,
 
   // fetch file
   std::string url, ext;
-  if (oeis_fetch_direct) {
+  if (oeis_fetch_direct && (filename.front() == 'b' || filename == "names" ||
+                            filename == "stripped")) {
     url = "https://www.oeis.org/";
     if (filename.front() == 'b') {
       auto id = filename.substr(1, 6);
