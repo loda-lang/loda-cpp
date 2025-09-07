@@ -49,6 +49,7 @@ MineManager::MineManager(const Settings &settings,
       finder_initialized(false),
       update_oeis(false),
       update_programs(false),
+      is_api_server(Setup::getSetupFlag("LODA_IS_API_SERVER", false)),
       optimizer(settings),
       minimizer(settings),
       loader(sequences, settings.num_terms),
@@ -189,7 +190,10 @@ bool MineManager::shouldMatch(const ManagedSequence &seq) const {
 }
 
 void MineManager::update(bool force) {
-  std::vector<std::string> files = {"stripped", "names", "offsets"};
+  std::vector<std::string> files = {"stripped", "names"};
+  if (!is_api_server) {
+    files.push_back("offsets");
+  }
 
   // check whether oeis files need to be updated
   const auto oeis_home = SequenceUtil::getSeqsFolder('A');

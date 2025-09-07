@@ -90,6 +90,7 @@ class MineManager {
   bool finder_initialized;
   bool update_oeis;
   bool update_programs;
+  bool is_api_server;
 
   Optimizer optimizer;
   Minimizer minimizer;
