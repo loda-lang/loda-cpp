@@ -181,12 +181,17 @@ std::vector<std::pair<std::string, std::string>> Git::diffTree(
   return result;
 }
 
-void Git::gunzip(const std::string &path) {
+void Git::gunzip(const std::string &path, bool keep) {
 #ifdef _WIN64
   const std::string gzip_test = "gzip --version " + getNullRedirect();
   if (system(gzip_test.c_str()) != 0) {
     fixWindowsEnv();  // gzip is included in Git for Windows
   }
 #endif
-  execCmd("gzip -f -d \"" + path + "\"");
+  std::string cmd = "gzip -f -d ";
+  if (keep) {
+    cmd += "-k ";
+  }
+  cmd += "\"" + path + "\"";
+  execCmd(cmd);
 }

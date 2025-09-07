@@ -104,10 +104,11 @@ void ApiClient::getOeisFile(const std::string& filename,
 
   // fetch file
   std::string url, ext;
-  if (oeis_fetch_direct && (filename.front() == 'b' || filename == "names" ||
-                            filename == "stripped")) {
+  const bool is_b_file = filename.front() == 'b';
+  if (oeis_fetch_direct &&
+      (is_b_file || filename == "names" || filename == "stripped")) {
     url = "https://www.oeis.org/";
-    if (filename.front() == 'b') {
+    if (is_b_file) {
       auto id = filename.substr(1, 6);
       url += "A" + id + "/" + filename;
     } else {
@@ -134,7 +135,7 @@ void ApiClient::getOeisFile(const std::string& filename,
   }
   if (success) {
     if (ext == ".gz") {
-      Git::gunzip(local_path + ".gz");
+      Git::gunzip(local_path + ".gz", !is_b_file);
     }
     fetched_oeis_files++;
     last_oeis_time = std::chrono::steady_clock::now();

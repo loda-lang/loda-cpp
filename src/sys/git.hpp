@@ -22,5 +22,5 @@ class Git {
   static std::vector<std::pair<std::string, std::string>> diffTree(
       const std::string &folder, const std::string &commit_id);
 
-  static void gunzip(const std::string &path);
+  static void gunzip(const std::string &path, bool keep);
 };
