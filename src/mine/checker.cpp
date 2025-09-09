@@ -181,10 +181,13 @@ check_result_t Checker::checkProgramBasic(const Program& program,
                        " because program is not new");
       return result;
     }
-    // fall back to default validation if metadata is missing
-    if (change_type.empty() || !previous_hash) {
-      Log::get().debug(
-          "Falling back to default validation due to missing metadata");
+    // fall back to default validation if is fast or if metadata is missing
+    bool is_fast = !ProgramUtil::hasOp(program, Operation::Type::LPB) &&
+                   !ProgramUtil::hasOp(program, Operation::Type::SEQ) &&
+                   !ProgramUtil::hasOp(program, Operation::Type::PRG);
+    if (is_fast || change_type.empty() || !previous_hash) {
+      Log::get().debug("Falling back to extended validation for " +
+                       seq.id.string());
       return checkProgramExtended(program, existing, is_new, seq, full_check,
                                   num_usages);
     }

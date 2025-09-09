@@ -4,6 +4,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ### Enhancements
 
+* Improve program validation
 * Improve usage stats
 
 ### v25.9.7
