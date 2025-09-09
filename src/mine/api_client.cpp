@@ -78,11 +78,24 @@ bool ApiClient::postProgram(const std::string& path, bool fail_on_error) {
 }
 
 void ApiClient::postCPUHour() {
+  const auto tmp_file_id = Random::get().gen() % 1000;
+  // attention: curl sometimes has problems with absolute paths.
+  // so we use a relative path here!
+  // TODO: extend WebClient::postFile to support content directly
+  const std::string tmp_file =
+      "loda_usage_" + std::to_string(tmp_file_id) + ".json";
+  std::ofstream out(tmp_file);
+  out << "{\"version\":\"" << Version::VERSION << "\", \"platform\":\""
+      << Version::PLATFORM << "\", \"cpuHours\":1" << "}\n";
+  out.close();
+  const std::vector<std::string> headers = {"Content-Type: application/json"};
   const std::string url = base_url + "cpuhours";
-  if (!WebClient::postFile(url, {}) &&
-      !WebClient::postFile(url, {}, {}, {}, true)) {
-    Log::get().warn("Cannot report CPU hour");
+  if (!WebClient::postFile(url, tmp_file, {}, headers)) {
+    WebClient::postFile(url, tmp_file, {}, headers,
+                        true);  // for debugging
+    Log::get().error("Error reporting usage", false);
   }
+  std::remove(tmp_file.c_str());
 }
 
 void ApiClient::getOeisFile(const std::string& filename,
