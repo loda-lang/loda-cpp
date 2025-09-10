@@ -55,7 +55,7 @@ class Miner {
 
   void reportCPUHour();
 
-  static const std::string ANONYMOUS;
+  static const std::string UNKNOWN;
   static const int64_t PROGRAMS_TO_FETCH;
   static const int64_t MAX_BACKLOG;
   static const int64_t NUM_MUTATIONS;

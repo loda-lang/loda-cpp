@@ -20,7 +20,7 @@
 #include "sys/log.hpp"
 #include "sys/metrics.hpp"
 
-const std::string Miner::ANONYMOUS("anonymous");
+const std::string Miner::UNKNOWN("unknown");
 const int64_t Miner::PROGRAMS_TO_FETCH = 2000;  // magic number
 const int64_t Miner::MAX_BACKLOG = 1000;        // magic number
 const int64_t Miner::NUM_MUTATIONS = 100;       // magic number
@@ -191,13 +191,6 @@ void Miner::runMineLoop() {
             if (program.ops.empty()) {
               current_fetch = 0;
               break;
-            }
-            submitted_profile = Comments::getCommentField(
-                program, Comments::PREFIX_MINER_PROFILE);
-            if (submitted_profile.empty()) {
-              Log::get().warn(
-                  "Ignoring submission due to missing miner profile");
-              continue;
             }
             current_fetch--;
             // check metadata stored in program's comments
@@ -510,7 +503,7 @@ void Miner::ensureSubmitter(Program &program) {
   auto submitter = Comments::getSubmitter(program);
   if (submitter.empty()) {
     Comments::addComment(program,
-                         Comments::PREFIX_SUBMITTED_BY + " " + ANONYMOUS);
+                         Comments::PREFIX_SUBMITTED_BY + " " + UNKNOWN);
   }
 }
 
@@ -522,7 +515,7 @@ void Miner::updateSubmitter(Program &program) {
       Comments::addComment(program,
                            Comments::PREFIX_SUBMITTED_BY + " " + submitter);
     }
-  } else if (submitter == ANONYMOUS) {
+  } else if (submitter == UNKNOWN) {
     Comments::removeCommentField(program, Comments::PREFIX_SUBMITTED_BY);
   }
 }
