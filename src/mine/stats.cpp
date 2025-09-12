@@ -17,7 +17,7 @@
 
 const std::string Stats::CALL_GRAPH_HEADER("caller,callee");
 const std::string Stats::PROGRAMS_HEADER(
-    "id,submitter,length,usages,inc_eval,log_eval");
+    "id,submitter,length,usages,inc_eval,log_eval,loop,formula");
 const std::string Stats::STEPS_HEADER("total,min,max,runs");
 const std::string Stats::SUMMARY_HEADER(
     "num_sequences,num_programs,num_formulas");
@@ -150,6 +150,7 @@ void Stats::load(std::string path) {
     std::ifstream programs(full);
     int64_t largest_id = 0;
     checkHeader(programs, PROGRAMS_HEADER, full);
+    std::string loop_col, formula_col;
     while (std::getline(programs, line)) {
       std::stringstream s(line);
       std::getline(s, k, ',');
@@ -157,7 +158,9 @@ void Stats::load(std::string path) {
       std::getline(s, l, ',');
       std::getline(s, m, ',');
       std::getline(s, v, ',');
-      std::getline(s, w);
+      std::getline(s, w, ',');
+      std::getline(s, loop_col, ',');
+      std::getline(s, formula_col);
       UID id(k);
       largest_id = std::max<int64_t>(largest_id, id.number());
       all_program_ids.insert(id);
@@ -169,6 +172,12 @@ void Stats::load(std::string path) {
       }
       if (std::stoll(w)) {
         supports_logeval.insert(id);
+      }
+      if (std::stoll(loop_col)) {
+        has_loop.insert(id);
+      }
+      if (std::stoll(formula_col)) {
+        has_formula.insert(id);
       }
     }
     programs.close();
@@ -269,9 +278,12 @@ void Stats::save(std::string path) {
   for (auto id : all_program_ids) {
     const auto inceval = supports_inceval.exists(id);
     const auto logeval = supports_logeval.exists(id);
+    const auto loop_flag = has_loop.exists(id);
+    const auto formula_flag = has_formula.exists(id);
     programs << id.string() << sep << program_submitter[id] << sep
              << program_lengths[id] << sep << program_usages[id] << sep
-             << inceval << sep << logeval << "\n";
+             << inceval << sep << logeval << sep << loop_flag << sep
+             << formula_flag << "\n";
   }
   programs.close();
 
@@ -362,7 +374,7 @@ std::string Stats::getMainStatsFile(std::string path) const {
 }
 
 void Stats::updateProgramStats(UID id, const Program &program,
-                               std::string submitter) {
+                               std::string submitter, bool with_formula) {
   const size_t num_ops = ProgramUtil::numOps(program, false);
   program_lengths[id] = num_ops;
   if (num_ops >= num_programs_per_length.size()) {
@@ -386,8 +398,12 @@ void Stats::updateProgramStats(UID id, const Program &program,
   OpPos o;
   o.len = program.ops.size();
   o.pos = 0;
+  bool with_loop = false;
   for (auto &op : program.ops) {
     num_ops_per_type[static_cast<size_t>(op.type)]++;
+    if (op.type == Operation::Type::LPB) {
+      with_loop = true;
+    }
     if (op.type != Operation::Type::SEQ && op.type != Operation::Type::PRG &&
         Operation::Metadata::get(op.type).num_operands == 2 &&
         op.source.type == Operand::Type::CONSTANT) {
@@ -425,6 +441,12 @@ void Stats::updateProgramStats(UID id, const Program &program,
   }
   if (Analyzer::hasLogarithmicComplexity(program)) {
     supports_logeval.insert(id);
+  }
+  if (with_loop) {
+    has_loop.insert(id);
+  }
+  if (with_formula) {
+    has_formula.insert(id);
   }
   blocks_collector.add(program);
 }

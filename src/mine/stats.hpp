@@ -43,8 +43,8 @@ class Stats {
 
   std::string getMainStatsFile(std::string path) const;
 
-  void updateProgramStats(UID id, const Program &program,
-                          std::string submitter);
+  void updateProgramStats(UID id, const Program &program, std::string submitter,
+                          bool with_formula);
 
   void updateSequenceStats(UID id, bool program_found, bool formula_found);
 
@@ -73,6 +73,8 @@ class Stats {
   UIDSet latest_program_ids;
   UIDSet supports_inceval;
   UIDSet supports_logeval;
+  UIDSet has_loop;
+  UIDSet has_formula;
   Blocks blocks;
 
  private:
