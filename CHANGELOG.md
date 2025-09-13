@@ -2,9 +2,12 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### v25.9.13
+
 ### Enhancements
 
 * Extend program stats
+* Improve error output in `eval` command
 
 ### v25.9.10
 
