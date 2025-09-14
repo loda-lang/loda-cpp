@@ -230,34 +230,66 @@ Number Semantics::log(const Number& a, const Number& b) {
   return (m == a) ? res : sub(res, 1);
 }
 
-Number Semantics::nrt(const Number& a, const Number& b) {
-  if (a == Number::INF || b == Number::INF || a < Number::ZERO ||
-      b < Number::ONE) {
-    return Number::INF;
-  }
-  if (a == Number::ZERO || a == Number::ONE || b == Number::ONE) {
-    return a;
-  }
-  auto r = Number::ONE;
-  auto l = Number::ZERO;
-  auto h = a;
-  while (l < h) {
-    auto m = div(add(l, h), 2);
-    auto p = pow(m, b);
-    if (p == a) {
-      return m;
-    }
-    if (p < a) {
-      l = m;
-    } else {
-      h = m;
-    }
-    if (r == m) {
+// Helper: Newton's method for integer roots. Returns true if converged, false
+// otherwise. Result in x_out.
+static bool newton_nrt(const Number& n, const Number& k, Number& x_out) {
+  auto x = Semantics::max(Semantics::div(n, k), Number::ONE);  // initial guess
+  const int max_iter = 100;
+  for (int i = 0; i < max_iter; ++i) {
+    auto k_minus_1 = Semantics::sub(k, Number::ONE);
+    auto xk1 = Semantics::pow(x, k_minus_1);
+    if (xk1 == Number::ZERO) {
       break;
     }
-    r = m;
+    auto t1 = Semantics::mul(k_minus_1, x);
+    auto t2 = Semantics::div(n, xk1);
+    auto num = Semantics::add(t1, t2);
+    auto x_next = Semantics::div(num, k);
+    if (x_next == x) {
+      x_out = x_next;
+      return true;
+    }
+    x = x_next;
   }
-  return r;
+  x_out = x;
+  return false;
+}
+
+Number Semantics::nrt(const Number& n, const Number& k) {
+  if (n == Number::INF || k == Number::INF || n < Number::ZERO ||
+      k < Number::ONE) {
+    return Number::INF;
+  }
+  if (n == Number::ZERO || n == Number::ONE || k == Number::ONE) {
+    return n;
+  }
+  Number x;
+  bool converged = newton_nrt(n, k, x);
+  if (!converged) {
+    Number l = Number::ONE;
+    Number h = n;
+    while (add(l, Number::ONE) < h) {
+      Number m = div(add(l, h), 2);
+      Number p = pow(m, k);
+      if (p == n) {
+        x = m;
+        break;
+      } else if (p < n) {
+        l = m;
+      } else {
+        h = m;
+      }
+    }
+    x = l;
+  }
+  // Ensure x^k <= n < (x+1)^k, but avoid infinite loops
+  while (pow(x, k) > n) {
+    x = sub(x, Number::ONE);
+  }
+  while (pow(add(x, Number::ONE), k) <= n) {
+    x = add(x, Number::ONE);
+  }
+  return x;
 }
 
 Number Semantics::dgs(const Number& a, const Number& b) {
