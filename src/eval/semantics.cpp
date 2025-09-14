@@ -232,7 +232,7 @@ Number Semantics::log(const Number& a, const Number& b) {
 
 // Helper: Newton's method for integer roots. Returns true if converged, false
 // otherwise. Result in x_out.
-static bool newton_nrt(const Number& n, const Number& k, Number& x_out) {
+bool newton_nrt(const Number& n, const Number& k, Number& x_out) {
   auto x = Semantics::max(Semantics::div(n, k), Number::ONE);  // initial guess
   const int max_iter = 100;
   for (int i = 0; i < max_iter; ++i) {
@@ -256,7 +256,7 @@ static bool newton_nrt(const Number& n, const Number& k, Number& x_out) {
 }
 
 // Helper: Binary search for integer n-th root. Returns the result.
-static Number binary_search_nrt(const Number& n, const Number& k) {
+Number binary_search_nrt(const Number& n, const Number& k) {
   auto l = Number::ONE;
   auto h = n;
   auto x = l;
