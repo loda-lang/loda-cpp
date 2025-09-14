@@ -164,20 +164,20 @@ void Commands::upgrade() {
 
 void Commands::evaluate(const std::string& path) {
   initLog(true);
-  Program program = SequenceProgram::getProgramAndSeqId(path).first;
-  Evaluator evaluator(settings, EVAL_ALL, false);
   Sequence seq;
   std::string error;
   try {
+    auto program = SequenceProgram::getProgramAndSeqId(path).first;
+    Evaluator evaluator(settings, EVAL_ALL, false);
     evaluator.eval(program, seq);
   } catch (const std::exception& e) {
     error = e.what();
   }
-  if (!settings.print_as_b_file) {
+  if (!settings.print_as_b_file && seq.size() > 0) {
     std::cout << seq << std::endl;
   }
   if (!error.empty()) {
-    std::cout << "Error: " << error << std::endl;
+    std::cout << error << std::endl;
     exit(1);
   }
 }
