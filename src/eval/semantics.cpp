@@ -266,11 +266,11 @@ Number Semantics::nrt(const Number& n, const Number& k) {
   Number x;
   bool converged = newton_nrt(n, k, x);
   if (!converged) {
-    Number l = Number::ONE;
-    Number h = n;
+    auto l = Number::ONE;
+    auto h = n;
     while (add(l, Number::ONE) < h) {
-      Number m = div(add(l, h), 2);
-      Number p = pow(m, k);
+      auto m = div(add(l, h), 2);
+      auto p = pow(m, k);
       if (p == n) {
         x = m;
         break;
@@ -282,7 +282,7 @@ Number Semantics::nrt(const Number& n, const Number& k) {
     }
     x = l;
   }
-  // Ensure x^k <= n < (x+1)^k, but avoid infinite loops
+  // Ensure x^k <= n < (x+1)^k
   while (pow(x, k) > n) {
     x = sub(x, Number::ONE);
   }
