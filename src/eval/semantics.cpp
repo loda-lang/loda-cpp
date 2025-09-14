@@ -255,6 +255,27 @@ static bool newton_nrt(const Number& n, const Number& k, Number& x_out) {
   return false;
 }
 
+// Helper: Binary search for integer n-th root. Returns the result.
+static Number binary_search_nrt(const Number& n, const Number& k) {
+  auto l = Number::ONE;
+  auto h = n;
+  auto x = l;
+  while (Semantics::add(l, Number::ONE) < h) {
+    auto m = Semantics::div(Semantics::add(l, h), 2);
+    auto p = Semantics::pow(m, k);
+    if (p == n) {
+      x = m;
+      break;
+    } else if (p < n) {
+      l = m;
+    } else {
+      h = m;
+    }
+    x = l;
+  }
+  return x;
+}
+
 Number Semantics::nrt(const Number& n, const Number& k) {
   if (n == Number::INF || k == Number::INF || n < Number::ZERO ||
       k < Number::ONE) {
@@ -264,23 +285,13 @@ Number Semantics::nrt(const Number& n, const Number& k) {
     return n;
   }
   Number x;
-  bool converged = newton_nrt(n, k, x);
-  if (!converged) {
-    auto l = Number::ONE;
-    auto h = n;
-    while (add(l, Number::ONE) < h) {
-      auto m = div(add(l, h), 2);
-      auto p = pow(m, k);
-      if (p == n) {
-        x = m;
-        break;
-      } else if (p < n) {
-        l = m;
-      } else {
-        h = m;
-      }
-    }
-    x = l;
+  if (!newton_nrt(n, k, x)) {
+    x = binary_search_nrt(n, k);
+  }
+  // Sanity check: x should be non-negative and not INF
+  if (x < Number::ZERO || x == Number::INF) {
+    // This should never happen; indicates a bug in the root-finding logic
+    return Number::INF;
   }
   // Ensure x^k <= n < (x+1)^k
   while (pow(x, k) > n) {
