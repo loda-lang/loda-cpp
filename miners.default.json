@@ -105,7 +105,7 @@
     },
     {
       "name": "iterate",
-      "overwrite": "none",
+      "overwrite": "auto",
       "enabled": true,
       "backoff": false,
       "generators": [
