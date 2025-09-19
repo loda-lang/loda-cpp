@@ -5,6 +5,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 ### Enhancements
 
 * Faster `nrt` using Newton's method
+* Correct existing programs
 
 ### v25.9.13
 

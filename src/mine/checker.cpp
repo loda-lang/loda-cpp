@@ -284,9 +284,10 @@ std::string Checker::isOptimizedBetter(Program existing, Program optimized,
   // evaluate optimized program for fixed number of terms
   num_check = std::min<size_t>(num_check, terms.size());
   num_check = std::max<size_t>(num_check, SequenceUtil::EXTENDED_SEQ_LENGTH);
-  Sequence tmp;
+  Sequence optimized_seq, existing_seq;
   evaluator.clearCaches();
-  auto optimized_steps = evaluator.eval(optimized, tmp, num_check, false);
+  auto optimized_steps =
+      evaluator.eval(optimized, optimized_seq, num_check, false);
   if (Signals::HALT) {
     return not_better;  // interrupted evaluation
   }
@@ -294,16 +295,24 @@ std::string Checker::isOptimizedBetter(Program existing, Program optimized,
   // check if the first decreasing/non-increasing term is beyond the known
   // sequence terms => fake "better" program
   const int64_t s = terms.size();
-  if (tmp.get_first_delta_lt(Number::ZERO) >= s ||  // decreasing
-      tmp.get_first_delta_lt(Number::ONE) >= s) {   // non-increasing
-    return not_better;                              // => fake "better" program
+  if (optimized_seq.get_first_delta_lt(Number::ZERO) >= s ||  // decreasing
+      optimized_seq.get_first_delta_lt(Number::ONE) >= s) {   // non-increasing
+    return not_better;  // => fake "better" program
   }
 
   // evaluate existing program for same number of terms
   evaluator.clearCaches();
-  const auto existing_steps = evaluator.eval(existing, tmp, num_check, false);
+  const auto existing_steps =
+      evaluator.eval(existing, existing_seq, num_check, false);
   if (Signals::HALT) {
     return not_better;  // interrupted evaluation
+  }
+
+  // check correctness of the existing program
+  size_t num_checked_terms = std::min(terms.size(), existing_seq.size());
+  if (existing_seq.subsequence(0, num_checked_terms) !=
+      terms.subsequence(0, num_checked_terms)) {
+    return "Corrected";
   }
 
   // check number of successfully computed terms
