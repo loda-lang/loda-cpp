@@ -308,8 +308,15 @@ std::string Checker::isOptimizedBetter(Program existing, Program optimized,
     return not_better;  // interrupted evaluation
   }
 
+  // check correctness of the optimized program
+  size_t num_checked_terms = std::min(terms.size(), optimized_seq.size());
+  if (optimized_seq.subsequence(0, num_checked_terms) !=
+      terms.subsequence(0, num_checked_terms)) {
+    return not_better;
+  }
+
   // check correctness of the existing program
-  size_t num_checked_terms = std::min(terms.size(), existing_seq.size());
+  num_checked_terms = std::min(terms.size(), existing_seq.size());
   if (existing_seq.subsequence(0, num_checked_terms) !=
       terms.subsequence(0, num_checked_terms)) {
     return "Corrected";
