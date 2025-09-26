@@ -17,7 +17,7 @@
 
 const std::string Stats::CALL_GRAPH_HEADER("caller,callee");
 const std::string Stats::PROGRAMS_HEADER(
-    "id,submitter,length,usages,inc_eval,log_eval,loop,formula");
+    "id,submitter,length,usages,inc_eval,log_eval,vir_eval,loop,formula");
 const std::string Stats::STEPS_HEADER("total,min,max,runs");
 const std::string Stats::SUMMARY_HEADER(
     "num_sequences,num_programs,num_formulas");
@@ -43,7 +43,7 @@ void Stats::load(std::string path) {
   auto start_time = std::chrono::steady_clock::now();
 
   const std::string sep(",");
-  std::string full, line, k, l, m, v, w, u;
+  std::string full, line, k, l, m, v, w, u, x;
   Parser parser;
   Operation op;
   Operand count;
@@ -159,6 +159,7 @@ void Stats::load(std::string path) {
       std::getline(s, m, ',');
       std::getline(s, v, ',');
       std::getline(s, w, ',');
+      std::getline(s, x, ',');
       std::getline(s, loop_col, ',');
       std::getline(s, formula_col);
       UID id(k);
@@ -278,11 +279,12 @@ void Stats::save(std::string path) {
   for (auto id : all_program_ids) {
     const auto inceval = supports_inceval.exists(id);
     const auto logeval = supports_logeval.exists(id);
+    const auto vireval = supports_vireval.exists(id);
     const auto loop_flag = has_loop.exists(id);
     const auto formula_flag = has_formula.exists(id);
     programs << id.string() << sep << program_submitter[id] << sep
              << program_lengths[id] << sep << program_usages[id] << sep
-             << inceval << sep << logeval << sep << loop_flag << sep
+             << inceval << sep << logeval << sep << vireval << sep << loop_flag << sep
              << formula_flag << "\n";
   }
   programs.close();
@@ -436,11 +438,15 @@ void Stats::updateProgramStats(UID id, const Program &program,
   Settings settings;
   Interpreter interpreter(settings);
   IncrementalEvaluator inceval(interpreter);
+  VirtualEvaluator vireval(settings);
   if (inceval.init(program)) {
     supports_inceval.insert(id);
   }
   if (Analyzer::hasLogarithmicComplexity(program)) {
     supports_logeval.insert(id);
+  }
+  if (vireval.init(program)) {
+    supports_vireval.insert(id);
   }
   if (with_loop) {
     has_loop.insert(id);
