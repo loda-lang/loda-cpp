@@ -73,6 +73,7 @@ class Stats {
   UIDSet latest_program_ids;
   UIDSet supports_inceval;
   UIDSet supports_logeval;
+  UIDSet supports_vireval;
   UIDSet has_loop;
   UIDSet has_formula;
   Blocks blocks;
