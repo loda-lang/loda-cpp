@@ -174,6 +174,9 @@ void Stats::load(std::string path) {
       if (std::stoll(w)) {
         supports_logeval.insert(id);
       }
+      if (std::stoll(x)) {
+        supports_vireval.insert(id);
+      }
       if (std::stoll(loop_col)) {
         has_loop.insert(id);
       }
