@@ -6,6 +6,7 @@
 *.o
 *.obj
 *.pdb
+.DS_Store
 /src/coverage/
 /src/loda
 /src/loda.exe
@@ -13,5 +14,4 @@
 /loda
 /loda.exe
 /completer.hist
-/.DS_Store
 /.settings/
