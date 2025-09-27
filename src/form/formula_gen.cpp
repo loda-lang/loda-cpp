@@ -118,13 +118,13 @@ Expression FormulaGenerator::facToExpression(const Expression& a,
                                              const Expression& b) const {
   Expression num(Expression::Type::FACTORIAL);
   Expression denom(Expression::Type::FACTORIAL);
-  // Falling factorial: a!/(a-b)!
-  // If b >= 0: (a)!/(a-b)!
-  // If b < 0: rising factorial: (a+b-1)!/(a-1)!
-  if (b.type == Expression::Type::CONSTANT && b.value >= 0) {
+  // Falling factorial: a!/(a+b)!
+  // If b <= 0: (a)!/(a+b)!
+  // If b > 0: rising factorial: (a+b-1)!/(a-1)!
+  if (b.type == Expression::Type::CONSTANT && b.value <= 0) {
     // falling factorial
     num.children = {a};
-    denom.children = {sum({a, product({constant(-1), b})})};
+    denom.children = {sum({a, b})};
   } else {
     // rising factorial
     // (a+b-1)!/(a-1)!
