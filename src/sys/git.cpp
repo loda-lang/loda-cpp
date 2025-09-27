@@ -134,8 +134,12 @@ bool Git::git(const std::string &folder, const std::string &args,
   return execCmd("git " + a, fail_on_error);
 }
 
-void Git::clone(const std::string &url, const std::string &folder) {
-  git("", "clone " + url + " \"" + folder + "\"");
+void Git::clone(const std::string &url, const std::string &folder, bool fast) {
+  std::string clone_and_args = "clone ";
+  if (fast) {
+    clone_and_args = clone_and_args + "--depth=1 --shallow-submodules ";
+  }
+  git("", clone_and_args + url + " \"" + folder + "\"");
 }
 
 std::string getTmpFile() {

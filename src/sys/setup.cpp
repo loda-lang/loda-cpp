@@ -443,7 +443,7 @@ bool Setup::checkProgramsHome() {
   if (!existsProgramsHome()) {
     std::cout << "LODA needs to download its programs repository from GitHub."
               << std::endl;
-    std::cout << "The repository requires around 350 MB of disk space."
+    std::cout << "The repository requires around 650 MB of disk space."
               << std::endl;
     std::cout << "Checking whether git is installed:" << std::endl;
     Git::git("", "--version");
