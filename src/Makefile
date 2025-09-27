@@ -18,7 +18,7 @@ OBJS = base/uid.o \
   seq/managed_seq.o seq/seq_index.o seq/seq_list.o seq/seq_loader.o seq/seq_program.o seq/seq_util.o \
   sys/file.o sys/git.o sys/jute.o sys/log.o sys/metrics.o sys/process.o sys/setup.o sys/util.o sys/web_client.o
 
-loda: CXXFLAGS += -O2
+loda: CXXFLAGS += -O2 -flto=thin
 loda: $(OBJS)
 	$(CXX) $(LDFLAGS) -o loda $(OBJS)
 	[ -L ../loda ] || ( cd .. && ln -s src/loda loda )
