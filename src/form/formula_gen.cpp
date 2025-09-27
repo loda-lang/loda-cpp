@@ -113,6 +113,43 @@ bool FormulaGenerator::bitfunc(Operation::Type type, const Expression& a,
   return true;
 }
 
+// Express falling/rising factorial using standard factorial
+bool FormulaGenerator::facToExpression(const Expression& a,
+                                             const Expression& b, Expression& res) const {
+
+  if (ExpressionUtil::canBeNegative(a, offset) ||
+      ExpressionUtil::canBeNegative(b, offset)) {
+    return false;
+  }
+  
+  Expression num(Expression::Type::FACTORIAL);
+  Expression denom(Expression::Type::FACTORIAL);
+  // Falling factorial: a!/(a+b)!
+  // If b <= 0: (a)!/(a+b)!
+  // If b > 0: rising factorial: (a+b-1)!/(a-1)!
+  if (b.type == Expression::Type::CONSTANT && b.value <= 0) {
+    // falling factorial
+    num.children = {a};
+    denom.children = {sum({a, b})};
+  } else {
+    // rising factorial
+    // (a+b-1)!/(a-1)!
+    num.children = {sum({a, sum({b, constant(-1)})})};
+    denom.children = {sum({a, constant(-1)})};
+  }
+  // simplify immediately
+  auto& d = denom.children.front();
+  ExpressionUtil::normalize(d);
+  if (d.type == Expression::Type::CONSTANT &&
+      (d.value == Number::ZERO || d.value == Number::ONE)) {
+    res =  num;
+  } else {
+    res =  divToFraction(num, denom);
+  }
+  
+  return true;
+}
+
 bool FormulaGenerator::update(const Operation& op) {
   auto source = operandToExpression(op.source);
   auto target = operandToExpression(op.target);
@@ -166,6 +203,10 @@ bool FormulaGenerator::update(const Operation& op) {
     }
     case Operation::Type::BIN: {
       res = func("binomial", {prevTarget, source});
+      break;
+    }
+    case Operation::Type::FAC: {
+      okay = facToExpression(prevTarget, source, res);
       break;
     }
     case Operation::Type::LOG: {

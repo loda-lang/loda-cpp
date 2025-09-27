@@ -370,7 +370,9 @@ bool Expression::needsBrackets(bool isRoot, Expression::Type parentType) const {
     return false;
   }
   if (type == Expression::Type::FACTORIAL &&
-      parentType == Expression::Type::FACTORIAL) {
+      (parentType == Expression::Type::FACTORIAL ||
+       parentType == Expression::Type::PRODUCT ||
+       parentType == Expression::Type::SUM)) {
     return false;
   }
   if (parentType == Expression::Type::FACTORIAL && !isRoot) {
