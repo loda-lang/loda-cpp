@@ -116,6 +116,12 @@ bool FormulaGenerator::bitfunc(Operation::Type type, const Expression& a,
 // Express falling/rising factorial using standard factorial
 bool FormulaGenerator::facToExpression(const Expression& a,
                                              const Expression& b, Expression& res) const {
+
+  if (ExpressionUtil::canBeNegative(a, offset) ||
+      ExpressionUtil::canBeNegative(b, offset)) {
+    return false;
+  }
+  
   Expression num(Expression::Type::FACTORIAL);
   Expression denom(Expression::Type::FACTORIAL);
   // Falling factorial: a!/(a+b)!
@@ -141,10 +147,6 @@ bool FormulaGenerator::facToExpression(const Expression& a,
     res =  divToFraction(num, denom);
   }
   
-  if (ExpressionUtil::canBeNegative(a, offset) ||
-      ExpressionUtil::canBeNegative(b, offset)) {
-    return false;
-  }
   return true;
 }
 
