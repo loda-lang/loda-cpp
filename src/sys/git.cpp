@@ -1,5 +1,6 @@
 #include "sys/git.hpp"
 
+#include "mine/stats.hpp"
 #include "sys/file.hpp"
 #include "sys/log.hpp"
 #include "sys/util.hpp"
@@ -137,7 +138,9 @@ bool Git::git(const std::string &folder, const std::string &args,
 void Git::clone(const std::string &url, const std::string &folder, bool fast) {
   std::string clone_and_args = "clone ";
   if (fast) {
-    clone_and_args = clone_and_args + "--depth=1 --shallow-submodules ";
+    clone_and_args = clone_and_args +
+                     "--depth=" + std::to_string(commits_for_programs_collect) +
+                     " --shallow-submodules ";
   }
   git("", clone_and_args + url + " \"" + folder + "\"");
 }
