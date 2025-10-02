@@ -17,7 +17,7 @@
 
 const std::string Stats::CALL_GRAPH_HEADER("caller,callee");
 const std::string Stats::PROGRAMS_HEADER(
-    "id,submitter,length,usages,inc_eval,log_eval,vir_eval,loop,formula");
+    "id,submitter,length,usages,inc_eval,log_eval,vir_eval,loop,formula,indirect");
 const std::string Stats::STEPS_HEADER("total,min,max,runs");
 const std::string Stats::SUMMARY_HEADER(
     "num_sequences,num_programs,num_formulas");
@@ -150,7 +150,7 @@ void Stats::load(std::string path) {
     std::ifstream programs(full);
     int64_t largest_id = 0;
     checkHeader(programs, PROGRAMS_HEADER, full);
-    std::string loop_col, formula_col;
+    std::string loop_col, formula_col, indirect_col;
     while (std::getline(programs, line)) {
       std::stringstream s(line);
       std::getline(s, k, ',');
@@ -161,7 +161,8 @@ void Stats::load(std::string path) {
       std::getline(s, w, ',');
       std::getline(s, x, ',');
       std::getline(s, loop_col, ',');
-      std::getline(s, formula_col);
+      std::getline(s, formula_col, ',');
+      std::getline(s, indirect_col);
       UID id(k);
       largest_id = std::max<int64_t>(largest_id, id.number());
       all_program_ids.insert(id);
@@ -182,6 +183,9 @@ void Stats::load(std::string path) {
       }
       if (std::stoll(formula_col)) {
         has_formula.insert(id);
+      }
+      if (std::stoll(indirect_col)) {
+        has_indirect.insert(id);
       }
     }
     programs.close();
@@ -285,10 +289,11 @@ void Stats::save(std::string path) {
     const auto vireval = supports_vireval.exists(id);
     const auto loop_flag = has_loop.exists(id);
     const auto formula_flag = has_formula.exists(id);
+    const auto indirect_flag = has_indirect.exists(id);
     programs << id.string() << sep << program_submitter[id] << sep
              << program_lengths[id] << sep << program_usages[id] << sep
              << inceval << sep << logeval << sep << vireval << sep << loop_flag << sep
-             << formula_flag << "\n";
+             << formula_flag << sep << indirect_flag << "\n";
   }
   programs.close();
 
@@ -404,6 +409,7 @@ void Stats::updateProgramStats(UID id, const Program &program,
   o.len = program.ops.size();
   o.pos = 0;
   bool with_loop = false;
+  bool with_indirect = false;
   for (auto &op : program.ops) {
     num_ops_per_type[static_cast<size_t>(op.type)]++;
     if (op.type == Operation::Type::LPB) {
@@ -416,6 +422,9 @@ void Stats::updateProgramStats(UID id, const Program &program,
         num_constants[op.source.value] = 0;
       }
       num_constants[op.source.value]++;
+    }
+    if (op.source.type == Operand::Type::INDIRECT || op.target.type == Operand::Type::INDIRECT) {
+      with_indirect = true;
     }
     if (op.type != Operation::Type::NOP) {
       if (num_operations.find(op) == num_operations.end()) {
@@ -456,6 +465,9 @@ void Stats::updateProgramStats(UID id, const Program &program,
   }
   if (with_formula) {
     has_formula.insert(id);
+  }
+  if (with_indirect) {
+    has_indirect.insert(id);
   }
   blocks_collector.add(program);
 }
