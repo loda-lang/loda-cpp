@@ -2,6 +2,10 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 ## [Unreleased]
 
+### Bugfixes
+
+* Fix `nrt` operation
+
 ### Enhancements
 
 * Support `fac` in formula generation

@@ -245,7 +245,9 @@ bool newton_nrt(const Number& n, const Number& k, Number& x_out) {
     auto t2 = Semantics::div(n, xk1);
     auto num = Semantics::add(t1, t2);
     auto x_next = Semantics::div(num, k);
-    if (x_next == x) {
+    if (x_next == Number::INF) {
+      return false;
+    } else if (x_next == x) {
       x_out = x_next;
       return true;
     }
