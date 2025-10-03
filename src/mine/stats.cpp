@@ -17,7 +17,8 @@
 
 const std::string Stats::CALL_GRAPH_HEADER("caller,callee");
 const std::string Stats::PROGRAMS_HEADER(
-    "id,submitter,length,usages,inc_eval,log_eval,vir_eval,loop,formula,indirect");
+    "id,submitter,length,usages,inc_eval,log_eval,vir_eval,loop,formula,"
+    "indirect");
 const std::string Stats::STEPS_HEADER("total,min,max,runs");
 const std::string Stats::SUMMARY_HEADER(
     "num_sequences,num_programs,num_formulas");
@@ -292,8 +293,8 @@ void Stats::save(std::string path) {
     const auto indirect_flag = has_indirect.exists(id);
     programs << id.string() << sep << program_submitter[id] << sep
              << program_lengths[id] << sep << program_usages[id] << sep
-             << inceval << sep << logeval << sep << vireval << sep << loop_flag << sep
-             << formula_flag << sep << indirect_flag << "\n";
+             << inceval << sep << logeval << sep << vireval << sep << loop_flag
+             << sep << formula_flag << sep << indirect_flag << "\n";
   }
   programs.close();
 
@@ -423,7 +424,7 @@ void Stats::updateProgramStats(UID id, const Program &program,
       }
       num_constants[op.source.value]++;
     }
-    if (op.source.type == Operand::Type::INDIRECT || op.target.type == Operand::Type::INDIRECT) {
+    if (ProgramUtil::hasIndirectOperand(op)) {
       with_indirect = true;
     }
     if (op.type != Operation::Type::NOP) {
