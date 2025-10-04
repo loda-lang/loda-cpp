@@ -32,4 +32,8 @@ class Git {
       const std::string &folder, const std::string &commit_id);
 
   static void gunzip(const std::string &path, bool keep);
+
+  // Returns the path to a tmp file containing the HEAD version of the file.
+  static std::string extractHeadVersion(const std::string &folder,
+                                        const std::string &file);
 };

@@ -184,7 +184,31 @@ void SequenceProgram::commitUpdateAndDeletedPrograms(
   size_t num_deleted = 0;
 
   // Handle updated files
+  Parser parser;
   for (const auto &file : files_to_update) {
+    // Load new version
+    Program new_program;
+    try {
+      new_program = parser.parse(file);
+    } catch (const std::exception &e) {
+      std::cerr << "Failed to parse new version: " << file << std::endl;
+    }
+
+    // Load old version using Git helper
+    Program old_program;
+    try {
+      std::string tmp_old = Git::extractHeadVersion(progs_dir, file);
+      if (!tmp_old.empty()) {
+        old_program = parser.parse(tmp_old);
+        std::remove(tmp_old.c_str());
+      } else {
+        std::cerr << "Failed to load old version from git for: " << file
+                  << std::endl;
+      }
+    } catch (const std::exception &e) {
+      std::cerr << "Failed to parse old version: " << file << std::endl;
+    }
+
     // Check if already staged
     if (Git::git(progs_dir, "diff -U1000 --exit-code -- \"" + file + "\"",
                  false)) {
@@ -219,6 +243,8 @@ void SequenceProgram::commitUpdateAndDeletedPrograms(
         std::cout << "Full check enabled.\n\n";
       }
     }
+
+    // You can now compare old_program and new_program here if needed
 
     std::cout << "Update " << anumber << "? (Y)es, (n)o, (r)evert: ";
     std::string answer;

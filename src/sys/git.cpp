@@ -222,3 +222,13 @@ void Git::gunzip(const std::string &path, bool keep) {
   cmd += "\"" + path + "\"";
   execCmd(cmd);
 }
+
+std::string Git::extractHeadVersion(const std::string &folder,
+                                    const std::string &file) {
+  std::string tmp_file = getTmpFile();
+  if (!git(folder, "show HEAD:\"" + file + "\" > \"" + tmp_file + "\"",
+           false)) {
+    return "";
+  }
+  return tmp_file;
+}
