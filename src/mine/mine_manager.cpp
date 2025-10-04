@@ -724,8 +724,8 @@ update_program_result_t MineManager::updateProgram(
   switch (validation_mode) {
     case ValidationMode::BASIC:
       checked = finder.getChecker().checkProgramBasic(
-          p, existing, is_new, seq, change_type, previous_hash, full_check,
-          num_usages);
+          p, existing, is_new, seq, change_type, submitter, previous_hash,
+          full_check, num_usages);
       break;
     case ValidationMode::EXTENDED:
       checked = finder.getChecker().checkProgramExtended(
