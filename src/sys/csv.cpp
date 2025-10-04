@@ -40,6 +40,10 @@ std::string CsvReader::getField(size_t index) const {
   return current_row[index];
 }
 
+int64_t CsvReader::getIntegerField(size_t index) const {
+  return std::stoll(getField(index));
+}
+
 size_t CsvReader::numFields() const { return current_row.size(); }
 
 void CsvReader::close() { stream.close(); }

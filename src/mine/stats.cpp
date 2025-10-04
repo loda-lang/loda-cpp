@@ -46,7 +46,7 @@ void Stats::load(std::string path) {
     Log::get().debug("Loading " + full);
     CsvReader reader(full);
     while (reader.readRow()) {
-      num_constants[Number(reader.getField(0))] = std::stoll(reader.getField(1));
+      num_constants[Number(reader.getField(0))] = reader.getIntegerField(1);
     }
     reader.close();
   }
@@ -56,11 +56,11 @@ void Stats::load(std::string path) {
     Log::get().debug("Loading " + full);
     CsvReader reader(full);
     while (reader.readRow()) {
-      auto l = std::stoll(reader.getField(0));
+      auto l = reader.getIntegerField(0);
       while (l >= (int64_t)num_programs_per_length.size()) {
         num_programs_per_length.push_back(0);
       }
-      num_programs_per_length[l] = std::stoll(reader.getField(1));
+      num_programs_per_length[l] = reader.getIntegerField(1);
     }
     reader.close();
   }
@@ -71,7 +71,7 @@ void Stats::load(std::string path) {
     CsvReader reader(full);
     while (reader.readRow()) {
       auto type = Operation::Metadata::get(reader.getField(0)).type;
-      num_ops_per_type.at(static_cast<size_t>(type)) = std::stoll(reader.getField(1));
+      num_ops_per_type.at(static_cast<size_t>(type)) = reader.getIntegerField(1);
     }
     reader.close();
   }
@@ -138,25 +138,25 @@ void Stats::load(std::string path) {
       UID id(reader.getField(0));
       largest_id = std::max<int64_t>(largest_id, id.number());
       all_program_ids.insert(id);
-      program_submitter[id] = std::stoll(reader.getField(1));
-      program_lengths[id] = std::stoll(reader.getField(2));
-      program_usages[id] = std::stoll(reader.getField(3));
-      if (std::stoll(reader.getField(4))) {
+      program_submitter[id] = reader.getIntegerField(1);
+      program_lengths[id] = reader.getIntegerField(2);
+      program_usages[id] = reader.getIntegerField(3);
+      if (reader.getIntegerField(4)) {
         supports_inceval.insert(id);
       }
-      if (std::stoll(reader.getField(5))) {
+      if (reader.getIntegerField(5)) {
         supports_logeval.insert(id);
       }
-      if (std::stoll(reader.getField(6))) {
+      if (reader.getIntegerField(6)) {
         supports_vireval.insert(id);
       }
-      if (std::stoll(reader.getField(7))) {
+      if (reader.getIntegerField(7)) {
         has_loop.insert(id);
       }
-      if (std::stoll(reader.getField(8))) {
+      if (reader.getIntegerField(8)) {
         has_formula.insert(id);
       }
-      if (std::stoll(reader.getField(9))) {
+      if (reader.getIntegerField(9)) {
         has_indirect.insert(id);
       }
     }
@@ -192,9 +192,9 @@ void Stats::load(std::string path) {
     CsvReader reader(full);
     reader.checkHeader(SUMMARY_HEADER);
     if (reader.readRow()) {
-      num_sequences = std::stoll(reader.getField(0));
-      num_programs = std::stoll(reader.getField(1));
-      num_formulas = std::stoll(reader.getField(2));
+      num_sequences = reader.getIntegerField(0);
+      num_programs = reader.getIntegerField(1);
+      num_formulas = reader.getIntegerField(2);
     }
   }
 
@@ -209,12 +209,12 @@ void Stats::load(std::string path) {
     num_programs_per_submitter.clear();
     reader.checkHeader(SUBMITTERS_HEADER);
     while (reader.readRow()) {
-      auto ref_id = std::stoll(reader.getField(1));
+      auto ref_id = reader.getIntegerField(1);
       submitter_ref_ids[reader.getField(0)] = ref_id;
       if (ref_id >= static_cast<int64_t>(num_programs_per_submitter.size())) {
         num_programs_per_submitter.resize(ref_id + 1);
       }
-      num_programs_per_submitter[ref_id] = std::stoll(reader.getField(2));
+      num_programs_per_submitter[ref_id] = reader.getIntegerField(2);
     }
     reader.close();
   }

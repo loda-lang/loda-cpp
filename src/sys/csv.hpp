@@ -17,6 +17,9 @@ class CsvReader {
   // Get a field from the current row by index
   std::string getField(size_t index) const;
 
+  // Get an integer field from the current row by index
+  int64_t getIntegerField(size_t index) const;
+
   // Get number of fields in the current row
   size_t numFields() const;
 
