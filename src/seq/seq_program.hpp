@@ -21,4 +21,8 @@ class SequenceProgram {
   static UIDSet collectLatestProgramIds(size_t max_commits,
                                         size_t max_added_programs,
                                         size_t max_modified_programs);
+
+  static void commitAddedPrograms(size_t min_commit_count = 5);
+
+  static void commitUpdateAndDeletedPrograms();
 };

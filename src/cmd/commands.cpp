@@ -921,3 +921,11 @@ void Commands::compare(const std::string& path1, const std::string& path2) {
   Log::get().info(manager.getFinder().getChecker().compare(
       p1, p2, "First", "Second", seq, full_check, num_usages));
 }
+
+void Commands::commitAddedPrograms(size_t min_commit_count) {
+  SequenceProgram::commitAddedPrograms(min_commit_count);
+}
+
+void Commands::commitUpdatedAndDeletedPrograms() {
+  SequenceProgram::commitUpdateAndDeletedPrograms();
+}

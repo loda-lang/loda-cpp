@@ -264,6 +264,14 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
     commands.replace(args.at(1), args.at(2));
   } else if (cmd == "auto-fold") {
     commands.autoFold();
+  } else if (cmd == "add-programs") {
+    size_t min_commit_count = 5;
+    if (args.size() > 1) {
+      min_commit_count = std::stoul(args.at(1));
+    }
+    commands.commitAddedPrograms(min_commit_count);
+  } else if (cmd == "update-programs") {
+    commands.commitUpdatedAndDeletedPrograms();
   }
 #endif
   // unknown command

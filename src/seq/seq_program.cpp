@@ -1,5 +1,6 @@
 #include "seq/seq_program.hpp"
 
+#include <iostream>
 #include <set>
 
 #include "lang/analyzer.hpp"
@@ -124,4 +125,130 @@ UIDSet SequenceProgram::collectLatestProgramIds(size_t max_commits,
     Log::get().warn("Cannot read programs commit history");
   }
   return latest_program_ids;
+}
+
+void SequenceProgram::commitAddedPrograms(size_t min_commit_count) {
+  auto progs_dir = Setup::getProgramsHome();
+  auto status_entries = Git::status(progs_dir);
+
+  std::vector<std::string> files_to_add;
+  for (const auto &entry : status_entries) {
+    const std::string &status = entry.first;
+    const std::string &file = entry.second;
+    if (status == "??" && file.find("oeis/") == 0) {
+      files_to_add.push_back(file);
+    }
+  }
+
+  for (const auto &file : files_to_add) {
+    if (!Git::add(progs_dir, file)) {
+      Log::get().warn("Failed to add file: " + file);
+    }
+  }
+
+  if (files_to_add.size() >= min_commit_count) {
+    std::string msg =
+        "added " + std::to_string(files_to_add.size()) + " programs";
+    if (!Git::commit(progs_dir, msg)) {
+      Log::get().warn("Failed to commit added programs");
+    }
+  }
+
+  if (!Git::push(progs_dir)) {
+    Log::get().warn("Failed to push changes");
+  }
+}
+
+void SequenceProgram::commitUpdateAndDeletedPrograms() {
+  auto progs_dir = Setup::getProgramsHome();
+  auto status_entries = Git::status(progs_dir);
+
+  std::vector<std::string> files_to_update;
+  std::vector<std::string> files_to_delete;
+
+  for (const auto &entry : status_entries) {
+    const std::string &status = entry.first;
+    const std::string &file = entry.second;
+    if (file.find("oeis/") != 0) {
+      continue;
+    }
+    if (status == "M") {
+      files_to_update.push_back(file);
+    } else if (status == "D") {
+      files_to_delete.push_back(file);
+    }
+  }
+
+  size_t num_updated = 0;
+  size_t num_deleted = 0;
+
+  // Handle updated files
+  for (const auto &file : files_to_update) {
+    // Check if already staged
+    if (Git::git(progs_dir, "diff -U1000 --exit-code -- \"" + file + "\"",
+                 false)) {
+      std::cout << "Already staged: " << file << std::endl;
+      num_updated++;
+      continue;
+    }
+
+    std::string fname = file.substr(file.find_last_of("/\\") + 1);
+    std::string anumber = fname.substr(0, fname.find('.'));
+
+    std::cout << "Update program " << file << "? (Y)es, (n)o, (r)evert: ";
+    std::string answer;
+    std::getline(std::cin, answer);
+
+    if (answer.empty() || answer == "y" || answer == "Y") {
+      Git::add(progs_dir, file);
+      num_updated++;
+    } else if (answer == "r" || answer == "R") {
+      Git::git(progs_dir, "checkout -- \"" + file + "\"");
+      std::cout << "Reverted: " << file << std::endl;
+    } else {
+      Git::git(progs_dir, "checkout -- \"" + file + "\"");
+      std::cout << "Restored: " << file << std::endl;
+    }
+  }
+
+  // Handle deleted files
+  for (const auto &file : files_to_delete) {
+    std::string fname = file.substr(file.find_last_of("/\\") + 1);
+    std::string anumber = fname.substr(0, fname.find('.'));
+
+    std::cout << "Delete program " << file << "? (Y)es, (n)o: ";
+    std::string answer;
+    std::getline(std::cin, answer);
+
+    if (answer.empty() || answer == "y" || answer == "Y") {
+      if (Git::add(progs_dir, file)) {
+        num_deleted++;
+        std::cout << "Staged for deletion: " << file << std::endl;
+      } else {
+        Log::get().warn("Failed to stage deleted file: " + file);
+      }
+    } else {
+      Git::git(progs_dir, "checkout -- \"" + file + "\"");
+      std::cout << "Restored: " << file << std::endl;
+    }
+  }
+
+  // Single commit at the end
+  if ((num_updated + num_deleted) > 0) {
+    std::cout << "Commit " << num_updated << " updated and " << num_deleted
+              << " deleted programs? (Y/n): ";
+    std::string answer;
+    std::getline(std::cin, answer);
+    if (answer.empty() || answer == "y" || answer == "Y") {
+      std::string msg = "updated " + std::to_string(num_updated) +
+                        " and deleted " + std::to_string(num_deleted) +
+                        " programs";
+      if (!Git::commit(progs_dir, msg)) {
+        Log::get().warn("Failed to commit changes");
+      }
+      if (!Git::push(progs_dir)) {
+        Log::get().warn("Failed to push changes");
+      }
+    }
+  }
 }
