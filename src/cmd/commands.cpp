@@ -923,9 +923,17 @@ void Commands::compare(const std::string& path1, const std::string& path2) {
 }
 
 void Commands::commitAddedPrograms(size_t min_commit_count) {
+  initLog(true);
   SequenceProgram::commitAddedPrograms(min_commit_count);
 }
 
 void Commands::commitUpdatedAndDeletedPrograms() {
-  SequenceProgram::commitUpdateAndDeletedPrograms();
+  initLog(true);
+  Stats stats;
+  try {
+    stats.load(Setup::getLodaHome() + "stats/");
+  } catch (const std::exception& e) {
+    std::cerr << "Could not load stats: " << e.what() << std::endl;
+  }
+  SequenceProgram::commitUpdateAndDeletedPrograms(&stats);
 }

@@ -4,6 +4,7 @@
 
 #include "base/uid.hpp"
 #include "lang/program.hpp"
+#include "mine/stats.hpp"
 
 class SequenceProgram {
  public:
@@ -24,5 +25,5 @@ class SequenceProgram {
 
   static void commitAddedPrograms(size_t min_commit_count = 5);
 
-  static void commitUpdateAndDeletedPrograms();
+  static void commitUpdateAndDeletedPrograms(Stats* stats);
 };

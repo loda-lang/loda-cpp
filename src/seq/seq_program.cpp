@@ -159,7 +159,7 @@ void SequenceProgram::commitAddedPrograms(size_t min_commit_count) {
   }
 }
 
-void SequenceProgram::commitUpdateAndDeletedPrograms() {
+void SequenceProgram::commitUpdateAndDeletedPrograms(Stats *stats) {
   auto progs_dir = Setup::getProgramsHome();
   auto status_entries = Git::status(progs_dir);
 
@@ -172,9 +172,9 @@ void SequenceProgram::commitUpdateAndDeletedPrograms() {
     if (file.find("oeis/") != 0) {
       continue;
     }
-    if (status == "M") {
+    if (status == " M") {
       files_to_update.push_back(file);
-    } else if (status == "D") {
+    } else if (status == " D") {
       files_to_delete.push_back(file);
     }
   }
@@ -191,11 +191,27 @@ void SequenceProgram::commitUpdateAndDeletedPrograms() {
       num_updated++;
       continue;
     }
+    std::cout << "\n";
 
     std::string fname = file.substr(file.find_last_of("/\\") + 1);
     std::string anumber = fname.substr(0, fname.find('.'));
 
-    std::cout << "Update program " << file << "? (Y)es, (n)o, (r)evert: ";
+    // Usage info and warnings
+    int64_t usage = 0;
+    if (stats != nullptr) {
+      UID uid(anumber);
+      usage = stats->getNumUsages(uid);
+      if (usage > 0) {
+        std::cout << usage << " other programs using this program.\n\n";
+      }
+      if (usage >= 100) {
+        std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
+        std::cout << "!!!   HIGH USAGE WARNING   !!!\n";
+        std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n";
+      }
+    }
+
+    std::cout << "Update " << anumber << "? (Y)es, (n)o, (r)evert: ";
     std::string answer;
     std::getline(std::cin, answer);
 
@@ -216,7 +232,7 @@ void SequenceProgram::commitUpdateAndDeletedPrograms() {
     std::string fname = file.substr(file.find_last_of("/\\") + 1);
     std::string anumber = fname.substr(0, fname.find('.'));
 
-    std::cout << "Delete program " << file << "? (Y)es, (n)o: ";
+    std::cout << "\nDelete " << anumber << "? (Y)es, (n)o: ";
     std::string answer;
     std::getline(std::cin, answer);
 
