@@ -18,7 +18,7 @@ SRCS = base/uid.cpp \
   math/big_number.cpp math/number.cpp math/sequence.cpp \
   mine/api_client.cpp mine/blocks.cpp mine/checker.cpp mine/config.cpp mine/distribution.cpp mine/extender.cpp mine/finder.cpp mine/generator.cpp mine/generator_v1.cpp mine/generator_v2.cpp mine/generator_v3.cpp mine/generator_v4.cpp mine/generator_v5.cpp mine/generator_v6.cpp mine/generator_v7.cpp mine/generator_v8.cpp mine/invalid_matches.cpp mine/iterator.cpp mine/matcher.cpp mine/mine_manager.cpp mine/miner.cpp mine/mutator.cpp mine/reducer.cpp mine/stats.cpp \
   seq/managed_seq.cpp seq/seq_index.cpp seq/seq_list.cpp seq/seq_loader.cpp seq/seq_program.cpp seq/seq_util.cpp \
-  sys/file.cpp sys/git.cpp sys/jute.cpp sys/log.cpp sys/metrics.cpp sys/process.cpp sys/setup.cpp sys/util.cpp sys/web_client.cpp
+  sys/csv.cpp sys/file.cpp sys/git.cpp sys/jute.cpp sys/log.cpp sys/metrics.cpp sys/process.cpp sys/setup.cpp sys/util.cpp sys/web_client.cpp
 
 loda: $(SRCS)
 	cl /EHsc /Feloda.exe $(CXXFLAGS) $(SRCS)
