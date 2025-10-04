@@ -138,9 +138,36 @@ void Git::clone(const std::string &url, const std::string &folder) {
   git("", "clone " + url + " \"" + folder + "\"");
 }
 
+bool Git::add(const std::string &folder, const std::string &file) {
+  return git(folder, "add \"" + file + "\"");
+}
+
+bool Git::commit(const std::string &folder, const std::string &message) {
+  return git(folder, "commit -m \"" + message + "\"");
+}
+
+bool Git::push(const std::string &folder) { return git(folder, "push"); }
+
 std::string getTmpFile() {
   const int64_t id = Random::get().gen() % 1000;
   return getTmpDir() + "git_" + std::to_string(id) + ".txt";
+}
+
+std::vector<std::pair<std::string, std::string>> Git::status(
+    const std::string &folder) {
+  std::vector<std::pair<std::string, std::string>> result;
+  auto tmp_file = getTmpFile();
+  git(folder, "status --porcelain > \"" + tmp_file + "\"");
+  std::ifstream in(tmp_file);
+  std::string line;
+  while (std::getline(in, line)) {
+    if (line.size() < 4) continue;
+    std::string status = line.substr(0, 2);
+    std::string file = line.substr(3);
+    result.emplace_back(status, file);
+  }
+  std::remove(tmp_file.c_str());
+  return result;
 }
 
 std::vector<std::string> Git::log(const std::string &folder,
