@@ -3,6 +3,7 @@
 #include <iostream>
 #include <set>
 
+#include "eval/evaluator.hpp"
 #include "lang/analyzer.hpp"
 #include "lang/comments.hpp"
 #include "lang/parser.hpp"
@@ -183,13 +184,17 @@ void SequenceProgram::commitUpdateAndDeletedPrograms(
   size_t num_updated = 0;
   size_t num_deleted = 0;
 
-  // Handle updated files
   Parser parser;
+  Settings settings;
+  settings.print_as_b_file = true;
+  Evaluator evaluator(settings, EVAL_ALL, true);
+
+  // Handle updated files
   for (const auto &file : files_to_update) {
     // Load new version
     Program new_program;
     try {
-      new_program = parser.parse(file);
+      new_program = parser.parse(progs_dir + file);
     } catch (const std::exception &e) {
       std::cerr << "Failed to parse new version: " << file << std::endl;
     }
@@ -244,11 +249,34 @@ void SequenceProgram::commitUpdateAndDeletedPrograms(
       }
     }
 
-    // You can now compare old_program and new_program here if needed
-
-    std::cout << "Update " << anumber << "? (Y)es, (n)o, (r)evert: ";
+    // Interactive prompt with check option
+    std::cout << "Update " << anumber << "? (Y)es, (n)o, (c)heck, (r)evert: ";
     std::string answer;
     std::getline(std::cin, answer);
+
+    if (answer == "c" || answer == "C") {
+      try {
+        UID uid(anumber);
+        ManagedSequence managed_seq(uid);
+        Sequence seq = managed_seq.getTerms(getNumCheckTerms(
+            full_check_list && full_check_list->count(uid) > 0));
+        int64_t num_terms = seq.size();
+        auto result = evaluator.check(new_program, seq, num_terms, uid);
+        std::cout << "\n";
+        if (result.first == status_t::OK) {
+          std::cout << "Check passed.\n\n";
+        } else if (result.first == status_t::WARNING) {
+          std::cout << "Check warning.\n\n";
+        } else {
+          std::cout << "Check failed.\n\n";
+        }
+      } catch (const std::exception &e) {
+        std::cerr << "Check failed: " << e.what() << "\n\n";
+      }
+      // Re-prompt after check
+      std::cout << "Update " << anumber << "? (Y)es, (n)o, (r)evert: ";
+      std::getline(std::cin, answer);
+    }
 
     if (answer.empty() || answer == "y" || answer == "Y") {
       Git::add(progs_dir, file);
