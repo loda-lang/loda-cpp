@@ -25,5 +25,6 @@ class SequenceProgram {
 
   static void commitAddedPrograms(size_t min_commit_count = 5);
 
-  static void commitUpdateAndDeletedPrograms(Stats* stats);
+  static void commitUpdateAndDeletedPrograms(
+      Stats* stats, const std::unordered_set<UID>* full_check_list);
 };

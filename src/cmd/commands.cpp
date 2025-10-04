@@ -935,5 +935,13 @@ void Commands::commitUpdatedAndDeletedPrograms() {
   } catch (const std::exception& e) {
     std::cerr << "Could not load stats: " << e.what() << std::endl;
   }
-  SequenceProgram::commitUpdateAndDeletedPrograms(&stats);
+  std::unordered_set<UID> full_check_list;
+  try {
+    const std::string full_check_path =
+        Setup::getProgramsHome() + "oeis/full_check.txt";
+    SequenceList::loadList(full_check_path, full_check_list);
+  } catch (const std::exception& e) {
+    std::cerr << "Could not load full_check list: " << e.what() << std::endl;
+  }
+  SequenceProgram::commitUpdateAndDeletedPrograms(&stats, &full_check_list);
 }

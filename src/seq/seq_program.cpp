@@ -159,7 +159,8 @@ void SequenceProgram::commitAddedPrograms(size_t min_commit_count) {
   }
 }
 
-void SequenceProgram::commitUpdateAndDeletedPrograms(Stats *stats) {
+void SequenceProgram::commitUpdateAndDeletedPrograms(
+    Stats *stats, const std::unordered_set<UID> *full_check_list) {
   auto progs_dir = Setup::getProgramsHome();
   auto status_entries = Git::status(progs_dir);
 
@@ -198,7 +199,7 @@ void SequenceProgram::commitUpdateAndDeletedPrograms(Stats *stats) {
 
     // Usage info and warnings
     int64_t usage = 0;
-    if (stats != nullptr) {
+    if (stats) {
       UID uid(anumber);
       usage = stats->getNumUsages(uid);
       if (usage > 0) {
@@ -208,6 +209,14 @@ void SequenceProgram::commitUpdateAndDeletedPrograms(Stats *stats) {
         std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
         std::cout << "!!!   HIGH USAGE WARNING   !!!\n";
         std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n";
+      }
+    }
+
+    // Full check info
+    if (full_check_list) {
+      UID uid(anumber);
+      if (full_check_list->count(uid) > 0) {
+        std::cout << "Full check enabled.\n\n";
       }
     }
 
