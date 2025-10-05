@@ -4,7 +4,8 @@
 
 #include "lang/program_util.hpp"
 
-SimpleLoopProgram Analyzer::extractSimpleLoop(const Program& program) {
+SimpleLoopProgram Analyzer::extractSimpleLoop(const Program& program,
+                                              SimpleLoopError* error) {
   SimpleLoopProgram result;
   int64_t phase = 0;
   for (auto& op : program.ops) {
@@ -13,12 +14,31 @@ SimpleLoopProgram Analyzer::extractSimpleLoop(const Program& program) {
     }
     if (ProgramUtil::hasIndirectOperand(op)) {
       result.is_simple_loop = false;
+      if (error) {
+        *error = SimpleLoopError::HAS_INDIRECT_OPERAND;
+      }
       return result;
     }
     if (op.type == Operation::Type::LPB) {
-      if (phase != 0 || op.target.type != Operand::Type::DIRECT ||
-          op.source != Operand(Operand::Type::CONSTANT, 1)) {
+      if (phase != 0) {
         result.is_simple_loop = false;
+        if (error) {
+          *error = SimpleLoopError::MULTIPLE_LOOPS;
+        }
+        return result;
+      }
+      if (op.target.type != Operand::Type::DIRECT) {
+        result.is_simple_loop = false;
+        if (error) {
+          *error = SimpleLoopError::LPB_TARGET_NOT_DIRECT;
+        }
+        return result;
+      }
+      if (op.source != Operand(Operand::Type::CONSTANT, 1)) {
+        result.is_simple_loop = false;
+        if (error) {
+          *error = SimpleLoopError::LPB_SOURCE_NOT_ONE;
+        }
         return result;
       }
       result.counter = op.target.value.asInt();
@@ -28,6 +48,9 @@ SimpleLoopProgram Analyzer::extractSimpleLoop(const Program& program) {
     if (op.type == Operation::Type::LPE) {
       if (phase != 1) {
         result.is_simple_loop = false;
+        if (error) {
+          *error = SimpleLoopError::LPE_WITHOUT_LPB;
+        }
         return result;
       }
       phase = 2;
@@ -43,6 +66,9 @@ SimpleLoopProgram Analyzer::extractSimpleLoop(const Program& program) {
   }
   // need to be in the post-loop phase here for success
   result.is_simple_loop = (phase == 2);
+  if (!result.is_simple_loop && error) {
+    *error = SimpleLoopError::NO_LOOP_FOUND;
+  }
   return result;
 }
 

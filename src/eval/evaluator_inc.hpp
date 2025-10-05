@@ -93,8 +93,6 @@ class IncrementalEvaluator {
   void computeStatefulCells();
   void computeLoopCounterDependentCells();
   void initRuntimeData();
-  SimpleLoopProgram extractSimpleLoopWithError(const Program& program,
-                                               ErrorCode* error_code);
 
   Interpreter& interpreter;
 

@@ -37,81 +37,41 @@ void IncrementalEvaluator::reset() {
 
 // ====== Initialization functions (static code analysis) =========
 
-SimpleLoopProgram IncrementalEvaluator::extractSimpleLoopWithError(
-    const Program& program, ErrorCode* error_code) {
-  SimpleLoopProgram result;
-  int64_t phase = 0;
-  for (auto& op : program.ops) {
-    if (op.type == Operation::Type::NOP) {
-      continue;
-    }
-    if (ProgramUtil::hasIndirectOperand(op)) {
-      result.is_simple_loop = false;
-      if (error_code) {
-        *error_code = ErrorCode::HAS_INDIRECT_OPERAND;
-      }
-      return result;
-    }
-    if (op.type == Operation::Type::LPB) {
-      if (phase != 0) {
-        result.is_simple_loop = false;
-        if (error_code) {
-          *error_code = ErrorCode::MULTIPLE_LOOPS;
-        }
-        return result;
-      }
-      if (op.target.type != Operand::Type::DIRECT) {
-        result.is_simple_loop = false;
-        if (error_code) {
-          *error_code = ErrorCode::LPB_TARGET_NOT_DIRECT;
-        }
-        return result;
-      }
-      if (op.source != Operand(Operand::Type::CONSTANT, 1)) {
-        result.is_simple_loop = false;
-        if (error_code) {
-          *error_code = ErrorCode::LPB_SOURCE_NOT_ONE;
-        }
-        return result;
-      }
-      result.counter = op.target.value.asInt();
-      phase = 1;
-      continue;
-    }
-    if (op.type == Operation::Type::LPE) {
-      if (phase != 1) {
-        result.is_simple_loop = false;
-        if (error_code) {
-          *error_code = ErrorCode::LPE_WITHOUT_LPB;
-        }
-        return result;
-      }
-      phase = 2;
-      continue;
-    }
-    if (phase == 0) {
-      result.pre_loop.ops.push_back(op);
-    } else if (phase == 1) {
-      result.body.ops.push_back(op);
-    } else if (phase == 2) {
-      result.post_loop.ops.push_back(op);
-    }
-  }
-  // need to be in the post-loop phase here for success
-  result.is_simple_loop = (phase == 2);
-  if (!result.is_simple_loop && error_code) {
-    *error_code = ErrorCode::NO_LOOP_FOUND;
-  }
-  return result;
-}
-
 bool IncrementalEvaluator::init(const Program& program,
                                 bool skip_input_transform, bool skip_offset,
                                 ErrorCode* error_code) {
   reset();
   ErrorCode local_error_code = ErrorCode::OK;
-  simple_loop = extractSimpleLoopWithError(program, &local_error_code);
+  
+  // Use Analyzer's extractSimpleLoop with error code support
+  SimpleLoopError simple_loop_error;
+  simple_loop = Analyzer::extractSimpleLoop(program, &simple_loop_error);
+  
   if (!simple_loop.is_simple_loop) {
+    // Map SimpleLoopError to IncrementalEvaluator::ErrorCode
+    switch (simple_loop_error) {
+      case SimpleLoopError::HAS_INDIRECT_OPERAND:
+        local_error_code = ErrorCode::HAS_INDIRECT_OPERAND;
+        break;
+      case SimpleLoopError::MULTIPLE_LOOPS:
+        local_error_code = ErrorCode::MULTIPLE_LOOPS;
+        break;
+      case SimpleLoopError::LPB_TARGET_NOT_DIRECT:
+        local_error_code = ErrorCode::LPB_TARGET_NOT_DIRECT;
+        break;
+      case SimpleLoopError::LPB_SOURCE_NOT_ONE:
+        local_error_code = ErrorCode::LPB_SOURCE_NOT_ONE;
+        break;
+      case SimpleLoopError::LPE_WITHOUT_LPB:
+        local_error_code = ErrorCode::LPE_WITHOUT_LPB;
+        break;
+      case SimpleLoopError::NO_LOOP_FOUND:
+        local_error_code = ErrorCode::NO_LOOP_FOUND;
+        break;
+      default:
+        local_error_code = ErrorCode::NO_LOOP_FOUND;
+        break;
+    }
     last_error_code = local_error_code;
     if (error_code) {
       *error_code = local_error_code;
