@@ -11,6 +11,7 @@
 #include "lang/program_util.hpp"
 #include "seq/managed_seq.hpp"
 #include "seq/seq_program.hpp"
+#include "sys/csv.hpp"
 #include "sys/file.hpp"
 #include "sys/log.hpp"
 #include "sys/setup.hpp"
@@ -24,14 +25,6 @@ const std::string Stats::SUMMARY_HEADER(
     "num_sequences,num_programs,num_formulas");
 const std::string SUBMITTERS_HEADER = "submitter,ref_id,num_programs";
 
-void checkHeader(std::istream &in, const std::string &header,
-                 const std::string &file) {
-  std::string line;
-  if (!std::getline(in, line) || line != header) {
-    throw std::runtime_error("unexpected header in " + file);
-  }
-}
-
 Stats::Stats()
     : num_programs(0),
       num_sequences(0),
@@ -43,8 +36,7 @@ void Stats::load(std::string path) {
   Log::get().debug("Loading program stats from " + path);
   auto start_time = std::chrono::steady_clock::now();
 
-  const std::string sep(",");
-  std::string full, line, k, l, m, v, w, u, x;
+  std::string full;
   Parser parser;
   Operation op;
   Operand count;
@@ -52,45 +44,36 @@ void Stats::load(std::string path) {
   {
     full = path + "constant_counts.csv";
     Log::get().debug("Loading " + full);
-    std::ifstream constants(full);
-    while (std::getline(constants, line)) {
-      std::stringstream s(line);
-      std::getline(s, k, ',');
-      std::getline(s, v);
-      num_constants[Number(k)] = std::stoll(v);
+    CsvReader reader(full);
+    while (reader.readRow()) {
+      num_constants[Number(reader.getField(0))] = reader.getIntegerField(1);
     }
-    constants.close();
+    reader.close();
   }
 
   {
     full = path + "program_lengths.csv";
     Log::get().debug("Loading " + full);
-    std::ifstream program_lengths(full);
-    while (std::getline(program_lengths, line)) {
-      std::stringstream s(line);
-      std::getline(s, k, ',');
-      std::getline(s, v);
-      auto l = std::stoll(k);
+    CsvReader reader(full);
+    while (reader.readRow()) {
+      auto l = reader.getIntegerField(0);
       while (l >= (int64_t)num_programs_per_length.size()) {
         num_programs_per_length.push_back(0);
       }
-      num_programs_per_length[l] = std::stoll(v);
+      num_programs_per_length[l] = reader.getIntegerField(1);
     }
-    program_lengths.close();
+    reader.close();
   }
 
   {
     full = path + "operation_type_counts.csv";
     Log::get().debug("Loading " + full);
-    std::ifstream op_type_counts(full);
-    while (std::getline(op_type_counts, line)) {
-      std::stringstream s(line);
-      std::getline(s, k, ',');
-      std::getline(s, v);
-      auto type = Operation::Metadata::get(k).type;
-      num_ops_per_type.at(static_cast<size_t>(type)) = std::stoll(v);
+    CsvReader reader(full);
+    while (reader.readRow()) {
+      auto type = Operation::Metadata::get(reader.getField(0)).type;
+      num_ops_per_type.at(static_cast<size_t>(type)) = reader.getIntegerField(1);
     }
-    op_type_counts.close();
+    reader.close();
   }
 
   {
@@ -148,87 +131,71 @@ void Stats::load(std::string path) {
   {
     full = path + "programs.csv";
     Log::get().debug("Loading " + full);
-    std::ifstream programs(full);
+    CsvReader reader(full);
     int64_t largest_id = 0;
-    checkHeader(programs, PROGRAMS_HEADER, full);
-    std::string loop_col, formula_col, indirect_col;
-    while (std::getline(programs, line)) {
-      std::stringstream s(line);
-      std::getline(s, k, ',');
-      std::getline(s, u, ',');
-      std::getline(s, l, ',');
-      std::getline(s, m, ',');
-      std::getline(s, v, ',');
-      std::getline(s, w, ',');
-      std::getline(s, x, ',');
-      std::getline(s, loop_col, ',');
-      std::getline(s, formula_col, ',');
-      std::getline(s, indirect_col);
-      UID id(k);
+    reader.checkHeader(PROGRAMS_HEADER);
+    while (reader.readRow()) {
+      UID id(reader.getField(0));
       largest_id = std::max<int64_t>(largest_id, id.number());
       all_program_ids.insert(id);
-      program_submitter[id] = std::stoll(u);
-      program_lengths[id] = std::stoll(l);
-      program_usages[id] = std::stoll(m);
-      if (std::stoll(v)) {
+      program_submitter[id] = reader.getIntegerField(1);
+      program_lengths[id] = reader.getIntegerField(2);
+      program_usages[id] = reader.getIntegerField(3);
+      if (reader.getIntegerField(4)) {
         supports_inceval.insert(id);
       }
-      if (std::stoll(w)) {
+      if (reader.getIntegerField(5)) {
         supports_logeval.insert(id);
       }
-      if (std::stoll(x)) {
+      if (reader.getIntegerField(6)) {
         supports_vireval.insert(id);
       }
-      if (std::stoll(loop_col)) {
+      if (reader.getIntegerField(7)) {
         has_loop.insert(id);
       }
-      if (std::stoll(formula_col)) {
+      if (reader.getIntegerField(8)) {
         has_formula.insert(id);
       }
-      if (std::stoll(indirect_col)) {
+      if (reader.getIntegerField(9)) {
         has_indirect.insert(id);
       }
     }
-    programs.close();
+    reader.close();
   }
 
   {
     full = path + "latest_programs.csv";
     Log::get().debug("Loading " + full);
-    std::ifstream latest_programs(full);
+    CsvReader reader(full);
     latest_program_ids.clear();
-    while (std::getline(latest_programs, line)) {
-      latest_program_ids.insert(UID(line));
+    while (reader.readRow()) {
+      latest_program_ids.insert(UID(reader.getField(0)));
     }
-    latest_programs.close();
+    reader.close();
   }
 
   {
     full = path + "call_graph.csv";
     Log::get().debug("Loading " + full);
-    std::ifstream call(full);
-    checkHeader(call, CALL_GRAPH_HEADER, full);
+    CsvReader reader(full);
+    reader.checkHeader(CALL_GRAPH_HEADER);
     call_graph.clear();
-    while (std::getline(call, line)) {
-      std::stringstream s(line);
-      std::getline(s, k, ',');
-      std::getline(s, v);
-      call_graph.insert(std::pair<UID, UID>(UID(k), UID(v)));
+    while (reader.readRow()) {
+      call_graph.emplace(UID(reader.getField(0)), UID(reader.getField(1)));
     }
-    call.close();
+    reader.close();
   }
 
   {
     full = path + "summary.csv";
     Log::get().debug("Loading " + full);
-    std::ifstream summary(full);
-    checkHeader(summary, SUMMARY_HEADER, full);
-    std::getline(summary, k, ',');
-    std::getline(summary, v, ',');
-    std::getline(summary, w);
-    num_sequences = std::stoll(k);
-    num_programs = std::stoll(v);
-    num_formulas = std::stoll(w);
+    CsvReader reader(full);
+    reader.checkHeader(SUMMARY_HEADER);
+    if (reader.readRow()) {
+      num_sequences = reader.getIntegerField(0);
+      num_programs = reader.getIntegerField(1);
+      num_formulas = reader.getIntegerField(2);
+    }
   }
 
   {
@@ -238,22 +205,18 @@ void Stats::load(std::string path) {
   {
     full = path + "submitters.csv";
     Log::get().debug("Loading " + full);
-    std::ifstream submitters(full);
+    CsvReader reader(full);
     num_programs_per_submitter.clear();
-    checkHeader(submitters, SUBMITTERS_HEADER, full);
-    while (std::getline(submitters, line)) {
-      std::stringstream s(line);
-      std::getline(s, k, ',');
-      std::getline(s, v, ',');
-      std::getline(s, w);
-      auto ref_id = std::stoll(v);
-      submitter_ref_ids[k] = ref_id;
+    reader.checkHeader(SUBMITTERS_HEADER);
+    while (reader.readRow()) {
+      auto ref_id = reader.getIntegerField(1);
+      submitter_ref_ids[reader.getField(0)] = ref_id;
       if (ref_id >= static_cast<int64_t>(num_programs_per_submitter.size())) {
         num_programs_per_submitter.resize(ref_id + 1);
       }
-      num_programs_per_submitter[ref_id] = std::stoll(w);
+      num_programs_per_submitter[ref_id] = reader.getIntegerField(2);
     }
-    submitters.close();
+    reader.close();
   }
 
   // TODO: remaining stats
@@ -275,105 +238,130 @@ void Stats::save(std::string path) {
   ensureTrailingFileSep(path);
   Log::get().debug("Saving program stats to " + path);
 
-  const std::string sep(",");
-  std::ofstream constants(path + "constant_counts.csv");
-  for (auto &e : num_constants) {
-    constants << e.first << sep << e.second << "\n";
-  }
-  constants.close();
-
-  std::ofstream programs(path + "programs.csv");
-  programs << PROGRAMS_HEADER << "\n";
-  for (auto id : all_program_ids) {
-    const auto inceval = supports_inceval.exists(id);
-    const auto logeval = supports_logeval.exists(id);
-    const auto vireval = supports_vireval.exists(id);
-    const auto loop_flag = has_loop.exists(id);
-    const auto formula_flag = has_formula.exists(id);
-    const auto indirect_flag = has_indirect.exists(id);
-    programs << id.string() << sep << program_submitter[id] << sep
-             << program_lengths[id] << sep << program_usages[id] << sep
-             << inceval << sep << logeval << sep << vireval << sep << loop_flag
-             << sep << formula_flag << sep << indirect_flag << "\n";
-  }
-  programs.close();
-
-  std::ofstream latest_programs(path + "latest_programs.csv");
-  for (auto id : latest_program_ids) {
-    latest_programs << id.string() << "\n";
-  }
-  latest_programs.close();
-
-  std::ofstream lengths(path + "program_lengths.csv");
-  for (size_t i = 0; i < num_programs_per_length.size(); i++) {
-    if (num_programs_per_length[i] > 0) {
-      lengths << i << sep << num_programs_per_length[i] << "\n";
+  {
+    CsvWriter writer(path + "constant_counts.csv");
+    for (auto &e : num_constants) {
+      writer.writeRow(e.first.to_string(), std::to_string(e.second));
     }
+    writer.close();
   }
-  lengths.close();
 
-  std::ofstream op_type_counts(path + "operation_type_counts.csv");
-  for (size_t i = 0; i < num_ops_per_type.size(); i++) {
-    if (num_ops_per_type[i] > 0) {
-      op_type_counts
-          << Operation::Metadata::get(static_cast<Operation::Type>(i)).name
-          << sep << num_ops_per_type[i] << "\n";
+  {
+    CsvWriter writer(path + "programs.csv");
+    writer.writeHeader(PROGRAMS_HEADER);
+    for (auto id : all_program_ids) {
+      const auto inceval = supports_inceval.exists(id);
+      const auto logeval = supports_logeval.exists(id);
+      const auto vireval = supports_vireval.exists(id);
+      const auto loop_flag = has_loop.exists(id);
+      const auto formula_flag = has_formula.exists(id);
+      const auto indirect_flag = has_indirect.exists(id);
+      writer.writeRow({id.string(), std::to_string(program_submitter[id]),
+                       std::to_string(program_lengths[id]),
+                       std::to_string(program_usages[id]),
+                       std::to_string(inceval), std::to_string(logeval),
+                       std::to_string(vireval), std::to_string(loop_flag),
+                       std::to_string(formula_flag),
+                       std::to_string(indirect_flag)});
     }
+    writer.close();
   }
-  op_type_counts.close();
 
-  std::ofstream op_counts(path + "operation_counts.csv");
-  for (auto &op : num_operations) {
-    const auto &meta = Operation::Metadata::get(op.first.type);
-    op_counts << meta.name << sep
-              << ProgramUtil::operandToString(op.first.target) << sep
-              << ProgramUtil::operandToString(op.first.source) << sep
-              << op.second << "\n";
+  {
+    CsvWriter writer(path + "latest_programs.csv");
+    for (auto id : latest_program_ids) {
+      writer.writeRow({id.string()});
+    }
+    writer.close();
   }
-  op_counts.close();
 
-  std::ofstream oppos_counts(path + "operation_pos_counts.csv");
-  for (auto &o : num_operation_positions) {
-    const auto &meta = Operation::Metadata::get(o.first.op.type);
-    oppos_counts << o.first.pos << sep << o.first.len << sep << meta.name << sep
-                 << ProgramUtil::operandToString(o.first.op.target) << sep
-                 << ProgramUtil::operandToString(o.first.op.source) << sep
-                 << o.second << "\n";
+  {
+    CsvWriter writer(path + "program_lengths.csv");
+    for (size_t i = 0; i < num_programs_per_length.size(); i++) {
+      if (num_programs_per_length[i] > 0) {
+        writer.writeRow(std::to_string(i),
+                        std::to_string(num_programs_per_length[i]));
+      }
+    }
+    writer.close();
   }
-  oppos_counts.close();
 
-  std::ofstream summary(path + "summary.csv");
-  summary << SUMMARY_HEADER << "\n";
-  summary << num_sequences << sep << num_programs << sep << num_formulas
-          << "\n";
-  summary.close();
-
-  std::ofstream cal(path + "call_graph.csv");
-  cal << CALL_GRAPH_HEADER << "\n";
-  for (auto it : call_graph) {
-    cal << it.first.string() << sep << it.second.string() << "\n";
+  {
+    CsvWriter writer(path + "operation_type_counts.csv");
+    for (size_t i = 0; i < num_ops_per_type.size(); i++) {
+      if (num_ops_per_type[i] > 0) {
+        writer.writeRow(
+            Operation::Metadata::get(static_cast<Operation::Type>(i)).name,
+            std::to_string(num_ops_per_type[i]));
+      }
+    }
+    writer.close();
   }
-  cal.close();
+
+  {
+    CsvWriter writer(path + "operation_counts.csv");
+    for (auto &op : num_operations) {
+      const auto &meta = Operation::Metadata::get(op.first.type);
+      writer.writeRow({meta.name,
+                       ProgramUtil::operandToString(op.first.target),
+                       ProgramUtil::operandToString(op.first.source),
+                       std::to_string(op.second)});
+    }
+    writer.close();
+  }
+
+  {
+    CsvWriter writer(path + "operation_pos_counts.csv");
+    for (auto &o : num_operation_positions) {
+      const auto &meta = Operation::Metadata::get(o.first.op.type);
+      writer.writeRow({std::to_string(o.first.pos), std::to_string(o.first.len),
+                       meta.name,
+                       ProgramUtil::operandToString(o.first.op.target),
+                       ProgramUtil::operandToString(o.first.op.source),
+                       std::to_string(o.second)});
+    }
+    writer.close();
+  }
+
+  {
+    CsvWriter writer(path + "summary.csv");
+    writer.writeHeader(SUMMARY_HEADER);
+    writer.writeRow({std::to_string(num_sequences),
+                     std::to_string(num_programs),
+                     std::to_string(num_formulas)});
+    writer.close();
+  }
+
+  {
+    CsvWriter writer(path + "call_graph.csv");
+    writer.writeHeader(CALL_GRAPH_HEADER);
+    for (auto it : call_graph) {
+      writer.writeRow(it.first.string(), it.second.string());
+    }
+    writer.close();
+  }
 
   if (steps.total) {  // write steps stats only if present
-    std::ofstream steps_out(path + "steps.csv");
-    steps_out << STEPS_HEADER << "\n";
-    steps_out << steps.total << sep << steps.min << sep << steps.max << sep
-              << steps.runs << "\n";
-    steps_out.close();
+    CsvWriter writer(path + "steps.csv");
+    writer.writeHeader(STEPS_HEADER);
+    writer.writeRow({std::to_string(steps.total), std::to_string(steps.min),
+                     std::to_string(steps.max), std::to_string(steps.runs)});
+    writer.close();
   }
 
   {
     blocks.save(path + "blocks.asm");
   }
 
-  std::ofstream submitters(path + "submitters.csv");
-  submitters << SUBMITTERS_HEADER << "\n";
-  for (const auto &e : submitter_ref_ids) {
-    submitters << e.first << sep << e.second << sep
-               << num_programs_per_submitter[e.second] << "\n";
+  {
+    CsvWriter writer(path + "submitters.csv");
+    writer.writeHeader(SUBMITTERS_HEADER);
+    for (const auto &e : submitter_ref_ids) {
+      writer.writeRow({e.first, std::to_string(e.second),
+                       std::to_string(num_programs_per_submitter[e.second])});
+    }
+    writer.close();
   }
-  submitters.close();
 
   Log::get().debug("Finished saving program stats");
 }
