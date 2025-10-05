@@ -181,7 +181,7 @@ void Stats::load(std::string path) {
     reader.checkHeader(CALL_GRAPH_HEADER);
     call_graph.clear();
     while (reader.readRow()) {
-      call_graph.insert(std::pair<UID, UID>(UID(reader.getField(0)), UID(reader.getField(1))));
+      call_graph.emplace(UID(reader.getField(0)), UID(reader.getField(1)));
     }
     reader.close();
   }
