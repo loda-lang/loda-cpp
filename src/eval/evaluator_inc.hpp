@@ -93,6 +93,9 @@ class IncrementalEvaluator {
   void computeStatefulCells();
   void computeLoopCounterDependentCells();
   void initRuntimeData();
+  
+  // Helper function to map SimpleLoopError to ErrorCode
+  static ErrorCode mapSimpleLoopError(SimpleLoopError error);
 
   Interpreter& interpreter;
 

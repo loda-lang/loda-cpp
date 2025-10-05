@@ -37,6 +37,26 @@ void IncrementalEvaluator::reset() {
 
 // ====== Initialization functions (static code analysis) =========
 
+IncrementalEvaluator::ErrorCode IncrementalEvaluator::mapSimpleLoopError(
+    SimpleLoopError error) {
+  switch (error) {
+    case SimpleLoopError::HAS_INDIRECT_OPERAND:
+      return ErrorCode::HAS_INDIRECT_OPERAND;
+    case SimpleLoopError::MULTIPLE_LOOPS:
+      return ErrorCode::MULTIPLE_LOOPS;
+    case SimpleLoopError::LPB_TARGET_NOT_DIRECT:
+      return ErrorCode::LPB_TARGET_NOT_DIRECT;
+    case SimpleLoopError::LPB_SOURCE_NOT_ONE:
+      return ErrorCode::LPB_SOURCE_NOT_ONE;
+    case SimpleLoopError::LPE_WITHOUT_LPB:
+      return ErrorCode::LPE_WITHOUT_LPB;
+    case SimpleLoopError::NO_LOOP_FOUND:
+      return ErrorCode::NO_LOOP_FOUND;
+    default:
+      return ErrorCode::NO_LOOP_FOUND;
+  }
+}
+
 bool IncrementalEvaluator::init(const Program& program,
                                 bool skip_input_transform, bool skip_offset,
                                 ErrorCode* error_code) {
@@ -49,29 +69,7 @@ bool IncrementalEvaluator::init(const Program& program,
   
   if (!simple_loop.is_simple_loop) {
     // Map SimpleLoopError to IncrementalEvaluator::ErrorCode
-    switch (simple_loop_error) {
-      case SimpleLoopError::HAS_INDIRECT_OPERAND:
-        local_error_code = ErrorCode::HAS_INDIRECT_OPERAND;
-        break;
-      case SimpleLoopError::MULTIPLE_LOOPS:
-        local_error_code = ErrorCode::MULTIPLE_LOOPS;
-        break;
-      case SimpleLoopError::LPB_TARGET_NOT_DIRECT:
-        local_error_code = ErrorCode::LPB_TARGET_NOT_DIRECT;
-        break;
-      case SimpleLoopError::LPB_SOURCE_NOT_ONE:
-        local_error_code = ErrorCode::LPB_SOURCE_NOT_ONE;
-        break;
-      case SimpleLoopError::LPE_WITHOUT_LPB:
-        local_error_code = ErrorCode::LPE_WITHOUT_LPB;
-        break;
-      case SimpleLoopError::NO_LOOP_FOUND:
-        local_error_code = ErrorCode::NO_LOOP_FOUND;
-        break;
-      default:
-        local_error_code = ErrorCode::NO_LOOP_FOUND;
-        break;
-    }
+    local_error_code = mapSimpleLoopError(simple_loop_error);
     last_error_code = local_error_code;
     if (error_code) {
       *error_code = local_error_code;
