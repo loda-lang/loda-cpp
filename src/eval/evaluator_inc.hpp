@@ -25,13 +25,8 @@ class IncrementalEvaluator {
   // Detailed error codes for initialization failures
   enum class ErrorCode {
     OK = 0,
-    // Simple loop extraction errors (1-99)
-    HAS_INDIRECT_OPERAND = 1,
-    MULTIPLE_LOOPS = 2,
-    LPB_TARGET_NOT_DIRECT = 3,
-    LPB_SOURCE_NOT_ONE = 4,
-    LPE_WITHOUT_LPB = 5,
-    NO_LOOP_FOUND = 6,
+    // Simple loop extraction error (1-99)
+    NOT_A_SIMPLE_LOOP = 1,
     // Pre-loop check errors (100-199)
     LOOP_COUNTER_NOT_INPUT_DEPENDENT = 100,
     PRELOOP_UNSUPPORTED_OPERATION = 101,
@@ -93,9 +88,6 @@ class IncrementalEvaluator {
   void computeStatefulCells();
   void computeLoopCounterDependentCells();
   void initRuntimeData();
-  
-  // Helper function to map SimpleLoopError to ErrorCode
-  static ErrorCode mapSimpleLoopError(SimpleLoopError error);
 
   Interpreter& interpreter;
 
