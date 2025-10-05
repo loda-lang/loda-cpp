@@ -37,6 +37,13 @@ void IncrementalEvaluator::reset() {
 
 // ====== Initialization functions (static code analysis) =========
 
+void IncrementalEvaluator::setErrorCode(ErrorCode code, ErrorCode* error_code) {
+  last_error_code = code;
+  if (error_code) {
+    *error_code = code;
+  }
+}
+
 bool IncrementalEvaluator::init(const Program& program,
                                 bool skip_input_transform, bool skip_offset,
                                 ErrorCode* error_code) {
@@ -49,10 +56,7 @@ bool IncrementalEvaluator::init(const Program& program,
   if (!simple_loop.is_simple_loop) {
     // Use single error code for all simple loop extraction failures
     local_error_code = ErrorCode::NOT_A_SIMPLE_LOOP;
-    last_error_code = local_error_code;
-    if (error_code) {
-      *error_code = local_error_code;
-    }
+    setErrorCode(local_error_code, error_code);
     if (is_debug) {
       Log::get().debug("[IE] Simple loop check failed");
     }
@@ -60,20 +64,14 @@ bool IncrementalEvaluator::init(const Program& program,
   }
   // now the program fragments and the loop counter cell are initialized
   if (!checkPreLoop(skip_input_transform, &local_error_code)) {
-    last_error_code = local_error_code;
-    if (error_code) {
-      *error_code = local_error_code;
-    }
+    setErrorCode(local_error_code, error_code);
     if (is_debug) {
       Log::get().debug("[IE] Pre-loop check failed");
     }
     return false;
   }
   if (!checkPostLoop(&local_error_code)) {
-    last_error_code = local_error_code;
-    if (error_code) {
-      *error_code = local_error_code;
-    }
+    setErrorCode(local_error_code, error_code);
     if (is_debug) {
       Log::get().debug("[IE] Post-loop check failed");
     }
@@ -81,10 +79,7 @@ bool IncrementalEvaluator::init(const Program& program,
   }
   // now the output cells are initialized
   if (!checkLoopBody(&local_error_code)) {
-    last_error_code = local_error_code;
-    if (error_code) {
-      *error_code = local_error_code;
-    }
+    setErrorCode(local_error_code, error_code);
     if (is_debug) {
       Log::get().debug("[IE] Loop body check failed");
     }
@@ -96,10 +91,7 @@ bool IncrementalEvaluator::init(const Program& program,
   // initialue the runtime data
   initRuntimeData();
   initialized = true;
-  last_error_code = ErrorCode::OK;
-  if (error_code) {
-    *error_code = ErrorCode::OK;
-  }
+  setErrorCode(ErrorCode::OK, error_code);
   if (is_debug) {
     Log::get().debug("[IE] Initialization successful");
   }

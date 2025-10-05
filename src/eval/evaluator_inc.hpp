@@ -88,6 +88,9 @@ class IncrementalEvaluator {
   void computeStatefulCells();
   void computeLoopCounterDependentCells();
   void initRuntimeData();
+  
+  // Helper function to set error codes
+  void setErrorCode(ErrorCode code, ErrorCode* error_code);
 
   Interpreter& interpreter;
 
