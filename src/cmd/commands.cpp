@@ -937,7 +937,7 @@ void Commands::extractVirseqs() {
       }
       
       // Create output filename
-      std::string output_dir = Setup::getLodaHomeNoCheck() + "virseq/";
+      std::string output_dir = Setup::getLodaHome() + "virseq" + FILE_SEP;
       std::string output_file = output_dir + seq.id.string() + "_" + 
                                 std::to_string(i + 1) + ".asm";
       
