@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <unordered_set>
 
 #include "eval/evaluator.hpp"
 #include "eval/minimizer.hpp"
@@ -28,6 +29,7 @@ class Checker {
                                    const Program& existing, bool is_new,
                                    const ManagedSequence& seq,
                                    const std::string& change_type,
+                                   const std::string& submitter,
                                    size_t previous_hash, bool full_check,
                                    size_t num_usages);
 
@@ -44,6 +46,7 @@ class Checker {
   Minimizer& minimizer;
   InvalidMatches& invalid_matches;
   Optimizer optimizer;
+  std::unordered_set<std::string> forced_submitter_checks;
 
   void notifyUnfoldOrMinimizeProblem(const Program& p, const std::string& id);
 };

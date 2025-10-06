@@ -22,14 +22,33 @@
 //
 class IncrementalEvaluator {
  public:
+  // Detailed error codes for initialization failures
+  enum class ErrorCode {
+    OK = 0,
+    // Simple loop extraction error (1-99)
+    NOT_A_SIMPLE_LOOP = 1,
+    // Pre-loop check errors (100-199)
+    LOOP_COUNTER_NOT_INPUT_DEPENDENT = 100,
+    PRELOOP_UNSUPPORTED_OPERATION = 101,
+    PRELOOP_NON_CONSTANT_OPERAND = 102,
+    // Loop body check errors (200-299)
+    LOOP_COUNTER_NOT_UPDATED = 200,
+    LOOP_COUNTER_DECREMENT_INVALID = 201,
+    LOOP_COUNTER_UPDATE_INVALID = 202,
+    INPUT_DEPENDENT_CELL_READ = 203,
+    INPUT_DEPENDENT_SOURCE_USED = 204,
+    NON_COMMUTATIVE_OPERATIONS = 205,
+  };
+ public:
   explicit IncrementalEvaluator(Interpreter& interpreter);
 
   void reset();
 
   // Initialize the IE using a program. IE can be applied only if this function
-  // returns true.
+  // returns true. If error_code is provided, it will be set to the detailed
+  // error code when initialization fails.
   bool init(const Program& program, bool skip_input_transform = false,
-            bool skip_offset = false);
+            bool skip_offset = false, ErrorCode* error_code = nullptr);
 
   // Compute the next term and step count.
   std::pair<Number, size_t> next(bool skip_final_iter = false,
@@ -59,13 +78,19 @@ class IncrementalEvaluator {
   inline int64_t getPreviousSlice() const { return previous_slice; }
   bool isInputDependent(const Operand& op) const;
 
+  // Get the last error code from initialization
+  inline ErrorCode getLastErrorCode() const { return last_error_code; }
+
  private:
-  bool checkPreLoop(bool skip_input_transform);
-  bool checkLoopBody();
-  bool checkPostLoop();
+  bool checkPreLoop(bool skip_input_transform, ErrorCode* error_code);
+  bool checkLoopBody(ErrorCode* error_code);
+  bool checkPostLoop(ErrorCode* error_code);
   void computeStatefulCells();
   void computeLoopCounterDependentCells();
   void initRuntimeData();
+  
+  // Helper function to set error codes
+  void setErrorCode(ErrorCode code, ErrorCode* error_code);
 
   Interpreter& interpreter;
 
@@ -82,6 +107,7 @@ class IncrementalEvaluator {
   Operation::Type loop_counter_type;
   bool initialized;
   const bool is_debug;
+  ErrorCode last_error_code;
 
   // runtime data
   int64_t argument;

@@ -14,6 +14,7 @@
 #include "sys/file.hpp"
 #include "sys/log.hpp"
 #include "sys/setup.hpp"
+#include "sys/util.hpp"
 
 bool hasBadConstant(const Program& p) {
   auto constants = Constants::getAllConstants(p, true);
@@ -97,7 +98,18 @@ Checker::Checker(const Settings& settings, Evaluator& evaluator,
     : evaluator(evaluator),
       minimizer(minimizer),
       invalid_matches(invalid_matches),
-      optimizer(settings) {}
+      optimizer(settings) {
+  // Initialize forced_submitter_checks from setup value
+  std::string value = Setup::getSetupValue("LODA_FORCED_SUBMITTER_CHECKS");
+  std::stringstream ss(value);
+  std::string name;
+  while (std::getline(ss, name, ',')) {
+    trimString(name);
+    if (!name.empty()) {
+      forced_submitter_checks.insert(name);
+    }
+  }
+}
 
 check_result_t Checker::checkProgramExtended(Program program, Program existing,
                                              bool is_new,
@@ -168,6 +180,7 @@ check_result_t Checker::checkProgramBasic(const Program& program,
                                           const Program& existing, bool is_new,
                                           const ManagedSequence& seq,
                                           const std::string& change_type,
+                                          const std::string& submitter,
                                           size_t previous_hash, bool full_check,
                                           size_t num_usages) {
   static const std::string first = "Found";
@@ -181,11 +194,14 @@ check_result_t Checker::checkProgramBasic(const Program& program,
                        " because program is not new");
       return result;
     }
-    // fall back to default validation if is fast or if metadata is missing
+    // fall back to extended validation if the program is fast, if metadata is
+    // missing, or if forced submitter checks enabled
     bool is_fast = !ProgramUtil::hasOp(program, Operation::Type::LPB) &&
                    !ProgramUtil::hasOp(program, Operation::Type::SEQ) &&
                    !ProgramUtil::hasOp(program, Operation::Type::PRG);
-    if (is_fast || change_type.empty() || !previous_hash) {
+    if (is_fast || change_type.empty() || !previous_hash ||
+        forced_submitter_checks.find(submitter) !=
+            forced_submitter_checks.end()) {
       Log::get().debug("Falling back to extended validation for " +
                        seq.id.string());
       return checkProgramExtended(program, existing, is_new, seq, full_check,
