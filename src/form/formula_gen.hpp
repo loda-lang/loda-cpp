@@ -3,6 +3,7 @@
 #include <map>
 
 #include "eval/evaluator_inc.hpp"
+#include "eval/range_generator.hpp"
 #include "form/formula.hpp"
 #include "lang/program.hpp"
 
@@ -37,13 +38,21 @@ class FormulaGenerator {
   Expression divToFraction(const Expression& numerator,
                            const Expression& denominator) const;
 
+  Expression divToFraction(const Expression& numerator,
+                           const Expression& denominator, const Operand& numOp,
+                           const Operand& denomOp,
+                           const RangeMap* ranges) const;
+
   bool bitfunc(Operation::Type type, const Expression& a, const Expression& b,
                Expression& res) const;
 
   bool facToExpression(const Expression& a, const Expression& b,
                Expression& res) const;
 
-  bool update(const Operation& op);
+  bool canBeNegativeWithRanges(const Expression& e, const Operand& operand,
+                                const RangeMap* ranges) const;
+
+  bool update(const Operation& op, const RangeMap* ranges = nullptr);
 
   bool update(const Program& p);
 
@@ -64,6 +73,7 @@ class FormulaGenerator {
   Settings settings;
   Interpreter interpreter;
   IncrementalEvaluator incEval;
+  RangeGenerator rangeGenerator;
 
   Formula formula;
   std::map<int64_t, std::string> cellNames;

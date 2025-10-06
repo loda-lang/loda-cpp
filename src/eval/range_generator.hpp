@@ -24,6 +24,17 @@ class RangeGenerator {
    */
   bool generate(const Program& program, RangeMap& ranges,
                 Number inputUpperBound = Number::INF);
+  
+  /**
+   * Collects range maps for each operation in the program.
+   * @param program The LODA program to analyze.
+   * @param collected The output vector of range maps (one per operation).
+   * @param inputUpperBound The upper bound for the input parameter.
+   * @return True if the collection was successful, false otherwise.
+   */
+  bool collectRanges(const Program& program, std::vector<RangeMap>& collected,
+                     Number inputUpperBound = Number::INF);
+  
   bool annotate(Program& program, Number inputUpperBound = Number::INF);
 
  private:

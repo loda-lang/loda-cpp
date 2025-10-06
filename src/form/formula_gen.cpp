@@ -93,6 +93,41 @@ Expression FormulaGenerator::divToFraction(
   return func(funcName, {frac});
 }
 
+Expression FormulaGenerator::divToFraction(
+    const Expression& numerator, const Expression& denominator,
+    const Operand& numOp, const Operand& denomOp,
+    const RangeMap* ranges) const {
+  Expression frac(Expression::Type::FRACTION, "", {numerator, denominator});
+  std::string funcName = "floor";
+  if (canBeNegativeWithRanges(numerator, numOp, ranges) ||
+      canBeNegativeWithRanges(denominator, denomOp, ranges)) {
+    funcName = "truncate";
+  }
+  return func(funcName, {frac});
+}
+
+bool FormulaGenerator::canBeNegativeWithRanges(const Expression& e,
+                                                const Operand& operand,
+                                                const RangeMap* ranges) const {
+  // If we have ranges and the operand is a direct memory access, use ranges
+  if (ranges && operand.type == Operand::Type::DIRECT) {
+    auto it = ranges->find(operand.value.asInt());
+    if (it != ranges->end()) {
+      const auto& range = it->second;
+      // If lower bound is >= 0, it cannot be negative
+      if (range.lower_bound >= Number::ZERO) {
+        return false;
+      }
+      // If upper bound is < 0, it must be negative
+      if (range.upper_bound < Number::ZERO) {
+        return true;
+      }
+    }
+  }
+  // Fall back to the original canBeNegative check
+  return ExpressionUtil::canBeNegative(e, offset);
+}
+
 bool FormulaGenerator::bitfunc(Operation::Type type, const Expression& a,
                                const Expression& b, Expression& res) const {
   std::string name;
@@ -150,7 +185,7 @@ bool FormulaGenerator::facToExpression(const Expression& a,
   return true;
 }
 
-bool FormulaGenerator::update(const Operation& op) {
+bool FormulaGenerator::update(const Operation& op, const RangeMap* ranges) {
   auto source = operandToExpression(op.source);
   auto target = operandToExpression(op.target);
   if (source.type == Expression::Type::FUNCTION) {
@@ -180,12 +215,12 @@ bool FormulaGenerator::update(const Operation& op) {
       break;
     }
     case Operation::Type::DIV: {
-      res = divToFraction(prevTarget, source);
+      res = divToFraction(prevTarget, source, op.target, op.source, ranges);
       break;
     }
     case Operation::Type::POW: {
       res = Expression(Expression::Type::POWER, "", {prevTarget, source});
-      if (ExpressionUtil::canBeNegative(source, offset)) {
+      if (canBeNegativeWithRanges(source, op.source, ranges)) {
         res = func("truncate", {res});
       }
       break;
@@ -193,9 +228,10 @@ bool FormulaGenerator::update(const Operation& op) {
     case Operation::Type::MOD: {
       auto c1 = prevTarget;
       auto c2 = source;
-      if (ExpressionUtil::canBeNegative(c1, offset) ||
-          ExpressionUtil::canBeNegative(c2, offset)) {
-        res = sum({c1, product({constant(-1), c2, divToFraction(c1, c2)})});
+      if (canBeNegativeWithRanges(c1, op.target, ranges) ||
+          canBeNegativeWithRanges(c2, op.source, ranges)) {
+        res = sum({c1, product({constant(-1), c2,
+                                divToFraction(c1, c2, op.target, op.source, ranges)})});
       } else {
         res = mod(c1, c2);
       }
@@ -272,7 +308,7 @@ bool FormulaGenerator::update(const Operation& op) {
       // ((x-1)%(y-1)+1)*sign(x)
       auto x = prevTarget;
       auto abs_x = x;
-      if (ExpressionUtil::canBeNegative(x, offset)) {
+      if (canBeNegativeWithRanges(x, op.target, ranges)) {
         abs_x = abs(x);
       }
       auto abs_x_minus_1 = sum({abs_x, constant(-1)});
@@ -283,7 +319,7 @@ bool FormulaGenerator::update(const Operation& op) {
     }
     case Operation::Type::DGS: {
       auto sumdigits = func("sumdigits", {prevTarget, source});
-      if (ExpressionUtil::canBeNegative(prevTarget, offset)) {
+      if (canBeNegativeWithRanges(prevTarget, op.target, ranges)) {
         res = product({sumdigits, sign(prevTarget)});
       } else {
         res = sumdigits;
@@ -304,10 +340,20 @@ bool FormulaGenerator::update(const Operation& op) {
 }
 
 bool FormulaGenerator::update(const Program& p) {
+  // Try to generate ranges for better precision
+  std::vector<RangeMap> collected;
+  bool hasRanges = rangeGenerator.collectRanges(p, collected, Number::INF);
+
+  size_t opIndex = 0;
   for (const auto& op : p.ops) {
-    if (!update(op)) {
+    const RangeMap* ranges = nullptr;
+    if (hasRanges && opIndex < collected.size()) {
+      ranges = &collected[opIndex];
+    }
+    if (!update(op, ranges)) {
       return false;  // operation not supported
     }
+    opIndex++;
   }
   return true;
 }

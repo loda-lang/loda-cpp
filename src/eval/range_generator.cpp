@@ -42,6 +42,12 @@ bool RangeGenerator::generate(const Program& program, RangeMap& ranges,
   return true;
 }
 
+bool RangeGenerator::collectRanges(const Program& program,
+                                   std::vector<RangeMap>& collected,
+                                   Number inputUpperBound) {
+  return collect(program, collected, inputUpperBound);
+}
+
 bool RangeGenerator::annotate(Program& program, Number inputUpperBound) {
   std::vector<RangeMap> collected;
   bool ok = collect(program, collected, inputUpperBound);
