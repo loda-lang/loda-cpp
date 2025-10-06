@@ -84,7 +84,10 @@
         "execution": "cpp",
         "numbers": "cpp",
         "forward_list": "cpp",
-        "print": "cpp"
+        "print": "cpp",
+        "cerrno": "cpp",
+        "iterator": "cpp",
+        "format": "cpp"
     },
     "makefile.makeDirectory": "src",
     "c-cpp-flylint.clang.includePaths": [
