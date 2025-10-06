@@ -103,7 +103,7 @@ void Commands::help() {
   std::cout << "  -b                   Print result in the OEIS b-file format"
             << std::endl;
   std::cout << "  -o <string>          Export format "
-               "(formula,loda,pari,range)"
+               "(formula,lean,loda,pari,range)"
             << std::endl;
   std::cout
       << "  -d                   Export with dependencies to other programs"
