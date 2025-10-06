@@ -287,8 +287,8 @@ void Stats::save(std::string path) {
     const auto formula_flag = has_formula.exists(id);
     programs << id.string() << sep << program_submitter[id] << sep
              << program_lengths[id] << sep << program_usages[id] << sep
-             << inceval << sep << logeval << sep << vireval << sep << loop_flag << sep
-             << formula_flag << "\n";
+             << inceval << sep << logeval << sep << vireval << sep << loop_flag
+             << sep << formula_flag << "\n";
   }
   programs.close();
 
@@ -480,8 +480,8 @@ void Stats::finalize() {
     blocks = blocks_collector.finalize();
   }
   if (latest_program_ids.empty()) {
-    latest_program_ids = SequenceProgram::collectLatestProgramIds(
-        commits_for_programs_collect, 200, 200);  // magic number
+    latest_program_ids =
+        SequenceProgram::collectLatestProgramIds(20, 200, 200);  // magic number
   }
 }
 

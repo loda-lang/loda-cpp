@@ -15,7 +15,7 @@ class Git {
                   bool fail_on_error = true);
 
   static void clone(const std::string &url, const std::string &folder,
-                    bool fast = true);
+                    int depth = -1);
 
   static std::vector<std::string> log(const std::string &folder,
                                       size_t max_commits);

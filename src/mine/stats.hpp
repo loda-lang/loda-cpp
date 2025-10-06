@@ -8,8 +8,6 @@
 #include "eval/evaluator.hpp"
 #include "mine/blocks.hpp"
 
-const int64_t commits_for_programs_collect = 20;
-
 class OpPos {
  public:
   Operation op;
