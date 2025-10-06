@@ -14,7 +14,8 @@ class Git {
   static bool git(const std::string &folder, const std::string &args,
                   bool fail_on_error = true);
 
-  static void clone(const std::string &url, const std::string &folder);
+  static void clone(const std::string &url, const std::string &folder,
+                    int depth = -1);
 
   static bool add(const std::string &folder, const std::string &file);
 
