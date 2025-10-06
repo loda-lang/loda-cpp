@@ -1,5 +1,6 @@
 #include "cmd/commands.hpp"
 
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 
@@ -932,8 +933,16 @@ void Commands::findIncevalPrograms(const std::string& error_code) {
   Interpreter interpreter(settings);
   IncrementalEvaluator inceval(interpreter);
   
-  int64_t numFound = 0;
   int64_t numChecked = 0;
+  
+  // Structure to hold results
+  struct Result {
+    UID id;
+    int64_t error_code_value;
+    std::string seq_name;
+    size_t program_size;
+  };
+  std::vector<Result> results;
   
   // Iterate through program IDs and programs together
   auto id_it = program_ids.begin();
@@ -962,19 +971,29 @@ void Commands::findIncevalPrograms(const std::string& error_code) {
         seq_name = "";
       }
       
-      // Print with error code, ID, and name
-      std::string msg = "Found program with code " + std::to_string(error_code_value) + 
-                        ": " + id.string();
-      if (!seq_name.empty()) {
-        msg += ": " + seq_name;
-      }
-      Log::get().info(msg);
-      numFound++;
+      // Store result for later sorting
+      results.push_back({id, error_code_value, seq_name, program.ops.size()});
     }
   }
   
+  // Sort results by program size (number of operations), shortest first
+  std::sort(results.begin(), results.end(), 
+            [](const Result& a, const Result& b) {
+              return a.program_size < b.program_size;
+            });
+  
+  // Print sorted results
+  for (const auto& result : results) {
+    std::string msg = "Found program with code " + std::to_string(result.error_code_value) + 
+                      ": " + result.id.string();
+    if (!result.seq_name.empty()) {
+      msg += ": " + result.seq_name;
+    }
+    Log::get().info(msg);
+  }
+  
   Log::get().info("Checked " + std::to_string(numChecked) + " programs");
-  Log::get().info("Found " + std::to_string(numFound) + 
+  Log::get().info("Found " + std::to_string(results.size()) + 
                   " programs with error code " + error_code);
 }
 
