@@ -160,42 +160,36 @@ std::string LeanFormula::toString() const {
   // For now, only handle single function
   const std::string funcName = functions[0];
   
-  // Generate LEAN function definition
-  buf << "def " << funcName << " : ℕ → ℕ";
-  
-  // Collect initial terms (base cases)
-  std::vector<std::pair<int64_t, Expression>> baseCases;
-  Expression recursiveCase;
-  bool hasRecursive = false;
+  // Check if this is a simple direct formula (no recursion)
+  bool hasRecursion = false;
+  Expression mainExpr;
   
   for (const auto& entry : main_formula.entries) {
     if (entry.first.type == Expression::Type::FUNCTION &&
         entry.first.name == funcName) {
-      // Check if this is a base case (n == constant)
-      if (entry.second.type == Expression::Type::IF) {
-        // Has if-then structure, extract base cases
-        // This is complex, for now skip
-        return "";
-      } else {
-        // This is the recursive case
-        recursiveCase = entry.second;
-        hasRecursive = true;
+      mainExpr = entry.second;
+      // Check if the expression contains a recursive call
+      if (mainExpr.contains(Expression::Type::FUNCTION, funcName)) {
+        hasRecursion = true;
       }
+      break;
     }
   }
   
-  // For simple non-loop programs, generate direct formula
-  if (!hasRecursive) {
-    return "";
+  // Generate LEAN function definition
+  buf << "def " << funcName << " : ℕ → ℕ := fun n => ";
+  
+  if (!hasRecursion) {
+    // Simple non-recursive formula
+    buf << exprToLeanString(mainExpr, main_formula, funcName);
+  } else {
+    // Recursive formula - use pattern matching
+    // This is more complex and requires extracting base cases from IF expressions
+    // For now, generate a placeholder
+    buf << std::endl;
+    buf << "  | 0 => 0  -- TODO: extract base case" << std::endl;
+    buf << "  | n + 1 => " << exprToLeanString(mainExpr, main_formula, funcName);
   }
-  
-  // Generate pattern matching cases
-  buf << std::endl;
-  
-  // Try to extract base cases from IF expressions
-  // For now, generate a simple recursive definition
-  buf << "  | 0 => 0  -- TODO: extract base case" << std::endl;
-  buf << "  | n + 1 => " << exprToLeanString(recursiveCase, main_formula, funcName);
   
   return buf.str();
 }

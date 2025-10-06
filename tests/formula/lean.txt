@@ -1,1 +1,1 @@
-A000027: def a : ℕ → ℕ  | 0 => 0  -- TODO: extract base case  | n + 1 => (n)
+A000027: def a : ℕ → ℕ := fun n => n
