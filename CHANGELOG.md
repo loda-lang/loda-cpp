@@ -6,7 +6,7 @@ To install or update LODA, please follow the [installation instructions](https:/
 
 * Improve submitted program checks
 * Internal tools for committing programs
-* Add `find-inceval-programs` command to identify programs incompatible with IncrementalEvaluator
+* Add internal `find-inceval-programs` command
 
 ### v25.10.3
 
