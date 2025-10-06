@@ -11,7 +11,7 @@ endif
 OBJS = base/uid.o \
   cmd/benchmark.o cmd/boinc.o cmd/commands.o cmd/main.o cmd/test.o \
   eval/evaluator.o eval/evaluator_inc.o eval/evaluator_par.o eval/evaluator_vir.o eval/fold.o eval/interpreter.o eval/memory.o eval/minimizer.o eval/optimizer.o eval/range.o eval/range_generator.o eval/semantics.o \
-  form/expression_util.o form/expression.o form/formula_gen.o form/formula_util.o form/formula.o form/pari.o form/variant.o \
+  form/expression_util.o form/expression.o form/formula_gen.o form/formula_util.o form/formula.o form/lean.o form/pari.o form/variant.o \
   lang/analyzer.o lang/comments.o lang/constants.o lang/parser.o lang/program.o lang/program_cache.o lang/program_util.o lang/subprogram.o lang/virtual_seq.o \
   math/big_number.o math/number.o math/sequence.o \
   mine/api_client.o mine/blocks.o mine/checker.o mine/config.o mine/distribution.o mine/extender.o mine/finder.o mine/generator_v1.o mine/generator_v2.o mine/generator_v3.o mine/generator_v4.o mine/generator_v5.o mine/generator_v6.o mine/generator_v7.o mine/generator_v8.o mine/generator.o mine/invalid_matches.o mine/iterator.o mine/matcher.o mine/mine_manager.o mine/miner.o mine/mutator.o mine/reducer.o mine/stats.o \

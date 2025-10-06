@@ -228,6 +228,12 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
       id = args.at(1);
     }
     commands.testPari(id);
+  } else if (cmd == "test-lean") {
+    std::string id;
+    if (args.size() > 1) {
+      id = args.at(1);
+    }
+    commands.testLean(id);
   } else if (cmd == "test-range") {
     std::string id;
     if (args.size() > 1) {

@@ -61,6 +61,8 @@ class Commands {
 
   void testPari(const std::string& id);
 
+  void testLean(const std::string& id);
+
   void testRange(const std::string& id);
 
   void generate();

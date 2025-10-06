@@ -13,6 +13,7 @@
 #include "eval/optimizer.hpp"
 #include "eval/range_generator.hpp"
 #include "form/formula_gen.hpp"
+#include "form/lean.hpp"
 #include "form/pari.hpp"
 #include "lang/analyzer.hpp"
 #include "lang/comments.hpp"
@@ -237,6 +238,7 @@ void Commands::export_(const std::string& path) {
   const auto& format = settings.export_format;
   Formula formula;
   PariFormula pari_formula;
+  LeanFormula lean_formula;
   FormulaGenerator generator;
   if (format.empty() || format == "formula") {
     if (!generator.generate(program, -1, formula, settings.with_deps)) {
@@ -255,6 +257,12 @@ void Commands::export_(const std::string& path) {
       throwConversionError(format);
     }
     std::cout << pari_formula.toString() << std::endl;
+  } else if (format == "lean") {
+    if (!generator.generate(program, -1, formula, settings.with_deps) ||
+        !LeanFormula::convert(formula, lean_formula)) {
+      throwConversionError(format);
+    }
+    std::cout << lean_formula.toString() << std::endl;
   } else if (format == "loda") {
     ProgramUtil::print(program, std::cout);
   } else if (format == "range") {
@@ -699,6 +707,130 @@ void Commands::testPari(const std::string& test_id) {
   Log::get().info(std::to_string(good) + " passed, " + std::to_string(bad) +
                   " failed, " + std::to_string(skipped) +
                   " skipped PARI checks");
+}
+
+void Commands::testLean(const std::string& test_id) {
+  initLog(false);
+  Parser parser;
+  Interpreter interpreter(settings);
+  Evaluator evaluator(settings, EVAL_ALL, false);
+  IncrementalEvaluator inceval(interpreter);
+  MineManager manager(settings);
+  Memory tmp_memory;
+  manager.load();
+  auto& stats = manager.getStats();
+  int64_t good = 0, bad = 0, skipped = 0;
+  UID target_id;
+  if (!test_id.empty()) {
+    target_id = UID(test_id);
+  }
+  for (auto id : stats.all_program_ids) {
+    if (target_id.number() > 0 && id != target_id) {
+      continue;
+    }
+    auto seq = manager.getSequences().get(id);
+    auto idStr = id.string();
+    Program program;
+    try {
+      program = parser.parse(ProgramUtil::getProgramPath(id));
+    } catch (std::exception& e) {
+      Log::get().warn(std::string(e.what()));
+      continue;
+    }
+
+    // generate LEAN code
+    FormulaGenerator generator;
+    Formula formula;
+    LeanFormula lean_formula;
+    Sequence expSeq;
+    try {
+      if (!generator.generate(program, id.number(), formula, true) ||
+          !LeanFormula::convert(formula, lean_formula)) {
+        continue;
+      }
+    } catch (const std::exception& e) {
+      // error during formula generation => check evaluation
+      bool hasEvalError;
+      try {
+        evaluator.eval(program, expSeq, 10);
+        hasEvalError = false;
+      } catch (const std::exception&) {
+        hasEvalError = true;
+      }
+      if (!hasEvalError) {
+        Log::get().error(
+            "Expected evaluation error for " + idStr + ": " + e.what(), true);
+      }
+    }
+
+    // determine number of terms for testing
+    size_t numTerms = seq.numExistingTerms();
+    if (inceval.init(program)) {
+      const int64_t targetTerms = 15 * inceval.getLoopCounterDecrement();
+      numTerms = std::min<size_t>(numTerms, targetTerms);
+      while (numTerms > 0) {
+        tmp_memory.clear();
+        tmp_memory.set(Program::INPUT_CELL, numTerms - 1);
+        interpreter.run(inceval.getSimpleLoop().pre_loop, tmp_memory);
+        int64_t tmpTerms =
+            tmp_memory.get(inceval.getSimpleLoop().counter).asInt();
+        if (tmpTerms <= targetTerms) {
+          break;
+        }
+        numTerms--;
+      }
+    }
+    for (const auto& op : program.ops) {
+      if (op.type == Operation::Type::SEQ) {
+        numTerms = std::min<size_t>(numTerms, 10);
+      }
+      if ((op.type == Operation::Type::POW ||
+           op.type == Operation::Type::BIN) &&
+          op.source.type == Operand::Type::DIRECT) {
+        numTerms = std::min<size_t>(numTerms, 10);
+      }
+    }
+    if (numTerms < 5) {
+      Log::get().warn("Skipping " + idStr);
+      skipped++;
+      continue;
+    }
+    Log::get().info("Checking " + std::to_string(numTerms) + " terms of " +
+                    idStr + ": " + lean_formula.toString());
+
+    // evaluate LODA program
+    try {
+      evaluator.eval(program, expSeq, numTerms);
+    } catch (const std::exception&) {
+      Log::get().warn("Cannot evaluate " + idStr);
+      continue;
+    }
+    if (expSeq.empty()) {
+      Log::get().error("Evaluation error", true);
+    }
+
+    // evaluate LEAN program
+    auto offset = ProgramUtil::getOffset(program);
+    Sequence genSeq;
+    if (!lean_formula.eval(offset, numTerms, 10, genSeq)) {
+      Log::get().warn("LEAN evaluation timeout for " + idStr);
+      skipped++;
+      continue;
+    }
+
+    // compare results
+    if (genSeq != expSeq) {
+      Log::get().info("Generated sequence: " + genSeq.to_string());
+      Log::get().info("Expected sequence:  " + expSeq.to_string());
+      Log::get().error("Unexpected LEAN sequence", true);
+      bad++;
+    } else {
+      good++;
+    }
+  }
+  Log::get().info(std::to_string(good) + " passed, " + std::to_string(bad) +
+                  " failed, " + std::to_string(skipped) +
+                  " skipped LEAN checks");
 }
 
 bool checkRange(const ManagedSequence& seq, const Program& program,
