@@ -901,6 +901,57 @@ void Commands::findEmbseqs() {
                   " embedded sequence programs");
 }
 
+void Commands::findIncevalPrograms(const std::string& error_code) {
+  initLog(false);
+  Parser parser;
+  MineManager manager(settings);
+  manager.load();
+  
+  // Parse the error code argument
+  int64_t target_error_code = std::stoll(error_code);
+  auto target_code = static_cast<IncrementalEvaluator::ErrorCode>(target_error_code);
+  
+  Log::get().info("Searching for programs with IncrementalEvaluator error code " + 
+                  error_code);
+  
+  // Load all programs
+  auto programs = manager.loadAllPrograms();
+  auto& stats = manager.getStats();
+  auto& program_ids = stats.all_program_ids;
+  
+  // Create interpreter and incremental evaluator
+  Interpreter interpreter(settings);
+  IncrementalEvaluator inceval(interpreter);
+  
+  int64_t numFound = 0;
+  int64_t numChecked = 0;
+  
+  // Iterate through program IDs and programs together
+  auto id_it = program_ids.begin();
+  for (auto& program : programs) {
+    if (id_it == program_ids.end()) {
+      break;
+    }
+    auto id = *id_it;
+    ++id_it;
+    numChecked++;
+    
+    // Try to initialize the incremental evaluator
+    IncrementalEvaluator::ErrorCode code;
+    bool success = inceval.init(program, false, false, &code);
+    
+    // Check if it failed with the target error code
+    if (!success && code == target_code) {
+      Log::get().info("Found: " + id.string());
+      numFound++;
+    }
+  }
+  
+  Log::get().info("Checked " + std::to_string(numChecked) + " programs");
+  Log::get().info("Found " + std::to_string(numFound) + 
+                  " programs with error code " + error_code);
+}
+
 void Commands::lists() {
   initLog(false);
   MineManager manager(settings);

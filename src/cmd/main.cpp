@@ -256,6 +256,8 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
     commands.findSlow(settings.num_terms, type);
   } else if (cmd == "find-embseqs") {
     commands.findEmbseqs();
+  } else if (cmd == "find-inceval-programs") {
+    commands.findIncevalPrograms(args.at(1));
   } else if (cmd == "lists") {
     commands.lists();
   } else if (cmd == "compare") {
