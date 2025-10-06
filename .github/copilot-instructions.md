@@ -8,15 +8,15 @@ LODA is an open-source project focused on the systematic discovery and analysis 
 
 The C++ source code organized under the `src/` directory into the following modules:
 
-- [`base`](base): Basic data structures (e.g., UID)
-- [`cmd`](cmd): Command-line interface, test suite, and main entry point
-- [`eval`](eval): Interpreter and evaluation engine for LODA programs
-- [`form`](form): Formula generation (including PARI/GP integration)
-- [`lang`](lang): LODA language core (parser, analyzer, program representation)
-- [`math`](math): Internal math library (big numbers, integer sequences)
-- [`mine`](mine): Mining infrastructure (generators, matchers, miners)
-- [`seq`](seq): Sequence data management and OEIS integration
-- [`sys`](sys): System utilities (file I/O, git, logging, setup, web client)
+- [`base`](../src/base): Basic data structures (e.g., UID)
+- [`cmd`](../src/cmd): Command-line interface, test suite, and main entry point
+- [`eval`](../src/eval): Interpreter and evaluation engine for LODA programs
+- [`form`](../src/form): Formula generation (including PARI/GP integration)
+- [`lang`](../src/lang): LODA language core (parser, analyzer, program representation)
+- [`math`](../src/math): Internal math library (big numbers, integer sequences)
+- [`mine`](../src/mine): Mining infrastructure (generators, matchers, miners)
+- [`seq`](../src/seq): Sequence data management and OEIS integration
+- [`sys`](../src/sys): System utilities (file I/O, git, logging, setup, web client)
 
 ## Building
 
@@ -55,7 +55,7 @@ Run tests from the main project folder using the following commands:
 
 ### Programs
 
-LODA programs are represented by the `Program` class in `lang/program.hpp`. A program consists of a list of operations, each described by the `Operation` class. Each operation has an `opcode` (specifying the operation type), a target operand and a source operand, both represented by the `Operand` class.
+LODA programs are represented by the [`Program`](../src/lang/program.hpp) class. A program consists of a list of operations, each described by the `Operation` class. Each operation has an `opcode` (specifying the operation type), a target operand and a source operand, both represented by the `Operand` class.
 
 Most operations are arithmetic and involve two operands. The source operand is always read-only, while the target operand can be modified. New operation types can be added by extending the relevant classes and updating the semantics engine.
 
@@ -65,53 +65,53 @@ LODA program files use the `.asm` extension.
 
 ### Sequences
 
-Integer sequences are represented by the `Sequence` class (in `math/sequence.hpp`). The project integrates with OEIS to fetch sequence definitions and find LODA programs that compute those sequences.
+Integer sequences are represented by the [`Sequence`](../src/math/sequence.hpp) class. The project integrates with OEIS to fetch sequence definitions and find LODA programs that compute those sequences.
 All programs for OEIS integer sequences are stored in a separate repository: [loda-programs](https://github.com/loda-lang/loda-programs).
 
 ### Semantics and Evaluation
 
-Arithmetic operations are implemented in the `Semantics` class (`eval/semantics.hpp`). The core execution of LODA programs is handled by the `Interpreter` class (`eval/interpreter.hpp`), which takes a `Program` and operates on a runtime state represented by the `Memory` class (`eval/memory.hpp`). Program evaluation and integer sequence generation are performed by the `Evaluator` class (`eval/evaluator.hpp`). There are a few specialized evaluator implementations such as `IncrementalEvaluator` (`eval/evaluator_inc.hpp`) for performance optimization and advanced analysis.
+Arithmetic operations are implemented in the [`Semantics`](../src/eval/semantics.hpp) class. The core execution of LODA programs is handled by the [`Interpreter`](../src/eval/interpreter.hpp) class, which takes a [`Program`](../src/lang/program.hpp) and operates on a runtime state represented by the [`Memory`](../src/eval/memory.hpp) class. Program evaluation and integer sequence generation are performed by the [`Evaluator`](../src/eval/evaluator.hpp) class. There are a few specialized evaluator implementations such as [`IncrementalEvaluator`](../src/eval/evaluator_inc.hpp) for performance optimization and advanced analysis.
 
 ### Mining
 
 The mining process generates random programs and matches them against OEIS sequences. Key classes:
-- `Miner`: Coordinates the mining process
-- `Generator`: Creates random programs (multiple versions: V1-V8)
-- `Matcher`: Matches program output against sequences
-- `MineManager`: Manages program and sequence data
+- [`Miner`](../src/mine/miner.hpp): Coordinates the mining process
+- [`Generator`](../src/mine/generator.hpp): Creates random programs (multiple versions: V1-V8)
+- [`Matcher`](../src/mine/matcher.hpp): Matches program output against sequences
+- [`MineManager`](../src/mine/mine_manager.hpp): Manages program and sequence data
 
 ### Formula Generation
 
 Automated formula generation from LODA programs is used to find closed-form or recurrence relations for OEIS sequences. It is implemented using the following key classes in the `form` module:
-- `Expression` (`form/expression.hpp`): Represents mathematical expressions and sub-expressions.
-- `Formula` (`form/formula.hpp`): Encapsulates a complete formula, including recurrence relations and initial terms.
-- `FormulaGenerator` (`form/formula_generator.hpp`): Converts a LODA program into a formula.
+- [`Expression`](../src/form/expression.hpp): Represents mathematical expressions and sub-expressions.
+- [`Formula`](../src/form/formula.hpp): Encapsulates a complete formula, including recurrence relations and initial terms.
+- [`FormulaGenerator`](../src/form/formula_generator.hpp): Converts a LODA program into a formula.
 
 ## Common Tasks
 
 ### Adding a New Command
 
-1. Declare the command in `cmd/commands.hpp`.
-2. Implement it in `cmd/commands.cpp`.
-3. Add command-line parsing in `cmd/main.cpp`.
+1. Declare the command in [`cmd/commands.hpp`](../src/cmd/commands.hpp).
+2. Implement it in [`cmd/commands.cpp`](../src/cmd/commands.cpp).
+3. Add command-line parsing in [`cmd/main.cpp`](../src/cmd/main.cpp).
 4. For official commands only: update help text in `Commands::help()` and [README.md](../README.md).
 
 ### Adding a New Operation Type
 
-1. Add the new operation type to the relevant enums, declarations and metadata in `lang/program.hpp` and `lang/program.cpp`.
-2. For arithmetic operations, implement the behavior in the `Semantics` class (`eval/semantics.hpp` and `eval/semantics.cpp`).
-3. For arithmetic operation, extend `eval/range_generator.cpp` to support range computation for the new operation, if possible.
+1. Add the new operation type to the relevant enums, declarations and metadata in [`lang/program.hpp`](../src/lang/program.hpp) and [`lang/program.cpp`](../src/lang/program.cpp).
+2. For arithmetic operations, implement the behavior in the [`Semantics`](../src/eval/semantics.hpp) class and [`eval/semantics.cpp`](../src/eval/semantics.cpp).
+3. For arithmetic operation, extend [`eval/range_generator.cpp`](../src/eval/range_generator.cpp) to support range computation for the new operation, if possible.
 4. Check if the new operation needs to be handled in utility or mining code:
-    - `lang/program_util.cpp`
-    - `mine/iterator.cpp`
-    - `mine/generator.cpp`
+    - [`lang/program_util.cpp`](../src/lang/program_util.cpp)
+    - [`mine/iterator.cpp`](../src/mine/iterator.cpp)
+    - [`mine/generator.cpp`](../src/mine/generator.cpp)
 5. Create a CSV file in `tests/semantics/<opcode>.csv` containing test cases (three columns: operand1, operand2, expected result).
 6. Run the fast test suite: `./loda test-fast` to verify correctness.
-7. If static code optimizations are possible for the new operation, extend `eval/optimizer.cpp`. Add relevant `.asm` test files to `tests/optimizer`.
+7. If static code optimizations are possible for the new operation, extend [`eval/optimizer.cpp`](../src/eval/optimizer.cpp). Add relevant `.asm` test files to `tests/optimizer`.
 
 ### Adding Tests
 
-Add test methods to the `Test` class in `src/cmd/test.hpp` and implement in `src/cmd/test.cpp`. For most common tasks, it suffices to add corresponding test data in the `tests` folder and execute the existing tests.
+Add test methods to the [`Test`](../src/cmd/test.hpp) class and implement in [`cmd/test.cpp`](../src/cmd/test.cpp). For most common tasks, it suffices to add corresponding test data in the `tests` folder and execute the existing tests.
 
 ## Dependencies
 
