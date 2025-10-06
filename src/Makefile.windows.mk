@@ -1,4 +1,5 @@
-CXXFLAGS = /I. /O2 /std:c++17 /LTCG
+CXXFLAGS = /I. /O2 /std:c++17 /GL
+LDFLAGS = /LTCG
 
 !IFDEF LODA_VERSION
 CXXFLAGS = $(CXXFLAGS) /DLODA_VERSION=$(LODA_VERSION)
@@ -21,7 +22,7 @@ SRCS = base/uid.cpp \
   sys/csv.cpp sys/file.cpp sys/git.cpp sys/jute.cpp sys/log.cpp sys/metrics.cpp sys/process.cpp sys/setup.cpp sys/util.cpp sys/web_client.cpp
 
 loda: $(SRCS)
-	cl /EHsc /Feloda.exe $(CXXFLAGS) $(SRCS)
+	cl /EHsc /Feloda.exe $(CXXFLAGS) $(SRCS) $(LDFLAGS)
 	copy loda.exe ..
 
 clean:
