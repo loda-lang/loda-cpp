@@ -24,30 +24,30 @@ LODA supports Linux, macOS, and Windows. You need a standard C++ compiler and `m
 
 To build from source, switch to the `src/` folder and run the appropriate command for your platform:
 
-* Linux x86\_64: `cd src && make -f Makefile.linux-x86.mk`
-* Linux ARM64: `cd src && make -f Makefile.linux-arm64.mk`
-* MacOS x86\_64: `cd src && make -f Makefile.macos-x86.mk`
-* MacOS ARM64: `cd src && make -f Makefile.macos-arm64.mk`
-* Windows: `cd src && nmake /F Makefile.windows.mk`
+* Linux x86\_64: `make -f Makefile.linux-x86.mk`
+* Linux ARM64: `make -f Makefile.linux-arm64.mk`
+* MacOS x86\_64: `make -f Makefile.macos-x86.mk`
+* MacOS ARM64: `make -f Makefile.macos-arm64.mk`
+* Windows: `nmake /F Makefile.windows.mk`
 
 After building, the `loda` executable will be copied or symlinked into the main project folder.
 
 ## Testing
 
-Run tests from the main folder using the following commands:
+Run tests from the main project folder using the following commands:
 - Fast tests: `./loda test-fast`
 - All tests: `./loda test`
 
 ## Code Style Guidelines
 
 - C++ Standard: C++17
-- Compiler Flags: strict compilation with `-Wall -Werror` (all warnings are treated as errors).
-- Naming Conventions:
+- Compiler flags: strict compilation with `-Wall -Werror` (all warnings are treated as errors).
+- Naming conventions:
   - Classes: PascalCase (e.g., `MineManager`, `Evaluator`)
   - Functions/methods: camelCase (e.g., `evaluate()`, `checkProgram()`)
   - Member variables: snake_case with no prefix (e.g., `max_memory`, `num_terms`)
   - Constants: UPPER_SNAKE_CASE (e.g., `PREFIX_SUBMITTED_BY`)
-- File Organization:  
+- File organization:  
   - Each class should have a dedicated `.hpp` header and `.cpp` implementation file.
   - Group related classes in module folders (e.g., `eval/`, `lang/`, `mine/`).
 
@@ -55,9 +55,7 @@ Run tests from the main folder using the following commands:
 
 ### Programs
 
-LODA programs are represented by the `Program` class in `lang/program.hpp`.  
-A program consists of a sequence of operations, each described by the `Operation` class.  
-Each operation has an `opcode` (specifying the operation type), a target operand and a source operand, both represented by the `Operand` class.
+LODA programs are represented by the `Program` class in `lang/program.hpp`. A program consists of a list of operations, each described by the `Operation` class. Each operation has an `opcode` (specifying the operation type), a target operand and a source operand, both represented by the `Operand` class.
 
 Most operations are arithmetic and involve two operands. The source operand is always read-only, while the target operand can be modified. New operation types can be added by extending the relevant classes and updating the semantics engine.
 
@@ -72,10 +70,7 @@ All programs for OEIS integer sequences are stored in a separate repository: [lo
 
 ### Semantics and Evaluation
 
-Arithmetic operations are implemented in the `Semantics` class (`eval/semantics.hpp`).  
-The core execution of LODA programs is handled by the `Interpreter` class (`eval/interpreter.hpp`), which takes a `Program` and operates on a runtime state represented by the `Memory` class (`eval/memory.hpp`).
-Program evaluation and integer sequence generation are performed by the `Evaluator` class (`eval/evaluator.hpp`).  
-There are a few specialized evaluator implementations such as `IncrementalEvaluator` (`eval/evaluator_inc.hpp`) for performance optimization and advanced analysis.
+Arithmetic operations are implemented in the `Semantics` class (`eval/semantics.hpp`). The core execution of LODA programs is handled by the `Interpreter` class (`eval/interpreter.hpp`), which takes a `Program` and operates on a runtime state represented by the `Memory` class (`eval/memory.hpp`). Program evaluation and integer sequence generation are performed by the `Evaluator` class (`eval/evaluator.hpp`). There are a few specialized evaluator implementations such as `IncrementalEvaluator` (`eval/evaluator_inc.hpp`) for performance optimization and advanced analysis.
 
 ### Mining
 
@@ -107,9 +102,9 @@ Automated formula generation from LODA programs is used to find closed-form or r
 2. For arithmetic operations, implement the behavior in the `Semantics` class (`eval/semantics.hpp` and `eval/semantics.cpp`).
 3. For arithmetic operation, extend `eval/range_generator.cpp` to support range computation for the new operation, if possible.
 4. Check if the new operation needs to be handled in utility or mining code:
-  - `lang/program_util.cpp`
-  - `mine/iterator.cpp`
-  - `mine/generator.cpp`
+    - `lang/program_util.cpp`
+    - `mine/iterator.cpp`
+    - `mine/generator.cpp`
 5. Create a CSV file in `tests/semantics/<opcode>.csv` containing test cases (three columns: operand1, operand2, expected result).
 6. Run the fast test suite: `./loda test-fast` to verify correctness.
 7. If static code optimizations are possible for the new operation, extend `eval/optimizer.cpp`. Add relevant `.asm` test files to `tests/optimizer`.
