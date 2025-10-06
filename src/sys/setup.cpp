@@ -158,7 +158,7 @@ bool Setup::existsProgramsHome() {
 void Setup::cloneProgramsHome(const std::string& git_url) {
   // We cannot use getProgramsHome() here because it checks for existence
   Git::clone(git_url, getLodaHome() + "programs",
-             Setup::commits_for_collect_latest_programs);
+             Setup::NUM_COMMITS_FOR_PROGRAMS);
 }
 
 bool Setup::pullProgramsHome(bool fail_on_error) {

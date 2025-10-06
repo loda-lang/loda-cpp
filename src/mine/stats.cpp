@@ -482,7 +482,7 @@ void Stats::finalize() {
   }
   if (latest_program_ids.empty()) {
     latest_program_ids = SequenceProgram::collectLatestProgramIds(
-        Setup::commits_for_collect_latest_programs, 200, 200);  // magic number
+        Setup::NUM_COMMITS_FOR_PROGRAMS, 200, 200);  // magic number
   }
 }
 
