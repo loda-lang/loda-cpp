@@ -256,6 +256,16 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
     commands.findSlow(settings.num_terms, type);
   } else if (cmd == "find-embseqs") {
     commands.findEmbseqs();
+  } else if (cmd == "find-inceval-programs") {
+    if (args.size() < 2) {
+      std::cerr << "Error: find-inceval-programs requires an error code argument" << std::endl;
+      std::cerr << "Usage: loda find-inceval-programs <error_code|range>" << std::endl;
+      std::cerr << "Examples:" << std::endl;
+      std::cerr << "  loda find-inceval-programs 1         # Find programs with error code 1" << std::endl;
+      std::cerr << "  loda find-inceval-programs 100-200   # Find programs with error codes 100-200" << std::endl;
+      return 1;
+    }
+    commands.findIncevalPrograms(args.at(1));
   } else if (cmd == "lists") {
     commands.lists();
   } else if (cmd == "compare") {
