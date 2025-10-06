@@ -1,7 +1,9 @@
 #include "seq/seq_program.hpp"
 
+#include <iostream>
 #include <set>
 
+#include "eval/evaluator.hpp"
 #include "lang/analyzer.hpp"
 #include "lang/comments.hpp"
 #include "lang/parser.hpp"
@@ -124,4 +126,208 @@ UIDSet SequenceProgram::collectLatestProgramIds(size_t max_commits,
     Log::get().warn("Cannot read programs commit history");
   }
   return latest_program_ids;
+}
+
+void SequenceProgram::commitAddedPrograms(size_t min_commit_count) {
+  auto progs_dir = Setup::getProgramsHome();
+  auto status_entries = Git::status(progs_dir);
+
+  std::vector<std::string> files_to_add;
+  for (const auto &entry : status_entries) {
+    const std::string &status = entry.first;
+    const std::string &file = entry.second;
+    if (status == "??" && file.find("oeis/") == 0) {
+      files_to_add.push_back(file);
+    }
+  }
+
+  for (const auto &file : files_to_add) {
+    if (!Git::add(progs_dir, file)) {
+      Log::get().warn("Failed to add file: " + file);
+    }
+  }
+
+  if (files_to_add.size() >= min_commit_count) {
+    std::string msg =
+        "added " + std::to_string(files_to_add.size()) + " programs";
+    if (!Git::commit(progs_dir, msg)) {
+      Log::get().warn("Failed to commit added programs");
+    }
+  }
+
+  if (!Git::push(progs_dir)) {
+    Log::get().warn("Failed to push changes");
+  }
+}
+
+void SequenceProgram::commitUpdateAndDeletedPrograms(
+    Stats *stats, const std::unordered_set<UID> *full_check_list) {
+  auto progs_dir = Setup::getProgramsHome();
+  auto status_entries = Git::status(progs_dir);
+
+  std::vector<std::string> files_to_update;
+  std::vector<std::string> files_to_delete;
+
+  for (const auto &entry : status_entries) {
+    const std::string &status = entry.first;
+    const std::string &file = entry.second;
+    if (file.find("oeis/") != 0) {
+      continue;
+    }
+    if (status == " M") {
+      files_to_update.push_back(file);
+    } else if (status == " D") {
+      files_to_delete.push_back(file);
+    }
+  }
+
+  size_t num_updated = 0;
+  size_t num_deleted = 0;
+
+  Parser parser;
+  Settings settings;
+  settings.print_as_b_file = true;
+  Evaluator evaluator(settings, EVAL_ALL, true);
+
+  // Handle updated files
+  for (const auto &file : files_to_update) {
+    // Load new version
+    Program new_program;
+    try {
+      new_program = parser.parse(progs_dir + file);
+    } catch (const std::exception &e) {
+      std::cerr << "Failed to parse new version: " << file << std::endl;
+    }
+
+    // Load old version using Git helper
+    Program old_program;
+    try {
+      std::string tmp_old = Git::extractHeadVersion(progs_dir, file);
+      if (!tmp_old.empty()) {
+        old_program = parser.parse(tmp_old);
+        std::remove(tmp_old.c_str());
+      } else {
+        std::cerr << "Failed to load old version from git for: " << file
+                  << std::endl;
+      }
+    } catch (const std::exception &e) {
+      std::cerr << "Failed to parse old version: " << file << std::endl;
+    }
+
+    // Check if already staged
+    if (Git::git(progs_dir, "diff -U1000 --exit-code -- \"" + file + "\"",
+                 false)) {
+      std::cout << "Already staged: " << file << std::endl;
+      num_updated++;
+      continue;
+    }
+    std::cout << "\n";
+
+    std::string fname = file.substr(file.find_last_of("/\\") + 1);
+    std::string anumber = fname.substr(0, fname.find('.'));
+
+    // Usage info and warnings
+    int64_t usage = 0;
+    if (stats) {
+      UID uid(anumber);
+      usage = stats->getNumUsages(uid);
+      if (usage > 0) {
+        std::cout << usage << " other programs using this program.\n\n";
+      }
+      if (usage >= 100) {
+        std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
+        std::cout << "!!!   HIGH USAGE WARNING   !!!\n";
+        std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n";
+      }
+    }
+
+    // Full check info
+    if (full_check_list) {
+      UID uid(anumber);
+      if (full_check_list->count(uid) > 0) {
+        std::cout << "Full check enabled.\n\n";
+      }
+    }
+
+    // Interactive prompt with check option
+    std::cout << "Update " << anumber << "? (Y)es, (n)o, (c)heck, (r)evert: ";
+    std::string answer;
+    std::getline(std::cin, answer);
+
+    if (answer == "c" || answer == "C") {
+      try {
+        UID uid(anumber);
+        ManagedSequence managed_seq(uid);
+        Sequence seq = managed_seq.getTerms(getNumCheckTerms(
+            full_check_list && full_check_list->count(uid) > 0));
+        int64_t num_terms = seq.size();
+        auto result = evaluator.check(new_program, seq, num_terms, uid);
+        std::cout << "\n";
+        if (result.first == status_t::OK) {
+          std::cout << "Check passed.\n\n";
+        } else if (result.first == status_t::WARNING) {
+          std::cout << "Check warning.\n\n";
+        } else {
+          std::cout << "Check failed.\n\n";
+        }
+      } catch (const std::exception &e) {
+        std::cerr << "Check failed: " << e.what() << "\n\n";
+      }
+      // Re-prompt after check
+      std::cout << "Update " << anumber << "? (Y)es, (n)o, (r)evert: ";
+      std::getline(std::cin, answer);
+    }
+
+    if (answer.empty() || answer == "y" || answer == "Y") {
+      Git::add(progs_dir, file);
+      num_updated++;
+    } else if (answer == "r" || answer == "R") {
+      Git::git(progs_dir, "checkout -- \"" + file + "\"");
+      std::cout << "Reverted: " << file << std::endl;
+    } else {
+      Git::git(progs_dir, "checkout -- \"" + file + "\"");
+      std::cout << "Restored: " << file << std::endl;
+    }
+  }
+
+  // Handle deleted files
+  for (const auto &file : files_to_delete) {
+    std::string fname = file.substr(file.find_last_of("/\\") + 1);
+    std::string anumber = fname.substr(0, fname.find('.'));
+
+    std::cout << "\nDelete " << anumber << "? (Y)es, (n)o: ";
+    std::string answer;
+    std::getline(std::cin, answer);
+
+    if (answer.empty() || answer == "y" || answer == "Y") {
+      if (Git::add(progs_dir, file)) {
+        num_deleted++;
+        std::cout << "Staged for deletion: " << file << std::endl;
+      } else {
+        Log::get().warn("Failed to stage deleted file: " + file);
+      }
+    } else {
+      Git::git(progs_dir, "checkout -- \"" + file + "\"");
+      std::cout << "Restored: " << file << std::endl;
+    }
+  }
+
+  // Single commit at the end
+  if ((num_updated + num_deleted) > 0) {
+    std::cout << "Commit " << num_updated << " updated and " << num_deleted
+              << " deleted programs? (Y/n): ";
+    std::string answer;
+    std::getline(std::cin, answer);
+    if (answer.empty() || answer == "y" || answer == "Y") {
+      std::string msg = "updated " + std::to_string(num_updated) +
+                        " and deleted " + std::to_string(num_deleted) +
+                        " programs";
+      if (!Git::commit(progs_dir, msg)) {
+        Log::get().warn("Failed to commit changes");
+      }
+      if (!Git::push(progs_dir)) {
+        Log::get().warn("Failed to push changes");
+      }
+    }
+  }
 }

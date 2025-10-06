@@ -1,8 +1,24 @@
 # Development
 
+## Source Code Structure
+
+The C++ source code contain is organized into the following modules:
+
+- [`base`](base): Basic data structures (e.g., UID)
+- [`cmd`](cmd): Command-line interface, test suite, and main entry point
+- [`eval`](eval): Interpreter and evaluation engine for LODA programs
+- [`form`](form): Formula generation (including PARI/GP integration)
+- [`lang`](lang): LODA language core (parser, analyzer, program representation)
+- [`math`](math): Internal math library (big numbers, integer sequences)
+- [`mine`](mine): Mining infrastructure (generators, matchers, miners)
+- [`seq`](seq): Sequence data management and OEIS integration
+- [`sys`](sys): System utilities (file I/O, git, logging, setup, web client)
+
 ## Building
 
-To build LODA, all you need is the `make` (`nmake` on Windows) tool and a standard C++ compiler. All major platforms are supported: Linux, MacOS, and Windows. It does not require any external libraries, but only the `curl`, `gzip` command-line tools. To build from sources, switch to the `src` folder and run the build command for your platform:
+LODA supports Linux, macOS, and Windows. You need a standard C++ compiler and `make` (or `nmake` on Windows). No external libraries are required, but the `curl` and `gzip` command-line tools must be available.
+
+To build from source, switch to the `src/` folder and run the appropriate command for your platform:
 
 * Linux x86\_64: `make -f Makefile.linux-x86.mk`
 * Linux ARM64: `make -f Makefile.linux-arm64.mk`
@@ -10,17 +26,11 @@ To build LODA, all you need is the `make` (`nmake` on Windows) tool and a standa
 * MacOS ARM64: `make -f Makefile.macos-arm64.mk`
 * Windows: `nmake /F Makefile.windows.mk`
 
-## Modules
+After building, the `loda` executable will be copied or symlinked into the main project folder.
 
-The source code is organized into these modules:
+## Testing
 
-* [base](base): Basic common data structures.
-* [cmd](cmd): Commands, tests and main.
-* [eval](eval): Interpreter and evaluation of programs.
-* [form](form): Formula generation from programs.
-* [lang](lang): LODA language core.
-* [math](math): Internal math library.
-* [mine](mine): Program mining.
-* [seq](seq): Sequence data management.
-* [oeis](oeis): Utils for managing OEIS data.
-* [sys](sys): System utils.
+Run tests from the main folder using the following commands:
+
+- Fast tests: `./loda test-fast`
+- All tests: `./loda test`

@@ -76,6 +76,7 @@ class Stats {
   UIDSet supports_vireval;
   UIDSet has_loop;
   UIDSet has_formula;
+  UIDSet has_indirect;
   Blocks blocks;
 
  private:

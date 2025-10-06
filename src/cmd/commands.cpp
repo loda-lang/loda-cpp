@@ -921,3 +921,27 @@ void Commands::compare(const std::string& path1, const std::string& path2) {
   Log::get().info(manager.getFinder().getChecker().compare(
       p1, p2, "First", "Second", seq, full_check, num_usages));
 }
+
+void Commands::commitAddedPrograms(size_t min_commit_count) {
+  initLog(true);
+  SequenceProgram::commitAddedPrograms(min_commit_count);
+}
+
+void Commands::commitUpdatedAndDeletedPrograms() {
+  initLog(true);
+  Stats stats;
+  try {
+    stats.load(Setup::getLodaHome() + "stats/");
+  } catch (const std::exception& e) {
+    std::cerr << "Could not load stats: " << e.what() << std::endl;
+  }
+  std::unordered_set<UID> full_check_list;
+  try {
+    const std::string full_check_path =
+        Setup::getProgramsHome() + "oeis/full_check.txt";
+    SequenceList::loadList(full_check_path, full_check_list);
+  } catch (const std::exception& e) {
+    std::cerr << "Could not load full_check list: " << e.what() << std::endl;
+  }
+  SequenceProgram::commitUpdateAndDeletedPrograms(&stats, &full_check_list);
+}

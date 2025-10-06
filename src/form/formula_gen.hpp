@@ -40,6 +40,9 @@ class FormulaGenerator {
   bool bitfunc(Operation::Type type, const Expression& a, const Expression& b,
                Expression& res) const;
 
+  bool facToExpression(const Expression& a, const Expression& b,
+               Expression& res) const;
+
   bool update(const Operation& op);
 
   bool update(const Program& p);

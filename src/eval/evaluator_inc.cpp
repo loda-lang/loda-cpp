@@ -24,6 +24,7 @@ void IncrementalEvaluator::reset() {
   loop_counter_type = Operation::Type::NOP;
   offset = 0;
   initialized = false;
+  last_error_code = ErrorCode::OK;
 
   // runtime data
   argument = 0;
@@ -36,31 +37,49 @@ void IncrementalEvaluator::reset() {
 
 // ====== Initialization functions (static code analysis) =========
 
+void IncrementalEvaluator::setErrorCode(ErrorCode code, ErrorCode* error_code) {
+  last_error_code = code;
+  if (error_code) {
+    *error_code = code;
+  }
+}
+
 bool IncrementalEvaluator::init(const Program& program,
-                                bool skip_input_transform, bool skip_offset) {
+                                bool skip_input_transform, bool skip_offset,
+                                ErrorCode* error_code) {
   reset();
+  ErrorCode local_error_code = ErrorCode::OK;
+  
+  // Extract simple loop structure using Analyzer
   simple_loop = Analyzer::extractSimpleLoop(program);
+  
   if (!simple_loop.is_simple_loop) {
+    // Use single error code for all simple loop extraction failures
+    local_error_code = ErrorCode::NOT_A_SIMPLE_LOOP;
+    setErrorCode(local_error_code, error_code);
     if (is_debug) {
       Log::get().debug("[IE] Simple loop check failed");
     }
     return false;
   }
   // now the program fragments and the loop counter cell are initialized
-  if (!checkPreLoop(skip_input_transform)) {
+  if (!checkPreLoop(skip_input_transform, &local_error_code)) {
+    setErrorCode(local_error_code, error_code);
     if (is_debug) {
       Log::get().debug("[IE] Pre-loop check failed");
     }
     return false;
   }
-  if (!checkPostLoop()) {
+  if (!checkPostLoop(&local_error_code)) {
+    setErrorCode(local_error_code, error_code);
     if (is_debug) {
       Log::get().debug("[IE] Post-loop check failed");
     }
     return false;
   }
   // now the output cells are initialized
-  if (!checkLoopBody()) {
+  if (!checkLoopBody(&local_error_code)) {
+    setErrorCode(local_error_code, error_code);
     if (is_debug) {
       Log::get().debug("[IE] Loop body check failed");
     }
@@ -72,6 +91,7 @@ bool IncrementalEvaluator::init(const Program& program,
   // initialue the runtime data
   initRuntimeData();
   initialized = true;
+  setErrorCode(ErrorCode::OK, error_code);
   if (is_debug) {
     Log::get().debug("[IE] Initialization successful");
   }
@@ -84,7 +104,8 @@ bool IncrementalEvaluator::isInputDependent(const Operand& op) const {
               input_dependent_cells.end());
 }
 
-bool IncrementalEvaluator::checkPreLoop(bool skip_input_transform) {
+bool IncrementalEvaluator::checkPreLoop(bool skip_input_transform,
+                                        ErrorCode* error_code) {
   // here we do a static code analysis of the pre-loop
   // fragment to make sure here that the loop counter cell
   // is monotonically increasing (not strictly)
@@ -108,6 +129,9 @@ bool IncrementalEvaluator::checkPreLoop(bool skip_input_transform) {
       case Operation::Type::SUB:
       case Operation::Type::TRN:
         if (op.source.type != Operand::Type::CONSTANT) {
+          if (error_code) {
+            *error_code = ErrorCode::PRELOOP_NON_CONSTANT_OPERAND;
+          }
           return false;
         }
         is_transform = true;
@@ -119,6 +143,9 @@ bool IncrementalEvaluator::checkPreLoop(bool skip_input_transform) {
       case Operation::Type::POW:
         if (op.source.type != Operand::Type::CONSTANT ||
             op.source.value < Number::ONE) {
+          if (error_code) {
+            *error_code = ErrorCode::PRELOOP_NON_CONSTANT_OPERAND;
+          }
           return false;
         }
         is_transform = true;
@@ -126,6 +153,9 @@ bool IncrementalEvaluator::checkPreLoop(bool skip_input_transform) {
 
       default:
         // everything else is currently not allowed
+        if (error_code) {
+          *error_code = ErrorCode::PRELOOP_UNSUPPORTED_OPERATION;
+        }
         return false;
     }
     if (!skip_input_transform || !is_transform) {
@@ -135,12 +165,15 @@ bool IncrementalEvaluator::checkPreLoop(bool skip_input_transform) {
   // check if loop counter is initialized
   if (input_dependent_cells.find(simple_loop.counter) ==
       input_dependent_cells.end()) {
+    if (error_code) {
+      *error_code = ErrorCode::LOOP_COUNTER_NOT_INPUT_DEPENDENT;
+    }
     return false;
   }
   return true;
 }
 
-bool IncrementalEvaluator::checkLoopBody() {
+bool IncrementalEvaluator::checkLoopBody(ErrorCode* error_code) {
   // check loop counter cell
   bool loop_counter_updated = false;
   for (const auto& op : simple_loop.body.ops) {
@@ -160,22 +193,37 @@ bool IncrementalEvaluator::checkLoopBody() {
         loop_counter_lower_bound = std::max<int64_t>(loop_counter_lower_bound,
                                                      op.source.value.asInt());
       } else {
+        if (error_code) {
+          *error_code = ErrorCode::LOOP_COUNTER_UPDATE_INVALID;
+        }
         return false;
       }
     } else if (meta.num_operands > 0 && isInputDependent(op.target) &&
                meta.is_reading_target) {
+      if (error_code) {
+        *error_code = ErrorCode::INPUT_DEPENDENT_CELL_READ;
+      }
       return false;
     } else if (meta.num_operands > 1 && isInputDependent(op.source) &&
                op.source.value.asInt() != simple_loop.counter) {
+      if (error_code) {
+        *error_code = ErrorCode::INPUT_DEPENDENT_SOURCE_USED;
+      }
       return false;
     }
   }
   if (!loop_counter_updated) {
+    if (error_code) {
+      *error_code = ErrorCode::LOOP_COUNTER_NOT_UPDATED;
+    }
     return false;
   }
   if (loop_counter_decrement < 1 ||
       loop_counter_decrement >
           1000) {  // prevent exhaustive memory usage; magic number
+    if (error_code) {
+      *error_code = ErrorCode::LOOP_COUNTER_DECREMENT_INVALID;
+    }
     return false;
   }
 
@@ -216,6 +264,9 @@ bool IncrementalEvaluator::checkLoopBody() {
   }
 
   // IE not supported
+  if (error_code) {
+    *error_code = ErrorCode::NON_COMMUTATIVE_OPERATIONS;
+  }
   return false;
 }
 
@@ -281,7 +332,7 @@ void IncrementalEvaluator::computeLoopCounterDependentCells() {
   }
 }
 
-bool IncrementalEvaluator::checkPostLoop() {
+bool IncrementalEvaluator::checkPostLoop(ErrorCode* error_code) {
   // initialize output cells. all memory cells that are read
   // by the post-loop fragment are output cells.
   std::set<int64_t> write;
@@ -313,6 +364,8 @@ bool IncrementalEvaluator::checkPostLoop() {
   if (write.find(Program::OUTPUT_CELL) == write.end()) {
     output_cells.insert(Program::OUTPUT_CELL);
   }
+  // Post-loop check always succeeds (no error cases currently)
+  (void)error_code;  // suppress unused parameter warning
   return true;
 }
 
