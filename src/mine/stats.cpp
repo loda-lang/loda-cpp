@@ -71,8 +71,7 @@ void Stats::load(std::string path) {
     CsvReader reader(full);
     while (reader.readRow()) {
       auto type = Operation::Metadata::get(reader.getField(0)).type;
-      num_ops_per_type.at(static_cast<size_t>(type)) =
-          reader.getIntegerField(1);
+      num_ops_per_type.at(static_cast<size_t>(type)) = reader.getIntegerField(1);
     }
     reader.close();
   }
@@ -303,7 +302,8 @@ void Stats::save(std::string path) {
     CsvWriter writer(path + "operation_counts.csv");
     for (auto &op : num_operations) {
       const auto &meta = Operation::Metadata::get(op.first.type);
-      writer.writeRow({meta.name, ProgramUtil::operandToString(op.first.target),
+      writer.writeRow({meta.name,
+                       ProgramUtil::operandToString(op.first.target),
                        ProgramUtil::operandToString(op.first.source),
                        std::to_string(op.second)});
     }
