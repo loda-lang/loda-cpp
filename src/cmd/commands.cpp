@@ -907,9 +907,17 @@ void Commands::findIncevalPrograms(const std::string& error_code) {
   MineManager manager(settings);
   manager.load();
   
-  // Parse the error code argument
-  int64_t target_error_code = std::stoll(error_code);
-  auto target_code = static_cast<IncrementalEvaluator::ErrorCode>(target_error_code);
+  // Parse the error code argument (can be a single code or a range)
+  int64_t min_error_code, max_error_code;
+  auto pos = error_code.find('-');
+  if (pos != std::string::npos) {
+    // Range specified (e.g., "100-200")
+    min_error_code = std::stoll(error_code.substr(0, pos));
+    max_error_code = std::stoll(error_code.substr(pos + 1));
+  } else {
+    // Single error code
+    min_error_code = max_error_code = std::stoll(error_code);
+  }
   
   Log::get().info("Searching for programs with IncrementalEvaluator error code " + 
                   error_code);
@@ -918,6 +926,7 @@ void Commands::findIncevalPrograms(const std::string& error_code) {
   auto programs = manager.loadAllPrograms();
   auto& stats = manager.getStats();
   auto& program_ids = stats.all_program_ids;
+  const auto& sequences = manager.getSequences();
   
   // Create interpreter and incremental evaluator
   Interpreter interpreter(settings);
@@ -940,9 +949,26 @@ void Commands::findIncevalPrograms(const std::string& error_code) {
     IncrementalEvaluator::ErrorCode code;
     bool success = inceval.init(program, false, false, &code);
     
-    // Check if it failed with the target error code
-    if (!success && code == target_code) {
-      Log::get().info("Found: " + id.string());
+    // Check if it failed with an error code in the target range
+    int64_t error_code_value = static_cast<int64_t>(code);
+    if (!success && error_code_value >= min_error_code && 
+        error_code_value <= max_error_code) {
+      // Get the sequence name
+      std::string seq_name;
+      try {
+        auto seq = sequences.get(id);
+        seq_name = seq.name;
+      } catch (...) {
+        seq_name = "";
+      }
+      
+      // Print with error code, ID, and name
+      std::string msg = "Found program with code " + std::to_string(error_code_value) + 
+                        ": " + id.string();
+      if (!seq_name.empty()) {
+        msg += ": " + seq_name;
+      }
+      Log::get().info(msg);
       numFound++;
     }
   }
