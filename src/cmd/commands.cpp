@@ -902,6 +902,75 @@ void Commands::findEmbseqs() {
                   " embedded sequence programs");
 }
 
+void Commands::extractVirseqs() {
+  initLog(false);
+  Parser parser;
+  MineManager manager(settings);
+  manager.load();
+  auto& stats = manager.getStats();
+  int64_t numExtracted = 0;
+  
+  for (const auto& seq : manager.getSequences()) {
+    if (!stats.all_program_ids.exists(seq.id)) {
+      continue;
+    }
+    Program program;
+    try {
+      program = parser.parse(ProgramUtil::getProgramPath(seq.id));
+    } catch (const std::exception& e) {
+      Log::get().warn(std::string(e.what()));
+      continue;
+    }
+    
+    auto virseqs = VirtualSequence::findVirtualSequencePrograms(program, 3, 1, 1);
+    if (virseqs.empty()) {
+      continue;
+    }
+    
+    for (size_t i = 0; i < virseqs.size(); i++) {
+      const auto& vs = virseqs[i];
+      
+      // Extract the virtual sequence program
+      Program extracted;
+      for (int64_t pos = vs.start_pos; pos <= vs.end_pos; pos++) {
+        extracted.ops.push_back(program.ops[pos]);
+      }
+      
+      // Create output filename
+      std::string output_dir = Setup::getLodaHomeNoCheck() + "virseq/";
+      std::string output_file = output_dir + seq.id.string() + "_" + 
+                                std::to_string(i + 1) + ".asm";
+      
+      // Write the extracted program to file
+      ensureDir(output_file);
+      std::ofstream out(output_file);
+      
+      // Add header comment
+      Operation nop(Operation::Type::NOP);
+      nop.comment = "Virtual sequence " + std::to_string(i + 1) + 
+                    " extracted from " + seq.id.string();
+      extracted.ops.insert(extracted.ops.begin(), nop);
+      
+      nop.comment = "Input: $" + std::to_string(vs.input_cell) + 
+                    ", Output: $" + std::to_string(vs.output_cell);
+      extracted.ops.insert(extracted.ops.begin() + 1, nop);
+      
+      nop.comment.clear();
+      extracted.ops.insert(extracted.ops.begin() + 2, nop);
+      
+      ProgramUtil::print(extracted, out);
+      out.close();
+      
+      numExtracted++;
+      Log::get().info("Extracted virtual sequence " + std::to_string(i + 1) + 
+                      " from " + seq.id.string() + " to " + output_file);
+    }
+  }
+  
+  Log::get().info("Extracted " + std::to_string(numExtracted) + 
+                  " virtual sequence programs");
+}
+
 void Commands::findIncevalPrograms(const std::string& error_code) {
   initLog(false);
   Parser parser;
