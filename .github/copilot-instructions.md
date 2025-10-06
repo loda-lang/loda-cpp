@@ -42,6 +42,7 @@ Run tests from the main project folder using the following commands:
 
 - C++ Standard: C++17
 - Compiler flags: strict compilation with `-Wall -Werror` (all warnings are treated as errors).
+- Generally follow the [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html) for formatting.
 - Naming conventions:
   - Classes: PascalCase (e.g., `MineManager`, `Evaluator`)
   - Functions/methods: camelCase (e.g., `evaluate()`, `checkProgram()`)
@@ -123,12 +124,11 @@ The project has minimal external dependencies:
 
 ## General Guidelines for Changes
 
-- Follow the [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html) for formatting.
 - Make minimal, focused changes and match the style of existing code.
-- Consistently use RAII for resource management.
-- For every class, consistently use either logging and it's error handling, or throw runtime exceptions in case of errors.
-- Optimize for performance, especially in mining and evaluation code.
-- Algorithmic optimizations are more important than low-level performance tuning.
-- Run the full test suite (`./loda test`) after any modification.
+- Use RAII for resource management; avoid manual memory allocation.
+- Use either logging and its error handling or throw runtime exceptions consistently for each class.
+- Optimize for performance and memory safety, especially in mining and evaluation code. Prefer algorithmic optimizations over low-level tuning.
+- Run the full test suite (`./loda test`) after any modification to ensure correctness.
 - Document enhancements and bugfixes in `CHANGELOG.md`.
-- We aim at staying backwward compatible, but it is not strinctly required. Changes must be reflected in the LODA language specification: https://loda-lang.org/spec/
+- Aim to maintain backward compatibility, but it is not strictly required.
+- Update the [LODA language specification](https://loda-lang.org/spec/) for any language changes.
