@@ -138,8 +138,7 @@ bool Git::git(const std::string &folder, const std::string &args,
 void Git::clone(const std::string &url, const std::string &folder, int depth) {
   std::string clone_and_args = "clone ";
   if (depth != -1) {
-    clone_and_args = clone_and_args +
-                     "--depth=" + std::to_string(commits_for_programs_collect) +
+    clone_and_args = clone_and_args + "--depth=" + std::to_string(depth) +
                      " --shallow-submodules ";
   }
   git("", clone_and_args + url + " \"" + folder + "\"");
