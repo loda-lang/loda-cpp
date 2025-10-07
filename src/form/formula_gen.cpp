@@ -170,9 +170,8 @@ bool FormulaGenerator::facToExpression(const Expression& a, const Expression& b,
       (d.value == Number::ZERO || d.value == Number::ONE)) {
     res =  num;
   } else {
-    // Use dummy operands for the factorial division since we don't have specific cell info
-    Operand dummyOp(Operand::Type::CONSTANT, Number::ZERO);
-    res = divToFraction(num, denom, dummyOp, dummyOp, nullptr);
+    // Factorial division is guaranteed to produce an integer, so use a standard fraction
+    res = Expression(Expression::Type::FRACTION, "", {num, denom});
   }
   
   return true;
