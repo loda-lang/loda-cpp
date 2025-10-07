@@ -1,5 +1,3 @@
-To install or update LODA, please follow the [installation instructions](https://loda-lang.org/install/). Here are the release notes:
-
 ## [Unreleased]
 
 ### Enhancements
@@ -9,18 +7,18 @@ To install or update LODA, please follow the [installation instructions](https:/
 * Add internal `find-inceval-programs` command
 * Avoid cloning entire `git` history for programs
 
-### v25.10.3
+## v25.10.3
 
 ### Bugfixes
 
 * Fix `nrt` operation
 
-### Enhancements
+## Enhancements
 
 * Support `fac` in formula generation
 * Extend program stats
 
-### v25.9.26
+## v25.9.26
 
 ### Enhancements
 
@@ -28,14 +26,14 @@ To install or update LODA, please follow the [installation instructions](https:/
 * Correct existing programs
 * Extend program stats
 
-### v25.9.13
+## v25.9.13
 
 ### Enhancements
 
 * Extend program stats
 * Improve error output in `eval` command
 
-### v25.9.10
+## v25.9.10
 
 ### Enhancements
 
@@ -43,19 +41,19 @@ To install or update LODA, please follow the [installation instructions](https:/
 * Improve usage stats
 * Allow submissions w/o miner profile
 
-### v25.9.7
+## v25.9.7
 
 ### Enhancements
 
 * Extensions to run on API server
 
-### v25.9.4
+## v25.9.4
 
 ### Enhancements
 
 * Generate submitter stats
 
-### v25.8.30
+## v25.8.30
 
 ### Bugfixes
 
