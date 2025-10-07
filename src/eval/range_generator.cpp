@@ -61,11 +61,16 @@ bool RangeGenerator::collect(const Program& program,
   }
   bool ok = true, hasLoops = false;
   for (auto& op : program.ops) {
+    if (is_range_before_op) {
+      collected.push_back(ranges);
+    }
     if (!update(op, ranges)) {
       ok = false;
       break;
     }
-    collected.push_back(ranges);
+    if (!is_range_before_op) {
+      collected.push_back(ranges);
+    }
     hasLoops = hasLoops || op.type == Operation::Type::LPB;
   }
   // compute fixed point if the program has loops
@@ -81,11 +86,16 @@ bool RangeGenerator::collect(const Program& program,
           mergeLoopRange(end.get(it.first), it.second);
         }
       }
+      if (is_range_before_op) {
+        collected[j] = ranges;
+      }
       if (!update(op, ranges)) {
         ok = false;
         break;
       }
-      collected[j] = ranges;
+      if (!is_range_before_op) {
+        collected[j] = ranges;
+      }
     }
   }
   // remove unbounded ranges
