@@ -936,19 +936,34 @@ void Commands::extractVirseqs() {
         extracted.ops.push_back(program.ops[pos]);
       }
       
-      // Create output filename
-      std::string output_dir = Setup::getLodaHome() + "virseq" + FILE_SEP;
-      std::string output_file = output_dir + seq.id.string() + "_" + 
-                                std::to_string(i + 1) + ".asm";
+      // Create output filename with same subdirectory structure as oeis
+      std::string base_dir = Setup::getProgramsHome() + "seqs" + FILE_SEP + "virtual" + FILE_SEP;
+      std::string subdir = ProgramUtil::dirStr(seq.id);
+      std::string output_dir = base_dir + subdir + FILE_SEP;
+      
+      // Skip underscore and index if there is only one virseq
+      std::string filename = seq.id.string();
+      if (virseqs.size() > 1) {
+        filename += "_" + std::to_string(i + 1);
+      }
+      filename += ".asm";
+      std::string output_file = output_dir + filename;
       
       // Write the extracted program to file
       ensureDir(output_file);
       std::ofstream out(output_file);
       
-      // Add header comment
+      // Add header comment with sequence name
       Operation nop(Operation::Type::NOP);
-      nop.comment = "Virtual sequence " + std::to_string(i + 1) + 
-                    " extracted from " + seq.id.string();
+      std::string comment = "Virtual sequence";
+      if (virseqs.size() > 1) {
+        comment += " " + std::to_string(i + 1);
+      }
+      comment += " extracted from " + seq.id.string();
+      if (!seq.name.empty()) {
+        comment += ": " + seq.name;
+      }
+      nop.comment = comment;
       extracted.ops.insert(extracted.ops.begin(), nop);
       
       // nop.comment = "Input: $" + std::to_string(vs.input_cell) + ", Output: $" + std::to_string(vs.output_cell);
