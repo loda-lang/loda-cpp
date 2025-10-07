@@ -7,6 +7,7 @@
 * Add internal `find-inceval-programs` command
 * Add internal `extract-virseqs` command
 * Internal tools for committing programs
+* Change `extract-virseqs` command to write files to the programs folder
 
 ## v25.10.3
 
