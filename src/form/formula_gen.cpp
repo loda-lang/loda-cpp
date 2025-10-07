@@ -446,14 +446,12 @@ bool FormulaGenerator::generateSingle(const Program& p) {
 
   // update formula based on main program / loop body
   Program main;
-  const std::vector<RangeMap>* mainRanges = nullptr;
   if (useIncEval) {
     main = incEval.getSimpleLoop().body;
-    mainRanges = bodyRanges.empty() ? nullptr : &bodyRanges;
   } else {
     main = p;
-    mainRanges = bodyRanges.empty() ? nullptr : &bodyRanges;
   }
+  const std::vector<RangeMap>* mainRanges = bodyRanges.empty() ? nullptr : &bodyRanges;
   if (!update(main, mainRanges)) {
     return false;
   }
@@ -482,8 +480,8 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     Log::get().debug("Prepared post-loop: " + formula.toString());
 
     // handle post-loop code
-    // Note: Post-loop ranges may be pruned, so we don't use them
-    if (!update(incEval.getSimpleLoop().post_loop, nullptr)) {
+    if (!update(incEval.getSimpleLoop().post_loop,
+                postLoopRanges.empty() ? nullptr : &postLoopRanges)) {
       return false;
     }
     Log::get().debug("Processed post-loop: " + formula.toString());
