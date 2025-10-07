@@ -1201,8 +1201,9 @@ void Test::checkRanges(int64_t id, bool finite, const std::string& expected) {
   Log::get().info("Testing ranges for " + uid.string() + ": " + expected +
                   " with upper bound " + inputUpperBound.to_string());
   RangeGenerator generator;
+  generator.setInputUpperBound(inputUpperBound);
   RangeMap ranges;
-  if (!generator.generate(p, ranges, inputUpperBound)) {
+  if (!generator.generate(p, ranges)) {
     Log::get().error("Cannot generate range from program", true);
   }
   auto result = ranges.toString(Program::OUTPUT_CELL, "a(n)");
@@ -1394,9 +1395,10 @@ bool checkRange(const Sequence& seq, const Program& program, bool finiteInput) {
   auto offset = ProgramUtil::getOffset(program);
   Number inputUpperBound = finiteInput ? offset + seq.size() - 1 : Number::INF;
   RangeGenerator generator;
+  generator.setInputUpperBound(inputUpperBound);
   RangeMap ranges;
   try {
-    if (!generator.generate(program, ranges, inputUpperBound)) {
+    if (!generator.generate(program, ranges)) {
       return false;
     }
   } catch (const std::exception& e) {

@@ -128,8 +128,9 @@ std::string rangeStr(const Range &r, int64_t n) {
 
 Range Evaluator::generateRange(const Program &p, int64_t inputUpperBound) {
   RangeMap ranges;
+  range_generator.setInputUpperBound(Number(inputUpperBound));
   try {
-    if (!range_generator.generate(p, ranges, Number(inputUpperBound))) {
+    if (!range_generator.generate(p, ranges)) {
       ranges.clear();
     }
   } catch (const std::exception &e) {
