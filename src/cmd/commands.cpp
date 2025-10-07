@@ -951,13 +951,21 @@ void Commands::extractVirseqs() {
                     " extracted from " + seq.id.string();
       extracted.ops.insert(extracted.ops.begin(), nop);
       
-      nop.comment = "Input: $" + std::to_string(vs.input_cell) + 
-                    ", Output: $" + std::to_string(vs.output_cell);
-      extracted.ops.insert(extracted.ops.begin() + 1, nop);
+      // nop.comment = "Input: $" + std::to_string(vs.input_cell) + ", Output: $" + std::to_string(vs.output_cell);
+      // extracted.ops.insert(extracted.ops.begin() + 1, nop);
       
       nop.comment.clear();
-      extracted.ops.insert(extracted.ops.begin() + 2, nop);
-      
+      extracted.ops.insert(extracted.ops.begin() + 1, nop);
+
+      Operation mov(Operation::Type::MOV);
+      mov.target = Operand(Operand::Type::DIRECT, vs.input_cell);
+      mov.source = Operand(Operand::Type::DIRECT, 0);
+      extracted.ops.insert(extracted.ops.begin() + 2, mov);
+
+      mov.target = Operand(Operand::Type::DIRECT, 0);
+      mov.source = Operand(Operand::Type::DIRECT, vs.output_cell);
+      extracted.ops.insert(extracted.ops.end(), mov);
+
       ProgramUtil::print(extracted, out);
       out.close();
       
