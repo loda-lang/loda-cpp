@@ -54,7 +54,7 @@ class FormulaGenerator {
 
   bool update(const Operation& op, const RangeMap* ranges = nullptr);
 
-  bool update(const Program& p);
+  bool update(const Program& p, const std::vector<RangeMap>* ranges = nullptr);
 
   void prepareForPostLoop(int64_t numCells, int64_t offset,
                           const std::map<int64_t, Expression>& preloopExprs);

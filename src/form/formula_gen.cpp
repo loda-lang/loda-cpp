@@ -111,7 +111,8 @@ bool FormulaGenerator::canBeNegativeWithRanges(const Expression& e,
                                                 const RangeMap* ranges) const {
   // If we have ranges and the operand is a direct memory access, use ranges
   if (ranges && operand.type == Operand::Type::DIRECT) {
-    auto it = ranges->find(operand.value.asInt());
+    int64_t cell = operand.value.asInt();
+    auto it = ranges->find(cell);
     if (it != ranges->end()) {
       const auto& range = it->second;
       // If lower bound is >= 0, it cannot be negative
@@ -339,18 +340,14 @@ bool FormulaGenerator::update(const Operation& op, const RangeMap* ranges) {
   return okay;
 }
 
-bool FormulaGenerator::update(const Program& p) {
-  // Try to generate ranges for better precision
-  std::vector<RangeMap> collected;
-  bool hasRanges = rangeGenerator.collectRanges(p, collected, Number::INF);
-
+bool FormulaGenerator::update(const Program& p, const std::vector<RangeMap>* ranges) {
   size_t opIndex = 0;
   for (const auto& op : p.ops) {
-    const RangeMap* ranges = nullptr;
-    if (hasRanges && opIndex < collected.size()) {
-      ranges = &collected[opIndex];
+    const RangeMap* opRanges = nullptr;
+    if (ranges && opIndex < ranges->size()) {
+      opRanges = &(*ranges)[opIndex];
     }
-    if (!update(op, ranges)) {
+    if (!update(op, opRanges)) {
       return false;  // operation not supported
     }
     opIndex++;
@@ -409,6 +406,19 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   const bool useIncEval =
       incEval.init(p, true, true);  // skip input transformations and offset
 
+  // Generate ranges for better precision in formula generation
+  std::vector<RangeMap> preLoopRanges, bodyRanges, postLoopRanges;
+  
+  rangeGenerator.setInputUpperBound(Number::INF);
+  rangeGenerator.setRangeBeforeOp(true);  // We need ranges before operations for formula generation
+  if (useIncEval) {
+    // For simple loop programs, collect ranges for each phase
+    rangeGenerator.collect(incEval.getSimpleLoop(), preLoopRanges, bodyRanges, postLoopRanges);
+  } else {
+    // For non-loop programs, collect ranges for the main program
+    rangeGenerator.collect(p, bodyRanges);
+  }
+
   // initialize function names for memory cells
   cellNames.clear();
   for (int64_t cell = 0; cell < numCells; cell++) {
@@ -430,7 +440,8 @@ bool FormulaGenerator::generateSingle(const Program& p) {
       return false;
     }
     // update formula based on pre-loop code
-    if (!update(incEval.getSimpleLoop().pre_loop)) {
+    if (!update(incEval.getSimpleLoop().pre_loop, 
+                preLoopRanges.empty() ? nullptr : &preLoopRanges)) {
       return false;
     }
     for (auto cell : incEval.getInputDependentCells()) {
@@ -444,12 +455,15 @@ bool FormulaGenerator::generateSingle(const Program& p) {
 
   // update formula based on main program / loop body
   Program main;
+  const std::vector<RangeMap>* mainRanges = nullptr;
   if (useIncEval) {
     main = incEval.getSimpleLoop().body;
+    mainRanges = bodyRanges.empty() ? nullptr : &bodyRanges;
   } else {
     main = p;
+    mainRanges = bodyRanges.empty() ? nullptr : &bodyRanges;
   }
-  if (!update(main)) {
+  if (!update(main, mainRanges)) {
     return false;
   }
   Log::get().debug("Updated formula:  " + formula.toString());
@@ -477,7 +491,8 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     Log::get().debug("Prepared post-loop: " + formula.toString());
 
     // handle post-loop code
-    if (!update(incEval.getSimpleLoop().post_loop)) {
+    // Note: Post-loop ranges may be pruned, so we don't use them
+    if (!update(incEval.getSimpleLoop().post_loop, nullptr)) {
       return false;
     }
     Log::get().debug("Processed post-loop: " + formula.toString());
