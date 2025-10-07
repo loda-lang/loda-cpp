@@ -571,6 +571,9 @@ std::string ProgramUtil::getProgramsDir(char domain) {
     case 'P':
       dir = "prg";
       break;
+    case 'V':
+      dir = "virt";
+      break;
     default:
       throw std::runtime_error("Unknown domain: " + std::string(1, domain));
   }

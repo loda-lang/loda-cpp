@@ -941,7 +941,7 @@ void Commands::extractVirseqs() {
       }
 
       // Create output filename with same subdirectory structure as oeis
-      std::string base_dir = SequenceUtil::getSeqsFolder('V');
+      std::string base_dir = ProgramUtil::getProgramsDir('V');
       std::string subdir = ProgramUtil::dirStr(seq.id);
       std::string output_dir = base_dir + subdir + FILE_SEP;
       std::string filename = seq.id.string();
