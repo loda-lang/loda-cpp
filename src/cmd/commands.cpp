@@ -265,7 +265,8 @@ void Commands::export_(const std::string& path) {
       auto offset = ProgramUtil::getOffset(program);
       inputUpperBound = Number(offset + settings.num_terms - 1);
     }
-    generator.annotate(program, inputUpperBound);
+    generator.setInputUpperBound(inputUpperBound);
+    generator.annotate(program);
     ProgramUtil::print(program, std::cout);
   } else if (format == "virseq") {
     ProgramUtil::removeOps(program, Operation::Type::NOP);
@@ -710,9 +711,10 @@ bool checkRange(const ManagedSequence& seq, const Program& program,
   auto terms = seq.getTerms(numTerms);
   Number inputUpperBound = finiteInput ? offset + numTerms - 1 : Number::INF;
   RangeGenerator generator;
+  generator.setInputUpperBound(inputUpperBound);
   RangeMap ranges;
   try {
-    if (!generator.generate(program, ranges, inputUpperBound)) {
+    if (!generator.generate(program, ranges)) {
       return false;
     }
   } catch (const std::exception& e) {

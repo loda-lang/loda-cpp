@@ -4,15 +4,15 @@
 
 The C++ source code contain is organized into the following modules:
 
-- [`base`](base): Basic data structures (e.g., UID)
-- [`cmd`](cmd): Command-line interface, test suite, and main entry point
-- [`eval`](eval): Interpreter and evaluation engine for LODA programs
-- [`form`](form): Formula generation (including PARI/GP integration)
-- [`lang`](lang): LODA language core (parser, analyzer, program representation)
-- [`math`](math): Internal math library (big numbers, integer sequences)
-- [`mine`](mine): Mining infrastructure (generators, matchers, miners)
-- [`seq`](seq): Sequence data management and OEIS integration
-- [`sys`](sys): System utilities (file I/O, git, logging, setup, web client)
+- [base](base): Basic data structures (e.g., UID)
+- [cmd](cmd): Command-line interface, test suite, and main entry point
+- [eval](eval): Interpreter and evaluation engine for LODA programs
+- [form](form): Formula generation (including PARI/GP integration)
+- [lang](lang): LODA language core (parser, analyzer, program representation)
+- [math](math): Internal math library (big numbers, integer sequences)
+- [mine](mine): Mining infrastructure (generators, matchers, miners)
+- [seq](seq): Sequence data management and OEIS integration
+- [sys](sys): System utilities (file I/O, git, logging, setup, web client)
 
 ## Building
 
