@@ -38,7 +38,7 @@ std::string SequenceUtil::getSeqsFolder(char domain) {
       folder = "user";
       break;
     case 'V':
-      folder = "virtual";
+      folder = "virt";
       break;
     default:
       Log::get().error("Unsupported sequence domain: " + std::string(1, domain),
