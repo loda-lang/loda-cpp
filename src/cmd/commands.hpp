@@ -79,6 +79,8 @@ class Commands {
 
   void findEmbseqs();
 
+  void extractVirseqs();
+
   void findIncevalPrograms(const std::string& error_code);
 
   void lists();

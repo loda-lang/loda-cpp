@@ -26,6 +26,7 @@
 #include "mine/mutator.hpp"
 #include "seq/seq_list.hpp"
 #include "seq/seq_program.hpp"
+#include "seq/seq_util.hpp"
 #include "sys/file.hpp"
 #include "sys/log.hpp"
 #include "sys/setup.hpp"
@@ -936,6 +937,96 @@ void Commands::findEmbseqs() {
   }
   Log::get().info("Found " + std::to_string(numFound) +
                   " embedded sequence programs");
+}
+
+void Commands::extractVirseqs() {
+  initLog(false);
+  Parser parser;
+  MineManager manager(settings);
+  manager.load();
+  auto& stats = manager.getStats();
+  int64_t numExtracted = 0;
+
+  for (const auto& seq : manager.getSequences()) {
+    if (!stats.all_program_ids.exists(seq.id)) {
+      continue;
+    }
+    Program program;
+    try {
+      program = parser.parse(ProgramUtil::getProgramPath(seq.id));
+    } catch (const std::exception& e) {
+      Log::get().warn(std::string(e.what()));
+      continue;
+    }
+
+    auto virseqs =
+        VirtualSequence::findVirtualSequencePrograms(program, 3, 1, 1);
+    if (virseqs.empty()) {
+      continue;
+    }
+
+    for (size_t i = 0; i < virseqs.size(); i++) {
+      const auto& vs = virseqs[i];
+
+      // Extract the virtual sequence program
+      Program extracted;
+      for (int64_t pos = vs.start_pos; pos <= vs.end_pos; pos++) {
+        extracted.ops.push_back(program.ops[pos]);
+      }
+
+      // Create output filename with same subdirectory structure as oeis
+      std::string base_dir = SequenceUtil::getSeqsFolder('V');
+      std::string subdir = ProgramUtil::dirStr(seq.id);
+      std::string output_dir = base_dir + subdir + FILE_SEP;
+      std::string filename = seq.id.string();
+      if (virseqs.size() > 1) {
+        filename += "_" + std::to_string(i + 1);
+      }
+      filename += ".asm";
+      std::string output_file = output_dir + filename;
+
+      // Write the extracted program to file
+      ensureDir(output_file);
+      std::ofstream out(output_file);
+
+      // Add header comment with sequence name
+      Operation nop(Operation::Type::NOP);
+      std::string comment = "Virtual sequence";
+      if (virseqs.size() > 1) {
+        comment += " " + std::to_string(i + 1);
+      }
+      comment += " extracted from " + seq.string();
+      nop.comment = comment;
+      extracted.ops.insert(extracted.ops.begin(), nop);
+      nop.comment.clear();
+      extracted.ops.insert(extracted.ops.begin() + 1, nop);
+
+      // Map input cell to Program::INPUT_CELL if needed
+      if (vs.input_cell != Program::INPUT_CELL) {
+        Operation mov(Operation::Type::MOV);
+        mov.target = Operand(Operand::Type::DIRECT, vs.input_cell);
+        mov.source = Operand(Operand::Type::DIRECT, Program::INPUT_CELL);
+        extracted.ops.insert(extracted.ops.begin() + 2, mov);
+      }
+
+      // Map output cell to Program::OUTPUT_CELL if needed
+      if (vs.output_cell != Program::OUTPUT_CELL) {
+        Operation mov(Operation::Type::MOV);
+        mov.target = Operand(Operand::Type::DIRECT, Program::OUTPUT_CELL);
+        mov.source = Operand(Operand::Type::DIRECT, vs.output_cell);
+        extracted.ops.insert(extracted.ops.end(), mov);
+      }
+
+      ProgramUtil::print(extracted, out);
+      out.close();
+
+      numExtracted++;
+      Log::get().info("Extracted virtual sequence from " + seq.string());
+    }
+  }
+
+  Log::get().info("Extracted " + std::to_string(numExtracted) +
+                  " virtual sequence programs");
 }
 
 void Commands::findIncevalPrograms(const std::string& error_code) {

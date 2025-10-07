@@ -15,6 +15,7 @@
  *
  * Usage:
  *   - Set the input upper bound (optional, defaults to infinity)
+ *   - Set whether to collect ranges before or after operations (optional, defaults to after)
  *   - Call generate() to get a RangeMap for a program
  *   - Call collect() to get per-operation ranges
  *   - Call annotate() to add range comments to a program
@@ -24,12 +25,13 @@
  * Example:
  *   RangeGenerator gen;
  *   gen.setInputUpperBound(100);
+ *   gen.setRangeBeforeOp(true);  // Optional: get ranges before operations
  *   RangeMap ranges;
  *   gen.generate(program, ranges);
  */
 class RangeGenerator {
  public:
-  RangeGenerator() : input_upper_bound(Number::INF) {}
+  RangeGenerator() : input_upper_bound(Number::INF), is_range_before_op(false) {}
 
   /**
    * Computes the final range map for all memory cells after running the
@@ -49,7 +51,8 @@ class RangeGenerator {
   bool annotate(Program& program);
 
   /**
-   * Computes the range map after each operation in the program.
+   * Computes the range map after each operation in the program (or before each
+   * operation if setRangeBeforeOp(true) was called).
    * @param program The LODA program to analyze.
    * @param ranges Output: vector of RangeMap, one per operation.
    * @return True if successful, false otherwise.
@@ -76,6 +79,13 @@ class RangeGenerator {
    */
   void setInputUpperBound(const Number& bound) { input_upper_bound = bound; }
 
+  /**
+   * Sets whether ranges should be collected before or after operations.
+   * @param before If true, collect() returns ranges before each operation is executed.
+   *               If false (default), ranges are collected after each operation.
+   */
+  void setRangeBeforeOp(bool before) { is_range_before_op = before; }
+
  private:
   struct LoopState {
     int64_t counterCell;
@@ -92,6 +102,7 @@ class RangeGenerator {
   int64_t getTargetCell(const Operation& op) const;
 
   Number input_upper_bound;
+  bool is_range_before_op;
   ProgramCache program_cache;
   std::map<UID, Range> seq_range_cache;
   std::stack<LoopState> loop_states;

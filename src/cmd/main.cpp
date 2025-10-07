@@ -262,6 +262,8 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
     commands.findSlow(settings.num_terms, type);
   } else if (cmd == "find-embseqs") {
     commands.findEmbseqs();
+  } else if (cmd == "extract-virseqs") {
+    commands.extractVirseqs();
   } else if (cmd == "find-inceval-programs") {
     if (args.size() < 2) {
       std::cerr << "Error: find-inceval-programs requires an error code argument" << std::endl;
