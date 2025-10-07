@@ -36,9 +36,6 @@ class FormulaGenerator {
   void initFormula(int64_t numCells, bool useIncEval);
 
   Expression divToFraction(const Expression& numerator,
-                           const Expression& denominator) const;
-
-  Expression divToFraction(const Expression& numerator,
                            const Expression& denominator, const Operand& numOp,
                            const Operand& denomOp,
                            const RangeMap* ranges) const;
@@ -47,7 +44,8 @@ class FormulaGenerator {
                Expression& res) const;
 
   bool facToExpression(const Expression& a, const Expression& b,
-               Expression& res) const;
+                       const Operand& aOp, const Operand& bOp,
+                       const RangeMap* ranges, Expression& res) const;
 
   bool canBeNegativeWithRanges(const Expression& e, const Operand& operand,
                                 const RangeMap* ranges) const;

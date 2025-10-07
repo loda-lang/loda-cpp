@@ -83,17 +83,6 @@ Expression FormulaGenerator::operandToExpression(Operand op) const {
 }
 
 Expression FormulaGenerator::divToFraction(
-    const Expression& numerator, const Expression& denominator) const {
-  Expression frac(Expression::Type::FRACTION, "", {numerator, denominator});
-  std::string funcName = "floor";
-  if (ExpressionUtil::canBeNegative(numerator, offset) ||
-      ExpressionUtil::canBeNegative(denominator, offset)) {
-    funcName = "truncate";
-  }
-  return func(funcName, {frac});
-}
-
-Expression FormulaGenerator::divToFraction(
     const Expression& numerator, const Expression& denominator,
     const Operand& numOp, const Operand& denomOp,
     const RangeMap* ranges) const {
@@ -150,11 +139,12 @@ bool FormulaGenerator::bitfunc(Operation::Type type, const Expression& a,
 }
 
 // Express falling/rising factorial using standard factorial
-bool FormulaGenerator::facToExpression(const Expression& a,
-                                             const Expression& b, Expression& res) const {
+bool FormulaGenerator::facToExpression(const Expression& a, const Expression& b,
+                                       const Operand& aOp, const Operand& bOp,
+                                       const RangeMap* ranges, Expression& res) const {
 
-  if (ExpressionUtil::canBeNegative(a, offset) ||
-      ExpressionUtil::canBeNegative(b, offset)) {
+  if (canBeNegativeWithRanges(a, aOp, ranges) ||
+      canBeNegativeWithRanges(b, bOp, ranges)) {
     return false;
   }
   
@@ -180,7 +170,9 @@ bool FormulaGenerator::facToExpression(const Expression& a,
       (d.value == Number::ZERO || d.value == Number::ONE)) {
     res =  num;
   } else {
-    res =  divToFraction(num, denom);
+    // Use dummy operands for the factorial division since we don't have specific cell info
+    Operand dummyOp(Operand::Type::CONSTANT, Number::ZERO);
+    res = divToFraction(num, denom, dummyOp, dummyOp, nullptr);
   }
   
   return true;
@@ -243,7 +235,7 @@ bool FormulaGenerator::update(const Operation& op, const RangeMap* ranges) {
       break;
     }
     case Operation::Type::FAC: {
-      okay = facToExpression(prevTarget, source, res);
+      okay = facToExpression(prevTarget, source, op.target, op.source, ranges, res);
       break;
     }
     case Operation::Type::LOG: {
