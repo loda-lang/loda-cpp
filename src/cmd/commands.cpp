@@ -25,6 +25,7 @@
 #include "mine/mutator.hpp"
 #include "seq/seq_list.hpp"
 #include "seq/seq_program.hpp"
+#include "seq/seq_util.hpp"
 #include "sys/file.hpp"
 #include "sys/log.hpp"
 #include "sys/setup.hpp"
@@ -937,7 +938,7 @@ void Commands::extractVirseqs() {
       }
       
       // Create output filename with same subdirectory structure as oeis
-      std::string base_dir = Setup::getProgramsHome() + "seqs" + FILE_SEP + "virtual" + FILE_SEP;
+      std::string base_dir = SequenceUtil::getSeqsFolder('V');
       std::string subdir = ProgramUtil::dirStr(seq.id);
       std::string output_dir = base_dir + subdir + FILE_SEP;
       
@@ -966,20 +967,24 @@ void Commands::extractVirseqs() {
       nop.comment = comment;
       extracted.ops.insert(extracted.ops.begin(), nop);
       
-      // nop.comment = "Input: $" + std::to_string(vs.input_cell) + ", Output: $" + std::to_string(vs.output_cell);
-      // extracted.ops.insert(extracted.ops.begin() + 1, nop);
-      
       nop.comment.clear();
       extracted.ops.insert(extracted.ops.begin() + 1, nop);
 
-      Operation mov(Operation::Type::MOV);
-      mov.target = Operand(Operand::Type::DIRECT, vs.input_cell);
-      mov.source = Operand(Operand::Type::DIRECT, 0);
-      extracted.ops.insert(extracted.ops.begin() + 2, mov);
+      // Map input cell to Program::INPUT_CELL if needed
+      if (vs.input_cell != Program::INPUT_CELL) {
+        Operation mov(Operation::Type::MOV);
+        mov.target = Operand(Operand::Type::DIRECT, vs.input_cell);
+        mov.source = Operand(Operand::Type::DIRECT, Program::INPUT_CELL);
+        extracted.ops.insert(extracted.ops.begin() + 2, mov);
+      }
 
-      mov.target = Operand(Operand::Type::DIRECT, 0);
-      mov.source = Operand(Operand::Type::DIRECT, vs.output_cell);
-      extracted.ops.insert(extracted.ops.end(), mov);
+      // Map output cell to Program::OUTPUT_CELL if needed
+      if (vs.output_cell != Program::OUTPUT_CELL) {
+        Operation mov(Operation::Type::MOV);
+        mov.target = Operand(Operand::Type::DIRECT, Program::OUTPUT_CELL);
+        mov.source = Operand(Operand::Type::DIRECT, vs.output_cell);
+        extracted.ops.insert(extracted.ops.end(), mov);
+      }
 
       ProgramUtil::print(extracted, out);
       out.close();
