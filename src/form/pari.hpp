@@ -31,6 +31,8 @@ class PariFormula {
   bool eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
             Sequence& result) const;
 
+  std::string getName() const { return "PARI"; }
+
  private:
   Formula main_formula;
   bool as_vector;

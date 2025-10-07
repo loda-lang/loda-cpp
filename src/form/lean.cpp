@@ -8,6 +8,10 @@
 #include "sys/log.hpp"
 #include "sys/process.hpp"
 
+// Forward declaration
+std::string exprToLeanString(const Expression& expr, const Formula& f,
+                              const std::string& funcName);
+
 bool convertExprToLean(Expression& expr, const Formula& f) {
   // convert bottom-up!
   for (auto& c : expr.children) {
@@ -18,6 +22,29 @@ bool convertExprToLean(Expression& expr, const Formula& f) {
   // LEAN doesn't support some advanced features yet
   // We only support simple recursive functions for now
   return true;
+}
+
+std::string binaryExpr(const Expression& expr, const Formula& f,
+                       const std::string& funcName, const std::string& op) {
+  if (expr.children.size() != 2) {
+    return "";
+  }
+  std::stringstream ss;
+  ss << "(" << exprToLeanString(expr.children[0], f, funcName) << " " << op
+     << " " << exprToLeanString(expr.children[1], f, funcName) << ")";
+  return ss.str();
+}
+
+std::string naryExpr(const Expression& expr, const Formula& f,
+                     const std::string& funcName, const std::string& op) {
+  std::stringstream ss;
+  ss << "(";
+  for (size_t i = 0; i < expr.children.size(); i++) {
+    if (i > 0) ss << " " << op << " ";
+    ss << exprToLeanString(expr.children[i], f, funcName);
+  }
+  ss << ")";
+  return ss.str();
 }
 
 std::string exprToLeanString(const Expression& expr, const Formula& f,
@@ -56,49 +83,15 @@ std::string exprToLeanString(const Expression& expr, const Formula& f,
       break;
     }
     case Expression::Type::SUM:
-      if (expr.children.size() == 2) {
-        ss << "(" << exprToLeanString(expr.children[0], f, funcName) << " + "
-           << exprToLeanString(expr.children[1], f, funcName) << ")";
-      } else {
-        ss << "(";
-        for (size_t i = 0; i < expr.children.size(); i++) {
-          if (i > 0) ss << " + ";
-          ss << exprToLeanString(expr.children[i], f, funcName);
-        }
-        ss << ")";
-      }
-      break;
+      return naryExpr(expr, f, funcName, "+");
     case Expression::Type::PRODUCT:
-      if (expr.children.size() == 2) {
-        ss << "(" << exprToLeanString(expr.children[0], f, funcName) << " * "
-           << exprToLeanString(expr.children[1], f, funcName) << ")";
-      } else {
-        ss << "(";
-        for (size_t i = 0; i < expr.children.size(); i++) {
-          if (i > 0) ss << " * ";
-          ss << exprToLeanString(expr.children[i], f, funcName);
-        }
-        ss << ")";
-      }
-      break;
+      return naryExpr(expr, f, funcName, "*");
     case Expression::Type::FRACTION:
-      if (expr.children.size() == 2) {
-        ss << "(" << exprToLeanString(expr.children[0], f, funcName) << " / "
-           << exprToLeanString(expr.children[1], f, funcName) << ")";
-      }
-      break;
+      return binaryExpr(expr, f, funcName, "/");
     case Expression::Type::POWER:
-      if (expr.children.size() == 2) {
-        ss << "(" << exprToLeanString(expr.children[0], f, funcName) << " ^ "
-           << exprToLeanString(expr.children[1], f, funcName) << ")";
-      }
-      break;
+      return binaryExpr(expr, f, funcName, "^");
     case Expression::Type::MODULUS:
-      if (expr.children.size() == 2) {
-        ss << "(" << exprToLeanString(expr.children[0], f, funcName) << " % "
-           << exprToLeanString(expr.children[1], f, funcName) << ")";
-      }
-      break;
+      return binaryExpr(expr, f, funcName, "%");
     case Expression::Type::IF:
       // LEAN uses pattern matching, not if-then-else in recursive definitions
       // This is handled at a higher level
