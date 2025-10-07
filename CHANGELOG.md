@@ -3,9 +3,10 @@
 ### Enhancements
 
 * Improve submitted program checks
-* Internal tools for committing programs
-* Add internal `find-inceval-programs` command
 * Avoid cloning entire `git` history for programs
+* Add internal `find-inceval-programs` command
+* Add internal `extract-virseqs` command
+* Internal tools for committing programs
 
 ## v25.10.3
 
