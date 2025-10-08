@@ -83,14 +83,39 @@ Expression FormulaGenerator::operandToExpression(Operand op) const {
 }
 
 Expression FormulaGenerator::divToFraction(
-    const Expression& numerator, const Expression& denominator) const {
+    const Expression& numerator, const Expression& denominator,
+    const Operand& numOp, const Operand& denomOp,
+    const RangeMap* ranges) const {
   Expression frac(Expression::Type::FRACTION, "", {numerator, denominator});
   std::string funcName = "floor";
-  if (ExpressionUtil::canBeNegative(numerator, offset) ||
-      ExpressionUtil::canBeNegative(denominator, offset)) {
+  if (canBeNegativeWithRanges(numerator, numOp, ranges) ||
+      canBeNegativeWithRanges(denominator, denomOp, ranges)) {
     funcName = "truncate";
   }
   return func(funcName, {frac});
+}
+
+bool FormulaGenerator::canBeNegativeWithRanges(const Expression& e,
+                                                const Operand& operand,
+                                                const RangeMap* ranges) const {
+  // If we have ranges and the operand is a direct memory access, use ranges
+  if (ranges && operand.type == Operand::Type::DIRECT) {
+    int64_t cell = operand.value.asInt();
+    auto it = ranges->find(cell);
+    if (it != ranges->end()) {
+      const auto& range = it->second;
+      // If lower bound is >= 0, it cannot be negative
+      if (range.lower_bound >= Number::ZERO) {
+        return false;
+      }
+      // If upper bound is < 0, it must be negative
+      if (range.upper_bound < Number::ZERO) {
+        return true;
+      }
+    }
+  }
+  // Fall back to the original canBeNegative check
+  return ExpressionUtil::canBeNegative(e, offset);
 }
 
 bool FormulaGenerator::bitfunc(Operation::Type type, const Expression& a,
@@ -114,11 +139,12 @@ bool FormulaGenerator::bitfunc(Operation::Type type, const Expression& a,
 }
 
 // Express falling/rising factorial using standard factorial
-bool FormulaGenerator::facToExpression(const Expression& a,
-                                             const Expression& b, Expression& res) const {
+bool FormulaGenerator::facToExpression(const Expression& a, const Expression& b,
+                                       const Operand& aOp, const Operand& bOp,
+                                       const RangeMap* ranges, Expression& res) const {
 
-  if (ExpressionUtil::canBeNegative(a, offset) ||
-      ExpressionUtil::canBeNegative(b, offset)) {
+  if (canBeNegativeWithRanges(a, aOp, ranges) ||
+      canBeNegativeWithRanges(b, bOp, ranges)) {
     return false;
   }
   
@@ -144,13 +170,14 @@ bool FormulaGenerator::facToExpression(const Expression& a,
       (d.value == Number::ZERO || d.value == Number::ONE)) {
     res =  num;
   } else {
-    res =  divToFraction(num, denom);
+    // Factorial division is guaranteed to produce an integer, so use a standard fraction
+    res = Expression(Expression::Type::FRACTION, "", {num, denom});
   }
   
   return true;
 }
 
-bool FormulaGenerator::update(const Operation& op) {
+bool FormulaGenerator::update(const Operation& op, const RangeMap* ranges) {
   auto source = operandToExpression(op.source);
   auto target = operandToExpression(op.target);
   if (source.type == Expression::Type::FUNCTION) {
@@ -180,12 +207,12 @@ bool FormulaGenerator::update(const Operation& op) {
       break;
     }
     case Operation::Type::DIV: {
-      res = divToFraction(prevTarget, source);
+      res = divToFraction(prevTarget, source, op.target, op.source, ranges);
       break;
     }
     case Operation::Type::POW: {
       res = Expression(Expression::Type::POWER, "", {prevTarget, source});
-      if (ExpressionUtil::canBeNegative(source, offset)) {
+      if (canBeNegativeWithRanges(source, op.source, ranges)) {
         res = func("truncate", {res});
       }
       break;
@@ -193,9 +220,10 @@ bool FormulaGenerator::update(const Operation& op) {
     case Operation::Type::MOD: {
       auto c1 = prevTarget;
       auto c2 = source;
-      if (ExpressionUtil::canBeNegative(c1, offset) ||
-          ExpressionUtil::canBeNegative(c2, offset)) {
-        res = sum({c1, product({constant(-1), c2, divToFraction(c1, c2)})});
+      if (canBeNegativeWithRanges(c1, op.target, ranges) ||
+          canBeNegativeWithRanges(c2, op.source, ranges)) {
+        res = sum({c1, product({constant(-1), c2,
+                                divToFraction(c1, c2, op.target, op.source, ranges)})});
       } else {
         res = mod(c1, c2);
       }
@@ -206,7 +234,7 @@ bool FormulaGenerator::update(const Operation& op) {
       break;
     }
     case Operation::Type::FAC: {
-      okay = facToExpression(prevTarget, source, res);
+      okay = facToExpression(prevTarget, source, op.target, op.source, ranges, res);
       break;
     }
     case Operation::Type::LOG: {
@@ -272,7 +300,7 @@ bool FormulaGenerator::update(const Operation& op) {
       // ((x-1)%(y-1)+1)*sign(x)
       auto x = prevTarget;
       auto abs_x = x;
-      if (ExpressionUtil::canBeNegative(x, offset)) {
+      if (canBeNegativeWithRanges(x, op.target, ranges)) {
         abs_x = abs(x);
       }
       auto abs_x_minus_1 = sum({abs_x, constant(-1)});
@@ -283,7 +311,7 @@ bool FormulaGenerator::update(const Operation& op) {
     }
     case Operation::Type::DGS: {
       auto sumdigits = func("sumdigits", {prevTarget, source});
-      if (ExpressionUtil::canBeNegative(prevTarget, offset)) {
+      if (canBeNegativeWithRanges(prevTarget, op.target, ranges)) {
         res = product({sumdigits, sign(prevTarget)});
       } else {
         res = sumdigits;
@@ -303,11 +331,17 @@ bool FormulaGenerator::update(const Operation& op) {
   return okay;
 }
 
-bool FormulaGenerator::update(const Program& p) {
+bool FormulaGenerator::update(const Program& p, const std::vector<RangeMap>* ranges) {
+  size_t opIndex = 0;
   for (const auto& op : p.ops) {
-    if (!update(op)) {
+    const RangeMap* opRanges = nullptr;
+    if (ranges && opIndex < ranges->size()) {
+      opRanges = &(*ranges)[opIndex];
+    }
+    if (!update(op, opRanges)) {
       return false;  // operation not supported
     }
+    opIndex++;
   }
   return true;
 }
@@ -363,6 +397,19 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   const bool useIncEval =
       incEval.init(p, true, true);  // skip input transformations and offset
 
+  // Generate ranges for better precision in formula generation
+  std::vector<RangeMap> preLoopRanges, bodyRanges, postLoopRanges;
+  
+  rangeGenerator.setInputUpperBound(Number::INF);
+  rangeGenerator.setRangeBeforeOp(true);  // We need ranges before operations for formula generation
+  if (useIncEval) {
+    // For simple loop programs, collect ranges for each phase
+    rangeGenerator.collect(incEval.getSimpleLoop(), preLoopRanges, bodyRanges, postLoopRanges);
+  } else {
+    // For non-loop programs, collect ranges for the main program
+    rangeGenerator.collect(p, bodyRanges);
+  }
+
   // initialize function names for memory cells
   cellNames.clear();
   for (int64_t cell = 0; cell < numCells; cell++) {
@@ -384,7 +431,8 @@ bool FormulaGenerator::generateSingle(const Program& p) {
       return false;
     }
     // update formula based on pre-loop code
-    if (!update(incEval.getSimpleLoop().pre_loop)) {
+    if (!update(incEval.getSimpleLoop().pre_loop, 
+                preLoopRanges.empty() ? nullptr : &preLoopRanges)) {
       return false;
     }
     for (auto cell : incEval.getInputDependentCells()) {
@@ -403,7 +451,8 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   } else {
     main = p;
   }
-  if (!update(main)) {
+  const std::vector<RangeMap>* mainRanges = bodyRanges.empty() ? nullptr : &bodyRanges;
+  if (!update(main, mainRanges)) {
     return false;
   }
   Log::get().debug("Updated formula:  " + formula.toString());
@@ -431,7 +480,8 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     Log::get().debug("Prepared post-loop: " + formula.toString());
 
     // handle post-loop code
-    if (!update(incEval.getSimpleLoop().post_loop)) {
+    if (!update(incEval.getSimpleLoop().post_loop,
+                postLoopRanges.empty() ? nullptr : &postLoopRanges)) {
       return false;
     }
     Log::get().debug("Processed post-loop: " + formula.toString());
