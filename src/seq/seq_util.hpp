@@ -23,19 +23,18 @@ class SequenceUtil {
 
   static std::string getSeqsFolder(char domain);
 
-  // Evaluate a formula by writing code to a file, executing it with a command,
+  // Evaluate code by writing it to a file, executing it with a command,
   // and reading the result from output. Returns true on success.
-  template <typename Formula>
   static bool evalFormulaWithExternalTool(
-      const Formula& formula, int64_t offset, int64_t numTerms,
-      int timeoutSeconds, const std::string& toolPath,
-      const std::string& resultPath, const std::vector<std::string>& args,
+      const std::string& evalCode, const std::string& toolName,
+      const std::string& toolPath, const std::string& resultPath,
+      const std::vector<std::string>& args, int timeoutSeconds,
       Sequence& result) {
     std::ofstream toolFile(toolPath);
     if (!toolFile) {
-      Log::get().error("Error generating " + formula.getName() + " file", true);
+      Log::get().error("Error generating " + toolName + " file", true);
     }
-    formula.printEvalCode(offset, numTerms, toolFile);
+    toolFile << evalCode;
     toolFile.close();
 
     int exitCode = execWithTimeout(args, timeoutSeconds, resultPath);
@@ -45,7 +44,7 @@ class SequenceUtil {
       if (exitCode == PROCESS_ERROR_TIMEOUT) {
         return false;  // timeout
       } else {
-        Log::get().error("Error evaluating " + formula.getName() +
+        Log::get().error("Error evaluating " + toolName +
                              " code: tool exited with code " +
                              std::to_string(exitCode),
                          true);
@@ -57,7 +56,7 @@ class SequenceUtil {
     std::ifstream resultIn(resultPath);
     std::string buf;
     if (!resultIn) {
-      Log::get().error("Error reading " + formula.getName() + " output", true);
+      Log::get().error("Error reading " + toolName + " output", true);
     }
     while (std::getline(resultIn, buf)) {
       result.push_back(Number(buf));

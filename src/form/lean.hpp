@@ -24,7 +24,7 @@ class LeanFormula {
 
   std::string toString() const;
 
-  void printEvalCode(int64_t offset, int64_t numTerms, std::ostream& out) const;
+  std::string printEvalCode(int64_t offset, int64_t numTerms) const;
 
   // Evaluates the formula for the given offset and number of terms, with a
   // timeout in seconds. Returns true if successful, false if a timeout

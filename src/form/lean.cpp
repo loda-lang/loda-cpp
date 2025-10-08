@@ -196,8 +196,9 @@ std::string LeanFormula::toString() const {
   return buf.str();
 }
 
-void LeanFormula::printEvalCode(int64_t offset, int64_t numTerms,
-                                std::ostream& out) const {
+std::string LeanFormula::printEvalCode(int64_t offset, int64_t numTerms) const {
+  std::stringstream out;
+  
   // Generate LEAN code to evaluate the function
   out << toString() << std::endl;
   out << std::endl;
@@ -215,6 +216,8 @@ void LeanFormula::printEvalCode(int64_t offset, int64_t numTerms,
   out << "      pure ()" << std::endl;
   out << std::endl;
   out << "  loop 0 offset" << std::endl;
+  
+  return out.str();
 }
 
 bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
@@ -223,7 +226,7 @@ bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
   const std::string leanResult("lean-result.txt");
   std::vector<std::string> args = {"lean", "--run", leanPath};
   
+  std::string evalCode = printEvalCode(offset, numTerms);
   return SequenceUtil::evalFormulaWithExternalTool(
-      *this, offset, numTerms, timeoutSeconds, leanPath, leanResult, args,
-      result);
+      evalCode, getName(), leanPath, leanResult, args, timeoutSeconds, result);
 }

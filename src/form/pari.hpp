@@ -21,7 +21,7 @@ class PariFormula {
   static bool convert(const Formula& formula, bool as_vector,
                       PariFormula& pari_formula);
 
-  void printEvalCode(int64_t offset, int64_t numTerms, std::ostream& out) const;
+  std::string printEvalCode(int64_t offset, int64_t numTerms) const;
 
   std::string toString() const;
 

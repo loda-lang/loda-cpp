@@ -125,8 +125,9 @@ std::string PariFormula::toString() const {
   }
 }
 
-void PariFormula::printEvalCode(int64_t offset, int64_t numTerms,
-                                std::ostream& out) const {
+std::string PariFormula::printEvalCode(int64_t offset, int64_t numTerms) const {
+  std::stringstream out;
+  
   if (as_vector) {
     // declare vectors
     auto functions =
@@ -147,6 +148,8 @@ void PariFormula::printEvalCode(int64_t offset, int64_t numTerms,
     out << "print(a(n))";
   }
   out << ")" << std::endl << "quit" << std::endl;
+  
+  return out.str();
 }
 
 bool PariFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
@@ -157,7 +160,7 @@ bool PariFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
   std::vector<std::string> args = {
       "gp", "-s", std::to_string(maxparisize) + "M", "-q", gpPath};
   
+  std::string evalCode = printEvalCode(offset, numTerms);
   return SequenceUtil::evalFormulaWithExternalTool(
-      *this, offset, numTerms, timeoutSeconds, gpPath, gpResult, args,
-      result);
+      evalCode, getName(), gpPath, gpResult, args, timeoutSeconds, result);
 }
