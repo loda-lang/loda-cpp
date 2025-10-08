@@ -18,6 +18,16 @@ const std::string& SequenceList::getListsHome() {
   return lists_home;
 }
 
+const std::string& SequenceList::getCacheHome() {
+  static std::string cache_home;
+  if (cache_home.empty()) {
+    // don't remove the trailing /
+    cache_home = Setup::getLodaHome() + "cache" + FILE_SEP;
+    ensureDir(cache_home);
+  }
+  return cache_home;
+}
+
 void SequenceList::loadList(const std::string& path,
                             std::unordered_set<UID>& list) {
   Log::get().debug("Loading list " + path);
@@ -147,6 +157,31 @@ void SequenceList::mergeMap(const std::string& file_name,
     in.close();
   }
   std::ofstream out(getListsHome() + file_name);
+  for (auto it : map) {
+    out << it.first.string() << ": " << it.second
+        << std::endl;  // flush at every line to avoid corrupt data
+  }
+  out.close();
+  map.clear();
+}
+
+void SequenceList::mergeCacheMap(const std::string& file_name,
+                                 std::map<UID, int64_t>& map) {
+  if (file_name.find(FILE_SEP) != std::string::npos) {
+    Log::get().error("Invalid file name for merging cache map: " + file_name,
+                     true);
+  }
+  FolderLock lock(getCacheHome());
+  std::ifstream in(getCacheHome() + file_name);
+  if (in.good()) {
+    try {
+      addToMap(in, map);
+    } catch (...) {
+      Log::get().warn("Overwriting corrupt data in " + file_name);
+    }
+    in.close();
+  }
+  std::ofstream out(getCacheHome() + file_name);
   for (auto it : map) {
     out << it.first.string() << ": " << it.second
         << std::endl;  // flush at every line to avoid corrupt data

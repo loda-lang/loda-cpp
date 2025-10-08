@@ -11,6 +11,8 @@ class SequenceList {
  public:
   static const std::string& getListsHome();
 
+  static const std::string& getCacheHome();
+
   static void loadList(const std::string& path, std::unordered_set<UID>& list);
 
   static bool loadMapWithComments(const std::string& path,
@@ -22,6 +24,9 @@ class SequenceList {
 
   static void mergeMap(const std::string& file_name,
                        std::map<UID, int64_t>& map);
+
+  static void mergeCacheMap(const std::string& file_name,
+                            std::map<UID, int64_t>& map);
 
   static void saveMapWithComments(const std::string& path,
                                   const std::map<UID, std::string>& map);
