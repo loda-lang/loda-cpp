@@ -35,5 +35,8 @@ class Formula {
 
   void collectEntries(const Expression& e, Formula& target);
 
+  std::map<Expression, Expression> collectFunctionEntries(
+      const std::string& funcName) const;
+
   std::map<Expression, Expression> entries;
 };

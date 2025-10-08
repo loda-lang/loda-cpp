@@ -309,10 +309,7 @@ void FormulaUtil::convertInitialTermsToIf(Formula& formula,
   }
 }
 
-namespace {
-
-// Helper function to extract offset from a function argument
-bool extractOffset(const Expression& arg, Number& offset) {
+bool FormulaUtil::extractArgumentOffset(const Expression& arg, Number& offset) {
   if (arg.type == Expression::Type::PARAMETER) {
     offset = Number::ZERO;
     return true;
@@ -324,6 +321,21 @@ bool extractOffset(const Expression& arg, Number& offset) {
   }
   return false;
 }
+
+void FormulaUtil::removeFunctionEntries(Formula& formula,
+                                        const std::string& funcName) {
+  auto entryIt = formula.entries.begin();
+  while (entryIt != formula.entries.end()) {
+    if (entryIt->first.type == Expression::Type::FUNCTION &&
+        entryIt->first.name == funcName) {
+      entryIt = formula.entries.erase(entryIt);
+    } else {
+      entryIt++;
+    }
+  }
+}
+
+namespace {
 
 // Helper function to check if a function is a simple recursive reference
 bool isSimpleRecursiveReference(const Formula& formula,
@@ -346,7 +358,7 @@ bool isSimpleRecursiveReference(const Formula& formula,
   }
   
   // Extract offset
-  if (!extractOffset(arg, offset)) {
+  if (!FormulaUtil::extractArgumentOffset(arg, offset)) {
     return false;
   }
   
@@ -364,19 +376,6 @@ bool isSimpleRecursiveReference(const Formula& formula,
   }
   
   return true;
-}
-
-// Helper function to collect all entries for a function
-std::map<Expression, Expression> collectFunctionEntries(
-    const Formula& formula, const std::string& funcName) {
-  std::map<Expression, Expression> entries;
-  for (const auto& entry : formula.entries) {
-    if (entry.first.type == Expression::Type::FUNCTION &&
-        entry.first.name == funcName) {
-      entries[entry.first] = entry.second;
-    }
-  }
-  return entries;
 }
 
 // Helper function to adjust index by offset
@@ -427,15 +426,7 @@ void performReplacement(Formula& formula,
   }
   
   // Remove all entries of the referenced function
-  auto entryIt = formula.entries.begin();
-  while (entryIt != formula.entries.end()) {
-    if (entryIt->first.type == Expression::Type::FUNCTION &&
-        entryIt->first.name == refFuncName) {
-      entryIt = formula.entries.erase(entryIt);
-    } else {
-      entryIt++;
-    }
-  }
+  FormulaUtil::removeFunctionEntries(formula, refFuncName);
 }
 
 }  // namespace
@@ -470,7 +461,7 @@ void FormulaUtil::replaceSimpleRecursiveReferences(Formula& formula) {
     }
     
     // Collect all entries for the referenced function
-    auto refFuncEntries = collectFunctionEntries(formula, refFuncName);
+    auto refFuncEntries = formula.collectFunctionEntries(refFuncName);
     
     // Remove the simple reference definition
     formula.entries.erase(it);
