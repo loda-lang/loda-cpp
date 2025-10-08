@@ -308,3 +308,141 @@ void FormulaUtil::convertInitialTermsToIf(Formula& formula,
     }
   }
 }
+
+void FormulaUtil::replaceSimpleRecursiveReferences(Formula& formula) {
+  // Find all functions
+  auto funcs = getDefinitions(formula);
+  
+  // Track which functions were created by this algorithm
+  std::set<std::string> processedRecursiveFuncs;
+  
+  // For each function, check if it's a simple reference to another recursive function
+  for (const auto& funcName : funcs) {
+    // Skip if funcName is an external OEIS sequence
+    if (!funcName.empty() && std::isupper(funcName[0])) {
+      continue;
+    }
+    
+    // Get the general definition (the one with a parameter, not a constant)
+    Expression funcExpr = ExpressionUtil::newFunction(funcName);
+    auto it = formula.entries.find(funcExpr);
+    if (it == formula.entries.end()) {
+      continue;  // No general definition found
+    }
+    
+    auto& rhs = it->second;
+    
+    // Check if RHS is a simple function call with an offset: b(n+k) or b(n-k) or b(n)
+    if (rhs.type != Expression::Type::FUNCTION || rhs.children.size() != 1) {
+      continue;
+    }
+    
+    std::string refFuncName = rhs.name;
+    const auto& arg = rhs.children.front();
+    
+    // Skip if the referenced function was already processed by this algorithm
+    if (processedRecursiveFuncs.find(refFuncName) != processedRecursiveFuncs.end()) {
+      continue;
+    }
+    
+    // Calculate offset
+    Number offset = Number::ZERO;
+    if (arg.type == Expression::Type::PARAMETER) {
+      offset = Number::ZERO;
+    } else if (arg.type == Expression::Type::SUM && arg.children.size() == 2) {
+      if (arg.children[0].type == Expression::Type::PARAMETER &&
+          arg.children[1].type == Expression::Type::CONSTANT) {
+        offset = arg.children[1].value;
+      } else {
+        continue;  // Not a simple offset
+      }
+    } else {
+      continue;  // Not a simple reference
+    }
+    
+    // Check if the referenced function is recursive
+    if (!isRecursive(formula, refFuncName)) {
+      continue;
+    }
+    
+    // Check if there are no other dependencies between funcName and refFuncName
+    // (i.e., funcName only references refFuncName in this simple way)
+    auto deps = getDependencies(formula, Expression::Type::FUNCTION, false, false);
+    bool hasOtherDeps = false;
+    for (const auto& dep : deps) {
+      if (dep.first == funcName && dep.second != refFuncName) {
+        hasOtherDeps = true;
+        break;
+      }
+    }
+    if (hasOtherDeps) {
+      continue;  // Has other dependencies, not a simple reference
+    }
+    
+    // Now we can replace references to refFuncName with funcName
+    // We need to adjust the indices by subtracting the offset
+    
+    // Collect all entries for the referenced function
+    std::map<Expression, Expression> refFuncEntries;
+    for (const auto& entry : formula.entries) {
+      if (entry.first.type == Expression::Type::FUNCTION &&
+          entry.first.name == refFuncName) {
+        refFuncEntries[entry.first] = entry.second;
+      }
+    }
+    
+    // Remove the simple reference definition
+    formula.entries.erase(it);
+    
+    // For each entry of the referenced function
+    for (const auto& refEntry : refFuncEntries) {
+      Expression newLeft = refEntry.first;
+      newLeft.name = funcName;
+      
+      // Adjust the index by subtracting the offset
+      if (refEntry.first.children.size() == 1) {
+        auto& arg = newLeft.children.front();
+        if (arg.type == Expression::Type::CONSTANT) {
+          // Initial term: adjust constant index
+          arg.value -= offset;
+        } else if (arg.type == Expression::Type::PARAMETER) {
+          // General term with parameter: keep as n
+          // No adjustment needed for the left side
+        } else if (arg.type == Expression::Type::SUM) {
+          // Already has an offset on the left side, adjust it
+          if (arg.children.size() == 2 &&
+              arg.children[0].type == Expression::Type::PARAMETER &&
+              arg.children[1].type == Expression::Type::CONSTANT) {
+            arg.children[1].value -= offset;
+            ExpressionUtil::normalize(newLeft.children[0]);
+          }
+        }
+      }
+      
+      // Replace references to refFuncName with funcName in the RHS
+      Expression newRight = refEntry.second;
+      newRight.replaceName(refFuncName, funcName);
+      
+      formula.entries[newLeft] = newRight;
+    }
+    
+    // Replace all references to refFuncName with funcName in remaining formulas
+    for (auto& entry : formula.entries) {
+      entry.second.replaceName(refFuncName, funcName);
+    }
+    
+    // Remove all entries of the referenced function
+    auto entryIt = formula.entries.begin();
+    while (entryIt != formula.entries.end()) {
+      if (entryIt->first.type == Expression::Type::FUNCTION &&
+          entryIt->first.name == refFuncName) {
+        entryIt = formula.entries.erase(entryIt);
+      } else {
+        entryIt++;
+      }
+    }
+    
+    // Mark this function as processed
+    processedRecursiveFuncs.insert(funcName);
+  }
+}

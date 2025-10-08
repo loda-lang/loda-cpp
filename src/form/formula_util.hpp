@@ -26,4 +26,6 @@ class FormulaUtil {
   static void convertInitialTermsToIf(
       Formula& formula,
       const Expression::Type type = Expression::Type::FUNCTION);
+
+  static void replaceSimpleRecursiveReferences(Formula& formula);
 };
