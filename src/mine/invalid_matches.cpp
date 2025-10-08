@@ -12,7 +12,7 @@ InvalidMatches::InvalidMatches()
 {
   // Migrate file from lists folder to cache folder
   const auto lists_path = SequenceList::getListsHome() + FILENAME;
-  const auto cache_path = SequenceList::getCacheHome() + FILENAME;
+  const auto cache_path = Setup::getCacheHome() + FILENAME;
   if (isFile(lists_path) && !isFile(cache_path)) {
     Log::get().info("Migrating \"" + FILENAME + "\" from lists to cache folder");
     moveFile(lists_path, cache_path);
@@ -20,7 +20,7 @@ InvalidMatches::InvalidMatches()
 }
 
 void InvalidMatches::load() {
-  auto path = SequenceList::getCacheHome() + FILENAME;
+  auto path = Setup::getCacheHome() + FILENAME;
   try {
     SequenceList::loadMap(path, invalid_matches);
   } catch (const std::exception&) {
@@ -45,11 +45,11 @@ void InvalidMatches::insert(UID id) {
     scheduler.reset();
     Log::get().info("Saving invalid matches stats for " +
                     std::to_string(invalid_matches.size()) + " sequences");
-    SequenceList::mergeCacheMap(FILENAME, invalid_matches);
+    SequenceList::mergeMap(Setup::getCacheHome(), FILENAME, invalid_matches);
   }
 }
 
 void InvalidMatches::deleteFile() {
-  auto path = SequenceList::getCacheHome() + FILENAME;
+  auto path = Setup::getCacheHome() + FILENAME;
   std::remove(path.c_str());
 }
