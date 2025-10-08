@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Removed
+
+- Removed list generation functionality (`generateLists()`) as it's replaced by the API and web interface
+- Removed hidden `lists` command
+- List files (list*.markdown, no_loda.txt) are automatically cleaned up during stats generation
+
 ## v25.10.8
 
 ### Enhancements
