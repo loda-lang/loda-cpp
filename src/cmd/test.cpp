@@ -1155,7 +1155,7 @@ void Test::checkFormulas(const std::string& testFile, FormulaType type) {
       }
     } else if (type == FormulaType::LEAN) {
       LeanFormula lean;
-      if (!LeanFormula::convert(f, lean)) {
+      if (!LeanFormula::convert(f, false, lean)) {
         Log::get().error("Cannot convert formula to LEAN", true);
       }
       if (lean.toString() != e.second) {

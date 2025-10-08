@@ -118,7 +118,13 @@ std::string exprToLeanString(const Expression& expr, const Formula& f,
   return ss.str();
 }
 
-bool LeanFormula::convert(const Formula& formula, LeanFormula& lean_formula) {
+bool LeanFormula::convert(const Formula& formula, bool as_vector,
+                          LeanFormula& lean_formula) {
+  // LEAN does not support vector mode
+  if (as_vector) {
+    return false;
+  }
+  
   lean_formula = LeanFormula();
   
   // Check if this is a simple formula we can convert

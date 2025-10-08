@@ -20,7 +20,8 @@ class LeanFormula {
  public:
   LeanFormula() {};
 
-  static bool convert(const Formula& formula, LeanFormula& lean_formula);
+  static bool convert(const Formula& formula, bool as_vector,
+                      LeanFormula& lean_formula);
 
   std::string toString() const;
 

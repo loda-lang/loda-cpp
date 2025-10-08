@@ -260,7 +260,7 @@ void Commands::export_(const std::string& path) {
     std::cout << pari_formula.toString() << std::endl;
   } else if (format == "lean") {
     if (!generator.generate(program, -1, formula, settings.with_deps) ||
-        !LeanFormula::convert(formula, lean_formula)) {
+        !LeanFormula::convert(formula, false, lean_formula)) {
       throwConversionError(format);
     }
     std::cout << lean_formula.toString() << std::endl;
@@ -622,16 +622,10 @@ void testFormula(const std::string& test_id, const Settings& settings,
     FormulaType formula_obj;
     Sequence expSeq;
     try {
-      bool convert_ok;
       if (!generator.generate(program, id.number(), formula, true)) {
         continue;
       }
-      if constexpr (std::is_same_v<FormulaType, PariFormula>) {
-        convert_ok = PariFormula::convert(formula, as_vector, formula_obj);
-      } else {
-        convert_ok = FormulaType::convert(formula, formula_obj);
-      }
-      if (!convert_ok) {
+      if (!FormulaType::convert(formula, as_vector, formula_obj)) {
         continue;
       }
     } catch (const std::exception& e) {
