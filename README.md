@@ -59,7 +59,7 @@ Options:
 
 ## Development
 
-For developer guidance, see the detailed documentation in `src/README.md` and the Copilot instructions file (`.github/copilot-instructions.md`). These cover code structure, style, and common tasks for contributing to LODA.
+For developer guidance, see the detailed documentation in [src/README.md](src/README.md) and the [Copilot instructions](.github/copilot-instructions.md). These cover code structure, style, and common tasks for contributing to LODA.
 
 ## License
 

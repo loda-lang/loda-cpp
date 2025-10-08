@@ -1,13 +1,13 @@
 ## [Unreleased]
 
+## v25.10.8
+
 ### Enhancements
 
+* Improve formula generation
 * Improve submitted program checks
 * Avoid cloning entire `git` history for programs
-* Add internal `find-inceval-programs` command
-* Add internal `extract-virseqs` command
-* Internal tools for committing programs
-* Change `extract-virseqs` command to write files to the programs folder
+* Add internal commands and tools
 
 ## v25.10.3
 
