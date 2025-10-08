@@ -376,8 +376,7 @@ void MineManager::cleanupListFiles() {
   Log::get().debug("Cleaning up leftover list files at \"" + lists_home + "\"");
   
   // Delete list*.markdown files
-  const size_t list_file_size = 50000;
-  const size_t max_lists = 1000000 / list_file_size;  // 20 list files
+  const size_t max_lists = 10;
   size_t deleted_count = 0;
   for (size_t i = 0; i < max_lists; i++) {
     const std::string list_path =
