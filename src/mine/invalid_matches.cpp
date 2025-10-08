@@ -9,7 +9,9 @@ const std::string FILENAME = "invalid_matches.txt";
 
 InvalidMatches::InvalidMatches()
     : scheduler(1800)  // 30 minutes
-{
+{}
+
+void InvalidMatches::load() {
   // Migrate file from lists folder to cache folder
   const auto lists_path = SequenceList::getListsHome() + FILENAME;
   const auto cache_path = Setup::getCacheHome() + FILENAME;
@@ -17,10 +19,8 @@ InvalidMatches::InvalidMatches()
     Log::get().info("Migrating \"" + FILENAME + "\" from lists to cache folder");
     moveFile(lists_path, cache_path);
   }
-}
-
-void InvalidMatches::load() {
-  auto path = Setup::getCacheHome() + FILENAME;
+  
+  auto path = cache_path;
   try {
     SequenceList::loadMap(path, invalid_matches);
   } catch (const std::exception&) {
