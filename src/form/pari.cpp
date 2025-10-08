@@ -5,6 +5,7 @@
 
 #include "form/expression_util.hpp"
 #include "form/formula_util.hpp"
+#include "seq/seq_util.hpp"
 #include "sys/log.hpp"
 #include "sys/process.hpp"
 
@@ -153,42 +154,10 @@ bool PariFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
   const std::string gpPath("pari-loda.gp");
   const std::string gpResult("pari-result.txt");
   const int64_t maxparisize = 256;  // in MB
-  std::ofstream gp(gpPath);
-  if (!gp) {
-    Log::get().error("Error generating gp file", true);
-  }
-  printEvalCode(offset, numTerms, gp);
-  gp.close();
-
   std::vector<std::string> args = {
       "gp", "-s", std::to_string(maxparisize) + "M", "-q", gpPath};
-  int exitCode = execWithTimeout(args, timeoutSeconds, gpResult);
-  if (exitCode != 0) {
-    std::remove(gpPath.c_str());
-    std::remove(gpResult.c_str());
-    if (exitCode == PROCESS_ERROR_TIMEOUT) {
-      return false;  // timeout
-    } else {
-      Log::get().error("Error evaluating PARI code: gp exited with code " +
-                           std::to_string(exitCode),
-                       true);
-    }
-  }
-
-  // read result from file
-  result.clear();
-  std::ifstream resultIn(gpResult);
-  std::string buf;
-  if (!resultIn) {
-    Log::get().error("Error reading PARI output", true);
-  }
-  while (std::getline(resultIn, buf)) {
-    result.push_back(Number(buf));
-  }
-
-  // clean up
-  std::remove(gpPath.c_str());
-  std::remove(gpResult.c_str());
-
-  return true;
+  
+  return SequenceUtil::evalFormulaWithExternalTool(
+      *this, offset, numTerms, timeoutSeconds, gpPath, gpResult, args,
+      result);
 }

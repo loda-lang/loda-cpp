@@ -1,7 +1,13 @@
 #pragma once
 
+#include <fstream>
+#include <vector>
+
 #include "base/uid.hpp"
 #include "math/number.hpp"
+#include "math/sequence.hpp"
+#include "sys/log.hpp"
+#include "sys/process.hpp"
 
 class SequenceUtil {
  public:
@@ -16,4 +22,51 @@ class SequenceUtil {
   static std::string getOeisUrl(UID id);
 
   static std::string getSeqsFolder(char domain);
+
+  // Evaluate a formula by writing code to a file, executing it with a command,
+  // and reading the result from output. Returns true on success.
+  template <typename Formula>
+  static bool evalFormulaWithExternalTool(
+      const Formula& formula, int64_t offset, int64_t numTerms,
+      int timeoutSeconds, const std::string& toolPath,
+      const std::string& resultPath, const std::vector<std::string>& args,
+      Sequence& result) {
+    std::ofstream toolFile(toolPath);
+    if (!toolFile) {
+      Log::get().error("Error generating " + formula.getName() + " file", true);
+    }
+    formula.printEvalCode(offset, numTerms, toolFile);
+    toolFile.close();
+
+    int exitCode = execWithTimeout(args, timeoutSeconds, resultPath);
+    if (exitCode != 0) {
+      std::remove(toolPath.c_str());
+      std::remove(resultPath.c_str());
+      if (exitCode == PROCESS_ERROR_TIMEOUT) {
+        return false;  // timeout
+      } else {
+        Log::get().error("Error evaluating " + formula.getName() +
+                             " code: tool exited with code " +
+                             std::to_string(exitCode),
+                         true);
+      }
+    }
+
+    // read result from file
+    result.clear();
+    std::ifstream resultIn(resultPath);
+    std::string buf;
+    if (!resultIn) {
+      Log::get().error("Error reading " + formula.getName() + " output", true);
+    }
+    while (std::getline(resultIn, buf)) {
+      result.push_back(Number(buf));
+    }
+
+    // clean up
+    std::remove(toolPath.c_str());
+    std::remove(resultPath.c_str());
+
+    return true;
+  }
 };

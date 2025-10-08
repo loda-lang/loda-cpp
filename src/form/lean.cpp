@@ -5,6 +5,7 @@
 
 #include "form/expression_util.hpp"
 #include "form/formula_util.hpp"
+#include "seq/seq_util.hpp"
 #include "sys/log.hpp"
 #include "sys/process.hpp"
 
@@ -176,9 +177,7 @@ std::string LeanFormula::toString() const {
         entry.first.name == funcName) {
       mainExpr = entry.second;
       // Check if the expression contains a recursive call
-      if (mainExpr.contains(Expression::Type::FUNCTION, funcName)) {
-        hasRecursion = true;
-      }
+      hasRecursion = FormulaUtil::isRecursive(main_formula, funcName);
       break;
     }
   }
@@ -190,12 +189,8 @@ std::string LeanFormula::toString() const {
     // Simple non-recursive formula
     buf << exprToLeanString(mainExpr, main_formula, funcName);
   } else {
-    // Recursive formula - use pattern matching
-    // This is more complex and requires extracting base cases from IF expressions
-    // For now, generate a placeholder
-    buf << std::endl;
-    buf << "  | 0 => 0  -- TODO: extract base case" << std::endl;
-    buf << "  | n + 1 => " << exprToLeanString(mainExpr, main_formula, funcName);
+    // Recursive formulas not yet supported
+    return "";
   }
   
   return buf.str();
@@ -226,42 +221,9 @@ bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
                        Sequence& result) const {
   const std::string leanPath("loda-eval.lean");
   const std::string leanResult("lean-result.txt");
-  
-  std::ofstream lean(leanPath);
-  if (!lean) {
-    Log::get().error("Error generating lean file", true);
-  }
-  printEvalCode(offset, numTerms, lean);
-  lean.close();
-
   std::vector<std::string> args = {"lean", "--run", leanPath};
-  int exitCode = execWithTimeout(args, timeoutSeconds, leanResult);
-  if (exitCode != 0) {
-    std::remove(leanPath.c_str());
-    std::remove(leanResult.c_str());
-    if (exitCode == PROCESS_ERROR_TIMEOUT) {
-      return false;  // timeout
-    } else {
-      Log::get().error("Error evaluating LEAN code: lean exited with code " +
-                           std::to_string(exitCode),
-                       true);
-    }
-  }
-
-  // read result from file
-  result.clear();
-  std::ifstream resultIn(leanResult);
-  std::string buf;
-  if (!resultIn) {
-    Log::get().error("Error reading LEAN output", true);
-  }
-  while (std::getline(resultIn, buf)) {
-    result.push_back(Number(buf));
-  }
-
-  // clean up
-  std::remove(leanPath.c_str());
-  std::remove(leanResult.c_str());
-
-  return true;
+  
+  return SequenceUtil::evalFormulaWithExternalTool(
+      *this, offset, numTerms, timeoutSeconds, leanPath, leanResult, args,
+      result);
 }
