@@ -1,2 +1,3 @@
-A000027: def a : ℕ → ℕ := fun n => n
-A000247: def a : ℕ → ℕ := fun n => ((2 ^ n) + (-1 * n) + -2)
+A000027: def a (n : Int) : Int := n
+A000034: def a (n : Int) : Int := ((n % 2) + 1)
+A000247: def a (n : Int) : Int := (Int.ofNat (2 ^ n.toNat) + (-1 * n) + -2)

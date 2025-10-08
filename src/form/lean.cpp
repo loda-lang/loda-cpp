@@ -88,8 +88,22 @@ std::string exprToLeanString(const Expression& expr, const Formula& f,
       return naryExpr(expr, f, funcName, "*");
     case Expression::Type::FRACTION:
       return binaryExpr(expr, f, funcName, "/");
-    case Expression::Type::POWER:
+    case Expression::Type::POWER: {
+      // Special handling for power with parameter base
+      if (expr.children.size() == 2) {
+        auto& base = expr.children[0];
+        auto& exponent = expr.children[1];
+        // Check if exponent is the parameter (like n)
+        if (exponent.type == Expression::Type::PARAMETER) {
+          // Need to convert: base^n becomes Int.ofNat (base ^ n.toNat)
+          std::stringstream ps;
+          ps << "Int.ofNat (" << exprToLeanString(base, f, funcName) 
+             << " ^ " << exprToLeanString(exponent, f, funcName) << ".toNat)";
+          return ps.str();
+        }
+      }
       return binaryExpr(expr, f, funcName, "^");
+    }
     case Expression::Type::MODULUS:
       return binaryExpr(expr, f, funcName, "%");
     case Expression::Type::IF:
@@ -170,7 +184,7 @@ std::string LeanFormula::toString() const {
   }
   
   // Generate LEAN function definition
-  buf << "def " << funcName << " : ℕ → ℕ := fun n => ";
+  buf << "def " << funcName << " (n : Int) : Int := ";
   
   if (!hasRecursion) {
     // Simple non-recursive formula
@@ -193,9 +207,19 @@ void LeanFormula::printEvalCode(int64_t offset, int64_t numTerms,
   out << toString() << std::endl;
   out << std::endl;
   
-  // Generate evaluation code
-  out << "#eval List.range " << numTerms << " |>.map (fun i => "
-      << "a (i + " << offset << "))" << std::endl;
+  // Generate evaluation code with the new IO pattern
+  out << "def main : IO Unit := do" << std::endl;
+  out << "  let offset : Int := " << offset << std::endl;
+  out << "  let num_terms : Nat := " << numTerms << std::endl;
+  out << std::endl;
+  out << "  let rec loop (count : Nat) (n : Int) : IO Unit := do" << std::endl;
+  out << "    if count < num_terms then" << std::endl;
+  out << "      IO.println (toString (a n))" << std::endl;
+  out << "      loop (count + 1) (n + 1)" << std::endl;
+  out << "    else" << std::endl;
+  out << "      pure ()" << std::endl;
+  out << std::endl;
+  out << "  loop 0 offset" << std::endl;
 }
 
 bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
