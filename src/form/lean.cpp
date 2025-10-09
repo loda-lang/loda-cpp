@@ -30,6 +30,15 @@ bool convertExprToLean(Expression& expr, const Formula& f) {
       break;
   }
   
+  // Check for unsupported functions
+  if (expr.type == Expression::Type::FUNCTION) {
+    if (expr.name == "floor" || expr.name == "truncate" || 
+        expr.name == "ceil" || expr.name == "frac") {
+      // These functions are not supported in LEAN export
+      return false;
+    }
+  }
+  
   // convert bottom-up!
   for (auto& c : expr.children) {
     if (!convertExprToLean(c, f)) {
@@ -76,14 +85,9 @@ std::string functionExpr(const Expression& expr, const Formula& f,
       ss << " " << exprToLeanString(expr.children[0], f, funcName);
     }
   } else {
-    // Check for unsupported built-in functions
-    if (expr.name == "floor" || expr.name == "truncate" || 
-        expr.name == "ceil" || expr.name == "frac") {
-      // These functions are not supported in LEAN export
-      return "";
-    }
     // Built-in function - need to map to LEAN syntax
     // For now, we keep the generic function call syntax
+    // Note: unsupported functions are already filtered out in convertExprToLean()
     ss << expr.name;
     if (!expr.children.empty()) {
       ss << " (";
