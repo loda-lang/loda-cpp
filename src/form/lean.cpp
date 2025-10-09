@@ -76,6 +76,12 @@ std::string functionExpr(const Expression& expr, const Formula& f,
       ss << " " << exprToLeanString(expr.children[0], f, funcName);
     }
   } else {
+    // Check for unsupported built-in functions
+    if (expr.name == "floor" || expr.name == "truncate" || 
+        expr.name == "ceil" || expr.name == "frac") {
+      // These functions are not supported in LEAN export
+      return "";
+    }
     // Built-in function - need to map to LEAN syntax
     // For now, we keep the generic function call syntax
     ss << expr.name;

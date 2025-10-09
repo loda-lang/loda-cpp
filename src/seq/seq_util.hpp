@@ -40,14 +40,28 @@ class SequenceUtil {
     int exitCode = execWithTimeout(args, timeoutSeconds, resultPath);
     if (exitCode != 0) {
       std::remove(toolPath.c_str());
+      // Try to read error message from result file before removing it
+      std::string errorMsg;
+      std::ifstream errorIn(resultPath);
+      if (errorIn) {
+        std::string line;
+        while (std::getline(errorIn, line) && errorMsg.size() < 500) {
+          if (!errorMsg.empty()) errorMsg += "; ";
+          errorMsg += line;
+        }
+        errorIn.close();
+      }
       std::remove(resultPath.c_str());
       if (exitCode == PROCESS_ERROR_TIMEOUT) {
         return false;  // timeout
       } else {
-        Log::get().error("Error evaluating " + toolName +
+        std::string fullMsg = "Error evaluating " + toolName +
                              " code: tool exited with code " +
-                             std::to_string(exitCode),
-                         true);
+                             std::to_string(exitCode);
+        if (!errorMsg.empty()) {
+          fullMsg += " (" + errorMsg + ")";
+        }
+        Log::get().error(fullMsg, true);
       }
     }
 
