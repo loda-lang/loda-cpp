@@ -3,6 +3,7 @@
 #include <set>
 
 #include "form/expression_util.hpp"
+#include "sys/log.hpp"
 
 void FormulaUtil::resolveIdentities(Formula& formula) {
   auto copy = formula.entries;
@@ -337,6 +338,22 @@ void FormulaUtil::removeFunctionEntries(Formula& formula,
 
 namespace {
 
+// Helper function to check if expression contains parameter outside of function calls
+bool containsParameterOutsideFunction(const Expression& expr) {
+  if (expr.type == Expression::Type::PARAMETER) {
+    return true;
+  }
+  if (expr.type == Expression::Type::FUNCTION) {
+    return false;  // Don't recurse into function calls
+  }
+  for (const auto& child : expr.children) {
+    if (containsParameterOutsideFunction(child)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // Helper function to check if a function is a simple recursive reference
 bool isSimpleRecursiveReference(const Formula& formula,
                                 const std::string& funcName,
@@ -367,12 +384,16 @@ bool isSimpleRecursiveReference(const Formula& formula,
     return false;
   }
   
-  // Check if the referenced function's RHS contains parameters (n)
+  // Check if the referenced function's RHS contains parameters (n) outside of function calls
   // If so, skip simplification as it would create incorrect formulas
   Expression refFuncExpr = ExpressionUtil::newFunction(refFuncName);
   auto it = formula.entries.find(refFuncExpr);
-  if (it != formula.entries.end() && it->second.contains(Expression::Type::PARAMETER)) {
-    return false;  // RHS contains parameter, cannot simplify
+  if (it != formula.entries.end()) {
+    bool hasParam = containsParameterOutsideFunction(it->second);
+    if (hasParam) {
+      Log::get().debug("Skipping simplification of " + funcName + " -> " + refFuncName + " because RHS contains PARAMETER outside of function calls");
+      return false;  // RHS contains parameter outside function calls, cannot simplify
+    }
   }
   
   // Check if there are no other dependencies
