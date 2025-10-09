@@ -463,6 +463,23 @@ void FormulaUtil::replaceSimpleRecursiveReferences(Formula& formula) {
     // Collect all entries for the referenced function
     auto refFuncEntries = formula.collectFunctionEntries(refFuncName);
     
+    // Check if simplification would create negative initial term indices
+    bool hasNegativeIndices = false;
+    for (const auto& entry : refFuncEntries) {
+      if (entry.first.children.size() == 1 &&
+          entry.first.children.front().type == Expression::Type::CONSTANT) {
+        Number adjustedIndex = entry.first.children.front().value;
+        adjustedIndex -= offset;
+        if (adjustedIndex < Number::ZERO) {
+          hasNegativeIndices = true;
+          break;
+        }
+      }
+    }
+    if (hasNegativeIndices) {
+      continue;  // Skip simplification to avoid negative indices
+    }
+    
     // Remove the simple reference definition
     formula.entries.erase(it);
     
