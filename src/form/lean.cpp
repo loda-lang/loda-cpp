@@ -194,7 +194,15 @@ std::string LeanFormula::toString() const {
   }
   
   // Generate LEAN function definition
-  buf << "def " << funcName << " (n : Int) : Int := ";
+  // Check if the expression uses the parameter n
+  bool usesParameter = mainExpr.contains(Expression::Type::PARAMETER);
+  
+  if (usesParameter) {
+    buf << "def " << funcName << " (n : Int) : Int := ";
+  } else {
+    // Use _ for unused parameter to avoid LEAN warnings
+    buf << "def " << funcName << " (_ : Int) : Int := ";
+  }
   
   if (!hasRecursion) {
     // Simple non-recursive formula
