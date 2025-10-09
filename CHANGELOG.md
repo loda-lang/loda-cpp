@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Enhancements
+
+* Simplify formulas by replacing simple references to recursive functions
+
 ## v25.10.8
 
 ### Enhancements
