@@ -14,14 +14,29 @@ std::string exprToLeanString(const Expression& expr, const Formula& f,
                               const std::string& funcName);
 
 bool convertExprToLean(Expression& expr, const Formula& f) {
+  // Check for unsupported types first
+  switch (expr.type) {
+    case Expression::Type::IF:
+    case Expression::Type::EQUAL:
+    case Expression::Type::NOT_EQUAL:
+    case Expression::Type::LESS_EQUAL:
+    case Expression::Type::GREATER_EQUAL:
+    case Expression::Type::LOCAL:
+    case Expression::Type::VECTOR:
+    case Expression::Type::FACTORIAL:
+      // These types are not supported in LEAN export
+      return false;
+    default:
+      break;
+  }
+  
   // convert bottom-up!
   for (auto& c : expr.children) {
     if (!convertExprToLean(c, f)) {
       return false;
     }
   }
-  // LEAN doesn't support some advanced features yet
-  // We only support simple recursive functions for now
+  
   return true;
 }
 
@@ -206,7 +221,12 @@ std::string LeanFormula::toString() const {
   
   if (!hasRecursion) {
     // Simple non-recursive formula
-    buf << exprToLeanString(mainExpr, main_formula, funcName);
+    std::string exprStr = exprToLeanString(mainExpr, main_formula, funcName);
+    if (exprStr.empty()) {
+      // Failed to convert expression (should not happen if convert() succeeded)
+      return "";
+    }
+    buf << exprStr;
   } else {
     // Recursive formulas not yet supported
     return "";
