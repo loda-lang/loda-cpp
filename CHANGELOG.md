@@ -2,7 +2,7 @@
 
 ### Enhancements
 
-- Removed deprecated list generation functionality
+* Removed deprecated list generation functionality
 
 ## v25.10.8
 
