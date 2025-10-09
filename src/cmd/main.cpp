@@ -274,8 +274,6 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
       return 1;
     }
     commands.findIncevalPrograms(args.at(1));
-  } else if (cmd == "lists") {
-    commands.lists();
   } else if (cmd == "compare") {
     commands.compare(args.at(1), args.at(2));
   } else if (cmd == "replace") {

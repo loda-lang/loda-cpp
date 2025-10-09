@@ -53,8 +53,6 @@ class MineManager {
   void dumpProgram(UID id, Program& p, const std::string& file,
                    const std::string& submitted_by) const;
 
-  void generateLists();
-
   std::vector<Program> loadAllPrograms();
 
   bool isIgnored(UID id) const {
@@ -69,6 +67,8 @@ class MineManager {
   bool shouldMatch(const ManagedSequence& seq) const;
 
   void generateStats(int64_t age_in_days);
+
+  void cleanupListFiles();
 
   void addSeqComments(Program& p) const;
 

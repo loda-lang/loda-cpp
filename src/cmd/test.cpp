@@ -984,7 +984,7 @@ void Test::oeisList() {
   map[UID('A', 7)] = 9;
   map[UID('A', 8)] = 4;
   auto copy = map;
-  SequenceList::mergeMap("test.txt", map);
+  SequenceList::mergeMap(SequenceList::getListsHome(), "test.txt", map);
   if (!map.empty()) {
     Log::get().error("unexpected map content", true);
   }
@@ -994,7 +994,7 @@ void Test::oeisList() {
   }
   std::map<UID, int64_t> delta;
   delta[UID('A', 7)] = 6;
-  SequenceList::mergeMap("test.txt", delta);
+  SequenceList::mergeMap(SequenceList::getListsHome(), "test.txt", delta);
   SequenceList::loadMap(path, map);
   copy[UID('A', 7)] = 15;
   if (map != copy) {

@@ -83,8 +83,6 @@ class Commands {
 
   void findIncevalPrograms(const std::string& error_code);
 
-  void lists();
-
   void compare(const std::string& path1, const std::string& path2);
 
   void addToList(const std::string& seq_id, const std::string& list_filename);

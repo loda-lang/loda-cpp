@@ -151,7 +151,6 @@ void Commands::update() {
   MineManager manager(settings);
   manager.update(true);
   manager.getStats();
-  manager.generateLists();
 }
 
 void Commands::upgrade() {
@@ -969,7 +968,7 @@ void Commands::extractVirseqs() {
       }
 
       // Create output filename with same subdirectory structure as oeis
-      std::string base_dir = SequenceUtil::getSeqsFolder('V');
+      std::string base_dir = ProgramUtil::getProgramsDir('V');
       std::string subdir = ProgramUtil::dirStr(seq.id);
       std::string output_dir = base_dir + subdir + FILE_SEP;
       std::string filename = seq.id.string();
@@ -1118,13 +1117,6 @@ void Commands::findIncevalPrograms(const std::string& error_code) {
   Log::get().info("Checked " + std::to_string(numChecked) + " programs");
   Log::get().info("Found " + std::to_string(results.size()) +
                   " programs with error code " + error_code);
-}
-
-void Commands::lists() {
-  initLog(false);
-  MineManager manager(settings);
-  manager.load();
-  manager.generateLists();
 }
 
 void Commands::compare(const std::string& path1, const std::string& path2) {

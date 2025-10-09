@@ -2,12 +2,17 @@
 
 ### Enhancements
 
+* Add LEAN export support for simple LODA programs
+* Removed deprecated list generation functionality
+
+## v25.10.8
+
+### Enhancements
+
+* Improve formula generation
 * Improve submitted program checks
 * Avoid cloning entire `git` history for programs
-* Add internal `find-inceval-programs` command
-* Add internal `extract-virseqs` command
-* Internal tools for committing programs
-* Add LEAN export support for simple LODA programs
+* Add internal commands and tools
 
 ## v25.10.3
 

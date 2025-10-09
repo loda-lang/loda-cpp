@@ -37,6 +37,8 @@ class Setup {
 
   static const std::string& getSeqsHome();
 
+  static const std::string& getCacheHome();
+
   static const std::string& getProgramsHome();
 
   static void setProgramsHome(const std::string& home);

@@ -20,7 +20,8 @@ class SequenceList {
 
   static void addToMap(std::istream& in, std::map<UID, int64_t>& map);
 
-  static void mergeMap(const std::string& file_name,
+  static void mergeMap(const std::string& folder,
+                       const std::string& file_name,
                        std::map<UID, int64_t>& map);
 
   static void saveMapWithComments(const std::string& path,
