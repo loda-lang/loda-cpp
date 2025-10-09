@@ -367,6 +367,14 @@ bool isSimpleRecursiveReference(const Formula& formula,
     return false;
   }
   
+  // Check if the referenced function's RHS contains parameters (n)
+  // If so, skip simplification as it would create incorrect formulas
+  Expression refFuncExpr = ExpressionUtil::newFunction(refFuncName);
+  auto it = formula.entries.find(refFuncExpr);
+  if (it != formula.entries.end() && it->second.contains(Expression::Type::PARAMETER)) {
+    return false;  // RHS contains parameter, cannot simplify
+  }
+  
   // Check if there are no other dependencies
   auto deps = FormulaUtil::getDependencies(formula, Expression::Type::FUNCTION, false, false);
   for (const auto& dep : deps) {
