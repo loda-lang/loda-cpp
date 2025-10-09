@@ -627,10 +627,6 @@ void testFormula(const std::string& test_id, const Settings& settings,
       if (!FormulaType::convert(formula, as_vector, formula_obj)) {
         continue;
       }
-      // Skip if formula string is empty (e.g., unsupported recursive formulas)
-      if (formula_obj.toString().empty()) {
-        continue;
-      }
     } catch (const std::exception& e) {
       // error during formula generation => check evaluation
       bool hasEvalError;

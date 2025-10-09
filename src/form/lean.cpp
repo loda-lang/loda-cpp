@@ -30,13 +30,9 @@ bool convertExprToLean(Expression& expr, const Formula& f) {
       break;
   }
   
-  // Check for unsupported functions
+  // Reject all functions for now - only arithmetic expressions are supported
   if (expr.type == Expression::Type::FUNCTION) {
-    if (expr.name == "floor" || expr.name == "truncate" || 
-        expr.name == "ceil" || expr.name == "frac") {
-      // These functions are not supported in LEAN export
-      return false;
-    }
+    return false;
   }
   
   // convert bottom-up!
