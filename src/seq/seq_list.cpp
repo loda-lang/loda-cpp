@@ -131,13 +131,14 @@ void SequenceList::addToMap(std::istream& in, std::map<UID, int64_t>& map) {
   }
 }
 
-void SequenceList::mergeMap(const std::string& file_name,
+void SequenceList::mergeMap(const std::string& folder,
+                            const std::string& file_name,
                             std::map<UID, int64_t>& map) {
   if (file_name.find(FILE_SEP) != std::string::npos) {
     Log::get().error("Invalid file name for merging map: " + file_name, true);
   }
-  FolderLock lock(getListsHome());
-  std::ifstream in(getListsHome() + file_name);
+  FolderLock lock(folder);
+  std::ifstream in(folder + file_name);
   if (in.good()) {
     try {
       addToMap(in, map);
@@ -146,7 +147,7 @@ void SequenceList::mergeMap(const std::string& file_name,
     }
     in.close();
   }
-  std::ofstream out(getListsHome() + file_name);
+  std::ofstream out(folder + file_name);
   for (auto it : map) {
     out << it.first.string() << ": " << it.second
         << std::endl;  // flush at every line to avoid corrupt data

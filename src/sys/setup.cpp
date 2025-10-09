@@ -136,6 +136,16 @@ const std::string& Setup::getSeqsHome() {
   return SEQS_HOME;
 }
 
+const std::string& Setup::getCacheHome() {
+  static std::string cache_home;
+  if (cache_home.empty()) {
+    // don't remove the trailing /
+    cache_home = getLodaHome() + "cache" + FILE_SEP;
+    ensureDir(cache_home);
+  }
+  return cache_home;
+}
+
 const std::string& Setup::getProgramsHome() {
   if (PROGRAMS_HOME.empty()) {
     setProgramsHome(getLodaHome() + "programs" + FILE_SEP);

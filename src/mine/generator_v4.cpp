@@ -97,7 +97,7 @@ GeneratorV4::GeneratorV4(const Config& config, const Stats& stats)
 
   const auto loda_home = Setup::getLodaHome();
   moveDirToParent(loda_home, "gen_v4", "cache");
-  home = loda_home + "cache" + FILE_SEP + "gen_v4" + FILE_SEP + config.miner;
+  home = Setup::getCacheHome() + "gen_v4" + FILE_SEP + config.miner;
   numfiles_path = home + FILE_SEP + "numfiles.txt";
 
   // obtain lock
