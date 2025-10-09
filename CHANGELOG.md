@@ -7,6 +7,7 @@
 * Add internal `find-inceval-programs` command
 * Add internal `extract-virseqs` command
 * Internal tools for committing programs
+* Add LEAN export support for simple LODA programs
 
 ## v25.10.3
 

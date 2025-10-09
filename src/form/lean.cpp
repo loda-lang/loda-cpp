@@ -48,6 +48,34 @@ std::string naryExpr(const Expression& expr, const Formula& f,
   return ss.str();
 }
 
+std::string functionExpr(const Expression& expr, const Formula& f,
+                         const std::string& funcName) {
+  std::stringstream ss;
+  auto functions =
+      FormulaUtil::getDefinitions(f, Expression::Type::FUNCTION);
+  if (std::find(functions.begin(), functions.end(), expr.name) !=
+      functions.end()) {
+    // Recursive call
+    ss << expr.name;
+    if (!expr.children.empty()) {
+      ss << " " << exprToLeanString(expr.children[0], f, funcName);
+    }
+  } else {
+    // Built-in function - need to map to LEAN syntax
+    // For now, we keep the generic function call syntax
+    ss << expr.name;
+    if (!expr.children.empty()) {
+      ss << " (";
+      for (size_t i = 0; i < expr.children.size(); i++) {
+        if (i > 0) ss << ", ";
+        ss << exprToLeanString(expr.children[i], f, funcName);
+      }
+      ss << ")";
+    }
+  }
+  return ss.str();
+}
+
 std::string exprToLeanString(const Expression& expr, const Formula& f,
                               const std::string& funcName) {
   std::stringstream ss;
@@ -58,31 +86,8 @@ std::string exprToLeanString(const Expression& expr, const Formula& f,
     case Expression::Type::PARAMETER:
       ss << expr.name;
       break;
-    case Expression::Type::FUNCTION: {
-      auto functions =
-          FormulaUtil::getDefinitions(f, Expression::Type::FUNCTION);
-      if (std::find(functions.begin(), functions.end(), expr.name) !=
-          functions.end()) {
-        // Recursive call
-        ss << expr.name;
-        if (!expr.children.empty()) {
-          ss << " " << exprToLeanString(expr.children[0], f, funcName);
-        }
-      } else {
-        // Built-in function - need to map to LEAN syntax
-        // For now, we keep the generic function call syntax
-        ss << expr.name;
-        if (!expr.children.empty()) {
-          ss << " (";
-          for (size_t i = 0; i < expr.children.size(); i++) {
-            if (i > 0) ss << ", ";
-            ss << exprToLeanString(expr.children[i], f, funcName);
-          }
-          ss << ")";
-        }
-      }
-      break;
-    }
+    case Expression::Type::FUNCTION:
+      return functionExpr(expr, f, funcName);
     case Expression::Type::SUM:
       return naryExpr(expr, f, funcName, "+");
     case Expression::Type::PRODUCT:
