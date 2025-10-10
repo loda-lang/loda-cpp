@@ -91,14 +91,12 @@ void Formula::collectEntries(const Expression& e, Formula& target) {
   }
 }
 
-std::map<Expression, Expression> Formula::collectFunctionEntries(
-    const std::string& funcName) const {
-  std::map<Expression, Expression> entries;
-  for (const auto& entry : this->entries) {
+void Formula::collectFunctionEntries(const std::string& func,
+                                     Formula& target) const {
+  for (const auto& entry : entries) {
     if (entry.first.type == Expression::Type::FUNCTION &&
-        entry.first.name == funcName) {
-      entries[entry.first] = entry.second;
+        entry.first.name == func) {
+      target.entries.insert(entry);
     }
   }
-  return entries;
 }
