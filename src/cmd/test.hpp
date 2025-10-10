@@ -92,7 +92,7 @@ class Test {
 
   void checkFormulas(const std::string &testFile, FormulaType type);
 
-  template <typename FormulaType>
+  template <typename FormulaTypeClass>
   void checkFormulasWithExternalTools(const std::string &testFile,
                                       bool asVector);
 

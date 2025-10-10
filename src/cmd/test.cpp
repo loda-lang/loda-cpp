@@ -1181,7 +1181,7 @@ void Test::checkFormulas(const std::string& testFile, FormulaType type) {
   }
 }
 
-template <typename FormulaType>
+template <typename FormulaTypeClass>
 void Test::checkFormulasWithExternalTools(const std::string& testFile,
                                           bool asVector) {
   std::string path = std::string("tests") + FILE_SEP + std::string("formula") +
@@ -1197,7 +1197,7 @@ void Test::checkFormulasWithExternalTools(const std::string& testFile,
   for (const auto& e : map) {
     auto id = e.first;
     auto idStr = id.string();
-    FormulaType formula_obj;
+    FormulaTypeClass formula_obj;
     auto program = parser.parse(ProgramUtil::getProgramPath(id));
     // generate formula code
     Formula formula;
@@ -1205,7 +1205,7 @@ void Test::checkFormulasWithExternalTools(const std::string& testFile,
     if (!generator.generate(program, id.number(), formula, true)) {
       Log::get().error("Cannot generate formula", true);
     }
-    if (!FormulaType::convert(formula, asVector, formula_obj)) {
+    if (!FormulaTypeClass::convert(formula, asVector, formula_obj)) {
       Log::get().error("Cannot convert formula to " + formula_obj.getName(),
                        true);
     }
@@ -1233,12 +1233,6 @@ void Test::checkFormulasWithExternalTools(const std::string& testFile,
     }
   }
 }
-
-// Explicit template instantiations
-template void Test::checkFormulasWithExternalTools<PariFormula>(
-    const std::string& testFile, bool asVector);
-template void Test::checkFormulasWithExternalTools<LeanFormula>(
-    const std::string& testFile, bool asVector);
 
 void Test::range() {
   testRanges("range.txt", false);
