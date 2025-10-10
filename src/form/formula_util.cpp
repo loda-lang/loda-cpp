@@ -111,27 +111,6 @@ bool FormulaUtil::isRecursive(const Formula& formula,
   return false;
 }
 
-void FormulaUtil::convertInitialTermsToIf(Formula& formula,
-                                          const Expression::Type type) {
-  auto it = formula.entries.begin();
-  while (it != formula.entries.end()) {
-    auto left = it->first;
-    auto general = ExpressionUtil::newFunction(left.name);
-    general.type = type;
-    auto general_it = formula.entries.find(general);
-    if (ExpressionUtil::isInitialTerm(left) &&
-        general_it != formula.entries.end()) {
-      auto index_expr = left.children.front();
-      general_it->second =
-          Expression(Expression::Type::IF, "",
-                     {index_expr, it->second, general_it->second});
-      it = formula.entries.erase(it);
-    } else {
-      it++;
-    }
-  }
-}
-
 void FormulaUtil::removeFunctionEntries(Formula& formula,
                                         const std::string& funcName) {
   auto entryIt = formula.entries.begin();

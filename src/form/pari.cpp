@@ -66,6 +66,26 @@ bool addLocalVars(Formula& f) {
   return changed;
 }
 
+void convertInitialTermsToIf(Formula& formula, const Expression::Type type) {
+  auto it = formula.entries.begin();
+  while (it != formula.entries.end()) {
+    auto left = it->first;
+    auto general = ExpressionUtil::newFunction(left.name);
+    general.type = type;
+    auto general_it = formula.entries.find(general);
+    if (ExpressionUtil::isInitialTerm(left) &&
+        general_it != formula.entries.end()) {
+      auto index_expr = left.children.front();
+      general_it->second =
+          Expression(Expression::Type::IF, "",
+                     {index_expr, it->second, general_it->second});
+      it = formula.entries.erase(it);
+    } else {
+      it++;
+    }
+  }
+}
+
 bool PariFormula::convert(const Formula& formula, bool as_vector,
                           PariFormula& pari_formula) {
   pari_formula = PariFormula();
@@ -88,12 +108,12 @@ bool PariFormula::convert(const Formula& formula, bool as_vector,
     pari_formula.main_formula.entries[left] = right;
   }
   if (as_vector) {
-    FormulaUtil::convertInitialTermsToIf(pari_formula.main_formula,
-                                         Expression::Type::VECTOR);
+    convertInitialTermsToIf(pari_formula.main_formula,
+                            Expression::Type::VECTOR);
   } else {
     addLocalVars(pari_formula.main_formula);
-    FormulaUtil::convertInitialTermsToIf(pari_formula.main_formula,
-                                         Expression::Type::FUNCTION);
+    convertInitialTermsToIf(pari_formula.main_formula,
+                            Expression::Type::FUNCTION);
   }
   return true;
 }
@@ -127,7 +147,7 @@ std::string PariFormula::toString() const {
 
 std::string PariFormula::printEvalCode(int64_t offset, int64_t numTerms) const {
   std::stringstream out;
-  
+
   if (as_vector) {
     // declare vectors
     auto functions =
@@ -148,7 +168,7 @@ std::string PariFormula::printEvalCode(int64_t offset, int64_t numTerms) const {
     out << "print(a(n))";
   }
   out << ")" << std::endl << "quit" << std::endl;
-  
+
   return out.str();
 }
 
@@ -159,7 +179,7 @@ bool PariFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
   const int64_t maxparisize = 256;  // in MB
   std::vector<std::string> args = {
       "gp", "-s", std::to_string(maxparisize) + "M", "-q", gpPath};
-  
+
   std::string evalCode = printEvalCode(offset, numTerms);
   return SequenceUtil::evalFormulaWithExternalTool(
       evalCode, getName(), gpPath, gpResult, args, timeoutSeconds, result);

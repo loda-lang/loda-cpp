@@ -483,7 +483,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   }
 
   // resolve simple recursions
-  FormulaSimplify::resolveSimpleRecursions(formula);
+  FormulaSimplify::replaceTrivialRecursions(formula);
   Log::get().debug("Resolved simple recursions: " + formula.toString());
 
   // resolve simple functions
@@ -677,7 +677,7 @@ bool FormulaGenerator::generate(const Program& p, int64_t id, Formula& result,
   result = formula;
 
   // replace simple references to recursive functions
-  FormulaSimplify::replaceSimpleRecursiveReferences(result);
+  FormulaSimplify::replaceSimpleRecursiveRefs(result);
 
   // replace functions A000142(n) by n! in all formula definitions
   const auto factorialSeqName = FACTORIAL_SEQ_ID.string();

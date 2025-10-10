@@ -1,6 +1,8 @@
 #include "form/formula_simplify.hpp"
 
+#include <map>
 #include <set>
+#include <string>
 
 #include "form/expression_util.hpp"
 #include "form/formula_util.hpp"
@@ -77,7 +79,7 @@ void FormulaSimplify::resolveSimpleFunctions(Formula& formula) {
   }
 }
 
-void FormulaSimplify::resolveSimpleRecursions(Formula& formula) {
+void FormulaSimplify::replaceTrivialRecursions(Formula& formula) {
   // collect functions
   std::set<std::string> funcs;
   for (auto& e : formula.entries) {
@@ -182,8 +184,7 @@ void FormulaSimplify::resolveSimpleRecursions(Formula& formula) {
   }
 }
 
-bool FormulaSimplify::extractArgumentOffset(const Expression& arg,
-                                            Number& offset) {
+bool extractArgumentOffset(const Expression& arg, Number& offset) {
   if (arg.type == Expression::Type::PARAMETER) {
     offset = Number::ZERO;
     return true;
@@ -198,8 +199,8 @@ bool FormulaSimplify::extractArgumentOffset(const Expression& arg,
 
 // Helper function to check if expression contains parameter outside of function
 // calls
-bool FormulaSimplify::containsParameterOutsideFunction(
-    const Expression& expr, const std::string& funcName) {
+bool containsParameterOutsideFunction(const Expression& expr,
+                                      const std::string& funcName) {
   if (expr.type == Expression::Type::PARAMETER) {
     return true;
   }
@@ -207,7 +208,7 @@ bool FormulaSimplify::containsParameterOutsideFunction(
     return false;  // Don't recurse into function calls
   }
   for (const auto& child : expr.children) {
-    if (FormulaSimplify::containsParameterOutsideFunction(child, funcName)) {
+    if (containsParameterOutsideFunction(child, funcName)) {
       return true;
     }
   }
@@ -215,10 +216,11 @@ bool FormulaSimplify::containsParameterOutsideFunction(
 }
 
 // Helper function to check if a function is a simple recursive reference
-bool FormulaSimplify::isSimpleRecursiveReference(
-    const Formula& formula, const std::string& funcName, const Expression& rhs,
-    const std::set<std::string>& processedFuncs, std::string& refFuncName,
-    Number& offset) {
+bool isSimpleRecursiveReference(const Formula& formula,
+                                const std::string& funcName,
+                                const Expression& rhs,
+                                const std::set<std::string>& processedFuncs,
+                                std::string& refFuncName, Number& offset) {
   // Check if RHS is a simple function call
   if (rhs.type != Expression::Type::FUNCTION || rhs.children.size() != 1) {
     return false;
@@ -248,8 +250,7 @@ bool FormulaSimplify::isSimpleRecursiveReference(
   Expression refFuncExpr = ExpressionUtil::newFunction(refFuncName);
   auto it = formula.entries.find(refFuncExpr);
   if (it != formula.entries.end()) {
-    if (FormulaSimplify::containsParameterOutsideFunction(it->second,
-                                                          refFuncName)) {
+    if (containsParameterOutsideFunction(it->second, refFuncName)) {
       // RHS contains parameter outside function calls, cannot
       // simplify
       return false;
@@ -301,12 +302,10 @@ bool FormulaSimplify::isSimpleRecursiveReference(
 }
 
 // Helper function to adjust index by offset
-void FormulaSimplify::adjustIndexByOffset(Expression& expr,
-                                          const Number& offset) {
+void adjustIndexByOffset(Expression& expr, const Number& offset) {
   if (expr.children.size() != 1) {
     return;
   }
-
   auto& arg = expr.children.front();
   if (arg.type == Expression::Type::CONSTANT) {
     // Initial term: adjust constant index
@@ -322,7 +321,7 @@ void FormulaSimplify::adjustIndexByOffset(Expression& expr,
 }
 
 // Helper function to perform the replacement
-void FormulaSimplify::performReplacement(
+void performReplacement(
     Formula& formula, const std::string& funcName,
     const std::string& refFuncName, const Number& offset,
     const std::map<Expression, Expression>& refFuncEntries) {
@@ -332,7 +331,7 @@ void FormulaSimplify::performReplacement(
     newLeft.name = funcName;
 
     // Adjust the index by subtracting the offset
-    FormulaSimplify::adjustIndexByOffset(newLeft, offset);
+    adjustIndexByOffset(newLeft, offset);
 
     // Replace references to refFuncName with funcName in the RHS
     Expression newRight = refEntry.second;
@@ -350,7 +349,7 @@ void FormulaSimplify::performReplacement(
   FormulaUtil::removeFunctionEntries(formula, refFuncName);
 }
 
-void FormulaSimplify::replaceSimpleRecursiveReferences(Formula& formula) {
+void FormulaSimplify::replaceSimpleRecursiveRefs(Formula& formula) {
   // Find all functions
   auto funcs = FormulaUtil::getDefinitions(formula);
 
@@ -375,9 +374,9 @@ void FormulaSimplify::replaceSimpleRecursiveReferences(Formula& formula) {
     // Check if this is a simple recursive reference
     std::string refFuncName;
     Number offset;
-    if (!FormulaSimplify::isSimpleRecursiveReference(
-            formula, funcName, it->second, processedRecursiveFuncs, refFuncName,
-            offset)) {
+    if (!isSimpleRecursiveReference(formula, funcName, it->second,
+                                    processedRecursiveFuncs, refFuncName,
+                                    offset)) {
       continue;
     }
 
@@ -406,8 +405,8 @@ void FormulaSimplify::replaceSimpleRecursiveReferences(Formula& formula) {
     formula.entries.erase(it);
 
     // Perform the replacement
-    FormulaSimplify::performReplacement(formula, funcName, refFuncName, offset,
-                                        refFuncs.entries);
+    performReplacement(formula, funcName, refFuncName, offset,
+                       refFuncs.entries);
 
     // Mark this function as processed
     processedRecursiveFuncs.insert(funcName);
