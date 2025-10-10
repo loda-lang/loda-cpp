@@ -1199,7 +1199,6 @@ void Test::checkFormulasWithExternalTools(const std::string& testFile,
     auto idStr = id.string();
     FormulaType formula_obj;
     auto program = parser.parse(ProgramUtil::getProgramPath(id));
-
     // generate formula code
     Formula formula;
     Sequence expSeq;
@@ -1234,6 +1233,12 @@ void Test::checkFormulasWithExternalTools(const std::string& testFile,
     }
   }
 }
+
+// Explicit template instantiations
+template void Test::checkFormulasWithExternalTools<PariFormula>(
+    const std::string& testFile, bool asVector);
+template void Test::checkFormulasWithExternalTools<LeanFormula>(
+    const std::string& testFile, bool asVector);
 
 void Test::range() {
   testRanges("range.txt", false);
