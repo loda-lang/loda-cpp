@@ -308,3 +308,250 @@ void FormulaUtil::convertInitialTermsToIf(Formula& formula,
     }
   }
 }
+
+bool FormulaUtil::extractArgumentOffset(const Expression& arg, Number& offset) {
+  if (arg.type == Expression::Type::PARAMETER) {
+    offset = Number::ZERO;
+    return true;
+  } else if (arg.type == Expression::Type::SUM && arg.children.size() == 2 &&
+             arg.children[0].type == Expression::Type::PARAMETER &&
+             arg.children[1].type == Expression::Type::CONSTANT) {
+    offset = arg.children[1].value;
+    return true;
+  }
+  return false;
+}
+
+void FormulaUtil::removeFunctionEntries(Formula& formula,
+                                        const std::string& funcName) {
+  auto entryIt = formula.entries.begin();
+  while (entryIt != formula.entries.end()) {
+    if (entryIt->first.type == Expression::Type::FUNCTION &&
+        entryIt->first.name == funcName) {
+      entryIt = formula.entries.erase(entryIt);
+    } else {
+      entryIt++;
+    }
+  }
+}
+
+namespace {
+
+// Helper function to check if expression contains parameter outside of function
+// calls
+bool containsParameterOutsideFunction(const Expression& expr,
+                                      const std::string& funcName) {
+  if (expr.type == Expression::Type::PARAMETER) {
+    return true;
+  }
+  if (expr.type == Expression::Type::FUNCTION && expr.name == funcName) {
+    return false;  // Don't recurse into function calls
+  }
+  for (const auto& child : expr.children) {
+    if (containsParameterOutsideFunction(child, funcName)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// Helper function to check if a function is a simple recursive reference
+bool isSimpleRecursiveReference(const Formula& formula,
+                                const std::string& funcName,
+                                const Expression& rhs,
+                                const std::set<std::string>& processedFuncs,
+                                std::string& refFuncName, Number& offset) {
+  // Check if RHS is a simple function call
+  if (rhs.type != Expression::Type::FUNCTION || rhs.children.size() != 1) {
+    return false;
+  }
+
+  refFuncName = rhs.name;
+  const auto& arg = rhs.children.front();
+
+  // Skip if the referenced function was already processed
+  if (processedFuncs.find(refFuncName) != processedFuncs.end()) {
+    return false;
+  }
+
+  // Extract offset
+  if (!FormulaUtil::extractArgumentOffset(arg, offset)) {
+    return false;
+  }
+
+  // Check if the referenced function is recursive
+  if (!FormulaUtil::isRecursive(formula, refFuncName)) {
+    return false;
+  }
+
+  // Check if the referenced function's RHS contains parameters (n) outside of
+  // function calls If so, skip simplification as it would create incorrect
+  // formulas
+  Expression refFuncExpr = ExpressionUtil::newFunction(refFuncName);
+  auto it = formula.entries.find(refFuncExpr);
+  if (it != formula.entries.end()) {
+    if (containsParameterOutsideFunction(it->second, refFuncName)) {
+      // RHS contains parameter outside function calls, cannot
+      // simplify
+      return false;
+    }
+  }
+
+  // Check if there are no other dependencies from funcName
+  auto deps = FormulaUtil::getDependencies(formula, Expression::Type::FUNCTION,
+                                           false, false);
+
+  // Get the set of functions actually defined in this formula
+  auto definedFuncs =
+      FormulaUtil::getDefinitions(formula, Expression::Type::FUNCTION, false);
+  std::set<std::string> definedFuncSet(definedFuncs.begin(),
+                                       definedFuncs.end());
+
+  for (const auto& dep : deps) {
+    if (dep.first == funcName && dep.second != refFuncName) {
+      return false;  // Has other dependencies
+    }
+  }
+
+  for (const auto& dep : deps) {
+    // Check if no other functions (besides funcName) depend on refFuncName
+    // This prevents incorrect replacements like in A000472 where both a(n) and
+    // c(n) depend on b(n), but replacing b with a would make c(n) incorrectly
+    // depend on a(n)
+    // Only consider dependencies on functions that are actually defined in this
+    // formula Also exclude self-references (refFuncName depending on itself) as
+    // these are valid recursive definitions
+    if (dep.first != funcName && dep.first != refFuncName &&
+        dep.second == refFuncName &&
+        definedFuncSet.find(dep.first) != definedFuncSet.end()) {
+      return false;  // Another function also depends on refFuncName
+    }
+
+    // Check if the referenced function (refFuncName) depends on other functions
+    // defined in this formula. This prevents issues like in A001577 where
+    // d(n) depends on both b(n) and c(n), making the simplification too
+    // complex.
+    if (dep.first == refFuncName &&
+        definedFuncSet.find(dep.second) != definedFuncSet.end() &&
+        dep.second != refFuncName) {  // Exclude self-references
+      return false;  // refFuncName depends on other functions in this formula
+    }
+  }
+
+  return true;
+}
+
+// Helper function to adjust index by offset
+void adjustIndexByOffset(Expression& expr, const Number& offset) {
+  if (expr.children.size() != 1) {
+    return;
+  }
+
+  auto& arg = expr.children.front();
+  if (arg.type == Expression::Type::CONSTANT) {
+    // Initial term: adjust constant index
+    arg.value -= offset;
+  } else if (arg.type == Expression::Type::SUM && arg.children.size() == 2 &&
+             arg.children[0].type == Expression::Type::PARAMETER &&
+             arg.children[1].type == Expression::Type::CONSTANT) {
+    // Already has an offset on the left side, adjust it
+    arg.children[1].value -= offset;
+    ExpressionUtil::normalize(expr.children[0]);
+  }
+  // For PARAMETER type, no adjustment needed for the left side
+}
+
+// Helper function to perform the replacement
+void performReplacement(
+    Formula& formula, const std::string& funcName,
+    const std::string& refFuncName, const Number& offset,
+    const std::map<Expression, Expression>& refFuncEntries) {
+  // For each entry of the referenced function
+  for (const auto& refEntry : refFuncEntries) {
+    Expression newLeft = refEntry.first;
+    newLeft.name = funcName;
+
+    // Adjust the index by subtracting the offset
+    adjustIndexByOffset(newLeft, offset);
+
+    // Replace references to refFuncName with funcName in the RHS
+    Expression newRight = refEntry.second;
+    newRight.replaceName(refFuncName, funcName);
+
+    formula.entries[newLeft] = newRight;
+  }
+
+  // Replace all references to refFuncName with funcName in remaining formulas
+  for (auto& entry : formula.entries) {
+    entry.second.replaceName(refFuncName, funcName);
+  }
+
+  // Remove all entries of the referenced function
+  FormulaUtil::removeFunctionEntries(formula, refFuncName);
+}
+
+}  // namespace
+
+void FormulaUtil::replaceSimpleRecursiveReferences(Formula& formula) {
+  // Find all functions
+  auto funcs = getDefinitions(formula);
+
+  // Track which functions were created by this algorithm
+  std::set<std::string> processedRecursiveFuncs;
+
+  // For each function, check if it's a simple reference to another recursive
+  // function
+  for (const auto& funcName : funcs) {
+    // Skip if funcName is an external OEIS sequence
+    if (!funcName.empty() && std::isupper(funcName[0])) {
+      continue;
+    }
+
+    // Get the general definition (the one with a parameter, not a constant)
+    Expression funcExpr = ExpressionUtil::newFunction(funcName);
+    auto it = formula.entries.find(funcExpr);
+    if (it == formula.entries.end()) {
+      continue;  // No general definition found
+    }
+
+    // Check if this is a simple recursive reference
+    std::string refFuncName;
+    Number offset;
+    if (!isSimpleRecursiveReference(formula, funcName, it->second,
+                                    processedRecursiveFuncs, refFuncName,
+                                    offset)) {
+      continue;
+    }
+
+    // Collect all entries for the referenced function
+    Formula refFuncs;
+    formula.collectFunctionEntries(refFuncName, refFuncs);
+
+    // Check if simplification would create negative initial term indices
+    bool hasNegativeIndices = false;
+    for (const auto& entry : refFuncs.entries) {
+      if (entry.first.children.size() == 1 &&
+          entry.first.children.front().type == Expression::Type::CONSTANT) {
+        Number adjustedIndex = entry.first.children.front().value;
+        adjustedIndex -= offset;
+        if (adjustedIndex < Number::ZERO) {
+          hasNegativeIndices = true;
+          break;
+        }
+      }
+    }
+    if (hasNegativeIndices) {
+      continue;  // Skip simplification to avoid negative indices
+    }
+
+    // Remove the simple reference definition
+    formula.entries.erase(it);
+
+    // Perform the replacement
+    performReplacement(formula, funcName, refFuncName, offset,
+                       refFuncs.entries);
+
+    // Mark this function as processed
+    processedRecursiveFuncs.insert(funcName);
+  }
+}
