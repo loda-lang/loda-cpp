@@ -40,9 +40,6 @@ class FormulaGenerator {
                            const Operand& denomOp,
                            const RangeMap* ranges) const;
 
-  bool bitfunc(Operation::Type type, const Expression& a, const Expression& b,
-               Expression& res) const;
-
   bool facToExpression(const Expression& a, const Expression& b,
                        const Operand& aOp, const Operand& bOp,
                        const RangeMap* ranges, Expression& res) const;
