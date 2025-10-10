@@ -681,6 +681,9 @@ bool FormulaGenerator::generate(const Program& p, int64_t id, Formula& result,
   formula.replaceName(mainName, canonicalName(0));
   result = formula;
 
+  // replace simple references to recursive functions
+  FormulaUtil::replaceSimpleRecursiveReferences(result);
+
   // replace functions A000142(n) by n! in all formula definitions
   const auto factorialSeqName = FACTORIAL_SEQ_ID.string();
   for (auto& entry : result.entries) {

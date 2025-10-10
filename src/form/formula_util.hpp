@@ -26,4 +26,11 @@ class FormulaUtil {
   static void convertInitialTermsToIf(
       Formula& formula,
       const Expression::Type type = Expression::Type::FUNCTION);
+
+  static void replaceSimpleRecursiveReferences(Formula& formula);
+
+  static bool extractArgumentOffset(const Expression& arg, Number& offset);
+
+  static void removeFunctionEntries(Formula& formula,
+                                     const std::string& funcName);
 };

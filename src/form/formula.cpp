@@ -90,3 +90,13 @@ void Formula::collectEntries(const Expression& e, Formula& target) {
     collectEntries(c, target);
   }
 }
+
+void Formula::collectFunctionEntries(const std::string& func,
+                                     Formula& target) const {
+  for (const auto& entry : entries) {
+    if (entry.first.type == Expression::Type::FUNCTION &&
+        entry.first.name == func) {
+      target.entries.insert(entry);
+    }
+  }
+}

@@ -2,6 +2,7 @@
 
 ### Enhancements
 
+* Simplify formulas by replacing simple references to recursive functions
 * Removed deprecated list generation functionality
 
 ## v25.10.8
