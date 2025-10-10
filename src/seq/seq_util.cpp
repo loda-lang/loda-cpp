@@ -1,5 +1,6 @@
 #include "seq/seq_util.hpp"
 
+#include <algorithm>
 #include <cstdio>
 #include <fstream>
 
