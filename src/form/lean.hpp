@@ -3,19 +3,6 @@
 #include "form/formula.hpp"
 #include "math/sequence.hpp"
 
-/**
- * LEAN generator. Takes a formula as input and generates
- * executable LEAN code as output. It also includes a utility
- * function to invoke the LEAN interpreter.
- *
- * Example input formula:
- * a(n) = n*a(n-1), a(0) = 1
- *
- * Generated LEAN code:
- * def a : ℕ → ℕ
- *   | 0 => 1
- *   | n + 1 => n * a n
- */
 class LeanFormula {
  public:
   LeanFormula() {};

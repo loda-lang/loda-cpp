@@ -587,7 +587,7 @@ void Commands::testAnalyzer() {
 
 template <typename FormulaType>
 void testFormula(const std::string& test_id, const Settings& settings,
-                 bool as_vector = false) {
+                 bool as_vector) {
   Parser parser;
   Interpreter interpreter(settings);
   Evaluator evaluator(settings, EVAL_ALL, false);
@@ -709,14 +709,9 @@ void testFormula(const std::string& test_id, const Settings& settings,
       good++;
     }
   }
-  
-  // Get the formula type name
-  FormulaType dummy_formula;
-  std::string formulaName = dummy_formula.getName();
-  
   Log::get().info(std::to_string(good) + " passed, " + std::to_string(bad) +
                   " failed, " + std::to_string(skipped) + " skipped " +
-                  formulaName + " checks");
+                  FormulaType().getName() + " checks");
 }
 
 void Commands::testPari(const std::string& test_id) {
@@ -727,7 +722,7 @@ void Commands::testPari(const std::string& test_id) {
 
 void Commands::testLean(const std::string& test_id) {
   initLog(false);
-  testFormula<LeanFormula>(test_id, settings);
+  testFormula<LeanFormula>(test_id, settings, false);
 }
 
 bool checkRange(const ManagedSequence& seq, const Program& program,

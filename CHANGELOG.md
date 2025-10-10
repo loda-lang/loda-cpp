@@ -1,8 +1,11 @@
 ## [Unreleased]
 
-### Enhancements
+### Features
 
 * Add LEAN export support for simple LODA programs
+
+### Enhancements
+
 * Removed deprecated list generation functionality
 
 ## v25.10.8
