@@ -92,6 +92,10 @@ class Test {
 
   void checkFormulas(const std::string &testFile, FormulaType type);
 
+  template <typename FormulaType>
+  void checkFormulasWithExternalTools(const std::string &testFile,
+                                      bool asVector);
+
   void checkRanges(int64_t id, bool finite, const std::string &expected);
 
  private:

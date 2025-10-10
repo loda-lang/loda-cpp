@@ -1,5 +1,6 @@
 #include "cmd/test.hpp"
 
+#include <cstdlib>
 #include <deque>
 #include <fstream>
 #include <iomanip>
@@ -79,11 +80,18 @@ void Test::fast() {
 }
 
 void Test::slow() {
-  number();
-  randomNumber(100);
+  // External tool tests (only if environment variable is set)
+  if (std::getenv("LODA_TEST_WITH_EXTERNAL_TOOLS")) {
+    Log::get().info("Testing external tool evaluation");
+    checkFormulasWithExternalTools<PariFormula>("pari-function.txt", false);
+    checkFormulasWithExternalTools<PariFormula>("pari-vector.txt", true);
+    checkFormulasWithExternalTools<LeanFormula>("lean.txt", false);
+  }
   virtualEval();
   ackermann();
   stats();
+  number();
+  randomNumber(100);
   apiClient();  // requires API server
   oeisList();
   oeisSeq();
@@ -1169,6 +1177,60 @@ void Test::checkFormulas(const std::string& testFile, FormulaType type) {
       if (pari.toString() != e.second) {
         Log::get().error("Unexpected PARI/GP code: " + pari.toString(), true);
       }
+    }
+  }
+}
+
+template <typename FormulaType>
+void Test::checkFormulasWithExternalTools(const std::string& testFile,
+                                          bool asVector) {
+  std::string path = std::string("tests") + FILE_SEP + std::string("formula") +
+                     FILE_SEP + testFile;
+  std::map<UID, std::string> map;
+  SequenceList::loadMapWithComments(path, map);
+  if (map.empty()) {
+    Log::get().error("Unexpected map content", true);
+  }
+  Parser parser;
+  FormulaGenerator generator;
+  Evaluator evaluator(settings, EVAL_ALL, false);
+  for (const auto& e : map) {
+    auto id = e.first;
+    auto idStr = id.string();
+    FormulaType formula_obj;
+    auto program = parser.parse(ProgramUtil::getProgramPath(id));
+
+    // generate formula code
+    Formula formula;
+    Sequence expSeq;
+    if (!generator.generate(program, id.number(), formula, true)) {
+      Log::get().error("Cannot generate formula", true);
+    }
+    if (!FormulaType::convert(formula, asVector, formula_obj)) {
+      Log::get().error("Cannot convert formula to " + formula_obj.getName(),
+                       true);
+    }
+    // evaluate LODA program
+    Log::get().info("Testing " + formula_obj.getName() + " for " + idStr +
+                    ": " + formula_obj.toString());
+    size_t numTerms = 12;
+    evaluator.eval(program, expSeq, numTerms);
+    if (expSeq.empty()) {
+      Log::get().error("Evaluation error", true);
+    }
+    // evaluate formula
+    auto offset = ProgramUtil::getOffset(program);
+    Sequence genSeq;
+    if (!formula_obj.eval(offset, numTerms, 10, genSeq)) {
+      Log::get().error(
+          formula_obj.getName() + " evaluation timeout for " + idStr, true);
+    }
+    // compare results
+    if (genSeq != expSeq) {
+      Log::get().info("Generated sequence: " + genSeq.to_string());
+      Log::get().info("Expected sequence:  " + expSeq.to_string());
+      Log::get().error("Unexpected " + formula_obj.getName() + " sequence",
+                       true);
     }
   }
 }

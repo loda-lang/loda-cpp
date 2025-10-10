@@ -14,8 +14,19 @@ jobs:
       - uses: actions/checkout@v2
       - name: Build
         run: cd src && make -f Makefile.linux-x86.mk
+      - name: Install external tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install pari-gp
+          # Install Lean 4 via elan (official installer)
+          curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y
+          echo "$HOME/.elan/bin" >> $GITHUB_PATH
+          gp --version
+          lean --version
       - name: Test
         run: ./loda test
+        env:
+          LODA_TEST_WITH_EXTERNAL_TOOLS: 1
   build-linux-arm64:
     runs-on:
       - self-hosted
