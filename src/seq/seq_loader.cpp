@@ -55,39 +55,30 @@ void SequenceLoader::loadData(const std::string &folder, char domain) {
     Log::get().error("Sequence data not found: " + path, true);
   }
   std::string line;
-  std::string buf;
   size_t pos;
   size_t id;
-  Sequence seq_full, seq_big;
+  // One-pass RAM economy: parse and add directly, resize as needed
+  std::string buf;
   while (std::getline(stripped, line)) {
-    if (line.empty() || line[0] == '#') {
-      continue;
-    }
-    if (line[0] != domain) {
-      throwParseError(line);
-    }
+    if (line.empty() || line[0] == '#') continue;
+    if (line[0] != domain) throwParseError(line);
     num_total++;
     id = 0;
     for (pos = 1; pos < line.length() && line[pos] >= '0' && line[pos] <= '9';
          ++pos) {
       id = (10 * id) + (line[pos] - '0');
     }
-    if (pos >= line.length() || line[pos] != ' ' || id == 0) {
+    if (pos >= line.length() || line[pos] != ' ' || id == 0)
       throwParseError(line);
-    }
     ++pos;
-    if (pos >= line.length() || line[pos] != ',') {
-      throwParseError(line);
-    }
+    if (pos >= line.length() || line[pos] != ',') throwParseError(line);
     ++pos;
     buf.clear();
-    seq_full.clear();
+    Sequence seq_full;
     while (pos < line.length()) {
       if (line[pos] == ',') {
         Number num(buf);
-        if (SequenceUtil::isTooBig(num)) {
-          break;
-        }
+        if (SequenceUtil::isTooBig(num)) break;
         seq_full.push_back(num);
         buf.clear();
       } else if ((line[pos] >= '0' && line[pos] <= '9') || line[pos] == '-') {
@@ -97,13 +88,8 @@ void SequenceLoader::loadData(const std::string &folder, char domain) {
       }
       ++pos;
     }
-
-    // check minimum number of terms
-    if (seq_full.size() < min_num_terms) {
-      continue;
-    }
-
-    // add sequence to index
+    if (seq_full.size() < min_num_terms) continue;
+    // Add directly to index, which resizes as needed
     index.add(ManagedSequence(UID(domain, id), "", seq_full));
     num_loaded++;
   }
