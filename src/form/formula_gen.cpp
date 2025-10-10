@@ -7,6 +7,7 @@ const UID FACTORIAL_SEQ_ID('A', 142);
 #include <stdexcept>
 
 #include "form/expression_util.hpp"
+#include "form/formula_simplify.hpp"
 #include "form/formula_util.hpp"
 #include "form/variant.hpp"
 #include "lang/parser.hpp"
@@ -82,10 +83,11 @@ Expression FormulaGenerator::operandToExpression(Operand op) const {
   throw std::runtime_error("internal error");  // unreachable
 }
 
-Expression FormulaGenerator::divToFraction(
-    const Expression& numerator, const Expression& denominator,
-    const Operand& numOp, const Operand& denomOp,
-    const RangeMap* ranges) const {
+Expression FormulaGenerator::divToFraction(const Expression& numerator,
+                                           const Expression& denominator,
+                                           const Operand& numOp,
+                                           const Operand& denomOp,
+                                           const RangeMap* ranges) const {
   Expression frac(Expression::Type::FRACTION, "", {numerator, denominator});
   std::string funcName = "floor";
   if (canBeNegativeWithRanges(numerator, numOp, ranges) ||
@@ -96,8 +98,8 @@ Expression FormulaGenerator::divToFraction(
 }
 
 bool FormulaGenerator::canBeNegativeWithRanges(const Expression& e,
-                                                const Operand& operand,
-                                                const RangeMap* ranges) const {
+                                               const Operand& operand,
+                                               const RangeMap* ranges) const {
   // If we have ranges and the operand is a direct memory access, use ranges
   if (ranges && operand.type == Operand::Type::DIRECT) {
     int64_t cell = operand.value.asInt();
@@ -121,13 +123,13 @@ bool FormulaGenerator::canBeNegativeWithRanges(const Expression& e,
 // Express falling/rising factorial using standard factorial
 bool FormulaGenerator::facToExpression(const Expression& a, const Expression& b,
                                        const Operand& aOp, const Operand& bOp,
-                                       const RangeMap* ranges, Expression& res) const {
-
+                                       const RangeMap* ranges,
+                                       Expression& res) const {
   if (canBeNegativeWithRanges(a, aOp, ranges) ||
       canBeNegativeWithRanges(b, bOp, ranges)) {
     return false;
   }
-  
+
   Expression num(Expression::Type::FACTORIAL);
   Expression denom(Expression::Type::FACTORIAL);
   // Falling factorial: a!/(a+b)!
@@ -148,12 +150,13 @@ bool FormulaGenerator::facToExpression(const Expression& a, const Expression& b,
   ExpressionUtil::normalize(d);
   if (d.type == Expression::Type::CONSTANT &&
       (d.value == Number::ZERO || d.value == Number::ONE)) {
-    res =  num;
+    res = num;
   } else {
-    // Factorial division is guaranteed to produce an integer, so use a standard fraction
+    // Factorial division is guaranteed to produce an integer, so use a standard
+    // fraction
     res = Expression(Expression::Type::FRACTION, "", {num, denom});
   }
-  
+
   return true;
 }
 
@@ -203,7 +206,8 @@ bool FormulaGenerator::update(const Operation& op, const RangeMap* ranges) {
       if (canBeNegativeWithRanges(c1, op.target, ranges) ||
           canBeNegativeWithRanges(c2, op.source, ranges)) {
         res = sum({c1, product({constant(-1), c2,
-                                divToFraction(c1, c2, op.target, op.source, ranges)})});
+                                divToFraction(c1, c2, op.target, op.source,
+                                              ranges)})});
       } else {
         res = mod(c1, c2);
       }
@@ -214,7 +218,8 @@ bool FormulaGenerator::update(const Operation& op, const RangeMap* ranges) {
       break;
     }
     case Operation::Type::FAC: {
-      okay = facToExpression(prevTarget, source, op.target, op.source, ranges, res);
+      okay = facToExpression(prevTarget, source, op.target, op.source, ranges,
+                             res);
       break;
     }
     case Operation::Type::LOG: {
@@ -317,7 +322,8 @@ bool FormulaGenerator::update(const Operation& op, const RangeMap* ranges) {
   return okay;
 }
 
-bool FormulaGenerator::update(const Program& p, const std::vector<RangeMap>* ranges) {
+bool FormulaGenerator::update(const Program& p,
+                              const std::vector<RangeMap>* ranges) {
   size_t opIndex = 0;
   for (const auto& op : p.ops) {
     const RangeMap* opRanges = nullptr;
@@ -385,12 +391,14 @@ bool FormulaGenerator::generateSingle(const Program& p) {
 
   // Generate ranges for better precision in formula generation
   std::vector<RangeMap> preLoopRanges, bodyRanges, postLoopRanges;
-  
+
   rangeGenerator.setInputUpperBound(Number::INF);
-  rangeGenerator.setRangeBeforeOp(true);  // We need ranges before operations for formula generation
+  rangeGenerator.setRangeBeforeOp(
+      true);  // We need ranges before operations for formula generation
   if (useIncEval) {
     // For simple loop programs, collect ranges for each phase
-    rangeGenerator.collect(incEval.getSimpleLoop(), preLoopRanges, bodyRanges, postLoopRanges);
+    rangeGenerator.collect(incEval.getSimpleLoop(), preLoopRanges, bodyRanges,
+                           postLoopRanges);
   } else {
     // For non-loop programs, collect ranges for the main program
     rangeGenerator.collect(p, bodyRanges);
@@ -417,7 +425,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
       return false;
     }
     // update formula based on pre-loop code
-    if (!update(incEval.getSimpleLoop().pre_loop, 
+    if (!update(incEval.getSimpleLoop().pre_loop,
                 preLoopRanges.empty() ? nullptr : &preLoopRanges)) {
       return false;
     }
@@ -437,7 +445,8 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   } else {
     main = p;
   }
-  const std::vector<RangeMap>* mainRanges = bodyRanges.empty() ? nullptr : &bodyRanges;
+  const std::vector<RangeMap>* mainRanges =
+      bodyRanges.empty() ? nullptr : &bodyRanges;
   if (!update(main, mainRanges)) {
     return false;
   }
@@ -474,11 +483,11 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   }
 
   // resolve simple recursions
-  FormulaUtil::resolveSimpleRecursions(formula);
+  FormulaSimplify::resolveSimpleRecursions(formula);
   Log::get().debug("Resolved simple recursions: " + formula.toString());
 
   // resolve simple functions
-  FormulaUtil::resolveSimpleFunctions(formula);
+  FormulaSimplify::resolveSimpleFunctions(formula);
   Log::get().debug("Resolved simple functions: " + formula.toString());
 
   // extract main formula (filter out irrelant memory cells)
@@ -488,7 +497,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   Log::get().debug("Pruned formula: " + formula.toString());
 
   // resolve identities
-  FormulaUtil::resolveIdentities(formula);
+  FormulaSimplify::resolveIdentities(formula);
   Log::get().debug("Resolved identities: " + formula.toString());
 
   // success
@@ -668,7 +677,7 @@ bool FormulaGenerator::generate(const Program& p, int64_t id, Formula& result,
   result = formula;
 
   // replace simple references to recursive functions
-  FormulaUtil::replaceSimpleRecursiveReferences(result);
+  FormulaSimplify::replaceSimpleRecursiveReferences(result);
 
   // replace functions A000142(n) by n! in all formula definitions
   const auto factorialSeqName = FACTORIAL_SEQ_ID.string();
