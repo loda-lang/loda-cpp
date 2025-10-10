@@ -24,7 +24,7 @@ bool SequenceUtil::isTooBig(const Number& n) {
     return n.getNumUsedWords() >
            static_cast<int64_t>(BigNumber::NUM_WORDS / 4);  // magic number
   } else {
-    static const int64_t NUM_INF = std::numeric_limits<int64_t>::max();
+    static const int64_t NUM_INF = (std::numeric_limits<int64_t>::max)();
     return (n.value > (NUM_INF / 1000)) || (n.value < (NUM_INF / -1000));
   }
 }
