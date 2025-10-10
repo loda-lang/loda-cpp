@@ -118,26 +118,6 @@ bool FormulaGenerator::canBeNegativeWithRanges(const Expression& e,
   return ExpressionUtil::canBeNegative(e, offset);
 }
 
-bool FormulaGenerator::bitfunc(Operation::Type type, const Expression& a,
-                               const Expression& b, Expression& res) const {
-  std::string name;
-  switch (type) {
-    case Operation::Type::BAN:
-      name = "bitand";
-      break;
-    case Operation::Type::BOR:
-      name = "bitor";
-      break;
-    case Operation::Type::BXO:
-      name = "bitxor";
-      break;
-    default:
-      return false;
-  }
-  res = func(name, {a, b});
-  return true;
-}
-
 // Express falling/rising factorial using standard factorial
 bool FormulaGenerator::facToExpression(const Expression& a, const Expression& b,
                                        const Operand& aOp, const Operand& bOp,
@@ -262,10 +242,16 @@ bool FormulaGenerator::update(const Operation& op, const RangeMap* ranges) {
       res = func("max", {prevTarget, source});
       break;
     }
-    case Operation::Type::BAN:
-    case Operation::Type::BOR:
+    case Operation::Type::BAN: {
+      res = func("bitand", {prevTarget, source});
+      break;
+    }
+    case Operation::Type::BOR: {
+      res = func("bitor", {prevTarget, source});
+      break;
+    }
     case Operation::Type::BXO: {
-      okay = bitfunc(op.type, prevTarget, source, res);
+      res = func("bitxor", {prevTarget, source});
       break;
     }
     case Operation::Type::SEQ: {
