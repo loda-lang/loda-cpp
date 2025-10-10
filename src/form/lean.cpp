@@ -1,0 +1,166 @@
+#include "form/lean.hpp"
+
+#include <sstream>
+
+#include "form/expression_util.hpp"
+#include "form/formula_util.hpp"
+#include "seq/seq_util.hpp"
+
+bool isSupportedByLean(const Expression& expr, const Formula& f) {
+  switch (expr.type) {
+    case Expression::Type::IF:
+    case Expression::Type::EQUAL:
+    case Expression::Type::NOT_EQUAL:
+    case Expression::Type::LESS_EQUAL:
+    case Expression::Type::GREATER_EQUAL:
+    case Expression::Type::LOCAL:
+    case Expression::Type::VECTOR:
+    case Expression::Type::FACTORIAL:
+    case Expression::Type::FUNCTION:
+      return false;
+    case Expression::Type::POWER:
+      // Support only non-negative constants as exponents
+      if (expr.children.size() != 2 ||
+          expr.children[1].type != Expression::Type::CONSTANT ||
+          expr.children[1].value < Number::ZERO) {
+        return false;
+      }
+      break;
+    default:
+      break;
+  }
+  // Check children recursively
+  for (const auto& c : expr.children) {
+    if (!isSupportedByLean(c, f)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// Forward declaration
+std::string exprToLeanString(const Expression& expr, const Formula& f,
+                             const std::string& funcName);
+
+std::string binaryExpr(const Expression& expr, const Formula& f,
+                       const std::string& funcName, const std::string& op) {
+  std::stringstream ss;
+  ss << "(" << exprToLeanString(expr.children[0], f, funcName) << " " << op
+     << " " << exprToLeanString(expr.children[1], f, funcName) << ")";
+  return ss.str();
+}
+
+std::string naryExpr(const Expression& expr, const Formula& f,
+                     const std::string& funcName, const std::string& op) {
+  std::stringstream ss;
+  ss << "(";
+  for (size_t i = 0; i < expr.children.size(); i++) {
+    if (i > 0) ss << " " << op << " ";
+    ss << exprToLeanString(expr.children[i], f, funcName);
+  }
+  ss << ")";
+  return ss.str();
+}
+
+std::string exprToLeanString(const Expression& expr, const Formula& f,
+                             const std::string& funcName) {
+  std::stringstream ss;
+  switch (expr.type) {
+    case Expression::Type::CONSTANT:
+      ss << expr.value;
+      break;
+    case Expression::Type::PARAMETER:
+      ss << expr.name;
+      break;
+    case Expression::Type::SUM:
+      return naryExpr(expr, f, funcName, "+");
+    case Expression::Type::PRODUCT:
+      return naryExpr(expr, f, funcName, "*");
+    case Expression::Type::FRACTION:
+      return binaryExpr(expr, f, funcName, "/");
+    case Expression::Type::POWER:
+      return binaryExpr(expr, f, funcName, "^");
+    case Expression::Type::MODULUS:
+      return binaryExpr(expr, f, funcName, "%");
+    default:
+      // Unsupported types
+      return "";
+  }
+  return ss.str();
+}
+
+bool LeanFormula::convert(const Formula& formula, bool as_vector,
+                          LeanFormula& lean_formula) {
+  // Check if conversion is supported.
+  if (as_vector) {
+    return false;
+  }
+  auto functions =
+      FormulaUtil::getDefinitions(formula, Expression::Type::FUNCTION);
+  if (functions.size() != 1) {
+    return false;
+  }
+  const std::string funcName = functions[0];
+  lean_formula = {};
+  for (const auto& entry : formula.entries) {
+    auto& left = entry.first;
+    auto& right = entry.second;
+    if (!isSupportedByLean(right, formula)) {
+      return false;
+    }
+    if (left.type != Expression::Type::FUNCTION || left.children.size() != 1) {
+      return false;
+    }
+    auto& arg = left.children.front();
+    if (arg.type != Expression::Type::PARAMETER) {
+      return false;
+    }
+    lean_formula.main_formula.entries.insert(entry);
+  }
+  return lean_formula.main_formula.entries.size() == 1;
+}
+
+std::string LeanFormula::toString() const {
+  std::stringstream buf;
+  std::string funcName;
+  Expression mainExpr;
+  for (const auto& entry : main_formula.entries) {
+    funcName = entry.first.name;
+    mainExpr = entry.second;
+    break;
+  }
+  bool usesParameter = mainExpr.contains(Expression::Type::PARAMETER);
+  std::string arg = usesParameter ? "n" : "_";
+  buf << "def " << funcName << " (" << arg << " : Int) : Int := ";
+  buf << exprToLeanString(mainExpr, main_formula, funcName);
+  return buf.str();
+}
+
+std::string LeanFormula::printEvalCode(int64_t offset, int64_t numTerms) const {
+  std::stringstream out;
+  out << toString() << std::endl;
+  out << std::endl;
+  out << "def main : IO Unit := do" << std::endl;
+  out << "  let offset : Int := " << offset << std::endl;
+  out << "  let num_terms : Nat := " << numTerms << std::endl;
+  out << std::endl;
+  out << "  let rec loop (count : Nat) (n : Int) : IO Unit := do" << std::endl;
+  out << "    if count < num_terms then" << std::endl;
+  out << "      IO.println (toString (a n))" << std::endl;
+  out << "      loop (count + 1) (n + 1)" << std::endl;
+  out << "    else" << std::endl;
+  out << "      pure ()" << std::endl;
+  out << std::endl;
+  out << "  loop 0 offset" << std::endl;
+  return out.str();
+}
+
+bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
+                       Sequence& result) const {
+  const std::string leanPath("loda-eval.lean");
+  const std::string leanResult("lean-result.txt");
+  std::vector<std::string> args = {"lean", "--run", leanPath};
+  std::string evalCode = printEvalCode(offset, numTerms);
+  return SequenceUtil::evalFormulaWithExternalTool(
+      evalCode, getName(), leanPath, leanResult, args, timeoutSeconds, result);
+}

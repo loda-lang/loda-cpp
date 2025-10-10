@@ -13,6 +13,7 @@
 #include "eval/optimizer.hpp"
 #include "eval/range_generator.hpp"
 #include "form/formula_gen.hpp"
+#include "form/lean.hpp"
 #include "form/pari.hpp"
 #include "lang/analyzer.hpp"
 #include "lang/comments.hpp"
@@ -103,7 +104,7 @@ void Commands::help() {
   std::cout << "  -b                   Print result in the OEIS b-file format"
             << std::endl;
   std::cout << "  -o <string>          Export format "
-               "(formula,loda,pari,range)"
+               "(formula,loda,pari,lean,range)"
             << std::endl;
   std::cout
       << "  -d                   Export with dependencies to other programs"
@@ -237,6 +238,7 @@ void Commands::export_(const std::string& path) {
   const auto& format = settings.export_format;
   Formula formula;
   PariFormula pari_formula;
+  LeanFormula lean_formula;
   FormulaGenerator generator;
   if (format.empty() || format == "formula") {
     if (!generator.generate(program, -1, formula, settings.with_deps)) {
@@ -255,6 +257,12 @@ void Commands::export_(const std::string& path) {
       throwConversionError(format);
     }
     std::cout << pari_formula.toString() << std::endl;
+  } else if (format == "lean") {
+    if (!generator.generate(program, -1, formula, settings.with_deps) ||
+        !LeanFormula::convert(formula, false, lean_formula)) {
+      throwConversionError(format);
+    }
+    std::cout << lean_formula.toString() << std::endl;
   } else if (format == "loda") {
     ProgramUtil::print(program, std::cout);
   } else if (format == "range") {
@@ -577,8 +585,9 @@ void Commands::testAnalyzer() {
                   " programs have exponential complexity");
 }
 
-void Commands::testPari(const std::string& test_id) {
-  initLog(false);
+template <typename FormulaType>
+void testFormula(const std::string& test_id, const Settings& settings,
+                 bool as_vector) {
   Parser parser;
   Interpreter interpreter(settings);
   Evaluator evaluator(settings, EVAL_ALL, false);
@@ -606,15 +615,16 @@ void Commands::testPari(const std::string& test_id) {
       continue;
     }
 
-    // generate PARI code
+    // generate formula code
     FormulaGenerator generator;
     Formula formula;
-    PariFormula pari_formula;
-    const bool as_vector = false;  // TODO: switch to true
+    FormulaType formula_obj;
     Sequence expSeq;
     try {
-      if (!generator.generate(program, id.number(), formula, true) ||
-          !PariFormula::convert(formula, as_vector, pari_formula)) {
+      if (!generator.generate(program, id.number(), formula, true)) {
+        continue;
+      }
+      if (!FormulaType::convert(formula, as_vector, formula_obj)) {
         continue;
       }
     } catch (const std::exception& e) {
@@ -665,7 +675,7 @@ void Commands::testPari(const std::string& test_id) {
       continue;
     }
     Log::get().info("Checking " + std::to_string(numTerms) + " terms of " +
-                    idStr + ": " + pari_formula.toString());
+                    idStr + ": " + formula_obj.toString());
 
     // evaluate LODA program
     try {
@@ -678,11 +688,12 @@ void Commands::testPari(const std::string& test_id) {
       Log::get().error("Evaluation error", true);
     }
 
-    // evaluate PARI program
+    // evaluate formula program
     auto offset = ProgramUtil::getOffset(program);
     Sequence genSeq;
-    if (!pari_formula.eval(offset, numTerms, 10, genSeq)) {
-      Log::get().warn("PARI evaluation timeout for " + idStr);
+    if (!formula_obj.eval(offset, numTerms, 10, genSeq)) {
+      Log::get().warn(formula_obj.getName() + " evaluation timeout for " +
+                      idStr);
       skipped++;
       continue;
     }
@@ -691,15 +702,27 @@ void Commands::testPari(const std::string& test_id) {
     if (genSeq != expSeq) {
       Log::get().info("Generated sequence: " + genSeq.to_string());
       Log::get().info("Expected sequence:  " + expSeq.to_string());
-      Log::get().error("Unexpected PARI sequence", true);
+      Log::get().error("Unexpected " + formula_obj.getName() + " sequence",
+                       true);
       bad++;
     } else {
       good++;
     }
   }
   Log::get().info(std::to_string(good) + " passed, " + std::to_string(bad) +
-                  " failed, " + std::to_string(skipped) +
-                  " skipped PARI checks");
+                  " failed, " + std::to_string(skipped) + " skipped " +
+                  FormulaType().getName() + " checks");
+}
+
+void Commands::testPari(const std::string& test_id) {
+  initLog(false);
+  const bool as_vector = false;  // TODO: switch to true
+  testFormula<PariFormula>(test_id, settings, as_vector);
+}
+
+void Commands::testLean(const std::string& test_id) {
+  initLog(false);
+  testFormula<LeanFormula>(test_id, settings, false);
 }
 
 bool checkRange(const ManagedSequence& seq, const Program& program,

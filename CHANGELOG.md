@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Features
+
+* Add LEAN export support for simple LODA programs
+
 ### Enhancements
 
 * Simplify formulas by replacing simple references to recursive functions

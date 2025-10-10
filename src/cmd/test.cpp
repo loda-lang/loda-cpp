@@ -14,6 +14,7 @@
 #include "eval/range_generator.hpp"
 #include "eval/semantics.hpp"
 #include "form/formula_gen.hpp"
+#include "form/lean.hpp"
 #include "form/pari.hpp"
 #include "lang/comments.hpp"
 #include "lang/constants.hpp"
@@ -1127,6 +1128,7 @@ void Test::formula() {
   checkFormulas("formula.txt", FormulaType::FORMULA);
   checkFormulas("pari-function.txt", FormulaType::PARI_FUNCTION);
   checkFormulas("pari-vector.txt", FormulaType::PARI_VECTOR);
+  checkFormulas("lean.txt", FormulaType::LEAN);
 }
 
 void Test::checkFormulas(const std::string& testFile, FormulaType type) {
@@ -1150,6 +1152,14 @@ void Test::checkFormulas(const std::string& testFile, FormulaType type) {
     if (type == FormulaType::FORMULA) {
       if (f.toString() != e.second) {
         Log::get().error("Unexpected formula: " + f.toString(), true);
+      }
+    } else if (type == FormulaType::LEAN) {
+      LeanFormula lean;
+      if (!LeanFormula::convert(f, false, lean)) {
+        Log::get().error("Cannot convert formula to LEAN", true);
+      }
+      if (lean.toString() != e.second) {
+        Log::get().error("Unexpected LEAN code: " + lean.toString(), true);
       }
     } else {
       PariFormula pari;

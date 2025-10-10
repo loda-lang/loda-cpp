@@ -21,7 +21,7 @@ class PariFormula {
   static bool convert(const Formula& formula, bool as_vector,
                       PariFormula& pari_formula);
 
-  void printEvalCode(int64_t offset, int64_t numTerms, std::ostream& out) const;
+  std::string printEvalCode(int64_t offset, int64_t numTerms) const;
 
   std::string toString() const;
 
@@ -30,6 +30,8 @@ class PariFormula {
   // occurred. The result sequence is written to 'result'.
   bool eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
             Sequence& result) const;
+
+  std::string getName() const { return "PARI"; }
 
  private:
   Formula main_formula;
