@@ -16,15 +16,35 @@ bool isSupportedByLean(const Expression& expr, const Formula& f) {
     case Expression::Type::LOCAL:
     case Expression::Type::VECTOR:
     case Expression::Type::FACTORIAL:
-    case Expression::Type::FUNCTION:
       return false;
-    case Expression::Type::POWER:
-      // Support only non-negative constants as exponents
-      if (expr.children.size() != 2 ||
-          expr.children[1].type != Expression::Type::CONSTANT ||
-          expr.children[1].value < Number::ZERO) {
+    case Expression::Type::FUNCTION: {
+      // Allow built-in functions, but not user-defined functions
+      // Built-in functions are those that appear on the right-hand side
+      // but are not defined (don't appear on the left-hand side)
+      auto definitions = FormulaUtil::getDefinitions(f, Expression::Type::FUNCTION);
+      bool isUserDefined = std::find(definitions.begin(), definitions.end(), expr.name) != definitions.end();
+      if (isUserDefined) {
         return false;
       }
+      // Only support specific built-in functions
+      if (expr.name != "min" && expr.name != "max" && expr.name != "gcd" &&
+          expr.name != "abs" && expr.name != "sign") {
+        return false;
+      }
+      break;
+    }
+    case Expression::Type::POWER:
+      // Support only non-negative constants as exponents, or supported functions
+      if (expr.children.size() != 2) {
+        return false;
+      }
+      // Check if exponent is a non-negative constant
+      if (expr.children[1].type == Expression::Type::CONSTANT) {
+        if (expr.children[1].value < Number::ZERO) {
+          return false;
+        }
+      }
+      // For non-constant exponents, they will be checked recursively below
       break;
     default:
       break;
