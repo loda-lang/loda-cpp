@@ -34,12 +34,17 @@ bool isSupportedByLean(const Expression& expr, const Formula& f) {
       break;
     }
     case Expression::Type::POWER:
-      // Support only non-negative constants as exponents
-      if (expr.children.size() != 2 ||
-          expr.children[1].type != Expression::Type::CONSTANT ||
-          expr.children[1].value < Number::ZERO) {
+      // Support only non-negative constants as exponents, or supported functions
+      if (expr.children.size() != 2) {
         return false;
       }
+      // Check if exponent is a non-negative constant
+      if (expr.children[1].type == Expression::Type::CONSTANT) {
+        if (expr.children[1].value < Number::ZERO) {
+          return false;
+        }
+      }
+      // For non-constant exponents, they will be checked recursively below
       break;
     default:
       break;
