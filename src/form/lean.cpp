@@ -9,10 +9,6 @@
 bool isSupportedByLean(const Expression& expr, const Formula& f) {
   switch (expr.type) {
     case Expression::Type::IF:
-    case Expression::Type::EQUAL:
-    case Expression::Type::NOT_EQUAL:
-    case Expression::Type::LESS_EQUAL:
-    case Expression::Type::GREATER_EQUAL:
     case Expression::Type::LOCAL:
     case Expression::Type::VECTOR:
     case Expression::Type::FACTORIAL:
