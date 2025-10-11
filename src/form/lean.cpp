@@ -38,57 +38,6 @@ bool isSupportedByLean(const Expression& expr, const Formula& f) {
   return true;
 }
 
-// Forward declaration
-std::string exprToLeanString(const Expression& expr, const Formula& f,
-                             const std::string& funcName);
-
-std::string binaryExpr(const Expression& expr, const Formula& f,
-                       const std::string& funcName, const std::string& op) {
-  std::stringstream ss;
-  ss << "(" << exprToLeanString(expr.children[0], f, funcName) << " " << op
-     << " " << exprToLeanString(expr.children[1], f, funcName) << ")";
-  return ss.str();
-}
-
-std::string naryExpr(const Expression& expr, const Formula& f,
-                     const std::string& funcName, const std::string& op) {
-  std::stringstream ss;
-  ss << "(";
-  for (size_t i = 0; i < expr.children.size(); i++) {
-    if (i > 0) ss << " " << op << " ";
-    ss << exprToLeanString(expr.children[i], f, funcName);
-  }
-  ss << ")";
-  return ss.str();
-}
-
-std::string exprToLeanString(const Expression& expr, const Formula& f,
-                             const std::string& funcName) {
-  std::stringstream ss;
-  switch (expr.type) {
-    case Expression::Type::CONSTANT:
-      ss << expr.value;
-      break;
-    case Expression::Type::PARAMETER:
-      ss << expr.name;
-      break;
-    case Expression::Type::SUM:
-      return naryExpr(expr, f, funcName, "+");
-    case Expression::Type::PRODUCT:
-      return naryExpr(expr, f, funcName, "*");
-    case Expression::Type::FRACTION:
-      return binaryExpr(expr, f, funcName, "/");
-    case Expression::Type::POWER:
-      return binaryExpr(expr, f, funcName, "^");
-    case Expression::Type::MODULUS:
-      return binaryExpr(expr, f, funcName, "%");
-    default:
-      // Unsupported types
-      return "";
-  }
-  return ss.str();
-}
-
 bool LeanFormula::convert(const Formula& formula, bool as_vector,
                           LeanFormula& lean_formula) {
   // Check if conversion is supported.
@@ -131,8 +80,7 @@ std::string LeanFormula::toString() const {
   }
   bool usesParameter = mainExpr.contains(Expression::Type::PARAMETER);
   std::string arg = usesParameter ? "n" : "_";
-  buf << "def " << funcName << " (" << arg << " : Int) : Int := ";
-  buf << exprToLeanString(mainExpr, main_formula, funcName);
+  buf << "def " << funcName << " (" << arg << " : Int) : Int := " << mainExpr;
   return buf.str();
 }
 
