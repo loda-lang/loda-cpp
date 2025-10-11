@@ -4,12 +4,6 @@
 
 class FormulaUtil {
  public:
-  static void resolveIdentities(Formula& formula);
-
-  static void resolveSimpleFunctions(Formula& formula);
-
-  static void resolveSimpleRecursions(Formula& formula);
-
   static std::vector<std::string> getDefinitions(
       const Formula& formula,
       const Expression::Type type = Expression::Type::FUNCTION,
@@ -23,7 +17,6 @@ class FormulaUtil {
   static bool isRecursive(const Formula& formula, const std::string& funcName,
                           Expression::Type type = Expression::Type::FUNCTION);
 
-  static void convertInitialTermsToIf(
-      Formula& formula,
-      const Expression::Type type = Expression::Type::FUNCTION);
+  static void removeFunctionEntries(Formula& formula,
+                                    const std::string& funcName);
 };

@@ -15,6 +15,7 @@ MiningMode convertStrToMiningMode(const std::string& str);
 class Setup {
  public:
   static const std::string LODA_SUBMIT_CPU_HOURS;
+  static const int64_t NUM_COMMITS_FOR_PROGRAMS = 20;
 
   static std::string getLodaHomeNoCheck();
 
@@ -35,6 +36,8 @@ class Setup {
   static void setMinersConfig(const std::string& loda_config);
 
   static const std::string& getSeqsHome();
+
+  static const std::string& getCacheHome();
 
   static const std::string& getProgramsHome();
 

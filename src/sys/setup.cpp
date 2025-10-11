@@ -136,6 +136,16 @@ const std::string& Setup::getSeqsHome() {
   return SEQS_HOME;
 }
 
+const std::string& Setup::getCacheHome() {
+  static std::string cache_home;
+  if (cache_home.empty()) {
+    // don't remove the trailing /
+    cache_home = getLodaHome() + "cache" + FILE_SEP;
+    ensureDir(cache_home);
+  }
+  return cache_home;
+}
+
 const std::string& Setup::getProgramsHome() {
   if (PROGRAMS_HOME.empty()) {
     setProgramsHome(getLodaHome() + "programs" + FILE_SEP);
@@ -157,7 +167,8 @@ bool Setup::existsProgramsHome() {
 
 void Setup::cloneProgramsHome(const std::string& git_url) {
   // We cannot use getProgramsHome() here because it checks for existence
-  Git::clone(git_url, getLodaHome() + "programs");
+  Git::clone(git_url, getLodaHome() + "programs",
+             Setup::NUM_COMMITS_FOR_PROGRAMS);
 }
 
 bool Setup::pullProgramsHome(bool fail_on_error) {
@@ -443,7 +454,7 @@ bool Setup::checkProgramsHome() {
   if (!existsProgramsHome()) {
     std::cout << "LODA needs to download its programs repository from GitHub."
               << std::endl;
-    std::cout << "The repository requires around 350 MB of disk space."
+    std::cout << "The repository requires around 650 MB of disk space."
               << std::endl;
     std::cout << "Checking whether git is installed:" << std::endl;
     Git::git("", "--version");

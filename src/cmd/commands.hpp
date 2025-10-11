@@ -61,6 +61,8 @@ class Commands {
 
   void testPari(const std::string& id);
 
+  void testLean(const std::string& id);
+
   void testRange(const std::string& id);
 
   void generate();
@@ -77,7 +79,9 @@ class Commands {
 
   void findEmbseqs();
 
-  void lists();
+  void extractVirseqs();
+
+  void findIncevalPrograms(const std::string& error_code);
 
   void compare(const std::string& path1, const std::string& path2);
 

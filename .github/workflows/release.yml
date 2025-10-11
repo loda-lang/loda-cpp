@@ -10,6 +10,21 @@ jobs:
       - name: Generate Version
         id: generate-version
         run: echo "version=$(date +'%-y.%-m.%-d')" >> "$GITHUB_OUTPUT"
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Extract Release Notes
+        id: extract-release-notes
+        run: |
+          VERSION=$(echo "${{ steps.generate-version.outputs.version }}")
+          # Try to extract section for the current version first
+          RELEASE_NOTES=$(awk -v ver="$VERSION" '$0 ~ ("^## v" ver) {flag=1; next} /^## / {flag=0} flag {print}' CHANGELOG.md | sed '/^[[:space:]]*$/d')
+          # If empty, fall back to [Unreleased]
+          if [ -z "$RELEASE_NOTES" ]; then
+            RELEASE_NOTES=$(awk '/^## \[Unreleased\]/ {flag=1; next} /^## / {flag=0} flag {print}' CHANGELOG.md | sed '/^[[:space:]]*$/d')
+          fi
+          echo "release_notes<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$RELEASE_NOTES" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
       - name: Create Release
         uses: actions/create-release@v1
         id: create-release
@@ -18,6 +33,7 @@ jobs:
           prerelease: false
           release_name: v${{ steps.generate-version.outputs.version }}
           tag_name: v${{ steps.generate-version.outputs.version }}
+          body: ${{ steps.extract-release-notes.outputs.release_notes }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
     outputs:

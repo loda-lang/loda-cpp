@@ -88,9 +88,13 @@ class Test {
 
   void virtualSeq();
 
-  enum class FormulaType { FORMULA, PARI_FUNCTION, PARI_VECTOR };
+  enum class FormulaType { FORMULA, PARI_FUNCTION, PARI_VECTOR, LEAN };
 
   void checkFormulas(const std::string &testFile, FormulaType type);
+
+  template <typename FormulaTypeClass>
+  void checkFormulasWithExternalTools(const std::string &testFile,
+                                      bool asVector);
 
   void checkRanges(int64_t id, bool finite, const std::string &expected);
 

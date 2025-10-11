@@ -367,69 +367,35 @@ void MineManager::generateStats(int64_t age_in_days) {
                   " programs in " + buf.str() + "s");
 }
 
-void MineManager::generateLists() {
-  load();
-  getStats();
+void MineManager::cleanupListFiles() {
   const std::string lists_home = SequenceList::getListsHome();
-  Log::get().debug("Generating program lists at \"" + lists_home + "\"");
-  const size_t list_file_size = 50000;
-  std::vector<std::stringstream> list_files(1000000 / list_file_size);
-  std::stringstream no_loda;
-  size_t num_processed = 0;
-  std::string buf;
-  for (auto &s : sequences) {
-    if (s.id.number() == 0 || deny_list.find(s.id) != deny_list.end()) {
-      continue;
-    }
-    if (stats->all_program_ids.exists(s.id)) {
-      // update program list
-      const size_t list_index = (s.id.number() + 1) / list_file_size;
-      buf = s.name;
-      replaceAll(buf, "{", "\\{");
-      replaceAll(buf, "}", "\\}");
-      replaceAll(buf, "*", "\\*");
-      replaceAll(buf, "_", "\\_");
-      replaceAll(buf, "|", "\\|");
-      list_files.at(list_index)
-          << "* [" << s.id.string() << "](https://oeis.org/" << s.id.string()
-          << ") ([program](/edit/?oeis=" << s.id.number() << ")): " << buf
-          << "\n";
-
-      num_processed++;
-    } else {
-      no_loda << s.id.string() << ": " << s.name << "\n";
+  if (!isDir(lists_home)) {
+    return;  // nothing to clean up
+  }
+  
+  Log::get().debug("Cleaning up leftover list files at \"" + lists_home + "\"");
+  
+  // Delete list*.markdown files
+  const size_t max_lists = 10;
+  size_t deleted_count = 0;
+  for (size_t i = 0; i < max_lists; i++) {
+    const std::string list_path =
+        lists_home + "list" + std::to_string(i) + ".markdown";
+    if (std::remove(list_path.c_str()) == 0) {
+      deleted_count++;
     }
   }
-
-  // write lists
-  ensureDir(lists_home);
-  for (size_t i = 0; i < list_files.size(); i++) {
-    const auto f = list_files[i].str();
-    if (!f.empty()) {
-      const std::string list_path =
-          lists_home + "list" + std::to_string(i) + ".markdown";
-      UID start('A', std::max<int64_t>(i * list_file_size, 1));
-      UID end('A', ((i + 1) * list_file_size) - 1);
-      std::ofstream list_file(list_path);
-      list_file << "---\n";
-      list_file << "layout: page\n";
-      list_file << "title: Programs for " << start.string() << "-"
-                << end.string() << "\n";
-      list_file << "permalink: /list" << i << "/\n";
-      list_file << "---\n";
-      list_file << "List of integer sequences with links to LODA programs."
-                << "\n\n";
-      list_file << f;
-      list_file << "\n\n[License Info](https://github.com/loda-lang/"
-                   "loda-programs#license)\n";
-    }
+  
+  // Delete no_loda.txt
+  const std::string no_loda_path = lists_home + "no_loda.txt";
+  if (std::remove(no_loda_path.c_str()) == 0) {
+    deleted_count++;
   }
-  std::ofstream no_loda_file(lists_home + "no_loda.txt");
-  no_loda_file << no_loda.str();
-  no_loda_file.close();
-
-  Log::get().info("Generated lists for " + std::to_string(num_processed) +
-                  " programs");
+  
+  if (deleted_count > 0) {
+    Log::get().info("Deleted " + std::to_string(deleted_count) +
+                    " leftover list files");
+  }
 }
 
 void MineManager::migrate() {
@@ -488,10 +454,8 @@ const Stats &MineManager::getStats() {
         age_in_days >= update_interval) {
       generateStats(age_in_days);
 
-      // generate lists in server mode
-      if (Setup::getMiningMode() == MINING_MODE_SERVER) {
-        generateLists();
-      }
+      // cleanup leftover list files
+      cleanupListFiles();
     }
     try {
       stats->load(stats_home);

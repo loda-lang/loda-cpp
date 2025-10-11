@@ -1,5 +1,6 @@
 #include "cmd/test.hpp"
 
+#include <cstdlib>
 #include <deque>
 #include <fstream>
 #include <iomanip>
@@ -14,6 +15,7 @@
 #include "eval/range_generator.hpp"
 #include "eval/semantics.hpp"
 #include "form/formula_gen.hpp"
+#include "form/lean.hpp"
 #include "form/pari.hpp"
 #include "lang/comments.hpp"
 #include "lang/constants.hpp"
@@ -78,11 +80,18 @@ void Test::fast() {
 }
 
 void Test::slow() {
-  number();
-  randomNumber(100);
+  // External tool tests (only if environment variable is set)
+  if (std::getenv("LODA_TEST_WITH_EXTERNAL_TOOLS")) {
+    Log::get().info("Testing external tool evaluation");
+    checkFormulasWithExternalTools<PariFormula>("pari-function.txt", false);
+    checkFormulasWithExternalTools<PariFormula>("pari-vector.txt", true);
+    checkFormulasWithExternalTools<LeanFormula>("lean.txt", false);
+  }
   virtualEval();
   ackermann();
   stats();
+  number();
+  randomNumber(100);
   apiClient();  // requires API server
   oeisList();
   oeisSeq();
@@ -983,7 +992,7 @@ void Test::oeisList() {
   map[UID('A', 7)] = 9;
   map[UID('A', 8)] = 4;
   auto copy = map;
-  SequenceList::mergeMap("test.txt", map);
+  SequenceList::mergeMap(SequenceList::getListsHome(), "test.txt", map);
   if (!map.empty()) {
     Log::get().error("unexpected map content", true);
   }
@@ -993,7 +1002,7 @@ void Test::oeisList() {
   }
   std::map<UID, int64_t> delta;
   delta[UID('A', 7)] = 6;
-  SequenceList::mergeMap("test.txt", delta);
+  SequenceList::mergeMap(SequenceList::getListsHome(), "test.txt", delta);
   SequenceList::loadMap(path, map);
   copy[UID('A', 7)] = 15;
   if (map != copy) {
@@ -1127,6 +1136,7 @@ void Test::formula() {
   checkFormulas("formula.txt", FormulaType::FORMULA);
   checkFormulas("pari-function.txt", FormulaType::PARI_FUNCTION);
   checkFormulas("pari-vector.txt", FormulaType::PARI_VECTOR);
+  checkFormulas("lean.txt", FormulaType::LEAN);
 }
 
 void Test::checkFormulas(const std::string& testFile, FormulaType type) {
@@ -1151,6 +1161,14 @@ void Test::checkFormulas(const std::string& testFile, FormulaType type) {
       if (f.toString() != e.second) {
         Log::get().error("Unexpected formula: " + f.toString(), true);
       }
+    } else if (type == FormulaType::LEAN) {
+      LeanFormula lean;
+      if (!LeanFormula::convert(f, false, lean)) {
+        Log::get().error("Cannot convert formula to LEAN", true);
+      }
+      if (lean.toString() != e.second) {
+        Log::get().error("Unexpected LEAN code: " + lean.toString(), true);
+      }
     } else {
       PariFormula pari;
       if (!PariFormula::convert(f, type == FormulaType::PARI_VECTOR, pari)) {
@@ -1159,6 +1177,59 @@ void Test::checkFormulas(const std::string& testFile, FormulaType type) {
       if (pari.toString() != e.second) {
         Log::get().error("Unexpected PARI/GP code: " + pari.toString(), true);
       }
+    }
+  }
+}
+
+template <typename FormulaTypeClass>
+void Test::checkFormulasWithExternalTools(const std::string& testFile,
+                                          bool asVector) {
+  std::string path = std::string("tests") + FILE_SEP + std::string("formula") +
+                     FILE_SEP + testFile;
+  std::map<UID, std::string> map;
+  SequenceList::loadMapWithComments(path, map);
+  if (map.empty()) {
+    Log::get().error("Unexpected map content", true);
+  }
+  Parser parser;
+  FormulaGenerator generator;
+  Evaluator evaluator(settings, EVAL_ALL, false);
+  for (const auto& e : map) {
+    auto id = e.first;
+    auto idStr = id.string();
+    FormulaTypeClass formula_obj;
+    auto program = parser.parse(ProgramUtil::getProgramPath(id));
+    // generate formula code
+    Formula formula;
+    Sequence expSeq;
+    if (!generator.generate(program, id.number(), formula, true)) {
+      Log::get().error("Cannot generate formula", true);
+    }
+    if (!FormulaTypeClass::convert(formula, asVector, formula_obj)) {
+      Log::get().error("Cannot convert formula to " + formula_obj.getName(),
+                       true);
+    }
+    // evaluate LODA program
+    Log::get().info("Testing " + formula_obj.getName() + " for " + idStr +
+                    ": " + formula_obj.toString());
+    size_t numTerms = 12;
+    evaluator.eval(program, expSeq, numTerms);
+    if (expSeq.empty()) {
+      Log::get().error("Evaluation error", true);
+    }
+    // evaluate formula
+    auto offset = ProgramUtil::getOffset(program);
+    Sequence genSeq;
+    if (!formula_obj.eval(offset, numTerms, 10, genSeq)) {
+      Log::get().error(
+          formula_obj.getName() + " evaluation timeout for " + idStr, true);
+    }
+    // compare results
+    if (genSeq != expSeq) {
+      Log::get().info("Generated sequence: " + genSeq.to_string());
+      Log::get().info("Expected sequence:  " + expSeq.to_string());
+      Log::get().error("Unexpected " + formula_obj.getName() + " sequence",
+                       true);
     }
   }
 }
@@ -1191,8 +1262,9 @@ void Test::checkRanges(int64_t id, bool finite, const std::string& expected) {
   Log::get().info("Testing ranges for " + uid.string() + ": " + expected +
                   " with upper bound " + inputUpperBound.to_string());
   RangeGenerator generator;
+  generator.setInputUpperBound(inputUpperBound);
   RangeMap ranges;
-  if (!generator.generate(p, ranges, inputUpperBound)) {
+  if (!generator.generate(p, ranges)) {
     Log::get().error("Cannot generate range from program", true);
   }
   auto result = ranges.toString(Program::OUTPUT_CELL, "a(n)");
@@ -1384,9 +1456,10 @@ bool checkRange(const Sequence& seq, const Program& program, bool finiteInput) {
   auto offset = ProgramUtil::getOffset(program);
   Number inputUpperBound = finiteInput ? offset + seq.size() - 1 : Number::INF;
   RangeGenerator generator;
+  generator.setInputUpperBound(inputUpperBound);
   RangeMap ranges;
   try {
-    if (!generator.generate(program, ranges, inputUpperBound)) {
+    if (!generator.generate(program, ranges)) {
       return false;
     }
   } catch (const std::exception& e) {
