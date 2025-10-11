@@ -11,3 +11,4 @@ A999001: def a (n : Int) : Int := n==5
 A999002: def a (n : Int) : Int := n!=3
 A999003: def a (n : Int) : Int := n<=7
 A999004: def a (n : Int) : Int := n>=2
+A999005: def a (n : Int) : Int := ((2*n)==10)+5
