@@ -2,6 +2,7 @@
 
 ### Features
 
+* Add memory operations: `fil`, `rol`, `ror`
 * Add LEAN export support for simple LODA programs
 
 ### Enhancements

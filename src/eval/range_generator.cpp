@@ -219,6 +219,9 @@ bool RangeGenerator::update(const Operation& op, RangeMap& ranges) {
       break;
     }
     case Operation::Type::CLR:
+    case Operation::Type::FIL:
+    case Operation::Type::ROL:
+    case Operation::Type::ROR:
     case Operation::Type::PRG:
     case Operation::Type::__COUNT:
       return false;  // unsupported operation type for range generation

@@ -6,17 +6,27 @@
 #include "form/formula_util.hpp"
 #include "seq/seq_util.hpp"
 
-bool isSupportedByLean(const Expression& expr, const Formula& f) {
+bool convertToLean(Expression& expr, const Formula& f) {
+  // Check children recursively
+  for (auto& c : expr.children) {
+    if (!convertToLean(c, f)) {
+      return false;
+    }
+  }
   switch (expr.type) {
     case Expression::Type::IF:
-    case Expression::Type::EQUAL:
-    case Expression::Type::NOT_EQUAL:
-    case Expression::Type::LESS_EQUAL:
-    case Expression::Type::GREATER_EQUAL:
     case Expression::Type::LOCAL:
     case Expression::Type::VECTOR:
     case Expression::Type::FACTORIAL:
       return false;
+    case Expression::Type::EQUAL:
+    case Expression::Type::NOT_EQUAL:
+    case Expression::Type::LESS_EQUAL:
+    case Expression::Type::GREATER_EQUAL: {
+      Expression f(Expression::Type::FUNCTION, "Bool.toInt ", {expr});
+      expr = f;
+      break;
+    }
     case Expression::Type::FUNCTION: {
       // Allow built-in functions, but not user-defined functions
       // Built-in functions are those that appear on the right-hand side
@@ -49,12 +59,6 @@ bool isSupportedByLean(const Expression& expr, const Formula& f) {
     default:
       break;
   }
-  // Check children recursively
-  for (const auto& c : expr.children) {
-    if (!isSupportedByLean(c, f)) {
-      return false;
-    }
-  }
   return true;
 }
 
@@ -72,9 +76,9 @@ bool LeanFormula::convert(const Formula& formula, bool as_vector,
   const std::string funcName = functions[0];
   lean_formula = {};
   for (const auto& entry : formula.entries) {
-    auto& left = entry.first;
-    auto& right = entry.second;
-    if (!isSupportedByLean(right, formula)) {
+    auto left = entry.first;
+    auto right = entry.second;
+    if (!convertToLean(right, formula)) {
       return false;
     }
     if (left.type != Expression::Type::FUNCTION || left.children.size() != 1) {
@@ -84,7 +88,7 @@ bool LeanFormula::convert(const Formula& formula, bool as_vector,
     if (arg.type != Expression::Type::PARAMETER) {
       return false;
     }
-    lean_formula.main_formula.entries.insert(entry);
+    lean_formula.main_formula.entries[left] = right;
   }
   return lean_formula.main_formula.entries.size() == 1;
 }

@@ -63,26 +63,55 @@ void Memory::clear() {
   full.clear();
 }
 
-void Memory::clear(int64_t start, int64_t length) {
-  int64_t end = start + length;  // exclusive
-  if (start > end) {
-    std::swap(start, end);
-    start++;
-    end++;
+inline std::pair<int64_t, int64_t> getRange(int64_t start, int64_t length) {
+  if (length > 0) {
+    return {start, start + length};
+  } else {
+    return {start + length + 1, start + 1};
   }
+}
+
+void Memory::clear(int64_t start, int64_t length) {
+  auto range = getRange(start, length);
   for (int64_t i = 0; i < MEMORY_CACHE_SIZE; i++) {
-    if (i >= start && i < end) {
+    if (i >= range.first && i < range.second) {
       cache[i] = Number::ZERO;
     }
   }
   auto i = full.begin();
   while (i != full.end()) {
-    if (i->first >= start && i->first < end) {
+    if (i->first >= range.first && i->first < range.second) {
       i = full.erase(i);
     } else {
       i++;
     }
   }
+}
+
+void Memory::fill(int64_t start, int64_t length) {
+  auto value = get(start);
+  auto range = getRange(start, length);
+  for (int64_t i = range.first; i < range.second; i++) {
+    set(i, value);
+  }
+}
+
+void Memory::rotateLeft(int64_t start, int64_t length) {
+  auto range = getRange(start, length);
+  auto leftmost = get(range.first);
+  for (int64_t i = range.first; i < range.second - 1; i++) {
+    set(i, get(i + 1));
+  }
+  set(range.second - 1, leftmost);
+}
+
+void Memory::rotateRight(int64_t start, int64_t length) {
+  auto range = getRange(start, length);
+  auto rightmost = get(range.second - 1);
+  for (int64_t i = range.second - 1; i > range.first; i--) {
+    set(i, get(i - 1));
+  }
+  set(range.first, rightmost);
 }
 
 inline bool collectPositiveAndNegativeValues(int64_t index, const Number &value,

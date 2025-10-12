@@ -499,6 +499,79 @@ void Test::memory() {
       checkMemory(frag, length + 1, 0);
     }
   }
+
+  // Test new memory operations: fil, rol, ror
+  Memory mem;
+
+  // Test fil operation with positive length
+  mem.set(2, 7);
+  mem.fill(2, 4);
+  checkMemory(mem, 1, 0);  // unchanged
+  checkMemory(mem, 2, 7);  // $2,$3,$4,$5 := 7,7,7,7
+  checkMemory(mem, 3, 7);
+  checkMemory(mem, 4, 7);
+  checkMemory(mem, 5, 7);
+  checkMemory(mem, 6, 0);  // unchanged
+
+  // Test fil operation with negative length
+  mem.clear();
+  mem.set(7, 9);
+  mem.fill(7, -3);
+  checkMemory(mem, 4, 0);  // unchanged
+  checkMemory(mem, 5, 9);  // $5,$6,$7 := 9,9,9
+  checkMemory(mem, 6, 9);
+  checkMemory(mem, 7, 9);
+  checkMemory(mem, 8, 0);  // unchanged
+
+  // Test rol operation with positive length
+  mem.clear();
+  mem.set(2, 2);
+  mem.set(3, 3);
+  mem.set(4, 4);
+  mem.set(5, 5);
+  mem.rotateLeft(2, 4);
+  checkMemory(mem, 1, 0);  // unchanged
+  checkMemory(mem, 2, 3);  // $2,$3,$4,$5 := 3,4,5,2
+  checkMemory(mem, 3, 4);
+  checkMemory(mem, 4, 5);
+  checkMemory(mem, 5, 2);
+  checkMemory(mem, 6, 0);  // unchanged
+
+  // Test rol operation with negative length
+  mem.clear();
+  mem.set(6, 6);
+  mem.set(7, 7);
+  mem.set(8, 8);
+  mem.rotateLeft(8, -3);
+  checkMemory(mem, 5, 0);  // unchanged
+  checkMemory(mem, 6, 7);  // $6,$7,$8 := 7,8,6
+  checkMemory(mem, 7, 8);
+  checkMemory(mem, 8, 6);
+  checkMemory(mem, 9, 0);  // unchanged
+
+  // Test ror operation with positive length
+  mem.clear();
+  mem.set(10, 10);
+  mem.set(11, 11);
+  mem.set(12, 12);
+  mem.rotateRight(10, 3);
+  checkMemory(mem, 9, 0);    // unchanged
+  checkMemory(mem, 10, 12);  // $10,$11,$12 := 12,10,11
+  checkMemory(mem, 11, 10);
+  checkMemory(mem, 12, 11);
+  checkMemory(mem, 13, 0);  // unchanged
+
+  // Test ror operation with negative length
+  mem.clear();
+  mem.set(15, 15);
+  mem.set(16, 16);
+  mem.set(17, 17);
+  mem.rotateRight(17, -3);
+  checkMemory(mem, 14, 0);   // unchanged
+  checkMemory(mem, 15, 17);  // $15,$16,$17 := 17,15,16
+  checkMemory(mem, 16, 15);
+  checkMemory(mem, 17, 16);
+  checkMemory(mem, 18, 0);  // unchanged
 }
 
 void checkEnclosingLoop(const Program& p, int64_t begin, int64_t end,

@@ -33,6 +33,8 @@ class Interpreter {
   void set(const Operand &a, const Number &v, Memory &mem,
            const Operation &last_op) const;
 
+  void checkMaxMemory(int64_t length);
+
   std::pair<Number, size_t> callSeq(UID id, const Number &arg);
 
   size_t callPrg(UID id, int64_t start, Memory &mem);
