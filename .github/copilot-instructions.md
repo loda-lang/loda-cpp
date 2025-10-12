@@ -110,6 +110,11 @@ Automated formula generation from LODA programs is used to find closed-form or r
 6. Run the fast test suite: `./loda test-fast` to verify correctness.
 7. If static code optimizations are possible for the new operation, extend [eval/optimizer.cpp](../src/eval/optimizer.cpp). Add relevant `.asm` test files to `tests/optimizer`.
 
+### Extending the Optimizer
+
+1. Extend the `Optimizer` class in [eval/optimizer.cpp](../src/eval/optimizer.cpp).
+2. Ad test files in the `tests/optimizer/` folder.
+
 ### Adding Tests
 
 Add test methods to the [Test](../src/cmd/test.hpp) class and implement in [cmd/test.cpp](../src/cmd/test.cpp). For most common tasks, it suffices to add corresponding test data in the `tests` folder and execute the existing tests.
@@ -126,6 +131,7 @@ The project has minimal external dependencies:
 
 - Make minimal, focused changes and match the style of existing code.
 - When adding, removing, or moving source files, update both the [general Makefile](../src/Makefile) and the [Windows-specific Makefile](../src/Makefile.windows.mk).
+- Avoid code duplication. Extract common functionality into local helper functions or shared utility functions.
 - Prefer RAII for resource management; avoid manual memory allocation.
 - Handle errors consistently: use either logging with error handling or throw runtime exceptions for each class.
 - Optimize for performance and memory safety, especially in mining and evaluation code. Prefer algorithmic optimizations over low-level tuning.

@@ -19,6 +19,11 @@ bool convertToLean(Expression& expr, const Formula& f) {
     case Expression::Type::VECTOR:
     case Expression::Type::FACTORIAL:
       return false;
+    case Expression::Type::FUNCTION:
+      // if (expr.name == "min" || expr.name == "max") {
+      //  break;
+      // }
+      return false;
     case Expression::Type::EQUAL:
     case Expression::Type::NOT_EQUAL:
     case Expression::Type::LESS_EQUAL:
