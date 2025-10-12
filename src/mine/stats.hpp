@@ -77,6 +77,8 @@ class Stats {
   UIDSet has_loop;
   UIDSet has_formula;
   UIDSet has_indirect;
+  UIDSet supports_pari;
+  UIDSet supports_lean;
   Blocks blocks;
 
  private:
