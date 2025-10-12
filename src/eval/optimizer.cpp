@@ -841,13 +841,19 @@ bool Optimizer::collapseMovChains(Program &p) const {
   // Detect shift patterns in sequences of mov operations and replace with rol/ror
   // Left shift: mov $i,$i+1; mov $i+1,$i+2; ... => rol $i,length; mov $end,$end+1
   // Right shift: mov $i,$i-1; mov $i-1,$i-2; ... => mov $temp,$start; ror $start,length; mov $start,$temp
+  
+  // Helper lambda to check if an operation is a MOV with DIRECT operands
+  auto isDirectMov = [](const Operation &op) {
+    return op.type == Operation::Type::MOV &&
+           op.target.type == Operand::Type::DIRECT &&
+           op.source.type == Operand::Type::DIRECT;
+  };
+  
   bool changed = false;
   
   for (size_t i = 0; i + 1 < p.ops.size(); i++) {
     // Check if we have a MOV operation with DIRECT operands
-    if (p.ops[i].type != Operation::Type::MOV ||
-        p.ops[i].target.type != Operand::Type::DIRECT ||
-        p.ops[i].source.type != Operand::Type::DIRECT) {
+    if (!isDirectMov(p.ops[i])) {
       continue;
     }
     
@@ -863,12 +869,9 @@ bool Optimizer::collapseMovChains(Program &p) const {
     // Count consecutive shift operations
     size_t shift_count = 1;
     int64_t last_target = first_target;
-    int64_t last_source = first_source;
     
     for (size_t j = i + 1; j < p.ops.size(); j++) {
-      if (p.ops[j].type != Operation::Type::MOV ||
-          p.ops[j].target.type != Operand::Type::DIRECT ||
-          p.ops[j].source.type != Operand::Type::DIRECT) {
+      if (!isDirectMov(p.ops[j])) {
         break;
       }
       
@@ -877,10 +880,9 @@ bool Optimizer::collapseMovChains(Program &p) const {
       
       // Check if this continues the shift chain
       if (curr_target == last_target + direction &&
-          curr_source == last_source + direction) {
+          curr_source == curr_target + direction) {
         shift_count++;
         last_target = curr_target;
-        last_source = curr_source;
       } else {
         break;
       }
@@ -895,6 +897,7 @@ bool Optimizer::collapseMovChains(Program &p) const {
       // For left rotation (direction == 1): cells go from first_target to last_target
       // For right rotation (direction == -1): cells go from last_source to first_source
       int64_t start_cell, end_cell, length;
+      int64_t last_source = last_target + direction;
       
       if (direction == 1) {
         // Left shift: mov $3,$4; mov $4,$5; ... 
@@ -931,8 +934,8 @@ bool Optimizer::collapseMovChains(Program &p) const {
       }
       // For right rotation: add save/restore around ror
       else {
-        // Find a temporary cell (use start_cell - 1 or end_cell + 1)
-        int64_t temp_cell = (start_cell > 0) ? start_cell - 1 : end_cell + 1;
+        // Find a temporary cell using getLargestDirectMemoryCell
+        int64_t temp_cell = ProgramUtil::getLargestDirectMemoryCell(p) + 1;
         
         // Replace first operation with save operation
         p.ops[i] = Operation(
