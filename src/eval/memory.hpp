@@ -23,6 +23,12 @@ class Memory {
 
   void clear(int64_t start, int64_t length);
 
+  void fill(int64_t start, int64_t length);
+
+  void rotateLeft(int64_t start, int64_t length);
+
+  void rotateRight(int64_t start, int64_t length);
+
   Memory fragment(int64_t start, int64_t length) const;
 
   size_t approximate_size() const;

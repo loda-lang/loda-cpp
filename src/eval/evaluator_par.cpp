@@ -79,6 +79,9 @@ bool PartialEvaluator::doPartialEval(Program &p, size_t op_index) {
       return false;
     }
     case Operation::Type::CLR:
+    case Operation::Type::FIL:
+    case Operation::Type::ROL:
+    case Operation::Type::ROR:
     case Operation::Type::PRG: {
       values.clear();
       return false;

@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-const std::array<Operation::Type, 34> Operation::Types = {
+const std::array<Operation::Type, 37> Operation::Types = {
     Operation::Type::NOP, Operation::Type::MOV, Operation::Type::ADD,
     Operation::Type::SUB, Operation::Type::TRN, Operation::Type::MUL,
     Operation::Type::DIV, Operation::Type::DIF, Operation::Type::DIR,
@@ -13,7 +13,8 @@ const std::array<Operation::Type, 34> Operation::Types = {
     Operation::Type::LEQ, Operation::Type::GEQ, Operation::Type::MIN,
     Operation::Type::MAX, Operation::Type::BAN, Operation::Type::BOR,
     Operation::Type::BXO, Operation::Type::LPB, Operation::Type::LPE,
-    Operation::Type::CLR, Operation::Type::SEQ, Operation::Type::PRG,
+    Operation::Type::CLR, Operation::Type::FIL, Operation::Type::ROL,
+    Operation::Type::ROR, Operation::Type::SEQ, Operation::Type::PRG,
     Operation::Type::DBG};
 
 const Operation::Metadata& Operation::Metadata::get(Type t) {
@@ -79,6 +80,12 @@ const Operation::Metadata& Operation::Metadata::get(Type t) {
       Operation::Type::LPE, "lpe", 0, true, false, false};
   static Operation::Metadata clr{
       Operation::Type::CLR, "clr", 2, true, false, true};
+  static Operation::Metadata fil{
+      Operation::Type::FIL, "fil", 2, true, false, true};
+  static Operation::Metadata rol{
+      Operation::Type::ROL, "rol", 2, true, false, true};
+  static Operation::Metadata ror{
+      Operation::Type::ROR, "ror", 2, true, false, true};
   static Operation::Metadata seq{
       Operation::Type::SEQ, "seq", 2, true, true, true};
   static Operation::Metadata prg{
@@ -148,6 +155,12 @@ const Operation::Metadata& Operation::Metadata::get(Type t) {
       return lpe;
     case Operation::Type::CLR:
       return clr;
+    case Operation::Type::FIL:
+      return fil;
+    case Operation::Type::ROL:
+      return rol;
+    case Operation::Type::ROR:
+      return ror;
     case Operation::Type::SEQ:
       return seq;
     case Operation::Type::PRG:
