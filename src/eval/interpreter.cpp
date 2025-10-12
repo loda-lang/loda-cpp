@@ -194,10 +194,7 @@ size_t Interpreter::run(const Program& p, Memory& mem) {
         if (needs_frags) {
           length = get(op.source, mem).asInt();
           start = get(op.target, mem, true).asInt();
-          if (length > settings.max_memory && settings.max_memory >= 0) {
-            throw std::runtime_error("Maximum memory exceeded: " +
-                                     std::to_string(length));
-          }
+          checkMaxMemory(length);
           frag = mem.fragment(start, length);
           frag_stack.push(frag);
           frag_length_stack.push(length);
@@ -267,18 +264,21 @@ size_t Interpreter::run(const Program& p, Memory& mem) {
       case Operation::Type::FIL: {
         length = get(op.source, mem).asInt();
         start = get(op.target, mem, true).asInt();
+        checkMaxMemory(length);
         mem.fill(start, length);
         break;
       }
       case Operation::Type::ROL: {
         length = get(op.source, mem).asInt();
         start = get(op.target, mem, true).asInt();
+        checkMaxMemory(length);
         mem.rotateLeft(start, length);
         break;
       }
       case Operation::Type::ROR: {
         length = get(op.source, mem).asInt();
         start = get(op.target, mem, true).asInt();
+        checkMaxMemory(length);
         mem.rotateRight(start, length);
         break;
       }
@@ -402,6 +402,13 @@ void Interpreter::set(const Operand& a, const Number& v, Memory& mem,
         "; last operation: " + ProgramUtil::operationToString(last_op));
   }
   mem.set(index, v);
+}
+
+void Interpreter::checkMaxMemory(int64_t length) {
+  if (length > settings.max_memory && settings.max_memory >= 0) {
+    throw std::runtime_error("Maximum memory exceeded: " +
+                             std::to_string(length));
+  }
 }
 
 std::pair<Number, size_t> Interpreter::callSeq(UID id, const Number& arg) {
