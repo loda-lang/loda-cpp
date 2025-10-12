@@ -7,15 +7,6 @@
 #include "seq/seq_util.hpp"
 
 bool convertToLean(Expression& expr, const Formula& f) {
-  // Precompute definitions to avoid recomputing for each function
-  static thread_local const Formula* lastFormula = nullptr;
-  static thread_local std::vector<std::string> cachedDefinitions;
-  
-  if (&f != lastFormula) {
-    cachedDefinitions = FormulaUtil::getDefinitions(f, Expression::Type::FUNCTION);
-    lastFormula = &f;
-  }
-  
   // Check children recursively
   for (auto& c : expr.children) {
     if (!convertToLean(c, f)) {
@@ -37,18 +28,10 @@ bool convertToLean(Expression& expr, const Formula& f) {
       break;
     }
     case Expression::Type::FUNCTION: {
-      // Allow built-in functions, but not user-defined functions
-      // Built-in functions are those that appear on the right-hand side
-      // but are not defined (don't appear on the left-hand side)
-      bool isUserDefined = std::find(cachedDefinitions.begin(), cachedDefinitions.end(), expr.name) != cachedDefinitions.end();
-      if (isUserDefined) {
-        return false;
+      if (expr.name == "min" || expr.name == "max") {
+        break;
       }
-      // Only support min / max functions for now
-      if (expr.name != "min" && expr.name != "max") {
-        return false;
-      }
-      break;
+      return false;
     }
     case Expression::Type::POWER:
       // Support only non-negative constants as exponents
