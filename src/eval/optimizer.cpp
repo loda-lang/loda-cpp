@@ -839,110 +839,89 @@ bool Optimizer::pullUpMov(Program &p) const {
 
 bool Optimizer::collapseMovChains(Program &p) const {
   // Detect rotation patterns in sequences of mov operations
-  // Left rotation: mov $3,$4; mov $4,$5; mov $5,$6; ... => rol $3,n
-  // Right rotation: mov $5,$4; mov $4,$3; mov $3,$2; ... => ror $start,n
+  // Left rotation: mov $temp,$start; mov $start,$start+1; ...; mov $end,$temp => rol $start,length
+  // Right rotation: mov $temp,$end; mov $end,$end-1; ...; mov $start,$temp => ror $start,length
   bool changed = false;
   
-  for (size_t i = 0; i + 1 < p.ops.size(); i++) {
-    // Check if we have at least 2 consecutive MOV operations
-    if (p.ops[i].type != Operation::Type::MOV) {
+  for (size_t i = 0; i + 2 < p.ops.size(); i++) {
+    if (p.ops[i].type != Operation::Type::MOV ||
+        p.ops[i].target.type != Operand::Type::DIRECT ||
+        p.ops[i].source.type != Operand::Type::DIRECT) {
       continue;
     }
     
-    // Count how many consecutive MOV operations form a chain
-    size_t chain_length = 1;
-    bool is_left_rotation = false;
-    bool is_right_rotation = false;
-    int64_t start_cell = -1;
-    int64_t end_cell = -1;
+    const auto &save_op = p.ops[i];
+    int64_t temp_cell = save_op.target.value.asInt();
+    int64_t saved_cell = save_op.source.value.asInt();
     
-    // Check for left rotation pattern: mov $i,$i+1
-    if (p.ops[i].target.type == Operand::Type::DIRECT &&
-        p.ops[i].source.type == Operand::Type::DIRECT) {
-      int64_t target_val = p.ops[i].target.value.asInt();
-      int64_t source_val = p.ops[i].source.value.asInt();
-      
-      if (source_val == target_val + 1) {
-        is_left_rotation = true;
-        start_cell = target_val;
-        
-        // Continue checking subsequent operations
-        for (size_t j = i + 1; j < p.ops.size(); j++) {
-          if (p.ops[j].type != Operation::Type::MOV ||
-              p.ops[j].target.type != Operand::Type::DIRECT ||
-              p.ops[j].source.type != Operand::Type::DIRECT) {
-            break;
-          }
-          // Check if this continues the chain
-          int64_t curr_target = p.ops[j].target.value.asInt();
-          int64_t curr_source = p.ops[j].source.value.asInt();
-          int64_t prev_target = p.ops[j - 1].target.value.asInt();
-          int64_t prev_source = p.ops[j - 1].source.value.asInt();
-          
-          if (curr_target == prev_target + 1 && curr_source == prev_source + 1) {
-            chain_length++;
-          } else {
-            break;
-          }
-        }
-      }
-      // Check for right rotation pattern: mov $i,$i-1
-      else if (source_val == target_val - 1) {
-        is_right_rotation = true;
-        end_cell = target_val;  // target of the first MOV
-        
-        // Continue checking subsequent operations
-        for (size_t j = i + 1; j < p.ops.size(); j++) {
-          if (p.ops[j].type != Operation::Type::MOV ||
-              p.ops[j].target.type != Operand::Type::DIRECT ||
-              p.ops[j].source.type != Operand::Type::DIRECT) {
-            break;
-          }
-          // Check if this continues the chain
-          int64_t curr_target = p.ops[j].target.value.asInt();
-          int64_t curr_source = p.ops[j].source.value.asInt();
-          int64_t prev_target = p.ops[j - 1].target.value.asInt();
-          int64_t prev_source = p.ops[j - 1].source.value.asInt();
-          
-          if (curr_target == prev_target - 1 && curr_source == prev_source - 1) {
-            chain_length++;
-            start_cell = curr_source;  // source of the last MOV in chain
-          } else {
-            break;
-          }
-        }
-        // If we didn't find additional MOVs, the start is the source of the first MOV
-        if (chain_length == 1) {
-          start_cell = source_val;
-        }
-      }
+    // Try to detect a rotation pattern starting from i+1
+    // Pattern: shift operations followed by restore operation
+    
+    // Check if next operation is a MOV with DIRECT operands
+    if (p.ops[i + 1].type != Operation::Type::MOV ||
+        p.ops[i + 1].target.type != Operand::Type::DIRECT ||
+        p.ops[i + 1].source.type != Operand::Type::DIRECT) {
+      continue;
     }
     
-    // We need at least 2 MOV operations to form a rotation
-    if (chain_length >= 2 && (is_left_rotation || is_right_rotation)) {
-      // Replace the chain with a rotation operation
-      Operation::Type rot_type = is_left_rotation ? 
-          Operation::Type::ROL : Operation::Type::ROR;
-      
-      // For left rotation: length = chain_length
-      // For right rotation: length = end_cell - start_cell + 1
-      int64_t length;
-      if (is_left_rotation) {
-        length = chain_length;
-      } else {
-        length = end_cell - start_cell + 1;
+    int64_t first_target = p.ops[i + 1].target.value.asInt();
+    int64_t first_source = p.ops[i + 1].source.value.asInt();
+    int64_t direction = first_source - first_target;  // +1 for left, -1 for right
+    
+    if (direction != 1 && direction != -1) {
+      continue;
+    }
+    
+    // The saved cell should match the first shift target for a valid rotation
+    if (saved_cell != first_target) {
+      continue;
+    }
+    
+    // Count consecutive shift operations
+    size_t shift_count = 1;
+    int64_t last_target = first_target;
+    int64_t last_source = first_source;
+    
+    for (size_t j = i + 2; j < p.ops.size(); j++) {
+      if (p.ops[j].type != Operation::Type::MOV ||
+          p.ops[j].target.type != Operand::Type::DIRECT ||
+          p.ops[j].source.type != Operand::Type::DIRECT) {
+        break;
       }
       
-      p.ops[i] = Operation(
-          rot_type,
-          Operand(Operand::Type::DIRECT, Number(start_cell)),
-          Operand(Operand::Type::CONSTANT, Number(length))
-      );
+      int64_t curr_target = p.ops[j].target.value.asInt();
+      int64_t curr_source = p.ops[j].source.value.asInt();
       
-      // Remove the remaining MOV operations in the chain
-      p.ops.erase(p.ops.begin() + i + 1, p.ops.begin() + i + chain_length);
-      
-      changed = true;
+      // Check if this is the restore operation (target == last shift's source, source == temp)
+      if (curr_target == last_source && curr_source == temp_cell) {
+        // Valid rotation pattern found!
+        int64_t start_cell = (direction == 1) ? first_target : last_source;
+        int64_t length = shift_count + 1;  // shifts + 1
+        Operation::Type rot_type = (direction == 1) ? 
+            Operation::Type::ROL : Operation::Type::ROR;
+        
+        // Replace with rotation operation
+        p.ops[i] = Operation(
+            rot_type,
+            Operand(Operand::Type::DIRECT, Number(start_cell)),
+            Operand(Operand::Type::CONSTANT, Number(length))
+        );
+        
+        // Remove all the shift operations and restore operation
+        p.ops.erase(p.ops.begin() + i + 1, p.ops.begin() + i + shift_count + 2);
+        
+        changed = true;
+        break;  // Pattern found, move to next position
+      }
+      // Check if this continues the shift chain
+      else if (curr_target == last_target + direction &&
+               curr_source == last_source + direction) {
+        shift_count++;
+        last_target = curr_target;
+        last_source = curr_source;
+      } else {
+        break;  // Not a valid pattern
+      }
     }
   }
   

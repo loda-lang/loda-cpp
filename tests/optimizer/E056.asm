@@ -1,7 +1,9 @@
 ; in
+mov $0,$5
 mov $5,$4
 mov $4,$3
 mov $3,$2
 mov $2,$1
+mov $1,$0
 ; out
 ror $1,5
