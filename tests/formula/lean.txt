@@ -6,6 +6,7 @@ A000290: def a (n : Int) : Int := n^2
 A001093: def a (n : Int) : Int := n^3+1
 A001105: def a (n : Int) : Int := 2*n^2
 A001539: def a (n : Int) : Int := (4*n+2)^2-1
+A004273: def a (n : Int) : Int := max(2*n-1,0)
 A004277: def a (n : Int) : Int := max(2*n,1)
 A004964: def a (n : Int) : Int := Bool.toInt (0!=n)+76*n
 A004966: def a (n : Int) : Int := Bool.toInt (n>=1)+199*n
