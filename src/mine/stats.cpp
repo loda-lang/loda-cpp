@@ -10,6 +10,7 @@
 #include "form/lean.hpp"
 #include "form/pari.hpp"
 #include "lang/analyzer.hpp"
+#include "lang/comments.hpp"
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
 #include "seq/managed_seq.hpp"
@@ -464,15 +465,18 @@ void Stats::updateProgramStats(UID id, const Program &program,
   if (with_loop) {
     has_loop.insert(id);
   }
-  if (with_formula) {
-    has_formula.insert(id);
-  }
   if (with_indirect) {
     has_indirect.insert(id);
   }
   
+  // Derive formula flag the same way as in mine_manager (check for formula comment)
+  bool has_formula_comment = !Comments::getCommentField(program, Comments::PREFIX_FORMULA).empty();
+  if (has_formula_comment) {
+    has_formula.insert(id);
+  }
+  
   // Check if PARI and Lean formula generation is supported
-  if (with_formula) {
+  if (has_formula_comment) {
     FormulaGenerator generator;
     Formula formula;
     PariFormula pari_formula;
