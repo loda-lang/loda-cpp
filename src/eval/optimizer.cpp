@@ -838,42 +838,25 @@ bool Optimizer::pullUpMov(Program &p) const {
 }
 
 bool Optimizer::collapseMovChains(Program &p) const {
-  // Detect rotation patterns in sequences of mov operations
-  // Left rotation: mov $temp,$start; mov $start,$start+1; ...; mov $end,$temp => rol $start,length
-  // Right rotation: mov $temp,$end; mov $end,$end-1; ...; mov $start,$temp => ror $start,length
+  // Detect shift patterns in sequences of mov operations and replace with rol/ror
+  // Left shift: mov $i,$i+1; mov $i+1,$i+2; ... => rol $i,length; mov $end,$end+1
+  // Right shift: mov $i,$i-1; mov $i-1,$i-2; ... => mov $temp,$start; ror $start,length; mov $start,$temp
   bool changed = false;
   
-  for (size_t i = 0; i + 2 < p.ops.size(); i++) {
+  for (size_t i = 0; i + 1 < p.ops.size(); i++) {
+    // Check if we have a MOV operation with DIRECT operands
     if (p.ops[i].type != Operation::Type::MOV ||
         p.ops[i].target.type != Operand::Type::DIRECT ||
         p.ops[i].source.type != Operand::Type::DIRECT) {
       continue;
     }
     
-    const auto &save_op = p.ops[i];
-    int64_t temp_cell = save_op.target.value.asInt();
-    int64_t saved_cell = save_op.source.value.asInt();
-    
-    // Try to detect a rotation pattern starting from i+1
-    // Pattern: shift operations followed by restore operation
-    
-    // Check if next operation is a MOV with DIRECT operands
-    if (p.ops[i + 1].type != Operation::Type::MOV ||
-        p.ops[i + 1].target.type != Operand::Type::DIRECT ||
-        p.ops[i + 1].source.type != Operand::Type::DIRECT) {
-      continue;
-    }
-    
-    int64_t first_target = p.ops[i + 1].target.value.asInt();
-    int64_t first_source = p.ops[i + 1].source.value.asInt();
+    const auto &first_op = p.ops[i];
+    int64_t first_target = first_op.target.value.asInt();
+    int64_t first_source = first_op.source.value.asInt();
     int64_t direction = first_source - first_target;  // +1 for left, -1 for right
     
     if (direction != 1 && direction != -1) {
-      continue;
-    }
-    
-    // The saved cell should match the first shift target for a valid rotation
-    if (saved_cell != first_target) {
       continue;
     }
     
@@ -882,7 +865,7 @@ bool Optimizer::collapseMovChains(Program &p) const {
     int64_t last_target = first_target;
     int64_t last_source = first_source;
     
-    for (size_t j = i + 2; j < p.ops.size(); j++) {
+    for (size_t j = i + 1; j < p.ops.size(); j++) {
       if (p.ops[j].type != Operation::Type::MOV ||
           p.ops[j].target.type != Operand::Type::DIRECT ||
           p.ops[j].source.type != Operand::Type::DIRECT) {
@@ -892,36 +875,91 @@ bool Optimizer::collapseMovChains(Program &p) const {
       int64_t curr_target = p.ops[j].target.value.asInt();
       int64_t curr_source = p.ops[j].source.value.asInt();
       
-      // Check if this is the restore operation (target == last shift's source, source == temp)
-      if (curr_target == last_source && curr_source == temp_cell) {
-        // Valid rotation pattern found!
-        int64_t start_cell = (direction == 1) ? first_target : last_source;
-        int64_t length = shift_count + 1;  // shifts + 1
-        Operation::Type rot_type = (direction == 1) ? 
-            Operation::Type::ROL : Operation::Type::ROR;
-        
-        // Replace with rotation operation
+      // Check if this continues the shift chain
+      if (curr_target == last_target + direction &&
+          curr_source == last_source + direction) {
+        shift_count++;
+        last_target = curr_target;
+        last_source = curr_source;
+      } else {
+        break;
+      }
+    }
+    
+    // We need at least 2 MOV operations to form a shift pattern worth optimizing
+    if (shift_count >= 2) {
+      // Determine rotation parameters
+      Operation::Type rot_type = (direction == 1) ? 
+          Operation::Type::ROL : Operation::Type::ROR;
+      
+      // For left rotation (direction == 1): cells go from first_target to last_target
+      // For right rotation (direction == -1): cells go from last_source to first_source
+      int64_t start_cell, end_cell, length;
+      
+      if (direction == 1) {
+        // Left shift: mov $3,$4; mov $4,$5; ... 
+        // Rotation covers first_target to last_target (shift_count cells)
+        start_cell = first_target;
+        end_cell = last_target;
+        length = shift_count;
+      } else {
+        // Right shift: mov $5,$4; mov $4,$3; ... 
+        // Rotation covers last_source to first_source (shift_count + 1 cells)
+        start_cell = last_source;
+        end_cell = first_target;
+        length = shift_count + 1;
+      }
+      
+      // For left rotation: replace with rol + auxiliary mov
+      if (direction == 1) {
+        // Replace first operation with rol
         p.ops[i] = Operation(
             rot_type,
             Operand(Operand::Type::DIRECT, Number(start_cell)),
             Operand(Operand::Type::CONSTANT, Number(length))
         );
         
-        // Remove all the shift operations and restore operation
-        p.ops.erase(p.ops.begin() + i + 1, p.ops.begin() + i + shift_count + 2);
+        // Remove the remaining shift operations
+        p.ops.erase(p.ops.begin() + i + 1, p.ops.begin() + i + shift_count);
         
-        changed = true;
-        break;  // Pattern found, move to next position
+        // Add auxiliary mov to fix the wrap-around
+        p.ops.insert(p.ops.begin() + i + 1, Operation(
+            Operation::Type::MOV,
+            Operand(Operand::Type::DIRECT, Number(end_cell)),
+            Operand(Operand::Type::DIRECT, Number(last_source))
+        ));
       }
-      // Check if this continues the shift chain
-      else if (curr_target == last_target + direction &&
-               curr_source == last_source + direction) {
-        shift_count++;
-        last_target = curr_target;
-        last_source = curr_source;
-      } else {
-        break;  // Not a valid pattern
+      // For right rotation: add save/restore around ror
+      else {
+        // Find a temporary cell (use start_cell - 1 or end_cell + 1)
+        int64_t temp_cell = (start_cell > 0) ? start_cell - 1 : end_cell + 1;
+        
+        // Replace first operation with save operation
+        p.ops[i] = Operation(
+            Operation::Type::MOV,
+            Operand(Operand::Type::DIRECT, Number(temp_cell)),
+            Operand(Operand::Type::DIRECT, Number(start_cell))
+        );
+        
+        // Remove the remaining shift operations
+        p.ops.erase(p.ops.begin() + i + 1, p.ops.begin() + i + shift_count);
+        
+        // Add ror operation
+        p.ops.insert(p.ops.begin() + i + 1, Operation(
+            rot_type,
+            Operand(Operand::Type::DIRECT, Number(start_cell)),
+            Operand(Operand::Type::CONSTANT, Number(length))
+        ));
+        
+        // Add restore operation
+        p.ops.insert(p.ops.begin() + i + 2, Operation(
+            Operation::Type::MOV,
+            Operand(Operand::Type::DIRECT, Number(start_cell)),
+            Operand(Operand::Type::DIRECT, Number(temp_cell))
+        ));
       }
+      
+      changed = true;
     }
   }
   
