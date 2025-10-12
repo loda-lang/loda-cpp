@@ -65,13 +65,16 @@ class Operation {
     LPB,     // loop begin
     LPE,     // loop end
     CLR,     // clear
+    FIL,     // fill
+    ROL,     // rotate left
+    ROR,     // rotate right
     SEQ,     // sequence
     PRG,     // program
     DBG,     // debug
     __COUNT  // number of operation types
   };
 
-  static const std::array<Type, 34> Types;
+  static const std::array<Type, 37> Types;
 
   class Metadata {
    public:

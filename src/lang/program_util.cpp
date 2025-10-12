@@ -50,7 +50,10 @@ bool ProgramUtil::isNop(const Operation &op) {
              op.source.value == Number::ZERO &&
              (op.type == Operation::Type::ADD ||
               op.type == Operation::Type::SUB ||
-              op.type == Operation::Type::CLR)) {
+              op.type == Operation::Type::CLR ||
+              op.type == Operation::Type::FIL ||
+              op.type == Operation::Type::ROL ||
+              op.type == Operation::Type::ROR)) {
     return true;
   } else if (op.source.type == Operand::Type::CONSTANT &&
              op.source.value == Number::ONE &&
@@ -59,7 +62,9 @@ bool ProgramUtil::isNop(const Operation &op) {
                op.type == Operation::Type::DIF ||
                op.type == Operation::Type::DIR ||
                op.type == Operation::Type::POW ||
-               op.type == Operation::Type::BIN))) {
+               op.type == Operation::Type::BIN ||
+               op.type == Operation::Type::ROL ||
+               op.type == Operation::Type::ROR))) {
     return true;
   }
   return false;
@@ -98,8 +103,9 @@ size_t ProgramUtil::numOps(const Program &p, Operand::Type type) {
 bool ProgramUtil::isArithmetic(Operation::Type t) {
   return (t != Operation::Type::NOP && t != Operation::Type::DBG &&
           t != Operation::Type::LPB && t != Operation::Type::LPE &&
-          t != Operation::Type::CLR && t != Operation::Type::SEQ &&
-          t != Operation::Type::PRG);
+          t != Operation::Type::CLR && t != Operation::Type::FIL &&
+          t != Operation::Type::ROL && t != Operation::Type::ROR &&
+          t != Operation::Type::SEQ && t != Operation::Type::PRG);
 }
 
 bool ProgramUtil::isCommutative(Operation::Type t) {
@@ -165,7 +171,9 @@ bool ProgramUtil::isReadingCell(const Operation &op, int64_t cell) {
 }
 
 bool ProgramUtil::isWritingRegion(Operation::Type t) {
-  return (t == Operation::Type::CLR || t == Operation::Type::PRG);
+  return (t == Operation::Type::CLR || t == Operation::Type::FIL ||
+          t == Operation::Type::ROL || t == Operation::Type::ROR ||
+          t == Operation::Type::PRG);
 }
 
 bool ProgramUtil::hasRegionOperation(const Program &p) {
@@ -227,7 +235,9 @@ bool ProgramUtil::getUsedMemoryCells(const Program &p,
         op.type == Operation::Type::PRG) {
       return false;
     }
-    if (op.type == Operation::Type::LPB || op.type == Operation::Type::CLR) {
+    if (op.type == Operation::Type::LPB || op.type == Operation::Type::CLR ||
+        op.type == Operation::Type::FIL || op.type == Operation::Type::ROL ||
+        op.type == Operation::Type::ROR) {
       if (op.source.type == Operand::Type::CONSTANT) {
         region_length = op.source.value.asInt();
       } else {
@@ -284,7 +294,8 @@ bool ProgramUtil::getUsedUninitializedCells(const Program &p,
       }
     }
     // check region operations
-    if (op.type == Operation::Type::CLR) {
+    if (op.type == Operation::Type::CLR || op.type == Operation::Type::FIL ||
+        op.type == Operation::Type::ROL || op.type == Operation::Type::ROR) {
       if (op.source.type == Operand::Type::CONSTANT) {
         // start of region (direct memory cell)
         const auto t = op.target.value.asInt();

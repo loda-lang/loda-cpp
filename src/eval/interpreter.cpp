@@ -124,6 +124,9 @@ Number Interpreter::calc(const Operation::Type type, const Number& target,
     case Operation::Type::LPB:
     case Operation::Type::LPE:
     case Operation::Type::CLR:
+    case Operation::Type::FIL:
+    case Operation::Type::ROL:
+    case Operation::Type::ROR:
     case Operation::Type::SEQ:
     case Operation::Type::PRG:
     case Operation::Type::__COUNT:
@@ -191,10 +194,7 @@ size_t Interpreter::run(const Program& p, Memory& mem) {
         if (needs_frags) {
           length = get(op.source, mem).asInt();
           start = get(op.target, mem, true).asInt();
-          if (length > settings.max_memory && settings.max_memory >= 0) {
-            throw std::runtime_error("Maximum memory exceeded: " +
-                                     std::to_string(length));
-          }
+          checkMaxMemory(length);
           frag = mem.fragment(start, length);
           frag_stack.push(frag);
           frag_length_stack.push(length);
@@ -259,6 +259,27 @@ size_t Interpreter::run(const Program& p, Memory& mem) {
         length = get(op.source, mem).asInt();
         start = get(op.target, mem, true).asInt();
         mem.clear(start, length);
+        break;
+      }
+      case Operation::Type::FIL: {
+        length = get(op.source, mem).asInt();
+        start = get(op.target, mem, true).asInt();
+        checkMaxMemory(length);
+        mem.fill(start, length);
+        break;
+      }
+      case Operation::Type::ROL: {
+        length = get(op.source, mem).asInt();
+        start = get(op.target, mem, true).asInt();
+        checkMaxMemory(length);
+        mem.rotateLeft(start, length);
+        break;
+      }
+      case Operation::Type::ROR: {
+        length = get(op.source, mem).asInt();
+        start = get(op.target, mem, true).asInt();
+        checkMaxMemory(length);
+        mem.rotateRight(start, length);
         break;
       }
       case Operation::Type::DBG: {
@@ -381,6 +402,13 @@ void Interpreter::set(const Operand& a, const Number& v, Memory& mem,
         "; last operation: " + ProgramUtil::operationToString(last_op));
   }
   mem.set(index, v);
+}
+
+void Interpreter::checkMaxMemory(int64_t length) {
+  if (length > settings.max_memory && settings.max_memory >= 0) {
+    throw std::runtime_error("Maximum memory exceeded: " +
+                             std::to_string(length));
+  }
 }
 
 std::pair<Number, size_t> Interpreter::callSeq(UID id, const Number& arg) {
