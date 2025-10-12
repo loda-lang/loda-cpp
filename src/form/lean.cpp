@@ -19,11 +19,6 @@ bool convertToLean(Expression& expr, const Formula& f) {
     case Expression::Type::VECTOR:
     case Expression::Type::FACTORIAL:
       return false;
-    case Expression::Type::FUNCTION:
-      // if (expr.name == "min" || expr.name == "max") {
-      //  break;
-      // }
-      return false;
     case Expression::Type::EQUAL:
     case Expression::Type::NOT_EQUAL:
     case Expression::Type::LESS_EQUAL:
@@ -49,17 +44,12 @@ bool convertToLean(Expression& expr, const Formula& f) {
       break;
     }
     case Expression::Type::POWER:
-      // Support only non-negative constants as exponents, or supported functions
-      if (expr.children.size() != 2) {
+      // Support only non-negative constants as exponents
+      if (expr.children.size() != 2 ||
+          expr.children[1].type != Expression::Type::CONSTANT ||
+          expr.children[1].value < Number::ZERO) {
         return false;
       }
-      // Check if exponent is a non-negative constant
-      if (expr.children[1].type == Expression::Type::CONSTANT) {
-        if (expr.children[1].value < Number::ZERO) {
-          return false;
-        }
-      }
-      // For non-constant exponents, they will be checked recursively below
       break;
     default:
       break;
