@@ -10,7 +10,6 @@
 #include "form/lean.hpp"
 #include "form/pari.hpp"
 #include "lang/analyzer.hpp"
-#include "lang/comments.hpp"
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
 #include "seq/managed_seq.hpp"
@@ -23,7 +22,7 @@
 const std::string Stats::CALL_GRAPH_HEADER("caller,callee");
 const std::string Stats::PROGRAMS_HEADER(
     "id,submitter,length,usages,inc_eval,log_eval,vir_eval,loop,formula,"
-    "indirect,pari,lean");
+    "pari,lean,indirect");
 const std::string Stats::STEPS_HEADER("total,min,max,runs");
 const std::string Stats::SUMMARY_HEADER(
     "num_sequences,num_programs,num_formulas");
@@ -161,13 +160,13 @@ void Stats::load(std::string path) {
         has_formula.insert(id);
       }
       if (reader.getIntegerField(9)) {
-        has_indirect.insert(id);
-      }
-      if (reader.getIntegerField(10)) {
         supports_pari.insert(id);
       }
-      if (reader.getIntegerField(11)) {
+      if (reader.getIntegerField(10)) {
         supports_lean.insert(id);
+      }
+      if (reader.getIntegerField(11)) {
+        has_indirect.insert(id);
       }
     }
     reader.close();
@@ -265,17 +264,17 @@ void Stats::save(std::string path) {
       const auto vireval = supports_vireval.exists(id);
       const auto loop_flag = has_loop.exists(id);
       const auto formula_flag = has_formula.exists(id);
-      const auto indirect_flag = has_indirect.exists(id);
       const auto pari_flag = supports_pari.exists(id);
       const auto lean_flag = supports_lean.exists(id);
+      const auto indirect_flag = has_indirect.exists(id);
       writer.writeRow({id.string(), std::to_string(program_submitter[id]),
                        std::to_string(program_lengths[id]),
                        std::to_string(program_usages[id]),
                        std::to_string(inceval), std::to_string(logeval),
                        std::to_string(vireval), std::to_string(loop_flag),
                        std::to_string(formula_flag),
-                       std::to_string(indirect_flag),
-                       std::to_string(pari_flag), std::to_string(lean_flag)});
+                       std::to_string(pari_flag), std::to_string(lean_flag),
+                       std::to_string(indirect_flag)});
     }
     writer.close();
   }
@@ -465,18 +464,15 @@ void Stats::updateProgramStats(UID id, const Program &program,
   if (with_loop) {
     has_loop.insert(id);
   }
+  if (with_formula) {
+    has_formula.insert(id);
+  }
   if (with_indirect) {
     has_indirect.insert(id);
   }
   
-  // Derive formula flag the same way as in mine_manager (check for formula comment)
-  bool has_formula_comment = !Comments::getCommentField(program, Comments::PREFIX_FORMULA).empty();
-  if (has_formula_comment) {
-    has_formula.insert(id);
-  }
-  
   // Check if PARI and Lean formula generation is supported
-  if (has_formula_comment) {
+  if (with_formula) {
     FormulaGenerator generator;
     Formula formula;
     PariFormula pari_formula;
