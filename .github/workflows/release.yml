@@ -125,12 +125,10 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
   build-windows-arm64:
     needs: create-release
-    runs-on: windows-2022
+    runs-on: windows-11-arm64
     steps:
       - uses: actions/checkout@v2
       - uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: amd64_arm64
       - name: Build
         run: cd src && nmake.exe /F Makefile.windows-arm64.mk loda LODA_PLATFORM=windows-arm64 LODA_VERSION=${{ needs.create-release.outputs.version }}
       - name: Upload
