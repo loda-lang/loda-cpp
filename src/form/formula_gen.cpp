@@ -388,11 +388,9 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   int64_t largest_used = 0;
   int64_t numCells;
   if (!ProgramUtil::getUsedMemoryCells(p, nullptr, largest_used, -1)) {
-    // If we can't determine used cells, fall back to direct cell method
-    numCells = ProgramUtil::getLargestDirectMemoryCell(p) + 1;
-  } else {
-    numCells = largest_used + 1;
+    return false;
   }
+  numCells = largest_used + 1;
   const bool useIncEval =
       incEval.init(p, true, true);  // skip input transformations and offset
 

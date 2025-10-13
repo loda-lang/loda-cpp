@@ -59,8 +59,6 @@ class ProgramUtil {
                                         std::set<int64_t> &uninitialized,
                                         size_t start_pos = 0);
 
-  static int64_t getLargestDirectMemoryCell(const Program &p);
-
   static bool swapDirectOperandCells(Program &p, int64_t cell1, int64_t cell2);
 
   static std::pair<int64_t, int64_t> getEnclosingLoop(const Program &p,

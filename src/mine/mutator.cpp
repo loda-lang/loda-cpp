@@ -37,6 +37,21 @@ int64_t getRandomPos(const Program &program) {
   return pos;
 }
 
+// Local helper function to get largest direct memory cell
+// This is the only place where using getLargestDirectMemoryCell() is allowed
+int64_t getLargestDirectMemoryCell(const Program &p) {
+  int64_t largest = 0;
+  for (const auto &op : p.ops) {
+    if (op.source.type == Operand::Type::DIRECT) {
+      largest = std::max<int64_t>(largest, op.source.value.asInt());
+    }
+    if (op.target.type == Operand::Type::DIRECT) {
+      largest = std::max<int64_t>(largest, op.target.value.asInt());
+    }
+  }
+  return largest;
+}
+
 void Mutator::mutateRandom(Program &program) {
   int64_t num_mutations, pos;
   size_t i;
@@ -45,7 +60,7 @@ void Mutator::mutateRandom(Program &program) {
   int64_t num_cells = 0;
   if (!ProgramUtil::getUsedMemoryCells(program, nullptr, num_cells, -1)) {
     // If we can't determine used cells, fall back to direct cell method
-    num_cells = ProgramUtil::getLargestDirectMemoryCell(program);
+    num_cells = getLargestDirectMemoryCell(program);
   }
   num_cells++;  // convert from largest index to count
   static const int64_t new_cells = 2;
