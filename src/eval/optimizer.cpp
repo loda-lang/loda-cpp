@@ -300,9 +300,8 @@ bool Optimizer::mergeRepeated(Program &p) const {
   Operation::Type merge_type = (p.ops[pos.first].type == Operation::Type::ADD)
                                    ? Operation::Type::MUL
                                    : Operation::Type::POW;
-  std::unordered_set<int64_t> used_cells;
   int64_t largest = 0;
-  if (!ProgramUtil::getUsedMemoryCells(p, used_cells, largest,
+  if (!ProgramUtil::getUsedMemoryCells(p, nullptr, largest,
                                        settings.max_memory)) {
     return false;
   }
@@ -539,7 +538,7 @@ bool Optimizer::reduceMemoryCells(Program &p) const {
   if (!canChangeVariableOrder(p)) {
     return false;
   }
-  if (!ProgramUtil::getUsedMemoryCells(p, used_cells, largest_used,
+  if (!ProgramUtil::getUsedMemoryCells(p, &used_cells, largest_used,
                                        settings.max_memory)) {
     return false;
   }
@@ -578,9 +577,8 @@ bool Optimizer::reduceMemoryCells(Program &p) const {
 }
 
 bool Optimizer::partialEval(Program &p) const {
-  std::unordered_set<int64_t> used_cells;
   int64_t largest_used = 0;
-  if (!ProgramUtil::getUsedMemoryCells(p, used_cells, largest_used,
+  if (!ProgramUtil::getUsedMemoryCells(p, nullptr, largest_used,
                                        settings.max_memory)) {
     return false;
   }
@@ -768,9 +766,8 @@ bool Optimizer::collapseArithmeticLoops(Program &p) const {
     const Operation::Type fold_type = (basic_type == Operation::Type::ADD)
                                           ? Operation::Type::MUL
                                           : Operation::Type::POW;
-    std::unordered_set<int64_t> used_cells;
     int64_t largest = 0;
-    if (!ProgramUtil::getUsedMemoryCells(p, used_cells, largest,
+    if (!ProgramUtil::getUsedMemoryCells(p, nullptr, largest,
                                          settings.max_memory)) {
       continue;
     }

@@ -225,7 +225,7 @@ bool ProgramUtil::areIndependent(const Operation &op1, const Operation &op2) {
 }
 
 bool ProgramUtil::getUsedMemoryCells(const Program &p,
-                                     std::unordered_set<int64_t> &used_cells,
+                                     std::unordered_set<int64_t> *used_cells,
                                      int64_t &largest_used,
                                      int64_t max_memory) {
   for (const auto &op : p.ops) {
@@ -240,6 +240,10 @@ bool ProgramUtil::getUsedMemoryCells(const Program &p,
         op.type == Operation::Type::ROR) {
       if (op.source.type == Operand::Type::CONSTANT) {
         region_length = op.source.value.asInt();
+        // Handle negative region lengths
+        if (region_length < 0) {
+          return false;
+        }
       } else {
         return false;
       }
@@ -249,18 +253,43 @@ bool ProgramUtil::getUsedMemoryCells(const Program &p,
     }
     if (op.source.type == Operand::Type::DIRECT) {
       for (int64_t i = 0; i < region_length; i++) {
-        used_cells.insert(op.source.value.asInt() + i);
+        if (used_cells) {
+          used_cells->insert(op.source.value.asInt() + i);
+        }
       }
     }
     if (op.target.type == Operand::Type::DIRECT) {
       for (int64_t i = 0; i < region_length; i++) {
-        used_cells.insert(op.target.value.asInt() + i);
+        if (used_cells) {
+          used_cells->insert(op.target.value.asInt() + i);
+        }
       }
     }
   }
-  const auto max = [](int64_t a, int64_t b) { return std::max(a, b); };
-  largest_used =
-      std::accumulate(used_cells.begin(), used_cells.end(), (int64_t)0, max);
+  if (used_cells) {
+    const auto max = [](int64_t a, int64_t b) { return std::max(a, b); };
+    largest_used =
+        std::accumulate(used_cells->begin(), used_cells->end(), (int64_t)0, max);
+  } else {
+    // If used_cells is null, we still need to compute largest_used
+    largest_used = 0;
+    for (const auto &op : p.ops) {
+      int64_t region_length = 1;
+      if (op.type == Operation::Type::LPB || op.type == Operation::Type::CLR ||
+          op.type == Operation::Type::FIL || op.type == Operation::Type::ROL ||
+          op.type == Operation::Type::ROR) {
+        if (op.source.type == Operand::Type::CONSTANT) {
+          region_length = op.source.value.asInt();
+        }
+      }
+      if (op.source.type == Operand::Type::DIRECT) {
+        largest_used = std::max(largest_used, op.source.value.asInt() + region_length - 1);
+      }
+      if (op.target.type == Operand::Type::DIRECT) {
+        largest_used = std::max(largest_used, op.target.value.asInt() + region_length - 1);
+      }
+    }
+  }
   return true;
 }
 

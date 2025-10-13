@@ -91,11 +91,9 @@ bool Fold::unfold(Program &main, int64_t pos) {
     shared_region_length = std::max<int64_t>(sub.getDirective("inputs"),
                                              sub.getDirective("outputs"));
   }
-  std::unordered_set<int64_t> used_cells;
   int64_t largest_used = 0;
-  if (!ProgramUtil::getUsedMemoryCells(main, used_cells, largest_used, -1)) {
-    // If we can't determine used cells, fall back to direct cell method
-    largest_used = ProgramUtil::getLargestDirectMemoryCell(main);
+  if (!ProgramUtil::getUsedMemoryCells(main, nullptr, largest_used, -1)) {
+    return false;
   }
   for (auto &op : sub.ops) {
     updateOperand(op.target, start, shared_region_length, largest_used);
@@ -183,13 +181,12 @@ bool Fold::fold(Program &main, Program sub, size_t subId,
   // get used memory cells
   std::unordered_set<int64_t> used_sub_cells;
   int64_t tmp_larged_used;
-  if (!ProgramUtil::getUsedMemoryCells(sub, used_sub_cells, tmp_larged_used,
+  if (!ProgramUtil::getUsedMemoryCells(sub, &used_sub_cells, tmp_larged_used,
                                        maxMemory)) {
     return false;
   }
-  std::unordered_set<int64_t> used_main_cells;
   int64_t largest_used_main = 0;
-  if (!ProgramUtil::getUsedMemoryCells(main, used_main_cells, largest_used_main,
+  if (!ProgramUtil::getUsedMemoryCells(main, nullptr, largest_used_main,
                                        maxMemory)) {
     return false;
   }

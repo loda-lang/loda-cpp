@@ -65,9 +65,8 @@ bool Extender::linear2(Program &p, line_t inverse, line_t target) {
 
 bool Extender::delta_one(Program &p, const bool sum) {
   Settings settings;
-  std::unordered_set<int64_t> used_cells;
   int64_t largest_used = 0;
-  if (!ProgramUtil::getUsedMemoryCells(p, used_cells, largest_used,
+  if (!ProgramUtil::getUsedMemoryCells(p, nullptr, largest_used,
                                        settings.max_memory)) {
     return false;
   }
