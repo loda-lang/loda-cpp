@@ -9,6 +9,7 @@
 
 * Simplify formulas by replacing simple references to recursive functions
 * Removed deprecated list generation functionality
+* Add Windows ARM64 build support
 
 ## v25.10.8
 
