@@ -89,7 +89,8 @@ std::string LeanFormula::toString() const {
   }
   bool usesParameter = mainExpr.contains(Expression::Type::PARAMETER);
   std::string arg = usesParameter ? "n" : "_";
-  buf << "def " << funcName << " (" << arg << " : Int) : Int := " << mainExpr;
+  buf << "def " << funcName << " (" << arg << " : Int) : Int := "
+      << mainExpr.toString(true);
   return buf.str();
 }
 

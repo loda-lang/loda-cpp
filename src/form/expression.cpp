@@ -288,7 +288,30 @@ void Expression::printExtracted(std::ostream& out, bool curry) const {
       out << name;
       break;
     case Expression::Type::FUNCTION:
-      printChildrenWrapped(out, curry, ",", name + "(", ")");
+      if (curry) {
+        // Curry-style notation: function name followed by space-separated args
+        // Remove trailing space from function name if present (e.g., "Bool.toInt ")
+        std::string funcName = name;
+        if (!funcName.empty() && funcName.back() == ' ') {
+          funcName.pop_back();
+        }
+        out << funcName;
+        for (size_t i = 0; i < children.size(); i++) {
+          out << " ";
+          // In Curry notation, wrap arguments in parens unless they're simple
+          bool needsParens = !(children[i].type == Expression::Type::CONSTANT ||
+                              children[i].type == Expression::Type::PARAMETER);
+          if (needsParens) {
+            out << "(";
+          }
+          children[i].print(out, curry, true, Expression::Type::FUNCTION);
+          if (needsParens) {
+            out << ")";
+          }
+        }
+      } else {
+        printChildrenWrapped(out, curry, ",", name + "(", ")");
+      }
       break;
     case Expression::Type::VECTOR:
       printChildrenWrapped(out, curry, ",", name + "[", "]");
@@ -404,7 +427,7 @@ void Expression::printChildren(std::ostream& out, bool curry,
     if (i > 0 && (op != "+" || !extracted.second)) {
       out << op;
     }
-    children[i].print(out, false, curry, type);
+    children[i].print(out, curry, false, type);
   }
 }
 
