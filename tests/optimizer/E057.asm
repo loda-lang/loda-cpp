@@ -1,9 +1,0 @@
-; in
-mov $0,99
-mov $5,$0
-mov $6,$0
-mov $7,$0
-; out
-mov $0,99
-mov $5,99
-fil $5,3

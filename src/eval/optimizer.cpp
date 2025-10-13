@@ -294,11 +294,10 @@ std::pair<int64_t, int64_t> findConsecutiveMovOps(const Program &p,
   for (size_t i = 0; i < p.ops.size(); i++) {
     const auto &op = p.ops[i];
     
-    // Check if this is a MOV with direct target and constant/direct source
+    // Check if this is a MOV with direct target and constant source
     if (op.type == Operation::Type::MOV &&
         op.target.type == Operand::Type::DIRECT &&
-        (op.source.type == Operand::Type::CONSTANT ||
-         op.source.type == Operand::Type::DIRECT)) {
+        op.source.type == Operand::Type::CONSTANT) {
       
       if (pos.first == -1) {
         // Start a new sequence
