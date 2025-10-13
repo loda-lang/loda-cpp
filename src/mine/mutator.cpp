@@ -42,7 +42,13 @@ void Mutator::mutateRandom(Program &program) {
   size_t i;
 
   // get number of used memory cells
-  int64_t num_cells = ProgramUtil::getLargestDirectMemoryCell(program) + 1;
+  std::unordered_set<int64_t> used_cells;
+  int64_t num_cells = 0;
+  if (!ProgramUtil::getUsedMemoryCells(program, used_cells, num_cells, -1)) {
+    // If we can't determine used cells, fall back to direct cell method
+    num_cells = ProgramUtil::getLargestDirectMemoryCell(program);
+  }
+  num_cells++;  // convert from largest index to count
   static const int64_t new_cells = 2;
 
   // calculate the number of mutations to apply

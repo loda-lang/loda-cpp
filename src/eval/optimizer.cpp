@@ -3,6 +3,7 @@
 #include <map>
 #include <set>
 #include <stack>
+#include <unordered_set>
 
 #include "eval/evaluator_par.hpp"
 #include "eval/interpreter.hpp"
@@ -299,7 +300,12 @@ bool Optimizer::mergeRepeated(Program &p) const {
   Operation::Type merge_type = (p.ops[pos.first].type == Operation::Type::ADD)
                                    ? Operation::Type::MUL
                                    : Operation::Type::POW;
-  auto largest = ProgramUtil::getLargestDirectMemoryCell(p);
+  std::unordered_set<int64_t> used_cells;
+  int64_t largest = 0;
+  if (!ProgramUtil::getUsedMemoryCells(p, used_cells, largest,
+                                       settings.max_memory)) {
+    return false;
+  }
   Operand tmp_cell(Operand::Type::DIRECT, largest + 1);
   Operand count(Operand::Type::CONSTANT, pos.second);
   p.ops[pos.first].type = Operation::Type::MOV;
@@ -762,7 +768,12 @@ bool Optimizer::collapseArithmeticLoops(Program &p) const {
     const Operation::Type fold_type = (basic_type == Operation::Type::ADD)
                                           ? Operation::Type::MUL
                                           : Operation::Type::POW;
-    auto largest = ProgramUtil::getLargestDirectMemoryCell(p);
+    std::unordered_set<int64_t> used_cells;
+    int64_t largest = 0;
+    if (!ProgramUtil::getUsedMemoryCells(p, used_cells, largest,
+                                         settings.max_memory)) {
+      continue;
+    }
     const Operand tmp_counter(Operand::Type::DIRECT, largest + 1);
     const Operand tmp_result(Operand::Type::DIRECT, largest + 2);
     p.ops[i] = Operation(Operation::Type::MOV, tmp_counter, loop_counter);
