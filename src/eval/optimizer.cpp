@@ -934,8 +934,15 @@ bool Optimizer::collapseMovChains(Program &p) const {
       }
       // For right rotation: add save/restore around ror
       else {
-        // Find a temporary cell using getLargestDirectMemoryCell
-        int64_t temp_cell = ProgramUtil::getLargestDirectMemoryCell(p) + 1;
+        // Find a temporary cell using getUsedMemoryCells
+        std::unordered_set<int64_t> used_cells;
+        int64_t largest_used = 0;
+        if (!ProgramUtil::getUsedMemoryCells(p, used_cells, largest_used,
+                                             settings.max_memory)) {
+          // Cannot determine used cells, skip optimization
+          continue;
+        }
+        int64_t temp_cell = largest_used + 1;
         
         // Replace first operation with save operation
         p.ops[i] = Operation(
