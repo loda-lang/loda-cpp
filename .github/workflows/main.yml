@@ -64,6 +64,15 @@ jobs:
         run: cd src && nmake.exe /F Makefile.windows.mk
       - name: Test
         run: ./loda.exe test
+  build-windows-arm64:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: amd64_arm64
+      - name: Build
+        run: cd src && nmake.exe /F Makefile.windows-arm64.mk
   code-coverage:
     runs-on: ubuntu-22.04
     steps:
