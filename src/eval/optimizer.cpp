@@ -343,17 +343,34 @@ bool Optimizer::mergeRepeated(Program &p) const {
   // First check for consecutive MOV operations that can be replaced with FIL
   auto mov_pos = findConsecutiveMovOps(p, 3);
   if (mov_pos.first != -1) {
-    if (Log::get().level == Log::Level::DEBUG) {
-      Log::get().debug("Merging consecutive MOV operations into FIL");
-    }
-    // Replace with FIL operation
-    // Keep the first MOV, replace second with FIL, erase the rest
+    const auto &first_mov = p.ops[mov_pos.first];
     Operand count(Operand::Type::CONSTANT, mov_pos.second);
-    p.ops[mov_pos.first + 1] = Operation(Operation::Type::FIL,
-                                          p.ops[mov_pos.first].target, count);
-    if (mov_pos.second > 2) {
-      p.ops.erase(p.ops.begin() + mov_pos.first + 2,
-                  p.ops.begin() + mov_pos.first + mov_pos.second);
+    
+    // Check if the constant value is zero - if so, use CLR instead of FIL
+    if (first_mov.source.type == Operand::Type::CONSTANT &&
+        first_mov.source.value == Number::ZERO) {
+      if (Log::get().level == Log::Level::DEBUG) {
+        Log::get().debug("Merging consecutive MOV 0 operations into CLR");
+      }
+      // Replace all MOVs with a single CLR operation
+      p.ops[mov_pos.first] = Operation(Operation::Type::CLR,
+                                        first_mov.target, count);
+      if (mov_pos.second > 1) {
+        p.ops.erase(p.ops.begin() + mov_pos.first + 1,
+                    p.ops.begin() + mov_pos.first + mov_pos.second);
+      }
+    } else {
+      if (Log::get().level == Log::Level::DEBUG) {
+        Log::get().debug("Merging consecutive MOV operations into FIL");
+      }
+      // Replace with FIL operation
+      // Keep the first MOV, replace second with FIL, erase the rest
+      p.ops[mov_pos.first + 1] = Operation(Operation::Type::FIL,
+                                            first_mov.target, count);
+      if (mov_pos.second > 2) {
+        p.ops.erase(p.ops.begin() + mov_pos.first + 2,
+                    p.ops.begin() + mov_pos.first + mov_pos.second);
+      }
     }
     return true;
   }
