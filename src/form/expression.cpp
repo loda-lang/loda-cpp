@@ -265,7 +265,7 @@ std::pair<Expression, bool> extractSign(const Expression& e) {
 
 void Expression::print(std::ostream& out, bool curry, bool isRoot,
                        Expression::Type parentType) const {
-  const bool brackets = needsBrackets(isRoot, parentType);
+  const bool brackets = needsBrackets(isRoot, parentType, curry);
   if (brackets) {
     out << "(";
   }
@@ -296,18 +296,10 @@ void Expression::printExtracted(std::ostream& out, bool curry) const {
           funcName.pop_back();
         }
         out << funcName;
+        // Print children with space separator for Curry notation
         for (size_t i = 0; i < children.size(); i++) {
           out << " ";
-          // In Curry notation, wrap arguments in parens unless they're simple
-          bool needsParens = !(children[i].type == Expression::Type::CONSTANT ||
-                              children[i].type == Expression::Type::PARAMETER);
-          if (needsParens) {
-            out << "(";
-          }
-          children[i].print(out, curry, true, Expression::Type::FUNCTION);
-          if (needsParens) {
-            out << ")";
-          }
+          children[i].print(out, curry, false, Expression::Type::FUNCTION);
         }
       } else {
         printChildrenWrapped(out, curry, ",", name + "(", ")");
@@ -357,7 +349,8 @@ void Expression::printExtracted(std::ostream& out, bool curry) const {
   }
 }
 
-bool Expression::needsBrackets(bool isRoot, Expression::Type parentType) const {
+bool Expression::needsBrackets(bool isRoot, Expression::Type parentType,
+                               bool curry) const {
   if (isRoot) {
     return false;
   }
@@ -370,6 +363,11 @@ bool Expression::needsBrackets(bool isRoot, Expression::Type parentType) const {
   }
   if (type == Expression::Type::FUNCTION ||
       parentType == Expression::Type::FUNCTION) {
+    // In Curry notation, function arguments need brackets unless they're simple
+    if (curry && parentType == Expression::Type::FUNCTION) {
+      return !(type == Expression::Type::CONSTANT ||
+               type == Expression::Type::PARAMETER);
+    }
     return false;
   }
   if (type == Expression::Type::VECTOR ||

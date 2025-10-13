@@ -110,5 +110,6 @@ class Expression {
                             const std::string& op, const std::string& prefix,
                             const std::string& suffix) const;
 
-  bool needsBrackets(bool isRoot, Expression::Type parentType) const;
+  bool needsBrackets(bool isRoot, Expression::Type parentType,
+                     bool curry = false) const;
 };
