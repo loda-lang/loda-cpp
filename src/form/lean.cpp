@@ -23,7 +23,7 @@ bool convertToLean(Expression& expr, const Formula& f) {
     case Expression::Type::NOT_EQUAL:
     case Expression::Type::LESS_EQUAL:
     case Expression::Type::GREATER_EQUAL: {
-      Expression f(Expression::Type::FUNCTION, "Bool.toInt ", {expr});
+      Expression f(Expression::Type::FUNCTION, "Bool.toInt", {expr});
       expr = f;
       break;
     }
@@ -89,8 +89,8 @@ std::string LeanFormula::toString() const {
   }
   bool usesParameter = mainExpr.contains(Expression::Type::PARAMETER);
   std::string arg = usesParameter ? "n" : "_";
-  buf << "def " << funcName << " (" << arg << " : Int) : Int := "
-      << mainExpr.toString(true);
+  buf << "def " << funcName << " (" << arg
+      << " : Int) : Int := " << mainExpr.toString(true);
   return buf.str();
 }
 

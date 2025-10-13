@@ -289,18 +289,7 @@ void Expression::printExtracted(std::ostream& out, bool curry) const {
       break;
     case Expression::Type::FUNCTION:
       if (curry) {
-        // Curry-style notation: function name followed by space-separated args
-        // Remove trailing space from function name if present (e.g., "Bool.toInt ")
-        std::string funcName = name;
-        if (!funcName.empty() && funcName.back() == ' ') {
-          funcName.pop_back();
-        }
-        out << funcName;
-        // Print children with space separator for Curry notation
-        for (size_t i = 0; i < children.size(); i++) {
-          out << " ";
-          children[i].print(out, curry, false, Expression::Type::FUNCTION);
-        }
+        printChildrenWrapped(out, curry, " ", name + " ", "");
       } else {
         printChildrenWrapped(out, curry, ",", name + "(", ")");
       }
@@ -354,6 +343,10 @@ bool Expression::needsBrackets(bool isRoot, Expression::Type parentType,
   if (isRoot) {
     return false;
   }
+  if (parentType == Expression::Type::FUNCTION) {
+    return curry && !(type == Expression::Type::CONSTANT ||
+                      type == Expression::Type::PARAMETER);
+  }
   if (type == Expression::Type::PARAMETER) {
     return false;
   }
@@ -361,13 +354,7 @@ bool Expression::needsBrackets(bool isRoot, Expression::Type parentType,
       (parentType == Expression::Type::SUM || (Number(-1) < value))) {
     return false;
   }
-  if (type == Expression::Type::FUNCTION ||
-      parentType == Expression::Type::FUNCTION) {
-    // In Curry notation, function arguments need brackets unless they're simple
-    if (curry && parentType == Expression::Type::FUNCTION) {
-      return !(type == Expression::Type::CONSTANT ||
-               type == Expression::Type::PARAMETER);
-    }
+  if (type == Expression::Type::FUNCTION) {
     return false;
   }
   if (type == Expression::Type::VECTOR ||
