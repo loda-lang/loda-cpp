@@ -888,33 +888,23 @@ bool Optimizer::collapseMovChains(Program &p) const {
       }
     }
     
-    // We need at least 2 MOV operations to form a shift pattern worth optimizing
-    if (shift_count >= 2) {
+    // We need at least 3 MOV operations to reduce the operation count
+    // (3 MOVs -> 2 ops for rol, or 4+ MOVs -> 3 ops for ror)
+    if (shift_count >= 3) {
       // Determine rotation parameters
       Operation::Type rot_type = (direction == 1) ? 
           Operation::Type::ROL : Operation::Type::ROR;
       
-      // For left rotation (direction == 1): cells go from first_target to last_target
-      // For right rotation (direction == -1): cells go from last_source to first_source
-      int64_t start_cell, end_cell, length;
       int64_t last_source = last_target + direction;
-      
-      if (direction == 1) {
-        // Left shift: mov $3,$4; mov $4,$5; ... 
-        // Rotation covers first_target to last_target (shift_count cells)
-        start_cell = first_target;
-        end_cell = last_target;
-        length = shift_count;
-      } else {
-        // Right shift: mov $5,$4; mov $4,$3; ... 
-        // Rotation covers last_source to first_source (shift_count + 1 cells)
-        start_cell = last_source;
-        end_cell = first_target;
-        length = shift_count + 1;
-      }
       
       // For left rotation: replace with rol + auxiliary mov
       if (direction == 1) {
+        // Left shift: mov $3,$4; mov $4,$5; ... 
+        // Rotation covers first_target to last_target (shift_count cells)
+        int64_t start_cell = first_target;
+        int64_t end_cell = last_target;
+        int64_t length = shift_count;
+        
         // Replace first operation with rol
         p.ops[i] = Operation(
             rot_type,
@@ -934,6 +924,11 @@ bool Optimizer::collapseMovChains(Program &p) const {
       }
       // For right rotation: add save/restore around ror
       else {
+        // Right shift: mov $5,$4; mov $4,$3; ... 
+        // Rotation covers last_source to first_source (shift_count + 1 cells)
+        int64_t start_cell = last_source;
+        int64_t length = shift_count + 1;
+        
         // Find a temporary cell using getUsedMemoryCells
         std::unordered_set<int64_t> used_cells;
         int64_t largest_used = 0;
