@@ -86,7 +86,7 @@ class Expression {
 
   friend std::ostream& operator<<(std::ostream& out, const Expression& e);
 
-  std::string toString() const;
+  std::string toString(bool curry = false) const;
 
   Type type;
   std::string name;
@@ -98,14 +98,16 @@ class Expression {
 
   int compareChildren(const Expression& e) const;
 
-  void print(std::ostream& out, bool isRoot, Expression::Type parentType) const;
+  void print(std::ostream& out, bool curry, bool isRoot,
+             Expression::Type parentType) const;
 
-  void printExtracted(std::ostream& out) const;
+  void printExtracted(std::ostream& out, bool curry) const;
 
-  void printChildren(std::ostream& out, const std::string& op) const;
+  void printChildren(std::ostream& out, bool curry,
+                     const std::string& op) const;
 
-  void printChildrenWrapped(std::ostream& out, const std::string& op,
-                            const std::string& prefix,
+  void printChildrenWrapped(std::ostream& out, bool curry,
+                            const std::string& op, const std::string& prefix,
                             const std::string& suffix) const;
 
   bool needsBrackets(bool isRoot, Expression::Type parentType) const;

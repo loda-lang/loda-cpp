@@ -213,13 +213,13 @@ void Expression::replaceType(Type currentType, const std::string& matchName,
 }
 
 std::ostream& operator<<(std::ostream& out, const Expression& e) {
-  e.print(out, true, Expression::Type::CONSTANT);
+  e.print(out, false, true, Expression::Type::CONSTANT);
   return out;
 }
 
-std::string Expression::toString() const {
+std::string Expression::toString(bool curry) const {
   std::stringstream ss;
-  ss << (*this);
+  print(ss, curry, true, Expression::Type::CONSTANT);
   return ss.str();
 }
 
@@ -263,7 +263,7 @@ std::pair<Expression, bool> extractSign(const Expression& e) {
   return result;
 }
 
-void Expression::print(std::ostream& out, bool isRoot,
+void Expression::print(std::ostream& out, bool curry, bool isRoot,
                        Expression::Type parentType) const {
   const bool brackets = needsBrackets(isRoot, parentType);
   if (brackets) {
@@ -273,13 +273,13 @@ void Expression::print(std::ostream& out, bool isRoot,
   if (extracted.second) {
     out << "-";
   }
-  extracted.first.printExtracted(out);
+  extracted.first.printExtracted(out, curry);
   if (brackets) {
     out << ")";
   }
 }
 
-void Expression::printExtracted(std::ostream& out) const {
+void Expression::printExtracted(std::ostream& out, bool curry) const {
   switch (type) {
     case Expression::Type::CONSTANT:
       out << value;
@@ -288,36 +288,36 @@ void Expression::printExtracted(std::ostream& out) const {
       out << name;
       break;
     case Expression::Type::FUNCTION:
-      printChildrenWrapped(out, ",", name + "(", ")");
+      printChildrenWrapped(out, curry, ",", name + "(", ")");
       break;
     case Expression::Type::VECTOR:
-      printChildrenWrapped(out, ",", name + "[", "]");
+      printChildrenWrapped(out, curry, ",", name + "[", "]");
       break;
     case Expression::Type::LOCAL:
-      printChildrenWrapped(out, "); ", "local(" + name + "=", "");
+      printChildrenWrapped(out, curry, "); ", "local(" + name + "=", "");
       break;
     case Expression::Type::SUM:
-      printChildren(out, "+");
+      printChildren(out, curry, "+");
       break;
     case Expression::Type::PRODUCT:
-      printChildren(out, "*");
+      printChildren(out, curry, "*");
       break;
     case Expression::Type::FRACTION:
-      printChildren(out, "/");
+      printChildren(out, curry, "/");
       break;
     case Expression::Type::POWER:
-      printChildren(out, "^");
+      printChildren(out, curry, "^");
       break;
     case Expression::Type::MODULUS:
-      printChildren(out, "%");
+      printChildren(out, curry, "%");
       break;
     case Expression::Type::IF:
       assertNumChildren(3);
-      printChildrenWrapped(out, ",", "if(n==", ")");
+      printChildrenWrapped(out, curry, ",", "if(n==", ")");
       break;
     case Expression::Type::FACTORIAL:
       assertNumChildren(1);
-      children[0].print(out, false, Expression::Type::FACTORIAL);
+      children[0].print(out, curry, false, Expression::Type::FACTORIAL);
       out << "!";
       break;
     case Type::EQUAL:
@@ -325,10 +325,11 @@ void Expression::printExtracted(std::ostream& out) const {
     case Type::LESS_EQUAL:
     case Type::GREATER_EQUAL:
       assertNumChildren(2);
-      printChildren(out, (type == Type::EQUAL        ? "=="
-                          : type == Type::NOT_EQUAL  ? "!="
-                          : type == Type::LESS_EQUAL ? "<="
-                                                     : ">="));
+      printChildren(out, curry,
+                    (type == Type::EQUAL        ? "=="
+                     : type == Type::NOT_EQUAL  ? "!="
+                     : type == Type::LESS_EQUAL ? "<="
+                                                : ">="));
       break;
   }
 }
@@ -396,20 +397,22 @@ bool Expression::needsBrackets(bool isRoot, Expression::Type parentType) const {
   }
 }
 
-void Expression::printChildren(std::ostream& out, const std::string& op) const {
+void Expression::printChildren(std::ostream& out, bool curry,
+                               const std::string& op) const {
   for (size_t i = 0; i < children.size(); i++) {
     auto extracted = extractSign(children[i]);
     if (i > 0 && (op != "+" || !extracted.second)) {
       out << op;
     }
-    children[i].print(out, false, type);
+    children[i].print(out, false, curry, type);
   }
 }
 
-void Expression::printChildrenWrapped(std::ostream& out, const std::string& op,
+void Expression::printChildrenWrapped(std::ostream& out, bool curry,
+                                      const std::string& op,
                                       const std::string& prefix,
                                       const std::string& suffix) const {
   out << prefix;
-  printChildren(out, op);
+  printChildren(out, curry, op);
   out << suffix;
 }
