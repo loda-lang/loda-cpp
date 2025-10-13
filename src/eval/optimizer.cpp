@@ -288,7 +288,93 @@ std::pair<int64_t, int64_t> findRepeatedOps(const Program &p,
   return pos;
 }
 
+std::pair<int64_t, int64_t> findConsecutiveMovOps(const Program &p,
+                                                  int64_t min_repetitions) {
+  std::pair<int64_t, int64_t> pos(-1, 0);  // start, length
+  for (size_t i = 0; i < p.ops.size(); i++) {
+    const auto &op = p.ops[i];
+    
+    // Check if this is a MOV with direct target and constant source
+    if (op.type == Operation::Type::MOV &&
+        op.target.type == Operand::Type::DIRECT &&
+        op.source.type == Operand::Type::CONSTANT) {
+      
+      if (pos.first == -1) {
+        // Start a new sequence
+        pos.first = i;
+        pos.second = 1;
+      } else {
+        // Check if this continues the sequence
+        const auto &first_op = p.ops[pos.first];
+        const auto &prev_op = p.ops[i - 1];
+        
+        // Must have same source value and consecutive target cells
+        if (op.source == first_op.source &&
+            op.target.value.asInt() == prev_op.target.value.asInt() + 1) {
+          pos.second++;
+        } else {
+          // Sequence ended
+          if (pos.second >= min_repetitions) {
+            return pos;
+          }
+          // Try starting a new sequence from this operation
+          pos.first = i;
+          pos.second = 1;
+        }
+      }
+    } else {
+      // Not a MOV operation, check if we have a valid sequence
+      if (pos.first != -1 && pos.second >= min_repetitions) {
+        return pos;
+      }
+      pos.first = -1;
+      pos.second = 0;
+    }
+  }
+  
+  // Final check
+  if (pos.second < min_repetitions) {
+    pos.first = -1;
+  }
+  return pos;
+}
+
 bool Optimizer::mergeRepeated(Program &p) const {
+  // First check for consecutive MOV operations that can be replaced with FIL
+  auto mov_pos = findConsecutiveMovOps(p, 3);
+  if (mov_pos.first != -1) {
+    const auto &first_mov = p.ops[mov_pos.first];
+    Operand count(Operand::Type::CONSTANT, mov_pos.second);
+    
+    // Check if the constant value is zero - if so, use CLR instead of FIL
+    bool use_clr = (first_mov.source.type == Operand::Type::CONSTANT &&
+                    first_mov.source.value == Number::ZERO);
+    
+    if (Log::get().level == Log::Level::DEBUG) {
+      Log::get().debug(use_clr ? "Merging consecutive MOV 0 operations into CLR"
+                               : "Merging consecutive MOV operations into FIL");
+    }
+    
+    if (use_clr) {
+      // Replace all MOVs with a single CLR operation
+      p.ops[mov_pos.first] = Operation(Operation::Type::CLR,
+                                        first_mov.target, count);
+    } else {
+      // Replace with FIL operation: keep first MOV, replace second with FIL
+      p.ops[mov_pos.first + 1] = Operation(Operation::Type::FIL,
+                                            first_mov.target, count);
+    }
+    
+    // Erase remaining operations
+    int erase_start = mov_pos.first + (use_clr ? 1 : 2);
+    if (mov_pos.second > (use_clr ? 1 : 2)) {
+      p.ops.erase(p.ops.begin() + erase_start,
+                  p.ops.begin() + mov_pos.first + mov_pos.second);
+    }
+    return true;
+  }
+
+  // Then check for repeated ADD/MUL operations
   auto pos = findRepeatedOps(p, 3);
   if (pos.first == -1) {
     return false;
