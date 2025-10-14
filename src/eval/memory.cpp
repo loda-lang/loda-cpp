@@ -97,6 +97,9 @@ void Memory::fill(int64_t start, int64_t length) {
 }
 
 void Memory::rotateLeft(int64_t start, int64_t length) {
+  if (length == 0) {
+    return;
+  }
   auto range = getRange(start, length);
   auto leftmost = get(range.first);
   for (int64_t i = range.first; i < range.second - 1; i++) {
@@ -106,6 +109,9 @@ void Memory::rotateLeft(int64_t start, int64_t length) {
 }
 
 void Memory::rotateRight(int64_t start, int64_t length) {
+  if (length == 0) {
+    return;
+  }
   auto range = getRange(start, length);
   auto rightmost = get(range.second - 1);
   for (int64_t i = range.second - 1; i > range.first; i--) {

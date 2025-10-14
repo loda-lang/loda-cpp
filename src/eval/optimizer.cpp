@@ -20,6 +20,9 @@ bool Optimizer::optimize(Program &p) const {
   bool result = false;
   while (changed) {
     changed = false;
+    if (collapseMovChains(p)) {
+      changed = true;
+    }
     if (simplifyOperations(p)) {
       changed = true;
     }
@@ -288,7 +291,93 @@ std::pair<int64_t, int64_t> findRepeatedOps(const Program &p,
   return pos;
 }
 
+std::pair<int64_t, int64_t> findConsecutiveMovOps(const Program &p,
+                                                  int64_t min_repetitions) {
+  std::pair<int64_t, int64_t> pos(-1, 0);  // start, length
+  for (size_t i = 0; i < p.ops.size(); i++) {
+    const auto &op = p.ops[i];
+    
+    // Check if this is a MOV with direct target and constant source
+    if (op.type == Operation::Type::MOV &&
+        op.target.type == Operand::Type::DIRECT &&
+        op.source.type == Operand::Type::CONSTANT) {
+      
+      if (pos.first == -1) {
+        // Start a new sequence
+        pos.first = i;
+        pos.second = 1;
+      } else {
+        // Check if this continues the sequence
+        const auto &first_op = p.ops[pos.first];
+        const auto &prev_op = p.ops[i - 1];
+        
+        // Must have same source value and consecutive target cells
+        if (op.source == first_op.source &&
+            op.target.value.asInt() == prev_op.target.value.asInt() + 1) {
+          pos.second++;
+        } else {
+          // Sequence ended
+          if (pos.second >= min_repetitions) {
+            return pos;
+          }
+          // Try starting a new sequence from this operation
+          pos.first = i;
+          pos.second = 1;
+        }
+      }
+    } else {
+      // Not a MOV operation, check if we have a valid sequence
+      if (pos.first != -1 && pos.second >= min_repetitions) {
+        return pos;
+      }
+      pos.first = -1;
+      pos.second = 0;
+    }
+  }
+  
+  // Final check
+  if (pos.second < min_repetitions) {
+    pos.first = -1;
+  }
+  return pos;
+}
+
 bool Optimizer::mergeRepeated(Program &p) const {
+  // First check for consecutive MOV operations that can be replaced with FIL
+  auto mov_pos = findConsecutiveMovOps(p, 3);
+  if (mov_pos.first != -1) {
+    const auto &first_mov = p.ops[mov_pos.first];
+    Operand count(Operand::Type::CONSTANT, mov_pos.second);
+    
+    // Check if the constant value is zero - if so, use CLR instead of FIL
+    bool use_clr = (first_mov.source.type == Operand::Type::CONSTANT &&
+                    first_mov.source.value == Number::ZERO);
+    
+    if (Log::get().level == Log::Level::DEBUG) {
+      Log::get().debug(use_clr ? "Merging consecutive MOV 0 operations into CLR"
+                               : "Merging consecutive MOV operations into FIL");
+    }
+    
+    if (use_clr) {
+      // Replace all MOVs with a single CLR operation
+      p.ops[mov_pos.first] = Operation(Operation::Type::CLR,
+                                        first_mov.target, count);
+    } else {
+      // Replace with FIL operation: keep first MOV, replace second with FIL
+      p.ops[mov_pos.first + 1] = Operation(Operation::Type::FIL,
+                                            first_mov.target, count);
+    }
+    
+    // Erase remaining operations
+    int erase_start = mov_pos.first + (use_clr ? 1 : 2);
+    if (mov_pos.second > (use_clr ? 1 : 2)) {
+      p.ops.erase(p.ops.begin() + erase_start,
+                  p.ops.begin() + mov_pos.first + mov_pos.second);
+    }
+    return true;
+  }
+
+  // Then check for repeated ADD/MUL operations
   auto pos = findRepeatedOps(p, 3);
   if (pos.first == -1) {
     return false;
@@ -830,6 +919,91 @@ bool Optimizer::pullUpMov(Program &p) const {
     std::swap(a, b);
     p.ops.insert(p.ops.begin() + i + 1, d);
     changed = true;
+  }
+  return changed;
+}
+
+bool isDirectMov(const Operation &op) {
+  return op.type == Operation::Type::MOV &&
+         op.target.type == Operand::Type::DIRECT &&
+         op.source.type == Operand::Type::DIRECT;
+}
+
+Operation directMov(int64_t target, int64_t source) {
+  return Operation(Operation::Type::MOV, Operand(Operand::Type::DIRECT, target),
+                   Operand(Operand::Type::DIRECT, source));
+}
+
+bool Optimizer::collapseMovChains(Program &p) const {
+  // Detect shift patterns in sequences of mov operations and replace with
+  // rol/ror Left shift: mov $i,$i+1; mov $i+1,$i+2; ... => rol $i,length; mov
+  // $end,$end+1 Right shift: mov $i,$i-1; mov $i-1,$i-2; ... => mov
+  // $temp,$start; ror $start,length; mov $start,$temp
+  bool changed = false;
+  for (size_t i = 0; i + 1 < p.ops.size(); i++) {
+    // Find first mov of chain
+    if (!isDirectMov(p.ops[i])) {
+      continue;
+    }
+    const auto &first_op = p.ops[i];
+    int64_t first_target = first_op.target.value.asInt();
+    int64_t first_source = first_op.source.value.asInt();
+    int64_t direction =
+        first_source - first_target;  // +1 for left, -1 for right
+    if (direction != 1 && direction != -1) {
+      continue;
+    }
+
+    // Count consecutive shift operations
+    size_t shift_count = 1;
+    int64_t last_target = first_target;
+    for (size_t j = i + 1; j < p.ops.size(); j++) {
+      if (!isDirectMov(p.ops[j])) {
+        break;
+      }
+      int64_t curr_target = p.ops[j].target.value.asInt();
+      int64_t curr_source = p.ops[j].source.value.asInt();
+      if (curr_target == last_target + direction &&
+          curr_source == curr_target + direction) {
+        shift_count++;
+        last_target = curr_target;
+      } else {
+        break;
+      }
+    }
+
+    // Require at least 3 mov operations
+    if (shift_count >= 3) {
+      int64_t last_source = last_target + direction;
+      if (direction == 1) {  // left shift
+        int64_t start_cell = first_target;
+        int64_t end_cell = last_target;
+        int64_t length = shift_count;
+        p.ops[i] = Operation(Operation::Type::ROL,
+                             Operand(Operand::Type::DIRECT, start_cell),
+                             Operand(Operand::Type::CONSTANT, length));
+        p.ops.erase(p.ops.begin() + i + 1, p.ops.begin() + i + shift_count);
+        p.ops.insert(p.ops.begin() + i + 1, directMov(end_cell, last_source));
+      } else {  // right shift
+        int64_t start_cell = last_source;
+        int64_t length = shift_count + 1;
+        std::unordered_set<int64_t> used_cells;
+        int64_t largest_used = 0;
+        if (!ProgramUtil::getUsedMemoryCells(p, used_cells, largest_used,
+                                             settings.max_memory)) {
+          continue;
+        }
+        int64_t temp_cell = largest_used + 1;
+        p.ops[i] = directMov(temp_cell, start_cell);
+        p.ops.erase(p.ops.begin() + i + 1, p.ops.begin() + i + shift_count);
+        p.ops.insert(p.ops.begin() + i + 1,
+                     Operation(Operation::Type::ROR,
+                               Operand(Operand::Type::DIRECT, start_cell),
+                               Operand(Operand::Type::CONSTANT, length)));
+        p.ops.insert(p.ops.begin() + i + 2, directMov(start_cell, temp_cell));
+      }
+      changed = true;
+    }
   }
   return changed;
 }
