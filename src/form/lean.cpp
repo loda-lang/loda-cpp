@@ -5,6 +5,7 @@
 #include "form/expression_util.hpp"
 #include "form/formula_util.hpp"
 #include "seq/seq_util.hpp"
+#include "sys/util.hpp"
 
 bool convertToLean(Expression& expr, const Formula& f) {
   // Check children recursively
@@ -23,15 +24,16 @@ bool convertToLean(Expression& expr, const Formula& f) {
     case Expression::Type::NOT_EQUAL:
     case Expression::Type::LESS_EQUAL:
     case Expression::Type::GREATER_EQUAL: {
-      Expression f(Expression::Type::FUNCTION, "Bool.toInt ", {expr});
+      Expression f(Expression::Type::FUNCTION, "Bool.toInt", {expr});
       expr = f;
       break;
     }
-    case Expression::Type::FUNCTION:
-      // if (expr.name == "min" || expr.name == "max") {
-      //  break;
-      // }
+    case Expression::Type::FUNCTION: {
+      if (expr.name == "min" || expr.name == "max") {
+        break;
+      }
       return false;
+    }
     case Expression::Type::POWER:
       // Support only non-negative constants as exponents
       if (expr.children.size() != 2 ||
@@ -88,7 +90,8 @@ std::string LeanFormula::toString() const {
   }
   bool usesParameter = mainExpr.contains(Expression::Type::PARAMETER);
   std::string arg = usesParameter ? "n" : "_";
-  buf << "def " << funcName << " (" << arg << " : Int) : Int := " << mainExpr;
+  buf << "def " << funcName << " (" << arg
+      << " : Int) : Int := " << mainExpr.toString(true);
   return buf.str();
 }
 
@@ -113,8 +116,9 @@ std::string LeanFormula::printEvalCode(int64_t offset, int64_t numTerms) const {
 
 bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
                        Sequence& result) const {
-  const std::string leanPath("loda-eval.lean");
-  const std::string leanResult("lean-result.txt");
+  const std::string tmpFileId = std::to_string(Random::get().gen() % 1000);
+  const std::string leanPath("lean-loda-" + tmpFileId + ".lean");
+  const std::string leanResult("lean-result-" + tmpFileId + ".txt");
   std::vector<std::string> args = {"lean", "--run", leanPath};
   std::string evalCode = printEvalCode(offset, numTerms);
   return SequenceUtil::evalFormulaWithExternalTool(
