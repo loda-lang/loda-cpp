@@ -331,7 +331,7 @@ void Expression::printExtracted(std::ostream& out, bool curry) const {
       assertNumChildren(2);
       printChildren(out, curry,
                     (type == Type::EQUAL        ? "=="
-                     : type == Type::NOT_EQUAL  ? "!="
+                     : type == Type::NOT_EQUAL  ? (curry ? " != " : "!=")
                      : type == Type::LESS_EQUAL ? "<="
                                                 : ">="));
       break;
@@ -355,7 +355,7 @@ bool Expression::needsBrackets(bool isRoot, Expression::Type parentType,
     return false;
   }
   if (type == Expression::Type::FUNCTION) {
-    return false;
+    return curry;
   }
   if (type == Expression::Type::VECTOR ||
       parentType == Expression::Type::VECTOR) {

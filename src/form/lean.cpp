@@ -5,6 +5,7 @@
 #include "form/expression_util.hpp"
 #include "form/formula_util.hpp"
 #include "seq/seq_util.hpp"
+#include "sys/util.hpp"
 
 bool convertToLean(Expression& expr, const Formula& f) {
   // Check children recursively
@@ -115,8 +116,9 @@ std::string LeanFormula::printEvalCode(int64_t offset, int64_t numTerms) const {
 
 bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
                        Sequence& result) const {
-  const std::string leanPath("loda-eval.lean");
-  const std::string leanResult("lean-result.txt");
+  const std::string tmpFileId = std::to_string(Random::get().gen() % 1000);
+  const std::string leanPath("lean-loda-" + tmpFileId + ".lean");
+  const std::string leanResult("lean-result-" + tmpFileId + ".txt");
   std::vector<std::string> args = {"lean", "--run", leanPath};
   std::string evalCode = printEvalCode(offset, numTerms);
   return SequenceUtil::evalFormulaWithExternalTool(
