@@ -7,6 +7,7 @@
 
 ### Enhancements
 
+* Support `floor` and `truncate` functions in LEAN formula generation
 * Simplify formulas by replacing simple references to recursive functions
 * Removed deprecated list generation functionality
 
