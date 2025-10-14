@@ -1,13 +1,8 @@
-; Test: mergeRepeated with region operation (clr)
-; This test ensures that temporary cells are allocated correctly
-; when region operations are present
 ; in
-clr $5,10
-add $0,$1
-add $0,$1
-add $0,$1
+mov $3,7
+mov $4,7
+mov $5,7
+mov $6,7
 ; out
-clr $5,10
-mov $15,$1
-mul $15,3
-add $0,$15
+mov $3,7
+fil $3,4

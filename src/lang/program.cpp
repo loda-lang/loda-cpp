@@ -180,10 +180,6 @@ const Operation::Metadata& Operation::Metadata::get(const std::string& name) {
       return m;
     }
   }
-  // for backwards compatibility
-  if (name == "cmp") {
-    return get(Operation::Type::EQU);
-  }
   throw std::runtime_error("invalid operation: " + name);
 }
 

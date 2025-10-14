@@ -1513,11 +1513,21 @@ void Test::minimizer(size_t tests) {
       Log::get().error("Error during minimization: " + std::string(e.what()),
                        true);
     }
-    evaluator.eval(minimized, s2, s1.size());
+    try {
+      evaluator.eval(minimized, s2, s1.size());
+    } catch (const std::exception& e) {
+      std::cout << "before: " << s1 << std::endl;
+      ProgramUtil::print(program, std::cout);
+      std::cout << "after: Error during evaluation" << std::endl;
+      ProgramUtil::print(minimized, std::cout);
+      Log::get().error("Error during evaluation: " + std::string(e.what()),
+                       true);
+      continue;
+    }
     if (s1.size() != s2.size() || (s1 != s2)) {
       std::cout << "before: " << s1 << std::endl;
       ProgramUtil::print(program, std::cout);
-      std::cout << "after:  " << s2 << std::endl;
+      std::cout << "after: " << s2 << std::endl;
       ProgramUtil::print(minimized, std::cout);
       Log::get().error(
           "Program evaluated to different sequence after minimization", true);
