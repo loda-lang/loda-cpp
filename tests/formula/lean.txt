@@ -20,3 +20,4 @@ A006221: def a (n : Int) : Int := n*(n*(34*n+51)+27)+5
 A008531: def a (n : Int) : Int := (Bool.toInt (n==0))+n*(5*n^2+5)
 A021019: def a (n : Int) : Int := 6*(min n 1)
 A060576: def a (n : Int) : Int := Bool.toInt (n != 1)
+A109008: def a (n : Int) : Int := Int.gcd n 4

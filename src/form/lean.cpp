@@ -32,6 +32,11 @@ bool convertToLean(Expression& expr, const Formula& f) {
       if (expr.name == "min" || expr.name == "max") {
         break;
       }
+      if (expr.name == "gcd") {
+        Expression f(Expression::Type::FUNCTION, "Int.gcd", expr.children);
+        expr = f;
+        break;
+      }
       return false;
     }
     case Expression::Type::POWER:
