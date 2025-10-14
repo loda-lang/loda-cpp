@@ -33,9 +33,7 @@ bool convertToLean(Expression& expr, const Formula& f) {
         break;
       }
       if (expr.name == "bitxor") {
-        if (expr.children.size() != 2) return false;
-        Expression f(Expression::Type::FUNCTION, "Int.xor", {expr.children[0], expr.children[1]});
-        expr = f;
+        expr.name = "Int.xor";
         break;
       }
       return false;
