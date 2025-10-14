@@ -28,7 +28,8 @@ To build from source, switch to the `src/` folder and run the appropriate comman
 * Linux ARM64: `make -f Makefile.linux-arm64.mk`
 * MacOS x86\_64: `make -f Makefile.macos-x86.mk`
 * MacOS ARM64: `make -f Makefile.macos-arm64.mk`
-* Windows (x86\_64 and ARM64): `nmake /F Makefile.windows.mk`
+* Windows x86\_64: `nmake /F Makefile.windows.mk`
+* Windows ARM64: `nmake /F Makefile.windows-arm64.mk`
 
 After building, the `loda` executable will be copied or symlinked into the main project folder.
 
