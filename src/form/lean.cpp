@@ -29,7 +29,8 @@ bool convertToLean(Expression& expr, const Formula& f) {
       break;
     }
     case Expression::Type::FUNCTION: {
-      if (expr.name == "min" || expr.name == "max") {
+      if (expr.name == "min" || expr.name == "max" ||
+          expr.name == "floor" || expr.name == "truncate") {
         break;
       }
       return false;
