@@ -5,6 +5,21 @@
 #include "lang/program_util.hpp"
 #include "lang/subprogram.hpp"
 
+// Local helper to get largest direct memory cell (ignores region operations)
+// Used as fallback when getUsedMemoryCells fails (e.g., with PRG operations)
+static int64_t getLargestDirectMemoryCell(const Program &p) {
+  int64_t largest = 0;
+  for (const auto &op : p.ops) {
+    if (op.source.type == Operand::Type::DIRECT) {
+      largest = std::max<int64_t>(largest, op.source.value.asInt());
+    }
+    if (op.target.type == Operand::Type::DIRECT) {
+      largest = std::max<int64_t>(largest, op.target.value.asInt());
+    }
+  }
+  return largest;
+}
+
 void updateOperand(Operand &op, int64_t start, int64_t shared_region_length,
                    int64_t largest_used) {
   if (op.type != Operand::Type::DIRECT) {
@@ -93,7 +108,9 @@ bool Fold::unfold(Program &main, int64_t pos) {
   }
   int64_t largest_used = 0;
   if (!ProgramUtil::getUsedMemoryCells(main, nullptr, largest_used, -1)) {
-    return false;
+    // Fallback to getLargestDirectMemoryCell for cases where getUsedMemoryCells fails
+    // This is necessary for programs with PRG operations or other complex cases
+    largest_used = getLargestDirectMemoryCell(main);
   }
   for (auto &op : sub.ops) {
     updateOperand(op.target, start, shared_region_length, largest_used);
