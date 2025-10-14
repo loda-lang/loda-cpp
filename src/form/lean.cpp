@@ -32,6 +32,12 @@ bool convertToLean(Expression& expr, const Formula& f) {
       if (expr.name == "min" || expr.name == "max") {
         break;
       }
+      if (expr.name == "bitxor") {
+        if (expr.children.size() != 2) return false;
+        Expression f(Expression::Type::FUNCTION, "Int.xor", {expr.children[0], expr.children[1]});
+        expr = f;
+        break;
+      }
       return false;
     }
     case Expression::Type::POWER:
@@ -97,6 +103,8 @@ std::string LeanFormula::toString() const {
 
 std::string LeanFormula::printEvalCode(int64_t offset, int64_t numTerms) const {
   std::stringstream out;
+  out << "import Mathlib.Data.Int.Bitwise" << std::endl;
+  out << std::endl;
   out << toString() << std::endl;
   out << std::endl;
   out << "def main : IO Unit := do" << std::endl;
