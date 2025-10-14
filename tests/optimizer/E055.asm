@@ -1,9 +1,8 @@
 ; in
-mov $3,$4
-mov $4,$5
-mov $5,$6
-mov $6,$7
-mov $7,$8
+mov $3,7
+mov $4,7
+mov $5,7
+mov $6,7
 ; out
-rol $3,5
-mov $7,$8
+mov $3,7
+fil $3,4

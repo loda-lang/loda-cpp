@@ -1,6 +1,7 @@
 ; in
-mov $2,$1
-mov $1,$0
+mov $5,0
+mov $6,0
+mov $7,0
+mov $8,0
 ; out
-mov $1,$0
-mov $2,0
+clr $5,4

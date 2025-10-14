@@ -1,9 +1,9 @@
 ; in
-mov $5,$4
-mov $4,$3
-mov $3,$2
-mov $2,$1
+mov $10,42
+mov $11,42
+mov $12,42
+mov $13,42
+mov $14,42
 ; out
-mov $6,0
-ror $1,5
-mov $1,$6
+mov $10,42
+fil $10,5
