@@ -38,7 +38,9 @@ int64_t getRandomPos(const Program &program) {
 }
 
 // Local helper function to get largest direct memory cell
-// This is the only place where using getLargestDirectMemoryCell() is allowed
+// WARNING: This function does NOT consider region operations (clr, fil, rol, ror).
+// This is acceptable only in the mutator code where approximate cell counts are sufficient.
+// All other code should use ProgramUtil::getUsedMemoryCells() instead.
 int64_t getLargestDirectMemoryCell(const Program &p) {
   int64_t largest = 0;
   for (const auto &op : p.ops) {
@@ -57,12 +59,7 @@ void Mutator::mutateRandom(Program &program) {
   size_t i;
 
   // get number of used memory cells
-  int64_t num_cells = 0;
-  if (!ProgramUtil::getUsedMemoryCells(program, nullptr, num_cells, -1)) {
-    // If we can't determine used cells, fall back to direct cell method
-    num_cells = getLargestDirectMemoryCell(program);
-  }
-  num_cells++;  // convert from largest index to count
+  int64_t num_cells = getLargestDirectMemoryCell(program) + 1;
   static const int64_t new_cells = 2;
 
   // calculate the number of mutations to apply

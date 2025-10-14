@@ -1,5 +1,6 @@
 #include "lang/program_util.hpp"
 
+#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <numeric>
@@ -241,33 +242,56 @@ bool ProgramUtil::getUsedMemoryCells(const Program &p,
         op.type == Operation::Type::ROR) {
       if (op.source.type == Operand::Type::CONSTANT) {
         region_length = op.source.value.asInt();
-        // Handle negative region lengths by treating them as 0
-        if (region_length < 0) {
-          region_length = 0;
-        }
       } else {
         return false;
       }
     }
-    if (region_length > max_memory && max_memory >= 0) {
+    // Check max memory using absolute value of region length
+    if (std::abs(region_length) > max_memory && max_memory >= 0) {
       return false;
     }
     if (op.source.type == Operand::Type::DIRECT) {
-      for (int64_t i = 0; i < region_length; i++) {
-        int64_t cell = op.source.value.asInt() + i;
-        if (used_cells) {
-          used_cells->insert(cell);
+      if (region_length >= 0) {
+        // Positive region length: count up from base
+        for (int64_t i = 0; i < region_length; i++) {
+          int64_t cell = op.source.value.asInt() + i;
+          if (used_cells) {
+            used_cells->insert(cell);
+          }
+          largest_used = std::max(largest_used, cell);
         }
-        largest_used = std::max(largest_used, cell);
+      } else {
+        // Negative region length: count down from base, stop at 0
+        int64_t base = op.source.value.asInt();
+        for (int64_t i = 0; i > region_length && base + i >= 0; i--) {
+          int64_t cell = base + i;
+          if (used_cells) {
+            used_cells->insert(cell);
+          }
+          largest_used = std::max(largest_used, cell);
+        }
       }
     }
     if (op.target.type == Operand::Type::DIRECT) {
-      for (int64_t i = 0; i < region_length; i++) {
-        int64_t cell = op.target.value.asInt() + i;
-        if (used_cells) {
-          used_cells->insert(cell);
+      if (region_length >= 0) {
+        // Positive region length: count up from base
+        for (int64_t i = 0; i < region_length; i++) {
+          int64_t cell = op.target.value.asInt() + i;
+          if (used_cells) {
+            used_cells->insert(cell);
+          }
+          largest_used = std::max(largest_used, cell);
         }
-        largest_used = std::max(largest_used, cell);
+      } else {
+        // Negative region length: count down from base, stop at 0
+        int64_t base = op.target.value.asInt();
+        for (int64_t i = 0; i > region_length && base + i >= 0; i--) {
+          int64_t cell = base + i;
+          if (used_cells) {
+            used_cells->insert(cell);
+          }
+          largest_used = std::max(largest_used, cell);
+        }
       }
     }
   }

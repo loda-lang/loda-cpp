@@ -995,9 +995,8 @@ bool Optimizer::collapseMovChains(Program &p) const {
       } else {  // right shift
         int64_t start_cell = last_source;
         int64_t length = shift_count + 1;
-        std::unordered_set<int64_t> used_cells;
         int64_t largest_used = 0;
-        if (!ProgramUtil::getUsedMemoryCells(p, used_cells, largest_used,
+        if (!ProgramUtil::getUsedMemoryCells(p, nullptr, largest_used,
                                              settings.max_memory)) {
           continue;
         }
