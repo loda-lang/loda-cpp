@@ -39,6 +39,8 @@ class Optimizer {
 
   bool pullUpMov(Program &p) const;
 
+  bool collapseMovChains(Program &p) const;
+
   bool removeCommutativeDetour(Program &p) const;
 
   static constexpr size_t NUM_RESERVED_CELLS = 1;

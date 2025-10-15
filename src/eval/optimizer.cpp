@@ -20,6 +20,9 @@ bool Optimizer::optimize(Program &p) const {
   bool result = false;
   while (changed) {
     changed = false;
+    if (collapseMovChains(p)) {
+      changed = true;
+    }
     if (simplifyOperations(p)) {
       changed = true;
     }
@@ -916,6 +919,91 @@ bool Optimizer::pullUpMov(Program &p) const {
     std::swap(a, b);
     p.ops.insert(p.ops.begin() + i + 1, d);
     changed = true;
+  }
+  return changed;
+}
+
+bool isDirectMov(const Operation &op) {
+  return op.type == Operation::Type::MOV &&
+         op.target.type == Operand::Type::DIRECT &&
+         op.source.type == Operand::Type::DIRECT;
+}
+
+Operation directMov(int64_t target, int64_t source) {
+  return Operation(Operation::Type::MOV, Operand(Operand::Type::DIRECT, target),
+                   Operand(Operand::Type::DIRECT, source));
+}
+
+bool Optimizer::collapseMovChains(Program &p) const {
+  // Detect shift patterns in sequences of mov operations and replace with
+  // rol/ror Left shift: mov $i,$i+1; mov $i+1,$i+2; ... => rol $i,length; mov
+  // $end,$end+1 Right shift: mov $i,$i-1; mov $i-1,$i-2; ... => mov
+  // $temp,$start; ror $start,length; mov $start,$temp
+  bool changed = false;
+  for (size_t i = 0; i + 1 < p.ops.size(); i++) {
+    // Find first mov of chain
+    if (!isDirectMov(p.ops[i])) {
+      continue;
+    }
+    const auto &first_op = p.ops[i];
+    int64_t first_target = first_op.target.value.asInt();
+    int64_t first_source = first_op.source.value.asInt();
+    int64_t direction =
+        first_source - first_target;  // +1 for left, -1 for right
+    if (direction != 1 && direction != -1) {
+      continue;
+    }
+
+    // Count consecutive shift operations
+    size_t shift_count = 1;
+    int64_t last_target = first_target;
+    for (size_t j = i + 1; j < p.ops.size(); j++) {
+      if (!isDirectMov(p.ops[j])) {
+        break;
+      }
+      int64_t curr_target = p.ops[j].target.value.asInt();
+      int64_t curr_source = p.ops[j].source.value.asInt();
+      if (curr_target == last_target + direction &&
+          curr_source == curr_target + direction) {
+        shift_count++;
+        last_target = curr_target;
+      } else {
+        break;
+      }
+    }
+
+    // Require at least 3 mov operations
+    if (shift_count >= 3) {
+      int64_t last_source = last_target + direction;
+      if (direction == 1) {  // left shift
+        int64_t start_cell = first_target;
+        int64_t end_cell = last_target;
+        int64_t length = shift_count;
+        p.ops[i] = Operation(Operation::Type::ROL,
+                             Operand(Operand::Type::DIRECT, start_cell),
+                             Operand(Operand::Type::CONSTANT, length));
+        p.ops.erase(p.ops.begin() + i + 1, p.ops.begin() + i + shift_count);
+        p.ops.insert(p.ops.begin() + i + 1, directMov(end_cell, last_source));
+      } else {  // right shift
+        int64_t start_cell = last_source;
+        int64_t length = shift_count + 1;
+        std::unordered_set<int64_t> used_cells;
+        int64_t largest_used = 0;
+        if (!ProgramUtil::getUsedMemoryCells(p, used_cells, largest_used,
+                                             settings.max_memory)) {
+          continue;
+        }
+        int64_t temp_cell = largest_used + 1;
+        p.ops[i] = directMov(temp_cell, start_cell);
+        p.ops.erase(p.ops.begin() + i + 1, p.ops.begin() + i + shift_count);
+        p.ops.insert(p.ops.begin() + i + 1,
+                     Operation(Operation::Type::ROR,
+                               Operand(Operand::Type::DIRECT, start_cell),
+                               Operand(Operand::Type::CONSTANT, length)));
+        p.ops.insert(p.ops.begin() + i + 2, directMov(start_cell, temp_cell));
+      }
+      changed = true;
+    }
   }
   return changed;
 }

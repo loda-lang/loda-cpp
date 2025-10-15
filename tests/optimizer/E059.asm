@@ -1,0 +1,9 @@
+; in
+mov $3,$4
+mov $4,$5
+mov $5,$6
+mov $6,$7
+mov $7,$8
+; out
+rol $3,5
+mov $7,$8
