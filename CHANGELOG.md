@@ -4,11 +4,14 @@
 
 * Add memory operations: `fil`, `rol`, `ror`
 * Add limited LEAN export for simple programs
+* Support LEAN project creation with Mathlib dependencies for formula evaluation
 
 ### Enhancements
 
 * Simplify formulas by replacing simple references to recursive functions
 * Removed deprecated list generation functionality
+* Add support for `bitxor` operation in LEAN formula generation (maps to `Int.xor`)
+* Automatically create temporary LEAN project when imports are needed (e.g., `Mathlib.Data.Int.Bitwise`)
 
 ## v25.10.8
 
