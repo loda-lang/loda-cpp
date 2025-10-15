@@ -32,6 +32,10 @@ bool convertToLean(Expression& expr, const Formula& f) {
       if (expr.name == "min" || expr.name == "max") {
         break;
       }
+      if (expr.name == "gcd") {
+        expr.name = "Int.gcd";
+        break;
+      }
       // Convert floor and truncate functions to LEAN equivalents
       if (expr.name == "floor" || expr.name == "truncate") {
         // These functions should have a single FRACTION argument
