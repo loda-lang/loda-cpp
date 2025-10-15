@@ -248,7 +248,7 @@ void collectUsedMemoryCells(const Operand &operand, int64_t region_length,
 }
 
 bool ProgramUtil::getUsedMemoryCells(const Program &p,
-                                     std::unordered_map<UID, Program> *prg_refs,
+                                     std::map<UID, Program> *prg_refs,
                                      std::unordered_set<int64_t> *used_cells,
                                      int64_t &largest_used,
                                      int64_t max_memory) {
