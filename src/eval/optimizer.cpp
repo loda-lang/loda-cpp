@@ -296,37 +296,33 @@ std::pair<int64_t, int64_t> findConsecutiveMovOps(const Program &p,
   std::pair<int64_t, int64_t> pos(-1, 0);  // start, length
   for (size_t i = 0; i < p.ops.size(); i++) {
     const auto &op = p.ops[i];
-    
-    // Check if this is a MOV with direct target and constant source
     if (op.type == Operation::Type::MOV &&
         op.target.type == Operand::Type::DIRECT &&
         op.source.type == Operand::Type::CONSTANT) {
-      
       if (pos.first == -1) {
-        // Start a new sequence
+        // start a new sequence
         pos.first = i;
         pos.second = 1;
       } else {
-        // Check if this continues the sequence
+        // check if this continues the sequence
         const auto &first_op = p.ops[pos.first];
         const auto &prev_op = p.ops[i - 1];
-        
-        // Must have same source value and consecutive target cells
+        // must have same source value and consecutive target cells
         if (op.source == first_op.source &&
             op.target.value.asInt() == prev_op.target.value.asInt() + 1) {
           pos.second++;
         } else {
-          // Sequence ended
+          // sequence ended
           if (pos.second >= min_repetitions) {
             return pos;
           }
-          // Try starting a new sequence from this operation
+          // try starting a new sequence from this operation
           pos.first = i;
           pos.second = 1;
         }
       }
     } else {
-      // Not a MOV operation, check if we have a valid sequence
+      // not a mov operation, check if we have a valid sequence
       if (pos.first != -1 && pos.second >= min_repetitions) {
         return pos;
       }
@@ -334,8 +330,7 @@ std::pair<int64_t, int64_t> findConsecutiveMovOps(const Program &p,
       pos.second = 0;
     }
   }
-  
-  // Final check
+  // final check
   if (pos.second < min_repetitions) {
     pos.first = -1;
   }
@@ -343,41 +338,35 @@ std::pair<int64_t, int64_t> findConsecutiveMovOps(const Program &p,
 }
 
 bool Optimizer::mergeRepeated(Program &p) const {
-  // First check for consecutive MOV operations that can be replaced with FIL
+  // merge consecutive mov operations into fil/clr
   auto mov_pos = findConsecutiveMovOps(p, 3);
   if (mov_pos.first != -1) {
     const auto &first_mov = p.ops[mov_pos.first];
     Operand count(Operand::Type::CONSTANT, mov_pos.second);
-    
-    // Check if the constant value is zero - if so, use CLR instead of FIL
     bool use_clr = (first_mov.source.type == Operand::Type::CONSTANT &&
                     first_mov.source.value == Number::ZERO);
-    
     if (Log::get().level == Log::Level::DEBUG) {
-      Log::get().debug(use_clr ? "Merging consecutive MOV 0 operations into CLR"
-                               : "Merging consecutive MOV operations into FIL");
+      Log::get().debug("Merging " + std::to_string(mov_pos.second) +
+                       " consecutive mov operations");
     }
-    
     if (use_clr) {
-      // Replace all MOVs with a single CLR operation
-      p.ops[mov_pos.first] = Operation(Operation::Type::CLR,
-                                        first_mov.target, count);
+      p.ops[mov_pos.first] =
+          Operation(Operation::Type::CLR, first_mov.target, count);
     } else {
-      // Replace with FIL operation: keep first MOV, replace second with FIL
-      p.ops[mov_pos.first + 1] = Operation(Operation::Type::FIL,
-                                            first_mov.target, count);
+      p.ops[mov_pos.first + 1] =
+          Operation(Operation::Type::FIL, first_mov.target, count);
     }
-    
-    // Erase remaining operations
-    int erase_start = mov_pos.first + (use_clr ? 1 : 2);
-    if (mov_pos.second > (use_clr ? 1 : 2)) {
+    // erase remaining operations
+    int64_t erase_offset = use_clr ? 1 : 2;
+    int64_t erase_start = mov_pos.first + erase_offset;
+    if (mov_pos.second > erase_offset) {
       p.ops.erase(p.ops.begin() + erase_start,
                   p.ops.begin() + mov_pos.first + mov_pos.second);
     }
     return true;
   }
 
-  // Then check for repeated ADD/MUL operations
+  // check for repeated add/mul operations
   auto pos = findRepeatedOps(p, 3);
   if (pos.first == -1) {
     return false;
@@ -388,7 +377,11 @@ bool Optimizer::mergeRepeated(Program &p) const {
   Operation::Type merge_type = (p.ops[pos.first].type == Operation::Type::ADD)
                                    ? Operation::Type::MUL
                                    : Operation::Type::POW;
-  auto largest = ProgramUtil::getLargestDirectMemoryCell(p);
+  int64_t largest = 0;
+  if (!ProgramUtil::getUsedMemoryCells(p, nullptr, nullptr, largest,
+                                       settings.max_memory)) {
+    return false;
+  }
   Operand tmp_cell(Operand::Type::DIRECT, largest + 1);
   Operand count(Operand::Type::CONSTANT, pos.second);
   p.ops[pos.first].type = Operation::Type::MOV;
@@ -622,7 +615,7 @@ bool Optimizer::reduceMemoryCells(Program &p) const {
   if (!canChangeVariableOrder(p)) {
     return false;
   }
-  if (!ProgramUtil::getUsedMemoryCells(p, used_cells, largest_used,
+  if (!ProgramUtil::getUsedMemoryCells(p, nullptr, &used_cells, largest_used,
                                        settings.max_memory)) {
     return false;
   }
@@ -661,9 +654,8 @@ bool Optimizer::reduceMemoryCells(Program &p) const {
 }
 
 bool Optimizer::partialEval(Program &p) const {
-  std::unordered_set<int64_t> used_cells;
   int64_t largest_used = 0;
-  if (!ProgramUtil::getUsedMemoryCells(p, used_cells, largest_used,
+  if (!ProgramUtil::getUsedMemoryCells(p, nullptr, nullptr, largest_used,
                                        settings.max_memory)) {
     return false;
   }
@@ -851,7 +843,11 @@ bool Optimizer::collapseArithmeticLoops(Program &p) const {
     const Operation::Type fold_type = (basic_type == Operation::Type::ADD)
                                           ? Operation::Type::MUL
                                           : Operation::Type::POW;
-    auto largest = ProgramUtil::getLargestDirectMemoryCell(p);
+    int64_t largest = 0;
+    if (!ProgramUtil::getUsedMemoryCells(p, nullptr, nullptr, largest,
+                                         settings.max_memory)) {
+      continue;
+    }
     const Operand tmp_counter(Operand::Type::DIRECT, largest + 1);
     const Operand tmp_result(Operand::Type::DIRECT, largest + 2);
     p.ops[i] = Operation(Operation::Type::MOV, tmp_counter, loop_counter);
@@ -987,9 +983,8 @@ bool Optimizer::collapseMovChains(Program &p) const {
       } else {  // right shift
         int64_t start_cell = last_source;
         int64_t length = shift_count + 1;
-        std::unordered_set<int64_t> used_cells;
         int64_t largest_used = 0;
-        if (!ProgramUtil::getUsedMemoryCells(p, used_cells, largest_used,
+        if (!ProgramUtil::getUsedMemoryCells(p, nullptr, nullptr, largest_used,
                                              settings.max_memory)) {
           continue;
         }

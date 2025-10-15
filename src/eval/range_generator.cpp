@@ -15,7 +15,8 @@ bool RangeGenerator::init(const Program& program, RangeMap& ranges) {
   }
   std::unordered_set<int64_t> used_cells;
   int64_t largest_used = 0;
-  if (!ProgramUtil::getUsedMemoryCells(program, used_cells, largest_used, -1)) {
+  if (!ProgramUtil::getUsedMemoryCells(program, nullptr, &used_cells,
+                                       largest_used, -1)) {
     return false;
   }
   loop_states = {};
