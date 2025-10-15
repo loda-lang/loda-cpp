@@ -7,10 +7,11 @@
 #include "seq/seq_util.hpp"
 #include "sys/util.hpp"
 
-bool convertToLean(Expression& expr, const Formula& f) {
+bool convertToLean(Expression& expr, const Formula& f,
+                   const std::string& funcName) {
   // Check children recursively
   for (auto& c : expr.children) {
-    if (!convertToLean(c, f)) {
+    if (!convertToLean(c, f, funcName)) {
       return false;
     }
   }
@@ -55,6 +56,10 @@ bool convertToLean(Expression& expr, const Formula& f) {
         // If not a simple fraction, reject
         return false;
       }
+      // Allow recursive calls to the main function
+      if (expr.name == funcName) {
+        break;
+      }
       return false;
     }
     case Expression::Type::POWER:
@@ -87,34 +92,77 @@ bool LeanFormula::convert(const Formula& formula, bool as_vector,
   for (const auto& entry : formula.entries) {
     auto left = entry.first;
     auto right = entry.second;
-    if (!convertToLean(right, formula)) {
+    if (!convertToLean(right, formula, funcName)) {
       return false;
     }
     if (left.type != Expression::Type::FUNCTION || left.children.size() != 1) {
       return false;
     }
     auto& arg = left.children.front();
-    if (arg.type != Expression::Type::PARAMETER) {
+    if (arg.type != Expression::Type::PARAMETER &&
+        arg.type != Expression::Type::CONSTANT) {
       return false;
     }
     lean_formula.main_formula.entries[left] = right;
   }
-  return lean_formula.main_formula.entries.size() == 1;
+  return lean_formula.main_formula.entries.size() >= 1;
 }
 
 std::string LeanFormula::toString() const {
   std::stringstream buf;
   std::string funcName;
-  Expression mainExpr;
+  
+  // Collect base cases (constant arguments) and recursive case (parameter argument)
+  std::vector<std::pair<Expression, Expression>> baseCases;
+  Expression recursiveCase;
+  Expression recursiveRHS;
+  
   for (const auto& entry : main_formula.entries) {
     funcName = entry.first.name;
-    mainExpr = entry.second;
-    break;
+    const auto& arg = entry.first.children.front();
+    if (arg.type == Expression::Type::CONSTANT) {
+      baseCases.push_back({entry.first, entry.second});
+    } else {
+      recursiveCase = entry.first;
+      recursiveRHS = entry.second;
+    }
   }
-  bool usesParameter = mainExpr.contains(Expression::Type::PARAMETER);
-  std::string arg = usesParameter ? "n" : "_";
-  buf << "def " << funcName << " (" << arg
-      << " : Int) : Int := " << mainExpr.toString(true);
+  
+  // Check if this is a recursive formula (multiple entries)
+  if (main_formula.entries.size() == 1) {
+    // Non-recursive case (original behavior)
+    bool usesParameter = recursiveRHS.contains(Expression::Type::PARAMETER);
+    std::string arg = usesParameter ? "n" : "_";
+    buf << "def " << funcName << " (" << arg
+        << " : Int) : Int := " << recursiveRHS.toString(true);
+  } else {
+    // Recursive case with base cases - output on a single line
+    buf << "def " << funcName << " (n : Int) : Int := ";
+    
+    // Sort base cases by constant value for consistent output
+    std::sort(baseCases.begin(), baseCases.end(),
+              [](const auto& a, const auto& b) {
+                return a.first.children.front().value < b.first.children.front().value;
+              });
+    
+    // Generate if-then-else chain (single line)
+    for (size_t i = 0; i < baseCases.size(); i++) {
+      const auto& bc = baseCases[i];
+      const auto& constValue = bc.first.children.front().value;
+      if (i == 0) {
+        buf << "if n = " << constValue.to_string();
+      } else {
+        buf << " else if n = " << constValue.to_string();
+      }
+      buf << " then " << bc.second.toString(true);
+    }
+    
+    // Add the recursive case
+    if (!recursiveCase.name.empty()) {
+      buf << " else " << recursiveRHS.toString(true);
+    }
+  }
+  
   return buf.str();
 }
 
