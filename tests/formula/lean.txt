@@ -27,3 +27,4 @@ A008576: def a (n : Int) : Int := (Int.tdiv (8*n-2) 3)+1
 A008577: def a (n : Int) : Int := Int.fdiv ((2*n+1)^2+3) 3
 A021019: def a (n : Int) : Int := 6*(min n 1)
 A060576: def a (n : Int) : Int := Bool.toInt (n != 1)
+A092242: def a (n : Int) : Int := 2*(Int.xor (3*n-3) 1)+3
