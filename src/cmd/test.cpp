@@ -572,6 +572,31 @@ void Test::memory() {
   checkMemory(mem, 16, 15);
   checkMemory(mem, 17, 16);
   checkMemory(mem, 18, 0);  // unchanged
+
+  // Test operations with zero length - should do nothing
+  mem.clear();
+  mem.set(5, 100);
+  mem.set(6, 200);
+
+  // Test clr with zero length
+  mem.clear(5, 0);
+  checkMemory(mem, 5, 100);  // unchanged
+  checkMemory(mem, 6, 200);  // unchanged
+
+  // Test fil with zero length
+  mem.fill(5, 0);
+  checkMemory(mem, 5, 100);  // unchanged
+  checkMemory(mem, 6, 200);  // unchanged
+
+  // Test rol with zero length
+  mem.rotateLeft(5, 0);
+  checkMemory(mem, 5, 100);  // unchanged
+  checkMemory(mem, 6, 200);  // unchanged
+
+  // Test ror with zero length
+  mem.rotateRight(5, 0);
+  checkMemory(mem, 5, 100);  // unchanged
+  checkMemory(mem, 6, 200);  // unchanged
 }
 
 void checkEnclosingLoop(const Program& p, int64_t begin, int64_t end,

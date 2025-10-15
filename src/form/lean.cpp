@@ -32,6 +32,25 @@ bool convertToLean(Expression& expr, const Formula& f) {
       if (expr.name == "min" || expr.name == "max") {
         break;
       }
+      // Convert floor and truncate functions to LEAN equivalents
+      if (expr.name == "floor" || expr.name == "truncate") {
+        // These functions should have a single FRACTION argument
+        if (expr.children.size() == 1 &&
+            expr.children[0].type == Expression::Type::FRACTION &&
+            expr.children[0].children.size() == 2) {
+          // Extract numerator and denominator from fraction
+          auto numerator = expr.children[0].children[0];
+          auto denominator = expr.children[0].children[1];
+          // Replace with Int.fdiv or Int.tdiv
+          expr.name = (expr.name == "floor") ? "Int.fdiv" : "Int.tdiv";
+          expr.children.clear();
+          expr.children.push_back(numerator);
+          expr.children.push_back(denominator);
+          break;
+        }
+        // If not a simple fraction, reject
+        return false;
+      }
       return false;
     }
     case Expression::Type::POWER:
