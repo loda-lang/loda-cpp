@@ -42,7 +42,8 @@ void Mutator::mutateRandom(Program &program) {
   size_t i;
 
   // get number of used memory cells
-  int64_t num_cells = ProgramUtil::getLargestDirectMemoryCell(program) + 1;
+  int64_t num_cells =
+      ProgramUtil::getLargestDirectMemoryCellWithoutRegions(program) + 1;
   static const int64_t new_cells = 2;
 
   // calculate the number of mutations to apply

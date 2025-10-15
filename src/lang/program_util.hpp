@@ -51,15 +51,16 @@ class ProgramUtil {
   static bool areIndependent(const Operation &op1, const Operation &op2);
 
   static bool getUsedMemoryCells(const Program &p,
-                                 std::unordered_set<int64_t> &used_cells,
+                                 std::map<UID, Program> *prg_refs,
+                                 std::unordered_set<int64_t> *used_cells,
                                  int64_t &larged_used, int64_t max_memory);
+
+  static int64_t getLargestDirectMemoryCellWithoutRegions(const Program &p);
 
   static bool getUsedUninitializedCells(const Program &p,
                                         std::set<int64_t> &initialized,
                                         std::set<int64_t> &uninitialized,
                                         size_t start_pos = 0);
-
-  static int64_t getLargestDirectMemoryCell(const Program &p);
 
   static bool swapDirectOperandCells(Program &p, int64_t cell1, int64_t cell2);
 

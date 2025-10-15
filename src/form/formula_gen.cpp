@@ -381,11 +381,14 @@ void FormulaGenerator::initFormula(int64_t numCells, bool useIncEval) {
 }
 
 bool FormulaGenerator::generateSingle(const Program& p) {
-  // indirect operands are not supported
   if (ProgramUtil::hasIndirectOperand(p)) {
     return false;
   }
-  const int64_t numCells = ProgramUtil::getLargestDirectMemoryCell(p) + 1;
+  if (ProgramUtil::hasRegionOperation(p)) {
+    return false;
+  }
+  const int64_t numCells =
+      ProgramUtil::getLargestDirectMemoryCellWithoutRegions(p) + 1;
   const bool useIncEval =
       incEval.init(p, true, true);  // skip input transformations and offset
 
