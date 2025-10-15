@@ -7,6 +7,7 @@
 
 ### Enhancements
 
+* Support simple recursive functions in LEAN formula generation
 * Simplify formulas by replacing simple references to recursive functions
 * Removed deprecated list generation functionality
 
