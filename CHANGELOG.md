@@ -10,10 +10,6 @@
 * Simplify formulas by replacing simple references to recursive functions
 * Removed deprecated list generation functionality
 
-### Bugfixes
-
-* Fix potential bugs in optimizer, folder, mutator, and formula generator when programs contain region operations (`clr`, `fil`, `rol`, `ror`). These functions now correctly use `getUsedMemoryCells()` instead of `getLargestDirectMemoryCell()` to account for memory cells affected by region operations.
-
 ## v25.10.8
 
 ### Enhancements

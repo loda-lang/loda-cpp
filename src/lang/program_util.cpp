@@ -1,6 +1,5 @@
 #include "lang/program_util.hpp"
 
-#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <numeric>
@@ -225,7 +224,31 @@ bool ProgramUtil::areIndependent(const Operation &op1, const Operation &op2) {
   return true;
 }
 
+void collectUsedMemoryCells(const Operand &operand, int64_t region_length,
+                            std::unordered_set<int64_t> *used_cells,
+                            int64_t &largest_used) {
+  if (operand.type != Operand::Type::DIRECT) {
+    return;
+  }
+  int64_t start, end;
+  int64_t base = operand.value.asInt();
+  if (region_length >= 0) {
+    start = base;
+    end = base + region_length;
+  } else {
+    start = std::max<int64_t>(base + region_length + 1, 0);
+    end = base + 1;
+  }
+  for (int64_t cell = start; cell < end; cell++) {
+    if (used_cells) {
+      used_cells->insert(cell);
+    }
+    largest_used = std::max(largest_used, cell);
+  }
+}
+
 bool ProgramUtil::getUsedMemoryCells(const Program &p,
+                                     std::unordered_map<UID, Program> *prg_refs,
                                      std::unordered_set<int64_t> *used_cells,
                                      int64_t &largest_used,
                                      int64_t max_memory) {
@@ -233,69 +256,52 @@ bool ProgramUtil::getUsedMemoryCells(const Program &p,
   for (const auto &op : p.ops) {
     int64_t region_length = 1;
     if (op.source.type == Operand::Type::INDIRECT ||
-        op.target.type == Operand::Type::INDIRECT ||
-        op.type == Operation::Type::PRG) {
+        op.target.type == Operand::Type::INDIRECT) {
       return false;
     }
-    if (op.type == Operation::Type::LPB || op.type == Operation::Type::CLR ||
-        op.type == Operation::Type::FIL || op.type == Operation::Type::ROL ||
-        op.type == Operation::Type::ROR) {
+    if (op.type == Operation::Type::PRG) {
+      if (op.source.type != Operand::Type::CONSTANT) {
+        return false;
+      }
+      auto sub_uid = UID::castFromInt(op.source.value.asInt());
+      if (prg_refs || prg_refs->find(sub_uid) == prg_refs->end()) {
+        return false;
+      }
+      const auto &sub = prg_refs->at(sub_uid);
+      region_length = std::max<int64_t>(sub.getDirective("inputs"),
+                                        sub.getDirective("outputs"));
+    } else if (op.type == Operation::Type::LPB ||
+               op.type == Operation::Type::CLR ||
+               op.type == Operation::Type::FIL ||
+               op.type == Operation::Type::ROL ||
+               op.type == Operation::Type::ROR) {
       if (op.source.type == Operand::Type::CONSTANT) {
         region_length = op.source.value.asInt();
       } else {
         return false;
       }
     }
-    // Check max memory using absolute value of region length
     if (std::abs(region_length) > max_memory && max_memory >= 0) {
       return false;
     }
-    if (op.source.type == Operand::Type::DIRECT) {
-      if (region_length >= 0) {
-        // Positive region length: count up from base
-        for (int64_t i = 0; i < region_length; i++) {
-          int64_t cell = op.source.value.asInt() + i;
-          if (used_cells) {
-            used_cells->insert(cell);
-          }
-          largest_used = std::max(largest_used, cell);
-        }
-      } else {
-        // Negative region length: count down from base, stop at 0
-        int64_t base = op.source.value.asInt();
-        for (int64_t i = 0; i > region_length && base + i >= 0; i--) {
-          int64_t cell = base + i;
-          if (used_cells) {
-            used_cells->insert(cell);
-          }
-          largest_used = std::max(largest_used, cell);
-        }
-      }
-    }
-    if (op.target.type == Operand::Type::DIRECT) {
-      if (region_length >= 0) {
-        // Positive region length: count up from base
-        for (int64_t i = 0; i < region_length; i++) {
-          int64_t cell = op.target.value.asInt() + i;
-          if (used_cells) {
-            used_cells->insert(cell);
-          }
-          largest_used = std::max(largest_used, cell);
-        }
-      } else {
-        // Negative region length: count down from base, stop at 0
-        int64_t base = op.target.value.asInt();
-        for (int64_t i = 0; i > region_length && base + i >= 0; i--) {
-          int64_t cell = base + i;
-          if (used_cells) {
-            used_cells->insert(cell);
-          }
-          largest_used = std::max(largest_used, cell);
-        }
-      }
-    }
+    collectUsedMemoryCells(op.source, region_length, used_cells, largest_used);
+    collectUsedMemoryCells(op.target, region_length, used_cells, largest_used);
   }
   return true;
+}
+
+int64_t ProgramUtil::getLargestDirectMemoryCellWithoutRegions(
+    const Program &p) {
+  int64_t largest = 0;
+  for (const auto &op : p.ops) {
+    if (op.source.type == Operand::Type::DIRECT) {
+      largest = std::max<int64_t>(largest, op.source.value.asInt());
+    }
+    if (op.target.type == Operand::Type::DIRECT) {
+      largest = std::max<int64_t>(largest, op.target.value.asInt());
+    }
+  }
+  return largest;
 }
 
 bool ProgramUtil::getUsedUninitializedCells(const Program &p,

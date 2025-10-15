@@ -5,21 +5,6 @@
 #include "lang/program_util.hpp"
 #include "lang/subprogram.hpp"
 
-// Local helper to get largest direct memory cell (ignores region operations)
-// Used as fallback when getUsedMemoryCells fails (e.g., with PRG operations)
-static int64_t getLargestDirectMemoryCell(const Program &p) {
-  int64_t largest = 0;
-  for (const auto &op : p.ops) {
-    if (op.source.type == Operand::Type::DIRECT) {
-      largest = std::max<int64_t>(largest, op.source.value.asInt());
-    }
-    if (op.target.type == Operand::Type::DIRECT) {
-      largest = std::max<int64_t>(largest, op.target.value.asInt());
-    }
-  }
-  return largest;
-}
-
 void updateOperand(Operand &op, int64_t start, int64_t shared_region_length,
                    int64_t largest_used) {
   if (op.type != Operand::Type::DIRECT) {
@@ -106,12 +91,8 @@ bool Fold::unfold(Program &main, int64_t pos) {
     shared_region_length = std::max<int64_t>(sub.getDirective("inputs"),
                                              sub.getDirective("outputs"));
   }
-  int64_t largest_used = 0;
-  if (!ProgramUtil::getUsedMemoryCells(main, nullptr, largest_used, -1)) {
-    // Fallback to getLargestDirectMemoryCell for cases where getUsedMemoryCells fails
-    // This is necessary for programs with PRG operations or other complex cases
-    largest_used = getLargestDirectMemoryCell(main);
-  }
+  int64_t largest_used =
+      ProgramUtil::getLargestDirectMemoryCellWithoutRegions(main);
   for (auto &op : sub.ops) {
     updateOperand(op.target, start, shared_region_length, largest_used);
     updateOperand(op.source, start, shared_region_length, largest_used);
@@ -198,15 +179,12 @@ bool Fold::fold(Program &main, Program sub, size_t subId,
   // get used memory cells
   std::unordered_set<int64_t> used_sub_cells;
   int64_t tmp_larged_used;
-  if (!ProgramUtil::getUsedMemoryCells(sub, &used_sub_cells, tmp_larged_used,
-                                       maxMemory)) {
+  if (!ProgramUtil::getUsedMemoryCells(sub, nullptr, &used_sub_cells,
+                                       tmp_larged_used, maxMemory)) {
     return false;
   }
-  int64_t largest_used_main = 0;
-  if (!ProgramUtil::getUsedMemoryCells(main, nullptr, largest_used_main,
-                                       maxMemory)) {
-    return false;
-  }
+  int64_t largest_used_main =
+      ProgramUtil::getLargestDirectMemoryCellWithoutRegions(main);
   // initialize partial evaluator for main program
   Settings settings;
   PartialEvaluator eval(settings);

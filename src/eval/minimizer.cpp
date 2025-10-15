@@ -87,7 +87,7 @@ bool Minimizer::minimize(Program& p, size_t num_terms) const {
         int64_t base = getPowerOf(op.source.value);
         if (base != 0) {
           int64_t largest_used = 0;
-          if (ProgramUtil::getUsedMemoryCells(p, nullptr, largest_used,
+          if (ProgramUtil::getUsedMemoryCells(p, nullptr, nullptr, largest_used,
                                               settings.max_memory)) {
             // try to replace gcd by a loop
             auto tmp = Operand(Operand::Type::DIRECT, largest_used + 1);

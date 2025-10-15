@@ -66,11 +66,11 @@ bool Extender::linear2(Program &p, line_t inverse, line_t target) {
 bool Extender::delta_one(Program &p, const bool sum) {
   Settings settings;
   int64_t largest_used = 0;
-  if (!ProgramUtil::getUsedMemoryCells(p, nullptr, largest_used,
+  if (!ProgramUtil::getUsedMemoryCells(p, nullptr, nullptr, largest_used,
                                        settings.max_memory)) {
     return false;
   }
-  largest_used = std::max((int64_t)Program::OUTPUT_CELL, largest_used);
+  largest_used = std::max<int64_t>(Program::OUTPUT_CELL, largest_used);
   auto saved_arg_cell = largest_used + 1;
   auto saved_result_cell = largest_used + 2;
   auto loop_counter_cell = largest_used + 3;
