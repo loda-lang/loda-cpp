@@ -166,7 +166,7 @@ bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
     leanPath = projectDir + "Main.lean";
     leanResult = projectDir + "lean-result-" + tmpFileId + ".txt";
     // Use sh -c to run lake in the project directory
-    args = {"sh", "-c", "cd " + projectDir + " && lake env lean --run Main.lean > " + leanResult + " 2>&1"};
+    args = {"sh", "-c", "cd " + projectDir + " && lake env lean --run Main.lean"};
   } else {
     leanPath = "lean-loda-" + tmpFileId + ".lean";
     leanResult = "lean-result-" + tmpFileId + ".txt";
@@ -186,7 +186,7 @@ bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
     leanFile.close();
     
     // Execute with timeout
-    int exitCode = execWithTimeout(args, timeoutSeconds);
+    int exitCode = execWithTimeout(args, timeoutSeconds, leanResult);
     if (exitCode != 0) {
       std::remove(leanPath.c_str());
       if (exitCode == PROCESS_ERROR_TIMEOUT) {
