@@ -3,16 +3,12 @@
 
 #offset 1
 
-sub $0,1
-mov $2,1
-mov $3,$0
-mov $0,1
-add $3,1
-lpb $3
-  sub $3,1
-  pow $2,4
-  add $0,2
-  add $1,$2
-  mov $2,$0
-lpe
-mov $0,$1
+mov $1,$0
+pow $1,2
+mov $2,48
+mul $2,$1
+sub $2,40
+mul $2,$1
+add $2,7
+mul $0,$2
+div $0,15
