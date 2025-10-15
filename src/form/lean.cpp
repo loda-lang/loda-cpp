@@ -3,6 +3,10 @@
 #include <fstream>
 #include <sstream>
 
+#ifndef _WIN64
+#include <sys/stat.h>
+#endif
+
 #include "form/expression_util.hpp"
 #include "form/formula_util.hpp"
 #include "seq/seq_util.hpp"
@@ -169,8 +173,24 @@ bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
     const std::string projectDir = getTmpDir() + "lean-project/";
     leanPath = projectDir + "Main.lean";
     leanResult = projectDir + "lean-result-" + tmpFileId + ".txt";
-    // Use sh -c to run lake in the project directory
-    args = {"sh", "-c", "cd " + projectDir + " && lake env lean --run Main.lean"};
+    
+    // Create a wrapper script to run lake in the project directory
+    std::string runScript = projectDir + "run-" + tmpFileId + ".sh";
+    std::ofstream scriptFile(runScript);
+    if (!scriptFile) {
+      Log::get().error("Failed to create run script", true);
+    }
+    scriptFile << "#!/bin/sh\n";
+    scriptFile << "cd " + projectDir + "\n";
+    scriptFile << "lake env lean --run Main.lean\n";
+    scriptFile.close();
+    
+    // Make script executable on Unix systems
+#ifndef _WIN64
+    chmod(runScript.c_str(), 0755);
+#endif
+    
+    args = {runScript};
   } else {
     leanPath = "lean-loda-" + tmpFileId + ".lean";
     leanResult = "lean-result-" + tmpFileId + ".txt";
@@ -181,6 +201,9 @@ bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
   
   // For project-based eval, we need to handle it differently
   if (needsBitwiseImport()) {
+    const std::string projectDir = getTmpDir() + "lean-project/";
+    std::string runScript = projectDir + "run-" + tmpFileId + ".sh";
+    
     // Write the code to Main.lean
     std::ofstream leanFile(leanPath);
     if (!leanFile) {
@@ -193,6 +216,7 @@ bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
     int exitCode = execWithTimeout(args, timeoutSeconds, leanResult);
     if (exitCode != 0) {
       std::remove(leanPath.c_str());
+      std::remove(runScript.c_str());
       if (exitCode == PROCESS_ERROR_TIMEOUT) {
         return false;  // timeout
       }
@@ -205,6 +229,7 @@ bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
     if (!resultIn) {
       std::remove(leanPath.c_str());
       std::remove(leanResult.c_str());
+      std::remove(runScript.c_str());
       Log::get().error("Error reading LEAN result", true);
     }
     result.clear();
@@ -216,12 +241,14 @@ bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
         resultIn.close();
         std::remove(leanPath.c_str());
         std::remove(leanResult.c_str());
+        std::remove(runScript.c_str());
         Log::get().error("Error parsing LEAN output: " + line, true);
       }
     }
     resultIn.close();
     std::remove(leanPath.c_str());
     std::remove(leanResult.c_str());
+    std::remove(runScript.c_str());
     return true;
   } else {
     return SequenceUtil::evalFormulaWithExternalTool(
@@ -287,10 +314,27 @@ bool LeanFormula::initializeLeanProject() {
   toolchain.close();
 
   // Run lake update to download dependencies (with timeout)
-  // Use sh -c to run in the project directory
-  std::vector<std::string> updateArgs = {"sh", "-c", "cd " + projectDir + " && lake update"};
+  // Note: This requires lake to be run from the project directory
+  // We use a wrapper script to change directory first
+  std::string updateScript = projectDir + "update.sh";
+  std::ofstream scriptFile(updateScript);
+  if (!scriptFile) {
+    Log::get().warn("Failed to create update script");
+    return false;
+  }
+  scriptFile << "#!/bin/sh\n";
+  scriptFile << "cd " + projectDir + "\n";
+  scriptFile << "lake update\n";
+  scriptFile.close();
   
+  // Make script executable on Unix systems
+#ifndef _WIN64
+  chmod(updateScript.c_str(), 0755);
+#endif
+  
+  std::vector<std::string> updateArgs = {updateScript};
   int exitCode = execWithTimeout(updateArgs, 300);
+  std::remove(updateScript.c_str());
   
   if (exitCode != 0) {
     Log::get().warn("lake update failed with exit code " + std::to_string(exitCode));
