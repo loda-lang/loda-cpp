@@ -31,6 +31,7 @@ class IncrementalEvaluator {
     LOOP_COUNTER_NOT_INPUT_DEPENDENT = 100,
     PRELOOP_UNSUPPORTED_OPERATION = 101,
     PRELOOP_NON_CONSTANT_OPERAND = 102,
+    PRELOOP_MEMORY_REGION_OPERATION = 103,
     // Loop body check errors (200-299)
     LOOP_COUNTER_NOT_UPDATED = 200,
     LOOP_COUNTER_DECREMENT_INVALID = 201,
@@ -38,6 +39,9 @@ class IncrementalEvaluator {
     INPUT_DEPENDENT_CELL_READ = 203,
     INPUT_DEPENDENT_SOURCE_USED = 204,
     NON_COMMUTATIVE_OPERATIONS = 205,
+    LOOP_BODY_MEMORY_REGION_OPERATION = 206,
+    // Post-loop check errors (300-399)
+    POSTLOOP_MEMORY_REGION_OPERATION = 300,
   };
  public:
   explicit IncrementalEvaluator(Interpreter& interpreter);

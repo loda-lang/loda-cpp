@@ -10,6 +10,10 @@
 * Simplify formulas by replacing simple references to recursive functions
 * Removed deprecated list generation functionality
 
+### Bugfixes
+
+* Forbid memory region operations (clr, fil, rol, ror) in IncrementalEvaluator to prevent incorrect behavior
+
 ## v25.10.8
 
 ### Enhancements

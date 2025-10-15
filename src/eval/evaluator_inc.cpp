@@ -113,6 +113,14 @@ bool IncrementalEvaluator::checkPreLoop(bool skip_input_transform,
   input_dependent_cells.clear();
   input_dependent_cells.insert(Program::INPUT_CELL);
   for (auto& op : simple_loop.pre_loop.ops) {
+    // Check for memory region operations
+    if (op.type == Operation::Type::CLR || op.type == Operation::Type::FIL ||
+        op.type == Operation::Type::ROL || op.type == Operation::Type::ROR) {
+      if (error_code) {
+        *error_code = ErrorCode::PRELOOP_MEMORY_REGION_OPERATION;
+      }
+      return false;
+    }
     bool is_transform = false;
     switch (op.type) {
       case Operation::Type::MOV:
@@ -174,6 +182,16 @@ bool IncrementalEvaluator::checkPreLoop(bool skip_input_transform,
 }
 
 bool IncrementalEvaluator::checkLoopBody(ErrorCode* error_code) {
+  // check for memory region operations
+  for (const auto& op : simple_loop.body.ops) {
+    if (op.type == Operation::Type::CLR || op.type == Operation::Type::FIL ||
+        op.type == Operation::Type::ROL || op.type == Operation::Type::ROR) {
+      if (error_code) {
+        *error_code = ErrorCode::LOOP_BODY_MEMORY_REGION_OPERATION;
+      }
+      return false;
+    }
+  }
   // check loop counter cell
   bool loop_counter_updated = false;
   for (const auto& op : simple_loop.body.ops) {
@@ -333,6 +351,16 @@ void IncrementalEvaluator::computeLoopCounterDependentCells() {
 }
 
 bool IncrementalEvaluator::checkPostLoop(ErrorCode* error_code) {
+  // check for memory region operations
+  for (const auto& op : simple_loop.post_loop.ops) {
+    if (op.type == Operation::Type::CLR || op.type == Operation::Type::FIL ||
+        op.type == Operation::Type::ROL || op.type == Operation::Type::ROR) {
+      if (error_code) {
+        *error_code = ErrorCode::POSTLOOP_MEMORY_REGION_OPERATION;
+      }
+      return false;
+    }
+  }
   // initialize output cells. all memory cells that are read
   // by the post-loop fragment are output cells.
   std::set<int64_t> write;
@@ -364,8 +392,6 @@ bool IncrementalEvaluator::checkPostLoop(ErrorCode* error_code) {
   if (write.find(Program::OUTPUT_CELL) == write.end()) {
     output_cells.insert(Program::OUTPUT_CELL);
   }
-  // Post-loop check always succeeds (no error cases currently)
-  (void)error_code;  // suppress unused parameter warning
   return true;
 }
 
