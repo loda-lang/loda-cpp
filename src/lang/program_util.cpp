@@ -264,7 +264,7 @@ bool ProgramUtil::getUsedMemoryCells(const Program &p,
         return false;
       }
       auto sub_uid = UID::castFromInt(op.source.value.asInt());
-      if (prg_refs || prg_refs->find(sub_uid) == prg_refs->end()) {
+      if (!prg_refs || prg_refs->find(sub_uid) == prg_refs->end()) {
         return false;
       }
       const auto &sub = prg_refs->at(sub_uid);
