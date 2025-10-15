@@ -270,7 +270,7 @@ bool LeanFormula::initializeLeanProject() {
   lakefile << "import Lake\n";
   lakefile << "open Lake DSL\n\n";
   lakefile << "package \"lean-loda\" where\n";
-  lakefile << "  version := \"0.1.0\"\n\n";
+  lakefile << "  version := v!\"0.1.0\"\n\n";
   lakefile << "require mathlib from git\n";
   lakefile << "  \"https://github.com/leanprover-community/mathlib4.git\"\n\n";
   lakefile << "@[default_target]\n";
