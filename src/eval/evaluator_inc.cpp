@@ -176,6 +176,7 @@ bool IncrementalEvaluator::checkPreLoop(bool skip_input_transform,
 bool IncrementalEvaluator::checkLoopBody(ErrorCode* error_code) {
   // check loop counter cell
   bool loop_counter_updated = false;
+  bool has_memory_ops = false;
   for (const auto& op : simple_loop.body.ops) {
     const auto& meta = Operation::Metadata::get(op.type);
     const auto target = op.target.value.asInt();
@@ -199,7 +200,8 @@ bool IncrementalEvaluator::checkLoopBody(ErrorCode* error_code) {
         return false;
       }
     } else if (op.type == Operation::Type::CLR || op.type == Operation::Type::FIL || op.type == Operation::Type::ROL || op.type == Operation::Type::ROR) {
-      if (input_dependent_cells.size() > 1){
+      has_memory_ops = true;
+	  if (input_dependent_cells.size() > 1){
       	if (error_code) {
           *error_code = ErrorCode::MEMORY_OP_WITH_INPUT_DEPENDENT_CELL_EXCEPT_COUNTER;
         }
@@ -268,9 +270,10 @@ bool IncrementalEvaluator::checkLoopBody(ErrorCode* error_code) {
   computeLoopCounterDependentCells();
 
   // check if stateful cells and output cells are commutative
+  // if loop body has memory ops, this is not commutative
   bool is_commutative =
       ProgramUtil::isCommutative(simple_loop.body, stateful_cells) &&
-      ProgramUtil::isCommutative(simple_loop.body, output_cells);
+      ProgramUtil::isCommutative(simple_loop.body, output_cells) && (!has_memory_ops);
 
   if (is_debug) {
     Log::get().debug(
