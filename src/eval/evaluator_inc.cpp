@@ -198,6 +198,34 @@ bool IncrementalEvaluator::checkLoopBody(ErrorCode* error_code) {
         }
         return false;
       }
+    } else if (op.type == Operation::Type::CLR || op.type == Operation::Type::FIL || op.type == Operation::Type::ROL || op.type == Operation::Type::ROR) {
+      if (input_dependent_cells.size() > 1){
+      	if (error_code) {
+          *error_code = ErrorCode::MEMORY_OP_WITH_INPUT_DEPENDENT_CELL_EXCEPT_COUNTER;
+        }
+        return false;
+	  }
+	  if (op.source.type != Operand::Type::CONSTANT) {
+        if (error_code) {
+          *error_code = ErrorCode::MEMORY_OP_SOURCE_INVALID;
+        }
+        return false;
+	  }
+	  int64_t start = op.target.value.asInt();
+	  int64_t length = op.source.value.asInt();
+	  int64_t left;
+	  int64_t right;
+	  if (length > 0) {
+	    left = start; right = start + length;
+	  } else {
+	    left = start + length + 1; right = start + 1;
+	  }
+	  if (left <= simple_loop.counter && simple_loop.counter < right) {
+	  	if (error_code) {
+          *error_code = ErrorCode::MEMORY_OP_SOURCE_INVALID;
+        }
+        return false;
+	  }
     } else if (meta.num_operands > 0 && isInputDependent(op.target) &&
                meta.is_reading_target) {
       if (error_code) {
