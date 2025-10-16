@@ -160,22 +160,6 @@ bool FormulaGenerator::facToExpression(const Expression& a, const Expression& b,
   return true;
 }
 
-// Helper function to calculate memory region bounds from operation
-std::pair<int64_t, int64_t> calculateMemoryRegionBounds(const Operation& op) {
-  int64_t start = op.target.value.asInt();
-  int64_t length = op.source.value.asInt();
-  int64_t left;
-  int64_t right;
-  if (length > 0) {
-    left = start;
-    right = start + length;
-  } else {
-    left = start + length + 1;
-    right = start + 1;
-  }
-  return std::make_pair(left, right);
-}
-
 bool FormulaGenerator::update(const Operation& op, const RangeMap* ranges) {
   auto source = operandToExpression(op.source);
   auto target = operandToExpression(op.target);
@@ -333,9 +317,17 @@ bool FormulaGenerator::update(const Operation& op, const RangeMap* ranges) {
         okay = false;
         break;
       }
-      auto bounds = calculateMemoryRegionBounds(op);
-      int64_t left = bounds.first;
-      int64_t right = bounds.second;
+      int64_t start = op.target.value.asInt();
+  int64_t length = op.source.value.asInt();
+  int64_t left;
+  int64_t right;
+  if (length > 0) {
+    left = start;
+    right = start + length;
+  } else {
+    left = start + length + 1;
+    right = start + 1;
+  }
       if (right - left >= 15) { // magic number
         okay = false;
         break;
@@ -357,7 +349,7 @@ bool FormulaGenerator::update(const Operation& op, const RangeMap* ranges) {
         break;
 	  }
       for (int64_t i = left; i < right; i++) {
-        formula.entries[i] = ((op.type == Operation::Type::FIL) ? prevTarget : constant(0));
+        formula.entries[ExpressionUtil::newFunction(getCellName(i))] = ((op.type == Operation::Type::FIL) ? prevTarget : constant(0));
       }
       break;
     }

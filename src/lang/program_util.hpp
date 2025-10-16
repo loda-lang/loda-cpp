@@ -57,6 +57,8 @@ class ProgramUtil {
 
   static int64_t getLargestDirectMemoryCellWithoutRegions(const Program &p);
 
+  static int64_t getLargestDirectMemoryCellWithRegions(const Program &p);
+
   static bool getUsedUninitializedCells(const Program &p,
                                         std::set<int64_t> &initialized,
                                         std::set<int64_t> &uninitialized,
