@@ -241,7 +241,7 @@ std::pair<int64_t, int64_t> getTargetMemoryRange(const Operation &op){
   if (op.target.type != Operand::Type::DIRECT || op.type == Operation::Type::PRG) {
     throw std::runtime_error("Unsupported operation for target memory range");
   }
-  if (isWritingRegion(op.type)) {
+  if (ProgramUtil::isWritingRegion(op.type)) {
   	if (op.source.type != Operand::Type::CONSTANT) {
       throw std::runtime_error("Unsupported operation for target memory range");
     }
