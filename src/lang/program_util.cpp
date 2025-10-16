@@ -304,7 +304,8 @@ int64_t ProgramUtil::getLargestDirectMemoryCellWithoutRegions(
   return largest;
 }
 
-// Doesn't support memory ops with non-constant 
+// Doesn't support memory ops with non-constant source
+// Only used in formula generation
 int64_t ProgramUtil::getLargestDirectMemoryCellWithRegions(const Program &p) {
   int64_t largest = 0;
   for (const auto &op : p.ops) {

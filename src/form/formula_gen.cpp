@@ -311,35 +311,35 @@ bool FormulaGenerator::update(const Operation& op, const RangeMap* ranges) {
     }
     case Operation::Type::CLR:
     case Operation::Type::FIL:
-	case Operation::Type::ROL:
-	case Operation::Type::ROR: {
+    case Operation::Type::ROL:
+    case Operation::Type::ROR: {
       if (op.target.type != Operand::Type::DIRECT || op.source.type != Operand::Type::CONSTANT) {
         okay = false;
         break;
       }
       int64_t start = op.target.value.asInt();
-  int64_t length = op.source.value.asInt();
-  int64_t left;
-  int64_t right;
-  if (length > 0) {
-    left = start;
-    right = start + length;
-  } else {
-    left = start + length + 1;
-    right = start + 1;
-  }
+      int64_t length = op.source.value.asInt();
+      int64_t left;
+      int64_t right;
+      if (length > 0) {
+        left = start;
+        right = start + length;
+      } else {
+        left = start + length + 1;
+        right = start + 1;
+      }
       if (right - left >= 15) { // magic number
         okay = false;
         break;
       }
       if (op.type == Operation::Type::ROL) {
-      	auto leftEntry = formula.entries[ExpressionUtil::newFunction(getCellName(left))];
+          auto leftEntry = formula.entries[ExpressionUtil::newFunction(getCellName(left))];
         for (int64_t i = left; i < right - 1; i++) {
           formula.entries[ExpressionUtil::newFunction(getCellName(i))] = formula.entries[ExpressionUtil::newFunction(getCellName(i + 1))];
         }
         formula.entries[ExpressionUtil::newFunction(getCellName(right - 1))] = leftEntry;
         break;
-	  }
+      }
       if (op.type == Operation::Type::ROR) {
         auto rightEntry = formula.entries[ExpressionUtil::newFunction(getCellName(right - 1))];
         for (int64_t i = right - 1; i > left; i--) {
@@ -347,7 +347,7 @@ bool FormulaGenerator::update(const Operation& op, const RangeMap* ranges) {
         }
         formula.entries[ExpressionUtil::newFunction(getCellName(left))] = rightEntry;
         break;
-	  }
+      }
       for (int64_t i = left; i < right; i++) {
         formula.entries[ExpressionUtil::newFunction(getCellName(i))] = ((op.type == Operation::Type::FIL) ? prevTarget : constant(0));
       }
