@@ -176,6 +176,7 @@ bool IncrementalEvaluator::checkPreLoop(bool skip_input_transform,
 bool IncrementalEvaluator::checkLoopBody(ErrorCode* error_code) {
   // check loop counter cell
   bool loop_counter_updated = false;
+  bool has_memory_ops = false;
   for (const auto& op : simple_loop.body.ops) {
     const auto& meta = Operation::Metadata::get(op.type);
     const auto target = op.target.value.asInt();
@@ -198,6 +199,41 @@ bool IncrementalEvaluator::checkLoopBody(ErrorCode* error_code) {
         }
         return false;
       }
+    } else if (op.type == Operation::Type::CLR || op.type == Operation::Type::FIL || op.type == Operation::Type::ROL || op.type == Operation::Type::ROR) {
+      has_memory_ops = true;
+	  if (input_dependent_cells.size() > 1){
+      	if (error_code) {
+          *error_code = ErrorCode::MEMORY_OP_WITH_INPUT_DEPENDENT_CELL_EXCEPT_COUNTER;
+        }
+        return false;
+	  }
+	  if (op.source.type != Operand::Type::CONSTANT) {
+        if (error_code) {
+          *error_code = ErrorCode::MEMORY_OP_SOURCE_INVALID;
+        }
+        return false;
+	  }
+	  int64_t start = op.target.value.asInt();
+	  int64_t length = op.source.value.asInt();
+	  int64_t left;
+	  int64_t right;
+	  if (length > 0) {
+	    left = start; right = start + length;
+	  } else {
+	    left = start + length + 1; right = start + 1;
+	  }
+	  if (right - left >= 100) { // magic number
+	  	if (error_code) {
+          *error_code = ErrorCode::MEMORY_OP_SOURCE_INVALID;
+        }
+        return false;
+	  }
+	  if (left <= simple_loop.counter && simple_loop.counter < right) {
+	  	if (error_code) {
+          *error_code = ErrorCode::MEMORY_OP_SOURCE_INVALID;
+        }
+        return false;
+	  }
     } else if (meta.num_operands > 0 && isInputDependent(op.target) &&
                meta.is_reading_target) {
       if (error_code) {
@@ -234,9 +270,10 @@ bool IncrementalEvaluator::checkLoopBody(ErrorCode* error_code) {
   computeLoopCounterDependentCells();
 
   // check if stateful cells and output cells are commutative
+  // if loop body has memory ops, this is not commutative
   bool is_commutative =
       ProgramUtil::isCommutative(simple_loop.body, stateful_cells) &&
-      ProgramUtil::isCommutative(simple_loop.body, output_cells);
+      ProgramUtil::isCommutative(simple_loop.body, output_cells) && (!has_memory_ops);
 
   if (is_debug) {
     Log::get().debug(
@@ -275,6 +312,24 @@ void IncrementalEvaluator::computeStatefulCells() {
   std::set<int64_t> write;
   stateful_cells.clear();
   for (const auto& op : simple_loop.body.ops) {
+  	if (op.type == Operation::Type::CLR || op.type == Operation::Type::FIL || op.type == Operation::Type::ROL || op.type == Operation::Type::ROR) {
+  	  // Set all cells affected by memory ops as stateful.
+  	  int64_t start = op.target.value.asInt();
+	  int64_t length = op.source.value.asInt();
+	  int64_t left;
+	  int64_t right;
+	  if (length > 0) {
+	    left = start; right = start + length;
+	  } else {
+	    left = start + length + 1; right = start + 1;
+	  }
+	  for (int64_t i = left; i < right; i++) {
+	  	read.insert(i);
+	  	write.insert(i);
+	  	stateful_cells.insert(i);
+	  }
+  	  continue;
+	}
     const auto& meta = Operation::Metadata::get(op.type);
     if (meta.num_operands == 0) {
       continue;
@@ -306,6 +361,30 @@ void IncrementalEvaluator::computeLoopCounterDependentCells() {
   while (changed) {
     changed = false;
     for (const auto& op : simple_loop.body.ops) {
+      if (op.type == Operation::Type::CLR || op.type == Operation::Type::FIL || op.type == Operation::Type::ROL || op.type == Operation::Type::ROR) {
+	  	  // Set all cells affected by memory ops as loop counter dependent if one of the cells is loop counter dependent.
+	  	  int64_t start = op.target.value.asInt();
+		  int64_t length = op.source.value.asInt();
+		  int64_t left;
+		  int64_t right;
+		  if (length > 0) {
+		    left = start; right = start + length;
+		  } else {
+		    left = start + length + 1; right = start + 1;
+		  }
+		  int64_t is_dependent = 0;
+		  for (int64_t i = left; i < right; i++) {
+		  	if (loop_counter_dependent_cells.find(i) != loop_counter_dependent_cells.end()) is_dependent = 1;
+		  }
+		  if (is_dependent) {
+		    for (int64_t i = left; i < right; i++) {
+		    	if (loop_counter_dependent_cells.find(i) != loop_counter_dependent_cells.end()) continue;
+		    	loop_counter_dependent_cells.insert(i);
+                changed = true;
+		    }
+		  }
+	  	  continue;
+		}
       const auto& meta = Operation::Metadata::get(op.type);
       const auto target = op.target.value.asInt();
       if (loop_counter_dependent_cells.find(target) !=

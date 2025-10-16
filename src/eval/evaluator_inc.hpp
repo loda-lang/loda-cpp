@@ -38,6 +38,8 @@ class IncrementalEvaluator {
     INPUT_DEPENDENT_CELL_READ = 203,
     INPUT_DEPENDENT_SOURCE_USED = 204,
     NON_COMMUTATIVE_OPERATIONS = 205,
+    MEMORY_OP_SOURCE_INVALID = 210,
+    MEMORY_OP_WITH_INPUT_DEPENDENT_CELL_EXCEPT_COUNTER = 211,
   };
  public:
   explicit IncrementalEvaluator(Interpreter& interpreter);
