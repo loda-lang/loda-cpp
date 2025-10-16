@@ -1,0 +1,9 @@
+mov $1,1
+mov $2,2
+mov $3,3
+add $0,3
+lpb $0
+  rol $1,4
+  sub $0,1
+lpe
+mov $0,$1
