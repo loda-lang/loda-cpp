@@ -63,7 +63,7 @@ class FormulaGenerator {
 
   Expression operandToExpression(Operand op) const;
 
-  Expression FormulaGenerator::cellFunc(int64_t index) const;
+  Expression cellFunc(int64_t index) const;
 
   void simplifyFunctionNames();
 
