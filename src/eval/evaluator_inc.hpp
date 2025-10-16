@@ -41,6 +41,7 @@ class IncrementalEvaluator {
     MEMORY_OP_SOURCE_INVALID = 210,
     MEMORY_OP_WITH_INPUT_DEPENDENT_CELL_EXCEPT_COUNTER = 211,
   };
+
  public:
   explicit IncrementalEvaluator(Interpreter& interpreter);
 
@@ -90,7 +91,7 @@ class IncrementalEvaluator {
   void computeStatefulCells();
   void computeLoopCounterDependentCells();
   void initRuntimeData();
-  
+
   // Helper function to set error codes
   void setErrorCode(ErrorCode code, ErrorCode* error_code);
 

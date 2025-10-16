@@ -49,10 +49,10 @@ bool IncrementalEvaluator::init(const Program& program,
                                 ErrorCode* error_code) {
   reset();
   ErrorCode local_error_code = ErrorCode::OK;
-  
+
   // Extract simple loop structure using Analyzer
   simple_loop = Analyzer::extractSimpleLoop(program);
-  
+
   if (!simple_loop.is_simple_loop) {
     // Use single error code for all simple loop extraction failures
     local_error_code = ErrorCode::NOT_A_SIMPLE_LOOP;
@@ -173,6 +173,22 @@ bool IncrementalEvaluator::checkPreLoop(bool skip_input_transform,
   return true;
 }
 
+// Helper function to calculate memory region bounds from operation
+std::pair<int64_t, int64_t> calculateMemoryRegionBounds(const Operation& op) {
+  int64_t start = op.target.value.asInt();
+  int64_t length = op.source.value.asInt();
+  int64_t left;
+  int64_t right;
+  if (length > 0) {
+    left = start;
+    right = start + length;
+  } else {
+    left = start + length + 1;
+    right = start + 1;
+  }
+  return std::make_pair(left, right);
+}
+
 bool IncrementalEvaluator::checkLoopBody(ErrorCode* error_code) {
   // check loop counter cell
   bool loop_counter_updated = false;
@@ -199,41 +215,39 @@ bool IncrementalEvaluator::checkLoopBody(ErrorCode* error_code) {
         }
         return false;
       }
-    } else if (op.type == Operation::Type::CLR || op.type == Operation::Type::FIL || op.type == Operation::Type::ROL || op.type == Operation::Type::ROR) {
+    } else if (op.type == Operation::Type::CLR ||
+               op.type == Operation::Type::FIL ||
+               op.type == Operation::Type::ROL ||
+               op.type == Operation::Type::ROR) {
       has_memory_ops = true;
-	  if (input_dependent_cells.size() > 1){
-      	if (error_code) {
-          *error_code = ErrorCode::MEMORY_OP_WITH_INPUT_DEPENDENT_CELL_EXCEPT_COUNTER;
+      if (input_dependent_cells.size() > 1) {
+        if (error_code) {
+          *error_code =
+              ErrorCode::MEMORY_OP_WITH_INPUT_DEPENDENT_CELL_EXCEPT_COUNTER;
         }
         return false;
-	  }
-	  if (op.source.type != Operand::Type::CONSTANT) {
+      }
+      if (op.source.type != Operand::Type::CONSTANT) {
         if (error_code) {
           *error_code = ErrorCode::MEMORY_OP_SOURCE_INVALID;
         }
         return false;
-	  }
-	  int64_t start = op.target.value.asInt();
-	  int64_t length = op.source.value.asInt();
-	  int64_t left;
-	  int64_t right;
-	  if (length > 0) {
-	    left = start; right = start + length;
-	  } else {
-	    left = start + length + 1; right = start + 1;
-	  }
-	  if (right - left >= 100) { // magic number
-	  	if (error_code) {
+      }
+      auto bounds = calculateMemoryRegionBounds(op);
+      int64_t left = bounds.first;
+      int64_t right = bounds.second;
+      if (right - left >= interpreter.settings.max_memory) {
+        if (error_code) {
           *error_code = ErrorCode::MEMORY_OP_SOURCE_INVALID;
         }
         return false;
-	  }
-	  if (left <= simple_loop.counter && simple_loop.counter < right) {
-	  	if (error_code) {
+      }
+      if (left <= simple_loop.counter && simple_loop.counter < right) {
+        if (error_code) {
           *error_code = ErrorCode::MEMORY_OP_SOURCE_INVALID;
         }
         return false;
-	  }
+      }
     } else if (meta.num_operands > 0 && isInputDependent(op.target) &&
                meta.is_reading_target) {
       if (error_code) {
@@ -273,7 +287,8 @@ bool IncrementalEvaluator::checkLoopBody(ErrorCode* error_code) {
   // if loop body has memory ops, this is not commutative
   bool is_commutative =
       ProgramUtil::isCommutative(simple_loop.body, stateful_cells) &&
-      ProgramUtil::isCommutative(simple_loop.body, output_cells) && (!has_memory_ops);
+      ProgramUtil::isCommutative(simple_loop.body, output_cells) &&
+      (!has_memory_ops);
 
   if (is_debug) {
     Log::get().debug(
@@ -312,24 +327,19 @@ void IncrementalEvaluator::computeStatefulCells() {
   std::set<int64_t> write;
   stateful_cells.clear();
   for (const auto& op : simple_loop.body.ops) {
-  	if (op.type == Operation::Type::CLR || op.type == Operation::Type::FIL || op.type == Operation::Type::ROL || op.type == Operation::Type::ROR) {
-  	  // Set all cells affected by memory ops as stateful.
-  	  int64_t start = op.target.value.asInt();
-	  int64_t length = op.source.value.asInt();
-	  int64_t left;
-	  int64_t right;
-	  if (length > 0) {
-	    left = start; right = start + length;
-	  } else {
-	    left = start + length + 1; right = start + 1;
-	  }
-	  for (int64_t i = left; i < right; i++) {
-	  	read.insert(i);
-	  	write.insert(i);
-	  	stateful_cells.insert(i);
-	  }
-  	  continue;
-	}
+    if (op.type == Operation::Type::CLR || op.type == Operation::Type::FIL ||
+        op.type == Operation::Type::ROL || op.type == Operation::Type::ROR) {
+      // Set all cells affected by memory ops as stateful.
+      auto bounds = calculateMemoryRegionBounds(op);
+      int64_t left = bounds.first;
+      int64_t right = bounds.second;
+      for (int64_t i = left; i < right; i++) {
+        read.insert(i);
+        write.insert(i);
+        stateful_cells.insert(i);
+      }
+      continue;
+    }
     const auto& meta = Operation::Metadata::get(op.type);
     if (meta.num_operands == 0) {
       continue;
@@ -361,30 +371,30 @@ void IncrementalEvaluator::computeLoopCounterDependentCells() {
   while (changed) {
     changed = false;
     for (const auto& op : simple_loop.body.ops) {
-      if (op.type == Operation::Type::CLR || op.type == Operation::Type::FIL || op.type == Operation::Type::ROL || op.type == Operation::Type::ROR) {
-	  	  // Set all cells affected by memory ops as loop counter dependent if one of the cells is loop counter dependent.
-	  	  int64_t start = op.target.value.asInt();
-		  int64_t length = op.source.value.asInt();
-		  int64_t left;
-		  int64_t right;
-		  if (length > 0) {
-		    left = start; right = start + length;
-		  } else {
-		    left = start + length + 1; right = start + 1;
-		  }
-		  int64_t is_dependent = 0;
-		  for (int64_t i = left; i < right; i++) {
-		  	if (loop_counter_dependent_cells.find(i) != loop_counter_dependent_cells.end()) is_dependent = 1;
-		  }
-		  if (is_dependent) {
-		    for (int64_t i = left; i < right; i++) {
-		    	if (loop_counter_dependent_cells.find(i) != loop_counter_dependent_cells.end()) continue;
-		    	loop_counter_dependent_cells.insert(i);
-                changed = true;
-		    }
-		  }
-	  	  continue;
-		}
+      if (op.type == Operation::Type::CLR || op.type == Operation::Type::FIL ||
+          op.type == Operation::Type::ROL || op.type == Operation::Type::ROR) {
+        // Set all cells affected by memory ops as loop counter dependent if one
+        // of the cells is loop counter dependent.
+        auto bounds = calculateMemoryRegionBounds(op);
+        int64_t left = bounds.first;
+        int64_t right = bounds.second;
+        int64_t is_dependent = 0;
+        for (int64_t i = left; i < right; i++) {
+          if (loop_counter_dependent_cells.find(i) !=
+              loop_counter_dependent_cells.end())
+            is_dependent = 1;
+        }
+        if (is_dependent) {
+          for (int64_t i = left; i < right; i++) {
+            if (loop_counter_dependent_cells.find(i) !=
+                loop_counter_dependent_cells.end())
+              continue;
+            loop_counter_dependent_cells.insert(i);
+            changed = true;
+          }
+        }
+        continue;
+      }
       const auto& meta = Operation::Metadata::get(op.type);
       const auto target = op.target.value.asInt();
       if (loop_counter_dependent_cells.find(target) !=
