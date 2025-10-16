@@ -224,21 +224,43 @@ bool ProgramUtil::areIndependent(const Operation &op1, const Operation &op2) {
   return true;
 }
 
+pair<int64_t, int64_t> getTargetMemoryRange(int64_t start, int64_t length){
+    int64_t left;
+    int64_t right;
+    if (length > 0) {
+      left = start;
+      right = start + length;
+    } else {
+      left = std::max<int64_t>(start + length + 1, 0);
+      right = start + 1;
+    }
+    return std::make_pair(left, right);
+}
+
+pair<int64_t, int64_t> getTargetMemoryRange(const Operation &op){
+  if (op.target.type != Operand::Type::DIRECT || op.type == Operation::Type::PRG) {
+    throw std::runtime_error("Unsupported operation for target memory range");
+  }
+  if (isWritingRegion(op.type)) {
+  	if (op.source.type != Operand::Type::CONSTANT) {
+      throw std::runtime_error("Unsupported operation for target memory range");
+    }
+    int64_t start = op.target.value.asInt();
+    int64_t length = op.source.value.asInt();
+    return getTargetMemoryRange(start, length);
+  }
+  return std::make_pair(op.target.value.asInt(), op.target.value.asInt() + 1);
+}
+
 void collectUsedMemoryCells(const Operand &operand, int64_t region_length,
                             std::unordered_set<int64_t> *used_cells,
                             int64_t &largest_used) {
   if (operand.type != Operand::Type::DIRECT) {
     return;
   }
-  int64_t start, end;
-  int64_t base = operand.value.asInt();
-  if (region_length >= 0) {
-    start = base;
-    end = base + region_length;
-  } else {
-    start = std::max<int64_t>(base + region_length + 1, 0);
-    end = base + 1;
-  }
+  auto bounds = getTargetMemoryRange(operand.value.asInt(), region_length);
+  int64_t start = bounds.first;
+  int64_t end = bounds.second;
   for (int64_t cell = start; cell < end; cell++) {
     if (used_cells) {
       used_cells->insert(cell);

@@ -173,21 +173,7 @@ bool IncrementalEvaluator::checkPreLoop(bool skip_input_transform,
   return true;
 }
 
-// Helper function to calculate memory region bounds from operation
-std::pair<int64_t, int64_t> calculateMemoryRegionBounds(const Operation& op) {
-  int64_t start = op.target.value.asInt();
-  int64_t length = op.source.value.asInt();
-  int64_t left;
-  int64_t right;
-  if (length > 0) {
-    left = start;
-    right = start + length;
-  } else {
-    left = start + length + 1;
-    right = start + 1;
-  }
-  return std::make_pair(left, right);
-}
+
 
 bool IncrementalEvaluator::checkLoopBody(ErrorCode* error_code) {
   // check loop counter cell
@@ -233,7 +219,7 @@ bool IncrementalEvaluator::checkLoopBody(ErrorCode* error_code) {
         }
         return false;
       }
-      auto bounds = calculateMemoryRegionBounds(op);
+      auto bounds = ProgramUtil::getTargetMemoryRange(op);
       int64_t left = bounds.first;
       int64_t right = bounds.second;
       if (right - left >= interpreter.settings.max_memory) {
@@ -330,7 +316,7 @@ void IncrementalEvaluator::computeStatefulCells() {
     if (op.type == Operation::Type::CLR || op.type == Operation::Type::FIL ||
         op.type == Operation::Type::ROL || op.type == Operation::Type::ROR) {
       // Set all cells affected by memory ops as stateful.
-      auto bounds = calculateMemoryRegionBounds(op);
+      auto bounds = ProgramUtil::getTargetMemoryRange(op);
       int64_t left = bounds.first;
       int64_t right = bounds.second;
       for (int64_t i = left; i < right; i++) {
@@ -375,7 +361,7 @@ void IncrementalEvaluator::computeLoopCounterDependentCells() {
           op.type == Operation::Type::ROL || op.type == Operation::Type::ROR) {
         // Set all cells affected by memory ops as loop counter dependent if one
         // of the cells is loop counter dependent.
-        auto bounds = calculateMemoryRegionBounds(op);
+        auto bounds = ProgramUtil::getTargetMemoryRange(op);
         int64_t left = bounds.first;
         int64_t right = bounds.second;
         int64_t is_dependent = 0;

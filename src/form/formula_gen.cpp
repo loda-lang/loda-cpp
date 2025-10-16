@@ -120,6 +120,10 @@ bool FormulaGenerator::canBeNegativeWithRanges(const Expression& e,
   return ExpressionUtil::canBeNegative(e, offset);
 }
 
+Expression FormulaGenerator::cellFunc(int64_t index) const {
+  return ExpressionUtil::newFunction(getCellName(index));
+}
+
 // Express falling/rising factorial using standard factorial
 bool FormulaGenerator::facToExpression(const Expression& a, const Expression& b,
                                        const Operand& aOp, const Operand& bOp,
@@ -317,40 +321,30 @@ bool FormulaGenerator::update(const Operation& op, const RangeMap* ranges) {
         okay = false;
         break;
       }
-      int64_t start = op.target.value.asInt();
-      int64_t length = op.source.value.asInt();
-      int64_t left;
-      int64_t right;
-      if (length > 0) {
-        left = start;
-        right = start + length;
-      } else {
-        left = start + length + 1;
-        right = start + 1;
-      }
+      auto bounds = ProgramUtil::getTargetMemoryRange(op);
+      int64_t left = bounds.first;
+      int64_t right = bounds.second;
       if (right - left >= 15) { // magic number
         okay = false;
         break;
       }
       if (op.type == Operation::Type::ROL) {
-          auto leftEntry = formula.entries[ExpressionUtil::newFunction(getCellName(left))];
+          auto leftEntry = formula.entries[cellFunc(left)];
         for (int64_t i = left; i < right - 1; i++) {
-          formula.entries[ExpressionUtil::newFunction(getCellName(i))] = formula.entries[ExpressionUtil::newFunction(getCellName(i + 1))];
+          formula.entries[cellFunc(i)] = formula.entries[cellFunc(i + 1)];
         }
-        formula.entries[ExpressionUtil::newFunction(getCellName(right - 1))] = leftEntry;
-        break;
-      }
-      if (op.type == Operation::Type::ROR) {
-        auto rightEntry = formula.entries[ExpressionUtil::newFunction(getCellName(right - 1))];
+        formula.entries[cellFunc(right - 1)] = leftEntry;
+      } else if (op.type == Operation::Type::ROR) {
+        auto rightEntry = formula.entries[cellFunc(right - 1)];
         for (int64_t i = right - 1; i > left; i--) {
-          formula.entries[ExpressionUtil::newFunction(getCellName(i))] = formula.entries[ExpressionUtil::newFunction(getCellName(i - 1))];
+          formula.entries[cellFunc(i)] = formula.entries[cellFunc(i - 1)];
         }
-        formula.entries[ExpressionUtil::newFunction(getCellName(left))] = rightEntry;
-        break;
-      }
-      for (int64_t i = left; i < right; i++) {
-        formula.entries[ExpressionUtil::newFunction(getCellName(i))] = ((op.type == Operation::Type::FIL) ? prevTarget : constant(0));
-      }
+        formula.entries[cellFunc(left)] = rightEntry;
+      } else { // for clr and fil operations
+        for (int64_t i = left; i < right; i++) {
+          formula.entries[cellFunc(i)] = ((op.type == Operation::Type::FIL) ? prevTarget : constant(0));
+        }
+	  }
       break;
     }
     default: {
