@@ -136,8 +136,8 @@ std::string LeanFormula::toString() const {
     buf << "def " << funcName << " (" << arg
         << " : Int) : Int := " << recursiveRHS.toString(true);
   } else {
-    // Recursive case with base cases - output on a single line
-    buf << "def " << funcName << " (n : Int) : Int := ";
+    // Recursive case with base cases - use pattern matching syntax
+    buf << "def " << funcName << " : Int -> Int";
     
     // Sort base cases by constant value for consistent output
     std::sort(baseCases.begin(), baseCases.end(),
@@ -145,21 +145,15 @@ std::string LeanFormula::toString() const {
                 return a.first.children.front().value < b.first.children.front().value;
               });
     
-    // Generate if-then-else chain (single line)
-    for (size_t i = 0; i < baseCases.size(); i++) {
-      const auto& bc = baseCases[i];
+    // Generate pattern matching cases
+    for (const auto& bc : baseCases) {
       const auto& constValue = bc.first.children.front().value;
-      if (i == 0) {
-        buf << "if n = " << constValue.to_string();
-      } else {
-        buf << " else if n = " << constValue.to_string();
-      }
-      buf << " then " << bc.second.toString(true);
+      buf << " | " << constValue.to_string() << " => " << bc.second.toString(true);
     }
     
     // Add the recursive case
     if (!recursiveCase.name.empty()) {
-      buf << " else " << recursiveRHS.toString(true);
+      buf << " | n => " << recursiveRHS.toString(true);
     }
   }
   

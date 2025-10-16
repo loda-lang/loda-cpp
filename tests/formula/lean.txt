@@ -1,12 +1,12 @@
 A000004: def a (_ : Int) : Int := 0
 A000027: def a (n : Int) : Int := n
-A000032: def a (n : Int) : Int := if n = 0 then 2 else if n = 1 then 1 else if n = 2 then 3 else (a (n-1))+(a (n-2))
+A000032: def a : Int -> Int | 0 => 2 | 1 => 1 | 2 => 3 | n => (a (n-1))+(a (n-2))
 A000034: def a (n : Int) : Int := n%2+1
 A000035: def a (n : Int) : Int := n%2
-A000045: def a (n : Int) : Int := if n = 0 then 0 else if n = 1 then 1 else (a (n-1))+(a (n-2))
-A000073: def a (n : Int) : Int := if n = 0 then 0 else if n = 1 then 0 else if n = 2 then 1 else (a (n-1))+(a (n-2))+(a (n-3))
+A000045: def a : Int -> Int | 0 => 0 | 1 => 1 | n => (a (n-1))+(a (n-2))
+A000073: def a : Int -> Int | 0 => 0 | 1 => 0 | 2 => 1 | n => (a (n-1))+(a (n-2))+(a (n-3))
 A000115: def a (n : Int) : Int := Int.fdiv ((n+4)^2+9) 20
-A000142: def a (n : Int) : Int := if n = 0 then 1 else n*(a (n-1))
+A000142: def a : Int -> Int | 0 => 1 | n => n*(a (n-1))
 A000212: def a (n : Int) : Int := Int.fdiv (n^2) 3
 A000290: def a (n : Int) : Int := n^2
 A000463: def a (n : Int) : Int := (Int.gcd (n+1) ((Int.fdiv n 2)+1))*((Int.fdiv n 2)+1)
