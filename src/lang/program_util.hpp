@@ -59,9 +59,9 @@ class ProgramUtil {
 
   static int64_t getLargestDirectMemoryCellWithRegions(const Program &p);
 
-  static pair<int64_t, int64_t> getTargetMemoryRange(int64_t start, int64_t length);
+  static std::pair<int64_t, int64_t> getTargetMemoryRange(int64_t start, int64_t length);
 
-  static pair<int64_t, int64_t> getTargetMemoryRange(const Operation &op);
+  static std::pair<int64_t, int64_t> getTargetMemoryRange(const Operation &op);
 
   static bool getUsedUninitializedCells(const Program &p,
                                         std::set<int64_t> &initialized,
