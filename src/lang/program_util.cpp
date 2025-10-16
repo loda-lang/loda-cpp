@@ -304,6 +304,26 @@ int64_t ProgramUtil::getLargestDirectMemoryCellWithoutRegions(
   return largest;
 }
 
+// Doesn't support memory ops with non-constant 
+int64_t ProgramUtil::getLargestDirectMemoryCellWithRegions(const Program &p) {
+  int64_t largest = 0;
+  for (const auto &op : p.ops) {
+    if (op.source.type == Operand::Type::DIRECT) {
+      largest = std::max<int64_t>(largest, op.source.value.asInt());
+    }
+    if (op.target.type == Operand::Type::DIRECT) {
+      largest = std::max<int64_t>(largest, op.target.value.asInt());
+    }
+    if (op.type == Operation::Type::CLR || op.type == Operation::Type::FIL ||
+        op.type == Operation::Type::ROL || op.type == Operation::Type::ROR) {
+      if (op.source.type == Operand::Type::CONSTANT) {
+        largest = std::max<int64_t>(largest, op.target.value.asInt() + op.source.value.asInt() - 1);
+      }
+    }
+  }
+  return largest;
+}
+
 bool ProgramUtil::getUsedUninitializedCells(const Program &p,
                                             std::set<int64_t> &initialized,
                                             std::set<int64_t> &uninitialized,

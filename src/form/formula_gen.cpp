@@ -160,6 +160,22 @@ bool FormulaGenerator::facToExpression(const Expression& a, const Expression& b,
   return true;
 }
 
+// Helper function to calculate memory region bounds from operation
+std::pair<int64_t, int64_t> calculateMemoryRegionBounds(const Operation& op) {
+  int64_t start = op.target.value.asInt();
+  int64_t length = op.source.value.asInt();
+  int64_t left;
+  int64_t right;
+  if (length > 0) {
+    left = start;
+    right = start + length;
+  } else {
+    left = start + length + 1;
+    right = start + 1;
+  }
+  return std::make_pair(left, right);
+}
+
 bool FormulaGenerator::update(const Operation& op, const RangeMap* ranges) {
   auto source = operandToExpression(op.source);
   auto target = operandToExpression(op.target);
@@ -309,6 +325,42 @@ bool FormulaGenerator::update(const Operation& op, const RangeMap* ranges) {
       }
       break;
     }
+    case Operation::Type::CLR:
+    case Operation::Type::FIL:
+	case Operation::Type::ROL:
+	case Operation::Type::ROR: {
+      if (op.target.type != Operand::Type::DIRECT || op.source.type != Operand::Type::CONSTANT) {
+        okay = false;
+        break;
+      }
+      auto bounds = calculateMemoryRegionBounds(op);
+      int64_t left = bounds.first;
+      int64_t right = bounds.second;
+      if (right - left >= 15) { // magic number
+        okay = false;
+        break;
+      }
+      if (op.type == Operation::Type::ROL) {
+      	auto leftEntry = formula.entries[ExpressionUtil::newFunction(getCellName(left))];
+        for (int64_t i = left; i < right - 1; i++) {
+          formula.entries[ExpressionUtil::newFunction(getCellName(i))] = formula.entries[ExpressionUtil::newFunction(getCellName(i + 1))];
+        }
+        formula.entries[ExpressionUtil::newFunction(getCellName(right - 1))] = leftEntry;
+        break;
+	  }
+      if (op.type == Operation::Type::ROR) {
+        auto rightEntry = formula.entries[ExpressionUtil::newFunction(getCellName(right - 1))];
+        for (int64_t i = right - 1; i > left; i--) {
+          formula.entries[ExpressionUtil::newFunction(getCellName(i))] = formula.entries[ExpressionUtil::newFunction(getCellName(i - 1))];
+        }
+        formula.entries[ExpressionUtil::newFunction(getCellName(left))] = rightEntry;
+        break;
+	  }
+      for (int64_t i = left; i < right; i++) {
+        formula.entries[i] = ((op.type == Operation::Type::FIL) ? prevTarget : constant(0));
+      }
+      break;
+    }
     default: {
       okay = false;
       break;
@@ -384,11 +436,8 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   if (ProgramUtil::hasIndirectOperand(p)) {
     return false;
   }
-  if (ProgramUtil::hasRegionOperation(p)) {
-    return false;
-  }
   const int64_t numCells =
-      ProgramUtil::getLargestDirectMemoryCellWithoutRegions(p) + 1;
+      ProgramUtil::getLargestDirectMemoryCellWithRegions(p) + 1;
   const bool useIncEval =
       incEval.init(p, true, true);  // skip input transformations and offset
 
