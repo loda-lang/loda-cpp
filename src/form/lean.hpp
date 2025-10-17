@@ -7,7 +7,7 @@ class LeanFormula {
  public:
   LeanFormula() {};
 
-  static bool convert(const Formula& formula, bool as_vector,
+  static bool convert(const Formula& formula, int64_t offset, bool as_vector,
                       LeanFormula& lean_formula);
 
   std::string toString() const;
@@ -30,4 +30,7 @@ class LeanFormula {
   static bool initializeLeanProject();
 
   Formula main_formula;
+  std::string domain;  // Int or Nat
+
+  bool convertToLean(Expression& expr, const Formula& f);
 };

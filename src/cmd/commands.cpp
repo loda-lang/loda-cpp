@@ -235,6 +235,7 @@ void throwConversionError(const std::string& format) {
 void Commands::export_(const std::string& path) {
   initLog(true);
   Program program = SequenceProgram::getProgramAndSeqId(path).first;
+  auto offset = ProgramUtil::getOffset(program);
   const auto& format = settings.export_format;
   Formula formula;
   PariFormula pari_formula;
@@ -247,19 +248,19 @@ void Commands::export_(const std::string& path) {
     std::cout << formula.toString() << std::endl;
   } else if (format == "pari-function" || format == "pari") {
     if (!generator.generate(program, -1, formula, settings.with_deps) ||
-        !PariFormula::convert(formula, false, pari_formula)) {
+        !PariFormula::convert(formula, offset, false, pari_formula)) {
       throwConversionError(format);
     }
     std::cout << pari_formula.toString() << std::endl;
   } else if (format == "pari-vector") {
     if (!generator.generate(program, -1, formula, settings.with_deps) ||
-        !PariFormula::convert(formula, true, pari_formula)) {
+        !PariFormula::convert(formula, offset, true, pari_formula)) {
       throwConversionError(format);
     }
     std::cout << pari_formula.toString() << std::endl;
   } else if (format == "lean") {
     if (!generator.generate(program, -1, formula, settings.with_deps) ||
-        !LeanFormula::convert(formula, false, lean_formula)) {
+        !LeanFormula::convert(formula, offset, false, lean_formula)) {
       throwConversionError(format);
     }
     std::cout << lean_formula.toString() << std::endl;
@@ -624,7 +625,8 @@ void testFormula(const std::string& test_id, const Settings& settings,
       if (!generator.generate(program, id.number(), formula, true)) {
         continue;
       }
-      if (!FormulaType::convert(formula, as_vector, formula_obj)) {
+      if (!FormulaType::convert(formula, ProgramUtil::getOffset(program),
+                                as_vector, formula_obj)) {
         continue;
       }
     } catch (const std::exception& e) {

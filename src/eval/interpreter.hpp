@@ -26,6 +26,8 @@ class Interpreter {
 
   ProgramCache program_cache;
 
+  const Settings &settings;
+
  private:
   Number get(const Operand &a, const Memory &mem,
              bool get_address = false) const;
@@ -38,8 +40,6 @@ class Interpreter {
   std::pair<Number, size_t> callSeq(UID id, const Number &arg);
 
   size_t callPrg(UID id, int64_t start, Memory &mem);
-
-  const Settings &settings;
 
   const bool is_debug;
   bool has_memory;
