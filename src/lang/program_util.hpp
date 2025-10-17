@@ -6,6 +6,7 @@
 
 #include "base/uid.hpp"
 #include "lang/program.hpp"
+#include "math/number.hpp"
 
 class ProgramUtil {
  public:
@@ -59,9 +60,9 @@ class ProgramUtil {
 
   static int64_t getLargestDirectMemoryCellWithRegions(const Program &p);
 
-  static std::pair<int64_t, int64_t> getTargetMemoryRange(int64_t start, int64_t length);
+  static std::pair<Number, Number> getTargetMemoryRange(int64_t start, int64_t length);
 
-  static std::pair<int64_t, int64_t> getTargetMemoryRange(const Operation &op);
+  static std::pair<Number, Number> getTargetMemoryRange(const Operation &op);
 
   static bool getUsedUninitializedCells(const Program &p,
                                         std::set<int64_t> &initialized,

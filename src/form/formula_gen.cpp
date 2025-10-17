@@ -322,8 +322,12 @@ bool FormulaGenerator::update(const Operation& op, const RangeMap* ranges) {
         break;
       }
       auto bounds = ProgramUtil::getTargetMemoryRange(op);
-      int64_t left = bounds.first;
-      int64_t right = bounds.second;
+      if (bounds.first == Number::INF || bounds.second == Number::INF) {
+        okay = false;
+        break;
+      }
+      int64_t left = bounds.first.asInt();
+      int64_t right = bounds.second.asInt();
       if (right - left >= 15) { // magic number
         okay = false;
         break;

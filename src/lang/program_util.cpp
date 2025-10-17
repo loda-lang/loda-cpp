@@ -10,6 +10,7 @@
 #include "sys/file.hpp"
 #include "sys/setup.hpp"
 #include "sys/util.hpp"
+#include "math/number.hpp"
 
 bool ProgramUtil::hasOp(const Program &p, Operation::Type type) {
   return std::any_of(p.ops.begin(), p.ops.end(),
@@ -224,7 +225,7 @@ bool ProgramUtil::areIndependent(const Operation &op1, const Operation &op2) {
   return true;
 }
 
-std::pair<int64_t, int64_t> ProgramUtil::getTargetMemoryRange(int64_t start, int64_t length){
+std::pair<Number, Number> ProgramUtil::getTargetMemoryRange(int64_t start, int64_t length){
     int64_t left;
     int64_t right;
     if (length > 0) {
@@ -234,22 +235,27 @@ std::pair<int64_t, int64_t> ProgramUtil::getTargetMemoryRange(int64_t start, int
       left = std::max<int64_t>(start + length + 1, 0);
       right = start + 1;
     }
-    return std::make_pair(left, right);
+    return std::make_pair(Number(left), Number(right));
 }
 
-std::pair<int64_t, int64_t> ProgramUtil::getTargetMemoryRange(const Operation &op){
-  if (op.target.type != Operand::Type::DIRECT || op.type == Operation::Type::PRG) {
-    throw std::runtime_error("Unsupported operation for target memory range");
-  }
-  if (isWritingRegion(op.type)) {
-  	if (op.source.type != Operand::Type::CONSTANT) {
-      throw std::runtime_error("Unsupported operation for target memory range");
+// This function will return Number pair within int64_t range, or Number::INF pair to indicate unsupported operation.
+std::pair<Number, Number> ProgramUtil::getTargetMemoryRange(const Operation &op){
+  try {
+    if (op.target.type != Operand::Type::DIRECT || op.type == Operation::Type::PRG) {
+      return std::make_pair(Number::INF, Number::INF);
     }
-    int64_t start = op.target.value.asInt();
-    int64_t length = op.source.value.asInt();
-    return getTargetMemoryRange(start, length);
+    if (isWritingRegion(op.type)) {
+      if (op.source.type != Operand::Type::CONSTANT) {
+        return std::make_pair(Number::INF, Number::INF);
+      }
+      int64_t start = op.target.value.asInt();
+      int64_t length = op.source.value.asInt();
+      return getTargetMemoryRange(start, length);
+    }
+    return std::make_pair(op.target.value, Number(op.target.value.asInt() + 1));
+  } catch (const std::exception&) {
+    return std::make_pair(Number::INF, Number::INF);
   }
-  return std::make_pair(op.target.value.asInt(), op.target.value.asInt() + 1);
 }
 
 void collectUsedMemoryCells(const Operand &operand, int64_t region_length,
@@ -259,8 +265,11 @@ void collectUsedMemoryCells(const Operand &operand, int64_t region_length,
     return;
   }
   auto bounds = ProgramUtil::getTargetMemoryRange(operand.value.asInt(), region_length);
-  int64_t start = bounds.first;
-  int64_t end = bounds.second;
+  if (bounds.first == Number::INF || bounds.second == Number::INF) {
+    return;
+  }
+  int64_t start = bounds.first.asInt();
+  int64_t end = bounds.second.asInt();
   for (int64_t cell = start; cell < end; cell++) {
     if (used_cells) {
       used_cells->insert(cell);

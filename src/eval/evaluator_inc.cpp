@@ -220,8 +220,14 @@ bool IncrementalEvaluator::checkLoopBody(ErrorCode* error_code) {
         return false;
       }
       auto bounds = ProgramUtil::getTargetMemoryRange(op);
-      int64_t left = bounds.first;
-      int64_t right = bounds.second;
+      if (bounds.first == Number::INF || bounds.second == Number::INF) {
+        if (error_code) {
+          *error_code = ErrorCode::MEMORY_OP_SOURCE_INVALID;
+        }
+        return false;
+      }
+      int64_t left = bounds.first.asInt();
+      int64_t right = bounds.second.asInt();
       if (right - left >= interpreter.settings.max_memory) {
         if (error_code) {
           *error_code = ErrorCode::MEMORY_OP_SOURCE_INVALID;
@@ -317,8 +323,11 @@ void IncrementalEvaluator::computeStatefulCells() {
         op.type == Operation::Type::ROL || op.type == Operation::Type::ROR) {
       // Set all cells affected by memory ops as stateful.
       auto bounds = ProgramUtil::getTargetMemoryRange(op);
-      int64_t left = bounds.first;
-      int64_t right = bounds.second;
+      if (bounds.first == Number::INF || bounds.second == Number::INF) {
+        continue;
+      }
+      int64_t left = bounds.first.asInt();
+      int64_t right = bounds.second.asInt();
       for (int64_t i = left; i < right; i++) {
         read.insert(i);
         write.insert(i);
@@ -362,8 +371,11 @@ void IncrementalEvaluator::computeLoopCounterDependentCells() {
         // Set all cells affected by memory ops as loop counter dependent if one
         // of the cells is loop counter dependent.
         auto bounds = ProgramUtil::getTargetMemoryRange(op);
-        int64_t left = bounds.first;
-        int64_t right = bounds.second;
+        if (bounds.first == Number::INF || bounds.second == Number::INF) {
+          continue;
+        }
+        int64_t left = bounds.first.asInt();
+        int64_t right = bounds.second.asInt();
         int64_t is_dependent = 0;
         for (int64_t i = left; i < right; i++) {
           if (loop_counter_dependent_cells.find(i) !=
