@@ -19,11 +19,12 @@
 const std::string Stats::CALL_GRAPH_HEADER("caller,callee");
 const std::string Stats::PROGRAMS_HEADER(
     "id,submitter,length,usages,inc_eval,log_eval,vir_eval,loop,formula,"
-    "indirect");
+    "indirect,ops_mask");
 const std::string Stats::STEPS_HEADER("total,min,max,runs");
 const std::string Stats::SUMMARY_HEADER(
     "num_sequences,num_programs,num_formulas");
 const std::string SUBMITTERS_HEADER = "submitter,ref_id,num_programs";
+const std::string OPERATION_TYPES_HEADER = "name,ref_id,count";
 
 Stats::Stats()
     : num_programs(0),
@@ -69,9 +70,11 @@ void Stats::load(std::string path) {
     full = path + "operation_type_counts.csv";
     Log::get().debug("Loading " + full);
     CsvReader reader(full);
+    reader.checkHeader(OPERATION_TYPES_HEADER);
     while (reader.readRow()) {
       auto type = Operation::Metadata::get(reader.getField(0)).type;
-      num_ops_per_type.at(static_cast<size_t>(type)) = reader.getIntegerField(1);
+      // Field 1 is ref_id, which we don't need to load (it's in metadata)
+      num_ops_per_type.at(static_cast<size_t>(type)) = reader.getIntegerField(2);
     }
     reader.close();
   }
@@ -159,6 +162,7 @@ void Stats::load(std::string path) {
       if (reader.getIntegerField(9)) {
         has_indirect.insert(id);
       }
+      program_operation_types_bitmask[id] = reader.getIntegerField(10);
     }
     reader.close();
   }
@@ -262,7 +266,8 @@ void Stats::save(std::string path) {
                        std::to_string(inceval), std::to_string(logeval),
                        std::to_string(vireval), std::to_string(loop_flag),
                        std::to_string(formula_flag),
-                       std::to_string(indirect_flag)});
+                       std::to_string(indirect_flag),
+                       std::to_string(program_operation_types_bitmask[id])});
     }
     writer.close();
   }
@@ -288,11 +293,13 @@ void Stats::save(std::string path) {
 
   {
     CsvWriter writer(path + "operation_type_counts.csv");
+    writer.writeHeader(OPERATION_TYPES_HEADER);
     for (size_t i = 0; i < num_ops_per_type.size(); i++) {
       if (num_ops_per_type[i] > 0) {
-        writer.writeRow(
-            Operation::Metadata::get(static_cast<Operation::Type>(i)).name,
-            std::to_string(num_ops_per_type[i]));
+        const auto &meta =
+            Operation::Metadata::get(static_cast<Operation::Type>(i));
+        writer.writeRow(meta.name, std::to_string(meta.ref_id),
+                        std::to_string(num_ops_per_type[i]));
       }
     }
     writer.close();
@@ -399,8 +406,12 @@ void Stats::updateProgramStats(UID id, const Program &program,
   o.pos = 0;
   bool with_loop = false;
   bool with_indirect = false;
+  int64_t ops_bitmask = 0;
   for (auto &op : program.ops) {
     num_ops_per_type[static_cast<size_t>(op.type)]++;
+    // Set the bit corresponding to this operation type's ref_id
+    const auto &meta = Operation::Metadata::get(op.type);
+    ops_bitmask |= (1LL << meta.ref_id);
     if (op.type == Operation::Type::LPB) {
       with_loop = true;
     }
@@ -458,6 +469,7 @@ void Stats::updateProgramStats(UID id, const Program &program,
   if (with_indirect) {
     has_indirect.insert(id);
   }
+  program_operation_types_bitmask[id] = ops_bitmask;
   blocks_collector.add(program);
 }
 
