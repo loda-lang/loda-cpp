@@ -8,6 +8,7 @@
 #include "seq/seq_util.hpp"
 #include "sys/log.hpp"
 #include "sys/process.hpp"
+#include "sys/util.hpp"
 
 bool convertExprToPari(Expression& expr, const Formula& f, bool as_vector) {
   // convert bottom-up!
@@ -86,9 +87,9 @@ void convertInitialTermsToIf(Formula& formula, const Expression::Type type) {
   }
 }
 
-bool PariFormula::convert(const Formula& formula, bool as_vector,
-                          PariFormula& pari_formula) {
-  pari_formula = PariFormula();
+bool PariFormula::convert(const Formula& formula, int64_t offset,
+                          bool as_vector, PariFormula& pari_formula) {
+  pari_formula = {};
   pari_formula.as_vector = as_vector;
   auto defs = FormulaUtil::getDefinitions(formula, Expression::Type::FUNCTION);
   for (const auto& entry : formula.entries) {
@@ -174,12 +175,12 @@ std::string PariFormula::printEvalCode(int64_t offset, int64_t numTerms) const {
 
 bool PariFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
                        Sequence& result) const {
-  const std::string gpPath("pari-loda.gp");
-  const std::string gpResult("pari-result.txt");
+  const std::string tmpFileId = std::to_string(Random::get().gen() % 1000);
+  const std::string gpPath("pari-loda-" + tmpFileId + ".gp");
+  const std::string gpResult("pari-result-" + tmpFileId + ".txt");
   const int64_t maxparisize = 256;  // in MB
   std::vector<std::string> args = {
       "gp", "-s", std::to_string(maxparisize) + "M", "-q", gpPath};
-
   std::string evalCode = printEvalCode(offset, numTerms);
   return SequenceUtil::evalFormulaWithExternalTool(
       evalCode, getName(), gpPath, gpResult, args, timeoutSeconds, result);

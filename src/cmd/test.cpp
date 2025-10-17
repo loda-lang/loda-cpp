@@ -572,6 +572,31 @@ void Test::memory() {
   checkMemory(mem, 16, 15);
   checkMemory(mem, 17, 16);
   checkMemory(mem, 18, 0);  // unchanged
+
+  // Test operations with zero length - should do nothing
+  mem.clear();
+  mem.set(5, 100);
+  mem.set(6, 200);
+
+  // Test clr with zero length
+  mem.clear(5, 0);
+  checkMemory(mem, 5, 100);  // unchanged
+  checkMemory(mem, 6, 200);  // unchanged
+
+  // Test fil with zero length
+  mem.fill(5, 0);
+  checkMemory(mem, 5, 100);  // unchanged
+  checkMemory(mem, 6, 200);  // unchanged
+
+  // Test rol with zero length
+  mem.rotateLeft(5, 0);
+  checkMemory(mem, 5, 100);  // unchanged
+  checkMemory(mem, 6, 200);  // unchanged
+
+  // Test ror with zero length
+  mem.rotateRight(5, 0);
+  checkMemory(mem, 5, 100);  // unchanged
+  checkMemory(mem, 6, 200);  // unchanged
 }
 
 void checkEnclosingLoop(const Program& p, int64_t begin, int64_t end,
@@ -1226,6 +1251,7 @@ void Test::checkFormulas(const std::string& testFile, FormulaType type) {
     auto id = e.first;
     Log::get().info("Testing formula for " + id.string() + ": " + e.second);
     auto p = parser.parse(ProgramUtil::getProgramPath(id));
+    auto offset = ProgramUtil::getOffset(p);
     Formula f;
     if (!generator.generate(p, id.number(), f, true)) {
       Log::get().error("Cannot generate formula from program", true);
@@ -1236,7 +1262,7 @@ void Test::checkFormulas(const std::string& testFile, FormulaType type) {
       }
     } else if (type == FormulaType::LEAN) {
       LeanFormula lean;
-      if (!LeanFormula::convert(f, false, lean)) {
+      if (!LeanFormula::convert(f, offset, false, lean)) {
         Log::get().error("Cannot convert formula to LEAN", true);
       }
       if (lean.toString() != e.second) {
@@ -1244,7 +1270,8 @@ void Test::checkFormulas(const std::string& testFile, FormulaType type) {
       }
     } else {
       PariFormula pari;
-      if (!PariFormula::convert(f, type == FormulaType::PARI_VECTOR, pari)) {
+      if (!PariFormula::convert(f, offset, type == FormulaType::PARI_VECTOR,
+                                pari)) {
         Log::get().error("Cannot convert formula to PARI/GP", true);
       }
       if (pari.toString() != e.second) {
@@ -1272,13 +1299,14 @@ void Test::checkFormulasWithExternalTools(const std::string& testFile,
     auto idStr = id.string();
     FormulaTypeClass formula_obj;
     auto program = parser.parse(ProgramUtil::getProgramPath(id));
+    auto offset = ProgramUtil::getOffset(program);
     // generate formula code
     Formula formula;
     Sequence expSeq;
     if (!generator.generate(program, id.number(), formula, true)) {
       Log::get().error("Cannot generate formula", true);
     }
-    if (!FormulaTypeClass::convert(formula, asVector, formula_obj)) {
+    if (!FormulaTypeClass::convert(formula, offset, asVector, formula_obj)) {
       Log::get().error("Cannot convert formula to " + formula_obj.getName(),
                        true);
     }
@@ -1291,7 +1319,6 @@ void Test::checkFormulasWithExternalTools(const std::string& testFile,
       Log::get().error("Evaluation error", true);
     }
     // evaluate formula
-    auto offset = ProgramUtil::getOffset(program);
     Sequence genSeq;
     if (!formula_obj.eval(offset, numTerms, 10, genSeq)) {
       Log::get().error(
@@ -1513,11 +1540,21 @@ void Test::minimizer(size_t tests) {
       Log::get().error("Error during minimization: " + std::string(e.what()),
                        true);
     }
-    evaluator.eval(minimized, s2, s1.size());
+    try {
+      evaluator.eval(minimized, s2, s1.size());
+    } catch (const std::exception& e) {
+      std::cout << "before: " << s1 << std::endl;
+      ProgramUtil::print(program, std::cout);
+      std::cout << "after: Error during evaluation" << std::endl;
+      ProgramUtil::print(minimized, std::cout);
+      Log::get().error("Error during evaluation: " + std::string(e.what()),
+                       true);
+      continue;
+    }
     if (s1.size() != s2.size() || (s1 != s2)) {
       std::cout << "before: " << s1 << std::endl;
       ProgramUtil::print(program, std::cout);
-      std::cout << "after:  " << s2 << std::endl;
+      std::cout << "after: " << s2 << std::endl;
       ProgramUtil::print(minimized, std::cout);
       Log::get().error(
           "Program evaluated to different sequence after minimization", true);

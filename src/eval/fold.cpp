@@ -91,7 +91,8 @@ bool Fold::unfold(Program &main, int64_t pos) {
     shared_region_length = std::max<int64_t>(sub.getDirective("inputs"),
                                              sub.getDirective("outputs"));
   }
-  int64_t largest_used = ProgramUtil::getLargestDirectMemoryCell(main);
+  int64_t largest_used =
+      ProgramUtil::getLargestDirectMemoryCellWithoutRegions(main);
   for (auto &op : sub.ops) {
     updateOperand(op.target, start, shared_region_length, largest_used);
     updateOperand(op.source, start, shared_region_length, largest_used);
@@ -178,11 +179,12 @@ bool Fold::fold(Program &main, Program sub, size_t subId,
   // get used memory cells
   std::unordered_set<int64_t> used_sub_cells;
   int64_t tmp_larged_used;
-  if (!ProgramUtil::getUsedMemoryCells(sub, used_sub_cells, tmp_larged_used,
-                                       maxMemory)) {
+  if (!ProgramUtil::getUsedMemoryCells(sub, nullptr, &used_sub_cells,
+                                       tmp_larged_used, maxMemory)) {
     return false;
   }
-  int64_t largest_used_main = ProgramUtil::getLargestDirectMemoryCell(main);
+  int64_t largest_used_main =
+      ProgramUtil::getLargestDirectMemoryCellWithoutRegions(main);
   // initialize partial evaluator for main program
   Settings settings;
   PartialEvaluator eval(settings);

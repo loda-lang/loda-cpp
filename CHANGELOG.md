@@ -1,9 +1,17 @@
 ## [Unreleased]
 
+## v25.10.16
+
+### Bugfixes
+
+* Fix memory region operation handling in incremental evaluator
+
+## v25.10.15
+
 ### Features
 
 * Add memory operations: `fil`, `rol`, `ror`
-* Add LEAN export support for simple LODA programs
+* Add limited LEAN export for simple programs
 
 ### Enhancements
 

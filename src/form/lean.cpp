@@ -5,8 +5,9 @@
 #include "form/expression_util.hpp"
 #include "form/formula_util.hpp"
 #include "seq/seq_util.hpp"
+#include "sys/util.hpp"
 
-bool convertToLean(Expression& expr, const Formula& f) {
+bool LeanFormula::convertToLean(Expression& expr, const Formula& f) {
   // Check children recursively
   for (auto& c : expr.children) {
     if (!convertToLean(c, f)) {
@@ -23,15 +24,46 @@ bool convertToLean(Expression& expr, const Formula& f) {
     case Expression::Type::NOT_EQUAL:
     case Expression::Type::LESS_EQUAL:
     case Expression::Type::GREATER_EQUAL: {
-      Expression f(Expression::Type::FUNCTION, "Bool.toInt ", {expr});
+      Expression f(Expression::Type::FUNCTION, "Bool.toInt", {expr});
       expr = f;
       break;
     }
-    case Expression::Type::FUNCTION:
-      // if (expr.name == "min" || expr.name == "max") {
-      //  break;
-      // }
+    case Expression::Type::PARAMETER: {
+      if (domain == "Nat") {
+        Expression cast(Expression::Type::FUNCTION, "Int.ofNat", {expr});
+        expr = cast;
+      }
+      break;
+    }
+    case Expression::Type::FUNCTION: {
+      if (expr.name == "min" || expr.name == "max") {
+        break;
+      }
+      if (expr.name == "gcd") {
+        expr.name = "Int.gcd";
+        break;
+      }
+      // Convert floor and truncate functions to LEAN equivalents
+      if (expr.name == "floor" || expr.name == "truncate") {
+        // These functions should have a single FRACTION argument
+        if (expr.children.size() == 1 &&
+            expr.children[0].type == Expression::Type::FRACTION &&
+            expr.children[0].children.size() == 2) {
+          // Extract numerator and denominator from fraction
+          auto numerator = expr.children[0].children[0];
+          auto denominator = expr.children[0].children[1];
+          // Replace with Int.fdiv or Int.tdiv
+          expr.name = (expr.name == "floor") ? "Int.fdiv" : "Int.tdiv";
+          expr.children.clear();
+          expr.children.push_back(numerator);
+          expr.children.push_back(denominator);
+          break;
+        }
+        // If not a simple fraction, reject
+        return false;
+      }
       return false;
+    }
     case Expression::Type::POWER:
       // Support only non-negative constants as exponents
       if (expr.children.size() != 2 ||
@@ -46,8 +78,8 @@ bool convertToLean(Expression& expr, const Formula& f) {
   return true;
 }
 
-bool LeanFormula::convert(const Formula& formula, bool as_vector,
-                          LeanFormula& lean_formula) {
+bool LeanFormula::convert(const Formula& formula, int64_t offset,
+                          bool as_vector, LeanFormula& lean_formula) {
   // Check if conversion is supported.
   if (as_vector) {
     return false;
@@ -59,10 +91,18 @@ bool LeanFormula::convert(const Formula& formula, bool as_vector,
   }
   const std::string funcName = functions[0];
   lean_formula = {};
+  if (FormulaUtil::isRecursive(formula, funcName)) {
+    if (offset <= 0) {
+      return false;
+    }
+    lean_formula.domain = "Nat";
+  } else {
+    lean_formula.domain = "Int";
+  }
   for (const auto& entry : formula.entries) {
     auto left = entry.first;
     auto right = entry.second;
-    if (!convertToLean(right, formula)) {
+    if (!lean_formula.convertToLean(right, formula)) {
       return false;
     }
     if (left.type != Expression::Type::FUNCTION || left.children.size() != 1) {
@@ -88,7 +128,8 @@ std::string LeanFormula::toString() const {
   }
   bool usesParameter = mainExpr.contains(Expression::Type::PARAMETER);
   std::string arg = usesParameter ? "n" : "_";
-  buf << "def " << funcName << " (" << arg << " : Int) : Int := " << mainExpr;
+  buf << "def " << funcName << " (" << arg << " : " << domain
+      << ") : Int := " << mainExpr.toString(true);
   return buf.str();
 }
 
@@ -97,10 +138,11 @@ std::string LeanFormula::printEvalCode(int64_t offset, int64_t numTerms) const {
   out << toString() << std::endl;
   out << std::endl;
   out << "def main : IO Unit := do" << std::endl;
-  out << "  let offset : Int := " << offset << std::endl;
+  out << "  let offset : " << domain << " := " << offset << std::endl;
   out << "  let num_terms : Nat := " << numTerms << std::endl;
   out << std::endl;
-  out << "  let rec loop (count : Nat) (n : Int) : IO Unit := do" << std::endl;
+  out << "  let rec loop (count : Nat) (n : " << domain << ") : IO Unit := do"
+      << std::endl;
   out << "    if count < num_terms then" << std::endl;
   out << "      IO.println (toString (a n))" << std::endl;
   out << "      loop (count + 1) (n + 1)" << std::endl;
@@ -113,8 +155,9 @@ std::string LeanFormula::printEvalCode(int64_t offset, int64_t numTerms) const {
 
 bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
                        Sequence& result) const {
-  const std::string leanPath("loda-eval.lean");
-  const std::string leanResult("lean-result.txt");
+  const std::string tmpFileId = std::to_string(Random::get().gen() % 1000);
+  const std::string leanPath("lean-loda-" + tmpFileId + ".lean");
+  const std::string leanResult("lean-result-" + tmpFileId + ".txt");
   std::vector<std::string> args = {"lean", "--run", leanPath};
   std::string evalCode = printEvalCode(offset, numTerms);
   return SequenceUtil::evalFormulaWithExternalTool(
