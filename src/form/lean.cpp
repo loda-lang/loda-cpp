@@ -192,12 +192,8 @@ std::string LeanFormula::toString() const {
 
 void LeanFormula::transformParameterReferences(Expression& expr, int64_t offset,
                                                const std::string& funcName) const {
-  // Transform recursively for all children first
-  for (auto& child : expr.children) {
-    transformParameterReferences(child, offset, funcName);
-  }
-  
-  // If this is a function call to funcName, we need to transform its argument
+  // If this is a function call to funcName, transform its argument first
+  // before recursing into children
   if (expr.type == Expression::Type::FUNCTION && expr.name == funcName) {
     if (expr.children.size() == 1) {
       auto& arg = expr.children[0];
@@ -255,6 +251,26 @@ void LeanFormula::transformParameterReferences(Expression& expr, int64_t offset,
         }
       }
     }
+    // Don't recurse into function call arguments after transforming them
+    return;
+  }
+  
+  // Transform recursively for all children
+  for (auto& child : expr.children) {
+    transformParameterReferences(child, offset, funcName);
+  }
+  
+  // After transforming children, if this is a standalone Int.ofNat(n), transform it
+  if (expr.type == Expression::Type::FUNCTION && 
+      expr.name == "Int.ofNat" &&
+      expr.children.size() == 1 &&
+      expr.children[0].type == Expression::Type::PARAMETER &&
+      offset > 0) {
+    // Replace Int.ofNat(n) with (Int.ofNat n) + offset
+    Expression sum(Expression::Type::SUM);
+    sum.children.push_back(expr);
+    sum.children.push_back(Expression(Expression::Type::CONSTANT, "", Number(offset)));
+    expr = sum;
   }
 }
 
