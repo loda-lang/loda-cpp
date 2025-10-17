@@ -208,10 +208,15 @@ void Benchmark::findSlowFormulas() {
     FormulaGenerator gen;
     Formula formula;
     auto start_time = std::chrono::steady_clock::now();
+    bool success = false;
     try {
-      gen.generate(program, id, formula, false);
+      success = gen.generate(program, id, formula, false);
     } catch (std::exception& e) {
       // Skip programs that fail formula generation
+      continue;
+    }
+    if (!success) {
+      // Skip programs that cannot generate a formula
       continue;
     }
     auto end_time = std::chrono::steady_clock::now();
