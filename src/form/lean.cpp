@@ -1,10 +1,18 @@
 #include "form/lean.hpp"
 
+#include <fstream>
 #include <sstream>
+
+#ifndef _WIN64
+#include <sys/stat.h>
+#endif
 
 #include "form/expression_util.hpp"
 #include "form/formula_util.hpp"
 #include "seq/seq_util.hpp"
+#include "sys/file.hpp"
+#include "sys/log.hpp"
+#include "sys/process.hpp"
 #include "sys/util.hpp"
 
 bool LeanFormula::convertToLean(Expression& expr, const Formula& f) {
@@ -61,6 +69,11 @@ bool LeanFormula::convertToLean(Expression& expr, const Formula& f) {
         }
         // If not a simple fraction, reject
         return false;
+      }
+      // Convert bitxor to LEAN Int.xor
+      if (expr.name == "bitxor") {
+        expr.name = "Int.xor";
+        break;
       }
       return false;
     }
@@ -135,6 +148,12 @@ std::string LeanFormula::toString() const {
 
 std::string LeanFormula::printEvalCode(int64_t offset, int64_t numTerms) const {
   std::stringstream out;
+  // Add imports if needed
+  std::string imports = getImports();
+  if (!imports.empty()) {
+    out << imports << std::endl;
+    out << std::endl;
+  }
   out << toString() << std::endl;
   out << std::endl;
   out << "def main : IO Unit := do" << std::endl;
@@ -155,11 +174,185 @@ std::string LeanFormula::printEvalCode(int64_t offset, int64_t numTerms) const {
 
 bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
                        Sequence& result) const {
+  // Initialize LEAN project if needed (only once)
+  if (needsBitwiseImport() && !initializeLeanProject()) {
+    Log::get().warn("Failed to initialize LEAN project, continuing without it");
+  }
+
   const std::string tmpFileId = std::to_string(Random::get().gen() % 1000);
-  const std::string leanPath("lean-loda-" + tmpFileId + ".lean");
-  const std::string leanResult("lean-result-" + tmpFileId + ".txt");
-  std::vector<std::string> args = {"lean", "--run", leanPath};
+  std::string leanPath;
+  std::string leanResult;
+  std::vector<std::string> args;
+
+  // If we need imports, we need to use a LEAN project structure
+  if (needsBitwiseImport()) {
+    const std::string projectDir = getTmpDir() + "lean-project/";
+    leanPath = projectDir + "Main.lean";
+    leanResult = projectDir + "lean-result-" + tmpFileId + ".txt";
+    
+    // Create a wrapper script to run lake in the project directory
+    std::string runScript = projectDir + "run-" + tmpFileId + ".sh";
+    std::ofstream scriptFile(runScript);
+    if (!scriptFile) {
+      Log::get().error("Failed to create run script", true);
+    }
+    scriptFile << "#!/bin/sh\n";
+    scriptFile << "cd " + projectDir + "\n";
+    scriptFile << "lake env lean --run Main.lean\n";
+    scriptFile.close();
+    
+    // Make script executable on Unix systems
+#ifndef _WIN64
+    chmod(runScript.c_str(), 0755);
+#endif
+    
+    args = {runScript};
+  } else {
+    leanPath = "lean-loda-" + tmpFileId + ".lean";
+    leanResult = "lean-result-" + tmpFileId + ".txt";
+    args = {"lean", "--run", leanPath};
+  }
+
   std::string evalCode = printEvalCode(offset, numTerms);
-  return SequenceUtil::evalFormulaWithExternalTool(
-      evalCode, getName(), leanPath, leanResult, args, timeoutSeconds, result);
+  
+  // For project-based eval, we need to handle it differently
+  if (needsBitwiseImport()) {
+    const std::string projectDir = getTmpDir() + "lean-project/";
+    std::string runScript = projectDir + "run-" + tmpFileId + ".sh";
+    
+    // Write the code to Main.lean
+    std::ofstream leanFile(leanPath);
+    if (!leanFile) {
+      Log::get().error("Error generating LEAN file", true);
+    }
+    leanFile << evalCode;
+    leanFile.close();
+    
+    // Execute with timeout
+    int exitCode = execWithTimeout(args, timeoutSeconds, leanResult);
+    if (exitCode != 0) {
+      std::remove(leanPath.c_str());
+      std::remove(runScript.c_str());
+      if (exitCode == PROCESS_ERROR_TIMEOUT) {
+        return false;  // timeout
+      }
+      Log::get().error("Error evaluating LEAN code: exit code " + 
+                      std::to_string(exitCode), true);
+    }
+    
+    // Read the result
+    std::ifstream resultIn(leanResult);
+    if (!resultIn) {
+      std::remove(leanPath.c_str());
+      std::remove(leanResult.c_str());
+      std::remove(runScript.c_str());
+      Log::get().error("Error reading LEAN result", true);
+    }
+    result.clear();
+    std::string line;
+    while (std::getline(resultIn, line)) {
+      try {
+        result.push_back(Number(line));
+      } catch (...) {
+        resultIn.close();
+        std::remove(leanPath.c_str());
+        std::remove(leanResult.c_str());
+        std::remove(runScript.c_str());
+        Log::get().error("Error parsing LEAN output: " + line, true);
+      }
+    }
+    resultIn.close();
+    std::remove(leanPath.c_str());
+    std::remove(leanResult.c_str());
+    std::remove(runScript.c_str());
+    return true;
+  } else {
+    return SequenceUtil::evalFormulaWithExternalTool(
+        evalCode, getName(), leanPath, leanResult, args, timeoutSeconds, result);
+  }
+}
+
+bool LeanFormula::needsBitwiseImport() const {
+  for (const auto& entry : main_formula.entries) {
+    if (entry.second.contains(Expression::Type::FUNCTION, "Int.xor")) {
+      return true;
+    }
+  }
+  return false;
+}
+
+std::string LeanFormula::getImports() const {
+  if (needsBitwiseImport()) {
+    return "import Mathlib.Data.Int.Bitwise";
+  }
+  return "";
+}
+
+bool LeanFormula::initializeLeanProject() {
+  static bool initialized = false;
+  if (initialized) {
+    return true;
+  }
+
+  const std::string projectDir = getTmpDir() + "lean-project/";
+  
+  // Check if project directory already exists and is initialized
+  if (isDir(projectDir) && isFile(projectDir + "lakefile.lean")) {
+    initialized = true;
+    return true;
+  }
+
+  // Create project directory
+  ensureDir(projectDir);
+
+  // Create lakefile.lean
+  std::ofstream lakefile(projectDir + "lakefile.lean");
+  if (!lakefile) {
+    return false;
+  }
+  lakefile << "import Lake\n";
+  lakefile << "open Lake DSL\n\n";
+  lakefile << "package \"lean-loda\" where\n";
+  lakefile << "  version := v!\"0.1.0\"\n\n";
+  lakefile << "require mathlib from git\n";
+  lakefile << "  \"https://github.com/leanprover-community/mathlib4.git\"\n\n";
+  lakefile << "@[default_target]\n";
+  lakefile << "lean_exe «lean-loda» where\n";
+  lakefile << "  root := `Main\n";
+  lakefile.close();
+
+  // Run lake update to download dependencies and create toolchain (with timeout)
+  // Note: This requires lake to be run from the project directory
+  // We use a wrapper script to change directory first
+  // The script also copies the Mathlib toolchain to match the dependency
+  std::string updateScript = projectDir + "update.sh";
+  std::ofstream scriptFile(updateScript);
+  if (!scriptFile) {
+    Log::get().warn("Failed to create update script");
+    return false;
+  }
+  scriptFile << "#!/bin/sh\n";
+  scriptFile << "cd " + projectDir + "\n";
+  scriptFile << "lake update\n";
+  scriptFile << "if [ -f .lake/packages/mathlib/lean-toolchain ]; then\n";
+  scriptFile << "  cp .lake/packages/mathlib/lean-toolchain ./lean-toolchain\n";
+  scriptFile << "fi\n";
+  scriptFile.close();
+  
+  // Make script executable on Unix systems
+#ifndef _WIN64
+  chmod(updateScript.c_str(), 0755);
+#endif
+  
+  std::vector<std::string> updateArgs = {updateScript};
+  int exitCode = execWithTimeout(updateArgs, 300);
+  std::remove(updateScript.c_str());
+  
+  if (exitCode != 0) {
+    Log::get().warn("lake update failed with exit code " + std::to_string(exitCode));
+    return false;
+  }
+
+  initialized = true;
+  return true;
 }
