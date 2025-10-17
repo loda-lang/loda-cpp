@@ -149,11 +149,11 @@ std::string LeanFormula::toString() const {
     // Non-recursive case (original behavior)
     bool usesParameter = recursiveRHS.contains(Expression::Type::PARAMETER);
     std::string arg = usesParameter ? "n" : "_";
-    buf << "def " << funcName << " (" << arg
-        << " : Int) : Int := " << recursiveRHS.toString(true);
+    buf << "def " << funcName << " (" << arg << " : " << domain
+        << ") : Int := " << recursiveRHS.toString(true);
   } else {
     // Recursive case with base cases - use pattern matching syntax
-    buf << "def " << funcName << " : Int -> Int";
+    buf << "def " << funcName << " : " << domain << " -> Int";
 
     // Sort base cases by constant value for consistent output
     std::sort(baseCases.begin(), baseCases.end(),
