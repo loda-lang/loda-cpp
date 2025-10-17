@@ -205,10 +205,7 @@ void LeanFormula::transformParameterReferences(Expression& expr, int64_t offset,
         std::vector<Expression> otherTerms;
         
         for (const auto& term : arg.children) {
-          if (term.type == Expression::Type::FUNCTION && 
-              term.name == "Int.ofNat" &&
-              term.children.size() == 1 &&
-              term.children[0].type == Expression::Type::PARAMETER) {
+          if (ExpressionUtil::isIntOfNatParameter(term)) {
             hasIntOfNat = true;
           } else if (term.type == Expression::Type::CONSTANT) {
             Number tmp = constantValue;
@@ -223,32 +220,12 @@ void LeanFormula::transformParameterReferences(Expression& expr, int64_t offset,
           // We have (Int.ofNat n) + constant
           // Transform to n + (offset + constant)
           int64_t newConstant = offset + constantValue.asInt();
-          
-          if (newConstant == 0) {
-            // Just n
-            expr.children[0] = Expression(Expression::Type::PARAMETER, "n");
-          } else {
-            // n + newConstant
-            Expression newArg(Expression::Type::SUM);
-            newArg.children.push_back(Expression(Expression::Type::PARAMETER, "n"));
-            newArg.children.push_back(Expression(Expression::Type::CONSTANT, "", Number(newConstant)));
-            expr.children[0] = newArg;
-          }
+          expr.children[0] = ExpressionUtil::createParameterSum(newConstant);
         }
-      } else if (arg.type == Expression::Type::FUNCTION && 
-                 arg.name == "Int.ofNat" &&
-                 arg.children.size() == 1 &&
-                 arg.children[0].type == Expression::Type::PARAMETER) {
+      } else if (ExpressionUtil::isIntOfNatParameter(arg)) {
         // Simple case: just (Int.ofNat n)
         // Transform to n + offset
-        if (offset == 0) {
-          expr.children[0] = Expression(Expression::Type::PARAMETER, "n");
-        } else {
-          Expression newArg(Expression::Type::SUM);
-          newArg.children.push_back(Expression(Expression::Type::PARAMETER, "n"));
-          newArg.children.push_back(Expression(Expression::Type::CONSTANT, "", Number(offset)));
-          expr.children[0] = newArg;
-        }
+        expr.children[0] = ExpressionUtil::createParameterSum(offset);
       }
     }
     // Don't recurse into function call arguments after transforming them
@@ -261,11 +238,7 @@ void LeanFormula::transformParameterReferences(Expression& expr, int64_t offset,
   }
   
   // After transforming children, if this is a standalone Int.ofNat(n), transform it
-  if (expr.type == Expression::Type::FUNCTION && 
-      expr.name == "Int.ofNat" &&
-      expr.children.size() == 1 &&
-      expr.children[0].type == Expression::Type::PARAMETER &&
-      offset > 0) {
+  if (ExpressionUtil::isIntOfNatParameter(expr) && offset > 0) {
     // Replace Int.ofNat(n) with (Int.ofNat n) + offset
     Expression sum(Expression::Type::SUM);
     sum.children.push_back(expr);

@@ -448,3 +448,21 @@ Number ExpressionUtil::eval(const Expression& e,
       throw std::runtime_error("cannot evaluate " + e.toString());
   }
 }
+
+bool ExpressionUtil::isIntOfNatParameter(const Expression& e) {
+  return e.type == Expression::Type::FUNCTION && 
+         e.name == "Int.ofNat" &&
+         e.children.size() == 1 &&
+         e.children[0].type == Expression::Type::PARAMETER;
+}
+
+Expression ExpressionUtil::createParameterSum(int64_t constant) {
+  if (constant == 0) {
+    return Expression(Expression::Type::PARAMETER, "n");
+  } else {
+    Expression sum(Expression::Type::SUM);
+    sum.children.push_back(Expression(Expression::Type::PARAMETER, "n"));
+    sum.children.push_back(Expression(Expression::Type::CONSTANT, "", Number(constant)));
+    return sum;
+  }
+}
