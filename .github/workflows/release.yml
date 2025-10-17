@@ -103,20 +103,20 @@ jobs:
           asset_content_type: application/octet-stream
         env:
           GITHUB_TOKEN: ${{ github.token }}
-  build-windows:
+  build-windows-x86:
     needs: create-release
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@v2
       - uses: ilammy/msvc-dev-cmd@v1
       - name: Build
-        run: cd src && nmake.exe /F Makefile.windows.mk loda LODA_PLATFORM=windows LODA_VERSION=${{ needs.create-release.outputs.version }}
+        run: cd src && nmake.exe /F Makefile.windows.mk loda LODA_PLATFORM=windows-x86 LODA_VERSION=${{ needs.create-release.outputs.version }}
       - name: Upload
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
           asset_path: ./loda.exe
-          asset_name: loda-windows.exe
+          asset_name: loda-windows-x86.exe
           asset_content_type: application/octet-stream
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -129,7 +129,7 @@ jobs:
         with:
           arch: amd64_arm64
       - name: Build
-        run: cd src && nmake.exe /F Makefile.windows-arm64.mk loda LODA_PLATFORM=windows-arm64 LODA_VERSION=${{ needs.create-release.outputs.version }}
+        run: cd src && nmake.exe /F Makefile.windows.mk loda LODA_PLATFORM=windows-arm64 LODA_VERSION=${{ needs.create-release.outputs.version }}
       - name: Upload
         uses: actions/upload-release-asset@v1
         with:
