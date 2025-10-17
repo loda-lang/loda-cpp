@@ -899,6 +899,12 @@ void Commands::findSlow(int64_t num_terms, const std::string& type) {
   benchmark.findSlow(num_terms, t);
 }
 
+void Commands::findSlowFormulas() {
+  initLog(false);
+  Benchmark benchmark;
+  benchmark.findSlowFormulas();
+}
+
 void Commands::findEmbseqs() {
   initLog(false);
   Parser parser;
