@@ -321,17 +321,10 @@ bool LeanFormula::initializeLeanProject() {
   lakefile << "  root := `Main\n";
   lakefile.close();
 
-  // Create lean-toolchain file
-  std::ofstream toolchain(projectDir + "lean-toolchain");
-  if (!toolchain) {
-    return false;
-  }
-  toolchain << "leanprover/lean4:stable\n";
-  toolchain.close();
-
-  // Run lake update to download dependencies (with timeout)
+  // Run lake update to download dependencies and create toolchain (with timeout)
   // Note: This requires lake to be run from the project directory
   // We use a wrapper script to change directory first
+  // The script also copies the Mathlib toolchain to match the dependency
   std::string updateScript = projectDir + "update.sh";
   std::ofstream scriptFile(updateScript);
   if (!scriptFile) {
@@ -341,6 +334,9 @@ bool LeanFormula::initializeLeanProject() {
   scriptFile << "#!/bin/sh\n";
   scriptFile << "cd " + projectDir + "\n";
   scriptFile << "lake update\n";
+  scriptFile << "if [ -f .lake/packages/mathlib/lean-toolchain ]; then\n";
+  scriptFile << "  cp .lake/packages/mathlib/lean-toolchain ./lean-toolchain\n";
+  scriptFile << "fi\n";
   scriptFile.close();
   
   // Make script executable on Unix systems
