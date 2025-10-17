@@ -97,7 +97,7 @@ bool LeanFormula::convert(const Formula& formula, int64_t offset,
   const std::string funcName = functions[0];
   lean_formula = {};
   if (FormulaUtil::isRecursive(formula, funcName)) {
-    if (offset <= 0) {
+    if (offset < 0) {
       return false;
     }
     lean_formula.domain = "Nat";
@@ -162,7 +162,7 @@ std::string LeanFormula::toString() const {
                        b.first.children.front().value;
               });
 
-    // Generate pattern matching cases
+    // Generate pattern matching cases for base cases
     for (const auto& bc : baseCases) {
       const auto& constValue = bc.first.children.front().value;
       buf << " | " << constValue.to_string() << " => "
@@ -171,10 +171,91 @@ std::string LeanFormula::toString() const {
 
     // Add the recursive case
     if (!recursiveCase.name.empty()) {
-      buf << " | n => " << recursiveRHS.toString(true);
+      // For Nat domain, use n+k pattern where k is one more than the largest base case
+      if (domain == "Nat" && !baseCases.empty()) {
+        // Find the largest base case value
+        int64_t maxBaseCase = baseCases.back().first.children.front().value.asInt();
+        int64_t patternOffset = maxBaseCase + 1;
+        
+        // Transform the RHS: replace (n-k) with (n+(patternOffset-k))
+        Expression transformedRHS = recursiveRHS;
+        transformParameterReferences(transformedRHS, patternOffset, funcName);
+        
+        buf << " | n+" << patternOffset << " => " << transformedRHS.toString(true);
+      } else {
+        buf << " | n => " << recursiveRHS.toString(true);
+      }
     }
   }
   return buf.str();
+}
+
+void LeanFormula::transformParameterReferences(Expression& expr, int64_t offset,
+                                               const std::string& funcName) const {
+  // Transform recursively for all children first
+  for (auto& child : expr.children) {
+    transformParameterReferences(child, offset, funcName);
+  }
+  
+  // If this is a function call to funcName, we need to transform its argument
+  if (expr.type == Expression::Type::FUNCTION && expr.name == funcName) {
+    if (expr.children.size() == 1) {
+      auto& arg = expr.children[0];
+      // Check if the argument is (Int.ofNat n) + k
+      if (arg.type == Expression::Type::SUM && arg.children.size() >= 2) {
+        // Look for Int.ofNat cast and constant
+        bool hasIntOfNat = false;
+        Number constantValue = Number::ZERO;
+        std::vector<Expression> otherTerms;
+        
+        for (const auto& term : arg.children) {
+          if (term.type == Expression::Type::FUNCTION && 
+              term.name == "Int.ofNat" &&
+              term.children.size() == 1 &&
+              term.children[0].type == Expression::Type::PARAMETER) {
+            hasIntOfNat = true;
+          } else if (term.type == Expression::Type::CONSTANT) {
+            Number tmp = constantValue;
+            tmp += term.value;
+            constantValue = tmp;
+          } else {
+            otherTerms.push_back(term);
+          }
+        }
+        
+        if (hasIntOfNat && otherTerms.empty()) {
+          // We have (Int.ofNat n) + constant
+          // Transform to n + (offset + constant)
+          int64_t newConstant = offset + constantValue.asInt();
+          
+          if (newConstant == 0) {
+            // Just n
+            expr.children[0] = Expression(Expression::Type::PARAMETER, "n");
+          } else {
+            // n + newConstant
+            Expression newArg(Expression::Type::SUM);
+            newArg.children.push_back(Expression(Expression::Type::PARAMETER, "n"));
+            newArg.children.push_back(Expression(Expression::Type::CONSTANT, "", Number(newConstant)));
+            expr.children[0] = newArg;
+          }
+        }
+      } else if (arg.type == Expression::Type::FUNCTION && 
+                 arg.name == "Int.ofNat" &&
+                 arg.children.size() == 1 &&
+                 arg.children[0].type == Expression::Type::PARAMETER) {
+        // Simple case: just (Int.ofNat n)
+        // Transform to n + offset
+        if (offset == 0) {
+          expr.children[0] = Expression(Expression::Type::PARAMETER, "n");
+        } else {
+          Expression newArg(Expression::Type::SUM);
+          newArg.children.push_back(Expression(Expression::Type::PARAMETER, "n"));
+          newArg.children.push_back(Expression(Expression::Type::CONSTANT, "", Number(offset)));
+          expr.children[0] = newArg;
+        }
+      }
+    }
+  }
 }
 
 std::string LeanFormula::printEvalCode(int64_t offset, int64_t numTerms) const {
