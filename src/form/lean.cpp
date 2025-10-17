@@ -7,7 +7,7 @@
 #include "seq/seq_util.hpp"
 #include "sys/util.hpp"
 
-bool convertToLean(Expression& expr, const Formula& f) {
+bool LeanFormula::convertToLean(Expression& expr, const Formula& f) {
   // Check children recursively
   for (auto& c : expr.children) {
     if (!convertToLean(c, f)) {
@@ -26,6 +26,13 @@ bool convertToLean(Expression& expr, const Formula& f) {
     case Expression::Type::GREATER_EQUAL: {
       Expression f(Expression::Type::FUNCTION, "Bool.toInt", {expr});
       expr = f;
+      break;
+    }
+    case Expression::Type::PARAMETER: {
+      if (domain == "Nat") {
+        Expression cast(Expression::Type::FUNCTION, "Int.ofNat", {expr});
+        expr = cast;
+      }
       break;
     }
     case Expression::Type::FUNCTION: {
@@ -71,8 +78,8 @@ bool convertToLean(Expression& expr, const Formula& f) {
   return true;
 }
 
-bool LeanFormula::convert(const Formula& formula, bool as_vector,
-                          LeanFormula& lean_formula) {
+bool LeanFormula::convert(const Formula& formula, int64_t offset,
+                          bool as_vector, LeanFormula& lean_formula) {
   // Check if conversion is supported.
   if (as_vector) {
     return false;
@@ -84,10 +91,18 @@ bool LeanFormula::convert(const Formula& formula, bool as_vector,
   }
   const std::string funcName = functions[0];
   lean_formula = {};
+  if (FormulaUtil::isRecursive(formula, funcName)) {
+    if (offset <= 0) {
+      return false;
+    }
+    lean_formula.domain = "Nat";
+  } else {
+    lean_formula.domain = "Int";
+  }
   for (const auto& entry : formula.entries) {
     auto left = entry.first;
     auto right = entry.second;
-    if (!convertToLean(right, formula)) {
+    if (!lean_formula.convertToLean(right, formula)) {
       return false;
     }
     if (left.type != Expression::Type::FUNCTION || left.children.size() != 1) {
@@ -113,8 +128,8 @@ std::string LeanFormula::toString() const {
   }
   bool usesParameter = mainExpr.contains(Expression::Type::PARAMETER);
   std::string arg = usesParameter ? "n" : "_";
-  buf << "def " << funcName << " (" << arg
-      << " : Int) : Int := " << mainExpr.toString(true);
+  buf << "def " << funcName << " (" << arg << " : " << domain
+      << ") : Int := " << mainExpr.toString(true);
   return buf.str();
 }
 
@@ -123,10 +138,11 @@ std::string LeanFormula::printEvalCode(int64_t offset, int64_t numTerms) const {
   out << toString() << std::endl;
   out << std::endl;
   out << "def main : IO Unit := do" << std::endl;
-  out << "  let offset : Int := " << offset << std::endl;
+  out << "  let offset : " << domain << " := " << offset << std::endl;
   out << "  let num_terms : Nat := " << numTerms << std::endl;
   out << std::endl;
-  out << "  let rec loop (count : Nat) (n : Int) : IO Unit := do" << std::endl;
+  out << "  let rec loop (count : Nat) (n : " << domain << ") : IO Unit := do"
+      << std::endl;
   out << "    if count < num_terms then" << std::endl;
   out << "      IO.println (toString (a n))" << std::endl;
   out << "      loop (count + 1) (n + 1)" << std::endl;

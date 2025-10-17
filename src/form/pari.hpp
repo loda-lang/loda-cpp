@@ -18,7 +18,7 @@ class PariFormula {
  public:
   PariFormula() : as_vector(false) {};
 
-  static bool convert(const Formula& formula, bool as_vector,
+  static bool convert(const Formula& formula, int64_t offset, bool as_vector,
                       PariFormula& pari_formula);
 
   std::string printEvalCode(int64_t offset, int64_t numTerms) const;
@@ -35,5 +35,5 @@ class PariFormula {
 
  private:
   Formula main_formula;
-  bool as_vector;
+  bool as_vector = false;
 };
