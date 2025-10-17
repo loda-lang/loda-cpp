@@ -26,5 +26,6 @@ class LeanFormula {
   Formula main_formula;
   std::string domain;  // Int or Nat
 
-  bool convertToLean(Expression& expr, const Formula& f);
+  bool convertToLean(Expression& expr, const Formula& f,
+                     const std::string& funcName);
 };

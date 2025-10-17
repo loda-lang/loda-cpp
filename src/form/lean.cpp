@@ -174,6 +174,7 @@ std::string LeanFormula::toString() const {
       buf << " | n => " << recursiveRHS.toString(true);
     }
   }
+  return buf.str();
 }
 
 std::string LeanFormula::printEvalCode(int64_t offset, int64_t numTerms) const {
