@@ -1251,6 +1251,7 @@ void Test::checkFormulas(const std::string& testFile, FormulaType type) {
     auto id = e.first;
     Log::get().info("Testing formula for " + id.string() + ": " + e.second);
     auto p = parser.parse(ProgramUtil::getProgramPath(id));
+    auto offset = ProgramUtil::getOffset(p);
     Formula f;
     if (!generator.generate(p, id.number(), f, true)) {
       Log::get().error("Cannot generate formula from program", true);
@@ -1261,7 +1262,7 @@ void Test::checkFormulas(const std::string& testFile, FormulaType type) {
       }
     } else if (type == FormulaType::LEAN) {
       LeanFormula lean;
-      if (!LeanFormula::convert(f, false, lean)) {
+      if (!LeanFormula::convert(f, offset, false, lean)) {
         Log::get().error("Cannot convert formula to LEAN", true);
       }
       if (lean.toString() != e.second) {
@@ -1269,7 +1270,8 @@ void Test::checkFormulas(const std::string& testFile, FormulaType type) {
       }
     } else {
       PariFormula pari;
-      if (!PariFormula::convert(f, type == FormulaType::PARI_VECTOR, pari)) {
+      if (!PariFormula::convert(f, offset, type == FormulaType::PARI_VECTOR,
+                                pari)) {
         Log::get().error("Cannot convert formula to PARI/GP", true);
       }
       if (pari.toString() != e.second) {
@@ -1297,13 +1299,14 @@ void Test::checkFormulasWithExternalTools(const std::string& testFile,
     auto idStr = id.string();
     FormulaTypeClass formula_obj;
     auto program = parser.parse(ProgramUtil::getProgramPath(id));
+    auto offset = ProgramUtil::getOffset(program);
     // generate formula code
     Formula formula;
     Sequence expSeq;
     if (!generator.generate(program, id.number(), formula, true)) {
       Log::get().error("Cannot generate formula", true);
     }
-    if (!FormulaTypeClass::convert(formula, asVector, formula_obj)) {
+    if (!FormulaTypeClass::convert(formula, offset, asVector, formula_obj)) {
       Log::get().error("Cannot convert formula to " + formula_obj.getName(),
                        true);
     }
@@ -1316,7 +1319,6 @@ void Test::checkFormulasWithExternalTools(const std::string& testFile,
       Log::get().error("Evaluation error", true);
     }
     // evaluate formula
-    auto offset = ProgramUtil::getOffset(program);
     Sequence genSeq;
     if (!formula_obj.eval(offset, numTerms, 10, genSeq)) {
       Log::get().error(

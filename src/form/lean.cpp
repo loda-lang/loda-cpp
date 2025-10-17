@@ -7,8 +7,8 @@
 #include "seq/seq_util.hpp"
 #include "sys/util.hpp"
 
-bool convertToLean(Expression& expr, const Formula& f,
-                   const std::string& funcName) {
+bool LeanFormula::convertToLean(Expression& expr, const Formula& f,
+                                const std::string& funcName) {
   // Check children recursively
   for (auto& c : expr.children) {
     if (!convertToLean(c, f, funcName)) {
@@ -27,6 +27,13 @@ bool convertToLean(Expression& expr, const Formula& f,
     case Expression::Type::GREATER_EQUAL: {
       Expression f(Expression::Type::FUNCTION, "Bool.toInt", {expr});
       expr = f;
+      break;
+    }
+    case Expression::Type::PARAMETER: {
+      if (domain == "Nat") {
+        Expression cast(Expression::Type::FUNCTION, "Int.ofNat", {expr});
+        expr = cast;
+      }
       break;
     }
     case Expression::Type::FUNCTION: {
@@ -76,8 +83,8 @@ bool convertToLean(Expression& expr, const Formula& f,
   return true;
 }
 
-bool LeanFormula::convert(const Formula& formula, bool as_vector,
-                          LeanFormula& lean_formula) {
+bool LeanFormula::convert(const Formula& formula, int64_t offset,
+                          bool as_vector, LeanFormula& lean_formula) {
   // Check if conversion is supported.
   if (as_vector) {
     return false;
@@ -89,10 +96,18 @@ bool LeanFormula::convert(const Formula& formula, bool as_vector,
   }
   const std::string funcName = functions[0];
   lean_formula = {};
+  if (FormulaUtil::isRecursive(formula, funcName)) {
+    if (offset <= 0) {
+      return false;
+    }
+    lean_formula.domain = "Nat";
+  } else {
+    lean_formula.domain = "Int";
+  }
   for (const auto& entry : formula.entries) {
     auto left = entry.first;
     auto right = entry.second;
-    if (!convertToLean(right, formula, funcName)) {
+    if (!lean_formula.convertToLean(right, formula, funcName)) {
       return false;
     }
     if (left.type != Expression::Type::FUNCTION || left.children.size() != 1) {
@@ -111,12 +126,13 @@ bool LeanFormula::convert(const Formula& formula, bool as_vector,
 std::string LeanFormula::toString() const {
   std::stringstream buf;
   std::string funcName;
-  
-  // Collect base cases (constant arguments) and recursive case (parameter argument)
+
+  // Collect base cases (constant arguments) and recursive case (parameter
+  // argument)
   std::vector<std::pair<Expression, Expression>> baseCases;
   Expression recursiveCase;
   Expression recursiveRHS;
-  
+
   for (const auto& entry : main_formula.entries) {
     funcName = entry.first.name;
     const auto& arg = entry.first.children.front();
@@ -127,7 +143,7 @@ std::string LeanFormula::toString() const {
       recursiveRHS = entry.second;
     }
   }
-  
+
   // Check if this is a recursive formula (multiple entries)
   if (main_formula.entries.size() == 1) {
     // Non-recursive case (original behavior)
@@ -138,26 +154,26 @@ std::string LeanFormula::toString() const {
   } else {
     // Recursive case with base cases - use pattern matching syntax
     buf << "def " << funcName << " : Int -> Int";
-    
+
     // Sort base cases by constant value for consistent output
     std::sort(baseCases.begin(), baseCases.end(),
               [](const auto& a, const auto& b) {
-                return a.first.children.front().value < b.first.children.front().value;
+                return a.first.children.front().value <
+                       b.first.children.front().value;
               });
-    
+
     // Generate pattern matching cases
     for (const auto& bc : baseCases) {
       const auto& constValue = bc.first.children.front().value;
-      buf << " | " << constValue.to_string() << " => " << bc.second.toString(true);
+      buf << " | " << constValue.to_string() << " => "
+          << bc.second.toString(true);
     }
-    
+
     // Add the recursive case
     if (!recursiveCase.name.empty()) {
       buf << " | n => " << recursiveRHS.toString(true);
     }
   }
-  
-  return buf.str();
 }
 
 std::string LeanFormula::printEvalCode(int64_t offset, int64_t numTerms) const {
@@ -165,10 +181,11 @@ std::string LeanFormula::printEvalCode(int64_t offset, int64_t numTerms) const {
   out << toString() << std::endl;
   out << std::endl;
   out << "def main : IO Unit := do" << std::endl;
-  out << "  let offset : Int := " << offset << std::endl;
+  out << "  let offset : " << domain << " := " << offset << std::endl;
   out << "  let num_terms : Nat := " << numTerms << std::endl;
   out << std::endl;
-  out << "  let rec loop (count : Nat) (n : Int) : IO Unit := do" << std::endl;
+  out << "  let rec loop (count : Nat) (n : " << domain << ") : IO Unit := do"
+      << std::endl;
   out << "    if count < num_terms then" << std::endl;
   out << "      IO.println (toString (a n))" << std::endl;
   out << "      loop (count + 1) (n + 1)" << std::endl;
