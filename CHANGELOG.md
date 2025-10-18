@@ -4,6 +4,7 @@
 
 * Add internal command for finding programs with slow formula generation
 * Improve eval performance using optimized linker settings
+* Extend program stats with operation type bitmask
 
 ## v25.10.16
 
