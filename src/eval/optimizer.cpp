@@ -167,15 +167,11 @@ bool Optimizer::mergeOps(Program &p) const {
           do_merge = true;
         }
 
-        // first mul(pow), second div(nrt)?
+        // first mul, second div?
         else if ((o1.type == Operation::Type::MUL &&
                   o2.type == Operation::Type::DIV &&
                   o1.source.value != Number::ZERO &&
-                  o2.source.value != Number::ZERO) ||
-                 (o1.type == Operation::Type::POW &&
-                  o2.type == Operation::Type::NRT &&
-                  o1.source.value > Number::ONE &&
-                  o2.source.value > Number::ONE)) {
+                  o2.source.value != Number::ZERO)) {
           auto gcd = Semantics::gcd(o1.source.value, o2.source.value);
           o1.source.value = Semantics::div(o1.source.value, gcd);
           if (gcd == o2.source.value) {
