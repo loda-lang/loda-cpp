@@ -234,6 +234,12 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
       id = args.at(1);
     }
     commands.testLean(id);
+  } else if (cmd == "test-formula-parsing") {
+    std::string id;
+    if (args.size() > 1) {
+      id = args.at(1);
+    }
+    commands.testFormulaParser(id);
   } else if (cmd == "test-range") {
     std::string id;
     if (args.size() > 1) {
