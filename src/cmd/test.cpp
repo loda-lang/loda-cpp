@@ -15,6 +15,7 @@
 #include "eval/range_generator.hpp"
 #include "eval/semantics.hpp"
 #include "form/formula_gen.hpp"
+#include "form/formula_parser.hpp"
 #include "form/lean.hpp"
 #include "form/pari.hpp"
 #include "lang/comments.hpp"
@@ -1270,6 +1271,16 @@ void Test::checkFormulas(const std::string& testFile, FormulaType type) {
     if (type == FormulaType::FORMULA) {
       if (f.toString() != e.second) {
         Log::get().error("Unexpected formula: " + f.toString(), true);
+      }
+      // Round-trip test: parse the formula string back and check it matches
+      Formula parsed;
+      FormulaParser formulaParser;
+      if (!formulaParser.parse(e.second, parsed)) {
+        Log::get().error("Failed to parse formula string: " + e.second, true);
+      }
+      if (parsed.toString() != e.second) {
+        Log::get().error("Round-trip test failed. Original: " + e.second + 
+                        ", Parsed: " + parsed.toString(), true);
       }
     } else if (type == FormulaType::LEAN) {
       LeanFormula lean;
