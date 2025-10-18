@@ -104,7 +104,7 @@ bool LeanFormula::convert(const Formula& formula, int64_t offset,
   } else {
     lean_formula.domain = "Int";
   }
-  
+
   // Collect base cases to check minimum value for Nat domain
   bool hasBaseCase = false;
   Number minBaseCase = Number::ZERO;
@@ -130,15 +130,14 @@ bool LeanFormula::convert(const Formula& formula, int64_t offset,
     }
     lean_formula.main_formula.entries[left] = right;
   }
-  
+
   // For Nat domain with recursive formulas, the minimum base case must be 0
-  if (lean_formula.domain == "Nat" && 
-      FormulaUtil::isRecursive(formula, funcName) &&
-      hasBaseCase &&
+  if (lean_formula.domain == "Nat" &&
+      FormulaUtil::isRecursive(formula, funcName) && hasBaseCase &&
       minBaseCase != Number::ZERO) {
     return false;
   }
-  
+
   return lean_formula.main_formula.entries.size() >= 1;
 }
 
@@ -190,17 +189,20 @@ std::string LeanFormula::toString() const {
 
     // Add the recursive case
     if (!recursiveCase.name.empty()) {
-      // For Nat domain, use n+k pattern where k is one more than the largest base case
+      // For Nat domain, use n+k pattern where k is one more than the largest
+      // base case
       if (domain == "Nat" && !baseCases.empty()) {
         // Find the largest base case value
-        int64_t maxBaseCase = baseCases.back().first.children.front().value.asInt();
+        int64_t maxBaseCase =
+            baseCases.back().first.children.front().value.asInt();
         int64_t patternOffset = maxBaseCase + 1;
-        
+
         // Transform the RHS: replace (n-k) with (n+(patternOffset-k))
         Expression transformedRHS = recursiveRHS;
         transformParameterReferences(transformedRHS, patternOffset, funcName);
-        
-        buf << " | n+" << patternOffset << " => " << transformedRHS.toString(true);
+
+        buf << " | n+" << patternOffset << " => "
+            << transformedRHS.toString(true);
       } else {
         buf << " | n => " << recursiveRHS.toString(true);
       }
@@ -209,8 +211,8 @@ std::string LeanFormula::toString() const {
   return buf.str();
 }
 
-void LeanFormula::transformParameterReferences(Expression& expr, int64_t offset,
-                                               const std::string& funcName) const {
+void LeanFormula::transformParameterReferences(
+    Expression& expr, int64_t offset, const std::string& funcName) const {
   // If this is a function call to funcName, transform its argument first
   // before recursing into children
   if (expr.type == Expression::Type::FUNCTION && expr.name == funcName) {
@@ -222,26 +224,24 @@ void LeanFormula::transformParameterReferences(Expression& expr, int64_t offset,
         bool hasIntOfNat = false;
         Number constantValue = Number::ZERO;
         std::vector<Expression> otherTerms;
-        
+
         for (const auto& term : arg.children) {
-          if (ExpressionUtil::isIntOfNatParameter(term)) {
+          if (ExpressionUtil::isSimpleNamedFunction(term, "Int.ofNat")) {
             hasIntOfNat = true;
           } else if (term.type == Expression::Type::CONSTANT) {
-            Number tmp = constantValue;
-            tmp += term.value;
-            constantValue = tmp;
+            constantValue += term.value;
           } else {
             otherTerms.push_back(term);
           }
         }
-        
+
         if (hasIntOfNat && otherTerms.empty()) {
           // We have (Int.ofNat n) + constant
           // Transform to n + (offset + constant)
           int64_t newConstant = offset + constantValue.asInt();
           expr.children[0] = ExpressionUtil::createParameterSum(newConstant);
         }
-      } else if (ExpressionUtil::isIntOfNatParameter(arg)) {
+      } else if (ExpressionUtil::isSimpleNamedFunction(arg, "Int.ofNat")) {
         // Simple case: just (Int.ofNat n)
         // Transform to n + offset
         expr.children[0] = ExpressionUtil::createParameterSum(offset);
@@ -250,18 +250,19 @@ void LeanFormula::transformParameterReferences(Expression& expr, int64_t offset,
     // Don't recurse into function call arguments after transforming them
     return;
   }
-  
+
   // Transform recursively for all children
   for (auto& child : expr.children) {
     transformParameterReferences(child, offset, funcName);
   }
-  
-  // After transforming children, if this is a standalone Int.ofNat(n), transform it
-  if (ExpressionUtil::isIntOfNatParameter(expr) && offset > 0) {
+
+  // After transforming children, if this is a standalone Int.ofNat(n),
+  // transform it
+  if (ExpressionUtil::isSimpleNamedFunction(expr, "Int.ofNat") && offset > 0) {
     // Replace Int.ofNat(n) with (Int.ofNat n) + offset
     Expression sum(Expression::Type::SUM);
     sum.children.push_back(expr);
-    sum.children.push_back(Expression(Expression::Type::CONSTANT, "", Number(offset)));
+    sum.children.push_back(ExpressionUtil::newConstant(offset));
     expr = sum;
   }
 }

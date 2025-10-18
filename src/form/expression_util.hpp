@@ -16,14 +16,16 @@ class ExpressionUtil {
 
   static Expression newFunction(const std::string& name);
 
+  static Expression createParameterSum(int64_t constant);
+
   static bool normalize(Expression& e);
 
   static bool isSimpleFunction(const Expression& e, bool strict = true);
 
-  static bool isInitialTerm(const Expression& e);
+  static bool isSimpleNamedFunction(const Expression& e,
+                                    const std::string& name);
 
-  static bool isIntOfNatParameter(const Expression& e,
-                                  const std::string& funcName = "Int.ofNat");
+  static bool isInitialTerm(const Expression& e);
 
   static bool isRecursionArgument(const Expression& e, int64_t max_offset);
 
@@ -42,7 +44,4 @@ class ExpressionUtil {
 
   static Number eval(const Expression& e,
                      const std::map<std::string, Number> params);
-
-  // Create a parameter sum expression: n + constant (or just n if constant is 0)
-  static Expression createParameterSum(int64_t constant);
 };
