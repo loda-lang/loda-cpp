@@ -77,6 +77,8 @@ class Commands {
 
   void findSlow(int64_t num_terms, const std::string& type);
 
+  void findSlowFormulas();
+
   void findEmbseqs();
 
   void extractVirseqs();

@@ -69,6 +69,7 @@ class Stats {
   std::unordered_map<UID, int64_t> program_lengths;
   std::unordered_map<UID, int64_t> program_usages;
   std::unordered_map<UID, int64_t> program_submitter;
+  std::unordered_map<UID, int64_t> program_operation_types_bitmask;
   UIDSet all_program_ids;
   UIDSet latest_program_ids;
   UIDSet supports_inceval;

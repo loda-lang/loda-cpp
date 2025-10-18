@@ -626,6 +626,7 @@ void Test::operationMetadata() {
     Log::get().error("Unexpected number of operation types", true);
   }
   std::set<std::string> names;
+  std::set<int64_t> ref_ids;
   for (auto type : Operation::Types) {
     auto& meta = Operation::Metadata::get(type);
     if (type != meta.type) {
@@ -635,6 +636,16 @@ void Test::operationMetadata() {
       Log::get().error("Duplicate name: " + meta.name, true);
     }
     names.insert(meta.name);
+    if (meta.ref_id < 0 || meta.ref_id >= 64) {
+      Log::get().error("Invalid ref_id for " + meta.name + ": " +
+                           std::to_string(meta.ref_id),
+                       true);
+    }
+    if (ref_ids.count(meta.ref_id)) {
+      Log::get().error("Duplicate ref_id: " + std::to_string(meta.ref_id),
+                       true);
+    }
+    ref_ids.insert(meta.ref_id);
   }
 }
 

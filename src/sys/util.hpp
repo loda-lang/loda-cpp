@@ -41,9 +41,9 @@ class Settings {
 
   Settings();
 
-  std::vector<std::string> parseArgs(int argc, char *argv[]);
+  std::vector<std::string> parseArgs(int argc, char* argv[]);
 
-  void printArgs(std::vector<std::string> &args);
+  void printArgs(std::vector<std::string>& args);
 };
 
 class AdaptiveScheduler {
@@ -65,8 +65,8 @@ class AdaptiveScheduler {
 
 class ProgressMonitor {
  public:
-  ProgressMonitor(int64_t target_seconds, const std::string &progress_file,
-                  const std::string &checkpoint_file, uint64_t checkpoint_key);
+  ProgressMonitor(int64_t target_seconds, const std::string& progress_file,
+                  const std::string& checkpoint_file, uint64_t checkpoint_key);
 
   int64_t getElapsedSeconds();
 
@@ -90,7 +90,7 @@ class ProgressMonitor {
 
 class Random {
  public:
-  static Random &get();
+  static Random& get();
 
   uint64_t seed;
   std::mt19937 gen;
@@ -104,5 +104,6 @@ class Signals {
   static bool HALT;
 };
 
-void trimString(std::string &str);
-void lowerString(std::string &str);
+void trimString(std::string& str);
+void lowerString(std::string& str);
+std::string formatDuration(int64_t microseconds);
