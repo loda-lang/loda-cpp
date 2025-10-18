@@ -63,6 +63,8 @@ class Commands {
 
   void testLean(const std::string& id);
 
+  void testFormulaParser(const std::string& id);
+
   void testRange(const std::string& id);
 
   void generate();
