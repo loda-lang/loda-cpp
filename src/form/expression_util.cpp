@@ -16,6 +16,17 @@ Expression ExpressionUtil::newFunction(const std::string& name) {
   return Expression(Expression::Type::FUNCTION, name, {newParameter()});
 }
 
+Expression ExpressionUtil::createParameterSum(int64_t constant) {
+  if (constant == 0) {
+    return newParameter();
+  } else {
+    Expression sum(Expression::Type::SUM);
+    sum.children.push_back(newParameter());
+    sum.children.push_back(newConstant(constant));
+    return sum;
+  }
+}
+
 std::pair<Number, Expression> extractFactor(const Expression& e) {
   std::pair<Number, Expression> result;
   result.first = Number::ONE;
@@ -278,6 +289,13 @@ bool ExpressionUtil::isSimpleFunction(const Expression& e, bool strict) {
   } else {
     return !arg.contains(Expression::Type::FUNCTION);
   }
+}
+
+bool ExpressionUtil::isSimpleNamedFunction(const Expression& e,
+                                           const std::string& name) {
+  return e.type == Expression::Type::FUNCTION && e.name == name &&
+         e.children.size() == 1 &&
+         e.children[0].type == Expression::Type::PARAMETER;
 }
 
 bool ExpressionUtil::isInitialTerm(const Expression& e) {

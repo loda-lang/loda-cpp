@@ -1,8 +1,12 @@
 A000004: def a (_ : Int) : Int := 0
 A000027: def a (n : Int) : Int := n
+A000032: def a : Nat -> Int | 0 => 2 | 1 => 1 | 2 => 3 | n+3 => (a (n+2))+(a (n+1))
 A000034: def a (n : Int) : Int := n%2+1
 A000035: def a (n : Int) : Int := n%2
+A000045: def a : Nat -> Int | 0 => 0 | 1 => 1 | n+2 => (a (n+1))+(a n)
+A000073: def a : Nat -> Int | 0 => 0 | 1 => 0 | 2 => 1 | n+3 => (a (n+2))+(a (n+1))+(a n)
 A000115: def a (n : Int) : Int := Int.fdiv ((n+4)^2+9) 20
+A000142: def a : Nat -> Int | 0 => 1 | n+1 => ((Int.ofNat n)+1)*(a n)
 A000212: def a (n : Int) : Int := Int.fdiv (n^2) 3
 A000290: def a (n : Int) : Int := n^2
 A000463: def a (n : Int) : Int := (Int.gcd (n+1) ((Int.fdiv n 2)+1))*((Int.fdiv n 2)+1)

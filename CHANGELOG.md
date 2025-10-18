@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Features
+
+* Support simple recursive functions in LEAN formula generation
+
 ### Enhancements
 
 * Add internal command for finding programs with slow formula generation
