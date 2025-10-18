@@ -4,6 +4,7 @@
 
 * Support memory operations in formula generation
 * Support simple recursive functions in LEAN formula generation
+* Add Windows ARM64 build support
 
 ### Enhancements
 
