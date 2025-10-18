@@ -1,15 +1,18 @@
 ## [Unreleased]
 
+### Bugfixes
+
+* Fix optimizer bug
+
 ### Features
 
-* Add formula parser for parsing formulas from their string representation
 * Support memory operations in formula generation
 * Support simple recursive functions in LEAN formula generation
 * Add Windows ARM64 build support
 
 ### Enhancements
 
-* Add round-trip tests for formula parsing and generation
+* Add formula parser for parsing formulas from their string representation
 * Add internal command for finding programs with slow formula generation
 * Improve eval performance using optimized linker settings
 * Extend program stats with operation type bitmask
