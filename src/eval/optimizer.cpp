@@ -178,12 +178,20 @@ bool Optimizer::mergeOps(Program &p) const {
                   o2.source.value > Number::ONE)) {
           auto gcd = Semantics::gcd(o1.source.value, o2.source.value);
           auto new_o1_value = Semantics::div(o1.source.value, gcd);
-          // Don't merge POW and NRT if the result would be a no-op (exponent 1)
-          // because pow $0,k; nrt $0,m changes negative values to positive
-          // when k is even, so it's not equivalent to a no-op
+          // Special case for POW/NRT: if exponents are equal and result would be
+          // a no-op, handle differently based on whether exponent is even or odd
           if (o1.type == Operation::Type::POW && o2.type == Operation::Type::NRT &&
               new_o1_value == Number::ONE) {
-            // Skip this optimization
+            // If exponent is even: pow $0,k; nrt $0,k computes abs($0)
+            // Replace with gcd $0,0 which is more efficient
+            if (!o1.source.value.odd()) {
+              o1.type = Operation::Type::GCD;
+              o1.source = Operand(Operand::Type::CONSTANT, 0);
+              do_merge = true;
+            }
+            // If exponent is odd: pow $0,k; nrt $0,k is a no-op for non-negative
+            // values but causes overflow for negative values. Keep the operations
+            // to preserve the original behavior.
           } else {
             o1.source.value = new_o1_value;
             if (gcd == o2.source.value) {
