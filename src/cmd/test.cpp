@@ -626,6 +626,7 @@ void Test::operationMetadata() {
     Log::get().error("Unexpected number of operation types", true);
   }
   std::set<std::string> names;
+  std::set<int64_t> ref_ids;
   for (auto type : Operation::Types) {
     auto& meta = Operation::Metadata::get(type);
     if (type != meta.type) {
@@ -635,6 +636,16 @@ void Test::operationMetadata() {
       Log::get().error("Duplicate name: " + meta.name, true);
     }
     names.insert(meta.name);
+    if (meta.ref_id < 0 || meta.ref_id >= 64) {
+      Log::get().error("Invalid ref_id for " + meta.name + ": " +
+                           std::to_string(meta.ref_id),
+                       true);
+    }
+    if (ref_ids.count(meta.ref_id)) {
+      Log::get().error("Duplicate ref_id: " + std::to_string(meta.ref_id),
+                       true);
+    }
+    ref_ids.insert(meta.ref_id);
   }
 }
 
@@ -878,8 +889,8 @@ void Test::incEval() {
     i++;
   }
   // OEIS sequence test cases
-  std::vector<size_t> ids = {8,     45,    142,    178,    204,    246,   253,
-                             278,   280,   407,    542,    933,    1075,  1091,
+  std::vector<size_t> ids = {8,     45,    78,     142,    178,    204,    246,   253,
+                             278,   280,   407,    542,    803,    933,    1075,  1091,
                              1117,  1304,  1353,   1360,   1519,   1541,  1542,
                              1609,  2081,  3411,   7661,   7981,   8581,  10362,
                              11218, 12866, 14979,  22564,  25774,  49349, 57552,

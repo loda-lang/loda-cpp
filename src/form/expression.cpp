@@ -344,8 +344,19 @@ bool Expression::needsBrackets(bool isRoot, Expression::Type parentType,
     return false;
   }
   if (parentType == Expression::Type::FUNCTION) {
-    return curry && !(type == Expression::Type::CONSTANT ||
-                      type == Expression::Type::PARAMETER);
+    if (!curry) {
+      return false;
+    }
+    // In curry mode, parameters don't need brackets
+    if (type == Expression::Type::PARAMETER) {
+      return false;
+    }
+    // Constants need brackets if they are negative (to avoid parsing ambiguity)
+    if (type == Expression::Type::CONSTANT) {
+      return value < Number::ZERO;
+    }
+    // All other expression types need brackets
+    return true;
   }
   if (type == Expression::Type::PARAMETER) {
     return false;

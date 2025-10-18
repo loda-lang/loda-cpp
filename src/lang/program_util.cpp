@@ -7,16 +7,17 @@
 #include <stack>
 
 #include "lang/program.hpp"
+#include "math/number.hpp"
 #include "sys/file.hpp"
 #include "sys/setup.hpp"
 #include "sys/util.hpp"
 
-bool ProgramUtil::hasOp(const Program &p, Operation::Type type) {
+bool ProgramUtil::hasOp(const Program& p, Operation::Type type) {
   return std::any_of(p.ops.begin(), p.ops.end(),
-                     [&](const Operation &op) { return op.type == type; });
+                     [&](const Operation& op) { return op.type == type; });
 }
 
-void ProgramUtil::removeOps(Program &p, Operation::Type type) {
+void ProgramUtil::removeOps(Program& p, Operation::Type type) {
   auto it = p.ops.begin();
   while (it != p.ops.end()) {
     if (it->type == type) {
@@ -27,10 +28,10 @@ void ProgramUtil::removeOps(Program &p, Operation::Type type) {
   }
 }
 
-bool ProgramUtil::replaceOps(Program &p, Operation::Type oldType,
+bool ProgramUtil::replaceOps(Program& p, Operation::Type oldType,
                              Operation::Type newType) {
   bool result = false;
-  for (Operation &op : p.ops) {
+  for (Operation& op : p.ops) {
     if (op.type == oldType) {
       op.type = newType;
       result = true;
@@ -39,7 +40,7 @@ bool ProgramUtil::replaceOps(Program &p, Operation::Type oldType,
   return result;
 }
 
-bool ProgramUtil::isNop(const Operation &op) {
+bool ProgramUtil::isNop(const Operation& op) {
   if (op.type == Operation::Type::NOP || op.type == Operation::Type::DBG) {
     return true;
   } else if (op.source == op.target && (op.type == Operation::Type::MOV ||
@@ -70,26 +71,26 @@ bool ProgramUtil::isNop(const Operation &op) {
   return false;
 }
 
-size_t ProgramUtil::numOps(const Program &p, bool withNops) {
+size_t ProgramUtil::numOps(const Program& p, bool withNops) {
   if (withNops) {
     return p.ops.size();
   } else {
-    return std::count_if(p.ops.begin(), p.ops.end(), [](const Operation &op) {
+    return std::count_if(p.ops.begin(), p.ops.end(), [](const Operation& op) {
       return (op.type != Operation::Type::NOP);
     });
   }
 }
 
-size_t ProgramUtil::numOps(const Program &p, Operation::Type type) {
-  return std::count_if(p.ops.begin(), p.ops.end(), [type](const Operation &op) {
+size_t ProgramUtil::numOps(const Program& p, Operation::Type type) {
+  return std::count_if(p.ops.begin(), p.ops.end(), [type](const Operation& op) {
     return (op.type == type);
   });
 }
 
-size_t ProgramUtil::numOps(const Program &p, Operand::Type type) {
+size_t ProgramUtil::numOps(const Program& p, Operand::Type type) {
   size_t num_ops = 0;
-  for (const auto &op : p.ops) {
-    const auto &m = Operation::Metadata::get(op.type);
+  for (const auto& op : p.ops) {
+    const auto& m = Operation::Metadata::get(op.type);
     if (m.num_operands == 1 && op.target.type == type) {
       num_ops++;
     } else if (m.num_operands == 2 &&
@@ -115,9 +116,9 @@ bool ProgramUtil::isCommutative(Operation::Type t) {
           t == Operation::Type::NEQ);
 }
 
-bool ProgramUtil::isCommutative(const Program &p, int64_t cell) {
+bool ProgramUtil::isCommutative(const Program& p, int64_t cell) {
   auto update_type = Operation::Type::NOP;
-  for (const auto &op : p.ops) {
+  for (const auto& op : p.ops) {
     const auto meta = Operation::Metadata::get(op.type);
     const auto target = op.target.value.asInt();
     if (target == cell) {
@@ -140,8 +141,8 @@ bool ProgramUtil::isCommutative(const Program &p, int64_t cell) {
   return true;
 }
 
-bool ProgramUtil::isCommutative(const Program &p,
-                                const std::set<int64_t> &cells) {
+bool ProgramUtil::isCommutative(const Program& p,
+                                const std::set<int64_t>& cells) {
   return std::all_of(cells.begin(), cells.end(),
                      [&](int64_t c) { return isCommutative(p, c); });
 }
@@ -150,21 +151,21 @@ bool ProgramUtil::isAdditive(Operation::Type t) {
   return (t == Operation::Type::ADD || t == Operation::Type::SUB);
 }
 
-bool ProgramUtil::isNonTrivialLoopBegin(const Operation &op) {
+bool ProgramUtil::isNonTrivialLoopBegin(const Operation& op) {
   return (op.type == Operation::Type::LPB &&
           (op.source.type != Operand::Type::CONSTANT ||
            op.source.value != Number::ONE));
 }
 
-bool ProgramUtil::isNonTrivialClear(const Operation &op) {
+bool ProgramUtil::isNonTrivialClear(const Operation& op) {
   return (
       op.type == Operation::Type::CLR &&
       (op.source.type != Operand::Type::CONSTANT ||
        (Number::ONE < op.source.value || op.source.value < Number::MINUS_ONE)));
 }
 
-bool ProgramUtil::isReadingCell(const Operation &op, int64_t cell) {
-  const auto &m = Operation::Metadata::get(op.type);
+bool ProgramUtil::isReadingCell(const Operation& op, int64_t cell) {
+  const auto& m = Operation::Metadata::get(op.type);
   const Operand c(Operand::Type::DIRECT, cell);
   return (m.num_operands > 0 && op.target == c && m.is_reading_target) ||
          (m.num_operands > 1 && op.source == c);
@@ -176,25 +177,25 @@ bool ProgramUtil::isWritingRegion(Operation::Type t) {
           t == Operation::Type::PRG);
 }
 
-bool ProgramUtil::hasRegionOperation(const Program &p) {
-  return std::any_of(p.ops.begin(), p.ops.end(), [](const Operation &op) {
+bool ProgramUtil::hasRegionOperation(const Program& p) {
+  return std::any_of(p.ops.begin(), p.ops.end(), [](const Operation& op) {
     return isWritingRegion(op.type);
   });
 }
 
-bool ProgramUtil::hasIndirectOperand(const Operation &op) {
+bool ProgramUtil::hasIndirectOperand(const Operation& op) {
   const auto num_ops = Operation::Metadata::get(op.type).num_operands;
   return (num_ops > 0 && op.target.type == Operand::Type::INDIRECT) ||
          (num_ops > 1 && op.source.type == Operand::Type::INDIRECT);
 }
 
-bool ProgramUtil::hasIndirectOperand(const Program &p) {
-  return std::any_of(p.ops.begin(), p.ops.end(), [&](const Operation &op) {
+bool ProgramUtil::hasIndirectOperand(const Program& p) {
+  return std::any_of(p.ops.begin(), p.ops.end(), [&](const Operation& op) {
     return hasIndirectOperand(op);
   });
 }
 
-bool isIndependentCandidate(const Operation &op) {
+bool isIndependentCandidate(const Operation& op) {
   // must be an arithmetic operation or a sequence, and must not have indirect
   // operands
   return (
@@ -202,14 +203,14 @@ bool isIndependentCandidate(const Operation &op) {
       !ProgramUtil::hasIndirectOperand(op));
 }
 
-bool haveOverlappingOperands(const Operation &op1, const Operation &op2) {
+bool haveOverlappingOperands(const Operation& op1, const Operation& op2) {
   // source of the second operand is the same as the target of the first operand
   return (op2.source.type == Operand::Type::DIRECT &&
           op1.target.type == Operand::Type::DIRECT &&
           op1.target.value == op2.source.value);
 }
 
-bool ProgramUtil::areIndependent(const Operation &op1, const Operation &op2) {
+bool ProgramUtil::areIndependent(const Operation& op1, const Operation& op2) {
   if (!isIndependentCandidate(op1) || !isIndependentCandidate(op2)) {
     return false;
   }
@@ -224,21 +225,56 @@ bool ProgramUtil::areIndependent(const Operation &op1, const Operation &op2) {
   return true;
 }
 
-void collectUsedMemoryCells(const Operand &operand, int64_t region_length,
-                            std::unordered_set<int64_t> *used_cells,
-                            int64_t &largest_used) {
+std::pair<Number, Number> ProgramUtil::getTargetMemoryRange(int64_t start,
+                                                            int64_t length) {
+  int64_t left;
+  int64_t right;
+  if (length > 0) {
+    left = start;
+    right = start + length;
+  } else {
+    left = std::max<int64_t>(start + length + 1, 0);
+    right = start + 1;
+  }
+  return std::make_pair(Number(left), Number(right));
+}
+
+// This function will return Number pair within int64_t range, or Number::INF
+// pair to indicate unsupported operation.
+std::pair<Number, Number> ProgramUtil::getTargetMemoryRange(
+    const Operation& op) {
+  try {
+    if (op.target.type != Operand::Type::DIRECT ||
+        op.type == Operation::Type::PRG) {
+      return std::make_pair(Number::INF, Number::INF);
+    }
+    if (isWritingRegion(op.type)) {
+      if (op.source.type != Operand::Type::CONSTANT) {
+        return std::make_pair(Number::INF, Number::INF);
+      }
+      int64_t start = op.target.value.asInt();
+      int64_t length = op.source.value.asInt();
+      return getTargetMemoryRange(start, length);
+    }
+    return std::make_pair(op.target.value, Number(op.target.value.asInt() + 1));
+  } catch (const std::exception&) {
+    return std::make_pair(Number::INF, Number::INF);
+  }
+}
+
+void collectUsedMemoryCells(const Operand& operand, int64_t region_length,
+                            std::unordered_set<int64_t>* used_cells,
+                            int64_t& largest_used) {
   if (operand.type != Operand::Type::DIRECT) {
     return;
   }
-  int64_t start, end;
-  int64_t base = operand.value.asInt();
-  if (region_length >= 0) {
-    start = base;
-    end = base + region_length;
-  } else {
-    start = std::max<int64_t>(base + region_length + 1, 0);
-    end = base + 1;
+  auto bounds =
+      ProgramUtil::getTargetMemoryRange(operand.value.asInt(), region_length);
+  if (bounds.first == Number::INF || bounds.second == Number::INF) {
+    return;
   }
+  int64_t start = bounds.first.asInt();
+  int64_t end = bounds.second.asInt();
   for (int64_t cell = start; cell < end; cell++) {
     if (used_cells) {
       used_cells->insert(cell);
@@ -247,13 +283,13 @@ void collectUsedMemoryCells(const Operand &operand, int64_t region_length,
   }
 }
 
-bool ProgramUtil::getUsedMemoryCells(const Program &p,
-                                     std::map<UID, Program> *prg_refs,
-                                     std::unordered_set<int64_t> *used_cells,
-                                     int64_t &largest_used,
+bool ProgramUtil::getUsedMemoryCells(const Program& p,
+                                     std::map<UID, Program>* prg_refs,
+                                     std::unordered_set<int64_t>* used_cells,
+                                     int64_t& largest_used,
                                      int64_t max_memory) {
   largest_used = 0;
-  for (const auto &op : p.ops) {
+  for (const auto& op : p.ops) {
     int64_t region_length = 1;
     if (op.source.type == Operand::Type::INDIRECT ||
         op.target.type == Operand::Type::INDIRECT) {
@@ -267,7 +303,7 @@ bool ProgramUtil::getUsedMemoryCells(const Program &p,
       if (!prg_refs || prg_refs->find(sub_uid) == prg_refs->end()) {
         return false;
       }
-      const auto &sub = prg_refs->at(sub_uid);
+      const auto& sub = prg_refs->at(sub_uid);
       region_length = std::max<int64_t>(sub.getDirective("inputs"),
                                         sub.getDirective("outputs"));
     } else if (op.type == Operation::Type::LPB ||
@@ -291,9 +327,9 @@ bool ProgramUtil::getUsedMemoryCells(const Program &p,
 }
 
 int64_t ProgramUtil::getLargestDirectMemoryCellWithoutRegions(
-    const Program &p) {
+    const Program& p) {
   int64_t largest = 0;
-  for (const auto &op : p.ops) {
+  for (const auto& op : p.ops) {
     if (op.source.type == Operand::Type::DIRECT) {
       largest = std::max<int64_t>(largest, op.source.value.asInt());
     }
@@ -304,18 +340,40 @@ int64_t ProgramUtil::getLargestDirectMemoryCellWithoutRegions(
   return largest;
 }
 
-bool ProgramUtil::getUsedUninitializedCells(const Program &p,
-                                            std::set<int64_t> &initialized,
-                                            std::set<int64_t> &uninitialized,
+// Doesn't support memory ops with non-constant source
+// Only used in formula generation
+int64_t ProgramUtil::getLargestDirectMemoryCellWithRegions(const Program& p) {
+  int64_t largest = 0;
+  for (const auto& op : p.ops) {
+    if (op.source.type == Operand::Type::DIRECT) {
+      largest = std::max<int64_t>(largest, op.source.value.asInt());
+    }
+    if (op.target.type == Operand::Type::DIRECT) {
+      largest = std::max<int64_t>(largest, op.target.value.asInt());
+    }
+    if (op.type == Operation::Type::CLR || op.type == Operation::Type::FIL ||
+        op.type == Operation::Type::ROL || op.type == Operation::Type::ROR) {
+      if (op.source.type == Operand::Type::CONSTANT) {
+        largest = std::max<int64_t>(
+            largest, op.target.value.asInt() + op.source.value.asInt() - 1);
+      }
+    }
+  }
+  return largest;
+}
+
+bool ProgramUtil::getUsedUninitializedCells(const Program& p,
+                                            std::set<int64_t>& initialized,
+                                            std::set<int64_t>& uninitialized,
                                             size_t start_pos) {
   // find cells that are read and uninitialized
   for (size_t i = start_pos; i < p.ops.size(); i++) {
-    const auto &op = p.ops[i];
+    const auto& op = p.ops[i];
     // undecidable if there are indirect operands
     if (hasIndirectOperand(op)) {
       return false;
     }
-    const auto &meta = Operation::Metadata::get(op.type);
+    const auto& meta = Operation::Metadata::get(op.type);
     // check target memory cell
     if (meta.num_operands > 0 && op.target.type == Operand::Type::DIRECT) {
       auto t = op.target.value.asInt();
@@ -356,14 +414,14 @@ bool ProgramUtil::getUsedUninitializedCells(const Program &p,
   return true;
 }
 
-bool ProgramUtil::swapDirectOperandCells(Program &p, int64_t cell1,
+bool ProgramUtil::swapDirectOperandCells(Program& p, int64_t cell1,
                                          int64_t cell2) {
   if (cell1 == cell2) {
     return false;
   }
   bool changed = false;
-  for (auto &op : p.ops) {
-    const auto &meta = Operation::Metadata::get(op.type);
+  for (auto& op : p.ops) {
+    const auto& meta = Operation::Metadata::get(op.type);
     if (meta.num_operands > 1 && op.source.type == Operand::Type::DIRECT) {
       auto src = op.source.value.asInt();
       if (src == cell1) {
@@ -388,7 +446,7 @@ bool ProgramUtil::swapDirectOperandCells(Program &p, int64_t cell1,
   return changed;
 }
 
-std::pair<int64_t, int64_t> ProgramUtil::getEnclosingLoop(const Program &p,
+std::pair<int64_t, int64_t> ProgramUtil::getEnclosingLoop(const Program& p,
                                                           int64_t op_index) {
   int64_t open_loops;
   std::pair<int64_t, int64_t> loop(-1, -1);
@@ -445,7 +503,7 @@ std::string getIndent(int indent) {
   return s;
 }
 
-std::string ProgramUtil::operandToString(const Operand &op) {
+std::string ProgramUtil::operandToString(const Operand& op) {
   switch (op.type) {
     case Operand::Type::CONSTANT:
       return op.value.to_string();
@@ -457,8 +515,8 @@ std::string ProgramUtil::operandToString(const Operand &op) {
   return "";
 }
 
-std::string ProgramUtil::operationToString(const Operation &op) {
-  auto &metadata = Operation::Metadata::get(op.type);
+std::string ProgramUtil::operationToString(const Operation& op) {
+  auto& metadata = Operation::Metadata::get(op.type);
   std::string str;
   if (metadata.num_operands == 0 && op.type != Operation::Type::NOP) {
     str = metadata.name;
@@ -481,12 +539,12 @@ std::string ProgramUtil::operationToString(const Operation &op) {
   return str;
 }
 
-void ProgramUtil::print(const Operation &op, std::ostream &out, int indent) {
+void ProgramUtil::print(const Operation& op, std::ostream& out, int indent) {
   out << getIndent(indent) << operationToString(op);
 }
 
-void ProgramUtil::print(const Program &p, std::ostream &out,
-                        const std::string &newline) {
+void ProgramUtil::print(const Program& p, std::ostream& out,
+                        const std::string& newline) {
   size_t i = 0;
   bool last_has_comment = false;
   for (i = 0; i < p.ops.size() && p.ops[i].type == Operation::Type::NOP; i++) {
@@ -498,14 +556,14 @@ void ProgramUtil::print(const Program &p, std::ostream &out,
     if (i > 0 && last_has_comment) {
       out << newline;
     }
-    for (const auto &d : p.directives) {
+    for (const auto& d : p.directives) {
       out << "#" << d.first << " " << d.second << newline;
     }
     out << newline;
   }
   int indent = 0;
   for (; i < p.ops.size(); i++) {
-    const auto &op = p.ops[i];
+    const auto& op = p.ops[i];
     if (op.type == Operation::Type::LPE) {
       indent -= 2;
     }
@@ -517,9 +575,9 @@ void ProgramUtil::print(const Program &p, std::ostream &out,
   }
 }
 
-size_t ProgramUtil::hash(const Program &p) {
+size_t ProgramUtil::hash(const Program& p) {
   size_t h = 0;
-  for (const auto &op : p.ops) {
+  for (const auto& op : p.ops) {
     if (op.type != Operation::Type::NOP) {
       h = (h * 3) + hash(op);
     }
@@ -527,8 +585,8 @@ size_t ProgramUtil::hash(const Program &p) {
   return h;
 }
 
-size_t ProgramUtil::hash(const Operation &op) {
-  auto &meta = Operation::Metadata::get(op.type);
+size_t ProgramUtil::hash(const Operation& op) {
+  auto& meta = Operation::Metadata::get(op.type);
   size_t h = static_cast<size_t>(op.type);
   if (meta.num_operands > 0) {
     h = (5 * h) + hash(op.target);
@@ -539,15 +597,15 @@ size_t ProgramUtil::hash(const Operation &op) {
   return h;
 }
 
-size_t ProgramUtil::hash(const Operand &op) {
+size_t ProgramUtil::hash(const Operand& op) {
   return (11 * static_cast<size_t>(op.type)) + op.value.hash();
 }
 
-void throwInvalidLoop(const Program &p) {
+void throwInvalidLoop(const Program& p) {
   throw std::runtime_error("invalid loop");
 }
 
-void ProgramUtil::validate(const Program &p) {
+void ProgramUtil::validate(const Program& p) {
   // validate number of open/closing loops
   int64_t open_loops = 0;
   auto it = p.ops.begin();
@@ -567,7 +625,7 @@ void ProgramUtil::validate(const Program &p) {
   }
 }
 
-void swapCells(Operand &o, int64_t old_cell, int64_t new_cell) {
+void swapCells(Operand& o, int64_t old_cell, int64_t new_cell) {
   if (o == Operand(Operand::Type::DIRECT, old_cell)) {
     o.value = new_cell;
   } else if (o == Operand(Operand::Type::DIRECT, new_cell)) {
@@ -575,7 +633,7 @@ void swapCells(Operand &o, int64_t old_cell, int64_t new_cell) {
   }
 }
 
-void ProgramUtil::avoidNopOrOverflow(Operation &op) {
+void ProgramUtil::avoidNopOrOverflow(Operation& op) {
   if (op.source.type == Operand::Type::CONSTANT) {
     if (op.source.value == 0 &&
         (op.type == Operation::Type::ADD || op.type == Operation::Type::SUB ||
@@ -633,11 +691,11 @@ std::string ProgramUtil::getProgramPath(UID id, bool local) {
   }
 }
 
-int64_t ProgramUtil::getOffset(const Program &p) {
+int64_t ProgramUtil::getOffset(const Program& p) {
   return p.getDirective("offset", 0);
 }
 
-int64_t ProgramUtil::setOffset(Program &p, int64_t offset) {
+int64_t ProgramUtil::setOffset(Program& p, int64_t offset) {
   const int64_t current = p.getDirective("offset", 0);
   const int64_t delta = offset - current;
   if (delta > 0) {
@@ -659,7 +717,7 @@ int64_t ProgramUtil::setOffset(Program &p, int64_t offset) {
   return delta;
 }
 
-int64_t ProgramUtil::getLoopDepth(const Program &p, int64_t pos) {
+int64_t ProgramUtil::getLoopDepth(const Program& p, int64_t pos) {
   int64_t depth = 0;
   for (int64_t i = 0; i < pos; i++) {
     if (p.ops[i].type == Operation::Type::LPB) {

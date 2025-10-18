@@ -45,7 +45,7 @@ class FormulaGenerator {
                        const RangeMap* ranges, Expression& res) const;
 
   bool canBeNegativeWithRanges(const Expression& e, const Operand& operand,
-                                const RangeMap* ranges) const;
+                               const RangeMap* ranges) const;
 
   bool update(const Operation& op, const RangeMap* ranges = nullptr);
 
@@ -62,6 +62,8 @@ class FormulaGenerator {
   std::string getCellName(int64_t cell) const;
 
   Expression operandToExpression(Operand op) const;
+
+  Expression cellFunc(int64_t index) const;
 
   void simplifyFunctionNames();
 
