@@ -296,16 +296,7 @@ void Commands::profile(const std::string& path) {
   auto micro_secs = std::chrono::duration_cast<std::chrono::microseconds>(
                         cur_time - start_time)
                         .count();
-  std::cout.setf(std::ios::fixed);
-  std::cout.precision(3);
-  if (micro_secs < 1000) {
-    std::cout << micro_secs << "µs" << std::endl;
-  } else if (micro_secs < 1000000) {
-    std::cout << static_cast<double>(micro_secs) / 1000.0 << "ms" << std::endl;
-  } else {
-    std::cout << static_cast<double>(micro_secs) / 1000000.0 << "s"
-              << std::endl;
-  }
+  std::cout << formatDuration(micro_secs) << std::endl;
 }
 
 void Commands::fold(const std::string& main_path, const std::string& sub_id) {

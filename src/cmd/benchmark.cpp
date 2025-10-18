@@ -11,6 +11,7 @@
 #include "seq/managed_seq.hpp"
 #include "sys/log.hpp"
 #include "sys/setup.hpp"
+#include "sys/util.hpp"
 
 void Benchmark::smokeTest() {
   operations();
@@ -135,15 +136,11 @@ std::string Benchmark::programEval(const Program& p, eval_mode_t eval_mode,
     }
   }
   auto end_time = std::chrono::steady_clock::now();
-  double speed = std::chrono::duration_cast<std::chrono::milliseconds>(
-                     end_time - start_time)
-                     .count() /
-                 static_cast<double>(runs * 1000);
-  std::stringstream buf;
-  buf.setf(std::ios::fixed);
-  buf.precision(2);
-  buf << speed << "s";
-  return buf.str();
+  auto microseconds = std::chrono::duration_cast<std::chrono::microseconds>(
+                          end_time - start_time)
+                          .count() /
+                      runs;
+  return formatDuration(microseconds);
 }
 
 void Benchmark::findSlow(int64_t num_terms, Operation::Type type) {
@@ -172,11 +169,11 @@ void Benchmark::findSlow(int64_t num_terms, Operation::Type type) {
     auto start_time = std::chrono::steady_clock::now();
     evaluator.eval(program, seq, num_terms, false);
     auto end_time = std::chrono::steady_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
-        end_time - start_time);
-    Log::get().info(uid.string() + ": " + std::to_string(duration.count()) +
-                    "µs");
-    queue.push(std::pair<int64_t, UID>(duration.count(), uid));
+    auto microseconds = std::chrono::duration_cast<std::chrono::microseconds>(
+                            end_time - start_time)
+                            .count();
+    Log::get().info(uid.string() + ": " + formatDuration(microseconds));
+    queue.push(std::pair<int64_t, UID>(microseconds, uid));
   }
   std::cout << std::endl << "Slowest programs:" << std::endl;
   for (size_t i = 0; i < 20; i++) {
@@ -184,7 +181,7 @@ void Benchmark::findSlow(int64_t num_terms, Operation::Type type) {
     queue.pop();
     std::cout << "[" << entry.second.string()
               << "](https://loda-lang.org/edit/?oeis=" << entry.second.number()
-              << "): " << (entry.first / 1000) << "ms" << std::endl;
+              << "): " << formatDuration(entry.first) << std::endl;
   }
 }
 
@@ -208,23 +205,13 @@ void Benchmark::findSlowFormulas() {
     FormulaGenerator gen;
     Formula formula;
     auto start_time = std::chrono::steady_clock::now();
-    bool success = false;
-    try {
-      success = gen.generate(program, id, formula, false);
-    } catch (std::exception& e) {
-      // Skip programs that fail formula generation
-      continue;
-    }
-    if (!success) {
-      // Skip programs that cannot generate a formula
-      continue;
-    }
+    gen.generate(program, id, formula, false);
     auto end_time = std::chrono::steady_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
-        end_time - start_time);
-    Log::get().info(uid.string() + ": " + std::to_string(duration.count()) +
-                    "µs");
-    queue.push(std::pair<int64_t, UID>(duration.count(), uid));
+    auto microseconds = std::chrono::duration_cast<std::chrono::microseconds>(
+                            end_time - start_time)
+                            .count();
+    Log::get().info(uid.string() + ": " + formatDuration(microseconds));
+    queue.push(std::pair<int64_t, UID>(microseconds, uid));
   }
   std::cout << std::endl << "Slowest formula generations:" << std::endl;
   for (size_t i = 0; i < 20; i++) {
@@ -232,6 +219,6 @@ void Benchmark::findSlowFormulas() {
     queue.pop();
     std::cout << "[" << entry.second.string()
               << "](https://loda-lang.org/edit/?oeis=" << entry.second.number()
-              << "): " << (entry.first / 1000) << "ms" << std::endl;
+              << "): " << formatDuration(entry.first) << std::endl;
   }
 }
