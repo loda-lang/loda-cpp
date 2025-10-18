@@ -177,12 +177,21 @@ bool Optimizer::mergeOps(Program &p) const {
                   o1.source.value > Number::ONE &&
                   o2.source.value > Number::ONE)) {
           auto gcd = Semantics::gcd(o1.source.value, o2.source.value);
-          o1.source.value = Semantics::div(o1.source.value, gcd);
-          if (gcd == o2.source.value) {
-            do_merge = true;
-          } else if (gcd != Number::ONE) {
-            o2.source.value = Semantics::div(o2.source.value, gcd);
-            updated = true;
+          auto new_o1_value = Semantics::div(o1.source.value, gcd);
+          // Don't merge POW and NRT if the result would be a no-op (exponent 1)
+          // because pow $0,k; nrt $0,m changes negative values to positive
+          // when k is even, so it's not equivalent to a no-op
+          if (o1.type == Operation::Type::POW && o2.type == Operation::Type::NRT &&
+              new_o1_value == Number::ONE) {
+            // Skip this optimization
+          } else {
+            o1.source.value = new_o1_value;
+            if (gcd == o2.source.value) {
+              do_merge = true;
+            } else if (gcd != Number::ONE) {
+              o2.source.value = Semantics::div(o2.source.value, gcd);
+              updated = true;
+            }
           }
         }
 
