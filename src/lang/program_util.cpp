@@ -10,6 +10,7 @@
 #include "sys/file.hpp"
 #include "sys/setup.hpp"
 #include "sys/util.hpp"
+#include "math/number.hpp"
 
 bool ProgramUtil::hasOp(const Program &p, Operation::Type type) {
   return std::any_of(p.ops.begin(), p.ops.end(),
@@ -224,21 +225,51 @@ bool ProgramUtil::areIndependent(const Operation &op1, const Operation &op2) {
   return true;
 }
 
+std::pair<Number, Number> ProgramUtil::getTargetMemoryRange(int64_t start, int64_t length){
+    int64_t left;
+    int64_t right;
+    if (length > 0) {
+      left = start;
+      right = start + length;
+    } else {
+      left = std::max<int64_t>(start + length + 1, 0);
+      right = start + 1;
+    }
+    return std::make_pair(Number(left), Number(right));
+}
+
+// This function will return Number pair within int64_t range, or Number::INF pair to indicate unsupported operation.
+std::pair<Number, Number> ProgramUtil::getTargetMemoryRange(const Operation &op){
+  try {
+    if (op.target.type != Operand::Type::DIRECT || op.type == Operation::Type::PRG) {
+      return std::make_pair(Number::INF, Number::INF);
+    }
+    if (isWritingRegion(op.type)) {
+      if (op.source.type != Operand::Type::CONSTANT) {
+        return std::make_pair(Number::INF, Number::INF);
+      }
+      int64_t start = op.target.value.asInt();
+      int64_t length = op.source.value.asInt();
+      return getTargetMemoryRange(start, length);
+    }
+    return std::make_pair(op.target.value, Number(op.target.value.asInt() + 1));
+  } catch (const std::exception&) {
+    return std::make_pair(Number::INF, Number::INF);
+  }
+}
+
 void collectUsedMemoryCells(const Operand &operand, int64_t region_length,
                             std::unordered_set<int64_t> *used_cells,
                             int64_t &largest_used) {
   if (operand.type != Operand::Type::DIRECT) {
     return;
   }
-  int64_t start, end;
-  int64_t base = operand.value.asInt();
-  if (region_length >= 0) {
-    start = base;
-    end = base + region_length;
-  } else {
-    start = std::max<int64_t>(base + region_length + 1, 0);
-    end = base + 1;
+  auto bounds = ProgramUtil::getTargetMemoryRange(operand.value.asInt(), region_length);
+  if (bounds.first == Number::INF || bounds.second == Number::INF) {
+    return;
   }
+  int64_t start = bounds.first.asInt();
+  int64_t end = bounds.second.asInt();
   for (int64_t cell = start; cell < end; cell++) {
     if (used_cells) {
       used_cells->insert(cell);
@@ -299,6 +330,27 @@ int64_t ProgramUtil::getLargestDirectMemoryCellWithoutRegions(
     }
     if (op.target.type == Operand::Type::DIRECT) {
       largest = std::max<int64_t>(largest, op.target.value.asInt());
+    }
+  }
+  return largest;
+}
+
+// Doesn't support memory ops with non-constant source
+// Only used in formula generation
+int64_t ProgramUtil::getLargestDirectMemoryCellWithRegions(const Program &p) {
+  int64_t largest = 0;
+  for (const auto &op : p.ops) {
+    if (op.source.type == Operand::Type::DIRECT) {
+      largest = std::max<int64_t>(largest, op.source.value.asInt());
+    }
+    if (op.target.type == Operand::Type::DIRECT) {
+      largest = std::max<int64_t>(largest, op.target.value.asInt());
+    }
+    if (op.type == Operation::Type::CLR || op.type == Operation::Type::FIL ||
+        op.type == Operation::Type::ROL || op.type == Operation::Type::ROR) {
+      if (op.source.type == Operand::Type::CONSTANT) {
+        largest = std::max<int64_t>(largest, op.target.value.asInt() + op.source.value.asInt() - 1);
+      }
     }
   }
   return largest;
