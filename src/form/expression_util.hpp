@@ -22,6 +22,9 @@ class ExpressionUtil {
 
   static bool isInitialTerm(const Expression& e);
 
+  static bool isIntOfNatParameter(const Expression& e,
+                                  const std::string& funcName = "Int.ofNat");
+
   static bool isRecursionArgument(const Expression& e, int64_t max_offset);
 
   static bool isNonRecursiveFunctionReference(
@@ -39,9 +42,6 @@ class ExpressionUtil {
 
   static Number eval(const Expression& e,
                      const std::map<std::string, Number> params);
-
-  // Check if expression is Int.ofNat(n) where n is a parameter
-  static bool isIntOfNatParameter(const Expression& e);
 
   // Create a parameter sum expression: n + constant (or just n if constant is 0)
   static Expression createParameterSum(int64_t constant);

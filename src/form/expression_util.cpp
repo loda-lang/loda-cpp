@@ -449,9 +449,10 @@ Number ExpressionUtil::eval(const Expression& e,
   }
 }
 
-bool ExpressionUtil::isIntOfNatParameter(const Expression& e) {
+bool ExpressionUtil::isIntOfNatParameter(const Expression& e,
+                                         const std::string& funcName) {
   return e.type == Expression::Type::FUNCTION && 
-         e.name == "Int.ofNat" &&
+         e.name == funcName &&
          e.children.size() == 1 &&
          e.children[0].type == Expression::Type::PARAMETER;
 }
