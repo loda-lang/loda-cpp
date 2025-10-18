@@ -2,6 +2,7 @@
 
 ### Features
 
+* Support memory operations in formula generation
 * Support simple recursive functions in LEAN formula generation
 
 ### Enhancements

@@ -45,7 +45,7 @@ class FormulaGenerator {
                        const RangeMap* ranges, Expression& res) const;
 
   bool canBeNegativeWithRanges(const Expression& e, const Operand& operand,
-                                const RangeMap* ranges) const;
+                               const RangeMap* ranges) const;
 
   bool update(const Operation& op, const RangeMap* ranges = nullptr);
 

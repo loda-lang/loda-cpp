@@ -317,7 +317,8 @@ bool FormulaGenerator::update(const Operation& op, const RangeMap* ranges) {
     case Operation::Type::FIL:
     case Operation::Type::ROL:
     case Operation::Type::ROR: {
-      if (op.target.type != Operand::Type::DIRECT || op.source.type != Operand::Type::CONSTANT) {
+      if (op.target.type != Operand::Type::DIRECT ||
+          op.source.type != Operand::Type::CONSTANT) {
         okay = false;
         break;
       }
@@ -328,12 +329,12 @@ bool FormulaGenerator::update(const Operation& op, const RangeMap* ranges) {
       }
       int64_t left = bounds.first.asInt();
       int64_t right = bounds.second.asInt();
-      if (right - left >= 15) { // magic number
+      if (right - left >= 15) {  // magic number
         okay = false;
         break;
       }
       if (op.type == Operation::Type::ROL) {
-          auto leftEntry = formula.entries[cellFunc(left)];
+        auto leftEntry = formula.entries[cellFunc(left)];
         for (int64_t i = left; i < right - 1; i++) {
           formula.entries[cellFunc(i)] = formula.entries[cellFunc(i + 1)];
         }
@@ -344,11 +345,12 @@ bool FormulaGenerator::update(const Operation& op, const RangeMap* ranges) {
           formula.entries[cellFunc(i)] = formula.entries[cellFunc(i - 1)];
         }
         formula.entries[cellFunc(left)] = rightEntry;
-      } else { // for clr and fil operations
+      } else {  // for clr and fil operations
         for (int64_t i = left; i < right; i++) {
-          formula.entries[cellFunc(i)] = ((op.type == Operation::Type::FIL) ? prevTarget : constant(0));
+          formula.entries[cellFunc(i)] =
+              ((op.type == Operation::Type::FIL) ? prevTarget : constant(0));
         }
-	  }
+      }
       break;
     }
     default: {
