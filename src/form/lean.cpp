@@ -104,6 +104,10 @@ bool LeanFormula::convert(const Formula& formula, int64_t offset,
   } else {
     lean_formula.domain = "Int";
   }
+  
+  // Collect base cases to check minimum value for Nat domain
+  bool hasBaseCase = false;
+  Number minBaseCase = Number::ZERO;
   for (const auto& entry : formula.entries) {
     auto left = entry.first;
     auto right = entry.second;
@@ -118,8 +122,23 @@ bool LeanFormula::convert(const Formula& formula, int64_t offset,
         arg.type != Expression::Type::CONSTANT) {
       return false;
     }
+    if (arg.type == Expression::Type::CONSTANT) {
+      if (!hasBaseCase || arg.value < minBaseCase) {
+        minBaseCase = arg.value;
+        hasBaseCase = true;
+      }
+    }
     lean_formula.main_formula.entries[left] = right;
   }
+  
+  // For Nat domain with recursive formulas, the minimum base case must be 0
+  if (lean_formula.domain == "Nat" && 
+      FormulaUtil::isRecursive(formula, funcName) &&
+      hasBaseCase &&
+      minBaseCase != Number::ZERO) {
+    return false;
+  }
+  
   return lean_formula.main_formula.entries.size() >= 1;
 }
 
