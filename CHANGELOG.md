@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+## v25.10.19
+
 ### Bugfixes
 
 * Fix optimizer bug
