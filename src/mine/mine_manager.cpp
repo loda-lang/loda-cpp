@@ -326,14 +326,14 @@ void MineManager::generateStats(int64_t age_in_days) {
       try {
         program = parser.parse(program_file);
         has_program = true;
-        has_formula =
-            !Comments::getCommentField(program, Comments::PREFIX_FORMULA)
-                 .empty();
+        std::string formula_str =
+            Comments::getCommentField(program, Comments::PREFIX_FORMULA);
+        has_formula = !formula_str.empty();
         submitter = Comments::getSubmitter(program);
         ProgramUtil::removeOps(program, Operation::Type::NOP);
 
         // update stats
-        stats->updateProgramStats(s.id, program, submitter, has_formula);
+        stats->updateProgramStats(s.id, program, submitter, formula_str);
         num_processed++;
       } catch (const std::exception &exc) {
         Log::get().error(

@@ -6,6 +6,9 @@
 #include <sstream>
 
 #include "eval/evaluator_inc.hpp"
+#include "form/formula_parser.hpp"
+#include "form/lean.hpp"
+#include "form/pari.hpp"
 #include "lang/analyzer.hpp"
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
@@ -18,8 +21,8 @@
 
 const std::string Stats::CALL_GRAPH_HEADER("caller,callee");
 const std::string Stats::PROGRAMS_HEADER(
-    "id,submitter,length,usages,inc_eval,log_eval,vir_eval,loop,formula,"
-    "indirect,ops_mask");
+    "id,submitter,length,usages,inc_eval,log_eval,vir_eval,loop,formula,pari,"
+    "lean,indirect,ops_mask");
 const std::string Stats::STEPS_HEADER("total,min,max,runs");
 const std::string Stats::SUMMARY_HEADER(
     "num_sequences,num_programs,num_formulas");
@@ -161,9 +164,15 @@ void Stats::load(std::string path) {
         has_formula.insert(id);
       }
       if (reader.getIntegerField(9)) {
+        has_pari.insert(id);
+      }
+      if (reader.getIntegerField(10)) {
+        has_lean.insert(id);
+      }
+      if (reader.getIntegerField(11)) {
         has_indirect.insert(id);
       }
-      program_operation_types_bitmask[id] = reader.getIntegerField(10);
+      program_operation_types_bitmask[id] = reader.getIntegerField(12);
     }
     reader.close();
   }
@@ -260,6 +269,8 @@ void Stats::save(std::string path) {
       const auto vireval = supports_vireval.exists(id);
       const auto loop_flag = has_loop.exists(id);
       const auto formula_flag = has_formula.exists(id);
+      const auto pari_flag = has_pari.exists(id);
+      const auto lean_flag = has_lean.exists(id);
       const auto indirect_flag = has_indirect.exists(id);
       writer.writeRow({id.string(), std::to_string(program_submitter[id]),
                        std::to_string(program_lengths[id]),
@@ -267,6 +278,7 @@ void Stats::save(std::string path) {
                        std::to_string(inceval), std::to_string(logeval),
                        std::to_string(vireval), std::to_string(loop_flag),
                        std::to_string(formula_flag),
+                       std::to_string(pari_flag), std::to_string(lean_flag),
                        std::to_string(indirect_flag),
                        std::to_string(program_operation_types_bitmask[id])});
     }
@@ -380,7 +392,7 @@ std::string Stats::getMainStatsFile(std::string path) const {
 }
 
 void Stats::updateProgramStats(UID id, const Program& program,
-                               std::string submitter, bool with_formula) {
+                               std::string submitter, const std::string& formula_str) {
   const size_t num_ops = ProgramUtil::numOps(program, false);
   program_lengths[id] = num_ops;
   if (num_ops >= num_programs_per_length.size()) {
@@ -463,8 +475,24 @@ void Stats::updateProgramStats(UID id, const Program& program,
   if (with_loop) {
     has_loop.insert(id);
   }
+  bool with_formula = !formula_str.empty();
   if (with_formula) {
     has_formula.insert(id);
+    // Try to parse the formula and convert to PARI and LEAN
+    FormulaParser parser;
+    Formula formula;
+    if (parser.parse(formula_str, formula)) {
+      // Try PARI conversion (with offset 0 and as_vector false as defaults)
+      PariFormula pari_formula;
+      if (PariFormula::convert(formula, 0, false, pari_formula)) {
+        has_pari.insert(id);
+      }
+      // Try LEAN conversion (with offset 0 and as_vector false as defaults)
+      LeanFormula lean_formula;
+      if (LeanFormula::convert(formula, 0, false, lean_formula)) {
+        has_lean.insert(id);
+      }
+    }
   }
   if (with_indirect) {
     has_indirect.insert(id);

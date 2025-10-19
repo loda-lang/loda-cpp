@@ -44,7 +44,7 @@ class Stats {
   std::string getMainStatsFile(std::string path) const;
 
   void updateProgramStats(UID id, const Program &program, std::string submitter,
-                          bool with_formula);
+                          const std::string &formula_str);
 
   void updateSequenceStats(UID id, bool program_found, bool formula_found);
 
@@ -77,6 +77,8 @@ class Stats {
   UIDSet supports_vireval;
   UIDSet has_loop;
   UIDSet has_formula;
+  UIDSet has_pari;
+  UIDSet has_lean;
   UIDSet has_indirect;
   Blocks blocks;
 
