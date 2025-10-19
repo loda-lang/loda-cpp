@@ -392,7 +392,7 @@ std::string Stats::getMainStatsFile(std::string path) const {
 }
 
 void Stats::updateProgramStats(UID id, const Program& program,
-                               std::string submitter, const std::string& formula_str) {
+                               std::string submitter, const std::string& formula_str, int64_t offset) {
   const size_t num_ops = ProgramUtil::numOps(program, false);
   program_lengths[id] = num_ops;
   if (num_ops >= num_programs_per_length.size()) {
@@ -482,14 +482,14 @@ void Stats::updateProgramStats(UID id, const Program& program,
     FormulaParser parser;
     Formula formula;
     if (parser.parse(formula_str, formula)) {
-      // Try PARI conversion (with offset 0 and as_vector false as defaults)
+      // Try PARI conversion (with offset from program directive and as_vector false as default)
       PariFormula pari_formula;
-      if (PariFormula::convert(formula, 0, false, pari_formula)) {
+      if (PariFormula::convert(formula, offset, false, pari_formula)) {
         has_pari.insert(id);
       }
-      // Try LEAN conversion (with offset 0 and as_vector false as defaults)
+      // Try LEAN conversion (with offset from program directive and as_vector false as default)
       LeanFormula lean_formula;
-      if (LeanFormula::convert(formula, 0, false, lean_formula)) {
+      if (LeanFormula::convert(formula, offset, false, lean_formula)) {
         has_lean.insert(id);
       }
     }
