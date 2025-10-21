@@ -502,26 +502,17 @@ bool Optimizer::simplifyOperations(Program &p) const {
             op.type = Operation::Type::MAX;
             simplified = true;
           }
-          // mul $n,0 => mov $n,0
-          else if (op.type == Operation::Type::MUL) {
+          // mul $n,0 / ban $n,0 => mov $n,0
+          else if (op.type == Operation::Type::MUL ||
+                   op.type == Operation::Type::BAN) {
             op.type = Operation::Type::MOV;
             simplified = true;
           }
-          // pow $n,0 => mov $n,1
-          else if (op.type == Operation::Type::POW) {
+          // pow $n,0 / fac $n,0 => mov $n,1
+          else if (op.type == Operation::Type::POW ||
+                   op.type == Operation::Type::FAC) {
             op.type = Operation::Type::MOV;
             op.source = Operand(Operand::Type::CONSTANT, 1);
-            simplified = true;
-          }
-          // fac $n,0 => mov $n,1
-          else if (op.type == Operation::Type::FAC) {
-            op.type = Operation::Type::MOV;
-            op.source = Operand(Operand::Type::CONSTANT, 1);
-            simplified = true;
-          }
-          // ban $n,0 => mov $n,0
-          else if (op.type == Operation::Type::BAN) {
-            op.type = Operation::Type::MOV;
             simplified = true;
           }
         }
