@@ -503,24 +503,24 @@ bool Optimizer::simplifyOperations(Program &p) const {
             simplified = true;
           }
           // mul $n,0 => mov $n,0
-          if (op.type == Operation::Type::MUL) {
+          else if (op.type == Operation::Type::MUL) {
             op.type = Operation::Type::MOV;
             simplified = true;
           }
           // pow $n,0 => mov $n,1
-          if (op.type == Operation::Type::POW) {
+          else if (op.type == Operation::Type::POW) {
             op.type = Operation::Type::MOV;
             op.source = Operand(Operand::Type::CONSTANT, 1);
             simplified = true;
           }
           // fac $n,0 => mov $n,1
-          if (op.type == Operation::Type::FAC) {
+          else if (op.type == Operation::Type::FAC) {
             op.type = Operation::Type::MOV;
             op.source = Operand(Operand::Type::CONSTANT, 1);
             simplified = true;
           }
           // ban $n,0 => mov $n,0
-          if (op.type == Operation::Type::BAN) {
+          else if (op.type == Operation::Type::BAN) {
             op.type = Operation::Type::MOV;
             simplified = true;
           }
