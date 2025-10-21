@@ -51,6 +51,8 @@ bool ProgramUtil::isNop(const Operation& op) {
              op.source.value == Number::ZERO &&
              (op.type == Operation::Type::ADD ||
               op.type == Operation::Type::SUB ||
+              op.type == Operation::Type::BOR ||
+              op.type == Operation::Type::BXO ||
               op.type == Operation::Type::CLR ||
               op.type == Operation::Type::FIL ||
               op.type == Operation::Type::ROL ||
@@ -64,6 +66,8 @@ bool ProgramUtil::isNop(const Operation& op) {
                op.type == Operation::Type::DIR ||
                op.type == Operation::Type::POW ||
                op.type == Operation::Type::BIN ||
+               op.type == Operation::Type::FAC ||
+               op.type == Operation::Type::FIL ||
                op.type == Operation::Type::ROL ||
                op.type == Operation::Type::ROR))) {
     return true;
