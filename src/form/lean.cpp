@@ -320,7 +320,7 @@ bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
 
   // If we need imports, we need to use a LEAN project structure
   if (needsBitwiseImport()) {
-    const std::string projectDir = getTmpDir() + "lean-project/";
+    const std::string projectDir = "./lean-project/";
     ensureDir(projectDir);
     leanPath = projectDir + "Main.lean";
     leanResult = projectDir + "lean-result-" + tmpFileId + ".txt";
@@ -351,8 +351,8 @@ bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
     int exitCode =
         execWithTimeout(args, timeoutSeconds, leanResult, projectDir);
     if (exitCode != 0) {
-      std::remove(leanPath.c_str());
-      std::remove(leanResult.c_str());
+      // std::remove(leanPath.c_str());
+      // std::remove(leanResult.c_str());
       if (exitCode == PROCESS_ERROR_TIMEOUT) {
         return false;  // timeout
       }
@@ -413,7 +413,7 @@ bool LeanFormula::initializeLeanProject() {
     return true;
   }
 
-  const std::string projectDir = getTmpDir() + "lean-project/";
+  const std::string projectDir = +"./lean-project/";
 
   // Check if project directory already exists and is initialized
   if (isDir(projectDir) && isFile(projectDir + "lakefile.lean")) {
