@@ -53,7 +53,8 @@ bool isChildProcessAlive(HANDLE pid) {
 }
 
 int execWithTimeout(const std::vector<std::string>& args, int timeoutSeconds,
-                    const std::string& outputFile) {
+                    const std::string& outputFile,
+                    const std::string& workingDir) {
 #if defined(_WIN32) || defined(_WIN64)
   throw std::runtime_error(
       "execWithTimeout is only supported on Unix-like systems");
@@ -65,6 +66,12 @@ int execWithTimeout(const std::vector<std::string>& args, int timeoutSeconds,
   }
   if (pid == 0) {
     // Child
+    // Change working directory if requested
+    if (!workingDir.empty()) {
+      if (chdir(workingDir.c_str()) != 0) {
+        _exit(127);
+      }
+    }
     if (!outputFile.empty()) {
       int fd = open(outputFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
       if (fd < 0) _exit(127);

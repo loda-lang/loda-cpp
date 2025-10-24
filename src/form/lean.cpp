@@ -321,26 +321,11 @@ bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
   // If we need imports, we need to use a LEAN project structure
   if (needsBitwiseImport()) {
     const std::string projectDir = getTmpDir() + "lean-project/";
+    ensureDir(projectDir);
     leanPath = projectDir + "Main.lean";
     leanResult = projectDir + "lean-result-" + tmpFileId + ".txt";
-
-    // Create a wrapper script to run lake in the project directory
-    std::string runScript = projectDir + "run-" + tmpFileId + ".sh";
-    std::ofstream scriptFile(runScript);
-    if (!scriptFile) {
-      Log::get().error("Failed to create run script", true);
-    }
-    scriptFile << "#!/bin/sh\n";
-    scriptFile << "cd " + projectDir + "\n";
-    scriptFile << "lake env lean --run Main.lean\n";
-    scriptFile.close();
-
-    // Make script executable on Unix systems
-#ifndef _WIN64
-    chmod(runScript.c_str(), 0755);
-#endif
-
-    args = {runScript};
+    // Call lake in the project directory directly (no wrapper script)
+    args = {"lake", "env", "lean", "--run", "Main.lean"};
   } else {
     leanPath = "lean-loda-" + tmpFileId + ".lean";
     leanResult = "lean-result-" + tmpFileId + ".txt";
@@ -352,9 +337,9 @@ bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
   // For project-based eval, we need to handle it differently
   if (needsBitwiseImport()) {
     const std::string projectDir = getTmpDir() + "lean-project/";
-    std::string runScript = projectDir + "run-" + tmpFileId + ".sh";
 
     // Write the code to Main.lean
+    ensureDir(projectDir);
     std::ofstream leanFile(leanPath);
     if (!leanFile) {
       Log::get().error("Error generating LEAN file", true);
@@ -362,11 +347,12 @@ bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
     leanFile << evalCode;
     leanFile.close();
 
-    // Execute with timeout
-    int exitCode = execWithTimeout(args, timeoutSeconds, leanResult);
+    // Execute with timeout in projectDir
+    int exitCode =
+        execWithTimeout(args, timeoutSeconds, leanResult, projectDir);
     if (exitCode != 0) {
       std::remove(leanPath.c_str());
-      std::remove(runScript.c_str());
+      std::remove(leanResult.c_str());
       if (exitCode == PROCESS_ERROR_TIMEOUT) {
         return false;  // timeout
       }
@@ -380,7 +366,6 @@ bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
     if (!resultIn) {
       std::remove(leanPath.c_str());
       std::remove(leanResult.c_str());
-      std::remove(runScript.c_str());
       Log::get().error("Error reading LEAN result", true);
     }
     result.clear();
@@ -392,14 +377,12 @@ bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
         resultIn.close();
         std::remove(leanPath.c_str());
         std::remove(leanResult.c_str());
-        std::remove(runScript.c_str());
         Log::get().error("Error parsing LEAN output: " + line, true);
       }
     }
     resultIn.close();
     std::remove(leanPath.c_str());
     std::remove(leanResult.c_str());
-    std::remove(runScript.c_str());
     return true;
   } else {
     return SequenceUtil::evalFormulaWithExternalTool(evalCode, getName(),
@@ -458,31 +441,9 @@ bool LeanFormula::initializeLeanProject() {
   lakefile.close();
 
   // Run lake update to download dependencies and create toolchain (with
-  // timeout) Note: This requires lake to be run from the project directory We
-  // use a wrapper script to change directory first The script also copies the
-  // Mathlib toolchain to match the dependency
-  std::string updateScript = projectDir + "update.sh";
-  std::ofstream scriptFile(updateScript);
-  if (!scriptFile) {
-    Log::get().warn("Failed to create update script");
-    return false;
-  }
-  scriptFile << "#!/bin/sh\n";
-  scriptFile << "cd " + projectDir + "\n";
-  scriptFile << "lake update\n";
-  scriptFile << "if [ -f .lake/packages/mathlib/lean-toolchain ]; then\n";
-  scriptFile << "  cp .lake/packages/mathlib/lean-toolchain ./lean-toolchain\n";
-  scriptFile << "fi\n";
-  scriptFile.close();
-
-  // Make script executable on Unix systems
-#ifndef _WIN64
-  chmod(updateScript.c_str(), 0755);
-#endif
-
-  std::vector<std::string> updateArgs = {updateScript};
-  int exitCode = execWithTimeout(updateArgs, 300);
-  std::remove(updateScript.c_str());
+  // timeout). Run lake directly in the project directory.
+  std::vector<std::string> updateArgs = {"lake", "update"};
+  int exitCode = execWithTimeout(updateArgs, 300, "", projectDir);
 
   if (exitCode != 0) {
     Log::get().warn("lake update failed with exit code " +
