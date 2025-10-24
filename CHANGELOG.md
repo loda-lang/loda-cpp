@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Features
+
+* Add support for bitwise operation in LEAN formula generation using Mathlib
+
 ## v25.10.16
 
 ### Bugfixes
