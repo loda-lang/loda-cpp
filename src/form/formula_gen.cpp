@@ -120,6 +120,10 @@ bool FormulaGenerator::canBeNegativeWithRanges(const Expression& e,
   return ExpressionUtil::canBeNegative(e, offset);
 }
 
+Expression FormulaGenerator::cellFunc(int64_t index) const {
+  return ExpressionUtil::newFunction(getCellName(index));
+}
+
 // Express falling/rising factorial using standard factorial
 bool FormulaGenerator::facToExpression(const Expression& a, const Expression& b,
                                        const Operand& aOp, const Operand& bOp,
@@ -309,6 +313,46 @@ bool FormulaGenerator::update(const Operation& op, const RangeMap* ranges) {
       }
       break;
     }
+    case Operation::Type::CLR:
+    case Operation::Type::FIL:
+    case Operation::Type::ROL:
+    case Operation::Type::ROR: {
+      if (op.target.type != Operand::Type::DIRECT ||
+          op.source.type != Operand::Type::CONSTANT) {
+        okay = false;
+        break;
+      }
+      auto bounds = ProgramUtil::getTargetMemoryRange(op);
+      if (bounds.first == Number::INF || bounds.second == Number::INF) {
+        okay = false;
+        break;
+      }
+      int64_t left = bounds.first.asInt();
+      int64_t right = bounds.second.asInt();
+      if (right - left >= 15) {  // magic number
+        okay = false;
+        break;
+      }
+      if (op.type == Operation::Type::ROL) {
+        auto leftEntry = formula.entries[cellFunc(left)];
+        for (int64_t i = left; i < right - 1; i++) {
+          formula.entries[cellFunc(i)] = formula.entries[cellFunc(i + 1)];
+        }
+        formula.entries[cellFunc(right - 1)] = leftEntry;
+      } else if (op.type == Operation::Type::ROR) {
+        auto rightEntry = formula.entries[cellFunc(right - 1)];
+        for (int64_t i = right - 1; i > left; i--) {
+          formula.entries[cellFunc(i)] = formula.entries[cellFunc(i - 1)];
+        }
+        formula.entries[cellFunc(left)] = rightEntry;
+      } else {  // for clr and fil operations
+        for (int64_t i = left; i < right; i++) {
+          formula.entries[cellFunc(i)] =
+              ((op.type == Operation::Type::FIL) ? prevTarget : constant(0));
+        }
+      }
+      break;
+    }
     default: {
       okay = false;
       break;
@@ -384,11 +428,8 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   if (ProgramUtil::hasIndirectOperand(p)) {
     return false;
   }
-  if (ProgramUtil::hasRegionOperation(p)) {
-    return false;
-  }
   const int64_t numCells =
-      ProgramUtil::getLargestDirectMemoryCellWithoutRegions(p) + 1;
+      ProgramUtil::getLargestDirectMemoryCellWithRegions(p) + 1;
   const bool useIncEval =
       incEval.init(p, true, true);  // skip input transformations and offset
 

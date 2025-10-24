@@ -63,6 +63,8 @@ class Commands {
 
   void testLean(const std::string& id);
 
+  void testFormulaParser(const std::string& id);
+
   void testRange(const std::string& id);
 
   void generate();
@@ -76,6 +78,8 @@ class Commands {
   void benchmark();
 
   void findSlow(int64_t num_terms, const std::string& type);
+
+  void findSlowFormulas();
 
   void findEmbseqs();
 

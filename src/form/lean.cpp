@@ -15,10 +15,11 @@
 #include "sys/process.hpp"
 #include "sys/util.hpp"
 
-bool LeanFormula::convertToLean(Expression& expr, const Formula& f) {
+bool LeanFormula::convertToLean(Expression& expr, const Formula& f,
+                                const std::string& funcName) {
   // Check children recursively
   for (auto& c : expr.children) {
-    if (!convertToLean(c, f)) {
+    if (!convertToLean(c, f, funcName)) {
       return false;
     }
   }
@@ -75,6 +76,10 @@ bool LeanFormula::convertToLean(Expression& expr, const Formula& f) {
         expr.name = "Int.xor";
         break;
       }
+      // Allow recursive calls to the main function
+      if (expr.name == funcName) {
+        break;
+      }
       return false;
     }
     case Expression::Type::POWER:
@@ -105,45 +110,174 @@ bool LeanFormula::convert(const Formula& formula, int64_t offset,
   const std::string funcName = functions[0];
   lean_formula = {};
   if (FormulaUtil::isRecursive(formula, funcName)) {
-    if (offset <= 0) {
+    if (offset < 0) {
       return false;
     }
     lean_formula.domain = "Nat";
   } else {
     lean_formula.domain = "Int";
   }
+
+  // Collect base cases to check minimum value for Nat domain
+  bool hasBaseCase = false;
+  Number minBaseCase = Number::ZERO;
   for (const auto& entry : formula.entries) {
     auto left = entry.first;
     auto right = entry.second;
-    if (!lean_formula.convertToLean(right, formula)) {
+    if (!lean_formula.convertToLean(right, formula, funcName)) {
       return false;
     }
     if (left.type != Expression::Type::FUNCTION || left.children.size() != 1) {
       return false;
     }
     auto& arg = left.children.front();
-    if (arg.type != Expression::Type::PARAMETER) {
+    if (arg.type != Expression::Type::PARAMETER &&
+        arg.type != Expression::Type::CONSTANT) {
       return false;
+    }
+    if (arg.type == Expression::Type::CONSTANT) {
+      if (!hasBaseCase || arg.value < minBaseCase) {
+        minBaseCase = arg.value;
+        hasBaseCase = true;
+      }
     }
     lean_formula.main_formula.entries[left] = right;
   }
-  return lean_formula.main_formula.entries.size() == 1;
+
+  // For Nat domain with recursive formulas, the minimum base case must be 0
+  if (lean_formula.domain == "Nat" &&
+      FormulaUtil::isRecursive(formula, funcName) && hasBaseCase &&
+      minBaseCase != Number::ZERO) {
+    return false;
+  }
+
+  return lean_formula.main_formula.entries.size() >= 1;
 }
 
 std::string LeanFormula::toString() const {
   std::stringstream buf;
   std::string funcName;
-  Expression mainExpr;
+
+  // Collect base cases (constant arguments) and recursive case (parameter
+  // argument)
+  std::vector<std::pair<Expression, Expression>> baseCases;
+  Expression recursiveCase;
+  Expression recursiveRHS;
+
   for (const auto& entry : main_formula.entries) {
     funcName = entry.first.name;
-    mainExpr = entry.second;
-    break;
+    const auto& arg = entry.first.children.front();
+    if (arg.type == Expression::Type::CONSTANT) {
+      baseCases.push_back({entry.first, entry.second});
+    } else {
+      recursiveCase = entry.first;
+      recursiveRHS = entry.second;
+    }
   }
-  bool usesParameter = mainExpr.contains(Expression::Type::PARAMETER);
-  std::string arg = usesParameter ? "n" : "_";
-  buf << "def " << funcName << " (" << arg << " : " << domain
-      << ") : Int := " << mainExpr.toString(true);
+
+  // Check if this is a recursive formula (multiple entries)
+  if (main_formula.entries.size() == 1) {
+    // Non-recursive case (original behavior)
+    bool usesParameter = recursiveRHS.contains(Expression::Type::PARAMETER);
+    std::string arg = usesParameter ? "n" : "_";
+    buf << "def " << funcName << " (" << arg << " : " << domain
+        << ") : Int := " << recursiveRHS.toString(true);
+  } else {
+    // Recursive case with base cases - use pattern matching syntax
+    buf << "def " << funcName << " : " << domain << " -> Int";
+
+    // Sort base cases by constant value for consistent output
+    std::sort(baseCases.begin(), baseCases.end(),
+              [](const auto& a, const auto& b) {
+                return a.first.children.front().value <
+                       b.first.children.front().value;
+              });
+
+    // Generate pattern matching cases for base cases
+    for (const auto& bc : baseCases) {
+      const auto& constValue = bc.first.children.front().value;
+      buf << " | " << constValue.to_string() << " => "
+          << bc.second.toString(true);
+    }
+
+    // Add the recursive case
+    if (!recursiveCase.name.empty()) {
+      // For Nat domain, use n+k pattern where k is one more than the largest
+      // base case
+      if (domain == "Nat" && !baseCases.empty()) {
+        // Find the largest base case value
+        int64_t maxBaseCase =
+            baseCases.back().first.children.front().value.asInt();
+        int64_t patternOffset = maxBaseCase + 1;
+
+        // Transform the RHS: replace (n-k) with (n+(patternOffset-k))
+        Expression transformedRHS = recursiveRHS;
+        transformParameterReferences(transformedRHS, patternOffset, funcName);
+
+        buf << " | n+" << patternOffset << " => "
+            << transformedRHS.toString(true);
+      } else {
+        buf << " | n => " << recursiveRHS.toString(true);
+      }
+    }
+  }
   return buf.str();
+}
+
+void LeanFormula::transformParameterReferences(
+    Expression& expr, int64_t offset, const std::string& funcName) const {
+  // If this is a function call to funcName, transform its argument first
+  // before recursing into children
+  if (expr.type == Expression::Type::FUNCTION && expr.name == funcName) {
+    if (expr.children.size() == 1) {
+      auto& arg = expr.children[0];
+      // Check if the argument is (Int.ofNat n) + k
+      if (arg.type == Expression::Type::SUM && arg.children.size() >= 2) {
+        // Look for Int.ofNat cast and constant
+        bool hasIntOfNat = false;
+        Number constantValue = Number::ZERO;
+        std::vector<Expression> otherTerms;
+
+        for (const auto& term : arg.children) {
+          if (ExpressionUtil::isSimpleNamedFunction(term, "Int.ofNat")) {
+            hasIntOfNat = true;
+          } else if (term.type == Expression::Type::CONSTANT) {
+            constantValue += term.value;
+          } else {
+            otherTerms.push_back(term);
+          }
+        }
+
+        if (hasIntOfNat && otherTerms.empty()) {
+          // We have (Int.ofNat n) + constant
+          // Transform to n + (offset + constant)
+          int64_t newConstant = offset + constantValue.asInt();
+          expr.children[0] = ExpressionUtil::createParameterSum(newConstant);
+        }
+      } else if (ExpressionUtil::isSimpleNamedFunction(arg, "Int.ofNat")) {
+        // Simple case: just (Int.ofNat n)
+        // Transform to n + offset
+        expr.children[0] = ExpressionUtil::createParameterSum(offset);
+      }
+    }
+    // Don't recurse into function call arguments after transforming them
+    return;
+  }
+
+  // Transform recursively for all children
+  for (auto& child : expr.children) {
+    transformParameterReferences(child, offset, funcName);
+  }
+
+  // After transforming children, if this is a standalone Int.ofNat(n),
+  // transform it
+  if (ExpressionUtil::isSimpleNamedFunction(expr, "Int.ofNat") && offset > 0) {
+    // Replace Int.ofNat(n) with (Int.ofNat n) + offset
+    Expression sum(Expression::Type::SUM);
+    sum.children.push_back(expr);
+    sum.children.push_back(ExpressionUtil::newConstant(offset));
+    expr = sum;
+  }
 }
 
 std::string LeanFormula::printEvalCode(int64_t offset, int64_t numTerms) const {
@@ -189,7 +323,7 @@ bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
     const std::string projectDir = getTmpDir() + "lean-project/";
     leanPath = projectDir + "Main.lean";
     leanResult = projectDir + "lean-result-" + tmpFileId + ".txt";
-    
+
     // Create a wrapper script to run lake in the project directory
     std::string runScript = projectDir + "run-" + tmpFileId + ".sh";
     std::ofstream scriptFile(runScript);
@@ -200,12 +334,12 @@ bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
     scriptFile << "cd " + projectDir + "\n";
     scriptFile << "lake env lean --run Main.lean\n";
     scriptFile.close();
-    
+
     // Make script executable on Unix systems
 #ifndef _WIN64
     chmod(runScript.c_str(), 0755);
 #endif
-    
+
     args = {runScript};
   } else {
     leanPath = "lean-loda-" + tmpFileId + ".lean";
@@ -214,12 +348,12 @@ bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
   }
 
   std::string evalCode = printEvalCode(offset, numTerms);
-  
+
   // For project-based eval, we need to handle it differently
   if (needsBitwiseImport()) {
     const std::string projectDir = getTmpDir() + "lean-project/";
     std::string runScript = projectDir + "run-" + tmpFileId + ".sh";
-    
+
     // Write the code to Main.lean
     std::ofstream leanFile(leanPath);
     if (!leanFile) {
@@ -227,7 +361,7 @@ bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
     }
     leanFile << evalCode;
     leanFile.close();
-    
+
     // Execute with timeout
     int exitCode = execWithTimeout(args, timeoutSeconds, leanResult);
     if (exitCode != 0) {
@@ -236,10 +370,11 @@ bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
       if (exitCode == PROCESS_ERROR_TIMEOUT) {
         return false;  // timeout
       }
-      Log::get().error("Error evaluating LEAN code: exit code " + 
-                      std::to_string(exitCode), true);
+      Log::get().error(
+          "Error evaluating LEAN code: exit code " + std::to_string(exitCode),
+          true);
     }
-    
+
     // Read the result
     std::ifstream resultIn(leanResult);
     if (!resultIn) {
@@ -267,8 +402,9 @@ bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
     std::remove(runScript.c_str());
     return true;
   } else {
-    return SequenceUtil::evalFormulaWithExternalTool(
-        evalCode, getName(), leanPath, leanResult, args, timeoutSeconds, result);
+    return SequenceUtil::evalFormulaWithExternalTool(evalCode, getName(),
+                                                     leanPath, leanResult, args,
+                                                     timeoutSeconds, result);
   }
 }
 
@@ -295,7 +431,7 @@ bool LeanFormula::initializeLeanProject() {
   }
 
   const std::string projectDir = getTmpDir() + "lean-project/";
-  
+
   // Check if project directory already exists and is initialized
   if (isDir(projectDir) && isFile(projectDir + "lakefile.lean")) {
     initialized = true;
@@ -321,10 +457,10 @@ bool LeanFormula::initializeLeanProject() {
   lakefile << "  root := `Main\n";
   lakefile.close();
 
-  // Run lake update to download dependencies and create toolchain (with timeout)
-  // Note: This requires lake to be run from the project directory
-  // We use a wrapper script to change directory first
-  // The script also copies the Mathlib toolchain to match the dependency
+  // Run lake update to download dependencies and create toolchain (with
+  // timeout) Note: This requires lake to be run from the project directory We
+  // use a wrapper script to change directory first The script also copies the
+  // Mathlib toolchain to match the dependency
   std::string updateScript = projectDir + "update.sh";
   std::ofstream scriptFile(updateScript);
   if (!scriptFile) {
@@ -338,18 +474,19 @@ bool LeanFormula::initializeLeanProject() {
   scriptFile << "  cp .lake/packages/mathlib/lean-toolchain ./lean-toolchain\n";
   scriptFile << "fi\n";
   scriptFile.close();
-  
+
   // Make script executable on Unix systems
 #ifndef _WIN64
   chmod(updateScript.c_str(), 0755);
 #endif
-  
+
   std::vector<std::string> updateArgs = {updateScript};
   int exitCode = execWithTimeout(updateArgs, 300);
   std::remove(updateScript.c_str());
-  
+
   if (exitCode != 0) {
-    Log::get().warn("lake update failed with exit code " + std::to_string(exitCode));
+    Log::get().warn("lake update failed with exit code " +
+                    std::to_string(exitCode));
     return false;
   }
 

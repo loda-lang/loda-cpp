@@ -234,6 +234,12 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
       id = args.at(1);
     }
     commands.testLean(id);
+  } else if (cmd == "test-formula-parsing") {
+    std::string id;
+    if (args.size() > 1) {
+      id = args.at(1);
+    }
+    commands.testFormulaParser(id);
   } else if (cmd == "test-range") {
     std::string id;
     if (args.size() > 1) {
@@ -260,6 +266,8 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
       type = args.at(1);
     }
     commands.findSlow(settings.num_terms, type);
+  } else if (cmd == "find-slow-formulas") {
+    commands.findSlowFormulas();
   } else if (cmd == "find-embseqs") {
     commands.findEmbseqs();
   } else if (cmd == "extract-virseqs") {

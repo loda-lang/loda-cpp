@@ -16,9 +16,14 @@ class ExpressionUtil {
 
   static Expression newFunction(const std::string& name);
 
+  static Expression createParameterSum(int64_t constant);
+
   static bool normalize(Expression& e);
 
   static bool isSimpleFunction(const Expression& e, bool strict = true);
+
+  static bool isSimpleNamedFunction(const Expression& e,
+                                    const std::string& name);
 
   static bool isInitialTerm(const Expression& e);
 

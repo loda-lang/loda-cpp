@@ -13,6 +13,7 @@
 #include "eval/optimizer.hpp"
 #include "eval/range_generator.hpp"
 #include "form/formula_gen.hpp"
+#include "form/formula_parser.hpp"
 #include "form/lean.hpp"
 #include "form/pari.hpp"
 #include "lang/analyzer.hpp"
@@ -296,16 +297,7 @@ void Commands::profile(const std::string& path) {
   auto micro_secs = std::chrono::duration_cast<std::chrono::microseconds>(
                         cur_time - start_time)
                         .count();
-  std::cout.setf(std::ios::fixed);
-  std::cout.precision(3);
-  if (micro_secs < 1000) {
-    std::cout << micro_secs << "µs" << std::endl;
-  } else if (micro_secs < 1000000) {
-    std::cout << static_cast<double>(micro_secs) / 1000.0 << "ms" << std::endl;
-  } else {
-    std::cout << static_cast<double>(micro_secs) / 1000000.0 << "s"
-              << std::endl;
-  }
+  std::cout << formatDuration(micro_secs) << std::endl;
 }
 
 void Commands::fold(const std::string& main_path, const std::string& sub_id) {
@@ -727,6 +719,63 @@ void Commands::testLean(const std::string& test_id) {
   testFormula<LeanFormula>(test_id, settings, false);
 }
 
+void Commands::testFormulaParser(const std::string& test_id) {
+  initLog(false);
+  Parser parser;
+  FormulaParser formulaParser;
+  MineManager manager(settings);
+  manager.load();
+  auto& stats = manager.getStats();
+  int64_t good = 0, bad = 0, skipped = 0;
+  UID target_id;
+  if (!test_id.empty()) {
+    target_id = UID(test_id);
+  }
+  for (auto id : stats.all_program_ids) {
+    if (target_id.number() > 0 && id != target_id) {
+      continue;
+    }
+    auto idStr = id.string();
+    Program program;
+    try {
+      program = parser.parse(ProgramUtil::getProgramPath(id));
+    } catch (std::exception& e) {
+      Log::get().warn(std::string(e.what()));
+      continue;
+    }
+
+    // Check if program has a formula comment
+    std::string formulaStr = Comments::getCommentField(program, Comments::PREFIX_FORMULA);
+    if (formulaStr.empty()) {
+      skipped++;
+      continue;
+    }
+
+    Log::get().info("Testing formula parsing for " + idStr + ": " + formulaStr);
+
+    // Parse the formula string
+    Formula parsed;
+    if (!formulaParser.parse(formulaStr, parsed)) {
+      Log::get().error("Failed to parse formula for " + idStr + ": " + formulaStr, true);
+      bad++;
+      continue;
+    }
+
+    // Round-trip test: convert back to string and check it matches
+    std::string roundTripStr = parsed.toString();
+    if (roundTripStr != formulaStr) {
+      Log::get().error("Round-trip test failed for " + idStr + 
+                      ". Original: " + formulaStr + 
+                      ", Parsed: " + roundTripStr, true);
+      bad++;
+    } else {
+      good++;
+    }
+  }
+  Log::get().info(std::to_string(good) + " passed, " + std::to_string(bad) +
+                  " failed, " + std::to_string(skipped) + " skipped formula parsing checks");
+}
+
 bool checkRange(const ManagedSequence& seq, const Program& program,
                 bool finiteInput) {
   auto idStr = seq.id.string();
@@ -897,6 +946,12 @@ void Commands::findSlow(int64_t num_terms, const std::string& type) {
   }
   Benchmark benchmark;
   benchmark.findSlow(num_terms, t);
+}
+
+void Commands::findSlowFormulas() {
+  initLog(false);
+  Benchmark benchmark;
+  benchmark.findSlowFormulas();
 }
 
 void Commands::findEmbseqs() {
