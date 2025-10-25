@@ -320,7 +320,7 @@ bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
 
   // If we need imports, we need to use a LEAN project structure
   if (needsBitwiseImport()) {
-    const std::string projectDir = "./lean-project/";
+    const std::string projectDir = getTmpDir() + "lean-project/";
     ensureDir(projectDir);
     leanPath = projectDir + "Main.lean";
     leanResult = projectDir + "lean-result-" + tmpFileId + ".txt";
@@ -347,18 +347,21 @@ bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
     leanFile << evalCode;
     leanFile.close();
 
-    // Execute with timeout in projectDir
+    // Execute with timeout in projectDir. Project-mode runs (lake/lean)
+    // may take longer, so increase the timeout to be more forgiving. We
+    // still rely on the caller-provided timeoutSeconds as a baseline.
+    int projectTimeout = std::max<int>(timeoutSeconds, 600);  // 10 minutes
     int exitCode =
-        execWithTimeout(args, timeoutSeconds, leanResult, projectDir);
+        execWithTimeout(args, projectTimeout, leanResult, projectDir);
     if (exitCode != 0) {
-      // std::remove(leanPath.c_str());
-      // std::remove(leanResult.c_str());
       if (exitCode == PROCESS_ERROR_TIMEOUT) {
         return false;  // timeout
       }
-      Log::get().error(
-          "Error evaluating LEAN code: exit code " + std::to_string(exitCode),
-          true);
+      // Log the error but return false so caller can handle lack of LEAN tool.
+      std::string err =
+          "Error evaluating LEAN code: exit code " + std::to_string(exitCode);
+      Log::get().error(err, false);
+      return false;
     }
 
     // Read the result
@@ -366,7 +369,8 @@ bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
     if (!resultIn) {
       std::remove(leanPath.c_str());
       std::remove(leanResult.c_str());
-      Log::get().error("Error reading LEAN result", true);
+      Log::get().error("Error reading LEAN result", false);
+      return false;
     }
     result.clear();
     std::string line;
@@ -377,7 +381,8 @@ bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
         resultIn.close();
         std::remove(leanPath.c_str());
         std::remove(leanResult.c_str());
-        Log::get().error("Error parsing LEAN output: " + line, true);
+        Log::get().error("Error parsing LEAN output: " + line, false);
+        return false;
       }
     }
     resultIn.close();
@@ -441,9 +446,11 @@ bool LeanFormula::initializeLeanProject() {
   lakefile.close();
 
   // Run lake update to download dependencies and create toolchain (with
-  // timeout). Run lake directly in the project directory.
+  // timeout). Use a larger timeout here because fetching mathlib and
+  // preparing the toolchain can be slow on first run.
   std::vector<std::string> updateArgs = {"lake", "update"};
-  int exitCode = execWithTimeout(updateArgs, 300, "", projectDir);
+  int updateTimeout = 900;  // 15 minutes
+  int exitCode = execWithTimeout(updateArgs, updateTimeout, "", projectDir);
 
   if (exitCode != 0) {
     Log::get().warn("lake update failed with exit code " +
