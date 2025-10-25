@@ -68,13 +68,18 @@ bool LeanFormula::convertToLean(Expression& expr, const Formula& f,
         return false;
       }
       // Convert bitwise functions
-      if (expr.name == "bitxor") {
-        expr.name = "Int.xor";
+      if (expr.name == "bitand") {
+        expr.name = "Int.land";
         imports.insert("Mathlib.Data.Int.Bitwise");
         break;
       }
-      if (expr.name == "bitand") {
-        expr.name = "Int.land";
+      if (expr.name == "bitor") {
+        expr.name = "Int.lor";
+        imports.insert("Mathlib.Data.Int.Bitwise");
+        break;
+      }
+      if (expr.name == "bitxor") {
+        expr.name = "Int.xor";
         imports.insert("Mathlib.Data.Int.Bitwise");
         break;
       }
