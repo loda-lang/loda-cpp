@@ -67,12 +67,13 @@ bool LeanFormula::convertToLean(Expression& expr, const Formula& f,
         // If not a simple fraction, reject
         return false;
       }
-      // Convert bitxor to LEAN Int.xor
-      // if (expr.name == "bitxor") {
-      //  expr.name = "Int.xor";
-      //  imports.insert("import Mathlib.Data.Int.Bitwise");
-      //  break;
-      //}
+      // Convert bitwise functions
+      if (expr.name == "bitand" || expr.name == "bitor" ||
+          expr.name == "bitxor") {
+        expr.name = "Int." + expr.name.substr(3);
+        imports.insert("Mathlib.Data.Int.Bitwise");
+        break;
+      }
       // Allow recursive calls to the main function
       if (expr.name == funcName) {
         break;
