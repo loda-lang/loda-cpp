@@ -1,5 +1,7 @@
 #pragma once
 
+#include <set>
+
 #include "form/formula.hpp"
 #include "math/sequence.hpp"
 
@@ -25,7 +27,7 @@ class LeanFormula {
  private:
   Formula main_formula;
   std::string domain;  // Int or Nat
-  std::string imports;
+  std::set<std::string> imports;
 
   static bool initializeLeanProject();
 

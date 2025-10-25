@@ -68,11 +68,11 @@ bool LeanFormula::convertToLean(Expression& expr, const Formula& f,
         return false;
       }
       // Convert bitxor to LEAN Int.xor
-      if (expr.name == "bitxor") {
-        expr.name = "Int.xor";
-        imports = "import Mathlib.Data.Int.Bitwise";
-        break;
-      }
+      // if (expr.name == "bitxor") {
+      //  expr.name = "Int.xor";
+      //  imports.insert("import Mathlib.Data.Int.Bitwise");
+      //  break;
+      //}
       // Allow recursive calls to the main function
       if (expr.name == funcName) {
         break;
@@ -279,9 +279,10 @@ void LeanFormula::transformParameterReferences(
 
 std::string LeanFormula::printEvalCode(int64_t offset, int64_t numTerms) const {
   std::stringstream out;
-  // Add imports if needed
   if (!imports.empty()) {
-    out << imports << std::endl;
+    for (const auto& imp : imports) {
+      out << "import " << imp << std::endl;
+    }
     out << std::endl;
   }
   out << toString() << std::endl;
@@ -340,20 +341,15 @@ bool LeanFormula::initializeLeanProject() {
   if (initialized) {
     return true;
   }
-
-  const std::string projectDir = getLeanProjectDir();
-
   // Check if project is already initialized
-  std::string lakeFilePath = projectDir + "lakefile.lean";
+  const std::string projectDir = getLeanProjectDir();
+  const std::string lakeFilePath = projectDir + "lakefile.lean";
   if (isFile(lakeFilePath)) {
     initialized = true;
     return true;
   }
 
   Log::get().info("Initializing LEAN project at " + projectDir);
-
-  // Create project directory
-  ensureDir(projectDir);
 
   // Create lakefile.lean
   std::ofstream lakefile(lakeFilePath);
@@ -377,14 +373,12 @@ bool LeanFormula::initializeLeanProject() {
   std::vector<std::string> updateArgs = {"lake", "update"};
   int updateTimeout = 900;  // 15 minutes
   int exitCode = execWithTimeout(updateArgs, updateTimeout, "", projectDir);
-
   if (exitCode != 0) {
     Log::get().warn("lake update failed with exit code " +
                     std::to_string(exitCode));
     std::remove(lakeFilePath.c_str());
     return false;
   }
-
   initialized = true;
   return true;
 }
