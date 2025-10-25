@@ -5,6 +5,10 @@
 #include "form/expression_util.hpp"
 #include "form/formula_util.hpp"
 #include "seq/seq_util.hpp"
+#include "sys/file.hpp"
+#include "sys/log.hpp"
+#include "sys/process.hpp"
+#include "sys/setup.hpp"
 #include "sys/util.hpp"
 
 bool LeanFormula::convertToLean(Expression& expr, const Formula& f,
@@ -63,6 +67,12 @@ bool LeanFormula::convertToLean(Expression& expr, const Formula& f,
         // If not a simple fraction, reject
         return false;
       }
+      // Convert bitxor to LEAN Int.xor
+      // if (expr.name == "bitxor") {
+      //  expr.name = "Int.xor";
+      //  imports.insert("import Mathlib.Data.Int.Bitwise");
+      //  break;
+      //}
       // Allow recursive calls to the main function
       if (expr.name == funcName) {
         break;
@@ -269,6 +279,12 @@ void LeanFormula::transformParameterReferences(
 
 std::string LeanFormula::printEvalCode(int64_t offset, int64_t numTerms) const {
   std::stringstream out;
+  if (!imports.empty()) {
+    for (const auto& imp : imports) {
+      out << "import " << imp << std::endl;
+    }
+    out << std::endl;
+  }
   out << toString() << std::endl;
   out << std::endl;
   out << "def main : IO Unit := do" << std::endl;
@@ -287,13 +303,82 @@ std::string LeanFormula::printEvalCode(int64_t offset, int64_t numTerms) const {
   return out.str();
 }
 
+std::string getLeanProjectDir() {
+  auto dir = Setup::getCacheHome() + "lean" + FILE_SEP;
+  ensureDir(dir);
+  return dir;
+}
+
 bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
                        Sequence& result) const {
+  // Initialize LEAN project if needed (only once)
+  bool needsProject = !imports.empty();
+  if (needsProject && !initializeLeanProject()) {
+    Log::get().error("Failed to initialize LEAN project", true);
+  }
+
   const std::string tmpFileId = std::to_string(Random::get().gen() % 1000);
-  const std::string leanPath("lean-loda-" + tmpFileId + ".lean");
-  const std::string leanResult("lean-result-" + tmpFileId + ".txt");
-  std::vector<std::string> args = {"lean", "--run", leanPath};
-  std::string evalCode = printEvalCode(offset, numTerms);
+  const std::string projectDir = getLeanProjectDir();
+  const std::string leanPath = projectDir + "Main.lean";
+  const std::string leanResult = projectDir + "result-" + tmpFileId + ".txt";
+  const std::string evalCode = printEvalCode(offset, numTerms);
+  std::vector<std::string> args;
+
+  // If we need imports, we need to use a LEAN project structure
+  if (needsProject) {
+    args = {"lake", "env", "lean", "--run", "Main.lean"};
+    timeoutSeconds = std::max<int>(timeoutSeconds, 600);  // 10 minutes
+  } else {
+    args = {"lean", "--run", leanPath};
+  }
   return SequenceUtil::evalFormulaWithExternalTool(
-      evalCode, getName(), leanPath, leanResult, args, timeoutSeconds, result);
+      evalCode, getName(), leanPath, leanResult, args, timeoutSeconds, result,
+      projectDir);
+}
+
+bool LeanFormula::initializeLeanProject() {
+  static bool initialized = false;
+  if (initialized) {
+    return true;
+  }
+  // Check if project is already initialized
+  const std::string projectDir = getLeanProjectDir();
+  const std::string lakeFilePath = projectDir + "lakefile.lean";
+  if (isFile(lakeFilePath)) {
+    initialized = true;
+    return true;
+  }
+
+  Log::get().info("Initializing LEAN project at " + projectDir);
+
+  // Create lakefile.lean
+  std::ofstream lakefile(lakeFilePath);
+  if (!lakefile) {
+    return false;
+  }
+  lakefile << "import Lake\n";
+  lakefile << "open Lake DSL\n\n";
+  lakefile << "package \"lean-loda\" where\n";
+  lakefile << "  version := v!\"0.1.0\"\n\n";
+  lakefile << "require mathlib from git\n";
+  lakefile << "  \"https://github.com/leanprover-community/mathlib4.git\"\n\n";
+  lakefile << "@[default_target]\n";
+  lakefile << "lean_exe «lean-loda» where\n";
+  lakefile << "  root := `Main\n";
+  lakefile.close();
+
+  // Run lake update to download dependencies and create toolchain (with
+  // timeout). Use a larger timeout here because fetching mathlib and
+  // preparing the toolchain can be slow on first run.
+  std::vector<std::string> updateArgs = {"lake", "update"};
+  int updateTimeout = 900;  // 15 minutes
+  int exitCode = execWithTimeout(updateArgs, updateTimeout, "", projectDir);
+  if (exitCode != 0) {
+    Log::get().warn("lake update failed with exit code " +
+                    std::to_string(exitCode));
+    std::remove(lakeFilePath.c_str());
+    return false;
+  }
+  initialized = true;
+  return true;
 }

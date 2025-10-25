@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Enhancements
+
+* Add LEAN project support for testing
+
 ## v25.10.19
 
 ### Bugfixes
