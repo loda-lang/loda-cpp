@@ -68,7 +68,6 @@ bool SequenceUtil::evalFormulaWithExternalTool(
   int exitCode = execWithTimeout(args, timeoutSeconds, resultPath, workingDir);
 
   if (exitCode != 0) {
-    std::remove(toolPath.c_str());
     // Try to read error message from result file before removing it
     std::string errorMsg;
     std::ifstream errorIn(resultPath);

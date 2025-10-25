@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Features
+
+* Support bitwise operations in LEAN formula generation
+
 ### Enhancements
 
 * Add LEAN project support for testing
