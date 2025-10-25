@@ -43,3 +43,4 @@ A060576: def a (n : Int) : Int := Bool.toInt (n != 1)
 A080457: def a (n : Int) : Int := (Int.lor (3*n-6) 3)+4
 A106249: def a (n : Int) : Int := Int.tdiv ((Int.lor (n+1) 2)-1) 2
 A109008: def a (n : Int) : Int := Int.gcd n 4
+A129760: def a (n : Int) : Int := Int.land n (n-1)
