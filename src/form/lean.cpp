@@ -316,7 +316,8 @@ std::string getLeanProjectDir() {
 bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
                        Sequence& result) const {
   // Initialize LEAN project if needed (only once)
-  if (needsBitwiseImport() && !initializeLeanProject()) {
+  bool needsProject = !getImports().empty();
+  if (needsProject && !initializeLeanProject()) {
     Log::get().error("Failed to initialize LEAN project", true);
   }
 
@@ -326,7 +327,7 @@ bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
   std::vector<std::string> args;
 
   // If we need imports, we need to use a LEAN project structure
-  if (needsBitwiseImport()) {
+  if (needsProject) {
     const std::string projectDir = getLeanProjectDir();
     leanPath = projectDir + "Main.lean";
     leanResult = projectDir + "lean-result-" + tmpFileId + ".txt";
@@ -341,7 +342,7 @@ bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
   std::string evalCode = printEvalCode(offset, numTerms);
 
   // For project-based eval, we need to handle it differently
-  if (needsBitwiseImport()) {
+  if (needsProject) {
     // Write the code to Main.lean
     const std::string projectDir = getLeanProjectDir();
     std::ofstream leanFile(leanPath);
@@ -400,18 +401,11 @@ bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
   }
 }
 
-bool LeanFormula::needsBitwiseImport() const {
+std::string LeanFormula::getImports() const {
   for (const auto& entry : main_formula.entries) {
     if (entry.second.contains(Expression::Type::FUNCTION, "Int.xor")) {
-      return true;
+      return "import Mathlib.Data.Int.Bitwise";
     }
-  }
-  return false;
-}
-
-std::string LeanFormula::getImports() const {
-  if (needsBitwiseImport()) {
-    return "import Mathlib.Data.Int.Bitwise";
   }
   return "";
 }

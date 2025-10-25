@@ -23,18 +23,16 @@ class LeanFormula {
   std::string getName() const { return "LEAN"; }
 
  private:
-  bool needsBitwiseImport() const;
+  Formula main_formula;
+  std::string domain;  // Int or Nat
 
   std::string getImports() const;
 
   static bool initializeLeanProject();
 
-  Formula main_formula;
-  std::string domain;  // Int or Nat
-
   bool convertToLean(Expression& expr, const Formula& f,
                      const std::string& funcName);
-  
+
   void transformParameterReferences(Expression& expr, int64_t offset,
                                     const std::string& funcName) const;
 };
