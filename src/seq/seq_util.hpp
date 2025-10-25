@@ -1,7 +1,5 @@
 #pragma once
 
-#include <vector>
-
 #include "base/uid.hpp"
 #include "math/sequence.hpp"
 
@@ -19,10 +17,16 @@ class SequenceUtil {
 
   static std::string getSeqsFolder(char domain);
 
+  // Evaluate generated code using an external tool. The function writes
+  // 'evalCode' to 'toolPath', executes the external tool with 'args', waits up
+  // to 'timeoutSeconds' for completion and reads the sequence from
+  // 'resultPath' into 'result'. If 'workingDir' is non-empty, the external
+  // tool is executed inside that directory. Returns true on success.
   static bool evalFormulaWithExternalTool(const std::string& evalCode,
                                           const std::string& toolName,
                                           const std::string& toolPath,
                                           const std::string& resultPath,
                                           const std::vector<std::string>& args,
-                                          int timeoutSeconds, Sequence& result);
+                                          int timeoutSeconds, Sequence& result,
+                                          const std::string& workingDir = "");
 };
