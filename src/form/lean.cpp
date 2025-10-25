@@ -11,6 +11,17 @@
 #include "sys/setup.hpp"
 #include "sys/util.hpp"
 
+std::string convertBitfuncToLean(const std::string& bitfunc) {
+  if (bitfunc == "bitand") {
+    return "Int.land";
+  } else if (bitfunc == "bitor") {
+    return "Int.lor";
+  } else if (bitfunc == "bitxor") {
+    return "Int.xor";
+  }
+  return "";
+}
+
 bool LeanFormula::convertToLean(Expression& expr, const Formula& f,
                                 const std::string& funcName) {
   // Check children recursively
@@ -68,18 +79,9 @@ bool LeanFormula::convertToLean(Expression& expr, const Formula& f,
         return false;
       }
       // Convert bitwise functions
-      if (expr.name == "bitand") {
-        expr.name = "Int.land";
-        imports.insert("Mathlib.Data.Int.Bitwise");
-        break;
-      }
-      if (expr.name == "bitor") {
-        expr.name = "Int.lor";
-        imports.insert("Mathlib.Data.Int.Bitwise");
-        break;
-      }
-      if (expr.name == "bitxor") {
-        expr.name = "Int.xor";
+      auto bitfunc = convertBitfuncToLean(expr.name);
+      if (!bitfunc.empty()) {
+        expr.name = bitfunc;
         imports.insert("Mathlib.Data.Int.Bitwise");
         break;
       }
