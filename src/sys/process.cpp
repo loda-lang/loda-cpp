@@ -1,11 +1,8 @@
 #include "sys/process.hpp"
 
-#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
-
-#include "sys/log.hpp"
 
 #ifdef _WIN64
 #include <windows.h>
@@ -55,26 +52,6 @@ bool isChildProcessAlive(HANDLE pid) {
 #endif
 }
 
-// Helper: log command context (command args, working directory, output file)
-static void logProcessContext(const std::vector<std::string>& args,
-                              const std::string& workingDir,
-                              const std::string& outputFile,
-                              const std::string& prefix,
-                              bool as_error = false) {
-  std::stringstream ss;
-  ss << prefix;
-  for (size_t i = 0; i < args.size(); ++i) {
-    if (i) ss << ' ';
-    ss << args[i];
-  }
-  ss << "', cwd='" << workingDir << "', out='" << outputFile << "'";
-  if (as_error) {
-    Log::get().error(ss.str());
-  } else {
-    Log::get().warn(ss.str());
-  }
-}
-
 int execWithTimeout(const std::vector<std::string>& args, int timeoutSeconds,
                     const std::string& outputFile,
                     const std::string& workingDir) {
@@ -109,10 +86,7 @@ int execWithTimeout(const std::vector<std::string>& args, int timeoutSeconds,
       argv.push_back(const_cast<char*>(arg.c_str()));
     }
     argv.push_back(nullptr);
-    // Do not set an alarm in the child. The parent enforces timeouts and
-    // will kill the child if it exceeds the allowed runtime. Setting an
-    // alarm() in the child leads to the child being terminated by SIGALRM
-    // which makes diagnosis harder and bypasses parent-side cleanup.
+    alarm(timeoutSeconds);
     execvp(argv[0], argv.data());
     // execvp only returns on error. Use PROCESS_ERROR_EXEC for exec failures
     // (command not found or not executable) to preserve conventional meaning.
@@ -125,44 +99,16 @@ int execWithTimeout(const std::vector<std::string>& args, int timeoutSeconds,
     pid_t result = waitpid(pid, &status, WNOHANG);
     if (result == pid) break;
     if (result == -1) {
-      Log::get().error(std::string("waitpid failed for pid ") +
-                       std::to_string(pid));
-      return -1;
+      throw std::runtime_error("waitpid failed");
     }
     if (difftime(time(nullptr), start) > timeoutSeconds) {
-      // Log timeout and command context before killing
-      logProcessContext(args, workingDir, outputFile,
-                        std::string("Timeout after ") +
-                            std::to_string(timeoutSeconds) + "s: cmd='",
-                        false);
-      if (kill(pid, SIGKILL) == 0) {
-        return PROCESS_ERROR_TIMEOUT;
-      } else {
-        Log::get().error(std::string("Failed to kill timed-out child pid ") +
-                         std::to_string(pid));
-        return -1;
-      }
+      kill(pid, SIGKILL);
+      return PROCESS_ERROR_TIMEOUT;
     }
     usleep(100000);  // Sleep for 100 ms
   }
-
   if (WIFEXITED(status)) {
-    const int exit_code = WEXITSTATUS(status);
-    if (exit_code != 0) {
-      logProcessContext(args, workingDir, outputFile,
-                        std::string("Process exited with code ") +
-                            std::to_string(exit_code) + ": cmd='",
-                        false);
-    }
-    return exit_code;
-  }
-  if (WIFSIGNALED(status)) {
-    const int sig = WTERMSIG(status);
-    logProcessContext(args, workingDir, outputFile,
-                      std::string("Process terminated by signal ") +
-                          std::to_string(sig) + ": cmd='",
-                      false);
-    return -sig;
+    return WEXITSTATUS(status);
   }
   return -1;
 #endif
