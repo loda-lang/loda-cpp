@@ -52,13 +52,12 @@ std::string SequenceUtil::getSeqsFolder(char domain) {
   return Setup::getSeqsHome() + folder + FILE_SEP;
 }
 
-// Evaluate code by writing it to a file, executing it with a command,
-// and reading the result from output. Returns true on success.
 bool SequenceUtil::evalFormulaWithExternalTool(
     const std::string& evalCode, const std::string& toolName,
     const std::string& toolPath, const std::string& resultPath,
-    const std::vector<std::string>& args, int timeoutSeconds,
-    Sequence& result) {
+    const std::vector<std::string>& args, int timeoutSeconds, Sequence& result,
+    const std::string& workingDir) {
+  // write tool file
   std::ofstream toolFile(toolPath);
   if (!toolFile) {
     Log::get().error("Error generating " + toolName + " file", true);
@@ -66,7 +65,8 @@ bool SequenceUtil::evalFormulaWithExternalTool(
   toolFile << evalCode;
   toolFile.close();
 
-  int exitCode = execWithTimeout(args, timeoutSeconds, resultPath);
+  int exitCode = execWithTimeout(args, timeoutSeconds, resultPath, workingDir);
+
   if (exitCode != 0) {
     std::remove(toolPath.c_str());
     // Try to read error message from result file before removing it
@@ -105,7 +105,7 @@ bool SequenceUtil::evalFormulaWithExternalTool(
     result.push_back(Number(buf));
   }
 
-  // clean up
+  // clean up temporary files
   std::remove(toolPath.c_str());
   std::remove(resultPath.c_str());
 
