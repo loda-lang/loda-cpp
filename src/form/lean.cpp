@@ -1,12 +1,6 @@
 #include "form/lean.hpp"
 
-#include <fstream>
 #include <sstream>
-
-#include "sys/setup.hpp"
-#ifndef _WIN64
-#include <sys/stat.h>
-#endif
 
 #include "form/expression_util.hpp"
 #include "form/formula_util.hpp"
@@ -14,6 +8,7 @@
 #include "sys/file.hpp"
 #include "sys/log.hpp"
 #include "sys/process.hpp"
+#include "sys/setup.hpp"
 #include "sys/util.hpp"
 
 bool LeanFormula::convertToLean(Expression& expr, const Formula& f,
@@ -75,6 +70,7 @@ bool LeanFormula::convertToLean(Expression& expr, const Formula& f,
       // Convert bitxor to LEAN Int.xor
       if (expr.name == "bitxor") {
         expr.name = "Int.xor";
+        imports = "import Mathlib.Data.Int.Bitwise";
         break;
       }
       // Allow recursive calls to the main function
@@ -284,7 +280,6 @@ void LeanFormula::transformParameterReferences(
 std::string LeanFormula::printEvalCode(int64_t offset, int64_t numTerms) const {
   std::stringstream out;
   // Add imports if needed
-  std::string imports = getImports();
   if (!imports.empty()) {
     out << imports << std::endl;
     out << std::endl;
@@ -316,58 +311,28 @@ std::string getLeanProjectDir() {
 bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
                        Sequence& result) const {
   // Initialize LEAN project if needed (only once)
-  bool needsProject = !getImports().empty();
+  bool needsProject = !imports.empty();
   if (needsProject && !initializeLeanProject()) {
     Log::get().error("Failed to initialize LEAN project", true);
   }
 
   const std::string tmpFileId = std::to_string(Random::get().gen() % 1000);
-  std::string leanPath;
-  std::string leanResult;
-  std::vector<std::string> args;
-
   const std::string projectDir = getLeanProjectDir();
-
-  leanPath = projectDir + "Main.lean";
-  leanResult = projectDir + "result-" + tmpFileId + ".txt";
+  const std::string leanPath = projectDir + "Main.lean";
+  const std::string leanResult = projectDir + "result-" + tmpFileId + ".txt";
+  const std::string evalCode = printEvalCode(offset, numTerms);
+  std::vector<std::string> args;
 
   // If we need imports, we need to use a LEAN project structure
   if (needsProject) {
-    // Call lake in the project directory directly (no wrapper script)
     args = {"lake", "env", "lean", "--run", "Main.lean"};
+    timeoutSeconds = std::max<int>(timeoutSeconds, 600);  // 10 minutes
   } else {
     args = {"lean", "--run", leanPath};
-  }
-
-  std::string evalCode = printEvalCode(offset, numTerms);
-
-  // For project-based eval, we need to handle it differently
-  if (needsProject) {
-    // Write the code to Main.lean
-    std::ofstream leanFile(leanPath);
-    if (!leanFile) {
-      Log::get().error("Error generating LEAN file", true);
-    }
-    leanFile << evalCode;
-    leanFile.close();
-
-    // Project-mode runs (lake/lean) may take longer, so increase the timeout to
-    // be more forgiving. We still rely on the caller-provided timeoutSeconds as
-    // a baseline.
-    timeoutSeconds = std::max<int>(timeoutSeconds, 600);  // 10 minutes
   }
   return SequenceUtil::evalFormulaWithExternalTool(
       evalCode, getName(), leanPath, leanResult, args, timeoutSeconds, result,
       projectDir);
-}
-
-std::string LeanFormula::getImports() const {
-  for (const auto& entry : main_formula.entries) {
-    if (entry.second.contains(Expression::Type::FUNCTION, "Int.xor")) {
-      return "import Mathlib.Data.Int.Bitwise";
-    }
-  }
-  return "";
 }
 
 bool LeanFormula::initializeLeanProject() {

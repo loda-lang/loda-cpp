@@ -25,8 +25,7 @@ class LeanFormula {
  private:
   Formula main_formula;
   std::string domain;  // Int or Nat
-
-  std::string getImports() const;
+  std::string imports;
 
   static bool initializeLeanProject();
 

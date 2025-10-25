@@ -1,8 +1,8 @@
 ## [Unreleased]
 
-### Features
+### Enhancements
 
-* Add support for bitwise operation in LEAN formula generation using Mathlib
+* Add LEAN project support for testing
 
 ## v25.10.19
 
