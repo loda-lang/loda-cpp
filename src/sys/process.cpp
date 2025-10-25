@@ -105,7 +105,9 @@ int execWithTimeout(const std::vector<std::string>& args, int timeoutSeconds,
       close(fd);
     }
     std::vector<char*> argv;
-    for (const auto& arg : args) argv.push_back(const_cast<char*>(arg.c_str()));
+    for (const auto& arg : args) {
+      argv.push_back(const_cast<char*>(arg.c_str()));
+    }
     argv.push_back(nullptr);
     // Do not set an alarm in the child. The parent enforces timeouts and
     // will kill the child if it exceeds the allowed runtime. Setting an
