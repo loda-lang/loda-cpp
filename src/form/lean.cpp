@@ -3,6 +3,7 @@
 #include <fstream>
 #include <sstream>
 
+#include "sys/setup.hpp"
 #ifndef _WIN64
 #include <sys/stat.h>
 #endif
@@ -306,11 +307,17 @@ std::string LeanFormula::printEvalCode(int64_t offset, int64_t numTerms) const {
   return out.str();
 }
 
+std::string getLeanProjectDir() {
+  auto dir = Setup::getCacheHome() + "lean" + FILE_SEP;
+  ensureDir(dir);
+  return dir;
+}
+
 bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
                        Sequence& result) const {
   // Initialize LEAN project if needed (only once)
   if (needsBitwiseImport() && !initializeLeanProject()) {
-    Log::get().warn("Failed to initialize LEAN project, continuing without it");
+    Log::get().error("Failed to initialize LEAN project", true);
   }
 
   const std::string tmpFileId = std::to_string(Random::get().gen() % 1000);
@@ -320,8 +327,7 @@ bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
 
   // If we need imports, we need to use a LEAN project structure
   if (needsBitwiseImport()) {
-    const std::string projectDir = getTmpDir() + "lean-project/";
-    ensureDir(projectDir);
+    const std::string projectDir = getLeanProjectDir();
     leanPath = projectDir + "Main.lean";
     leanResult = projectDir + "lean-result-" + tmpFileId + ".txt";
     // Call lake in the project directory directly (no wrapper script)
@@ -336,10 +342,8 @@ bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
 
   // For project-based eval, we need to handle it differently
   if (needsBitwiseImport()) {
-    const std::string projectDir = getTmpDir() + "lean-project/";
-
     // Write the code to Main.lean
-    ensureDir(projectDir);
+    const std::string projectDir = getLeanProjectDir();
     std::ofstream leanFile(leanPath);
     if (!leanFile) {
       Log::get().error("Error generating LEAN file", true);
@@ -418,19 +422,22 @@ bool LeanFormula::initializeLeanProject() {
     return true;
   }
 
-  const std::string projectDir = +"./lean-project/";
+  const std::string projectDir = getLeanProjectDir();
 
-  // Check if project directory already exists and is initialized
-  if (isDir(projectDir) && isFile(projectDir + "lakefile.lean")) {
+  // Check if project is already initialized
+  std::string lakeFilePath = projectDir + "lakefile.lean";
+  if (isFile(lakeFilePath)) {
     initialized = true;
     return true;
   }
+
+  Log::get().info("Initializing LEAN project at " + projectDir);
 
   // Create project directory
   ensureDir(projectDir);
 
   // Create lakefile.lean
-  std::ofstream lakefile(projectDir + "lakefile.lean");
+  std::ofstream lakefile(lakeFilePath);
   if (!lakefile) {
     return false;
   }
@@ -455,6 +462,7 @@ bool LeanFormula::initializeLeanProject() {
   if (exitCode != 0) {
     Log::get().warn("lake update failed with exit code " +
                     std::to_string(exitCode));
+    std::remove(lakeFilePath.c_str());
     return false;
   }
 
