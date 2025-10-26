@@ -111,6 +111,22 @@ bool FormulaUtil::isRecursive(const Formula& formula,
   return false;
 }
 
+Number FormulaUtil::getMinimumBaseCase(const Formula& formula,
+                                       const std::string& funcName) {
+  Number minBaseCase = Number::INF;
+  for (const auto& entry : formula.entries) {
+    auto left = entry.first;
+    if (left.type == Expression::Type::FUNCTION && left.name == funcName &&
+        left.children.size() == 1 &&
+        left.children[0].type == Expression::Type::CONSTANT) {
+      if (minBaseCase == Number::INF || left.children[0].value < minBaseCase) {
+        minBaseCase = left.children[0].value;
+      }
+    }
+  }
+  return minBaseCase;
+}
+
 void FormulaUtil::removeFunctionEntries(Formula& formula,
                                         const std::string& funcName) {
   auto entryIt = formula.entries.begin();

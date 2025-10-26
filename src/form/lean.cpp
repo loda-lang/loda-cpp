@@ -1,5 +1,6 @@
 #include "form/lean.hpp"
 
+#include <algorithm>
 #include <sstream>
 
 #include "form/expression_util.hpp"
@@ -23,10 +24,10 @@ std::string convertBitfuncToLean(const std::string& bitfunc) {
 }
 
 bool LeanFormula::convertToLean(Expression& expr, const Formula& f,
-                                const std::string& funcName) {
+                                const std::vector<std::string>& funcNames) {
   // Check children recursively
   for (auto& c : expr.children) {
-    if (!convertToLean(c, f, funcName)) {
+    if (!convertToLean(c, f, funcNames)) {
       return false;
     }
   }
@@ -85,8 +86,9 @@ bool LeanFormula::convertToLean(Expression& expr, const Formula& f,
         imports.insert("Mathlib.Data.Int.Bitwise");
         break;
       }
-      // Allow recursive calls to the main function
-      if (expr.name == funcName) {
+      // Allow calls to locally defined functions incl. recursions
+      if (std::find(funcNames.begin(), funcNames.end(), expr.name) !=
+          funcNames.end()) {
         break;
       }
       return false;
@@ -116,48 +118,25 @@ bool LeanFormula::convert(const Formula& formula, int64_t offset,
   if (functions.size() != 1) {
     return false;
   }
-  const std::string funcName = functions[0];
   lean_formula = {};
-  if (FormulaUtil::isRecursive(formula, funcName)) {
-    if (offset < 0) {
-      return false;
+  lean_formula.domain = "Int";
+  for (const auto& f : functions) {
+    if (FormulaUtil::isRecursive(formula, f)) {
+      if (offset < 0 ||
+          FormulaUtil::getMinimumBaseCase(formula, f) != Number::ZERO) {
+        return false;
+      }
+      lean_formula.domain = "Nat";
     }
-    lean_formula.domain = "Nat";
-  } else {
-    lean_formula.domain = "Int";
   }
 
-  // Collect base cases to check minimum value for Nat domain
-  bool hasBaseCase = false;
-  Number minBaseCase = Number::ZERO;
   for (const auto& entry : formula.entries) {
     auto left = entry.first;
     auto right = entry.second;
-    if (!lean_formula.convertToLean(right, formula, funcName)) {
+    if (!lean_formula.convertToLean(right, formula, functions)) {
       return false;
-    }
-    if (left.type != Expression::Type::FUNCTION || left.children.size() != 1) {
-      return false;
-    }
-    auto& arg = left.children.front();
-    if (arg.type != Expression::Type::PARAMETER &&
-        arg.type != Expression::Type::CONSTANT) {
-      return false;
-    }
-    if (arg.type == Expression::Type::CONSTANT) {
-      if (!hasBaseCase || arg.value < minBaseCase) {
-        minBaseCase = arg.value;
-        hasBaseCase = true;
-      }
     }
     lean_formula.main_formula.entries[left] = right;
-  }
-
-  // For Nat domain with recursive formulas, the minimum base case must be 0
-  if (lean_formula.domain == "Nat" &&
-      FormulaUtil::isRecursive(formula, funcName) && hasBaseCase &&
-      minBaseCase != Number::ZERO) {
-    return false;
   }
 
   return lean_formula.main_formula.entries.size() >= 1;
