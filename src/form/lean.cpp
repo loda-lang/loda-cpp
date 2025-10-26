@@ -156,7 +156,9 @@ std::string LeanFormula::printFunction(const std::string& funcName) const {
 
   // Collect base cases (constant arguments) and recursive case (parameter
   // argument)
-  std::vector<std::pair<Expression, Expression>> baseCases;
+  // Map from base case constant value -> RHS expression. Using std::map
+  // automatically keeps base cases sorted by the integer key.
+  std::map<int64_t, Expression> baseCases;
   Expression recursiveCase;
   Expression recursiveRHS;
 
@@ -166,7 +168,8 @@ std::string LeanFormula::printFunction(const std::string& funcName) const {
     }
     const auto& arg = entry.first.children.front();
     if (arg.type == Expression::Type::CONSTANT) {
-      baseCases.push_back({entry.first, entry.second});
+      // store RHS keyed by the constant value; map keeps keys sorted
+      baseCases[arg.value.asInt()] = entry.second;
     } else {
       recursiveCase = entry.first;
       recursiveRHS = entry.second;
@@ -178,18 +181,12 @@ std::string LeanFormula::printFunction(const std::string& funcName) const {
     // Recursive case with base cases - use pattern matching syntax
     buf << "def " << funcName << " : " << domain << " -> Int";
 
-    // Sort base cases by constant value for consistent output
-    std::sort(baseCases.begin(), baseCases.end(),
-              [](const auto& a, const auto& b) {
-                return a.first.children.front().value <
-                       b.first.children.front().value;
-              });
-
-    // Generate pattern matching cases for base cases
-    for (const auto& bc : baseCases) {
-      const auto& constValue = bc.first.children.front().value;
-      buf << " | " << constValue.to_string() << " => "
-          << bc.second.toString(true);
+    // Generate pattern matching cases for base cases. The map is sorted by
+    // integer key so iteration yields increasing constant values.
+    for (const auto& kv : baseCases) {
+      const auto constValue = kv.first;
+      buf << " | " << Number(constValue).to_string() << " => "
+          << kv.second.toString(true);
     }
 
     // Add the recursive case
@@ -197,9 +194,8 @@ std::string LeanFormula::printFunction(const std::string& funcName) const {
       // For Nat domain, use n+k pattern where k is one more than the largest
       // base case
       if (domain == "Nat" && !baseCases.empty()) {
-        // Find the largest base case value
-        int64_t maxBaseCase =
-            baseCases.back().first.children.front().value.asInt();
+        // Find the largest base case value (map is ordered ascending)
+        int64_t maxBaseCase = baseCases.rbegin()->first;
         int64_t patternOffset = maxBaseCase + 1;
 
         // Transform the RHS: replace (n-k) with (n+(patternOffset-k))
