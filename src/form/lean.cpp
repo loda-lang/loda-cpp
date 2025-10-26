@@ -273,6 +273,9 @@ void LeanFormula::transformParameterReferences(
     sum.children.push_back(ExpressionUtil::newConstant(offset));
     expr = sum;
   }
+
+  // finally simplify
+  ExpressionUtil::normalize(expr);
 }
 
 std::string LeanFormula::printEvalCode(int64_t offset, int64_t numTerms) const {
