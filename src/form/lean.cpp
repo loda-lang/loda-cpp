@@ -143,8 +143,16 @@ bool LeanFormula::convert(const Formula& formula, int64_t offset,
 }
 
 std::string LeanFormula::toString() const {
-  std::stringstream buf;
   std::string funcName;
+  for (const auto& entry : main_formula.entries) {
+    funcName = entry.first.name;
+    break;
+  }
+  return printFunction(funcName);
+}
+
+std::string LeanFormula::printFunction(const std::string& funcName) const {
+  std::stringstream buf;
 
   // Collect base cases (constant arguments) and recursive case (parameter
   // argument)
@@ -153,7 +161,9 @@ std::string LeanFormula::toString() const {
   Expression recursiveRHS;
 
   for (const auto& entry : main_formula.entries) {
-    funcName = entry.first.name;
+    if (entry.first.name != funcName) {
+      continue;
+    }
     const auto& arg = entry.first.children.front();
     if (arg.type == Expression::Type::CONSTANT) {
       baseCases.push_back({entry.first, entry.second});
@@ -163,14 +173,8 @@ std::string LeanFormula::toString() const {
     }
   }
 
-  // Check if this is a recursive formula (multiple entries)
-  if (main_formula.entries.size() == 1) {
-    // Non-recursive case (original behavior)
-    bool usesParameter = recursiveRHS.contains(Expression::Type::PARAMETER);
-    std::string arg = usesParameter ? "n" : "_";
-    buf << "def " << funcName << " (" << arg << " : " << domain
-        << ") : Int := " << recursiveRHS.toString(true);
-  } else {
+  const bool isRecursive = FormulaUtil::isRecursive(main_formula, funcName);
+  if (isRecursive) {
     // Recursive case with base cases - use pattern matching syntax
     buf << "def " << funcName << " : " << domain << " -> Int";
 
@@ -208,7 +212,14 @@ std::string LeanFormula::toString() const {
         buf << " | n => " << recursiveRHS.toString(true);
       }
     }
+  } else {
+    // Non-recursive case (original behavior)
+    bool usesParameter = recursiveRHS.contains(Expression::Type::PARAMETER);
+    std::string arg = usesParameter ? "n" : "_";
+    buf << "def " << funcName << " (" << arg << " : " << domain
+        << ") : Int := " << recursiveRHS.toString(true);
   }
+
   return buf.str();
 }
 

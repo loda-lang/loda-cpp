@@ -34,6 +34,8 @@ class LeanFormula {
   bool convertToLean(Expression& expr, const Formula& f,
                      const std::vector<std::string>& funcNames);
 
+  std::string printFunction(const std::string& funcName) const;
+
   void transformParameterReferences(Expression& expr, int64_t offset,
                                     const std::string& funcName) const;
 };
