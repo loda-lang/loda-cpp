@@ -155,12 +155,9 @@ std::string LeanFormula::toString() const {
   } else {
     buf << "mutual\n";
     for (size_t i = 0; i < functions.size(); ++i) {
-      if (i > 0) {
-        buf << "\n";
-      }
-      buf << printFunction(functions[i]);
+      buf << printFunction(functions[i]) << "\n";
     }
-    buf << "end\n";
+    buf << "end";
   }
   return buf.str();
 }
@@ -280,12 +277,36 @@ void LeanFormula::transformParameterReferences(
 
   // After transforming children, if this is a standalone Int.ofNat(n),
   // transform it
-  if (ExpressionUtil::isSimpleNamedFunction(expr, "Int.ofNat") && offset > 0) {
-    // Replace Int.ofNat(n) with (Int.ofNat n) + offset
-    Expression sum(Expression::Type::SUM);
-    sum.children.push_back(expr);
-    sum.children.push_back(ExpressionUtil::newConstant(offset));
-    expr = sum;
+  if (ExpressionUtil::isSimpleNamedFunction(expr, "Int.ofNat") && offset >= 0) {
+    // Replace Int.ofNat(n) with parameter-based sum n + offset (or just n
+    // when offset == 0). This yields a Nat-typed expression (PARAMETER or
+    // SUM(PARAMETER,CONST)) instead of an Int expression like
+    // (Int.ofNat n) + offset, avoiding Int/Nat type mismatches in
+    // pattern-matching positions.
+    expr = ExpressionUtil::createParameterSum(offset);
+  }
+
+  // Additionally, handle the common pattern (Int.ofNat n) + K where the SUM
+  // node may appear anywhere in the tree (not only directly as a function
+  // argument). Convert such sums into parameter-based sums n + (offset+K)
+  // when there are no other non-constant terms present.
+  if (expr.type == Expression::Type::SUM) {
+    bool hasIntOfNat = false;
+    Number constantsSum = Number::ZERO;
+    std::vector<Expression> otherTerms;
+    for (const auto& term : expr.children) {
+      if (ExpressionUtil::isSimpleNamedFunction(term, "Int.ofNat")) {
+        hasIntOfNat = true;
+      } else if (term.type == Expression::Type::CONSTANT) {
+        constantsSum += term.value;
+      } else {
+        otherTerms.push_back(term);
+      }
+    }
+    if (hasIntOfNat && otherTerms.empty()) {
+      int64_t newConst = offset + constantsSum.asInt();
+      expr = ExpressionUtil::createParameterSum(newConst);
+    }
   }
 
   // finally simplify
