@@ -17,6 +17,9 @@ class FormulaUtil {
   static bool isRecursive(const Formula& formula, const std::string& funcName,
                           Expression::Type type = Expression::Type::FUNCTION);
 
+  static Number getMinimumBaseCase(const Formula& formula,
+                                   const std::string& funcName);
+
   static void removeFunctionEntries(Formula& formula,
                                     const std::string& funcName);
 };

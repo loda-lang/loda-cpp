@@ -32,7 +32,7 @@ class LeanFormula {
   static bool initializeLeanProject();
 
   bool convertToLean(Expression& expr, const Formula& f,
-                     const std::string& funcName);
+                     const std::vector<std::string>& funcNames);
 
   void transformParameterReferences(Expression& expr, int64_t offset,
                                     const std::string& funcName) const;
