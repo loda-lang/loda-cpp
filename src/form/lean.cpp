@@ -115,11 +115,13 @@ bool LeanFormula::convert(const Formula& formula, int64_t offset,
   }
   auto functions =
       FormulaUtil::getDefinitions(formula, Expression::Type::FUNCTION);
-  if (functions.size() != 1) {
+  if (functions.empty()) {
     return false;
   }
+
   lean_formula = {};
   lean_formula.domain = "Int";
+  // If any function is recursive and requires Nat domain, set domain to Nat
   for (const auto& f : functions) {
     if (FormulaUtil::isRecursive(formula, f)) {
       if (offset < 0 ||
@@ -130,6 +132,8 @@ bool LeanFormula::convert(const Formula& formula, int64_t offset,
     }
   }
 
+  // Convert all entries. Use the collected function names to allow calls
+  // between the functions during conversion.
   for (const auto& entry : formula.entries) {
     auto left = entry.first;
     auto right = entry.second;
@@ -143,12 +147,22 @@ bool LeanFormula::convert(const Formula& formula, int64_t offset,
 }
 
 std::string LeanFormula::toString() const {
-  std::string funcName;
-  for (const auto& entry : main_formula.entries) {
-    funcName = entry.first.name;
-    break;
+  auto functions = FormulaUtil::getDefinitions(main_formula);
+
+  std::stringstream buf;
+  if (functions.size() == 1) {
+    buf << printFunction(functions[0]);
+  } else {
+    buf << "mutual\n";
+    for (size_t i = 0; i < functions.size(); ++i) {
+      if (i > 0) {
+        buf << "\n";
+      }
+      buf << printFunction(functions[i]);
+    }
+    buf << "end\n";
   }
-  return printFunction(funcName);
+  return buf.str();
 }
 
 std::string LeanFormula::printFunction(const std::string& funcName) const {
