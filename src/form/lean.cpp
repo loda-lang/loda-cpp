@@ -155,7 +155,7 @@ std::string LeanFormula::toString() const {
   } else {
     buf << "mutual\n";
     for (size_t i = 0; i < functions.size(); ++i) {
-      buf << printFunction(functions[i]) << "\n";
+      buf << "  " << printFunction(functions[i]) << "\n";
     }
     buf << "end";
   }
