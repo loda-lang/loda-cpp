@@ -23,11 +23,15 @@ std::string convertBitfuncToLean(const std::string& bitfunc) {
   return "";
 }
 
-bool LeanFormula::convertToLean(Expression& expr, const Formula& f,
-                                const std::vector<std::string>& funcNames) {
+bool LeanFormula::isLocalFunc(const std::string& funcName) const {
+  return std::find(funcNames.begin(), funcNames.end(), funcName) !=
+         funcNames.end();
+}
+
+bool LeanFormula::convertToLean(Expression& expr) {
   // Check children recursively
   for (auto& c : expr.children) {
-    if (!convertToLean(c, f, funcNames)) {
+    if (!convertToLean(c)) {
       return false;
     }
   }
@@ -87,8 +91,7 @@ bool LeanFormula::convertToLean(Expression& expr, const Formula& f,
         break;
       }
       // Allow calls to locally defined functions incl. recursions
-      if (std::find(funcNames.begin(), funcNames.end(), expr.name) !=
-          funcNames.end()) {
+      if (isLocalFunc(expr.name)) {
         break;
       }
       return false;
@@ -113,14 +116,14 @@ bool LeanFormula::convert(const Formula& formula, int64_t offset,
   if (as_vector) {
     return false;
   }
-  auto functions =
-      FormulaUtil::getDefinitions(formula, Expression::Type::FUNCTION);
-  if (functions.size() != 1) {
-    return false;
-  }
   lean_formula = {};
   lean_formula.domain = "Int";
-  for (const auto& f : functions) {
+  lean_formula.funcNames =
+      FormulaUtil::getDefinitions(formula, Expression::Type::FUNCTION);
+  if (lean_formula.funcNames.size() != 1) {
+    return false;
+  }
+  for (const auto& f : lean_formula.funcNames) {
     if (FormulaUtil::isRecursive(formula, f)) {
       if (offset < 0 ||
           FormulaUtil::getMinimumBaseCase(formula, f) != Number::ZERO) {
@@ -133,7 +136,7 @@ bool LeanFormula::convert(const Formula& formula, int64_t offset,
   for (const auto& entry : formula.entries) {
     auto left = entry.first;
     auto right = entry.second;
-    if (!lean_formula.convertToLean(right, formula, functions)) {
+    if (!lean_formula.convertToLean(right)) {
       return false;
     }
     lean_formula.main_formula.entries[left] = right;
