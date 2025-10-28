@@ -530,6 +530,10 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   FormulaSimplify::replaceTrivialRecursions(formula);
   Log::get().debug("Resolved simple recursions: " + formula.toString());
 
+  // replace geometric progressions
+  FormulaSimplify::replaceGeometricProgressions(formula);
+  Log::get().debug("Resolved geometric progressions: " + formula.toString());
+
   // resolve simple functions
   FormulaSimplify::resolveSimpleFunctions(formula);
   Log::get().debug("Resolved simple functions: " + formula.toString());
@@ -722,6 +726,9 @@ bool FormulaGenerator::generate(const Program& p, int64_t id, Formula& result,
 
   // replace simple references to recursive functions
   FormulaSimplify::replaceSimpleRecursiveRefs(result);
+
+  // replace geometric progressions
+  FormulaSimplify::replaceGeometricProgressions(result);
 
   // replace functions A000142(n) by n! in all formula definitions
   const auto factorialSeqName = FACTORIAL_SEQ_ID.string();

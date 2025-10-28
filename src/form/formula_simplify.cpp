@@ -412,3 +412,131 @@ void FormulaSimplify::replaceSimpleRecursiveRefs(Formula& formula) {
     processedRecursiveFuncs.insert(funcName);
   }
 }
+
+void FormulaSimplify::replaceGeometricProgressions(Formula& formula) {
+  // collect functions
+  std::set<std::string> funcs;
+  for (auto& e : formula.entries) {
+    if (ExpressionUtil::isSimpleFunction(e.first)) {
+      funcs.insert(e.first.name);
+    }
+  }
+  // collect and check their ratios and initial values
+  std::map<std::string, Number> ratios, initialValues;
+  std::map<std::string, Expression> params;
+  std::map<Number, Number> constants;
+  for (auto& f : funcs) {
+    constants.clear();
+    bool found_ratio = false;
+    Number ratio = 1;
+    for (auto& e : formula.entries) {
+      if (e.first.type != Expression::Type::FUNCTION) {
+        continue;
+      }
+      if (e.first.name != f) {
+        continue;
+      }
+      auto arg_type = e.first.children.front().type;
+      if (arg_type == Expression::Type::CONSTANT) {
+        if (e.second.type != Expression::Type::CONSTANT) {
+          constants.clear();
+          break;
+        }
+        constants[e.first.children.front().value] = e.second.value;
+      } else if (arg_type == Expression::Type::PARAMETER) {
+        params[f] = e.first.children.front();
+        auto val = e.second;
+        // Check if it's a product: c * f(n-1)
+        if (val.type != Expression::Type::PRODUCT) {
+          found_ratio = false;
+          break;
+        }
+        if (val.children.size() != 2) {
+          found_ratio = false;
+          break;
+        }
+        // One child should be a constant (the ratio)
+        // The other should be f(n-1)
+        Expression predecessor(
+            Expression::Type::SUM, "",
+            {params[f],
+             Expression(Expression::Type::CONSTANT, "", Number(-1))});
+        Expression prevTerm(Expression::Type::FUNCTION, f, {predecessor});
+        
+        int constantIdx = -1;
+        int functionIdx = -1;
+        if (val.children.at(0).type == Expression::Type::CONSTANT) {
+          constantIdx = 0;
+          functionIdx = 1;
+        } else if (val.children.at(1).type == Expression::Type::CONSTANT) {
+          constantIdx = 1;
+          functionIdx = 0;
+        } else {
+          found_ratio = false;
+          break;
+        }
+        
+        if (val.children.at(functionIdx) != prevTerm) {
+          found_ratio = false;
+          break;
+        }
+        ratio = val.children.at(constantIdx).value;
+        found_ratio = true;
+      } else {
+        found_ratio = false;
+        break;
+      }
+    }
+    if (!found_ratio || constants.find(Number::ZERO) == constants.end()) {
+      continue;
+    }
+    auto initial = constants.at(Number::ZERO);
+    // Verify that all constant terms match the geometric progression: a * r^n
+    for (const auto& c : constants) {
+      auto expected_val = initial;
+      for (Number i = Number::ZERO; i < c.first; i += Number::ONE) {
+        expected_val *= ratio;
+      }
+      if (c.second != expected_val) {
+        found_ratio = false;
+        break;
+      }
+    }
+    if (found_ratio) {
+      ratios[f] = ratio;
+      initialValues[f] = initial;
+    }
+  }
+  // Replace geometric progressions with exponential formulas
+  for (auto& f : funcs) {
+    if (ratios.find(f) == ratios.end()) {
+      continue;
+    }
+    // remove function
+    auto it = formula.entries.begin();
+    while (it != formula.entries.end()) {
+      if (it->first.name == f) {
+        it = formula.entries.erase(it);
+      } else {
+        it++;
+      }
+    }
+    // add simple function with exponential formula
+    Expression power(
+        Expression::Type::POWER, "",
+        {Expression(Expression::Type::CONSTANT, "", ratios[f]), params[f]});
+    Expression result;
+    if (initialValues[f] == Number::ONE) {
+      // f(n) = r^n
+      result = power;
+    } else {
+      // f(n) = a * r^n
+      result = Expression(
+          Expression::Type::PRODUCT, "",
+          {Expression(Expression::Type::CONSTANT, "", initialValues[f]), power});
+    }
+    ExpressionUtil::normalize(result);
+    Expression func(Expression::Type::FUNCTION, f, {params[f]});
+    formula.entries[func] = result;
+  }
+}
