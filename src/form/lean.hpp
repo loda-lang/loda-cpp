@@ -28,14 +28,14 @@ class LeanFormula {
   Formula main_formula;
   std::string domain;  // Int or Nat
   std::set<std::string> imports;
+  std::vector<std::string> funcNames;
 
   static bool initializeLeanProject();
 
-  bool convertToLean(Expression& expr, const Formula& f,
-                     const std::vector<std::string>& funcNames);
+  bool convertToLean(Expression& expr, Number patternOffset,
+                     bool insideOfLocalFunc);
+
+  bool isLocalFunc(const std::string& funcName) const;
 
   std::string printFunction(const std::string& funcName) const;
-
-  void transformParameterReferences(Expression& expr, int64_t offset,
-                                    const std::string& funcName) const;
 };
