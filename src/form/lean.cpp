@@ -136,7 +136,7 @@ bool LeanFormula::convert(const Formula& formula, int64_t offset,
   }
   for (const auto& f : lean_formula.funcNames) {
     if (FormulaUtil::isRecursive(formula, f)) {
-      if (offset < 0 ||
+      if (offset != 0 ||
           FormulaUtil::getMinimumBaseCase(formula, f) != Number::ZERO) {
         return false;
       }
