@@ -12,7 +12,7 @@
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
 #include "mine/config.hpp"
-#include "mine/generator.hpp"
+#include "gen/generator.hpp"
 #include "mine/mine_manager.hpp"
 #include "mine/mutator.hpp"
 #include "seq/seq_program.hpp"

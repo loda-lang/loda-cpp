@@ -1,4 +1,4 @@
-#include "mine/blocks.hpp"
+#include "gen/blocks.hpp"
 
 #include <fstream>
 #include <string>
