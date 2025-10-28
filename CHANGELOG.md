@@ -6,6 +6,7 @@
 
 ### Enhancements
 
+* Simplify geometric progressions in formula generation (e.g., `b(n) = 2*b(n-1)` becomes `b(n) = 2^n`)
 * Add LEAN project support for testing
 
 ## v25.10.19
