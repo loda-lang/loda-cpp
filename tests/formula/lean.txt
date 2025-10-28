@@ -24,16 +24,16 @@ A004273: def a (n : Int) : Int := max (2*n-1) 0
 A004277: def a (n : Int) : Int := max (2*n) 1
 A004444: def a (n : Int) : Int := Int.xor n 3
 A004518: def a (n : Int) : Int := 2*(Int.land n 91)
-A004964: def a (n : Int) : Int := (Bool.toInt (0 != n))+76*n
-A004966: def a (n : Int) : Int := (Bool.toInt (n>=1))+199*n
-A004972: def a (n : Int) : Int := (Bool.toInt (0 != n))+3571*n
+A004964: def a (n : Int) : Int := 76*n+(Bool.toInt (0 != n))
+A004966: def a (n : Int) : Int := 199*n+(Bool.toInt (n>=1))
+A004972: def a (n : Int) : Int := 3571*n+(Bool.toInt (0 != n))
 A005004: def a (n : Int) : Int := 2*n+(max (-(Int.gcd (n-1) 2)+n-2) 0)-1
 A005600: def a (n : Int) : Int := (3*(min (n-3) 6)-(Bool.toInt ((n%4)==0))+1)%10
 A005818: def a (n : Int) : Int := 2*n-2*(Bool.toInt (0==(n-1)))+3
 A006221: def a (n : Int) : Int := n*(n*(34*n+51)+27)+5
 A007899: def a (n : Int) : Int := -(Bool.toInt (0==n))+(Int.fdiv (21*n^2) 2)+2
 A008369: def a (n : Int) : Int := Int.fdiv ((Int.xor (n^2) 3)*((Int.xor (n^2) 3)+341)) 576
-A008531: def a (n : Int) : Int := (Bool.toInt (n==0))+n*(5*n^2+5)
+A008531: def a (n : Int) : Int := n*(5*n^2+5)+(Bool.toInt (n==0))
 A008576: def a (n : Int) : Int := (Int.tdiv (8*n-2) 3)+1
 A008577: def a (n : Int) : Int := Int.fdiv ((2*n+1)^2+3) 3
 A010170: def a (n : Int) : Int := ((Int.gcd (-(Bool.toInt (n==0))+n) 2)+7)*((Bool.toInt (n==0))+(Int.gcd (-(Bool.toInt (n==0))+n) 2)+7)-63

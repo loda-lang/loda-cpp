@@ -28,10 +28,14 @@ bool LeanFormula::isLocalFunc(const std::string& funcName) const {
          funcNames.end();
 }
 
-bool LeanFormula::convertToLean(Expression& expr) {
+bool LeanFormula::convertToLean(Expression& expr, Number patternOffset,
+                                bool insideOfLocalFunc) {
+  bool childInsideOfLocalFunc =
+      insideOfLocalFunc ||
+      (expr.type == Expression::Type::FUNCTION && isLocalFunc(expr.name));
   // Check children recursively
   for (auto& c : expr.children) {
-    if (!convertToLean(c)) {
+    if (!convertToLean(c, patternOffset, childInsideOfLocalFunc)) {
       return false;
     }
   }
@@ -50,9 +54,15 @@ bool LeanFormula::convertToLean(Expression& expr) {
       break;
     }
     case Expression::Type::PARAMETER: {
-      if (domain == "Nat") {
+      if (domain == "Nat" && !insideOfLocalFunc) {
         Expression cast(Expression::Type::FUNCTION, "Int.ofNat", {expr});
         expr = cast;
+      }
+      if (patternOffset != Number::ZERO && patternOffset != Number::INF) {
+        Expression sum(
+            Expression::Type::SUM, "",
+            {expr, ExpressionUtil::newConstant(patternOffset.asInt())});
+        expr = sum;
       }
       break;
     }
@@ -107,6 +117,7 @@ bool LeanFormula::convertToLean(Expression& expr) {
     default:
       break;
   }
+  ExpressionUtil::normalize(expr);
   return true;
 }
 
@@ -133,10 +144,29 @@ bool LeanFormula::convert(const Formula& formula, int64_t offset,
     }
   }
 
+  std::map<std::string, int64_t> maxBaseCases;
+  for (const auto& entry : formula.entries) {
+    if (entry.first.type != Expression::Type::FUNCTION ||
+        entry.first.children.size() != 1) {
+      continue;
+    }
+    const auto& arg = entry.first.children.front();
+    if (arg.type == Expression::Type::CONSTANT) {
+      if (maxBaseCases[entry.first.name] < arg.value.asInt()) {
+        maxBaseCases[entry.first.name] = arg.value.asInt();
+      }
+    }
+  }
+
   for (const auto& entry : formula.entries) {
     auto left = entry.first;
     auto right = entry.second;
-    if (!lean_formula.convertToLean(right)) {
+    Number patternOffset = Number::INF;
+    if (ExpressionUtil::isSimpleFunction(left, true) &&
+        maxBaseCases.find(left.name) != maxBaseCases.end()) {
+      patternOffset = maxBaseCases[left.name] + 1;
+    }
+    if (!lean_formula.convertToLean(right, patternOffset, false)) {
       return false;
     }
     lean_formula.main_formula.entries[left] = right;
@@ -200,13 +230,8 @@ std::string LeanFormula::printFunction(const std::string& funcName) const {
         // Find the largest base case value (map is ordered ascending)
         int64_t maxBaseCase = baseCases.rbegin()->first;
         int64_t patternOffset = maxBaseCase + 1;
-
-        // Transform the RHS: replace (n-k) with (n+(patternOffset-k))
-        Expression transformedRHS = recursiveRHS;
-        transformParameterReferences(transformedRHS, patternOffset, funcName);
-
         buf << " | n+" << patternOffset << " => "
-            << transformedRHS.toString(true);
+            << recursiveRHS.toString(true);
       } else {
         buf << " | n => " << recursiveRHS.toString(true);
       }
@@ -220,65 +245,6 @@ std::string LeanFormula::printFunction(const std::string& funcName) const {
   }
 
   return buf.str();
-}
-
-void LeanFormula::transformParameterReferences(
-    Expression& expr, int64_t offset, const std::string& funcName) const {
-  // If this is a function call to funcName, transform its argument first
-  // before recursing into children
-  if (expr.type == Expression::Type::FUNCTION && expr.name == funcName) {
-    if (expr.children.size() == 1) {
-      auto& arg = expr.children[0];
-      // Check if the argument is (Int.ofNat n) + k
-      if (arg.type == Expression::Type::SUM && arg.children.size() >= 2) {
-        // Look for Int.ofNat cast and constant
-        bool hasIntOfNat = false;
-        Number constantValue = Number::ZERO;
-        std::vector<Expression> otherTerms;
-
-        for (const auto& term : arg.children) {
-          if (ExpressionUtil::isSimpleNamedFunction(term, "Int.ofNat")) {
-            hasIntOfNat = true;
-          } else if (term.type == Expression::Type::CONSTANT) {
-            constantValue += term.value;
-          } else {
-            otherTerms.push_back(term);
-          }
-        }
-
-        if (hasIntOfNat && otherTerms.empty()) {
-          // We have (Int.ofNat n) + constant
-          // Transform to n + (offset + constant)
-          int64_t newConstant = offset + constantValue.asInt();
-          expr.children[0] = ExpressionUtil::createParameterSum(newConstant);
-        }
-      } else if (ExpressionUtil::isSimpleNamedFunction(arg, "Int.ofNat")) {
-        // Simple case: just (Int.ofNat n)
-        // Transform to n + offset
-        expr.children[0] = ExpressionUtil::createParameterSum(offset);
-      }
-    }
-    // Don't recurse into function call arguments after transforming them
-    return;
-  }
-
-  // Transform recursively for all children
-  for (auto& child : expr.children) {
-    transformParameterReferences(child, offset, funcName);
-  }
-
-  // After transforming children, if this is a standalone Int.ofNat(n),
-  // transform it
-  if (ExpressionUtil::isSimpleNamedFunction(expr, "Int.ofNat") && offset > 0) {
-    // Replace Int.ofNat(n) with (Int.ofNat n) + offset
-    Expression sum(Expression::Type::SUM);
-    sum.children.push_back(expr);
-    sum.children.push_back(ExpressionUtil::newConstant(offset));
-    expr = sum;
-  }
-
-  // finally simplify
-  ExpressionUtil::normalize(expr);
 }
 
 std::string LeanFormula::printEvalCode(int64_t offset, int64_t numTerms) const {
