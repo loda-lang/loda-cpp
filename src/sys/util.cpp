@@ -379,7 +379,8 @@ std::string formatDuration(int64_t microseconds) {
 
 std::string escapeDiscordMarkdown(const std::string& str) {
   std::string result;
-  result.reserve(str.size());
+  // Reserve extra space to avoid reallocations when escaping special characters
+  result.reserve(str.size() * 2);
   for (char c : str) {
     // Escape Discord markdown special characters: * _ ~ ` | >
     // Backslash itself needs to be escaped first

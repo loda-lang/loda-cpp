@@ -594,12 +594,14 @@ void MineManager::alert(Program p, UID id, const std::string &prefix,
                         const std::string &submitter) const {
   const auto &seq = sequences.get(id);
   std::string msg, full;
+  
+  // msg is for logging (no markdown escaping needed)
   msg = prefix + " program for " + seq.string();
   if (msg[msg.size() - 1] != '.') {
     msg += ".";
   }
   
-  // For Discord, we need to escape markdown in the sequence name
+  // full is for Discord (markdown escaping needed for sequence name)
   std::string seq_string_escaped = escapeDiscordMarkdown(seq.string());
   full = prefix + " program for " + seq_string_escaped;
   if (full[full.size() - 1] != '.') {
