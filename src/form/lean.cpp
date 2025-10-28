@@ -375,7 +375,7 @@ bool LeanFormula::initializeLeanProject() {
   // timeout). Use a larger timeout here because fetching mathlib and
   // preparing the toolchain can be slow on first run.
   std::vector<std::string> updateArgs = {"lake", "update"};
-  int updateTimeout = 900;  // 15 minutes
+  int updateTimeout = 300;  // 5 minutes
   int exitCode = execWithTimeout(updateArgs, updateTimeout, "", projectDir);
   if (exitCode != 0) {
     Log::get().warn("lake update failed with exit code " +
@@ -383,6 +383,15 @@ bool LeanFormula::initializeLeanProject() {
     std::remove(lakeFilePath.c_str());
     return false;
   }
+  updateArgs = {"lake", "exe", "cache", "get"};
+  exitCode = execWithTimeout(updateArgs, updateTimeout, "", projectDir);
+  if (exitCode != 0) {
+    Log::get().warn("lake exe cache get failed with exit code " +
+                    std::to_string(exitCode));
+    std::remove(lakeFilePath.c_str());
+    return false;
+  }
+
   initialized = true;
   return true;
 }
