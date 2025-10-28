@@ -78,6 +78,7 @@ void Test::fast() {
   knownPrograms();
   formula();
   range();
+  discordEscape();
 }
 
 void Test::slow() {
@@ -1805,5 +1806,70 @@ void Test::testMatcherPair(Matcher& matcher, size_t id1, size_t id2) {
                          " matcher generated wrong program for " +
                          uid2.string(),
                      true);
+  }
+}
+
+void Test::discordEscape() {
+  // Test escaping of Discord markdown special characters
+  Log::get().info("Testing Discord markdown escaping");
+  
+  // Test basic cases
+  if (escapeDiscordMarkdown("hello") != "hello") {
+    Log::get().error("Discord escape failed for plain text", true);
+  }
+  
+  // Test asterisks (commonly used in math formulas)
+  if (escapeDiscordMarkdown("a*b") != "a\\*b") {
+    Log::get().error("Discord escape failed for asterisks", true);
+  }
+  
+  if (escapeDiscordMarkdown("n^2*phi(n)") != "n^2\\*phi(n)") {
+    Log::get().error("Discord escape failed for formula with asterisks", true);
+  }
+  
+  // Test underscores
+  if (escapeDiscordMarkdown("a_n") != "a\\_n") {
+    Log::get().error("Discord escape failed for underscores", true);
+  }
+  
+  // Test backticks
+  if (escapeDiscordMarkdown("code`here") != "code\\`here") {
+    Log::get().error("Discord escape failed for backticks", true);
+  }
+  
+  // Test tildes
+  if (escapeDiscordMarkdown("~text~") != "\\~text\\~") {
+    Log::get().error("Discord escape failed for tildes", true);
+  }
+  
+  // Test pipes
+  if (escapeDiscordMarkdown("a|b") != "a\\|b") {
+    Log::get().error("Discord escape failed for pipes", true);
+  }
+  
+  // Test angle brackets
+  if (escapeDiscordMarkdown(">quote") != "\\>quote") {
+    Log::get().error("Discord escape failed for angle brackets", true);
+  }
+  
+  // Test backslashes
+  if (escapeDiscordMarkdown("a\\b") != "a\\\\b") {
+    Log::get().error("Discord escape failed for backslashes", true);
+  }
+  
+  // Test multiple special characters
+  if (escapeDiscordMarkdown("*a*_b_~c~") != "\\*a\\*\\_b\\_\\~c\\~") {
+    Log::get().error("Discord escape failed for multiple special chars", true);
+  }
+  
+  // Test real-world sequence name examples
+  if (escapeDiscordMarkdown("A000045: Fibonacci numbers") != 
+      "A000045: Fibonacci numbers") {
+    Log::get().error("Discord escape failed for simple sequence name", true);
+  }
+  
+  if (escapeDiscordMarkdown("A001234: Numbers n such that n*phi(n) is a square") != 
+      "A001234: Numbers n such that n\\*phi(n) is a square") {
+    Log::get().error("Discord escape failed for sequence name with asterisk", true);
   }
 }

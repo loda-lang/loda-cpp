@@ -376,3 +376,18 @@ std::string formatDuration(int64_t microseconds) {
   }
   return buf.str();
 }
+
+std::string escapeDiscordMarkdown(const std::string& str) {
+  std::string result;
+  result.reserve(str.size());
+  for (char c : str) {
+    // Escape Discord markdown special characters: * _ ~ ` | >
+    // Backslash itself needs to be escaped first
+    if (c == '\\' || c == '*' || c == '_' || c == '~' || c == '`' ||
+        c == '|' || c == '>') {
+      result += '\\';
+    }
+    result += c;
+  }
+  return result;
+}

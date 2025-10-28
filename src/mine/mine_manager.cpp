@@ -598,7 +598,15 @@ void MineManager::alert(Program p, UID id, const std::string &prefix,
   if (msg[msg.size() - 1] != '.') {
     msg += ".";
   }
-  full = msg + " Terms: " + seq.getTerms(settings.num_terms).to_string();
+  
+  // For Discord, we need to escape markdown in the sequence name
+  std::string seq_string_escaped = escapeDiscordMarkdown(seq.string());
+  full = prefix + " program for " + seq_string_escaped;
+  if (full[full.size() - 1] != '.') {
+    full += ".";
+  }
+  full += " Terms: " + seq.getTerms(settings.num_terms).to_string();
+  
   FormulaGenerator generator;
   Formula formula;
   if (generator.generate(p, id.number(), formula, false)) {
