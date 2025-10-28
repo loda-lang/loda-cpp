@@ -6,6 +6,7 @@
 
 #include "eval/fold.hpp"
 #include "eval/minimizer.hpp"
+#include "eval/semantics.hpp"
 #include "lang/constants.hpp"
 #include "lang/program_cache.hpp"
 #include "lang/program_util.hpp"
@@ -16,12 +17,26 @@
 #include "sys/setup.hpp"
 #include "sys/util.hpp"
 
-bool hasBadConstant(const Program& p) {
-  auto constants = Constants::getAllConstants(p, true);
-  return std::any_of(constants.begin(), constants.end(), [](const Number& c) {
-    return (Minimizer::getPowerOf(c) != 0 ||
-            Number(100000) < c);  // magic number
-  });
+int64_t getConstantScore(const Program& p) {
+  Number largest = Number::ZERO;
+  for (const auto& op : p.ops) {
+    // Exclude constants in SEQ operations
+    if (op.type == Operation::Type::SEQ) {
+      continue;
+    }
+    auto num_operands = Operation::Metadata::get(op.type).num_operands;
+    if (num_operands > 1 && op.source.type == Operand::Type::CONSTANT &&
+        ProgramUtil::isArithmetic(op.type)) {
+      if (largest < op.source.value) {
+        largest = op.source.value;
+      }
+    }
+  }
+  // Return log2 of the largest constant
+  if (largest <= Number::ZERO) {
+    return 0;
+  }
+  return Semantics::log(largest, Number::TWO).asInt();
 }
 
 bool hasBadLoop(const Program& p) {
@@ -48,8 +63,10 @@ bool hasIndirectOperand(const Program& p) {
 
 bool isSimpler(const Program& existing, const Program& optimized) {
   bool optimized_has_seq = ProgramUtil::hasOp(optimized, Operation::Type::SEQ);
-  if (hasBadConstant(existing) && !hasBadConstant(optimized) &&
-      !optimized_has_seq) {
+  // Compare constant scores: lower score (smaller constants) is simpler
+  int64_t existing_score = getConstantScore(existing);
+  int64_t optimized_score = getConstantScore(optimized);
+  if (existing_score > optimized_score && !optimized_has_seq) {
     return true;
   }
   if (hasBadLoop(existing) && !hasBadLoop(optimized) && !optimized_has_seq) {
