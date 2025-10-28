@@ -43,8 +43,28 @@ bool LeanFormula::convertToLean(Expression& expr, Number patternOffset,
     case Expression::Type::IF:
     case Expression::Type::LOCAL:
     case Expression::Type::VECTOR:
-    case Expression::Type::FACTORIAL:
       return false;
+    case Expression::Type::FACTORIAL: {
+      // Convert factorial to Nat.factorial function call
+      // The factorial expression should have exactly one child (the argument)
+      if (expr.children.size() != 1) {
+        return false;
+      }
+      auto arg = expr.children[0];
+      
+      // Create Int.toNat call to convert Int to Nat
+      Expression toNat(Expression::Type::FUNCTION, "Int.toNat", {arg});
+      
+      // Create Nat.factorial call
+      Expression factorial(Expression::Type::FUNCTION, "Nat.factorial", {toNat});
+      
+      // Cast result back to Int
+      Expression result(Expression::Type::FUNCTION, "Int.ofNat", {factorial});
+      
+      expr = result;
+      imports.insert("Mathlib.Data.Nat.Factorial.Basic");
+      break;
+    }
     case Expression::Type::EQUAL:
     case Expression::Type::NOT_EQUAL:
     case Expression::Type::LESS_EQUAL:
