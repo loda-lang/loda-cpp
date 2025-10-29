@@ -7,6 +7,7 @@
 ### Enhancements
 
 * Add LEAN project support for testing
+* Simplify generated expressions for `fac` operations
 
 ## v25.10.19
 
