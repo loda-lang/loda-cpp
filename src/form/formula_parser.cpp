@@ -184,7 +184,7 @@ Expression FormulaParser::parseAddSub() {
 
 Expression FormulaParser::parseTerm() {
   // Parse multiplication, division, and modulus
-  Expression left = parsePower();
+  Expression left = parseUnary();
   
   while (true) {
     skipWhitespace();
@@ -192,7 +192,7 @@ Expression FormulaParser::parseTerm() {
     if (op == '*' || op == '/' || op == '%') {
       next();
       skipWhitespace();
-      Expression right = parsePower();
+      Expression right = parseUnary();
       
       if (op == '*') {
         if (left.type == Expression::Type::PRODUCT) {
@@ -222,26 +222,8 @@ Expression FormulaParser::parseTerm() {
   return left;
 }
 
-Expression FormulaParser::parsePower() {
-  // Parse exponentiation (right-associative)
-  Expression left = parseUnary();
-  
-  skipWhitespace();
-  if (peek() == '^') {
-    next();
-    skipWhitespace();
-    Expression right = parsePower();  // Right-associative
-    Expression pow(Expression::Type::POWER);
-    pow.newChild(left);
-    pow.newChild(right);
-    return pow;
-  }
-  
-  return left;
-}
-
 Expression FormulaParser::parseUnary() {
-  // Parse unary minus and factorial
+  // Parse unary minus
   skipWhitespace();
   if (peek() == '-') {
     next();
@@ -265,6 +247,29 @@ Expression FormulaParser::parseUnary() {
     }
   }
   
+  return parsePower();
+}
+
+Expression FormulaParser::parsePower() {
+  // Parse exponentiation (right-associative)
+  Expression left = parsePostfix();
+  
+  skipWhitespace();
+  if (peek() == '^') {
+    next();
+    skipWhitespace();
+    Expression right = parsePower();  // Right-associative
+    Expression pow(Expression::Type::POWER);
+    pow.newChild(left);
+    pow.newChild(right);
+    return pow;
+  }
+  
+  return left;
+}
+
+Expression FormulaParser::parsePostfix() {
+  // Parse factorial
   Expression result = parsePrimary();
   
   // Check for factorial (but not if it's part of !=)
