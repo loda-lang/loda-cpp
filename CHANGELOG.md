@@ -7,6 +7,8 @@
 ### Enhancements
 
 * Add LEAN project support for testing
+* Simplify fac operations with small constants (-3 to 3) to PRODUCT expressions instead of FACTORIAL
+* Optimize trivial fac cases (k=0, k=1, k=-1) to constants or identity
 
 ## v25.10.19
 
