@@ -61,6 +61,61 @@ void replaceFunctionWithExpression(Formula& formula, const std::string& funcName
   formula.entries[func] = newExpr;
 }
 
+// Helper function to detect pattern: c * f(n-1) or c + f(n-1)
+// Returns true if pattern is detected, and sets constant value in result
+bool detectRecursivePattern(const Expression& val, const std::string& funcName,
+                            const Expression& param,
+                            Expression::Type opType, Number& constant) {
+  // Check if expression type matches the operation type
+  if (val.type != opType) {
+    return false;
+  }
+  if (val.children.size() != 2) {
+    return false;
+  }
+
+  // Build the expected f(n-1) expression
+  Expression predecessor(
+      Expression::Type::SUM, "",
+      {param, Expression(Expression::Type::CONSTANT, "", Number(-1))});
+  Expression prevTerm(Expression::Type::FUNCTION, funcName, {predecessor});
+
+  // For SUM: f(n-1) must be first, constant second
+  if (opType == Expression::Type::SUM) {
+    if (val.children.at(1).type != Expression::Type::CONSTANT) {
+      return false;
+    }
+    if (val.children.at(0) != prevTerm) {
+      return false;
+    }
+    constant = val.children.at(1).value;
+    return true;
+  }
+
+  // For PRODUCT: constant and f(n-1) can be in any order
+  if (opType == Expression::Type::PRODUCT) {
+    int constantIdx = -1;
+    int functionIdx = -1;
+    if (val.children.at(0).type == Expression::Type::CONSTANT) {
+      constantIdx = 0;
+      functionIdx = 1;
+    } else if (val.children.at(1).type == Expression::Type::CONSTANT) {
+      constantIdx = 1;
+      functionIdx = 0;
+    } else {
+      return false;
+    }
+
+    if (val.children.at(functionIdx) != prevTerm) {
+      return false;
+    }
+    constant = val.children.at(constantIdx).value;
+    return true;
+  }
+
+  return false;
+}
+
 }  // namespace
 
 void FormulaSimplify::resolveIdentities(Formula& formula) {
@@ -162,29 +217,13 @@ void FormulaSimplify::replaceTrivialRecursions(Formula& formula) {
       } else if (arg_type == Expression::Type::PARAMETER) {
         params[f] = e.first.children.front();
         auto val = e.second;
-        if (val.type != Expression::Type::SUM) {
+        if (detectRecursivePattern(val, f, params[f], Expression::Type::SUM,
+                                   slope)) {
+          found_slope = true;
+        } else {
           found_slope = false;
           break;
         }
-        if (val.children.size() != 2) {
-          found_slope = false;
-          break;
-        }
-        if (val.children.at(1).type != Expression::Type::CONSTANT) {
-          found_slope = false;
-          break;
-        }
-        Expression predecessor(
-            Expression::Type::SUM, "",
-            {params[f],
-             Expression(Expression::Type::CONSTANT, "", Number(-1))});
-        Expression prevTerm(Expression::Type::FUNCTION, f, {predecessor});
-        if (val.children.at(0) != prevTerm) {
-          found_slope = false;
-          break;
-        }
-        slope = val.children.at(1).value;
-        found_slope = true;
       } else {
         found_slope = false;
         break;
@@ -480,42 +519,13 @@ void FormulaSimplify::replaceGeometricProgressions(Formula& formula) {
       } else if (arg_type == Expression::Type::PARAMETER) {
         params[f] = e.first.children.front();
         auto val = e.second;
-        // Check if it's a product: c * f(n-1)
-        if (val.type != Expression::Type::PRODUCT) {
-          found_ratio = false;
-          break;
-        }
-        if (val.children.size() != 2) {
-          found_ratio = false;
-          break;
-        }
-        // One child should be a constant (the ratio)
-        // The other should be f(n-1)
-        Expression predecessor(
-            Expression::Type::SUM, "",
-            {params[f],
-             Expression(Expression::Type::CONSTANT, "", Number(-1))});
-        Expression prevTerm(Expression::Type::FUNCTION, f, {predecessor});
-        
-        int constantIdx = -1;
-        int functionIdx = -1;
-        if (val.children.at(0).type == Expression::Type::CONSTANT) {
-          constantIdx = 0;
-          functionIdx = 1;
-        } else if (val.children.at(1).type == Expression::Type::CONSTANT) {
-          constantIdx = 1;
-          functionIdx = 0;
+        if (detectRecursivePattern(val, f, params[f], Expression::Type::PRODUCT,
+                                   ratio)) {
+          found_ratio = true;
         } else {
           found_ratio = false;
           break;
         }
-        
-        if (val.children.at(functionIdx) != prevTerm) {
-          found_ratio = false;
-          break;
-        }
-        ratio = val.children.at(constantIdx).value;
-        found_ratio = true;
       } else {
         found_ratio = false;
         break;
