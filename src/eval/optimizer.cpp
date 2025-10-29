@@ -203,13 +203,15 @@ bool Optimizer::mergeOps(Program &p) const {
               do_merge = true;
             }
           } else {
-            o1.source.value = new_o1_value;
-            if (gcd == o2.source.value) {
-              do_merge = true;
-            } else if (gcd != Number::ONE) {
-              o2.source.value = Semantics::div(o2.source.value, gcd);
-              updated = true;
-            }
+          	if (o1.source.value.odd() || !new_o1_value.odd()){
+          	  o1.source.value = new_o1_value;
+              if (gcd == o2.source.value) {
+                do_merge = true;
+              } else if (gcd != Number::ONE) {
+                o2.source.value = Semantics::div(o2.source.value, gcd);
+                updated = true;
+              }
+		    }
           }
         }
 
