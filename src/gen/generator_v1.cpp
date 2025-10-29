@@ -1,4 +1,4 @@
-#include "mine/generator_v1.hpp"
+#include "gen/generator_v1.hpp"
 
 #include <ctype.h>
 

@@ -1,9 +1,9 @@
-#include "mine/generator_v5.hpp"
+#include "gen/generator_v5.hpp"
 
 #include <algorithm>
 
 #include "lang/program_util.hpp"
-#include "mine/generator.hpp"
+#include "gen/generator.hpp"
 #include "mine/stats.hpp"
 
 GeneratorV5::GeneratorV5(const Config &config, const Stats &stats)

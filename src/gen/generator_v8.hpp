@@ -1,7 +1,7 @@
 #pragma once
 
 #include "lang/parser.hpp"
-#include "mine/generator.hpp"
+#include "gen/generator.hpp"
 #include "mine/mutator.hpp"
 #include "sys/util.hpp"
 
