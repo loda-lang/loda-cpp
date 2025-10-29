@@ -200,6 +200,7 @@ bool Optimizer::mergeOps(Program &p) const {
               do_merge = true;
             } else {
               o1.source.value = new_o1_value;
+              do_merge = true;
             }
           } else {
             o1.source.value = new_o1_value;
