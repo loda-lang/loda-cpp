@@ -7,6 +7,62 @@
 #include "form/expression_util.hpp"
 #include "form/formula_util.hpp"
 
+namespace {
+
+// Helper function to collect simple functions from formula
+std::set<std::string> collectSimpleFunctions(const Formula& formula) {
+  std::set<std::string> funcs;
+  for (auto& e : formula.entries) {
+    if (ExpressionUtil::isSimpleFunction(e.first)) {
+      funcs.insert(e.first.name);
+    }
+  }
+  return funcs;
+}
+
+// Helper function to collect constant terms for a function
+bool collectConstantTerms(const Formula& formula, const std::string& funcName,
+                          std::map<Number, Number>& constants) {
+  constants.clear();
+  for (auto& e : formula.entries) {
+    if (e.first.type != Expression::Type::FUNCTION) {
+      continue;
+    }
+    if (e.first.name != funcName) {
+      continue;
+    }
+    auto arg_type = e.first.children.front().type;
+    if (arg_type == Expression::Type::CONSTANT) {
+      if (e.second.type != Expression::Type::CONSTANT) {
+        constants.clear();
+        return false;
+      }
+      constants[e.first.children.front().value] = e.second.value;
+    }
+  }
+  return !constants.empty();
+}
+
+// Helper function to replace function entries with a simplified expression
+void replaceFunctionWithExpression(Formula& formula, const std::string& funcName,
+                                   const Expression& param,
+                                   const Expression& newExpr) {
+  // Remove old function entries
+  auto it = formula.entries.begin();
+  while (it != formula.entries.end()) {
+    if (it->first.name == funcName) {
+      it = formula.entries.erase(it);
+    } else {
+      it++;
+    }
+  }
+  // Add new simplified function
+  Expression func(Expression::Type::FUNCTION, funcName, {param});
+  formula.entries[func] = newExpr;
+}
+
+}  // namespace
+
 void FormulaSimplify::resolveIdentities(Formula& formula) {
   auto copy = formula.entries;
   for (auto& e : copy) {
@@ -81,18 +137,15 @@ void FormulaSimplify::resolveSimpleFunctions(Formula& formula) {
 
 void FormulaSimplify::replaceTrivialRecursions(Formula& formula) {
   // collect functions
-  std::set<std::string> funcs;
-  for (auto& e : formula.entries) {
-    if (ExpressionUtil::isSimpleFunction(e.first)) {
-      funcs.insert(e.first.name);
-    }
-  }
+  auto funcs = collectSimpleFunctions(formula);
   // collect and check their slopes and offsets
   std::map<std::string, Number> slopes, offsets;
   std::map<std::string, Expression> params;
   std::map<Number, Number> constants;
   for (auto& f : funcs) {
-    constants.clear();
+    if (!collectConstantTerms(formula, f, constants)) {
+      continue;
+    }
     bool found_slope = false;
     Number slope = 0;
     for (auto& e : formula.entries) {
@@ -104,11 +157,8 @@ void FormulaSimplify::replaceTrivialRecursions(Formula& formula) {
       }
       auto arg_type = e.first.children.front().type;
       if (arg_type == Expression::Type::CONSTANT) {
-        if (e.second.type != Expression::Type::CONSTANT) {
-          constants.clear();
-          break;
-        }
-        constants[e.first.children.front().value] = e.second.value;
+        // Already handled by collectConstantTerms
+        continue;
       } else if (arg_type == Expression::Type::PARAMETER) {
         params[f] = e.first.children.front();
         auto val = e.second;
@@ -162,15 +212,6 @@ void FormulaSimplify::replaceTrivialRecursions(Formula& formula) {
     if (slopes.find(f) == slopes.end()) {
       continue;
     }
-    // remove function
-    auto it = formula.entries.begin();
-    while (it != formula.entries.end()) {
-      if (it->first.name == f) {
-        it = formula.entries.erase(it);
-      } else {
-        it++;
-      }
-    }
     // add simple function
     Expression prod(
         Expression::Type::PRODUCT, "",
@@ -179,8 +220,7 @@ void FormulaSimplify::replaceTrivialRecursions(Formula& formula) {
         Expression::Type::SUM, "",
         {Expression(Expression::Type::CONSTANT, "", offsets[f]), prod});
     ExpressionUtil::normalize(sum);
-    Expression func(Expression::Type::FUNCTION, f, {params[f]});
-    formula.entries[func] = sum;
+    replaceFunctionWithExpression(formula, f, params[f], sum);
   }
 }
 
@@ -415,18 +455,15 @@ void FormulaSimplify::replaceSimpleRecursiveRefs(Formula& formula) {
 
 void FormulaSimplify::replaceGeometricProgressions(Formula& formula) {
   // collect functions
-  std::set<std::string> funcs;
-  for (auto& e : formula.entries) {
-    if (ExpressionUtil::isSimpleFunction(e.first)) {
-      funcs.insert(e.first.name);
-    }
-  }
+  auto funcs = collectSimpleFunctions(formula);
   // collect and check their ratios and initial values
   std::map<std::string, Number> ratios, initialValues;
   std::map<std::string, Expression> params;
   std::map<Number, Number> constants;
   for (auto& f : funcs) {
-    constants.clear();
+    if (!collectConstantTerms(formula, f, constants)) {
+      continue;
+    }
     bool found_ratio = false;
     Number ratio = 1;
     for (auto& e : formula.entries) {
@@ -438,11 +475,8 @@ void FormulaSimplify::replaceGeometricProgressions(Formula& formula) {
       }
       auto arg_type = e.first.children.front().type;
       if (arg_type == Expression::Type::CONSTANT) {
-        if (e.second.type != Expression::Type::CONSTANT) {
-          constants.clear();
-          break;
-        }
-        constants[e.first.children.front().value] = e.second.value;
+        // Already handled by collectConstantTerms
+        continue;
       } else if (arg_type == Expression::Type::PARAMETER) {
         params[f] = e.first.children.front();
         auto val = e.second;
@@ -512,15 +546,6 @@ void FormulaSimplify::replaceGeometricProgressions(Formula& formula) {
     if (ratios.find(f) == ratios.end()) {
       continue;
     }
-    // remove function
-    auto it = formula.entries.begin();
-    while (it != formula.entries.end()) {
-      if (it->first.name == f) {
-        it = formula.entries.erase(it);
-      } else {
-        it++;
-      }
-    }
     // add simple function with exponential formula
     Expression power(
         Expression::Type::POWER, "",
@@ -536,7 +561,6 @@ void FormulaSimplify::replaceGeometricProgressions(Formula& formula) {
           {Expression(Expression::Type::CONSTANT, "", initialValues[f]), power});
     }
     ExpressionUtil::normalize(result);
-    Expression func(Expression::Type::FUNCTION, f, {params[f]});
-    formula.entries[func] = result;
+    replaceFunctionWithExpression(formula, f, params[f], result);
   }
 }
