@@ -198,10 +198,9 @@ bool Optimizer::mergeOps(Program &p) const {
               o1.type = Operation::Type::GCD;
               o1.source = Operand(Operand::Type::CONSTANT, 0);
               do_merge = true;
+            } else {
+              o1.source.value = new_o1_value;
             }
-            // If exponent is odd: pow $0,k; nrt $0,k is a no-op for non-negative
-            // values but causes overflow for negative values. Keep the operations
-            // to preserve the original behavior.
           } else {
             o1.source.value = new_o1_value;
             if (gcd == o2.source.value) {
