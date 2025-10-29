@@ -134,6 +134,48 @@ bool FormulaGenerator::facToExpression(const Expression& a, const Expression& b,
     return false;
   }
 
+  // Optimize for small constants: convert to PRODUCT instead of FACTORIAL
+  if (b.type == Expression::Type::CONSTANT && b.value >= Number(-3) &&
+      b.value <= Number(3)) {
+    auto k = b.value.asInt();
+
+    // Trivial case: k = 0 -> result is 1
+    if (k == 0) {
+      res = constant(1);
+      return true;
+    }
+
+    // Trivial case: k = 1 or k = -1 -> result is just a
+    if (k == 1 || k == -1) {
+      res = a;
+      return true;
+    }
+
+    // Build product expression
+    res = Expression(Expression::Type::PRODUCT);
+    if (k > 0) {
+      // Rising factorial: a * (a+1) * (a+2) * ... * (a+k-1)
+      for (int64_t i = 0; i < k; i++) {
+        if (i == 0) {
+          res.newChild(a);
+        } else {
+          res.newChild(sum({a, constant(i)}));
+        }
+      }
+    } else {
+      // Falling factorial: a * (a-1) * (a-2) * ... * (a+k+1)
+      // Note: k is negative, so a+k+1 < a
+      for (int64_t i = 0; i < -k; i++) {
+        if (i == 0) {
+          res.newChild(a);
+        } else {
+          res.newChild(sum({a, constant(-i)}));
+        }
+      }
+    }
+    return true;
+  }
+
   Expression num(Expression::Type::FACTORIAL);
   Expression denom(Expression::Type::FACTORIAL);
   // Falling factorial: a!/(a+b)!
