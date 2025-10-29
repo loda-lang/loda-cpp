@@ -129,6 +129,7 @@ bool FormulaGenerator::facToExpression(const Expression& a, const Expression& b,
                                        const Operand& aOp, const Operand& bOp,
                                        const RangeMap* ranges,
                                        Expression& res) const {
+  // TODO: can we relax the negativity check for b?
   if (canBeNegativeWithRanges(a, aOp, ranges) ||
       canBeNegativeWithRanges(b, bOp, ranges)) {
     return false;
@@ -176,8 +177,10 @@ bool FormulaGenerator::facToExpression(const Expression& a, const Expression& b,
     return true;
   }
 
+  // General case
   Expression num(Expression::Type::FACTORIAL);
   Expression denom(Expression::Type::FACTORIAL);
+
   // Falling factorial: a!/(a+b)!
   // If b <= 0: (a)!/(a+b)!
   // If b > 0: rising factorial: (a+b-1)!/(a-1)!
@@ -191,7 +194,8 @@ bool FormulaGenerator::facToExpression(const Expression& a, const Expression& b,
     num.children = {sum({a, sum({b, constant(-1)})})};
     denom.children = {sum({a, constant(-1)})};
   }
-  // simplify immediately
+
+  // Simplify immediately
   auto& d = denom.children.front();
   ExpressionUtil::normalize(d);
   if (d.type == Expression::Type::CONSTANT &&
