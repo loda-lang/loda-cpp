@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mine/generator.hpp"
+#include "gen/generator.hpp"
 
 class GeneratorV2 : public Generator {
  public:
