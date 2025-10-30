@@ -23,6 +23,37 @@ std::string convertBitfuncToLean(const std::string& bitfunc) {
   return "";
 }
 
+// Check if an expression could potentially evaluate to a negative number
+// when the parameter n is 0 or small positive values
+bool couldBeNegativeForSmallN(const Expression& expr) {
+  switch (expr.type) {
+    case Expression::Type::CONSTANT:
+      return expr.value < Number::ZERO;
+    case Expression::Type::PARAMETER:
+      return false;  // Assume parameter n >= 0
+    case Expression::Type::SUM:
+      // Check for expressions like n-k where k > 0
+      for (const auto& child : expr.children) {
+        if (child.type == Expression::Type::CONSTANT && child.value < Number::ZERO) {
+          return true;  // Contains a negative constant, so n+(-k) could be negative
+        }
+      }
+      return false;
+    case Expression::Type::PRODUCT:
+    case Expression::Type::FRACTION:
+    case Expression::Type::POWER:
+      // Check children recursively
+      for (const auto& child : expr.children) {
+        if (couldBeNegativeForSmallN(child)) {
+          return true;
+        }
+      }
+      return false;
+    default:
+      return false;  // Conservative: assume non-negative
+  }
+}
+
 bool LeanFormula::isLocalFunc(const std::string& funcName) const {
   return std::find(funcNames.begin(), funcNames.end(), funcName) !=
          funcNames.end();
@@ -43,8 +74,34 @@ bool LeanFormula::convertToLean(Expression& expr, Number patternOffset,
     case Expression::Type::IF:
     case Expression::Type::LOCAL:
     case Expression::Type::VECTOR:
-    case Expression::Type::FACTORIAL:
       return false;
+    case Expression::Type::FACTORIAL: {
+      // Convert factorial to Nat.factorial function call
+      // The factorial expression should have exactly one child (the argument)
+      if (expr.children.size() != 1) {
+        return false;
+      }
+      auto arg = expr.children[0];
+      
+      // Reject if the argument could be negative for small values of n
+      // This happens with expressions like (n-1)! where n could be 0
+      if (couldBeNegativeForSmallN(arg)) {
+        return false;
+      }
+      
+      // Create Int.toNat call to convert Int to Nat
+      Expression toNat(Expression::Type::FUNCTION, "Int.toNat", {arg});
+      
+      // Create Nat.factorial call
+      Expression factorial(Expression::Type::FUNCTION, "Nat.factorial", {toNat});
+      
+      // Cast result back to Int
+      Expression result(Expression::Type::FUNCTION, "Int.ofNat", {factorial});
+      
+      expr = result;
+      imports.insert("Mathlib.Data.Nat.Factorial.Basic");
+      break;
+    }
     case Expression::Type::EQUAL:
     case Expression::Type::NOT_EQUAL:
     case Expression::Type::LESS_EQUAL:

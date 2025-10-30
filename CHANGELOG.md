@@ -7,6 +7,7 @@
 ### Features
 
 * Support bitwise operations in LEAN formula generation
+* Support factorial operations in LEAN formula generation
 
 ### Enhancements
 
