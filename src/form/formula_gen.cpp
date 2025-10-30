@@ -572,13 +572,15 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     Log::get().debug("Processed post-loop: " + formula.toString());
   }
 
-  // resolve linear recursions
-  FormulaSimplify::replaceLinearRecursions(formula);
-  Log::get().debug("Resolved linear recursions: " + formula.toString());
+  // replace arithmetic progressions
+  if (FormulaSimplify::replaceArithmeticProgressions(formula)) {
+    Log::get().debug("Replaced arithmetic progressions: " + formula.toString());
+  }
 
   // replace geometric progressions
-  FormulaSimplify::replaceGeometricProgressions(formula);
-  Log::get().debug("Resolved geometric progressions: " + formula.toString());
+  if (FormulaSimplify::replaceGeometricProgressions(formula)) {
+    Log::get().debug("Replaced geometric progressions: " + formula.toString());
+  }
 
   // resolve simple functions
   FormulaSimplify::resolveSimpleFunctions(formula);
@@ -773,10 +775,9 @@ bool FormulaGenerator::generate(const Program& p, int64_t id, Formula& result,
   // replace simple references to recursive functions
   FormulaSimplify::replaceSimpleRecursiveRefs(result);
 
-  // replace linear recursions
-  FormulaSimplify::replaceLinearRecursions(formula);
-
-  // replace geometric progressions
+  // replace arithmetic & geometric progressions
+  // TODO: check if this is really needed here
+  FormulaSimplify::replaceArithmeticProgressions(formula);
   FormulaSimplify::replaceGeometricProgressions(result);
 
   // replace functions A000142(n) by n! in all formula definitions

@@ -39,7 +39,7 @@ class FormulaSimplify {
   static void resolveSimpleFunctions(Formula& formula);
 
   /**
-   * Replaces trivial linear recursions with direct formulas.
+   * Replaces arithmetic progressions with direct formulas.
    *
    * This method identifies recursive functions that follow a simple linear
    * pattern f(n) = f(n-1) + c (arithmetic progression) and replaces them
@@ -50,7 +50,21 @@ class FormulaSimplify {
    *
    * @param formula The formula to simplify by replacing trivial recursions
    */
-  static void replaceLinearRecursions(Formula& formula);
+  static bool replaceArithmeticProgressions(Formula& formula);
+
+  /**
+   * Replaces geometric progressions with exponential formulas.
+   *
+   * This method identifies recursive functions that follow a geometric
+   * progression pattern f(n) = c * f(n-1) and replaces them with direct
+   * exponential formulas f(n) = a * c^n. For example:
+   *   f(0) = 1
+   *   f(n) = 2 * f(n-1)
+   * Will be replaced with: f(n) = 2^n
+   *
+   * @param formula The formula to simplify by replacing geometric progressions
+   */
+  static bool replaceGeometricProgressions(Formula& formula);
 
   /**
    * Replaces simple recursive function references with direct definitions.
@@ -68,18 +82,4 @@ class FormulaSimplify {
    * references
    */
   static void replaceSimpleRecursiveRefs(Formula& formula);
-
-  /**
-   * Replaces geometric progressions with exponential formulas.
-   *
-   * This method identifies recursive functions that follow a geometric
-   * progression pattern f(n) = c * f(n-1) and replaces them with direct
-   * exponential formulas f(n) = a * c^n. For example:
-   *   f(0) = 1
-   *   f(n) = 2 * f(n-1)
-   * Will be replaced with: f(n) = 2^n
-   *
-   * @param formula The formula to simplify by replacing geometric progressions
-   */
-  static void replaceGeometricProgressions(Formula& formula);
 };

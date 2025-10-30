@@ -169,7 +169,7 @@ void FormulaSimplify::resolveSimpleFunctions(Formula& formula) {
   }
 }
 
-void FormulaSimplify::replaceLinearRecursions(Formula& formula) {
+bool FormulaSimplify::replaceArithmeticProgressions(Formula& formula) {
   // collect functions
   auto funcs = collectSimpleFunctions(formula);
   // collect and check their slopes and offsets
@@ -226,6 +226,7 @@ void FormulaSimplify::replaceLinearRecursions(Formula& formula) {
       offsets[f] = offset;
     }
   }
+  bool replaced = false;
   for (auto& f : funcs) {
     if (slopes.find(f) == slopes.end()) {
       continue;
@@ -239,10 +240,12 @@ void FormulaSimplify::replaceLinearRecursions(Formula& formula) {
         {Expression(Expression::Type::CONSTANT, "", offsets[f]), prod});
     ExpressionUtil::normalize(sum);
     replaceFunctionWithExpression(formula, f, params[f], sum);
+    replaced = true;
   }
+  return replaced;
 }
 
-void FormulaSimplify::replaceGeometricProgressions(Formula& formula) {
+bool FormulaSimplify::replaceGeometricProgressions(Formula& formula) {
   // collect functions
   auto funcs = collectSimpleFunctions(formula);
   // collect and check their ratios and initial values
@@ -302,6 +305,7 @@ void FormulaSimplify::replaceGeometricProgressions(Formula& formula) {
     }
   }
   // Replace geometric progressions with exponential formulas
+  bool replaced = false;
   for (auto& f : funcs) {
     if (ratios.find(f) == ratios.end()) {
       continue;
@@ -323,7 +327,9 @@ void FormulaSimplify::replaceGeometricProgressions(Formula& formula) {
     }
     ExpressionUtil::normalize(result);
     replaceFunctionWithExpression(formula, f, params[f], result);
+    replaced = true;
   }
+  return replaced;
 }
 
 bool extractArgumentOffset(const Expression& arg, Number& offset) {
