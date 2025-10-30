@@ -32,7 +32,7 @@ bool FormulaParser::parse(const std::string& str, Formula& formula) {
           skipWhitespace();
           rhs = parseExpression();
         }
-      } catch (...) {
+      } catch (const std::runtime_error&) {
         // parseFunction failed, we'll treat entire input as RHS
       }
 
