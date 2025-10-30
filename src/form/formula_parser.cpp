@@ -16,17 +16,34 @@ bool FormulaParser::parse(const std::string& str, Formula& formula) {
         break;
       }
 
-      // Parse left-hand side (function call)
-      Expression lhs = parseFunction();
+      // Save position to potentially backtrack
+      size_t saved_pos = pos;
+      Expression lhs;
+      Expression rhs;
+      bool has_lhs = false;
 
-      skipWhitespace();
-      if (!match('=')) {
-        return false;
+      // Try to parse left-hand side (function call)
+      try {
+        lhs = parseFunction();
+        skipWhitespace();
+        if (match('=')) {
+          // We have a full LHS = RHS formula
+          has_lhs = true;
+          skipWhitespace();
+          rhs = parseExpression();
+        }
+      } catch (...) {
+        // parseFunction failed, we'll treat entire input as RHS
       }
-      skipWhitespace();
 
-      // Parse right-hand side (expression)
-      Expression rhs = parseExpression();
+      if (!has_lhs) {
+        // No LHS found, reset and parse entire thing as RHS with default LHS
+        pos = saved_pos;
+        rhs = parseExpression();
+        // Create default LHS: a(n)
+        lhs = Expression(Expression::Type::FUNCTION, "a");
+        lhs.newChild(Expression::Type::PARAMETER, "n");
+      }
 
       // Add entry to formula
       formula.entries[lhs] = rhs;
