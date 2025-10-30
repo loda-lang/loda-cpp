@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Bugfixes
+
+* Fix escaping in generated Discord messages
+
 ### Features
 
 * Support bitwise operations in LEAN formula generation
