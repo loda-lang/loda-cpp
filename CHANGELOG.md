@@ -10,8 +10,9 @@
 
 ### Enhancements
 
-* Add LEAN project support for testing
+* Simplify geometric progressions in formula generation
 * Simplify generated expressions for `fac` operations
+* Add LEAN project support for testing
 
 ## v25.10.19
 
