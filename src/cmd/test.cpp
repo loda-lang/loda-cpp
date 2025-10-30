@@ -890,12 +890,12 @@ void Test::incEval() {
     i++;
   }
   // OEIS sequence test cases
-  std::vector<size_t> ids = {8,     45,    78,     142,    178,    204,    246,   253,
-                             278,   280,   407,    542,    803,    933,    1075,  1091,
-                             1117,  1304,  1353,   1360,   1519,   1541,  1542,
-                             1609,  2081,  3411,   7661,   7981,   8581,  10362,
-                             11218, 12866, 14979,  22564,  25774,  49349, 57552,
-                             79309, 80493, 122593, 130487, 247309, 302643};
+  std::vector<size_t> ids = {
+      8,     45,    78,    142,    178,    204,    246,   253,   278,
+      280,   407,   542,   803,    933,    1075,   1091,  1117,  1304,
+      1353,  1360,  1519,  1541,   1542,   1609,   2081,  3411,  7661,
+      7981,  8581,  10362, 11218,  12866,  14979,  22564, 25774, 49349,
+      57552, 79309, 80493, 122593, 130487, 247309, 302643};
   for (auto id : ids) {
     checkEvaluator(settings, id, "", EVAL_INCREMENTAL, true);
   }
@@ -1279,8 +1279,9 @@ void Test::checkFormulas(const std::string& testFile, FormulaType type) {
         Log::get().error("Failed to parse formula string: " + e.second, true);
       }
       if (parsed.toString() != e.second) {
-        Log::get().error("Round-trip test failed. Original: " + e.second + 
-                        ", Parsed: " + parsed.toString(), true);
+        Log::get().error("Round-trip test failed. Original: " + e.second +
+                             ", Parsed: " + parsed.toString(),
+                         true);
       }
     } else if (type == FormulaType::LEAN) {
       LeanFormula lean;
