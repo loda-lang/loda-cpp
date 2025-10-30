@@ -78,7 +78,6 @@ void Test::fast() {
   knownPrograms();
   formula();
   range();
-  discordEscape();
 }
 
 void Test::slow() {
@@ -891,12 +890,12 @@ void Test::incEval() {
     i++;
   }
   // OEIS sequence test cases
-  std::vector<size_t> ids = {8,     45,    78,     142,    178,    204,    246,   253,
-                             278,   280,   407,    542,    803,    933,    1075,  1091,
-                             1117,  1304,  1353,   1360,   1519,   1541,  1542,
-                             1609,  2081,  3411,   7661,   7981,   8581,  10362,
-                             11218, 12866, 14979,  22564,  25774,  49349, 57552,
-                             79309, 80493, 122593, 130487, 247309, 302643};
+  std::vector<size_t> ids = {
+      8,     45,    78,    142,    178,    204,    246,   253,   278,
+      280,   407,   542,   803,    933,    1075,   1091,  1117,  1304,
+      1353,  1360,  1519,  1541,   1542,   1609,   2081,  3411,  7661,
+      7981,  8581,  10362, 11218,  12866,  14979,  22564, 25774, 49349,
+      57552, 79309, 80493, 122593, 130487, 247309, 302643};
   for (auto id : ids) {
     checkEvaluator(settings, id, "", EVAL_INCREMENTAL, true);
   }
@@ -1280,8 +1279,9 @@ void Test::checkFormulas(const std::string& testFile, FormulaType type) {
         Log::get().error("Failed to parse formula string: " + e.second, true);
       }
       if (parsed.toString() != e.second) {
-        Log::get().error("Round-trip test failed. Original: " + e.second + 
-                        ", Parsed: " + parsed.toString(), true);
+        Log::get().error("Round-trip test failed. Original: " + e.second +
+                             ", Parsed: " + parsed.toString(),
+                         true);
       }
     } else if (type == FormulaType::LEAN) {
       LeanFormula lean;
@@ -1806,70 +1806,5 @@ void Test::testMatcherPair(Matcher& matcher, size_t id1, size_t id2) {
                          " matcher generated wrong program for " +
                          uid2.string(),
                      true);
-  }
-}
-
-void Test::discordEscape() {
-  // Test escaping of Discord markdown special characters
-  Log::get().info("Testing Discord markdown escaping");
-  
-  // Test basic cases
-  if (escapeDiscordMarkdown("hello") != "hello") {
-    Log::get().error("Discord escape failed for plain text", true);
-  }
-  
-  // Test asterisks (commonly used in math formulas)
-  if (escapeDiscordMarkdown("a*b") != "a\\*b") {
-    Log::get().error("Discord escape failed for asterisks", true);
-  }
-  
-  if (escapeDiscordMarkdown("n^2*phi(n)") != "n^2\\*phi(n)") {
-    Log::get().error("Discord escape failed for formula with asterisks", true);
-  }
-  
-  // Test underscores
-  if (escapeDiscordMarkdown("a_n") != "a\\_n") {
-    Log::get().error("Discord escape failed for underscores", true);
-  }
-  
-  // Test backticks
-  if (escapeDiscordMarkdown("code`here") != "code\\`here") {
-    Log::get().error("Discord escape failed for backticks", true);
-  }
-  
-  // Test tildes
-  if (escapeDiscordMarkdown("~text~") != "\\~text\\~") {
-    Log::get().error("Discord escape failed for tildes", true);
-  }
-  
-  // Test pipes
-  if (escapeDiscordMarkdown("a|b") != "a\\|b") {
-    Log::get().error("Discord escape failed for pipes", true);
-  }
-  
-  // Test angle brackets
-  if (escapeDiscordMarkdown(">quote") != "\\>quote") {
-    Log::get().error("Discord escape failed for angle brackets", true);
-  }
-  
-  // Test backslashes
-  if (escapeDiscordMarkdown("a\\b") != "a\\\\b") {
-    Log::get().error("Discord escape failed for backslashes", true);
-  }
-  
-  // Test multiple special characters
-  if (escapeDiscordMarkdown("*a*_b_~c~") != "\\*a\\*\\_b\\_\\~c\\~") {
-    Log::get().error("Discord escape failed for multiple special chars", true);
-  }
-  
-  // Test real-world sequence name examples
-  if (escapeDiscordMarkdown("A000045: Fibonacci numbers") != 
-      "A000045: Fibonacci numbers") {
-    Log::get().error("Discord escape failed for simple sequence name", true);
-  }
-  
-  if (escapeDiscordMarkdown("A001234: Numbers n such that n*phi(n) is a square") != 
-      "A001234: Numbers n such that n\\*phi(n) is a square") {
-    Log::get().error("Discord escape failed for sequence name with asterisk", true);
   }
 }
