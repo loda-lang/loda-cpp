@@ -234,7 +234,7 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
       id = args.at(1);
     }
     commands.testLean(id);
-  } else if (cmd == "test-formula-parsing") {
+  } else if (cmd == "test-formula-parser") {
     std::string id;
     if (args.size() > 1) {
       id = args.at(1);
@@ -274,11 +274,18 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
     commands.extractVirseqs();
   } else if (cmd == "find-inceval-programs") {
     if (args.size() < 2) {
-      std::cerr << "Error: find-inceval-programs requires an error code argument" << std::endl;
-      std::cerr << "Usage: loda find-inceval-programs <error_code|range>" << std::endl;
+      std::cerr
+          << "Error: find-inceval-programs requires an error code argument"
+          << std::endl;
+      std::cerr << "Usage: loda find-inceval-programs <error_code|range>"
+                << std::endl;
       std::cerr << "Examples:" << std::endl;
-      std::cerr << "  loda find-inceval-programs 1         # Find programs with error code 1" << std::endl;
-      std::cerr << "  loda find-inceval-programs 100-200   # Find programs with error codes 100-200" << std::endl;
+      std::cerr << "  loda find-inceval-programs 1         # Find programs "
+                   "with error code 1"
+                << std::endl;
+      std::cerr << "  loda find-inceval-programs 100-200   # Find programs "
+                   "with error codes 100-200"
+                << std::endl;
       return 1;
     }
     commands.findIncevalPrograms(args.at(1));
