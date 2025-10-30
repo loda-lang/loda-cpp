@@ -1,4 +1,4 @@
-#include "mine/generator_v4.hpp"
+#include "gen/generator_v4.hpp"
 
 #include <math.h>
 
@@ -9,8 +9,8 @@
 
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
-#include "mine/generator.hpp"
-#include "mine/generator_v1.hpp"
+#include "gen/generator.hpp"
+#include "gen/generator_v1.hpp"
 #include "sys/file.hpp"
 #include "sys/log.hpp"
 #include "sys/setup.hpp"

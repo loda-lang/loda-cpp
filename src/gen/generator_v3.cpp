@@ -1,6 +1,6 @@
-#include "mine/generator_v3.hpp"
+#include "gen/generator_v3.hpp"
 
-#include "mine/generator.hpp"
+#include "gen/generator.hpp"
 #include "mine/stats.hpp"
 #include "sys/log.hpp"
 

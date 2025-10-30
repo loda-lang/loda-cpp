@@ -1,3 +1,5 @@
+#pragma once
+
 #include "lang/program.hpp"
 
 class Iterator {

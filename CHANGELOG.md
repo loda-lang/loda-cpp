@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Bugfixes
+
+* Fix escaping in generated Discord messages
+
 ### Features
 
 * Support bitwise operations in LEAN formula generation
@@ -7,6 +11,7 @@
 ### Enhancements
 
 * Add LEAN project support for testing
+* Simplify generated expressions for `fac` operations
 
 ## v25.10.19
 
