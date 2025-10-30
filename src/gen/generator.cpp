@@ -1,18 +1,18 @@
-#include "mine/generator.hpp"
+#include "gen/generator.hpp"
 
 #include <algorithm>
 
 #include "eval/semantics.hpp"
 #include "lang/program_util.hpp"
 #include "mine/config.hpp"
-#include "mine/generator_v1.hpp"
-#include "mine/generator_v2.hpp"
-#include "mine/generator_v3.hpp"
-#include "mine/generator_v4.hpp"
-#include "mine/generator_v5.hpp"
-#include "mine/generator_v6.hpp"
-#include "mine/generator_v7.hpp"
-#include "mine/generator_v8.hpp"
+#include "gen/generator_v1.hpp"
+#include "gen/generator_v2.hpp"
+#include "gen/generator_v3.hpp"
+#include "gen/generator_v4.hpp"
+#include "gen/generator_v5.hpp"
+#include "gen/generator_v6.hpp"
+#include "gen/generator_v7.hpp"
+#include "gen/generator_v8.hpp"
 #include "sys/log.hpp"
 #include "sys/util.hpp"
 

@@ -35,8 +35,9 @@ class FormulaParser {
   Expression parseComparison();
   Expression parseAddSub();
   Expression parseTerm();
-  Expression parsePower();
   Expression parseUnary();
+  Expression parsePower();
+  Expression parsePostfix();
   Expression parsePrimary();
   Expression parseFunction();
   std::string parseName();

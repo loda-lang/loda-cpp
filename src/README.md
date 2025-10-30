@@ -8,6 +8,7 @@ The C++ source code contain is organized into the following modules:
 - [cmd](cmd): Command-line interface, test suite, and main entry point
 - [eval](eval): Interpreter and evaluation engine for LODA programs
 - [form](form): Formula generation (including PARI/GP integration)
+- [gen](gen): Random program generation
 - [lang](lang): LODA language core (parser, analyzer, program representation)
 - [math](math): Internal math library (big numbers, integer sequences)
 - [mine](mine): Mining infrastructure (generators, matchers, miners)
