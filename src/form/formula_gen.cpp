@@ -526,9 +526,9 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     Log::get().debug("Processed post-loop: " + formula.toString());
   }
 
-  // resolve simple recursions
-  FormulaSimplify::replaceTrivialRecursions(formula);
-  Log::get().debug("Resolved simple recursions: " + formula.toString());
+  // resolve linear recursions
+  FormulaSimplify::replaceLinearRecursions(formula);
+  Log::get().debug("Resolved linear recursions: " + formula.toString());
 
   // replace geometric progressions
   FormulaSimplify::replaceGeometricProgressions(formula);
@@ -726,6 +726,9 @@ bool FormulaGenerator::generate(const Program& p, int64_t id, Formula& result,
 
   // replace simple references to recursive functions
   FormulaSimplify::replaceSimpleRecursiveRefs(result);
+
+  // replace linear recursions
+  FormulaSimplify::replaceLinearRecursions(formula);
 
   // replace geometric progressions
   FormulaSimplify::replaceGeometricProgressions(result);

@@ -50,7 +50,7 @@ class FormulaSimplify {
    *
    * @param formula The formula to simplify by replacing trivial recursions
    */
-  static void replaceTrivialRecursions(Formula& formula);
+  static void replaceLinearRecursions(Formula& formula);
 
   /**
    * Replaces simple recursive function references with direct definitions.
