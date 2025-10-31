@@ -131,12 +131,12 @@ bool LeanFormula::convert(const Formula& formula, int64_t offset,
   lean_formula.domain = "Int";
   lean_formula.funcNames =
       FormulaUtil::getDefinitions(formula, Expression::Type::FUNCTION);
-  if (lean_formula.funcNames.size() != 1) {
+  if (lean_formula.funcNames.empty()) {
     return false;
   }
   for (const auto& f : lean_formula.funcNames) {
     if (FormulaUtil::isRecursive(formula, f)) {
-      if (offset < 0 ||
+      if (offset != 0 ||
           FormulaUtil::getMinimumBaseCase(formula, f) != Number::ZERO) {
         return false;
       }
@@ -176,12 +176,19 @@ bool LeanFormula::convert(const Formula& formula, int64_t offset,
 }
 
 std::string LeanFormula::toString() const {
-  std::string funcName;
-  for (const auto& entry : main_formula.entries) {
-    funcName = entry.first.name;
-    break;
+  auto functions = FormulaUtil::getDefinitions(main_formula);
+
+  std::stringstream buf;
+  if (functions.size() == 1) {
+    buf << printFunction(functions[0]);
+  } else {
+    buf << "mutual\n";
+    for (size_t i = 0; i < functions.size(); ++i) {
+      buf << "  " << printFunction(functions[i]) << "\n";
+    }
+    buf << "end";
   }
-  return printFunction(funcName);
+  return buf.str();
 }
 
 std::string LeanFormula::printFunction(const std::string& funcName) const {
@@ -209,41 +216,27 @@ std::string LeanFormula::printFunction(const std::string& funcName) const {
     }
   }
 
-  const bool isRecursive = FormulaUtil::isRecursive(main_formula, funcName);
-  if (isRecursive) {
-    // Recursive case with base cases - use pattern matching syntax
+  // Recursive case with base cases - use pattern matching syntax
+  if (!baseCases.empty()) {
     buf << "def " << funcName << " : " << domain << " -> Int";
-
-    // Generate pattern matching cases for base cases. The map is sorted by
-    // integer key so iteration yields increasing constant values.
     for (const auto& kv : baseCases) {
       const auto constValue = kv.first;
       buf << " | " << Number(constValue).to_string() << " => "
           << kv.second.toString(true);
     }
-
-    // Add the recursive case
-    if (!recursiveCase.name.empty()) {
-      // For Nat domain, use n+k pattern where k is one more than the largest
-      // base case
-      if (domain == "Nat" && !baseCases.empty()) {
-        // Find the largest base case value (map is ordered ascending)
-        int64_t maxBaseCase = baseCases.rbegin()->first;
-        int64_t patternOffset = maxBaseCase + 1;
-        buf << " | n+" << patternOffset << " => "
-            << recursiveRHS.toString(true);
-      } else {
-        buf << " | n => " << recursiveRHS.toString(true);
-      }
+    if (domain == "Nat" && !baseCases.empty()) {
+      int64_t maxBaseCase = baseCases.rbegin()->first;
+      int64_t patternOffset = maxBaseCase + 1;
+      buf << " | n+" << patternOffset << " => " << recursiveRHS.toString(true);
+    } else {
+      buf << " | n => " << recursiveRHS.toString(true);
     }
   } else {
-    // Non-recursive case (original behavior)
     bool usesParameter = recursiveRHS.contains(Expression::Type::PARAMETER);
     std::string arg = usesParameter ? "n" : "_";
     buf << "def " << funcName << " (" << arg << " : " << domain
         << ") : Int := " << recursiveRHS.toString(true);
   }
-
   return buf.str();
 }
 
