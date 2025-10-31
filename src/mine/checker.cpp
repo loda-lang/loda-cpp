@@ -30,6 +30,10 @@ int64_t getConstantScore(const Program& p) {
       if (largest < op.source.value) {
         largest = op.source.value;
       }
+      // negative constant
+	  if (largest < Semantics::mul(op.source.value, -1)) {
+        largest = Semantics::mul(op.source.value, -1);
+      }
     }
   }
   // Return log2 of the largest constant
@@ -66,7 +70,9 @@ bool isSimpler(const Program& existing, const Program& optimized) {
   // Compare constant scores: lower score (smaller constants) is simpler
   int64_t existing_score = getConstantScore(existing);
   int64_t optimized_score = getConstantScore(optimized);
-  if (existing_score > optimized_score && !optimized_has_seq) {
+  if (existing_score > optimized_score 
+   && existing_score > 10 // magic number
+   && !optimized_has_seq) {
     return true;
   }
   if (hasBadLoop(existing) && !hasBadLoop(optimized) && !optimized_has_seq) {
