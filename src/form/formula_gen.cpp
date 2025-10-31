@@ -129,11 +129,6 @@ bool FormulaGenerator::facToExpression(const Expression& a, const Expression& b,
                                        const Operand& aOp, const Operand& bOp,
                                        const RangeMap* ranges,
                                        Expression& res) const {
-  // TODO: can we relax the negativity check for b?
-  if (canBeNegativeWithRanges(a, aOp, ranges) ||
-      canBeNegativeWithRanges(b, bOp, ranges)) {
-    return false;
-  }
 
   // Optimize for small constants: convert to PRODUCT instead of FACTORIAL
   if (b.type == Expression::Type::CONSTANT && b.value >= Number(-3) &&
@@ -175,6 +170,11 @@ bool FormulaGenerator::facToExpression(const Expression& a, const Expression& b,
       }
     }
     return true;
+  }
+  // TODO: can we relax the negativity check for b?
+  if (canBeNegativeWithRanges(a, aOp, ranges) ||
+      canBeNegativeWithRanges(b, bOp, ranges)) {
+    return false;
   }
 
   // General case
