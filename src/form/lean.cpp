@@ -23,9 +23,10 @@ std::string convertBitfuncToLean(const std::string& bitfunc) {
   return "";
 }
 
-bool LeanFormula::isLocalFunc(const std::string& funcName) const {
+bool LeanFormula::isLocalOrSeqFunc(const std::string& funcName) const {
   return std::find(funcNames.begin(), funcNames.end(), funcName) !=
-         funcNames.end();
+             funcNames.end() ||
+         UID::valid(funcName);
 }
 
 bool LeanFormula::needsIntToNat(const Expression& expr) const {
@@ -39,7 +40,7 @@ bool LeanFormula::convertToLean(Expression& expr, Number patternOffset,
                                 bool insideOfLocalFunc) {
   bool childInsideOfLocalFunc =
       insideOfLocalFunc ||
-      (expr.type == Expression::Type::FUNCTION && isLocalFunc(expr.name));
+      (expr.type == Expression::Type::FUNCTION && isLocalOrSeqFunc(expr.name));
   // Check children recursively
   for (auto& c : expr.children) {
     if (!convertToLean(c, patternOffset, childInsideOfLocalFunc)) {
@@ -108,10 +109,10 @@ bool LeanFormula::convertToLean(Expression& expr, Number patternOffset,
         break;
       }
       // Allow calls to locally defined functions incl. recursions
-      if (isLocalFunc(expr.name)) {
-        // When domain is Nat, wrap arguments with Int.toNat to convert Int to Nat
-        // Only wrap if the argument needs it (contains Int-returning operations)
-        // or is not a plain PARAMETER
+      if (isLocalOrSeqFunc(expr.name)) {
+        // When domain is Nat, wrap arguments with Int.toNat to convert Int to
+        // Nat Only wrap if the argument needs it (contains Int-returning
+        // operations) or is not a plain PARAMETER
         if (domain == "Nat") {
           for (auto& arg : expr.children) {
             if (arg.type != Expression::Type::PARAMETER && needsIntToNat(arg)) {

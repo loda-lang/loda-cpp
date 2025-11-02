@@ -37,7 +37,7 @@ class LeanFormula {
 
   bool needsIntToNat(const Expression& expr) const;
 
-  bool isLocalFunc(const std::string& funcName) const;
+  bool isLocalOrSeqFunc(const std::string& funcName) const;
 
   std::string printFunction(const std::string& funcName) const;
 };
