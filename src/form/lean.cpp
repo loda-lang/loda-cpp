@@ -28,6 +28,13 @@ bool LeanFormula::isLocalFunc(const std::string& funcName) const {
          funcNames.end();
 }
 
+bool LeanFormula::needsIntToNat(const Expression& expr) const {
+  // Check if expression contains operations that return Int
+  return expr.contains(Expression::Type::FUNCTION, "Int.fdiv") ||
+         expr.contains(Expression::Type::FUNCTION, "Int.tdiv") ||
+         expr.contains(Expression::Type::FUNCTION, "Int.gcd");
+}
+
 bool LeanFormula::convertToLean(Expression& expr, Number patternOffset,
                                 bool insideOfLocalFunc) {
   bool childInsideOfLocalFunc =
@@ -102,6 +109,17 @@ bool LeanFormula::convertToLean(Expression& expr, Number patternOffset,
       }
       // Allow calls to locally defined functions incl. recursions
       if (isLocalFunc(expr.name)) {
+        // When domain is Nat, wrap arguments with Int.toNat to convert Int to Nat
+        // Only wrap if the argument needs it (contains Int-returning operations)
+        // or is not a plain PARAMETER
+        if (domain == "Nat") {
+          for (auto& arg : expr.children) {
+            if (arg.type != Expression::Type::PARAMETER && needsIntToNat(arg)) {
+              Expression toNat(Expression::Type::FUNCTION, "Int.toNat", {arg});
+              arg = toNat;
+            }
+          }
+        }
         break;
       }
       return false;
