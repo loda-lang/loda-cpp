@@ -23,16 +23,17 @@ std::string convertBitfuncToLean(const std::string& bitfunc) {
   return "";
 }
 
-bool LeanFormula::isLocalFunc(const std::string& funcName) const {
+bool LeanFormula::isLocalOrSeqFunc(const std::string& funcName) const {
   return std::find(funcNames.begin(), funcNames.end(), funcName) !=
-         funcNames.end();
+             funcNames.end() ||
+         UID::valid(funcName);
 }
 
 bool LeanFormula::convertToLean(Expression& expr, Number patternOffset,
                                 bool insideOfLocalFunc) {
   bool childInsideOfLocalFunc =
       insideOfLocalFunc ||
-      (expr.type == Expression::Type::FUNCTION && isLocalFunc(expr.name));
+      (expr.type == Expression::Type::FUNCTION && isLocalOrSeqFunc(expr.name));
   // Check children recursively
   for (auto& c : expr.children) {
     if (!convertToLean(c, patternOffset, childInsideOfLocalFunc)) {
@@ -100,8 +101,8 @@ bool LeanFormula::convertToLean(Expression& expr, Number patternOffset,
         imports.insert("Mathlib.Data.Int.Bitwise");
         break;
       }
-      // Allow calls to locally defined functions incl. recursions
-      if (isLocalFunc(expr.name)) {
+      // Allow calls to locally defined functions and sequences
+      if (isLocalOrSeqFunc(expr.name)) {
         break;
       }
       return false;
