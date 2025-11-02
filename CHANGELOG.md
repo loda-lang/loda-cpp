@@ -6,12 +6,14 @@
 
 ### Features
 
+* Support multiple functions in LEAN formula generation
 * Support bitwise operations in LEAN formula generation
 
 ### Enhancements
 
 * Simplify geometric progressions in formula generation
 * Simplify generated expressions for `fac` operations
+* Improve optimization of `pow`,`nrt` operations
 * Extend program stats with LEAN & PARI flags
 * Add LEAN project support for testing
 
