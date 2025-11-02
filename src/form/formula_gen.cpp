@@ -129,11 +129,6 @@ bool FormulaGenerator::facToExpression(const Expression& a, const Expression& b,
                                        const Operand& aOp, const Operand& bOp,
                                        const RangeMap* ranges,
                                        Expression& res) const {
-  // TODO: can we relax the negativity check for b?
-  if (canBeNegativeWithRanges(a, aOp, ranges) ||
-      canBeNegativeWithRanges(b, bOp, ranges)) {
-    return false;
-  }
 
   // Optimize for small constants: convert to PRODUCT instead of FACTORIAL
   if (b.type == Expression::Type::CONSTANT && b.value >= Number(-3) &&
@@ -175,6 +170,11 @@ bool FormulaGenerator::facToExpression(const Expression& a, const Expression& b,
       }
     }
     return true;
+  }
+  // TODO: can we relax the negativity check for b?
+  if (canBeNegativeWithRanges(a, aOp, ranges) ||
+      canBeNegativeWithRanges(b, bOp, ranges)) {
+    return false;
   }
 
   // General case
@@ -572,9 +572,15 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     Log::get().debug("Processed post-loop: " + formula.toString());
   }
 
-  // resolve simple recursions
-  FormulaSimplify::replaceTrivialRecursions(formula);
-  Log::get().debug("Resolved simple recursions: " + formula.toString());
+  // replace arithmetic progressions
+  if (FormulaSimplify::replaceArithmeticProgressions(formula)) {
+    Log::get().debug("Replaced arithmetic progressions: " + formula.toString());
+  }
+
+  // replace geometric progressions
+  if (FormulaSimplify::replaceGeometricProgressions(formula)) {
+    Log::get().debug("Replaced geometric progressions: " + formula.toString());
+  }
 
   // resolve simple functions
   FormulaSimplify::resolveSimpleFunctions(formula);
@@ -768,6 +774,11 @@ bool FormulaGenerator::generate(const Program& p, int64_t id, Formula& result,
 
   // replace simple references to recursive functions
   FormulaSimplify::replaceSimpleRecursiveRefs(result);
+
+  // replace arithmetic & geometric progressions
+  // TODO: check if this is really needed here
+  FormulaSimplify::replaceArithmeticProgressions(formula);
+  FormulaSimplify::replaceGeometricProgressions(result);
 
   // replace functions A000142(n) by n! in all formula definitions
   const auto factorialSeqName = FACTORIAL_SEQ_ID.string();
