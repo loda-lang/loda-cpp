@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+## v25.11.2
+
 ### Bugfixes
 
 * Fix escaping in generated Discord messages
