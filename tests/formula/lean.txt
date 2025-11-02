@@ -25,6 +25,12 @@ A000466: def a (n : Int) : Int := 4*n^2-1
 A001093: def a (n : Int) : Int := n^3+1
 A001105: def a (n : Int) : Int := 2*n^2
 A001107: def a (n : Int) : Int := n*(4*n-3)
+A001306: mutual
+    def A000064 (n : Nat) : Int := c (n+1)
+    def a (n : Nat) : Int := (b (Int.toNat (Int.fdiv n 5)))+1
+    def b : Nat -> Int | 0 => 0 | n+1 => (b n)+(A000064 (Int.toNat (Int.fdiv (n+1) 2)))
+    def c : Nat -> Int | 0 => 0 | 1 => 1 | 2 => 2 | 3 => 4 | 4 => 6 | 5 => 9 | 6 => 13 | 7 => 18 | 8 => 24 | 9 => 31 | n+10 => (c n)+(Int.fdiv (((Int.ofNat n)+17)*(11*(Int.ofNat n)+2*((Int.ofNat n)+9)^2+117)) 120)
+  end
 A001539: def a (n : Int) : Int := (4*n+2)^2-1
 A002015: def a (n : Int) : Int := (n^2)%100
 A002309: def a (n : Int) : Int := Int.fdiv (n*((48*n^2-40)*n^2+7)) 15
