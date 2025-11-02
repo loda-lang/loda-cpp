@@ -218,8 +218,7 @@ std::string LeanFormula::printFunction(const std::string& funcName) const {
   // Map from base case constant value -> RHS expression. Using std::map
   // automatically keeps base cases sorted by the integer key.
   std::map<int64_t, Expression> baseCases;
-  Expression recursiveCase;
-  Expression recursiveRHS;
+  Expression generalRHS;
 
   for (const auto& entry : main_formula.entries) {
     if (entry.first.name != funcName) {
@@ -230,10 +229,12 @@ std::string LeanFormula::printFunction(const std::string& funcName) const {
       // store RHS keyed by the constant value; map keeps keys sorted
       baseCases[arg.value.asInt()] = entry.second;
     } else {
-      recursiveCase = entry.first;
-      recursiveRHS = entry.second;
+      generalRHS = entry.second;
     }
   }
+
+  bool usesParameter = generalRHS.contains(Expression::Type::PARAMETER);
+  std::string arg = usesParameter ? "n" : "_";
 
   // Recursive case with base cases - use pattern matching syntax
   if (!baseCases.empty()) {
@@ -246,15 +247,14 @@ std::string LeanFormula::printFunction(const std::string& funcName) const {
     if (domain == "Nat" && !baseCases.empty()) {
       int64_t maxBaseCase = baseCases.rbegin()->first;
       int64_t patternOffset = maxBaseCase + 1;
-      buf << " | n+" << patternOffset << " => " << recursiveRHS.toString(true);
+      buf << " | " << arg << "+" << patternOffset << " => "
+          << generalRHS.toString(true);
     } else {
-      buf << " | n => " << recursiveRHS.toString(true);
+      buf << " | " << arg << " => " << generalRHS.toString(true);
     }
   } else {
-    bool usesParameter = recursiveRHS.contains(Expression::Type::PARAMETER);
-    std::string arg = usesParameter ? "n" : "_";
     buf << "def " << funcName << " (" << arg << " : " << domain
-        << ") : Int := " << recursiveRHS.toString(true);
+        << ") : Int := " << generalRHS.toString(true);
   }
   return buf.str();
 }
