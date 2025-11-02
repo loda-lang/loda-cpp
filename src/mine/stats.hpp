@@ -6,7 +6,7 @@
 
 #include "base/uid.hpp"
 #include "eval/evaluator.hpp"
-#include "mine/blocks.hpp"
+#include "gen/blocks.hpp"
 
 class OpPos {
  public:

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mine/generator.hpp"
+#include "gen/generator.hpp"
 
 struct OpProb {
   Operation operation;

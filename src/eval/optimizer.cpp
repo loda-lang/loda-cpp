@@ -198,18 +198,20 @@ bool Optimizer::mergeOps(Program &p) const {
               o1.type = Operation::Type::GCD;
               o1.source = Operand(Operand::Type::CONSTANT, 0);
               do_merge = true;
-            }
-            // If exponent is odd: pow $0,k; nrt $0,k is a no-op for non-negative
-            // values but causes overflow for negative values. Keep the operations
-            // to preserve the original behavior.
-          } else {
-            o1.source.value = new_o1_value;
-            if (gcd == o2.source.value) {
+            } else {
+              o1.source.value = new_o1_value;
               do_merge = true;
-            } else if (gcd != Number::ONE) {
-              o2.source.value = Semantics::div(o2.source.value, gcd);
-              updated = true;
             }
+          } else {
+          	if (o1.source.value.odd() || !new_o1_value.odd()){
+          	  o1.source.value = new_o1_value;
+              if (gcd == o2.source.value) {
+                do_merge = true;
+              } else if (gcd != Number::ONE) {
+                o2.source.value = Semantics::div(o2.source.value, gcd);
+                updated = true;
+              }
+		    }
           }
         }
 
@@ -500,6 +502,19 @@ bool Optimizer::simplifyOperations(Program &p) const {
           // trn $n,0 => max $n,0
           if (op.type == Operation::Type::TRN) {
             op.type = Operation::Type::MAX;
+            simplified = true;
+          }
+          // mul $n,0 / ban $n,0 => mov $n,0
+          else if (op.type == Operation::Type::MUL ||
+                   op.type == Operation::Type::BAN) {
+            op.type = Operation::Type::MOV;
+            simplified = true;
+          }
+          // pow $n,0 / fac $n,0 => mov $n,1
+          else if (op.type == Operation::Type::POW ||
+                   op.type == Operation::Type::FAC) {
+            op.type = Operation::Type::MOV;
+            op.source = Operand(Operand::Type::CONSTANT, 1);
             simplified = true;
           }
         }

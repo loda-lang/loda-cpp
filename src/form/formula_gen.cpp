@@ -129,13 +129,58 @@ bool FormulaGenerator::facToExpression(const Expression& a, const Expression& b,
                                        const Operand& aOp, const Operand& bOp,
                                        const RangeMap* ranges,
                                        Expression& res) const {
+
+  // Optimize for small constants: convert to PRODUCT instead of FACTORIAL
+  if (b.type == Expression::Type::CONSTANT && b.value >= Number(-3) &&
+      b.value <= Number(3)) {
+    auto k = b.value.asInt();
+
+    // Trivial case: k = 0 -> result is 1
+    if (k == 0) {
+      res = constant(1);
+      return true;
+    }
+
+    // Trivial case: k = 1 or k = -1 -> result is just a
+    if (k == 1 || k == -1) {
+      res = a;
+      return true;
+    }
+
+    // Build product expression
+    res = Expression(Expression::Type::PRODUCT);
+    if (k > 0) {
+      // Rising factorial: a * (a+1) * (a+2) * ... * (a+k-1)
+      for (int64_t i = 0; i < k; i++) {
+        if (i == 0) {
+          res.newChild(a);
+        } else {
+          res.newChild(sum({a, constant(i)}));
+        }
+      }
+    } else {
+      // Falling factorial: a * (a-1) * (a-2) * ... * (a+k+1)
+      // Note: k is negative, so a+k+1 < a
+      for (int64_t i = 0; i < -k; i++) {
+        if (i == 0) {
+          res.newChild(a);
+        } else {
+          res.newChild(sum({a, constant(-i)}));
+        }
+      }
+    }
+    return true;
+  }
+  // TODO: can we relax the negativity check for b?
   if (canBeNegativeWithRanges(a, aOp, ranges) ||
       canBeNegativeWithRanges(b, bOp, ranges)) {
     return false;
   }
 
+  // General case
   Expression num(Expression::Type::FACTORIAL);
   Expression denom(Expression::Type::FACTORIAL);
+
   // Falling factorial: a!/(a+b)!
   // If b <= 0: (a)!/(a+b)!
   // If b > 0: rising factorial: (a+b-1)!/(a-1)!
@@ -149,7 +194,8 @@ bool FormulaGenerator::facToExpression(const Expression& a, const Expression& b,
     num.children = {sum({a, sum({b, constant(-1)})})};
     denom.children = {sum({a, constant(-1)})};
   }
-  // simplify immediately
+
+  // Simplify immediately
   auto& d = denom.children.front();
   ExpressionUtil::normalize(d);
   if (d.type == Expression::Type::CONSTANT &&
@@ -526,9 +572,15 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     Log::get().debug("Processed post-loop: " + formula.toString());
   }
 
-  // resolve simple recursions
-  FormulaSimplify::replaceTrivialRecursions(formula);
-  Log::get().debug("Resolved simple recursions: " + formula.toString());
+  // replace arithmetic progressions
+  if (FormulaSimplify::replaceArithmeticProgressions(formula)) {
+    Log::get().debug("Replaced arithmetic progressions: " + formula.toString());
+  }
+
+  // replace geometric progressions
+  if (FormulaSimplify::replaceGeometricProgressions(formula)) {
+    Log::get().debug("Replaced geometric progressions: " + formula.toString());
+  }
 
   // resolve simple functions
   FormulaSimplify::resolveSimpleFunctions(formula);
@@ -722,6 +774,11 @@ bool FormulaGenerator::generate(const Program& p, int64_t id, Formula& result,
 
   // replace simple references to recursive functions
   FormulaSimplify::replaceSimpleRecursiveRefs(result);
+
+  // replace arithmetic & geometric progressions
+  // TODO: check if this is really needed here
+  FormulaSimplify::replaceArithmeticProgressions(formula);
+  FormulaSimplify::replaceGeometricProgressions(result);
 
   // replace functions A000142(n) by n! in all formula definitions
   const auto factorialSeqName = FACTORIAL_SEQ_ID.string();
