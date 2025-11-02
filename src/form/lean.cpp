@@ -108,7 +108,7 @@ bool LeanFormula::convertToLean(Expression& expr, Number patternOffset,
         imports.insert("Mathlib.Data.Int.Bitwise");
         break;
       }
-      // Allow calls to locally defined functions incl. recursions
+      // Allow calls to locally defined functions and sequences
       if (isLocalOrSeqFunc(expr.name)) {
         // When domain is Nat, wrap arguments with Int.toNat to convert Int to
         // Nat Only wrap if the argument needs it (contains Int-returning
