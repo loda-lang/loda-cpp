@@ -613,7 +613,7 @@ void MineManager::alert(Program p, UID id, const std::string& prefix,
   if (!submitter.empty()) {
     std::string sub = Comments::PREFIX_SUBMITTED_BY + " " + submitter;
     msg += " " + sub;
-    full += ". " + sub;
+    full += ". " + escapeDiscordMarkdown(sub);
   }
   Log::AlertDetails details;
   details.title = seq.id.string();
