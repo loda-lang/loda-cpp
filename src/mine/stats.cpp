@@ -277,9 +277,8 @@ void Stats::save(std::string path) {
                        std::to_string(program_usages[id]),
                        std::to_string(inceval), std::to_string(logeval),
                        std::to_string(vireval), std::to_string(loop_flag),
-                       std::to_string(formula_flag),
-                       std::to_string(pari_flag), std::to_string(lean_flag),
-                       std::to_string(indirect_flag),
+                       std::to_string(formula_flag), std::to_string(pari_flag),
+                       std::to_string(lean_flag), std::to_string(indirect_flag),
                        std::to_string(program_operation_types_bitmask[id])});
     }
     writer.close();
@@ -392,7 +391,8 @@ std::string Stats::getMainStatsFile(std::string path) const {
 }
 
 void Stats::updateProgramStats(UID id, const Program& program,
-                               std::string submitter, const std::string& formula_str, int64_t offset) {
+                               std::string submitter,
+                               const std::string& formula_str, int64_t offset) {
   const size_t num_ops = ProgramUtil::numOps(program, false);
   program_lengths[id] = num_ops;
   if (num_ops >= num_programs_per_length.size()) {
@@ -482,12 +482,14 @@ void Stats::updateProgramStats(UID id, const Program& program,
     FormulaParser parser;
     Formula formula;
     if (parser.parse(formula_str, formula)) {
-      // Try PARI conversion (with offset from program directive and as_vector false as default)
+      // Try PARI conversion (with offset from program directive and as_vector
+      // false as default)
       PariFormula pari_formula;
       if (PariFormula::convert(formula, offset, false, pari_formula)) {
         has_pari.insert(id);
       }
-      // Try LEAN conversion (with offset from program directive and as_vector false as default)
+      // Try LEAN conversion (with offset from program directive and as_vector
+      // false as default)
       LeanFormula lean_formula;
       if (LeanFormula::convert(formula, offset, false, lean_formula)) {
         has_lean.insert(id);

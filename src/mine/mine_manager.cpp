@@ -334,7 +334,8 @@ void MineManager::generateStats(int64_t age_in_days) {
         ProgramUtil::removeOps(program, Operation::Type::NOP);
 
         // update stats
-        stats->updateProgramStats(s.id, program, submitter, formula_str, offset);
+        stats->updateProgramStats(s.id, program, submitter, formula_str,
+                                  offset);
         num_processed++;
       } catch (const std::exception& exc) {
         Log::get().error(
