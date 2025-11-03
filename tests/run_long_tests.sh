@@ -78,9 +78,6 @@ run_test() {
     local end_time=$(date +%s)
     local duration=$((end_time - start_time))
     
-    # Read the output
-    local output=$(cat "$output_file")
-    
     # Determine status
     local status
     local status_emoji
