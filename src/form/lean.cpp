@@ -125,14 +125,17 @@ bool LeanFormula::convertToLean(Expression& expr, Number patternOffset,
       }
       return false;
     }
-    case Expression::Type::POWER:
-      // Support only non-negative constants as exponents
-      if (expr.children.size() != 2 ||
-          expr.children[1].type != Expression::Type::CONSTANT ||
-          expr.children[1].value < Number::ZERO) {
+    case Expression::Type::POWER: {
+      // Support only non-negative exponents
+      if (expr.children.size() != 2) {
+        return false;
+      }
+      int64_t offset = (patternOffset == Number::INF) ? 0 : patternOffset.asInt();
+      if (ExpressionUtil::canBeNegative(expr.children[1], offset)) {
         return false;
       }
       break;
+    }
     default:
       break;
   }
