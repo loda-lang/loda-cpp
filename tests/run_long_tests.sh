@@ -7,6 +7,9 @@
 
 set -e
 
+# Constants
+DISCORD_OUTPUT_LIMIT=1400  # Safe limit for Discord message output to avoid breaking UTF-8
+
 # Color codes for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -47,12 +50,12 @@ send_to_discord() {
     
     # Create temporary JSON file
     local tmp_file
-    tmp_file=$(mktemp /tmp/loda_discord_XXXXXX.json)
+    tmp_file=$(mktemp)
     echo "{\"content\":\"$escaped_message\"}" > "$tmp_file"
     
     # Send to Discord using curl
     local curl_error
-    curl_error=$(mktemp /tmp/loda_discord_error_XXXXXX.txt)
+    curl_error=$(mktemp)
     if curl -fsSL -X POST -H "Content-Type: application/json" -d @"$tmp_file" "$LODA_DISCORD_WEBHOOK" 2>"$curl_error"; then
         echo -e "${GREEN}✓ Results uploaded to Discord${NC}"
     else
@@ -80,7 +83,7 @@ run_test() {
     
     # Create temporary file for output
     local output_file
-    output_file=$(mktemp /tmp/loda_test_output_XXXXXX.txt)
+    output_file=$(mktemp)
     
     # Run the test and capture output and exit code
     local start_time
@@ -116,7 +119,7 @@ run_test() {
     # Prepare Discord message with safe truncation (avoid breaking multi-byte characters)
     # Use head -c to limit bytes, but be conservative to avoid breaking UTF-8
     local output_tail
-    output_tail=$(tail -20 "$output_file" | head -c 1400)
+    output_tail=$(tail -20 "$output_file" | head -c "$DISCORD_OUTPUT_LIMIT")
     local discord_message
     discord_message="$status_emoji **$test_name** - $status\nExit code: $exit_code\nDuration: ${duration}s\n\nLast 20 lines of output:\n\`\`\`\n${output_tail}\n\`\`\`"
     
