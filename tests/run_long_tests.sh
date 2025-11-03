@@ -21,7 +21,12 @@ LODA_BIN="$LODA_DIR/loda"
 # Check if loda binary exists
 if [ ! -f "$LODA_BIN" ]; then
     echo -e "${RED}Error: loda binary not found at $LODA_BIN${NC}"
-    echo "Please build the project first by running: cd src && make -f Makefile.linux-x86.mk"
+    echo "Please build the project first by running: cd src && make -f Makefile.<platform>.mk"
+    echo "  Linux x86_64:   make -f Makefile.linux-x86.mk"
+    echo "  Linux ARM64:    make -f Makefile.linux-arm64.mk"
+    echo "  macOS x86_64:   make -f Makefile.macos-x86.mk"
+    echo "  macOS ARM64:    make -f Makefile.macos-arm64.mk"
+    echo "  Windows:        nmake /F Makefile.windows.mk"
     exit 1
 fi
 
@@ -36,22 +41,29 @@ send_to_discord() {
     fi
     
     # Escape special characters for JSON
-    # Replace backslashes first, then quotes and newlines
-    local escaped_message=$(echo "$message" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | awk '{printf "%s\\n", $0}' | sed 's/\\n$//')
+    # Replace backslashes first, then quotes, then newlines
+    local escaped_message
+    escaped_message=$(echo "$message" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | awk '{printf "%s\\n", $0}' | sed 's/\\n$//')
     
     # Create temporary JSON file
-    local tmp_file=$(mktemp /tmp/loda_discord_XXXXXX.json)
+    local tmp_file
+    tmp_file=$(mktemp /tmp/loda_discord_XXXXXX.json)
     echo "{\"content\":\"$escaped_message\"}" > "$tmp_file"
     
     # Send to Discord using curl
-    if curl -fsSL -X POST -H "Content-Type: application/json" -d @"$tmp_file" "$LODA_DISCORD_WEBHOOK" > /dev/null 2>&1; then
+    local curl_error
+    curl_error=$(mktemp /tmp/loda_discord_error_XXXXXX.txt)
+    if curl -fsSL -X POST -H "Content-Type: application/json" -d @"$tmp_file" "$LODA_DISCORD_WEBHOOK" 2>"$curl_error"; then
         echo -e "${GREEN}✓ Results uploaded to Discord${NC}"
     else
         echo -e "${RED}✗ Failed to upload results to Discord${NC}"
+        if [ -s "$curl_error" ]; then
+            echo -e "${RED}Error details: $(cat "$curl_error")${NC}"
+        fi
     fi
     
     # Clean up
-    rm -f "$tmp_file"
+    rm -f "$tmp_file" "$curl_error"
 }
 
 # Function to run a test and upload results
@@ -67,15 +79,18 @@ run_test() {
     echo ""
     
     # Create temporary file for output
-    local output_file=$(mktemp /tmp/loda_test_output_XXXXXX.txt)
+    local output_file
+    output_file=$(mktemp /tmp/loda_test_output_XXXXXX.txt)
     
     # Run the test and capture output and exit code
-    local start_time=$(date +%s)
+    local start_time
+    start_time=$(date +%s)
     set +e
     $test_command > "$output_file" 2>&1
     local exit_code=$?
     set -e
-    local end_time=$(date +%s)
+    local end_time
+    end_time=$(date +%s)
     local duration=$((end_time - start_time))
     
     # Determine status
@@ -98,8 +113,12 @@ run_test() {
     tail -20 "$output_file"
     echo "----------------------------------------"
     
-    # Prepare Discord message
-    local discord_message="$status_emoji **$test_name** - $status\nExit code: $exit_code\nDuration: ${duration}s\n\nLast 20 lines of output:\n\`\`\`\n$(tail -20 "$output_file" | head -c 1500)\n\`\`\`"
+    # Prepare Discord message with safe truncation (avoid breaking multi-byte characters)
+    # Use head -c to limit bytes, but be conservative to avoid breaking UTF-8
+    local output_tail
+    output_tail=$(tail -20 "$output_file" | head -c 1400)
+    local discord_message
+    discord_message="$status_emoji **$test_name** - $status\nExit code: $exit_code\nDuration: ${duration}s\n\nLast 20 lines of output:\n\`\`\`\n${output_tail}\n\`\`\`"
     
     # Upload to Discord
     send_to_discord "$discord_message"
