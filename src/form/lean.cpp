@@ -36,14 +36,14 @@ bool LeanFormula::needsIntToNat(const Expression& expr) const {
          expr.contains(Expression::Type::FUNCTION, "Int.gcd");
 }
 
-bool LeanFormula::convertToLean(Expression& expr, Number patternOffset,
-                                bool insideOfLocalFunc, int64_t offset) {
+bool LeanFormula::convertToLean(Expression& expr, int64_t offset,
+                                Number patternOffset, bool insideOfLocalFunc) {
   bool childInsideOfLocalFunc =
       insideOfLocalFunc ||
       (expr.type == Expression::Type::FUNCTION && isLocalOrSeqFunc(expr.name));
   // Check children recursively
   for (auto& c : expr.children) {
-    if (!convertToLean(c, patternOffset, childInsideOfLocalFunc, offset)) {
+    if (!convertToLean(c, offset, patternOffset, childInsideOfLocalFunc)) {
       return false;
     }
   }
@@ -187,7 +187,7 @@ bool LeanFormula::convert(const Formula& formula, int64_t offset,
         maxBaseCases.find(left.name) != maxBaseCases.end()) {
       patternOffset = maxBaseCases[left.name] + 1;
     }
-    if (!lean_formula.convertToLean(right, patternOffset, false, offset)) {
+    if (!lean_formula.convertToLean(right, offset, patternOffset, false)) {
       return false;
     }
     lean_formula.main_formula.entries[left] = right;

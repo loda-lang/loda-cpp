@@ -32,8 +32,8 @@ class LeanFormula {
 
   static bool initializeLeanProject();
 
-  bool convertToLean(Expression& expr, Number patternOffset,
-                     bool insideOfLocalFunc, int64_t offset);
+  bool convertToLean(Expression& expr, int64_t offset, Number patternOffset,
+                     bool insideOfLocalFunc);
 
   bool needsIntToNat(const Expression& expr) const;
 
