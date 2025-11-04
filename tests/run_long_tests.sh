@@ -21,9 +21,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LODA_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 LODA_BIN="$LODA_DIR/loda"
 
-# Set test environment flags
-export LODA_TEST_WITH_EXTERNAL_TOOLS=1
-
 # Create output directory with timestamp
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 OUTPUT_DIR="$SCRIPT_DIR/test_output_$TIMESTAMP"
