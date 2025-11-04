@@ -41,8 +41,8 @@ std::string OverrideModeToString(OverwriteMode mode) {
   return "unknown";
 }
 
-MineManager::MineManager(const Settings &settings,
-                         const std::string &stats_home)
+MineManager::MineManager(const Settings& settings,
+                         const std::string& stats_home)
     : settings(settings),
       evaluator(settings, EVAL_ALL, true),
       finder(settings, evaluator),
@@ -105,7 +105,7 @@ void MineManager::load() {
   loader.checkConsistency();
 }
 
-Finder &MineManager::getFinder() {
+Finder& MineManager::getFinder() {
   if (!finder_initialized) {
     // generate stats is needed
     getStats();
@@ -117,7 +117,7 @@ Finder &MineManager::getFinder() {
         "\", backoff: " + (config.usesBackoff() ? "true" : "false"));
     ignore_list.clear();
     size_t num_matching = 0;
-    for (auto &seq : sequences) {
+    for (auto& seq : sequences) {
       if (shouldMatch(seq)) {
         auto seq_norm = seq.getTerms(settings.num_terms);
         finder.insert(seq_norm, seq.id);
@@ -137,7 +137,7 @@ Finder &MineManager::getFinder() {
   return finder;
 }
 
-bool MineManager::shouldMatch(const ManagedSequence &seq) const {
+bool MineManager::shouldMatch(const ManagedSequence& seq) const {
   // ignore empty sequence ids
   if (seq.id.number() == 0) {
     return false;
@@ -237,7 +237,7 @@ void MineManager::update(bool force) {
       Log::get().info("Updating OEIS index (last update " +
                       std::to_string(oeis_age_in_days) + " days ago)");
     }
-    for (const auto &file : files) {
+    for (const auto& file : files) {
       const auto path = oeis_home + file;
       ApiClient::getDefaultInstance().getOeisFile(file, path);
     }
@@ -272,14 +272,14 @@ void MineManager::update(bool force) {
         Setup::getMiningMode() == MiningMode::MINING_MODE_CLIENT) {
       Log::get().info("Cleaning up local programs directory");
       int64_t num_removed = 0;
-      for (const auto &f : std::filesystem::directory_iterator(local_dir)) {
+      for (const auto& f : std::filesystem::directory_iterator(local_dir)) {
         const auto stem = f.path().filename().stem().string();
         const auto ext = f.path().filename().extension().string();
         bool is_program;
         try {
           UID s(stem);
           is_program = true;
-        } catch (const std::exception &) {
+        } catch (const std::exception&) {
           is_program = stem.rfind("api-", 0) == 0;
         }
         is_program = is_program && (ext == ".asm");
@@ -317,7 +317,7 @@ void MineManager::generateStats(int64_t age_in_days) {
   bool has_program, has_formula;
 
   AdaptiveScheduler notify(20);  // magic number
-  for (const auto &s : sequences) {
+  for (const auto& s : sequences) {
     file_name = ProgramUtil::getProgramPath(s.id);
     std::ifstream program_file(file_name);
     has_program = false;
@@ -326,16 +326,18 @@ void MineManager::generateStats(int64_t age_in_days) {
       try {
         program = parser.parse(program_file);
         has_program = true;
-        has_formula =
-            !Comments::getCommentField(program, Comments::PREFIX_FORMULA)
-                 .empty();
+        std::string formula_str =
+            Comments::getCommentField(program, Comments::PREFIX_FORMULA);
+        has_formula = !formula_str.empty();
         submitter = Comments::getSubmitter(program);
+        int64_t offset = ProgramUtil::getOffset(program);
         ProgramUtil::removeOps(program, Operation::Type::NOP);
 
         // update stats
-        stats->updateProgramStats(s.id, program, submitter, has_formula);
+        stats->updateProgramStats(s.id, program, submitter, formula_str,
+                                  offset);
         num_processed++;
-      } catch (const std::exception &exc) {
+      } catch (const std::exception& exc) {
         Log::get().error(
             "Error parsing " + file_name + ": " + std::string(exc.what()),
             false);
@@ -372,9 +374,9 @@ void MineManager::cleanupListFiles() {
   if (!isDir(lists_home)) {
     return;  // nothing to clean up
   }
-  
+
   Log::get().debug("Cleaning up leftover list files at \"" + lists_home + "\"");
-  
+
   // Delete list*.markdown files
   const size_t max_lists = 10;
   size_t deleted_count = 0;
@@ -385,13 +387,13 @@ void MineManager::cleanupListFiles() {
       deleted_count++;
     }
   }
-  
+
   // Delete no_loda.txt
   const std::string no_loda_path = lists_home + "no_loda.txt";
   if (std::remove(no_loda_path.c_str()) == 0) {
     deleted_count++;
   }
-  
+
   if (deleted_count > 0) {
     Log::get().info("Deleted " + std::to_string(deleted_count) +
                     " leftover list files");
@@ -401,7 +403,7 @@ void MineManager::cleanupListFiles() {
 void MineManager::migrate() {
   load();
   AdaptiveScheduler scheduler(20);
-  for (const auto &s : sequences) {
+  for (const auto& s : sequences) {
     const auto path = ProgramUtil::getProgramPath(s.id);
     std::ifstream f(path);
     if (!f.good()) {
@@ -413,7 +415,7 @@ void MineManager::migrate() {
     const auto submitter = Comments::getSubmitter(p);
     ProgramUtil::removeOps(p, Operation::Type::NOP);
     for (size_t i = 0; i < 3 && i < p.ops.size(); i++) {
-      auto &op = p.ops[i];
+      auto& op = p.ops[i];
       if ((op.type == Operation::Type::MOD ||
            op.type == Operation::Type::MIN) &&
           op.source.type == Operand::Type::CONSTANT &&
@@ -436,9 +438,9 @@ void MineManager::migrate() {
   }
 }
 
-const SequenceIndex &MineManager::getSequences() const { return sequences; }
+const SequenceIndex& MineManager::getSequences() const { return sequences; }
 
-const Stats &MineManager::getStats() {
+const Stats& MineManager::getStats() {
   if (!stats) {
     // obtain lock
     FolderLock lock(stats_home);
@@ -459,7 +461,7 @@ const Stats &MineManager::getStats() {
     }
     try {
       stats->load(stats_home);
-    } catch (const std::exception &e) {
+    } catch (const std::exception& e) {
       Log::get().warn("Exception during stats loading, regenerating...");
       generateStats(age_in_days);
       stats->load(stats_home);  // reload
@@ -490,8 +492,8 @@ const Stats &MineManager::getStats() {
   return *stats;
 }
 
-void MineManager::addSeqComments(Program &p) const {
-  for (auto &op : p.ops) {
+void MineManager::addSeqComments(Program& p) const {
+  for (auto& op : p.ops) {
     if (op.type == Operation::Type::SEQ &&
         op.source.type == Operand::Type::CONSTANT) {
       const auto id = UID::castFromInt(op.source.value.asInt());
@@ -502,7 +504,7 @@ void MineManager::addSeqComments(Program &p) const {
   }
 }
 
-int64_t MineManager::updateProgramOffset(UID id, Program &p) const {
+int64_t MineManager::updateProgramOffset(UID id, Program& p) const {
   if (!sequences.exists(id)) {
     return 0;
   }
@@ -514,13 +516,13 @@ void MineManager::updateDependentOffset(UID id, UID used_id, int64_t delta) {
   Program p;
   try {
     p = parser.parse(path);
-  } catch (const std::exception &) {
+  } catch (const std::exception&) {
     return;  // ignore this dependent program
   }
   auto submitter = Comments::getSubmitter(p);
   bool updated = false;
   for (size_t i = 0; i < p.ops.size(); i++) {
-    const auto &op = p.ops[i];
+    const auto& op = p.ops[i];
     if (op.type == Operation::Type::SEQ &&
         op.source.type == Operand::Type::CONSTANT &&
         op.source.value == Number(used_id.number())) {
@@ -541,21 +543,22 @@ void MineManager::updateAllDependentOffset(UID id, int64_t delta) {
   if (delta == 0) {
     return;
   }
-  const auto &call_graph = getStats().call_graph;
-  for (const auto &entry : call_graph) {
+  const auto& call_graph = getStats().call_graph;
+  for (const auto& entry : call_graph) {
     if (entry.second == id) {
       updateDependentOffset(entry.first, entry.second, delta);
     }
   }
 }
 
-void MineManager::dumpProgram(UID id, Program &p, const std::string &file,
-                              const std::string &submitter) const {
+std::string MineManager::dumpProgram(UID id, Program& p,
+                                     const std::string& file,
+                                     const std::string& submitter) const {
   ProgramUtil::removeOps(p, Operation::Type::NOP);
   Comments::removeComments(p);
   addSeqComments(p);
   ensureDir(file);
-  const auto &seq = sequences.get(id);
+  const auto& seq = sequences.get(id);
   Program tmp;
   Operation nop(Operation::Type::NOP);
   nop.comment = seq.string();
@@ -577,8 +580,10 @@ void MineManager::dumpProgram(UID id, Program &p, const std::string &file,
   tmp.ops.push_back(nop);
   FormulaGenerator generator;
   Formula formula;
+  std::string formulaStr;
   if (generator.generate(p, id.number(), formula, false)) {
-    nop.comment = Comments::PREFIX_FORMULA + " " + formula.toString();
+    formulaStr = formula.toString();
+    nop.comment = Comments::PREFIX_FORMULA + " " + formulaStr;
     tmp.ops.push_back(nop);
   }
   nop.comment.clear();
@@ -587,34 +592,36 @@ void MineManager::dumpProgram(UID id, Program &p, const std::string &file,
   std::ofstream out(file);
   ProgramUtil::print(p, out);
   out.close();
+  return formulaStr;
 }
 
-void MineManager::alert(Program p, UID id, const std::string &prefix,
-                        const std::string &color,
-                        const std::string &submitter) const {
-  const auto &seq = sequences.get(id);
+void MineManager::alert(Program p, UID id, const std::string& prefix,
+                        const std::string& color, const std::string& formula,
+                        const std::string& submitter) const {
+  const auto& seq = sequences.get(id);
   std::string msg, full;
+  // msg is for logging (no markdown escaping needed)
   msg = prefix + " program for " + seq.string();
   if (msg[msg.size() - 1] != '.') {
     msg += ".";
   }
-  full = msg + " Terms: " + seq.getTerms(settings.num_terms).to_string();
-  FormulaGenerator generator;
-  Formula formula;
-  if (generator.generate(p, id.number(), formula, false)) {
-    full += ". " + Comments::PREFIX_FORMULA + " " + formula.toString();
+  // full is for Discord (markdown escaping needed for sequence name)
+  full = escapeDiscordMarkdown(msg) +
+         " Terms: " + seq.getTerms(settings.num_terms).to_string();
+
+  if (!formula.empty()) {
+    full += ". " + Comments::PREFIX_FORMULA + " `" + formula + "`";
   }
   if (!submitter.empty()) {
     std::string sub = Comments::PREFIX_SUBMITTED_BY + " " + submitter;
     msg += " " + sub;
-    full += ". " + sub;
+    full += ". " + escapeDiscordMarkdown(sub);
   }
   Log::AlertDetails details;
   details.title = seq.id.string();
   details.title_link = SequenceUtil::getOeisUrl(seq.id);
   details.color = color;
   std::stringstream buf;
-  // TODO: code block markers must be escaped for Slack, but not for Discord
   buf << full << "\\n```\\n";
   ProgramUtil::removeOps(p, Operation::Type::NOP);
   addSeqComments(p);
@@ -634,7 +641,7 @@ Program MineManager::getExistingProgram(UID id) {
     const std::string file_name = has_local ? local_file : global_file;
     try {
       existing = parser.parse(file_name);
-    } catch (const std::exception &) {
+    } catch (const std::exception&) {
       Log::get().error("Error parsing " + file_name, false);
       existing.ops.clear();
     }
@@ -668,7 +675,7 @@ update_program_result_t MineManager::updateProgram(
   }
 
   // check if there is an existing program already
-  auto &seq = sequences.get(id);
+  auto& seq = sequences.get(id);
   auto existing = getExistingProgram(id);
   bool is_new = existing.ops.empty();
 
@@ -715,7 +722,7 @@ update_program_result_t MineManager::updateProgram(
   const std::string target_file = ProgramUtil::getProgramPath(id, !is_server);
   auto delta = updateProgramOffset(id, result.program);
   optimizer.optimize(result.program);
-  dumpProgram(id, result.program, target_file, submitter);
+  const auto formula = dumpProgram(id, result.program, target_file, submitter);
   if (is_server) {
     updateAllDependentOffset(id, delta);
   }
@@ -731,8 +738,8 @@ update_program_result_t MineManager::updateProgram(
   }
 
   // send alert
-  std::string color = is_new ? "good" : "warning";
-  alert(result.program, id, checked.status, color, submitter);
+  const std::string color = is_new ? "good" : "warning";
+  alert(result.program, id, checked.status, color, formula, submitter);
 
   return result;
 }
@@ -743,7 +750,7 @@ bool MineManager::maintainProgram(UID id, bool eval) {
   if (id.number() == 0 || !sequences.exists(id)) {
     return true;
   }
-  auto &s = sequences.get(id);
+  auto& s = sequences.get(id);
 
   // try to open the program file
   const std::string file_name = ProgramUtil::getProgramPath(s.id);
@@ -763,7 +770,7 @@ bool MineManager::maintainProgram(UID id, bool eval) {
     try {
       program = parser.parse(program_file);
       submitter = Comments::getSubmitter(program);
-    } catch (const std::exception &) {
+    } catch (const std::exception&) {
       is_okay = false;
     }
     program_file.close();
@@ -774,7 +781,7 @@ bool MineManager::maintainProgram(UID id, bool eval) {
     try {
       ProgramCache cache;
       cache.collect(s.id);
-    } catch (const std::exception &) {
+    } catch (const std::exception&) {
       is_okay = false;
     }
   }
@@ -790,7 +797,7 @@ bool MineManager::maintainProgram(UID id, bool eval) {
         return true;  // interrupted evaluation
       }
       is_okay = (res.first != status_t::ERROR);  // we allow warnings
-    } catch (const std::exception &e) {
+    } catch (const std::exception& e) {
       Log::get().error(
           "Error checking " + file_name + ": " + std::string(e.what()), false);
       return true;  // not clear what happened, so don't remove it
@@ -814,14 +821,14 @@ bool MineManager::maintainProgram(UID id, bool eval) {
       }
       dumpProgram(s.id, updated, file_name, submitter);
       updateAllDependentOffset(s.id, delta);
-    } catch (const std::exception &e) {
+    } catch (const std::exception& e) {
       is_okay = false;
     }
   }
 
   if (!is_okay) {
     // send alert and remove file
-    alert(program, id, "Removed invalid", "danger", "");
+    alert(program, id, "Removed invalid", "danger", "", "");
     remove(file_name.c_str());
   }
 
@@ -830,7 +837,7 @@ bool MineManager::maintainProgram(UID id, bool eval) {
 
 std::vector<Program> MineManager::loadAllPrograms() {
   load();
-  auto &program_ids = getStats().all_program_ids;
+  auto& program_ids = getStats().all_program_ids;
   const auto num_programs = getStats().num_programs;
   std::vector<Program> programs;
   Log::get().info("Loading " + std::to_string(num_programs) + " programs");
@@ -844,7 +851,7 @@ std::vector<Program> MineManager::loadAllPrograms() {
     try {
       programs.push_back(parser.parse(in));
       loaded++;
-    } catch (const std::exception &e) {
+    } catch (const std::exception& e) {
       Log::get().warn("Skipping " + id.string() + ": " + e.what());
       continue;
     }

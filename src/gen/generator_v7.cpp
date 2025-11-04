@@ -1,4 +1,4 @@
-#include "mine/generator_v7.hpp"
+#include "gen/generator_v7.hpp"
 
 #include "lang/comments.hpp"
 #include "lang/parser.hpp"

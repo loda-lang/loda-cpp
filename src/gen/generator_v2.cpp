@@ -1,6 +1,6 @@
-#include "mine/generator_v2.hpp"
+#include "gen/generator_v2.hpp"
 
-#include "mine/generator.hpp"
+#include "gen/generator.hpp"
 #include "mine/stats.hpp"
 
 GeneratorV2::GeneratorV2(const Config &config, const Stats &stats)

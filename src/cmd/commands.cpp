@@ -21,7 +21,7 @@
 #include "lang/program_util.hpp"
 #include "lang/subprogram.hpp"
 #include "lang/virtual_seq.hpp"
-#include "mine/iterator.hpp"
+#include "gen/iterator.hpp"
 #include "mine/mine_manager.hpp"
 #include "mine/miner.hpp"
 #include "mine/mutator.hpp"

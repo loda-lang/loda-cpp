@@ -50,8 +50,8 @@ class MineManager {
 
   bool maintainProgram(UID id, bool eval = true);
 
-  void dumpProgram(UID id, Program& p, const std::string& file,
-                   const std::string& submitted_by) const;
+  std::string dumpProgram(UID id, Program& p, const std::string& file,
+                          const std::string& submitted_by) const;
 
   std::vector<Program> loadAllPrograms();
 
@@ -79,7 +79,8 @@ class MineManager {
   void updateAllDependentOffset(UID id, int64_t delta);
 
   void alert(Program p, UID id, const std::string& prefix,
-             const std::string& color, const std::string& submitted_by) const;
+             const std::string& color, const std::string& formula,
+             const std::string& submitted_by) const;
 
   const Settings& settings;
   OverwriteMode overwrite_mode;

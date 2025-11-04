@@ -1,7 +1,7 @@
 #pragma once
 
-#include "mine/generator.hpp"
-#include "mine/iterator.hpp"
+#include "gen/generator.hpp"
+#include "gen/iterator.hpp"
 #include "sys/util.hpp"
 
 class ProgramState {

@@ -12,6 +12,7 @@ The C++ source code organized under the `src/` directory into the following modu
 - [cmd](../src/cmd): Command-line interface, test suite, and main entry point
 - [eval](../src/eval): Interpreter and evaluation engine for LODA programs
 - [form](../src/form): Formula generation (including PARI/GP integration)
+- [gen](../src/gen): Random program generation
 - [lang](../src/lang): LODA language core (parser, analyzer, program representation)
 - [math](../src/math): Internal math library (big numbers, integer sequences)
 - [mine](../src/mine): Mining infrastructure (generators, matchers, miners)

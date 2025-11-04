@@ -44,7 +44,7 @@ class Test {
 
   void virtualEval();
 
-  static bool checkEvaluator(const Settings &settings, size_t id,
+  static bool checkEvaluator(const Settings& settings, size_t id,
                              std::string path, eval_mode_t evalMode,
                              bool mustSupportEvalMode);
 
@@ -90,32 +90,32 @@ class Test {
 
   enum class FormulaType { FORMULA, PARI_FUNCTION, PARI_VECTOR, LEAN };
 
-  void checkFormulas(const std::string &testFile, FormulaType type);
+  void checkFormulas(const std::string& testFile, FormulaType type);
 
   template <typename FormulaTypeClass>
-  void checkFormulasWithExternalTools(const std::string &testFile,
+  void checkFormulasWithExternalTools(const std::string& testFile,
                                       bool asVector);
 
-  void checkRanges(int64_t id, bool finite, const std::string &expected);
+  void checkRanges(int64_t id, bool finite, const std::string& expected);
 
  private:
   std::vector<std::pair<Program, Program>> loadInOutTests(
-      const std::string &prefix);
+      const std::string& prefix);
 
-  void testRanges(const std::string &filename, bool finite);
+  void testRanges(const std::string& filename, bool finite);
 
-  void testSeq(size_t id, const Sequence &values);
+  void testSeq(size_t id, const Sequence& values);
 
-  void testBinary(const std::string &func, const std::string &file,
-                  const std::vector<std::vector<int64_t>> &values);
+  void testBinary(const std::string& func, const std::string& file,
+                  const std::vector<std::vector<int64_t>>& values);
 
-  void testMatcherSet(Matcher &matcher, const std::vector<size_t> &ids);
+  void testMatcherSet(Matcher& matcher, const std::vector<size_t>& ids);
 
-  void testMatcherPair(Matcher &matcher, size_t id1, size_t id2);
+  void testMatcherPair(Matcher& matcher, size_t id1, size_t id2);
 
-  void testPariEval(const std::string &testFile, bool asVector);
+  void testPariEval(const std::string& testFile, bool asVector);
 
-  MineManager &getManager();
+  MineManager& getManager();
 
   Settings settings;
   std::unique_ptr<MineManager> manager_ptr;

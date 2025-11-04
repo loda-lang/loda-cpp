@@ -35,7 +35,9 @@ class LeanFormula {
   bool convertToLean(Expression& expr, Number patternOffset,
                      bool insideOfLocalFunc);
 
-  bool isLocalFunc(const std::string& funcName) const;
+  bool needsIntToNat(const Expression& expr) const;
+
+  bool isLocalOrSeqFunc(const std::string& funcName) const;
 
   std::string printFunction(const std::string& funcName) const;
 };
