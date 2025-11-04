@@ -133,6 +133,11 @@ bool LeanFormula::convertToLean(Expression& expr, int64_t offset,
       if (ExpressionUtil::canBeNegative(expr.children[1], offset)) {
         return false;
       }
+      // Wrap non-constant exponent with Int.toNat for LEAN compatibility
+      if (expr.children[1].type != Expression::Type::CONSTANT) {
+        Expression toNat(Expression::Type::FUNCTION, "Int.toNat", {expr.children[1]});
+        expr.children[1] = toNat;
+      }
       break;
     }
     default:
