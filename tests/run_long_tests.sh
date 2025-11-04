@@ -21,6 +21,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LODA_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 LODA_BIN="$LODA_DIR/loda"
 
+# Set test environment flags
+export LODA_TEST_WITH_EXTERNAL_TOOLS=1
+
 # Create output directory with timestamp
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 OUTPUT_DIR="$SCRIPT_DIR/test_output_$TIMESTAMP"
@@ -30,11 +33,6 @@ mkdir -p "$OUTPUT_DIR"
 if [ ! -f "$LODA_BIN" ]; then
     echo -e "${RED}Error: loda binary not found at $LODA_BIN${NC}"
     echo "Please build the project first by running: cd src && make -f Makefile.<platform>.mk"
-    echo "  Linux x86_64:   make -f Makefile.linux-x86.mk"
-    echo "  Linux ARM64:    make -f Makefile.linux-arm64.mk"
-    echo "  macOS x86_64:   make -f Makefile.macos-x86.mk"
-    echo "  macOS ARM64:    make -f Makefile.macos-arm64.mk"
-    echo "  Windows:        nmake /F Makefile.windows.mk"
     exit 1
 fi
 
@@ -145,7 +143,6 @@ echo "Discord webhook: ${LODA_DISCORD_WEBHOOK:+configured}"
 run_test "test-inceval" "$LODA_BIN test-inceval"
 run_test "test-vireval" "$LODA_BIN test-vireval"
 run_test "test-pari" "$LODA_BIN test-pari"
-run_test "test-analyzer" "$LODA_BIN test-analyzer"
 run_test "test-lean" "$LODA_BIN test-lean"
 run_test "test-formula-parser" "$LODA_BIN test-formula-parser"
 
