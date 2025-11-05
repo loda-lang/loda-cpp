@@ -36,14 +36,14 @@ bool LeanFormula::needsIntToNat(const Expression& expr) const {
          expr.contains(Expression::Type::FUNCTION, "Int.gcd");
 }
 
-bool LeanFormula::convertToLean(Expression& expr, Number patternOffset,
-                                bool insideOfLocalFunc) {
+bool LeanFormula::convertToLean(Expression& expr, int64_t offset,
+                                Number patternOffset, bool insideOfLocalFunc) {
   bool childInsideOfLocalFunc =
       insideOfLocalFunc ||
       (expr.type == Expression::Type::FUNCTION && isLocalOrSeqFunc(expr.name));
   // Check children recursively
   for (auto& c : expr.children) {
-    if (!convertToLean(c, patternOffset, childInsideOfLocalFunc)) {
+    if (!convertToLean(c, offset, patternOffset, childInsideOfLocalFunc)) {
       return false;
     }
   }
@@ -125,14 +125,21 @@ bool LeanFormula::convertToLean(Expression& expr, Number patternOffset,
       }
       return false;
     }
-    case Expression::Type::POWER:
-      // Support only non-negative constants as exponents
-      if (expr.children.size() != 2 ||
-          expr.children[1].type != Expression::Type::CONSTANT ||
-          expr.children[1].value < Number::ZERO) {
+    case Expression::Type::POWER: {
+      // Support only non-negative exponents
+      if (expr.children.size() != 2) {
         return false;
       }
+      if (ExpressionUtil::canBeNegative(expr.children[1], offset)) {
+        return false;
+      }
+      // Wrap non-constant exponent with Int.toNat for LEAN compatibility
+      if (expr.children[1].type != Expression::Type::CONSTANT) {
+        Expression toNat(Expression::Type::FUNCTION, "Int.toNat", {expr.children[1]});
+        expr.children[1] = toNat;
+      }
       break;
+    }
     default:
       break;
   }
@@ -185,7 +192,7 @@ bool LeanFormula::convert(const Formula& formula, int64_t offset,
         maxBaseCases.find(left.name) != maxBaseCases.end()) {
       patternOffset = maxBaseCases[left.name] + 1;
     }
-    if (!lean_formula.convertToLean(right, patternOffset, false)) {
+    if (!lean_formula.convertToLean(right, offset, patternOffset, false)) {
       return false;
     }
     lean_formula.main_formula.entries[left] = right;
