@@ -4,6 +4,7 @@ A000032: def a : Nat -> Int | 0 => 2 | 1 => 1 | 2 => 3 | n+3 => (a (n+2))+(a (n+
 A000034: def a (n : Int) : Int := n%2+1
 A000035: def a (n : Int) : Int := n%2
 A000045: def a : Nat -> Int | 0 => 0 | 1 => 1 | n+2 => (a (n+1))+(a n)
+A000051: def a (n : Int) : Int := 2^(Int.toNat n)+1
 A000073: def a : Nat -> Int | 0 => 0 | 1 => 0 | 2 => 1 | n+3 => (a (n+2))+(a (n+1))+(a n)
 A000115: def a (n : Int) : Int := Int.fdiv ((n+4)^2+9) 20
 A000142: def a : Nat -> Int | 0 => 1 | n+1 => (a n)*((Int.ofNat n)+1)
@@ -25,6 +26,7 @@ A000466: def a (n : Int) : Int := 4*n^2-1
 A001093: def a (n : Int) : Int := n^3+1
 A001105: def a (n : Int) : Int := 2*n^2
 A001107: def a (n : Int) : Int := n*(4*n-3)
+A001146: def a (n : Int) : Int := 2^(Int.toNat (2^(Int.toNat n)))
 A001306: mutual
     def A000064 (n : Nat) : Int := c (n+1)
     def a (n : Nat) : Int := (b (Int.toNat (Int.fdiv n 5)))+1
@@ -32,8 +34,10 @@ A001306: mutual
     def c : Nat -> Int | 0 => 0 | 1 => 1 | 2 => 2 | 3 => 4 | 4 => 6 | 5 => 9 | 6 => 13 | 7 => 18 | 8 => 24 | 9 => 31 | n+10 => (c n)+(Int.fdiv (((Int.ofNat n)+17)*(11*(Int.ofNat n)+2*((Int.ofNat n)+9)^2+117)) 120)
   end
 A001539: def a (n : Int) : Int := (4*n+2)^2-1
+A001563: def a (n : Int) : Int := n*(Int.ofNat (Nat.factorial (Int.toNat n)))
 A002015: def a (n : Int) : Int := (n^2)%100
 A002309: def a (n : Int) : Int := Int.fdiv (n*((48*n^2-40)*n^2+7)) 15
+A002378: def a (n : Int) : Int := n*(n+1)
 A002418: def a (n : Int) : Int := Int.tdiv (n*(n*(n*(5*n+14)+7)-2)) 24
 A003188: def a (n : Int) : Int := Int.xor n (Int.fdiv n 2)
 A004079: def a (n : Int) : Int := (Bool.toInt (((Int.gcd (-14) (n-1))*(n-1))==(n-1)))+n-1
@@ -54,6 +58,7 @@ A005310: mutual
 A005600: def a (n : Int) : Int := (3*(min (n-3) 6)-(Bool.toInt ((n%4)==0))+1)%10
 A005818: def a (n : Int) : Int := 2*n-2*(Bool.toInt (0==(n-1)))+3
 A006221: def a (n : Int) : Int := n*(n*(34*n+51)+27)+5
+A007531: def a (n : Int) : Int := n*(n-2)*(n-1)
 A007899: def a (n : Int) : Int := -(Bool.toInt (0==n))+(Int.fdiv (21*n^2) 2)+2
 A008369: def a (n : Int) : Int := Int.fdiv ((Int.xor (n^2) 3)*((Int.xor (n^2) 3)+341)) 576
 A008531: def a (n : Int) : Int := n*(5*n^2+5)+(Bool.toInt (n==0))
