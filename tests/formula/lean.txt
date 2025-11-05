@@ -26,6 +26,7 @@ A000466: def a (n : Int) : Int := 4*n^2-1
 A001093: def a (n : Int) : Int := n^3+1
 A001105: def a (n : Int) : Int := 2*n^2
 A001107: def a (n : Int) : Int := n*(4*n-3)
+A001146: def a (n : Int) : Int := 2^(Int.toNat (2^(Int.toNat n)))
 A001306: mutual
     def A000064 (n : Nat) : Int := c (n+1)
     def a (n : Nat) : Int := (b (Int.toNat (Int.fdiv n 5)))+1
