@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Enhancements
+
+* Support multi-line output for PARI/GP formulas with multiple functions
+
 ## v25.11.2
 
 ### Bugfixes
