@@ -140,14 +140,21 @@ bool LeanFormula::convertToLean(Expression& expr, int64_t offset,
       }
       return false;
     }
-    case Expression::Type::POWER:
-      // Support only non-negative constants as exponents
-      if (expr.children.size() != 2 ||
-          expr.children[1].type != Expression::Type::CONSTANT ||
-          expr.children[1].value < Number::ZERO) {
+    case Expression::Type::POWER: {
+      // Support only non-negative exponents
+      if (expr.children.size() != 2) {
         return false;
       }
+      if (ExpressionUtil::canBeNegative(expr.children[1], offset)) {
+        return false;
+      }
+      // Wrap non-constant exponent with Int.toNat for LEAN compatibility
+      if (expr.children[1].type != Expression::Type::CONSTANT) {
+        Expression toNat(Expression::Type::FUNCTION, "Int.toNat", {expr.children[1]});
+        expr.children[1] = toNat;
+      }
       break;
+    }
     default:
       break;
   }

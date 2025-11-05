@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Enhancements
+
+* Improve LEAN formula generation for `pow`
+
 ## v25.11.2
 
 ### Bugfixes
