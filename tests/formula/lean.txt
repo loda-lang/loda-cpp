@@ -34,6 +34,7 @@ A001306: mutual
     def c : Nat -> Int | 0 => 0 | 1 => 1 | 2 => 2 | 3 => 4 | 4 => 6 | 5 => 9 | 6 => 13 | 7 => 18 | 8 => 24 | 9 => 31 | n+10 => (c n)+(Int.fdiv (((Int.ofNat n)+17)*(11*(Int.ofNat n)+2*((Int.ofNat n)+9)^2+117)) 120)
   end
 A001539: def a (n : Int) : Int := (4*n+2)^2-1
+A001563: def a (n : Int) : Int := n*(Int.ofNat (Nat.factorial (Int.toNat n)))
 A002015: def a (n : Int) : Int := (n^2)%100
 A002309: def a (n : Int) : Int := Int.fdiv (n*((48*n^2-40)*n^2+7)) 15
 A002378: def a (n : Int) : Int := n*(n+1)

@@ -2,6 +2,7 @@
 
 ### Enhancements
 
+* Support `fac` in LEAN formula generation
 * Improve LEAN formula generation for `pow`
 
 ## v25.11.2
@@ -14,7 +15,6 @@
 
 * Support multiple functions in LEAN formula generation
 * Support bitwise operations in LEAN formula generation
-* Support factorial operations in LEAN formula generation
 
 ### Enhancements
 
