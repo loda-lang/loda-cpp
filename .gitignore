@@ -17,3 +17,4 @@
 /.settings/
 pari-loda-*.gp
 _codeql_detected_source_root
+./tests/test_output_*/
