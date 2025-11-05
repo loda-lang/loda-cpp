@@ -142,7 +142,16 @@ std::string PariFormula::toString() const {
     }
     return buf.str();
   } else {
-    return main_formula.toString("; ", true);
+    // Get all function definitions in the formula to determine output format
+    auto functions =
+        FormulaUtil::getDefinitions(main_formula, Expression::Type::FUNCTION);
+    if (functions.size() > 1) {
+      // Multiple functions: use newline separator and no brackets
+      return main_formula.toString("\n", false);
+    } else {
+      // Single function: use semicolon separator with brackets (original behavior)
+      return main_formula.toString("; ", true);
+    }
   }
 }
 
