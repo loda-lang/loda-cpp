@@ -156,9 +156,16 @@ run_test() {
     # Prepare Discord message with safe truncation (avoid breaking multi-byte characters)
     # Use head -c to limit bytes, but be conservative to avoid breaking UTF-8
     local output_tail
-    output_tail=$(tail -20 "$output_file" | head -c "$DISCORD_OUTPUT_LIMIT")
+    output_tail=$(tail -10 "$output_file" | head -c "$DISCORD_OUTPUT_LIMIT")
     local discord_message
-    discord_message="$status_emoji **$test_name** - $status\nExit code: $exit_code\nDuration: ${duration_str}\n\nLast 20 lines of output:\n\`\`\`\n${output_tail}\n\`\`\`"
+    discord_message="$status_emoji **$test_name** - $status
+Exit code: $exit_code
+Duration: ${duration_str}
+
+Last 10 lines of output:
+\`\`\`
+${output_tail}
+\`\`\`"
     
     # Upload to Discord
     send_to_discord "$discord_message"
