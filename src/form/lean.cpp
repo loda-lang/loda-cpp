@@ -51,8 +51,23 @@ bool LeanFormula::convertToLean(Expression& expr, int64_t offset,
     case Expression::Type::IF:
     case Expression::Type::LOCAL:
     case Expression::Type::VECTOR:
-    case Expression::Type::FACTORIAL:
       return false;
+    case Expression::Type::FACTORIAL: {
+      if (expr.children.size() != 1) {
+        return false;
+      }
+      auto arg = expr.children[0];
+      if (ExpressionUtil::canBeNegative(arg, offset)) {
+        return false;
+      }
+      Expression toNat(Expression::Type::FUNCTION, "Int.toNat", {arg});
+      Expression factorial(Expression::Type::FUNCTION, "Nat.factorial",
+                           {toNat});
+      Expression result(Expression::Type::FUNCTION, "Int.ofNat", {factorial});
+      expr = result;
+      imports.insert("Mathlib.Data.Nat.Factorial.Basic");
+      break;
+    }
     case Expression::Type::EQUAL:
     case Expression::Type::NOT_EQUAL:
     case Expression::Type::LESS_EQUAL:
@@ -135,7 +150,8 @@ bool LeanFormula::convertToLean(Expression& expr, int64_t offset,
       }
       // Wrap non-constant exponent with Int.toNat for LEAN compatibility
       if (expr.children[1].type != Expression::Type::CONSTANT) {
-        Expression toNat(Expression::Type::FUNCTION, "Int.toNat", {expr.children[1]});
+        Expression toNat(Expression::Type::FUNCTION, "Int.toNat",
+                         {expr.children[1]});
         expr.children[1] = toNat;
       }
       break;

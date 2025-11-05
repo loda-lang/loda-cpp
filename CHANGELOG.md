@@ -2,6 +2,7 @@
 
 ### Enhancements
 
+* Support `fac` in LEAN formula generation
 * Improve LEAN formula generation for `pow`
 
 ## v25.11.2
