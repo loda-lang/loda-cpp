@@ -123,6 +123,41 @@ bool LeanFormula::convertToLean(Expression& expr, int64_t offset,
         imports.insert("Mathlib.Data.Int.Bitwise");
         break;
       }
+      // Convert sqrtint and sqrtnint functions
+      if (expr.name == "sqrtint") {
+        // sqrtint(x) -> Int.ofNat (Nat.sqrt (Int.toNat x))
+        if (expr.children.size() != 1) {
+          return false;
+        }
+        auto arg = expr.children[0];
+        if (ExpressionUtil::canBeNegative(arg, offset)) {
+          return false;  // sqrt of negative number not supported
+        }
+        Expression toNat(Expression::Type::FUNCTION, "Int.toNat", {arg});
+        Expression natSqrt(Expression::Type::FUNCTION, "Nat.sqrt", {toNat});
+        Expression ofNat(Expression::Type::FUNCTION, "Int.ofNat", {natSqrt});
+        expr = ofNat;
+        imports.insert("Mathlib.Data.Nat.Sqrt");
+        break;
+      }
+      if (expr.name == "sqrtnint") {
+        // sqrtnint(x, n) -> sqrtnint x n (custom helper function)
+        if (expr.children.size() != 2) {
+          return false;
+        }
+        auto base = expr.children[0];
+        auto root = expr.children[1];
+        if (ExpressionUtil::canBeNegative(base, offset)) {
+          return false;  // nth root of negative number not supported
+        }
+        if (ExpressionUtil::canBeNegative(root, offset)) {
+          return false;  // negative root index not supported
+        }
+        // Use helper function sqrtnint
+        expr.name = "sqrtnint";
+        helper_funcs.insert("sqrtnint");
+        break;
+      }
       // Allow calls to locally defined functions and sequences
       if (isLocalOrSeqFunc(expr.name)) {
         // When domain is Nat, wrap arguments with Int.toNat to convert Int to
@@ -221,6 +256,36 @@ std::string LeanFormula::toString() const {
   auto functions = FormulaUtil::getDefinitions(main_formula);
 
   std::stringstream buf;
+  
+  // Print helper function definitions first
+  if (!helper_funcs.empty()) {
+    for (const auto& func : helper_funcs) {
+      if (func == "sqrtnint") {
+        // Integer nth root: floor(x^(1/n))
+        // We compute it by binary search to find largest y such that y^n <= x
+        buf << "def sqrtnint (x : Int) (n : Int) : Int :=\n";
+        buf << "  if n <= 0 then 0\n";
+        buf << "  else if x < 0 then 0\n";
+        buf << "  else\n";
+        buf << "    let xNat := Int.toNat x\n";
+        buf << "    let nNat := Int.toNat n\n";
+        buf << "    -- Binary search for largest y such that y^n <= x\n";
+        buf << "    let rec search (low high : Nat) (fuel : Nat) : Nat :=\n";
+        buf << "      match fuel with\n";
+        buf << "      | 0 => low\n";
+        buf << "      | fuel' + 1 =>\n";
+        buf << "        if low >= high then low\n";
+        buf << "        else\n";
+        buf << "          let mid := (low + high + 1) / 2\n";
+        buf << "          if mid ^ nNat <= xNat then\n";
+        buf << "            search mid high fuel'\n";
+        buf << "          else\n";
+        buf << "            search low (mid - 1) fuel'\n";
+        buf << "    Int.ofNat (search 0 xNat 64)\n\n";
+      }
+    }
+  }
+  
   if (functions.size() == 1) {
     buf << printFunction(functions[0]);
   } else {
