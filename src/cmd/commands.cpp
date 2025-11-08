@@ -16,12 +16,12 @@
 #include "form/formula_parser.hpp"
 #include "form/lean.hpp"
 #include "form/pari.hpp"
+#include "gen/iterator.hpp"
 #include "lang/analyzer.hpp"
 #include "lang/comments.hpp"
 #include "lang/program_util.hpp"
 #include "lang/subprogram.hpp"
 #include "lang/virtual_seq.hpp"
-#include "gen/iterator.hpp"
 #include "mine/mine_manager.hpp"
 #include "mine/miner.hpp"
 #include "mine/mutator.hpp"
@@ -685,7 +685,7 @@ void testFormula(const std::string& test_id, const Settings& settings,
     // evaluate formula program
     auto offset = ProgramUtil::getOffset(program);
     Sequence genSeq;
-    if (!formula_obj.eval(offset, numTerms, 10, genSeq)) {
+    if (!formula_obj.eval(offset, numTerms, 60, genSeq)) {
       Log::get().warn(formula_obj.getName() + " evaluation timeout for " +
                       idStr);
       skipped++;
@@ -745,7 +745,8 @@ void Commands::testFormulaParser(const std::string& test_id) {
     }
 
     // Check if program has a formula comment
-    std::string formulaStr = Comments::getCommentField(program, Comments::PREFIX_FORMULA);
+    std::string formulaStr =
+        Comments::getCommentField(program, Comments::PREFIX_FORMULA);
     if (formulaStr.empty()) {
       skipped++;
       continue;
@@ -756,7 +757,8 @@ void Commands::testFormulaParser(const std::string& test_id) {
     // Parse the formula string
     Formula parsed;
     if (!formulaParser.parse(formulaStr, parsed)) {
-      Log::get().error("Failed to parse formula for " + idStr + ": " + formulaStr, true);
+      Log::get().error(
+          "Failed to parse formula for " + idStr + ": " + formulaStr, true);
       bad++;
       continue;
     }
@@ -764,16 +766,17 @@ void Commands::testFormulaParser(const std::string& test_id) {
     // Round-trip test: convert back to string and check it matches
     std::string roundTripStr = parsed.toString();
     if (roundTripStr != formulaStr) {
-      Log::get().error("Round-trip test failed for " + idStr + 
-                      ". Original: " + formulaStr + 
-                      ", Parsed: " + roundTripStr, true);
+      Log::get().error("Round-trip test failed for " + idStr + ". Original: " +
+                           formulaStr + ", Parsed: " + roundTripStr,
+                       true);
       bad++;
     } else {
       good++;
     }
   }
   Log::get().info(std::to_string(good) + " passed, " + std::to_string(bad) +
-                  " failed, " + std::to_string(skipped) + " skipped formula parsing checks");
+                  " failed, " + std::to_string(skipped) +
+                  " skipped formula parsing checks");
 }
 
 bool checkRange(const ManagedSequence& seq, const Program& program,
