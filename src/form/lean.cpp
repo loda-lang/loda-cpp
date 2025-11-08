@@ -97,6 +97,29 @@ bool LeanFormula::convertToLean(Expression& expr, int64_t offset,
         expr.name = "Int.gcd";
         break;
       }
+      // Convert binomial function to LEAN Nat.choose
+      if (expr.name == "binomial") {
+        // binomial requires exactly 2 arguments
+        if (expr.children.size() != 2) {
+          return false;
+        }
+        auto n = expr.children[0];
+        auto k = expr.children[1];
+        // Check if arguments can be negative
+        if (ExpressionUtil::canBeNegative(n, offset) ||
+            ExpressionUtil::canBeNegative(k, offset)) {
+          return false;
+        }
+        // Convert to Nat.choose(Int.toNat(n), Int.toNat(k))
+        Expression toNatN(Expression::Type::FUNCTION, "Int.toNat", {n});
+        Expression toNatK(Expression::Type::FUNCTION, "Int.toNat", {k});
+        Expression choose(Expression::Type::FUNCTION, "Nat.choose",
+                          {toNatN, toNatK});
+        Expression result(Expression::Type::FUNCTION, "Int.ofNat", {choose});
+        expr = result;
+        imports.insert("Mathlib.Data.Nat.Choose.Basic");
+        break;
+      }
       // Convert floor and truncate functions to LEAN equivalents
       if (expr.name == "floor" || expr.name == "truncate") {
         // These functions should have a single FRACTION argument
