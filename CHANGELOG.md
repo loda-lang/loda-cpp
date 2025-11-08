@@ -4,6 +4,7 @@
 
 * Support `fac` in LEAN formula generation
 * Improve LEAN formula generation for `pow`
+* Support `nrt` operation in LEAN formula generation
 
 ## v25.11.2
 
