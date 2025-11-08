@@ -65,6 +65,7 @@ A008369: def a (n : Int) : Int := Int.fdiv ((Int.xor (n^2) 3)*((Int.xor (n^2) 3)
 A008531: def a (n : Int) : Int := n*(5*n^2+5)+(Bool.toInt (n==0))
 A008576: def a (n : Int) : Int := (Int.tdiv (8*n-2) 3)+1
 A008577: def a (n : Int) : Int := Int.fdiv ((2*n+1)^2+3) 3
+A010052: def a (n : Int) : Int := Bool.toInt (((Int.ofNat (Nat.sqrt (Int.toNat n)))^2)==n)
 A010170: def a (n : Int) : Int := ((Int.gcd (-(Bool.toInt (n==0))+n) 2)+7)*((Bool.toInt (n==0))+(Int.gcd (-(Bool.toInt (n==0))+n) 2)+7)-63
 A016729: def a (n : Int) : Int := (Int.fdiv ((Int.gcd ((Int.xor (n-1) 97)-1) (n+96))+n+96) 3)-31
 A021019: def a (n : Int) : Int := 6*(min n 1)
@@ -73,3 +74,4 @@ A080457: def a (n : Int) : Int := (Int.lor (3*n-6) 3)+4
 A106249: def a (n : Int) : Int := Int.tdiv ((Int.lor (n+1) 2)-1) 2
 A109008: def a (n : Int) : Int := Int.gcd n 4
 A129760: def a (n : Int) : Int := Int.land n (n-1)
+A999998: def a (n : Int) : Int := Bool.toInt (((Int.ofNat (Nat.nthRoot (Int.toNat 3) (Int.toNat n)))^3)==n)

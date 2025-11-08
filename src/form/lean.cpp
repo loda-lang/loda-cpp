@@ -141,7 +141,7 @@ bool LeanFormula::convertToLean(Expression& expr, int64_t offset,
         break;
       }
       if (expr.name == "sqrtnint") {
-        // sqrtnint(x, n) -> sqrtnint x n (custom helper function)
+        // sqrtnint(x, n) -> Int.ofNat (Nat.nthRoot (Int.toNat n) (Int.toNat x))
         if (expr.children.size() != 2) {
           return false;
         }
@@ -153,9 +153,13 @@ bool LeanFormula::convertToLean(Expression& expr, int64_t offset,
         if (ExpressionUtil::canBeNegative(root, offset)) {
           return false;  // negative root index not supported
         }
-        // Use helper function sqrtnint
-        expr.name = "sqrtnint";
-        helper_funcs.insert("sqrtnint");
+        // Use Nat.nthRoot from Mathlib
+        Expression baseToNat(Expression::Type::FUNCTION, "Int.toNat", {base});
+        Expression rootToNat(Expression::Type::FUNCTION, "Int.toNat", {root});
+        Expression nthRoot(Expression::Type::FUNCTION, "Nat.nthRoot", {rootToNat, baseToNat});
+        Expression ofNat(Expression::Type::FUNCTION, "Int.ofNat", {nthRoot});
+        expr = ofNat;
+        imports.insert("Mathlib.Data.Nat.NthRoot.Defs");
         break;
       }
       // Allow calls to locally defined functions and sequences
@@ -256,36 +260,6 @@ std::string LeanFormula::toString() const {
   auto functions = FormulaUtil::getDefinitions(main_formula);
 
   std::stringstream buf;
-  
-  // Print helper function definitions first
-  if (!helper_funcs.empty()) {
-    for (const auto& func : helper_funcs) {
-      if (func == "sqrtnint") {
-        // Integer nth root: floor(x^(1/n))
-        // We compute it by binary search to find largest y such that y^n <= x
-        buf << "def sqrtnint (x : Int) (n : Int) : Int :=\n";
-        buf << "  if n <= 0 then 0\n";
-        buf << "  else if x < 0 then 0\n";
-        buf << "  else\n";
-        buf << "    let xNat := Int.toNat x\n";
-        buf << "    let nNat := Int.toNat n\n";
-        buf << "    -- Binary search for largest y such that y^n <= x\n";
-        buf << "    let rec search (low high : Nat) (fuel : Nat) : Nat :=\n";
-        buf << "      match fuel with\n";
-        buf << "      | 0 => low\n";
-        buf << "      | fuel' + 1 =>\n";
-        buf << "        if low >= high then low\n";
-        buf << "        else\n";
-        buf << "          let mid := (low + high + 1) / 2\n";
-        buf << "          if mid ^ nNat <= xNat then\n";
-        buf << "            search mid high fuel'\n";
-        buf << "          else\n";
-        buf << "            search low (mid - 1) fuel'\n";
-        buf << "    Int.ofNat (search 0 xNat 64)\n\n";
-      }
-    }
-  }
-  
   if (functions.size() == 1) {
     buf << printFunction(functions[0]);
   } else {

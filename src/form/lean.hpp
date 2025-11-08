@@ -28,7 +28,6 @@ class LeanFormula {
   Formula main_formula;
   std::string domain;  // Int or Nat
   std::set<std::string> imports;
-  std::set<std::string> helper_funcs;
   std::vector<std::string> funcNames;
 
   static bool initializeLeanProject();
