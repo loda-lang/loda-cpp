@@ -110,6 +110,14 @@ int execWithTimeout(const std::vector<std::string>& args, int timeoutSeconds,
   if (WIFEXITED(status)) {
     return WEXITSTATUS(status);
   }
+  // If the child did not exit normally, but was terminated by a signal,
+  // return 128 + signal number to make it easier to diagnose crashes
+  // (e.g., 139 => SIGSEGV). Otherwise return -1 for unknown cases.
+#ifdef WIFSIGNALED
+  if (WIFSIGNALED(status)) {
+    return 128 + WTERMSIG(status);
+  }
+#endif
   return -1;
 #endif
 }

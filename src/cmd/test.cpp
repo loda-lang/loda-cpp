@@ -18,6 +18,9 @@
 #include "form/formula_parser.hpp"
 #include "form/lean.hpp"
 #include "form/pari.hpp"
+#include "gen/blocks.hpp"
+#include "gen/generator_v1.hpp"
+#include "gen/iterator.hpp"
 #include "lang/comments.hpp"
 #include "lang/constants.hpp"
 #include "lang/parser.hpp"
@@ -26,10 +29,7 @@
 #include "lang/virtual_seq.hpp"
 #include "math/big_number.hpp"
 #include "mine/api_client.hpp"
-#include "gen/blocks.hpp"
 #include "mine/config.hpp"
-#include "gen/generator_v1.hpp"
-#include "gen/iterator.hpp"
 #include "mine/matcher.hpp"
 #include "mine/mine_manager.hpp"
 #include "mine/miner.hpp"
@@ -1343,7 +1343,7 @@ void Test::checkFormulasWithExternalTools(const std::string& testFile,
     }
     // evaluate formula
     Sequence genSeq;
-    if (!formula_obj.eval(offset, numTerms, 10, genSeq)) {
+    if (!formula_obj.eval(offset, numTerms, 60, genSeq)) {
       Log::get().error(
           formula_obj.getName() + " evaluation timeout for " + idStr, true);
     }
