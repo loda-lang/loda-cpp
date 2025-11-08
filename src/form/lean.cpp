@@ -376,7 +376,7 @@ bool LeanFormula::initializeLeanProject() {
   // timeout). Use a larger timeout here because fetching mathlib and
   // preparing the toolchain can be slow on first run.
   std::vector<std::string> updateArgs = {"lake", "update"};
-  int updateTimeout = 300;  // 5 minutes
+  int updateTimeout = 600;  // 10 minutes
   int exitCode = execWithTimeout(updateArgs, updateTimeout, "", projectDir);
   if (exitCode != 0) {
     Log::get().warn("lake update failed with exit code " +
