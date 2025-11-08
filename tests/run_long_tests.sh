@@ -97,12 +97,10 @@ send_to_discord() {
 # Function to run a test and upload results
 run_test() {
     local test_name="$1"
-    local test_command="$2"
     
     echo ""
     echo "=========================================="
     echo "Running: $test_name"
-    echo "Command: $test_command"
     echo "=========================================="
     echo ""
     
@@ -113,7 +111,8 @@ run_test() {
     local start_time
     start_time=$(date +%s)
     set +e
-    $test_command > "$output_file" 2>&1
+    # Change to the main loda directory before running the test
+    (cd "$LODA_DIR" && ./loda $test_name) > "$output_file" 2>&1
     local exit_code=$?
     set -e
     local end_time
@@ -181,14 +180,14 @@ echo "Output directory: $OUTPUT_DIR"
 echo "Discord webhook: ${LODA_DISCORD_WEBHOOK:+configured}"
 
 # Run the tests
-run_test "test-fast" "$LODA_BIN test-fast"
-run_test "test-slow" "$LODA_BIN test-slow"
-run_test "test-analyzer" "$LODA_BIN test-analyzer"
-run_test "test-formula-parser" "$LODA_BIN test-formula-parser"
-run_test "test-inceval" "$LODA_BIN test-inceval"
-run_test "test-pari" "$LODA_BIN test-pari"
-run_test "test-lean" "$LODA_BIN test-lean"
-run_test "test-vireval" "$LODA_BIN test-vireval"
+run_test "test-fast"
+run_test "test-slow"
+run_test "test-analyzer"
+run_test "test-formula-parser"
+run_test "test-inceval"
+run_test "test-pari"
+run_test "test-lean"
+run_test "test-vireval"
 
 echo ""
 echo "=========================================="
