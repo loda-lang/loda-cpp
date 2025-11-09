@@ -1,9 +1,12 @@
 ## [Unreleased]
 
+## v25.11.9
+
 ### Enhancements
 
 * Support `fac` in LEAN formula generation
 * Improve LEAN formula generation for `pow`
+* Improve mined programs comparison
 
 ## v25.11.2
 
