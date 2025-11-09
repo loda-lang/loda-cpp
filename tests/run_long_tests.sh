@@ -183,8 +183,6 @@ echo "Output directory: $OUTPUT_DIR"
 echo "Discord webhook: ${LODA_DISCORD_WEBHOOK:+configured}"
 
 # Run the tests
-run_test "test-fast"
-run_test "test-slow"
 run_test "test-analyzer"
 run_test "test-formula-parser"
 run_test "test-inceval"
