@@ -51,18 +51,26 @@ bool isSimpler(const Program& existing, const Program& optimized) {
   if (hasBadConstant(existing) && !hasBadConstant(optimized) &&
       !optimized_has_seq) {
     return true;
+  } else if (!hasBadConstant(existing) && hasBadConstant(optimized)) {
+    return false;
   }
   if (hasBadLoop(existing) && !hasBadLoop(optimized) && !optimized_has_seq) {
     return true;
+  } else if (!hasBadLoop(existing) && hasBadLoop(optimized)) {
+    return false;
   }
   auto info_existing = Constants::findConstantLoop(existing);
   auto info_optimized = Constants::findConstantLoop(optimized);
   if (info_existing.has_constant_loop && !info_optimized.has_constant_loop &&
       !optimized_has_seq) {
     return true;
+  }else if (!info_existing.has_constant_loop && info_optimized.has_constant_loop) {
+    return false;
   }
   if (hasIndirectOperand(existing) && !hasIndirectOperand(optimized)) {
     return true;
+  } else if (!hasIndirectOperand(existing) && hasIndirectOperand(optimized)) {
+    return false;
   }
   return false;
 }
