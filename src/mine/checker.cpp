@@ -64,7 +64,7 @@ bool isSimpler(const Program& existing, const Program& optimized) {
   if (hasIndirectOperand(existing) && !hasIndirectOperand(optimized)) {
     return true;
   }
-  return false;
+  return optimized.ops.size() <= existing.ops.size()/2 && !optimized_has_seq;
 }
 
 // Return true if all constants used in the program are within [-100,100]
