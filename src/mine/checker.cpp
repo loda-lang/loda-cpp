@@ -48,21 +48,30 @@ bool hasIndirectOperand(const Program& p) {
 
 bool isSimpler(const Program& existing, const Program& optimized) {
   bool optimized_has_seq = ProgramUtil::hasOp(optimized, Operation::Type::SEQ);
+  bool existing_has_seq = ProgramUtil::hasOp(existing, Operation::Type::SEQ);
   if (hasBadConstant(existing) && !hasBadConstant(optimized) &&
       !optimized_has_seq) {
     return true;
+  } else if (!hasBadConstant(existing) && hasBadConstant(optimized) && !existing_has_seq) {
+    return false;
   }
   if (hasBadLoop(existing) && !hasBadLoop(optimized) && !optimized_has_seq) {
     return true;
+  } else if (!hasBadLoop(existing) && hasBadLoop(optimized) && !existing_has_seq) {
+    return false;
   }
   auto info_existing = Constants::findConstantLoop(existing);
   auto info_optimized = Constants::findConstantLoop(optimized);
   if (info_existing.has_constant_loop && !info_optimized.has_constant_loop &&
       !optimized_has_seq) {
     return true;
+  }else if (!info_existing.has_constant_loop && info_optimized.has_constant_loop && !existing_has_seq) {
+    return false;
   }
   if (hasIndirectOperand(existing) && !hasIndirectOperand(optimized)) {
     return true;
+  } else if (!hasIndirectOperand(existing) && hasIndirectOperand(optimized)) {
+    return false;
   }
   return false;
 }
