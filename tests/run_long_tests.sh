@@ -72,7 +72,7 @@ send_to_discord() {
     
     # Check if Discord webhook is set
     if [ -z "$LODA_DISCORD_WEBHOOK" ]; then
-        echo -e "${YELLOW}Warning: LODA_DISCORD_WEBHOOK not set, skipping Discord upload${NC}"
+        echo -e "${YELLOW}Warning: LODA_DISCORD_WEBHOOK not set, skipping Discord notification${NC}"
         return 0
     fi
     
@@ -84,10 +84,8 @@ send_to_discord() {
     # Send to Discord using curl
     local curl_error
     curl_error=$(mktemp)
-    if curl -fsSL -X POST -H "Content-Type: application/json" -d "$json_payload" "$LODA_DISCORD_WEBHOOK" 2>"$curl_error"; then
-        echo -e "${GREEN}✓ Results uploaded to Discord${NC}"
-    else
-        echo -e "${RED}✗ Failed to upload results to Discord${NC}"
+    if ! curl -fsSL -X POST -H "Content-Type: application/json" -d "$json_payload" "$LODA_DISCORD_WEBHOOK" 2>"$curl_error"; then
+        echo -e "${RED}✗ Failed to send message to Discord${NC}"
         if [ -s "$curl_error" ]; then
             echo -e "${RED}Error details: $(cat "$curl_error")${NC}"
         fi
@@ -106,6 +104,8 @@ run_test() {
     echo "Running: $test_name"
     echo "=========================================="
     echo ""
+
+    send_to_discord "▶️ **Starting $test_name**"
     
     # Create output file in the timestamped directory
     local output_file="$OUTPUT_DIR/${test_name}.txt"
@@ -159,16 +159,17 @@ run_test() {
     # Use head -c to limit bytes, but be conservative to avoid breaking UTF-8
     local output_tail
     output_tail=$(tail -10 "$output_file" | head -c "$DISCORD_OUTPUT_LIMIT")
+    
+    # Upload to Discord
     local discord_message
-    discord_message="$status_emoji **$test_name** - $status
+    discord_message="$status_emoji Finished **$test_name** - $status
 Exit code: $exit_code
-Duration: ${duration_str}
-Last 10 lines of output:
+Duration: ${duration_str}"
+    send_to_discord "$discord_message"
+    discord_message="Last 10 lines of output:
 \`\`\`
 ${output_tail}
 \`\`\`"
-    
-    # Upload to Discord
     send_to_discord "$discord_message"
     
     echo ""
