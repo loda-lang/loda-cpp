@@ -162,7 +162,7 @@ run_test() {
     
     # Upload to Discord
     local discord_message
-    discord_message="$status_emoji Finished **$test_name** - $status
+    discord_message="$status_emoji **Finished $test_name - ${status}**
 Exit code: $exit_code
 Duration: ${duration_str}"
     send_to_discord "$discord_message"
