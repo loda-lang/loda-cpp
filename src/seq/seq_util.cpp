@@ -80,6 +80,7 @@ bool SequenceUtil::evalFormulaWithExternalTool(
       errorIn.close();
     }
     std::remove(resultPath.c_str());
+    std::remove(toolPath.c_str());
     if (exitCode == PROCESS_ERROR_TIMEOUT) {
       return false;  // timeout
     } else {

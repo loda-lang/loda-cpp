@@ -1,6 +1,7 @@
 #include "form/lean.hpp"
 
 #include <algorithm>
+#include <fstream>
 #include <sstream>
 
 #include "form/expression_util.hpp"
@@ -316,10 +317,11 @@ std::string getLeanProjectDir() {
 
 bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
                        Sequence& result) const {
-  // Initialize LEAN project if needed (only once)
+  // Ensure LEAN is properly initialized (including project setup if needed)
   bool needsProject = !imports.empty();
-  if (needsProject && !initializeLeanProject()) {
-    Log::get().error("Failed to initialize LEAN project", true);
+  if (!ensureLeanInitialized(needsProject)) {
+    Log::get().error("Failed to initialize LEAN", true);
+    return false;
   }
 
   const std::string tmpFileId = std::to_string(Random::get().gen() % 1000);
@@ -341,58 +343,80 @@ bool LeanFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
       projectDir);
 }
 
-bool LeanFormula::initializeLeanProject() {
-  static bool initialized = false;
-  if (initialized) {
-    return true;
-  }
-  // Check if project is already initialized
-  const std::string projectDir = getLeanProjectDir();
-  const std::string lakeFilePath = projectDir + "lakefile.lean";
-  if (isFile(lakeFilePath)) {
-    initialized = true;
+bool LeanFormula::ensureLeanInitialized(bool needsProject) {
+  static bool leanInitialized = false;
+  static bool projectInitialized = false;
+
+  if (leanInitialized && (!needsProject || projectInitialized)) {
     return true;
   }
 
-  Log::get().info("Initializing LEAN project at " + projectDir);
-
-  // Create lakefile.lean
-  std::ofstream lakefile(lakeFilePath);
-  if (!lakefile) {
-    return false;
+  // Force LEAN initialization by running --version first
+  // This prevents LEAN from trying to update during actual formula evaluation
+  if (!leanInitialized) {
+    Log::get().info("Initializing LEAN for first use");
+    std::vector<std::string> args = {"lean", "--version"};
+    int exitCode = execWithTimeout(args, 600, "", "");  // 10 minute timeout
+    if (exitCode == 0) {
+      Log::get().info("LEAN initialization completed successfully");
+    } else {
+      Log::get().warn("LEAN initialization test failed with exit code " +
+                      std::to_string(exitCode));
+      // Don't fail completely - LEAN might still work for actual formulas
+    }
+    leanInitialized = true;
   }
-  lakefile << "import Lake\n";
-  lakefile << "open Lake DSL\n\n";
-  lakefile << "package \"lean-loda\" where\n";
-  lakefile << "  version := v!\"0.1.0\"\n\n";
-  lakefile << "require mathlib from git\n";
-  lakefile << "  \"https://github.com/leanprover-community/mathlib4.git\"\n\n";
-  lakefile << "@[default_target]\n";
-  lakefile << "lean_exe «lean-loda» where\n";
-  lakefile << "  root := `Main\n";
-  lakefile.close();
 
-  // Run lake update to download dependencies and create toolchain (with
-  // timeout). Use a larger timeout here because fetching mathlib and
-  // preparing the toolchain can be slow on first run.
-  std::vector<std::string> updateArgs = {"lake", "update"};
-  int updateTimeout = 600;  // 10 minutes
-  int exitCode = execWithTimeout(updateArgs, updateTimeout, "", projectDir);
-  if (exitCode != 0) {
-    Log::get().warn("lake update failed with exit code " +
-                    std::to_string(exitCode));
+  // Initialize LEAN project if needed (for imports)
+  if (needsProject && !projectInitialized) {
+    const std::string projectDir = getLeanProjectDir();
+    const std::string lakeFilePath = projectDir + "lakefile.lean";
+
+    // Check if project is already initialized
+    if (isFile(lakeFilePath)) {
+      projectInitialized = true;
+      return true;
+    }
+
+    Log::get().info("Initializing LEAN project at " + projectDir);
+
+    // Create lakefile.lean
+    std::ofstream lakefile(lakeFilePath);
+    if (!lakefile) {
+      return false;
+    }
+    lakefile << "import Lake\n";
+    lakefile << "open Lake DSL\n\n";
+    lakefile << "package \"lean-loda\" where\n";
+    lakefile << "  version := v!\"0.1.0\"\n\n";
+    lakefile << "require mathlib from git\n";
+    lakefile
+        << "  \"https://github.com/leanprover-community/mathlib4.git\"\n\n";
+    lakefile << "@[default_target]\n";
+    lakefile << "lean_exe «lean-loda» where\n";
+    lakefile << "  root := `Main\n";
+    lakefile.close();
+
+    // Run lake update to download dependencies and create toolchain
+    std::vector<std::string> updateArgs = {"lake", "update"};
+    int updateTimeout = 1200;  // 20 minutes
+    int exitCode = execWithTimeout(updateArgs, updateTimeout, "", projectDir);
+    if (exitCode != 0) {
+      Log::get().warn("lake update failed with exit code " +
+                      std::to_string(exitCode));
+      std::remove(lakeFilePath.c_str());
+      return false;
+    }
+    updateArgs = {"lake", "exe", "cache", "get"};
+    exitCode = execWithTimeout(updateArgs, updateTimeout, "", projectDir);
+    if (exitCode != 0) {
+      Log::get().warn("lake exe cache get failed with exit code " +
+                      std::to_string(exitCode));
+      std::remove(lakeFilePath.c_str());
+      return false;
+    }
     std::remove(lakeFilePath.c_str());
-    return false;
+    projectInitialized = true;
   }
-  updateArgs = {"lake", "exe", "cache", "get"};
-  exitCode = execWithTimeout(updateArgs, updateTimeout, "", projectDir);
-  if (exitCode != 0) {
-    Log::get().warn("lake exe cache get failed with exit code " +
-                    std::to_string(exitCode));
-    std::remove(lakeFilePath.c_str());
-    return false;
-  }
-
-  initialized = true;
   return true;
 }
