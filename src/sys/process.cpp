@@ -103,35 +103,24 @@ int execWithTimeout(const std::vector<std::string>& args, int timeoutSeconds,
     }
     if (difftime(time(nullptr), start) > timeoutSeconds) {
       kill(pid, SIGKILL);
-      // Wait for the process to actually die after SIGKILL
-      waitpid(pid, &status, 0);
       return PROCESS_ERROR_TIMEOUT;
     }
     usleep(100000);  // Sleep for 100 ms
   }
-
-  // If we reach here, the child exited on its own
-  // Check if it took approximately the timeout duration (indicating alarm
-  // timeout)
-  double elapsed = difftime(time(nullptr), start);
-  bool likelyAlarmTimeout =
-      (elapsed >= timeoutSeconds - 1.0);  // Allow 1 second tolerance
   if (WIFEXITED(status)) {
-    int exitCode = WEXITSTATUS(status);
-    // If the process exited normally but took approximately the timeout
-    // duration, it's likely that the child's alarm triggered and was handled
-    // gracefully
-    if (likelyAlarmTimeout && exitCode == 0) {
-      return PROCESS_ERROR_TIMEOUT;
-    }
-    return exitCode;
+    return WEXITSTATUS(status);
   }
   // If the child did not exit normally, but was terminated by a signal,
-  // return 128 + signal number to make it easier to diagnose crashes
-  // (e.g., 139 => SIGSEGV). Otherwise return -1 for unknown cases.
+  // check if it was terminated by SIGALRM (our timeout alarm)
 #ifdef WIFSIGNALED
   if (WIFSIGNALED(status)) {
-    return 128 + WTERMSIG(status);
+    int signal = WTERMSIG(status);
+    if (signal == SIGALRM) {
+      return PROCESS_ERROR_TIMEOUT;  // Child was killed by our alarm
+    }
+    // For other signals, return 128 + signal number to make it easier to
+    // diagnose crashes (e.g., 139 => SIGSEGV)
+    return 128 + signal;
   }
 #endif
   return -1;

@@ -30,7 +30,7 @@ class LeanFormula {
   std::set<std::string> imports;
   std::vector<std::string> funcNames;
 
-  static bool ensureLeanInitialized(bool needsProject = false);
+  static bool initializeLeanProject();
 
   bool convertToLean(Expression& expr, int64_t offset, Number patternOffset,
                      bool insideOfLocalFunc);
