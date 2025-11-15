@@ -20,7 +20,7 @@ FormulaGenerator::FormulaGenerator()
       incEval(interpreter),
       freeNameIndex(0),
       offset(0),
-      maxInitialTerms(20) {}
+      maxInitialTerms(10) {}
 
 std::string FormulaGenerator::newName() {
   std::string name = "a" + std::to_string(freeNameIndex);
@@ -549,6 +549,22 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     for (int64_t cell = 0; cell < numCells; cell++) {
       auto name = getCellName(cell);
       numTerms[name] = getNumInitialTermsNeeded(cell, name, formula, incEval);
+    }
+
+    // Early check: fail fast if base initial terms count is too high
+    // Variant simplification typically increases the count by 30-70%, so we
+    // check with a safety margin to avoid spending time on hopeless cases
+    int64_t maxNumTerms = 0;
+    for (const auto& it : numTerms) {
+      maxNumTerms = std::max(maxNumTerms, it.second);
+    }
+    // Reject early if base count > 70% of limit (leaves room for ~43% increase)
+    if (maxNumTerms > maxInitialTerms * 7 / 10) {
+      Log::get().debug("Base initial terms (" + std::to_string(maxNumTerms) +
+                       ") likely to exceed limit (" +
+                       std::to_string(maxInitialTerms) +
+                       ") after variant simplification, failing fast");
+      return false;
     }
 
     // find and choose alternative function definitions
