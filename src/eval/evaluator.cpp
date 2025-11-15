@@ -252,7 +252,11 @@ bool Evaluator::supportsEvalModes(const Program &p, eval_mode_t eval_modes) {
   return result;
 }
 
-void Evaluator::clearCaches() { interpreter.clearCaches(); }
+void Evaluator::clearCaches() {
+  interpreter.clearCaches();
+  inc_evaluator.reset();
+  vir_evaluator.reset();
+}
 
 void Evaluator::checkEvalTime() const {
   const int64_t millis = std::chrono::duration_cast<std::chrono::milliseconds>(
