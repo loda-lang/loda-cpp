@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Enhancements
+
+* Increase maximum initial terms for formula generation from 10 to 20 to support programs with many stateful cells (e.g., A000033)
+
 ### Bugfixes
 
 * Fix parsing error during stats generation

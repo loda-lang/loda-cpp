@@ -20,7 +20,7 @@ FormulaGenerator::FormulaGenerator()
       incEval(interpreter),
       freeNameIndex(0),
       offset(0),
-      maxInitialTerms(10) {}
+      maxInitialTerms(20) {}
 
 std::string FormulaGenerator::newName() {
   std::string name = "a" + std::to_string(freeNameIndex);
