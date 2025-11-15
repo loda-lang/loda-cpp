@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Enhancements
+
+* Add early failure detection in formula generation for programs requiring too many initial terms
+
 ### Bugfixes
 
 * Fix parsing error during stats generation
