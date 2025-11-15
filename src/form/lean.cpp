@@ -12,6 +12,9 @@
 #include "sys/setup.hpp"
 #include "sys/util.hpp"
 
+// cannot use "lean" here because it is a reserved package name
+const std::string LEAN_PROJECT_NAME = "loda-lean";
+
 std::string convertBitfuncToLean(const std::string& bitfunc) {
   if (bitfunc == "bitand") {
     return "Int.land";
@@ -309,7 +312,7 @@ std::string LeanFormula::printEvalCode(int64_t offset, int64_t numTerms) const {
 }
 
 std::string getLeanProjectDir() {
-  auto dir = Setup::getCacheHome() + "lean" + FILE_SEP;
+  auto dir = Setup::getCacheHome() + LEAN_PROJECT_NAME + FILE_SEP;
   ensureDir(dir);
   return dir;
 }
@@ -346,9 +349,12 @@ bool LeanFormula::initializeLeanProject() {
   if (initialized) {
     return true;
   }
-  // Check if project is already initialized
-  const std::string projectDir = getLeanProjectDir();
+
+  const std::string cacheHome = Setup::getCacheHome();
+  const std::string projectDir = cacheHome + LEAN_PROJECT_NAME + FILE_SEP;
   const std::string lakeFilePath = projectDir + "lakefile.lean";
+
+  // Check if project is already initialized
   if (isFile(lakeFilePath)) {
     initialized = true;
     return true;
@@ -356,41 +362,39 @@ bool LeanFormula::initializeLeanProject() {
 
   Log::get().info("Initializing LEAN project at " + projectDir);
 
-  // Create lakefile.lean
-  std::ofstream lakefile(lakeFilePath);
-  if (!lakefile) {
-    return false;
-  }
-  lakefile << "import Lake\n";
-  lakefile << "open Lake DSL\n\n";
-  lakefile << "package \"lean-loda\" where\n";
-  lakefile << "  version := v!\"0.1.0\"\n\n";
-  lakefile << "require mathlib from git\n";
-  lakefile << "  \"https://github.com/leanprover-community/mathlib4.git\"\n\n";
-  lakefile << "@[default_target]\n";
-  lakefile << "lean_exe «lean-loda» where\n";
-  lakefile << "  root := `Main\n";
-  lakefile.close();
+  // Use lake to create a new Lean project with Mathlib dependency
+  // The command is: lake +leanprover-community/mathlib4:lean-toolchain new
+  // <project-name> math
+  std::vector<std::string> initArgs = {
+      "lake", "+leanprover-community/mathlib4:lean-toolchain", "new",
+      LEAN_PROJECT_NAME, "math"};
 
-  // Run lake update to download dependencies and create toolchain (with
-  // timeout). Use a larger timeout here because fetching mathlib and
-  // preparing the toolchain can be slow on first run.
-  std::vector<std::string> updateArgs = {"lake", "update"};
-  int updateTimeout = 600;  // 10 minutes
-  int exitCode = execWithTimeout(updateArgs, updateTimeout, "", projectDir);
+  int initTimeout = 600;  // 10 minutes for initial setup
+  int exitCode = execWithTimeout(initArgs, initTimeout, "", cacheHome);
   if (exitCode != 0) {
-    Log::get().warn("lake update failed with exit code " +
+    Log::get().warn("lake new failed with exit code " +
                     std::to_string(exitCode));
-    std::remove(lakeFilePath.c_str());
     return false;
   }
-  updateArgs = {"lake", "exe", "cache", "get"};
-  exitCode = execWithTimeout(updateArgs, updateTimeout, "", projectDir);
+
+  // Build the project to download and compile dependencies
+  std::vector<std::string> buildArgs = {"lake", "build"};
+  int buildTimeout = 1200;  // 20 minutes for building (mathlib can be large)
+  exitCode = execWithTimeout(buildArgs, buildTimeout, "", projectDir);
+  if (exitCode != 0) {
+    Log::get().warn("lake build failed with exit code " +
+                    std::to_string(exitCode));
+    return false;
+  }
+
+  // Download precompiled Mathlib cache to avoid lengthy compilation
+  std::vector<std::string> cacheArgs = {"lake", "exe", "cache", "get"};
+  int cacheTimeout = 1200;  // 20 minutes for downloading cache
+  exitCode = execWithTimeout(cacheArgs, cacheTimeout, "", projectDir);
   if (exitCode != 0) {
     Log::get().warn("lake exe cache get failed with exit code " +
-                    std::to_string(exitCode));
-    std::remove(lakeFilePath.c_str());
-    return false;
+                    std::to_string(exitCode) + ", continuing anyway");
+    // Don't fail here - the project might still work without cache
   }
 
   initialized = true;
