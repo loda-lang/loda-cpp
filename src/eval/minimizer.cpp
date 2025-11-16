@@ -121,6 +121,18 @@ bool Minimizer::minimize(Program& p, size_t num_terms) const {
     }
     global_change = global_change || local_change;
   }
+  
+  // Final validation: verify the minimized program produces the same sequence
+  Sequence validation_sequence;
+  evaluator.clearCaches();
+  evaluator.eval(p, validation_sequence, num_terms, false);
+  if (validation_sequence != target_sequence) {
+    Log::get().error(
+        "Minimized program produces different sequence than original - this should not happen",
+        false);
+    return false;
+  }
+  
   return global_change;
 }
 
@@ -224,6 +236,21 @@ bool Minimizer::optimizeAndMinimize(Program& p, size_t num_terms) const {
       minimized = minimize(p, num_terms);
       result = result || optimized || minimized;
     } while (optimized || minimized);
+    
+    // Final validation: verify the optimized/minimized program produces the same sequence as the original
+    Sequence original_sequence, final_sequence;
+    evaluator.clearCaches();
+    evaluator.eval(backup, original_sequence, num_terms, false);
+    evaluator.clearCaches();
+    evaluator.eval(p, final_sequence, num_terms, false);
+    if (final_sequence != original_sequence) {
+      Log::get().error(
+          "Optimized/minimized program produces different sequence than original",
+          false);
+      p = backup;  // Revert to original program
+      return false;
+    }
+    
     return result;
   } catch (std::exception& e) {
     // revert change
