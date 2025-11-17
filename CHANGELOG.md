@@ -1,9 +1,5 @@
 ## [Unreleased]
 
-### Bugfixes
-
-* Fix parsing error during stats generation
-
 ## v25.11.9
 
 ### Enhancements
