@@ -1,0 +1,7 @@
+; in
+pow $0,2
+nrt $0,4
+; out
+pow $0,2
+nrt $0,4
+
