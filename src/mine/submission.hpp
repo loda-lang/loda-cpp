@@ -2,6 +2,7 @@
 
 #include <string>
 
+#include "base/uid.hpp"
 #include "lang/program.hpp"
 #include "sys/jute.h"
 
@@ -10,11 +11,11 @@ class Submission {
   enum class Type { PROGRAM, SEQUENCE };
   enum class Mode { ADD, UPDATE, DELETE };
 
+  UID id;
   Type type;
   Mode mode;
-  std::string id;
-  std::string submitter;
   std::string content;
+  std::string submitter;
 
   static Submission fromJson(const jute::jValue& json);
 
