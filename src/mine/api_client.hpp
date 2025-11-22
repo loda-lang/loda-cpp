@@ -37,7 +37,6 @@ class ApiClient {
   std::string base_url;
   std::string base_url_v2;
   bool oeis_fetch_direct;
-  bool use_v2_api;
   int64_t client_id;
   int64_t session_id;
   int64_t start;
@@ -58,6 +57,4 @@ class ApiClient {
   void updateSessionV2();
 
   int64_t fetchInt(const std::string& endpoint);
-
-  void extractAndUpdateSession(const jute::jValue& json);
 };

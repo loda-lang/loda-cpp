@@ -16,8 +16,7 @@
 #include "sys/web_client.hpp"
 
 ApiClient::ApiClient()
-    : use_v2_api(true),
-      client_id(Random::get().gen() % 100000),
+    : client_id(Random::get().gen() % 100000),
       session_id(0),
       start(0),
       count(0),
@@ -231,17 +230,13 @@ void validateNewSessionIdAndCount(int64_t new_session_id, int64_t new_count) {
   }
 }
 
-void ApiClient::extractAndUpdateSession(const jute::jValue& json) {
-  auto session_val = const_cast<jute::jValue&>(json)["session"];
-  if (session_val.get_type() != jute::JNUMBER) {
-    throw std::runtime_error("Invalid JSON response: invalid session ID");
+int64_t getNumber(const jute::jValue& json, const std::string& name) {
+  auto val = const_cast<jute::jValue&>(json)[name];
+  if (val.get_type() != jute::JNUMBER) {
+    throw std::runtime_error("Invalid JSON response: invalid " + name +
+                             " value");
   }
-  session_id = static_cast<int64_t>(session_val.as_double());
-  auto total_val = const_cast<jute::jValue&>(json)["total"];
-  if (total_val.get_type() != jute::JNUMBER) {
-    throw std::runtime_error("Invalid JSON response: invalid total count");
-  }
-  count = static_cast<int64_t>(total_val.as_double());
+  return val.as_int();
 }
 
 void ApiClient::updateSession() {
@@ -262,25 +257,28 @@ void ApiClient::updateSession() {
 
 void ApiClient::updateSessionV2() {
   Log::get().debug("Updating API client session using v2 API");
+  auto json = WebClient::getJson(base_url_v2 + "submissions?limit=1");
+  auto new_session_id = getNumber(json, "session_id");
+  auto new_count = getNumber(json, "total_count");
+  validateNewSessionIdAndCount(new_session_id, new_count);
+  start = (new_session_id == session_id) ? count : 0;
+  count = new_count;
+  session_id = new_session_id;
 
-  // Check if we need to fetch session and count
-  if (session_id == 0) {
-    // First time or session expired - fetch to get session and total count
-    jute::jValue count_json =
-        WebClient::getJson(base_url_v2 + "submissions?limit=1");
-    extractAndUpdateSession(count_json);
-  }
-
-  Log::get().debug("Session: " + std::to_string(session_id) +
-                   ", total submissions: " + std::to_string(count));
-
-  if (count <= 0) {
-    v2_in_queue.clear();
-    return;
-  }
-
-  // Calculate how many programs to fetch (at most V2_SUBMISSIONS_PAGE_SIZE)
+  // Update pages for fetching submissions
   static constexpr int64_t PAGE_SIZE = 100;
+  int64_t num_pages = (count / PAGE_SIZE) + 1;
+  pages.clear();
+  for (int64_t i = 0; i < num_pages; i++) {
+    Page page;
+    page.start = i * PAGE_SIZE;
+    page.count = std::min<int64_t>(PAGE_SIZE, count - page.start);
+    pages.push_back(page);
+  }
+  std::shuffle(pages.begin(), pages.end(), Random::get().gen);
+
+  /*
+  // Calculate how many programs to fetch (at most V2_SUBMISSIONS_PAGE_SIZE)
   int64_t num_to_fetch = std::min<int64_t>(PAGE_SIZE, count);
 
   // Generate random skip offset within the valid range
@@ -346,6 +344,7 @@ void ApiClient::updateSessionV2() {
   Log::get().debug("Fetched " + std::to_string(v2_in_queue.size()) +
                    " programs from v2 API at random offset " +
                    std::to_string(random_skip));
+                   */
 }
 
 int64_t ApiClient::fetchInt(const std::string& endpoint) {
