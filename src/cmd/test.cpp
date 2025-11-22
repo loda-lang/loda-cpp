@@ -989,7 +989,8 @@ void Test::apiClient() {
   }
   // test v2 api
   auto submission = client.getNextSubmission();
-  if (submission.program.ops.empty()) {
+  auto parsed_program = submission.toProgram();
+  if (parsed_program.ops.empty()) {
     Log::get().error("Expected non-empty program from API server", true);
   }
 }

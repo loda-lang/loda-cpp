@@ -6,6 +6,7 @@
 
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
+#include "mine/submission.hpp"
 #include "sys/file.hpp"
 #include "sys/git.hpp"
 #include "sys/jute.h"
@@ -194,17 +195,7 @@ Submission ApiClient::getNextSubmission() {
   jute::parser json_parser;
   try {
     auto tmp2 = json_parser.parse_file(tmp)["results"][0];
-    submission.id = tmp2["id"].as_string();
-    submission.submitter = tmp2["submitter"].as_string();
-    submission.type = tmp2["type"].as_string();
-    submission.mode = tmp2["mode"].as_string();
-    std::istringstream parse_stream(tmp2["content"].as_string());
-    Parser program_parser;
-    try {
-      submission.program = program_parser.parse(parse_stream);
-    } catch (const std::exception&) {
-      submission.program.ops.clear();
-    }
+    submission = Submission::fromJson(tmp2);
     std::remove(tmp.c_str());
   } catch (const std::exception&) {
     Log::get().error("Error deserializing next submission from API server",
@@ -228,7 +219,7 @@ Program ApiClient::getNextProgram() {
 
     // Return program from v2 queue if available
     if (!v2_in_queue.empty()) {
-      Program program = v2_in_queue.back().program;
+      Program program = v2_in_queue.back().toProgram();
       v2_in_queue.pop_back();
       return program;
     }
@@ -408,51 +399,32 @@ void ApiClient::updateSessionV2() {
 
   // Extract and parse programs from submissions
   v2_in_queue.clear();
-  Parser parser;
 
   for (int i = 0; i < submissions.size(); i++) {
-    Submission submission_processed;
-    auto submission = submissions[i];
+    auto submission_json = submissions[i];
 
-    // Check if this is a program submission (not sequence)
-    auto obj_type = submission["type"];
-    if (obj_type.get_type() == jute::JSTRING &&
-        obj_type.as_string() != "program") {
-      continue;  // Skip non-program submissions
-    }
-    submission_processed.type = obj_type.as_string();
-    submission_processed.id = submission["id"].as_string();
-    submission_processed.submitter = submission["submitter"].as_string();
-    submission_processed.mode = submission["mode"].as_string();
-
-    // Extract the program code
-    auto code_val = submission["code"];
-    if (code_val.get_type() != jute::JSTRING) {
-      continue;  // Skip if no code field
-    }
-
-    std::string code = code_val.as_string();
-    if (code.empty()) {
+    // Create submission from JSON (this will validate type and mode)
+    Submission submission;
+    try {
+      submission = Submission::fromJson(submission_json);
+    } catch (const std::exception& e) {
+      Log::get().warn("Failed to parse submission: " + std::string(e.what()));
       continue;
     }
 
-    // Parse the program code
-    try {
-      std::stringstream code_stream(code);
-      Program program = parser.parse(code_stream);
-      if (!program.ops.empty()) {
-        submission_processed.program = program;
-        v2_in_queue.push_back(submission_processed);
-      }
-    } catch (const std::exception& e) {
-      // Extract ID for logging
-      std::string id_str = "unknown";
-      auto id_val = submission["id"];
-      if (id_val.get_type() == jute::JSTRING) {
-        id_str = id_val.as_string();
-      }
-      Log::get().warn("Failed to parse program " + id_str + ": " +
-                      std::string(e.what()));
+    // Check if this is a program submission (not sequence)
+    if (submission.type != Submission::Type::PROGRAM) {
+      continue;  // Skip non-program submissions
+    }
+
+    if (submission.content.empty()) {
+      continue;  // Skip if no content
+    }
+
+    // Validate that the program can be parsed
+    Program program = submission.toProgram();
+    if (!program.ops.empty()) {
+      v2_in_queue.push_back(submission);
     }
   }
 

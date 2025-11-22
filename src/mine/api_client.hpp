@@ -3,16 +3,8 @@
 #include <chrono>
 
 #include "lang/program.hpp"
+#include "mine/submission.hpp"
 #include "sys/jute.h"
-
-class Submission {
- public:
-  std::string id;
-  std::string submitter;
-  std::string type;
-  std::string mode;
-  Program program;
-};
 
 class ApiClient {
  public:
