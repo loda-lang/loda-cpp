@@ -24,6 +24,17 @@ void WebClient::initWebClient() {
 
 bool WebClient::get(const std::string &url, const std::string &local_path,
                     bool silent, bool fail_on_error, bool insecure) {
+
+size_t pos = 0;
+while((pos = url.find("&", pos)) != std::string::npos){
+	#ifdef _WIN64
+	url.replace(pos,1,"^&");
+	#else
+	url.replace(pos,1,"\\&");
+	#endif
+	pos += 2;
+}
+
   initWebClient();
   std::string cmd;
   switch (WEB_CLIENT_TYPE) {
