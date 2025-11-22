@@ -8,6 +8,7 @@
 #include "lang/program_util.hpp"
 #include "sys/file.hpp"
 #include "sys/git.hpp"
+#include "sys/jute.h"
 #include "sys/log.hpp"
 #include "sys/setup.hpp"
 #include "sys/util.hpp"
@@ -162,8 +163,54 @@ void ApiClient::getOeisFile(const std::string& filename,
 
 bool ApiClient::getProgram(int64_t index, const std::string& path) {
   std::remove(path.c_str());
-  return WebClient::get(base_url + "programs/" + std::to_string(index), path,
-                        false, false);
+  return WebClient::get(base_url + "programs/" + std::to_string(index),
+                        path, false, false);
+}
+
+bool ApiClient::getSubmission(int64_t index, const std::string &path) {
+  std::remove(path.c_str());
+  return WebClient::get(
+      base_url_v2 + "submissions?skip=" + std::to_string(index) + "&limit=1",
+      path, false, false);
+}
+
+Submission ApiClient::getNextSubmission() {
+  if (session_id == 0 || in_queue.empty()) {
+    updateSession();
+  }
+  Submission submission;
+  if (in_queue.empty()) {
+    return submission;
+  }
+  const int64_t index = in_queue.back();
+  in_queue.pop_back();
+  const std::string tmp =
+      getTmpDir() + "get_submission_" + std::to_string(client_id) + ".json";
+  if (!getSubmission(index, tmp)) {
+    Log::get().debug("Invalid session, resetting.");
+    session_id = 0; // resetting session
+    return submission;
+  }
+  jute::parser json_parser;
+  try {
+    auto tmp2 = json_parser.parse_file(tmp)["results"][0];
+    submission.id = tmp2["id"].as_string();
+    submission.submitter = tmp2["submitter"].as_string();
+    submission.type = tmp2["type"].as_string();
+    submission.mode = tmp2["mode"].as_string();
+    std::istringstream parse_stream(tmp2["content"].as_string());
+    Parser program_parser;
+    try {
+      submission.program = program_parser.parse(parse_stream);
+    } catch (const std::exception &) {
+      submission.program.ops.clear();
+    }
+    std::remove(tmp.c_str());
+  } catch (const std::exception &) {
+    Log::get().error("Error deserializing next submission from API server",
+                     true);
+  }
+  return submission;
 }
 
 Program ApiClient::getNextProgram() {
@@ -181,7 +228,7 @@ Program ApiClient::getNextProgram() {
 
     // Return program from v2 queue if available
     if (!v2_in_queue.empty()) {
-      Program program = v2_in_queue.back();
+      Program program = v2_in_queue.back().program;
       v2_in_queue.pop_back();
       return program;
     }
@@ -214,8 +261,8 @@ Program ApiClient::getNextProgram() {
   }
   std::remove(tmp.c_str());
   if (program.ops.empty()) {
-    Log::get().warn("Invalid program on API server: " + base_url + "programs/" +
-                    std::to_string(index));
+    Log::get().warn("Invalid program on API server: " + base_url +
+                    "programs/" + std::to_string(index));
   }
   return program;
 }
@@ -364,15 +411,20 @@ void ApiClient::updateSessionV2() {
   Parser parser;
 
   for (int i = 0; i < submissions.size(); i++) {
+  	Submission submission_processed;
     auto submission = submissions[i];
-
+    
     // Check if this is a program submission (not sequence)
     auto obj_type = submission["type"];
     if (obj_type.get_type() == jute::JSTRING &&
         obj_type.as_string() != "program") {
       continue;  // Skip non-program submissions
     }
-
+    submission_processed.type = obj_type.as_string();
+    submission_processed.id = submission["id"].as_string();
+    submission_processed.submitter = submission["submitter"].as_string();
+    submission_processed.mode = submission["mode"].as_string();
+    
     // Extract the program code
     auto code_val = submission["code"];
     if (code_val.get_type() != jute::JSTRING) {
@@ -389,7 +441,8 @@ void ApiClient::updateSessionV2() {
       std::stringstream code_stream(code);
       Program program = parser.parse(code_stream);
       if (!program.ops.empty()) {
-        v2_in_queue.push_back(program);
+      	submission_processed.program = program;
+        v2_in_queue.push_back(submission_processed);
       }
     } catch (const std::exception& e) {
       // Extract ID for logging

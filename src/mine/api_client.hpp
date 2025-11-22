@@ -5,8 +5,17 @@
 #include "lang/program.hpp"
 #include "sys/jute.h"
 
+class Submission {
+public:
+  std::string id;
+  std::string submitter;
+  std::string type;
+  std::string mode;
+  Program program;
+};
+
 class ApiClient {
- public:
+public:
   ApiClient();
 
   static ApiClient& getDefaultInstance();
@@ -18,6 +27,8 @@ class ApiClient {
   void postCPUHour();
 
   void getOeisFile(const std::string& filename, const std::string& local_path);
+
+  Submission getNextSubmission();
 
   Program getNextProgram();
 
@@ -37,12 +48,13 @@ class ApiClient {
   int64_t count;
   int64_t fetched_oeis_files;
   std::vector<int64_t> in_queue;     // for v1 API (program indices)
-  std::vector<Program> v2_in_queue;  // for v2 API (full programs)
+  std::vector<Submission> v2_in_queue;  // for v2 API (full programs)
   std::vector<Program> out_queue;
   std::chrono::time_point<std::chrono::steady_clock> last_oeis_time;
   bool printed_throttling_warning;
 
   bool getProgram(int64_t index, const std::string& path);
+  bool getSubmission(int64_t index, const std::string &path);
 
   void updateSession();
 
