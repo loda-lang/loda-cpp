@@ -25,16 +25,18 @@ void WebClient::initWebClient() {
 bool WebClient::get(const std::string &url, const std::string &local_path,
                     bool silent, bool fail_on_error, bool insecure) {
 
-size_t pos = 0;
-while((pos = url.find("&", pos)) != std::string::npos){
+std::string url_processed = "";
+size_t len = url.length();
+for(size_t pos = 0; pos < len; pos++){
+	if(url[pos] == '&' || url[pos] == '|'){
 	#ifdef _WIN64
-	url.replace(pos,1,"^&");
+	url_processed.push_back('^');
 	#else
-	url.replace(pos,1,"\\&");
+	url_processed.push_back('\\');
 	#endif
-	pos += 2;
+	}
+	url_processed.push_back(url[pos]);
 }
-
   initWebClient();
   std::string cmd;
   switch (WEB_CLIENT_TYPE) {
@@ -43,11 +45,11 @@ while((pos = url.find("&", pos)) != std::string::npos){
       if (insecure) {
         cmd += " --insecure";
       }
-      cmd += " -fsSLo \"" + local_path + "\" " + url;
+      cmd += " -fsSLo \"" + local_path + "\" " + url_processed;
       break;
     case WC_WGET:
       cmd =
-          "wget -q --no-use-server-timestamps -O \"" + local_path + "\" " + url;
+          "wget -q --no-use-server-timestamps -O \"" + local_path + "\" " + url_processed;
       break;
     default:
       Log::get().error("Unsupported web client for GET request", true);
