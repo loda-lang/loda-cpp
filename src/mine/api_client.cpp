@@ -1,6 +1,7 @@
 #include "mine/api_client.hpp"
 
 #include <fstream>
+#include <sstream>
 #include <thread>
 
 #include "lang/parser.hpp"
@@ -195,9 +196,10 @@ Submission ApiClient::getNextSubmission() {
     submission.submitter = tmp2["submitter"].as_string();
     submission.type = tmp2["type"].as_string();
     submission.mode = tmp2["mode"].as_string();
+    std::istringstream parse_stream(tmp2["content"].as_string());
     Parser program_parser;
     try {
-      submission.program = program_parser.parse(tmp2["content"].as_string());
+      submission.program = program_parser.parse(parse_stream);
     } catch (const std::exception &) {
       submission.program.ops.clear();
     }
