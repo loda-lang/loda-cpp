@@ -5,37 +5,25 @@
 
 #include "lang/parser.hpp"
 
+std::string getStringField(const jute::jValue& json, const std::string& name,
+                           bool required = true) {
+  auto field = const_cast<jute::jValue&>(json)[name];
+  if (field.get_type() == jute::JSTRING) {
+    return field.as_string();
+  } else if (required) {
+    throw std::runtime_error("Missing or invalid '" + name +
+                             "' field in submission JSON");
+  }
+  return "";
+}
+
 Submission Submission::fromJson(const jute::jValue& json) {
   Submission submission;
-  auto id = const_cast<jute::jValue&>(json)["id"];
-  if (id.get_type() == jute::JSTRING) {
-    submission.id = UID(id.as_string());
-  }
-  auto type_ = const_cast<jute::jValue&>(json)["type"];
-  if (type_.get_type() == jute::JSTRING) {
-    submission.type = typeFromString(type_.as_string());
-  } else {
-    throw std::runtime_error(
-        "Missing or invalid 'type' field in submission JSON");
-  }
-  auto mode = const_cast<jute::jValue&>(json)["mode"];
-  if (mode.get_type() == jute::JSTRING) {
-    submission.mode = modeFromString(mode.as_string());
-  } else {
-    throw std::runtime_error(
-        "Missing or invalid 'mode' field in submission JSON");
-  }
-  auto content = const_cast<jute::jValue&>(json)["content"];
-  if (content.get_type() == jute::JSTRING) {
-    submission.content = content.as_string();
-  } else {
-    throw std::runtime_error(
-        "Missing or invalid 'content' field in submission JSON");
-  }
-  auto submitter = const_cast<jute::jValue&>(json)["submitter"];
-  if (submitter.get_type() == jute::JSTRING) {
-    submission.submitter = submitter.as_string();
-  }
+  submission.id = UID(getStringField(json, "id"));
+  submission.type = typeFromString(getStringField(json, "type"));
+  submission.mode = modeFromString(getStringField(json, "mode"));
+  submission.content = getStringField(json, "content");
+  submission.submitter = getStringField(json, "submitter", false);
   return submission;
 }
 
