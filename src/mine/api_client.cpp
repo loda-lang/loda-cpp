@@ -260,24 +260,24 @@ Program ApiClient::getNextProgram() {
   return program;
 }
 
-void ApiClient::updateSession() {
-  Log::get().debug("Updating API client session");
-  auto new_session_id = fetchInt("session");
-  if (new_session_id == 0) {
+void validateNewSessionIdAndCount(int64_t new_session_id, int64_t new_count) {
+  if (new_session_id <= 0) {
     Log::get().error("Received invalid session ID from API server: " +
                          std::to_string(new_session_id),
                      true);
   }
-  auto new_count = fetchInt("count");
   if (new_count < 0 || new_count > 100000) {  // magic number
-    Log::get().error("Received invalid program count from API server" +
+    Log::get().error("Received invalid submission count from API server" +
                          std::to_string(new_count),
                      true);
   }
-  // Log::get().debug("old session:" + std::to_string(session_id) + ", old
-  // start:" + std::to_string(start) + ", old count:" +std::to_string(count) );
-  // Log::get().debug("new session:" + std::to_string(new_session_id) + ", new
-  // count:" +std::to_string(new_count) );
+}
+
+void ApiClient::updateSession() {
+  Log::get().debug("Updating API client session");
+  auto new_session_id = fetchInt("session");
+  auto new_count = fetchInt("count");
+  validateNewSessionIdAndCount(new_session_id, new_count);
   start = (new_session_id == session_id) ? count : 0;
   count = new_count;
   session_id = new_session_id;
@@ -286,9 +286,6 @@ void ApiClient::updateSession() {
   for (int64_t i = 0; i < delta_count; i++) {
     in_queue[i] = start + i;
   }
-  // Log::get().debug("updated session:" + std::to_string(session_id) + ",
-  // updated start:" + std::to_string(start) + ", updated count:"
-  // +std::to_string(count) + " queue: " + std::to_string(queue.size()));
   std::shuffle(in_queue.begin(), in_queue.end(), Random::get().gen);
 }
 
