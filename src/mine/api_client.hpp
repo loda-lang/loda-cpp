@@ -3,6 +3,7 @@
 #include <chrono>
 
 #include "lang/program.hpp"
+#include "sys/jute.h"
 
 class ApiClient {
  public:
@@ -23,15 +24,20 @@ class ApiClient {
  private:
   // throttle download of OEIS file from API server
   static constexpr int64_t OEIS_THROTTLING_SECS = 10;  // magic number
+  static constexpr int64_t V2_SUBMISSIONS_PAGE_SIZE =
+      100;  // page size for v2 API
 
   std::string base_url;
+  std::string base_url_v2;
   bool oeis_fetch_direct;
+  bool use_v2_api;
   int64_t client_id;
   int64_t session_id;
   int64_t start;
   int64_t count;
   int64_t fetched_oeis_files;
-  std::vector<int64_t> in_queue;
+  std::vector<int64_t> in_queue;     // for v1 API (program indices)
+  std::vector<Program> v2_in_queue;  // for v2 API (full programs)
   std::vector<Program> out_queue;
   std::chrono::time_point<std::chrono::steady_clock> last_oeis_time;
   bool printed_throttling_warning;
@@ -40,5 +46,11 @@ class ApiClient {
 
   void updateSession();
 
+  void updateSessionV2();
+
   int64_t fetchInt(const std::string& endpoint);
+
+  jute::jValue fetchJsonV2(const std::string& endpoint);
+
+  void extractAndUpdateSession(const jute::jValue& json);
 };

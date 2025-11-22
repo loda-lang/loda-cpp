@@ -4,6 +4,10 @@
 
 * Fix parsing error during stats generation
 
+### Enhancements
+
+* Use `v2/submissions/` API endpoint to fetch programs
+
 ## v25.11.9
 
 ### Enhancements
