@@ -305,32 +305,6 @@ int64_t ApiClient::fetchInt(const std::string& endpoint) {
   return value;
 }
 
-jute::jValue ApiClient::fetchJsonV2(const std::string& endpoint) {
-  const std::string tmp =
-      getTmpDir() + "submissions_" + std::to_string(client_id) + ".json";
-
-  if (!WebClient::get(base_url_v2 + endpoint, tmp, true, false)) {
-    std::remove(tmp.c_str());
-    throw std::runtime_error("Failed to fetch from v2 API: " + endpoint);
-  }
-
-  jute::jValue json;
-  try {
-    json = jute::parser::parse_file(tmp);
-  } catch (const std::exception& e) {
-    std::remove(tmp.c_str());
-    throw std::runtime_error("Failed to parse JSON response: " +
-                             std::string(e.what()));
-  }
-  std::remove(tmp.c_str());
-
-  if (json.get_type() != jute::JOBJECT) {
-    throw std::runtime_error("Invalid JSON response: expected object");
-  }
-
-  return json;
-}
-
 void ApiClient::extractAndUpdateSession(const jute::jValue& json) {
   // Extract session ID
   auto session_val = const_cast<jute::jValue&>(json)["session"];
@@ -361,7 +335,8 @@ void ApiClient::updateSessionV2() {
   // Check if we need to fetch session and count
   if (session_id == 0) {
     // First time or session expired - fetch to get session and total count
-    jute::jValue count_json = fetchJsonV2("submissions?mode=next&limit=1");
+    jute::jValue count_json =
+        WebClient::getJson(base_url_v2 + "submissions?limit=1");
     extractAndUpdateSession(count_json);
   }
 
@@ -386,7 +361,12 @@ void ApiClient::updateSessionV2() {
   endpoint << "submissions?type=program&limit=" << num_to_fetch
            << "&skip=" << random_skip;
 
-  jute::jValue json = fetchJsonV2(endpoint.str());
+  jute::jValue json = WebClient::getJson(base_url_v2 + endpoint.str());
+
+  // Validate response type
+  if (json.get_type() != jute::JOBJECT) {
+    throw std::runtime_error("Invalid JSON response: expected object");
+  }
 
   // Update session ID and count from the actual fetch response
   extractAndUpdateSession(json);

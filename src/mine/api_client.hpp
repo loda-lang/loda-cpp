@@ -54,7 +54,5 @@ class ApiClient {
 
   int64_t fetchInt(const std::string& endpoint);
 
-  jute::jValue fetchJsonV2(const std::string& endpoint);
-
   void extractAndUpdateSession(const jute::jValue& json);
 };

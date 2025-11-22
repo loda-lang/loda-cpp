@@ -121,3 +121,23 @@ bool WebClient::postFile(const std::string& url, const std::string& file_path,
   auto exit_code = system(cmd.c_str());
   return (exit_code == 0);
 }
+
+jute::jValue WebClient::getJson(const std::string& url) {
+  static int64_t request_counter = 0;
+  const std::string tmp =
+      getTmpDir() + "web_json_" + std::to_string(request_counter++) + ".json";
+  if (!get(url, tmp, false, false)) {
+    std::remove(tmp.c_str());
+    throw std::runtime_error("Failed to fetch JSON from URL: " + url);
+  }
+  jute::jValue json;
+  try {
+    json = jute::parser::parse_file(tmp);
+  } catch (const std::exception& e) {
+    std::remove(tmp.c_str());
+    throw std::runtime_error("Failed to parse JSON response: " +
+                             std::string(e.what()));
+  }
+  std::remove(tmp.c_str());
+  return json;
+}
