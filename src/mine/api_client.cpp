@@ -321,7 +321,8 @@ void ApiClient::updateSessionV2() {
   }
 
   // Calculate how many programs to fetch (at most V2_SUBMISSIONS_PAGE_SIZE)
-  int64_t num_to_fetch = std::min<int64_t>(V2_SUBMISSIONS_PAGE_SIZE, count);
+  static constexpr int64_t PAGE_SIZE = 100;
+  int64_t num_to_fetch = std::min<int64_t>(PAGE_SIZE, count);
 
   // Generate random skip offset within the valid range
   int64_t max_skip = std::max<int64_t>(0, count - num_to_fetch);
