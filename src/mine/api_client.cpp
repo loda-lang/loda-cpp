@@ -163,11 +163,11 @@ void ApiClient::getOeisFile(const std::string& filename,
 
 bool ApiClient::getProgram(int64_t index, const std::string& path) {
   std::remove(path.c_str());
-  return WebClient::get(base_url + "programs/" + std::to_string(index),
-                        path, false, false);
+  return WebClient::get(base_url + "programs/" + std::to_string(index), path,
+                        false, false);
 }
 
-bool ApiClient::getSubmission(int64_t index, const std::string &path) {
+bool ApiClient::getSubmission(int64_t index, const std::string& path) {
   std::remove(path.c_str());
   return WebClient::get(
       base_url_v2 + "submissions?skip=" + std::to_string(index) + "&limit=1",
@@ -188,7 +188,7 @@ Submission ApiClient::getNextSubmission() {
       getTmpDir() + "get_submission_" + std::to_string(client_id) + ".json";
   if (!getSubmission(index, tmp)) {
     Log::get().debug("Invalid session, resetting.");
-    session_id = 0; // resetting session
+    session_id = 0;  // resetting session
     return submission;
   }
   jute::parser json_parser;
@@ -202,11 +202,11 @@ Submission ApiClient::getNextSubmission() {
     Parser program_parser;
     try {
       submission.program = program_parser.parse(parse_stream);
-    } catch (const std::exception &) {
+    } catch (const std::exception&) {
       submission.program.ops.clear();
     }
     std::remove(tmp.c_str());
-  } catch (const std::exception &) {
+  } catch (const std::exception&) {
     Log::get().error("Error deserializing next submission from API server",
                      true);
   }
@@ -261,8 +261,8 @@ Program ApiClient::getNextProgram() {
   }
   std::remove(tmp.c_str());
   if (program.ops.empty()) {
-    Log::get().warn("Invalid program on API server: " + base_url +
-                    "programs/" + std::to_string(index));
+    Log::get().warn("Invalid program on API server: " + base_url + "programs/" +
+                    std::to_string(index));
   }
   return program;
 }
@@ -411,9 +411,9 @@ void ApiClient::updateSessionV2() {
   Parser parser;
 
   for (int i = 0; i < submissions.size(); i++) {
-  	Submission submission_processed;
+    Submission submission_processed;
     auto submission = submissions[i];
-    
+
     // Check if this is a program submission (not sequence)
     auto obj_type = submission["type"];
     if (obj_type.get_type() == jute::JSTRING &&
@@ -424,7 +424,7 @@ void ApiClient::updateSessionV2() {
     submission_processed.id = submission["id"].as_string();
     submission_processed.submitter = submission["submitter"].as_string();
     submission_processed.mode = submission["mode"].as_string();
-    
+
     // Extract the program code
     auto code_val = submission["code"];
     if (code_val.get_type() != jute::JSTRING) {
@@ -441,7 +441,7 @@ void ApiClient::updateSessionV2() {
       std::stringstream code_stream(code);
       Program program = parser.parse(code_stream);
       if (!program.ops.empty()) {
-      	submission_processed.program = program;
+        submission_processed.program = program;
         v2_in_queue.push_back(submission_processed);
       }
     } catch (const std::exception& e) {
