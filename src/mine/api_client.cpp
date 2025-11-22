@@ -187,6 +187,11 @@ Submission ApiClient::getNextSubmission() {
       v2_in_queue.pop_back();
       return submission;
     }
+    
+    if (session_id == 0 || in_queue.empty()) {
+      updateSession();
+    }
+    
   const int64_t index = in_queue.back();
   in_queue.pop_back();
   try {
