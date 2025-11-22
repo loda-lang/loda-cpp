@@ -163,6 +163,23 @@ bool ApiClient::getProgram(int64_t index, const std::string& path) {
                         false, false);
 }
 
+Submission ApiClient::getNextSubmission() {
+  const std::string tmp =
+      getTmpDir() + "get_submission_" + std::to_string(client_id) + ".json";
+  if (!WebClient::get(base_url + "v2/submissions?skip=0&limit=1", tmp, false,
+                      false)) {
+    Log::get().error("Error fetching next submission from API server", true);
+  }
+  Submission submission;
+  try {
+    submission = deserialize(tmp);
+  } catch (const std::exception &) {
+    Log::get().error("Error deserializing next submission from API server",
+                     true);
+  }
+  return submission;
+}
+
 Program ApiClient::getNextProgram() {
   if (session_id == 0 || in_queue.empty()) {
     updateSession();

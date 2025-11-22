@@ -42,3 +42,12 @@ class ApiClient {
 
   int64_t fetchInt(const std::string& endpoint);
 };
+
+class Submission {
+public:
+  std::string id;
+  std::string submitter;
+  std::string type;
+  std::string mode;
+  Program program;
+}
