@@ -168,32 +168,37 @@ bool ApiClient::getProgram(int64_t index, const std::string& path) {
                         false, false);
 }
 
-bool ApiClient::getSubmission(int64_t index, const std::string& path) {
-  std::remove(path.c_str());
-  return WebClient::get(
-      base_url_v2 + "submissions?skip=" + std::to_string(index) + "&limit=1",
-      path, false, false);
-}
-
 Submission ApiClient::getNextSubmission() {
   if (v2_in_queue.empty()) {
     try {
       updateSessionV2();
     } catch (const std::exception& e) {
-      Log::get().error("Error using v2 API: " +
-                      std::string(e.what()));
-    }
+        Log::get().warn("Error using v2 API: " +
+                        std::string(e.what()));
+        session_id = 0;
+      }
   }
     
     
   Submission submission;
-  // Return program from v2 queue if available
+  // Return submission from v2 queue if available
   if (!v2_in_queue.empty()) {
       submission = v2_in_queue.back();
       v2_in_queue.pop_back();
       return submission;
     }
-    return submission;
+  const int64_t index = in_queue.back();
+  in_queue.pop_back();
+  try {
+    auto url =
+        base_url_v2 + "submissions?skip=" + std::to_string(index) + "&limit=1";
+    auto json = WebClient::getJson(url);
+    submission = Submission::fromJson(json["results"][0]);
+  } catch (const std::exception&) {
+    Log::get().debug("Invalid session, resetting.");
+    session_id = 0;  // resetting session
+  }
+  return submission;
 }
 
 Program ApiClient::getNextProgram() {
@@ -298,27 +303,16 @@ int64_t ApiClient::fetchInt(const std::string& endpoint) {
 }
 
 void ApiClient::extractAndUpdateSession(const jute::jValue& json) {
-  // Extract session ID
   auto session_val = const_cast<jute::jValue&>(json)["session"];
-  if (session_val.get_type() == jute::JNUMBER) {
-    int64_t new_session_id = static_cast<int64_t>(session_val.as_double());
-    if (new_session_id != session_id) {
-      Log::get().debug("Session changed from " + std::to_string(session_id) +
-                       " to " + std::to_string(new_session_id));
-      session_id = new_session_id;
-    }
+  if (session_val.get_type() != jute::JNUMBER) {
+    throw std::runtime_error("Invalid JSON response: invalid session ID");
   }
-
-  // Extract and update count
+  session_id = static_cast<int64_t>(session_val.as_double());
   auto total_val = const_cast<jute::jValue&>(json)["total"];
-  if (total_val.get_type() == jute::JNUMBER) {
-    int64_t new_count = static_cast<int64_t>(total_val.as_double());
-    if (new_count != count) {
-      Log::get().debug("Count changed from " + std::to_string(count) + " to " +
-                       std::to_string(new_count));
-      count = new_count;
-    }
+  if (total_val.get_type() != jute::JNUMBER) {
+    throw std::runtime_error("Invalid JSON response: invalid total count");
   }
+  count = static_cast<int64_t>(total_val.as_double());
 }
 
 void ApiClient::updateSessionV2() {
