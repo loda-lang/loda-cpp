@@ -48,7 +48,7 @@ public:
   int64_t count;
   int64_t fetched_oeis_files;
   std::vector<int64_t> in_queue;     // for v1 API (program indices)
-  std::vector<Program> v2_in_queue;  // for v2 API (full programs)
+  std::vector<Submission> v2_in_queue;  // for v2 API (full programs)
   std::vector<Program> out_queue;
   std::chrono::time_point<std::chrono::steady_clock> last_oeis_time;
   bool printed_throttling_warning;

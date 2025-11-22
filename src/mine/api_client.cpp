@@ -228,7 +228,7 @@ Program ApiClient::getNextProgram() {
 
     // Return program from v2 queue if available
     if (!v2_in_queue.empty()) {
-      Program program = v2_in_queue.back();
+      Program program = v2_in_queue.back().program;
       v2_in_queue.pop_back();
       return program;
     }
@@ -411,15 +411,20 @@ void ApiClient::updateSessionV2() {
   Parser parser;
 
   for (int i = 0; i < submissions.size(); i++) {
+  	Submission submission_processed;
     auto submission = submissions[i];
-
+    
     // Check if this is a program submission (not sequence)
     auto obj_type = submission["type"];
     if (obj_type.get_type() == jute::JSTRING &&
         obj_type.as_string() != "program") {
       continue;  // Skip non-program submissions
     }
-
+    submission_processed.type = obj_type.as_string();
+    submission_processed.id = submission["id"].as_string();
+    submission_processed.submitter = submission["submitter"].as_string();
+    submission_processed.mode = submission["mode"].as_string();
+    
     // Extract the program code
     auto code_val = submission["code"];
     if (code_val.get_type() != jute::JSTRING) {
@@ -436,7 +441,8 @@ void ApiClient::updateSessionV2() {
       std::stringstream code_stream(code);
       Program program = parser.parse(code_stream);
       if (!program.ops.empty()) {
-        v2_in_queue.push_back(program);
+      	submission_processed.program = program;
+        v2_in_queue.push_back(submission);
       }
     } catch (const std::exception& e) {
       // Extract ID for logging
