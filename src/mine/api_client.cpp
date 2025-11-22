@@ -176,32 +176,24 @@ bool ApiClient::getSubmission(int64_t index, const std::string& path) {
 }
 
 Submission ApiClient::getNextSubmission() {
-  if (session_id == 0 || in_queue.empty()) {
-    updateSession();
+  if (v2_in_queue.empty()) {
+    try {
+      updateSessionV2();
+    } catch (const std::exception& e) {
+      Log::get().error("Error using v2 API: " +
+                      std::string(e.what()));
+    }
   }
+    
+    
   Submission submission;
-  if (in_queue.empty()) {
+  // Return program from v2 queue if available
+  if (!v2_in_queue.empty()) {
+      submission = v2_in_queue.back();
+      v2_in_queue.pop_back();
+      return submission;
+    }
     return submission;
-  }
-  const int64_t index = in_queue.back();
-  in_queue.pop_back();
-  const std::string tmp =
-      getTmpDir() + "get_submission_" + std::to_string(client_id) + ".json";
-  if (!getSubmission(index, tmp)) {
-    Log::get().debug("Invalid session, resetting.");
-    session_id = 0;  // resetting session
-    return submission;
-  }
-  jute::parser json_parser;
-  try {
-    auto tmp2 = json_parser.parse_file(tmp)["results"][0];
-    submission = Submission::fromJson(tmp2);
-    std::remove(tmp.c_str());
-  } catch (const std::exception&) {
-    Log::get().error("Error deserializing next submission from API server",
-                     true);
-  }
-  return submission;
 }
 
 Program ApiClient::getNextProgram() {
