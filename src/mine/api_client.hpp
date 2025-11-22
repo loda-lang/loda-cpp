@@ -4,8 +4,17 @@
 
 #include "lang/program.hpp"
 
+class Submission {
+public:
+  std::string id;
+  std::string submitter;
+  std::string type;
+  std::string mode;
+  Program program;
+};
+
 class ApiClient {
- public:
+public:
   ApiClient();
 
   static ApiClient& getDefaultInstance();
@@ -17,6 +26,8 @@ class ApiClient {
   void postCPUHour();
 
   void getOeisFile(const std::string& filename, const std::string& local_path);
+
+  Submission getNextSubmission();
 
   Program getNextProgram();
 
@@ -37,17 +48,9 @@ class ApiClient {
   bool printed_throttling_warning;
 
   bool getProgram(int64_t index, const std::string& path);
+  bool getSubmission(int64_t index, const std::string &path);
 
   void updateSession();
 
   int64_t fetchInt(const std::string& endpoint);
 };
-
-class Submission {
-public:
-  std::string id;
-  std::string submitter;
-  std::string type;
-  std::string mode;
-  Program program;
-}

@@ -7,6 +7,7 @@
 #include "lang/program_util.hpp"
 #include "sys/file.hpp"
 #include "sys/git.hpp"
+#include "sys/jute.h"
 #include "sys/log.hpp"
 #include "sys/setup.hpp"
 #include "sys/util.hpp"
@@ -29,7 +30,7 @@ ApiClient::ApiClient()
   if (server.back() != '/') {
     server += '/';
   }
-  base_url = server + "miner/v1/";
+  base_url = server;
   oeis_fetch_direct = Setup::getSetupFlag("LODA_OEIS_FETCH_DIRECT", false);
 }
 
@@ -62,7 +63,7 @@ bool ApiClient::postProgram(const std::string& path, bool fail_on_error) {
   if (!isFile(path)) {
     Log::get().error("File not found: " + path, true);
   }
-  const std::string url = base_url + "programs";
+  const std::string url = base_url + "miner/v1/programs";
   if (!WebClient::postFile(url, path)) {
     const std::string msg("Cannot submit program to API server");
     if (fail_on_error) {
@@ -89,7 +90,7 @@ void ApiClient::postCPUHour() {
       << Version::PLATFORM << "\", \"cpuHours\":1" << "}\n";
   out.close();
   const std::vector<std::string> headers = {"Content-Type: application/json"};
-  const std::string url = base_url + "cpuhours";
+  const std::string url = base_url + "miner/v1/cpuhours";
   if (!WebClient::postFile(url, tmp_file, {}, headers)) {
     WebClient::postFile(url, tmp_file, {}, headers,
                         true);  // for debugging
@@ -130,7 +131,7 @@ void ApiClient::getOeisFile(const std::string& filename,
     }
   } else {
     ext = ".gz";
-    url = base_url + "oeis/" + filename + ext;
+    url = base_url + "miner/v1/oeis/" + filename + ext;
   }
 
   bool success = false;
@@ -159,20 +160,48 @@ void ApiClient::getOeisFile(const std::string& filename,
 
 bool ApiClient::getProgram(int64_t index, const std::string& path) {
   std::remove(path.c_str());
-  return WebClient::get(base_url + "programs/" + std::to_string(index), path,
-                        false, false);
+  return WebClient::get(base_url + "miner/v1/programs/" + std::to_string(index),
+                        path, false, false);
+}
+
+bool ApiClient::getSubmission(int64_t index, const std::string &path) {
+  std::remove(path.c_str());
+  return WebClient::get(
+      base_url + "v2/submissions?skip=" + std::to_string(index) + "&limit=1",
+      path, false, false);
 }
 
 Submission ApiClient::getNextSubmission() {
-  const std::string tmp =
-      getTmpDir() + "get_submission_" + std::to_string(client_id) + ".json";
-  if (!WebClient::get(base_url + "v2/submissions?skip=0&limit=1", tmp, false,
-                      false)) {
-    Log::get().error("Error fetching next submission from API server", true);
+  if (session_id == 0 || in_queue.empty()) {
+    updateSession();
   }
   Submission submission;
+  if (in_queue.empty()) {
+    return submission;
+  }
+  const int64_t index = in_queue.back();
+  in_queue.pop_back();
+  const std::string tmp =
+      getTmpDir() + "get_submission_" + std::to_string(client_id) + ".json";
+  if (!getSubmission(index, tmp)) {
+    Log::get().debug("Invalid session, resetting.");
+    session_id = 0; // resetting session
+    return submission;
+  }
+  jute::parser json_parser;
   try {
-    submission = deserialize(tmp);
+    auto tmp2 = json_parser.parse_file(tmp)["results"][0];
+    submission.id = tmp2["id"].as_string();
+    submission.submitter = tmp2["submitter"].as_string();
+    submission.type = tmp2["type"].as_string();
+    submission.mode = tmp2["mode"].as_string();
+    Parser program_parser;
+    try {
+      submission.program = program_parser.parse(tmp2["content"].as_string());
+    } catch (const std::exception &) {
+      submission.program.ops.clear();
+    }
+    std::remove(tmp.c_str());
   } catch (const std::exception &) {
     Log::get().error("Error deserializing next submission from API server",
                      true);
@@ -205,8 +234,8 @@ Program ApiClient::getNextProgram() {
   }
   std::remove(tmp.c_str());
   if (program.ops.empty()) {
-    Log::get().warn("Invalid program on API server: " + base_url + "programs/" +
-                    std::to_string(index));
+    Log::get().warn("Invalid program on API server: " + base_url +
+                    "miner/v1/programs/" + std::to_string(index));
   }
   return program;
 }
@@ -246,7 +275,7 @@ void ApiClient::updateSession() {
 int64_t ApiClient::fetchInt(const std::string& endpoint) {
   const std::string tmp =
       getTmpDir() + "tmp_int_" + std::to_string(client_id) + ".txt";
-  WebClient::get(base_url + endpoint, tmp, true, true);
+  WebClient::get(base_url + "miner/v1/" + endpoint, tmp, true, true);
   std::ifstream in(tmp);
   if (in.bad()) {
     Log::get().error("Error fetching data from API server", true);
