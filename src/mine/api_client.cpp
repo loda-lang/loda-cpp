@@ -442,7 +442,7 @@ void ApiClient::updateSessionV2() {
       Program program = parser.parse(code_stream);
       if (!program.ops.empty()) {
       	submission_processed.program = program;
-        v2_in_queue.push_back(submission);
+        v2_in_queue.push_back(submission_processed);
       }
     } catch (const std::exception& e) {
       // Extract ID for logging
