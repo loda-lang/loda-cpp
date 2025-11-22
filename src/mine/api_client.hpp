@@ -45,6 +45,7 @@ class ApiClient {
   int64_t fetched_oeis_files;
   std::vector<int64_t> in_queue;
   std::vector<Page> pages;
+  std::vector<Submission> current_page_submissions;
   std::vector<Submission> v2_in_queue;
   std::vector<Program> out_queue;
   std::chrono::time_point<std::chrono::steady_clock> last_oeis_time;

@@ -191,32 +191,6 @@ Submission ApiClient::getNextSubmission() {
 }
 
 Program ApiClient::getNextProgram() {
-  if (use_v2_api) {
-    if (v2_in_queue.empty()) {
-      try {
-        updateSessionV2();
-      } catch (const std::exception& e) {
-        Log::get().warn("Error using v2 API, falling back to v1: " +
-                        std::string(e.what()));
-        use_v2_api = false;
-        session_id = 0;  // reset v1 session
-      }
-    }
-
-    // Return program from v2 queue if available
-    if (!v2_in_queue.empty()) {
-      Program program = v2_in_queue.back().toProgram();
-      v2_in_queue.pop_back();
-      return program;
-    }
-  }
-
-  if (!use_v2_api) {
-    if (session_id == 0 || in_queue.empty()) {
-      updateSession();
-    }
-  }
-
   Program program;
   if (in_queue.empty()) {
     return program;
@@ -257,6 +231,19 @@ void validateNewSessionIdAndCount(int64_t new_session_id, int64_t new_count) {
   }
 }
 
+void ApiClient::extractAndUpdateSession(const jute::jValue& json) {
+  auto session_val = const_cast<jute::jValue&>(json)["session"];
+  if (session_val.get_type() != jute::JNUMBER) {
+    throw std::runtime_error("Invalid JSON response: invalid session ID");
+  }
+  session_id = static_cast<int64_t>(session_val.as_double());
+  auto total_val = const_cast<jute::jValue&>(json)["total"];
+  if (total_val.get_type() != jute::JNUMBER) {
+    throw std::runtime_error("Invalid JSON response: invalid total count");
+  }
+  count = static_cast<int64_t>(total_val.as_double());
+}
+
 void ApiClient::updateSession() {
   Log::get().debug("Updating API client session");
   auto new_session_id = fetchInt("session");
@@ -271,34 +258,6 @@ void ApiClient::updateSession() {
     in_queue[i] = start + i;
   }
   std::shuffle(in_queue.begin(), in_queue.end(), Random::get().gen);
-}
-
-int64_t ApiClient::fetchInt(const std::string& endpoint) {
-  const std::string tmp =
-      getTmpDir() + "tmp_int_" + std::to_string(client_id) + ".txt";
-  WebClient::get(base_url + endpoint, tmp, true, true);
-  std::ifstream in(tmp);
-  if (in.bad()) {
-    Log::get().error("Error fetching data from API server", true);
-  }
-  int64_t value = 0;
-  in >> value;
-  in.close();
-  std::remove(tmp.c_str());
-  return value;
-}
-
-void ApiClient::extractAndUpdateSession(const jute::jValue& json) {
-  auto session_val = const_cast<jute::jValue&>(json)["session"];
-  if (session_val.get_type() != jute::JNUMBER) {
-    throw std::runtime_error("Invalid JSON response: invalid session ID");
-  }
-  session_id = static_cast<int64_t>(session_val.as_double());
-  auto total_val = const_cast<jute::jValue&>(json)["total"];
-  if (total_val.get_type() != jute::JNUMBER) {
-    throw std::runtime_error("Invalid JSON response: invalid total count");
-  }
-  count = static_cast<int64_t>(total_val.as_double());
 }
 
 void ApiClient::updateSessionV2() {
@@ -387,4 +346,19 @@ void ApiClient::updateSessionV2() {
   Log::get().debug("Fetched " + std::to_string(v2_in_queue.size()) +
                    " programs from v2 API at random offset " +
                    std::to_string(random_skip));
+}
+
+int64_t ApiClient::fetchInt(const std::string& endpoint) {
+  const std::string tmp =
+      getTmpDir() + "tmp_int_" + std::to_string(client_id) + ".txt";
+  WebClient::get(base_url + endpoint, tmp, true, true);
+  std::ifstream in(tmp);
+  if (in.bad()) {
+    Log::get().error("Error fetching data from API server", true);
+  }
+  int64_t value = 0;
+  in >> value;
+  in.close();
+  std::remove(tmp.c_str());
+  return value;
 }
