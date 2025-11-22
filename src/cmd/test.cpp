@@ -982,8 +982,14 @@ void Test::apiClient() {
   ApiClient client;
   client.postProgram(std::string("tests") + FILE_SEP + "programs" + FILE_SEP +
                      "oeis" + FILE_SEP + "000" + FILE_SEP + "A000005.asm");
+  // test v1 api
   auto program = client.getNextProgram();
   if (program.ops.empty()) {
+    Log::get().error("Expected non-empty program from API server", true);
+  }
+  // test v2 api
+  auto submission = client.getNextSubmission();
+  if (submission.program.ops.empty()) {
     Log::get().error("Expected non-empty program from API server", true);
   }
 }
