@@ -16,8 +16,7 @@
 #include "sys/web_client.hpp"
 
 ApiClient::ApiClient()
-    : use_v2_api(true),
-      client_id(Random::get().gen() % 100000),
+    : client_id(Random::get().gen() % 100000),
       session_id(0),
       start(0),
       count(0),
@@ -204,140 +203,10 @@ Submission ApiClient::getNextSubmission() {
     session_id = 0;  // resetting session
   }
   return submission;
-}
 
-Program ApiClient::getNextProgram() {
-  if (use_v2_api) {
-    if (v2_in_queue.empty()) {
-      try {
-        updateSessionV2();
-      } catch (const std::exception& e) {
-        Log::get().warn("Error using v2 API, falling back to v1: " +
-                        std::string(e.what()));
-        use_v2_api = false;
-        session_id = 0;  // reset v1 session
-      }
-    }
-
-    // Return program from v2 queue if available
-    if (!v2_in_queue.empty()) {
-      Program program = v2_in_queue.back().toProgram();
-      v2_in_queue.pop_back();
-      return program;
-    }
-  }
-
-  if (!use_v2_api) {
-    if (session_id == 0 || in_queue.empty()) {
-      updateSession();
-    }
-  }
-
-  Program program;
-  if (in_queue.empty()) {
-    return program;
-  }
-  const int64_t index = in_queue.back();
-  in_queue.pop_back();
-  const std::string tmp =
-      getTmpDir() + "get_program_" + std::to_string(client_id) + ".asm";
-  if (!getProgram(index, tmp)) {
-    Log::get().debug("Invalid session, resetting.");
-    session_id = 0;  // resetting session
-    return program;
-  }
-  Parser parser;
-  try {
-    program = parser.parse(tmp);
-  } catch (const std::exception&) {
-    program.ops.clear();
-  }
-  std::remove(tmp.c_str());
-  if (program.ops.empty()) {
-    Log::get().warn("Invalid program on API server: " + base_url + "programs/" +
-                    std::to_string(index));
-  }
-  return program;
-}
-
-void validateNewSessionIdAndCount(int64_t new_session_id, int64_t new_count) {
-  if (new_session_id <= 0) {
-    Log::get().error("Received invalid session ID from API server: " +
-                         std::to_string(new_session_id),
-                     true);
-  }
-  if (new_count < 0 || new_count > 100000) {  // magic number
-    Log::get().error("Received invalid submission count from API server" +
-                         std::to_string(new_count),
-                     true);
-  }
-}
-
-void ApiClient::updateSession() {
-  Log::get().debug("Updating API client session");
-  auto new_session_id = fetchInt("session");
-  auto new_count = fetchInt("count");
-  validateNewSessionIdAndCount(new_session_id, new_count);
-  start = (new_session_id == session_id) ? count : 0;
-  count = new_count;
-  session_id = new_session_id;
-  auto delta_count = count - start;
-  in_queue.resize(delta_count);
-  for (int64_t i = 0; i < delta_count; i++) {
-    in_queue[i] = start + i;
-  }
-  std::shuffle(in_queue.begin(), in_queue.end(), Random::get().gen);
-}
-
-int64_t ApiClient::fetchInt(const std::string& endpoint) {
-  const std::string tmp =
-      getTmpDir() + "tmp_int_" + std::to_string(client_id) + ".txt";
-  WebClient::get(base_url + endpoint, tmp, true, true);
-  std::ifstream in(tmp);
-  if (in.bad()) {
-    Log::get().error("Error fetching data from API server", true);
-  }
-  int64_t value = 0;
-  in >> value;
-  in.close();
-  std::remove(tmp.c_str());
-  return value;
-}
-
-void ApiClient::extractAndUpdateSession(const jute::jValue& json) {
-  auto session_val = const_cast<jute::jValue&>(json)["session"];
-  if (session_val.get_type() != jute::JNUMBER) {
-    throw std::runtime_error("Invalid JSON response: invalid session ID");
-  }
-  session_id = static_cast<int64_t>(session_val.as_double());
-  auto total_val = const_cast<jute::jValue&>(json)["total"];
-  if (total_val.get_type() != jute::JNUMBER) {
-    throw std::runtime_error("Invalid JSON response: invalid total count");
-  }
-  count = static_cast<int64_t>(total_val.as_double());
-}
-
-void ApiClient::updateSessionV2() {
-  Log::get().debug("Updating API client session using v2 API");
-
-  // Check if we need to fetch session and count
-  if (session_id == 0) {
-    // First time or session expired - fetch to get session and total count
-    jute::jValue count_json =
-        WebClient::getJson(base_url_v2 + "submissions?limit=1");
-    extractAndUpdateSession(count_json);
-  }
-
-  Log::get().debug("Session: " + std::to_string(session_id) +
-                   ", total submissions: " + std::to_string(count));
-
-  if (count <= 0) {
-    v2_in_queue.clear();
-    return;
-  }
-
+  /*
   // Calculate how many programs to fetch (at most V2_SUBMISSIONS_PAGE_SIZE)
-  int64_t num_to_fetch = std::min<int64_t>(V2_SUBMISSIONS_PAGE_SIZE, count);
+  int64_t num_to_fetch = std::min<int64_t>(PAGE_SIZE, count);
 
   // Generate random skip offset within the valid range
   int64_t max_skip = std::max<int64_t>(0, count - num_to_fetch);
@@ -402,4 +271,109 @@ void ApiClient::updateSessionV2() {
   Log::get().debug("Fetched " + std::to_string(v2_in_queue.size()) +
                    " programs from v2 API at random offset " +
                    std::to_string(random_skip));
+                   */
+}
+
+Program ApiClient::getNextProgram() {
+  Program program;
+  if (in_queue.empty()) {
+    return program;
+  }
+  const int64_t index = in_queue.back();
+  in_queue.pop_back();
+  const std::string tmp =
+      getTmpDir() + "get_program_" + std::to_string(client_id) + ".asm";
+  if (!getProgram(index, tmp)) {
+    Log::get().debug("Invalid session, resetting.");
+    session_id = 0;  // resetting session
+    return program;
+  }
+  Parser parser;
+  try {
+    program = parser.parse(tmp);
+  } catch (const std::exception&) {
+    program.ops.clear();
+  }
+  std::remove(tmp.c_str());
+  if (program.ops.empty()) {
+    Log::get().warn("Invalid program on API server: " + base_url + "programs/" +
+                    std::to_string(index));
+  }
+  return program;
+}
+
+void validateNewSessionIdAndCount(int64_t new_session_id, int64_t new_count) {
+  if (new_session_id <= 0) {
+    Log::get().error("Received invalid session ID from API server: " +
+                         std::to_string(new_session_id),
+                     true);
+  }
+  if (new_count < 0 || new_count > 100000) {  // magic number
+    Log::get().error("Received invalid submission count from API server" +
+                         std::to_string(new_count),
+                     true);
+  }
+}
+
+int64_t getNumber(const jute::jValue& json, const std::string& name) {
+  auto val = const_cast<jute::jValue&>(json)[name];
+  if (val.get_type() != jute::JNUMBER) {
+    throw std::runtime_error("Invalid JSON response: invalid " + name +
+                             " value");
+  }
+  return val.as_int();
+}
+
+void ApiClient::updateSession() {
+  Log::get().debug("Updating API client session");
+  auto new_session_id = fetchInt("session");
+  auto new_count = fetchInt("count");
+  validateNewSessionIdAndCount(new_session_id, new_count);
+  start = (new_session_id == session_id) ? count : 0;
+  count = new_count;
+  session_id = new_session_id;
+  auto delta_count = count - start;
+  in_queue.resize(delta_count);
+  for (int64_t i = 0; i < delta_count; i++) {
+    in_queue[i] = start + i;
+  }
+  std::shuffle(in_queue.begin(), in_queue.end(), Random::get().gen);
+}
+
+void ApiClient::updateSessionV2() {
+  Log::get().debug("Updating API client session using v2 API");
+  auto json = WebClient::getJson(base_url_v2 + "submissions?limit=1");
+  auto new_session_id = getNumber(json, "session_id");
+  auto new_count = getNumber(json, "total_count");
+  validateNewSessionIdAndCount(new_session_id, new_count);
+  start = (new_session_id == session_id) ? count : 0;
+  count = new_count;
+  session_id = new_session_id;
+
+  // Update pages for fetching submissions
+  static constexpr int64_t PAGE_SIZE = 100;
+  int64_t num_pages = (count / PAGE_SIZE) + 1;
+  pages.clear();
+  for (int64_t i = 0; i < num_pages; i++) {
+    Page page;
+    page.start = i * PAGE_SIZE;
+    page.count = std::min<int64_t>(PAGE_SIZE, count - page.start);
+    pages.push_back(page);
+  }
+  std::shuffle(pages.begin(), pages.end(), Random::get().gen);
+}
+
+int64_t ApiClient::fetchInt(const std::string& endpoint) {
+  const std::string tmp =
+      getTmpDir() + "tmp_int_" + std::to_string(client_id) + ".txt";
+  WebClient::get(base_url + endpoint, tmp, true, true);
+  std::ifstream in(tmp);
+  if (in.bad()) {
+    Log::get().error("Error fetching data from API server", true);
+  }
+  int64_t value = 0;
+  in >> value;
+  in.close();
+  std::remove(tmp.c_str());
+  return value;
 }
