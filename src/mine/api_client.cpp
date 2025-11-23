@@ -193,11 +193,10 @@ Submission ApiClient::getNextSubmission() {
     }
     in_queue.clear();
     for (int i = 0; i < submissions.size(); i++) {
-      auto submission_json = submissions[i];
       // Create submission from JSON (this will validate type and mode)
       Submission sub;
       try {
-        sub = Submission::fromJson(submission_json);
+        sub = Submission::fromJson(submissions[i]);
       } catch (const std::exception& e) {
         Log::get().warn("Failed to parse submission: " + std::string(e.what()));
         continue;
