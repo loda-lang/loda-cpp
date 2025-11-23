@@ -8,11 +8,11 @@
 
 #include "eval/interpreter.hpp"
 #include "eval/optimizer.hpp"
+#include "gen/generator.hpp"
 #include "lang/comments.hpp"
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
 #include "mine/config.hpp"
-#include "gen/generator.hpp"
 #include "mine/mine_manager.hpp"
 #include "mine/mutator.hpp"
 #include "seq/seq_program.hpp"
@@ -25,7 +25,7 @@ const int64_t Miner::PROGRAMS_TO_FETCH = 2000;  // magic number
 const int64_t Miner::MAX_BACKLOG = 1000;        // magic number
 const int64_t Miner::NUM_MUTATIONS = 100;       // magic number
 
-Miner::Miner(const Settings &settings, ProgressMonitor *progress_monitor)
+Miner::Miner(const Settings& settings, ProgressMonitor* progress_monitor)
     : settings(settings),
       mining_mode(Setup::getMiningMode()),
       validation_mode(ValidationMode::EXTENDED),  // set in reload()
@@ -90,7 +90,7 @@ void Miner::mine() {
       runMineLoop();
       auto mins = std::to_string(monitor->getElapsedSeconds() / 60);
       Log::get().info("Finished mining after " + mins + " minutes");
-    } catch (const std::exception &e) {
+    } catch (const std::exception& e) {
       Log::get().error(
           "Error during initialization or mining: " + std::string(e.what()),
           false);
@@ -133,7 +133,9 @@ std::string convertValidationModeToStr(ValidationMode mode) {
 void Miner::runMineLoop() {
   Parser parser;
   std::stack<Program> progs;
+  std::stack<UID> maintain_ids;
   Sequence norm_seq;
+  Submission submission;
   Program program;
   Matcher::seq_programs_t seq_programs;
   update_program_result_t update_result;
@@ -187,7 +189,12 @@ void Miner::runMineLoop() {
       if (mining_mode == MINING_MODE_SERVER) {
         if (current_fetch > 0) {
           while (true) {
-            program = api_client->getNextProgram();
+            submission = api_client->getNextSubmission();
+            if (submission.mode == Submission::Mode::REMOVE) {
+              maintain_ids.push(submission.id);
+              continue;
+            }
+            program = submission.toProgram();
             if (program.ops.empty()) {
               current_fetch = 0;
               break;
@@ -228,7 +235,7 @@ void Miner::runMineLoop() {
         bool ok = true;
         try {
           id = UID(id_str);
-        } catch (const std::exception &) {
+        } catch (const std::exception&) {
           ok = false;
         }
         if (id.domain() != 'A' || id.number() == 0) {
@@ -299,7 +306,12 @@ void Miner::runMineLoop() {
     } else {
       // we are in server mode and have no programs to process
       // => lets do maintenance work!
-      if (!manager->maintainProgram(mutator->random_program_ids.getFromAll())) {
+      if (maintain_ids.empty()) {
+        maintain_ids.emplace(mutator->random_program_ids.getFromAll());
+      }
+      auto id = maintain_ids.top();
+      maintain_ids.pop();
+      if (!manager->maintainProgram(id)) {
         num_removed++;
       }
     }
@@ -401,7 +413,7 @@ void Miner::reportCPUHour() {
   num_reported_hours++;
 }
 
-void Miner::submit(const std::string &path, std::string id_str) {
+void Miner::submit(const std::string& path, std::string id_str) {
   reload();
   Parser parser;
   auto program = parser.parse(path);
@@ -499,7 +511,7 @@ void Miner::submit(const std::string &path, std::string id_str) {
   }
 }
 
-void Miner::ensureSubmitter(Program &program) {
+void Miner::ensureSubmitter(Program& program) {
   auto submitter = Comments::getSubmitter(program);
   if (submitter.empty()) {
     Comments::addComment(program,
@@ -507,7 +519,7 @@ void Miner::ensureSubmitter(Program &program) {
   }
 }
 
-void Miner::updateSubmitter(Program &program) {
+void Miner::updateSubmitter(Program& program) {
   auto submitter = Comments::getSubmitter(program);
   if (submitter.empty()) {
     submitter = Setup::getSubmitter();

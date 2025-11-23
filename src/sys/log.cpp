@@ -4,6 +4,7 @@
 #include <chrono>
 #include <fstream>
 #include <iostream>
+#include <thread>
 
 #include "sys/file.hpp"
 #include "sys/setup.hpp"
@@ -16,25 +17,25 @@ Log::Log()
       loaded_alerts_config(false),
       slack_alerts(false) {}
 
-Log &Log::get() {
+Log& Log::get() {
   static Log log;
   return log;
 }
 
-void Log::debug(const std::string &msg) { log(Log::Level::DEBUG, msg); }
+void Log::debug(const std::string& msg) { log(Log::Level::DEBUG, msg); }
 
-void Log::info(const std::string &msg) { log(Log::Level::INFO, msg); }
+void Log::info(const std::string& msg) { log(Log::Level::INFO, msg); }
 
-void Log::warn(const std::string &msg) { log(Log::Level::WARN, msg); }
+void Log::warn(const std::string& msg) { log(Log::Level::WARN, msg); }
 
-void Log::error(const std::string &msg, bool throw_) {
+void Log::error(const std::string& msg, bool throw_) {
   log(Log::Level::ERROR, msg);
   if (throw_) {
     throw std::runtime_error(msg);
   }
 }
 
-void Log::alert(const std::string &msg, AlertDetails details) {
+void Log::alert(const std::string& msg, AlertDetails details) {
   log(Log::Level::ALERT, msg);
   if (!loaded_alerts_config) {
     slack_alerts = Setup::getSetupFlag("LODA_SLACK_ALERTS", false);
@@ -68,7 +69,7 @@ void Log::alert(const std::string &msg, AlertDetails details) {
   }
 }
 
-void Log::slack(const std::string &msg, AlertDetails details) {
+void Log::slack(const std::string& msg, AlertDetails details) {
   std::string cmd;
   if (!details.text.empty()) {
     replaceAll(details.title, "\"", "");
@@ -106,7 +107,7 @@ void Log::slack(const std::string &msg, AlertDetails details) {
   }
 }
 
-void Log::discord(const std::string &msg, AlertDetails details) {
+void Log::discord(const std::string& msg, AlertDetails details) {
   if (discord_webhook.empty()) {
     Log::get().warn(
         "Cannot send message to Discord because webhook is not set");
@@ -123,14 +124,16 @@ void Log::discord(const std::string &msg, AlertDetails details) {
   out.close();
   const std::vector<std::string> headers = {"Content-Type: application/json"};
   if (!WebClient::postFile(discord_webhook, tmp_file, {}, headers)) {
-    WebClient::postFile(discord_webhook, tmp_file, {}, headers,
-                        true);  // for debugging
-    Log::get().error("Error sending message to Discord", false);
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+    if (!WebClient::postFile(discord_webhook, tmp_file, {}, headers,
+                             true)) {  // for debugging
+      Log::get().error("Error sending message to Discord", false);
+    }
   }
   std::remove(tmp_file.c_str());
 }
 
-void Log::log(Level level, const std::string &msg) {
+void Log::log(Level level, const std::string& msg) {
   if (level < this->level || silent) {
     return;
   }
