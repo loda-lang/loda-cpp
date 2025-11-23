@@ -101,15 +101,6 @@ bool SequenceUtil::evalFormulaWithExternalTool(
     Log::get().error("Error reading " + toolName + " output", true);
   }
   while (std::getline(resultIn, buf)) {
-    // Check for PARI/GP error messages that start with "  ***"
-    // This indicates a timeout or error that wasn't caught by exit code
-    // Only check for PARI to avoid masking errors from other tools
-    if (toolName == "PARI" && buf.size() >= 5 && buf.substr(0, 5) == "  ***") {
-      // PARI error detected, treat as timeout
-      std::remove(toolPath.c_str());
-      std::remove(resultPath.c_str());
-      return false;
-    }
     result.push_back(Number(buf));
   }
 
