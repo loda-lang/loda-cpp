@@ -5,6 +5,11 @@
 
 #include <curl/curl.h>
 
+// Undefine Windows macros that conflict with our code
+#ifdef ERROR
+#undef ERROR
+#endif
+
 #include "sys/file.hpp"
 #include "sys/log.hpp"
 
