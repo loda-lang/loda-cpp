@@ -124,7 +124,8 @@ void Log::discord(const std::string& msg, AlertDetails details) {
   out.close();
   const std::vector<std::string> headers = {"Content-Type: application/json"};
   if (!WebClient::postFile(discord_webhook, tmp_file, {}, headers)) {
-    std::this_thread::sleep_for(std::chrono::seconds(2));
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    Log::get().warn("Retrying Discord message: " + details.text);
     if (!WebClient::postFile(discord_webhook, tmp_file, {}, headers,
                              true)) {  // for debugging
       Log::get().error("Error sending message to Discord", false);
