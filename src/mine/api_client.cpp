@@ -223,8 +223,6 @@ Submission ApiClient::getNextSubmission() {
   return submission;
 }
 
-Program ApiClient::getNextProgram() { return getNextSubmission().toProgram(); }
-
 void validateNewSessionIdAndCount(int64_t new_session_id, int64_t new_count) {
   if (new_session_id <= 0) {
     Log::get().error("Received invalid session ID from API server: " +

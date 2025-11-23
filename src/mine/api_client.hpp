@@ -22,8 +22,6 @@ class ApiClient {
 
   Submission getNextSubmission();
 
-  Program getNextProgram();
-
  private:
   // throttle download of OEIS file from API server
   static constexpr int64_t OEIS_THROTTLING_SECS = 10;  // magic number

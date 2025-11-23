@@ -7,6 +7,7 @@
 ### Enhancements
 
 * Use `v2/submissions/` API endpoint to fetch programs
+* Handle program submissions with `delete` mode
 
 ## v25.11.9
 
