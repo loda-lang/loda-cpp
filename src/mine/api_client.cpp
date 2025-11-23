@@ -210,14 +210,14 @@ Submission ApiClient::getNextSubmission() {
           sub.content.empty()) {
         continue;  // Skip if no content for ADD/UPDATE
       }
-      // For REMOVE mode, content is optional, but if provided it should be parseable
+      // If content is provided, validate that the program can be parsed
       if (!sub.content.empty()) {
-        // Validate that the program can be parsed
         Program program = sub.toProgram();
         if (program.ops.empty()) {
           continue;  // Skip if program is not parseable
         }
       }
+      // Accept the submission (including REMOVE with no content)
       in_queue.push_back(sub);
     }
     std::shuffle(in_queue.begin(), in_queue.end(), Random::get().gen);
