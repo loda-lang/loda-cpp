@@ -120,7 +120,7 @@ void Log::discord(const std::string& msg, AlertDetails details) {
   const std::string tmp_file =
       "loda_discord_" + std::to_string(tmp_file_id) + ".json";
   std::ofstream out(tmp_file);
-  out << "{\"content\":\"" << details.text << "\"}";
+  out << "{\"content\":\"" << escapeJsonString(details.text) << "\"}";
   out.close();
   const std::vector<std::string> headers = {"Content-Type: application/json"};
   if (!WebClient::postFile(discord_webhook, tmp_file, {}, headers)) {

@@ -392,3 +392,46 @@ std::string escapeDiscordMarkdown(const std::string& str) {
   }
   return result;
 }
+
+std::string escapeJsonString(const std::string& str) {
+  std::string result;
+  // Reserve extra space to avoid reallocations when escaping special characters
+  result.reserve(str.size() * 2);
+  for (char c : str) {
+    // Escape JSON special characters according to RFC 8259
+    switch (c) {
+      case '"':
+        result += "\\\"";
+        break;
+      case '\\':
+        result += "\\\\";
+        break;
+      case '\b':
+        result += "\\b";
+        break;
+      case '\f':
+        result += "\\f";
+        break;
+      case '\n':
+        result += "\\n";
+        break;
+      case '\r':
+        result += "\\r";
+        break;
+      case '\t':
+        result += "\\t";
+        break;
+      default:
+        // For control characters (0x00-0x1F), use \uXXXX format
+        if (c >= 0 && c < 0x20) {
+          char buf[7];
+          snprintf(buf, sizeof(buf), "\\u%04x", static_cast<unsigned char>(c));
+          result += buf;
+        } else {
+          result += c;
+        }
+        break;
+    }
+  }
+  return result;
+}
