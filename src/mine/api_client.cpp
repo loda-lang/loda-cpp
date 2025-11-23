@@ -212,9 +212,14 @@ Submission ApiClient::getNextSubmission() {
       }
       // If content is provided, validate that the program can be parsed
       if (!sub.content.empty()) {
-        Program program = sub.toProgram();
-        if (program.ops.empty()) {
-          continue;  // Skip if program is not parseable
+        try {
+          Program program = sub.toProgram();
+          if (program.ops.empty()) {
+            continue;  // Skip if program is not parseable
+          }
+        } catch (const std::exception& e) {
+          Log::get().warn("Failed to parse program content: " + std::string(e.what()));
+          continue;  // Skip if parsing throws
         }
       }
       // Accept the submission (including REMOVE with no content)
