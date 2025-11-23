@@ -622,10 +622,10 @@ void MineManager::alert(Program p, UID id, const std::string& prefix,
   details.title_link = SequenceUtil::getOeisUrl(seq.id);
   details.color = color;
   std::stringstream buf;
-  buf << full << "\\n```\\n";
+  buf << full << "\n```\n";
   ProgramUtil::removeOps(p, Operation::Type::NOP);
   addSeqComments(p);
-  ProgramUtil::print(p, buf, "\\n");
+  ProgramUtil::print(p, buf, "\n");
   buf << "```";
   details.text = buf.str();
   Log::get().alert(msg, details);
