@@ -161,27 +161,20 @@ void ApiClient::getOeisFile(const std::string& filename,
   }
 }
 
-bool ApiClient::getProgram(int64_t index, const std::string& path) {
-  std::remove(path.c_str());
-  return WebClient::get(base_url + "programs/" + std::to_string(index), path,
-                        false, false);
-}
-
 Submission ApiClient::getNextSubmission() {
   if (session_id == 0 || pages.empty()) {
-    updateSessionV2();
+    updateSession();
   }
-  Log::get().info("Fetching next submission");
   Submission submission;
   if (pages.empty()) {
     return submission;
   }
-  if (in_queue_current_page.empty()) {
+  if (in_queue.empty()) {
     // fetch next page
     const Page page = pages.back();
     pages.pop_back();
     std::stringstream endpoint;
-    endpoint << "submissions?limit=" << page.count << "&skip=" << page.start
+    endpoint << "submissions?limit=" << page.limit << "&skip=" << page.skip
              << "&type=program";
     auto json = WebClient::getJson(base_url_v2 + endpoint.str());
     auto submissions = json["results"];
@@ -189,7 +182,7 @@ Submission ApiClient::getNextSubmission() {
       throw std::runtime_error(
           "Invalid JSON response: missing submissions array");
     }
-    in_queue_current_page.clear();
+    in_queue.clear();
     for (int i = 0; i < submissions.size(); i++) {
       auto submission_json = submissions[i];
       // Create submission from JSON (this will validate type and mode)
@@ -209,50 +202,20 @@ Submission ApiClient::getNextSubmission() {
       // Validate that the program can be parsed
       Program program = sub.toProgram();
       if (!program.ops.empty()) {
-        in_queue_current_page.push_back(sub);
+        in_queue.push_back(sub);
       }
     }
-    std::shuffle(in_queue_current_page.begin(), in_queue_current_page.end(),
-                 Random::get().gen);
+    std::shuffle(in_queue.begin(), in_queue.end(), Random::get().gen);
   }
-  if (in_queue_current_page.empty()) {
+  if (in_queue.empty()) {
     return submission;
   }
-  submission = in_queue_current_page.back();
-  in_queue_current_page.pop_back();
+  submission = in_queue.back();
+  in_queue.pop_back();
   return submission;
 }
 
-Program ApiClient::getNextProgram() {
-  if (session_id == 0 || in_queue.empty()) {
-    updateSession();
-  }
-  Program program;
-  if (in_queue.empty()) {
-    return program;
-  }
-  const int64_t index = in_queue.back();
-  in_queue.pop_back();
-  const std::string tmp =
-      getTmpDir() + "get_program_" + std::to_string(client_id) + ".asm";
-  if (!getProgram(index, tmp)) {
-    Log::get().debug("Invalid session, resetting.");
-    session_id = 0;  // resetting session
-    return program;
-  }
-  Parser parser;
-  try {
-    program = parser.parse(tmp);
-  } catch (const std::exception&) {
-    program.ops.clear();
-  }
-  std::remove(tmp.c_str());
-  if (program.ops.empty()) {
-    Log::get().warn("Invalid program on API server: " + base_url + "programs/" +
-                    std::to_string(index));
-  }
-  return program;
-}
+Program ApiClient::getNextProgram() { return getNextSubmission().toProgram(); }
 
 void validateNewSessionIdAndCount(int64_t new_session_id, int64_t new_count) {
   if (new_session_id <= 0) {
@@ -277,23 +240,7 @@ int64_t getNumber(const jute::jValue& json, const std::string& name) {
 }
 
 void ApiClient::updateSession() {
-  Log::get().debug("Updating API client session");
-  auto new_session_id = fetchInt("session");
-  auto new_count = fetchInt("count");
-  validateNewSessionIdAndCount(new_session_id, new_count);
-  start = (new_session_id == session_id) ? count : 0;
-  count = new_count;
-  session_id = new_session_id;
-  auto delta_count = count - start;
-  in_queue.resize(delta_count);
-  for (int64_t i = 0; i < delta_count; i++) {
-    in_queue[i] = start + i;
-  }
-  std::shuffle(in_queue.begin(), in_queue.end(), Random::get().gen);
-}
-
-void ApiClient::updateSessionV2() {
-  Log::get().info("Updating API client session using v2 API");
+  Log::get().info("Updating API client session");
   auto json = WebClient::getJson(base_url_v2 + "submissions?limit=1");
   auto new_session_id = getNumber(json, "session");
   auto new_count = getNumber(json, "total");
@@ -308,24 +255,9 @@ void ApiClient::updateSessionV2() {
   pages.clear();
   for (int64_t i = 0; i < num_pages; i++) {
     Page page;
-    page.start = i * PAGE_SIZE;
-    page.count = std::min<int64_t>(PAGE_SIZE, count - page.start);
+    page.skip = i * PAGE_SIZE;
+    page.limit = std::min<int64_t>(PAGE_SIZE, count - page.skip);
     pages.push_back(page);
   }
   std::shuffle(pages.begin(), pages.end(), Random::get().gen);
-}
-
-int64_t ApiClient::fetchInt(const std::string& endpoint) {
-  const std::string tmp =
-      getTmpDir() + "tmp_int_" + std::to_string(client_id) + ".txt";
-  WebClient::get(base_url + endpoint, tmp, true, true);
-  std::ifstream in(tmp);
-  if (in.bad()) {
-    Log::get().error("Error fetching data from API server", true);
-  }
-  int64_t value = 0;
-  in >> value;
-  in.close();
-  std::remove(tmp.c_str());
-  return value;
 }
