@@ -3,8 +3,12 @@ LDFLAGS = /link /LTCG
 
 # Check if VCPKG_ROOT is set (for vcpkg integration)
 !IFDEF VCPKG_ROOT
-CXXFLAGS = $(CXXFLAGS) /I$(VCPKG_ROOT)\installed\x64-windows\include
-LDFLAGS = $(LDFLAGS) /LIBPATH:$(VCPKG_ROOT)\installed\x64-windows\lib
+# Default to x64-windows if VCPKG_ARCH is not specified
+!IFNDEF VCPKG_ARCH
+VCPKG_ARCH = x64-windows
+!ENDIF
+CXXFLAGS = $(CXXFLAGS) /I$(VCPKG_ROOT)\installed\$(VCPKG_ARCH)\include
+LDFLAGS = $(LDFLAGS) /LIBPATH:$(VCPKG_ROOT)\installed\$(VCPKG_ARCH)\lib
 !ENDIF
 
 CURL_LIBS = libcurl.lib

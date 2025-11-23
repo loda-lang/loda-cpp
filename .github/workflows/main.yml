@@ -84,12 +84,15 @@ jobs:
         run: cd src && nmake.exe /F Makefile.windows.mk
         env:
           VCPKG_ROOT: C:\vcpkg
+          VCPKG_ARCH: arm64-windows
   code-coverage:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v2
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y lcov libcurl4-openssl-dev
       - name: Generate
-        run: sudo apt-get update && sudo apt-get install -y lcov libcurl4-openssl-dev && cd src && make -f Makefile.linux-x86.mk coverage
+        run: cd src && make -f Makefile.linux-x86.mk coverage
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
