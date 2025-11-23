@@ -9,7 +9,7 @@
 class Submission {
  public:
   enum class Type { PROGRAM, SEQUENCE };
-  enum class Mode { ADD, UPDATE, DELETE };
+  enum class Mode { ADD, UPDATE, REMOVE };
 
   UID id;
   Type type;

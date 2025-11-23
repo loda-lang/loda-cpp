@@ -42,8 +42,8 @@ Submission::Mode Submission::modeFromString(const std::string& mode_str) {
     return Mode::ADD;
   } else if (mode_str == "update") {
     return Mode::UPDATE;
-  } else if (mode_str == "delete") {
-    return Mode::DELETE;
+  } else if (mode_str == "remove") {
+    return Mode::REMOVE;
   } else {
     throw std::runtime_error("Invalid submission mode: " + mode_str);
   }
@@ -65,8 +65,8 @@ std::string Submission::modeToString(Mode mode) {
       return "add";
     case Mode::UPDATE:
       return "update";
-    case Mode::DELETE:
-      return "delete";
+    case Mode::REMOVE:
+      return "remove";
   }
   return "unknown";
 }

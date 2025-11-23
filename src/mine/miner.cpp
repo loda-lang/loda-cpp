@@ -190,7 +190,7 @@ void Miner::runMineLoop() {
         if (current_fetch > 0) {
           while (true) {
             submission = api_client->getNextSubmission();
-            if (submission.mode == Submission::Mode::DELETE) {
+            if (submission.mode == Submission::Mode::REMOVE) {
               maintain_ids.push(submission.id);
               continue;
             }
