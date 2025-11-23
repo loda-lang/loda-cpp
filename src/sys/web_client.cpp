@@ -14,6 +14,9 @@ void WebClient::initWebClient() {
   if (WEB_CLIENT_TYPE == 0) {
     curl_global_init(CURL_GLOBAL_DEFAULT);
     WEB_CLIENT_TYPE = 1;
+    // Note: curl_global_cleanup() is intentionally not called as it's not
+    // thread-safe and the library remains usable for the lifetime of the
+    // program. This is a common pattern for libcurl usage.
   }
 }
 
@@ -140,7 +143,17 @@ bool WebClient::postFile(const std::string& url, const std::string& file_path,
     }
 
     file.seekg(0, std::ios::end);
-    size_t file_size = file.tellg();
+    std::streampos pos = file.tellg();
+    if (pos == std::streampos(-1)) {
+      file.close();
+      curl_slist_free_all(header_list);
+      curl_easy_cleanup(curl);
+      if (enable_debug) {
+        Log::get().error("Failed to determine file size: " + file_path, false);
+      }
+      return false;
+    }
+    size_t file_size = static_cast<size_t>(pos);
     file.seekg(0, std::ios::beg);
 
     curl_easy_setopt(curl, CURLOPT_POST, 1L);
