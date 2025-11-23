@@ -204,14 +204,21 @@ Submission ApiClient::getNextSubmission() {
       if (sub.type != Submission::Type::PROGRAM) {
         continue;  // Skip non-program submissions
       }
-      if (sub.content.empty()) {
-        continue;  // Skip if no content
+      // For ADD and UPDATE modes, content is required
+      if ((sub.mode == Submission::Mode::ADD ||
+           sub.mode == Submission::Mode::UPDATE) &&
+          sub.content.empty()) {
+        continue;  // Skip if no content for ADD/UPDATE
       }
-      // Validate that the program can be parsed
-      Program program = sub.toProgram();
-      if (!program.ops.empty()) {
-        in_queue.push_back(sub);
+      // For REMOVE mode, content is optional, but if provided it should be parseable
+      if (!sub.content.empty()) {
+        // Validate that the program can be parsed
+        Program program = sub.toProgram();
+        if (program.ops.empty()) {
+          continue;  // Skip if program is not parseable
+        }
       }
+      in_queue.push_back(sub);
     }
     std::shuffle(in_queue.begin(), in_queue.end(), Random::get().gen);
   }
