@@ -215,7 +215,7 @@ Submission ApiClient::getNextSubmission() {
         try {
           Program program = sub.toProgram();
           if (program.ops.empty()) {
-            continue;  // Skip if program is not parseable
+            continue;  // Skip if program has no operations
           }
         } catch (const std::exception& e) {
           Log::get().warn("Failed to parse program content: " + std::string(e.what()));
