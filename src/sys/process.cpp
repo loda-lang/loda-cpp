@@ -1,5 +1,6 @@
 #include "sys/process.hpp"
 
+#include <fstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -107,6 +108,24 @@ int execWithTimeout(const std::vector<std::string>& args, int timeoutSeconds,
     }
     usleep(100000);  // Sleep for 100 ms
   }
+  
+  // Check output file for "alarm interrupt" messages that indicate timeout
+  // This catches cases where the process exits normally (code 0) but had
+  // a timeout internally (e.g., PARI/GP alarm interrupt)
+  if (!outputFile.empty()) {
+    std::ifstream outputIn(outputFile);
+    if (outputIn) {
+      std::string line;
+      while (std::getline(outputIn, line)) {
+        if (line.find("alarm interrupt") != std::string::npos) {
+          outputIn.close();
+          return PROCESS_ERROR_TIMEOUT;
+        }
+      }
+      outputIn.close();
+    }
+  }
+  
   if (WIFEXITED(status)) {
     return WEXITSTATUS(status);
   }
