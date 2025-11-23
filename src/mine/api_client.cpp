@@ -7,6 +7,7 @@
 #include "lang/program_util.hpp"
 #include "sys/file.hpp"
 #include "sys/git.hpp"
+#include "sys/jute.h"
 #include "sys/log.hpp"
 #include "sys/setup.hpp"
 #include "sys/util.hpp"
@@ -158,6 +159,20 @@ void ApiClient::getOeisFile(const std::string& filename,
   }
 }
 
+jute::jValue ApiClient::getSubmissions(const Page& page,
+                                       Submission::Type type) {
+  std::stringstream endpoint;
+  endpoint << base_url_v2
+           << "submissions?type=" << Submission::typeToString(type);
+  if (page.limit != 0) {
+    endpoint << "&limit=" << page.limit;
+  }
+  if (page.skip != 0) {
+    endpoint << "&skip=" << page.skip;
+  }
+  return WebClient::getJson(endpoint.str());
+}
+
 Submission ApiClient::getNextSubmission() {
   if (session_id == 0 || pages.empty()) {
     updateSession();
@@ -170,10 +185,7 @@ Submission ApiClient::getNextSubmission() {
     // fetch next page
     const Page page = pages.back();
     pages.pop_back();
-    std::stringstream endpoint;
-    endpoint << "submissions?limit=" << page.limit << "&skip=" << page.skip
-             << "&type=program";
-    auto json = WebClient::getJson(base_url_v2 + endpoint.str());
+    auto json = getSubmissions(page, Submission::Type::PROGRAM);
     auto submissions = json["results"];
     if (submissions.get_type() != jute::JARRAY) {
       throw std::runtime_error(
@@ -238,7 +250,10 @@ int64_t getNumber(const jute::jValue& json, const std::string& name) {
 
 void ApiClient::updateSession() {
   Log::get().debug("Updating API client session");
-  auto json = WebClient::getJson(base_url_v2 + "submissions?limit=1");
+  Page p;
+  p.limit = 1;
+  p.skip = 0;
+  auto json = getSubmissions(p, Submission::Type::PROGRAM);
   auto new_session_id = getNumber(json, "session");
   auto new_count = getNumber(json, "total");
   validateNewSessionIdAndCount(new_session_id, new_count);

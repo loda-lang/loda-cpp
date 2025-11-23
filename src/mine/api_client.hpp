@@ -4,6 +4,7 @@
 
 #include "lang/program.hpp"
 #include "mine/submission.hpp"
+#include "sys/jute.h"
 
 class ApiClient {
  public:
@@ -48,4 +49,6 @@ class ApiClient {
   bool printed_throttling_warning;
 
   void updateSession();
+
+  jute::jValue getSubmissions(const Page& page, Submission::Type type);
 };
