@@ -22,7 +22,7 @@ Submission Submission::fromJson(const jute::jValue& json) {
   submission.id = UID(getStringField(json, "id"));
   submission.type = typeFromString(getStringField(json, "type"));
   submission.mode = modeFromString(getStringField(json, "mode"));
-  submission.content = getStringField(json, "content");
+  submission.content = getStringField(json, "content", false);
   submission.submitter = getStringField(json, "submitter", false);
   return submission;
 }
