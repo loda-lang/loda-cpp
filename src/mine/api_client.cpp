@@ -168,97 +168,65 @@ bool ApiClient::getProgram(int64_t index, const std::string& path) {
 }
 
 Submission ApiClient::getNextSubmission() {
-  if (session_id == 0 || in_queue.empty()) {
-    updateSession();
+  if (session_id == 0 || pages.empty()) {
+    updateSessionV2();
   }
+  Log::get().info("Fetching next submission");
   Submission submission;
-  if (in_queue.empty()) {
+  if (pages.empty()) {
     return submission;
   }
-  const int64_t index = in_queue.back();
-  in_queue.pop_back();
-  try {
-    auto url =
-        base_url_v2 + "submissions?skip=" + std::to_string(index) + "&limit=1";
-    auto json = WebClient::getJson(url);
-    submission = Submission::fromJson(json["results"][0]);
-  } catch (const std::exception&) {
-    Log::get().debug("Invalid session, resetting.");
-    session_id = 0;  // resetting session
+  if (in_queue_current_page.empty()) {
+    // fetch next page
+    const Page page = pages.back();
+    pages.pop_back();
+    std::stringstream endpoint;
+    endpoint << "submissions?limit=" << page.count << "&skip=" << page.start
+             << "&type=program";
+    auto json = WebClient::getJson(base_url_v2 + endpoint.str());
+    auto submissions = json["results"];
+    if (submissions.get_type() != jute::JARRAY) {
+      throw std::runtime_error(
+          "Invalid JSON response: missing submissions array");
+    }
+    in_queue_current_page.clear();
+    for (int i = 0; i < submissions.size(); i++) {
+      auto submission_json = submissions[i];
+      // Create submission from JSON (this will validate type and mode)
+      Submission sub;
+      try {
+        sub = Submission::fromJson(submission_json);
+      } catch (const std::exception& e) {
+        Log::get().warn("Failed to parse submission: " + std::string(e.what()));
+        continue;
+      }
+      if (sub.type != Submission::Type::PROGRAM) {
+        continue;  // Skip non-program submissions
+      }
+      if (sub.content.empty()) {
+        continue;  // Skip if no content
+      }
+      // Validate that the program can be parsed
+      Program program = sub.toProgram();
+      if (!program.ops.empty()) {
+        in_queue_current_page.push_back(sub);
+      }
+    }
+    std::shuffle(in_queue_current_page.begin(), in_queue_current_page.end(),
+                 Random::get().gen);
   }
+  if (in_queue_current_page.empty()) {
+    return submission;
+  }
+  submission = in_queue_current_page.back();
+  in_queue_current_page.pop_back();
   return submission;
-
-  /*
-  // Calculate how many programs to fetch (at most V2_SUBMISSIONS_PAGE_SIZE)
-  int64_t num_to_fetch = std::min<int64_t>(PAGE_SIZE, count);
-
-  // Generate random skip offset within the valid range
-  int64_t max_skip = std::max<int64_t>(0, count - num_to_fetch);
-  int64_t random_skip =
-      max_skip > 0 ? (Random::get().gen() % (max_skip + 1)) : 0;
-
-  // Fetch submissions at random offset
-  std::stringstream endpoint;
-  endpoint << "submissions?type=program&limit=" << num_to_fetch
-           << "&skip=" << random_skip;
-
-  jute::jValue json = WebClient::getJson(base_url_v2 + endpoint.str());
-
-  // Validate response type
-  if (json.get_type() != jute::JOBJECT) {
-    throw std::runtime_error("Invalid JSON response: expected object");
-  }
-
-  // Update session ID and count from the actual fetch response
-  extractAndUpdateSession(json);
-
-  auto submissions = json["submissions"];
-  if (submissions.get_type() != jute::JARRAY) {
-    throw std::runtime_error(
-        "Invalid JSON response: missing submissions array");
-  }
-
-  // Extract and parse programs from submissions
-  v2_in_queue.clear();
-
-  for (int i = 0; i < submissions.size(); i++) {
-    auto submission_json = submissions[i];
-
-    // Create submission from JSON (this will validate type and mode)
-    Submission submission;
-    try {
-      submission = Submission::fromJson(submission_json);
-    } catch (const std::exception& e) {
-      Log::get().warn("Failed to parse submission: " + std::string(e.what()));
-      continue;
-    }
-
-    // Check if this is a program submission (not sequence)
-    if (submission.type != Submission::Type::PROGRAM) {
-      continue;  // Skip non-program submissions
-    }
-
-    if (submission.content.empty()) {
-      continue;  // Skip if no content
-    }
-
-    // Validate that the program can be parsed
-    Program program = submission.toProgram();
-    if (!program.ops.empty()) {
-      v2_in_queue.push_back(submission);
-    }
-  }
-
-  // Shuffle the queue for additional randomization
-  std::shuffle(v2_in_queue.begin(), v2_in_queue.end(), Random::get().gen);
-
-  Log::get().debug("Fetched " + std::to_string(v2_in_queue.size()) +
-                   " programs from v2 API at random offset " +
-                   std::to_string(random_skip));
-                   */
 }
 
 Program ApiClient::getNextProgram() {
+  if (session_id == 0 || in_queue.empty()) {
+    updateSession();
+  }
   Program program;
   if (in_queue.empty()) {
     return program;
@@ -325,10 +293,10 @@ void ApiClient::updateSession() {
 }
 
 void ApiClient::updateSessionV2() {
-  Log::get().debug("Updating API client session using v2 API");
+  Log::get().info("Updating API client session using v2 API");
   auto json = WebClient::getJson(base_url_v2 + "submissions?limit=1");
-  auto new_session_id = getNumber(json, "session_id");
-  auto new_count = getNumber(json, "total_count");
+  auto new_session_id = getNumber(json, "session");
+  auto new_count = getNumber(json, "total");
   validateNewSessionIdAndCount(new_session_id, new_count);
   start = (new_session_id == session_id) ? count : 0;
   count = new_count;
