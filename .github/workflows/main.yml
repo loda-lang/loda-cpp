@@ -12,6 +12,8 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v2
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev
       - name: Build
         run: cd src && make -f Makefile.linux-x86.mk
       - name: Install external tools
@@ -32,6 +34,8 @@ jobs:
     runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v2
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev
       - name: Build
         run: cd src && make -f Makefile.linux-arm64.mk
       - name: Test
@@ -57,8 +61,13 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: ilammy/msvc-dev-cmd@v1
+      - name: Install dependencies
+        run: |
+          vcpkg install curl:x64-windows
       - name: Build
         run: cd src && nmake.exe /F Makefile.windows.mk
+        env:
+          VCPKG_ROOT: C:\vcpkg
       - name: Test
         run: ./loda.exe test
   build-windows-arm64:
@@ -68,14 +77,19 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: amd64_arm64
+      - name: Install dependencies
+        run: |
+          vcpkg install curl:arm64-windows
       - name: Build
         run: cd src && nmake.exe /F Makefile.windows.mk
+        env:
+          VCPKG_ROOT: C:\vcpkg
   code-coverage:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v2
       - name: Generate
-        run: sudo apt install lcov && cd src && make -f Makefile.linux-x86.mk coverage
+        run: sudo apt-get update && sudo apt-get install -y lcov libcurl4-openssl-dev && cd src && make -f Makefile.linux-x86.mk coverage
       - name: Upload
         uses: actions/upload-artifact@v4
         with:

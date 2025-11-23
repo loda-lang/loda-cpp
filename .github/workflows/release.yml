@@ -44,6 +44,8 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v2
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev
       - name: Build
         run: cd src && make -f Makefile.linux-x86.mk loda LODA_PLATFORM=linux-x86 LODA_VERSION=${{ needs.create-release.outputs.version }}
       - name: Upload
@@ -60,6 +62,8 @@ jobs:
     runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v2
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev
       - name: Build
         run: cd src && make -f Makefile.linux-arm64.mk loda LODA_PLATFORM=linux-arm64 LODA_VERSION=${{ needs.create-release.outputs.version }}
       - name: Upload
@@ -109,8 +113,13 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: ilammy/msvc-dev-cmd@v1
+      - name: Install dependencies
+        run: |
+          vcpkg install curl:x64-windows
       - name: Build
         run: cd src && nmake.exe /F Makefile.windows.mk loda LODA_PLATFORM=windows-x86 LODA_VERSION=${{ needs.create-release.outputs.version }}
+        env:
+          VCPKG_ROOT: C:\vcpkg
       - name: Upload
         uses: actions/upload-release-asset@v1
         with:
@@ -128,8 +137,13 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: amd64_arm64
+      - name: Install dependencies
+        run: |
+          vcpkg install curl:arm64-windows
       - name: Build
         run: cd src && nmake.exe /F Makefile.windows.mk loda LODA_PLATFORM=windows-arm64 LODA_VERSION=${{ needs.create-release.outputs.version }}
+        env:
+          VCPKG_ROOT: C:\vcpkg
       - name: Upload
         uses: actions/upload-release-asset@v1
         with:

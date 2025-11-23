@@ -1,5 +1,12 @@
 CXXFLAGS = /I. /std:c++17 /O2 /GL
 LDFLAGS = /link /LTCG
+
+# Check if VCPKG_ROOT is set (for vcpkg integration)
+!IFDEF VCPKG_ROOT
+CXXFLAGS = $(CXXFLAGS) /I$(VCPKG_ROOT)\installed\x64-windows\include
+LDFLAGS = $(LDFLAGS) /LIBPATH:$(VCPKG_ROOT)\installed\x64-windows\lib
+!ENDIF
+
 CURL_LIBS = libcurl.lib
 
 !IFDEF LODA_VERSION
