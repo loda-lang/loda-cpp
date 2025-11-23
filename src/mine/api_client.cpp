@@ -4,12 +4,9 @@
 #include <sstream>
 #include <thread>
 
-#include "lang/parser.hpp"
 #include "lang/program_util.hpp"
-#include "mine/submission.hpp"
 #include "sys/file.hpp"
 #include "sys/git.hpp"
-#include "sys/jute.h"
 #include "sys/log.hpp"
 #include "sys/setup.hpp"
 #include "sys/util.hpp"
@@ -240,7 +237,7 @@ int64_t getNumber(const jute::jValue& json, const std::string& name) {
 }
 
 void ApiClient::updateSession() {
-  Log::get().info("Updating API client session");
+  Log::get().debug("Updating API client session");
   auto json = WebClient::getJson(base_url_v2 + "submissions?limit=1");
   auto new_session_id = getNumber(json, "session");
   auto new_count = getNumber(json, "total");
@@ -251,11 +248,13 @@ void ApiClient::updateSession() {
 
   // Update pages for fetching submissions
   static constexpr int64_t PAGE_SIZE = 100;
-  int64_t num_pages = (count / PAGE_SIZE) + 1;
+  int64_t remaining = count - start;
+  int64_t num_pages =
+      (remaining / PAGE_SIZE) + (remaining % PAGE_SIZE > 0 ? 1 : 0);
   pages.clear();
   for (int64_t i = 0; i < num_pages; i++) {
     Page page;
-    page.skip = i * PAGE_SIZE;
+    page.skip = start + i * PAGE_SIZE;
     page.limit = std::min<int64_t>(PAGE_SIZE, count - page.skip);
     pages.push_back(page);
   }

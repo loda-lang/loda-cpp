@@ -4,7 +4,6 @@
 
 #include "lang/program.hpp"
 #include "mine/submission.hpp"
-#include "sys/jute.h"
 
 class ApiClient {
  public:
