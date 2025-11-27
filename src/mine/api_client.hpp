@@ -12,9 +12,15 @@ class ApiClient {
 
   static ApiClient& getDefaultInstance();
 
+  std::string serialize(std::string);
+
+  std::string toJson(const Program& program);
+  
   void postProgram(const Program& program, size_t max_buffer = 0);
 
   bool postProgram(const std::string& path, bool fail_on_error = true);
+  
+  bool postSubmission(const std::string& path, bool fail_on_error = true);
 
   void postCPUHour();
 

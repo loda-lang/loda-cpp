@@ -4,6 +4,7 @@
 #include <sstream>
 #include <thread>
 
+#include "lang/comments.hpp"
 #include "lang/program_util.hpp"
 #include "sys/file.hpp"
 #include "sys/git.hpp"
@@ -40,6 +41,40 @@ ApiClient& ApiClient::getDefaultInstance() {
   return api_client;
 }
 
+std::string ApiClient::serialize(std::string str) {
+  std::string result;
+  for (char c : str) {
+    if (c == '\\') {
+      result += "\\\\";
+    } else if (c == '\"') {
+      result += "\\\"";
+    } else if (c == '\n') {
+      result += "\\n";
+    } else if (c == '\r') {
+      // Ignore CR
+    } else {
+      result += c;
+    }
+  }
+  return result;
+}
+
+std::string ApiClient::toJson(const Program& program){
+  const std::string id = Comments::getSequenceIdFromProgram(program);
+  const std::string submitter = Comments::getSubmitter(program);
+  const std::string change_type = Comments::getCommentField(program, Comments::PREFIX_CHANGE_TYPE);
+  const std::string mode = (change_type == "" ? "add" : "update");
+  const std::string type = "program";
+  std::ostringstream oss;
+  ProgramUtil::print(program, oss);
+  const std::string content = oss.str();
+  return "{\"id\":\"" + serialize(id) + "\","
+         "\"submitter\":\"" + serialize(submitter) + "\","
+         "\"mode\":\"" + serialize(mode) + "\","
+         "\"type\":\"" + serialize(type) + "\","
+         "\"content\":\"" + serialize(content) + "\"}";
+}
+
 void ApiClient::postProgram(const Program& program, size_t max_buffer) {
   // attention: curl sometimes has problems with absolute paths.
   // so we use a relative path here!
@@ -65,6 +100,25 @@ bool ApiClient::postProgram(const std::string& path, bool fail_on_error) {
     Log::get().error("File not found: " + path, true);
   }
   const std::string url = base_url + "programs";
+  if (!WebClient::postFile(url, path)) {
+    const std::string msg("Cannot submit program to API server");
+    if (fail_on_error) {
+      if (!WebClient::postFile(url, path, {}, {}, true)) {
+        Log::get().error(msg, true);
+      }
+    } else {
+      Log::get().warn(msg);
+    }
+    return false;
+  }
+  return true;
+}
+
+bool ApiClient::postSubmission(const std::string& path, bool fail_on_error) {
+  if (!isFile(path)) {
+    Log::get().error("File not found: " + path, true);
+  }
+  const std::string url = base_url_v2 + "submissions";
   if (!WebClient::postFile(url, path)) {
     const std::string msg("Cannot submit program to API server");
     if (fail_on_error) {
