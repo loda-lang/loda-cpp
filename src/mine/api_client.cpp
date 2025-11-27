@@ -78,40 +78,21 @@ std::string ApiClient::toJson(const Program& program){
 void ApiClient::postProgram(const Program& program, size_t max_buffer) {
   // attention: curl sometimes has problems with absolute paths.
   // so we use a relative path here!
-  const std::string tmp = "post_program_" + std::to_string(client_id) + ".asm";
+  const std::string tmp = "post_program_" + std::to_string(client_id) + ".json";
   out_queue.push_back(program);
   while (!out_queue.empty()) {
     {
       std::ofstream out(tmp);
-      ProgramUtil::print(out_queue.back(), out);
+      out << toJson(out_queue.back());
       out.close();
     }
-    if (postProgram(tmp, out_queue.size() > max_buffer)) {
+    if (postSubmission(tmp, out_queue.size() > max_buffer)) {
       out_queue.pop_back();
     } else {
       break;
     }
   }
   std::remove(tmp.c_str());
-}
-
-bool ApiClient::postProgram(const std::string& path, bool fail_on_error) {
-  if (!isFile(path)) {
-    Log::get().error("File not found: " + path, true);
-  }
-  const std::string url = base_url + "programs";
-  if (!WebClient::postFile(url, path)) {
-    const std::string msg("Cannot submit program to API server");
-    if (fail_on_error) {
-      if (!WebClient::postFile(url, path, {}, {}, true)) {
-        Log::get().error(msg, true);
-      }
-    } else {
-      Log::get().warn(msg);
-    }
-    return false;
-  }
-  return true;
 }
 
 bool ApiClient::postSubmission(const std::string& path, bool fail_on_error) {
