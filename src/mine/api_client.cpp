@@ -83,6 +83,7 @@ void ApiClient::postProgram(const Program& program, size_t max_buffer) {
   while (!out_queue.empty()) {
     {
       std::ofstream out(tmp);
+      std::cout << toJson(out_queue.back()) << std::endl;
       out << toJson(out_queue.back());
       out.close();
     }

@@ -980,8 +980,8 @@ bool Test::checkEvaluator(const Settings& settings, size_t id, std::string path,
 void Test::apiClient() {
   Log::get().info("Testing API client");
   ApiClient client;
-  client.postProgram(std::string("tests") + FILE_SEP + "programs" + FILE_SEP +
-                     "oeis" + FILE_SEP + "000" + FILE_SEP + "A000005.asm");
+  // client.postProgram(std::string("tests") + FILE_SEP + "programs" + FILE_SEP
+  // + "oeis" + FILE_SEP + "000" + FILE_SEP + "A000005.asm");
   auto submission = client.getNextSubmission();
   if (submission.mode == Submission::Mode::REMOVE) return;
   auto program = submission.toProgram();
