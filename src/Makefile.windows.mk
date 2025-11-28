@@ -37,6 +37,8 @@ SRCS = base/uid.cpp \
 loda: $(SRCS)
 	cl /EHsc /Feloda.exe $(CXXFLAGS) $(SRCS) $(LDFLAGS) $(CURL_LIBS)
 	copy loda.exe ..
+	@echo Linked libraries:
+	dumpbin /dependents loda.exe
 
 clean:
 	del /f $(OBJS) loda.exe ../loda.exe
