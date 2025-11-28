@@ -2,7 +2,7 @@
 
 ### Enhancements
 
-* Add early failure detection in formula generation for programs requiring too many initial terms
+* Improve formula generation performance by imposing tighter limits on variant simplification
 
 ### Bugfixes
 
