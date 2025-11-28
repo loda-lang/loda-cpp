@@ -124,15 +124,16 @@ Expression FormulaGenerator::cellFunc(int64_t index) const {
   return ExpressionUtil::newFunction(getCellName(index));
 }
 
+// Maximum size of product expansion for factorial
+constexpr int64_t MAX_PRODUCT_EXPANSION = 10;
+
 // Express falling/rising factorial using standard factorial
 bool FormulaGenerator::facToExpression(const Expression& a, const Expression& b,
                                        const Operand& aOp, const Operand& bOp,
                                        const RangeMap* ranges,
                                        Expression& res) const {
-
-  // Optimize for small constants: convert to PRODUCT instead of FACTORIAL
-  if (b.type == Expression::Type::CONSTANT && b.value >= Number(-3) &&
-      b.value <= Number(3)) {
+  // Check if b is a constant
+  if (b.type == Expression::Type::CONSTANT) {
     auto k = b.value.asInt();
 
     // Trivial case: k = 0 -> result is 1
@@ -147,37 +148,55 @@ bool FormulaGenerator::facToExpression(const Expression& a, const Expression& b,
       return true;
     }
 
-    // Build product expression
-    res = Expression(Expression::Type::PRODUCT);
-    if (k > 0) {
-      // Rising factorial: a * (a+1) * (a+2) * ... * (a+k-1)
-      for (int64_t i = 0; i < k; i++) {
-        if (i == 0) {
-          res.newChild(a);
-        } else {
-          res.newChild(sum({a, constant(i)}));
-        }
-      }
-    } else {
-      // Falling factorial: a * (a-1) * (a-2) * ... * (a+k+1)
-      // Note: k is negative, so a+k+1 < a
-      for (int64_t i = 0; i < -k; i++) {
-        if (i == 0) {
-          res.newChild(a);
-        } else {
-          res.newChild(sum({a, constant(-i)}));
-        }
+    // For small constants or when factorial division would fail,
+    // use product expansion
+    bool useProductExpansion = (k >= -MAX_PRODUCT_EXPANSION && k <= MAX_PRODUCT_EXPANSION);
+
+    // For rising factorial, check if we can safely use factorial division
+    // The denominator is (a-1)!, which requires a >= 1
+    if (!useProductExpansion && k > 0) {
+      Expression denomArg = sum({a, constant(-1)});
+      ExpressionUtil::normalize(denomArg);
+      if (ExpressionUtil::canBeNegative(denomArg, offset)) {
+        // Factorial division would fail, use product expansion instead
+        useProductExpansion = true;
       }
     }
-    return true;
+
+    if (useProductExpansion) {
+      // Build product expression
+      res = Expression(Expression::Type::PRODUCT);
+      if (k > 0) {
+        // Rising factorial: a * (a+1) * (a+2) * ... * (a+k-1)
+        for (int64_t i = 0; i < k; i++) {
+          if (i == 0) {
+            res.newChild(a);
+          } else {
+            res.newChild(sum({a, constant(i)}));
+          }
+        }
+      } else {
+        // Falling factorial: a * (a-1) * (a-2) * ... * (a+k+1)
+        // Note: k is negative, so a+k+1 < a
+        for (int64_t i = 0; i < -k; i++) {
+          if (i == 0) {
+            res.newChild(a);
+          } else {
+            res.newChild(sum({a, constant(-i)}));
+          }
+        }
+      }
+      return true;
+    }
   }
+
   // TODO: can we relax the negativity check for b?
   if (canBeNegativeWithRanges(a, aOp, ranges) ||
       canBeNegativeWithRanges(b, bOp, ranges)) {
     return false;
   }
 
-  // General case
+  // General case: use factorial division
   Expression num(Expression::Type::FACTORIAL);
   Expression denom(Expression::Type::FACTORIAL);
 
@@ -191,6 +210,7 @@ bool FormulaGenerator::facToExpression(const Expression& a, const Expression& b,
   } else {
     // rising factorial
     // (a+b-1)!/(a-1)!
+    // Note: we already checked that a-1 >= 0 above for small constants
     num.children = {sum({a, sum({b, constant(-1)})})};
     denom.children = {sum({a, constant(-1)})};
   }

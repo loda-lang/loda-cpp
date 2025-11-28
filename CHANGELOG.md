@@ -7,6 +7,7 @@
 ### Bugfixes
 
 * Fix parsing error during stats generation
+* Fix PARI formula generation for rising factorial when the base can be zero (e.g., A006430)
 
 ### Enhancements
 
