@@ -22,8 +22,20 @@ void WebClient::initWebClient() {
   }
 }
 
-bool WebClient::get(const std::string &url, const std::string &local_path,
+bool WebClient::get(const std::string& url, const std::string& local_path,
                     bool silent, bool fail_on_error, bool insecure) {
+  std::string url_processed;
+  size_t len = url.length();
+  for (size_t pos = 0; pos < len; pos++) {
+    if (url[pos] == '&' || url[pos] == '|') {
+#ifdef _WIN64
+      url_processed.push_back('^');
+#else
+      url_processed.push_back('\\');
+#endif
+    }
+    url_processed.push_back(url[pos]);
+  }
   initWebClient();
   std::string cmd;
   switch (WEB_CLIENT_TYPE) {
@@ -32,11 +44,11 @@ bool WebClient::get(const std::string &url, const std::string &local_path,
       if (insecure) {
         cmd += " --insecure";
       }
-      cmd += " -fsSLo \"" + local_path + "\" " + url;
+      cmd += " -fsSLo \"" + local_path + "\" " + url_processed;
       break;
     case WC_WGET:
-      cmd =
-          "wget -q --no-use-server-timestamps -O \"" + local_path + "\" " + url;
+      cmd = "wget -q --no-use-server-timestamps -O \"" + local_path + "\" " +
+            url_processed;
       break;
     default:
       Log::get().error("Unsupported web client for GET request", true);
@@ -56,9 +68,9 @@ bool WebClient::get(const std::string &url, const std::string &local_path,
   return true;
 }
 
-bool WebClient::postFile(const std::string &url, const std::string &file_path,
-                         const std::string &auth,
-                         const std::vector<std::string> &headers,
+bool WebClient::postFile(const std::string& url, const std::string& file_path,
+                         const std::string& auth,
+                         const std::vector<std::string>& headers,
                          bool enable_debug) {
   initWebClient();
   std::string cmd;
@@ -73,7 +85,7 @@ bool WebClient::postFile(const std::string &url, const std::string &file_path,
       } else {
         cmd += " --data-binary \"@" + file_path + "\"";
       }
-      for (const auto &header : headers) {
+      for (const auto& header : headers) {
         cmd += " -H \"" + header + "\"";
       }
       break;
@@ -90,7 +102,7 @@ bool WebClient::postFile(const std::string &url, const std::string &file_path,
       } else {
         cmd += " --post-file \"" + file_path + "\"";
       }
-      for (const auto &header : headers) {
+      for (const auto& header : headers) {
         cmd += " --header \"" + header + "\"";
       }
       break;
@@ -108,4 +120,24 @@ bool WebClient::postFile(const std::string &url, const std::string &file_path,
   }
   auto exit_code = system(cmd.c_str());
   return (exit_code == 0);
+}
+
+jute::jValue WebClient::getJson(const std::string& url) {
+  static int64_t request_counter = 0;
+  const std::string tmp =
+      getTmpDir() + "web_json_" + std::to_string(request_counter++) + ".json";
+  if (!get(url, tmp, false, false)) {
+    std::remove(tmp.c_str());
+    throw std::runtime_error("Failed to fetch JSON from URL: " + url);
+  }
+  jute::jValue json;
+  try {
+    json = jute::parser::parse_file(tmp);
+  } catch (const std::exception& e) {
+    std::remove(tmp.c_str());
+    throw std::runtime_error("Failed to parse JSON response: " +
+                             std::string(e.what()));
+  }
+  std::remove(tmp.c_str());
+  return json;
 }

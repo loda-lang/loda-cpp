@@ -175,6 +175,11 @@ check_result_t Checker::checkProgramExtended(Program program, Program existing,
   // auto-unfold seq operations
   Fold::autoUnfold(program);
 
+  // set offset based on existing program
+  if (!is_new) {
+    ProgramUtil::setOffset(program, ProgramUtil::getOffset(existing));
+  }
+  
   // minimize based on number of terminating terms
   minimizer.optimizeAndMinimize(program, num_minimize);
   if (program != result.program) {
