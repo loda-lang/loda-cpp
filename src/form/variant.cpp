@@ -39,7 +39,7 @@ bool VariantsManager::update(Variant new_variant) {
     return false;
   }
   const auto num_terms = new_variant.definition.numTerms();
-  if (num_terms > 500) {  // magic number
+  if (num_terms > 200) {  // limit term count to reduce complexity
     Log::get().debug("Skipping variant with " + std::to_string(num_terms) +
                      " terms");
     return false;  // too many terms
@@ -49,6 +49,10 @@ bool VariantsManager::update(Variant new_variant) {
   //   return false;
   // }
   auto& vs = variants[new_variant.func];
+  // limit number of variants per function to reduce O(n^4) complexity
+  if (vs.size() >= 20) {
+    return false;
+  }
   // prevent rapid increases of variant sizes
   if (!std::all_of(vs.begin(), vs.end(), [new_variant](const Variant& v) {
         return v.used_funcs.size() + 1 >= new_variant.used_funcs.size();
@@ -196,7 +200,9 @@ bool simplifyFormulaUsingVariants(
     Formula& formula, std::map<std::string, int64_t>& num_initial_terms) {
   VariantsManager manager(formula, num_initial_terms);
   bool found = false;
-  while (manager.numVariants() < 200) {  // magic number
+  size_t iterations = 0;
+  while (manager.numVariants() < 100 && iterations < 50) {  // tighter limits
+    iterations++;
     if (findVariants(manager)) {
       found = true;
     } else {
