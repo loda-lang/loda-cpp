@@ -54,6 +54,8 @@ Submission::Type Submission::typeFromString(const std::string& type_str) {
     return Type::PROGRAM;
   } else if (type_str == "sequence") {
     return Type::SEQUENCE;
+  } else if (type_str == "bfile") {
+    return Type::BFILE;
   } else {
     throw std::runtime_error("Invalid submission type: " + type_str);
   }
@@ -77,6 +79,8 @@ std::string Submission::typeToString(Type type) {
       return "program";
     case Type::SEQUENCE:
       return "sequence";
+    case Type::BFILE:
+      return "bfile";
   }
   return "unknown";
 }

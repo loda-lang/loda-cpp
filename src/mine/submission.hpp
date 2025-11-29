@@ -8,7 +8,7 @@
 
 class Submission {
  public:
-  enum class Type { PROGRAM, SEQUENCE };
+  enum class Type { PROGRAM, SEQUENCE, BFILE };
   enum class Mode { ADD, UPDATE, REMOVE };
 
   UID id;
