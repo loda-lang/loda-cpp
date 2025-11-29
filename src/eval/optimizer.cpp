@@ -161,12 +161,28 @@ bool Optimizer::mergeOps(Program &p) const {
         // first sub, the other max?
         else if (o1.type == Operation::Type::SUB &&
                  o2.type == Operation::Type::MAX &&
-                 o2.source.type == Operand::Type::CONSTANT &&
                  o2.source.value == 0) {
           o1.type = Operation::Type::TRN;
           do_merge = true;
         }
 
+        // first trn, second add?
+        else if (o1.type == Operation::Type::TRN &&
+                 o2.type == Operation::Type::ADD &&
+				 o1.source.value == o2.source.value) {
+          o1.type = Operation::Type::MAX;
+          do_merge = true;
+        }
+        
+        // first add, second trn?
+        else if (o1.type == Operation::Type::ADD &&
+		         o2.type == Operation::Type::TRN &&
+				 o1.source.value == o2.source.value) {
+          o1.type = Operation::Type::MAX;
+          o1.source = Operand(Operand::Type::CONSTANT, 0);
+          do_merge = true;
+        }
+        
         // first mul, second div?
         else if (o1.type == Operation::Type::MUL &&
                  o2.type == Operation::Type::DIV &&
@@ -252,6 +268,19 @@ bool Optimizer::mergeOps(Program &p) const {
              o2.type == Operation::Type::SUB) ||
             (o1.type == Operation::Type::SUB &&
              o2.type == Operation::Type::ADD)) {
+          o1.source = Operand(Operand::Type::CONSTANT, 0);
+          do_merge = true;
+        }
+        
+        // first trn, second add?
+        else if (o1.type == Operation::Type::TRN && o2.type == Operation::Type::ADD) {
+          o1.type = Operation::Type::MAX;
+          do_merge = true;
+        }
+        
+        // first add, second trn?
+        else if (o1.type == Operation::Type::ADD && o2.type == Operation::Type::TRN) {
+          o1.type = Operation::Type::MAX;
           o1.source = Operand(Operand::Type::CONSTANT, 0);
           do_merge = true;
         }
