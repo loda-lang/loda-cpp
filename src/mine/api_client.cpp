@@ -41,24 +41,6 @@ ApiClient& ApiClient::getDefaultInstance() {
   return api_client;
 }
 
-std::string ApiClient::serialize(std::string str) {
-  std::string result;
-  for (char c : str) {
-    if (c == '\\') {
-      result += "\\\\";
-    } else if (c == '\"') {
-      result += "\\\"";
-    } else if (c == '\n') {
-      result += "\\n";
-    } else if (c == '\r') {
-      // Ignore CR
-    } else {
-      result += c;
-    }
-  }
-  return result;
-}
-
 std::string ApiClient::toJson(const Program& program){
   const std::string id = Comments::getSequenceIdFromProgram(program);
   const std::string submitter = Comments::getSubmitter(program);
@@ -68,11 +50,11 @@ std::string ApiClient::toJson(const Program& program){
   std::ostringstream oss;
   ProgramUtil::print(program, oss);
   const std::string content = oss.str();
-  return "{\"id\":\"" + serialize(id) + "\","
-         "\"submitter\":\"" + serialize(submitter) + "\","
-         "\"mode\":\"" + serialize(mode) + "\","
-         "\"type\":\"" + serialize(type) + "\","
-         "\"content\":\"" + serialize(content) + "\"}";
+  return "{\"id\":\"" + escapeJsonString(id) + "\","
+         "\"submitter\":\"" + escapeJsonString(submitter) + "\","
+         "\"mode\":\"" + escapeJsonString(mode) + "\","
+         "\"type\":\"" + escapeJsonString(type) + "\","
+         "\"content\":\"" + escapeJsonString(content) + "\"}";
 }
 
 void ApiClient::postProgram(const Program& program, size_t max_buffer) {
@@ -83,7 +65,6 @@ void ApiClient::postProgram(const Program& program, size_t max_buffer) {
   while (!out_queue.empty()) {
     {
       std::ofstream out(tmp);
-      std::cout << toJson(out_queue.back()) << std::endl;
       out << toJson(out_queue.back());
       out.close();
     }
