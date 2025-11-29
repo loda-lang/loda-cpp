@@ -1,8 +1,11 @@
 ## [Unreleased]
 
+## v25.11.29
+
 ### Enhancements
 
 * Improve formula generation performance by imposing tighter limits on variant simplification
+* Improve operations merging in optimizer
 
 ### Bugfixes
 
@@ -10,7 +13,7 @@
 
 ### Enhancements
 
-* Use `v2/submissions/` API endpoint to fetch programs
+* Use `v2/submissions/` API endpoint to fetch and submit programs
 * Handle program submissions with `delete` mode
 
 ## v25.11.9
