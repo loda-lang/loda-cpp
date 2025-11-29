@@ -27,8 +27,6 @@ loda: $(OBJS)
 	$(CXX) $(LDFLAGS) -o loda $(OBJS) $(CURL_LIBS)
 	[ -L ../loda ] || ( cd .. && ln -s src/loda loda )
 	du -sh loda
-	@echo "Linked libraries:"
-	@ldd loda 2>/dev/null || otool -L loda 2>/dev/null || echo "Unable to determine linked libraries"
 
 coverage: CXXFLAGS += -O0 -fprofile-arcs -ftest-coverage
 coverage: LDFLAGS += --coverage
