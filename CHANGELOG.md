@@ -1,12 +1,20 @@
 ## [Unreleased]
 
-### Bugfixes
-
-* Fix parsing error during stats generation
+## v25.11.29
 
 ### Enhancements
 
-* Use `v2/submissions/` API endpoint to fetch programs
+* Improve formula generation performance by imposing tighter limits on variant simplification
+* Improve operations merging in optimizer
+
+### Bugfixes
+
+* Fix parsing error during stats generation
+* Fix PARI formula generation for rising factorial when the base can be zero (e.g., A006430)
+
+### Enhancements
+
+* Use `v2/submissions/` API endpoint to fetch and submit programs
 * Handle program submissions with `delete` mode
 * Integrate libcurl for HTTP requests, replacing external curl/wget tools
 

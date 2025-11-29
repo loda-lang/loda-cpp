@@ -4,6 +4,7 @@
 #include <sstream>
 #include <thread>
 
+#include "lang/comments.hpp"
 #include "lang/program_util.hpp"
 #include "sys/file.hpp"
 #include "sys/git.hpp"
@@ -40,18 +41,34 @@ ApiClient& ApiClient::getDefaultInstance() {
   return api_client;
 }
 
+std::string ApiClient::toJson(const Program& program){
+  const std::string id = Comments::getSequenceIdFromProgram(program);
+  const std::string submitter = Comments::getSubmitter(program);
+  const std::string change_type = Comments::getCommentField(program, Comments::PREFIX_CHANGE_TYPE);
+  const std::string mode = ((change_type == "" || change_type == "Found") ? "add" : "update");
+  const std::string type = "program";
+  std::ostringstream oss;
+  ProgramUtil::print(program, oss);
+  const std::string content = oss.str();
+  return "{\"id\":\"" + escapeJsonString(id) + "\","
+         "\"submitter\":\"" + escapeJsonString(submitter) + "\","
+         "\"mode\":\"" + escapeJsonString(mode) + "\","
+         "\"type\":\"" + escapeJsonString(type) + "\","
+         "\"content\":\"" + escapeJsonString(content) + "\"}";
+}
+
 void ApiClient::postProgram(const Program& program, size_t max_buffer) {
   // attention: curl sometimes has problems with absolute paths.
   // so we use a relative path here!
-  const std::string tmp = "post_program_" + std::to_string(client_id) + ".asm";
+  const std::string tmp = "post_program_" + std::to_string(client_id) + ".json";
   out_queue.push_back(program);
   while (!out_queue.empty()) {
     {
       std::ofstream out(tmp);
-      ProgramUtil::print(out_queue.back(), out);
+      out << toJson(out_queue.back());
       out.close();
     }
-    if (postProgram(tmp, out_queue.size() > max_buffer)) {
+    if (postSubmission(tmp, out_queue.size() > max_buffer)) {
       out_queue.pop_back();
     } else {
       break;
@@ -60,11 +77,11 @@ void ApiClient::postProgram(const Program& program, size_t max_buffer) {
   std::remove(tmp.c_str());
 }
 
-bool ApiClient::postProgram(const std::string& path, bool fail_on_error) {
+bool ApiClient::postSubmission(const std::string& path, bool fail_on_error) {
   if (!isFile(path)) {
     Log::get().error("File not found: " + path, true);
   }
-  const std::string url = base_url + "programs";
+  const std::string url = base_url_v2 + "submissions";
   if (!WebClient::postFile(url, path)) {
     const std::string msg("Cannot submit program to API server");
     if (fail_on_error) {
@@ -204,14 +221,26 @@ Submission ApiClient::getNextSubmission() {
       if (sub.type != Submission::Type::PROGRAM) {
         continue;  // Skip non-program submissions
       }
-      if (sub.content.empty()) {
-        continue;  // Skip if no content
+      // For ADD and UPDATE modes, content is required
+      if ((sub.mode == Submission::Mode::ADD ||
+           sub.mode == Submission::Mode::UPDATE) &&
+          sub.content.empty()) {
+        continue;  // Skip if no content for ADD/UPDATE
       }
-      // Validate that the program can be parsed
-      Program program = sub.toProgram();
-      if (!program.ops.empty()) {
-        in_queue.push_back(sub);
+      // If content is provided, validate that the program can be parsed
+      if (!sub.content.empty()) {
+        try {
+          Program program = sub.toProgram();
+          if (program.ops.empty()) {
+            continue;  // Skip if program has no operations
+          }
+        } catch (const std::exception& e) {
+          Log::get().warn("Failed to parse program content: " + std::string(e.what()));
+          continue;  // Skip if parsing throws
+        }
       }
+      // Accept the submission (including REMOVE with no content)
+      in_queue.push_back(sub);
     }
     std::shuffle(in_queue.begin(), in_queue.end(), Random::get().gen);
   }
