@@ -45,7 +45,7 @@ std::string ApiClient::toJson(const Program& program){
   const std::string id = Comments::getSequenceIdFromProgram(program);
   const std::string submitter = Comments::getSubmitter(program);
   const std::string change_type = Comments::getCommentField(program, Comments::PREFIX_CHANGE_TYPE);
-  const std::string mode = (change_type == "" ? "add" : "update");
+  const std::string mode = ((change_type == "" || change_type == "Found") ? "add" : "update");
   const std::string type = "program";
   std::ostringstream oss;
   ProgramUtil::print(program, oss);
