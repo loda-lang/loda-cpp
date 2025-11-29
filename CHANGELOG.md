@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Enhancements
+
+* Integrate `libcurl` for HTTP requests, replacing external `curl`/`wget` tools
+
 ## v25.11.29
 
 ### Enhancements

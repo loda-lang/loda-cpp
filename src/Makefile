@@ -1,5 +1,8 @@
 CXXFLAGS += -I. -g -Wall -Werror -fmessage-length=0 -std=c++17
 
+# Default curl libs for dynamic linking (can be overridden by platform-specific makefiles)
+CURL_LIBS ?= -lcurl
+
 ifdef LODA_VERSION
 CXXFLAGS += -DLODA_VERSION=$(LODA_VERSION)
 endif
@@ -21,14 +24,14 @@ OBJS = base/uid.o \
 
 loda: CXXFLAGS += -O2
 loda: $(OBJS)
-	$(CXX) $(LDFLAGS) -o loda $(OBJS)
+	$(CXX) $(LDFLAGS) -o loda $(OBJS) $(CURL_LIBS)
 	[ -L ../loda ] || ( cd .. && ln -s src/loda loda )
 	du -sh loda
 
 coverage: CXXFLAGS += -O0 -fprofile-arcs -ftest-coverage
 coverage: LDFLAGS += --coverage
 coverage: $(OBJS)
-	$(CXX) $(LDFLAGS) -o loda $(OBJS)
+	$(CXX) $(LDFLAGS) -o loda $(OBJS) $(CURL_LIBS)
 	[ -L ../loda ] || ( cd .. && ln -s src/loda loda )
 	cd .. && ./loda test && cd src
 	gcov $(OBJS:.o=.cpp)

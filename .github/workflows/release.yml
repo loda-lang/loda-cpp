@@ -44,6 +44,8 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v2
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev
       - name: Build
         run: cd src && make -f Makefile.linux-x86.mk loda LODA_PLATFORM=linux-x86 LODA_VERSION=${{ needs.create-release.outputs.version }}
       - name: Upload
@@ -60,6 +62,8 @@ jobs:
     runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v2
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev
       - name: Build
         run: cd src && make -f Makefile.linux-arm64.mk loda LODA_PLATFORM=linux-arm64 LODA_VERSION=${{ needs.create-release.outputs.version }}
       - name: Upload
@@ -109,15 +113,27 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: ilammy/msvc-dev-cmd@v1
+      - name: Install dependencies
+        run: |
+          vcpkg install curl:x64-windows
       - name: Build
         run: cd src && nmake.exe /F Makefile.windows.mk loda LODA_PLATFORM=windows-x86 LODA_VERSION=${{ needs.create-release.outputs.version }}
+        env:
+          VCPKG_ROOT: C:\vcpkg
+      - name: Package
+        run: |
+          mkdir loda-windows-x86
+          copy loda.exe loda-windows-x86\
+          copy C:\vcpkg\installed\x64-windows\bin\libcurl.dll loda-windows-x86\
+          Compress-Archive -Path loda-windows-x86\* -DestinationPath loda-windows-x86.zip
+        shell: pwsh
       - name: Upload
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./loda.exe
-          asset_name: loda-windows-x86.exe
-          asset_content_type: application/octet-stream
+          asset_path: ./loda-windows-x86.zip
+          asset_name: loda-windows-x86.zip
+          asset_content_type: application/zip
         env:
           GITHUB_TOKEN: ${{ github.token }}
   build-windows-arm64:
@@ -128,14 +144,27 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: amd64_arm64
+      - name: Install dependencies
+        run: |
+          vcpkg install curl:arm64-windows
       - name: Build
         run: cd src && nmake.exe /F Makefile.windows.mk loda LODA_PLATFORM=windows-arm64 LODA_VERSION=${{ needs.create-release.outputs.version }}
+        env:
+          VCPKG_ROOT: C:\vcpkg
+          VCPKG_ARCH: arm64-windows
+      - name: Package
+        run: |
+          mkdir loda-windows-arm64
+          copy loda.exe loda-windows-arm64\
+          copy C:\vcpkg\installed\arm64-windows\bin\libcurl.dll loda-windows-arm64\
+          Compress-Archive -Path loda-windows-arm64\* -DestinationPath loda-windows-arm64.zip
+        shell: pwsh
       - name: Upload
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./loda.exe
-          asset_name: loda-windows-arm64.exe
-          asset_content_type: application/octet-stream
+          asset_path: ./loda-windows-arm64.zip
+          asset_name: loda-windows-arm64.zip
+          asset_content_type: application/zip
         env:
           GITHUB_TOKEN: ${{ github.token }}
