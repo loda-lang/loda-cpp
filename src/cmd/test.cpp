@@ -37,6 +37,7 @@
 #include "seq/seq_list.hpp"
 #include "sys/file.hpp"
 #include "sys/git.hpp"
+#include "sys/gzip.hpp"
 #include "sys/log.hpp"
 #include "sys/setup.hpp"
 
@@ -78,6 +79,7 @@ void Test::fast() {
   knownPrograms();
   formula();
   range();
+  gzip();
 }
 
 void Test::slow() {
@@ -1808,5 +1810,82 @@ void Test::testMatcherPair(Matcher& matcher, size_t id1, size_t id2) {
                          " matcher generated wrong program for " +
                          uid2.string(),
                      true);
+  }
+}
+
+void Test::gzip() {
+  Log::get().info("Testing gzip decompression");
+  std::string test_content = "Hello, this is a test for zlib gzip decompression!";
+  std::string tmp_dir = getTmpDir();
+
+  // Test 1: Decompress and remove original file
+  {
+    std::string base_path = tmp_dir + "gzip_test1.txt";
+    std::string gz_path = base_path + ".gz";
+
+    // Create test file and compress it with system gzip
+    {
+      std::ofstream out(base_path);
+      out << test_content;
+      out.close();
+    }
+    if (system(("gzip -f \"" + base_path + "\"").c_str()) != 0) {
+      Log::get().error("Failed to create test gzip file", true);
+    }
+
+    // Decompress using our implementation (keep=false)
+    gunzip(gz_path, false);
+
+    // Verify: original .gz should be deleted, content should match
+    if (isFile(gz_path)) {
+      Log::get().error("gzip file was not deleted when keep=false", true);
+    }
+    if (!isFile(base_path)) {
+      Log::get().error("Decompressed file not created", true);
+    }
+    std::ifstream in(base_path);
+    std::string result((std::istreambuf_iterator<char>(in)),
+                       std::istreambuf_iterator<char>());
+    in.close();
+    if (result != test_content) {
+      Log::get().error("Decompressed content does not match original", true);
+    }
+    std::remove(base_path.c_str());
+  }
+
+  // Test 2: Decompress and keep original file
+  {
+    std::string base_path = tmp_dir + "gzip_test2.txt";
+    std::string gz_path = base_path + ".gz";
+
+    // Create test file and compress it with system gzip
+    {
+      std::ofstream out(base_path);
+      out << test_content;
+      out.close();
+    }
+    if (system(("gzip -f \"" + base_path + "\"").c_str()) != 0) {
+      Log::get().error("Failed to create test gzip file", true);
+    }
+
+    // Decompress using our implementation (keep=true)
+    gunzip(gz_path, true);
+
+    // Verify: original .gz should still exist, content should match
+    if (!isFile(gz_path)) {
+      Log::get().error("gzip file was deleted when keep=true", true);
+    }
+    if (!isFile(base_path)) {
+      Log::get().error("Decompressed file not created", true);
+    }
+    std::ifstream in(base_path);
+    std::string result((std::istreambuf_iterator<char>(in)),
+                       std::istreambuf_iterator<char>());
+    in.close();
+    if (result != test_content) {
+      Log::get().error("Decompressed content does not match original", true);
+    }
+    std::remove(base_path.c_str());
+    std::remove(gz_path.c_str());
   }
 }

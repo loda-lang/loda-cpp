@@ -86,6 +86,8 @@ class Test {
 
   void range();
 
+  void gzip();
+
   void virtualSeq();
 
   enum class FormulaType { FORMULA, PARI_FUNCTION, PARI_VECTOR, LEAN };
