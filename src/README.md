@@ -17,13 +17,13 @@ The C++ source code contain is organized into the following modules:
 
 ## Building
 
-LODA supports Linux, macOS, and Windows. You need a standard C++ compiler and `make` (or `nmake` on Windows). The `libcurl` development library and the `gzip` command-line tool must be available at build time.
+LODA supports Linux, macOS, and Windows. You need a standard C++ compiler and `make` (or `nmake` on Windows). The `libcurl` and `zlib` development libraries must be available at build time.
 
 ### Build Dependencies
 
 - **C++ compiler**: g++, clang++, or MSVC (C++17 support required)
 - **libcurl**: Development headers and library (e.g., `libcurl4-openssl-dev` on Debian/Ubuntu)
-- **gzip**: Command-line tool for compression
+- **zlib**: Development headers and library (e.g., `zlib1g-dev` on Debian/Ubuntu)
 
 To build from source, switch to the `src/` folder and run the appropriate command for your platform:
 

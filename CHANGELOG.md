@@ -3,6 +3,7 @@
 ### Enhancements
 
 * Integrate `libcurl` for HTTP requests, replacing external `curl`/`wget` tools
+* Integrate `zlib` for gzip decompression, replacing external `gzip`/`gunzip` tools
 
 ## v25.11.29
 
