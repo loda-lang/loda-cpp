@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Enhancements
+
+* Improve formula generation performance by imposing tighter limits on variant simplification
+
 ### Bugfixes
 
 * Fix parsing error during stats generation
