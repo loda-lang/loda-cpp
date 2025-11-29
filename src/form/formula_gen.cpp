@@ -132,7 +132,8 @@ bool FormulaGenerator::facToExpression(const Expression& a, const Expression& b,
                                        const Operand& aOp, const Operand& bOp,
                                        const RangeMap* ranges,
                                        Expression& res) const {
-  // Check if b is a constant within a safe range for conversion to int
+  // Check if b is a constant within the product expansion threshold.
+  // This range check also ensures safe conversion to int64_t.
   if (b.type == Expression::Type::CONSTANT &&
       b.value >= Number(-MAX_PRODUCT_EXPANSION) &&
       b.value <= Number(MAX_PRODUCT_EXPANSION)) {
@@ -150,46 +151,30 @@ bool FormulaGenerator::facToExpression(const Expression& a, const Expression& b,
       return true;
     }
 
-    // For small constants or when factorial division would fail,
-    // use product expansion
-    bool useProductExpansion = true;
-
-    // For rising factorial, check if we can safely use factorial division
-    // The denominator is (a-1)!, which requires a >= 1
+    // Use product expansion for small constants.
+    // This avoids factorial division issues when a can be zero.
+    res = Expression(Expression::Type::PRODUCT);
     if (k > 0) {
-      Expression denomArg = sum({a, constant(-1)});
-      ExpressionUtil::normalize(denomArg);
-      if (ExpressionUtil::canBeNegative(denomArg, offset)) {
-        // Factorial division would fail, use product expansion instead
-        useProductExpansion = true;
-      }
-    }
-
-    if (useProductExpansion) {
-      // Build product expression
-      res = Expression(Expression::Type::PRODUCT);
-      if (k > 0) {
-        // Rising factorial: a * (a+1) * (a+2) * ... * (a+k-1)
-        for (int64_t i = 0; i < k; i++) {
-          if (i == 0) {
-            res.newChild(a);
-          } else {
-            res.newChild(sum({a, constant(i)}));
-          }
-        }
-      } else {
-        // Falling factorial: a * (a-1) * (a-2) * ... * (a+k+1)
-        // Note: k is negative, so a+k+1 < a
-        for (int64_t i = 0; i < -k; i++) {
-          if (i == 0) {
-            res.newChild(a);
-          } else {
-            res.newChild(sum({a, constant(-i)}));
-          }
+      // Rising factorial: a * (a+1) * (a+2) * ... * (a+k-1)
+      for (int64_t i = 0; i < k; i++) {
+        if (i == 0) {
+          res.newChild(a);
+        } else {
+          res.newChild(sum({a, constant(i)}));
         }
       }
-      return true;
+    } else {
+      // Falling factorial: a * (a-1) * (a-2) * ... * (a+k+1)
+      // Note: k is negative, so a+k+1 < a
+      for (int64_t i = 0; i < -k; i++) {
+        if (i == 0) {
+          res.newChild(a);
+        } else {
+          res.newChild(sum({a, constant(-i)}));
+        }
+      }
     }
+    return true;
   }
 
   // TODO: can we relax the negativity check for b?
