@@ -117,6 +117,29 @@ void ApiClient::postCPUHour() {
   std::remove(tmp_file.c_str());
 }
 
+void ApiClient::reportBrokenBFile(const UID& id) {
+  // only report OEIS b-files
+  if (id.domain() != 'A') {
+    return;
+  }
+  const auto tmp_file_id = Random::get().gen() % 1000;
+  // attention: curl sometimes has problems with absolute paths.
+  // so we use a relative path here!
+  const std::string tmp_file =
+      "loda_bfile_removal_" + std::to_string(tmp_file_id) + ".json";
+  std::ofstream out(tmp_file);
+  out << "{\"id\":\"" << escapeJsonString(id.string())
+      << "\",\"mode\":\"remove\",\"type\":\"bfile\"}\n";
+  out.close();
+  const std::string url = base_url_v2 + "submissions";
+  if (!WebClient::postFile(url, tmp_file)) {
+    Log::get().warn("Failed to report broken b-file for " + id.string());
+  } else {
+    Log::get().info("Reported broken b-file for " + id.string());
+  }
+  std::remove(tmp_file.c_str());
+}
+
 void ApiClient::getOeisFile(const std::string& filename,
                             const std::string& local_path) {
   // throttling

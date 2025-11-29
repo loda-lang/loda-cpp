@@ -24,6 +24,8 @@ class ApiClient {
 
   void getOeisFile(const std::string& filename, const std::string& local_path);
 
+  void reportBrokenBFile(const UID& id);
+
   Submission getNextSubmission();
 
  private:
