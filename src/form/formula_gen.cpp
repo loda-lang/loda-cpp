@@ -132,8 +132,10 @@ bool FormulaGenerator::facToExpression(const Expression& a, const Expression& b,
                                        const Operand& aOp, const Operand& bOp,
                                        const RangeMap* ranges,
                                        Expression& res) const {
-  // Check if b is a constant
-  if (b.type == Expression::Type::CONSTANT) {
+  // Check if b is a constant within a safe range for conversion to int
+  if (b.type == Expression::Type::CONSTANT &&
+      b.value >= Number(-MAX_PRODUCT_EXPANSION) &&
+      b.value <= Number(MAX_PRODUCT_EXPANSION)) {
     auto k = b.value.asInt();
 
     // Trivial case: k = 0 -> result is 1
@@ -150,11 +152,11 @@ bool FormulaGenerator::facToExpression(const Expression& a, const Expression& b,
 
     // For small constants or when factorial division would fail,
     // use product expansion
-    bool useProductExpansion = (k >= -MAX_PRODUCT_EXPANSION && k <= MAX_PRODUCT_EXPANSION);
+    bool useProductExpansion = true;
 
     // For rising factorial, check if we can safely use factorial division
     // The denominator is (a-1)!, which requires a >= 1
-    if (!useProductExpansion && k > 0) {
+    if (k > 0) {
       Expression denomArg = sum({a, constant(-1)});
       ExpressionUtil::normalize(denomArg);
       if (ExpressionUtil::canBeNegative(denomArg, offset)) {
