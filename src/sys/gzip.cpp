@@ -46,10 +46,10 @@ void gunzip(const std::string &path, bool keep) {
     }
   }
 
-  // Check for errors
-  int err;
-  const char *error_msg = gzerror(gz, &err);
-  if (err != Z_OK && err != Z_STREAM_END) {
+  // Check for errors (gzread returns -1 on error, 0 on EOF)
+  if (bytes_read < 0) {
+    int err;
+    const char *error_msg = gzerror(gz, &err);
     std::string msg = error_msg ? error_msg : "Unknown error";
     gzclose(gz);
     throw std::runtime_error("Error decompressing file: " + path + " - " + msg);
