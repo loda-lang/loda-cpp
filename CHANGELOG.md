@@ -8,6 +8,7 @@
 
 ### Bugfixes
 
+* Fix PARI evaluation error for formulas with constant identity functions (e.g., A026765)
 * Fix LEAN evaluation error for formulas with mutually recursive functions that are not self-recursive (e.g., A001636)
 
 ## v25.11.29

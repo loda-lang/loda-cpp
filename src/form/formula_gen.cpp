@@ -782,6 +782,9 @@ bool FormulaGenerator::generate(const Program& p, int64_t id, Formula& result,
   // replace simple references to recursive functions
   FormulaSimplify::replaceSimpleRecursiveRefs(result);
 
+  // replace constant identity functions (e.g., b(n) = b(n-1) with no base case)
+  FormulaSimplify::replaceConstantIdentityFunctions(result);
+
   // replace arithmetic & geometric progressions
   // TODO: check if this is really needed here
   FormulaSimplify::replaceArithmeticProgressions(formula);
