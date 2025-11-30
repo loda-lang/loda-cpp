@@ -6,6 +6,10 @@
 * Integrate `zlib` for gzip decompression, replacing external `gzip`/`gunzip` tools
 * Report broken b-files to LODA API server for automatic cache invalidation
 
+### Bugfixes
+
+* Fix PARI evaluation error for formulas with constant identity functions (e.g., A026765)
+
 ## v25.11.29
 
 ### Enhancements
