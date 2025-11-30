@@ -5,6 +5,7 @@
 * Integrate `libcurl` for HTTP requests, replacing external `curl`/`wget` tools
 * Integrate `zlib` for gzip decompression, replacing external `gzip`/`gunzip` tools
 * Report broken b-files to LODA API server for automatic cache invalidation
+* Add internal `export-formulas` command to export all program formulas to a file or stdout
 
 ### Bugfixes
 

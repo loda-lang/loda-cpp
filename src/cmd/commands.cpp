@@ -1188,6 +1188,40 @@ void Commands::compare(const std::string& path1, const std::string& path2) {
       p1, p2, "First", "Second", seq, full_check, num_usages));
 }
 
+void Commands::exportFormulas(const std::string& output_file) {
+  initLog(true);
+  Parser parser;
+  MineManager manager(settings);
+  manager.load();
+  auto& stats = manager.getStats();
+  std::ostream* out = &std::cout;
+  std::ofstream file_out;
+  if (!output_file.empty()) {
+    file_out.open(output_file);
+    if (!file_out.good()) {
+      Log::get().error("Cannot open output file: " + output_file, true);
+    }
+    out = &file_out;
+  }
+  for (auto id : stats.all_program_ids) {
+    try {
+      Program program = parser.parse(ProgramUtil::getProgramPath(id));
+      std::string formula =
+          Comments::getCommentField(program, Comments::PREFIX_FORMULA);
+
+      if (!formula.empty()) {
+        *out << id.string() << ": " << formula << std::endl;
+      }
+    } catch (const std::exception& e) {
+      Log::get().warn("Error processing " + id.string() + ": " +
+                      std::string(e.what()));
+    }
+  }
+  if (file_out.is_open()) {
+    file_out.close();
+  }
+}
+
 void Commands::commitAddedPrograms(size_t min_commit_count) {
   initLog(true);
   SequenceProgram::commitAddedPrograms(min_commit_count);
