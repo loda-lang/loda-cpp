@@ -579,8 +579,8 @@ void FormulaSimplify::replaceSimpleRecursiveRefs(Formula& formula) {
 bool isConstantIdentityFunction(const Formula& formula,
                                 const std::string& funcName) {
   // Find the general definition (the one with a parameter, not a constant)
-  Expression funcExpr = ExpressionUtil::newFunction(funcName);
-  auto it = formula.entries.find(funcExpr);
+  Expression funcKey = ExpressionUtil::newFunction(funcName);
+  auto it = formula.entries.find(funcKey);
   if (it == formula.entries.end()) {
     return false;  // No general definition found
   }
