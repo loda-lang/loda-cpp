@@ -111,6 +111,66 @@ bool FormulaUtil::isRecursive(const Formula& formula,
   return false;
 }
 
+bool FormulaUtil::hasMutualRecursion(const Formula& formula,
+                                     Expression::Type type) {
+  // Get transitive dependencies between functions
+  auto deps = getDependencies(formula, type, true, false);
+
+  // Build a set of all function names
+  std::set<std::string> funcNames;
+  for (const auto& e : formula.entries) {
+    if (e.first.type == type && !e.first.name.empty()) {
+      funcNames.insert(e.first.name);
+    }
+  }
+
+  // Check for mutual recursion: A depends on B and B depends on A (where A !=
+  // B), and neither A nor B is self-recursive.
+  // If at least one function in the cycle is self-recursive, the LEAN code
+  // generator will use Nat domain with pattern offsets, which can prove
+  // termination.
+  for (const auto& funcA : funcNames) {
+    for (const auto& funcB : funcNames) {
+      if (funcA == funcB) continue;
+
+      // Check if A depends on B
+      bool aToB = false;
+      auto rangeA = deps.equal_range(funcA);
+      for (auto it = rangeA.first; it != rangeA.second; ++it) {
+        if (it->second == funcB) {
+          aToB = true;
+          break;
+        }
+      }
+
+      // Check if B depends on A
+      bool bToA = false;
+      auto rangeB = deps.equal_range(funcB);
+      for (auto it = rangeB.first; it != rangeB.second; ++it) {
+        if (it->second == funcA) {
+          bToA = true;
+          break;
+        }
+      }
+
+      // If both A->B and B->A exist, we have mutual recursion
+      if (aToB && bToA) {
+        // Check if either A or B is self-recursive
+        // Use non-transitive check for self-recursion
+        bool aIsSelfRecursive = isRecursive(formula, funcA, type);
+        bool bIsSelfRecursive = isRecursive(formula, funcB, type);
+
+        // If neither is self-recursive, LEAN can't prove termination
+        // because the domain will be Int instead of Nat
+        if (!aIsSelfRecursive && !bIsSelfRecursive) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
 Number FormulaUtil::getMinimumBaseCase(const Formula& formula,
                                        const std::string& funcName) {
   Number minBaseCase = Number::INF;

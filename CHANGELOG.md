@@ -6,6 +6,10 @@
 * Integrate `zlib` for gzip decompression, replacing external `gzip`/`gunzip` tools
 * Report broken b-files to LODA API server for automatic cache invalidation
 
+### Bugfixes
+
+* Fix LEAN evaluation error for formulas with mutually recursive functions that are not self-recursive (e.g., A001636)
+
 ## v25.11.29
 
 ### Enhancements

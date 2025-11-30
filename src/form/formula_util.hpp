@@ -17,6 +17,12 @@ class FormulaUtil {
   static bool isRecursive(const Formula& formula, const std::string& funcName,
                           Expression::Type type = Expression::Type::FUNCTION);
 
+  // Check if the formula contains mutually recursive functions (cycles of
+  // length > 1 in the dependency graph, e.g., A calls B, B calls A)
+  static bool hasMutualRecursion(
+      const Formula& formula,
+      Expression::Type type = Expression::Type::FUNCTION);
+
   static Number getMinimumBaseCase(const Formula& formula,
                                    const std::string& funcName);
 
