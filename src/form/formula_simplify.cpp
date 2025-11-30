@@ -7,6 +7,20 @@
 #include "form/expression_util.hpp"
 #include "form/formula_util.hpp"
 
+// Helper function to replace all function calls by name with a replacement
+// expression
+void replaceFunctionByName(Expression& expr, const std::string& funcName,
+                           const Expression& replacement) {
+  // First recurse into children
+  for (auto& child : expr.children) {
+    replaceFunctionByName(child, funcName, replacement);
+  }
+  // Then check if this expression matches
+  if (expr.type == Expression::Type::FUNCTION && expr.name == funcName) {
+    expr = replacement;
+  }
+}
+
 // Helper function to collect simple functions from formula
 std::set<std::string> collectSimpleFunctions(const Formula& formula) {
   std::set<std::string> funcs;
@@ -559,4 +573,88 @@ void FormulaSimplify::replaceSimpleRecursiveRefs(Formula& formula) {
     // Mark this function as processed
     processedRecursiveFuncs.insert(funcName);
   }
+}
+
+// Helper function to check if a function is a constant identity (f(n) = f(n-k))
+bool isConstantIdentityFunction(const Formula& formula,
+                                const std::string& funcName) {
+  // Find the general definition (the one with a parameter, not a constant)
+  Expression funcKey = ExpressionUtil::newFunction(funcName);
+  auto it = formula.entries.find(funcKey);
+  if (it == formula.entries.end()) {
+    return false;  // No general definition found
+  }
+
+  const auto& rhs = it->second;
+
+  // Check if RHS is f(n-k) where k > 0
+  if (rhs.type != Expression::Type::FUNCTION || rhs.children.size() != 1) {
+    return false;
+  }
+
+  // Must reference itself
+  if (rhs.name != funcName) {
+    return false;
+  }
+
+  const auto& arg = rhs.children.front();
+
+  // Check if argument is n-k where k > 0
+  Number offset;
+  if (!extractArgumentOffset(arg, offset)) {
+    return false;
+  }
+
+  // Must be a backwards reference (offset < 0)
+  if (offset >= Number::ZERO) {
+    return false;
+  }
+
+  // Check that there are no initial terms (base cases) for this function
+  for (const auto& entry : formula.entries) {
+    if (entry.first.type == Expression::Type::FUNCTION &&
+        entry.first.name == funcName && entry.first.children.size() == 1 &&
+        entry.first.children.front().type == Expression::Type::CONSTANT) {
+      // Found an initial term - this is not a constant identity function
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool FormulaSimplify::replaceConstantIdentityFunctions(Formula& formula) {
+  // Collect all function names
+  auto funcs = FormulaUtil::getDefinitions(formula, Expression::Type::FUNCTION);
+
+  // Find constant identity functions
+  std::set<std::string> constantFuncs;
+  for (const auto& funcName : funcs) {
+    if (isConstantIdentityFunction(formula, funcName)) {
+      constantFuncs.insert(funcName);
+    }
+  }
+
+  if (constantFuncs.empty()) {
+    return false;
+  }
+
+  // Replace references to constant identity functions with 0
+  Expression zero = ExpressionUtil::newConstant(0);
+  for (const auto& funcName : constantFuncs) {
+    // Remove all entries for this function
+    FormulaUtil::removeFunctionEntries(formula, funcName);
+
+    // Replace all references to funcName(...) with 0 in other entries
+    for (auto& entry : formula.entries) {
+      replaceFunctionByName(entry.second, funcName, zero);
+    }
+  }
+
+  // Normalize after replacements
+  for (auto& entry : formula.entries) {
+    ExpressionUtil::normalize(entry.second);
+  }
+
+  return true;
 }
