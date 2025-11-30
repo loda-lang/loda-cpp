@@ -111,6 +111,18 @@ bool FormulaUtil::isRecursive(const Formula& formula,
   return false;
 }
 
+// Helper function to check if a function depends on another
+static bool dependsOn(const std::multimap<std::string, std::string>& deps,
+                      const std::string& from, const std::string& to) {
+  auto range = deps.equal_range(from);
+  for (auto it = range.first; it != range.second; ++it) {
+    if (it->second == to) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool FormulaUtil::hasMutualRecursion(const Formula& formula,
                                      Expression::Type type) {
   // Get transitive dependencies between functions
@@ -129,32 +141,13 @@ bool FormulaUtil::hasMutualRecursion(const Formula& formula,
   // If at least one function in the cycle is self-recursive, the LEAN code
   // generator will use Nat domain with pattern offsets, which can prove
   // termination.
-  for (const auto& funcA : funcNames) {
-    for (const auto& funcB : funcNames) {
-      if (funcA == funcB) continue;
+  for (auto itA = funcNames.begin(); itA != funcNames.end(); ++itA) {
+    for (auto itB = std::next(itA); itB != funcNames.end(); ++itB) {
+      const auto& funcA = *itA;
+      const auto& funcB = *itB;
 
-      // Check if A depends on B
-      bool aToB = false;
-      auto rangeA = deps.equal_range(funcA);
-      for (auto it = rangeA.first; it != rangeA.second; ++it) {
-        if (it->second == funcB) {
-          aToB = true;
-          break;
-        }
-      }
-
-      // Check if B depends on A
-      bool bToA = false;
-      auto rangeB = deps.equal_range(funcB);
-      for (auto it = rangeB.first; it != rangeB.second; ++it) {
-        if (it->second == funcA) {
-          bToA = true;
-          break;
-        }
-      }
-
-      // If both A->B and B->A exist, we have mutual recursion
-      if (aToB && bToA) {
+      // Check for mutual dependency (A->B and B->A)
+      if (dependsOn(deps, funcA, funcB) && dependsOn(deps, funcB, funcA)) {
         // Check if either A or B is self-recursive
         // Use non-transitive check for self-recursion
         bool aIsSelfRecursive = isRecursive(formula, funcA, type);
