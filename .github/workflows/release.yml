@@ -125,6 +125,7 @@ jobs:
           mkdir loda-windows-x86
           copy loda.exe loda-windows-x86\
           copy C:\vcpkg\installed\x64-windows\bin\libcurl.dll loda-windows-x86\
+          copy C:\vcpkg\installed\x64-windows\bin\zlib1.dll loda-windows-x86\
           Compress-Archive -Path loda-windows-x86\* -DestinationPath loda-windows-x86.zip
         shell: pwsh
       - name: Upload
@@ -157,6 +158,7 @@ jobs:
           mkdir loda-windows-arm64
           copy loda.exe loda-windows-arm64\
           copy C:\vcpkg\installed\arm64-windows\bin\libcurl.dll loda-windows-arm64\
+          copy C:\vcpkg\installed\arm64-windows\bin\zlib1.dll loda-windows-arm64\
           Compress-Archive -Path loda-windows-arm64\* -DestinationPath loda-windows-arm64.zip
         shell: pwsh
       - name: Upload
