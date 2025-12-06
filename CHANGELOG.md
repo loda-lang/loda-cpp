@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Bugfixes
+
+* Fix `test-lean` failure when LEAN project directory exists but is incomplete
+
+## v25.12.1
+
 ### Enhancements
 
 * Integrate `libcurl` for HTTP requests, replacing external `curl`/`wget` tools
