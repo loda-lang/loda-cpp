@@ -197,16 +197,25 @@ bool FormulaGenerator::facToExpression(const Expression& a, const Expression& b,
   } else {
     // rising factorial
     // (a+b-1)!/(a-1)!
-    // Note: we already checked that a-1 >= 0 above for small constants
     num.children = {sum({a, sum({b, constant(-1)})})};
     denom.children = {sum({a, constant(-1)})};
   }
 
+  // Check if factorial arguments can be negative
+  // Factorial is only defined for non-negative integers
+  auto& numArg = num.children.front();
+  auto& denomArg = denom.children.front();
+  ExpressionUtil::normalize(numArg);
+  ExpressionUtil::normalize(denomArg);
+  
+  if (ExpressionUtil::canBeNegative(numArg, offset) ||
+      ExpressionUtil::canBeNegative(denomArg, offset)) {
+    return false;
+  }
+
   // Simplify immediately
-  auto& d = denom.children.front();
-  ExpressionUtil::normalize(d);
-  if (d.type == Expression::Type::CONSTANT &&
-      (d.value == Number::ZERO || d.value == Number::ONE)) {
+  if (denomArg.type == Expression::Type::CONSTANT &&
+      (denomArg.value == Number::ZERO || denomArg.value == Number::ONE)) {
     res = num;
   } else {
     // Factorial division is guaranteed to produce an integer, so use a standard
