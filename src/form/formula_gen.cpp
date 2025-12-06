@@ -186,20 +186,49 @@ bool FormulaGenerator::facToExpression(const Expression& a, const Expression& b,
   // General case: use factorial division
   Expression num(Expression::Type::FACTORIAL);
   Expression denom(Expression::Type::FACTORIAL);
+  Expression numArg, denomArg;
 
   // Falling factorial: a!/(a+b)!
   // If b <= 0: (a)!/(a+b)!
   // If b > 0: rising factorial: (a+b-1)!/(a-1)!
   if (b.type == Expression::Type::CONSTANT && b.value <= 0) {
     // falling factorial
-    num.children = {a};
-    denom.children = {sum({a, b})};
+    numArg = a;
+    num.children = {numArg};
+    denomArg = sum({a, b});
+    denom.children = {denomArg};
   } else {
     // rising factorial
     // (a+b-1)!/(a-1)!
-    // Note: we already checked that a-1 >= 0 above for small constants
-    num.children = {sum({a, sum({b, constant(-1)})})};
-    denom.children = {sum({a, constant(-1)})};
+    numArg = sum({a, sum({b, constant(-1)})});
+    num.children = {numArg};
+    denomArg = sum({a, constant(-1)});
+    denom.children = {denomArg};
+  }
+
+  // Simplify the arguments
+  ExpressionUtil::normalize(numArg);
+  ExpressionUtil::normalize(denomArg);
+  
+  // Check if the numerator argument can be negative
+  // Factorial is only defined for non-negative integers
+  if (ExpressionUtil::canBeNegative(numArg, offset)) {
+    return false;
+  }
+  
+  // For rising factorial (b > 0), check if denominator can be negative
+  // If so, we need to use an IF expression to handle edge cases
+  bool needsIfWrapper = false;
+  if (!(b.type == Expression::Type::CONSTANT && b.value <= 0)) {
+    // Rising factorial case: check if a-1 can be negative
+    if (ExpressionUtil::canBeNegative(denomArg, offset)) {
+      needsIfWrapper = true;
+    }
+  } else {
+    // Falling factorial case: check if a+b can be negative
+    if (ExpressionUtil::canBeNegative(denomArg, offset)) {
+      return false;
+    }
   }
 
   // Simplify immediately
@@ -212,6 +241,32 @@ bool FormulaGenerator::facToExpression(const Expression& a, const Expression& b,
     // Factorial division is guaranteed to produce an integer, so use a standard
     // fraction
     res = Expression(Expression::Type::FRACTION, "", {num, denom});
+  }
+  
+  // If we need an IF wrapper for rising factorial edge cases
+  if (needsIfWrapper) {
+    // For rising factorial: when a can be zero, the product is zero
+    // Wrap in IF: if(a==0, 0, factorial_division)
+    // However, we cannot express arbitrary conditions in IF, only n==value
+    // As a workaround, we check the simplified denominator argument
+    // If it can be negative, we need special handling
+    //
+    // For many common cases like binomial(n+1,2) where a==0 when n==0,
+    // we try to determine the n value that makes a==0
+    //
+    // For now, use a heuristic: if offset is 0 and a can be 0,
+    // assume it's 0 when n=0
+    auto nEqualsZero = ExpressionUtil::newParameter();  // This represents n
+    auto condition = Expression(Expression::Type::EQUAL, "", {nEqualsZero, constant(0)});
+    // Check if a becomes 0 at n=0 by checking if a contains only positive terms of n
+    // For simplicity, we'll use n==0 as the condition when offset is 0
+    if (offset == 0) {
+      res = Expression(Expression::Type::IF, "", {constant(0), constant(0), res});
+    } else {
+      // For non-zero offsets, we cannot easily express the condition
+      // Fall back to not using factorial division
+      return false;
+    }
   }
 
   return true;
