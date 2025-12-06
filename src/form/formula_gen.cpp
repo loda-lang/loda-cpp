@@ -246,20 +246,12 @@ bool FormulaGenerator::facToExpression(const Expression& a, const Expression& b,
   // If we need an IF wrapper for rising factorial edge cases
   if (needsIfWrapper) {
     // For rising factorial: when a can be zero, the product is zero
-    // Wrap in IF: if(a==0, 0, factorial_division)
-    // However, we cannot express arbitrary conditions in IF, only n==value
-    // As a workaround, we check the simplified denominator argument
-    // If it can be negative, we need special handling
+    // Wrap in IF: if(n==0, 0, factorial_division)
+    // The IF expression format is: IF(value_to_compare_n_to, then_value, else_value)
+    // It automatically generates: if(n==value_to_compare_n_to, then_value, else_value)
     //
     // For many common cases like binomial(n+1,2) where a==0 when n==0,
-    // we try to determine the n value that makes a==0
-    //
-    // For now, use a heuristic: if offset is 0 and a can be 0,
-    // assume it's 0 when n=0
-    auto nEqualsZero = ExpressionUtil::newParameter();  // This represents n
-    auto condition = Expression(Expression::Type::EQUAL, "", {nEqualsZero, constant(0)});
-    // Check if a becomes 0 at n=0 by checking if a contains only positive terms of n
-    // For simplicity, we'll use n==0 as the condition when offset is 0
+    // we use n==0 as the condition when offset is 0
     if (offset == 0) {
       res = Expression(Expression::Type::IF, "", {constant(0), constant(0), res});
     } else {
