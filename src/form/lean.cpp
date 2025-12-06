@@ -367,6 +367,12 @@ bool LeanFormula::initializeLeanProject() {
     return true;
   }
 
+  // If directory exists but lakefile doesn't, clean up incomplete initialization
+  if (isDir(projectDir)) {
+    Log::get().info("Removing incomplete LEAN project at " + projectDir);
+    rmDirRecursive(projectDir);
+  }
+
   Log::get().info("Initializing LEAN project at " + projectDir);
 
   // Use lake to create a new Lean project with Mathlib dependency
