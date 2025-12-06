@@ -203,19 +203,19 @@ bool FormulaGenerator::facToExpression(const Expression& a, const Expression& b,
 
   // Check if factorial arguments can be negative
   // Factorial is only defined for non-negative integers
-  auto& n = num.children.front();
-  auto& d = denom.children.front();
-  ExpressionUtil::normalize(n);
-  ExpressionUtil::normalize(d);
+  auto& numArg = num.children.front();
+  auto& denomArg = denom.children.front();
+  ExpressionUtil::normalize(numArg);
+  ExpressionUtil::normalize(denomArg);
   
-  if (ExpressionUtil::canBeNegative(n, offset) ||
-      ExpressionUtil::canBeNegative(d, offset)) {
+  if (ExpressionUtil::canBeNegative(numArg, offset) ||
+      ExpressionUtil::canBeNegative(denomArg, offset)) {
     return false;
   }
 
   // Simplify immediately
-  if (d.type == Expression::Type::CONSTANT &&
-      (d.value == Number::ZERO || d.value == Number::ONE)) {
+  if (denomArg.type == Expression::Type::CONSTANT &&
+      (denomArg.value == Number::ZERO || denomArg.value == Number::ONE)) {
     res = num;
   } else {
     // Factorial division is guaranteed to produce an integer, so use a standard
