@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Bugfixes
+
+* Fix `test-lean` failure when LEAN project directory exists but is incomplete
+
+## v25.12.1
+
 ### Enhancements
 
 * Integrate `libcurl` for HTTP requests, replacing external `curl`/`wget` tools
@@ -11,7 +17,6 @@
 
 * Fix PARI evaluation error for formulas with constant identity functions (e.g., A026765)
 * Fix LEAN evaluation error for formulas with mutually recursive functions that are not self-recursive (e.g., A001636)
-* Fix `test-lean` failure when LEAN project directory exists but is incomplete
 
 ## v25.11.29
 
