@@ -389,13 +389,14 @@ bool isSimpleRecursiveReference(const Formula& formula,
   }
 
   refFuncName = rhs.name;
-  const auto& arg = rhs.children.front();
 
   // Skip if the function references itself (self-recursion, not a simple
   // reference)
   if (refFuncName == funcName) {
     return false;
   }
+
+  const auto& arg = rhs.children.front();
 
   // Skip if the referenced function was already processed
   if (processedFuncs.find(refFuncName) != processedFuncs.end()) {
