@@ -358,6 +358,11 @@ void IncrementalEvaluator::computeStatefulCells() {
       write.insert(target);
     }
   }
+  for (const auto& cell : read) {
+    if (write.find(cell) == write.end()) {
+      stateful_cells.insert(cell);
+    }
+  }
 }
 
 void IncrementalEvaluator::computeLoopCounterDependentCells() {
