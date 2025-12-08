@@ -666,11 +666,9 @@ bool Optimizer::fixSandwich(Program &p) const {
         std::swap(op1, op2);
         op1.source.value *= op2.source.value;
         changed = true;
-      } else if (op1.type == Operation::Type::MUL &&
-                 Semantics::mod(op2.source.value, op1.source.value) ==
-                     Number::ZERO) {
-        std::swap(op1, op2);
-        op1.source.value /= op2.source.value;
+      } else if (op1.type == Operation::Type::MUL) {
+        std::swap(op3, op2);
+        op3.source.value *= op2.source.value;
         changed = true;
       }
     } else if (ProgramUtil::isAdditive(op2.type) &&
