@@ -3,6 +3,7 @@
 ### Bugfixes
 
 * Fix `test-lean` failure when LEAN project directory exists but is incomplete
+* Fix LEAN type synthesis error by wrapping pattern offset constants with `Int.ofNat` in Nat domain formulas
 
 ## v25.12.1
 
