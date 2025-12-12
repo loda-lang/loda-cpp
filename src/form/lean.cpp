@@ -85,9 +85,14 @@ bool LeanFormula::convertToLean(Expression& expr, int64_t offset,
         expr = cast;
       }
       if (patternOffset != Number::ZERO && patternOffset != Number::INF) {
-        Expression sum(
-            Expression::Type::SUM, "",
-            {expr, ExpressionUtil::newConstant(patternOffset.asInt())});
+        Expression offsetConst = ExpressionUtil::newConstant(patternOffset.asInt());
+        // When domain is Nat and parameter was wrapped with Int.ofNat, also wrap the offset constant
+        // Only wrap positive offsets in Int.ofNat; negative values use plain Int literals
+        if (domain == "Nat" && !insideOfLocalFunc && patternOffset.asInt() > 0) {
+          Expression castOffset(Expression::Type::FUNCTION, "Int.ofNat", {offsetConst});
+          offsetConst = castOffset;
+        }
+        Expression sum(Expression::Type::SUM, "", {expr, offsetConst});
         expr = sum;
       }
       break;
