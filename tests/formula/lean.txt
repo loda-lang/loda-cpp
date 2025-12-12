@@ -32,7 +32,7 @@ A001306: mutual
     def A000064 (n : Nat) : Int := c (n+1)
     def a (n : Nat) : Int := (b (Int.toNat (Int.fdiv n 5)))+1
     def b : Nat -> Int | 0 => 0 | n+1 => (b n)+(A000064 (Int.toNat (Int.fdiv (n+1) 2)))
-    def c : Nat -> Int | 0 => 0 | 1 => 1 | 2 => 2 | 3 => 4 | 4 => 6 | 5 => 9 | 6 => 13 | 7 => 18 | 8 => 24 | 9 => 31 | n+10 => (c n)+(Int.fdiv (((Int.ofNat n)+(Int.ofNat 17))*(11*(Int.ofNat n)+2*((Int.ofNat n)+(Int.ofNat 9))^2+117)) 120)
+    def c : Nat -> Int | 0 => 0 | 1 => 1 | 2 => 2 | 3 => 4 | 4 => 6 | 5 => 9 | 6 => 13 | 7 => 18 | 8 => 24 | 9 => 31 | n+10 => (c n)+(Int.fdiv (((Int.ofNat n)+(Int.ofNat 10)+7)*(11*(Int.ofNat n)+11*(Int.ofNat 10)+2*((Int.ofNat n)+(Int.ofNat 10)-1)^2+7)) 120)
   end
 A001539: def a (n : Int) : Int := (4*n+2)^2-1
 A001563: def a (n : Int) : Int := n*(Int.ofNat (Nat.factorial (Int.toNat n)))
