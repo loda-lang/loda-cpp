@@ -457,7 +457,11 @@ int64_t getNumInitialTermsNeeded(int64_t cell, const std::string& fname,
   // stateful.erase(Program::OUTPUT_CELL);
   int64_t terms_needed = 0;
   if (stateful.find(cell) != stateful.end()) {
-    terms_needed = (ie.getLoopCounterDecrement() * stateful.size());
+    // For a recurrence a(n) = a(n-k), we need k initial terms.
+    // The recurrence depth k equals the loop counter decrement times the number
+    // of distinct states. We add 1 to account for the initial state before the
+    // loop, ensuring we have enough terms to avoid undefined references.
+    terms_needed = (ie.getLoopCounterDecrement() * stateful.size()) + 1;
   }
   return terms_needed;
 }
