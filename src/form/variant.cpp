@@ -6,8 +6,7 @@
 
 VariantsManager::VariantsManager(
     const Formula& formula,
-    const std::map<std::string, int64_t>& num_initial_terms, int64_t offset)
-    : offset_(offset) {
+    const std::map<std::string, int64_t>& num_initial_terms) {
   // step 1: collect function names
   for (const auto& entry : formula.entries) {
     if (ExpressionUtil::isSimpleFunction(entry.first, true)) {
@@ -105,8 +104,7 @@ size_t VariantsManager::numVariants() const {
   return num;
 }
 
-bool resolve(const Variant& lookup, Variant& target, Expression& target_def,
-             int64_t offset) {
+bool resolve(const Variant& lookup, Variant& target, Expression& target_def) {
   if (target_def.type == Expression::Type::FUNCTION &&
       target_def.children.size() == 1) {
     if (target_def.name != target.func && target_def.name == lookup.func) {
@@ -116,19 +114,10 @@ bool resolve(const Variant& lookup, Variant& target, Expression& target_def,
       replacement.replaceAll(ExpressionUtil::newParameter(), arg);
       ExpressionUtil::normalize(replacement);
       target_def = replacement;
-      // update number of required initial terms, accounting for offset
-      // When we substitute lookup(arg) where arg may shift the index (e.g., n-8),
-      // we need to ensure we have enough initial terms to cover the shifted range.
-      // The original formula evaluated at n=0, but with offset we should evaluate at n=offset.
-      int64_t arg_at_offset = ExpressionUtil::eval(arg, {{"n", offset}}).asInt();
+      // update number of required initial terms
       int64_t min_initial_terms =
-          lookup.num_initial_terms - arg_at_offset + offset - 1;
-      Log::get().debug("resolve: " + lookup.func + " has " +
-                       std::to_string(lookup.num_initial_terms) +
-                       " initial terms, arg=" + arg.toString() +
-                       ", arg_at_offset=" + std::to_string(arg_at_offset) +
-                       ", calculated min=" + std::to_string(min_initial_terms) +
-                       ", offset=" + std::to_string(offset));
+          lookup.num_initial_terms -
+          ExpressionUtil::eval(arg, {{"n", 0}}).asInt() - 1;
       target.num_initial_terms =
           std::max(target.num_initial_terms, min_initial_terms);
       // stop here, because else we would replace inside the replacement!
@@ -137,7 +126,7 @@ bool resolve(const Variant& lookup, Variant& target, Expression& target_def,
   }
   bool resolved = false;
   for (auto& c : target_def.children) {
-    if (resolve(lookup, target, c, offset)) {
+    if (resolve(lookup, target, c)) {
       resolved = true;
     }
   }
@@ -145,8 +134,8 @@ bool resolve(const Variant& lookup, Variant& target, Expression& target_def,
   return resolved;
 }
 
-bool resolve(const Variant& lookup, Variant& target, int64_t offset) {
-  return resolve(lookup, target, target.definition, offset);
+bool resolve(const Variant& lookup, Variant& target) {
+  return resolve(lookup, target, target.definition);
 }
 
 bool gaussElim(const Variant& lookup, Variant& target) {
@@ -191,7 +180,7 @@ bool findVariants(VariantsManager& manager) {
       for (const auto& lookup : variants) {
         for (const auto& lookup_variant : lookup.second) {
           auto new_variant = target_variant;  // copy
-          if (resolve(lookup_variant, new_variant, manager.getOffset()) &&
+          if (resolve(lookup_variant, new_variant) &&
               manager.update(new_variant)) {
             updated = true;
           }
@@ -208,9 +197,8 @@ bool findVariants(VariantsManager& manager) {
 }
 
 bool simplifyFormulaUsingVariants(
-    Formula& formula, std::map<std::string, int64_t>& num_initial_terms,
-    int64_t offset) {
-  VariantsManager manager(formula, num_initial_terms, offset);
+    Formula& formula, std::map<std::string, int64_t>& num_initial_terms) {
+  VariantsManager manager(formula, num_initial_terms);
   bool found = false;
   size_t iterations = 0;
   while (manager.numVariants() < 100 && iterations < 50) {  // tighter limits

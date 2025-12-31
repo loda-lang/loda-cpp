@@ -567,13 +567,23 @@ bool FormulaGenerator::generateSingle(const Program& p) {
       numTerms[name] = getNumInitialTermsNeeded(cell, name, formula, incEval);
     }
 
-    // get offset for variant calculations
-    const int64_t offset = ProgramUtil::getOffset(p);
-
     // find and choose alternative function definitions
-    simplifyFormulaUsingVariants(formula, numTerms, offset);
+    simplifyFormulaUsingVariants(formula, numTerms);
+    
+    // After variant simplification, ensure the output cell has enough initial terms.
+    // For periodic sequences, variants may underestimate the required number of terms.
+    // We use the maximum across all cells as a conservative estimate.
+    int64_t max_terms = 0;
+    for (const auto& kv : numTerms) {
+      max_terms = std::max(max_terms, kv.second);
+    }
+    if (max_terms > 0) {
+      auto output_name = getCellName(Program::OUTPUT_CELL);
+      numTerms[output_name] = std::max(numTerms[output_name], max_terms);
+    }
 
     // evaluate program and add initial terms to formula
+    const int64_t offset = ProgramUtil::getOffset(p);
     if (!addInitialTerms(numCells, offset, numTerms)) {
       return false;
     }
