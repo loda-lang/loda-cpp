@@ -366,7 +366,7 @@ bool LeanFormula::initializeLeanProject() {
 
   const std::string cacheHome = Setup::getCacheHome();
   const std::string projectDir = cacheHome + LEAN_PROJECT_NAME + FILE_SEP;
-  const std::string lakeFilePath = projectDir + "lakefile.lean";
+  const std::string lakeFilePath = projectDir + "lakefile.toml";
 
   // Check if project is already initialized
   if (isFile(lakeFilePath)) {
