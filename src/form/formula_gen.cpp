@@ -458,13 +458,6 @@ int64_t getNumInitialTermsNeeded(int64_t cell, const std::string& fname,
   int64_t terms_needed = 0;
   if (stateful.find(cell) != stateful.end()) {
     terms_needed = (ie.getLoopCounterDecrement() * stateful.size());
-    // For the counter cell (main function in periodic sequences), add one
-    // additional initial term to complete the recurrence period. This ensures
-    // that for a recurrence a(n) = a(n-k), we have k initial terms to avoid
-    // deep recursion in PARI evaluation.
-    if (cell == ie.getSimpleLoop().counter) {
-      terms_needed += ie.getLoopCounterDecrement();
-    }
   }
   return terms_needed;
 }
@@ -574,11 +567,13 @@ bool FormulaGenerator::generateSingle(const Program& p) {
       numTerms[name] = getNumInitialTermsNeeded(cell, name, formula, incEval);
     }
 
+    // get offset for variant calculations
+    const int64_t offset = ProgramUtil::getOffset(p);
+
     // find and choose alternative function definitions
-    simplifyFormulaUsingVariants(formula, numTerms);
+    simplifyFormulaUsingVariants(formula, numTerms, offset);
 
     // evaluate program and add initial terms to formula
-    const int64_t offset = ProgramUtil::getOffset(p);
     if (!addInitialTerms(numCells, offset, numTerms)) {
       return false;
     }

@@ -27,7 +27,8 @@ class Variant {
 class VariantsManager {
  public:
   VariantsManager(const Formula& formula,
-                  const std::map<std::string, int64_t>& num_initial_terms);
+                  const std::map<std::string, int64_t>& num_initial_terms,
+                  int64_t offset);
 
   bool update(Variant new_variant);
 
@@ -35,11 +36,16 @@ class VariantsManager {
 
   size_t numVariants() const;
 
+  int64_t getOffset() const { return offset_; }
+
  private:
   void collectFuncs(Variant& variant) const;
 
   void collectFuncs(Variant& variant, const Expression& expr) const;
+
+  int64_t offset_;  // program offset for correct initial terms calculation
 };
 
 bool simplifyFormulaUsingVariants(
-    Formula& formula, std::map<std::string, int64_t>& num_initial_terms);
+    Formula& formula, std::map<std::string, int64_t>& num_initial_terms,
+    int64_t offset);
