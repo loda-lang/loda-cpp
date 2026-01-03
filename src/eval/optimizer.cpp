@@ -136,10 +136,11 @@ bool Optimizer::mergeOps(Program &p) const {
           do_merge = true;
         }
 
-        // both mul, div or pow operations?
+        // both mul, div, pow or nrt operations?
         else if (o1.type == o2.type && (o1.type == Operation::Type::MUL ||
                                         o1.type == Operation::Type::DIV ||
-                                        o1.type == Operation::Type::POW)) {
+                                        o1.type == Operation::Type::POW ||
+                                        o1.type == Operation::Type::NRT)) {
           o1.source.value = Semantics::mul(o1.source.value, o2.source.value);
           do_merge = true;
         }
