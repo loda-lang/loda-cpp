@@ -246,6 +246,8 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
       id = args.at(1);
     }
     commands.testRange(id);
+  } else if (cmd == "test-recursion") {
+    commands.testRecursion();
   } else if (cmd == "generate" || cmd == "gen") {
     commands.generate();
   } else if (cmd == "migrate") {

@@ -881,6 +881,12 @@ void Commands::testRange(const std::string& id) {
   }
 }
 
+void Commands::testRecursion() {
+  initLog(false);
+  Test test;
+  test.recursion();
+}
+
 void Commands::generate() {
   initLog(true);
   MineManager manager(settings);

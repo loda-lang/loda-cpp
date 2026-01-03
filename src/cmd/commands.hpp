@@ -67,6 +67,8 @@ class Commands {
 
   void testRange(const std::string& id);
 
+  void testRecursion();
+
   void generate();
 
   void migrate();

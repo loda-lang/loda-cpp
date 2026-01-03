@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <deque>
 #include <fstream>
+#include <functional>
 #include <iomanip>
 #include <sstream>
 #include <stdexcept>
@@ -1888,4 +1889,222 @@ void Test::gzip() {
     std::remove(base_path.c_str());
     std::remove(gz_path.c_str());
   }
+}
+
+void Test::recursion() {
+  Log::get().info("Testing recursive formulas");
+  Parser parser;
+  FormulaGenerator generator;
+  size_t num_checked = 0;
+  size_t num_invalid = 0;
+
+  // Iterate over all programs
+  for (size_t id = 0; id < 400000; id++) {
+    UID uid('A', id);
+    
+    // Check if file exists before trying to open it
+    std::string path = ProgramUtil::getProgramPath(uid);
+    std::ifstream test_exists(path);
+    if (!test_exists.good()) {
+      continue;
+    }
+    test_exists.close();
+
+    // Parse program
+    Program program;
+    try {
+      std::ifstream in(path);
+      program = parser.parse(in);
+    } catch (std::exception& e) {
+      continue;  // Skip programs that cannot be parsed
+    }
+
+    // Generate formula
+    Formula formula;
+    try {
+      if (!generator.generate(program, id, formula, false)) {
+        continue;  // Skip programs for which formula cannot be generated
+      }
+    } catch (std::exception& e) {
+      // Skip programs that cause formula generation errors (e.g., missing dependencies)
+      continue;
+    }
+
+    // Group entries by function name
+    std::map<std::string, std::vector<std::pair<Expression, Expression>>> functions;
+    for (const auto& entry : formula.entries) {
+      const auto& lhs = entry.first;
+
+      if (lhs.type == Expression::Type::FUNCTION && !lhs.name.empty()) {
+        functions[lhs.name].push_back(entry);
+      }
+    }
+
+    // Check each function separately
+    bool has_any_recursive = false;
+    for (const auto& func_entry : functions) {
+      const std::string& func_name = func_entry.first;
+      const auto& entries = func_entry.second;
+
+      // Find recursive definition and initial terms for this function
+      bool has_recursive_definition = false;
+      Expression recursive_lhs;
+      Expression recursive_rhs;
+      std::map<int64_t, Expression> initial_terms;
+
+      for (const auto& entry : entries) {
+        const auto& lhs = entry.first;
+        const auto& rhs = entry.second;
+
+        if (lhs.children.size() == 1) {
+          const auto& arg = lhs.children[0];
+          if (arg.type == Expression::Type::PARAMETER && arg.name == "n") {
+            // This is the recursive definition
+            has_recursive_definition = true;
+            recursive_lhs = lhs;
+            recursive_rhs = rhs;
+          } else if (arg.type == Expression::Type::CONSTANT) {
+            // This is an initial term
+            initial_terms[arg.value.asInt()] = lhs;
+          }
+        }
+      }
+
+      // Skip non-recursive functions
+      if (!has_recursive_definition) {
+        continue;
+      }
+
+      has_any_recursive = true;
+
+      // Now validate this recursive function
+      bool is_valid = true;
+      std::string error_msg;
+
+      // 1. Check if RHS contains func_name(n) (invalid self-reference)
+      if (recursive_rhs.contains(Expression::Type::FUNCTION, func_name)) {
+        // Check all function calls in RHS
+        std::function<bool(const Expression&)> check_recursive_calls;
+        check_recursive_calls = [&](const Expression& expr) -> bool {
+          if (expr.type == Expression::Type::FUNCTION && expr.name == func_name) {
+            if (expr.children.size() == 1) {
+              const auto& arg = expr.children[0];
+              
+              // Check if argument is exactly 'n' (invalid self-reference)
+              if (arg.type == Expression::Type::PARAMETER && arg.name == "n") {
+                is_valid = false;
+                error_msg = "RHS contains " + func_name + "(n) self-reference";
+                return false;
+              }
+
+              // Check if argument is of the form n-k where k is a positive constant
+              // Valid forms: n-1, n-2, etc.
+              // Invalid forms: 2*n, n+1, etc.
+              if (arg.type == Expression::Type::SUM && arg.children.size() == 2) {
+                const auto& left = arg.children[0];
+                const auto& right = arg.children[1];
+                
+                // Check for n + constant pattern
+                if (left.type == Expression::Type::PARAMETER && left.name == "n" &&
+                    right.type == Expression::Type::CONSTANT) {
+                  int64_t offset = right.value.asInt();
+                  // Valid if offset is negative (n + negative = n - positive)
+                  if (offset >= 0) {
+                    is_valid = false;
+                    error_msg = "RHS contains " + func_name + "(" + arg.toString() + 
+                               ") with non-decreasing offset";
+                    return false;
+                  }
+                } else {
+                  // Some other expression form - invalid
+                  is_valid = false;
+                  error_msg = "RHS contains " + func_name + "(" + arg.toString() + 
+                             ") with invalid argument";
+                  return false;
+                }
+              } else if (arg.type != Expression::Type::SUM) {
+                // Not a sum expression - check if it's a simple subtraction or invalid
+                is_valid = false;
+                error_msg = "RHS contains " + func_name + "(" + arg.toString() + 
+                           ") with non-standard form";
+                return false;
+              }
+            }
+          }
+
+          // Recursively check children
+          for (const auto& child : expr.children) {
+            if (!check_recursive_calls(child)) {
+              return false;
+            }
+          }
+          return true;
+        };
+
+        if (!check_recursive_calls(recursive_rhs)) {
+          // Error already set in check_recursive_calls
+        }
+      }
+
+      // 2. Check if number of initial terms is sufficient
+      if (is_valid && recursive_rhs.contains(Expression::Type::FUNCTION, func_name)) {
+        // Find the maximum recursion depth
+        int64_t max_depth = 0;
+        std::function<void(const Expression&)> find_max_depth;
+        find_max_depth = [&](const Expression& expr) {
+          if (expr.type == Expression::Type::FUNCTION && expr.name == func_name) {
+            if (expr.children.size() == 1) {
+              const auto& arg = expr.children[0];
+              if (arg.type == Expression::Type::SUM && arg.children.size() == 2) {
+                const auto& left = arg.children[0];
+                const auto& right = arg.children[1];
+                if (left.type == Expression::Type::PARAMETER && left.name == "n" &&
+                    right.type == Expression::Type::CONSTANT) {
+                  int64_t offset = right.value.asInt();
+                  int64_t depth = -offset;  // Convert n+(-k) to depth k
+                  if (depth > max_depth) {
+                    max_depth = depth;
+                  }
+                }
+              }
+            }
+          }
+          for (const auto& child : expr.children) {
+            find_max_depth(child);
+          }
+        };
+
+        find_max_depth(recursive_rhs);
+
+        // Check if we have initial terms for indices 0 through max_depth-1
+        if (max_depth > 0) {
+          for (int64_t i = 0; i < max_depth; i++) {
+            if (initial_terms.find(i) == initial_terms.end()) {
+              is_valid = false;
+              error_msg = "Function " + func_name + " missing initial term for index " + std::to_string(i) + 
+                         " (required " + std::to_string(max_depth) + " initial terms, " +
+                         "but only " + std::to_string(initial_terms.size()) + " provided)";
+              break;
+            }
+          }
+        }
+      }
+
+      if (!is_valid) {
+        num_invalid++;
+        Log::get().warn(uid.string() + ": " + formula.toString() + " => INVALID: " + error_msg);
+      }
+    }
+
+    // Report progress
+    if (has_any_recursive) {
+      if ((num_checked % 100) == 0) {
+        Log::get().info("Checking " + uid.string());
+      }
+      num_checked++;
+    }
+  }
+
+  Log::get().info("Checked " + std::to_string(num_checked) + 
+                  " recursive formulas, found " + std::to_string(num_invalid) + " invalid");
 }
