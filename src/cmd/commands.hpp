@@ -1,8 +1,10 @@
 #pragma once
 
+#include <map>
 #include <string>
 
 #include "eval/evaluator.hpp"
+#include "form/expression.hpp"
 #include "sys/util.hpp"
 
 class Commands {
@@ -103,4 +105,11 @@ class Commands {
   const Settings& settings;
 
   static void initLog(bool silent);
+
+  // Helper method for validating a single recursive formula definition
+  static bool validateRecursiveFormula(
+      const std::string& func_name,
+      const Expression& recursive_rhs,
+      const std::map<int64_t, Expression>& initial_terms,
+      std::string& error_msg);
 };

@@ -90,8 +90,6 @@ class Test {
 
   void virtualSeq();
 
-  void recursion();
-
   enum class FormulaType { FORMULA, PARI_FUNCTION, PARI_VECTOR, LEAN };
 
   void checkFormulas(const std::string& testFile, FormulaType type);
