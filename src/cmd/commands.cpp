@@ -1065,9 +1065,7 @@ bool Commands::validateRecursiveFormula(
       return true;
     };
 
-    if (!check_recursive_calls(recursive_rhs)) {
-      // Error already set in check_recursive_calls
-    }
+    check_recursive_calls(recursive_rhs);
   }
 
   // 2. Check if number of initial terms is sufficient
