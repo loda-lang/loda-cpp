@@ -1,5 +1,7 @@
 #include "form/variant.hpp"
 
+#include <functional>
+
 #include "form/expression_util.hpp"
 #include "form/formula_util.hpp"
 #include "sys/log.hpp"
@@ -27,9 +29,10 @@ VariantsManager::VariantsManager(
 }
 
 void debugUpdate(const std::string& prefix, const Variant& variant) {
-  Log::get().debug(prefix +
-                   ExpressionUtil::newFunction(variant.func).toString() +
-                   " = " + variant.definition.toString());
+  Log::get().debug(
+      prefix + ExpressionUtil::newFunction(variant.func).toString() + " = " +
+      variant.definition.toString() + " with " +
+      std::to_string(variant.num_initial_terms) + " initial terms");
 }
 
 bool VariantsManager::update(Variant new_variant) {
@@ -104,6 +107,29 @@ size_t VariantsManager::numVariants() const {
   return num;
 }
 
+// Helper function to calculate minimum initial terms needed for self-references
+int64_t calculateMinInitialTermsForSelfRef(const std::string& func,
+                                           const Expression& expr) {
+  int64_t min_offset = 0;
+  std::function<void(const Expression&)> findMinOffset =
+      [&](const Expression& e) {
+        if (e.type == Expression::Type::FUNCTION && e.name == func &&
+            e.children.size() == 1) {
+          // Evaluate the offset for n=0
+          int64_t offset =
+              ExpressionUtil::eval(e.children[0], {{"n", 0}}).asInt();
+          min_offset = std::min(min_offset, offset);
+        }
+        for (const auto& c : e.children) {
+          findMinOffset(c);
+        }
+      };
+  findMinOffset(expr);
+  // If we have a self-reference with offset, we need at least -offset initial
+  // terms e.g., a(n) = a(n-4) needs 4 initial terms to compute a(4)
+  return -min_offset;
+}
+
 bool resolve(const Variant& lookup, Variant& target, Expression& target_def) {
   if (target_def.type == Expression::Type::FUNCTION &&
       target_def.children.size() == 1) {
@@ -120,6 +146,14 @@ bool resolve(const Variant& lookup, Variant& target, Expression& target_def) {
           ExpressionUtil::eval(arg, {{"n", 0}}).asInt() - 1;
       target.num_initial_terms =
           std::max(target.num_initial_terms, min_initial_terms);
+
+      // If the result is self-referential, ensure we have enough initial terms
+      int64_t self_ref_terms =
+          calculateMinInitialTermsForSelfRef(target.func, target_def);
+      if (self_ref_terms > 0) {
+        target.num_initial_terms =
+            std::max(target.num_initial_terms, self_ref_terms);
+      }
       // stop here, because else we would replace inside the replacement!
       return true;
     }

@@ -2,8 +2,13 @@
 
 ### Bugfixes
 
+* Fix calculation of number of needed initial terms (A131083)
 * Fix `test-lean` failure when LEAN project directory exists but is incomplete
 * Fix LEAN type synthesis error by wrapping pattern offset constants with `Int.ofNat` in Nat domain formulas
+
+### Enhancements
+
+* Add optimizer case for `nrt`
 
 ## v25.12.1
 
