@@ -3,7 +3,7 @@
 #include <map>
 #include <string>
 
-#include "form/expression.hpp"
+#include "form/formula.hpp"
 
 /**
  * Validates a single recursive formula definition.
@@ -31,3 +31,16 @@ bool extractRecursiveDefinition(
     const std::vector<std::pair<Expression, Expression>>& entries,
     const std::string& func_name, Expression& recursive_rhs,
     std::map<int64_t, Expression>& initial_terms);
+
+// Returns true if the function is self-recursive.
+bool isRecursive(const Formula& formula, const std::string& func_name,
+                 Expression::Type type = Expression::Type::FUNCTION);
+
+// Returns true if there is a mutual recursion cycle (A <-> B) where neither
+// side is self-recursive.
+bool hasMutualRecursion(const Formula& formula,
+                        Expression::Type type = Expression::Type::FUNCTION);
+
+// Smallest constant index for which func_name has a base-case definition; INF
+// if none.
+Number getMinimumBaseCase(const Formula& formula, const std::string& func_name);

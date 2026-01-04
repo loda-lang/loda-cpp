@@ -1,6 +1,9 @@
 #include "form/recursion.hpp"
 
 #include <algorithm>
+#include <set>
+
+#include "form/formula_util.hpp"
 
 // Recursively traverses the expression tree to find recursion depth
 static void findDepthRecursive(const Expression& e,
@@ -75,6 +78,85 @@ static bool checkRecursiveCalls(const Expression& expr,
     }
   }
   return true;
+}
+
+bool isRecursive(const Formula& formula, const std::string& func_name,
+                 Expression::Type type) {
+  auto deps = FormulaUtil::getDependencies(formula, type, false, false);
+  for (const auto& dep : deps) {
+    if (dep.first == func_name && dep.second == func_name) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// Helper function to check if a function depends on another
+static bool dependsOn(const std::multimap<std::string, std::string>& deps,
+                      const std::string& from, const std::string& to) {
+  auto range = deps.equal_range(from);
+  for (auto it = range.first; it != range.second; ++it) {
+    if (it->second == to) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool hasMutualRecursion(const Formula& formula, Expression::Type type) {
+  // Get transitive dependencies between functions
+  auto deps = FormulaUtil::getDependencies(formula, type, true, false);
+
+  // Build a set of all function names
+  std::set<std::string> funcNames;
+  for (const auto& e : formula.entries) {
+    if (e.first.type == type && !e.first.name.empty()) {
+      funcNames.insert(e.first.name);
+    }
+  }
+
+  // Check for mutual recursion: A depends on B and B depends on A (where A !=
+  // B), and neither A nor B is self-recursive.
+  // If at least one function in the cycle is self-recursive, the LEAN code
+  // generator will use Nat domain with pattern offsets, which can prove
+  // termination.
+  for (auto itA = funcNames.begin(); itA != funcNames.end(); ++itA) {
+    for (auto itB = std::next(itA); itB != funcNames.end(); ++itB) {
+      const auto& funcA = *itA;
+      const auto& funcB = *itB;
+
+      // Check for mutual dependency (A->B and B->A)
+      if (dependsOn(deps, funcA, funcB) && dependsOn(deps, funcB, funcA)) {
+        // Check if either A or B is self-recursive
+        // Use non-transitive check for self-recursion
+        bool aIsSelfRecursive = isRecursive(formula, funcA, type);
+        bool bIsSelfRecursive = isRecursive(formula, funcB, type);
+
+        // If neither is self-recursive, LEAN can't prove termination
+        // because the domain will be Int instead of Nat
+        if (!aIsSelfRecursive && !bIsSelfRecursive) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
+Number getMinimumBaseCase(const Formula& formula,
+                          const std::string& func_name) {
+  Number minBaseCase = Number::INF;
+  for (const auto& entry : formula.entries) {
+    const auto& left = entry.first;
+    if (left.type == Expression::Type::FUNCTION && left.name == func_name &&
+        left.children.size() == 1 &&
+        left.children[0].type == Expression::Type::CONSTANT) {
+      if (minBaseCase == Number::INF || left.children[0].value < minBaseCase) {
+        minBaseCase = left.children[0].value;
+      }
+    }
+  }
+  return minBaseCase;
 }
 
 // Verify that initial_terms contain a contiguous block of size max_depth

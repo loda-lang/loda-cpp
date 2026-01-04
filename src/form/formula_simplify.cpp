@@ -6,6 +6,7 @@
 
 #include "form/expression_util.hpp"
 #include "form/formula_util.hpp"
+#include "form/recursion.hpp"
 
 // Helper function to replace all function calls by name with a replacement
 // expression
@@ -409,7 +410,7 @@ bool isSimpleRecursiveReference(const Formula& formula,
   }
 
   // Check if the referenced function is recursive
-  if (!FormulaUtil::isRecursive(formula, refFuncName)) {
+  if (!isRecursive(formula, refFuncName)) {
     return false;
   }
 

@@ -5,6 +5,7 @@
 
 #include "form/expression_util.hpp"
 #include "form/formula_util.hpp"
+#include "form/recursion.hpp"
 #include "seq/seq_util.hpp"
 #include "sys/file.hpp"
 #include "sys/log.hpp"
@@ -85,13 +86,18 @@ bool LeanFormula::convertToLean(Expression& expr, int64_t offset,
         expr = cast;
       }
       if (patternOffset != Number::ZERO && patternOffset != Number::INF) {
-        Expression offsetConst = ExpressionUtil::newConstant(patternOffset.asInt());
-        // When domain is Nat and parameter was wrapped with Int.ofNat, also wrap the offset constant
-        // to ensure consistent Int types throughout (e.g., (Int.ofNat n)+(Int.ofNat 3) instead of (Int.ofNat n)+3).
-        // Only wrap positive offsets in Int.ofNat; negative values cannot be wrapped with Int.ofNat
-        // (which only accepts Nat), so they remain as plain Int literals (e.g., -1).
-        if (domain == "Nat" && !insideOfLocalFunc && patternOffset.asInt() > 0) {
-          Expression castOffset(Expression::Type::FUNCTION, "Int.ofNat", {offsetConst});
+        Expression offsetConst =
+            ExpressionUtil::newConstant(patternOffset.asInt());
+        // When domain is Nat and parameter was wrapped with Int.ofNat, also
+        // wrap the offset constant to ensure consistent Int types throughout
+        // (e.g., (Int.ofNat n)+(Int.ofNat 3) instead of (Int.ofNat n)+3). Only
+        // wrap positive offsets in Int.ofNat; negative values cannot be wrapped
+        // with Int.ofNat (which only accepts Nat), so they remain as plain Int
+        // literals (e.g., -1).
+        if (domain == "Nat" && !insideOfLocalFunc &&
+            patternOffset.asInt() > 0) {
+          Expression castOffset(Expression::Type::FUNCTION, "Int.ofNat",
+                                {offsetConst});
           offsetConst = castOffset;
         }
         Expression sum(Expression::Type::SUM, "", {expr, offsetConst});
@@ -182,7 +188,7 @@ bool LeanFormula::convert(const Formula& formula, int64_t offset,
 
   // Check for mutual recursion - LEAN can't prove termination automatically
   // for mutually recursive functions without explicit termination proofs
-  if (FormulaUtil::hasMutualRecursion(formula)) {
+  if (hasMutualRecursion(formula)) {
     return false;
   }
 
@@ -194,9 +200,8 @@ bool LeanFormula::convert(const Formula& formula, int64_t offset,
     return false;
   }
   for (const auto& f : lean_formula.funcNames) {
-    if (FormulaUtil::isRecursive(formula, f)) {
-      if (offset != 0 ||
-          FormulaUtil::getMinimumBaseCase(formula, f) != Number::ZERO) {
+    if (isRecursive(formula, f)) {
+      if (offset != 0 || getMinimumBaseCase(formula, f) != Number::ZERO) {
         return false;
       }
       lean_formula.domain = "Nat";
@@ -374,7 +379,8 @@ bool LeanFormula::initializeLeanProject() {
     return true;
   }
 
-  // If directory exists but lakefile doesn't, clean up incomplete initialization
+  // If directory exists but lakefile doesn't, clean up incomplete
+  // initialization
   if (isDir(projectDir)) {
     Log::get().info("Removing incomplete LEAN project at " + projectDir);
     rmDirRecursive(projectDir);

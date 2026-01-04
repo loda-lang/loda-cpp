@@ -1,7 +1,5 @@
 #include "form/formula_util.hpp"
 
-#include <set>
-
 #include "form/expression_util.hpp"
 
 std::vector<std::string> FormulaUtil::getDefinitions(
@@ -97,87 +95,6 @@ std::multimap<std::string, std::string> FormulaUtil::getDependencies(
     }
   }
   return deps;
-}
-
-bool FormulaUtil::isRecursive(const Formula& formula,
-                              const std::string& funcName,
-                              Expression::Type type) {
-  auto deps = getDependencies(formula, type, false, false);
-  for (auto it : deps) {
-    if (it.first == funcName && it.second == funcName) {
-      return true;
-    }
-  }
-  return false;
-}
-
-// Helper function to check if a function depends on another
-static bool dependsOn(const std::multimap<std::string, std::string>& deps,
-                      const std::string& from, const std::string& to) {
-  auto range = deps.equal_range(from);
-  for (auto it = range.first; it != range.second; ++it) {
-    if (it->second == to) {
-      return true;
-    }
-  }
-  return false;
-}
-
-bool FormulaUtil::hasMutualRecursion(const Formula& formula,
-                                     Expression::Type type) {
-  // Get transitive dependencies between functions
-  auto deps = getDependencies(formula, type, true, false);
-
-  // Build a set of all function names
-  std::set<std::string> funcNames;
-  for (const auto& e : formula.entries) {
-    if (e.first.type == type && !e.first.name.empty()) {
-      funcNames.insert(e.first.name);
-    }
-  }
-
-  // Check for mutual recursion: A depends on B and B depends on A (where A !=
-  // B), and neither A nor B is self-recursive.
-  // If at least one function in the cycle is self-recursive, the LEAN code
-  // generator will use Nat domain with pattern offsets, which can prove
-  // termination.
-  for (auto itA = funcNames.begin(); itA != funcNames.end(); ++itA) {
-    for (auto itB = std::next(itA); itB != funcNames.end(); ++itB) {
-      const auto& funcA = *itA;
-      const auto& funcB = *itB;
-
-      // Check for mutual dependency (A->B and B->A)
-      if (dependsOn(deps, funcA, funcB) && dependsOn(deps, funcB, funcA)) {
-        // Check if either A or B is self-recursive
-        // Use non-transitive check for self-recursion
-        bool aIsSelfRecursive = isRecursive(formula, funcA, type);
-        bool bIsSelfRecursive = isRecursive(formula, funcB, type);
-
-        // If neither is self-recursive, LEAN can't prove termination
-        // because the domain will be Int instead of Nat
-        if (!aIsSelfRecursive && !bIsSelfRecursive) {
-          return true;
-        }
-      }
-    }
-  }
-  return false;
-}
-
-Number FormulaUtil::getMinimumBaseCase(const Formula& formula,
-                                       const std::string& funcName) {
-  Number minBaseCase = Number::INF;
-  for (const auto& entry : formula.entries) {
-    auto left = entry.first;
-    if (left.type == Expression::Type::FUNCTION && left.name == funcName &&
-        left.children.size() == 1 &&
-        left.children[0].type == Expression::Type::CONSTANT) {
-      if (minBaseCase == Number::INF || left.children[0].value < minBaseCase) {
-        minBaseCase = left.children[0].value;
-      }
-    }
-  }
-  return minBaseCase;
 }
 
 void FormulaUtil::removeFunctionEntries(Formula& formula,
