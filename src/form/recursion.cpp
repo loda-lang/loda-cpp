@@ -1,7 +1,6 @@
 #include "form/recursion.hpp"
 
 #include <algorithm>
-#include <functional>
 
 // Recursively traverses the expression tree to find recursion depth
 static void findDepthRecursive(const Expression& e,
@@ -29,6 +28,91 @@ static void findDepthRecursive(const Expression& e,
   }
 }
 
+// Validate recursive call structure: forbid self-reference a(n) and restrict
+// arguments to n-k with k > 0.
+static bool checkRecursiveCalls(const Expression& expr,
+                                const std::string& func_name,
+                                std::string& error_msg) {
+  if (expr.type == Expression::Type::FUNCTION && expr.name == func_name) {
+    if (expr.children.size() == 1) {
+      const auto& arg = expr.children[0];
+
+      // Reject direct self-reference func_name(n)
+      if (arg.type == Expression::Type::PARAMETER && arg.name == "n") {
+        error_msg = "RHS contains " + func_name + "(n) self-reference";
+        return false;
+      }
+
+      // Allow only n + constant with negative constant (i.e., n-k)
+      if (arg.type == Expression::Type::SUM && arg.children.size() == 2) {
+        const auto& left = arg.children[0];
+        const auto& right = arg.children[1];
+
+        if (left.type == Expression::Type::PARAMETER && left.name == "n" &&
+            right.type == Expression::Type::CONSTANT) {
+          int64_t offset = right.value.asInt();
+          if (offset >= 0) {
+            error_msg = "RHS contains " + func_name + "(" + arg.toString() +
+                        ") with non-decreasing offset";
+            return false;
+          }
+        } else {
+          error_msg = "RHS contains " + func_name + "(" + arg.toString() +
+                      ") with invalid argument";
+          return false;
+        }
+      } else if (arg.type != Expression::Type::SUM) {
+        error_msg = "RHS contains " + func_name + "(" + arg.toString() +
+                    ") with non-standard form";
+        return false;
+      }
+    }
+  }
+
+  for (const auto& child : expr.children) {
+    if (!checkRecursiveCalls(child, func_name, error_msg)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// Verify that initial_terms contain a contiguous block of size max_depth
+// starting at the smallest provided index. Returns false and sets error_msg on
+// failure.
+static bool checkInitialTerms(
+    const std::string& func_name,
+    const std::map<int64_t, Expression>& initial_terms, int64_t max_depth,
+    std::string& error_msg) {
+  if (max_depth <= 0) {
+    return true;
+  }
+  if (initial_terms.empty()) {
+    error_msg = func_name + "(n) has no initial terms (requires " +
+                std::to_string(max_depth) + ")";
+    return false;
+  }
+
+  const auto min_index =
+      std::min_element(
+          initial_terms.begin(), initial_terms.end(),
+          [](const auto& a, const auto& b) { return a.first < b.first; })
+          ->first;
+  const int64_t start_index = min_index;
+  for (int64_t i = 0; i < max_depth; i++) {
+    const auto expected_index = start_index + i;
+    if (initial_terms.find(expected_index) == initial_terms.end()) {
+      error_msg = func_name + "(n) is missing initial term for index " +
+                  std::to_string(expected_index) + " (required " +
+                  std::to_string(max_depth) + " initial terms, " + "but only " +
+                  std::to_string(initial_terms.size()) + " provided)";
+      return false;
+    }
+  }
+
+  return true;
+}
+
 bool validateRecursiveFormula(
     const std::string& func_name, const Expression& recursive_rhs,
     const std::map<int64_t, Expression>& initial_terms,
@@ -42,65 +126,7 @@ bool validateRecursiveFormula(
   // 1. Check if RHS contains func_name(n) (invalid self-reference) or invalid
   // argument forms
   if (has_recursive_calls) {
-    // Check all function calls in RHS
-    std::function<bool(const Expression&)> check_recursive_calls;
-    check_recursive_calls = [&](const Expression& expr) -> bool {
-      if (expr.type == Expression::Type::FUNCTION && expr.name == func_name) {
-        if (expr.children.size() == 1) {
-          const auto& arg = expr.children[0];
-
-          // Check if argument is exactly 'n' (invalid self-reference)
-          if (arg.type == Expression::Type::PARAMETER && arg.name == "n") {
-            is_valid = false;
-            error_msg = "RHS contains " + func_name + "(n) self-reference";
-            return false;
-          }
-
-          // Check if argument is of the form n+k where k is a constant
-          // Valid forms: n-1, n-2, etc. (represented as n+(-1), n+(-2))
-          // Invalid forms: n+1, 2*n, etc.
-          if (arg.type == Expression::Type::SUM && arg.children.size() == 2) {
-            const auto& left = arg.children[0];
-            const auto& right = arg.children[1];
-
-            // Check for n + constant pattern
-            if (left.type == Expression::Type::PARAMETER && left.name == "n" &&
-                right.type == Expression::Type::CONSTANT) {
-              int64_t offset = right.value.asInt();
-              // Valid if offset is negative (n + negative = n - positive)
-              if (offset >= 0) {
-                is_valid = false;
-                error_msg = "RHS contains " + func_name + "(" + arg.toString() +
-                            ") with non-decreasing offset";
-                return false;
-              }
-            } else {
-              // Some other expression form - invalid
-              is_valid = false;
-              error_msg = "RHS contains " + func_name + "(" + arg.toString() +
-                          ") with invalid argument";
-              return false;
-            }
-          } else if (arg.type != Expression::Type::SUM) {
-            // Not a sum expression - invalid (only n+constant form is allowed)
-            is_valid = false;
-            error_msg = "RHS contains " + func_name + "(" + arg.toString() +
-                        ") with non-standard form";
-            return false;
-          }
-        }
-      }
-
-      // Recursively check children
-      for (const auto& child : expr.children) {
-        if (!check_recursive_calls(child)) {
-          return false;
-        }
-      }
-      return true;
-    };
-
-    check_recursive_calls(recursive_rhs);
+    is_valid = checkRecursiveCalls(recursive_rhs, func_name, error_msg);
   }
 
   // 2. Check if number of initial terms is sufficient
@@ -109,35 +135,8 @@ bool validateRecursiveFormula(
     int64_t max_depth = 0;
     findDepthRecursive(recursive_rhs, func_name, max_depth);
 
-    // Require a contiguous block of initial terms sized max_depth, starting at
-    // the minimum provided initial index. This treats helper functions and
-    // main sequence formulas uniformly.
-    if (max_depth > 0) {
-      if (initial_terms.empty()) {
-        is_valid = false;
-        error_msg = func_name + "(n) has no initial terms (requires " +
-                    std::to_string(max_depth) + ")";
-      } else {
-        const auto min_index =
-            std::min_element(
-                initial_terms.begin(), initial_terms.end(),
-                [](const auto& a, const auto& b) { return a.first < b.first; })
-                ->first;
-        const int64_t start_index = min_index;
-        for (int64_t i = 0; i < max_depth; i++) {
-          const auto expected_index = start_index + i;
-          if (initial_terms.find(expected_index) == initial_terms.end()) {
-            is_valid = false;
-            error_msg = func_name + "(n) is missing initial term for index " +
-                        std::to_string(expected_index) + " (required " +
-                        std::to_string(max_depth) + " initial terms, " +
-                        "but only " + std::to_string(initial_terms.size()) +
-                        " provided)";
-            break;
-          }
-        }
-      }
-    }
+    is_valid =
+        checkInitialTerms(func_name, initial_terms, max_depth, error_msg);
   }
 
   return is_valid;
