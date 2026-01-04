@@ -887,7 +887,7 @@ void Commands::testRange(const std::string& id) {
 void Commands::testRecursion() {
   initLog(false);
   Log::get().info("Testing recursive formulas");
-  
+
   Parser parser;
   FormulaGenerator generator;
   size_t num_checked = 0;
@@ -896,7 +896,7 @@ void Commands::testRecursion() {
   // Iterate over all programs
   for (size_t id = 0; id < 400000; id++) {
     UID uid('A', id);
-    
+
     // Check if file exists before trying to open it
     std::string path = ProgramUtil::getProgramPath(uid);
     std::ifstream test_exists(path);
@@ -921,12 +921,14 @@ void Commands::testRecursion() {
         continue;  // Skip programs for which formula cannot be generated
       }
     } catch (std::exception& e) {
-      // Skip programs that cause formula generation errors (e.g., missing dependencies)
+      // Skip programs that cause formula generation errors (e.g., missing
+      // dependencies)
       continue;
     }
 
     // Group entries by function name
-    std::map<std::string, std::vector<std::pair<Expression, Expression>>> functions;
+    std::map<std::string, std::vector<std::pair<Expression, Expression>>>
+        functions;
     for (const auto& entry : formula.entries) {
       const auto& lhs = entry.first;
 
@@ -942,28 +944,10 @@ void Commands::testRecursion() {
       const auto& entries = func_entry.second;
 
       // Find recursive definition and initial terms for this function
-      bool has_recursive_definition = false;
-      Expression recursive_lhs;
       Expression recursive_rhs;
       std::map<int64_t, Expression> initial_terms;
-
-      for (const auto& entry : entries) {
-        const auto& lhs = entry.first;
-        const auto& rhs = entry.second;
-
-        if (lhs.children.size() == 1) {
-          const auto& arg = lhs.children[0];
-          if (arg.type == Expression::Type::PARAMETER && arg.name == "n") {
-            // This is the recursive definition
-            has_recursive_definition = true;
-            recursive_lhs = lhs;
-            recursive_rhs = rhs;
-          } else if (arg.type == Expression::Type::CONSTANT) {
-            // This is an initial term
-            initial_terms[arg.value.asInt()] = lhs;
-          }
-        }
-      }
+      bool has_recursive_definition = extractRecursiveDefinition(
+          entries, func_name, recursive_rhs, initial_terms);
 
       // Skip non-recursive functions
       if (!has_recursive_definition) {
@@ -974,25 +958,27 @@ void Commands::testRecursion() {
 
       // Validate this recursive function using the helper method
       std::string error_msg;
-      bool is_valid = validateRecursiveFormula(func_name, recursive_rhs, initial_terms, error_msg);
+      bool is_valid = validateRecursiveFormula(func_name, recursive_rhs,
+                                               initial_terms, error_msg);
 
       if (!is_valid) {
         num_invalid++;
-        Log::get().warn(uid.string() + ": " + formula.toString() + " => INVALID: " + error_msg);
+        Log::get().error(uid.string() + ": " + formula.toString() +
+                             " => INVALID: " + error_msg,
+                         true);
       }
     }
 
     // Report progress
     if (has_any_recursive) {
       num_checked++;
-      if ((num_checked % 100) == 0) {
-        Log::get().info("Checking " + uid.string());
-      }
+      Log::get().info("Checking " + uid.string());
     }
   }
 
-  Log::get().info("Checked " + std::to_string(num_checked) + 
-                  " recursive formulas, found " + std::to_string(num_invalid) + " invalid");
+  Log::get().info("Checked " + std::to_string(num_checked) +
+                  " recursive formulas, found " + std::to_string(num_invalid) +
+                  " invalid");
 }
 
 void Commands::generate() {

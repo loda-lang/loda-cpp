@@ -126,3 +126,33 @@ bool validateRecursiveFormula(
 
   return is_valid;
 }
+
+bool extractRecursiveDefinition(
+    const std::vector<std::pair<Expression, Expression>>& entries,
+    const std::string& func_name, Expression& recursive_rhs,
+    std::map<int64_t, Expression>& initial_terms) {
+  bool has_recursive_definition = false;
+  initial_terms.clear();
+
+  for (const auto& entry : entries) {
+    const auto& lhs = entry.first;
+    const auto& rhs = entry.second;
+
+    if (lhs.type != Expression::Type::FUNCTION || lhs.name != func_name) {
+      continue;
+    }
+    if (lhs.children.size() != 1) {
+      continue;
+    }
+
+    const auto& arg = lhs.children[0];
+    if (arg.type == Expression::Type::PARAMETER && arg.name == "n") {
+      has_recursive_definition = true;
+      recursive_rhs = rhs;
+    } else if (arg.type == Expression::Type::CONSTANT) {
+      initial_terms[arg.value.asInt()] = lhs;
+    }
+  }
+
+  return has_recursive_definition;
+}
