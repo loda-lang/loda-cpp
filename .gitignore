@@ -4,6 +4,7 @@
 *.ilk
 *.log
 *.o
+*.o.tmp
 *.obj
 *.pdb
 .DS_Store
