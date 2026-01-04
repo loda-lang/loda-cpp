@@ -3,6 +3,11 @@
 ### Bugfixes
 
 * Fix `test-lean` failure when LEAN project directory exists but is incomplete
+* Fix calculation of number of needed initial terms (A131083)
+
+### Enhancements
+
+* Add optimizer case for `nrt`
 
 ## v25.12.1
 
