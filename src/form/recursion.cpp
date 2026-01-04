@@ -4,6 +4,7 @@
 #include <set>
 
 #include "form/formula_util.hpp"
+#include "form/function.hpp"
 
 // Recursively traverses the expression tree to find recursion depth
 static void findDepthRecursive(const Expression& e,
@@ -143,22 +144,6 @@ bool hasMutualRecursion(const Formula& formula, Expression::Type type) {
   return false;
 }
 
-Number getMinimumBaseCase(const Formula& formula,
-                          const std::string& func_name) {
-  Number minBaseCase = Number::INF;
-  for (const auto& entry : formula.entries) {
-    const auto& left = entry.first;
-    if (left.type == Expression::Type::FUNCTION && left.name == func_name &&
-        left.children.size() == 1 &&
-        left.children[0].type == Expression::Type::CONSTANT) {
-      if (minBaseCase == Number::INF || left.children[0].value < minBaseCase) {
-        minBaseCase = left.children[0].value;
-      }
-    }
-  }
-  return minBaseCase;
-}
-
 // Verify that initial_terms contain a contiguous block of size max_depth
 // starting at the smallest provided index. Returns false and sets error_msg on
 // failure.
@@ -195,10 +180,12 @@ static bool checkInitialTerms(
   return true;
 }
 
-bool validateRecursiveFormula(
-    const std::string& func_name, const Expression& recursive_rhs,
-    const std::map<int64_t, Expression>& initial_terms,
-    std::string& error_msg) {
+bool validateRecursiveFunction(const Function& func, std::string& error_msg) {
+  // Extract function components
+  const auto& func_name = func.name;
+  const auto& recursive_rhs = func.general_case;
+  const auto& initial_terms = func.base_cases;
+
   bool is_valid = true;
 
   // Check if RHS contains recursive calls to this function
@@ -222,34 +209,4 @@ bool validateRecursiveFormula(
   }
 
   return is_valid;
-}
-
-bool extractRecursiveDefinition(
-    const std::vector<std::pair<Expression, Expression>>& entries,
-    const std::string& func_name, Expression& recursive_rhs,
-    std::map<int64_t, Expression>& initial_terms) {
-  bool has_recursive_definition = false;
-  initial_terms.clear();
-
-  for (const auto& entry : entries) {
-    const auto& lhs = entry.first;
-    const auto& rhs = entry.second;
-
-    if (lhs.type != Expression::Type::FUNCTION || lhs.name != func_name) {
-      continue;
-    }
-    if (lhs.children.size() != 1) {
-      continue;
-    }
-
-    const auto& arg = lhs.children[0];
-    if (arg.type == Expression::Type::PARAMETER && arg.name == "n") {
-      has_recursive_definition = true;
-      recursive_rhs = rhs;
-    } else if (arg.type == Expression::Type::CONSTANT) {
-      initial_terms[arg.value.asInt()] = lhs;
-    }
-  }
-
-  return has_recursive_definition;
 }
