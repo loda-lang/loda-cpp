@@ -201,7 +201,9 @@ bool LeanFormula::convert(const Formula& formula, int64_t offset,
   }
   for (const auto& f : lean_formula.funcNames) {
     if (isRecursive(formula, f)) {
-      if (offset != 0 || getMinimumBaseCase(formula, f) != Number::ZERO) {
+      // Extract only the function with the matching name
+      auto funcs = Function::fromFormula(formula, f);
+      if (funcs.empty() || offset != 0 || funcs[0].getMinimumBaseCase() != 0) {
         return false;
       }
       lean_formula.domain = "Nat";

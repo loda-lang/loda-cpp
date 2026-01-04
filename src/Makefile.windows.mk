@@ -27,7 +27,7 @@ CXXFLAGS = $(CXXFLAGS) /DLODA_PLATFORM=$(LODA_PLATFORM)
 SRCS = base/uid.cpp \
   cmd/benchmark.cpp cmd/boinc.cpp cmd/commands.cpp cmd/main.cpp cmd/test.cpp \
   eval/evaluator.cpp eval/evaluator_inc.cpp eval/evaluator_par.cpp eval/evaluator_vir.cpp eval/fold.cpp eval/interpreter.cpp eval/memory.cpp eval/minimizer.cpp eval/optimizer.cpp eval/range.cpp eval/range_generator.cpp eval/semantics.cpp \
-  form/expression_util.cpp form/expression.cpp form/formula_gen.cpp form/formula_parser.cpp form/formula_simplify.cpp form/formula_util.cpp form/formula.cpp form/lean.cpp form/pari.cpp form/recursion.cpp form/variant.cpp \
+  form/expression_util.cpp form/expression.cpp form/formula_gen.cpp form/formula_parser.cpp form/formula_simplify.cpp form/formula_util.cpp form/formula.cpp form/function.cpp form/lean.cpp form/pari.cpp form/recursion.cpp form/variant.cpp \
   gen/blocks.cpp gen/generator.cpp gen/generator_v1.cpp gen/generator_v2.cpp gen/generator_v3.cpp gen/generator_v4.cpp gen/generator_v5.cpp gen/generator_v6.cpp gen/generator_v7.cpp gen/generator_v8.cpp gen/iterator.cpp \
   lang/analyzer.cpp lang/comments.cpp lang/constants.cpp lang/parser.cpp lang/program.cpp lang/program_cache.cpp lang/program_util.cpp lang/subprogram.cpp lang/virtual_seq.cpp \
   math/big_number.cpp math/number.cpp math/sequence.cpp \

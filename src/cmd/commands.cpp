@@ -15,6 +15,7 @@
 #include "eval/range_generator.hpp"
 #include "form/formula_gen.hpp"
 #include "form/formula_parser.hpp"
+#include "form/function.hpp"
 #include "form/lean.hpp"
 #include "form/pari.hpp"
 #include "form/recursion.hpp"
@@ -926,38 +927,21 @@ void Commands::testRecursion(const std::string& test_id) {
       continue;
     }
 
-    // Group entries by function name
-    std::map<std::string, std::vector<std::pair<Expression, Expression>>>
-        functions;
-    for (const auto& entry : formula.entries) {
-      const auto& lhs = entry.first;
-
-      if (lhs.type == Expression::Type::FUNCTION && !lhs.name.empty()) {
-        functions[lhs.name].push_back(entry);
-      }
-    }
+    // Extract functions from the formula
+    auto functions = Function::fromFormula(formula);
 
     // Check each function separately
     bool has_any_recursive = false;
     bool logged_program = false;
-    for (const auto& func_entry : functions) {
-      const std::string& func_name = func_entry.first;
-      const auto& entries = func_entry.second;
-
-      // Find recursive definition and initial terms for this function
-      Expression recursive_rhs;
-      std::map<int64_t, Expression> initial_terms;
-      bool has_recursive_definition = extractRecursiveDefinition(
-          entries, func_name, recursive_rhs, initial_terms);
-
-      // Skip non-recursive functions
-      if (!has_recursive_definition) {
+    for (const auto& func : functions) {
+      // Skip functions without a general case
+      if (!func.has_general_case) {
         continue;
       }
 
-      // Only proceed if the RHS actually calls the same function
+      // Only proceed if the general case calls the same function
       const bool is_recursive =
-          recursive_rhs.contains(Expression::Type::FUNCTION, func_name);
+          func.general_case.contains(Expression::Type::FUNCTION, func.name);
       if (!is_recursive) {
         continue;
       }
@@ -971,8 +955,7 @@ void Commands::testRecursion(const std::string& test_id) {
 
       // Validate this recursive function using the helper method
       std::string error_msg;
-      bool is_valid = validateRecursiveFormula(func_name, recursive_rhs,
-                                               initial_terms, error_msg);
+      bool is_valid = validateRecursiveFunction(func, error_msg);
 
       if (!is_valid) {
         num_invalid++;
