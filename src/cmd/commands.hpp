@@ -67,7 +67,7 @@ class Commands {
 
   void testRange(const std::string& id);
 
-  void testRecursion();
+  void testRecursion(const std::string& id);
 
   void generate();
 

@@ -113,11 +113,11 @@ bool validateRecursiveFormula(
       for (int64_t i = 0; i < max_depth; i++) {
         if (initial_terms.find(i) == initial_terms.end()) {
           is_valid = false;
-          error_msg = "Function " + func_name +
-                      " missing initial term for index " + std::to_string(i) +
-                      " (required " + std::to_string(max_depth) +
-                      " initial terms, " + "but only " +
-                      std::to_string(initial_terms.size()) + " provided)";
+          error_msg = func_name + "(n) is missing initial term for index " +
+                      std::to_string(i) + " (required " +
+                      std::to_string(max_depth) + " initial terms, " +
+                      "but only " + std::to_string(initial_terms.size()) +
+                      " provided)";
           break;
         }
       }

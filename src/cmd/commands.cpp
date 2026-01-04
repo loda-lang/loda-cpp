@@ -884,7 +884,7 @@ void Commands::testRange(const std::string& id) {
   }
 }
 
-void Commands::testRecursion() {
+void Commands::testRecursion(const std::string& test_id) {
   initLog(false);
   Log::get().info("Testing recursive formulas");
 
@@ -893,23 +893,23 @@ void Commands::testRecursion() {
   size_t num_checked = 0;
   size_t num_invalid = 0;
 
-  // Iterate over all programs
-  for (size_t id = 0; id < 400000; id++) {
-    UID uid('A', id);
+  MineManager manager(settings);
+  manager.load();
+  auto& stats = manager.getStats();
 
-    // Check if file exists before trying to open it
-    std::string path = ProgramUtil::getProgramPath(uid);
-    std::ifstream test_exists(path);
-    if (!test_exists.good()) {
+  UID target_id;
+  if (!test_id.empty()) {
+    target_id = UID(test_id);
+  }
+
+  for (auto uid : stats.all_program_ids) {
+    if (target_id.number() > 0 && uid != target_id) {
       continue;
     }
-    test_exists.close();
 
-    // Parse program
     Program program;
     try {
-      std::ifstream in(path);
-      program = parser.parse(in);
+      program = parser.parse(ProgramUtil::getProgramPath(uid));
     } catch (std::exception& e) {
       continue;  // Skip programs that cannot be parsed
     }
@@ -917,7 +917,7 @@ void Commands::testRecursion() {
     // Generate formula
     Formula formula;
     try {
-      if (!generator.generate(program, id, formula, false)) {
+      if (!generator.generate(program, uid.number(), formula, false)) {
         continue;  // Skip programs for which formula cannot be generated
       }
     } catch (std::exception& e) {
@@ -939,6 +939,7 @@ void Commands::testRecursion() {
 
     // Check each function separately
     bool has_any_recursive = false;
+    bool logged_program = false;
     for (const auto& func_entry : functions) {
       const std::string& func_name = func_entry.first;
       const auto& entries = func_entry.second;
@@ -954,7 +955,19 @@ void Commands::testRecursion() {
         continue;
       }
 
+      // Only proceed if the RHS actually calls the same function
+      const bool is_recursive =
+          recursive_rhs.contains(Expression::Type::FUNCTION, func_name);
+      if (!is_recursive) {
+        continue;
+      }
+
       has_any_recursive = true;
+
+      if (!logged_program) {
+        Log::get().info("Checking " + uid.string() + ": " + formula.toString());
+        logged_program = true;
+      }
 
       // Validate this recursive function using the helper method
       std::string error_msg;
@@ -972,7 +985,6 @@ void Commands::testRecursion() {
     // Report progress
     if (has_any_recursive) {
       num_checked++;
-      Log::get().info("Checking " + uid.string());
     }
   }
 
