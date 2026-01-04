@@ -971,8 +971,9 @@ void Commands::testRecursion(const std::string& test_id) {
 
       // Validate this recursive function using the helper method
       std::string error_msg;
-      bool is_valid = validateRecursiveFormula(func_name, recursive_rhs,
-                                               initial_terms, error_msg);
+      const int64_t offset = ProgramUtil::getOffset(program);
+      bool is_valid = validateRecursiveFormula(
+          func_name, recursive_rhs, initial_terms, offset, error_msg);
 
       if (!is_valid) {
         num_invalid++;

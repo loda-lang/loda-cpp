@@ -1,5 +1,6 @@
 #include "form/recursion.hpp"
 
+#include <algorithm>
 #include <functional>
 
 // Recursively traverses the expression tree to find recursion depth
@@ -30,7 +31,7 @@ static void findDepthRecursive(const Expression& e,
 
 bool validateRecursiveFormula(
     const std::string& func_name, const Expression& recursive_rhs,
-    const std::map<int64_t, Expression>& initial_terms,
+    const std::map<int64_t, Expression>& initial_terms, int64_t offset,
     std::string& error_msg) {
   bool is_valid = true;
 
@@ -108,17 +109,26 @@ bool validateRecursiveFormula(
     int64_t max_depth = 0;
     findDepthRecursive(recursive_rhs, func_name, max_depth);
 
-    // Check if we have initial terms for indices 0 through max_depth-1
+    // Check if we have a contiguous block of initial terms with size
+    // max_depth, starting at the provided offset (supports non-zero offsets
+    // like a(1) = 1).
     if (max_depth > 0) {
-      for (int64_t i = 0; i < max_depth; i++) {
-        if (initial_terms.find(i) == initial_terms.end()) {
-          is_valid = false;
-          error_msg = func_name + "(n) is missing initial term for index " +
-                      std::to_string(i) + " (required " +
-                      std::to_string(max_depth) + " initial terms, " +
-                      "but only " + std::to_string(initial_terms.size()) +
-                      " provided)";
-          break;
+      if (initial_terms.empty()) {
+        is_valid = false;
+        error_msg = func_name + "(n) has no initial terms (requires " +
+                    std::to_string(max_depth) + ")";
+      } else {
+        for (int64_t i = 0; i < max_depth; i++) {
+          const auto expected_index = offset + i;
+          if (initial_terms.find(expected_index) == initial_terms.end()) {
+            is_valid = false;
+            error_msg = func_name + "(n) is missing initial term for index " +
+                        std::to_string(expected_index) + " (required " +
+                        std::to_string(max_depth) + " initial terms, " +
+                        "but only " + std::to_string(initial_terms.size()) +
+                        " provided)";
+            break;
+          }
         }
       }
     }
