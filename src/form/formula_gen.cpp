@@ -207,7 +207,7 @@ bool FormulaGenerator::facToExpression(const Expression& a, const Expression& b,
   auto& denomArg = denom.children.front();
   ExpressionUtil::normalize(numArg);
   ExpressionUtil::normalize(denomArg);
-  
+
   if (ExpressionUtil::canBeNegative(numArg, offset) ||
       ExpressionUtil::canBeNegative(denomArg, offset)) {
     return false;
@@ -486,6 +486,17 @@ void FormulaGenerator::initFormula(int64_t numCells, bool useIncEval) {
   }
 }
 
+void debugNumInitialTerms(const std::map<std::string, int64_t>& numTerms) {
+  std::string termsStr;
+  for (const auto& [name, terms] : numTerms) {
+    if (!termsStr.empty()) {
+      termsStr += ", ";
+    }
+    termsStr += name + ": " + std::to_string(terms);
+  }
+  Log::get().debug("Number of initial terms needed: " + termsStr);
+}
+
 bool FormulaGenerator::generateSingle(const Program& p) {
   if (ProgramUtil::hasIndirectOperand(p)) {
     return false;
@@ -556,7 +567,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   if (!update(main, mainRanges)) {
     return false;
   }
-  Log::get().debug("Updated formula:  " + formula.toString());
+  Log::get().debug("Updated formula: " + formula.toString());
 
   // additional work for IE programs
   if (useIncEval) {
@@ -566,9 +577,11 @@ bool FormulaGenerator::generateSingle(const Program& p) {
       auto name = getCellName(cell);
       numTerms[name] = getNumInitialTermsNeeded(cell, name, formula, incEval);
     }
+    debugNumInitialTerms(numTerms);
 
     // find and choose alternative function definitions
     simplifyFormulaUsingVariants(formula, numTerms);
+    debugNumInitialTerms(numTerms);
 
     // evaluate program and add initial terms to formula
     const int64_t offset = ProgramUtil::getOffset(p);
@@ -659,8 +672,6 @@ bool FormulaGenerator::addInitialTerms(
   // calculate maximum number of initial terms needed
   int64_t maxNumTerms = 0;
   for (auto it : numTerms) {
-    Log::get().debug("Function " + it.first + "(n) requires " +
-                     std::to_string(it.second) + " intial terms");
     maxNumTerms = std::max(maxNumTerms, it.second);
   }
   if (maxNumTerms > maxInitialTerms) {
