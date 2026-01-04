@@ -1815,7 +1815,8 @@ void Test::testMatcherPair(Matcher& matcher, size_t id1, size_t id2) {
 
 void Test::gzip() {
   Log::get().info("Testing gzip decompression");
-  std::string test_content = "Hello, this is a test for zlib gzip decompression!";
+  std::string test_content =
+      "Hello, this is a test for zlib gzip decompression!";
   std::string tmp_dir = getTmpDir();
 
   // Test 1: Decompress and remove original file

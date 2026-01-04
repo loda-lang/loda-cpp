@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <fstream>
+#include <functional>
 #include <iostream>
 
 #include "cmd/benchmark.hpp"
@@ -16,9 +17,11 @@
 #include "form/formula_parser.hpp"
 #include "form/lean.hpp"
 #include "form/pari.hpp"
+#include "form/recursion.hpp"
 #include "gen/iterator.hpp"
 #include "lang/analyzer.hpp"
 #include "lang/comments.hpp"
+#include "lang/parser.hpp"
 #include "lang/program_util.hpp"
 #include "lang/subprogram.hpp"
 #include "lang/virtual_seq.hpp"
@@ -879,6 +882,115 @@ void Commands::testRange(const std::string& id) {
                     std::to_string(numChecked) + " programs, ingnored " +
                     std::to_string(numInvalid) + " invalid programs");
   }
+}
+
+void Commands::testRecursion(const std::string& test_id) {
+  initLog(false);
+  Log::get().info("Testing recursive formulas");
+
+  Parser parser;
+  FormulaGenerator generator;
+  size_t num_checked = 0;
+  size_t num_invalid = 0;
+
+  MineManager manager(settings);
+  manager.load();
+  auto& stats = manager.getStats();
+
+  UID target_id;
+  if (!test_id.empty()) {
+    target_id = UID(test_id);
+  }
+
+  for (auto uid : stats.all_program_ids) {
+    if (target_id.number() > 0 && uid != target_id) {
+      continue;
+    }
+
+    Program program;
+    try {
+      program = parser.parse(ProgramUtil::getProgramPath(uid));
+    } catch (std::exception& e) {
+      continue;  // Skip programs that cannot be parsed
+    }
+
+    // Generate formula
+    Formula formula;
+    try {
+      if (!generator.generate(program, uid.number(), formula, false)) {
+        continue;  // Skip programs for which formula cannot be generated
+      }
+    } catch (std::exception& e) {
+      // Skip programs that cause formula generation errors (e.g., missing
+      // dependencies)
+      continue;
+    }
+
+    // Group entries by function name
+    std::map<std::string, std::vector<std::pair<Expression, Expression>>>
+        functions;
+    for (const auto& entry : formula.entries) {
+      const auto& lhs = entry.first;
+
+      if (lhs.type == Expression::Type::FUNCTION && !lhs.name.empty()) {
+        functions[lhs.name].push_back(entry);
+      }
+    }
+
+    // Check each function separately
+    bool has_any_recursive = false;
+    bool logged_program = false;
+    for (const auto& func_entry : functions) {
+      const std::string& func_name = func_entry.first;
+      const auto& entries = func_entry.second;
+
+      // Find recursive definition and initial terms for this function
+      Expression recursive_rhs;
+      std::map<int64_t, Expression> initial_terms;
+      bool has_recursive_definition = extractRecursiveDefinition(
+          entries, func_name, recursive_rhs, initial_terms);
+
+      // Skip non-recursive functions
+      if (!has_recursive_definition) {
+        continue;
+      }
+
+      // Only proceed if the RHS actually calls the same function
+      const bool is_recursive =
+          recursive_rhs.contains(Expression::Type::FUNCTION, func_name);
+      if (!is_recursive) {
+        continue;
+      }
+
+      has_any_recursive = true;
+
+      if (!logged_program) {
+        Log::get().info("Checking " + uid.string() + ": " + formula.toString());
+        logged_program = true;
+      }
+
+      // Validate this recursive function using the helper method
+      std::string error_msg;
+      bool is_valid = validateRecursiveFormula(func_name, recursive_rhs,
+                                               initial_terms, error_msg);
+
+      if (!is_valid) {
+        num_invalid++;
+        Log::get().error(uid.string() + ": " + formula.toString() +
+                             " => INVALID: " + error_msg,
+                         true);
+      }
+    }
+
+    // Report progress
+    if (has_any_recursive) {
+      num_checked++;
+    }
+  }
+
+  Log::get().info("Checked " + std::to_string(num_checked) +
+                  " recursive formulas, found " + std::to_string(num_invalid) +
+                  " invalid");
 }
 
 void Commands::generate() {
