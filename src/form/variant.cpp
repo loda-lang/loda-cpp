@@ -1,5 +1,7 @@
 #include "form/variant.hpp"
 
+#include <functional>
+
 #include "form/expression_util.hpp"
 #include "form/formula_util.hpp"
 #include "sys/log.hpp"
