@@ -9,6 +9,7 @@
 ### Enhancements
 
 * Add optimizer case for `nrt`
+* Add internal command `test-recursion`
 
 ## v25.12.1
 
