@@ -12,20 +12,18 @@
  * 1. No self-reference: func_name(n) must not appear in RHS
  * 2. Valid recursion form: only func_name(n-k) for positive constant k allowed
  * 3. Sufficient initial terms: if max recursion depth is d, requires initial
- *    terms for indices offset..offset+d-1
+ *    terms for indices starting at the minimum provided initial term
  *
  * @param func_name The name of the function being validated (e.g., "a", "b")
  * @param recursive_rhs The right-hand side expression of the recursive
  * definition
  * @param initial_terms Map from index to LHS expression for initial terms
- * @param offset Smallest valid index for this sequence (program offset)
  * @param error_msg Output parameter for error message if validation fails
  * @return true if the recursive formula is valid, false otherwise
  */
 bool validateRecursiveFormula(
     const std::string& func_name, const Expression& recursive_rhs,
-    const std::map<int64_t, Expression>& initial_terms, int64_t offset,
-    std::string& error_msg);
+    const std::map<int64_t, Expression>& initial_terms, std::string& error_msg);
 
 // Extract the recursive definition (rhs) and initial terms for a function.
 // Returns true if a recursive definition func_name(n) was found.

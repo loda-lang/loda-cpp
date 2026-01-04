@@ -31,7 +31,7 @@ static void findDepthRecursive(const Expression& e,
 
 bool validateRecursiveFormula(
     const std::string& func_name, const Expression& recursive_rhs,
-    const std::map<int64_t, Expression>& initial_terms, int64_t offset,
+    const std::map<int64_t, Expression>& initial_terms,
     std::string& error_msg) {
   bool is_valid = true;
 
@@ -109,17 +109,23 @@ bool validateRecursiveFormula(
     int64_t max_depth = 0;
     findDepthRecursive(recursive_rhs, func_name, max_depth);
 
-    // Check if we have a contiguous block of initial terms with size
-    // max_depth, starting at the provided offset (supports non-zero offsets
-    // like a(1) = 1).
+    // Require a contiguous block of initial terms sized max_depth, starting at
+    // the minimum provided initial index. This treats helper functions and
+    // main sequence formulas uniformly.
     if (max_depth > 0) {
       if (initial_terms.empty()) {
         is_valid = false;
         error_msg = func_name + "(n) has no initial terms (requires " +
                     std::to_string(max_depth) + ")";
       } else {
+        const auto min_index =
+            std::min_element(
+                initial_terms.begin(), initial_terms.end(),
+                [](const auto& a, const auto& b) { return a.first < b.first; })
+                ->first;
+        const int64_t start_index = min_index;
         for (int64_t i = 0; i < max_depth; i++) {
-          const auto expected_index = offset + i;
+          const auto expected_index = start_index + i;
           if (initial_terms.find(expected_index) == initial_terms.end()) {
             is_valid = false;
             error_msg = func_name + "(n) is missing initial term for index " +
