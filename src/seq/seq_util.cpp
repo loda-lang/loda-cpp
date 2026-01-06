@@ -101,7 +101,20 @@ bool SequenceUtil::evalFormulaWithExternalTool(
     Log::get().error("Error reading " + toolName + " output", true);
   }
   while (std::getline(resultIn, buf)) {
-    result.push_back(Number(buf));
+    try {
+      result.push_back(Number(buf));
+    } catch (const std::invalid_argument& e) {
+      // Read the full error message from the remaining output
+      std::string errorMsg = buf;
+      while (std::getline(resultIn, buf) && errorMsg.size() < 1000) {
+        errorMsg += "\n" + buf;
+      }
+      resultIn.close();
+      std::remove(toolPath.c_str());
+      std::remove(resultPath.c_str());
+      Log::get().error("Error parsing " + toolName + " output: " + 
+                       std::string(e.what()) + "\nOutput:\n" + errorMsg, true);
+    }
   }
 
   // clean up temporary files
