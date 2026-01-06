@@ -113,8 +113,8 @@ bool LeanFormula::convertToLean(Expression& expr, int64_t offset,
         expr.name = "Int.gcd";
         // Int.gcd returns Nat in LEAN 4, so wrap with Int.ofNat to convert to Int
         // This ensures the result can be used in Int arithmetic without type errors
-        Expression gcdCall = expr;
-        expr = Expression(Expression::Type::FUNCTION, "Int.ofNat", {gcdCall});
+        Expression gcdExpr = expr;
+        expr = Expression(Expression::Type::FUNCTION, "Int.ofNat", {gcdExpr});
         break;
       }
       // Convert floor and truncate functions to LEAN equivalents
