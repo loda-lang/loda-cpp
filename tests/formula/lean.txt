@@ -73,3 +73,4 @@ A080457: def a (n : Int) : Int := (Int.lor (3*n-6) 3)+4
 A106249: def a (n : Int) : Int := Int.tdiv ((Int.lor (n+1) 2)-1) 2
 A109008: def a (n : Int) : Int := Int.ofNat (Int.gcd n 4)
 A129760: def a (n : Int) : Int := Int.land n (n-1)
+A041499: def a : Nat -> Int | 0 => 1 | 1 => 3 | 2 => 13 | n+3 => (a (n+2))*((Int.fdiv ((max ((Int.ofNat (Int.gcd ((Int.ofNat n)+(Int.ofNat 3)) 4))^2-3) 0)+1) 3)^2+(max ((Int.ofNat (Int.gcd ((Int.ofNat n)+(Int.ofNat 3)) 4))^2-3) 0)+3)+(a (n+1))
