@@ -8,7 +8,8 @@
 set -e
 
 # Constants
-DISCORD_OUTPUT_LIMIT=5000  # Safe limit for Discord message output to avoid breaking UTF-8
+OUTPUT_LINES=8  # Number of lines of test output to show
+DISCORD_OUTPUT_LIMIT=1900  # Safe limit for Discord message output to avoid breaking UTF-8
 
 # Color codes for output
 RED='\033[0;31m'
@@ -148,17 +149,17 @@ run_test() {
         echo -e "${RED}✗ Test failed (exit code: $exit_code, duration: ${duration_str})${NC}"
     fi
     
-    # Print last 10 lines of output
+    # Print last lines of output
     echo ""
-    echo "Last 10 lines of output:"
+    echo "Last $OUTPUT_LINES lines of output:"
     echo "----------------------------------------"
-    tail -20 "$output_file"
+    tail -$OUTPUT_LINES "$output_file"
     echo "----------------------------------------"
     
     # Prepare Discord message with safe truncation (avoid breaking multi-byte characters)
     # Use head -c to limit bytes, but be conservative to avoid breaking UTF-8
     local output_tail
-    output_tail=$(tail -10 "$output_file" | head -c "$DISCORD_OUTPUT_LIMIT")
+    output_tail=$(tail -$OUTPUT_LINES "$output_file" | head -c "$DISCORD_OUTPUT_LIMIT")
     
     # Upload to Discord
     local discord_message
@@ -166,7 +167,7 @@ run_test() {
 Exit code: $exit_code
 Duration: ${duration_str}"
     send_to_discord "$discord_message"
-    discord_message="Last 10 lines of output:
+    discord_message="Last $OUTPUT_LINES lines of output:
 \`\`\`
 ${output_tail}
 \`\`\`"
