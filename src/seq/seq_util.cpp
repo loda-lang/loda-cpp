@@ -101,7 +101,13 @@ bool SequenceUtil::evalFormulaWithExternalTool(
     Log::get().error("Error reading " + toolName + " output", true);
   }
   while (std::getline(resultIn, buf)) {
-    result.push_back(Number(buf));
+    try {
+      result.push_back(Number(buf));
+    } catch (const std::invalid_argument&) {
+      // Skip lines that cannot be parsed as numbers (e.g., error messages)
+      // This can happen if the external tool outputs error messages to stdout
+      break;
+    }
   }
 
   // clean up temporary files

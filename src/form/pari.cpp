@@ -178,7 +178,7 @@ bool PariFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
   const std::string tmpFileId = std::to_string(Random::get().gen() % 1000);
   const std::string gpPath("pari-loda-" + tmpFileId + ".gp");
   const std::string gpResult("pari-result-" + tmpFileId + ".txt");
-  const int64_t maxparisize = 256;  // in MB
+  const int64_t maxparisize = 1024;  // in MB
   std::vector<std::string> args = {
       "gp", "-s", std::to_string(maxparisize) + "M", "-q", gpPath};
   std::string evalCode = printEvalCode(offset, numTerms);
