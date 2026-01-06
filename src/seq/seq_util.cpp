@@ -103,10 +103,17 @@ bool SequenceUtil::evalFormulaWithExternalTool(
   while (std::getline(resultIn, buf)) {
     try {
       result.push_back(Number(buf));
-    } catch (const std::invalid_argument&) {
-      // Skip lines that cannot be parsed as numbers (e.g., error messages)
-      // This can happen if the external tool outputs error messages to stdout
-      break;
+    } catch (const std::invalid_argument& e) {
+      // Read the full error message from the remaining output
+      std::string errorMsg = buf;
+      while (std::getline(resultIn, buf) && errorMsg.size() < 1000) {
+        errorMsg += "\n" + buf;
+      }
+      resultIn.close();
+      std::remove(toolPath.c_str());
+      std::remove(resultPath.c_str());
+      Log::get().error("Error parsing " + toolName + " output: " + 
+                       std::string(e.what()) + "\nOutput:\n" + errorMsg, true);
     }
   }
 
