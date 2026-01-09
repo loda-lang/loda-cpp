@@ -85,7 +85,12 @@ bool LeanFormula::convertToLean(Expression& expr, int64_t offset,
         Expression cast(Expression::Type::FUNCTION, "Int.ofNat", {expr});
         expr = cast;
       }
-      if (patternOffset != Number::ZERO && patternOffset != Number::INF) {
+      // Only adjust the parameter by the pattern offset when using Nat domain
+      // pattern matching ("n+k") where the bound variable represents the
+      // predecessor part. For Int domain we keep the parameter unchanged to
+      // preserve the original semantics.
+      if (domain == "Nat" && patternOffset != Number::ZERO &&
+          patternOffset != Number::INF) {
         Expression offsetConst =
             ExpressionUtil::newConstant(patternOffset.asInt());
         // When domain is Nat and parameter was wrapped with Int.ofNat, also
@@ -94,8 +99,7 @@ bool LeanFormula::convertToLean(Expression& expr, int64_t offset,
         // wrap positive offsets in Int.ofNat; negative values cannot be wrapped
         // with Int.ofNat (which only accepts Nat), so they remain as plain Int
         // literals (e.g., -1).
-        if (domain == "Nat" && !insideOfLocalFunc &&
-            patternOffset.asInt() > 0) {
+        if (!insideOfLocalFunc && patternOffset.asInt() > 0) {
           Expression castOffset(Expression::Type::FUNCTION, "Int.ofNat",
                                 {offsetConst});
           offsetConst = castOffset;
@@ -236,7 +240,16 @@ bool LeanFormula::convert(const Formula& formula, int64_t offset,
         maxBaseCases.find(left.name) != maxBaseCases.end()) {
       patternOffset = maxBaseCases[left.name] + 1;
     }
-    if (!lean_formula.convertToLean(right, offset, patternOffset, false)) {
+    // When pattern matching with base cases, the general branch is only used
+    // for arguments >= patternOffset. Use that as the effective minimum index
+    // during conversion to avoid treating expressions like "n-1" as possibly
+    // negative when they are only evaluated for n >= patternOffset.
+    int64_t effectiveOffset = offset;
+    if (patternOffset != Number::INF) {
+      effectiveOffset += patternOffset.asInt();
+    }
+    if (!lean_formula.convertToLean(right, effectiveOffset, patternOffset,
+                                    false)) {
       return false;
     }
     lean_formula.main_formula.entries[left] = right;

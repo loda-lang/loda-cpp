@@ -5,7 +5,7 @@
 * Fix calculation of number of needed initial terms (A131083)
 * Fix `test-lean` failure when LEAN project directory exists but is incomplete
 * Fix LEAN type synthesis error by wrapping pattern offset constants with `Int.ofNat` in Nat domain formulas
-* Fix `test-pari` crash for sequences with large intermediate values (A132076) by increasing PARI stack size and improving error handling
+* Fix LEAN export incorrectly applying pattern offset to `Int` domain parameters (A046231)
 
 ### Enhancements
 
