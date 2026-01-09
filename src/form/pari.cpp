@@ -52,11 +52,10 @@ bool hasSelfReferentialPower(const Expression& e,
     const auto& left = e.children[0];
     const auto& right = e.children[1];
     // Check if both operands are the same function call
-    if (left.type == Expression::Type::FUNCTION &&
-        right.type == Expression::Type::FUNCTION &&
+    // If they're equal and one is a function in our list, both must be
+    if (left == right && left.type == Expression::Type::FUNCTION &&
         std::find(functions.begin(), functions.end(), left.name) !=
-            functions.end() &&
-        left == right) {
+            functions.end()) {
       return true;
     }
   }
