@@ -624,11 +624,13 @@ void testFormula(const std::string& test_id, const Settings& settings,
       }
       // For PariFormula, check if vector mode is required
       bool use_as_vector = as_vector;
-      if (std::is_same<FormulaType, PariFormula>::value && !as_vector) {
-        if (PariFormula::requiresVectorMode(formula)) {
-          use_as_vector = true;
-          Log::get().debug("Switching to vector mode for " + idStr +
-                           " due to self-referential power operation");
+      if constexpr (std::is_same_v<FormulaType, PariFormula>) {
+        if (!as_vector) {
+          if (PariFormula::requiresVectorMode(formula)) {
+            use_as_vector = true;
+            Log::get().debug("Switching to vector mode for " + idStr +
+                             " due to self-referential power operation");
+          }
         }
       }
       if (!FormulaType::convert(formula, ProgramUtil::getOffset(program),

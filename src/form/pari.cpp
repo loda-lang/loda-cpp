@@ -47,6 +47,7 @@ void countFuncs(const Formula& f, const Expression& e,
 // the same function call (e.g., e(n-1)^e(n-1))
 bool hasSelfReferentialPower(const Expression& e,
                              const std::vector<std::string>& functions) {
+  // POWER expressions require exactly 2 children: base and exponent
   if (e.type == Expression::Type::POWER && e.children.size() == 2) {
     const auto& left = e.children[0];
     const auto& right = e.children[1];
