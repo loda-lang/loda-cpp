@@ -4,7 +4,6 @@
 #include <fstream>
 #include <functional>
 #include <iostream>
-#include <type_traits>
 
 #include "cmd/benchmark.hpp"
 #include "cmd/boinc.hpp"
@@ -622,17 +621,8 @@ void testFormula(const std::string& test_id, const Settings& settings,
       if (!generator.generate(program, id.number(), formula, true)) {
         continue;
       }
-      // For PariFormula, check if vector mode is required
-      bool use_as_vector = as_vector;
-      if constexpr (std::is_same_v<FormulaType, PariFormula>) {
-        if (!as_vector && PariFormula::requiresVectorMode(formula)) {
-          use_as_vector = true;
-          Log::get().debug("Switching to vector mode for " + idStr +
-                           " due to self-referential power operation");
-        }
-      }
       if (!FormulaType::convert(formula, ProgramUtil::getOffset(program),
-                                use_as_vector, formula_obj)) {
+                                as_vector, formula_obj)) {
         continue;
       }
     } catch (const std::exception& e) {

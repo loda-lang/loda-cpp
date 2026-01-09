@@ -82,12 +82,24 @@ bool requiresVectorMode(const Formula& f) {
 bool addLocalVars(Formula& f) {
   std::map<Expression, size_t> count;
   bool changed = false;
+  auto functions = FormulaUtil::getDefinitions(f, Expression::Type::FUNCTION);
   for (auto& e : f.entries) {
     count.clear();
     countFuncs(f, e.second, count);
     size_t i = 1;
     for (auto& c : count) {
       if (c.second < 2) {
+        continue;
+      }
+      // Skip local variable optimization if this function call would be used
+      // in a self-referential power operation (e.g., e(n-1)^e(n-1))
+      // This prevents exponential blowup in recursive evaluation
+      if (c.first.type == Expression::Type::FUNCTION &&
+          std::find(functions.begin(), functions.end(), c.first.name) !=
+              functions.end() &&
+          hasSelfReferentialPower(e.second, functions)) {
+        Log::get().debug("Skipping local variable for " + c.first.toString() +
+                         " due to self-referential power pattern");
         continue;
       }
       std::string name = "l" + std::to_string(i++);
