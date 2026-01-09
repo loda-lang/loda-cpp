@@ -8,7 +8,7 @@
 set -e
 
 # Constants
-OUTPUT_LINES=8  # Number of lines of test output to show
+OUTPUT_LINES=15  # Number of lines of test output to show
 DISCORD_OUTPUT_LIMIT=1900  # Safe limit for Discord message output to avoid breaking UTF-8
 
 # Color codes for output
@@ -96,6 +96,39 @@ send_to_discord() {
     rm -f "$curl_error"
 }
 
+# Function to send output lines to Discord one by one
+send_output_to_discord() {
+    local output_file="$1"
+    local line_count=0
+    local current_message=""
+    local max_message_length=1800  # Safe limit to avoid hitting Discord's 2000 character limit
+    
+    while IFS= read -r line; do
+        line_count=$((line_count + 1))
+        
+        # If adding this line would exceed the limit, send the current message first
+        if [ $((${#current_message} + ${#line} + 1)) -gt $max_message_length ] && [ -n "$current_message" ]; then
+            send_to_discord "$current_message"
+            current_message=""
+            # Small delay to avoid rate limiting
+            sleep 0.5
+        fi
+        
+        # Add line to current message
+        if [ -z "$current_message" ]; then
+            current_message="$line"
+        else
+            current_message="${current_message}
+${line}"
+        fi
+    done < <(tail -$OUTPUT_LINES "$output_file")
+    
+    # Send any remaining message
+    if [ -n "$current_message" ]; then
+        send_to_discord "$current_message"
+    fi
+}
+
 # Function to run a test and upload results
 run_test() {
     local test_name="$1"
@@ -156,22 +189,16 @@ run_test() {
     tail -$OUTPUT_LINES "$output_file"
     echo "----------------------------------------"
     
-    # Prepare Discord message with safe truncation (avoid breaking multi-byte characters)
-    # Use head -c to limit bytes, but be conservative to avoid breaking UTF-8
-    local output_tail
-    output_tail=$(tail -$OUTPUT_LINES "$output_file" | head -c "$DISCORD_OUTPUT_LIMIT")
-    
     # Upload to Discord
     local discord_message
     discord_message="$status_emoji **Finished $test_name - ${status}**
 Exit code: $exit_code
 Duration: ${duration_str}"
     send_to_discord "$discord_message"
-    discord_message="Last $OUTPUT_LINES lines of output:
-\`\`\`
-${output_tail}
-\`\`\`"
-    send_to_discord "$discord_message"
+    
+    # Send output lines one by one to avoid size limits
+    send_to_discord "Last $OUTPUT_LINES lines of output:"
+    send_output_to_discord "$output_file"
     
     echo ""
 }
