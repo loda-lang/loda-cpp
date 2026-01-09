@@ -43,6 +43,42 @@ void countFuncs(const Formula& f, const Expression& e,
   }
 }
 
+// Check if expression contains a POWER operation where both operands are
+// the same function call (e.g., e(n-1)^e(n-1))
+bool hasSelfReferentialPower(const Expression& e,
+                             const std::vector<std::string>& functions) {
+  if (e.type == Expression::Type::POWER && e.children.size() == 2) {
+    const auto& left = e.children[0];
+    const auto& right = e.children[1];
+    // Check if both operands are the same function call
+    if (left.type == Expression::Type::FUNCTION &&
+        right.type == Expression::Type::FUNCTION &&
+        std::find(functions.begin(), functions.end(), left.name) !=
+            functions.end() &&
+        left == right) {
+      return true;
+    }
+  }
+  // Recursively check children
+  for (const auto& c : e.children) {
+    if (hasSelfReferentialPower(c, functions)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// Check if formula requires vector mode due to problematic patterns
+bool requiresVectorMode(const Formula& f) {
+  auto functions = FormulaUtil::getDefinitions(f, Expression::Type::FUNCTION);
+  for (const auto& entry : f.entries) {
+    if (hasSelfReferentialPower(entry.second, functions)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool addLocalVars(Formula& f) {
   std::map<Expression, size_t> count;
   bool changed = false;
@@ -117,6 +153,10 @@ bool PariFormula::convert(const Formula& formula, int64_t offset,
                             Expression::Type::FUNCTION);
   }
   return true;
+}
+
+bool PariFormula::requiresVectorMode(const Formula& formula) {
+  return ::requiresVectorMode(formula);
 }
 
 std::string PariFormula::toString() const {
