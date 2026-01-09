@@ -6,6 +6,7 @@
 * Fix `test-lean` failure when LEAN project directory exists but is incomplete
 * Fix LEAN type synthesis error by wrapping pattern offset constants with `Int.ofNat` in Nat domain formulas
 * Fix LEAN export incorrectly applying pattern offset to `Int` domain parameters (A046231)
+* Fix PARI error handling and test evaluation
 
 ### Enhancements
 

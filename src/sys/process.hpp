@@ -42,4 +42,5 @@ bool isChildProcessAlive(HANDLE pid);
 // Returns exit code, or PROCESS_ERROR_TIMEOUT if killed due to timeout.
 int execWithTimeout(const std::vector<std::string>& args, int timeoutSeconds,
                     const std::string& outputFile = "",
-                    const std::string& workingDir = "");
+                    const std::string& workingDir = "",
+                    const std::string& stdinContent = "");

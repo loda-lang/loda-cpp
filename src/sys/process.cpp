@@ -55,12 +55,23 @@ bool isChildProcessAlive(HANDLE pid) {
 
 int execWithTimeout(const std::vector<std::string>& args, int timeoutSeconds,
                     const std::string& outputFile,
-                    const std::string& workingDir) {
+                    const std::string& workingDir,
+                    const std::string& stdinContent) {
 #if defined(_WIN32) || defined(_WIN64)
   throw std::runtime_error(
       "execWithTimeout is only supported on Unix-like systems");
 #else
   // Unix implementation
+
+  // Only create a stdin pipe when stdinContent is non-empty
+  int stdinPipe[2] = {-1, -1};
+  const bool useStdinPipe = !stdinContent.empty();
+  if (useStdinPipe) {
+    if (pipe(stdinPipe) != 0) {
+      throw std::runtime_error("pipe failed");
+    }
+  }
+
   int pid = fork();
   if (pid < 0) {
     throw std::runtime_error("fork failed");
@@ -82,6 +93,14 @@ int execWithTimeout(const std::vector<std::string>& args, int timeoutSeconds,
       dup2(fd, STDERR_FILENO);
       close(fd);
     }
+
+    // Redirect stdin to read end of pipe if provided
+    if (useStdinPipe) {
+      close(stdinPipe[1]);  // Close write end in child
+      dup2(stdinPipe[0], STDIN_FILENO);
+      close(stdinPipe[0]);
+    }
+
     std::vector<char*> argv;
     for (const auto& arg : args) {
       argv.push_back(const_cast<char*>(arg.c_str()));
@@ -92,6 +111,15 @@ int execWithTimeout(const std::vector<std::string>& args, int timeoutSeconds,
     // execvp only returns on error. Use PROCESS_ERROR_EXEC for exec failures
     // (command not found or not executable) to preserve conventional meaning.
     _exit(PROCESS_ERROR_EXEC);
+  }
+
+  // Parent: if stdin content provided, write it to the stdin pipe and close it
+  if (useStdinPipe) {
+    close(stdinPipe[0]);  // Close read end in parent
+    ssize_t written =
+        write(stdinPipe[1], stdinContent.c_str(), stdinContent.size());
+    (void)written;  // ignore short writes; process will read what is available
+    close(stdinPipe[1]);  // Close write end to send EOF
   }
   // Parent
   int status = 0;
@@ -108,7 +136,7 @@ int execWithTimeout(const std::vector<std::string>& args, int timeoutSeconds,
     }
     usleep(100000);  // Sleep for 100 ms
   }
-  
+
   // Check output file for "alarm interrupt" messages that indicate timeout
   // This catches cases where the process exits normally (code 0) but had
   // a timeout internally (e.g., PARI/GP alarm interrupt)
@@ -125,7 +153,7 @@ int execWithTimeout(const std::vector<std::string>& args, int timeoutSeconds,
       outputIn.close();
     }
   }
-  
+
   if (WIFEXITED(status)) {
     return WEXITSTATUS(status);
   }
