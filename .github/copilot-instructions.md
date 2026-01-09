@@ -118,8 +118,8 @@ Formula tests verify that the formula generation process correctly converts LODA
 1. **Identify target sequences**: Find the IDs of OEIS sequences (e.g., A000045) that should be used for the new formula tests. If you need to discover sequences, use the LODA API MCP server to search for programs matching specific criteria or mathematical properties. Look for sequences with concise, readable formulas. Avoid sequences that require extensive computation for verification.
 
 2. **Ensure LODA programs exist**: Check if the LODA programs already exist in the test directory structure `tests/programs/oeis/XXX/` (where XXX is the first 3 digits of the sequence number). If missing:
-   - Fetch the programs from the LODA API MCP server using `mcp_loda-mcp-serv_get_program_details`
-   - Clean the program by removing submitter comments and existing formula comments
+   - Fetch the programs using `./loda export AXXXXXX -o loda` (e.g., `./loda export A000045 -o loda`)
+   - Clean the program by removing "Submitted by..." comments and formula comments (keep only the sequence description and terms)
    - Save as `AXXXXXX.asm` in the appropriate subdirectory (e.g., `tests/programs/oeis/000/A000045.asm`)
 
 3. **Generate expected formulas**: Use the `export` command to generate the expected formulas in different formats:
