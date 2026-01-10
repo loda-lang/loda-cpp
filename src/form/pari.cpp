@@ -24,30 +24,50 @@ bool convertExprToPari(Expression& expr, const Formula& f, bool as_vector) {
     expr.type = Expression::Type::VECTOR;
   }
   
-  // Wrap truncate(base^exponent) with if(exponent<0,0,...) to avoid
+  // Wrap truncate(base^exponent) with conditional to avoid
   // PARI stack overflow from large negative exponents
   if (expr.type == Expression::Type::FUNCTION && expr.name == "truncate" &&
       expr.children.size() == 1 &&
       expr.children[0].type == Expression::Type::POWER &&
       expr.children[0].children.size() == 2) {
+    const auto& base = expr.children[0].children[0];
     const auto& exponent = expr.children[0].children[1];
     // Check if exponent could be negative (is a function or parameter)
     if (exponent.type == Expression::Type::FUNCTION ||
         exponent.type == Expression::Type::VECTOR ||
         exponent.type == Expression::Type::PARAMETER ||
         ExpressionUtil::canBeNegative(exponent, 0)) {
-      // Create: if(exponent<0, 0, truncate(base^exponent))
-      Expression condition(Expression::Type::LESS_EQUAL);
-      condition.newChild(exponent);
-      condition.newChild(ExpressionUtil::newConstant(-1));
+      // Create nested IFs to handle special cases:
+      // if(base*base==1, truncate(base^exponent), if(exponent<=-1, 0, truncate(base^exponent)))
+      // This handles: 1^(-n)=1, (-1)^(-n)=(-1)^n, otherwise truncate(base^neg)=0
+      
+      // Check if base² == 1 (base is ±1)
+      Expression base_squared(Expression::Type::PRODUCT);
+      base_squared.newChild(base);
+      base_squared.newChild(base);
+      
+      Expression base_is_one(Expression::Type::EQUAL);
+      base_is_one.newChild(base_squared);
+      base_is_one.newChild(ExpressionUtil::newConstant(1));
+      
+      // Inner IF: if(exponent<=-1, 0, truncate(base^exponent))
+      Expression exp_negative(Expression::Type::LESS_EQUAL);
+      exp_negative.newChild(exponent);
+      exp_negative.newChild(ExpressionUtil::newConstant(-1));
       
       Expression zero = ExpressionUtil::newConstant(0);
-      Expression original = expr;  // copy
+      Expression original = expr;  // copy of truncate(base^exponent)
       
+      Expression inner_if(Expression::Type::IF);
+      inner_if.newChild(exp_negative);
+      inner_if.newChild(zero);
+      inner_if.newChild(original);
+      
+      // Outer IF: if(base*base==1, truncate(base^exponent), inner_if)
       expr = Expression(Expression::Type::IF);
-      expr.newChild(condition);
-      expr.newChild(zero);
-      expr.newChild(original);
+      expr.newChild(base_is_one);
+      expr.newChild(original);  // Use original for base ∈ {-1, 1}
+      expr.newChild(inner_if);  // Use conditional for other bases
     }
   }
   
