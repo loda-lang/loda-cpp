@@ -120,6 +120,23 @@ bool FormulaGenerator::canBeNegativeWithRanges(const Expression& e,
   return ExpressionUtil::canBeNegative(e, offset);
 }
 
+bool FormulaGenerator::isNotInRange(const Operand& operand,
+                                    const Number& value,
+                                    const RangeMap* ranges) const {
+  // If we have ranges and the operand is a direct memory access, check ranges
+  if (ranges && operand.type == Operand::Type::DIRECT) {
+    int64_t cell = operand.value.asInt();
+    auto it = ranges->find(cell);
+    if (it != ranges->end()) {
+      const auto& range = it->second;
+      // Value is not in range if it's below lower bound or above upper bound
+      return (value < range.lower_bound || value > range.upper_bound);
+    }
+  }
+  // If no range information available, assume value could be in range
+  return false;
+}
+
 Expression FormulaGenerator::cellFunc(int64_t index) const {
   return ExpressionUtil::newFunction(getCellName(index));
 }
@@ -270,20 +287,9 @@ bool FormulaGenerator::update(const Operation& op, const RangeMap* ranges) {
         // 3. exponent >= 0: base^exponent is an integer
         // Pattern: if(base*base==1, base^exp, if(exp<=-1, 0, base^exp))
         
-        // Use range analysis to determine if base can be ±1
-        bool baseCanBeOne = true;
-        if (ranges && op.target.type == Operand::Type::DIRECT) {
-          int64_t cell = op.target.value.asInt();
-          auto it = ranges->find(cell);
-          if (it != ranges->end()) {
-            const auto& range = it->second;
-            // If range excludes -1 and 1, no need to check base==±1
-            if ((range.lower_bound > Number::ONE || range.upper_bound < Number::MINUS_ONE) ||
-                (range.lower_bound > Number::MINUS_ONE && range.upper_bound < Number::ONE)) {
-              baseCanBeOne = false;
-            }
-          }
-        }
+        // Use isNotInRange to determine if base can be ±1
+        bool baseCanBeOne = !(isNotInRange(op.target, Number::ONE, ranges) &&
+                              isNotInRange(op.target, Number::MINUS_ONE, ranges));
         
         if (baseCanBeOne) {
           // Check if base² == 1 (base is ±1)
