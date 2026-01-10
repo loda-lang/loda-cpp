@@ -315,6 +315,8 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
     commands.commitAddedPrograms(min_commit_count);
   } else if (cmd == "update-programs") {
     commands.commitUpdatedAndDeletedPrograms();
+  } else if (cmd == "update-formula-tests") {
+    commands.updateFormulaTests();
   }
 #endif
   // unknown command
