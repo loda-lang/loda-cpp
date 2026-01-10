@@ -19,6 +19,9 @@ class UID {
   // Throws std::invalid_argument if the string is not valid.
   explicit UID(const std::string& s);
 
+  // Check if a string is a valid UID.
+  static bool valid(const std::string& s);
+
   // Set the UID value from domain and number, with validation
   void set(char domain, int64_t number);
 

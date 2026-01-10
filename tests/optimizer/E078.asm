@@ -1,0 +1,11 @@
+; in
+sub $0,5
+mov $1,$0
+div $1,3
+add $0,$1
+trn $0,$1
+; out
+sub $0,5
+mov $1,$0
+div $1,3
+max $0,0

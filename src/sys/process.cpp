@@ -1,5 +1,6 @@
 #include "sys/process.hpp"
 
+#include <fstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -53,31 +54,72 @@ bool isChildProcessAlive(HANDLE pid) {
 }
 
 int execWithTimeout(const std::vector<std::string>& args, int timeoutSeconds,
-                    const std::string& outputFile) {
+                    const std::string& outputFile,
+                    const std::string& workingDir,
+                    const std::string& stdinContent) {
 #if defined(_WIN32) || defined(_WIN64)
   throw std::runtime_error(
       "execWithTimeout is only supported on Unix-like systems");
 #else
   // Unix implementation
+
+  // Only create a stdin pipe when stdinContent is non-empty
+  int stdinPipe[2] = {-1, -1};
+  const bool useStdinPipe = !stdinContent.empty();
+  if (useStdinPipe) {
+    if (pipe(stdinPipe) != 0) {
+      throw std::runtime_error("pipe failed");
+    }
+  }
+
   int pid = fork();
   if (pid < 0) {
     throw std::runtime_error("fork failed");
   }
   if (pid == 0) {
     // Child
+    // Change working directory if requested
+    if (!workingDir.empty()) {
+      if (chdir(workingDir.c_str()) != 0) {
+        _exit(PROCESS_ERROR_CHDIR);
+      }
+    }
     if (!outputFile.empty()) {
       int fd = open(outputFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
-      if (fd < 0) _exit(127);
+      if (fd < 0) {
+        _exit(PROCESS_ERROR_OPEN_OUTPUT);
+      }
       dup2(fd, STDOUT_FILENO);
       dup2(fd, STDERR_FILENO);
       close(fd);
     }
+
+    // Redirect stdin to read end of pipe if provided
+    if (useStdinPipe) {
+      close(stdinPipe[1]);  // Close write end in child
+      dup2(stdinPipe[0], STDIN_FILENO);
+      close(stdinPipe[0]);
+    }
+
     std::vector<char*> argv;
-    for (const auto& arg : args) argv.push_back(const_cast<char*>(arg.c_str()));
+    for (const auto& arg : args) {
+      argv.push_back(const_cast<char*>(arg.c_str()));
+    }
     argv.push_back(nullptr);
     alarm(timeoutSeconds);
     execvp(argv[0], argv.data());
-    _exit(127);
+    // execvp only returns on error. Use PROCESS_ERROR_EXEC for exec failures
+    // (command not found or not executable) to preserve conventional meaning.
+    _exit(PROCESS_ERROR_EXEC);
+  }
+
+  // Parent: if stdin content provided, write it to the stdin pipe and close it
+  if (useStdinPipe) {
+    close(stdinPipe[0]);  // Close read end in parent
+    ssize_t written =
+        write(stdinPipe[1], stdinContent.c_str(), stdinContent.size());
+    (void)written;  // ignore short writes; process will read what is available
+    close(stdinPipe[1]);  // Close write end to send EOF
   }
   // Parent
   int status = 0;
@@ -94,9 +136,40 @@ int execWithTimeout(const std::vector<std::string>& args, int timeoutSeconds,
     }
     usleep(100000);  // Sleep for 100 ms
   }
+
+  // Check output file for "alarm interrupt" messages that indicate timeout
+  // This catches cases where the process exits normally (code 0) but had
+  // a timeout internally (e.g., PARI/GP alarm interrupt)
+  if (!outputFile.empty()) {
+    std::ifstream outputIn(outputFile);
+    if (outputIn) {
+      std::string line;
+      while (std::getline(outputIn, line)) {
+        if (line.find("alarm interrupt") != std::string::npos) {
+          outputIn.close();
+          return PROCESS_ERROR_TIMEOUT;
+        }
+      }
+      outputIn.close();
+    }
+  }
+
   if (WIFEXITED(status)) {
     return WEXITSTATUS(status);
   }
+  // If the child did not exit normally, but was terminated by a signal,
+  // check if it was terminated by SIGALRM (our timeout alarm)
+#ifdef WIFSIGNALED
+  if (WIFSIGNALED(status)) {
+    int signal = WTERMSIG(status);
+    if (signal == SIGALRM) {
+      return PROCESS_ERROR_TIMEOUT;  // Child was killed by our alarm
+    }
+    // For other signals, return 128 + signal number to make it easier to
+    // diagnose crashes (e.g., 139 => SIGSEGV)
+    return 128 + signal;
+  }
+#endif
   return -1;
 #endif
 }

@@ -63,7 +63,11 @@ class Commands {
 
   void testLean(const std::string& id);
 
+  void testFormulaParser(const std::string& id);
+
   void testRange(const std::string& id);
+
+  void testRecursion(const std::string& id);
 
   void generate();
 
@@ -77,6 +81,8 @@ class Commands {
 
   void findSlow(int64_t num_terms, const std::string& type);
 
+  void findSlowFormulas();
+
   void findEmbseqs();
 
   void extractVirseqs();
@@ -86,6 +92,8 @@ class Commands {
   void compare(const std::string& path1, const std::string& path2);
 
   void addToList(const std::string& seq_id, const std::string& list_filename);
+
+  void exportFormulas(const std::string& output_file);
 
   void commitAddedPrograms(size_t min_commit_count = 5);
 

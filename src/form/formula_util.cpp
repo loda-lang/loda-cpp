@@ -1,7 +1,5 @@
 #include "form/formula_util.hpp"
 
-#include <set>
-
 #include "form/expression_util.hpp"
 
 std::vector<std::string> FormulaUtil::getDefinitions(
@@ -97,18 +95,6 @@ std::multimap<std::string, std::string> FormulaUtil::getDependencies(
     }
   }
   return deps;
-}
-
-bool FormulaUtil::isRecursive(const Formula& formula,
-                              const std::string& funcName,
-                              Expression::Type type) {
-  auto deps = getDependencies(formula, type, false, false);
-  for (auto it : deps) {
-    if (it.first == funcName && it.second == funcName) {
-      return true;
-    }
-  }
-  return false;
 }
 
 void FormulaUtil::removeFunctionEntries(Formula& formula,

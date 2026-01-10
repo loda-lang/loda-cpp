@@ -6,6 +6,9 @@
 #include <sstream>
 
 #include "eval/evaluator_inc.hpp"
+#include "form/formula_parser.hpp"
+#include "form/lean.hpp"
+#include "form/pari.hpp"
 #include "lang/analyzer.hpp"
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
@@ -18,12 +21,13 @@
 
 const std::string Stats::CALL_GRAPH_HEADER("caller,callee");
 const std::string Stats::PROGRAMS_HEADER(
-    "id,submitter,length,usages,inc_eval,log_eval,vir_eval,loop,formula,"
-    "indirect");
+    "id,submitter,length,usages,inc_eval,log_eval,vir_eval,loop,formula,pari,"
+    "lean,indirect,ops_mask");
 const std::string Stats::STEPS_HEADER("total,min,max,runs");
 const std::string Stats::SUMMARY_HEADER(
     "num_sequences,num_programs,num_formulas");
 const std::string SUBMITTERS_HEADER = "submitter,ref_id,num_programs";
+const std::string OPERATION_TYPES_HEADER = "name,ref_id,count";
 
 Stats::Stats()
     : num_programs(0),
@@ -66,12 +70,15 @@ void Stats::load(std::string path) {
   }
 
   {
-    full = path + "operation_type_counts.csv";
+    full = path + "operation_types.csv";
     Log::get().debug("Loading " + full);
     CsvReader reader(full);
+    reader.checkHeader(OPERATION_TYPES_HEADER);
     while (reader.readRow()) {
       auto type = Operation::Metadata::get(reader.getField(0)).type;
-      num_ops_per_type.at(static_cast<size_t>(type)) = reader.getIntegerField(1);
+      // Field 1 is ref_id, which we don't need to load (it's in metadata)
+      num_ops_per_type.at(static_cast<size_t>(type)) =
+          reader.getIntegerField(2);
     }
     reader.close();
   }
@@ -157,8 +164,15 @@ void Stats::load(std::string path) {
         has_formula.insert(id);
       }
       if (reader.getIntegerField(9)) {
+        has_pari.insert(id);
+      }
+      if (reader.getIntegerField(10)) {
+        has_lean.insert(id);
+      }
+      if (reader.getIntegerField(11)) {
         has_indirect.insert(id);
       }
+      program_operation_types_bitmask[id] = reader.getIntegerField(12);
     }
     reader.close();
   }
@@ -240,7 +254,7 @@ void Stats::save(std::string path) {
 
   {
     CsvWriter writer(path + "constant_counts.csv");
-    for (auto &e : num_constants) {
+    for (auto& e : num_constants) {
       writer.writeRow(e.first.to_string(), std::to_string(e.second));
     }
     writer.close();
@@ -255,14 +269,17 @@ void Stats::save(std::string path) {
       const auto vireval = supports_vireval.exists(id);
       const auto loop_flag = has_loop.exists(id);
       const auto formula_flag = has_formula.exists(id);
+      const auto pari_flag = has_pari.exists(id);
+      const auto lean_flag = has_lean.exists(id);
       const auto indirect_flag = has_indirect.exists(id);
       writer.writeRow({id.string(), std::to_string(program_submitter[id]),
                        std::to_string(program_lengths[id]),
                        std::to_string(program_usages[id]),
                        std::to_string(inceval), std::to_string(logeval),
                        std::to_string(vireval), std::to_string(loop_flag),
-                       std::to_string(formula_flag),
-                       std::to_string(indirect_flag)});
+                       std::to_string(formula_flag), std::to_string(pari_flag),
+                       std::to_string(lean_flag), std::to_string(indirect_flag),
+                       std::to_string(program_operation_types_bitmask[id])});
     }
     writer.close();
   }
@@ -287,12 +304,14 @@ void Stats::save(std::string path) {
   }
 
   {
-    CsvWriter writer(path + "operation_type_counts.csv");
+    CsvWriter writer(path + "operation_types.csv");
+    writer.writeHeader(OPERATION_TYPES_HEADER);
     for (size_t i = 0; i < num_ops_per_type.size(); i++) {
       if (num_ops_per_type[i] > 0) {
-        writer.writeRow(
-            Operation::Metadata::get(static_cast<Operation::Type>(i)).name,
-            std::to_string(num_ops_per_type[i]));
+        const auto& meta =
+            Operation::Metadata::get(static_cast<Operation::Type>(i));
+        writer.writeRow(meta.name, std::to_string(meta.ref_id),
+                        std::to_string(num_ops_per_type[i]));
       }
     }
     writer.close();
@@ -300,10 +319,9 @@ void Stats::save(std::string path) {
 
   {
     CsvWriter writer(path + "operation_counts.csv");
-    for (auto &op : num_operations) {
-      const auto &meta = Operation::Metadata::get(op.first.type);
-      writer.writeRow({meta.name,
-                       ProgramUtil::operandToString(op.first.target),
+    for (auto& op : num_operations) {
+      const auto& meta = Operation::Metadata::get(op.first.type);
+      writer.writeRow({meta.name, ProgramUtil::operandToString(op.first.target),
                        ProgramUtil::operandToString(op.first.source),
                        std::to_string(op.second)});
     }
@@ -312,8 +330,8 @@ void Stats::save(std::string path) {
 
   {
     CsvWriter writer(path + "operation_pos_counts.csv");
-    for (auto &o : num_operation_positions) {
-      const auto &meta = Operation::Metadata::get(o.first.op.type);
+    for (auto& o : num_operation_positions) {
+      const auto& meta = Operation::Metadata::get(o.first.op.type);
       writer.writeRow({std::to_string(o.first.pos), std::to_string(o.first.len),
                        meta.name,
                        ProgramUtil::operandToString(o.first.op.target),
@@ -356,7 +374,7 @@ void Stats::save(std::string path) {
   {
     CsvWriter writer(path + "submitters.csv");
     writer.writeHeader(SUBMITTERS_HEADER);
-    for (const auto &e : submitter_ref_ids) {
+    for (const auto& e : submitter_ref_ids) {
       writer.writeRow({e.first, std::to_string(e.second),
                        std::to_string(num_programs_per_submitter[e.second])});
     }
@@ -372,8 +390,9 @@ std::string Stats::getMainStatsFile(std::string path) const {
   return path;
 }
 
-void Stats::updateProgramStats(UID id, const Program &program,
-                               std::string submitter, bool with_formula) {
+void Stats::updateProgramStats(UID id, const Program& program,
+                               std::string submitter,
+                               const std::string& formula_str, int64_t offset) {
   const size_t num_ops = ProgramUtil::numOps(program, false);
   program_lengths[id] = num_ops;
   if (num_ops >= num_programs_per_length.size()) {
@@ -399,8 +418,12 @@ void Stats::updateProgramStats(UID id, const Program &program,
   o.pos = 0;
   bool with_loop = false;
   bool with_indirect = false;
-  for (auto &op : program.ops) {
+  int64_t ops_bitmask = 0;
+  for (auto& op : program.ops) {
     num_ops_per_type[static_cast<size_t>(op.type)]++;
+    // Set the bit corresponding to this operation type's ref_id
+    const auto& meta = Operation::Metadata::get(op.type);
+    ops_bitmask |= (1LL << meta.ref_id);
     if (op.type == Operation::Type::LPB) {
       with_loop = true;
     }
@@ -452,12 +475,31 @@ void Stats::updateProgramStats(UID id, const Program &program,
   if (with_loop) {
     has_loop.insert(id);
   }
+  bool with_formula = !formula_str.empty();
   if (with_formula) {
     has_formula.insert(id);
+    // Try to parse the formula and convert to PARI and LEAN
+    FormulaParser parser;
+    Formula formula;
+    if (parser.parse(formula_str, formula)) {
+      // Try PARI conversion (with offset from program directive and as_vector
+      // false as default)
+      PariFormula pari_formula;
+      if (PariFormula::convert(formula, offset, false, pari_formula)) {
+        has_pari.insert(id);
+      }
+      // Try LEAN conversion (with offset from program directive and as_vector
+      // false as default)
+      LeanFormula lean_formula;
+      if (LeanFormula::convert(formula, offset, false, lean_formula)) {
+        has_lean.insert(id);
+      }
+    }
   }
   if (with_indirect) {
     has_indirect.insert(id);
   }
+  program_operation_types_bitmask[id] = ops_bitmask;
   blocks_collector.add(program);
 }
 
@@ -502,7 +544,7 @@ int64_t Stats::getTransitiveLength(UID id) const {
   }
   int64_t length = program_lengths.at(id);
   auto range = call_graph.equal_range(id);
-  for (auto &it = range.first; it != range.second; it++) {
+  for (auto& it = range.first; it != range.second; it++) {
     auto len = getTransitiveLength(it->second);
     if (len < 0) {
       length = -1;
@@ -522,7 +564,7 @@ size_t Stats::getNumUsages(UID id) const {
   return 0;
 }
 
-RandomProgramIds::RandomProgramIds(const UIDSet &ids) {
+RandomProgramIds::RandomProgramIds(const UIDSet& ids) {
   ids_set = ids;
   for (auto id : ids) {
     ids_vector.push_back(id);
@@ -540,7 +582,7 @@ UID RandomProgramIds::get() const {
   return UID();
 }
 
-RandomProgramIds2::RandomProgramIds2(const Stats &stats)
+RandomProgramIds2::RandomProgramIds2(const Stats& stats)
     : all_program_ids(stats.all_program_ids),
       latest_program_ids(stats.latest_program_ids) {}
 

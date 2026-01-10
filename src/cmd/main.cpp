@@ -234,12 +234,24 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
       id = args.at(1);
     }
     commands.testLean(id);
+  } else if (cmd == "test-formula-parser") {
+    std::string id;
+    if (args.size() > 1) {
+      id = args.at(1);
+    }
+    commands.testFormulaParser(id);
   } else if (cmd == "test-range") {
     std::string id;
     if (args.size() > 1) {
       id = args.at(1);
     }
     commands.testRange(id);
+  } else if (cmd == "test-recursion") {
+    std::string id;
+    if (args.size() > 1) {
+      id = args.at(1);
+    }
+    commands.testRecursion(id);
   } else if (cmd == "generate" || cmd == "gen") {
     commands.generate();
   } else if (cmd == "migrate") {
@@ -260,17 +272,26 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
       type = args.at(1);
     }
     commands.findSlow(settings.num_terms, type);
+  } else if (cmd == "find-slow-formulas") {
+    commands.findSlowFormulas();
   } else if (cmd == "find-embseqs") {
     commands.findEmbseqs();
   } else if (cmd == "extract-virseqs") {
     commands.extractVirseqs();
   } else if (cmd == "find-inceval-programs") {
     if (args.size() < 2) {
-      std::cerr << "Error: find-inceval-programs requires an error code argument" << std::endl;
-      std::cerr << "Usage: loda find-inceval-programs <error_code|range>" << std::endl;
+      std::cerr
+          << "Error: find-inceval-programs requires an error code argument"
+          << std::endl;
+      std::cerr << "Usage: loda find-inceval-programs <error_code|range>"
+                << std::endl;
       std::cerr << "Examples:" << std::endl;
-      std::cerr << "  loda find-inceval-programs 1         # Find programs with error code 1" << std::endl;
-      std::cerr << "  loda find-inceval-programs 100-200   # Find programs with error codes 100-200" << std::endl;
+      std::cerr << "  loda find-inceval-programs 1         # Find programs "
+                   "with error code 1"
+                << std::endl;
+      std::cerr << "  loda find-inceval-programs 100-200   # Find programs "
+                   "with error codes 100-200"
+                << std::endl;
       return 1;
     }
     commands.findIncevalPrograms(args.at(1));
@@ -278,6 +299,12 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
     commands.compare(args.at(1), args.at(2));
   } else if (cmd == "replace") {
     commands.replace(args.at(1), args.at(2));
+  } else if (cmd == "export-formulas") {
+    std::string output_file;
+    if (args.size() > 1) {
+      output_file = args.at(1);
+    }
+    commands.exportFormulas(output_file);
   } else if (cmd == "auto-fold") {
     commands.autoFold();
   } else if (cmd == "add-programs") {

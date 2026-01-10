@@ -6,7 +6,7 @@
 
 #include "base/uid.hpp"
 #include "eval/evaluator.hpp"
-#include "mine/blocks.hpp"
+#include "gen/blocks.hpp"
 
 class OpPos {
  public:
@@ -44,7 +44,7 @@ class Stats {
   std::string getMainStatsFile(std::string path) const;
 
   void updateProgramStats(UID id, const Program &program, std::string submitter,
-                          bool with_formula);
+                          const std::string &formula_str, int64_t offset);
 
   void updateSequenceStats(UID id, bool program_found, bool formula_found);
 
@@ -69,6 +69,7 @@ class Stats {
   std::unordered_map<UID, int64_t> program_lengths;
   std::unordered_map<UID, int64_t> program_usages;
   std::unordered_map<UID, int64_t> program_submitter;
+  std::unordered_map<UID, int64_t> program_operation_types_bitmask;
   UIDSet all_program_ids;
   UIDSet latest_program_ids;
   UIDSet supports_inceval;
@@ -76,6 +77,8 @@ class Stats {
   UIDSet supports_vireval;
   UIDSet has_loop;
   UIDSet has_formula;
+  UIDSet has_pari;
+  UIDSet has_lean;
   UIDSet has_indirect;
   Blocks blocks;
 

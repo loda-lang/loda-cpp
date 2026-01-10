@@ -178,10 +178,20 @@ bool PariFormula::eval(int64_t offset, int64_t numTerms, int timeoutSeconds,
   const std::string tmpFileId = std::to_string(Random::get().gen() % 1000);
   const std::string gpPath("pari-loda-" + tmpFileId + ".gp");
   const std::string gpResult("pari-result-" + tmpFileId + ".txt");
-  const int64_t maxparisize = 256;  // in MB
+  const int64_t maxparisize = 1024;  // in MB
   std::vector<std::string> args = {
-      "gp", "-s", std::to_string(maxparisize) + "M", "-q", gpPath};
+      "gp",
+      "-s",
+      std::to_string(maxparisize) + "M",
+      "--default",
+      "parisizemax=" + std::to_string(maxparisize) + "M",
+      "--default",
+      "recover=0",
+      "-q",
+      gpPath};
   std::string evalCode = printEvalCode(offset, numTerms);
+  // Provide "quit\n" on stdin to ensure PARI exits break loop cleanly on errors
   return SequenceUtil::evalFormulaWithExternalTool(
-      evalCode, getName(), gpPath, gpResult, args, timeoutSeconds, result);
+      evalCode, getName(), gpPath, gpResult, args, timeoutSeconds, result, "",
+      "quit\n");
 }

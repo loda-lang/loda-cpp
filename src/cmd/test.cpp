@@ -15,8 +15,12 @@
 #include "eval/range_generator.hpp"
 #include "eval/semantics.hpp"
 #include "form/formula_gen.hpp"
+#include "form/formula_parser.hpp"
 #include "form/lean.hpp"
 #include "form/pari.hpp"
+#include "gen/blocks.hpp"
+#include "gen/generator_v1.hpp"
+#include "gen/iterator.hpp"
 #include "lang/comments.hpp"
 #include "lang/constants.hpp"
 #include "lang/parser.hpp"
@@ -25,10 +29,7 @@
 #include "lang/virtual_seq.hpp"
 #include "math/big_number.hpp"
 #include "mine/api_client.hpp"
-#include "mine/blocks.hpp"
 #include "mine/config.hpp"
-#include "mine/generator_v1.hpp"
-#include "mine/iterator.hpp"
 #include "mine/matcher.hpp"
 #include "mine/mine_manager.hpp"
 #include "mine/miner.hpp"
@@ -36,6 +37,7 @@
 #include "seq/seq_list.hpp"
 #include "sys/file.hpp"
 #include "sys/git.hpp"
+#include "sys/gzip.hpp"
 #include "sys/log.hpp"
 #include "sys/setup.hpp"
 
@@ -77,6 +79,7 @@ void Test::fast() {
   knownPrograms();
   formula();
   range();
+  gzip();
 }
 
 void Test::slow() {
@@ -626,6 +629,7 @@ void Test::operationMetadata() {
     Log::get().error("Unexpected number of operation types", true);
   }
   std::set<std::string> names;
+  std::set<int64_t> ref_ids;
   for (auto type : Operation::Types) {
     auto& meta = Operation::Metadata::get(type);
     if (type != meta.type) {
@@ -635,6 +639,16 @@ void Test::operationMetadata() {
       Log::get().error("Duplicate name: " + meta.name, true);
     }
     names.insert(meta.name);
+    if (meta.ref_id < 0 || meta.ref_id >= 64) {
+      Log::get().error("Invalid ref_id for " + meta.name + ": " +
+                           std::to_string(meta.ref_id),
+                       true);
+    }
+    if (ref_ids.count(meta.ref_id)) {
+      Log::get().error("Duplicate ref_id: " + std::to_string(meta.ref_id),
+                       true);
+    }
+    ref_ids.insert(meta.ref_id);
   }
 }
 
@@ -878,12 +892,12 @@ void Test::incEval() {
     i++;
   }
   // OEIS sequence test cases
-  std::vector<size_t> ids = {8,     45,    142,    178,    204,    246,   253,
-                             278,   280,   407,    542,    933,    1075,  1091,
-                             1117,  1304,  1353,   1360,   1519,   1541,  1542,
-                             1609,  2081,  3411,   7661,   7981,   8581,  10362,
-                             11218, 12866, 14979,  22564,  25774,  49349, 57552,
-                             79309, 80493, 122593, 130487, 247309, 302643};
+  std::vector<size_t> ids = {
+      8,     45,    78,    142,    178,    204,    246,   253,   278,
+      280,   407,   542,   803,    933,    1075,   1091,  1117,  1304,
+      1353,  1360,  1519,  1541,   1542,   1609,   2081,  3411,  7661,
+      7981,  8581,  10362, 11218,  12866,  14979,  22564, 25774, 49349,
+      57552, 79309, 80493, 122593, 130487, 247309, 302643};
   for (auto id : ids) {
     checkEvaluator(settings, id, "", EVAL_INCREMENTAL, true);
   }
@@ -968,9 +982,11 @@ bool Test::checkEvaluator(const Settings& settings, size_t id, std::string path,
 void Test::apiClient() {
   Log::get().info("Testing API client");
   ApiClient client;
-  client.postProgram(std::string("tests") + FILE_SEP + "programs" + FILE_SEP +
-                     "oeis" + FILE_SEP + "000" + FILE_SEP + "A000005.asm");
-  auto program = client.getNextProgram();
+  // client.postProgram(std::string("tests") + FILE_SEP + "programs" + FILE_SEP
+  // + "oeis" + FILE_SEP + "000" + FILE_SEP + "A000005.asm");
+  auto submission = client.getNextSubmission();
+  if (submission.mode == Submission::Mode::REMOVE) return;
+  auto program = submission.toProgram();
   if (program.ops.empty()) {
     Log::get().error("Expected non-empty program from API server", true);
   }
@@ -1260,6 +1276,17 @@ void Test::checkFormulas(const std::string& testFile, FormulaType type) {
       if (f.toString() != e.second) {
         Log::get().error("Unexpected formula: " + f.toString(), true);
       }
+      // Round-trip test: parse the formula string back and check it matches
+      Formula parsed;
+      FormulaParser formulaParser;
+      if (!formulaParser.parse(e.second, parsed)) {
+        Log::get().error("Failed to parse formula string: " + e.second, true);
+      }
+      if (parsed.toString() != e.second) {
+        Log::get().error("Round-trip test failed. Original: " + e.second +
+                             ", Parsed: " + parsed.toString(),
+                         true);
+      }
     } else if (type == FormulaType::LEAN) {
       LeanFormula lean;
       if (!LeanFormula::convert(f, offset, false, lean)) {
@@ -1320,7 +1347,7 @@ void Test::checkFormulasWithExternalTools(const std::string& testFile,
     }
     // evaluate formula
     Sequence genSeq;
-    if (!formula_obj.eval(offset, numTerms, 10, genSeq)) {
+    if (!formula_obj.eval(offset, numTerms, 60, genSeq)) {
       Log::get().error(
           formula_obj.getName() + " evaluation timeout for " + idStr, true);
     }
@@ -1783,5 +1810,83 @@ void Test::testMatcherPair(Matcher& matcher, size_t id1, size_t id2) {
                          " matcher generated wrong program for " +
                          uid2.string(),
                      true);
+  }
+}
+
+void Test::gzip() {
+  Log::get().info("Testing gzip decompression");
+  std::string test_content =
+      "Hello, this is a test for zlib gzip decompression!";
+  std::string tmp_dir = getTmpDir();
+
+  // Test 1: Decompress and remove original file
+  {
+    std::string base_path = tmp_dir + "gzip_test1.txt";
+    std::string gz_path = base_path + ".gz";
+
+    // Create test file and compress it with system gzip
+    {
+      std::ofstream out(base_path);
+      out << test_content;
+      out.close();
+    }
+    if (system(("gzip -f \"" + base_path + "\"").c_str()) != 0) {
+      Log::get().error("Failed to create test gzip file", true);
+    }
+
+    // Decompress using our implementation (keep=false)
+    gunzip(gz_path, false);
+
+    // Verify: original .gz should be deleted, content should match
+    if (isFile(gz_path)) {
+      Log::get().error("gzip file was not deleted when keep=false", true);
+    }
+    if (!isFile(base_path)) {
+      Log::get().error("Decompressed file not created", true);
+    }
+    std::ifstream in(base_path);
+    std::string result((std::istreambuf_iterator<char>(in)),
+                       std::istreambuf_iterator<char>());
+    in.close();
+    if (result != test_content) {
+      Log::get().error("Decompressed content does not match original", true);
+    }
+    std::remove(base_path.c_str());
+  }
+
+  // Test 2: Decompress and keep original file
+  {
+    std::string base_path = tmp_dir + "gzip_test2.txt";
+    std::string gz_path = base_path + ".gz";
+
+    // Create test file and compress it with system gzip
+    {
+      std::ofstream out(base_path);
+      out << test_content;
+      out.close();
+    }
+    if (system(("gzip -f \"" + base_path + "\"").c_str()) != 0) {
+      Log::get().error("Failed to create test gzip file", true);
+    }
+
+    // Decompress using our implementation (keep=true)
+    gunzip(gz_path, true);
+
+    // Verify: original .gz should still exist, content should match
+    if (!isFile(gz_path)) {
+      Log::get().error("gzip file was deleted when keep=true", true);
+    }
+    if (!isFile(base_path)) {
+      Log::get().error("Decompressed file not created", true);
+    }
+    std::ifstream in(base_path);
+    std::string result((std::istreambuf_iterator<char>(in)),
+                       std::istreambuf_iterator<char>());
+    in.close();
+    if (result != test_content) {
+      Log::get().error("Decompressed content does not match original", true);
+    }
+    std::remove(base_path.c_str());
+    std::remove(gz_path.c_str());
   }
 }

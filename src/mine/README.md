@@ -2,9 +2,7 @@
 
 The source code in this folder is used for mining LODA programs that generate integer sequences from the OEIS database.
 The high-level architecture is shown below.
-The mining process is coordinated in the [Miner](miner.cpp) class. It uses [Generator](generator.hpp) instances to
-produce random LODA programs, which are evaluated and matched against the integer sequence database using instances of
-the [Matcher](matcher.hpp) class. If a generated program matches a sequence and there is no known program for it or it is considered better as the existing one, it is written to the programs folder and submitted to the central API server.
+The mining process is coordinated in the [Miner](miner.cpp) class. It uses [Generator](../gen/generator.hpp) instances from the [gen module](../gen/README.md) to produce random LODA programs, which are evaluated and matched against the integer sequence database using instances of the [Matcher](matcher.hpp) class. If a generated program matches a sequence and there is no known program for it or it is considered better as the existing one, it is written to the programs folder and submitted to the central API server.
 
 ![Mining architecture](../../images/mining-arch.png)
 
@@ -15,92 +13,7 @@ A miner profile has the following basic properties:
 - "backoff": Boolean to control the back-off strategy during sequence matching.
 - "overwrite": Controls whether existing programs should be overwritten. Possible values are "none", "auto" or "all".
 
-See below for further details on the [program generation](#program-generation) and [sequence matching](#sequence-matching).
-
-## Program Generation
-
-There are multiple generators available with differing strategies. They can generate programs either randomly or deterministically. Random program generators can use statistics on existing LODA program to define probability distributions. We also distinguish between generators that create programs from scratch, or that mutate
-randomly chosen existing programs, or use patterns or templates to create programs.
-
-All generator implement the [Generator](generator.hpp) interface. They are identified using a plain version number and instantiated using a factory class.
-For more details on the available generators and their strategies, see below.
-
-### Generator Version 1
-
-[GeneratorV1](generator_v1.cpp) produces random programs from scratch or from existing program templates. It includes several configuration options, for example, to control the approximate length of the programs and the used operation and operand types. For constants, it uses a distribution derived from the program stats. Historically,
-this generator found many simple programs in the early days of the project. However, nowadays it hardly finds new
-programs. This is mainly because it is stateless: it does not use any probabilistic model for
-dependencies between multiple operations in a generated program.
-
-```json
-{
-    "name": "my-generator",
-    "version": 1,
-    "length": 40,
-    "maxIndex": 8,
-    "loops": false,
-    "calls": false,
-    "indirectAccess": false,
-    "template": [
-        "$LODA_HOME/programs/templates/call2.asm",
-        "$LODA_HOME/programs/templates/loop.asm",
-      ]
-}
-```
-
-### Generator Version 2
-
-[GeneratorV2](generator_v2.cpp) generates random programs from scratch. It uses probability distributions generated from the program stats to randomly select the program length and operation (including operand). It does not include
-any configuration options and solely depends on the program stats. It is also stateless: it does not use any probabiblity distributions for sequential dependencies of operations.
-
-### Generator Version 3
-
-[GeneratorV3](generator_v3.cpp) also uses program length and operation distibutions. However, it uses separate
-distributions per position in the program. For example, it uses different distributions for the first and the second
-operation in the generated programs.
-
-### Generator Version 4
-
-[GeneratorV4](generator_v4.cpp) is partially deterministic and uses persistence to save its state to disk. It first
-initializes around 200 random programs of varying length and complexity and stores them on disk. It uses these
-random programs as *seeds* for deterministic generation using a program iterator. In a nutshell, the iterator
-increases a program like a number. Hence this is an exhaustive, brute-force search.
-
-### Generator Version 5
-
-[GeneratorV5](generator_v5.cpp) splits up the existing programs into blocks of a few operations and uses probaility
-distributions to randomly select and combine such program blocks.
-
-### Generator Version 6
-
-[GeneratorV6](generator_v6.cpp) is the most successful generator at the time of writing. It works quite simple:
-it randomly selects one of the already existing programs and mutates them, i.e., modifies, adds or deletes operations. It includes a parameter for controlling the mutation rate. In addition, it does not use a uniform
-distribution for selecting programs to mutate, but it takes into account the git history of the programs
-repository. In a nutshell, it prefers to mutate recently added or modified programs.
-
-```json
-{
-    "name": "my-generator",
-    "version": 6,
-    "mutationRate": 0.2
-}
-```
-
-### Generator Version 7
-
-[GeneratorV7](generator_v7.cpp) mutates [program patterns](https://github.com/loda-lang/loda-programs/tree/main/patterns) that have been generated using [loda-rust](https://github.com/loda-lang/loda-rust).
-
-### Generator Version 8
-
-[GeneratorV8](generator_v8.cpp) is not a true generator, but rather an input plugin that reads programs from a batch file. The batch filemust have the following format: every line corresponds to one program, where operations are separated using a semi-colon. This can been used for [NMT Mining](https://github.com/loda-lang/nmt-mining).
-
-```json
-{
-    "name": "my-generator",
-    "version": 8,
-    "batchFile": "programs.txt"
-}
-```
+See the [gen module documentation](../gen/README.md) for details on program generation and the sections below for details on sequence matching.
 
 ## Sequence Matching
 

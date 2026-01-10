@@ -12,6 +12,7 @@ The C++ source code organized under the `src/` directory into the following modu
 - [cmd](../src/cmd): Command-line interface, test suite, and main entry point
 - [eval](../src/eval): Interpreter and evaluation engine for LODA programs
 - [form](../src/form): Formula generation (including PARI/GP integration)
+- [gen](../src/gen): Random program generation
 - [lang](../src/lang): LODA language core (parser, analyzer, program representation)
 - [math](../src/math): Internal math library (big numbers, integer sequences)
 - [mine](../src/mine): Mining infrastructure (generators, matchers, miners)
@@ -28,7 +29,7 @@ To build from source, switch to the `src/` folder and run the appropriate comman
 * Linux ARM64: `make -f Makefile.linux-arm64.mk`
 * MacOS x86\_64: `make -f Makefile.macos-x86.mk`
 * MacOS ARM64: `make -f Makefile.macos-arm64.mk`
-* Windows: `nmake /F Makefile.windows.mk`
+* Windows (x86\_64 and ARM64): `nmake /F Makefile.windows.mk`
 
 After building, the `loda` executable will be copied or symlinked into the main project folder.
 
@@ -90,14 +91,14 @@ Automated formula generation from LODA programs is used to find closed-form or r
 
 ## Common Tasks
 
-### Adding a New Command
+### Adding Commands
 
 1. Declare the command in [cmd/commands.hpp](../src/cmd/commands.hpp).
 2. Implement it in [cmd/commands.cpp](../src/cmd/commands.cpp).
 3. Add command-line parsing in [cmd/main.cpp](../src/cmd/main.cpp).
 4. For official commands only: update help text in `Commands::help()` and [README.md](../README.md).
 
-### Adding a New Operation Type
+### Adding Operation Types
 
 1. Add the new operation type to the relevant enums, declarations and metadata in [lang/program.hpp](../src/lang/program.hpp) and [lang/program.cpp](../src/lang/program.cpp).
 2. For arithmetic operations, implement the behavior in the [Semantics](../src/eval/semantics.cpp).
@@ -109,6 +110,42 @@ Automated formula generation from LODA programs is used to find closed-form or r
 5. Create a CSV file in `tests/semantics/<opcode>.csv` containing test cases (three columns: operand1, operand2, expected result).
 6. Run the fast test suite: `./loda test-fast` to verify correctness.
 7. If static code optimizations are possible for the new operation, extend [eval/optimizer.cpp](../src/eval/optimizer.cpp). Add relevant `.asm` test files to `tests/optimizer`.
+
+### Adding Formula Tests
+
+Formula tests verify that the formula generation process correctly converts LODA programs into mathematical formulas and external tool formats (PARI/GP, LEAN).
+
+1. **Identify target sequences**: Find the IDs of OEIS sequences (e.g., A000045) that should be used for the new formula tests. If you need to discover sequences, use the LODA API MCP server to search for programs matching specific criteria or mathematical properties. Look for sequences with concise, readable formulas. Avoid sequences that require extensive computation for verification.
+
+2. **Ensure LODA programs exist**: Check if the LODA programs already exist in the test directory structure `tests/programs/oeis/XXX/` (where XXX is the first 3 digits of the sequence number). If missing:
+   - Fetch the programs using `./loda export AXXXXXX -o loda` (e.g., `./loda export A000045 -o loda`)
+   - Clean the program by removing "Submitted by..." comments and formula comments (keep only the sequence description and terms)
+   - Save as `AXXXXXX.asm` in the appropriate subdirectory (e.g., `tests/programs/oeis/000/A000045.asm`)
+
+3. **Generate expected formulas**: Use the `export` command to generate the expected formulas in different formats:
+   - Plain formula: `./loda export A000045 -o formula`
+   - PARI/GP function: `./loda export A000045 -o pari-function` 
+   - PARI/GP vector: `./loda export A000045 -o pari-vector`
+   - LEAN code: `./loda export A000045 -o lean`
+
+4. **Add test expectations**: Add the generated formulas to the corresponding test files:
+   - `tests/formula/formula.txt`: Plain mathematical formulas (format: `A000045: a(n) = a(n-1)+a(n-2), a(1) = 1, a(0) = 0`)
+   - `tests/formula/pari-function.txt`: PARI/GP function definitions
+   - `tests/formula/pari-vector.txt`: PARI/GP vector implementations  
+   - `tests/formula/lean.txt`: LEAN theorem prover code
+
+5. **Verify correctness**: 
+   - Run fast tests: `./loda test-fast` to verify formula generation
+   - Run full tests: `./loda test` to include external tool validation (requires PARI/GP and LEAN installation)
+   - Check that the round-trip parsing works (formula string → parsed formula → string should be identical)
+
+6. **Test different formula types**: The test system supports multiple formula validation modes:
+   - `FormulaType::FORMULA`: Basic mathematical notation with round-trip parsing
+   - `FormulaType::PARI_FUNCTION`: PARI/GP function format validation
+   - `FormulaType::PARI_VECTOR`: PARI/GP vector format validation  
+   - `FormulaType::LEAN`: LEAN theorem prover format validation
+
+**Note**: External tool tests (PARI/GP, LEAN) only run when the environment variable `LODA_TEST_WITH_EXTERNAL_TOOLS` is set, as they require additional software installations.
 
 ### Extending the Optimizer
 

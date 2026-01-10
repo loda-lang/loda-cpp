@@ -10,10 +10,12 @@ inline void invalidate(const std::string& key, const std::string& value) {
   throw std::invalid_argument("Invalid UID " + key + ": " + value);
 }
 
+constexpr size_t MAX_LENGTH = 7;
+
 UID::UID(char domain, int64_t number) { set(domain, number); }
 
 UID::UID(const std::string& s) {
-  if (s.size() < 2 || s.size() > 7 || s[0] < 'A' || s[0] > 'Z') {
+  if (s.size() < 2 || s.size() > MAX_LENGTH || s[0] < 'A' || s[0] > 'Z') {
     invalidate("string", "'" + s + "'");
   }
   int64_t number = 0;
@@ -24,6 +26,18 @@ UID::UID(const std::string& s) {
     number = number * 10 + (s[i] - '0');
   }
   set(s[0], number);
+}
+
+bool UID::valid(const std::string& s) {
+  if (s.size() < 2 || s.size() > MAX_LENGTH || s[0] < 'A' || s[0] > 'Z') {
+    return false;
+  }
+  for (size_t i = 1; i < s.size(); ++i) {
+    if (s[i] < '0' || s[i] > '9') {
+      return false;
+    }
+  }
+  return true;
 }
 
 void UID::set(char domain, int64_t number) {

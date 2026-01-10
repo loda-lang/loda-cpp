@@ -1,5 +1,95 @@
 ## [Unreleased]
 
+### Bugfixes
+
+* Fix calculation of number of needed initial terms (A131083)
+* Fix `test-lean` failure when LEAN project directory exists but is incomplete
+* Fix LEAN type synthesis error by wrapping pattern offset constants with `Int.ofNat` in Nat domain formulas
+* Fix LEAN export incorrectly applying pattern offset to `Int` domain parameters (A046231)
+* Fix PARI error handling and test evaluation
+
+### Enhancements
+
+* Add optimizer case for `nrt`
+* Add internal command `test-recursion`
+
+## v25.12.1
+
+### Enhancements
+
+* Integrate `libcurl` for HTTP requests, replacing external `curl`/`wget` tools
+* Integrate `zlib` for gzip decompression, replacing external `gzip`/`gunzip` tools
+* Report broken b-files to LODA API server for automatic cache invalidation
+* Add internal `export-formulas` command to export all program formulas to a file or stdout
+
+### Bugfixes
+
+* Fix PARI evaluation error for formulas with constant identity functions (e.g., A026765)
+* Fix LEAN evaluation error for formulas with mutually recursive functions that are not self-recursive (e.g., A001636)
+
+## v25.11.29
+
+### Enhancements
+
+* Improve formula generation performance by imposing tighter limits on variant simplification
+* Improve operations merging in optimizer
+
+### Bugfixes
+
+* Fix parsing error during stats generation
+* Fix PARI formula generation for rising factorial when the base can be zero (e.g., A006430)
+
+### Enhancements
+
+* Use `v2/submissions/` API endpoint to fetch and submit programs
+* Handle program submissions with `delete` mode
+
+## v25.11.9
+
+### Enhancements
+
+* Support `fac` in LEAN formula generation
+* Improve LEAN formula generation for `pow`
+* Improve mined programs comparison
+
+## v25.11.2
+
+### Bugfixes
+
+* Fix escaping in generated Discord messages
+
+### Features
+
+* Support multiple functions in LEAN formula generation
+* Support bitwise operations in LEAN formula generation
+
+### Enhancements
+
+* Simplify geometric progressions in formula generation
+* Simplify generated expressions for `fac` operations
+* Improve optimization of `pow`,`nrt` operations
+* Extend program stats with LEAN & PARI flags
+* Add LEAN project support for testing
+
+## v25.10.19
+
+### Bugfixes
+
+* Fix optimizer bug
+
+### Features
+
+* Support memory operations in formula generation
+* Support simple recursive functions in LEAN formula generation
+* Add Windows ARM64 build support
+
+### Enhancements
+
+* Add formula parser for parsing formulas from their string representation
+* Add internal command for finding programs with slow formula generation
+* Improve eval performance using optimized linker settings
+* Extend program stats with operation type bitmask
+
 ## v25.10.16
 
 ### Bugfixes

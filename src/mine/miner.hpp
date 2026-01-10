@@ -7,7 +7,7 @@
 #include "lang/program.hpp"
 #include "math/number.hpp"
 #include "mine/api_client.hpp"
-#include "mine/generator.hpp"
+#include "gen/generator.hpp"
 #include "mine/matcher.hpp"
 #include "mine/mine_manager.hpp"
 #include "mine/mutator.hpp"

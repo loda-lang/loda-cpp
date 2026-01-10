@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <fstream>
+#include <functional>
 #include <iostream>
 
 #include "cmd/benchmark.hpp"
@@ -13,14 +14,18 @@
 #include "eval/optimizer.hpp"
 #include "eval/range_generator.hpp"
 #include "form/formula_gen.hpp"
+#include "form/formula_parser.hpp"
+#include "form/function.hpp"
 #include "form/lean.hpp"
 #include "form/pari.hpp"
+#include "form/recursion.hpp"
+#include "gen/iterator.hpp"
 #include "lang/analyzer.hpp"
 #include "lang/comments.hpp"
+#include "lang/parser.hpp"
 #include "lang/program_util.hpp"
 #include "lang/subprogram.hpp"
 #include "lang/virtual_seq.hpp"
-#include "mine/iterator.hpp"
 #include "mine/mine_manager.hpp"
 #include "mine/miner.hpp"
 #include "mine/mutator.hpp"
@@ -296,16 +301,7 @@ void Commands::profile(const std::string& path) {
   auto micro_secs = std::chrono::duration_cast<std::chrono::microseconds>(
                         cur_time - start_time)
                         .count();
-  std::cout.setf(std::ios::fixed);
-  std::cout.precision(3);
-  if (micro_secs < 1000) {
-    std::cout << micro_secs << "µs" << std::endl;
-  } else if (micro_secs < 1000000) {
-    std::cout << static_cast<double>(micro_secs) / 1000.0 << "ms" << std::endl;
-  } else {
-    std::cout << static_cast<double>(micro_secs) / 1000000.0 << "s"
-              << std::endl;
-  }
+  std::cout << formatDuration(micro_secs) << std::endl;
 }
 
 void Commands::fold(const std::string& main_path, const std::string& sub_id) {
@@ -693,7 +689,7 @@ void testFormula(const std::string& test_id, const Settings& settings,
     // evaluate formula program
     auto offset = ProgramUtil::getOffset(program);
     Sequence genSeq;
-    if (!formula_obj.eval(offset, numTerms, 10, genSeq)) {
+    if (!formula_obj.eval(offset, numTerms, 60, genSeq)) {
       Log::get().warn(formula_obj.getName() + " evaluation timeout for " +
                       idStr);
       skipped++;
@@ -725,6 +721,66 @@ void Commands::testPari(const std::string& test_id) {
 void Commands::testLean(const std::string& test_id) {
   initLog(false);
   testFormula<LeanFormula>(test_id, settings, false);
+}
+
+void Commands::testFormulaParser(const std::string& test_id) {
+  initLog(false);
+  Parser parser;
+  FormulaParser formulaParser;
+  MineManager manager(settings);
+  manager.load();
+  auto& stats = manager.getStats();
+  int64_t good = 0, bad = 0, skipped = 0;
+  UID target_id;
+  if (!test_id.empty()) {
+    target_id = UID(test_id);
+  }
+  for (auto id : stats.all_program_ids) {
+    if (target_id.number() > 0 && id != target_id) {
+      continue;
+    }
+    auto idStr = id.string();
+    Program program;
+    try {
+      program = parser.parse(ProgramUtil::getProgramPath(id));
+    } catch (std::exception& e) {
+      Log::get().warn(std::string(e.what()));
+      continue;
+    }
+
+    // Check if program has a formula comment
+    std::string formulaStr =
+        Comments::getCommentField(program, Comments::PREFIX_FORMULA);
+    if (formulaStr.empty()) {
+      skipped++;
+      continue;
+    }
+
+    Log::get().info("Testing formula parsing for " + idStr + ": " + formulaStr);
+
+    // Parse the formula string
+    Formula parsed;
+    if (!formulaParser.parse(formulaStr, parsed)) {
+      Log::get().error(
+          "Failed to parse formula for " + idStr + ": " + formulaStr, true);
+      bad++;
+      continue;
+    }
+
+    // Round-trip test: convert back to string and check it matches
+    std::string roundTripStr = parsed.toString();
+    if (roundTripStr != formulaStr) {
+      Log::get().error("Round-trip test failed for " + idStr + ". Original: " +
+                           formulaStr + ", Parsed: " + roundTripStr,
+                       true);
+      bad++;
+    } else {
+      good++;
+    }
+  }
+  Log::get().info(std::to_string(good) + " passed, " + std::to_string(bad) +
+                  " failed, " + std::to_string(skipped) +
+                  " skipped formula parsing checks");
 }
 
 bool checkRange(const ManagedSequence& seq, const Program& program,
@@ -829,6 +885,97 @@ void Commands::testRange(const std::string& id) {
   }
 }
 
+void Commands::testRecursion(const std::string& test_id) {
+  initLog(false);
+  Log::get().info("Testing recursive formulas");
+
+  Parser parser;
+  FormulaGenerator generator;
+  size_t num_checked = 0;
+  size_t num_invalid = 0;
+
+  MineManager manager(settings);
+  manager.load();
+  auto& stats = manager.getStats();
+
+  UID target_id;
+  if (!test_id.empty()) {
+    target_id = UID(test_id);
+  }
+
+  for (auto uid : stats.all_program_ids) {
+    if (target_id.number() > 0 && uid != target_id) {
+      continue;
+    }
+
+    Program program;
+    try {
+      program = parser.parse(ProgramUtil::getProgramPath(uid));
+    } catch (std::exception& e) {
+      continue;  // Skip programs that cannot be parsed
+    }
+
+    // Generate formula
+    Formula formula;
+    try {
+      if (!generator.generate(program, uid.number(), formula, false)) {
+        continue;  // Skip programs for which formula cannot be generated
+      }
+    } catch (std::exception& e) {
+      // Skip programs that cause formula generation errors (e.g., missing
+      // dependencies)
+      continue;
+    }
+
+    // Extract functions from the formula
+    auto functions = Function::fromFormula(formula);
+
+    // Check each function separately
+    bool has_any_recursive = false;
+    bool logged_program = false;
+    for (const auto& func : functions) {
+      // Skip functions without a general case
+      if (!func.has_general_case) {
+        continue;
+      }
+
+      // Only proceed if the general case calls the same function
+      const bool is_recursive =
+          func.general_case.contains(Expression::Type::FUNCTION, func.name);
+      if (!is_recursive) {
+        continue;
+      }
+
+      has_any_recursive = true;
+
+      if (!logged_program) {
+        Log::get().info("Checking " + uid.string() + ": " + formula.toString());
+        logged_program = true;
+      }
+
+      // Validate this recursive function using the helper method
+      std::string error_msg;
+      bool is_valid = validateRecursiveFunction(func, error_msg);
+
+      if (!is_valid) {
+        num_invalid++;
+        Log::get().error(uid.string() + ": " + formula.toString() +
+                             " => INVALID: " + error_msg,
+                         true);
+      }
+    }
+
+    // Report progress
+    if (has_any_recursive) {
+      num_checked++;
+    }
+  }
+
+  Log::get().info("Checked " + std::to_string(num_checked) +
+                  " recursive formulas, found " + std::to_string(num_invalid) +
+                  " invalid");
+}
+
 void Commands::generate() {
   initLog(true);
   MineManager manager(settings);
@@ -897,6 +1044,12 @@ void Commands::findSlow(int64_t num_terms, const std::string& type) {
   }
   Benchmark benchmark;
   benchmark.findSlow(num_terms, t);
+}
+
+void Commands::findSlowFormulas() {
+  initLog(false);
+  Benchmark benchmark;
+  benchmark.findSlowFormulas();
 }
 
 void Commands::findEmbseqs() {
@@ -1128,6 +1281,40 @@ void Commands::compare(const std::string& path1, const std::string& path2) {
   bool full_check = manager.isFullCheck(seq.id);
   Log::get().info(manager.getFinder().getChecker().compare(
       p1, p2, "First", "Second", seq, full_check, num_usages));
+}
+
+void Commands::exportFormulas(const std::string& output_file) {
+  initLog(true);
+  Parser parser;
+  MineManager manager(settings);
+  manager.load();
+  auto& stats = manager.getStats();
+  std::ostream* out = &std::cout;
+  std::ofstream file_out;
+  if (!output_file.empty()) {
+    file_out.open(output_file);
+    if (!file_out.good()) {
+      Log::get().error("Cannot open output file: " + output_file, true);
+    }
+    out = &file_out;
+  }
+  for (auto id : stats.all_program_ids) {
+    try {
+      Program program = parser.parse(ProgramUtil::getProgramPath(id));
+      std::string formula =
+          Comments::getCommentField(program, Comments::PREFIX_FORMULA);
+
+      if (!formula.empty()) {
+        *out << id.string() << ": " << formula << std::endl;
+      }
+    } catch (const std::exception& e) {
+      Log::get().warn("Error processing " + id.string() + ": " +
+                      std::string(e.what()));
+    }
+  }
+  if (file_out.is_open()) {
+    file_out.close();
+  }
 }
 
 void Commands::commitAddedPrograms(size_t min_commit_count) {

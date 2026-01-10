@@ -19,79 +19,79 @@ const std::array<Operation::Type, 37> Operation::Types = {
 
 const Operation::Metadata& Operation::Metadata::get(Type t) {
   static Operation::Metadata nop{
-      Operation::Type::NOP, "nop", 0, false, false, false};
+      Operation::Type::NOP, "nop", 0, 0, false, false, false};
   static Operation::Metadata mov{
-      Operation::Type::MOV, "mov", 2, true, false, true};
+      Operation::Type::MOV, "mov", 1, 2, true, false, true};
   static Operation::Metadata add{
-      Operation::Type::ADD, "add", 2, true, true, true};
+      Operation::Type::ADD, "add", 2, 2, true, true, true};
   static Operation::Metadata sub{
-      Operation::Type::SUB, "sub", 2, true, true, true};
+      Operation::Type::SUB, "sub", 3, 2, true, true, true};
   static Operation::Metadata trn{
-      Operation::Type::TRN, "trn", 2, true, true, true};
+      Operation::Type::TRN, "trn", 4, 2, true, true, true};
   static Operation::Metadata mul{
-      Operation::Type::MUL, "mul", 2, true, true, true};
+      Operation::Type::MUL, "mul", 5, 2, true, true, true};
   static Operation::Metadata div{
-      Operation::Type::DIV, "div", 2, true, true, true};
+      Operation::Type::DIV, "div", 6, 2, true, true, true};
   static Operation::Metadata dif{
-      Operation::Type::DIF, "dif", 2, true, true, true};
+      Operation::Type::DIF, "dif", 7, 2, true, true, true};
   static Operation::Metadata dir{
-      Operation::Type::DIR, "dir", 2, true, true, true};
+      Operation::Type::DIR, "dir", 8, 2, true, true, true};
   static Operation::Metadata mod{
-      Operation::Type::MOD, "mod", 2, true, true, true};
+      Operation::Type::MOD, "mod", 9, 2, true, true, true};
   static Operation::Metadata pow{
-      Operation::Type::POW, "pow", 2, true, true, true};
+      Operation::Type::POW, "pow", 10, 2, true, true, true};
   static Operation::Metadata gcd{
-      Operation::Type::GCD, "gcd", 2, true, true, true};
+      Operation::Type::GCD, "gcd", 11, 2, true, true, true};
   static Operation::Metadata lex{
-      Operation::Type::LEX, "lex", 2, true, true, true};
+      Operation::Type::LEX, "lex", 12, 2, true, true, true};
   static Operation::Metadata bin{
-      Operation::Type::BIN, "bin", 2, true, true, true};
+      Operation::Type::BIN, "bin", 13, 2, true, true, true};
   static Operation::Metadata fac{
-      Operation::Type::FAC, "fac", 2, true, true, true};
+      Operation::Type::FAC, "fac", 14, 2, true, true, true};
   static Operation::Metadata log{
-      Operation::Type::LOG, "log", 2, true, true, true};
+      Operation::Type::LOG, "log", 15, 2, true, true, true};
   static Operation::Metadata nrt{
-      Operation::Type::NRT, "nrt", 2, true, true, true};
+      Operation::Type::NRT, "nrt", 16, 2, true, true, true};
   static Operation::Metadata dgs{
-      Operation::Type::DGS, "dgs", 2, true, true, true};
+      Operation::Type::DGS, "dgs", 17, 2, true, true, true};
   static Operation::Metadata dgr{
-      Operation::Type::DGR, "dgr", 2, true, true, true};
+      Operation::Type::DGR, "dgr", 18, 2, true, true, true};
   static Operation::Metadata equ{
-      Operation::Type::EQU, "equ", 2, true, true, true};
+      Operation::Type::EQU, "equ", 19, 2, true, true, true};
   static Operation::Metadata neq{
-      Operation::Type::NEQ, "neq", 2, true, true, true};
+      Operation::Type::NEQ, "neq", 20, 2, true, true, true};
   static Operation::Metadata leq{
-      Operation::Type::LEQ, "leq", 2, true, true, true};
+      Operation::Type::LEQ, "leq", 21, 2, true, true, true};
   static Operation::Metadata geq{
-      Operation::Type::GEQ, "geq", 2, true, true, true};
+      Operation::Type::GEQ, "geq", 22, 2, true, true, true};
   static Operation::Metadata min{
-      Operation::Type::MIN, "min", 2, true, true, true};
+      Operation::Type::MIN, "min", 23, 2, true, true, true};
   static Operation::Metadata max{
-      Operation::Type::MAX, "max", 2, true, true, true};
+      Operation::Type::MAX, "max", 24, 2, true, true, true};
   static Operation::Metadata ban{
-      Operation::Type::BAN, "ban", 2, true, true, true};
+      Operation::Type::BAN, "ban", 25, 2, true, true, true};
   static Operation::Metadata bor{
-      Operation::Type::BOR, "bor", 2, true, true, true};
+      Operation::Type::BOR, "bor", 26, 2, true, true, true};
   static Operation::Metadata bxo{
-      Operation::Type::BXO, "bxo", 2, true, true, true};
+      Operation::Type::BXO, "bxo", 27, 2, true, true, true};
   static Operation::Metadata lpb{
-      Operation::Type::LPB, "lpb", 2, true, true, false};
+      Operation::Type::LPB, "lpb", 28, 2, true, true, false};
   static Operation::Metadata lpe{
-      Operation::Type::LPE, "lpe", 0, true, false, false};
+      Operation::Type::LPE, "lpe", 29, 0, true, false, false};
   static Operation::Metadata clr{
-      Operation::Type::CLR, "clr", 2, true, false, true};
+      Operation::Type::CLR, "clr", 30, 2, true, false, true};
   static Operation::Metadata fil{
-      Operation::Type::FIL, "fil", 2, true, false, true};
+      Operation::Type::FIL, "fil", 31, 2, true, false, true};
   static Operation::Metadata rol{
-      Operation::Type::ROL, "rol", 2, true, false, true};
+      Operation::Type::ROL, "rol", 32, 2, true, false, true};
   static Operation::Metadata ror{
-      Operation::Type::ROR, "ror", 2, true, false, true};
+      Operation::Type::ROR, "ror", 33, 2, true, false, true};
   static Operation::Metadata seq{
-      Operation::Type::SEQ, "seq", 2, true, true, true};
+      Operation::Type::SEQ, "seq", 34, 2, true, true, true};
   static Operation::Metadata prg{
-      Operation::Type::PRG, "prg", 2, true, true, true};
+      Operation::Type::PRG, "prg", 35, 2, true, true, true};
   static Operation::Metadata dbg{
-      Operation::Type::DBG, "dbg", 0, false, false, false};
+      Operation::Type::DBG, "dbg", 36, 0, false, false, false};
   switch (t) {
     case Operation::Type::NOP:
       return nop;

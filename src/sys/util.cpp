@@ -54,7 +54,7 @@ enum class Option {
   LOG_LEVEL
 };
 
-std::vector<std::string> Settings::parseArgs(int argc, char *argv[]) {
+std::vector<std::string> Settings::parseArgs(int argc, char* argv[]) {
   Option option(Option::NONE);
   std::vector<std::string> unparsed;
   for (int i = 1; i < argc; ++i) {
@@ -162,7 +162,7 @@ std::vector<std::string> Settings::parseArgs(int argc, char *argv[]) {
   return unparsed;
 }
 
-void Settings::printArgs(std::vector<std::string> &args) {
+void Settings::printArgs(std::vector<std::string>& args) {
   if (num_terms != DEFAULT_NUM_TERMS) {
     args.push_back("-t");
     args.push_back(std::to_string(num_terms));
@@ -239,8 +239,8 @@ void AdaptiveScheduler::reset() {
 }
 
 ProgressMonitor::ProgressMonitor(int64_t target_seconds,
-                                 const std::string &progress_file,
-                                 const std::string &checkpoint_file,
+                                 const std::string& progress_file,
+                                 const std::string& checkpoint_file,
                                  uint64_t checkpoint_key)
     : start_time(std::chrono::steady_clock::now()),
       target_seconds(target_seconds),
@@ -263,7 +263,7 @@ ProgressMonitor::ProgressMonitor(int64_t target_seconds,
         checkpoint_seconds = decode(value);
         Log::get().info("Resuming from checkpoint at " +
                         std::to_string(getProgress() * 100.0) + "%");
-      } catch (const std::exception &) {
+      } catch (const std::exception&) {
         Log::get().error("Error reading checkpoint: " + checkpoint_file,
                          false);  // continue without checkpoint
       }
@@ -333,7 +333,7 @@ uint32_t ProgressMonitor::decode(uint64_t value) {
   return result;
 }
 
-Random &Random::get() {
+Random& Random::get() {
   static Random rand;
   return rand;
 }
@@ -346,7 +346,7 @@ Random::Random() {
 
 bool Signals::HALT = false;
 
-void trimString(std::string &str) {
+void trimString(std::string& str) {
   while (!str.empty()) {
     if (str.front() == ' ') {
       str = str.substr(1);
@@ -358,7 +358,80 @@ void trimString(std::string &str) {
   }
 }
 
-void lowerString(std::string &str) {
+void lowerString(std::string& str) {
   std::transform(str.begin(), str.end(), str.begin(),
                  [](unsigned char c) { return std::tolower(c); });
+}
+
+std::string formatDuration(int64_t microseconds) {
+  std::stringstream buf;
+  buf.setf(std::ios::fixed);
+  buf.precision(3);
+  if (microseconds < 1000) {
+    buf << microseconds << "µs";
+  } else if (microseconds < 1000000) {
+    buf << static_cast<double>(microseconds) / 1000.0 << "ms";
+  } else {
+    buf << static_cast<double>(microseconds) / 1000000.0 << "s";
+  }
+  return buf.str();
+}
+
+std::string escapeDiscordMarkdown(const std::string& str) {
+  std::string result;
+  // Reserve extra space to avoid reallocations when escaping special characters
+  result.reserve(str.size() * 2);
+  for (char c : str) {
+    // Escape Discord markdown special characters: * _ ~ ` | >
+    // Backslash itself needs to be escaped first
+    if (c == '\\' || c == '*' || c == '_' || c == '~' || c == '`' ||
+        c == '|' || c == '>') {
+      result += '\\';
+    }
+    result += c;
+  }
+  return result;
+}
+
+std::string escapeJsonString(const std::string& str) {
+  std::string result;
+  // Reserve extra space to avoid reallocations when escaping special characters
+  result.reserve(str.size() * 2);
+  for (char c : str) {
+    // Escape JSON special characters according to RFC 8259
+    switch (c) {
+      case '"':
+        result += "\\\"";
+        break;
+      case '\\':
+        result += "\\\\";
+        break;
+      case '\b':
+        result += "\\b";
+        break;
+      case '\f':
+        result += "\\f";
+        break;
+      case '\n':
+        result += "\\n";
+        break;
+      case '\r':
+        result += "\\r";
+        break;
+      case '\t':
+        result += "\\t";
+        break;
+      default:
+        // For control characters (0x00-0x1F), use \uXXXX format
+        if (static_cast<unsigned char>(c) < 0x20) {
+          char buf[7];
+          snprintf(buf, sizeof(buf), "\\u%04x", static_cast<unsigned char>(c));
+          result += buf;
+        } else {
+          result += c;
+        }
+        break;
+    }
+  }
+  return result;
 }

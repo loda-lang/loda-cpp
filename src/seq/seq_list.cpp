@@ -54,8 +54,27 @@ bool SequenceList::loadMapWithComments(const std::string& path,
   }
   std::string line, id, comment;
   map.clear();
+  // Read primary lines and allow continuation comment lines starting with
+  // two spaces. Continuation lines are appended to the last read comment
+  // (separated by a '\n').
+  UID last_uid;
+  bool have_last = false;
   while (std::getline(file, line)) {
     if (line.empty() || line[0] == '#') {
+      continue;
+    }
+    // continuation line: starts with two spaces
+    if (line.size() >= 2 && line[0] == ' ' && line[1] == ' ') {
+      if (have_last) {
+        // append the continuation (trim only the leading two spaces)
+        auto cont = line.substr(2);
+        if (!cont.empty()) {
+          if (!map[last_uid].empty()) {
+            map[last_uid] += "\n";
+          }
+          map[last_uid] += cont;
+        }
+      }
       continue;
     }
     id = "";
@@ -73,7 +92,10 @@ bool SequenceList::loadMapWithComments(const std::string& path,
       }
     }
     trimString(comment);
-    map[UID(id)] = comment;
+    UID uid(id);
+    map[uid] = comment;
+    last_uid = uid;
+    have_last = true;
   }
   Log::get().debug("Finished loading of list " + path + " with " +
                    std::to_string(map.size()) + " entries");

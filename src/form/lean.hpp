@@ -1,5 +1,7 @@
 #pragma once
 
+#include <set>
+
 #include "form/formula.hpp"
 #include "math/sequence.hpp"
 
@@ -25,6 +27,17 @@ class LeanFormula {
  private:
   Formula main_formula;
   std::string domain;  // Int or Nat
+  std::set<std::string> imports;
+  std::vector<std::string> funcNames;
 
-  bool convertToLean(Expression& expr, const Formula& f);
+  static bool initializeLeanProject();
+
+  bool convertToLean(Expression& expr, int64_t offset, Number patternOffset,
+                     bool insideOfLocalFunc);
+
+  bool needsIntToNat(const Expression& expr) const;
+
+  bool isLocalOrSeqFunc(const std::string& funcName) const;
+
+  std::string printFunction(const std::string& funcName) const;
 };

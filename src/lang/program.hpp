@@ -84,6 +84,7 @@ class Operation {
 
     Type type;
     std::string name;
+    int64_t ref_id;
     size_t num_operands;
     bool is_public;
     bool is_reading_target;
