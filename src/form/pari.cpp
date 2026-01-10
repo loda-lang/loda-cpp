@@ -23,6 +23,34 @@ bool convertExprToPari(Expression& expr, const Formula& f, bool as_vector) {
           functions.end()) {
     expr.type = Expression::Type::VECTOR;
   }
+  
+  // Wrap truncate(base^exponent) with if(exponent<0,0,...) to avoid
+  // PARI stack overflow from large negative exponents
+  if (expr.type == Expression::Type::FUNCTION && expr.name == "truncate" &&
+      expr.children.size() == 1 &&
+      expr.children[0].type == Expression::Type::POWER &&
+      expr.children[0].children.size() == 2) {
+    const auto& exponent = expr.children[0].children[1];
+    // Check if exponent could be negative (is a function or parameter)
+    if (exponent.type == Expression::Type::FUNCTION ||
+        exponent.type == Expression::Type::VECTOR ||
+        exponent.type == Expression::Type::PARAMETER ||
+        ExpressionUtil::canBeNegative(exponent, 0)) {
+      // Create: if(exponent<0, 0, truncate(base^exponent))
+      Expression condition(Expression::Type::LESS_EQUAL);
+      condition.newChild(exponent);
+      condition.newChild(ExpressionUtil::newConstant(-1));
+      
+      Expression zero = ExpressionUtil::newConstant(0);
+      Expression original = expr;  // copy
+      
+      expr = Expression(Expression::Type::IF);
+      expr.newChild(condition);
+      expr.newChild(zero);
+      expr.newChild(original);
+    }
+  }
+  
   return true;
 }
 
@@ -82,24 +110,12 @@ bool requiresVectorMode(const Formula& f) {
 bool addLocalVars(Formula& f) {
   std::map<Expression, size_t> count;
   bool changed = false;
-  auto functions = FormulaUtil::getDefinitions(f, Expression::Type::FUNCTION);
   for (auto& e : f.entries) {
     count.clear();
     countFuncs(f, e.second, count);
     size_t i = 1;
     for (auto& c : count) {
       if (c.second < 2) {
-        continue;
-      }
-      // Skip local variable optimization if this function call would be used
-      // in a self-referential power operation (e.g., e(n-1)^e(n-1))
-      // This prevents exponential blowup in recursive evaluation
-      if (c.first.type == Expression::Type::FUNCTION &&
-          std::find(functions.begin(), functions.end(), c.first.name) !=
-              functions.end() &&
-          hasSelfReferentialPower(e.second, functions)) {
-        Log::get().debug("Skipping local variable for " + c.first.toString() +
-                         " due to self-referential power pattern");
         continue;
       }
       std::string name = "l" + std::to_string(i++);

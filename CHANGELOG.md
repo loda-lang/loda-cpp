@@ -6,7 +6,7 @@
 * Fix `test-lean` failure when LEAN project directory exists but is incomplete
 * Fix LEAN type synthesis error by wrapping pattern offset constants with `Int.ofNat` in Nat domain formulas
 * Fix LEAN export incorrectly applying pattern offset to `Int` domain parameters (A046231)
-* Fix PARI stack overflow in `test-pari` for sequences with self-referential power operations (A132076) by preventing local variable optimization for such patterns
+* Fix PARI stack overflow in `test-pari` for sequences with truncate(power) operations where exponent can be negative (A132076) by wrapping with conditional to return 0 for negative exponents
 
 ### Enhancements
 
