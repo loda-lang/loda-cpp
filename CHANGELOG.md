@@ -7,7 +7,7 @@
 * Fix LEAN type synthesis error by wrapping pattern offset constants with `Int.ofNat` in Nat domain formulas
 * Fix LEAN export incorrectly applying pattern offset to `Int` domain parameters (A046231)
 * Fix PARI error handling and test evaluation
-* Fix PARI stack overflow in `test-pari` for sequences with truncate(power) operations where exponent can be negative (A132076) by wrapping with conditional that avoids computing large negative powers (returns 0 for negative exponents except when base is ±1, which always produce integers)
+* Fix stack overflow in formula evaluators for sequences with power operations where exponent can be negative (A132076) by wrapping with conditional in general formula generator that avoids computing large negative powers (returns 0 for negative exponents except when base is ±1, which always produce integers)
 
 ### Enhancements
 

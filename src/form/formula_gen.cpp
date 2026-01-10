@@ -262,7 +262,42 @@ bool FormulaGenerator::update(const Operation& op, const RangeMap* ranges) {
     case Operation::Type::POW: {
       res = Expression(Expression::Type::POWER, "", {prevTarget, source});
       if (canBeNegativeWithRanges(source, op.source, ranges)) {
-        res = func("truncate", {res});
+        // Wrap with conditional to avoid computing large negative powers
+        // that can cause stack overflow in formula evaluators like PARI.
+        // This handles three cases:
+        // 1. base ∈ {-1,1}: base^exponent is always an integer
+        // 2. exponent < 0 and base ∉ {-1,1}: result is 0
+        // 3. exponent >= 0: base^exponent is an integer
+        // Pattern: if(base*base==1, base^exp, if(exp<=-1, 0, base^exp))
+        
+        // Check if base² == 1 (base is ±1)
+        Expression base_squared(Expression::Type::PRODUCT);
+        base_squared.newChild(prevTarget);
+        base_squared.newChild(prevTarget);
+        
+        Expression base_is_one(Expression::Type::EQUAL);
+        base_is_one.newChild(base_squared);
+        base_is_one.newChild(constant(1));
+        
+        // Inner IF: if(exponent<=-1, 0, base^exponent)
+        Expression exp_negative(Expression::Type::LESS_EQUAL);
+        exp_negative.newChild(source);
+        exp_negative.newChild(constant(-1));
+        
+        Expression zero = constant(0);
+        
+        Expression inner_if(Expression::Type::IF);
+        inner_if.newChild(exp_negative);
+        inner_if.newChild(zero);
+        inner_if.newChild(res);  // base^exponent
+        
+        // Outer IF: if(base*base==1, base^exponent, inner_if)
+        Expression outer_if(Expression::Type::IF);
+        outer_if.newChild(base_is_one);
+        outer_if.newChild(res);  // base^exponent for base ∈ {-1, 1}
+        outer_if.newChild(inner_if);  // conditional for other bases
+        
+        res = outer_if;
       }
       break;
     }
