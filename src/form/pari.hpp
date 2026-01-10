@@ -21,9 +21,6 @@ class PariFormula {
   static bool convert(const Formula& formula, int64_t offset, bool as_vector,
                       PariFormula& pari_formula);
 
-  // Check if formula requires vector mode due to problematic patterns
-  static bool requiresVectorMode(const Formula& formula);
-
   std::string printEvalCode(int64_t offset, int64_t numTerms) const;
 
   std::string toString() const;
