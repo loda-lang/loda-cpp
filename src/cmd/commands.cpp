@@ -1343,10 +1343,10 @@ void Commands::commitUpdatedAndDeletedPrograms() {
 
 void Commands::updateFormulaTests() {
   initLog(false);
-  
+
   // Set programs home to test directory
   Setup::setProgramsHome(std::string("tests") + FILE_SEP + "programs");
-  
+
   Parser parser;
   FormulaGenerator generator;
 
@@ -1363,8 +1363,8 @@ void Commands::updateFormulaTests() {
       {"lean.txt", "lean"}};
 
   for (const auto& test_file : test_files) {
-    std::string path = std::string("tests") + FILE_SEP + std::string("formula") +
-                       FILE_SEP + test_file.filename;
+    std::string path = std::string("tests") + FILE_SEP +
+                       std::string("formula") + FILE_SEP + test_file.filename;
 
     Log::get().info("Updating " + path);
 
@@ -1377,13 +1377,8 @@ void Commands::updateFormulaTests() {
       continue;
     }
 
-    // Open output file
-    std::ofstream out(path);
-    if (!out.good()) {
-      Log::get().error("Cannot open file for writing: " + path, true);
-    }
-
-    // Process each sequence
+    // Process each sequence and build updated map
+    std::map<UID, std::string> updated_map;
     for (const auto& entry : existing_map) {
       auto id = entry.first;
       try {
@@ -1395,8 +1390,8 @@ void Commands::updateFormulaTests() {
         Formula formula;
         if (!generator.generate(program, id.number(), formula, true)) {
           Log::get().warn("Cannot generate formula for " + id.string());
-          // Write original entry if formula generation fails
-          out << id.string() << ": " << entry.second << std::endl;
+          // Keep original entry if formula generation fails
+          updated_map[id] = entry.second;
           continue;
         }
 
@@ -1409,7 +1404,7 @@ void Commands::updateFormulaTests() {
           if (!PariFormula::convert(formula, offset, false, pari)) {
             Log::get().warn("Cannot convert formula to PARI/GP for " +
                             id.string());
-            out << id.string() << ": " << entry.second << std::endl;
+            updated_map[id] = entry.second;
             continue;
           }
           result = pari.toString();
@@ -1418,33 +1413,36 @@ void Commands::updateFormulaTests() {
           if (!PariFormula::convert(formula, offset, true, pari)) {
             Log::get().warn("Cannot convert formula to PARI/GP vector for " +
                             id.string());
-            out << id.string() << ": " << entry.second << std::endl;
+            updated_map[id] = entry.second;
             continue;
           }
           result = pari.toString();
         } else if (test_file.format == "lean") {
           LeanFormula lean;
           if (!LeanFormula::convert(formula, offset, false, lean)) {
-            Log::get().warn("Cannot convert formula to LEAN for " + id.string());
-            out << id.string() << ": " << entry.second << std::endl;
+            Log::get().warn("Cannot convert formula to LEAN for " +
+                            id.string());
+            updated_map[id] = entry.second;
             continue;
           }
           result = lean.toString();
         }
 
-        // Write updated entry
-        out << id.string() << ": " << result << std::endl;
+        // Store updated entry
+        updated_map[id] = result;
         Log::get().info("Updated " + id.string());
 
       } catch (const std::exception& e) {
         Log::get().warn("Error processing " + id.string() + ": " +
                         std::string(e.what()));
-        // Write original entry on error
-        out << id.string() << ": " << entry.second << std::endl;
+        // Keep original entry on error
+        updated_map[id] = entry.second;
       }
     }
 
-    out.close();
+    // Write all entries using saveMapWithComments (handles multi-line
+    // formatting)
+    SequenceList::saveMapWithComments(path, updated_map);
     Log::get().info("Finished updating " + path);
   }
 }

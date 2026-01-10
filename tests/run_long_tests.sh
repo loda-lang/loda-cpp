@@ -108,7 +108,7 @@ send_output_to_discord() {
         
         # If adding this line would exceed the limit, send the current message first
         if [ $((${#current_message} + ${#line} + 1)) -gt $max_message_length ] && [ -n "$current_message" ]; then
-            send_to_discord "$current_message"
+            send_to_discord "\`\`\`\n${current_message}\n\`\`\`"
             current_message=""
             # Small delay to avoid rate limiting
             sleep 0.5
@@ -125,7 +125,7 @@ ${line}"
     
     # Send any remaining message
     if [ -n "$current_message" ]; then
-        send_to_discord "$current_message"
+        send_to_discord "\`\`\`\n${current_message}\n\`\`\`"
     fi
 }
 
