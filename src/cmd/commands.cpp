@@ -714,7 +714,7 @@ void testFormula(const std::string& test_id, const Settings& settings,
 
 void Commands::testPari(const std::string& test_id) {
   initLog(false);
-  const bool as_vector = false;  // TODO: switch to true
+  const bool as_vector = false;
   testFormula<PariFormula>(test_id, settings, as_vector);
 }
 

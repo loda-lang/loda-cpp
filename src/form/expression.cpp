@@ -317,7 +317,17 @@ void Expression::printExtracted(std::ostream& out, bool curry) const {
       break;
     case Expression::Type::IF:
       assertNumChildren(3);
-      printChildrenWrapped(out, curry, ",", "if(n==", ")");
+      // Check if first child is a comparison expression
+      if (children[0].type == Expression::Type::LESS_EQUAL ||
+          children[0].type == Expression::Type::GREATER_EQUAL ||
+          children[0].type == Expression::Type::EQUAL ||
+          children[0].type == Expression::Type::NOT_EQUAL) {
+        // General if(condition, then, else) form
+        printChildrenWrapped(out, curry, ",", "if(", ")");
+      } else {
+        // Legacy if(n==value, then, else) form
+        printChildrenWrapped(out, curry, ",", "if(n==", ")");
+      }
       break;
     case Expression::Type::FACTORIAL:
       assertNumChildren(1);
