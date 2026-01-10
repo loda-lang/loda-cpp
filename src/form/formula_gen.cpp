@@ -270,34 +270,66 @@ bool FormulaGenerator::update(const Operation& op, const RangeMap* ranges) {
         // 3. exponent >= 0: base^exponent is an integer
         // Pattern: if(base*base==1, base^exp, if(exp<=-1, 0, base^exp))
         
-        // Check if base² == 1 (base is ±1)
-        Expression base_squared(Expression::Type::PRODUCT);
-        base_squared.newChild(prevTarget);
-        base_squared.newChild(prevTarget);
+        // Use range analysis to determine if base can be ±1
+        bool baseCanBeOne = true;
+        if (ranges && op.target.type == Operand::Type::DIRECT) {
+          int64_t cell = op.target.value.asInt();
+          auto it = ranges->find(cell);
+          if (it != ranges->end()) {
+            const auto& range = it->second;
+            // If range excludes -1 and 1, no need to check base==±1
+            if ((range.lower_bound > Number::ONE || range.upper_bound < Number::MINUS_ONE) ||
+                (range.lower_bound > Number::MINUS_ONE && range.upper_bound < Number::ONE)) {
+              baseCanBeOne = false;
+            }
+          }
+        }
         
-        Expression base_is_one(Expression::Type::EQUAL);
-        base_is_one.newChild(base_squared);
-        base_is_one.newChild(constant(1));
-        
-        // Inner IF: if(exponent<=-1, 0, base^exponent)
-        Expression exp_negative(Expression::Type::LESS_EQUAL);
-        exp_negative.newChild(source);
-        exp_negative.newChild(constant(-1));
-        
-        Expression zero = constant(0);
-        
-        Expression inner_if(Expression::Type::IF);
-        inner_if.newChild(exp_negative);
-        inner_if.newChild(zero);
-        inner_if.newChild(res);  // base^exponent
-        
-        // Outer IF: if(base*base==1, base^exponent, inner_if)
-        Expression outer_if(Expression::Type::IF);
-        outer_if.newChild(base_is_one);
-        outer_if.newChild(res);  // base^exponent for base ∈ {-1, 1}
-        outer_if.newChild(inner_if);  // conditional for other bases
-        
-        res = outer_if;
+        if (baseCanBeOne) {
+          // Check if base² == 1 (base is ±1)
+          Expression base_squared(Expression::Type::PRODUCT);
+          base_squared.newChild(prevTarget);
+          base_squared.newChild(prevTarget);
+          
+          Expression base_is_one(Expression::Type::EQUAL);
+          base_is_one.newChild(base_squared);
+          base_is_one.newChild(constant(1));
+          
+          // Inner IF: if(exponent<=-1, 0, base^exponent)
+          Expression exp_negative(Expression::Type::LESS_EQUAL);
+          exp_negative.newChild(source);
+          exp_negative.newChild(constant(-1));
+          
+          Expression zero = constant(0);
+          
+          Expression inner_if(Expression::Type::IF);
+          inner_if.newChild(exp_negative);
+          inner_if.newChild(zero);
+          inner_if.newChild(res);  // base^exponent
+          
+          // Outer IF: if(base*base==1, base^exponent, inner_if)
+          Expression outer_if(Expression::Type::IF);
+          outer_if.newChild(base_is_one);
+          outer_if.newChild(res);  // base^exponent for base ∈ {-1, 1}
+          outer_if.newChild(inner_if);  // conditional for other bases
+          
+          res = outer_if;
+        } else {
+          // Base cannot be ±1, so we can skip the base check
+          // Pattern: if(exp<=-1, 0, base^exp)
+          Expression exp_negative(Expression::Type::LESS_EQUAL);
+          exp_negative.newChild(source);
+          exp_negative.newChild(constant(-1));
+          
+          Expression zero = constant(0);
+          
+          Expression if_expr(Expression::Type::IF);
+          if_expr.newChild(exp_negative);
+          if_expr.newChild(zero);
+          if_expr.newChild(res);  // base^exponent
+          
+          res = if_expr;
+        }
       }
       break;
     }
