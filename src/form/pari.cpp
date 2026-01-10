@@ -38,8 +38,12 @@ bool convertExprToPari(Expression& expr, const Formula& f, bool as_vector) {
         exponent.type == Expression::Type::PARAMETER ||
         ExpressionUtil::canBeNegative(exponent, 0)) {
       // Create nested IFs to handle special cases:
-      // if(base*base==1, truncate(base^exponent), if(exponent<=-1, 0, truncate(base^exponent)))
-      // This handles: 1^(-n)=1, (-1)^(-n)=(-1)^n, otherwise truncate(base^neg)=0
+      // if(base*base==1, base^exponent, if(exponent<=-1, 0, base^exponent))
+      // This handles: 1^(-n)=1, (-1)^(-n)=(-1)^n, otherwise base^neg=0
+      // Note: truncate is not needed since all branches return integers:
+      //   - base ∈ {-1,1}: integer^integer = integer
+      //   - exponent < 0 and base ∉ {-1,1}: return 0
+      //   - exponent >= 0: integer^integer = integer
       
       // Check if base² == 1 (base is ±1)
       Expression base_squared(Expression::Type::PRODUCT);
@@ -50,23 +54,23 @@ bool convertExprToPari(Expression& expr, const Formula& f, bool as_vector) {
       base_is_one.newChild(base_squared);
       base_is_one.newChild(ExpressionUtil::newConstant(1));
       
-      // Inner IF: if(exponent<=-1, 0, truncate(base^exponent))
+      // Inner IF: if(exponent<=-1, 0, base^exponent)
       Expression exp_negative(Expression::Type::LESS_EQUAL);
       exp_negative.newChild(exponent);
       exp_negative.newChild(ExpressionUtil::newConstant(-1));
       
       Expression zero = ExpressionUtil::newConstant(0);
-      Expression original = expr;  // copy of truncate(base^exponent)
+      Expression power_expr = expr.children[0];  // base^exponent without truncate
       
       Expression inner_if(Expression::Type::IF);
       inner_if.newChild(exp_negative);
       inner_if.newChild(zero);
-      inner_if.newChild(original);
+      inner_if.newChild(power_expr);
       
-      // Outer IF: if(base*base==1, truncate(base^exponent), inner_if)
+      // Outer IF: if(base*base==1, base^exponent, inner_if)
       expr = Expression(Expression::Type::IF);
       expr.newChild(base_is_one);
-      expr.newChild(original);  // Use original for base ∈ {-1, 1}
+      expr.newChild(power_expr);  // Use power for base ∈ {-1, 1}
       expr.newChild(inner_if);  // Use conditional for other bases
     }
   }
