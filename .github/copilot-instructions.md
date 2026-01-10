@@ -147,6 +147,25 @@ Formula tests verify that the formula generation process correctly converts LODA
 
 **Note**: External tool tests (PARI/GP, LEAN) only run when the environment variable `LODA_TEST_WITH_EXTERNAL_TOOLS` is set, as they require additional software installations.
 
+### Updating Formula Tests
+
+When the formula generation code is changed (e.g., modifications to [FormulaGenerator](../src/form/formula_gen.hpp), [Formula](../src/form/formula.hpp), or format converters like [PARI](../src/form/pari.hpp) or [LEAN](../src/form/lean.hpp)), use the `update-formula-tests` internal command to regenerate test expectations:
+
+```bash
+./loda update-formula-tests
+```
+
+This command automatically updates all four formula test files (`tests/formula/formula.txt`, `tests/formula/pari-function.txt`, `tests/formula/pari-vector.txt`, `tests/formula/lean.txt`) by:
+- Reading existing test entries to preserve order
+- Regenerating formulas for each sequence ID using the current formula generation logic
+- Converting formulas to the appropriate format (plain formula, PARI/GP function, PARI/GP vector, LEAN)
+- Preserving original entries if formula generation or conversion fails
+
+After updating, verify the changes are correct by:
+1. Reviewing the diff to ensure formulas were updated as expected
+2. Running `./loda test-fast` to verify all formula tests pass
+3. Committing the updated test files along with the formula generation code changes
+
 ### Extending the Optimizer
 
 1. Extend the `Optimizer` class in [eval/optimizer.cpp](../src/eval/optimizer.cpp).
