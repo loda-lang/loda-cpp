@@ -99,6 +99,8 @@ class Commands {
 
   void commitUpdatedAndDeletedPrograms();
 
+  void updateFormulaTests();
+
  private:
   const Settings& settings;
 

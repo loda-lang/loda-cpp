@@ -13,6 +13,7 @@
 
 * Add optimizer case for `nrt`
 * Add internal command `test-recursion`
+* Add internal command `update-formula-tests` to automatically update formula test expectations
 
 ## v25.12.1
 

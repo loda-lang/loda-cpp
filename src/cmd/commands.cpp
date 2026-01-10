@@ -1340,3 +1340,111 @@ void Commands::commitUpdatedAndDeletedPrograms() {
   }
   SequenceProgram::commitUpdateAndDeletedPrograms(&stats, &full_check_list);
 }
+
+void Commands::updateFormulaTests() {
+  initLog(false);
+  
+  // Set programs home to test directory
+  Setup::setProgramsHome(std::string("tests") + FILE_SEP + "programs");
+  
+  Parser parser;
+  FormulaGenerator generator;
+
+  // Define test files and their corresponding formula types
+  struct FormulaTestFile {
+    std::string filename;
+    std::string format;  // "formula", "pari-function", "pari-vector", "lean"
+  };
+
+  std::vector<FormulaTestFile> test_files = {
+      {"formula.txt", "formula"},
+      {"pari-function.txt", "pari-function"},
+      {"pari-vector.txt", "pari-vector"},
+      {"lean.txt", "lean"}};
+
+  for (const auto& test_file : test_files) {
+    std::string path = std::string("tests") + FILE_SEP + std::string("formula") +
+                       FILE_SEP + test_file.filename;
+
+    Log::get().info("Updating " + path);
+
+    // Load existing entries to preserve the order
+    std::map<UID, std::string> existing_map;
+    SequenceList::loadMapWithComments(path, existing_map);
+
+    if (existing_map.empty()) {
+      Log::get().warn("No entries found in " + path);
+      continue;
+    }
+
+    // Open output file
+    std::ofstream out(path);
+    if (!out.good()) {
+      Log::get().error("Cannot open file for writing: " + path, true);
+    }
+
+    // Process each sequence
+    for (const auto& entry : existing_map) {
+      auto id = entry.first;
+      try {
+        // Parse the program
+        auto program = parser.parse(ProgramUtil::getProgramPath(id));
+        auto offset = ProgramUtil::getOffset(program);
+
+        // Generate the formula
+        Formula formula;
+        if (!generator.generate(program, id.number(), formula, true)) {
+          Log::get().warn("Cannot generate formula for " + id.string());
+          // Write original entry if formula generation fails
+          out << id.string() << ": " << entry.second << std::endl;
+          continue;
+        }
+
+        // Convert to the appropriate format
+        std::string result;
+        if (test_file.format == "formula") {
+          result = formula.toString();
+        } else if (test_file.format == "pari-function") {
+          PariFormula pari;
+          if (!PariFormula::convert(formula, offset, false, pari)) {
+            Log::get().warn("Cannot convert formula to PARI/GP for " +
+                            id.string());
+            out << id.string() << ": " << entry.second << std::endl;
+            continue;
+          }
+          result = pari.toString();
+        } else if (test_file.format == "pari-vector") {
+          PariFormula pari;
+          if (!PariFormula::convert(formula, offset, true, pari)) {
+            Log::get().warn("Cannot convert formula to PARI/GP vector for " +
+                            id.string());
+            out << id.string() << ": " << entry.second << std::endl;
+            continue;
+          }
+          result = pari.toString();
+        } else if (test_file.format == "lean") {
+          LeanFormula lean;
+          if (!LeanFormula::convert(formula, offset, false, lean)) {
+            Log::get().warn("Cannot convert formula to LEAN for " + id.string());
+            out << id.string() << ": " << entry.second << std::endl;
+            continue;
+          }
+          result = lean.toString();
+        }
+
+        // Write updated entry
+        out << id.string() << ": " << result << std::endl;
+        Log::get().info("Updated " + id.string());
+
+      } catch (const std::exception& e) {
+        Log::get().warn("Error processing " + id.string() + ": " +
+                        std::string(e.what()));
+        // Write original entry on error
+        out << id.string() << ": " << entry.second << std::endl;
+      }
+    }
+
+    out.close();
+    Log::get().info("Finished updating " + path);
+  }
+}
