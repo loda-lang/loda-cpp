@@ -1,9 +1,9 @@
 #include "sys/web_client.hpp"
 
+#include <curl/curl.h>
+
 #include <cstring>
 #include <fstream>
-
-#include <curl/curl.h>
 
 // Undefine Windows macros that conflict with our code
 #ifdef ERROR
@@ -12,6 +12,18 @@
 
 #include "sys/file.hpp"
 #include "sys/log.hpp"
+#include "sys/util.hpp"
+
+// Helper to construct a consistent default User-Agent string
+static std::string makeUserAgent() {
+  // Example: "loda-cpp/25.12.1 (macos-arm64)"
+  std::string ua = "loda-cpp/";
+  ua += Version::VERSION;
+  ua += " (";
+  ua += Version::PLATFORM;
+  ua += ")";
+  return ua;
+}
 
 int64_t WebClient::WEB_CLIENT_TYPE = 0;
 
@@ -77,6 +89,9 @@ bool WebClient::get(const std::string& url, const std::string& local_path,
   }
 
   curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+  // Set default User-Agent for all requests
+  const std::string ua = makeUserAgent();
+  curl_easy_setopt(curl, CURLOPT_USERAGENT, ua.c_str());
   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeFileCallback);
   curl_easy_setopt(curl, CURLOPT_WRITEDATA, &file);
   curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
@@ -93,9 +108,9 @@ bool WebClient::get(const std::string& url, const std::string& local_path,
     std::remove(local_path.c_str());
     curl_easy_cleanup(curl);
     if (fail_on_error) {
-      Log::get().error("Error fetching " + url + ": " +
-                           std::string(curl_easy_strerror(res)),
-                       true);
+      Log::get().error(
+          "Error fetching " + url + ": " + std::string(curl_easy_strerror(res)),
+          true);
     }
     return false;
   }
@@ -122,6 +137,9 @@ bool WebClient::postFile(const std::string& url, const std::string& file_path,
   }
 
   curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+  // Set default User-Agent for all requests
+  const std::string ua = makeUserAgent();
+  curl_easy_setopt(curl, CURLOPT_USERAGENT, ua.c_str());
 
   if (!auth.empty()) {
     curl_easy_setopt(curl, CURLOPT_USERPWD, auth.c_str());
