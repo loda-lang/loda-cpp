@@ -39,6 +39,8 @@ class Setup {
 
   static const std::string& getCacheHome();
 
+  static const std::string& getDebugHome();
+
   static const std::string& getProgramsHome();
 
   static void setProgramsHome(const std::string& home);

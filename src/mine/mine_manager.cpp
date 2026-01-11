@@ -741,6 +741,13 @@ update_program_result_t MineManager::updateProgram(
   const std::string color = is_new ? "good" : "warning";
   alert(result.program, id, checked.status, color, formula, submitter);
 
+  // log the change
+  if (is_new) {
+    change_log.logAdded(id, checked.status, submitter);
+  } else {
+    change_log.logUpdated(id, checked.status, submitter);
+  }
+
   return result;
 }
 
@@ -829,6 +836,7 @@ bool MineManager::maintainProgram(UID id, bool eval) {
   if (!is_okay) {
     // send alert and remove file
     alert(program, id, "Removed invalid", "danger", "", "");
+    change_log.logRemoved(id, "Removed invalid");
     remove(file_name.c_str());
   }
 

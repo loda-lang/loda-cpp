@@ -146,6 +146,16 @@ const std::string& Setup::getCacheHome() {
   return cache_home;
 }
 
+const std::string& Setup::getDebugHome() {
+  static std::string debug_home;
+  if (debug_home.empty()) {
+    // don't remove the trailing /
+    debug_home = getLodaHome() + "debug" + FILE_SEP;
+    ensureDir(debug_home);
+  }
+  return debug_home;
+}
+
 const std::string& Setup::getProgramsHome() {
   if (PROGRAMS_HOME.empty()) {
     setProgramsHome(getLodaHome() + "programs" + FILE_SEP);
