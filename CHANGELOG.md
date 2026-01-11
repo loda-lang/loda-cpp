@@ -14,7 +14,8 @@
 * Add optimizer case for `nrt`
 * Add internal command `test-recursion`
 * Add internal command `update-formula-tests` to automatically update formula test expectations
-* Add program change log in server mode to track program updates (added, updated, removed) with reasons in `$LODA_HOME/debug/programs_changelog.txt`
+* Add program change log in server mode to track program updates
+* Use v2 API endpoint for reporting CPU hours
 
 ## v25.12.1
 

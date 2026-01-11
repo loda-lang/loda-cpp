@@ -41,20 +41,22 @@ ApiClient& ApiClient::getDefaultInstance() {
   return api_client;
 }
 
-std::string ApiClient::toJson(const Program& program){
+std::string ApiClient::toJson(const Program& program) {
   const std::string id = Comments::getSequenceIdFromProgram(program);
   const std::string submitter = Comments::getSubmitter(program);
-  const std::string change_type = Comments::getCommentField(program, Comments::PREFIX_CHANGE_TYPE);
-  const std::string mode = ((change_type == "" || change_type == "Found") ? "add" : "update");
+  const std::string change_type =
+      Comments::getCommentField(program, Comments::PREFIX_CHANGE_TYPE);
+  const std::string mode =
+      ((change_type == "" || change_type == "Found") ? "add" : "update");
   const std::string type = "program";
   std::ostringstream oss;
   ProgramUtil::print(program, oss);
   const std::string content = oss.str();
-  return "{\"id\":\"" + escapeJsonString(id) + "\","
-         "\"submitter\":\"" + escapeJsonString(submitter) + "\","
-         "\"mode\":\"" + escapeJsonString(mode) + "\","
-         "\"type\":\"" + escapeJsonString(type) + "\","
-         "\"content\":\"" + escapeJsonString(content) + "\"}";
+  return "{\"id\":\"" + escapeJsonString(id) + "\"," + "\"submitter\":\"" +
+         escapeJsonString(submitter) + "\"," + "\"mode\":\"" +
+         escapeJsonString(mode) + "\"," + "\"type\":\"" +
+         escapeJsonString(type) + "\"," + "\"content\":\"" +
+         escapeJsonString(content) + "\"}";
 }
 
 void ApiClient::postProgram(const Program& program, size_t max_buffer) {
@@ -108,7 +110,7 @@ void ApiClient::postCPUHour() {
       << Version::PLATFORM << "\", \"cpuHours\":1" << "}\n";
   out.close();
   const std::vector<std::string> headers = {"Content-Type: application/json"};
-  const std::string url = base_url + "cpuhours";
+  const std::string url = base_url_v2 + "stats/cpuhours";
   if (!WebClient::postFile(url, tmp_file, {}, headers)) {
     WebClient::postFile(url, tmp_file, {}, headers,
                         true);  // for debugging
@@ -258,7 +260,8 @@ Submission ApiClient::getNextSubmission() {
             continue;  // Skip if program has no operations
           }
         } catch (const std::exception& e) {
-          Log::get().warn("Failed to parse program content: " + std::string(e.what()));
+          Log::get().warn("Failed to parse program content: " +
+                          std::string(e.what()));
           continue;  // Skip if parsing throws
         }
       }
