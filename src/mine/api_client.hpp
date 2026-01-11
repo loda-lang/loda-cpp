@@ -16,7 +16,7 @@ class ApiClient {
 
   void postProgram(const Program& program, size_t max_buffer = 0);
 
-  //void postSubmission(const Submission& submission, size_t max_buffer = 0);
+  // void postSubmission(const Submission& submission, size_t max_buffer = 0);
 
   bool postSubmission(const std::string& path, bool fail_on_error = true);
 
@@ -38,7 +38,6 @@ class ApiClient {
     int64_t skip;
   };
 
-  std::string base_url;
   std::string base_url_v2;
   bool oeis_fetch_direct;
   int64_t client_id;

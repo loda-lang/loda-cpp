@@ -31,7 +31,6 @@ ApiClient::ApiClient()
   if (server.back() != '/') {
     server += '/';
   }
-  base_url = server + "miner/v1/";
   base_url_v2 = server + "v2/";
   oeis_fetch_direct = Setup::getSetupFlag("LODA_OEIS_FETCH_DIRECT", false);
 }
@@ -174,7 +173,7 @@ void ApiClient::getOeisFile(const std::string& filename,
     }
   } else {
     ext = ".gz";
-    url = base_url + "oeis/" + filename + ext;
+    url = base_url_v2 + "sequences/data/oeis/" + filename + ext;
   }
 
   bool success = false;
