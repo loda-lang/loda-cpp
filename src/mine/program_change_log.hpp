@@ -3,7 +3,7 @@
 #include <fstream>
 #include <string>
 
-#include "base/uid.hpp"
+class UID;  // Forward declaration
 
 class ProgramChangeLog {
  public:

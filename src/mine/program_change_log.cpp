@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <sstream>
 
+#include "base/uid.hpp"
 #include "sys/file.hpp"
 #include "sys/log.hpp"
 #include "sys/setup.hpp"
