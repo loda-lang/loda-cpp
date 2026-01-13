@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+## v26.1.13
+
 ### Bugfixes
 
 * Fix calculation of number of needed initial terms (A131083)
