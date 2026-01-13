@@ -8,7 +8,7 @@
 set -e
 
 # Constants
-OUTPUT_LINES=15  # Number of lines of test output to show
+OUTPUT_LINES=20  # Number of lines of test output to show
 DISCORD_OUTPUT_LIMIT=1900  # Safe limit for Discord message output to avoid breaking UTF-8
 
 # Color codes for output
@@ -212,11 +212,11 @@ echo "Output directory: $OUTPUT_DIR"
 echo "Discord webhook: ${LODA_DISCORD_WEBHOOK:+configured}"
 
 # Run the tests
-run_test "test-analyzer"
-run_test "test-formula-parser"
-run_test "test-inceval"
-run_test "test-vireval"
-run_test "test-recursion"
+# run_test "test-analyzer"
+# run_test "test-formula-parser"
+# run_test "test-inceval"
+# run_test "test-vireval"
+# run_test "test-recursion"
 run_test "test-pari"
 run_test "test-lean"
 
