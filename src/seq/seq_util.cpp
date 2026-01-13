@@ -153,23 +153,21 @@ bool SequenceUtil::evalFormulaWithExternalTool(
     if (parsed.hasError()) {
       fullMsg += ": " + parsed.errorMsg;
     }
-    Log::get().warn(fullMsg);
-    return false;
+    Log::get().error(fullMsg, true);
   }
 
   // Handle parsing errors (e.g., non-numeric output)
   if (parsed.hasError()) {
     std::remove(resultPath.c_str());
-    Log::get().warn(
-        "Error parsing " + toolName + " output: " + parsed.errorMsg);
-    return false;
+    Log::get().error(
+        "Error parsing " + toolName + " output: " + parsed.errorMsg, true);
   }
 
   // Handle no numeric output
   if (parsed.numericValues.empty()) {
     std::remove(resultPath.c_str());
-    Log::get().warn("Error parsing " + toolName + " output: no numeric output");
-    return false;
+    Log::get().error("Error parsing " + toolName + " output: no numeric output",
+                     true);
   }
 
   // Clean up temporary files
