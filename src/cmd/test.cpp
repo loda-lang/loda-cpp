@@ -80,6 +80,7 @@ void Test::fast() {
   formula();
   range();
   gzip();
+  jute();
 }
 
 void Test::slow() {
@@ -1888,5 +1889,148 @@ void Test::gzip() {
     }
     std::remove(base_path.c_str());
     std::remove(gz_path.c_str());
+  }
+}
+
+void Test::jute() {
+  Log::get().info("Testing jute JSON round-trip");
+
+  // Test 1: Simple types
+  {
+    std::string json = R"({"str":"hello","num":42,"bool":true,"null":null})";
+    auto parsed1 = jute::parser::parse(json);
+    auto serialized = parsed1.to_string(true);
+    auto parsed2 = jute::parser::parse(serialized);
+
+    if (parsed1["str"].as_string() != parsed2["str"].as_string() ||
+        parsed1["num"].as_int() != parsed2["num"].as_int() ||
+        parsed1["bool"].as_bool() != parsed2["bool"].as_bool() ||
+        parsed1["null"].get_type() != parsed2["null"].get_type()) {
+      Log::get().error("Simple types round-trip test failed", true);
+    }
+  }
+
+  // Test 2: String escaping
+  {
+    std::string json = R"({"escape":"line1\nline2\ttab\"quote\\\\/slash"})";
+    auto parsed1 = jute::parser::parse(json);
+    auto str1 = parsed1["escape"].as_string();
+    auto serialized = parsed1.to_string(true);
+    auto parsed2 = jute::parser::parse(serialized);
+    auto str2 = parsed2["escape"].as_string();
+
+    if (str1 != str2) {
+      Log::get().error(
+          "String escaping round-trip test failed: " + str1 + " != " + str2,
+          true);
+    }
+    if (str1.find('\n') == std::string::npos ||
+        str1.find('\t') == std::string::npos) {
+      Log::get().error("Escaped characters not properly deserialized", true);
+    }
+  }
+
+  // Test 3: Arrays
+  {
+    std::string json = R"({"arr":[1,2,3,"test",true,null]})";
+    auto parsed1 = jute::parser::parse(json);
+    auto serialized = parsed1.to_string(true);
+    auto parsed2 = jute::parser::parse(serialized);
+
+    if (parsed1["arr"].size() != parsed2["arr"].size() ||
+        parsed1["arr"][0].as_int() != parsed2["arr"][0].as_int() ||
+        parsed1["arr"][3].as_string() != parsed2["arr"][3].as_string()) {
+      Log::get().error("Array round-trip test failed", true);
+    }
+  }
+
+  // Test 4: Nested objects
+  {
+    std::string json = R"({"outer":{"inner":{"deep":"value"}}})";
+    auto parsed1 = jute::parser::parse(json);
+    auto serialized = parsed1.to_string(true);
+    auto parsed2 = jute::parser::parse(serialized);
+
+    if (parsed1["outer"]["inner"]["deep"].as_string() !=
+        parsed2["outer"]["inner"]["deep"].as_string()) {
+      Log::get().error("Nested objects round-trip test failed", true);
+    }
+  }
+
+  // Test 5: Compact vs pretty format
+  {
+    std::string json = R"({"a":1,"b":2})";
+    auto parsed = jute::parser::parse(json);
+    auto compact = parsed.to_string(true);
+    auto pretty = parsed.to_string(false);
+
+    // Both should parse back to same values
+    auto parsed_compact = jute::parser::parse(compact);
+    auto parsed_pretty = jute::parser::parse(pretty);
+
+    if (parsed_compact["a"].as_int() != parsed_pretty["a"].as_int() ||
+        parsed_compact["b"].as_int() != parsed_pretty["b"].as_int()) {
+      Log::get().error("Compact vs pretty round-trip test failed", true);
+    }
+
+    // Compact should have no newlines
+    if (compact.find('\n') != std::string::npos) {
+      Log::get().error("Compact format should not contain newlines", true);
+    }
+
+    // Pretty should have newlines
+    if (pretty.find('\n') == std::string::npos) {
+      Log::get().error("Pretty format should contain newlines", true);
+    }
+  }
+
+  // Test 6: Special characters in keys
+  {
+    std::string json = R"({"key\nwith\ttabs":"value"})";
+    auto parsed1 = jute::parser::parse(json);
+    auto serialized = parsed1.to_string(true);
+    auto parsed2 = jute::parser::parse(serialized);
+
+    // Should be able to access with the deserialized key
+    std::string key = "key\nwith\ttabs";
+    if (parsed1[key].as_string() != parsed2[key].as_string()) {
+      Log::get().error("Special characters in keys round-trip test failed",
+                       true);
+    }
+  }
+
+  // Test 7: Empty structures
+  {
+    std::string json1 = R"({})";
+    std::string json2 = R"([])";
+
+    auto parsed1 = jute::parser::parse(json1);
+    auto serialized1 = parsed1.to_string(true);
+    auto reparsed1 = jute::parser::parse(serialized1);
+    if (reparsed1.size() != 0) {
+      Log::get().error("Empty object round-trip test failed", true);
+    }
+
+    auto parsed2 = jute::parser::parse(json2);
+    auto serialized2 = parsed2.to_string(true);
+    auto reparsed2 = jute::parser::parse(serialized2);
+    if (reparsed2.size() != 0) {
+      Log::get().error("Empty array round-trip test failed", true);
+    }
+  }
+
+  // Test 8: Numbers (int and double)
+  {
+    std::string json = R"({"int":123,"negative":-456,"decimal":3.14})";
+    auto parsed1 = jute::parser::parse(json);
+    auto serialized = parsed1.to_string(true);
+    auto parsed2 = jute::parser::parse(serialized);
+
+    if (parsed1["int"].as_int() != parsed2["int"].as_int() ||
+        parsed1["negative"].as_int() != parsed2["negative"].as_int() ||
+        std::abs(parsed1["decimal"].as_double() -
+                 parsed2["decimal"].as_double()) > 0.001) {
+      Log::get().error("Number round-trip test failed", true);
+    }
   }
 }

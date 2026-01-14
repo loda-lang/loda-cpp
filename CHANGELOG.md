@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Enhancement
+
+* Improve JSON handling
+
 ## v26.1.13
 
 ### Bugfixes
