@@ -3,6 +3,7 @@
 ### Bugfixes
 
 * Fix `upgrade` command showing misleading "already installed" message when version check fails
+* Add detailed HTTP error messages when version check fails
 
 ### Enhancement
 

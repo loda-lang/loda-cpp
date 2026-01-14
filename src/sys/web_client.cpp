@@ -107,10 +107,12 @@ bool WebClient::get(const std::string& url, const std::string& local_path,
   if (res != CURLE_OK) {
     std::remove(local_path.c_str());
     curl_easy_cleanup(curl);
+    const std::string error_msg =
+        "Error fetching " + url + ": " + std::string(curl_easy_strerror(res));
     if (fail_on_error) {
-      Log::get().error(
-          "Error fetching " + url + ": " + std::string(curl_easy_strerror(res)),
-          true);
+      Log::get().error(error_msg, true);
+    } else if (!silent) {
+      Log::get().warn(error_msg);
     }
     return false;
   }

@@ -487,8 +487,8 @@ std::string Setup::getLatestVersion() {
   const std::string local_release_info(".latest-release.json");
   const std::string release_info_url(
       "https://api.github.com/repos/loda-lang/loda-cpp/releases/latest");
-  if (!WebClient::get(release_info_url, local_release_info, true, false)) {
-    Log::get().warn("Cannot get latest version info and check for updates");
+  if (!WebClient::get(release_info_url, local_release_info, false, false)) {
+    // Error already logged by WebClient::get()
     return "";  // return empty string on failure
   }
   const std::string content = getFileAsString(local_release_info);
