@@ -108,4 +108,3 @@ void trimString(std::string& str);
 void lowerString(std::string& str);
 std::string formatDuration(int64_t microseconds);
 std::string escapeDiscordMarkdown(const std::string& str);
-std::string escapeJsonString(const std::string& str);

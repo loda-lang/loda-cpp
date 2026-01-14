@@ -119,8 +119,13 @@ void Log::discord(const std::string& msg, AlertDetails details) {
   // TODO: extend WebClient::postFile to support content directly
   const std::string tmp_file =
       "loda_discord_" + std::to_string(tmp_file_id) + ".json";
+
+  jute::jValue json(jute::JOBJECT);
+  json.add_property("content", jute::jValue(jute::JSTRING));
+  json["content"].set_string(details.text);
+
   std::ofstream out(tmp_file);
-  out << "{\"content\":\"" << escapeJsonString(details.text) << "\"}";
+  out << json.to_string(true);
   out.close();
   const std::vector<std::string> headers = {"Content-Type: application/json"};
   if (!WebClient::postFile(discord_webhook, tmp_file, {}, headers)) {

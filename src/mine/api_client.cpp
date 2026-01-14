@@ -51,11 +51,19 @@ std::string ApiClient::toJson(const Program& program) {
   std::ostringstream oss;
   ProgramUtil::print(program, oss);
   const std::string content = oss.str();
-  return "{\"id\":\"" + escapeJsonString(id) + "\"," + "\"submitter\":\"" +
-         escapeJsonString(submitter) + "\"," + "\"mode\":\"" +
-         escapeJsonString(mode) + "\"," + "\"type\":\"" +
-         escapeJsonString(type) + "\"," + "\"content\":\"" +
-         escapeJsonString(content) + "\"}";
+
+  jute::jValue json(jute::JOBJECT);
+  json.add_property("id", jute::jValue(jute::JSTRING));
+  json["id"].set_string(id);
+  json.add_property("submitter", jute::jValue(jute::JSTRING));
+  json["submitter"].set_string(submitter);
+  json.add_property("mode", jute::jValue(jute::JSTRING));
+  json["mode"].set_string(mode);
+  json.add_property("type", jute::jValue(jute::JSTRING));
+  json["type"].set_string(type);
+  json.add_property("content", jute::jValue(jute::JSTRING));
+  json["content"].set_string(content);
+  return json.to_string(true);
 }
 
 void ApiClient::postProgram(const Program& program, size_t max_buffer) {
@@ -104,9 +112,17 @@ void ApiClient::postCPUHour() {
   // TODO: extend WebClient::postFile to support content directly
   const std::string tmp_file =
       "loda_usage_" + std::to_string(tmp_file_id) + ".json";
+
+  jute::jValue json(jute::JOBJECT);
+  json.add_property("version", jute::jValue(jute::JSTRING));
+  json["version"].set_string(Version::VERSION);
+  json.add_property("platform", jute::jValue(jute::JSTRING));
+  json["platform"].set_string(Version::PLATFORM);
+  json.add_property("cpuHours", jute::jValue(jute::JNUMBER));
+  json["cpuHours"].set_string("1");
+
   std::ofstream out(tmp_file);
-  out << "{\"version\":\"" << Version::VERSION << "\", \"platform\":\""
-      << Version::PLATFORM << "\", \"cpuHours\":1" << "}\n";
+  out << json.to_string(true) << "\n";
   out.close();
   const std::vector<std::string> headers = {"Content-Type: application/json"};
   const std::string url = base_url_v2 + "stats/cpuhours";
@@ -128,9 +144,17 @@ void ApiClient::reportBrokenBFile(const UID& id) {
   // so we use a relative path here!
   const std::string tmp_file =
       "loda_bfile_removal_" + std::to_string(tmp_file_id) + ".json";
+
+  jute::jValue json(jute::JOBJECT);
+  json.add_property("id", jute::jValue(jute::JSTRING));
+  json["id"].set_string(id.string());
+  json.add_property("mode", jute::jValue(jute::JSTRING));
+  json["mode"].set_string("remove");
+  json.add_property("type", jute::jValue(jute::JSTRING));
+  json["type"].set_string("bfile");
+
   std::ofstream out(tmp_file);
-  out << "{\"id\":\"" << escapeJsonString(id.string())
-      << "\",\"mode\":\"remove\",\"type\":\"bfile\"}\n";
+  out << json.to_string(true) << "\n";
   out.close();
   const std::string url = base_url_v2 + "submissions";
   if (!WebClient::postFile(url, tmp_file)) {
