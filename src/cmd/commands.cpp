@@ -584,7 +584,8 @@ void Commands::testAnalyzer() {
 
 template <typename FormulaType>
 void testFormula(const std::string& test_id, const Settings& settings,
-                 bool as_vector) {
+                 bool as_vector,
+                 const std::unordered_set<UID>& skip_list = {}) {
   Parser parser;
   Interpreter interpreter(settings);
   Evaluator evaluator(settings, EVAL_ALL, false);
@@ -600,6 +601,11 @@ void testFormula(const std::string& test_id, const Settings& settings,
   }
   for (auto id : stats.all_program_ids) {
     if (target_id.number() > 0 && id != target_id) {
+      continue;
+    }
+    // Skip sequences in the skip list
+    if (skip_list.find(id) != skip_list.end()) {
+      skipped++;
       continue;
     }
     auto seq = manager.getSequences().get(id);
@@ -715,7 +721,11 @@ void testFormula(const std::string& test_id, const Settings& settings,
 void Commands::testPari(const std::string& test_id) {
   initLog(false);
   const bool as_vector = false;
-  testFormula<PariFormula>(test_id, settings, as_vector);
+  // Skip list for sequences with known PARI formula issues
+  static const std::unordered_set<UID> skip_list = {
+      UID('A', 231350)};  // PARI can't handle binomial coefficients with very
+                          // large arguments
+  testFormula<PariFormula>(test_id, settings, as_vector, skip_list);
 }
 
 void Commands::testLean(const std::string& test_id) {
