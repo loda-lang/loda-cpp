@@ -67,34 +67,23 @@ std::string ApiClient::toJson(const Program& program) {
 }
 
 void ApiClient::postProgram(const Program& program, size_t max_buffer) {
-  // attention: curl sometimes has problems with absolute paths.
-  // so we use a relative path here!
-  const std::string tmp = "post_program_" + std::to_string(client_id) + ".json";
   out_queue.push_back(program);
   while (!out_queue.empty()) {
-    {
-      std::ofstream out(tmp);
-      out << toJson(out_queue.back());
-      out.close();
-    }
-    if (postSubmission(tmp, out_queue.size() > max_buffer)) {
+    const std::string content = toJson(out_queue.back());
+    if (postSubmission(content, out_queue.size() > max_buffer)) {
       out_queue.pop_back();
     } else {
       break;
     }
   }
-  std::remove(tmp.c_str());
 }
 
-bool ApiClient::postSubmission(const std::string& path, bool fail_on_error) {
-  if (!isFile(path)) {
-    Log::get().error("File not found: " + path, true);
-  }
+bool ApiClient::postSubmission(const std::string& content, bool fail_on_error) {
   const std::string url = base_url_v2 + "submissions";
-  if (!WebClient::postFile(url, path)) {
+  if (!WebClient::postContent(url, content)) {
     const std::string msg("Cannot submit program to API server");
     if (fail_on_error) {
-      if (!WebClient::postFile(url, path, {}, {}, true)) {
+      if (!WebClient::postContent(url, content, {}, {}, true)) {
         Log::get().error(msg, true);
       }
     } else {
@@ -106,13 +95,6 @@ bool ApiClient::postSubmission(const std::string& path, bool fail_on_error) {
 }
 
 void ApiClient::postCPUHour() {
-  const auto tmp_file_id = Random::get().gen() % 1000;
-  // attention: curl sometimes has problems with absolute paths.
-  // so we use a relative path here!
-  // TODO: extend WebClient::postFile to support content directly
-  const std::string tmp_file =
-      "loda_usage_" + std::to_string(tmp_file_id) + ".json";
-
   jute::jValue json(jute::JOBJECT);
   json.add_property("version", jute::jValue(jute::JSTRING));
   json["version"].set_string(Version::VERSION);
@@ -121,17 +103,14 @@ void ApiClient::postCPUHour() {
   json.add_property("cpuHours", jute::jValue(jute::JNUMBER));
   json["cpuHours"].set_string("1");
 
-  std::ofstream out(tmp_file);
-  out << json.to_string(true) << "\n";
-  out.close();
+  const std::string content = json.to_string(true) + "\n";
   const std::vector<std::string> headers = {"Content-Type: application/json"};
   const std::string url = base_url_v2 + "stats/cpuhours";
-  if (!WebClient::postFile(url, tmp_file, {}, headers)) {
-    WebClient::postFile(url, tmp_file, {}, headers,
-                        true);  // for debugging
+  if (!WebClient::postContent(url, content, {}, headers)) {
+    WebClient::postContent(url, content, {}, headers,
+                           true);  // for debugging
     Log::get().error("Error reporting usage", false);
   }
-  std::remove(tmp_file.c_str());
 }
 
 void ApiClient::reportBrokenBFile(const UID& id) {
@@ -139,11 +118,6 @@ void ApiClient::reportBrokenBFile(const UID& id) {
   if (id.domain() != 'A') {
     return;
   }
-  const auto tmp_file_id = Random::get().gen() % 1000;
-  // attention: curl sometimes has problems with absolute paths.
-  // so we use a relative path here!
-  const std::string tmp_file =
-      "loda_bfile_removal_" + std::to_string(tmp_file_id) + ".json";
 
   jute::jValue json(jute::JOBJECT);
   json.add_property("id", jute::jValue(jute::JSTRING));
@@ -153,16 +127,13 @@ void ApiClient::reportBrokenBFile(const UID& id) {
   json.add_property("type", jute::jValue(jute::JSTRING));
   json["type"].set_string("bfile");
 
-  std::ofstream out(tmp_file);
-  out << json.to_string(true) << "\n";
-  out.close();
+  const std::string content = json.to_string(true) + "\n";
   const std::string url = base_url_v2 + "submissions";
-  if (!WebClient::postFile(url, tmp_file)) {
+  if (!WebClient::postContent(url, content)) {
     Log::get().warn("Failed to report broken b-file for " + id.string());
   } else {
     Log::get().info("Reported broken b-file for " + id.string());
   }
-  std::remove(tmp_file.c_str());
 }
 
 void ApiClient::getOeisFile(const std::string& filename,
