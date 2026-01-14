@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Bugfixes
+
+* Fix `upgrade` command showing misleading "already installed" message when version check fails
+
 ### Enhancement
 
 * Improve JSON handling
