@@ -2,7 +2,7 @@
 
 ### Enhancement
 
-* Improve JSON handling
+* Improve JSON serialization and API request handling
 
 ## v26.1.13
 
