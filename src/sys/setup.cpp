@@ -489,7 +489,7 @@ std::string Setup::getLatestVersion() {
       "https://api.github.com/repos/loda-lang/loda-cpp/releases/latest");
   if (!WebClient::get(release_info_url, local_release_info, true, false)) {
     Log::get().warn("Cannot get latest version info and check for updates");
-    return Version::BRANCH;  // pretend we are on the latest version
+    return "";  // return empty string on failure
   }
   const std::string content = getFileAsString(local_release_info);
   std::remove(local_release_info.c_str());
@@ -500,11 +500,18 @@ std::string Setup::getLatestVersion() {
 std::string Setup::checkLatestedVersion(bool silent) {
   if (Version::IS_RELEASE) {
     const auto latest_version = getLatestVersion();
+    if (latest_version.empty()) {
+      return "";  // failed to check for updates
+    }
     if (latest_version != Version::BRANCH) {
       if (!silent) {
         Log::get().info("New LODA version available: " + latest_version);
       }
       return latest_version;
+    }
+    // Already on the latest version
+    if (!silent) {
+      Log::get().info("Latest version of LODA is already installed");
     }
   }
   return "";

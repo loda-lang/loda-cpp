@@ -164,8 +164,6 @@ void Commands::upgrade() {
   auto latest_version = Setup::checkLatestedVersion(false);
   if (!latest_version.empty()) {
     Setup::performUpgrade(latest_version, false);
-  } else {
-    Log::get().info("Latest version of LODA is already installed");
   }
 }
 
