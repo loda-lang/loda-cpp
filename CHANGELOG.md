@@ -2,13 +2,15 @@
 
 ## v26.1.15
 
-### Enhancement
+### Enhancements
 
 * Improve JSON serialization and API request handling
+* Improve `upgrade` command output
 
 ### Bugfixes
 
 * Fix integer overflow in optimizer
+* Fix invalid DLL on windows-arm64
 
 ## v26.1.13
 
