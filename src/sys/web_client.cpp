@@ -14,18 +14,8 @@
 #include "sys/log.hpp"
 #include "sys/util.hpp"
 
-// Helper to construct a consistent default User-Agent string
-static std::string makeUserAgent() {
-  // Example: "loda-cpp/25.12.1 (macos-arm64)"
-  std::string ua = "loda-cpp/";
-  ua += Version::VERSION;
-  ua += " (";
-  ua += Version::PLATFORM;
-  ua += ")";
-  return ua;
-}
-
 int64_t WebClient::WEB_CLIENT_TYPE = 0;
+std::string WebClient::USER_AGENT;
 
 void WebClient::initWebClient() {
   if (WEB_CLIENT_TYPE == 0) {
@@ -35,6 +25,18 @@ void WebClient::initWebClient() {
     // thread-safe and the library remains usable for the lifetime of the
     // program. This is a common pattern for libcurl usage.
   }
+}
+
+const std::string& WebClient::getUserAgent() {
+  if (USER_AGENT.empty()) {
+    // Example: "loda-cpp/26.1.15 (linux-x86_64)"
+    USER_AGENT = "loda-cpp/";
+    USER_AGENT += Version::VERSION;
+    USER_AGENT += " (";
+    USER_AGENT += Version::PLATFORM;
+    USER_AGENT += ")";
+  }
+  return USER_AGENT;
 }
 
 namespace {
@@ -82,8 +84,7 @@ bool WebClient::get(const std::string& url, const std::string& local_path,
 
   curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
   // Set default User-Agent for all requests
-  const std::string ua = makeUserAgent();
-  curl_easy_setopt(curl, CURLOPT_USERAGENT, ua.c_str());
+  curl_easy_setopt(curl, CURLOPT_USERAGENT, getUserAgent().c_str());
   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeFileCallback);
   curl_easy_setopt(curl, CURLOPT_WRITEDATA, &file);
   curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
@@ -132,8 +133,7 @@ bool WebClient::postContent(const std::string& url, const std::string& content,
 
   curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
   // Set default User-Agent for all requests
-  const std::string ua = makeUserAgent();
-  curl_easy_setopt(curl, CURLOPT_USERAGENT, ua.c_str());
+  curl_easy_setopt(curl, CURLOPT_USERAGENT, getUserAgent().c_str());
 
   if (!auth.empty()) {
     curl_easy_setopt(curl, CURLOPT_USERPWD, auth.c_str());

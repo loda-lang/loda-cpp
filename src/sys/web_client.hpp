@@ -20,5 +20,7 @@ class WebClient {
 
  private:
   static int64_t WEB_CLIENT_TYPE;
+  static std::string USER_AGENT;
   static void initWebClient();
+  static const std::string& getUserAgent();
 };
