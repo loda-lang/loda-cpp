@@ -79,7 +79,7 @@ class Commands {
 
   void benchmark();
 
-  void findSlow(int64_t num_terms, const std::string& type);
+  void findSlowPrograms(int64_t num_terms, const std::string& type);
 
   void findSlowFormulas();
 

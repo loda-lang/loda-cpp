@@ -266,12 +266,12 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
     commands.iterate(args.at(1));
   } else if (cmd == "benchmark") {
     commands.benchmark();
-  } else if (cmd == "find-slow") {
+  } else if (cmd == "find-slow-programs") {
     std::string type;
     if (args.size() > 1) {
       type = args.at(1);
     }
-    commands.findSlow(settings.num_terms, type);
+    commands.findSlowPrograms(settings.num_terms, type);
   } else if (cmd == "find-slow-formulas") {
     commands.findSlowFormulas();
   } else if (cmd == "find-embseqs") {

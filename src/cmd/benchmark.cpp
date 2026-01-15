@@ -143,7 +143,7 @@ std::string Benchmark::programEval(const Program& p, eval_mode_t eval_mode,
   return formatDuration(microseconds);
 }
 
-void Benchmark::findSlow(int64_t num_terms, Operation::Type type) {
+void Benchmark::findSlowPrograms(int64_t num_terms, Operation::Type type) {
   Parser parser;
   Settings settings;
   Interpreter interpreter(settings);

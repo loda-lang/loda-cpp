@@ -234,6 +234,7 @@ echo "Discord webhook: ${LODA_DISCORD_WEBHOOK:+configured}"
 # run_test "test-inceval"
 # run_test "test-vireval"
 # run_test "test-recursion"
+run_test "find-slow-formulas"
 run_test "test-pari"
 run_test "test-lean"
 

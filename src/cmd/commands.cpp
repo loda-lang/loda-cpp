@@ -1044,14 +1044,14 @@ void Commands::benchmark() {
   benchmark.smokeTest();
 }
 
-void Commands::findSlow(int64_t num_terms, const std::string& type) {
+void Commands::findSlowPrograms(int64_t num_terms, const std::string& type) {
   initLog(false);
   auto t = Operation::Type::NOP;
   if (!type.empty()) {
     t = Operation::Metadata::get(type).type;
   }
   Benchmark benchmark;
-  benchmark.findSlow(num_terms, t);
+  benchmark.findSlowPrograms(num_terms, t);
 }
 
 void Commands::findSlowFormulas() {
