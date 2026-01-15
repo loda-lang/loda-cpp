@@ -31,7 +31,7 @@ void WebClient::initWebClient() {
 const std::string& WebClient::getUserAgent() {
   static std::once_flag init_flag;
   std::call_once(init_flag, []() {
-    // Example: "loda-cpp/26.1.15 (linux-x86_64)"
+    // Example: "loda-cpp/X.Y.Z (platform-arch)"
     USER_AGENT = "loda-cpp/";
     USER_AGENT += Version::VERSION;
     USER_AGENT += " (";
