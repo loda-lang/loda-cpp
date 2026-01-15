@@ -4,6 +4,7 @@
 
 #include <cstring>
 #include <fstream>
+#include <mutex>
 
 // Undefine Windows macros that conflict with our code
 #ifdef ERROR
@@ -28,14 +29,15 @@ void WebClient::initWebClient() {
 }
 
 const std::string& WebClient::getUserAgent() {
-  if (USER_AGENT.empty()) {
+  static std::once_flag init_flag;
+  std::call_once(init_flag, []() {
     // Example: "loda-cpp/26.1.15 (linux-x86_64)"
     USER_AGENT = "loda-cpp/";
     USER_AGENT += Version::VERSION;
     USER_AGENT += " (";
     USER_AGENT += Version::PLATFORM;
     USER_AGENT += ")";
-  }
+  });
   return USER_AGENT;
 }
 
