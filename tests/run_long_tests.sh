@@ -144,6 +144,16 @@ run_test() {
     # Create output file in the timestamped directory
     local output_file="$OUTPUT_DIR/${test_name}.txt"
     
+    # Heartbeat to show progress every 10 minutes
+    local heartbeat_pid
+    (
+        while true; do
+            sleep 600
+            send_output_to_discord "$output_file"
+        done
+    ) &
+    heartbeat_pid=$!
+
     # Run the test and capture output and exit code
     local start_time
     start_time=$(date +%s)
@@ -152,6 +162,13 @@ run_test() {
     (cd "$LODA_DIR" && ./loda $test_name) > "$output_file" 2>&1
     local exit_code=$?
     set -e
+
+    # Stop heartbeat
+    if [ -n "$heartbeat_pid" ]; then
+        kill "$heartbeat_pid" 2>/dev/null || true
+        wait "$heartbeat_pid" 2>/dev/null || true
+    fi
+
     local end_time
     end_time=$(date +%s)
     local duration=$((end_time - start_time))
