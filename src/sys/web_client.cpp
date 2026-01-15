@@ -57,14 +57,6 @@ size_t writeStringCallback(void* contents, size_t size, size_t nmemb,
   return total_size;
 }
 
-// Callback function to read data from a file
-size_t readFileCallback(void* ptr, size_t size, size_t nmemb, void* userp) {
-  std::ifstream* file = static_cast<std::ifstream*>(userp);
-  size_t total_size = size * nmemb;
-  file->read(static_cast<char*>(ptr), total_size);
-  return file->gcount();
-}
-
 }  // namespace
 
 bool WebClient::get(const std::string& url, const std::string& local_path,
@@ -124,10 +116,10 @@ bool WebClient::get(const std::string& url, const std::string& local_path,
   return true;
 }
 
-bool WebClient::postFile(const std::string& url, const std::string& file_path,
-                         const std::string& auth,
-                         const std::vector<std::string>& headers,
-                         bool enable_debug) {
+bool WebClient::postContent(const std::string& url, const std::string& content,
+                            const std::string& auth,
+                            const std::vector<std::string>& headers,
+                            bool enable_debug) {
   initWebClient();
 
   CURL* curl = curl_easy_init();
@@ -155,41 +147,9 @@ bool WebClient::postFile(const std::string& url, const std::string& file_path,
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header_list);
   }
 
-  std::ifstream file;
-  if (!file_path.empty()) {
-    file.open(file_path, std::ios::binary);
-    if (!file.is_open()) {
-      curl_slist_free_all(header_list);
-      curl_easy_cleanup(curl);
-      if (enable_debug) {
-        Log::get().error("Failed to open file: " + file_path, false);
-      }
-      return false;
-    }
-
-    file.seekg(0, std::ios::end);
-    std::streampos pos = file.tellg();
-    if (pos == std::streampos(-1)) {
-      file.close();
-      curl_slist_free_all(header_list);
-      curl_easy_cleanup(curl);
-      if (enable_debug) {
-        Log::get().error("Failed to determine file size: " + file_path, false);
-      }
-      return false;
-    }
-    size_t file_size = static_cast<size_t>(pos);
-    file.seekg(0, std::ios::beg);
-
-    curl_easy_setopt(curl, CURLOPT_POST, 1L);
-    curl_easy_setopt(curl, CURLOPT_READFUNCTION, readFileCallback);
-    curl_easy_setopt(curl, CURLOPT_READDATA, &file);
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, static_cast<long>(file_size));
-  } else {
-    curl_easy_setopt(curl, CURLOPT_POST, 1L);
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, 0L);
-  }
-
+  curl_easy_setopt(curl, CURLOPT_POST, 1L);
+  curl_easy_setopt(curl, CURLOPT_POSTFIELDS, content.c_str());
+  curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, content.size());
   curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
   curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L);
 
@@ -204,9 +164,6 @@ bool WebClient::postFile(const std::string& url, const std::string& file_path,
 
   CURLcode res = curl_easy_perform(curl);
 
-  if (file.is_open()) {
-    file.close();
-  }
   curl_slist_free_all(header_list);
   curl_easy_cleanup(curl);
 

@@ -1,13 +1,16 @@
 ## [Unreleased]
 
+## v26.1.15
+
+### Enhancements
+
+* Improve JSON serialization and API request handling
+* Improve `upgrade` command output
+
 ### Bugfixes
 
-* Fix `upgrade` command showing misleading "already installed" message when version check fails
-* Add detailed HTTP error messages when version check fails
-
-### Enhancement
-
-* Improve JSON handling
+* Fix integer overflow in optimizer
+* Fix invalid DLL on windows-arm64
 
 ## v26.1.13
 

@@ -113,25 +113,21 @@ void Log::discord(const std::string& msg, AlertDetails details) {
         "Cannot send message to Discord because webhook is not set");
     return;
   }
-  const auto tmp_file_id = Random::get().gen() % 1000;
-  // attention: curl sometimes has problems with absolute paths.
-  // so we use a relative path here!
-  // TODO: extend WebClient::postFile to support content directly
-  const std::string tmp_file =
-      "loda_discord_" + std::to_string(tmp_file_id) + ".json";
-  std::ofstream out(tmp_file);
-  out << "{\"content\":\"" << escapeJsonString(details.text) << "\"}";
-  out.close();
+
+  jute::jValue json(jute::JOBJECT);
+  json.add_property("content", jute::jValue(jute::JSTRING));
+  json["content"].set_string(details.text);
+
+  const std::string content = json.to_string(true);
   const std::vector<std::string> headers = {"Content-Type: application/json"};
-  if (!WebClient::postFile(discord_webhook, tmp_file, {}, headers)) {
+  if (!WebClient::postContent(discord_webhook, content, {}, headers)) {
     std::this_thread::sleep_for(std::chrono::seconds(1));
     Log::get().warn("Retrying Discord message: " + details.text);
-    if (!WebClient::postFile(discord_webhook, tmp_file, {}, headers,
-                             true)) {  // for debugging
+    if (!WebClient::postContent(discord_webhook, content, {}, headers,
+                                true)) {  // for debugging
       Log::get().error("Error sending message to Discord", false);
     }
   }
-  std::remove(tmp_file.c_str());
 }
 
 void Log::log(Level level, const std::string& msg) {
