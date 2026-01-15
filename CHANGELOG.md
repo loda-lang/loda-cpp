@@ -1,8 +1,14 @@
 ## [Unreleased]
 
+## v26.1.15
+
 ### Enhancement
 
 * Improve JSON serialization and API request handling
+
+### Bugfixes
+
+* Fix integer overflow in optimizer
 
 ## v26.1.13
 

@@ -418,6 +418,16 @@ int64_t Number::asInt() const {
   return value;
 }
 
+bool Number::fitsInInt64() const {
+  if (big == INF_PTR) {
+    return false;
+  }
+  if (big) {
+    return big->fitsInInt64();
+  }
+  return true;
+}
+
 int64_t Number::getNumUsedWords() const {
   if (big && big != INF_PTR) {
     return big->getNumUsedWords();

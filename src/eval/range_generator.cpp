@@ -240,6 +240,10 @@ bool RangeGenerator::handleSeqOperation(const Operation& op, Range& target) {
   if (op.source.type != Operand::Type::CONSTANT) {
     return false;  // sequence operation requires a constant source
   }
+  // Check if constant UID is within int64_t range
+  if (!op.source.value.fitsInInt64()) {
+    return false;  // UID out of range
+  }
   const auto uid = UID::castFromInt(op.source.value.asInt());
   auto it = seq_range_cache.find(uid);
   if (it != seq_range_cache.end()) {

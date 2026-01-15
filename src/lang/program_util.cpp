@@ -303,6 +303,10 @@ bool ProgramUtil::getUsedMemoryCells(const Program& p,
       if (op.source.type != Operand::Type::CONSTANT) {
         return false;
       }
+      // Check if constant UID is within int64_t range
+      if (!op.source.value.fitsInInt64()) {
+        return false;  // UID out of range
+      }
       auto sub_uid = UID::castFromInt(op.source.value.asInt());
       if (!prg_refs || prg_refs->find(sub_uid) == prg_refs->end()) {
         return false;
@@ -316,6 +320,10 @@ bool ProgramUtil::getUsedMemoryCells(const Program& p,
                op.type == Operation::Type::ROL ||
                op.type == Operation::Type::ROR) {
       if (op.source.type == Operand::Type::CONSTANT) {
+        // Check if constant region length is within int64_t range
+        if (!op.source.value.fitsInInt64()) {
+          return false;  // Region length out of range
+        }
         region_length = op.source.value.asInt();
       } else {
         return false;
