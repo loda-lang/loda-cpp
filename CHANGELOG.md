@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+## v26.1.16
+
+### Bugfixes
+
+* Fix JSON serialization
+
 ## v26.1.15
 
 ### Enhancements

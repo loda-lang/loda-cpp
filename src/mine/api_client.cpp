@@ -53,16 +53,11 @@ std::string ApiClient::toJson(const Program& program) {
   const std::string content = oss.str();
 
   jute::jValue json(jute::JOBJECT);
-  json.add_property("id", jute::jValue(jute::JSTRING));
-  json["id"].set_string(id);
-  json.add_property("submitter", jute::jValue(jute::JSTRING));
-  json["submitter"].set_string(submitter);
-  json.add_property("mode", jute::jValue(jute::JSTRING));
-  json["mode"].set_string(mode);
-  json.add_property("type", jute::jValue(jute::JSTRING));
-  json["type"].set_string(type);
-  json.add_property("content", jute::jValue(jute::JSTRING));
-  json["content"].set_string(content);
+  json.set_property_string("id", id);
+  json.set_property_string("submitter", submitter);
+  json.set_property_string("mode", mode);
+  json.set_property_string("type", type);
+  json.set_property_string("content", content);
   return json.to_string(true);
 }
 
@@ -80,10 +75,11 @@ void ApiClient::postProgram(const Program& program, size_t max_buffer) {
 
 bool ApiClient::postSubmission(const std::string& content, bool fail_on_error) {
   const std::string url = base_url_v2 + "submissions";
-  if (!WebClient::postContent(url, content)) {
+  const std::vector<std::string> headers = {"Content-Type: application/json"};
+  if (!WebClient::postContent(url, content, {}, headers)) {
     const std::string msg("Cannot submit program to API server");
     if (fail_on_error) {
-      if (!WebClient::postContent(url, content, {}, {}, true)) {
+      if (!WebClient::postContent(url, content, {}, headers, true)) {
         Log::get().error(msg, true);
       }
     } else {
@@ -96,12 +92,11 @@ bool ApiClient::postSubmission(const std::string& content, bool fail_on_error) {
 
 void ApiClient::postCPUHour() {
   jute::jValue json(jute::JOBJECT);
-  json.add_property("version", jute::jValue(jute::JSTRING));
-  json["version"].set_string(Version::VERSION);
-  json.add_property("platform", jute::jValue(jute::JSTRING));
-  json["platform"].set_string(Version::PLATFORM);
-  json.add_property("cpuHours", jute::jValue(jute::JNUMBER));
-  json["cpuHours"].set_string("1");
+  json.set_property_string("version", Version::VERSION);
+  json.set_property_string("platform", Version::PLATFORM);
+  jute::jValue cpu_hours(jute::JNUMBER);
+  cpu_hours.set_string("1");
+  json.add_property("cpuHours", cpu_hours);
 
   const std::string content = json.to_string(true) + "\n";
   const std::vector<std::string> headers = {"Content-Type: application/json"};
@@ -120,12 +115,9 @@ void ApiClient::reportBrokenBFile(const UID& id) {
   }
 
   jute::jValue json(jute::JOBJECT);
-  json.add_property("id", jute::jValue(jute::JSTRING));
-  json["id"].set_string(id.string());
-  json.add_property("mode", jute::jValue(jute::JSTRING));
-  json["mode"].set_string("remove");
-  json.add_property("type", jute::jValue(jute::JSTRING));
-  json["type"].set_string("bfile");
+  json.set_property_string("id", id.string());
+  json.set_property_string("mode", "remove");
+  json.set_property_string("type", "bfile");
 
   const std::string content = json.to_string(true) + "\n";
   const std::string url = base_url_v2 + "submissions";

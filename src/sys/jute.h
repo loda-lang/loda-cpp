@@ -29,6 +29,7 @@ class jValue {
   jType get_type();
   void set_type(jType);
   void add_property(std::string key, jValue v);
+  void set_property_string(const std::string& key, const std::string& value);
   void add_element(jValue v);
   void set_string(std::string s);
   int as_int();

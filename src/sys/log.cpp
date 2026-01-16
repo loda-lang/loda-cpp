@@ -115,8 +115,7 @@ void Log::discord(const std::string& msg, AlertDetails details) {
   }
 
   jute::jValue json(jute::JOBJECT);
-  json.add_property("content", jute::jValue(jute::JSTRING));
-  json["content"].set_string(details.text);
+  json.set_property_string("content", details.text);
 
   const std::string content = json.to_string(true);
   const std::vector<std::string> headers = {"Content-Type: application/json"};

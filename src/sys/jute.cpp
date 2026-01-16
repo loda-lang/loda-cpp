@@ -129,6 +129,20 @@ void jValue::add_property(string key, jValue v) {
   mpindex[key] = properties.size();
   properties.push_back(make_pair(key, v));
 }
+
+void jValue::set_property_string(const std::string& key,
+                                 const std::string& value) {
+  auto it = mpindex.find(key);
+  if (it != mpindex.end()) {
+    auto& entry = properties[it->second].second;
+    entry.set_type(JSTRING);
+    entry.set_string(value);
+    return;
+  }
+  jValue v(JSTRING);
+  v.set_string(value);
+  add_property(key, v);
+}
 void jValue::add_element(jValue v) { arr.push_back(v); }
 void jValue::set_string(string s) { svalue = s; }
 int jValue::as_int() {
