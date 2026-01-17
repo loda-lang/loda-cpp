@@ -198,14 +198,21 @@ void Benchmark::findSlowFormulas() {
     }
     try {
       program = parser.parse(in);
-    } catch (std::exception& e) {
+    } catch (const std::exception& e) {
       Log::get().warn("Skipping " + uid.string() + ": " + e.what());
       continue;
     }
     FormulaGenerator gen;
     Formula formula;
     auto start_time = std::chrono::steady_clock::now();
-    gen.generate(program, id, formula, false);
+    try {
+      gen.generate(program, id, formula, false);
+    } catch (const std::exception& e) {
+      // Skip programs that cause formula generation errors (e.g., missing
+      // dependencies)
+      Log::get().warn("Skipping " + uid.string() + ": " + e.what());
+      continue;
+    }
     auto end_time = std::chrono::steady_clock::now();
     auto microseconds = std::chrono::duration_cast<std::chrono::microseconds>(
                             end_time - start_time)
