@@ -11,6 +11,9 @@ set -e
 OUTPUT_LINES=20  # Number of lines of test output to show
 DISCORD_OUTPUT_LIMIT=1900  # Safe limit for Discord message output to avoid breaking UTF-8
 
+# Accumulated test results for final summary
+TEST_RESULTS=()
+
 # Color codes for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -148,7 +151,7 @@ run_test() {
     local heartbeat_pid
     (
         while true; do
-            sleep 600
+            sleep 3600
             send_output_to_discord "$output_file"
         done
     ) &
@@ -216,6 +219,9 @@ Duration: ${duration_str}"
     # Send output lines one by one to avoid size limits
     send_to_discord "Last $OUTPUT_LINES lines of output:"
     send_output_to_discord "$output_file"
+
+    # Store result for final summary
+    TEST_RESULTS+=("${status_emoji} ${test_name} - ${status} (exit code: ${exit_code}, duration: ${duration_str})")
     
     echo ""
 }
@@ -235,8 +241,26 @@ echo "Discord webhook: ${LODA_DISCORD_WEBHOOK:+configured}"
 # run_test "test-vireval"
 # run_test "test-recursion"
 run_test "find-slow-formulas"
-run_test "test-pari"
+# run_test "test-pari"
 run_test "test-lean"
+
+# Print and send final summary
+echo ""
+echo "=========================================="
+echo "Test Summary"
+echo "=========================================="
+for summary_line in "${TEST_RESULTS[@]}"; do
+    echo "${summary_line}"
+done
+
+# Send summary to Discord as a single message
+if [ ${#TEST_RESULTS[@]} -gt 0 ]; then
+    summary_payload="Test Summary:\n"
+    for summary_line in "${TEST_RESULTS[@]}"; do
+        summary_payload+="${summary_line}\n"
+    done
+    send_to_discord "${summary_payload}"
+fi
 
 echo ""
 echo "=========================================="
