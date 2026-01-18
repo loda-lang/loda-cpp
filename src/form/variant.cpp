@@ -9,8 +9,19 @@
 
 // Timeout configuration for variant search and application
 namespace {
+// Maximum time allowed for finding new variants through resolution and
+// Gaussian elimination. After this timeout, variant search stops with
+// whatever variants have been found so far.
 const auto VARIANT_SEARCH_TIMEOUT = std::chrono::seconds(10);
+
+// Maximum total time allowed for both variant search and application.
+// After this timeout, variant application stops and returns any formulas
+// simplified so far. This prevents extremely long formula generation times.
 const auto VARIANT_APPLY_TIMEOUT = std::chrono::seconds(20);
+
+// How often to check for timeout in variant application loop.
+// Checking every iteration would add overhead, so we check periodically.
+const size_t TIMEOUT_CHECK_FREQUENCY = 10;
 }  // namespace
 
 VariantsManager::VariantsManager(
@@ -268,7 +279,9 @@ bool simplifyFormulaUsingVariants(
   Log::get().debug("Found " + std::to_string(manager.numVariants()) +
                    " variants");
   bool applied = false;
-  // Cache the original dependencies to avoid recomputing for each variant
+  // Cache getDependencies to avoid redundant O(n) computation in nested loops.
+  // This reduces overall complexity from O(n^4) to O(n^3) where n is the number
+  // of variants, significantly improving performance for formulas with many variants.
   auto deps_old = FormulaUtil::getDependencies(
       formula, Expression::Type::FUNCTION, true, true);
   size_t check_counter = 0;
@@ -278,7 +291,7 @@ bool simplifyFormulaUsingVariants(
     }
     for (auto& variant : manager.variants[entry.first.name]) {
       // Check timeout periodically to reduce overhead
-      if (++check_counter % 10 == 0) {
+      if (++check_counter % TIMEOUT_CHECK_FREQUENCY == 0) {
         auto elapsed = std::chrono::steady_clock::now() - start_time;
         if (elapsed > VARIANT_APPLY_TIMEOUT) {
           Log::get().debug("Variant application timeout after " +
