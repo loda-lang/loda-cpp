@@ -653,7 +653,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     debugNumInitialTerms(numTerms);
 
     // find and choose alternative function definitions
-    simplifyFormulaUsingVariants(formula, numTerms);
+    simplifyFormulaUsingVariants(formula, numTerms, maxInitialTerms);
     debugNumInitialTerms(numTerms);
 
     // evaluate program and add initial terms to formula

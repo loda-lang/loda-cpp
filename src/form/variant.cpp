@@ -26,7 +26,9 @@ const size_t TIMEOUT_CHECK_FREQUENCY = 10;
 
 VariantsManager::VariantsManager(
     const Formula& formula,
-    const std::map<std::string, int64_t>& num_initial_terms) {
+    const std::map<std::string, int64_t>& num_initial_terms,
+    int64_t max_initial_terms)
+    : max_initial_terms_(max_initial_terms) {
   // step 1: collect function names
   for (const auto& entry : formula.entries) {
     if (ExpressionUtil::isSimpleFunction(entry.first, true)) {
@@ -64,6 +66,15 @@ bool VariantsManager::update(Variant new_variant) {
     Log::get().debug("Skipping variant with " + std::to_string(num_terms) +
                      " terms");
     return false;  // too many terms
+  }
+  // Check if variant would exceed max initial terms limit
+  if (max_initial_terms_ >= 0 &&
+      new_variant.num_initial_terms > max_initial_terms_) {
+    Log::get().debug("Skipping variant requiring " +
+                     std::to_string(new_variant.num_initial_terms) +
+                     " initial terms (max: " +
+                     std::to_string(max_initial_terms_) + ")");
+    return false;
   }
   collectFuncs(new_variant);
   // if (new_variant.used_funcs.size() > 3) {  // magic number
@@ -249,8 +260,9 @@ bool findVariants(VariantsManager& manager) {
 }
 
 bool simplifyFormulaUsingVariants(
-    Formula& formula, std::map<std::string, int64_t>& num_initial_terms) {
-  VariantsManager manager(formula, num_initial_terms);
+    Formula& formula, std::map<std::string, int64_t>& num_initial_terms,
+    int64_t max_initial_terms) {
+  VariantsManager manager(formula, num_initial_terms, max_initial_terms);
   bool found = false;
   size_t iterations = 0;
   const auto start_time = std::chrono::steady_clock::now();
