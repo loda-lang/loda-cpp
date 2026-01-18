@@ -1,28 +1,10 @@
 #include "form/variant.hpp"
 
-#include <chrono>
 #include <functional>
 
 #include "form/expression_util.hpp"
 #include "form/formula_util.hpp"
 #include "sys/log.hpp"
-
-// Timeout configuration for variant search and application
-namespace {
-// Maximum time allowed for finding new variants through resolution and
-// Gaussian elimination. After this timeout, variant search stops with
-// whatever variants have been found so far.
-const auto VARIANT_SEARCH_TIMEOUT = std::chrono::seconds(10);
-
-// Maximum total time allowed for both variant search and application.
-// After this timeout, variant application stops and returns any formulas
-// simplified so far. This prevents extremely long formula generation times.
-const auto VARIANT_APPLY_TIMEOUT = std::chrono::seconds(20);
-
-// How often to check for timeout in variant application loop.
-// Checking every iteration would add overhead, so we check periodically.
-const size_t TIMEOUT_CHECK_FREQUENCY = 10;
-}  // namespace
 
 VariantsManager::VariantsManager(
     const Formula& formula,
@@ -265,19 +247,9 @@ bool simplifyFormulaUsingVariants(
   VariantsManager manager(formula, num_initial_terms, max_initial_terms);
   bool found = false;
   size_t iterations = 0;
-  const auto start_time = std::chrono::steady_clock::now();
   
   while (manager.numVariants() < 75 && iterations < 30) {  // reduced from 100/50 but not too aggressive
     iterations++;
-    
-    // Check if we've exceeded the timeout
-    auto elapsed = std::chrono::steady_clock::now() - start_time;
-    if (elapsed > VARIANT_SEARCH_TIMEOUT) {
-      Log::get().debug("Variant search timeout after " +
-                       std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count()) +
-                       "ms with " + std::to_string(manager.numVariants()) + " variants found");
-      break;
-    }
     
     if (findVariants(manager)) {
       found = true;
@@ -296,24 +268,11 @@ bool simplifyFormulaUsingVariants(
   // of variants, significantly improving performance for formulas with many variants.
   auto deps_old = FormulaUtil::getDependencies(
       formula, Expression::Type::FUNCTION, true, true);
-  size_t check_counter = 0;
   for (auto& entry : formula.entries) {
     if (!ExpressionUtil::isSimpleFunction(entry.first, true)) {
       continue;
     }
     for (auto& variant : manager.variants[entry.first.name]) {
-      // Check timeout periodically to reduce overhead
-      if (++check_counter % TIMEOUT_CHECK_FREQUENCY == 0) {
-        auto elapsed = std::chrono::steady_clock::now() - start_time;
-        if (elapsed > VARIANT_APPLY_TIMEOUT) {
-          Log::get().debug("Variant application timeout after " +
-                           std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count()) +
-                           "ms");
-          Log::get().debug("Updated formula:  " + formula.toString());
-          return applied;
-        }
-      }
-      
       if (variant.definition == entry.second) {
         continue;
       }

@@ -3,9 +3,9 @@
 ### Enhancements
 
 * Optimize formula generation to prevent extremely long computation times
-  * Add timeout mechanism (10s for variant search, 20s total)
   * Cache dependency calculations to avoid redundant computation
   * Reduce variant limits to prevent exponential growth
+  * Enforce max initial terms limit to reject expensive variants early
 
 ## v26.1.16
 
