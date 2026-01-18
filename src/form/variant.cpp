@@ -249,6 +249,9 @@ bool simplifyFormulaUsingVariants(
   Log::get().debug("Found " + std::to_string(manager.numVariants()) +
                    " variants");
   bool applied = false;
+  // Cache the original dependencies to avoid recomputing for each variant
+  auto deps_old = FormulaUtil::getDependencies(
+      formula, Expression::Type::FUNCTION, true, true);
   for (auto& entry : formula.entries) {
     if (!ExpressionUtil::isSimpleFunction(entry.first, true)) {
       continue;
@@ -262,8 +265,6 @@ bool simplifyFormulaUsingVariants(
       }
       Formula copy = formula;
       copy.entries[entry.first] = variant.definition;
-      auto deps_old = FormulaUtil::getDependencies(
-          formula, Expression::Type::FUNCTION, true, true);
       auto deps_new = FormulaUtil::getDependencies(
           copy, Expression::Type::FUNCTION, true, true);
       if (deps_new.size() < deps_old.size()) {
@@ -271,6 +272,8 @@ bool simplifyFormulaUsingVariants(
         num_initial_terms[entry.first.name] = variant.num_initial_terms;
         applied = true;
         debugUpdate("Applied variant ", variant);
+        // Update cached dependencies since formula changed
+        deps_old = deps_new;
       }
     }
   }
