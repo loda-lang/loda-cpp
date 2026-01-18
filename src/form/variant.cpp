@@ -1,5 +1,6 @@
 #include "form/variant.hpp"
 
+#include <chrono>
 #include <functional>
 
 #include "form/expression_util.hpp"
@@ -235,8 +236,21 @@ bool simplifyFormulaUsingVariants(
   VariantsManager manager(formula, num_initial_terms);
   bool found = false;
   size_t iterations = 0;
+  const auto start_time = std::chrono::steady_clock::now();
+  const auto timeout = std::chrono::seconds(10);  // 10 second timeout for variant finding
+  
   while (manager.numVariants() < 100 && iterations < 50) {  // tighter limits
     iterations++;
+    
+    // Check if we've exceeded the timeout
+    auto elapsed = std::chrono::steady_clock::now() - start_time;
+    if (elapsed > timeout) {
+      Log::get().debug("Variant search timeout after " +
+                       std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count()) +
+                       "ms with " + std::to_string(manager.numVariants()) + " variants found");
+      break;
+    }
+    
     if (findVariants(manager)) {
       found = true;
     } else {
@@ -252,11 +266,22 @@ bool simplifyFormulaUsingVariants(
   // Cache the original dependencies to avoid recomputing for each variant
   auto deps_old = FormulaUtil::getDependencies(
       formula, Expression::Type::FUNCTION, true, true);
+  const auto apply_timeout = std::chrono::seconds(20);  // 20 second timeout for variant application
   for (auto& entry : formula.entries) {
     if (!ExpressionUtil::isSimpleFunction(entry.first, true)) {
       continue;
     }
     for (auto& variant : manager.variants[entry.first.name]) {
+      // Check timeout for variant application phase
+      auto elapsed = std::chrono::steady_clock::now() - start_time;
+      if (elapsed > apply_timeout) {
+        Log::get().debug("Variant application timeout after " +
+                         std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count()) +
+                         "ms");
+        Log::get().debug("Updated formula:  " + formula.toString());
+        return applied;
+      }
+      
       if (variant.definition == entry.second) {
         continue;
       }
