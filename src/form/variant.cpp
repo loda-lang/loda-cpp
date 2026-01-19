@@ -52,10 +52,10 @@ bool VariantsManager::update(Variant new_variant) {
   // Check if variant would exceed max initial terms limit
   if (max_initial_terms_ >= 0 &&
       new_variant.num_initial_terms > max_initial_terms_) {
-    Log::get().debug("Skipping variant requiring " +
-                     std::to_string(new_variant.num_initial_terms) +
-                     " initial terms (max: " +
-                     std::to_string(max_initial_terms_) + ")");
+    Log::get().debug(
+        "Skipping variant requiring " +
+        std::to_string(new_variant.num_initial_terms) +
+        " initial terms (max: " + std::to_string(max_initial_terms_) + ")");
     return false;
   }
   collectFuncs(new_variant);
@@ -247,10 +247,10 @@ bool simplifyFormulaUsingVariants(
   VariantsManager manager(formula, num_initial_terms, max_initial_terms);
   bool found = false;
   size_t iterations = 0;
-  
+
   while (manager.numVariants() < 100 && iterations < 50) {  // tighter limits
     iterations++;
-    
+
     if (findVariants(manager)) {
       found = true;
     } else {
@@ -265,7 +265,8 @@ bool simplifyFormulaUsingVariants(
   bool applied = false;
   // Cache getDependencies to avoid redundant O(n) computation in nested loops.
   // This reduces overall complexity from O(n^4) to O(n^3) where n is the number
-  // of variants, significantly improving performance for formulas with many variants.
+  // of variants, significantly improving performance for formulas with many
+  // variants.
   auto deps_old = FormulaUtil::getDependencies(
       formula, Expression::Type::FUNCTION, true, true);
   for (auto& entry : formula.entries) {

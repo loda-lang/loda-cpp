@@ -224,8 +224,7 @@ void Benchmark::findSlowFormulas() {
   for (size_t i = 0; i < 20; i++) {
     auto entry = queue.top();
     queue.pop();
-    std::cout << "[" << entry.second.string()
-              << "](https://loda-lang.org/edit/?oeis=" << entry.second.number()
-              << "): " << formatDuration(entry.first) << std::endl;
+    std::cout << entry.second.string() << ": " << formatDuration(entry.first)
+              << std::endl;
   }
 }
