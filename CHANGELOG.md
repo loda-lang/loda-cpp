@@ -4,6 +4,10 @@
 
 * Optimize formula generation by caching dependency calculations and enforcing max initial terms limit
 
+### Bugfixes
+
+* Fix LEAN type mismatch for nested sequence calls (A111432)
+
 ## v26.1.16
 
 ### Bugfixes
