@@ -35,9 +35,23 @@ bool LeanFormula::isLocalOrSeqFunc(const std::string& funcName) const {
 
 bool LeanFormula::needsIntToNat(const Expression& expr) const {
   // Check if expression contains operations that return Int
-  return expr.contains(Expression::Type::FUNCTION, "Int.fdiv") ||
-         expr.contains(Expression::Type::FUNCTION, "Int.tdiv") ||
-         expr.contains(Expression::Type::FUNCTION, "Int.gcd");
+  if (expr.contains(Expression::Type::FUNCTION, "Int.fdiv") ||
+      expr.contains(Expression::Type::FUNCTION, "Int.tdiv") ||
+      expr.contains(Expression::Type::FUNCTION, "Int.gcd")) {
+    return true;
+  }
+  // Check if expression contains calls to local or sequence functions
+  // which return Int
+  if (expr.type == Expression::Type::FUNCTION && isLocalOrSeqFunc(expr.name)) {
+    return true;
+  }
+  // Check children recursively
+  for (const auto& child : expr.children) {
+    if (needsIntToNat(child)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 bool LeanFormula::convertToLean(Expression& expr, int64_t offset,
