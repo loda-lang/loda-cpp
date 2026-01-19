@@ -8,7 +8,9 @@
 
 VariantsManager::VariantsManager(
     const Formula& formula,
-    const std::map<std::string, int64_t>& num_initial_terms) {
+    const std::map<std::string, int64_t>& num_initial_terms,
+    int64_t max_initial_terms)
+    : max_initial_terms_(max_initial_terms) {
   // step 1: collect function names
   for (const auto& entry : formula.entries) {
     if (ExpressionUtil::isSimpleFunction(entry.first, true)) {
@@ -46,6 +48,15 @@ bool VariantsManager::update(Variant new_variant) {
     Log::get().debug("Skipping variant with " + std::to_string(num_terms) +
                      " terms");
     return false;  // too many terms
+  }
+  // Check if variant would exceed max initial terms limit
+  if (max_initial_terms_ >= 0 &&
+      new_variant.num_initial_terms > max_initial_terms_) {
+    Log::get().debug(
+        "Skipping variant requiring " +
+        std::to_string(new_variant.num_initial_terms) +
+        " initial terms (max: " + std::to_string(max_initial_terms_) + ")");
+    return false;
   }
   collectFuncs(new_variant);
   // if (new_variant.used_funcs.size() > 3) {  // magic number
@@ -231,12 +242,15 @@ bool findVariants(VariantsManager& manager) {
 }
 
 bool simplifyFormulaUsingVariants(
-    Formula& formula, std::map<std::string, int64_t>& num_initial_terms) {
-  VariantsManager manager(formula, num_initial_terms);
+    Formula& formula, std::map<std::string, int64_t>& num_initial_terms,
+    int64_t max_initial_terms) {
+  VariantsManager manager(formula, num_initial_terms, max_initial_terms);
   bool found = false;
   size_t iterations = 0;
+
   while (manager.numVariants() < 100 && iterations < 50) {  // tighter limits
     iterations++;
+
     if (findVariants(manager)) {
       found = true;
     } else {
@@ -249,6 +263,12 @@ bool simplifyFormulaUsingVariants(
   Log::get().debug("Found " + std::to_string(manager.numVariants()) +
                    " variants");
   bool applied = false;
+  // Cache getDependencies to avoid redundant O(n) computation in nested loops.
+  // This reduces overall complexity from O(n^4) to O(n^3) where n is the number
+  // of variants, significantly improving performance for formulas with many
+  // variants.
+  auto deps_old = FormulaUtil::getDependencies(
+      formula, Expression::Type::FUNCTION, true, true);
   for (auto& entry : formula.entries) {
     if (!ExpressionUtil::isSimpleFunction(entry.first, true)) {
       continue;
@@ -262,8 +282,6 @@ bool simplifyFormulaUsingVariants(
       }
       Formula copy = formula;
       copy.entries[entry.first] = variant.definition;
-      auto deps_old = FormulaUtil::getDependencies(
-          formula, Expression::Type::FUNCTION, true, true);
       auto deps_new = FormulaUtil::getDependencies(
           copy, Expression::Type::FUNCTION, true, true);
       if (deps_new.size() < deps_old.size()) {
@@ -271,6 +289,8 @@ bool simplifyFormulaUsingVariants(
         num_initial_terms[entry.first.name] = variant.num_initial_terms;
         applied = true;
         debugUpdate("Applied variant ", variant);
+        // Update cached dependencies since formula changed
+        deps_old = deps_new;
       }
     }
   }

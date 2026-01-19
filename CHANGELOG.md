@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Enhancements
+
+* Optimize formula generation by caching dependency calculations and enforcing max initial terms limit
+
 ## v26.1.16
 
 ### Bugfixes
