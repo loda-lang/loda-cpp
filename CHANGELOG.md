@@ -2,10 +2,7 @@
 
 ### Enhancements
 
-* Optimize formula generation to prevent extremely long computation times
-  * Cache dependency calculations to avoid redundant computation
-  * Reduce variant limits to prevent exponential growth
-  * Enforce max initial terms limit to reject expensive variants early
+* Optimize formula generation by caching dependency calculations and enforcing max initial terms limit
 
 ## v26.1.16
 
