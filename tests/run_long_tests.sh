@@ -255,9 +255,10 @@ done
 
 # Send summary to Discord as a single message
 if [ ${#TEST_RESULTS[@]} -gt 0 ]; then
-    summary_payload="Test Summary:\n"
+    summary_payload="Test Summary:"
     for summary_line in "${TEST_RESULTS[@]}"; do
-        summary_payload+="${summary_line}\n"
+        summary_payload="${summary_payload}
+${summary_line}"
     done
     send_to_discord "${summary_payload}"
 fi
