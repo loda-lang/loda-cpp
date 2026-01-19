@@ -168,7 +168,11 @@ bool LeanFormula::convertToLean(Expression& expr, int64_t offset,
         // operations) or is not a plain PARAMETER
         if (domain == "Nat") {
           for (auto& arg : expr.children) {
-            if (arg.type != Expression::Type::PARAMETER && needsIntToNat(arg)) {
+            // Skip if already wrapped with Int.toNat
+            bool alreadyWrapped = arg.type == Expression::Type::FUNCTION &&
+                                  arg.name == "Int.toNat";
+            if (!alreadyWrapped && arg.type != Expression::Type::PARAMETER &&
+                needsIntToNat(arg)) {
               Expression toNat(Expression::Type::FUNCTION, "Int.toNat", {arg});
               arg = toNat;
             }
