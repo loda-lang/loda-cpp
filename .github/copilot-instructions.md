@@ -89,6 +89,51 @@ Automated formula generation from LODA programs is used to find closed-form or r
 - [Formula](../src/form/formula.hpp): Encapsulates a complete formula, including recurrence relations and initial terms.
 - [FormulaGenerator](../src/form/formula_gen.hpp): Converts a LODA program into a formula.
 
+## Fetching LODA Programs
+
+Many bugs and issues in LODA are specific to certain OEIS sequences and their programs. When working on issue analysis or bug reproduction, you often need to fetch LODA programs by their sequence IDs. There are two main approaches:
+
+### Using the LODA MCP Server (Recommended for Quick Access)
+
+The LODA MCP server provides direct access to programs without any local setup. This is the fastest and most convenient method for issue analysis and debugging.
+
+**Example**: Fetch program A000045 (Fibonacci numbers)
+```
+Use the loda-get_program_details tool with id: "A000045"
+```
+
+This returns the complete program code, metadata, and usage information immediately. Use this approach when:
+- Quickly investigating a bug or issue
+- Examining specific program code during debugging
+- No local LODA environment is set up
+- You need to inspect programs from different sequences
+
+### Using Local LODA Commands (For Extensive Work)
+
+For extensive testing, development, or when you need to work with many programs locally, set up a local LODA environment.
+
+**Setup** (one-time, required before using local commands):
+1. Build the LODA executable: `cd src && make -f Makefile.linux-x86.mk` (or the appropriate Makefile for your platform)
+2. Run setup: `./loda setup` 
+   - Accept default location (`$HOME/loda`)
+   - This clones the loda-programs repository (~650MB) to `$HOME/loda/programs`
+   - Choose "Local Mode" for mining (option 1)
+   - Skip advanced settings
+
+**After setup**, you can use the `export` command:
+- Get program code: `./loda export A000045 -o loda`
+- Get formula: `./loda export A000045 -o formula`
+- Get PARI/GP code: `./loda export A000045 -o pari-function`
+- Evaluate sequence: `./loda eval A000045`
+
+Programs are stored locally at `$HOME/loda/programs/oeis/XXX/AXXXXXX.asm` (where XXX is the first 3 digits of the sequence ID).
+
+Use this approach when:
+- Working on extensive changes requiring many programs
+- Testing the export/eval commands themselves
+- Working offline or need faster repeated access
+- Adding programs to the test directory structure
+
 ## Common Tasks
 
 ### Adding Commands
@@ -115,10 +160,10 @@ Automated formula generation from LODA programs is used to find closed-form or r
 
 Formula tests verify that the formula generation process correctly converts LODA programs into mathematical formulas and external tool formats (PARI/GP, LEAN).
 
-1. **Identify target sequences**: Find the IDs of OEIS sequences (e.g., A000045) that should be used for the new formula tests. If you need to discover sequences, use the LODA API MCP server to search for programs matching specific criteria or mathematical properties. Look for sequences with concise, readable formulas. Avoid sequences that require extensive computation for verification.
+1. **Identify target sequences**: Find the IDs of OEIS sequences (e.g., A000045) that should be used for the new formula tests. If you need to discover sequences, use the LODA MCP server to search for programs matching specific criteria or mathematical properties. Look for sequences with concise, readable formulas. Avoid sequences that require extensive computation for verification.
 
 2. **Ensure LODA programs exist**: Check if the LODA programs already exist in the test directory structure `tests/programs/oeis/XXX/` (where XXX is the first 3 digits of the sequence number). If missing:
-   - Fetch the programs using `./loda export AXXXXXX -o loda` (e.g., `./loda export A000045 -o loda`)
+   - Fetch the program using the LODA MCP server (see [Fetching LODA Programs](#fetching-loda-programs) section) or using `./loda export AXXXXXX -o loda` if you have set up a local LODA environment
    - Clean the program by removing "Submitted by..." comments and formula comments (keep only the sequence description and terms)
    - Save as `AXXXXXX.asm` in the appropriate subdirectory (e.g., `tests/programs/oeis/000/A000045.asm`)
 
