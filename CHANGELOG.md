@@ -2,7 +2,7 @@
 
 ### Enhancements
 
-* Optimize formula generation by caching dependency calculations and enforcing max initial terms limit
+* Optimize formula generation by caching dependency calculations per variant, significantly improving performance for sequences with many variants (e.g., A042269)
 
 ### Bugfixes
 

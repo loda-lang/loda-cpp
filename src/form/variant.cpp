@@ -263,12 +263,16 @@ bool simplifyFormulaUsingVariants(
   Log::get().debug("Found " + std::to_string(manager.numVariants()) +
                    " variants");
   bool applied = false;
-  // Cache getDependencies to avoid redundant O(n) computation in nested loops.
-  // This reduces overall complexity from O(n^4) to O(n^3) where n is the number
-  // of variants, significantly improving performance for formulas with many
-  // variants.
+  // Cache getDependencies to avoid redundant O(m^2) computation in nested loops.
+  // This reduces overall complexity from O(n × m^3) to O(n × m^2) where n is the
+  // number of variants and m is the number of functions, significantly improving
+  // performance for formulas with many variants.
   auto deps_old = FormulaUtil::getDependencies(
       formula, Expression::Type::FUNCTION, true, true);
+  
+  // Cache dependency results for each variant to avoid recomputation
+  std::map<std::pair<std::string, Expression>, std::multimap<std::string, std::string>> deps_cache;
+  
   for (auto& entry : formula.entries) {
     if (!ExpressionUtil::isSimpleFunction(entry.first, true)) {
       continue;
@@ -280,10 +284,22 @@ bool simplifyFormulaUsingVariants(
       if (!variant.required_funcs.empty()) {
         continue;
       }
-      Formula copy = formula;
-      copy.entries[entry.first] = variant.definition;
-      auto deps_new = FormulaUtil::getDependencies(
-          copy, Expression::Type::FUNCTION, true, true);
+      
+      // Check cache first
+      auto cache_key = std::make_pair(entry.first.name, variant.definition);
+      std::multimap<std::string, std::string> deps_new;
+      auto cache_it = deps_cache.find(cache_key);
+      if (cache_it != deps_cache.end()) {
+        deps_new = cache_it->second;
+      } else {
+        // Compute dependencies and cache the result
+        Formula copy = formula;
+        copy.entries[entry.first] = variant.definition;
+        deps_new = FormulaUtil::getDependencies(
+            copy, Expression::Type::FUNCTION, true, true);
+        deps_cache[cache_key] = deps_new;
+      }
+      
       if (deps_new.size() < deps_old.size()) {
         entry.second = variant.definition;
         num_initial_terms[entry.first.name] = variant.num_initial_terms;
