@@ -175,12 +175,27 @@ bool Optimizer::mergeOps(Program &p) const {
           do_merge = true;
         }
         
-        // first add, second trn?
+        // first add, second trn/equ/neq/leq/geq?
         else if (o1.type == Operation::Type::ADD &&
-		         o2.type == Operation::Type::TRN &&
-				 o1.source.value == o2.source.value) {
-          o1.type = Operation::Type::MAX;
-          o1.source = Operand(Operand::Type::CONSTANT, 0);
+          (o2.type == Operation::Type::TRN || 
+		  o2.type == Operation::Type::EQU || 
+		  o2.type == Operation::Type::NEQ || 
+		  o2.type == Operation::Type::LEQ || 
+		  o2.type == Operation::Type::GEQ)) {
+          o1.type = o2.type;
+          o1.source.value = Semantics::sub(o2.source.value, o1.source.value);
+          do_merge = true;
+        }
+        
+        // first sub, second trn/equ/neq/leq/geq?
+        else if (o1.type == Operation::Type::SUB &&
+          (o2.type == Operation::Type::TRN || 
+		  o2.type == Operation::Type::EQU || 
+		  o2.type == Operation::Type::NEQ || 
+		  o2.type == Operation::Type::LEQ || 
+		  o2.type == Operation::Type::GEQ)) {
+          o1.type = o2.type;
+          o1.source.value = Semantics::add(o2.source.value, o1.source.value);
           do_merge = true;
         }
         
@@ -241,22 +256,6 @@ bool Optimizer::mergeOps(Program &p) const {
                  Semantics::getPowerOf(o1.source.value, o2.source.value) !=
                      Number::ZERO) {
           o1 = o2;
-          do_merge = true;
-        }
-        
-        // first add, second equ/neq/leq/geq?
-        else if (o1.type == Operation::Type::ADD &&
-          (o2.type == Operation::Type::EQU || o2.type == Operation::Type::NEQ || o2.type == Operation::Type::LEQ || o2.type == Operation::Type::GEQ)) {
-          o1.type = o2.type;
-          o1.source.value = Semantics::sub(o2.source.value, o1.source.value);
-          do_merge = true;
-        }
-        
-        // first sub, second equ/neq/leq/geq?
-        else if (o1.type == Operation::Type::SUB &&
-          (o2.type == Operation::Type::EQU || o2.type == Operation::Type::NEQ || o2.type == Operation::Type::LEQ || o2.type == Operation::Type::GEQ)) {
-          o1.type = o2.type;
-          o1.source.value = Semantics::add(o2.source.value, o1.source.value);
           do_merge = true;
         }
       }
