@@ -69,6 +69,21 @@ static bool looksLikeErrorLine(const std::string& line) {
          (lowered.find("error") != std::string::npos);
 }
 
+// Check if a string starts with a prefix (case-insensitive)
+static bool startsWithIgnoreCase(const std::string& str,
+                                 const std::string& prefix) {
+  if (str.size() < prefix.size()) {
+    return false;
+  }
+  for (size_t i = 0; i < prefix.size(); ++i) {
+    if (std::tolower(static_cast<unsigned char>(str[i])) !=
+        std::tolower(static_cast<unsigned char>(prefix[i]))) {
+      return false;
+    }
+  }
+  return true;
+}
+
 // Helper function to parse tool output file, extracting both errors and numbers
 static ParsedToolOutput parseToolOutput(const std::string& resultPath) {
   ParsedToolOutput result;
@@ -94,16 +109,8 @@ static ParsedToolOutput parseToolOutput(const std::string& resultPath) {
     std::string trimmed = line.substr(firstNonSpace);
 
     // Skip informational messages from LEAN (e.g., "info: downloading ...")
-    // Use case-insensitive comparison to handle both "info:" and "INFO:"
-    if (trimmed.size() >= 5) {
-      std::string prefix = trimmed.substr(0, 5);
-      std::transform(prefix.begin(), prefix.end(), prefix.begin(),
-                     [](unsigned char c) {
-                       return static_cast<char>(std::tolower(c));
-                     });
-      if (prefix == "info:") {
-        continue;  // Skip LEAN info messages
-      }
+    if (startsWithIgnoreCase(trimmed, "info:")) {
+      continue;  // Skip LEAN info messages
     }
 
     bool currentError = inError || looksLikeErrorLine(line);
