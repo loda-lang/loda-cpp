@@ -470,6 +470,10 @@ void Setup::migrateSetupTxtToJson() {
 
   // Rename old file
   if (isFile(setup_txt)) {
+    // Remove existing .old file if it exists to allow rename
+    if (isFile(setup_txt_old)) {
+      std::remove(setup_txt_old.c_str());
+    }
     if (std::rename(setup_txt.c_str(), setup_txt_old.c_str()) != 0) {
       Log::get().warn("Failed to rename setup.txt to setup.txt.old");
     } else {
