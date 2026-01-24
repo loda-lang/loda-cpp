@@ -2,6 +2,7 @@
 
 ### Enhancements
 
+* Increase default max physical memory to 1.2 GiB
 * Optimize formula generation performance
 * Increase physical memory threshold factor and print usage
 
