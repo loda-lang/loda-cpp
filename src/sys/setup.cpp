@@ -316,7 +316,7 @@ std::string convertKeyToJson(const std::string& key) {
   bool nextUpper = false;
 
   for (size_t i = 0; i < key.size(); i++) {
-    if (key.substr(i, 5) == "LODA_") {
+    if (i + 4 < key.size() && key.substr(i, 5) == "LODA_") {
       i += 4;  // Skip "LODA_"
       continue;
     }
@@ -389,8 +389,8 @@ void Setup::loadSetup() {
 
 void Setup::loadSetupFromJson() {
   const std::string setup_json = getLodaHomeNoCheck() + "setup.json";
-  std::ifstream in(setup_json);
-  if (!in.good()) {
+  
+  if (!isFile(setup_json)) {
     return;
   }
 
@@ -446,10 +446,11 @@ void Setup::saveSetupToJson() {
   }
 
   std::ofstream out(setup_json);
-  if (out.bad()) {
+  if (!out.good()) {
     Log::get().error("Error saving configuration to setup.json", true);
   }
   out << json.to_string() << std::endl;
+  out.close();
 }
 
 void Setup::migrateSetupTxtToJson() {
@@ -464,8 +465,11 @@ void Setup::migrateSetupTxtToJson() {
 
   // Rename old file
   if (isFile(setup_txt)) {
-    std::rename(setup_txt.c_str(), setup_txt_old.c_str());
-    Log::get().info("Renamed setup.txt to setup.txt.old");
+    if (std::rename(setup_txt.c_str(), setup_txt_old.c_str()) != 0) {
+      Log::get().warn("Failed to rename setup.txt to setup.txt.old");
+    } else {
+      Log::get().info("Renamed setup.txt to setup.txt.old");
+    }
   }
 }
 
