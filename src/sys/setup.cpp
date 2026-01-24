@@ -310,38 +310,175 @@ void throwSetupParseError(const std::string& line) {
   Log::get().error("Error parsing line from setup.txt: " + line, true);
 }
 
-void Setup::loadSetup() {
-  std::ifstream in(getLodaHomeNoCheck() + "setup.txt");
-  if (in.good()) {
-    std::string line;
-    while (std::getline(in, line)) {
-      if (line.empty() || line[0] == '#') {
-        continue;
-      }
-      auto pos = line.find('=');
-      if (pos == std::string::npos) {
-        throwSetupParseError(line);
-      }
-      auto key = line.substr(0, pos);
-      auto value = line.substr(pos + 1);
-      trimString(key);
-      trimString(value);
-      std::transform(key.begin(), key.end(), key.begin(), ::toupper);
-      if (key.empty() || value.empty()) {
-        throwSetupParseError(line);
-      }
-      SETUP[key] = value;
+// Convert LODA_XXX_YYY to xxxYyy (camelCase)
+std::string convertKeyToJson(const std::string& key) {
+  std::string result;
+  bool nextUpper = false;
+
+  for (size_t i = 0; i < key.size(); i++) {
+    if (i + 5 <= key.size() && key.substr(i, 5) == "LODA_") {
+      i += 4;  // Skip "LODA_"
+      continue;
     }
+    if (key[i] == '_') {
+      nextUpper = true;
+    } else {
+      if (nextUpper) {
+        result += std::toupper(key[i]);
+        nextUpper = false;
+      } else {
+        result += std::tolower(key[i]);
+      }
+    }
+  }
+  return result;
+}
+
+// Convert xxxYyy (camelCase) back to LODA_XXX_YYY
+std::string convertKeyFromJson(const std::string& jsonKey) {
+  std::string result = "LODA_";
+  for (size_t i = 0; i < jsonKey.size(); i++) {
+    if (std::isupper(jsonKey[i])) {
+      result += '_';
+      result += jsonKey[i];
+    } else {
+      result += std::toupper(jsonKey[i]);
+    }
+  }
+  return result;
+}
+
+void Setup::loadSetup() {
+  const std::string setup_json = getLodaHomeNoCheck() + "setup.json";
+  const std::string setup_txt = getLodaHomeNoCheck() + "setup.txt";
+
+  // Try JSON first
+  if (isFile(setup_json)) {
+    loadSetupFromJson();
+    return;
+  }
+
+  // Try TXT and migrate if found
+  if (isFile(setup_txt)) {
+    {
+      std::ifstream in(setup_txt);
+      if (in.good()) {
+        std::string line;
+        while (std::getline(in, line)) {
+          if (line.empty() || line[0] == '#') {
+            continue;
+          }
+          auto pos = line.find('=');
+          if (pos == std::string::npos) {
+            throwSetupParseError(line);
+          }
+          auto key = line.substr(0, pos);
+          auto value = line.substr(pos + 1);
+          trimString(key);
+          trimString(value);
+          std::transform(key.begin(), key.end(), key.begin(), ::toupper);
+          if (key.empty() || value.empty()) {
+            throwSetupParseError(line);
+          }
+          SETUP[key] = value;
+        }
+      }
+    }  // Close file before migration
+    // Automatically migrate to JSON
+    migrateSetupTxtToJson();
+  }
+}
+
+void Setup::loadSetupFromJson() {
+  const std::string setup_json = getLodaHomeNoCheck() + "setup.json";
+  
+  if (!isFile(setup_json)) {
+    return;
+  }
+
+  try {
+    auto str = getFileAsString(setup_json);
+    auto json = jute::parser::parse(str);
+
+    // Read specific known keys
+    auto read_json_value = [&](const std::string& jsonKey) {
+      auto val = json[jsonKey];
+      auto type = val.get_type();
+      
+      // Skip if key doesn't exist (JUNKNOWN or JNULL)
+      if (type == jute::jType::JUNKNOWN || type == jute::jType::JNULL) {
+        return;
+      }
+      
+      std::string lodaKey = convertKeyFromJson(jsonKey);
+      if (type == jute::jType::JSTRING || type == jute::jType::JNUMBER) {
+        SETUP[lodaKey] = val.as_string();
+      } else if (type == jute::jType::JBOOLEAN) {
+        SETUP[lodaKey] = val.as_bool() ? "yes" : "no";
+      }
+    };
+
+    // Read known keys
+    read_json_value("githubUpdateInterval");
+    read_json_value("maxInstances");
+    read_json_value("maxPhysicalMemory");
+    read_json_value("maxProgramAge");
+    read_json_value("miningMode");
+    read_json_value("oeisUpdateInterval");
+    read_json_value("submittedBy");
+    read_json_value("submitCpuHours");
+
+  } catch (const std::exception& e) {
+    Log::get().error("Error parsing setup.json: " + std::string(e.what()), true);
   }
 }
 
 void Setup::saveSetup() {
-  std::ofstream out(getLodaHome() + "setup.txt");
-  if (out.bad()) {
-    Log::get().error("Error saving configuration to setup.txt", true);
+  saveSetupToJson();
+}
+
+void Setup::saveSetupToJson() {
+  const std::string setup_json = getLodaHome() + "setup.json";
+
+  jute::jValue json(jute::jType::JOBJECT);
+
+  for (const auto& it : SETUP) {
+    std::string jsonKey = convertKeyToJson(it.first);
+    json.set_property_string(jsonKey, it.second);
   }
-  for (auto it : SETUP) {
-    out << it.first << "=" << it.second << std::endl;
+
+  std::ofstream out(setup_json);
+  if (!out.good()) {
+    Log::get().error("Error opening setup.json for writing", true);
+  }
+  out << json.to_string() << std::endl;
+  if (!out.good()) {
+    Log::get().error("Error writing configuration to setup.json", true);
+  }
+  out.close();
+}
+
+void Setup::migrateSetupTxtToJson() {
+  const std::string setup_txt = getLodaHomeNoCheck() + "setup.txt";
+  const std::string setup_json = getLodaHomeNoCheck() + "setup.json";
+  const std::string setup_txt_old = getLodaHomeNoCheck() + "setup.txt.old";
+
+  Log::get().info("Migrating setup.txt to setup.json");
+
+  // Save to JSON
+  saveSetupToJson();
+
+  // Rename old file
+  if (isFile(setup_txt)) {
+    // Remove existing .old file if it exists to allow rename
+    if (isFile(setup_txt_old)) {
+      std::remove(setup_txt_old.c_str());
+    }
+    if (std::rename(setup_txt.c_str(), setup_txt_old.c_str()) != 0) {
+      Log::get().warn("Failed to rename setup.txt to setup.txt.old");
+    } else {
+      Log::get().info("Renamed setup.txt to setup.txt.old");
+    }
   }
 }
 

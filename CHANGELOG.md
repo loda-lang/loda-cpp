@@ -4,6 +4,7 @@
 
 * Optimize formula generation performance
 * Increase physical memory threshold factor and print usage
+* Migrate setup configuration from setup.txt to setup.json with automatic conversion using standard JSON naming conventions (camelCase)
 
 ### Bugfixes
 
