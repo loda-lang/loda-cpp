@@ -86,12 +86,20 @@ static ParsedToolOutput parseToolOutput(const std::string& resultPath) {
       continue;
     }
 
+    // Skip informational messages from LEAN (e.g., "info: downloading ...")
+    size_t firstNonSpace = line.find_first_not_of(" \t");
+    if (firstNonSpace != std::string::npos) {
+      std::string trimmed = line.substr(firstNonSpace);
+      if (trimmed.find("info:") == 0) {
+        continue;  // Skip LEAN info messages
+      }
+    }
+
     bool currentError = inError || looksLikeErrorLine(line);
 
     // Try to parse as a number only if we are not already in error mode and
     // the current line does not look like an explicit error
     if (!currentError) {
-      size_t firstNonSpace = line.find_first_not_of(" \t");
       if (firstNonSpace == std::string::npos) {
         continue;  // Skip whitespace-only lines
       }
