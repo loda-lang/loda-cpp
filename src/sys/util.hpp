@@ -108,3 +108,4 @@ void trimString(std::string& str);
 void lowerString(std::string& str);
 std::string formatDuration(int64_t microseconds);
 std::string escapeDiscordMarkdown(const std::string& str);
+bool startsWithIgnoreCase(const std::string& str, const std::string& prefix);

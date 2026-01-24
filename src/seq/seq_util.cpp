@@ -9,6 +9,7 @@
 #include "sys/log.hpp"
 #include "sys/process.hpp"
 #include "sys/setup.hpp"
+#include "sys/util.hpp"
 
 const size_t SequenceUtil::DEFAULT_SEQ_LENGTH = 80;  // magic number
 
@@ -67,21 +68,6 @@ static bool looksLikeErrorLine(const std::string& line) {
       [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
   return (line.find("***") != std::string::npos) ||
          (lowered.find("error") != std::string::npos);
-}
-
-// Check if a string starts with a prefix (case-insensitive)
-static bool startsWithIgnoreCase(const std::string& str,
-                                 const std::string& prefix) {
-  if (str.size() < prefix.size()) {
-    return false;
-  }
-  for (size_t i = 0; i < prefix.size(); ++i) {
-    if (std::tolower(static_cast<unsigned char>(str[i])) !=
-        std::tolower(static_cast<unsigned char>(prefix[i]))) {
-      return false;
-    }
-  }
-  return true;
 }
 
 // Helper function to parse tool output file, extracting both errors and numbers
