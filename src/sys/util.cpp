@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 
@@ -377,6 +378,27 @@ std::string formatDuration(int64_t microseconds) {
   return buf.str();
 }
 
+std::string formatBytes(size_t bytes) {
+  static const char* kUnits[] = {"B", "KB", "MB", "GB", "TB", "PB"};
+  size_t unit_index = 0;
+  double value = static_cast<double>(bytes);
+  while (value >= 1024.0 &&
+         unit_index + 1 < (sizeof(kUnits) / sizeof(*kUnits))) {
+    value /= 1024.0;
+    ++unit_index;
+  }
+  std::stringstream buf;
+  if (value < 10.0) {
+    buf << std::fixed << std::setprecision(2);
+  } else if (value < 100.0) {
+    buf << std::fixed << std::setprecision(1);
+  } else {
+    buf << std::fixed << std::setprecision(0);
+  }
+  buf << value << " " << kUnits[unit_index];
+  return buf.str();
+}
+
 std::string escapeDiscordMarkdown(const std::string& str) {
   std::string result;
   // Reserve extra space to avoid reallocations when escaping special characters
@@ -393,8 +415,7 @@ std::string escapeDiscordMarkdown(const std::string& str) {
   return result;
 }
 
-bool startsWithIgnoreCase(const std::string& str,
-                          const std::string& prefix) {
+bool startsWithIgnoreCase(const std::string& str, const std::string& prefix) {
   if (str.size() < prefix.size()) {
     return false;
   }

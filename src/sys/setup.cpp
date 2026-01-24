@@ -279,16 +279,16 @@ bool Setup::hasMemory() {
   const auto max_physical_memory = getMaxMemory();
   const auto usage = getMemUsage();
   if (usage > (size_t)(0.95 * max_physical_memory)) {
-    if (usage > (size_t)(1.5 * max_physical_memory)) {
+    if (usage > (size_t)(2.0 * max_physical_memory)) {
       Log::get().error("Exceeded maximum physical memory limit of " +
-                           std::to_string(max_physical_memory / (1024 * 1024)) +
-                           "MB",
+                           formatBytes(max_physical_memory) +
+                           " (usage: " + formatBytes(usage) + ")",
                        true);
     }
     if (!PRINTED_MEMORY_WARNING) {
       Log::get().warn("Reaching maximum physical memory limit of " +
-                      std::to_string(max_physical_memory / (1024 * 1024)) +
-                      "MB");
+                      formatBytes(max_physical_memory) +
+                      " (usage: " + formatBytes(usage) + ")");
       PRINTED_MEMORY_WARNING = true;
     }
     return false;

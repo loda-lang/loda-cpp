@@ -2,7 +2,8 @@
 
 ### Enhancements
 
-* Optimize formula generation by caching dependency calculations and enforcing max initial terms limit
+* Optimize formula generation performance
+* Increase physical memory threshold factor and print usage
 
 ### Bugfixes
 
