@@ -86,13 +86,16 @@ static ParsedToolOutput parseToolOutput(const std::string& resultPath) {
       continue;
     }
 
-    // Skip informational messages from LEAN (e.g., "info: downloading ...")
+    // Calculate firstNonSpace and trimmed once for reuse
     size_t firstNonSpace = line.find_first_not_of(" \t");
-    if (firstNonSpace != std::string::npos) {
-      std::string trimmed = line.substr(firstNonSpace);
-      if (trimmed.find("info:") == 0) {
-        continue;  // Skip LEAN info messages
-      }
+    if (firstNonSpace == std::string::npos) {
+      continue;  // Skip whitespace-only lines
+    }
+    std::string trimmed = line.substr(firstNonSpace);
+
+    // Skip informational messages from LEAN (e.g., "info: downloading ...")
+    if (trimmed.compare(0, 5, "info:") == 0) {
+      continue;  // Skip LEAN info messages
     }
 
     bool currentError = inError || looksLikeErrorLine(line);
@@ -100,10 +103,6 @@ static ParsedToolOutput parseToolOutput(const std::string& resultPath) {
     // Try to parse as a number only if we are not already in error mode and
     // the current line does not look like an explicit error
     if (!currentError) {
-      if (firstNonSpace == std::string::npos) {
-        continue;  // Skip whitespace-only lines
-      }
-      std::string trimmed = line.substr(firstNonSpace);
       try {
         result.numericValues.push_back(Number(trimmed));
         continue;  // successfully parsed numeric output
