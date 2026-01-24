@@ -2,7 +2,7 @@
 
 ### Enhancements
 
-* Optimize formula generation by caching dependency calculations and enforcing max initial terms limit
+* Add term limit checks in formula generation to prevent exponential complexity growth (e.g., A042269)
 
 ### Bugfixes
 

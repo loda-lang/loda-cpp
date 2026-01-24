@@ -3,6 +3,7 @@
 #include <functional>
 
 #include "form/expression_util.hpp"
+#include "form/formula_constants.hpp"
 #include "form/formula_util.hpp"
 #include "sys/log.hpp"
 
@@ -44,7 +45,7 @@ bool VariantsManager::update(Variant new_variant) {
     return false;
   }
   const auto num_terms = new_variant.definition.numTerms();
-  if (num_terms > 200) {  // limit term count to reduce complexity
+  if (num_terms > MAX_FORMULA_TERMS) {  // limit term count to reduce complexity
     Log::get().debug("Skipping variant with " + std::to_string(num_terms) +
                      " terms");
     return false;  // too many terms
