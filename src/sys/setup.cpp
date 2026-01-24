@@ -314,7 +314,6 @@ void throwSetupParseError(const std::string& line) {
 std::string convertKeyToJson(const std::string& key) {
   std::string result;
   bool nextUpper = false;
-  bool firstWord = true;
 
   for (size_t i = 0; i < key.size(); i++) {
     if (key.substr(i, 5) == "LODA_") {
@@ -323,13 +322,12 @@ std::string convertKeyToJson(const std::string& key) {
     }
     if (key[i] == '_') {
       nextUpper = true;
-      firstWord = false;
     } else {
       if (nextUpper) {
         result += std::toupper(key[i]);
         nextUpper = false;
       } else {
-        result += (firstWord ? std::tolower(key[i]) : std::tolower(key[i]));
+        result += std::tolower(key[i]);
       }
     }
   }
@@ -400,24 +398,20 @@ void Setup::loadSetupFromJson() {
     auto str = getFileAsString(setup_json);
     auto json = jute::parser::parse(str);
 
-    // Read all properties
-    for (int i = 0; i < json.size(); i++) {
-      // Iterate through all properties in the JSON object
-      // This is a bit tricky with jute as it doesn't provide direct access to keys
-      // We'll need to reconstruct from known keys
-    }
-
-    // Use a different approach - read specific known keys
+    // Read specific known keys
     auto read_json_value = [&](const std::string& jsonKey) {
       auto val = json[jsonKey];
-      if (val.get_type() == jute::jType::JSTRING) {
-        std::string lodaKey = convertKeyFromJson(jsonKey);
+      auto type = val.get_type();
+      
+      // Skip if key doesn't exist (JUNKNOWN or JNULL)
+      if (type == jute::jType::JUNKNOWN || type == jute::jType::JNULL) {
+        return;
+      }
+      
+      std::string lodaKey = convertKeyFromJson(jsonKey);
+      if (type == jute::jType::JSTRING || type == jute::jType::JNUMBER) {
         SETUP[lodaKey] = val.as_string();
-      } else if (val.get_type() == jute::jType::JNUMBER) {
-        std::string lodaKey = convertKeyFromJson(jsonKey);
-        SETUP[lodaKey] = val.as_string();
-      } else if (val.get_type() == jute::jType::JBOOLEAN) {
-        std::string lodaKey = convertKeyFromJson(jsonKey);
+      } else if (type == jute::jType::JBOOLEAN) {
         SETUP[lodaKey] = val.as_bool() ? "yes" : "no";
       }
     };
