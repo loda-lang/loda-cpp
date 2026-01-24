@@ -7,6 +7,7 @@ const UID FACTORIAL_SEQ_ID('A', 142);
 #include <stdexcept>
 
 #include "form/expression_util.hpp"
+#include "form/formula_constants.hpp"
 #include "form/formula_simplify.hpp"
 #include "form/formula_util.hpp"
 #include "form/variant.hpp"
@@ -570,6 +571,28 @@ void debugNumInitialTerms(const std::map<std::string, int64_t>& numTerms) {
   Log::get().debug("Number of initial terms needed: " + termsStr);
 }
 
+// Helper function to count total terms in a formula
+static size_t countFormulaTerms(const Formula& formula) {
+  size_t total = 0;
+  for (const auto& entry : formula.entries) {
+    total += entry.second.numTerms();
+  }
+  return total;
+}
+
+// Helper function to check if formula exceeds term limit
+static bool checkFormulaTermLimit(const Formula& formula,
+                                  const std::string& context) {
+  const auto num_terms = countFormulaTerms(formula);
+  if (num_terms > MAX_FORMULA_TERMS) {
+    Log::get().debug("Formula in " + context + " has " +
+                     std::to_string(num_terms) + " terms (max: " +
+                     std::to_string(MAX_FORMULA_TERMS) + ")");
+    return false;
+  }
+  return true;
+}
+
 bool FormulaGenerator::generateSingle(const Program& p) {
   if (ProgramUtil::hasIndirectOperand(p)) {
     return false;
@@ -656,6 +679,11 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     simplifyFormulaUsingVariants(formula, numTerms, maxInitialTerms);
     debugNumInitialTerms(numTerms);
 
+    // Check formula term limit after variant simplification
+    if (!checkFormulaTermLimit(formula, "variant simplification")) {
+      return false;
+    }
+
     // evaluate program and add initial terms to formula
     const int64_t offset = ProgramUtil::getOffset(p);
     if (!addInitialTerms(numCells, offset, numTerms)) {
@@ -679,14 +707,29 @@ bool FormulaGenerator::generateSingle(const Program& p) {
     Log::get().debug("Replaced arithmetic progressions: " + formula.toString());
   }
 
+  // Check formula term limit after arithmetic progression replacement
+  if (!checkFormulaTermLimit(formula, "arithmetic progression replacement")) {
+    return false;
+  }
+
   // replace geometric progressions
   if (FormulaSimplify::replaceGeometricProgressions(formula)) {
     Log::get().debug("Replaced geometric progressions: " + formula.toString());
   }
 
+  // Check formula term limit after geometric progression replacement
+  if (!checkFormulaTermLimit(formula, "geometric progression replacement")) {
+    return false;
+  }
+
   // resolve simple functions
   FormulaSimplify::resolveSimpleFunctions(formula);
   Log::get().debug("Resolved simple functions: " + formula.toString());
+
+  // Check formula term limit after resolving simple functions
+  if (!checkFormulaTermLimit(formula, "resolving simple functions")) {
+    return false;
+  }
 
   // extract main formula (filter out irrelant memory cells)
   Formula tmp;
@@ -697,6 +740,11 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   // resolve identities
   FormulaSimplify::resolveIdentities(formula);
   Log::get().debug("Resolved identities: " + formula.toString());
+
+  // Check formula term limit after resolving identities
+  if (!checkFormulaTermLimit(formula, "resolving identities")) {
+    return false;
+  }
 
   // success
   return true;
@@ -888,6 +936,11 @@ bool FormulaGenerator::generate(const Program& p, int64_t id, Formula& result,
   for (auto& entry : result.entries) {
     entry.second.replaceType(Expression::Type::FUNCTION, factorialSeqName, 1,
                              Expression::Type::FACTORIAL);
+  }
+
+  // Final check for formula term limit
+  if (!checkFormulaTermLimit(result, "final formula")) {
+    return false;
   }
 
   return true;

@@ -3,6 +3,7 @@
 #include <functional>
 
 #include "form/expression_util.hpp"
+#include "form/formula_constants.hpp"
 #include "form/formula_util.hpp"
 #include "sys/log.hpp"
 
@@ -44,7 +45,7 @@ bool VariantsManager::update(Variant new_variant) {
     return false;
   }
   const auto num_terms = new_variant.definition.numTerms();
-  if (num_terms > 150) {  // limit term count to reduce complexity
+  if (num_terms > MAX_FORMULA_TERMS) {  // limit term count to reduce complexity
     Log::get().debug("Skipping variant with " + std::to_string(num_terms) +
                      " terms");
     return false;  // too many terms
@@ -64,7 +65,7 @@ bool VariantsManager::update(Variant new_variant) {
   // }
   auto& vs = variants[new_variant.func];
   // limit number of variants per function to reduce O(n^4) complexity
-  if (vs.size() >= 15) {
+  if (vs.size() >= 20) {
     return false;
   }
   // prevent rapid increases of variant sizes
@@ -248,7 +249,7 @@ bool simplifyFormulaUsingVariants(
   bool found = false;
   size_t iterations = 0;
 
-  while (manager.numVariants() < 75 && iterations < 35) {  // tighter limits
+  while (manager.numVariants() < 100 && iterations < 50) {  // tighter limits
     iterations++;
 
     if (findVariants(manager)) {
@@ -263,16 +264,12 @@ bool simplifyFormulaUsingVariants(
   Log::get().debug("Found " + std::to_string(manager.numVariants()) +
                    " variants");
   bool applied = false;
-  // Cache getDependencies to avoid redundant O(m^2) computation in nested loops.
-  // This reduces overall complexity from O(n × m^3) to O(n × m^2) where n is the
-  // number of variants and m is the number of functions, significantly improving
-  // performance for formulas with many variants.
+  // Cache getDependencies to avoid redundant O(n) computation in nested loops.
+  // This reduces overall complexity from O(n^4) to O(n^3) where n is the number
+  // of variants, significantly improving performance for formulas with many
+  // variants.
   auto deps_old = FormulaUtil::getDependencies(
       formula, Expression::Type::FUNCTION, true, true);
-  
-  // Cache dependency results for each variant to avoid recomputation
-  std::map<std::pair<std::string, Expression>, std::multimap<std::string, std::string>> deps_cache;
-  
   for (auto& entry : formula.entries) {
     if (!ExpressionUtil::isSimpleFunction(entry.first, true)) {
       continue;
@@ -284,22 +281,10 @@ bool simplifyFormulaUsingVariants(
       if (!variant.required_funcs.empty()) {
         continue;
       }
-      
-      // Check cache first
-      auto cache_key = std::make_pair(entry.first.name, variant.definition);
-      std::multimap<std::string, std::string> deps_new;
-      auto cache_it = deps_cache.find(cache_key);
-      if (cache_it != deps_cache.end()) {
-        deps_new = cache_it->second;
-      } else {
-        // Compute dependencies and cache the result
-        Formula copy = formula;
-        copy.entries[entry.first] = variant.definition;
-        deps_new = FormulaUtil::getDependencies(
-            copy, Expression::Type::FUNCTION, true, true);
-        deps_cache[cache_key] = deps_new;
-      }
-      
+      Formula copy = formula;
+      copy.entries[entry.first] = variant.definition;
+      auto deps_new = FormulaUtil::getDependencies(
+          copy, Expression::Type::FUNCTION, true, true);
       if (deps_new.size() < deps_old.size()) {
         entry.second = variant.definition;
         num_initial_terms[entry.first.name] = variant.num_initial_terms;
