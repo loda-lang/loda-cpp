@@ -316,7 +316,7 @@ std::string convertKeyToJson(const std::string& key) {
   bool nextUpper = false;
 
   for (size_t i = 0; i < key.size(); i++) {
-    if (i + 4 < key.size() && key.substr(i, 5) == "LODA_") {
+    if (i + 5 <= key.size() && key.substr(i, 5) == "LODA_") {
       i += 4;  // Skip "LODA_"
       continue;
     }
@@ -360,28 +360,30 @@ void Setup::loadSetup() {
 
   // Try TXT and migrate if found
   if (isFile(setup_txt)) {
-    std::ifstream in(setup_txt);
-    if (in.good()) {
-      std::string line;
-      while (std::getline(in, line)) {
-        if (line.empty() || line[0] == '#') {
-          continue;
+    {
+      std::ifstream in(setup_txt);
+      if (in.good()) {
+        std::string line;
+        while (std::getline(in, line)) {
+          if (line.empty() || line[0] == '#') {
+            continue;
+          }
+          auto pos = line.find('=');
+          if (pos == std::string::npos) {
+            throwSetupParseError(line);
+          }
+          auto key = line.substr(0, pos);
+          auto value = line.substr(pos + 1);
+          trimString(key);
+          trimString(value);
+          std::transform(key.begin(), key.end(), key.begin(), ::toupper);
+          if (key.empty() || value.empty()) {
+            throwSetupParseError(line);
+          }
+          SETUP[key] = value;
         }
-        auto pos = line.find('=');
-        if (pos == std::string::npos) {
-          throwSetupParseError(line);
-        }
-        auto key = line.substr(0, pos);
-        auto value = line.substr(pos + 1);
-        trimString(key);
-        trimString(value);
-        std::transform(key.begin(), key.end(), key.begin(), ::toupper);
-        if (key.empty() || value.empty()) {
-          throwSetupParseError(line);
-        }
-        SETUP[key] = value;
       }
-    }
+    }  // Close file before migration
     // Automatically migrate to JSON
     migrateSetupTxtToJson();
   }
@@ -447,9 +449,12 @@ void Setup::saveSetupToJson() {
 
   std::ofstream out(setup_json);
   if (!out.good()) {
-    Log::get().error("Error saving configuration to setup.json", true);
+    Log::get().error("Error opening setup.json for writing", true);
   }
   out << json.to_string() << std::endl;
+  if (!out.good()) {
+    Log::get().error("Error writing configuration to setup.json", true);
+  }
   out.close();
 }
 
