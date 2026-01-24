@@ -9,6 +9,7 @@
 #include "sys/log.hpp"
 #include "sys/process.hpp"
 #include "sys/setup.hpp"
+#include "sys/util.hpp"
 
 const size_t SequenceUtil::DEFAULT_SEQ_LENGTH = 80;  // magic number
 
@@ -70,7 +71,8 @@ static bool looksLikeErrorLine(const std::string& line) {
 }
 
 // Helper function to parse tool output file, extracting both errors and numbers
-static ParsedToolOutput parseToolOutput(const std::string& resultPath) {
+static ParsedToolOutput parseToolOutput(
+    const std::string& resultPath, const std::string& ignoredPrefix = "") {
   ParsedToolOutput result;
   std::ifstream resultFile(resultPath);
   if (!resultFile) {
@@ -86,16 +88,24 @@ static ParsedToolOutput parseToolOutput(const std::string& resultPath) {
       continue;
     }
 
+    // Calculate firstNonSpace and trimmed once for reuse
+    size_t firstNonSpace = line.find_first_not_of(" \t");
+    if (firstNonSpace == std::string::npos) {
+      continue;  // Skip whitespace-only lines
+    }
+    std::string trimmed = line.substr(firstNonSpace);
+
+    // Skip lines with the ignored prefix if specified
+    if (!ignoredPrefix.empty() &&
+        startsWithIgnoreCase(trimmed, ignoredPrefix)) {
+      continue;
+    }
+
     bool currentError = inError || looksLikeErrorLine(line);
 
     // Try to parse as a number only if we are not already in error mode and
     // the current line does not look like an explicit error
     if (!currentError) {
-      size_t firstNonSpace = line.find_first_not_of(" \t");
-      if (firstNonSpace == std::string::npos) {
-        continue;  // Skip whitespace-only lines
-      }
-      std::string trimmed = line.substr(firstNonSpace);
       try {
         result.numericValues.push_back(Number(trimmed));
         continue;  // successfully parsed numeric output
@@ -135,8 +145,12 @@ bool SequenceUtil::evalFormulaWithExternalTool(
   int exitCode = execWithTimeout(args, timeoutSeconds, resultPath, workingDir,
                                  stdinContent);
 
+  // Determine ignored prefix based on tool name
+  // LEAN outputs "info:" messages that should be ignored
+  std::string ignoredPrefix = (toolName == "LEAN") ? "info:" : "";
+
   // Parse the output file for both errors and numeric values
-  auto parsed = parseToolOutput(resultPath);
+  auto parsed = parseToolOutput(resultPath, ignoredPrefix);
 
   // Handle timeouts
   if (exitCode == PROCESS_ERROR_TIMEOUT) {
