@@ -37,5 +37,7 @@ class Formula {
 
   void collectFunctionEntries(const std::string& func, Formula& target) const;
 
+  size_t numTerms() const;
+
   std::map<Expression, Expression> entries;
 };

@@ -571,19 +571,10 @@ void debugNumInitialTerms(const std::map<std::string, int64_t>& numTerms) {
   Log::get().debug("Number of initial terms needed: " + termsStr);
 }
 
-// Helper function to count total terms in a formula
-static size_t countFormulaTerms(const Formula& formula) {
-  size_t total = 0;
-  for (const auto& entry : formula.entries) {
-    total += entry.second.numTerms();
-  }
-  return total;
-}
-
 // Helper function to check if formula exceeds term limit
 static bool checkFormulaTermLimit(const Formula& formula,
                                   const std::string& context) {
-  const auto num_terms = countFormulaTerms(formula);
+  const auto num_terms = formula.numTerms();
   if (num_terms > MAX_FORMULA_TERMS) {
     Log::get().debug("Formula in " + context + " has " +
                      std::to_string(num_terms) + " terms (max: " +
