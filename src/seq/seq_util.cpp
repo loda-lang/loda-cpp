@@ -94,8 +94,16 @@ static ParsedToolOutput parseToolOutput(const std::string& resultPath) {
     std::string trimmed = line.substr(firstNonSpace);
 
     // Skip informational messages from LEAN (e.g., "info: downloading ...")
-    if (trimmed.compare(0, 5, "info:") == 0) {
-      continue;  // Skip LEAN info messages
+    // Use case-insensitive comparison to handle both "info:" and "INFO:"
+    if (trimmed.size() >= 5) {
+      std::string prefix = trimmed.substr(0, 5);
+      std::transform(prefix.begin(), prefix.end(), prefix.begin(),
+                     [](unsigned char c) {
+                       return static_cast<char>(std::tolower(c));
+                     });
+      if (prefix == "info:") {
+        continue;  // Skip LEAN info messages
+      }
     }
 
     bool currentError = inError || looksLikeErrorLine(line);
