@@ -85,7 +85,8 @@ static bool startsWithIgnoreCase(const std::string& str,
 }
 
 // Helper function to parse tool output file, extracting both errors and numbers
-static ParsedToolOutput parseToolOutput(const std::string& resultPath) {
+static ParsedToolOutput parseToolOutput(
+    const std::string& resultPath, const std::string& ignoredPrefix = "") {
   ParsedToolOutput result;
   std::ifstream resultFile(resultPath);
   if (!resultFile) {
@@ -108,9 +109,10 @@ static ParsedToolOutput parseToolOutput(const std::string& resultPath) {
     }
     std::string trimmed = line.substr(firstNonSpace);
 
-    // Skip informational messages from LEAN (e.g., "info: downloading ...")
-    if (startsWithIgnoreCase(trimmed, "info:")) {
-      continue;  // Skip LEAN info messages
+    // Skip lines with the ignored prefix if specified
+    if (!ignoredPrefix.empty() &&
+        startsWithIgnoreCase(trimmed, ignoredPrefix)) {
+      continue;
     }
 
     bool currentError = inError || looksLikeErrorLine(line);
@@ -157,8 +159,12 @@ bool SequenceUtil::evalFormulaWithExternalTool(
   int exitCode = execWithTimeout(args, timeoutSeconds, resultPath, workingDir,
                                  stdinContent);
 
+  // Determine ignored prefix based on tool name
+  // LEAN outputs "info:" messages that should be ignored
+  std::string ignoredPrefix = (toolName == "LEAN") ? "info:" : "";
+
   // Parse the output file for both errors and numeric values
-  auto parsed = parseToolOutput(resultPath);
+  auto parsed = parseToolOutput(resultPath, ignoredPrefix);
 
   // Handle timeouts
   if (exitCode == PROCESS_ERROR_TIMEOUT) {
