@@ -1,10 +1,11 @@
 ## [Unreleased]
 
+## v26.1.25
+
 ### Enhancements
 
-* Increase default max physical memory to 1.2 GiB
 * Optimize formula generation performance
-* Increase physical memory threshold factor and print usage
+* Increase default maximum physical memory and print usage
 
 ### Bugfixes
 
