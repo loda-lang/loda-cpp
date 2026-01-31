@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Enhancements
+
+* Support `bin` (binomial coefficient) in LEAN formula generation
+
 ## v26.1.25
 
 ### Enhancements
@@ -84,7 +88,6 @@
 
 ### Enhancements
 
-* Support `bin` (binomial coefficient) in LEAN formula generation
 * Support `fac` in LEAN formula generation
 * Improve LEAN formula generation for `pow`
 * Improve mined programs comparison
