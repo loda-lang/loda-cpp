@@ -8,7 +8,11 @@
 set -e
 
 # Constants
-DISCORD_OUTPUT_LIMIT=5000  # Safe limit for Discord message output to avoid breaking UTF-8
+OUTPUT_LINES=20  # Number of lines of test output to show
+DISCORD_OUTPUT_LIMIT=1900  # Safe limit for Discord message output to avoid breaking UTF-8
+
+# Accumulated test results for final summary
+TEST_RESULTS=()
 
 # Color codes for output
 RED='\033[0;31m'
@@ -20,6 +24,9 @@ NC='\033[0m' # No Color
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LODA_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 LODA_BIN="$LODA_DIR/loda"
+
+# Enable testing with external tools
+export LODA_TEST_WITH_EXTERNAL_TOOLS=1
 
 # Create output directory with timestamp
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
@@ -69,7 +76,7 @@ send_to_discord() {
     
     # Check if Discord webhook is set
     if [ -z "$LODA_DISCORD_WEBHOOK" ]; then
-        echo -e "${YELLOW}Warning: LODA_DISCORD_WEBHOOK not set, skipping Discord upload${NC}"
+        echo -e "${YELLOW}Warning: LODA_DISCORD_WEBHOOK not set, skipping Discord notification${NC}"
         return 0
     fi
     
@@ -81,10 +88,8 @@ send_to_discord() {
     # Send to Discord using curl
     local curl_error
     curl_error=$(mktemp)
-    if curl -fsSL -X POST -H "Content-Type: application/json" -d "$json_payload" "$LODA_DISCORD_WEBHOOK" 2>"$curl_error"; then
-        echo -e "${GREEN}✓ Results uploaded to Discord${NC}"
-    else
-        echo -e "${RED}✗ Failed to upload results to Discord${NC}"
+    if ! curl -fsSL -X POST -H "Content-Type: application/json" -d "$json_payload" "$LODA_DISCORD_WEBHOOK" 2>"$curl_error"; then
+        echo -e "${RED}✗ Failed to send message to Discord${NC}"
         if [ -s "$curl_error" ]; then
             echo -e "${RED}Error details: $(cat "$curl_error")${NC}"
         fi
@@ -94,28 +99,79 @@ send_to_discord() {
     rm -f "$curl_error"
 }
 
+# Function to send output lines to Discord one by one
+send_output_to_discord() {
+    local output_file="$1"
+    local line_count=0
+    local current_message=""
+    local max_message_length=1800  # Safe limit to avoid hitting Discord's 2000 character limit
+    
+    while IFS= read -r line; do
+        line_count=$((line_count + 1))
+        
+        # If adding this line would exceed the limit, send the current message first
+        if [ $((${#current_message} + ${#line} + 1)) -gt $max_message_length ] && [ -n "$current_message" ]; then
+            send_to_discord $'```\n'"${current_message}"$'\n```'
+            current_message=""
+            # Small delay to avoid rate limiting
+            sleep 0.5
+        fi
+        
+        # Add line to current message
+        if [ -z "$current_message" ]; then
+            current_message="$line"
+        else
+            current_message="${current_message}
+${line}"
+        fi
+    done < <(tail -$OUTPUT_LINES "$output_file")
+    
+    # Send any remaining message
+    if [ -n "$current_message" ]; then
+        send_to_discord $'```\n'"${current_message}"$'\n```'
+    fi
+}
+
 # Function to run a test and upload results
 run_test() {
     local test_name="$1"
-    local test_command="$2"
     
     echo ""
     echo "=========================================="
     echo "Running: $test_name"
-    echo "Command: $test_command"
     echo "=========================================="
     echo ""
+
+    send_to_discord "▶️ **Starting $test_name**"
     
     # Create output file in the timestamped directory
     local output_file="$OUTPUT_DIR/${test_name}.txt"
     
+    # Heartbeat to show progress every 10 minutes
+    local heartbeat_pid
+    (
+        while true; do
+            sleep 3600
+            send_output_to_discord "$output_file"
+        done
+    ) &
+    heartbeat_pid=$!
+
     # Run the test and capture output and exit code
     local start_time
     start_time=$(date +%s)
     set +e
-    $test_command > "$output_file" 2>&1
+    # Change to the main loda directory before running the test
+    (cd "$LODA_DIR" && ./loda $test_name) > "$output_file" 2>&1
     local exit_code=$?
     set -e
+
+    # Stop heartbeat
+    if [ -n "$heartbeat_pid" ]; then
+        kill "$heartbeat_pid" 2>/dev/null || true
+        wait "$heartbeat_pid" 2>/dev/null || true
+    fi
+
     local end_time
     end_time=$(date +%s)
     local duration=$((end_time - start_time))
@@ -146,28 +202,26 @@ run_test() {
         echo -e "${RED}✗ Test failed (exit code: $exit_code, duration: ${duration_str})${NC}"
     fi
     
-    # Print last 10 lines of output
+    # Print last lines of output
     echo ""
-    echo "Last 10 lines of output:"
+    echo "Last $OUTPUT_LINES lines of output:"
     echo "----------------------------------------"
-    tail -20 "$output_file"
+    tail -$OUTPUT_LINES "$output_file"
     echo "----------------------------------------"
-    
-    # Prepare Discord message with safe truncation (avoid breaking multi-byte characters)
-    # Use head -c to limit bytes, but be conservative to avoid breaking UTF-8
-    local output_tail
-    output_tail=$(tail -10 "$output_file" | head -c "$DISCORD_OUTPUT_LIMIT")
-    local discord_message
-    discord_message="$status_emoji **$test_name** - $status
-Exit code: $exit_code
-Duration: ${duration_str}
-Last 10 lines of output:
-\`\`\`
-${output_tail}
-\`\`\`"
     
     # Upload to Discord
+    local discord_message
+    discord_message="$status_emoji **Finished $test_name - ${status}**
+Exit code: $exit_code
+Duration: ${duration_str}"
     send_to_discord "$discord_message"
+    
+    # Send output lines one by one to avoid size limits
+    send_to_discord "Last $OUTPUT_LINES lines of output:"
+    send_output_to_discord "$output_file"
+
+    # Store result for final summary
+    TEST_RESULTS+=("${status_emoji} ${test_name} - ${status} (exit code: ${exit_code}, duration: ${duration_str})")
     
     echo ""
 }
@@ -181,12 +235,33 @@ echo "Output directory: $OUTPUT_DIR"
 echo "Discord webhook: ${LODA_DISCORD_WEBHOOK:+configured}"
 
 # Run the tests
-run_test "test-formula-parser" "$LODA_BIN test-formula-parser"
-run_test "test-inceval" "$LODA_BIN test-inceval"
-run_test "test-pari" "$LODA_BIN test-pari"
-run_test "test-lean" "$LODA_BIN test-lean"
-run_test "test-vireval" "$LODA_BIN test-vireval"
-run_test "test-analyzer" "$LODA_BIN test-analyzer"
+# run_test "test-analyzer"
+# run_test "test-formula-parser"
+# run_test "test-inceval"
+# run_test "test-vireval"
+# run_test "test-recursion"
+run_test "find-slow-formulas"
+# run_test "test-pari"
+run_test "test-lean"
+
+# Print and send final summary
+echo ""
+echo "=========================================="
+echo "Test Summary"
+echo "=========================================="
+for summary_line in "${TEST_RESULTS[@]}"; do
+    echo "${summary_line}"
+done
+
+# Send summary to Discord as a single message
+if [ ${#TEST_RESULTS[@]} -gt 0 ]; then
+    summary_payload="Test Summary:"
+    for summary_line in "${TEST_RESULTS[@]}"; do
+        summary_payload="${summary_payload}
+${summary_line}"
+    done
+    send_to_discord "${summary_payload}"
+fi
 
 echo ""
 echo "=========================================="

@@ -1,10 +1,93 @@
 ## [Unreleased]
 
+## v26.1.25
+
+### Enhancements
+
+* Optimize formula generation performance
+* Increase default maximum physical memory and print usage
+
+### Bugfixes
+
+* Fix LEAN type mismatch for nested sequence calls (A111432)
+
+## v26.1.16
+
+### Bugfixes
+
+* Fix JSON serialization
+
+## v26.1.15
+
+### Enhancements
+
+* Improve JSON serialization and API request handling
+* Improve `upgrade` command output
+
+### Bugfixes
+
+* Fix integer overflow in optimizer
+* Fix invalid DLL on windows-arm64
+
+## v26.1.13
+
+### Bugfixes
+
+* Fix calculation of number of needed initial terms (A131083)
+* Fix `test-lean` failure when LEAN project directory exists but is incomplete
+* Fix LEAN type synthesis error by wrapping pattern offset constants with `Int.ofNat` in Nat domain formulas
+* Fix LEAN export incorrectly applying pattern offset to `Int` domain parameters (A046231)
+* Fix PARI error handling and test evaluation
+* Fix stack overflow in formula evaluators for sequences with power operations where exponent can be negative (A132076)
+
+### Enhancements
+
+* Add optimizer case for `nrt`
+* Add internal command `test-recursion`
+* Add internal command `update-formula-tests` to automatically update formula test expectations
+* Add program change log in server mode to track program updates
+* Use v2 API endpoints to download OEIS data and report stats
+* Set user agent in web requests
+
+## v25.12.1
+
+### Enhancements
+
+* Integrate `libcurl` for HTTP requests, replacing external `curl`/`wget` tools
+* Integrate `zlib` for gzip decompression, replacing external `gzip`/`gunzip` tools
+* Report broken b-files to LODA API server for automatic cache invalidation
+* Add internal `export-formulas` command to export all program formulas to a file or stdout
+
+### Bugfixes
+
+* Fix PARI evaluation error for formulas with constant identity functions (e.g., A026765)
+* Fix LEAN evaluation error for formulas with mutually recursive functions that are not self-recursive (e.g., A001636)
+
+## v25.11.29
+
+### Enhancements
+
+* Improve formula generation performance by imposing tighter limits on variant simplification
+* Improve operations merging in optimizer
+
+### Bugfixes
+
+* Fix parsing error during stats generation
+* Fix PARI formula generation for rising factorial when the base can be zero (e.g., A006430)
+
+### Enhancements
+
+* Use `v2/submissions/` API endpoint to fetch and submit programs
+* Handle program submissions with `delete` mode
+
+## v25.11.9
+
 ### Enhancements
 
 * Support `bin` (binomial coefficient) in LEAN formula generation
 * Support `fac` in LEAN formula generation
 * Improve LEAN formula generation for `pow`
+* Improve mined programs comparison
 
 ## v25.11.2
 

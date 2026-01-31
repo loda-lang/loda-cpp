@@ -120,19 +120,40 @@ bool FormulaGenerator::canBeNegativeWithRanges(const Expression& e,
   return ExpressionUtil::canBeNegative(e, offset);
 }
 
+bool FormulaGenerator::isNotInRange(const Operand& operand,
+                                    const Number& value,
+                                    const RangeMap* ranges) const {
+  // If we have ranges and the operand is a direct memory access, check ranges
+  if (ranges && operand.type == Operand::Type::DIRECT) {
+    int64_t cell = operand.value.asInt();
+    auto it = ranges->find(cell);
+    if (it != ranges->end()) {
+      const auto& range = it->second;
+      // Value is not in range if it's below lower bound or above upper bound
+      return (value < range.lower_bound || value > range.upper_bound);
+    }
+  }
+  // If no range information available, assume value could be in range
+  return false;
+}
+
 Expression FormulaGenerator::cellFunc(int64_t index) const {
   return ExpressionUtil::newFunction(getCellName(index));
 }
+
+// Maximum size of product expansion for factorial
+constexpr int64_t MAX_PRODUCT_EXPANSION = 10;
 
 // Express falling/rising factorial using standard factorial
 bool FormulaGenerator::facToExpression(const Expression& a, const Expression& b,
                                        const Operand& aOp, const Operand& bOp,
                                        const RangeMap* ranges,
                                        Expression& res) const {
-
-  // Optimize for small constants: convert to PRODUCT instead of FACTORIAL
-  if (b.type == Expression::Type::CONSTANT && b.value >= Number(-3) &&
-      b.value <= Number(3)) {
+  // Check if b is a constant within the product expansion threshold.
+  // This range check also ensures safe conversion to int64_t.
+  if (b.type == Expression::Type::CONSTANT &&
+      b.value >= Number(-MAX_PRODUCT_EXPANSION) &&
+      b.value <= Number(MAX_PRODUCT_EXPANSION)) {
     auto k = b.value.asInt();
 
     // Trivial case: k = 0 -> result is 1
@@ -147,7 +168,8 @@ bool FormulaGenerator::facToExpression(const Expression& a, const Expression& b,
       return true;
     }
 
-    // Build product expression
+    // Use product expansion for small constants.
+    // This avoids factorial division issues when a can be zero.
     res = Expression(Expression::Type::PRODUCT);
     if (k > 0) {
       // Rising factorial: a * (a+1) * (a+2) * ... * (a+k-1)
@@ -171,13 +193,14 @@ bool FormulaGenerator::facToExpression(const Expression& a, const Expression& b,
     }
     return true;
   }
+
   // TODO: can we relax the negativity check for b?
   if (canBeNegativeWithRanges(a, aOp, ranges) ||
       canBeNegativeWithRanges(b, bOp, ranges)) {
     return false;
   }
 
-  // General case
+  // General case: use factorial division
   Expression num(Expression::Type::FACTORIAL);
   Expression denom(Expression::Type::FACTORIAL);
 
@@ -195,11 +218,21 @@ bool FormulaGenerator::facToExpression(const Expression& a, const Expression& b,
     denom.children = {sum({a, constant(-1)})};
   }
 
+  // Check if factorial arguments can be negative
+  // Factorial is only defined for non-negative integers
+  auto& numArg = num.children.front();
+  auto& denomArg = denom.children.front();
+  ExpressionUtil::normalize(numArg);
+  ExpressionUtil::normalize(denomArg);
+
+  if (ExpressionUtil::canBeNegative(numArg, offset) ||
+      ExpressionUtil::canBeNegative(denomArg, offset)) {
+    return false;
+  }
+
   // Simplify immediately
-  auto& d = denom.children.front();
-  ExpressionUtil::normalize(d);
-  if (d.type == Expression::Type::CONSTANT &&
-      (d.value == Number::ZERO || d.value == Number::ONE)) {
+  if (denomArg.type == Expression::Type::CONSTANT &&
+      (denomArg.value == Number::ZERO || denomArg.value == Number::ONE)) {
     res = num;
   } else {
     // Factorial division is guaranteed to produce an integer, so use a standard
@@ -246,7 +279,63 @@ bool FormulaGenerator::update(const Operation& op, const RangeMap* ranges) {
     case Operation::Type::POW: {
       res = Expression(Expression::Type::POWER, "", {prevTarget, source});
       if (canBeNegativeWithRanges(source, op.source, ranges)) {
-        res = func("truncate", {res});
+        // Wrap with conditional to avoid computing large negative powers
+        // that can cause stack overflow in formula evaluators like PARI.
+        // This handles three cases:
+        // 1. base ∈ {-1,1}: base^exponent is always an integer
+        // 2. exponent < 0 and base ∉ {-1,1}: result is 0
+        // 3. exponent >= 0: base^exponent is an integer
+        // Pattern: if(base*base==1, base^exp, if(exp<=-1, 0, base^exp))
+        
+        // Use isNotInRange to determine if base can be ±1
+        bool baseCanBeOne = !(isNotInRange(op.target, Number::ONE, ranges) &&
+                              isNotInRange(op.target, Number::MINUS_ONE, ranges));
+        
+        if (baseCanBeOne) {
+          // Check if base² == 1 (base is ±1)
+          Expression base_squared(Expression::Type::PRODUCT);
+          base_squared.newChild(prevTarget);
+          base_squared.newChild(prevTarget);
+          
+          Expression base_is_one(Expression::Type::EQUAL);
+          base_is_one.newChild(base_squared);
+          base_is_one.newChild(constant(1));
+          
+          // Inner IF: if(exponent<=-1, 0, base^exponent)
+          Expression exp_negative(Expression::Type::LESS_EQUAL);
+          exp_negative.newChild(source);
+          exp_negative.newChild(constant(-1));
+          
+          Expression zero = constant(0);
+          
+          Expression inner_if(Expression::Type::IF);
+          inner_if.newChild(exp_negative);
+          inner_if.newChild(zero);
+          inner_if.newChild(res);  // base^exponent
+          
+          // Outer IF: if(base*base==1, base^exponent, inner_if)
+          Expression outer_if(Expression::Type::IF);
+          outer_if.newChild(base_is_one);
+          outer_if.newChild(res);  // base^exponent for base ∈ {-1, 1}
+          outer_if.newChild(inner_if);  // conditional for other bases
+          
+          res = outer_if;
+        } else {
+          // Base cannot be ±1, so we can skip the base check
+          // Pattern: if(exp<=-1, 0, base^exp)
+          Expression exp_negative(Expression::Type::LESS_EQUAL);
+          exp_negative.newChild(source);
+          exp_negative.newChild(constant(-1));
+          
+          Expression zero = constant(0);
+          
+          Expression if_expr(Expression::Type::IF);
+          if_expr.newChild(exp_negative);
+          if_expr.newChild(zero);
+          if_expr.newChild(res);  // base^exponent
+          
+          res = if_expr;
+        }
       }
       break;
     }
@@ -470,6 +559,17 @@ void FormulaGenerator::initFormula(int64_t numCells, bool useIncEval) {
   }
 }
 
+void debugNumInitialTerms(const std::map<std::string, int64_t>& numTerms) {
+  std::string termsStr;
+  for (const auto& [name, terms] : numTerms) {
+    if (!termsStr.empty()) {
+      termsStr += ", ";
+    }
+    termsStr += name + ": " + std::to_string(terms);
+  }
+  Log::get().debug("Number of initial terms needed: " + termsStr);
+}
+
 bool FormulaGenerator::generateSingle(const Program& p) {
   if (ProgramUtil::hasIndirectOperand(p)) {
     return false;
@@ -540,7 +640,7 @@ bool FormulaGenerator::generateSingle(const Program& p) {
   if (!update(main, mainRanges)) {
     return false;
   }
-  Log::get().debug("Updated formula:  " + formula.toString());
+  Log::get().debug("Updated formula: " + formula.toString());
 
   // additional work for IE programs
   if (useIncEval) {
@@ -550,9 +650,11 @@ bool FormulaGenerator::generateSingle(const Program& p) {
       auto name = getCellName(cell);
       numTerms[name] = getNumInitialTermsNeeded(cell, name, formula, incEval);
     }
+    debugNumInitialTerms(numTerms);
 
     // find and choose alternative function definitions
-    simplifyFormulaUsingVariants(formula, numTerms);
+    simplifyFormulaUsingVariants(formula, numTerms, maxInitialTerms);
+    debugNumInitialTerms(numTerms);
 
     // evaluate program and add initial terms to formula
     const int64_t offset = ProgramUtil::getOffset(p);
@@ -643,8 +745,6 @@ bool FormulaGenerator::addInitialTerms(
   // calculate maximum number of initial terms needed
   int64_t maxNumTerms = 0;
   for (auto it : numTerms) {
-    Log::get().debug("Function " + it.first + "(n) requires " +
-                     std::to_string(it.second) + " intial terms");
     maxNumTerms = std::max(maxNumTerms, it.second);
   }
   if (maxNumTerms > maxInitialTerms) {
@@ -774,6 +874,9 @@ bool FormulaGenerator::generate(const Program& p, int64_t id, Formula& result,
 
   // replace simple references to recursive functions
   FormulaSimplify::replaceSimpleRecursiveRefs(result);
+
+  // replace constant identity functions (e.g., b(n) = b(n-1) with no base case)
+  FormulaSimplify::replaceConstantIdentityFunctions(result);
 
   // replace arithmetic & geometric progressions
   // TODO: check if this is really needed here

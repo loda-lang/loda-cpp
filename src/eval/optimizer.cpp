@@ -6,12 +6,12 @@
 
 #include "eval/evaluator_par.hpp"
 #include "eval/interpreter.hpp"
-#include "eval/semantics.hpp"
 #include "lang/program_util.hpp"
+#include "math/semantics.hpp"
 #include "sys/log.hpp"
 #include "sys/util.hpp"
 
-bool Optimizer::optimize(Program &p) const {
+bool Optimizer::optimize(Program& p) const {
   if (Log::get().level == Log::Level::DEBUG) {
     Log::get().debug("Starting optimization of program with " +
                      std::to_string(p.ops.size()) + " operations");
@@ -80,7 +80,7 @@ bool Optimizer::optimize(Program &p) const {
   return result;
 }
 
-bool Optimizer::removeNops(Program &p) const {
+bool Optimizer::removeNops(Program& p) const {
   bool removed = false;
   auto it = p.ops.begin();
   while (it != p.ops.end()) {
@@ -97,7 +97,7 @@ bool Optimizer::removeNops(Program &p) const {
   return removed;
 }
 
-bool Optimizer::removeEmptyLoops(Program &p) const {
+bool Optimizer::removeEmptyLoops(Program& p) const {
   bool removed = false;
   for (int64_t i = 0; i < static_cast<int64_t>(p.ops.size());
        i++)  // need to use signed integers here
@@ -116,13 +116,13 @@ bool Optimizer::removeEmptyLoops(Program &p) const {
   return removed;
 }
 
-bool Optimizer::mergeOps(Program &p) const {
+bool Optimizer::mergeOps(Program& p) const {
   bool updated = false;
   for (size_t i = 0; i + 1 < p.ops.size(); i++) {
     bool do_merge = false;
 
-    auto &o1 = p.ops[i];
-    auto &o2 = p.ops[i + 1];
+    auto& o1 = p.ops[i];
+    auto& o2 = p.ops[i + 1];
 
     // operation targets the direct same?
     if (o1.target == o2.target && o1.target.type == Operand::Type::DIRECT) {
@@ -136,10 +136,11 @@ bool Optimizer::mergeOps(Program &p) const {
           do_merge = true;
         }
 
-        // both mul, div or pow operations?
+        // both mul, div, pow or nrt operations?
         else if (o1.type == o2.type && (o1.type == Operation::Type::MUL ||
                                         o1.type == Operation::Type::DIV ||
-                                        o1.type == Operation::Type::POW)) {
+                                        o1.type == Operation::Type::POW ||
+                                        o1.type == Operation::Type::NRT)) {
           o1.source.value = Semantics::mul(o1.source.value, o2.source.value);
           do_merge = true;
         }
@@ -160,10 +161,40 @@ bool Optimizer::mergeOps(Program &p) const {
 
         // first sub, the other max?
         else if (o1.type == Operation::Type::SUB &&
-                 o2.type == Operation::Type::MAX &&
-                 o2.source.type == Operand::Type::CONSTANT &&
-                 o2.source.value == 0) {
+                 o2.type == Operation::Type::MAX && o2.source.value == 0) {
           o1.type = Operation::Type::TRN;
+          do_merge = true;
+        }
+
+        // first trn, second add?
+        else if (o1.type == Operation::Type::TRN &&
+                 o2.type == Operation::Type::ADD &&
+                 o1.source.value == o2.source.value) {
+          o1.type = Operation::Type::MAX;
+          do_merge = true;
+        }
+
+        // first add, second trn/equ/neq/leq/geq?
+        else if (o1.type == Operation::Type::ADD &&
+                 (o2.type == Operation::Type::TRN ||
+                  o2.type == Operation::Type::EQU ||
+                  o2.type == Operation::Type::NEQ ||
+                  o2.type == Operation::Type::LEQ ||
+                  o2.type == Operation::Type::GEQ)) {
+          o1.type = o2.type;
+          o1.source.value = Semantics::sub(o2.source.value, o1.source.value);
+          do_merge = true;
+        }
+
+        // first sub, second trn/equ/neq/leq/geq?
+        else if (o1.type == Operation::Type::SUB &&
+                 (o2.type == Operation::Type::TRN ||
+                  o2.type == Operation::Type::EQU ||
+                  o2.type == Operation::Type::NEQ ||
+                  o2.type == Operation::Type::LEQ ||
+                  o2.type == Operation::Type::GEQ)) {
+          o1.type = o2.type;
+          o1.source.value = Semantics::add(o2.source.value, o1.source.value);
           do_merge = true;
         }
 
@@ -189,9 +220,10 @@ bool Optimizer::mergeOps(Program &p) const {
                  o2.source.value > Number::ONE) {
           auto gcd = Semantics::gcd(o1.source.value, o2.source.value);
           auto new_o1_value = Semantics::div(o1.source.value, gcd);
+          auto new_o2_value = Semantics::div(o2.source.value, gcd);
           // Special case: if exponents are equal and result would be a no-op,
           // handle differently based on whether exponent is even or odd
-          if (new_o1_value == Number::ONE) {
+          if (new_o1_value == Number::ONE && new_o2_value == Number::ONE) {
             // If exponent is even: pow $0,k; nrt $0,k computes abs($0)
             // Replace with gcd $0,0 which is more efficient
             if (!o1.source.value.odd()) {
@@ -203,15 +235,15 @@ bool Optimizer::mergeOps(Program &p) const {
               do_merge = true;
             }
           } else {
-          	if (o1.source.value.odd() || !new_o1_value.odd()){
-          	  o1.source.value = new_o1_value;
+            if (o1.source.value.odd() || !new_o1_value.odd()) {
+              o1.source.value = new_o1_value;
               if (gcd == o2.source.value) {
                 do_merge = true;
               } else if (gcd != Number::ONE) {
-                o2.source.value = Semantics::div(o2.source.value, gcd);
+                o2.source.value = new_o2_value;
                 updated = true;
               }
-		    }
+            }
           }
         }
 
@@ -225,7 +257,6 @@ bool Optimizer::mergeOps(Program &p) const {
           o1 = o2;
           do_merge = true;
         }
-
       }
 
       // sources the same direct access?
@@ -236,6 +267,21 @@ bool Optimizer::mergeOps(Program &p) const {
              o2.type == Operation::Type::SUB) ||
             (o1.type == Operation::Type::SUB &&
              o2.type == Operation::Type::ADD)) {
+          o1.source = Operand(Operand::Type::CONSTANT, 0);
+          do_merge = true;
+        }
+
+        // first trn, second add?
+        else if (o1.type == Operation::Type::TRN &&
+                 o2.type == Operation::Type::ADD) {
+          o1.type = Operation::Type::MAX;
+          do_merge = true;
+        }
+
+        // first add, second trn?
+        else if (o1.type == Operation::Type::ADD &&
+                 o2.type == Operation::Type::TRN) {
+          o1.type = Operation::Type::MAX;
           o1.source = Operand(Operand::Type::CONSTANT, 0);
           do_merge = true;
         }
@@ -290,7 +336,7 @@ bool Optimizer::mergeOps(Program &p) const {
   return updated;
 }
 
-std::pair<int64_t, int64_t> findRepeatedOps(const Program &p,
+std::pair<int64_t, int64_t> findRepeatedOps(const Program& p,
                                             int64_t min_repetitions) {
   std::pair<int64_t, int64_t> pos(-1, 0);  // start, length
   for (size_t i = 0; i < p.ops.size(); i++) {
@@ -320,11 +366,11 @@ std::pair<int64_t, int64_t> findRepeatedOps(const Program &p,
   return pos;
 }
 
-std::pair<int64_t, int64_t> findConsecutiveMovOps(const Program &p,
+std::pair<int64_t, int64_t> findConsecutiveMovOps(const Program& p,
                                                   int64_t min_repetitions) {
   std::pair<int64_t, int64_t> pos(-1, 0);  // start, length
   for (size_t i = 0; i < p.ops.size(); i++) {
-    const auto &op = p.ops[i];
+    const auto& op = p.ops[i];
     if (op.type == Operation::Type::MOV &&
         op.target.type == Operand::Type::DIRECT &&
         op.source.type == Operand::Type::CONSTANT) {
@@ -334,8 +380,8 @@ std::pair<int64_t, int64_t> findConsecutiveMovOps(const Program &p,
         pos.second = 1;
       } else {
         // check if this continues the sequence
-        const auto &first_op = p.ops[pos.first];
-        const auto &prev_op = p.ops[i - 1];
+        const auto& first_op = p.ops[pos.first];
+        const auto& prev_op = p.ops[i - 1];
         // must have same source value and consecutive target cells
         if (op.source == first_op.source &&
             op.target.value.asInt() == prev_op.target.value.asInt() + 1) {
@@ -366,11 +412,11 @@ std::pair<int64_t, int64_t> findConsecutiveMovOps(const Program &p,
   return pos;
 }
 
-bool Optimizer::mergeRepeated(Program &p) const {
+bool Optimizer::mergeRepeated(Program& p) const {
   // merge consecutive mov operations into fil/clr
   auto mov_pos = findConsecutiveMovOps(p, 3);
   if (mov_pos.first != -1) {
-    const auto &first_mov = p.ops[mov_pos.first];
+    const auto& first_mov = p.ops[mov_pos.first];
     Operand count(Operand::Type::CONSTANT, mov_pos.second);
     bool use_clr = (first_mov.source.type == Operand::Type::CONSTANT &&
                     first_mov.source.value == Number::ZERO);
@@ -424,8 +470,8 @@ bool Optimizer::mergeRepeated(Program &p) const {
   return true;
 }
 
-inline bool simplifyOperand(Operand &op,
-                            std::unordered_set<int64_t> &initialized_cells,
+inline bool simplifyOperand(Operand& op,
+                            std::unordered_set<int64_t>& initialized_cells,
                             bool is_source) {
   switch (op.type) {
     case Operand::Type::CONSTANT:
@@ -449,14 +495,14 @@ inline bool simplifyOperand(Operand &op,
   return false;
 }
 
-bool Optimizer::simplifyOperations(Program &p) const {
+bool Optimizer::simplifyOperations(Program& p) const {
   std::unordered_set<int64_t> initialized_cells;
   for (size_t i = 0; i < NUM_INITIALIZED_CELLS; ++i) {
     initialized_cells.insert(i);
   }
   bool simplified = false;
   bool can_simplify = true;
-  for (auto &op : p.ops) {
+  for (auto& op : p.ops) {
     switch (op.type) {
       case Operation::Type::NOP:
       case Operation::Type::DBG:
@@ -597,12 +643,12 @@ bool Optimizer::simplifyOperations(Program &p) const {
   return simplified;
 }
 
-bool Optimizer::fixSandwich(Program &p) const {
+bool Optimizer::fixSandwich(Program& p) const {
   bool changed = false;
   for (size_t i = 0; i + 2 < p.ops.size(); i++) {
-    auto &op1 = p.ops[i];
-    auto &op2 = p.ops[i + 1];
-    auto &op3 = p.ops[i + 2];
+    auto& op1 = p.ops[i];
+    auto& op2 = p.ops[i + 1];
+    auto& op3 = p.ops[i + 2];
     if (op1.target != op2.target || op2.target != op3.target ||
         op1.target.type != Operand::Type::DIRECT ||
         op1.source.type != Operand::Type::CONSTANT ||
@@ -620,11 +666,9 @@ bool Optimizer::fixSandwich(Program &p) const {
         std::swap(op1, op2);
         op1.source.value *= op2.source.value;
         changed = true;
-      } else if (op1.type == Operation::Type::MUL &&
-                 Semantics::mod(op2.source.value, op1.source.value) ==
-                     Number::ZERO) {
-        std::swap(op1, op2);
-        op1.source.value /= op2.source.value;
+      } else if (op1.type == Operation::Type::MUL) {
+        std::swap(op3, op2);
+        op3.source.value *= op2.source.value;
         changed = true;
       }
     } else if (ProgramUtil::isAdditive(op2.type) &&
@@ -642,8 +686,8 @@ bool Optimizer::fixSandwich(Program &p) const {
   return changed;
 }
 
-bool Optimizer::canChangeVariableOrder(const Program &p) const {
-  return (std::none_of(p.ops.begin(), p.ops.end(), [&](const Operation &op) {
+bool Optimizer::canChangeVariableOrder(const Program& p) const {
+  return (std::none_of(p.ops.begin(), p.ops.end(), [&](const Operation& op) {
     return ProgramUtil::hasIndirectOperand(op) ||
            ProgramUtil::isNonTrivialLoopBegin(op) ||
            ProgramUtil::isNonTrivialClear(op) ||
@@ -651,7 +695,7 @@ bool Optimizer::canChangeVariableOrder(const Program &p) const {
   }));
 }
 
-bool Optimizer::reduceMemoryCells(Program &p) const {
+bool Optimizer::reduceMemoryCells(Program& p) const {
   std::unordered_set<int64_t> used_cells;
   int64_t largest_used = 0;
   if (!canChangeVariableOrder(p)) {
@@ -674,7 +718,7 @@ bool Optimizer::reduceMemoryCells(Program &p) const {
     }
     if (free) {
       bool replaced = false;
-      for (auto &op : p.ops) {
+      for (auto& op : p.ops) {
         if (op.source.type == Operand::Type::DIRECT &&
             op.source.value == largest_used) {
           op.source.value = candidate;
@@ -695,7 +739,7 @@ bool Optimizer::reduceMemoryCells(Program &p) const {
   return false;
 }
 
-bool Optimizer::partialEval(Program &p) const {
+bool Optimizer::partialEval(Program& p) const {
   int64_t largest_used = 0;
   if (!ProgramUtil::getUsedMemoryCells(p, nullptr, nullptr, largest_used,
                                        settings.max_memory)) {
@@ -706,7 +750,7 @@ bool Optimizer::partialEval(Program &p) const {
   bool changed = false;
   for (size_t i = 0; i < p.ops.size(); i++) {
     bool has_result = eval.doPartialEval(p, i);
-    auto &op = p.ops[i];
+    auto& op = p.ops[i];
     auto source = eval.resolveOperand(op.source);
     auto target = eval.resolveOperand(op.target);
     auto num_ops = Operation::Metadata::get(op.type).num_operands;
@@ -725,7 +769,7 @@ bool Optimizer::partialEval(Program &p) const {
   return changed;
 }
 
-bool Optimizer::sortOperations(Program &p) const {
+bool Optimizer::sortOperations(Program& p) const {
   opMover.init(p);
   for (size_t i = 0; i < p.ops.size(); i++) {
     int64_t oldScore = 0, maxScore = 0;
@@ -766,7 +810,7 @@ void throwInvalidLoop() {
   throw std::runtime_error("invalid loop detected during optimization");
 }
 
-bool Optimizer::mergeLoops(Program &p) const {
+bool Optimizer::mergeLoops(Program& p) const {
   std::stack<size_t> loop_begins;
   for (size_t i = 0; i + 1 < p.ops.size(); i++) {
     if (p.ops[i].type == Operation::Type::LPB) {
@@ -793,7 +837,7 @@ bool Optimizer::mergeLoops(Program &p) const {
   return false;
 }
 
-bool Optimizer::collapseMovLoops(Program &p) const {
+bool Optimizer::collapseMovLoops(Program& p) const {
   bool changed = false;
   for (size_t i = 0; i + 2 < p.ops.size(); i++) {
     if (p.ops[i].type != Operation::Type::LPB ||
@@ -801,8 +845,8 @@ bool Optimizer::collapseMovLoops(Program &p) const {
         p.ops[i + 2].type != Operation::Type::LPE) {
       continue;
     }
-    const auto &lpb = p.ops[i];
-    const auto &mov = p.ops[i + 1];
+    const auto& lpb = p.ops[i];
+    const auto& mov = p.ops[i + 1];
     if (lpb.source != Operand(Operand::Type::CONSTANT, 1) ||
         lpb.target.type != Operand::Type::DIRECT ||
         mov.source.type != Operand::Type::CONSTANT ||
@@ -823,7 +867,7 @@ bool Optimizer::collapseMovLoops(Program &p) const {
   return changed;
 }
 
-bool Optimizer::collapseDifLoops(Program &p) const {
+bool Optimizer::collapseDifLoops(Program& p) const {
   bool changed = false;
   for (size_t i = 0; i + 2 < p.ops.size(); i++) {
     if (p.ops[i].type != Operation::Type::LPB ||
@@ -831,8 +875,8 @@ bool Optimizer::collapseDifLoops(Program &p) const {
         p.ops[i + 2].type != Operation::Type::LPE) {
       continue;
     }
-    const auto &lpb = p.ops[i];
-    const auto &dif = p.ops[i + 1];
+    const auto& lpb = p.ops[i];
+    const auto& dif = p.ops[i + 1];
     if (lpb.source != Operand(Operand::Type::CONSTANT, 1) ||
         lpb.target.type != Operand::Type::DIRECT ||
         dif.source.type != Operand::Type::CONSTANT ||
@@ -848,7 +892,7 @@ bool Optimizer::collapseDifLoops(Program &p) const {
   return changed;
 }
 
-bool Optimizer::collapseArithmeticLoops(Program &p) const {
+bool Optimizer::collapseArithmeticLoops(Program& p) const {
   if (ProgramUtil::hasIndirectOperand(p)) {
     return false;
   }
@@ -924,13 +968,13 @@ bool canMerge(Operation::Type a, Operation::Type b) {
   return false;
 }
 
-bool Optimizer::pullUpMov(Program &p) const {
+bool Optimizer::pullUpMov(Program& p) const {
   // see tests E014 and E015
   bool changed = false;
   for (size_t i = 0; i + 2 < p.ops.size(); i++) {
-    auto &a = p.ops[i];
-    auto &b = p.ops[i + 1];
-    const auto &c = p.ops[i + 2];
+    auto& a = p.ops[i];
+    auto& b = p.ops[i + 1];
+    const auto& c = p.ops[i + 2];
     // check operation types
     if (!canMerge(a.type, c.type)) {
       continue;
@@ -961,7 +1005,7 @@ bool Optimizer::pullUpMov(Program &p) const {
   return changed;
 }
 
-bool isDirectMov(const Operation &op) {
+bool isDirectMov(const Operation& op) {
   return op.type == Operation::Type::MOV &&
          op.target.type == Operand::Type::DIRECT &&
          op.source.type == Operand::Type::DIRECT;
@@ -972,7 +1016,7 @@ Operation directMov(int64_t target, int64_t source) {
                    Operand(Operand::Type::DIRECT, source));
 }
 
-bool Optimizer::collapseMovChains(Program &p) const {
+bool Optimizer::collapseMovChains(Program& p) const {
   // Detect shift patterns in sequences of mov operations and replace with
   // rol/ror Left shift: mov $i,$i+1; mov $i+1,$i+2; ... => rol $i,length; mov
   // $end,$end+1 Right shift: mov $i,$i-1; mov $i-1,$i-2; ... => mov
@@ -983,7 +1027,7 @@ bool Optimizer::collapseMovChains(Program &p) const {
     if (!isDirectMov(p.ops[i])) {
       continue;
     }
-    const auto &first_op = p.ops[i];
+    const auto& first_op = p.ops[i];
     int64_t first_target = first_op.target.value.asInt();
     int64_t first_source = first_op.source.value.asInt();
     int64_t direction =
@@ -1045,16 +1089,16 @@ bool Optimizer::collapseMovChains(Program &p) const {
   return changed;
 }
 
-bool Optimizer::removeCommutativeDetour(Program &p) const {
+bool Optimizer::removeCommutativeDetour(Program& p) const {
   // see test E042
   if (ProgramUtil::hasIndirectOperand(p)) {
     return false;
   }
   int64_t open_loops = 0;
   for (size_t i = 0; i + 2 < p.ops.size(); i++) {
-    const auto &op1 = p.ops[i];
-    auto &op2 = p.ops[i + 1];
-    const auto &op3 = p.ops[i + 2];
+    const auto& op1 = p.ops[i];
+    auto& op2 = p.ops[i + 1];
+    const auto& op3 = p.ops[i + 2];
     // keep track of loops
     if (op1.type == Operation::Type::LPB) {
       open_loops++;
@@ -1105,7 +1149,7 @@ bool Optimizer::removeCommutativeDetour(Program &p) const {
 
 // === OperationMover ====================================
 
-void Optimizer::OperationMover::init(Program &p) {
+void Optimizer::OperationMover::init(Program& p) {
   prog = &p;
   opScores.resize(p.ops.size());
   std::fill(opScores.begin(), opScores.end(), 0);
@@ -1154,8 +1198,8 @@ bool Optimizer::OperationMover::down(size_t i) {
 }
 
 int64_t Optimizer::OperationMover::scoreNeighbors(size_t i) const {
-  const Operation &op1 = prog->ops[i];
-  const Operation &op2 = prog->ops[i + 1];
+  const Operation& op1 = prog->ops[i];
+  const Operation& op2 = prog->ops[i + 1];
   int64_t score = 0;
   if (op1.target == op2.target) {
     score += 40;

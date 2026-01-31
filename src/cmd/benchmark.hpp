@@ -12,7 +12,7 @@ class Benchmark {
 
   void programs();
 
-  void findSlow(int64_t num_terms, Operation::Type type);
+  void findSlowPrograms(int64_t num_terms, Operation::Type type);
 
   void findSlowFormulas();
 

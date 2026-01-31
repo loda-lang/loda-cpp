@@ -2,9 +2,6 @@
 
 #include <algorithm>
 
-#include "eval/semantics.hpp"
-#include "lang/program_util.hpp"
-#include "mine/config.hpp"
 #include "gen/generator_v1.hpp"
 #include "gen/generator_v2.hpp"
 #include "gen/generator_v3.hpp"
@@ -13,11 +10,14 @@
 #include "gen/generator_v6.hpp"
 #include "gen/generator_v7.hpp"
 #include "gen/generator_v8.hpp"
+#include "lang/program_util.hpp"
+#include "math/semantics.hpp"
+#include "mine/config.hpp"
 #include "sys/log.hpp"
 #include "sys/util.hpp"
 
-Generator::UPtr Generator::Factory::createGenerator(const Config &config,
-                                                    const Stats &stats) {
+Generator::UPtr Generator::Factory::createGenerator(const Config& config,
+                                                    const Stats& stats) {
   Generator::UPtr generator;
   switch (config.version) {
     case 1: {
@@ -61,10 +61,10 @@ Generator::UPtr Generator::Factory::createGenerator(const Config &config,
   return generator;
 }
 
-Generator::Generator(const Config &config, const Stats &stats)
+Generator::Generator(const Config& config, const Stats& stats)
     : config(config), random_program_ids(stats) {}
 
-void Generator::generateStateless(Program &p, size_t num_operations) {
+void Generator::generateStateless(Program& p, size_t num_operations) {
   // fill program with random operations
   size_t nops = 0;
   while (p.ops.size() + nops < num_operations) {
@@ -83,7 +83,7 @@ void Generator::generateStateless(Program &p, size_t num_operations) {
   }
 }
 
-void Generator::applyPostprocessing(Program &p) {
+void Generator::applyPostprocessing(Program& p) {
   auto written_cells = fixCausality(p);
   fixSingularities(p);
   fixCalls(p);
@@ -92,14 +92,14 @@ void Generator::applyPostprocessing(Program &p) {
   ensureMeaningfulLoops(p);
 }
 
-std::vector<int64_t> Generator::fixCausality(Program &p) {
+std::vector<int64_t> Generator::fixCausality(Program& p) {
   // fix causality of read operations
   std::vector<int64_t> written_cells;
   written_cells.push_back(0);
   int64_t new_cell;
   for (size_t position = 0; position < p.ops.size(); position++) {
-    auto &op = p.ops[position];
-    const auto &meta = Operation::Metadata::get(op.type);
+    auto& op = p.ops[position];
+    const auto& meta = Operation::Metadata::get(op.type);
 
     // fix source operand in new operation
     if (meta.num_operands == 2 && op.source.type == Operand::Type::DIRECT &&
@@ -138,7 +138,7 @@ std::vector<int64_t> Generator::fixCausality(Program &p) {
   return written_cells;
 }
 
-void Generator::fixSingularities(Program &p) {
+void Generator::fixSingularities(Program& p) {
   static const Operand tmp(Operand::Type::DIRECT, 26);  // magic number
   static const int64_t max_exponent = 5;                // magic number
   for (size_t i = 0; i < p.ops.size(); i++) {
@@ -175,8 +175,8 @@ void Generator::fixSingularities(Program &p) {
   }
 }
 
-void Generator::fixCalls(Program &p) {
-  for (auto &op : p.ops) {
+void Generator::fixCalls(Program& p) {
+  for (auto& op : p.ops) {
     if (op.type != Operation::Type::SEQ) {
       continue;
     }
@@ -185,7 +185,7 @@ void Generator::fixCalls(Program &p) {
       try {
         auto id = UID::castFromInt(op.source.value.asInt());
         reset = !random_program_ids.exists(id);
-      } catch (const std::exception &e) {
+      } catch (const std::exception& e) {
         reset = true;
       }
     } else {
@@ -198,10 +198,10 @@ void Generator::fixCalls(Program &p) {
   }
 }
 
-void Generator::ensureSourceNotOverwritten(Program &p) {
+void Generator::ensureSourceNotOverwritten(Program& p) {
   // make sure that the initial value does not get overridden immediately
   bool resets;
-  for (auto &op : p.ops) {
+  for (auto& op : p.ops) {
     if (op.target.type == Operand::Type::DIRECT &&
         op.target.value == Program::INPUT_CELL) {
       resets = false;
@@ -226,11 +226,11 @@ void Generator::ensureSourceNotOverwritten(Program &p) {
   }
 }
 
-void Generator::ensureTargetWritten(Program &p,
-                                    const std::vector<int64_t> &written_cells) {
+void Generator::ensureTargetWritten(Program& p,
+                                    const std::vector<int64_t>& written_cells) {
   // make sure that the target value gets written
   bool written = false;
-  for (auto &op : p.ops) {
+  for (auto& op : p.ops) {
     if (op.type != Operation::Type::LPB &&
         Operation::Metadata::get(op.type).num_operands == 2 &&
         op.target.type == Operand::Type::DIRECT &&
@@ -251,7 +251,7 @@ void Generator::ensureTargetWritten(Program &p,
   }
 }
 
-void Generator::ensureMeaningfulLoops(Program &p) {
+void Generator::ensureMeaningfulLoops(Program& p) {
   // make sure loops do something
   Operand mem;
   int64_t num_ops = 0;
@@ -330,7 +330,7 @@ void Generator::ensureMeaningfulLoops(Program &p) {
   }
 }
 
-MultiGenerator::MultiGenerator(const Settings &settings, const Stats &stats)
+MultiGenerator::MultiGenerator(const Settings& settings, const Stats& stats)
     : Generator(Generator::Config(), stats) {
   const auto config = ConfigLoader::load(settings);
   configs.clear();
@@ -340,7 +340,7 @@ MultiGenerator::MultiGenerator(const Settings &settings, const Stats &stats)
       auto gen = Generator::Factory::createGenerator(c, stats);
       generators.emplace_back(std::move(gen));
       configs.push_back(c);
-    } catch (std::exception &e) {
+    } catch (std::exception& e) {
       Log::get().warn(std::string(e.what()));  // treat only as warning
     }
   }
@@ -363,12 +363,12 @@ bool MultiGenerator::supportsRestart() const {
   // all generator need to support restart
   return std::all_of(
       generators.begin(), generators.end(),
-      [](const Generator::UPtr &gen) { return gen->supportsRestart(); });
+      [](const Generator::UPtr& gen) { return gen->supportsRestart(); });
 }
 
 bool MultiGenerator::isFinished() const {
   // finished if all are finished
   return std::all_of(
       generators.begin(), generators.end(),
-      [](const Generator::UPtr &gen) { return gen->isFinished(); });
+      [](const Generator::UPtr& gen) { return gen->isFinished(); });
 };

@@ -1,12 +1,16 @@
 #include "form/variant.hpp"
 
+#include <functional>
+
 #include "form/expression_util.hpp"
 #include "form/formula_util.hpp"
 #include "sys/log.hpp"
 
 VariantsManager::VariantsManager(
     const Formula& formula,
-    const std::map<std::string, int64_t>& num_initial_terms) {
+    const std::map<std::string, int64_t>& num_initial_terms,
+    int64_t max_initial_terms)
+    : max_initial_terms_(max_initial_terms) {
   // step 1: collect function names
   for (const auto& entry : formula.entries) {
     if (ExpressionUtil::isSimpleFunction(entry.first, true)) {
@@ -27,9 +31,10 @@ VariantsManager::VariantsManager(
 }
 
 void debugUpdate(const std::string& prefix, const Variant& variant) {
-  Log::get().debug(prefix +
-                   ExpressionUtil::newFunction(variant.func).toString() +
-                   " = " + variant.definition.toString());
+  Log::get().debug(
+      prefix + ExpressionUtil::newFunction(variant.func).toString() + " = " +
+      variant.definition.toString() + " with " +
+      std::to_string(variant.num_initial_terms) + " initial terms");
 }
 
 bool VariantsManager::update(Variant new_variant) {
@@ -39,16 +44,29 @@ bool VariantsManager::update(Variant new_variant) {
     return false;
   }
   const auto num_terms = new_variant.definition.numTerms();
-  if (num_terms > 500) {  // magic number
+  if (num_terms > 200) {  // limit term count to reduce complexity
     Log::get().debug("Skipping variant with " + std::to_string(num_terms) +
                      " terms");
     return false;  // too many terms
+  }
+  // Check if variant would exceed max initial terms limit
+  if (max_initial_terms_ >= 0 &&
+      new_variant.num_initial_terms > max_initial_terms_) {
+    Log::get().debug(
+        "Skipping variant requiring " +
+        std::to_string(new_variant.num_initial_terms) +
+        " initial terms (max: " + std::to_string(max_initial_terms_) + ")");
+    return false;
   }
   collectFuncs(new_variant);
   // if (new_variant.used_funcs.size() > 3) {  // magic number
   //   return false;
   // }
   auto& vs = variants[new_variant.func];
+  // limit number of variants per function to reduce O(n^4) complexity
+  if (vs.size() >= 20) {
+    return false;
+  }
   // prevent rapid increases of variant sizes
   if (!std::all_of(vs.begin(), vs.end(), [new_variant](const Variant& v) {
         return v.used_funcs.size() + 1 >= new_variant.used_funcs.size();
@@ -100,6 +118,29 @@ size_t VariantsManager::numVariants() const {
   return num;
 }
 
+// Helper function to calculate minimum initial terms needed for self-references
+int64_t calculateMinInitialTermsForSelfRef(const std::string& func,
+                                           const Expression& expr) {
+  int64_t min_offset = 0;
+  std::function<void(const Expression&)> findMinOffset =
+      [&](const Expression& e) {
+        if (e.type == Expression::Type::FUNCTION && e.name == func &&
+            e.children.size() == 1) {
+          // Evaluate the offset for n=0
+          int64_t offset =
+              ExpressionUtil::eval(e.children[0], {{"n", 0}}).asInt();
+          min_offset = std::min(min_offset, offset);
+        }
+        for (const auto& c : e.children) {
+          findMinOffset(c);
+        }
+      };
+  findMinOffset(expr);
+  // If we have a self-reference with offset, we need at least -offset initial
+  // terms e.g., a(n) = a(n-4) needs 4 initial terms to compute a(4)
+  return -min_offset;
+}
+
 bool resolve(const Variant& lookup, Variant& target, Expression& target_def) {
   if (target_def.type == Expression::Type::FUNCTION &&
       target_def.children.size() == 1) {
@@ -116,6 +157,14 @@ bool resolve(const Variant& lookup, Variant& target, Expression& target_def) {
           ExpressionUtil::eval(arg, {{"n", 0}}).asInt() - 1;
       target.num_initial_terms =
           std::max(target.num_initial_terms, min_initial_terms);
+
+      // If the result is self-referential, ensure we have enough initial terms
+      int64_t self_ref_terms =
+          calculateMinInitialTermsForSelfRef(target.func, target_def);
+      if (self_ref_terms > 0) {
+        target.num_initial_terms =
+            std::max(target.num_initial_terms, self_ref_terms);
+      }
       // stop here, because else we would replace inside the replacement!
       return true;
     }
@@ -193,10 +242,15 @@ bool findVariants(VariantsManager& manager) {
 }
 
 bool simplifyFormulaUsingVariants(
-    Formula& formula, std::map<std::string, int64_t>& num_initial_terms) {
-  VariantsManager manager(formula, num_initial_terms);
+    Formula& formula, std::map<std::string, int64_t>& num_initial_terms,
+    int64_t max_initial_terms) {
+  VariantsManager manager(formula, num_initial_terms, max_initial_terms);
   bool found = false;
-  while (manager.numVariants() < 200) {  // magic number
+  size_t iterations = 0;
+
+  while (manager.numVariants() < 100 && iterations < 50) {  // tighter limits
+    iterations++;
+
     if (findVariants(manager)) {
       found = true;
     } else {
@@ -209,6 +263,12 @@ bool simplifyFormulaUsingVariants(
   Log::get().debug("Found " + std::to_string(manager.numVariants()) +
                    " variants");
   bool applied = false;
+  // Cache getDependencies to avoid redundant O(n) computation in nested loops.
+  // This reduces overall complexity from O(n^4) to O(n^3) where n is the number
+  // of variants, significantly improving performance for formulas with many
+  // variants.
+  auto deps_old = FormulaUtil::getDependencies(
+      formula, Expression::Type::FUNCTION, true, true);
   for (auto& entry : formula.entries) {
     if (!ExpressionUtil::isSimpleFunction(entry.first, true)) {
       continue;
@@ -222,8 +282,6 @@ bool simplifyFormulaUsingVariants(
       }
       Formula copy = formula;
       copy.entries[entry.first] = variant.definition;
-      auto deps_old = FormulaUtil::getDependencies(
-          formula, Expression::Type::FUNCTION, true, true);
       auto deps_new = FormulaUtil::getDependencies(
           copy, Expression::Type::FUNCTION, true, true);
       if (deps_new.size() < deps_old.size()) {
@@ -231,6 +289,8 @@ bool simplifyFormulaUsingVariants(
         num_initial_terms[entry.first.name] = variant.num_initial_terms;
         applied = true;
         debugUpdate("Applied variant ", variant);
+        // Update cached dependencies since formula changed
+        deps_old = deps_new;
       }
     }
   }

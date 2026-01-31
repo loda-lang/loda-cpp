@@ -1,13 +1,13 @@
 #include "mine/matcher.hpp"
 
 #include "eval/optimizer.hpp"
-#include "eval/semantics.hpp"
+#include "math/semantics.hpp"
 #include "mine/reducer.hpp"
 #include "sys/log.hpp"
 
 // --- Factory --------------------------------------------------------
 
-Matcher::UPtr Matcher::Factory::create(const Matcher::Config &config) {
+Matcher::UPtr Matcher::Factory::create(const Matcher::Config& config) {
   Matcher::UPtr result;
   if (config.type == "direct") {
     result.reset(new DirectMatcher(config.backoff));
@@ -30,7 +30,7 @@ Matcher::UPtr Matcher::Factory::create(const Matcher::Config &config) {
 // --- AbstractMatcher --------------------------------------------------------
 
 template <class T>
-void AbstractMatcher<T>::insert(const Sequence &norm_seq, UID id) {
+void AbstractMatcher<T>::insert(const Sequence& norm_seq, UID id) {
   auto reduced = reduce(norm_seq, false);
   if (!reduced.first.empty()) {
     data[id] = reduced.second;
@@ -39,7 +39,7 @@ void AbstractMatcher<T>::insert(const Sequence &norm_seq, UID id) {
 }
 
 template <class T>
-void AbstractMatcher<T>::remove(const Sequence &norm_seq, UID id) {
+void AbstractMatcher<T>::remove(const Sequence& norm_seq, UID id) {
   auto reduced = reduce(norm_seq, false);
   if (!reduced.first.empty()) {
     ids.remove(reduced.first, id);
@@ -48,8 +48,8 @@ void AbstractMatcher<T>::remove(const Sequence &norm_seq, UID id) {
 }
 
 template <class T>
-void AbstractMatcher<T>::match(const Program &p, const Sequence &norm_seq,
-                               seq_programs_t &result) const {
+void AbstractMatcher<T>::match(const Program& p, const Sequence& norm_seq,
+                               seq_programs_t& result) const {
   if (!shouldMatchSequence(norm_seq)) {
     return;
   }
@@ -74,7 +74,7 @@ void AbstractMatcher<T>::match(const Program &p, const Sequence &norm_seq,
 }
 
 template <class T>
-bool AbstractMatcher<T>::shouldMatchSequence(const Sequence &seq) const {
+bool AbstractMatcher<T>::shouldMatchSequence(const Sequence& seq) const {
   if (backoff) {
     if (match_attempts.find(seq) != match_attempts.end()) {
       // Log::get().debug( "Back off matching of already matched sequence " +
@@ -92,7 +92,7 @@ bool AbstractMatcher<T>::shouldMatchSequence(const Sequence &seq) const {
 
 // --- Direct Matcher ---------------------------------------------------------
 
-std::pair<Sequence, int> DirectMatcher::reduce(const Sequence &seq,
+std::pair<Sequence, int> DirectMatcher::reduce(const Sequence& seq,
                                                bool match) const {
   std::pair<Sequence, int> result;
   result.first = seq;
@@ -100,11 +100,11 @@ std::pair<Sequence, int> DirectMatcher::reduce(const Sequence &seq,
   return result;
 }
 
-bool DirectMatcher::extend(Program &p, int base, int gen) const { return true; }
+bool DirectMatcher::extend(Program& p, int base, int gen) const { return true; }
 
 // --- Linear Matcher ---------------------------------------------------------
 
-std::pair<Sequence, line_t> LinearMatcher::reduce(const Sequence &seq,
+std::pair<Sequence, line_t> LinearMatcher::reduce(const Sequence& seq,
                                                   bool match) const {
   std::pair<Sequence, line_t> result;
   result.first = seq;
@@ -113,11 +113,11 @@ std::pair<Sequence, line_t> LinearMatcher::reduce(const Sequence &seq,
   return result;
 }
 
-bool LinearMatcher::extend(Program &p, line_t base, line_t gen) const {
+bool LinearMatcher::extend(Program& p, line_t base, line_t gen) const {
   return Extender::linear1(p, gen, base);
 }
 
-std::pair<Sequence, line_t> LinearMatcher2::reduce(const Sequence &seq,
+std::pair<Sequence, line_t> LinearMatcher2::reduce(const Sequence& seq,
                                                    bool match) const {
   std::pair<Sequence, line_t> result;
   result.first = seq;
@@ -126,7 +126,7 @@ std::pair<Sequence, line_t> LinearMatcher2::reduce(const Sequence &seq,
   return result;
 }
 
-bool LinearMatcher2::extend(Program &p, line_t base, line_t gen) const {
+bool LinearMatcher2::extend(Program& p, line_t base, line_t gen) const {
   return Extender::linear2(p, gen, base);
 }
 
@@ -134,7 +134,7 @@ bool LinearMatcher2::extend(Program &p, line_t base, line_t gen) const {
 
 const int64_t DeltaMatcher::MAX_DELTA = 4;  // magic number
 
-std::pair<Sequence, delta_t> DeltaMatcher::reduce(const Sequence &seq,
+std::pair<Sequence, delta_t> DeltaMatcher::reduce(const Sequence& seq,
                                                   bool match) const {
   std::pair<Sequence, delta_t> result;
   result.first = seq;
@@ -142,7 +142,7 @@ std::pair<Sequence, delta_t> DeltaMatcher::reduce(const Sequence &seq,
   return result;
 }
 
-bool DeltaMatcher::extend(Program &p, delta_t base, delta_t gen) const {
+bool DeltaMatcher::extend(Program& p, delta_t base, delta_t gen) const {
   if (base.offset == gen.offset && base.factor == gen.factor) {
     return Extender::delta_it(p, base.delta - gen.delta);
   } else {
@@ -167,13 +167,13 @@ bool DeltaMatcher::extend(Program &p, delta_t base, delta_t gen) const {
 
 // --- Digit Matcher ----------------------------------------------------------
 
-std::pair<Sequence, int64_t> DigitMatcher::reduce(const Sequence &seq,
+std::pair<Sequence, int64_t> DigitMatcher::reduce(const Sequence& seq,
                                                   bool match) const {
   std::pair<Sequence, int64_t> result;
   result.first = seq;
   result.second = Reducer::digit(result.first, num_digits);
   if (!match) {
-    for (auto &n : seq) {
+    for (auto& n : seq) {
       if (n < Number::ZERO || !(n < num_digits_big)) {
         result.first.clear();
         break;
@@ -183,6 +183,6 @@ std::pair<Sequence, int64_t> DigitMatcher::reduce(const Sequence &seq,
   return result;
 }
 
-bool DigitMatcher::extend(Program &p, int64_t base, int64_t gen) const {
+bool DigitMatcher::extend(Program& p, int64_t base, int64_t gen) const {
   return Extender::digit(p, num_digits, base - gen);
 }

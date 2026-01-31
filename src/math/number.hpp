@@ -64,6 +64,9 @@ class Number {
 
   int64_t asInt() const;
 
+  // Check whether the number can be represented as int64_t without overflow.
+  bool fitsInInt64() const;
+
   int64_t getNumUsedWords() const;
 
   bool odd() const;

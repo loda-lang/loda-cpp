@@ -1,6 +1,6 @@
-#include "eval/range.hpp"
+#include "math/range.hpp"
 
-#include "eval/semantics.hpp"
+#include "math/semantics.hpp"
 
 Range& Range::operator+=(const Range& r) {
   lower_bound += r.lower_bound;
