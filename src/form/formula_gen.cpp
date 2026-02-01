@@ -1,4 +1,5 @@
 #include "form/formula_gen.hpp"
+#include "lang/program.hpp"
 
 const UID FACTORIAL_SEQ_ID('A', 142);
 
@@ -132,6 +133,10 @@ bool FormulaGenerator::isNotInRange(const Operand& operand,
       // Value is not in range if it's below lower bound or above upper bound
       return (value < range.lower_bound || value > range.upper_bound);
     }
+  }
+  // If operand is a constant, just compare the value
+  if (operand.type == Operand::Type::CONSTANT) {
+    return value != operand.value;
   }
   // If no range information available, assume value could be in range
   return false;
