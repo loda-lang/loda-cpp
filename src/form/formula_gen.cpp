@@ -276,6 +276,21 @@ bool FormulaGenerator::update(const Operation& op, const RangeMap* ranges) {
       res = divToFraction(prevTarget, source, op.target, op.source, ranges);
       break;
     }
+    case Operation::Type::DIF: {
+      // if(source == 0, prevTarget, if(prevTarget % source == 0, prevTarget/source, prevTarget))
+      Expression frac(Expression::Type::FRACTION, "", {prevTarget, source});
+      Expression modExp = mod(prevTarget, source);
+      Expression mod_is_zero(Expression::Type::EQUAL, "", {modExp, constant(0)});
+      Expression inner_if(Expression::Type::IF, "", {mod_is_zero, frac, prevTarget});
+      if(isNotInRange(op.source, Number::ZERO, ranges)){
+      	// source cannot be zero
+      	res = inner_if;
+	  }else{
+        Expression source_is_zero(Expression::Type::EQUAL, "", {source, constant(0)});
+	  	res = Expression(Expression::Type::IF, "", {source_is_zero, prevTarget, inner_if});
+	  }
+      break;
+    }
     case Operation::Type::POW: {
       res = Expression(Expression::Type::POWER, "", {prevTarget, source});
       if (canBeNegativeWithRanges(source, op.source, ranges)) {
