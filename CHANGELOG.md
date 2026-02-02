@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Enhancements
+
+* Support `bin` (binomial coefficient) in LEAN formula generation
+
 ## v26.1.25
 
 ### Enhancements
