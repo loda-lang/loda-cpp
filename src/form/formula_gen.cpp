@@ -1,4 +1,5 @@
 #include "form/formula_gen.hpp"
+#include "lang/program.hpp"
 
 const UID FACTORIAL_SEQ_ID('A', 142);
 
@@ -132,6 +133,10 @@ bool FormulaGenerator::isNotInRange(const Operand& operand,
       // Value is not in range if it's below lower bound or above upper bound
       return (value < range.lower_bound || value > range.upper_bound);
     }
+  }
+  // If operand is a constant, just compare the value
+  if (operand.type == Operand::Type::CONSTANT) {
+    return value != operand.value;
   }
   // If no range information available, assume value could be in range
   return false;
@@ -274,6 +279,21 @@ bool FormulaGenerator::update(const Operation& op, const RangeMap* ranges) {
     }
     case Operation::Type::DIV: {
       res = divToFraction(prevTarget, source, op.target, op.source, ranges);
+      break;
+    }
+    case Operation::Type::DIF: {
+      // if(source == 0, prevTarget, if(prevTarget % source == 0, prevTarget/source, prevTarget))
+      Expression frac(Expression::Type::FRACTION, "", {prevTarget, source});
+      Expression modExp = mod(prevTarget, source);
+      Expression mod_is_zero(Expression::Type::EQUAL, "", {modExp, constant(0)});
+      Expression inner_if(Expression::Type::IF, "", {mod_is_zero, frac, prevTarget});
+      if(isNotInRange(op.source, Number::ZERO, ranges)){
+      	// source cannot be zero
+      	res = inner_if;
+	  }else{
+        Expression source_is_zero(Expression::Type::EQUAL, "", {source, constant(0)});
+	  	res = Expression(Expression::Type::IF, "", {source_is_zero, prevTarget, inner_if});
+	  }
       break;
     }
     case Operation::Type::POW: {
