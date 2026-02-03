@@ -2,6 +2,7 @@
 
 ### Enhancements
 
+* Support `dif` and `lex` in formula generation
 * Support `bin` (binomial coefficient) in LEAN formula generation
 
 ## v26.1.25
