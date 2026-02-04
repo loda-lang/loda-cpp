@@ -296,6 +296,32 @@ bool FormulaGenerator::update(const Operation& op, const RangeMap* ranges) {
 	  }
       break;
     }
+    case Operation::Type::DIR: {
+      // if(prevTarget == 0, 0, if(source^2 <= 1, prevTarget, prevTarget/(source^valuation(prevTarget, source))))
+      // base = source
+      Expression valuation = func("valuation", {prevTarget, source});
+      Expression power(Expression::Type::POWER, "", {source, valuation});
+      Expression frac(Expression::Type::FRACTION, "", {prevTarget, power});
+      Expression inner_if;
+      if(isNotInRange(op.source, Number::ZERO, ranges)
+	   && isNotInRange(op.source, Number::ONE, ranges)
+	   && isNotInRange(op.source, Number::MINUS_ONE, ranges)){
+      	// source^2 cannot <= 1
+      	inner_if = frac;
+	  }else{
+        Expression base_squared(Expression::Type::POWER, "", {source, constant(2)});
+        Expression base_less_or_equal_one(Expression::Type::LESS_EQUAL, "", {base_squared, constant(1)});
+        inner_if = Expression(Expression::Type::IF, "", {base_less_or_equal_one, prevTarget, frac});
+	  }
+      if(isNotInRange(op.target, Number::ZERO, ranges)){
+      	// prevTarget cannot be zero
+      	res = inner_if;
+	  }else{
+        Expression prevTarget_is_zero(Expression::Type::EQUAL, "", {prevTarget, constant(0)});
+	  	res = Expression(Expression::Type::IF, "", {prevTarget_is_zero, constant(0), inner_if});
+	  }
+      break;
+    }
     case Operation::Type::LEX: {
       // if(prevTarget == 0, 0, if(source^2 <= 1, 0, valuation(prevTarget, source)))
       // base = source
