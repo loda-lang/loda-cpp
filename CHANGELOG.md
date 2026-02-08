@@ -4,6 +4,7 @@
 
 * Support `dif`, `dir` and `lex` in formula generation
 * Support `bin` (binomial coefficient) in LEAN formula generation
+* Enhance `check` command to verify program offset
 
 ## v26.1.25
 
