@@ -294,7 +294,14 @@ void Range::log(const Range& r) {
 
 void Range::nrt(const Range& r) {
   // update lower bound
-  lower_bound = Number::ZERO;
+  if (lower_bound > Number::ZERO && r.upper_bound > Number::ZERO) {
+    lower_bound = Semantics::nrt(lower_bound, r.upper_bound);
+    if (lower_bound == Number::INF) {
+      lower_bound = Number::ZERO;
+    }
+  } else {
+    lower_bound = Number::ZERO;
+  }
   // update upper bound
   if (upper_bound >= Number::ZERO && r.lower_bound > Number::ZERO) {
     upper_bound = Semantics::nrt(upper_bound, r.lower_bound);
