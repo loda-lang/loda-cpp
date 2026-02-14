@@ -183,6 +183,14 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
   else if (cmd == "boinc") {
     commands.boinc();
   }
+  // hidden export-formulas command
+  else if (cmd == "export-formulas") {
+    std::string output_file;
+    if (args.size() > 1) {
+      output_file = args.at(1);
+    }
+    commands.exportFormulas(output_file);
+  }
 #ifdef _WIN64
   // hidden helper command for updates on windows
   else if (cmd == "update-windows-executable") {
@@ -299,12 +307,6 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
     commands.compare(args.at(1), args.at(2));
   } else if (cmd == "replace") {
     commands.replace(args.at(1), args.at(2));
-  } else if (cmd == "export-formulas") {
-    std::string output_file;
-    if (args.size() > 1) {
-      output_file = args.at(1);
-    }
-    commands.exportFormulas(output_file);
   } else if (cmd == "auto-fold") {
     commands.autoFold();
   } else if (cmd == "add-programs") {
