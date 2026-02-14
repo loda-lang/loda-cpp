@@ -1,11 +1,12 @@
 ## [Unreleased]
 
+* Improve `lex` range computation
+
 ## v26.2.14
 
 ### Enhancements
 
 * Support `dif`, `dir` and `lex` in formula generation
-* Enhance range support for `lex` and `nrt` operations
 * Support `bin` (binomial coefficient) in LEAN formula generation
 * Improve `nrt` range computation
 * Enhance `check` command to verify program offset
