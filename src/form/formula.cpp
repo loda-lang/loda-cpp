@@ -100,3 +100,11 @@ void Formula::collectFunctionEntries(const std::string& func,
     }
   }
 }
+
+size_t Formula::numTerms() const {
+  size_t total = 0;
+  for (const auto& entry : entries) {
+    total += entry.second.numTerms();
+  }
+  return total;
+}
