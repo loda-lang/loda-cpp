@@ -1,10 +1,14 @@
 ## [Unreleased]
 
+## v26.2.14
+
 ### Enhancements
 
 * Support `dif`, `dir` and `lex` in formula generation
 * Support `bin` (binomial coefficient) in LEAN formula generation
+* Improve `nrt` range computation
 * Enhance `check` command to verify program offset
+* Add `export-formulas` to release build
 
 ## v26.1.25
 
