@@ -3,6 +3,7 @@
 ### Enhancements
 
 * Support `dif`, `dir` and `lex` in formula generation
+* Enhance range support for `lex` and `nrt` operations
 * Support `bin` (binomial coefficient) in LEAN formula generation
 * Enhance `check` command to verify program offset
 
