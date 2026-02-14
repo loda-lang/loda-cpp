@@ -7,10 +7,10 @@
 #include <sstream>
 #include <stack>
 
-#include "eval/semantics.hpp"
 #include "lang/parser.hpp"
 #include "lang/program.hpp"
 #include "lang/program_util.hpp"
+#include "math/semantics.hpp"
 #include "seq/managed_seq.hpp"
 #include "sys/log.hpp"
 #include "sys/setup.hpp"

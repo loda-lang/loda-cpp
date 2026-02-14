@@ -4,6 +4,7 @@
 #include <fstream>
 #include <functional>
 #include <iostream>
+#include <map>
 
 #include "cmd/benchmark.hpp"
 #include "cmd/boinc.hpp"
@@ -198,6 +199,21 @@ void Commands::check(const std::string& path) {
     uid = UID(Comments::getSequenceIdFromProgram(program));
   }
   auto seq = ManagedSequence(uid);
+  std::map<UID, int64_t> offsets;
+  bool has_offset = false;
+  const auto offsets_path =
+      SequenceUtil::getSeqsFolder(uid.domain()) + "offsets";
+  if (SequenceList::loadMap(offsets_path, offsets)) {
+    auto it = offsets.find(uid);
+    if (it != offsets.end()) {
+      seq.offset = it->second;
+      has_offset = true;
+    }
+  }
+  if (has_offset && ProgramUtil::getOffset(program) != seq.offset) {
+    std::cout << "error" << std::endl;
+    return;
+  }
   Evaluator evaluator(settings, EVAL_ALL, true);
   auto terms = seq.getTerms(SequenceUtil::FULL_SEQ_LENGTH);
   auto num_required = SequenceProgram::getNumRequiredTerms(program);

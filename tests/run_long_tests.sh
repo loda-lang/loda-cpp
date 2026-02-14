@@ -235,13 +235,14 @@ echo "Output directory: $OUTPUT_DIR"
 echo "Discord webhook: ${LODA_DISCORD_WEBHOOK:+configured}"
 
 # Run the tests
-# run_test "test-analyzer"
-# run_test "test-formula-parser"
-# run_test "test-inceval"
-# run_test "test-vireval"
-# run_test "test-recursion"
+run_test "test-analyzer"
+run_test "test-range"
+run_test "test-formula-parser"
+run_test "test-inceval"
+run_test "test-vireval"
+run_test "test-recursion"
 run_test "find-slow-formulas"
-# run_test "test-pari"
+run_test "test-pari"
 run_test "test-lean"
 
 # Print and send final summary

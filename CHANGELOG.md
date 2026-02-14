@@ -1,8 +1,24 @@
 ## [Unreleased]
 
+* Improve `lex` range computation
+* Add term limit checks in formula generation to prevent exponential complexity growth (e.g., A042269)
+
+## v26.2.14
+
 ### Enhancements
 
-* Add term limit checks in formula generation to prevent exponential complexity growth (e.g., A042269)
+* Support `dif`, `dir` and `lex` in formula generation
+* Support `bin` (binomial coefficient) in LEAN formula generation
+* Improve `nrt` range computation
+* Enhance `check` command to verify program offset
+* Add `export-formulas` to release build
+
+## v26.1.25
+
+### Enhancements
+
+* Optimize formula generation performance
+* Increase default maximum physical memory and print usage
 
 ### Bugfixes
 

@@ -1,4 +1,5 @@
 #include "form/formula_gen.hpp"
+#include "lang/program.hpp"
 
 const UID FACTORIAL_SEQ_ID('A', 142);
 
@@ -133,6 +134,10 @@ bool FormulaGenerator::isNotInRange(const Operand& operand,
       // Value is not in range if it's below lower bound or above upper bound
       return (value < range.lower_bound || value > range.upper_bound);
     }
+  }
+  // If operand is a constant, just compare the value
+  if (operand.type == Operand::Type::CONSTANT) {
+    return value != operand.value;
   }
   // If no range information available, assume value could be in range
   return false;
@@ -277,6 +282,71 @@ bool FormulaGenerator::update(const Operation& op, const RangeMap* ranges) {
       res = divToFraction(prevTarget, source, op.target, op.source, ranges);
       break;
     }
+    case Operation::Type::DIF: {
+      // if(source == 0, prevTarget, if(prevTarget % source == 0, prevTarget/source, prevTarget))
+      Expression frac(Expression::Type::FRACTION, "", {prevTarget, source});
+      Expression modExp = mod(prevTarget, source);
+      Expression mod_is_zero(Expression::Type::EQUAL, "", {modExp, constant(0)});
+      Expression inner_if(Expression::Type::IF, "", {mod_is_zero, frac, prevTarget});
+      if(isNotInRange(op.source, Number::ZERO, ranges)){
+      	// source cannot be zero
+      	res = inner_if;
+	  }else{
+        Expression source_is_zero(Expression::Type::EQUAL, "", {source, constant(0)});
+	  	res = Expression(Expression::Type::IF, "", {source_is_zero, prevTarget, inner_if});
+	  }
+      break;
+    }
+    case Operation::Type::DIR: {
+      // if(prevTarget == 0, 0, if(source^2 <= 1, prevTarget, prevTarget/(source^valuation(prevTarget, source))))
+      // base = source
+      Expression valuation = func("valuation", {prevTarget, source});
+      Expression power(Expression::Type::POWER, "", {source, valuation});
+      Expression frac(Expression::Type::FRACTION, "", {prevTarget, power});
+      Expression inner_if;
+      if(isNotInRange(op.source, Number::ZERO, ranges)
+	   && isNotInRange(op.source, Number::ONE, ranges)
+	   && isNotInRange(op.source, Number::MINUS_ONE, ranges)){
+      	// source^2 cannot <= 1
+      	inner_if = frac;
+	  }else{
+        Expression base_squared(Expression::Type::POWER, "", {source, constant(2)});
+        Expression base_less_or_equal_one(Expression::Type::LESS_EQUAL, "", {base_squared, constant(1)});
+        inner_if = Expression(Expression::Type::IF, "", {base_less_or_equal_one, prevTarget, frac});
+	  }
+      if(isNotInRange(op.target, Number::ZERO, ranges)){
+      	// prevTarget cannot be zero
+      	res = inner_if;
+	  }else{
+        Expression prevTarget_is_zero(Expression::Type::EQUAL, "", {prevTarget, constant(0)});
+	  	res = Expression(Expression::Type::IF, "", {prevTarget_is_zero, constant(0), inner_if});
+	  }
+      break;
+    }
+    case Operation::Type::LEX: {
+      // if(prevTarget == 0, 0, if(source^2 <= 1, 0, valuation(prevTarget, source)))
+      // base = source
+      Expression valuation = func("valuation", {prevTarget, source});
+      Expression inner_if;
+      if(isNotInRange(op.source, Number::ZERO, ranges)
+	   && isNotInRange(op.source, Number::ONE, ranges)
+	   && isNotInRange(op.source, Number::MINUS_ONE, ranges)){
+      	// source^2 cannot <= 1
+      	inner_if = valuation;
+	  }else{
+        Expression base_squared(Expression::Type::POWER, "", {source, constant(2)});
+        Expression base_less_or_equal_one(Expression::Type::LESS_EQUAL, "", {base_squared, constant(1)});
+        inner_if = Expression(Expression::Type::IF, "", {base_less_or_equal_one, constant(0), valuation});
+	  }
+      if(isNotInRange(op.target, Number::ZERO, ranges)){
+      	// prevTarget cannot be zero
+      	res = inner_if;
+	  }else{
+        Expression prevTarget_is_zero(Expression::Type::EQUAL, "", {prevTarget, constant(0)});
+	  	res = Expression(Expression::Type::IF, "", {prevTarget_is_zero, constant(0), inner_if});
+	  }
+      break;
+    }
     case Operation::Type::POW: {
       res = Expression(Expression::Type::POWER, "", {prevTarget, source});
       if (canBeNegativeWithRanges(source, op.source, ranges)) {
@@ -286,7 +356,7 @@ bool FormulaGenerator::update(const Operation& op, const RangeMap* ranges) {
         // 1. base ∈ {-1,1}: base^exponent is always an integer
         // 2. exponent < 0 and base ∉ {-1,1}: result is 0
         // 3. exponent >= 0: base^exponent is an integer
-        // Pattern: if(base*base==1, base^exp, if(exp<=-1, 0, base^exp))
+        // Pattern: if(base^2==1, base^exp, if(exp<=-1, 0, base^exp))
         
         // Use isNotInRange to determine if base can be ±1
         bool baseCanBeOne = !(isNotInRange(op.target, Number::ONE, ranges) &&
@@ -294,13 +364,8 @@ bool FormulaGenerator::update(const Operation& op, const RangeMap* ranges) {
         
         if (baseCanBeOne) {
           // Check if base² == 1 (base is ±1)
-          Expression base_squared(Expression::Type::PRODUCT);
-          base_squared.newChild(prevTarget);
-          base_squared.newChild(prevTarget);
-          
-          Expression base_is_one(Expression::Type::EQUAL);
-          base_is_one.newChild(base_squared);
-          base_is_one.newChild(constant(1));
+          Expression base_squared(Expression::Type::POWER, "", {prevTarget, constant(2)});
+          Expression base_is_one(Expression::Type::EQUAL, "", {base_squared, constant(1)});
           
           // Inner IF: if(exponent<=-1, 0, base^exponent)
           Expression exp_negative(Expression::Type::LESS_EQUAL);
