@@ -261,7 +261,7 @@ void Range::lex(const Range& r) {
   lower_bound = Number::ZERO;
   upper_bound = Number::INF;
   if (l1 != Number::INF && u1 != Number::INF){
-      upper_bound = Semantics::max(Semantics::log(Semantics::abs(l1), min_base),Semantics::log(Semantics::abs(u1), min_base));
+      upper_bound = Semantics::max(Semantics::log(Semantics::max(Semantics::abs(l1), 1), min_base),Semantics::log(Semantics::max(Semantics::abs(l1), 1), min_base));
   }
 }
 
