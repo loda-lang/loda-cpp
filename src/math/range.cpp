@@ -249,8 +249,20 @@ void Range::updateGcdBounds(const Range& r) {
 }
 
 void Range::lex(const Range& r) {
+  const auto l1 = lower_bound;
+  const auto u1 = upper_bound;
+  Number min_base = 2;
+  if (r.lower_bound >= 2) {
+      min_base = r.lower_bound;
+      
+  } else if (r.upper_bound <= -2){
+      min_base = Semantics::mul(r.upper_bound, -1);
+  }
   lower_bound = Number::ZERO;
   upper_bound = Number::INF;
+  if (l1 != Number::INF && u1 != Number::INF){
+      upper_bound = Semantics::max(Semantics::log(Semantics::max(Semantics::abs(l1), 1), min_base),Semantics::log(Semantics::max(Semantics::abs(u1), 1), min_base));
+  }
 }
 
 void Range::bin(const Range& r) {

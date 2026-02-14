@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+* Improve `lex` range computation
+
 ## v26.2.14
 
 ### Enhancements
