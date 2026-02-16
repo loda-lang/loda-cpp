@@ -102,13 +102,11 @@ bool WebClient::get(const std::string& url, const std::string& local_path,
     long http_code = 0;
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
     curl_easy_cleanup(curl);
-    
     std::string error_msg = "Error fetching " + url + ": " + 
                            std::string(curl_easy_strerror(res));
     if (http_code > 0) {
       error_msg += " (HTTP " + std::to_string(http_code) + ")";
     }
-    
     if (fail_on_error) {
       Log::get().error(error_msg, true);
     } else if (!silent) {

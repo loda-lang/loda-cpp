@@ -528,7 +528,6 @@ std::string Setup::getExecutable(const std::string& suffix) {
 void Setup::performUpgrade(const std::string& new_version, bool silent) {
   ensureDir(getLodaHome() + "bin" + FILE_SEP);
   const std::string exec_local = getExecutable("");
-  
 #ifdef _WIN64
   // Windows: download ZIP file and extract it
   const std::string zip_file = getLodaHome() + "bin" + FILE_SEP + 
@@ -538,16 +537,13 @@ void Setup::performUpgrade(const std::string& new_version, bool silent) {
   const std::string zip_url =
       "https://github.com/loda-lang/loda-cpp/releases/download/" + new_version +
       "/loda-" + Version::PLATFORM + ".zip";
-  
   // Clean up any previous download/extraction
   std::remove(zip_file.c_str());
   if (isDir(extract_dir)) {
     rmDirRecursive(extract_dir);
   }
-  
   // Download the ZIP file
   WebClient::get(zip_url, zip_file, true, true);
-  
   // Extract using PowerShell's Expand-Archive
   const std::string extract_cmd = 
       "powershell -Command \"Expand-Archive -Path \\\"" + zip_file + 
@@ -556,31 +552,25 @@ void Setup::performUpgrade(const std::string& new_version, bool silent) {
     std::remove(zip_file.c_str());
     Log::get().error("Failed to extract upgrade archive", true);
   }
-  
   // Move the executable and DLL files from the extracted directory
   const std::string exec_tmp = extract_dir + FILE_SEP + "loda.exe";
-  
   // Copy DLL dependencies to the bin directory
   const std::string bin_dir = getLodaHome() + "bin" + FILE_SEP;
   const std::string libcurl_src = extract_dir + FILE_SEP + "libcurl.dll";
   const std::string zlib_src = extract_dir + FILE_SEP + "zlib1.dll";
   const std::string libcurl_dst = bin_dir + "libcurl.dll";
   const std::string zlib_dst = bin_dir + "zlib1.dll";
-  
   if (isFile(libcurl_src)) {
     moveFile(libcurl_src, libcurl_dst);
   }
   if (isFile(zlib_src)) {
     moveFile(zlib_src, zlib_dst);
   }
-  
   // Use the temporary executable to update the main one
   const std::string cmd = "\"" + exec_tmp + "\" update-windows-executable \"" +
                           exec_tmp + "\" \"" + exec_local + "\"";
-  
   // Clean up the ZIP file
   std::remove(zip_file.c_str());
-  
   createWindowsProcess(cmd);
 #else
   // Unix: download executable directly
