@@ -2,9 +2,9 @@
 
 ### Enhancements
 
+* Use multi-line output for PARI/GP formulas
 * Support `fac` in LEAN formula generation
 * Generalize LEAN formula generation for `pow`
-* Use multi-line output for PARI/GP formulas
 
 ## v25.11.2
 
