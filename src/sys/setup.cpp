@@ -557,8 +557,24 @@ void Setup::performUpgrade(const std::string& new_version, bool silent) {
     Log::get().error("Failed to extract upgrade archive", true);
   }
   
-  // Move the executable from the extracted directory
+  // Move the executable and DLL files from the extracted directory
   const std::string exec_tmp = extract_dir + FILE_SEP + "loda.exe";
+  
+  // Copy DLL dependencies to the bin directory
+  const std::string bin_dir = getLodaHome() + "bin" + FILE_SEP;
+  const std::string libcurl_src = extract_dir + FILE_SEP + "libcurl.dll";
+  const std::string zlib_src = extract_dir + FILE_SEP + "zlib1.dll";
+  const std::string libcurl_dst = bin_dir + "libcurl.dll";
+  const std::string zlib_dst = bin_dir + "zlib1.dll";
+  
+  if (isFile(libcurl_src)) {
+    moveFile(libcurl_src, libcurl_dst);
+  }
+  if (isFile(zlib_src)) {
+    moveFile(zlib_src, zlib_dst);
+  }
+  
+  // Use the temporary executable to update the main one
   const std::string cmd = "\"" + exec_tmp + "\" update-windows-executable \"" +
                           exec_tmp + "\" \"" + exec_local + "\"";
   
