@@ -5,12 +5,16 @@
 
 #include "form/expression_util.hpp"
 #include "form/formula_util.hpp"
+#include "form/recursion.hpp"
 #include "seq/seq_util.hpp"
 #include "sys/file.hpp"
 #include "sys/log.hpp"
 #include "sys/process.hpp"
 #include "sys/setup.hpp"
 #include "sys/util.hpp"
+
+// cannot use "lean" here because it is a reserved package name
+const std::string LEAN_PROJECT_NAME = "loda-lean";
 
 std::string convertBitfuncToLean(const std::string& bitfunc) {
   if (bitfunc == "bitand") {
@@ -31,9 +35,23 @@ bool LeanFormula::isLocalOrSeqFunc(const std::string& funcName) const {
 
 bool LeanFormula::needsIntToNat(const Expression& expr) const {
   // Check if expression contains operations that return Int
-  return expr.contains(Expression::Type::FUNCTION, "Int.fdiv") ||
-         expr.contains(Expression::Type::FUNCTION, "Int.tdiv") ||
-         expr.contains(Expression::Type::FUNCTION, "Int.gcd");
+  if (expr.contains(Expression::Type::FUNCTION, "Int.fdiv") ||
+      expr.contains(Expression::Type::FUNCTION, "Int.tdiv") ||
+      expr.contains(Expression::Type::FUNCTION, "Int.gcd")) {
+    return true;
+  }
+  // Check if expression contains calls to local or sequence functions
+  // which return Int
+  if (expr.type == Expression::Type::FUNCTION && isLocalOrSeqFunc(expr.name)) {
+    return true;
+  }
+  // Check children recursively
+  for (const auto& child : expr.children) {
+    if (needsIntToNat(child)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 bool LeanFormula::convertToLean(Expression& expr, int64_t offset,
@@ -81,10 +99,26 @@ bool LeanFormula::convertToLean(Expression& expr, int64_t offset,
         Expression cast(Expression::Type::FUNCTION, "Int.ofNat", {expr});
         expr = cast;
       }
-      if (patternOffset != Number::ZERO && patternOffset != Number::INF) {
-        Expression sum(
-            Expression::Type::SUM, "",
-            {expr, ExpressionUtil::newConstant(patternOffset.asInt())});
+      // Only adjust the parameter by the pattern offset when using Nat domain
+      // pattern matching ("n+k") where the bound variable represents the
+      // predecessor part. For Int domain we keep the parameter unchanged to
+      // preserve the original semantics.
+      if (domain == "Nat" && patternOffset != Number::ZERO &&
+          patternOffset != Number::INF) {
+        Expression offsetConst =
+            ExpressionUtil::newConstant(patternOffset.asInt());
+        // When domain is Nat and parameter was wrapped with Int.ofNat, also
+        // wrap the offset constant to ensure consistent Int types throughout
+        // (e.g., (Int.ofNat n)+(Int.ofNat 3) instead of (Int.ofNat n)+3). Only
+        // wrap positive offsets in Int.ofNat; negative values cannot be wrapped
+        // with Int.ofNat (which only accepts Nat), so they remain as plain Int
+        // literals (e.g., -1).
+        if (!insideOfLocalFunc && patternOffset.asInt() > 0) {
+          Expression castOffset(Expression::Type::FUNCTION, "Int.ofNat",
+                                {offsetConst});
+          offsetConst = castOffset;
+        }
+        Expression sum(Expression::Type::SUM, "", {expr, offsetConst});
         expr = sum;
       }
       break;
@@ -95,6 +129,33 @@ bool LeanFormula::convertToLean(Expression& expr, int64_t offset,
       }
       if (expr.name == "gcd") {
         expr.name = "Int.gcd";
+        // Int.gcd returns Nat in LEAN 4, so wrap with Int.ofNat to convert to Int
+        // This ensures the result can be used in Int arithmetic without type errors
+        Expression gcdExpr = expr;
+        expr = Expression(Expression::Type::FUNCTION, "Int.ofNat", {gcdExpr});
+        break;
+      }
+      // Convert binomial function to LEAN Nat.choose
+      if (expr.name == "binomial") {
+        // binomial requires exactly 2 arguments
+        if (expr.children.size() != 2) {
+          return false;
+        }
+        auto n = expr.children[0];
+        auto k = expr.children[1];
+        // Check if arguments can be negative
+        if (ExpressionUtil::canBeNegative(n, offset) ||
+            ExpressionUtil::canBeNegative(k, offset)) {
+          return false;
+        }
+        // Convert to Nat.choose(Int.toNat(n), Int.toNat(k))
+        Expression toNatN(Expression::Type::FUNCTION, "Int.toNat", {n});
+        Expression toNatK(Expression::Type::FUNCTION, "Int.toNat", {k});
+        Expression choose(Expression::Type::FUNCTION, "Nat.choose",
+                          {toNatN, toNatK});
+        Expression result(Expression::Type::FUNCTION, "Int.ofNat", {choose});
+        expr = result;
+        imports.insert("Mathlib.Data.Nat.Choose.Basic");
         break;
       }
       // Convert floor and truncate functions to LEAN equivalents
@@ -169,7 +230,11 @@ bool LeanFormula::convertToLean(Expression& expr, int64_t offset,
         // operations) or is not a plain PARAMETER
         if (domain == "Nat") {
           for (auto& arg : expr.children) {
-            if (arg.type != Expression::Type::PARAMETER && needsIntToNat(arg)) {
+            // Skip if already wrapped with Int.toNat
+            bool alreadyWrapped = arg.type == Expression::Type::FUNCTION &&
+                                  arg.name == "Int.toNat";
+            if (!alreadyWrapped && arg.type != Expression::Type::PARAMETER &&
+                needsIntToNat(arg)) {
               Expression toNat(Expression::Type::FUNCTION, "Int.toNat", {arg});
               arg = toNat;
             }
@@ -208,6 +273,13 @@ bool LeanFormula::convert(const Formula& formula, int64_t offset,
   if (as_vector) {
     return false;
   }
+
+  // Check for mutual recursion - LEAN can't prove termination automatically
+  // for mutually recursive functions without explicit termination proofs
+  if (hasMutualRecursion(formula)) {
+    return false;
+  }
+
   lean_formula = {};
   lean_formula.domain = "Int";
   lean_formula.funcNames =
@@ -216,9 +288,10 @@ bool LeanFormula::convert(const Formula& formula, int64_t offset,
     return false;
   }
   for (const auto& f : lean_formula.funcNames) {
-    if (FormulaUtil::isRecursive(formula, f)) {
-      if (offset != 0 ||
-          FormulaUtil::getMinimumBaseCase(formula, f) != Number::ZERO) {
+    if (isRecursive(formula, f)) {
+      // Extract only the function with the matching name
+      auto funcs = Function::fromFormula(formula, f);
+      if (funcs.empty() || offset != 0 || funcs[0].getMinimumBaseCase() != 0) {
         return false;
       }
       lean_formula.domain = "Nat";
@@ -247,7 +320,16 @@ bool LeanFormula::convert(const Formula& formula, int64_t offset,
         maxBaseCases.find(left.name) != maxBaseCases.end()) {
       patternOffset = maxBaseCases[left.name] + 1;
     }
-    if (!lean_formula.convertToLean(right, offset, patternOffset, false)) {
+    // When pattern matching with base cases, the general branch is only used
+    // for arguments >= patternOffset. Use that as the effective minimum index
+    // during conversion to avoid treating expressions like "n-1" as possibly
+    // negative when they are only evaluated for n >= patternOffset.
+    int64_t effectiveOffset = offset;
+    if (patternOffset != Number::INF) {
+      effectiveOffset += patternOffset.asInt();
+    }
+    if (!lean_formula.convertToLean(right, effectiveOffset, patternOffset,
+                                    false)) {
       return false;
     }
     lean_formula.main_formula.entries[left] = right;
@@ -348,7 +430,7 @@ std::string LeanFormula::printEvalCode(int64_t offset, int64_t numTerms) const {
 }
 
 std::string getLeanProjectDir() {
-  auto dir = Setup::getCacheHome() + "lean" + FILE_SEP;
+  auto dir = Setup::getCacheHome() + LEAN_PROJECT_NAME + FILE_SEP;
   ensureDir(dir);
   return dir;
 }
@@ -385,51 +467,59 @@ bool LeanFormula::initializeLeanProject() {
   if (initialized) {
     return true;
   }
+
+  const std::string cacheHome = Setup::getCacheHome();
+  const std::string projectDir = cacheHome + LEAN_PROJECT_NAME + FILE_SEP;
+  const std::string lakeFilePath = projectDir + "lakefile.toml";
+
   // Check if project is already initialized
-  const std::string projectDir = getLeanProjectDir();
-  const std::string lakeFilePath = projectDir + "lakefile.lean";
   if (isFile(lakeFilePath)) {
     initialized = true;
     return true;
   }
 
+  // If directory exists but lakefile doesn't, clean up incomplete
+  // initialization
+  if (isDir(projectDir)) {
+    Log::get().info("Removing incomplete LEAN project at " + projectDir);
+    rmDirRecursive(projectDir);
+  }
+
   Log::get().info("Initializing LEAN project at " + projectDir);
 
-  // Create lakefile.lean
-  std::ofstream lakefile(lakeFilePath);
-  if (!lakefile) {
-    return false;
-  }
-  lakefile << "import Lake\n";
-  lakefile << "open Lake DSL\n\n";
-  lakefile << "package \"lean-loda\" where\n";
-  lakefile << "  version := v!\"0.1.0\"\n\n";
-  lakefile << "require mathlib from git\n";
-  lakefile << "  \"https://github.com/leanprover-community/mathlib4.git\"\n\n";
-  lakefile << "@[default_target]\n";
-  lakefile << "lean_exe «lean-loda» where\n";
-  lakefile << "  root := `Main\n";
-  lakefile.close();
+  // Use lake to create a new Lean project with Mathlib dependency
+  // The command is: lake +leanprover-community/mathlib4:lean-toolchain new
+  // <project-name> math
+  std::vector<std::string> initArgs = {
+      "lake", "+leanprover-community/mathlib4:lean-toolchain", "new",
+      LEAN_PROJECT_NAME, "math"};
 
-  // Run lake update to download dependencies and create toolchain (with
-  // timeout). Use a larger timeout here because fetching mathlib and
-  // preparing the toolchain can be slow on first run.
-  std::vector<std::string> updateArgs = {"lake", "update"};
-  int updateTimeout = 300;  // 5 minutes
-  int exitCode = execWithTimeout(updateArgs, updateTimeout, "", projectDir);
+  int initTimeout = 600;  // 10 minutes for initial setup
+  int exitCode = execWithTimeout(initArgs, initTimeout, "", cacheHome);
   if (exitCode != 0) {
-    Log::get().warn("lake update failed with exit code " +
+    Log::get().warn("lake new failed with exit code " +
                     std::to_string(exitCode));
-    std::remove(lakeFilePath.c_str());
     return false;
   }
-  updateArgs = {"lake", "exe", "cache", "get"};
-  exitCode = execWithTimeout(updateArgs, updateTimeout, "", projectDir);
+
+  // Build the project to download and compile dependencies
+  std::vector<std::string> buildArgs = {"lake", "build"};
+  int buildTimeout = 1200;  // 20 minutes for building (mathlib can be large)
+  exitCode = execWithTimeout(buildArgs, buildTimeout, "", projectDir);
+  if (exitCode != 0) {
+    Log::get().warn("lake build failed with exit code " +
+                    std::to_string(exitCode));
+    return false;
+  }
+
+  // Download precompiled Mathlib cache to avoid lengthy compilation
+  std::vector<std::string> cacheArgs = {"lake", "exe", "cache", "get"};
+  int cacheTimeout = 1200;  // 20 minutes for downloading cache
+  exitCode = execWithTimeout(cacheArgs, cacheTimeout, "", projectDir);
   if (exitCode != 0) {
     Log::get().warn("lake exe cache get failed with exit code " +
-                    std::to_string(exitCode));
-    std::remove(lakeFilePath.c_str());
-    return false;
+                    std::to_string(exitCode) + ", continuing anyway");
+    // Don't fail here - the project might still work without cache
   }
 
   initialized = true;

@@ -2,7 +2,9 @@
 
 #include <algorithm>
 #include <fstream>
+#include <functional>
 #include <iostream>
+#include <map>
 
 #include "cmd/benchmark.hpp"
 #include "cmd/boinc.hpp"
@@ -14,11 +16,14 @@
 #include "eval/range_generator.hpp"
 #include "form/formula_gen.hpp"
 #include "form/formula_parser.hpp"
+#include "form/function.hpp"
 #include "form/lean.hpp"
 #include "form/pari.hpp"
+#include "form/recursion.hpp"
 #include "gen/iterator.hpp"
 #include "lang/analyzer.hpp"
 #include "lang/comments.hpp"
+#include "lang/parser.hpp"
 #include "lang/program_util.hpp"
 #include "lang/subprogram.hpp"
 #include "lang/virtual_seq.hpp"
@@ -160,8 +165,6 @@ void Commands::upgrade() {
   auto latest_version = Setup::checkLatestedVersion(false);
   if (!latest_version.empty()) {
     Setup::performUpgrade(latest_version, false);
-  } else {
-    Log::get().info("Latest version of LODA is already installed");
   }
 }
 
@@ -196,6 +199,21 @@ void Commands::check(const std::string& path) {
     uid = UID(Comments::getSequenceIdFromProgram(program));
   }
   auto seq = ManagedSequence(uid);
+  std::map<UID, int64_t> offsets;
+  bool has_offset = false;
+  const auto offsets_path =
+      SequenceUtil::getSeqsFolder(uid.domain()) + "offsets";
+  if (SequenceList::loadMap(offsets_path, offsets)) {
+    auto it = offsets.find(uid);
+    if (it != offsets.end()) {
+      seq.offset = it->second;
+      has_offset = true;
+    }
+  }
+  if (has_offset && ProgramUtil::getOffset(program) != seq.offset) {
+    std::cout << "error" << std::endl;
+    return;
+  }
   Evaluator evaluator(settings, EVAL_ALL, true);
   auto terms = seq.getTerms(SequenceUtil::FULL_SEQ_LENGTH);
   auto num_required = SequenceProgram::getNumRequiredTerms(program);
@@ -580,7 +598,8 @@ void Commands::testAnalyzer() {
 
 template <typename FormulaType>
 void testFormula(const std::string& test_id, const Settings& settings,
-                 bool as_vector) {
+                 bool as_vector,
+                 const std::unordered_set<UID>& skip_list = {}) {
   Parser parser;
   Interpreter interpreter(settings);
   Evaluator evaluator(settings, EVAL_ALL, false);
@@ -596,6 +615,11 @@ void testFormula(const std::string& test_id, const Settings& settings,
   }
   for (auto id : stats.all_program_ids) {
     if (target_id.number() > 0 && id != target_id) {
+      continue;
+    }
+    // Skip sequences in the skip list
+    if (skip_list.find(id) != skip_list.end()) {
+      skipped++;
       continue;
     }
     auto seq = manager.getSequences().get(id);
@@ -710,8 +734,12 @@ void testFormula(const std::string& test_id, const Settings& settings,
 
 void Commands::testPari(const std::string& test_id) {
   initLog(false);
-  const bool as_vector = false;  // TODO: switch to true
-  testFormula<PariFormula>(test_id, settings, as_vector);
+  const bool as_vector = false;
+  // Skip list for sequences with known PARI formula issues
+  static const std::unordered_set<UID> skip_list = {
+      UID('A', 231350)};  // PARI can't handle binomial coefficients with very
+                          // large arguments
+  testFormula<PariFormula>(test_id, settings, as_vector, skip_list);
 }
 
 void Commands::testLean(const std::string& test_id) {
@@ -881,6 +909,97 @@ void Commands::testRange(const std::string& id) {
   }
 }
 
+void Commands::testRecursion(const std::string& test_id) {
+  initLog(false);
+  Log::get().info("Testing recursive formulas");
+
+  Parser parser;
+  FormulaGenerator generator;
+  size_t num_checked = 0;
+  size_t num_invalid = 0;
+
+  MineManager manager(settings);
+  manager.load();
+  auto& stats = manager.getStats();
+
+  UID target_id;
+  if (!test_id.empty()) {
+    target_id = UID(test_id);
+  }
+
+  for (auto uid : stats.all_program_ids) {
+    if (target_id.number() > 0 && uid != target_id) {
+      continue;
+    }
+
+    Program program;
+    try {
+      program = parser.parse(ProgramUtil::getProgramPath(uid));
+    } catch (std::exception& e) {
+      continue;  // Skip programs that cannot be parsed
+    }
+
+    // Generate formula
+    Formula formula;
+    try {
+      if (!generator.generate(program, uid.number(), formula, false)) {
+        continue;  // Skip programs for which formula cannot be generated
+      }
+    } catch (std::exception& e) {
+      // Skip programs that cause formula generation errors (e.g., missing
+      // dependencies)
+      continue;
+    }
+
+    // Extract functions from the formula
+    auto functions = Function::fromFormula(formula);
+
+    // Check each function separately
+    bool has_any_recursive = false;
+    bool logged_program = false;
+    for (const auto& func : functions) {
+      // Skip functions without a general case
+      if (!func.has_general_case) {
+        continue;
+      }
+
+      // Only proceed if the general case calls the same function
+      const bool is_recursive =
+          func.general_case.contains(Expression::Type::FUNCTION, func.name);
+      if (!is_recursive) {
+        continue;
+      }
+
+      has_any_recursive = true;
+
+      if (!logged_program) {
+        Log::get().info("Checking " + uid.string() + ": " + formula.toString());
+        logged_program = true;
+      }
+
+      // Validate this recursive function using the helper method
+      std::string error_msg;
+      bool is_valid = validateRecursiveFunction(func, error_msg);
+
+      if (!is_valid) {
+        num_invalid++;
+        Log::get().error(uid.string() + ": " + formula.toString() +
+                             " => INVALID: " + error_msg,
+                         true);
+      }
+    }
+
+    // Report progress
+    if (has_any_recursive) {
+      num_checked++;
+    }
+  }
+
+  Log::get().info("Checked " + std::to_string(num_checked) +
+                  " recursive formulas, found " + std::to_string(num_invalid) +
+                  " invalid");
+}
+
 void Commands::generate() {
   initLog(true);
   MineManager manager(settings);
@@ -941,14 +1060,14 @@ void Commands::benchmark() {
   benchmark.smokeTest();
 }
 
-void Commands::findSlow(int64_t num_terms, const std::string& type) {
+void Commands::findSlowPrograms(int64_t num_terms, const std::string& type) {
   initLog(false);
   auto t = Operation::Type::NOP;
   if (!type.empty()) {
     t = Operation::Metadata::get(type).type;
   }
   Benchmark benchmark;
-  benchmark.findSlow(num_terms, t);
+  benchmark.findSlowPrograms(num_terms, t);
 }
 
 void Commands::findSlowFormulas() {
@@ -1188,6 +1307,40 @@ void Commands::compare(const std::string& path1, const std::string& path2) {
       p1, p2, "First", "Second", seq, full_check, num_usages));
 }
 
+void Commands::exportFormulas(const std::string& output_file) {
+  initLog(true);
+  Parser parser;
+  MineManager manager(settings);
+  manager.load();
+  auto& stats = manager.getStats();
+  std::ostream* out = &std::cout;
+  std::ofstream file_out;
+  if (!output_file.empty()) {
+    file_out.open(output_file);
+    if (!file_out.good()) {
+      Log::get().error("Cannot open output file: " + output_file, true);
+    }
+    out = &file_out;
+  }
+  for (auto id : stats.all_program_ids) {
+    try {
+      Program program = parser.parse(ProgramUtil::getProgramPath(id));
+      std::string formula =
+          Comments::getCommentField(program, Comments::PREFIX_FORMULA);
+
+      if (!formula.empty()) {
+        *out << id.string() << ": " << formula << std::endl;
+      }
+    } catch (const std::exception& e) {
+      Log::get().warn("Error processing " + id.string() + ": " +
+                      std::string(e.what()));
+    }
+  }
+  if (file_out.is_open()) {
+    file_out.close();
+  }
+}
+
 void Commands::commitAddedPrograms(size_t min_commit_count) {
   initLog(true);
   SequenceProgram::commitAddedPrograms(min_commit_count);
@@ -1210,4 +1363,110 @@ void Commands::commitUpdatedAndDeletedPrograms() {
     std::cerr << "Could not load full_check list: " << e.what() << std::endl;
   }
   SequenceProgram::commitUpdateAndDeletedPrograms(&stats, &full_check_list);
+}
+
+void Commands::updateFormulaTests() {
+  initLog(false);
+
+  // Set programs home to test directory
+  Setup::setProgramsHome(std::string("tests") + FILE_SEP + "programs");
+
+  Parser parser;
+  FormulaGenerator generator;
+
+  // Define test files and their corresponding formula types
+  struct FormulaTestFile {
+    std::string filename;
+    std::string format;  // "formula", "pari-function", "pari-vector", "lean"
+  };
+
+  std::vector<FormulaTestFile> test_files = {
+      {"formula.txt", "formula"},
+      {"pari-function.txt", "pari-function"},
+      {"pari-vector.txt", "pari-vector"},
+      {"lean.txt", "lean"}};
+
+  for (const auto& test_file : test_files) {
+    std::string path = std::string("tests") + FILE_SEP +
+                       std::string("formula") + FILE_SEP + test_file.filename;
+
+    Log::get().info("Updating " + path);
+
+    // Load existing entries to preserve the order
+    std::map<UID, std::string> existing_map;
+    SequenceList::loadMapWithComments(path, existing_map);
+
+    if (existing_map.empty()) {
+      Log::get().warn("No entries found in " + path);
+      continue;
+    }
+
+    // Process each sequence and build updated map
+    std::map<UID, std::string> updated_map;
+    for (const auto& entry : existing_map) {
+      auto id = entry.first;
+      try {
+        // Parse the program
+        auto program = parser.parse(ProgramUtil::getProgramPath(id));
+        auto offset = ProgramUtil::getOffset(program);
+
+        // Generate the formula
+        Formula formula;
+        if (!generator.generate(program, id.number(), formula, true)) {
+          Log::get().warn("Cannot generate formula for " + id.string());
+          // Keep original entry if formula generation fails
+          updated_map[id] = entry.second;
+          continue;
+        }
+
+        // Convert to the appropriate format
+        std::string result;
+        if (test_file.format == "formula") {
+          result = formula.toString();
+        } else if (test_file.format == "pari-function") {
+          PariFormula pari;
+          if (!PariFormula::convert(formula, offset, false, pari)) {
+            Log::get().warn("Cannot convert formula to PARI/GP for " +
+                            id.string());
+            updated_map[id] = entry.second;
+            continue;
+          }
+          result = pari.toString();
+        } else if (test_file.format == "pari-vector") {
+          PariFormula pari;
+          if (!PariFormula::convert(formula, offset, true, pari)) {
+            Log::get().warn("Cannot convert formula to PARI/GP vector for " +
+                            id.string());
+            updated_map[id] = entry.second;
+            continue;
+          }
+          result = pari.toString();
+        } else if (test_file.format == "lean") {
+          LeanFormula lean;
+          if (!LeanFormula::convert(formula, offset, false, lean)) {
+            Log::get().warn("Cannot convert formula to LEAN for " +
+                            id.string());
+            updated_map[id] = entry.second;
+            continue;
+          }
+          result = lean.toString();
+        }
+
+        // Store updated entry
+        updated_map[id] = result;
+        Log::get().info("Updated " + id.string());
+
+      } catch (const std::exception& e) {
+        Log::get().warn("Error processing " + id.string() + ": " +
+                        std::string(e.what()));
+        // Keep original entry on error
+        updated_map[id] = entry.second;
+      }
+    }
+
+    // Write all entries using saveMapWithComments (handles multi-line
+    // formatting)
+    SequenceList::saveMapWithComments(path, updated_map);
+    Log::get().info("Finished updating " + path);
+  }
 }

@@ -48,23 +48,60 @@ bool hasIndirectOperand(const Program& p) {
 
 bool isSimpler(const Program& existing, const Program& optimized) {
   bool optimized_has_seq = ProgramUtil::hasOp(optimized, Operation::Type::SEQ);
+  bool existing_has_seq = ProgramUtil::hasOp(existing, Operation::Type::SEQ);
   if (hasBadConstant(existing) && !hasBadConstant(optimized) &&
       !optimized_has_seq) {
     return true;
+  } else if (!hasBadConstant(existing) && hasBadConstant(optimized) && !existing_has_seq) {
+    return false;
   }
   if (hasBadLoop(existing) && !hasBadLoop(optimized) && !optimized_has_seq) {
     return true;
+  } else if (!hasBadLoop(existing) && hasBadLoop(optimized) && !existing_has_seq) {
+    return false;
   }
   auto info_existing = Constants::findConstantLoop(existing);
   auto info_optimized = Constants::findConstantLoop(optimized);
   if (info_existing.has_constant_loop && !info_optimized.has_constant_loop &&
       !optimized_has_seq) {
     return true;
+  }else if (!info_existing.has_constant_loop && info_optimized.has_constant_loop && !existing_has_seq) {
+    return false;
   }
   if (hasIndirectOperand(existing) && !hasIndirectOperand(optimized)) {
     return true;
+  } else if (!hasIndirectOperand(existing) && hasIndirectOperand(optimized)) {
+    return false;
   }
   return false;
+}
+
+// Return true if all constants used in the program are within [-100,100]
+bool hasOnlySmallConstants(const Program& p) {
+  auto constants = Constants::getAllConstants(p, true);
+  for (const auto& c : constants) {
+    if (c < Number(-100) || c > Number(100)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// Check if optimized program is simpler for sequences with <=100 terms
+static bool isSimpler100(const Program& existing, const Program& optimized) {
+  // Compare usage of only small constants
+  bool existingHasSeq = ProgramUtil::hasOp(existing, Operation::Type::SEQ);
+  bool optimizedHasSeq = ProgramUtil::hasOp(optimized, Operation::Type::SEQ);
+  bool existingSmallConstants = hasOnlySmallConstants(existing);
+  bool optimizedSmallConstants = hasOnlySmallConstants(optimized);
+  if (optimizedSmallConstants && !existingSmallConstants && !optimizedHasSeq) {
+    return true;
+  }
+  if (existingSmallConstants && !optimizedSmallConstants && !existingHasSeq) {
+    return false;
+  }
+  // Otherwise prefer shorter programs
+  return optimized.ops.size() < existing.ops.size() && !optimizedHasSeq;
 }
 
 bool isBetterIncEval(const Program& existing, const Program& optimized,
@@ -138,6 +175,11 @@ check_result_t Checker::checkProgramExtended(Program program, Program existing,
   // auto-unfold seq operations
   Fold::autoUnfold(program);
 
+  // set offset based on existing program
+  if (!is_new) {
+    ProgramUtil::setOffset(program, ProgramUtil::getOffset(existing));
+  }
+  
   // minimize based on number of terminating terms
   minimizer.optimizeAndMinimize(program, num_minimize);
   if (program != result.program) {
@@ -271,6 +313,22 @@ std::string Checker::isOptimizedBetter(Program existing, Program optimized,
     return not_better;
   }
 
+  // get extended sequence terms
+  auto num_check = SequenceProgram::getNumCheckTerms(full_check);
+  auto terms = seq.getTerms(num_check);
+  if (terms.empty()) {
+    Log::get().error("Error fetching b-file for " + seq.id.string(), true);
+  }
+
+  // "Simple 100" check
+  if (terms.size() <= 100) {
+    if (isSimpler100(existing, optimized)) {
+      return "Simpler";
+    } else if (isSimpler100(optimized, existing)) {
+      return not_better;
+    }
+  }
+
   // consider special evaluation modes only for programs that are not
   // used by many other programs and that don't require a full check
   if (!full_check && num_usages < 5) {  // magic number
@@ -289,13 +347,6 @@ std::string Checker::isOptimizedBetter(Program existing, Program optimized,
   }
 
   // ======= EVALUATION CHECKS =========
-
-  // get extended sequence
-  auto num_check = SequenceProgram::getNumCheckTerms(full_check);
-  auto terms = seq.getTerms(num_check);
-  if (terms.empty()) {
-    Log::get().error("Error fetching b-file for " + seq.id.string(), true);
-  }
 
   // evaluate optimized program for fixed number of terms
   num_check = std::min<size_t>(num_check, terms.size());

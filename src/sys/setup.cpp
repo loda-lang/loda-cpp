@@ -146,6 +146,16 @@ const std::string& Setup::getCacheHome() {
   return cache_home;
 }
 
+const std::string& Setup::getDebugHome() {
+  static std::string debug_home;
+  if (debug_home.empty()) {
+    // don't remove the trailing /
+    debug_home = getLodaHome() + "debug" + FILE_SEP;
+    ensureDir(debug_home);
+  }
+  return debug_home;
+}
+
 const std::string& Setup::getProgramsHome() {
   if (PROGRAMS_HOME.empty()) {
     setProgramsHome(getLodaHome() + "programs" + FILE_SEP);
@@ -269,16 +279,16 @@ bool Setup::hasMemory() {
   const auto max_physical_memory = getMaxMemory();
   const auto usage = getMemUsage();
   if (usage > (size_t)(0.95 * max_physical_memory)) {
-    if (usage > (size_t)(1.5 * max_physical_memory)) {
+    if (usage > (size_t)(2.0 * max_physical_memory)) {
       Log::get().error("Exceeded maximum physical memory limit of " +
-                           std::to_string(max_physical_memory / (1024 * 1024)) +
-                           "MB",
+                           formatBytes(max_physical_memory) +
+                           " (usage: " + formatBytes(usage) + ")",
                        true);
     }
     if (!PRINTED_MEMORY_WARNING) {
       Log::get().warn("Reaching maximum physical memory limit of " +
-                      std::to_string(max_physical_memory / (1024 * 1024)) +
-                      "MB");
+                      formatBytes(max_physical_memory) +
+                      " (usage: " + formatBytes(usage) + ")");
       PRINTED_MEMORY_WARNING = true;
     }
     return false;
@@ -477,9 +487,9 @@ std::string Setup::getLatestVersion() {
   const std::string local_release_info(".latest-release.json");
   const std::string release_info_url(
       "https://api.github.com/repos/loda-lang/loda-cpp/releases/latest");
-  if (!WebClient::get(release_info_url, local_release_info, true, false)) {
-    Log::get().warn("Cannot get latest version info and check for updates");
-    return Version::BRANCH;  // pretend we are on the latest version
+  if (!WebClient::get(release_info_url, local_release_info, false, false)) {
+    // Error already logged by WebClient::get()
+    return "";  // return empty string on failure
   }
   const std::string content = getFileAsString(local_release_info);
   std::remove(local_release_info.c_str());
@@ -490,11 +500,18 @@ std::string Setup::getLatestVersion() {
 std::string Setup::checkLatestedVersion(bool silent) {
   if (Version::IS_RELEASE) {
     const auto latest_version = getLatestVersion();
+    if (latest_version.empty()) {
+      return "";  // failed to check for updates
+    }
     if (latest_version != Version::BRANCH) {
       if (!silent) {
         Log::get().info("New LODA version available: " + latest_version);
       }
       return latest_version;
+    }
+    // Already on the latest version
+    if (!silent) {
+      Log::get().info("Latest version of LODA is already installed");
     }
   }
   return "";
@@ -509,30 +526,59 @@ std::string Setup::getExecutable(const std::string& suffix) {
 }
 
 void Setup::performUpgrade(const std::string& new_version, bool silent) {
-  std::string exe;
-#ifdef _WIN64
-  exe = ".exe";
-#endif
   ensureDir(getLodaHome() + "bin" + FILE_SEP);
   const std::string exec_local = getExecutable("");
-  const std::string exec_tmp = getExecutable("-" + Version::PLATFORM);
 #ifdef _WIN64
-  if (isFile(exec_local) && isFile(exec_tmp)) {
-    std::string cmd = "del \"" + exec_tmp + "\" " + getNullRedirect();
-    if (system(cmd.c_str()) != 0) {
-      Log::get().error("Cannot delete temporary file: " + exec_tmp, false);
-    }
-  }
-#endif
-  const std::string exec_url =
+  // Windows: download ZIP file and extract it
+  const std::string zip_file = getLodaHome() + "bin" + FILE_SEP + 
+                                "loda-" + Version::PLATFORM + ".zip";
+  const std::string extract_dir = getLodaHome() + "bin" + FILE_SEP + 
+                                   "loda-" + Version::PLATFORM;
+  const std::string zip_url =
       "https://github.com/loda-lang/loda-cpp/releases/download/" + new_version +
-      "/loda-" + Version::PLATFORM + exe;
-  WebClient::get(exec_url, exec_tmp, true, true);
-#ifdef _WIN64
+      "/loda-" + Version::PLATFORM + ".zip";
+  // Clean up any previous download/extraction
+  std::remove(zip_file.c_str());
+  if (isDir(extract_dir)) {
+    rmDirRecursive(extract_dir);
+  }
+  // Download the ZIP file
+  WebClient::get(zip_url, zip_file, true, true);
+  // Extract using PowerShell's Expand-Archive
+  const std::string extract_cmd = 
+      "powershell -Command \"Expand-Archive -Path \\\"" + zip_file + 
+      "\\\" -DestinationPath \\\"" + getLodaHome() + "bin\\\" -Force\"";
+  if (!execCmd(extract_cmd, false)) {
+    std::remove(zip_file.c_str());
+    Log::get().error("Failed to extract upgrade archive", true);
+  }
+  // Move the executable and DLL files from the extracted directory
+  const std::string exec_tmp = extract_dir + FILE_SEP + "loda.exe";
+  // Copy DLL dependencies to the bin directory
+  const std::string bin_dir = getLodaHome() + "bin" + FILE_SEP;
+  const std::string libcurl_src = extract_dir + FILE_SEP + "libcurl.dll";
+  const std::string zlib_src = extract_dir + FILE_SEP + "zlib1.dll";
+  const std::string libcurl_dst = bin_dir + "libcurl.dll";
+  const std::string zlib_dst = bin_dir + "zlib1.dll";
+  if (isFile(libcurl_src)) {
+    moveFile(libcurl_src, libcurl_dst);
+  }
+  if (isFile(zlib_src)) {
+    moveFile(zlib_src, zlib_dst);
+  }
+  // Use the temporary executable to update the main one
   const std::string cmd = "\"" + exec_tmp + "\" update-windows-executable \"" +
                           exec_tmp + "\" \"" + exec_local + "\"";
+  // Clean up the ZIP file
+  std::remove(zip_file.c_str());
   createWindowsProcess(cmd);
 #else
+  // Unix: download executable directly
+  const std::string exec_tmp = getExecutable("-" + Version::PLATFORM);
+  const std::string exec_url =
+      "https://github.com/loda-lang/loda-cpp/releases/download/" + new_version +
+      "/loda-" + Version::PLATFORM;
+  WebClient::get(exec_url, exec_tmp, true, true);
   makeExecutable(exec_tmp);
   moveFile(exec_tmp, exec_local);
   if (!silent) {

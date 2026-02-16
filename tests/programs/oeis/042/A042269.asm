@@ -1,0 +1,54 @@
+; A042269: Denominators of continued fraction convergents to sqrt(660).
+
+mov $1,1
+mov $3,1
+lpb $0
+  sub $0,1
+  mov $4,$2
+  mov $2,$1
+  mov $7,-1
+  pow $7,$3
+  add $7,2
+  mov $8,2
+  trn $8,$1
+  add $8,6
+  gcd $1,$8
+  sub $1,3
+  sub $8,2
+  mov $10,3
+  pow $10,$1
+  mov $1,$10
+  mod $1,10
+  mov $9,2
+  add $9,$1
+  mov $1,$9
+  div $1,3
+  mul $1,3
+  mul $9,2
+  mul $1,$8
+  add $1,$9
+  div $1,2
+  sub $1,1
+  mul $1,$7
+  mul $1,2
+  sub $1,1
+  div $1,3
+  add $1,1
+  mul $1,5
+  div $1,3
+  mov $6,$1
+  mod $1,10
+  mul $1,2
+  add $1,$6
+  div $1,2
+  add $1,1
+  mov $5,$1
+  seq $5,6882 ; Double factorials n!!: a(n) = n*a(n-2) for n > 1, a(0) = a(1) = 1.
+  div $5,$1
+  mod $5,$1
+  sub $1,$5
+  mul $1,$2
+  add $1,$4
+  add $3,1
+lpe
+mov $0,$1

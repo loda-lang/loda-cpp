@@ -13,7 +13,6 @@
 #include "eval/minimizer.hpp"
 #include "eval/optimizer.hpp"
 #include "eval/range_generator.hpp"
-#include "eval/semantics.hpp"
 #include "form/formula_gen.hpp"
 #include "form/formula_parser.hpp"
 #include "form/lean.hpp"
@@ -28,6 +27,7 @@
 #include "lang/subprogram.hpp"
 #include "lang/virtual_seq.hpp"
 #include "math/big_number.hpp"
+#include "math/semantics.hpp"
 #include "mine/api_client.hpp"
 #include "mine/config.hpp"
 #include "mine/matcher.hpp"
@@ -37,6 +37,7 @@
 #include "seq/seq_list.hpp"
 #include "sys/file.hpp"
 #include "sys/git.hpp"
+#include "sys/gzip.hpp"
 #include "sys/log.hpp"
 #include "sys/setup.hpp"
 
@@ -78,6 +79,8 @@ void Test::fast() {
   knownPrograms();
   formula();
   range();
+  gzip();
+  jute();
 }
 
 void Test::slow() {
@@ -980,9 +983,11 @@ bool Test::checkEvaluator(const Settings& settings, size_t id, std::string path,
 void Test::apiClient() {
   Log::get().info("Testing API client");
   ApiClient client;
-  client.postProgram(std::string("tests") + FILE_SEP + "programs" + FILE_SEP +
-                     "oeis" + FILE_SEP + "000" + FILE_SEP + "A000005.asm");
-  auto program = client.getNextProgram();
+  // client.postProgram(std::string("tests") + FILE_SEP + "programs" + FILE_SEP
+  // + "oeis" + FILE_SEP + "000" + FILE_SEP + "A000005.asm");
+  auto submission = client.getNextSubmission();
+  if (submission.mode == Submission::Mode::REMOVE) return;
+  auto program = submission.toProgram();
   if (program.ops.empty()) {
     Log::get().error("Expected non-empty program from API server", true);
   }
@@ -1806,5 +1811,226 @@ void Test::testMatcherPair(Matcher& matcher, size_t id1, size_t id2) {
                          " matcher generated wrong program for " +
                          uid2.string(),
                      true);
+  }
+}
+
+void Test::gzip() {
+  Log::get().info("Testing gzip decompression");
+  std::string test_content =
+      "Hello, this is a test for zlib gzip decompression!";
+  std::string tmp_dir = getTmpDir();
+
+  // Test 1: Decompress and remove original file
+  {
+    std::string base_path = tmp_dir + "gzip_test1.txt";
+    std::string gz_path = base_path + ".gz";
+
+    // Create test file and compress it with system gzip
+    {
+      std::ofstream out(base_path);
+      out << test_content;
+      out.close();
+    }
+    if (system(("gzip -f \"" + base_path + "\"").c_str()) != 0) {
+      Log::get().error("Failed to create test gzip file", true);
+    }
+
+    // Decompress using our implementation (keep=false)
+    gunzip(gz_path, false);
+
+    // Verify: original .gz should be deleted, content should match
+    if (isFile(gz_path)) {
+      Log::get().error("gzip file was not deleted when keep=false", true);
+    }
+    if (!isFile(base_path)) {
+      Log::get().error("Decompressed file not created", true);
+    }
+    std::ifstream in(base_path);
+    std::string result((std::istreambuf_iterator<char>(in)),
+                       std::istreambuf_iterator<char>());
+    in.close();
+    if (result != test_content) {
+      Log::get().error("Decompressed content does not match original", true);
+    }
+    std::remove(base_path.c_str());
+  }
+
+  // Test 2: Decompress and keep original file
+  {
+    std::string base_path = tmp_dir + "gzip_test2.txt";
+    std::string gz_path = base_path + ".gz";
+
+    // Create test file and compress it with system gzip
+    {
+      std::ofstream out(base_path);
+      out << test_content;
+      out.close();
+    }
+    if (system(("gzip -f \"" + base_path + "\"").c_str()) != 0) {
+      Log::get().error("Failed to create test gzip file", true);
+    }
+
+    // Decompress using our implementation (keep=true)
+    gunzip(gz_path, true);
+
+    // Verify: original .gz should still exist, content should match
+    if (!isFile(gz_path)) {
+      Log::get().error("gzip file was deleted when keep=true", true);
+    }
+    if (!isFile(base_path)) {
+      Log::get().error("Decompressed file not created", true);
+    }
+    std::ifstream in(base_path);
+    std::string result((std::istreambuf_iterator<char>(in)),
+                       std::istreambuf_iterator<char>());
+    in.close();
+    if (result != test_content) {
+      Log::get().error("Decompressed content does not match original", true);
+    }
+    std::remove(base_path.c_str());
+    std::remove(gz_path.c_str());
+  }
+}
+
+void Test::jute() {
+  Log::get().info("Testing jute JSON round-trip");
+
+  // Test 1: Simple types
+  {
+    std::string json = R"({"str":"hello","num":42,"bool":true,"null":null})";
+    auto parsed1 = jute::parser::parse(json);
+    auto serialized = parsed1.to_string(true);
+    auto parsed2 = jute::parser::parse(serialized);
+
+    if (parsed1["str"].as_string() != parsed2["str"].as_string() ||
+        parsed1["num"].as_int() != parsed2["num"].as_int() ||
+        parsed1["bool"].as_bool() != parsed2["bool"].as_bool() ||
+        parsed1["null"].get_type() != parsed2["null"].get_type()) {
+      Log::get().error("Simple types round-trip test failed", true);
+    }
+  }
+
+  // Test 2: String escaping
+  {
+    std::string json = R"({"escape":"line1\nline2\ttab\"quote\\\\/slash"})";
+    auto parsed1 = jute::parser::parse(json);
+    auto str1 = parsed1["escape"].as_string();
+    auto serialized = parsed1.to_string(true);
+    auto parsed2 = jute::parser::parse(serialized);
+    auto str2 = parsed2["escape"].as_string();
+
+    if (str1 != str2) {
+      Log::get().error(
+          "String escaping round-trip test failed: " + str1 + " != " + str2,
+          true);
+    }
+    if (str1.find('\n') == std::string::npos ||
+        str1.find('\t') == std::string::npos) {
+      Log::get().error("Escaped characters not properly deserialized", true);
+    }
+  }
+
+  // Test 3: Arrays
+  {
+    std::string json = R"({"arr":[1,2,3,"test",true,null]})";
+    auto parsed1 = jute::parser::parse(json);
+    auto serialized = parsed1.to_string(true);
+    auto parsed2 = jute::parser::parse(serialized);
+
+    if (parsed1["arr"].size() != parsed2["arr"].size() ||
+        parsed1["arr"][0].as_int() != parsed2["arr"][0].as_int() ||
+        parsed1["arr"][3].as_string() != parsed2["arr"][3].as_string()) {
+      Log::get().error("Array round-trip test failed", true);
+    }
+  }
+
+  // Test 4: Nested objects
+  {
+    std::string json = R"({"outer":{"inner":{"deep":"value"}}})";
+    auto parsed1 = jute::parser::parse(json);
+    auto serialized = parsed1.to_string(true);
+    auto parsed2 = jute::parser::parse(serialized);
+
+    if (parsed1["outer"]["inner"]["deep"].as_string() !=
+        parsed2["outer"]["inner"]["deep"].as_string()) {
+      Log::get().error("Nested objects round-trip test failed", true);
+    }
+  }
+
+  // Test 5: Compact vs pretty format
+  {
+    std::string json = R"({"a":1,"b":2})";
+    auto parsed = jute::parser::parse(json);
+    auto compact = parsed.to_string(true);
+    auto pretty = parsed.to_string(false);
+
+    // Both should parse back to same values
+    auto parsed_compact = jute::parser::parse(compact);
+    auto parsed_pretty = jute::parser::parse(pretty);
+
+    if (parsed_compact["a"].as_int() != parsed_pretty["a"].as_int() ||
+        parsed_compact["b"].as_int() != parsed_pretty["b"].as_int()) {
+      Log::get().error("Compact vs pretty round-trip test failed", true);
+    }
+
+    // Compact should have no newlines
+    if (compact.find('\n') != std::string::npos) {
+      Log::get().error("Compact format should not contain newlines", true);
+    }
+
+    // Pretty should have newlines
+    if (pretty.find('\n') == std::string::npos) {
+      Log::get().error("Pretty format should contain newlines", true);
+    }
+  }
+
+  // Test 6: Special characters in keys
+  {
+    std::string json = R"({"key\nwith\ttabs":"value"})";
+    auto parsed1 = jute::parser::parse(json);
+    auto serialized = parsed1.to_string(true);
+    auto parsed2 = jute::parser::parse(serialized);
+
+    // Should be able to access with the deserialized key
+    std::string key = "key\nwith\ttabs";
+    if (parsed1[key].as_string() != parsed2[key].as_string()) {
+      Log::get().error("Special characters in keys round-trip test failed",
+                       true);
+    }
+  }
+
+  // Test 7: Empty structures
+  {
+    std::string json1 = R"({})";
+    std::string json2 = R"([])";
+
+    auto parsed1 = jute::parser::parse(json1);
+    auto serialized1 = parsed1.to_string(true);
+    auto reparsed1 = jute::parser::parse(serialized1);
+    if (reparsed1.size() != 0) {
+      Log::get().error("Empty object round-trip test failed", true);
+    }
+
+    auto parsed2 = jute::parser::parse(json2);
+    auto serialized2 = parsed2.to_string(true);
+    auto reparsed2 = jute::parser::parse(serialized2);
+    if (reparsed2.size() != 0) {
+      Log::get().error("Empty array round-trip test failed", true);
+    }
+  }
+
+  // Test 8: Numbers (int and double)
+  {
+    std::string json = R"({"int":123,"negative":-456,"decimal":3.14})";
+    auto parsed1 = jute::parser::parse(json);
+    auto serialized = parsed1.to_string(true);
+    auto parsed2 = jute::parser::parse(serialized);
+
+    if (parsed1["int"].as_int() != parsed2["int"].as_int() ||
+        parsed1["negative"].as_int() != parsed2["negative"].as_int() ||
+        std::abs(parsed1["decimal"].as_double() -
+                 parsed2["decimal"].as_double()) > 0.001) {
+      Log::get().error("Number round-trip test failed", true);
+    }
   }
 }

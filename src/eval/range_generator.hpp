@@ -4,9 +4,9 @@
 #include <stack>
 #include <vector>
 
-#include "eval/range.hpp"
 #include "lang/analyzer.hpp"
 #include "lang/program_cache.hpp"
+#include "math/range.hpp"
 
 /**
  * RangeGenerator analyzes LODA programs to compute the value ranges for each
@@ -15,7 +15,8 @@
  *
  * Usage:
  *   - Set the input upper bound (optional, defaults to infinity)
- *   - Set whether to collect ranges before or after operations (optional, defaults to after)
+ *   - Set whether to collect ranges before or after operations (optional,
+ * defaults to after)
  *   - Call generate() to get a RangeMap for a program
  *   - Call collect() to get per-operation ranges
  *   - Call annotate() to add range comments to a program
@@ -31,7 +32,8 @@
  */
 class RangeGenerator {
  public:
-  RangeGenerator() : input_upper_bound(Number::INF), is_range_before_op(false) {}
+  RangeGenerator()
+      : input_upper_bound(Number::INF), is_range_before_op(false) {}
 
   /**
    * Computes the final range map for all memory cells after running the
@@ -81,8 +83,8 @@ class RangeGenerator {
 
   /**
    * Sets whether ranges should be collected before or after operations.
-   * @param before If true, collect() returns ranges before each operation is executed.
-   *               If false (default), ranges are collected after each operation.
+   * @param before If true, collect() returns ranges before each operation is
+   * executed. If false (default), ranges are collected after each operation.
    */
   void setRangeBeforeOp(bool before) { is_range_before_op = before; }
 

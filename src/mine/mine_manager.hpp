@@ -7,6 +7,7 @@
 #include "lang/program_cache.hpp"
 #include "mine/finder.hpp"
 #include "mine/invalid_matches.hpp"
+#include "mine/program_change_log.hpp"
 #include "mine/stats.hpp"
 #include "seq/seq_loader.hpp"
 #include "sys/util.hpp"
@@ -107,4 +108,5 @@ class MineManager {
 
   std::unique_ptr<Stats> stats;
   std::string stats_home;
+  ProgramChangeLog change_log;
 };

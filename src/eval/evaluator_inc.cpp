@@ -1,7 +1,7 @@
 #include "eval/evaluator_inc.hpp"
 
-#include "eval/semantics.hpp"
 #include "lang/program_util.hpp"
+#include "math/semantics.hpp"
 #include "sys/log.hpp"
 #include "sys/util.hpp"
 
@@ -173,8 +173,6 @@ bool IncrementalEvaluator::checkPreLoop(bool skip_input_transform,
   return true;
 }
 
-
-
 bool IncrementalEvaluator::checkLoopBody(ErrorCode* error_code) {
   // check loop counter cell
   bool loop_counter_updated = false;
@@ -319,19 +317,29 @@ void IncrementalEvaluator::computeStatefulCells() {
   std::set<int64_t> write;
   stateful_cells.clear();
   for (const auto& op : simple_loop.body.ops) {
+    const auto target = op.target.value.asInt();
     if (op.type == Operation::Type::CLR || op.type == Operation::Type::FIL ||
         op.type == Operation::Type::ROL || op.type == Operation::Type::ROR) {
-      // Set all cells affected by memory ops as stateful.
       auto bounds = ProgramUtil::getTargetMemoryRange(op);
       if (bounds.first == Number::INF || bounds.second == Number::INF) {
         continue;
       }
+      if (op.type == Operation::Type::FIL) {
+        read.insert(target);
+      }
       int64_t left = bounds.first.asInt();
       int64_t right = bounds.second.asInt();
       for (int64_t i = left; i < right; i++) {
-        read.insert(i);
-        write.insert(i);
-        stateful_cells.insert(i);
+        if (op.type == Operation::Type::ROL ||
+            op.type == Operation::Type::ROR) {
+          read.insert(i);
+        }
+        if (write.find(i) == write.end()) {
+          if (read.find(i) != read.end()) {
+            stateful_cells.insert(i);
+          }
+          write.insert(i);
+        }
       }
       continue;
     }
@@ -339,7 +347,6 @@ void IncrementalEvaluator::computeStatefulCells() {
     if (meta.num_operands == 0) {
       continue;
     }
-    const auto target = op.target.value.asInt();
     if (target == simple_loop.counter) {
       continue;
     }
@@ -356,6 +363,11 @@ void IncrementalEvaluator::computeStatefulCells() {
         stateful_cells.insert(target);
       }
       write.insert(target);
+    }
+  }
+  for (const auto& cell : read) {
+    if (write.find(cell) == write.end() && cell != simple_loop.counter) {
+      stateful_cells.insert(cell);
     }
   }
 }
