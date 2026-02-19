@@ -199,14 +199,14 @@ void Commands::check(const std::string& path) {
     uid = UID(Comments::getSequenceIdFromProgram(program));
   }
   auto seq = ManagedSequence(uid);
-  std::map<UID, int64_t> offsets;
+  std::map<UID, std::string> offsets;
   bool has_offset = false;
   const auto offsets_path =
       SequenceUtil::getSeqsFolder(uid.domain()) + "offsets";
-  if (SequenceList::loadMap(offsets_path, offsets)) {
+  if (SequenceList::loadMapWithComments(offsets_path, offsets)) {
     auto it = offsets.find(uid);
     if (it != offsets.end()) {
-      seq.offset = it->second;
+      seq.offset = std::stoll(it->second);
       has_offset = true;
     }
   }
