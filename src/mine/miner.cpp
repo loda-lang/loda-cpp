@@ -481,6 +481,13 @@ void Miner::submit(const std::string& path, std::string id_str) {
         program = r.program;
         Comments::addComment(program,
                              Comments::PREFIX_MINER_PROFILE + " manual");
+              Comments::addComment(program, Comments::PREFIX_CHANGE_TYPE + " " +
+                                                r.change_type);
+              if (!r.is_new) {
+                Comments::addComment(
+                    program, Comments::PREFIX_PREVIOUS_HASH + " " +
+                                 std::to_string(r.previous_hash));
+              }
         api_client->postProgram(program);
       } else {
         Log::get().info(skip_msg + ": not in client mode");

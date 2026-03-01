@@ -1,10 +1,10 @@
 #include "mine/extender.hpp"
 
-#include "eval/semantics.hpp"
 #include "lang/program_util.hpp"
+#include "math/semantics.hpp"
 #include "sys/util.hpp"
 
-void add_or_sub(Program &p, const Number &c) {
+void add_or_sub(Program& p, const Number& c) {
   if (Number::ZERO < c) {
     p.push_back(Operation::Type::ADD, Operand::Type::DIRECT,
                 Program::OUTPUT_CELL, Operand::Type::CONSTANT, c);
@@ -16,7 +16,7 @@ void add_or_sub(Program &p, const Number &c) {
   }
 }
 
-bool Extender::linear1(Program &p, line_t inverse, line_t target) {
+bool Extender::linear1(Program& p, line_t inverse, line_t target) {
   if (inverse.offset == target.offset && inverse.factor == target.factor) {
     return true;
   }
@@ -47,7 +47,7 @@ bool Extender::linear1(Program &p, line_t inverse, line_t target) {
   return true;
 }
 
-bool Extender::linear2(Program &p, line_t inverse, line_t target) {
+bool Extender::linear2(Program& p, line_t inverse, line_t target) {
   if (inverse.factor == target.factor && inverse.offset == target.offset) {
     return true;
   }
@@ -63,7 +63,7 @@ bool Extender::linear2(Program &p, line_t inverse, line_t target) {
   return true;
 }
 
-bool Extender::delta_one(Program &p, const bool sum) {
+bool Extender::delta_one(Program& p, const bool sum) {
   Settings settings;
   int64_t largest_used = 0;
   if (!ProgramUtil::getUsedMemoryCells(p, nullptr, nullptr, largest_used,
@@ -143,7 +143,7 @@ bool Extender::delta_one(Program &p, const bool sum) {
   return true;
 }
 
-bool Extender::delta_it(Program &p, int64_t delta) {
+bool Extender::delta_it(Program& p, int64_t delta) {
   while (delta < 0) {
     if (!delta_one(p, false)) {
       return false;
@@ -159,7 +159,7 @@ bool Extender::delta_it(Program &p, int64_t delta) {
   return true;
 }
 
-bool Extender::digit(Program &p, int64_t num_digits, int64_t offset) {
+bool Extender::digit(Program& p, int64_t num_digits, int64_t offset) {
   if (offset != 0) {
     add_or_sub(p, offset);
   }

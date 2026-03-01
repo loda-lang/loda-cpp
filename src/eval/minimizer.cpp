@@ -4,9 +4,9 @@
 #include <set>
 
 #include "eval/optimizer.hpp"
-#include "eval/semantics.hpp"
 #include "lang/constants.hpp"
 #include "lang/program_util.hpp"
+#include "math/semantics.hpp"
 #include "sys/file.hpp"
 #include "sys/log.hpp"
 #include "sys/setup.hpp"

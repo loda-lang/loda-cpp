@@ -1,7 +1,7 @@
 #include "eval/evaluator_inc.hpp"
 
-#include "eval/semantics.hpp"
 #include "lang/program_util.hpp"
+#include "math/semantics.hpp"
 #include "sys/log.hpp"
 #include "sys/util.hpp"
 
@@ -173,8 +173,6 @@ bool IncrementalEvaluator::checkPreLoop(bool skip_input_transform,
   return true;
 }
 
-
-
 bool IncrementalEvaluator::checkLoopBody(ErrorCode* error_code) {
   // check loop counter cell
   bool loop_counter_updated = false;
@@ -320,7 +318,7 @@ void IncrementalEvaluator::computeStatefulCells() {
   stateful_cells.clear();
   for (const auto& op : simple_loop.body.ops) {
     const auto target = op.target.value.asInt();
-    if (op.type == Operation::Type::CLR || op.type == Operation::Type::FIL || 
+    if (op.type == Operation::Type::CLR || op.type == Operation::Type::FIL ||
         op.type == Operation::Type::ROL || op.type == Operation::Type::ROR) {
       auto bounds = ProgramUtil::getTargetMemoryRange(op);
       if (bounds.first == Number::INF || bounds.second == Number::INF) {
@@ -332,7 +330,8 @@ void IncrementalEvaluator::computeStatefulCells() {
       int64_t left = bounds.first.asInt();
       int64_t right = bounds.second.asInt();
       for (int64_t i = left; i < right; i++) {
-        if (op.type == Operation::Type::ROL || op.type == Operation::Type::ROR) {
+        if (op.type == Operation::Type::ROL ||
+            op.type == Operation::Type::ROR) {
           read.insert(i);
         }
         if (write.find(i) == write.end()) {

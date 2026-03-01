@@ -1,6 +1,6 @@
-#include "eval/range.hpp"
+#include "math/range.hpp"
 
-#include "eval/semantics.hpp"
+#include "math/semantics.hpp"
 
 Range& Range::operator+=(const Range& r) {
   lower_bound += r.lower_bound;
@@ -249,8 +249,20 @@ void Range::updateGcdBounds(const Range& r) {
 }
 
 void Range::lex(const Range& r) {
+  const auto l1 = lower_bound;
+  const auto u1 = upper_bound;
+  Number min_base = 2;
+  if (r.lower_bound >= 2) {
+      min_base = r.lower_bound;
+      
+  } else if (r.upper_bound <= -2){
+      min_base = Semantics::mul(r.upper_bound, -1);
+  }
   lower_bound = Number::ZERO;
   upper_bound = Number::INF;
+  if (l1 != Number::INF && u1 != Number::INF){
+      upper_bound = Semantics::max(Semantics::log(Semantics::max(Semantics::abs(l1), 1), min_base),Semantics::log(Semantics::max(Semantics::abs(u1), 1), min_base));
+  }
 }
 
 void Range::bin(const Range& r) {
@@ -294,7 +306,14 @@ void Range::log(const Range& r) {
 
 void Range::nrt(const Range& r) {
   // update lower bound
-  lower_bound = Number::ZERO;
+  if (lower_bound > Number::ZERO && r.upper_bound > Number::ZERO) {
+    lower_bound = Semantics::nrt(lower_bound, r.upper_bound);
+    if (lower_bound == Number::INF) {
+      lower_bound = Number::ZERO;
+    }
+  } else {
+    lower_bound = Number::ZERO;
+  }
   // update upper bound
   if (upper_bound >= Number::ZERO && r.lower_bound > Number::ZERO) {
     upper_bound = Semantics::nrt(upper_bound, r.lower_bound);

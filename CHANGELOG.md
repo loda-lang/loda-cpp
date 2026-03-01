@@ -1,10 +1,33 @@
 ## [Unreleased]
 
+# Enhancements
+
+* Support `nrt` operation in LEAN formula generation
+* Improve `lex` range computation
+* Add term limit checks in formula generation to prevent exponential complexity growth
+* Migrate setup configuration from setup.txt to setup.json with automatic conversion
+
+### Bugfixes
+
+* Fix Windows `upgrade` command to download .zip files instead of .exe
+* Improve error messages to show HTTP status codes for failed downloads
+
+## v26.2.14
+
+### Enhancements
+
+* Support `dif`, `dir` and `lex` in formula generation
+* Support `bin` (binomial coefficient) in LEAN formula generation
+* Improve `nrt` range computation
+* Enhance `check` command to verify program offset
+* Add `export-formulas` to release build
+
+## v26.1.25
+
 ### Enhancements
 
 * Optimize formula generation performance
-* Increase physical memory threshold factor and print usage
-* Migrate setup configuration from setup.txt to setup.json with automatic conversion using standard JSON naming conventions (camelCase)
+* Increase default maximum physical memory and print usage
 
 ### Bugfixes
 

@@ -4,8 +4,8 @@
 #include <stdexcept>
 #include <unordered_set>
 
-#include "eval/semantics.hpp"
 #include "lang/program_util.hpp"
+#include "math/semantics.hpp"
 #include "sys/log.hpp"
 
 bool RangeGenerator::init(const Program& program, RangeMap& ranges) {

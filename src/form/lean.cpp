@@ -135,6 +135,29 @@ bool LeanFormula::convertToLean(Expression& expr, int64_t offset,
         expr = Expression(Expression::Type::FUNCTION, "Int.ofNat", {gcdExpr});
         break;
       }
+      // Convert binomial function to LEAN Nat.choose
+      if (expr.name == "binomial") {
+        // binomial requires exactly 2 arguments
+        if (expr.children.size() != 2) {
+          return false;
+        }
+        auto n = expr.children[0];
+        auto k = expr.children[1];
+        // Check if arguments can be negative
+        if (ExpressionUtil::canBeNegative(n, offset) ||
+            ExpressionUtil::canBeNegative(k, offset)) {
+          return false;
+        }
+        // Convert to Nat.choose(Int.toNat(n), Int.toNat(k))
+        Expression toNatN(Expression::Type::FUNCTION, "Int.toNat", {n});
+        Expression toNatK(Expression::Type::FUNCTION, "Int.toNat", {k});
+        Expression choose(Expression::Type::FUNCTION, "Nat.choose",
+                          {toNatN, toNatK});
+        Expression result(Expression::Type::FUNCTION, "Int.ofNat", {choose});
+        expr = result;
+        imports.insert("Mathlib.Data.Nat.Choose.Basic");
+        break;
+      }
       // Convert floor and truncate functions to LEAN equivalents
       if (expr.name == "floor" || expr.name == "truncate") {
         // These functions should have a single FRACTION argument
@@ -159,6 +182,45 @@ bool LeanFormula::convertToLean(Expression& expr, int64_t offset,
       if (!bitfunc.empty()) {
         expr.name = bitfunc;
         imports.insert("Mathlib.Data.Int.Bitwise");
+        break;
+      }
+      // Convert sqrtint and sqrtnint functions
+      if (expr.name == "sqrtint") {
+        // sqrtint(x) -> Int.ofNat (Nat.sqrt (Int.toNat x))
+        if (expr.children.size() != 1) {
+          return false;
+        }
+        auto arg = expr.children[0];
+        if (ExpressionUtil::canBeNegative(arg, offset)) {
+          return false;  // sqrt of negative number not supported
+        }
+        Expression toNat(Expression::Type::FUNCTION, "Int.toNat", {arg});
+        Expression natSqrt(Expression::Type::FUNCTION, "Nat.sqrt", {toNat});
+        Expression ofNat(Expression::Type::FUNCTION, "Int.ofNat", {natSqrt});
+        expr = ofNat;
+        imports.insert("Mathlib.Data.Nat.Sqrt");
+        break;
+      }
+      if (expr.name == "sqrtnint") {
+        // sqrtnint(x, n) -> Int.ofNat (Nat.nthRoot (Int.toNat n) (Int.toNat x))
+        if (expr.children.size() != 2) {
+          return false;
+        }
+        auto base = expr.children[0];
+        auto root = expr.children[1];
+        if (ExpressionUtil::canBeNegative(base, offset)) {
+          return false;  // nth root of negative number not supported
+        }
+        if (ExpressionUtil::canBeNegative(root, offset)) {
+          return false;  // negative root index not supported
+        }
+        // Use Nat.nthRoot from Mathlib
+        Expression baseToNat(Expression::Type::FUNCTION, "Int.toNat", {base});
+        Expression rootToNat(Expression::Type::FUNCTION, "Int.toNat", {root});
+        Expression nthRoot(Expression::Type::FUNCTION, "Nat.nthRoot", {rootToNat, baseToNat});
+        Expression ofNat(Expression::Type::FUNCTION, "Int.ofNat", {nthRoot});
+        expr = ofNat;
+        imports.insert("Mathlib.Data.Nat.NthRoot.Defs");
         break;
       }
       // Allow calls to locally defined functions and sequences
