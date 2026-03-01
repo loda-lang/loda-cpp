@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Bugfixes
+
+* Fix `setup.json` loading
+
 ## v26.3.1
 
 ### Enhancements

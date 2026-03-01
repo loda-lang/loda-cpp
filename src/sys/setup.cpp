@@ -422,12 +422,21 @@ void Setup::loadSetupFromJson() {
     };
 
     // Read known keys
+    read_json_value("apiServer");
+    read_json_value("discordWebhook");
+    read_json_value("forcedSubmitterChecks");
     read_json_value("githubUpdateInterval");
+    read_json_value("influxdbAuth");
+    read_json_value("influxdbHost");
+    read_json_value("isApiServer");
     read_json_value("maxInstances");
     read_json_value("maxPhysicalMemory");
     read_json_value("maxProgramAge");
+    read_json_value("metricsPublishInterval");
     read_json_value("miningMode");
+    read_json_value("oeisFetchDirect");
     read_json_value("oeisUpdateInterval");
+    read_json_value("slackAlerts");
     read_json_value("submittedBy");
     read_json_value("submitCpuHours");
 
@@ -445,12 +454,13 @@ void Setup::saveSetupToJson() {
   jute::jValue json(jute::jType::JOBJECT);
 
   // Known integer keys (after conversion to JSON format)
-  const std::set<std::string> intKeys = {"githubUpdateInterval", "maxInstances",
-                                         "maxPhysicalMemory", "maxProgramAge",
-                                         "oeisUpdateInterval"};
+  const std::set<std::string> intKeys = {
+      "githubUpdateInterval", "maxInstances",           "maxPhysicalMemory",
+      "maxProgramAge",        "metricsPublishInterval", "oeisUpdateInterval"};
 
   // Known boolean keys (after conversion to JSON format)
-  const std::set<std::string> boolKeys = {"submitCpuHours"};
+  const std::set<std::string> boolKeys = {"isApiServer", "oeisFetchDirect",
+                                          "slackAlerts", "submitCpuHours"};
 
   for (const auto& it : SETUP) {
     std::string jsonKey = convertKeyToJson(it.first);
