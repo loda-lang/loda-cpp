@@ -184,6 +184,45 @@ bool LeanFormula::convertToLean(Expression& expr, int64_t offset,
         imports.insert("Mathlib.Data.Int.Bitwise");
         break;
       }
+      // Convert sqrtint and sqrtnint functions
+      if (expr.name == "sqrtint") {
+        // sqrtint(x) -> Int.ofNat (Nat.sqrt (Int.toNat x))
+        if (expr.children.size() != 1) {
+          return false;
+        }
+        auto arg = expr.children[0];
+        if (ExpressionUtil::canBeNegative(arg, offset)) {
+          return false;  // sqrt of negative number not supported
+        }
+        Expression toNat(Expression::Type::FUNCTION, "Int.toNat", {arg});
+        Expression natSqrt(Expression::Type::FUNCTION, "Nat.sqrt", {toNat});
+        Expression ofNat(Expression::Type::FUNCTION, "Int.ofNat", {natSqrt});
+        expr = ofNat;
+        imports.insert("Mathlib.Data.Nat.Sqrt");
+        break;
+      }
+      if (expr.name == "sqrtnint") {
+        // sqrtnint(x, n) -> Int.ofNat (Nat.nthRoot (Int.toNat n) (Int.toNat x))
+        if (expr.children.size() != 2) {
+          return false;
+        }
+        auto base = expr.children[0];
+        auto root = expr.children[1];
+        if (ExpressionUtil::canBeNegative(base, offset)) {
+          return false;  // nth root of negative number not supported
+        }
+        if (ExpressionUtil::canBeNegative(root, offset)) {
+          return false;  // negative root index not supported
+        }
+        // Use Nat.nthRoot from Mathlib
+        Expression baseToNat(Expression::Type::FUNCTION, "Int.toNat", {base});
+        Expression rootToNat(Expression::Type::FUNCTION, "Int.toNat", {root});
+        Expression nthRoot(Expression::Type::FUNCTION, "Nat.nthRoot", {rootToNat, baseToNat});
+        Expression ofNat(Expression::Type::FUNCTION, "Int.ofNat", {nthRoot});
+        expr = ofNat;
+        imports.insert("Mathlib.Data.Nat.NthRoot.Defs");
+        break;
+      }
       // Allow calls to locally defined functions and sequences
       if (isLocalOrSeqFunc(expr.name)) {
         // When domain is Nat, wrap arguments with Int.toNat to convert Int to

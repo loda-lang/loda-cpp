@@ -1,5 +1,6 @@
 ## [Unreleased]
 
+* Support `nrt` operation in LEAN formula generation
 * Improve `lex` range computation
 * Add term limit checks in formula generation to prevent exponential complexity growth (e.g., A042269)
 
