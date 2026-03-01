@@ -2,7 +2,7 @@
 
 ## v26.3.1
 
-# Enhancements
+### Enhancements
 
 * Support `nrt` operation in LEAN formula generation
 * Improve `lex` range computation
