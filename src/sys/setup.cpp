@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <set>
 #include <sstream>
 #include <thread>
 
@@ -182,7 +183,8 @@ void Setup::cloneProgramsHome(const std::string& git_url) {
 }
 
 bool Setup::pullProgramsHome(bool fail_on_error) {
-  std::string args =  "pull origin main -q --depth=" + std::to_string(Setup::NUM_COMMITS_FOR_PROGRAMS);
+  std::string args = "pull origin main -q --depth=" +
+                     std::to_string(Setup::NUM_COMMITS_FOR_PROGRAMS);
   return Git::git(getProgramsHome(), args, fail_on_error);
 }
 
@@ -392,7 +394,7 @@ void Setup::loadSetup() {
 
 void Setup::loadSetupFromJson() {
   const std::string setup_json = getLodaHomeNoCheck() + "setup.json";
-  
+
   if (!isFile(setup_json)) {
     return;
   }
@@ -405,12 +407,12 @@ void Setup::loadSetupFromJson() {
     auto read_json_value = [&](const std::string& jsonKey) {
       auto val = json[jsonKey];
       auto type = val.get_type();
-      
+
       // Skip if key doesn't exist (JUNKNOWN or JNULL)
       if (type == jute::jType::JUNKNOWN || type == jute::jType::JNULL) {
         return;
       }
-      
+
       std::string lodaKey = convertKeyFromJson(jsonKey);
       if (type == jute::jType::JSTRING || type == jute::jType::JNUMBER) {
         SETUP[lodaKey] = val.as_string();
@@ -430,22 +432,48 @@ void Setup::loadSetupFromJson() {
     read_json_value("submitCpuHours");
 
   } catch (const std::exception& e) {
-    Log::get().error("Error parsing setup.json: " + std::string(e.what()), true);
+    Log::get().error("Error parsing setup.json: " + std::string(e.what()),
+                     true);
   }
 }
 
-void Setup::saveSetup() {
-  saveSetupToJson();
-}
+void Setup::saveSetup() { saveSetupToJson(); }
 
 void Setup::saveSetupToJson() {
   const std::string setup_json = getLodaHome() + "setup.json";
 
   jute::jValue json(jute::jType::JOBJECT);
 
+  // Known integer keys (after conversion to JSON format)
+  const std::set<std::string> intKeys = {"githubUpdateInterval", "maxInstances",
+                                         "maxPhysicalMemory", "maxProgramAge",
+                                         "oeisUpdateInterval"};
+
+  // Known boolean keys (after conversion to JSON format)
+  const std::set<std::string> boolKeys = {"submitCpuHours"};
+
   for (const auto& it : SETUP) {
     std::string jsonKey = convertKeyToJson(it.first);
-    json.set_property_string(jsonKey, it.second);
+    const std::string& value = it.second;
+
+    // Check if this is an integer field
+    if (intKeys.find(jsonKey) != intKeys.end()) {
+      jute::jValue numValue(jute::jType::JNUMBER);
+      numValue.set_string(value);
+      json.add_property(jsonKey, numValue);
+    }
+    // Check if this is a boolean field (yes/no format)
+    else if (boolKeys.find(jsonKey) != boolKeys.end()) {
+      jute::jValue boolValue(jute::jType::JBOOLEAN);
+      boolValue.set_string((value == "yes" || value == "true" || value == "1")
+                               ? "true"
+                               : "false");
+      json.add_property(jsonKey, boolValue);
+    }
+    // Otherwise, store as string
+    else {
+      json.set_property_string(jsonKey, value);
+    }
   }
 
   std::ofstream out(setup_json);
@@ -668,10 +696,10 @@ void Setup::performUpgrade(const std::string& new_version, bool silent) {
   const std::string exec_local = getExecutable("");
 #ifdef _WIN64
   // Windows: download ZIP file and extract it
-  const std::string zip_file = getLodaHome() + "bin" + FILE_SEP + 
-                                "loda-" + Version::PLATFORM + ".zip";
-  const std::string extract_dir = getLodaHome() + "bin" + FILE_SEP + 
-                                   "loda-" + Version::PLATFORM;
+  const std::string zip_file =
+      getLodaHome() + "bin" + FILE_SEP + "loda-" + Version::PLATFORM + ".zip";
+  const std::string extract_dir =
+      getLodaHome() + "bin" + FILE_SEP + "loda-" + Version::PLATFORM;
   const std::string zip_url =
       "https://github.com/loda-lang/loda-cpp/releases/download/" + new_version +
       "/loda-" + Version::PLATFORM + ".zip";
@@ -683,8 +711,8 @@ void Setup::performUpgrade(const std::string& new_version, bool silent) {
   // Download the ZIP file
   WebClient::get(zip_url, zip_file, true, true);
   // Extract using PowerShell's Expand-Archive
-  const std::string extract_cmd = 
-      "powershell -Command \"Expand-Archive -Path \\\"" + zip_file + 
+  const std::string extract_cmd =
+      "powershell -Command \"Expand-Archive -Path \\\"" + zip_file +
       "\\\" -DestinationPath \\\"" + getLodaHome() + "bin\\\" -Force\"";
   if (!execCmd(extract_cmd, false)) {
     std::remove(zip_file.c_str());

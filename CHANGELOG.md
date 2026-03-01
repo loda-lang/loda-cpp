@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+## v26.3.1
+
 # Enhancements
 
 * Support `nrt` operation in LEAN formula generation
