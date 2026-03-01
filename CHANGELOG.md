@@ -1,8 +1,11 @@
 ## [Unreleased]
 
+# Enhancements
+
 * Support `nrt` operation in LEAN formula generation
 * Improve `lex` range computation
-* Add term limit checks in formula generation to prevent exponential complexity growth (e.g., A042269)
+* Add term limit checks in formula generation to prevent exponential complexity growth
+* Migrate setup configuration from setup.txt to setup.json with automatic conversion
 
 ### Bugfixes
 

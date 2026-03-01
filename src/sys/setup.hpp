@@ -110,6 +110,9 @@ class Setup {
                            const std::string& comment, bool must_have);
   static void loadSetup();
   static void saveSetup();
+  static void loadSetupFromJson();
+  static void saveSetupToJson();
+  static void migrateSetupTxtToJson();
 
   static void checkLodaHome();
   static bool checkProgramsHome();
