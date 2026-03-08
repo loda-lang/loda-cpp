@@ -3,6 +3,7 @@
 ### Bugfixes
 
 * Fix `setup.json` loading
+* Reduce unnecessary JSON escaping
 
 ## v26.3.1
 

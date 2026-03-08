@@ -18,8 +18,6 @@ string serialize(const string& str) {
       out += "\\\"";
     } else if (c == '\\') {
       out += "\\\\";
-    } else if (c == '/') {
-      out += "\\/";
     } else if (c == '\b') {
       out += "\\b";
     } else if (c == '\f') {
