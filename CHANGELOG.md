@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+## v26.3.10
+
 ### Bugfixes
 
 * Fix `setup.json` loading
