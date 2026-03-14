@@ -2,6 +2,7 @@
 
 ### Bugfixes
 
+* Linux build: GLIBC 2.31 compatibility
 * Update memory settings and fix inconsistencies
 
 ## v26.3.10
