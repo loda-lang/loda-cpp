@@ -935,10 +935,10 @@ bool Setup::checkUsageStats() {
 
 bool Setup::checkMaxMemory() {
   std::string line;
-  std::cout << "Enter the maximum memory usage per miner instance in MB."
+  std::cout << "Enter the maximum memory usage per miner instance in MiB."
             << std::endl
             << "The recommended range is " << DEFAULT_MAX_PHYSICAL_MEMORY
-            << " - " << (DEFAULT_MAX_PHYSICAL_MEMORY * 2) << " MB."
+            << " - " << (DEFAULT_MAX_PHYSICAL_MEMORY * 2) << " MiB."
             << std::endl;
   int64_t max_memory = getMaxMemory() / (1024 * 1024);
   std::cout << "[" << max_memory << "] ";

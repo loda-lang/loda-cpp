@@ -379,7 +379,7 @@ std::string formatDuration(int64_t microseconds) {
 }
 
 std::string formatBytes(size_t bytes) {
-  static const char* kUnits[] = {"B", "KB", "MB", "GB", "TB", "PB"};
+  static const char* kUnits[] = {"B", "KiB", "MiB", "GiB", "TiB", "PiB"};
   size_t unit_index = 0;
   double value = static_cast<double>(bytes);
   while (value >= 1024.0 &&

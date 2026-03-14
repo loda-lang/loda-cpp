@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Bugfixes
+
+* Update memory settings and fix inconsistencies
+
 ## v26.3.10
 
 ### Bugfixes
