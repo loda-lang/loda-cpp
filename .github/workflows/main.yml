@@ -17,7 +17,7 @@ jobs:
       - name: Install dependencies
         run: |
           apt-get update
-          DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential libcurl4-openssl-dev zlib1g-dev curl
+          DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential libcurl4-openssl-dev zlib1g-dev curl git
       - name: Build
         run: cd src && make -f Makefile.linux-x86.mk
       - name: Install external tools
