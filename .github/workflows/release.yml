@@ -49,7 +49,7 @@ jobs:
       - name: Install dependencies
         run: |
           apt-get update
-          DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential libcurl4-openssl-dev
+          DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential libcurl4-openssl-dev zlib1g-dev
       - name: Build
         run: cd src && make -f Makefile.linux-x86.mk loda LODA_PLATFORM=linux-x86 LODA_VERSION=${{ needs.create-release.outputs.version }}
       - name: Upload
@@ -71,7 +71,7 @@ jobs:
       - name: Install dependencies
         run: |
           apt-get update
-          DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential libcurl4-openssl-dev
+          DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential libcurl4-openssl-dev zlib1g-dev
       - name: Build
         run: cd src && make -f Makefile.linux-arm64.mk loda LODA_PLATFORM=linux-arm64 LODA_VERSION=${{ needs.create-release.outputs.version }}
       - name: Upload
