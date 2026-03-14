@@ -22,8 +22,8 @@ jobs:
         run: cd src && make -f Makefile.linux-x86.mk
       - name: Install external tools
         run: |
-          sudo apt-get update
-          sudo apt-get install pari-gp
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y pari-gp
           # Install Lean 4 via elan (official installer)
           curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y
           source ~/.elan/env
