@@ -149,8 +149,8 @@ std::string PariFormula::toString() const {
       // Multiple functions: use newline separator and no brackets
       return main_formula.toString("\n", false);
     } else {
-      // Single function: use semicolon separator with brackets (original behavior)
-      return main_formula.toString("; ", true);
+      // Single function: no separator needed (single entry)
+      return main_formula.toString("", false);
     }
   }
 }
