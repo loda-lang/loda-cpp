@@ -17,7 +17,7 @@ jobs:
       - name: Install dependencies
         run: |
           apt-get update
-          DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential libcurl4-openssl-dev zlib1g-dev
+          DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential libcurl4-openssl-dev zlib1g-dev curl
       - name: Build
         run: cd src && make -f Makefile.linux-x86.mk
       - name: Install external tools
@@ -26,7 +26,7 @@ jobs:
           DEBIAN_FRONTEND=noninteractive apt-get install -y pari-gp
           # Install Lean 4 via elan (official installer)
           curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y
-          source ~/.elan/env
+          . ~/.elan/env
           echo "$HOME/.elan/bin" >> $GITHUB_PATH
           gp --version
           lean --version

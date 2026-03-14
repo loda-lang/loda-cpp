@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+## v26.3.14
+
 ### Bugfixes
 
 * Linux build: GLIBC 2.31 compatibility
