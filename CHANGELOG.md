@@ -4,6 +4,10 @@
 
 * Update memory settings and fix inconsistencies
 
+### Enhancements
+
+* Use multi-line output for PARI/GP formulas
+
 ## v26.3.10
 
 ### Bugfixes
