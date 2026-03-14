@@ -1,5 +1,11 @@
 CXXFLAGS += -I. -g -Wall -Werror -fmessage-length=0 -std=c++17
 
+# Default curl libs for dynamic linking (can be overridden by platform-specific makefiles)
+CURL_LIBS ?= -lcurl
+
+# zlib for gzip decompression
+ZLIB_LIBS ?= -lz
+
 ifdef LODA_VERSION
 CXXFLAGS += -DLODA_VERSION=$(LODA_VERSION)
 endif
@@ -10,25 +16,25 @@ endif
 
 OBJS = base/uid.o \
   cmd/benchmark.o cmd/boinc.o cmd/commands.o cmd/main.o cmd/test.o \
-  eval/evaluator.o eval/evaluator_inc.o eval/evaluator_par.o eval/evaluator_vir.o eval/fold.o eval/interpreter.o eval/memory.o eval/minimizer.o eval/optimizer.o eval/range.o eval/range_generator.o eval/semantics.o \
-  form/expression_util.o form/expression.o form/formula_gen.o form/formula_parser.o form/formula_simplify.o form/formula_util.o form/formula.o form/lean.o form/pari.o form/variant.o \
+  eval/evaluator.o eval/evaluator_inc.o eval/evaluator_par.o eval/evaluator_vir.o eval/fold.o eval/interpreter.o eval/memory.o eval/minimizer.o eval/optimizer.o eval/range_generator.o \
+  form/expression_util.o form/expression.o form/formula_gen.o form/formula_parser.o form/formula_simplify.o form/formula_util.o form/formula.o form/function.o form/lean.o form/pari.o form/recursion.o form/variant.o \
   gen/blocks.o gen/generator.o gen/generator_v1.o gen/generator_v2.o gen/generator_v3.o gen/generator_v4.o gen/generator_v5.o gen/generator_v6.o gen/generator_v7.o gen/generator_v8.o gen/iterator.o \
   lang/analyzer.o lang/comments.o lang/constants.o lang/parser.o lang/program.o lang/program_cache.o lang/program_util.o lang/subprogram.o lang/virtual_seq.o \
-  math/big_number.o math/number.o math/sequence.o \
-  mine/api_client.o mine/checker.o mine/config.o mine/distribution.o mine/extender.o mine/finder.o mine/invalid_matches.o mine/matcher.o mine/mine_manager.o mine/miner.o mine/mutator.o mine/reducer.o mine/stats.o \
+  math/big_number.o math/number.o math/range.o math/semantics_number.o math/sequence.o \
+  mine/api_client.o mine/checker.o mine/config.o mine/distribution.o mine/extender.o mine/finder.o mine/invalid_matches.o mine/matcher.o mine/mine_manager.o mine/miner.o mine/mutator.o mine/program_change_log.o mine/reducer.o mine/stats.o mine/submission.o \
   seq/managed_seq.o seq/seq_index.o seq/seq_list.o seq/seq_loader.o seq/seq_program.o seq/seq_util.o \
-  sys/csv.o sys/file.o sys/git.o sys/jute.o sys/log.o sys/metrics.o sys/process.o sys/setup.o sys/util.o sys/web_client.o
+  sys/csv.o sys/file.o sys/git.o sys/gzip.o sys/jute.o sys/log.o sys/metrics.o sys/process.o sys/setup.o sys/util.o sys/web_client.o
 
 loda: CXXFLAGS += -O2
 loda: $(OBJS)
-	$(CXX) $(LDFLAGS) -o loda $(OBJS)
+	$(CXX) $(LDFLAGS) -o loda $(OBJS) $(CURL_LIBS) $(ZLIB_LIBS)
 	[ -L ../loda ] || ( cd .. && ln -s src/loda loda )
 	du -sh loda
 
 coverage: CXXFLAGS += -O0 -fprofile-arcs -ftest-coverage
 coverage: LDFLAGS += --coverage
 coverage: $(OBJS)
-	$(CXX) $(LDFLAGS) -o loda $(OBJS)
+	$(CXX) $(LDFLAGS) -o loda $(OBJS) $(CURL_LIBS) $(ZLIB_LIBS)
 	[ -L ../loda ] || ( cd .. && ln -s src/loda loda )
 	cd .. && ./loda test && cd src
 	gcov $(OBJS:.o=.cpp)

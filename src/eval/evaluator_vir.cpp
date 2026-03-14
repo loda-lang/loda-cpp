@@ -26,7 +26,7 @@ int64_t extractEmbedded(Program &refactored, Program &extracted, UID vid,
       Operation(Operation::Type::SEQ,
                 Operand(Operand::Type::DIRECT, Number(info.output_cell)),
                 Operand(Operand::Type::CONSTANT, Number(vid.castToInt())));
-  overhead -= 1;  // account for the seq operation
+  overhead -= 1; // account for the seq operation
   // move the result to the output cell
   if (info.input_cell != info.output_cell) {
     refactored.ops.insert(
@@ -34,7 +34,7 @@ int64_t extractEmbedded(Program &refactored, Program &extracted, UID vid,
         Operation(Operation::Type::MOV,
                   Operand(Operand::Type::DIRECT, Number(info.output_cell)),
                   Operand(Operand::Type::DIRECT, Number(info.input_cell))));
-    overhead -= 1;  // account for the mov operation
+    overhead -= 1; // account for the mov operation
   }
 
   // update the input cell in the extracted program
@@ -53,12 +53,18 @@ int64_t extractEmbedded(Program &refactored, Program &extracted, UID vid,
     extracted.push_back(Operation::Type::MOV, Operand::Type::DIRECT,
                         Number(Program::OUTPUT_CELL), Operand::Type::DIRECT,
                         Number(info.output_cell));
-    overhead -= 1;  // account for the mov operation
+    overhead -= 1; // account for the mov operation
   }
   return overhead;
 }
 
 bool VirtualEvaluator::init(const Program &p) {
+  // If program has memory operations, do not init the evaluator.
+  for (auto i : p.ops) {
+    if (ProgramUtil::isWritingRegion(i.type)) {
+      return false;
+    }
+  }
   interpreter.clearCaches();
   refactored = p;
   auto vid = UID('V', 1);

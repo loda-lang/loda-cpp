@@ -28,5 +28,6 @@ class SequenceUtil {
                                           const std::string& resultPath,
                                           const std::vector<std::string>& args,
                                           int timeoutSeconds, Sequence& result,
-                                          const std::string& workingDir = "");
+                                          const std::string& workingDir = "",
+                                          const std::string& stdinContent = "");
 };

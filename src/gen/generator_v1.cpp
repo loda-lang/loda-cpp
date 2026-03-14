@@ -9,16 +9,16 @@
 
 #include "eval/interpreter.hpp"
 #include "eval/optimizer.hpp"
-#include "eval/semantics.hpp"
 #include "lang/parser.hpp"
 #include "lang/program_util.hpp"
+#include "math/semantics.hpp"
 #include "mine/distribution.hpp"
 #include "mine/stats.hpp"
 #include "sys/log.hpp"
 
 #define POSITION_RANGE 100
 
-GeneratorV1::GeneratorV1(const Config &config, const Stats &stats)
+GeneratorV1::GeneratorV1(const Config& config, const Stats& stats)
     : Generator(config, stats), current_template(0), mutator(stats) {
   // the post processing adds operations, so we reduce the target length here
   num_operations = std::max<int64_t>(config.length / 2, 1);
@@ -26,7 +26,7 @@ GeneratorV1::GeneratorV1(const Config &config, const Stats &stats)
 
   // add operation types
   for (auto t : Operation::Types) {
-    auto &metadata = Operation::Metadata::get(t);
+    auto& metadata = Operation::Metadata::get(t);
     if (!metadata.is_public || t == Operation::Type::LPE) {
       continue;
     }
@@ -67,15 +67,15 @@ GeneratorV1::GeneratorV1(const Config &config, const Stats &stats)
   // load program templates
   Parser parser;
   Program p;
-  for (const auto &t : config.templates) {
+  for (const auto& t : config.templates) {
     try {
       p = parser.parse(t);
       ProgramUtil::removeOps(p, Operation::Type::NOP);
-      for (auto &op : p.ops) {
+      for (auto& op : p.ops) {
         op.comment.clear();
       }
       templates.push_back(p);
-    } catch (const std::exception &) {
+    } catch (const std::exception&) {
       Log::get().warn("Cannot load template (ignoring): " + t);
     }
   }
@@ -83,7 +83,7 @@ GeneratorV1::GeneratorV1(const Config &config, const Stats &stats)
   // initialize distributions
   constants.resize(stats.num_constants.size());
   size_t i = 0;
-  for (const auto &c : stats.num_constants) {
+  for (const auto& c : stats.num_constants) {
     constants[i++] = c.first;
   }
 

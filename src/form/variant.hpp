@@ -27,7 +27,8 @@ class Variant {
 class VariantsManager {
  public:
   VariantsManager(const Formula& formula,
-                  const std::map<std::string, int64_t>& num_initial_terms);
+                  const std::map<std::string, int64_t>& num_initial_terms,
+                  int64_t max_initial_terms = -1);
 
   bool update(Variant new_variant);
 
@@ -39,7 +40,10 @@ class VariantsManager {
   void collectFuncs(Variant& variant) const;
 
   void collectFuncs(Variant& variant, const Expression& expr) const;
+
+  int64_t max_initial_terms_;
 };
 
 bool simplifyFormulaUsingVariants(
-    Formula& formula, std::map<std::string, int64_t>& num_initial_terms);
+    Formula& formula, std::map<std::string, int64_t>& num_initial_terms,
+    int64_t max_initial_terms = -1);

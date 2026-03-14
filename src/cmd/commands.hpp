@@ -67,6 +67,8 @@ class Commands {
 
   void testRange(const std::string& id);
 
+  void testRecursion(const std::string& id);
+
   void generate();
 
   void migrate();
@@ -77,7 +79,7 @@ class Commands {
 
   void benchmark();
 
-  void findSlow(int64_t num_terms, const std::string& type);
+  void findSlowPrograms(int64_t num_terms, const std::string& type);
 
   void findSlowFormulas();
 
@@ -91,9 +93,13 @@ class Commands {
 
   void addToList(const std::string& seq_id, const std::string& list_filename);
 
+  void exportFormulas(const std::string& output_file);
+
   void commitAddedPrograms(size_t min_commit_count = 5);
 
   void commitUpdatedAndDeletedPrograms();
+
+  void updateFormulaTests();
 
  private:
   const Settings& settings;

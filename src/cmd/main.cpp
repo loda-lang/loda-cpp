@@ -183,6 +183,14 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
   else if (cmd == "boinc") {
     commands.boinc();
   }
+  // hidden export-formulas command
+  else if (cmd == "export-formulas") {
+    std::string output_file;
+    if (args.size() > 1) {
+      output_file = args.at(1);
+    }
+    commands.exportFormulas(output_file);
+  }
 #ifdef _WIN64
   // hidden helper command for updates on windows
   else if (cmd == "update-windows-executable") {
@@ -246,6 +254,12 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
       id = args.at(1);
     }
     commands.testRange(id);
+  } else if (cmd == "test-recursion") {
+    std::string id;
+    if (args.size() > 1) {
+      id = args.at(1);
+    }
+    commands.testRecursion(id);
   } else if (cmd == "generate" || cmd == "gen") {
     commands.generate();
   } else if (cmd == "migrate") {
@@ -260,12 +274,12 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
     commands.iterate(args.at(1));
   } else if (cmd == "benchmark") {
     commands.benchmark();
-  } else if (cmd == "find-slow") {
+  } else if (cmd == "find-slow-programs") {
     std::string type;
     if (args.size() > 1) {
       type = args.at(1);
     }
-    commands.findSlow(settings.num_terms, type);
+    commands.findSlowPrograms(settings.num_terms, type);
   } else if (cmd == "find-slow-formulas") {
     commands.findSlowFormulas();
   } else if (cmd == "find-embseqs") {
@@ -303,6 +317,8 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
     commands.commitAddedPrograms(min_commit_count);
   } else if (cmd == "update-programs") {
     commands.commitUpdatedAndDeletedPrograms();
+  } else if (cmd == "update-formula-tests") {
+    commands.updateFormulaTests();
   }
 #endif
   // unknown command

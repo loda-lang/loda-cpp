@@ -9,6 +9,7 @@
 #include "sys/log.hpp"
 #include "sys/process.hpp"
 #include "sys/setup.hpp"
+#include "sys/util.hpp"
 
 const size_t SequenceUtil::DEFAULT_SEQ_LENGTH = 80;  // magic number
 
@@ -52,11 +53,87 @@ std::string SequenceUtil::getSeqsFolder(char domain) {
   return Setup::getSeqsHome() + folder + FILE_SEP;
 }
 
+// Helper struct to hold parsed output from external tools
+struct ParsedToolOutput {
+  std::string errorMsg;    // Contains concatenated error lines (with "***")
+  Sequence numericValues;  // Parsed numeric results
+  bool hasError() const { return !errorMsg.empty(); }
+};
+
+// Detect obvious error markers from external tools (PARI: "***", Lean: "error")
+static bool looksLikeErrorLine(const std::string& line) {
+  std::string lowered = line;
+  std::transform(
+      lowered.begin(), lowered.end(), lowered.begin(),
+      [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+  return (line.find("***") != std::string::npos) ||
+         (lowered.find("error") != std::string::npos);
+}
+
+// Helper function to parse tool output file, extracting both errors and numbers
+static ParsedToolOutput parseToolOutput(
+    const std::string& resultPath, const std::string& ignoredPrefix = "") {
+  ParsedToolOutput result;
+  std::ifstream resultFile(resultPath);
+  if (!resultFile) {
+    return result;  // Return empty result if file cannot be opened
+  }
+
+  std::string line;
+  bool inError =
+      false;  // once set, all following lines are treated as error text
+  while (std::getline(resultFile, line)) {
+    // Skip empty lines
+    if (line.empty()) {
+      continue;
+    }
+
+    // Calculate firstNonSpace and trimmed once for reuse
+    size_t firstNonSpace = line.find_first_not_of(" \t");
+    if (firstNonSpace == std::string::npos) {
+      continue;  // Skip whitespace-only lines
+    }
+    std::string trimmed = line.substr(firstNonSpace);
+
+    // Skip lines with the ignored prefix if specified
+    if (!ignoredPrefix.empty() &&
+        startsWithIgnoreCase(trimmed, ignoredPrefix)) {
+      continue;
+    }
+
+    bool currentError = inError || looksLikeErrorLine(line);
+
+    // Try to parse as a number only if we are not already in error mode and
+    // the current line does not look like an explicit error
+    if (!currentError) {
+      try {
+        result.numericValues.push_back(Number(trimmed));
+        continue;  // successfully parsed numeric output
+      } catch (...) {
+        currentError = true;
+        line = "Non-numeric line: " + trimmed;
+      }
+    }
+
+    // Record error line and switch to error mode for the rest of the file
+    if (currentError) {
+      if (!result.errorMsg.empty()) {
+        result.errorMsg += "\n";
+      }
+      result.errorMsg += line;
+      inError = true;
+    }
+  }
+  resultFile.close();
+
+  return result;
+}
+
 bool SequenceUtil::evalFormulaWithExternalTool(
     const std::string& evalCode, const std::string& toolName,
     const std::string& toolPath, const std::string& resultPath,
     const std::vector<std::string>& args, int timeoutSeconds, Sequence& result,
-    const std::string& workingDir) {
+    const std::string& workingDir, const std::string& stdinContent) {
   // write tool file
   std::ofstream toolFile(toolPath);
   if (!toolFile) {
@@ -65,48 +142,53 @@ bool SequenceUtil::evalFormulaWithExternalTool(
   toolFile << evalCode;
   toolFile.close();
 
-  int exitCode = execWithTimeout(args, timeoutSeconds, resultPath, workingDir);
+  int exitCode = execWithTimeout(args, timeoutSeconds, resultPath, workingDir,
+                                 stdinContent);
 
-  if (exitCode != 0) {
-    // Try to read error message from result file before removing it
-    std::string errorMsg;
-    std::ifstream errorIn(resultPath);
-    if (errorIn) {
-      std::string line;
-      while (std::getline(errorIn, line) && errorMsg.size() < 500) {
-        if (!errorMsg.empty()) errorMsg += "; ";
-        errorMsg += line;
-      }
-      errorIn.close();
-    }
+  // Determine ignored prefix based on tool name
+  // LEAN outputs "info:" messages that should be ignored
+  std::string ignoredPrefix = (toolName == "LEAN") ? "info:" : "";
+
+  // Parse the output file for both errors and numeric values
+  auto parsed = parseToolOutput(resultPath, ignoredPrefix);
+
+  // Handle timeouts
+  if (exitCode == PROCESS_ERROR_TIMEOUT) {
     std::remove(resultPath.c_str());
-    if (exitCode == PROCESS_ERROR_TIMEOUT) {
-      return false;  // timeout
-    } else {
-      std::string fullMsg = "Error evaluating " + toolName +
-                            " code: tool exited with code " +
-                            std::to_string(exitCode);
-      if (!errorMsg.empty()) {
-        fullMsg += " (" + errorMsg + ")";
-      }
-      Log::get().error(fullMsg, true);
+    return false;
+  }
+
+  // Handle non-zero exit codes
+  if (exitCode != 0) {
+    std::remove(resultPath.c_str());
+    std::string fullMsg = "Error evaluating " + toolName +
+                          " code: tool exited with code " +
+                          std::to_string(exitCode);
+    if (parsed.hasError()) {
+      fullMsg += ": " + parsed.errorMsg;
     }
+    Log::get().error(fullMsg, true);
   }
 
-  // read result from file
-  result.clear();
-  std::ifstream resultIn(resultPath);
-  std::string buf;
-  if (!resultIn) {
-    Log::get().error("Error reading " + toolName + " output", true);
-  }
-  while (std::getline(resultIn, buf)) {
-    result.push_back(Number(buf));
+  // Handle parsing errors (e.g., non-numeric output)
+  if (parsed.hasError()) {
+    std::remove(resultPath.c_str());
+    Log::get().error(
+        "Error parsing " + toolName + " output: " + parsed.errorMsg, true);
   }
 
-  // clean up temporary files
+  // Handle no numeric output
+  if (parsed.numericValues.empty()) {
+    std::remove(resultPath.c_str());
+    Log::get().error("Error parsing " + toolName + " output: no numeric output",
+                     true);
+  }
+
+  // Clean up temporary files
   std::remove(toolPath.c_str());
   std::remove(resultPath.c_str());
 
+  // Copy results to output parameter
+  result = parsed.numericValues;
   return true;
 }

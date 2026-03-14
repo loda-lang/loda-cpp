@@ -8,14 +8,14 @@
 
 Blocks::Interface::Interface() {}
 
-Blocks::Interface::Interface(const Program &p) {
-  for (auto &op : p.ops) {
+Blocks::Interface::Interface(const Program& p) {
+  for (auto& op : p.ops) {
     extend(op);
   }
 }
 
-void Blocks::Interface::extend(const Operation &op) {
-  auto &meta = Operation::Metadata::get(op.type);
+void Blocks::Interface::extend(const Operation& op) {
+  auto& meta = Operation::Metadata::get(op.type);
   if (meta.num_operands > 0 && op.target.type == Operand::Type::DIRECT) {
     if (meta.is_reading_target) {
       inputs.insert(op.target.value.asInt());
@@ -38,7 +38,7 @@ void Blocks::Interface::clear() {
   all.clear();
 }
 
-void Blocks::Collector::add(const Program &p) {
+void Blocks::Collector::add(const Program& p) {
   interface.clear();
   Program block;
   for (auto op : p.ops) {
@@ -112,13 +112,13 @@ Blocks Blocks::Collector::finalize() {
 
 bool Blocks::Collector::empty() const { return blocks.empty(); }
 
-void Blocks::load(const std::string &path) {
+void Blocks::load(const std::string& path) {
   Parser parser;
   list = parser.parse(path);
   initRatesAndOffsets();
 }
 
-void Blocks::save(const std::string &path) {
+void Blocks::save(const std::string& path) {
   std::ofstream out(path);
   ProgramUtil::print(list, out);
 }

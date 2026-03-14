@@ -89,16 +89,61 @@ Automated formula generation from LODA programs is used to find closed-form or r
 - [Formula](../src/form/formula.hpp): Encapsulates a complete formula, including recurrence relations and initial terms.
 - [FormulaGenerator](../src/form/formula_gen.hpp): Converts a LODA program into a formula.
 
+## Fetching LODA Programs
+
+Many bugs and issues in LODA are specific to certain OEIS sequences and their programs. When working on issue analysis or bug reproduction, you often need to fetch LODA programs by their sequence IDs. There are two main approaches:
+
+### Using the LODA MCP Server (Recommended for Quick Access)
+
+The LODA MCP server provides direct access to programs without any local setup. This is the fastest and most convenient method for issue analysis and debugging.
+
+**Example**: Fetch program A000045 (Fibonacci numbers)
+```
+Use the loda-get_program_details tool with id: "A000045"
+```
+
+This returns the complete program code, metadata, and usage information immediately. Use this approach when:
+- Quickly investigating a bug or issue
+- Examining specific program code during debugging
+- No local LODA environment is set up
+- You need to inspect programs from different sequences
+
+### Using Local LODA Commands (For Extensive Work)
+
+For extensive testing, development, or when you need to work with many programs locally, set up a local LODA environment.
+
+**Setup** (one-time, required before using local commands):
+1. Build the LODA executable: `cd src && make -f Makefile.linux-x86.mk` (or the appropriate Makefile for your platform)
+2. Run setup: `./loda setup` 
+   - Accept default location (`$HOME/loda`)
+   - This clones the loda-programs repository (~650MB) to `$HOME/loda/programs`
+   - Choose "Local Mode" for mining (option 1)
+   - Skip advanced settings
+
+**After setup**, you can use the `export` command:
+- Get program code: `./loda export A000045 -o loda`
+- Get formula: `./loda export A000045 -o formula`
+- Get PARI/GP code: `./loda export A000045 -o pari-function`
+- Evaluate sequence: `./loda eval A000045`
+
+Programs are stored locally at `$HOME/loda/programs/oeis/XXX/AXXXXXX.asm` (where XXX is the first 3 digits of the sequence ID).
+
+Use this approach when:
+- Working on extensive changes requiring many programs
+- Testing the export/eval commands themselves
+- Working offline or need faster repeated access
+- Adding programs to the test directory structure
+
 ## Common Tasks
 
-### Adding a New Command
+### Adding Commands
 
 1. Declare the command in [cmd/commands.hpp](../src/cmd/commands.hpp).
 2. Implement it in [cmd/commands.cpp](../src/cmd/commands.cpp).
 3. Add command-line parsing in [cmd/main.cpp](../src/cmd/main.cpp).
 4. For official commands only: update help text in `Commands::help()` and [README.md](../README.md).
 
-### Adding a New Operation Type
+### Adding Operation Types
 
 1. Add the new operation type to the relevant enums, declarations and metadata in [lang/program.hpp](../src/lang/program.hpp) and [lang/program.cpp](../src/lang/program.cpp).
 2. For arithmetic operations, implement the behavior in the [Semantics](../src/eval/semantics.cpp).
@@ -110,6 +155,61 @@ Automated formula generation from LODA programs is used to find closed-form or r
 5. Create a CSV file in `tests/semantics/<opcode>.csv` containing test cases (three columns: operand1, operand2, expected result).
 6. Run the fast test suite: `./loda test-fast` to verify correctness.
 7. If static code optimizations are possible for the new operation, extend [eval/optimizer.cpp](../src/eval/optimizer.cpp). Add relevant `.asm` test files to `tests/optimizer`.
+
+### Adding Formula Tests
+
+Formula tests verify that the formula generation process correctly converts LODA programs into mathematical formulas and external tool formats (PARI/GP, LEAN).
+
+1. **Identify target sequences**: Find the IDs of OEIS sequences (e.g., A000045) that should be used for the new formula tests. If you need to discover sequences, use the LODA MCP server to search for programs matching specific criteria or mathematical properties. Look for sequences with concise, readable formulas. Avoid sequences that require extensive computation for verification.
+
+2. **Ensure LODA programs exist**: Check if the LODA programs already exist in the test directory structure `tests/programs/oeis/XXX/` (where XXX is the first 3 digits of the sequence number). If missing:
+   - Fetch the program using the LODA MCP server (see [Fetching LODA Programs](#fetching-loda-programs) section) or using `./loda export AXXXXXX -o loda` if you have set up a local LODA environment
+   - Clean the program by removing "Submitted by..." comments and formula comments (keep only the sequence description and terms)
+   - Save as `AXXXXXX.asm` in the appropriate subdirectory (e.g., `tests/programs/oeis/000/A000045.asm`)
+
+3. **Generate expected formulas**: Use the `export` command to generate the expected formulas in different formats:
+   - Plain formula: `./loda export A000045 -o formula`
+   - PARI/GP function: `./loda export A000045 -o pari-function` 
+   - PARI/GP vector: `./loda export A000045 -o pari-vector`
+   - LEAN code: `./loda export A000045 -o lean`
+
+4. **Add test expectations**: Add the generated formulas to the corresponding test files:
+   - `tests/formula/formula.txt`: Plain mathematical formulas (format: `A000045: a(n) = a(n-1)+a(n-2), a(1) = 1, a(0) = 0`)
+   - `tests/formula/pari-function.txt`: PARI/GP function definitions
+   - `tests/formula/pari-vector.txt`: PARI/GP vector implementations  
+   - `tests/formula/lean.txt`: LEAN theorem prover code
+
+5. **Verify correctness**: 
+   - Run fast tests: `./loda test-fast` to verify formula generation
+   - Run full tests: `./loda test` to include external tool validation (requires PARI/GP and LEAN installation)
+   - Check that the round-trip parsing works (formula string → parsed formula → string should be identical)
+
+6. **Test different formula types**: The test system supports multiple formula validation modes:
+   - `FormulaType::FORMULA`: Basic mathematical notation with round-trip parsing
+   - `FormulaType::PARI_FUNCTION`: PARI/GP function format validation
+   - `FormulaType::PARI_VECTOR`: PARI/GP vector format validation  
+   - `FormulaType::LEAN`: LEAN theorem prover format validation
+
+**Note**: External tool tests (PARI/GP, LEAN) only run when the environment variable `LODA_TEST_WITH_EXTERNAL_TOOLS` is set, as they require additional software installations.
+
+### Updating Formula Tests
+
+When the formula generation code is changed (e.g., modifications to [FormulaGenerator](../src/form/formula_gen.hpp), [Formula](../src/form/formula.hpp), or format converters like [PARI](../src/form/pari.hpp) or [LEAN](../src/form/lean.hpp)), use the `update-formula-tests` internal command to regenerate test expectations:
+
+```bash
+./loda update-formula-tests
+```
+
+This command automatically updates all four formula test files (`tests/formula/formula.txt`, `tests/formula/pari-function.txt`, `tests/formula/pari-vector.txt`, `tests/formula/lean.txt`) by:
+- Reading existing test entries to preserve order
+- Regenerating formulas for each sequence ID using the current formula generation logic
+- Converting formulas to the appropriate format (plain formula, PARI/GP function, PARI/GP vector, LEAN)
+- Preserving original entries if formula generation or conversion fails
+
+After updating, verify the changes are correct by:
+1. Reviewing the diff to ensure formulas were updated as expected
+2. Running `./loda test-fast` to verify all formula tests pass
+3. Committing the updated test files along with the formula generation code changes
 
 ### Extending the Optimizer
 

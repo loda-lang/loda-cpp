@@ -39,6 +39,8 @@ class Setup {
 
   static const std::string& getCacheHome();
 
+  static const std::string& getDebugHome();
+
   static const std::string& getProgramsHome();
 
   static void setProgramsHome(const std::string& home);
@@ -87,7 +89,7 @@ class Setup {
   static constexpr int64_t DEFAULT_OEIS_UPDATE_INTERVAL =
       30;                                                 // 1 month default
   static constexpr int64_t DEFAULT_MAX_PROGRAM_AGE = 14;  // 2 weeks default
-  static constexpr int64_t DEFAULT_MAX_PHYSICAL_MEMORY = 1024;  // 1 GB
+  static constexpr int64_t DEFAULT_MAX_PHYSICAL_MEMORY = 1434;  // 1.4 GiB
 
   static std::string LODA_HOME;
   static std::string SEQS_HOME;
@@ -108,6 +110,9 @@ class Setup {
                            const std::string& comment, bool must_have);
   static void loadSetup();
   static void saveSetup();
+  static void loadSetupFromJson();
+  static void saveSetupToJson();
+  static void migrateSetupTxtToJson();
 
   static void checkLodaHome();
   static bool checkProgramsHome();

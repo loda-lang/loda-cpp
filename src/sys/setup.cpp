@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <set>
 #include <sstream>
 #include <thread>
 
@@ -146,6 +147,16 @@ const std::string& Setup::getCacheHome() {
   return cache_home;
 }
 
+const std::string& Setup::getDebugHome() {
+  static std::string debug_home;
+  if (debug_home.empty()) {
+    // don't remove the trailing /
+    debug_home = getLodaHome() + "debug" + FILE_SEP;
+    ensureDir(debug_home);
+  }
+  return debug_home;
+}
+
 const std::string& Setup::getProgramsHome() {
   if (PROGRAMS_HOME.empty()) {
     setProgramsHome(getLodaHome() + "programs" + FILE_SEP);
@@ -172,7 +183,9 @@ void Setup::cloneProgramsHome(const std::string& git_url) {
 }
 
 bool Setup::pullProgramsHome(bool fail_on_error) {
-  return Git::git(getProgramsHome(), "pull origin main -q", fail_on_error);
+  std::string args = "pull origin main -q --depth=" +
+                     std::to_string(Setup::NUM_COMMITS_FOR_PROGRAMS);
+  return Git::git(getProgramsHome(), args, fail_on_error);
 }
 
 void Setup::checkDir(const std::string& home) {
@@ -269,16 +282,16 @@ bool Setup::hasMemory() {
   const auto max_physical_memory = getMaxMemory();
   const auto usage = getMemUsage();
   if (usage > (size_t)(0.95 * max_physical_memory)) {
-    if (usage > (size_t)(1.5 * max_physical_memory)) {
+    if (usage > (size_t)(2.0 * max_physical_memory)) {
       Log::get().error("Exceeded maximum physical memory limit of " +
-                           std::to_string(max_physical_memory / (1024 * 1024)) +
-                           "MB",
+                           formatBytes(max_physical_memory) +
+                           " (usage: " + formatBytes(usage) + ")",
                        true);
     }
     if (!PRINTED_MEMORY_WARNING) {
       Log::get().warn("Reaching maximum physical memory limit of " +
-                      std::to_string(max_physical_memory / (1024 * 1024)) +
-                      "MB");
+                      formatBytes(max_physical_memory) +
+                      " (usage: " + formatBytes(usage) + ")");
       PRINTED_MEMORY_WARNING = true;
     }
     return false;
@@ -300,38 +313,211 @@ void throwSetupParseError(const std::string& line) {
   Log::get().error("Error parsing line from setup.txt: " + line, true);
 }
 
-void Setup::loadSetup() {
-  std::ifstream in(getLodaHomeNoCheck() + "setup.txt");
-  if (in.good()) {
-    std::string line;
-    while (std::getline(in, line)) {
-      if (line.empty() || line[0] == '#') {
-        continue;
-      }
-      auto pos = line.find('=');
-      if (pos == std::string::npos) {
-        throwSetupParseError(line);
-      }
-      auto key = line.substr(0, pos);
-      auto value = line.substr(pos + 1);
-      trimString(key);
-      trimString(value);
-      std::transform(key.begin(), key.end(), key.begin(), ::toupper);
-      if (key.empty() || value.empty()) {
-        throwSetupParseError(line);
-      }
-      SETUP[key] = value;
+// Convert LODA_XXX_YYY to xxxYyy (camelCase)
+std::string convertKeyToJson(const std::string& key) {
+  std::string result;
+  bool nextUpper = false;
+
+  for (size_t i = 0; i < key.size(); i++) {
+    if (i + 5 <= key.size() && key.substr(i, 5) == "LODA_") {
+      i += 4;  // Skip "LODA_"
+      continue;
     }
+    if (key[i] == '_') {
+      nextUpper = true;
+    } else {
+      if (nextUpper) {
+        result += std::toupper(key[i]);
+        nextUpper = false;
+      } else {
+        result += std::tolower(key[i]);
+      }
+    }
+  }
+  return result;
+}
+
+// Convert xxxYyy (camelCase) back to LODA_XXX_YYY
+std::string convertKeyFromJson(const std::string& jsonKey) {
+  std::string result = "LODA_";
+  for (size_t i = 0; i < jsonKey.size(); i++) {
+    if (std::isupper(jsonKey[i])) {
+      result += '_';
+      result += jsonKey[i];
+    } else {
+      result += std::toupper(jsonKey[i]);
+    }
+  }
+  return result;
+}
+
+void Setup::loadSetup() {
+  const std::string setup_json = getLodaHomeNoCheck() + "setup.json";
+  const std::string setup_txt = getLodaHomeNoCheck() + "setup.txt";
+
+  // Try JSON first
+  if (isFile(setup_json)) {
+    loadSetupFromJson();
+    return;
+  }
+
+  // Try TXT and migrate if found
+  if (isFile(setup_txt)) {
+    {
+      std::ifstream in(setup_txt);
+      if (in.good()) {
+        std::string line;
+        while (std::getline(in, line)) {
+          if (line.empty() || line[0] == '#') {
+            continue;
+          }
+          auto pos = line.find('=');
+          if (pos == std::string::npos) {
+            throwSetupParseError(line);
+          }
+          auto key = line.substr(0, pos);
+          auto value = line.substr(pos + 1);
+          trimString(key);
+          trimString(value);
+          std::transform(key.begin(), key.end(), key.begin(), ::toupper);
+          if (key.empty() || value.empty()) {
+            throwSetupParseError(line);
+          }
+          SETUP[key] = value;
+        }
+      }
+    }  // Close file before migration
+    // Automatically migrate to JSON
+    migrateSetupTxtToJson();
   }
 }
 
-void Setup::saveSetup() {
-  std::ofstream out(getLodaHome() + "setup.txt");
-  if (out.bad()) {
-    Log::get().error("Error saving configuration to setup.txt", true);
+void Setup::loadSetupFromJson() {
+  const std::string setup_json = getLodaHomeNoCheck() + "setup.json";
+
+  if (!isFile(setup_json)) {
+    return;
   }
-  for (auto it : SETUP) {
-    out << it.first << "=" << it.second << std::endl;
+
+  try {
+    auto str = getFileAsString(setup_json);
+    auto json = jute::parser::parse(str);
+
+    // Read specific known keys
+    auto read_json_value = [&](const std::string& jsonKey) {
+      auto val = json[jsonKey];
+      auto type = val.get_type();
+
+      // Skip if key doesn't exist (JUNKNOWN or JNULL)
+      if (type == jute::jType::JUNKNOWN || type == jute::jType::JNULL) {
+        return;
+      }
+
+      std::string lodaKey = convertKeyFromJson(jsonKey);
+      if (type == jute::jType::JSTRING || type == jute::jType::JNUMBER) {
+        SETUP[lodaKey] = val.as_string();
+      } else if (type == jute::jType::JBOOLEAN) {
+        SETUP[lodaKey] = val.as_bool() ? "yes" : "no";
+      }
+    };
+
+    // Read known keys
+    read_json_value("apiServer");
+    read_json_value("discordWebhook");
+    read_json_value("forcedSubmitterChecks");
+    read_json_value("githubUpdateInterval");
+    read_json_value("influxdbAuth");
+    read_json_value("influxdbHost");
+    read_json_value("isApiServer");
+    read_json_value("maxInstances");
+    read_json_value("maxPhysicalMemory");
+    read_json_value("maxProgramAge");
+    read_json_value("metricsPublishInterval");
+    read_json_value("miningMode");
+    read_json_value("oeisFetchDirect");
+    read_json_value("oeisUpdateInterval");
+    read_json_value("slackAlerts");
+    read_json_value("submittedBy");
+    read_json_value("submitCpuHours");
+
+  } catch (const std::exception& e) {
+    Log::get().error("Error parsing setup.json: " + std::string(e.what()),
+                     true);
+  }
+}
+
+void Setup::saveSetup() { saveSetupToJson(); }
+
+void Setup::saveSetupToJson() {
+  const std::string setup_json = getLodaHome() + "setup.json";
+
+  jute::jValue json(jute::jType::JOBJECT);
+
+  // Known integer keys (after conversion to JSON format)
+  const std::set<std::string> intKeys = {
+      "githubUpdateInterval", "maxInstances",           "maxPhysicalMemory",
+      "maxProgramAge",        "metricsPublishInterval", "oeisUpdateInterval"};
+
+  // Known boolean keys (after conversion to JSON format)
+  const std::set<std::string> boolKeys = {"isApiServer", "oeisFetchDirect",
+                                          "slackAlerts", "submitCpuHours"};
+
+  for (const auto& it : SETUP) {
+    std::string jsonKey = convertKeyToJson(it.first);
+    const std::string& value = it.second;
+
+    // Check if this is an integer field
+    if (intKeys.find(jsonKey) != intKeys.end()) {
+      jute::jValue numValue(jute::jType::JNUMBER);
+      numValue.set_string(value);
+      json.add_property(jsonKey, numValue);
+    }
+    // Check if this is a boolean field (yes/no format)
+    else if (boolKeys.find(jsonKey) != boolKeys.end()) {
+      jute::jValue boolValue(jute::jType::JBOOLEAN);
+      boolValue.set_string((value == "yes" || value == "true" || value == "1")
+                               ? "true"
+                               : "false");
+      json.add_property(jsonKey, boolValue);
+    }
+    // Otherwise, store as string
+    else {
+      json.set_property_string(jsonKey, value);
+    }
+  }
+
+  std::ofstream out(setup_json);
+  if (!out.good()) {
+    Log::get().error("Error opening setup.json for writing", true);
+  }
+  out << json.to_string() << std::endl;
+  if (!out.good()) {
+    Log::get().error("Error writing configuration to setup.json", true);
+  }
+  out.close();
+}
+
+void Setup::migrateSetupTxtToJson() {
+  const std::string setup_txt = getLodaHomeNoCheck() + "setup.txt";
+  const std::string setup_json = getLodaHomeNoCheck() + "setup.json";
+  const std::string setup_txt_old = getLodaHomeNoCheck() + "setup.txt.old";
+
+  Log::get().info("Migrating setup.txt to setup.json");
+
+  // Save to JSON
+  saveSetupToJson();
+
+  // Rename old file
+  if (isFile(setup_txt)) {
+    // Remove existing .old file if it exists to allow rename
+    if (isFile(setup_txt_old)) {
+      std::remove(setup_txt_old.c_str());
+    }
+    if (std::rename(setup_txt.c_str(), setup_txt_old.c_str()) != 0) {
+      Log::get().warn("Failed to rename setup.txt to setup.txt.old");
+    } else {
+      Log::get().info("Renamed setup.txt to setup.txt.old");
+    }
   }
 }
 
@@ -477,9 +663,9 @@ std::string Setup::getLatestVersion() {
   const std::string local_release_info(".latest-release.json");
   const std::string release_info_url(
       "https://api.github.com/repos/loda-lang/loda-cpp/releases/latest");
-  if (!WebClient::get(release_info_url, local_release_info, true, false)) {
-    Log::get().warn("Cannot get latest version info and check for updates");
-    return Version::BRANCH;  // pretend we are on the latest version
+  if (!WebClient::get(release_info_url, local_release_info, false, false)) {
+    // Error already logged by WebClient::get()
+    return "";  // return empty string on failure
   }
   const std::string content = getFileAsString(local_release_info);
   std::remove(local_release_info.c_str());
@@ -490,11 +676,18 @@ std::string Setup::getLatestVersion() {
 std::string Setup::checkLatestedVersion(bool silent) {
   if (Version::IS_RELEASE) {
     const auto latest_version = getLatestVersion();
+    if (latest_version.empty()) {
+      return "";  // failed to check for updates
+    }
     if (latest_version != Version::BRANCH) {
       if (!silent) {
         Log::get().info("New LODA version available: " + latest_version);
       }
       return latest_version;
+    }
+    // Already on the latest version
+    if (!silent) {
+      Log::get().info("Latest version of LODA is already installed");
     }
   }
   return "";
@@ -509,30 +702,59 @@ std::string Setup::getExecutable(const std::string& suffix) {
 }
 
 void Setup::performUpgrade(const std::string& new_version, bool silent) {
-  std::string exe;
-#ifdef _WIN64
-  exe = ".exe";
-#endif
   ensureDir(getLodaHome() + "bin" + FILE_SEP);
   const std::string exec_local = getExecutable("");
-  const std::string exec_tmp = getExecutable("-" + Version::PLATFORM);
 #ifdef _WIN64
-  if (isFile(exec_local) && isFile(exec_tmp)) {
-    std::string cmd = "del \"" + exec_tmp + "\" " + getNullRedirect();
-    if (system(cmd.c_str()) != 0) {
-      Log::get().error("Cannot delete temporary file: " + exec_tmp, false);
-    }
-  }
-#endif
-  const std::string exec_url =
+  // Windows: download ZIP file and extract it
+  const std::string zip_file =
+      getLodaHome() + "bin" + FILE_SEP + "loda-" + Version::PLATFORM + ".zip";
+  const std::string extract_dir =
+      getLodaHome() + "bin" + FILE_SEP + "loda-" + Version::PLATFORM;
+  const std::string zip_url =
       "https://github.com/loda-lang/loda-cpp/releases/download/" + new_version +
-      "/loda-" + Version::PLATFORM + exe;
-  WebClient::get(exec_url, exec_tmp, true, true);
-#ifdef _WIN64
+      "/loda-" + Version::PLATFORM + ".zip";
+  // Clean up any previous download/extraction
+  std::remove(zip_file.c_str());
+  if (isDir(extract_dir)) {
+    rmDirRecursive(extract_dir);
+  }
+  // Download the ZIP file
+  WebClient::get(zip_url, zip_file, true, true);
+  // Extract using PowerShell's Expand-Archive
+  const std::string extract_cmd =
+      "powershell -Command \"Expand-Archive -Path \\\"" + zip_file +
+      "\\\" -DestinationPath \\\"" + getLodaHome() + "bin\\\" -Force\"";
+  if (!execCmd(extract_cmd, false)) {
+    std::remove(zip_file.c_str());
+    Log::get().error("Failed to extract upgrade archive", true);
+  }
+  // Move the executable and DLL files from the extracted directory
+  const std::string exec_tmp = extract_dir + FILE_SEP + "loda.exe";
+  // Copy DLL dependencies to the bin directory
+  const std::string bin_dir = getLodaHome() + "bin" + FILE_SEP;
+  const std::string libcurl_src = extract_dir + FILE_SEP + "libcurl.dll";
+  const std::string zlib_src = extract_dir + FILE_SEP + "zlib1.dll";
+  const std::string libcurl_dst = bin_dir + "libcurl.dll";
+  const std::string zlib_dst = bin_dir + "zlib1.dll";
+  if (isFile(libcurl_src)) {
+    moveFile(libcurl_src, libcurl_dst);
+  }
+  if (isFile(zlib_src)) {
+    moveFile(zlib_src, zlib_dst);
+  }
+  // Use the temporary executable to update the main one
   const std::string cmd = "\"" + exec_tmp + "\" update-windows-executable \"" +
                           exec_tmp + "\" \"" + exec_local + "\"";
+  // Clean up the ZIP file
+  std::remove(zip_file.c_str());
   createWindowsProcess(cmd);
 #else
+  // Unix: download executable directly
+  const std::string exec_tmp = getExecutable("-" + Version::PLATFORM);
+  const std::string exec_url =
+      "https://github.com/loda-lang/loda-cpp/releases/download/" + new_version +
+      "/loda-" + Version::PLATFORM;
+  WebClient::get(exec_url, exec_tmp, true, true);
   makeExecutable(exec_tmp);
   moveFile(exec_tmp, exec_local);
   if (!silent) {
@@ -713,10 +935,10 @@ bool Setup::checkUsageStats() {
 
 bool Setup::checkMaxMemory() {
   std::string line;
-  std::cout << "Enter the maximum memory usage per miner instance in MB."
+  std::cout << "Enter the maximum memory usage per miner instance in MiB."
             << std::endl
             << "The recommended range is " << DEFAULT_MAX_PHYSICAL_MEMORY
-            << " - " << (DEFAULT_MAX_PHYSICAL_MEMORY * 2) << " MB."
+            << " - " << (DEFAULT_MAX_PHYSICAL_MEMORY * 2) << " MiB."
             << std::endl;
   int64_t max_memory = getMaxMemory() / (1024 * 1024);
   std::cout << "[" << max_memory << "] ";

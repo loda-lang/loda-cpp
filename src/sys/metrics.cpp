@@ -20,12 +20,12 @@ Metrics::Metrics()
   tmp_file_id = Random::get().gen() % 1000;
 }
 
-Metrics &Metrics::get() {
+Metrics& Metrics::get() {
   static Metrics metrics;
   return metrics;
 }
 
-void Metrics::write(const std::vector<Entry> &entries) const {
+void Metrics::write(const std::vector<Entry>& entries) const {
   if (host.empty()) {
     return;
   }
@@ -33,25 +33,19 @@ void Metrics::write(const std::vector<Entry> &entries) const {
     Log::get().debug("Publishing metrics to InfluxDB");
     notified = true;
   }
-  // attention: curl sometimes has problems with absolute paths.
-  // so we use a relative path here!
-  const std::string tmp_file =
-      "loda_metrics_" + std::to_string(tmp_file_id) + ".txt";
-  std::ofstream out(tmp_file);
-  for (const auto &entry : entries) {
-    out << entry.field;
-    for (const auto &l : entry.labels) {
+  std::string content;
+  for (const auto& entry : entries) {
+    content += entry.field;
+    for (const auto& l : entry.labels) {
       auto v = l.second;
       replaceAll(v, " ", "\\ ");
-      out << "," << l.first << "=" << v;
+      content += "," + l.first + "=" + v;
     }
-    out << " value=" << entry.value << "\n";
+    content += " value=" + std::to_string(entry.value) + "\n";
   }
-  out.close();
   const std::string url = host + "/write?db=loda";
-  if (!WebClient::postFile(url, tmp_file, auth)) {
-    WebClient::postFile(url, tmp_file, auth, {}, true);  // for debugging
+  if (!WebClient::postContent(url, content, auth)) {
+    WebClient::postContent(url, content, auth, {}, true);  // for debugging
     Log::get().error("Error publishing metrics", false);
   }
-  std::remove(tmp_file.c_str());
 }

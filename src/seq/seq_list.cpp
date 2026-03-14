@@ -182,7 +182,14 @@ void SequenceList::saveMapWithComments(const std::string& path,
                                        const std::map<UID, std::string>& map) {
   std::ofstream out(path);
   for (const auto& entry : map) {
-    out << entry.first.string() << ": " << entry.second << "\n";
+    // Handle multi-line comments by indenting continuation lines with 2 spaces
+    std::string formatted_comment = entry.second;
+    size_t pos = 0;
+    while ((pos = formatted_comment.find('\n', pos)) != std::string::npos) {
+      formatted_comment.replace(pos, 1, "\n  ");
+      pos += 3;  // Move past the newline and two spaces
+    }
+    out << entry.first.string() << ": " << formatted_comment << "\n";
   }
   out.close();
 }

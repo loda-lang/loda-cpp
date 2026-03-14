@@ -46,6 +46,8 @@ void ManagedSequence::removeInvalidBFile(const std::string& error) const {
     if (isFile(path)) {
       Log::get().warn("Removing " + error + " b-file " + path);
       std::remove(path.c_str());
+      // report broken b-file to API server
+      ApiClient::getDefaultInstance().reportBrokenBFile(id);
     }
   }
 }

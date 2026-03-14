@@ -82,4 +82,21 @@ class FormulaSimplify {
    * references
    */
   static void replaceSimpleRecursiveRefs(Formula& formula);
+
+  /**
+   * Replaces constant identity functions with constant 0.
+   *
+   * This method identifies functions of the form f(n) = f(n-k) with no base
+   * case (no initial term like f(0) = c). Such functions represent constant
+   * values that were initialized to 0 during formula generation. Without
+   * this simplification, they would cause infinite recursion in PARI/GP.
+   * For example:
+   *   b(n) = b(n-1)  (with no b(0) = ...)
+   * Will be replaced with: constant 0 everywhere b is referenced
+   *
+   * @param formula The formula to simplify by replacing constant identity
+   * functions
+   * @return true if any replacements were made
+   */
+  static bool replaceConstantIdentityFunctions(Formula& formula);
 };

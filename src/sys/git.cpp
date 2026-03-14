@@ -1,6 +1,7 @@
 #include "sys/git.hpp"
 
 #include "sys/file.hpp"
+#include "sys/gzip.hpp"
 #include "sys/log.hpp"
 #include "sys/util.hpp"
 #include "sys/web_client.hpp"
@@ -95,16 +96,6 @@ void Git::fixWindowsEnv(std::string project_dir) {
           execCmd("powershell -command \"Expand-Archive -Force '" + mingit_zip +
                       "' '" + mingit_dir + "'\"",
                   false);
-        }
-      }
-
-      // 4) fetch gzip.exe
-      const std::string gzip_exe = bin_dir + "\\gzip.exe";
-      if (isDir(bin_dir) && !isFile(gzip_exe)) {
-        FolderLock lock(bin_dir);
-        if (!isFile(gzip_exe)) {
-          WebClient::get("https://boinc.loda-lang.org/loda/dl/gzip.exe",
-                         gzip_exe, false, false);
         }
       }
     }
@@ -212,20 +203,7 @@ std::vector<std::pair<std::string, std::string>> Git::diffTree(
   return result;
 }
 
-void Git::gunzip(const std::string &path, bool keep) {
-#ifdef _WIN64
-  const std::string gzip_test = "gzip --version " + getNullRedirect();
-  if (system(gzip_test.c_str()) != 0) {
-    fixWindowsEnv();  // gzip is included in Git for Windows
-  }
-#endif
-  std::string cmd = "gzip -f -d ";
-  if (keep) {
-    cmd += "-k ";
-  }
-  cmd += "\"" + path + "\"";
-  execCmd(cmd);
-}
+void Git::gunzip(const std::string &path, bool keep) { ::gunzip(path, keep); }
 
 std::string Git::extractHeadVersion(const std::string &folder,
                                     const std::string &file) {

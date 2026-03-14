@@ -47,6 +47,9 @@ class FormulaGenerator {
   bool canBeNegativeWithRanges(const Expression& e, const Operand& operand,
                                const RangeMap* ranges) const;
 
+  bool isNotInRange(const Operand& operand, const Number& value,
+                    const RangeMap* ranges) const;
+
   bool update(const Operation& op, const RangeMap* ranges = nullptr);
 
   bool update(const Program& p, const std::vector<RangeMap>* ranges = nullptr);

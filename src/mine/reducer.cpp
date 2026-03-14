@@ -1,15 +1,15 @@
 #include "mine/reducer.hpp"
 
-#include "eval/semantics.hpp"
+#include "math/semantics.hpp"
 #include "sys/util.hpp"
 
-Number Reducer::truncate(Sequence &seq) {
+Number Reducer::truncate(Sequence& seq) {
   if (seq.empty()) {
     return Number::ZERO;
   }
   // get minimum positive value; no negative values are allowed
   Number min = Number::INF;
-  for (auto &v : seq) {
+  for (auto& v : seq) {
     if (v < Number::ZERO) {
       return Number::ZERO;
     } else if (min == Number::INF || v < min) {
@@ -24,7 +24,7 @@ Number Reducer::truncate(Sequence &seq) {
   return min;
 }
 
-Number Reducer::shrink(Sequence &seq) {
+Number Reducer::shrink(Sequence& seq) {
   Number factor = Number::INF;
   for (size_t i = 0; i < seq.size(); i++) {
     if (seq[i] != Number::ZERO) {
@@ -46,7 +46,7 @@ Number Reducer::shrink(Sequence &seq) {
   return factor;
 }
 
-delta_t Reducer::delta(Sequence &seq, int64_t max_delta) {
+delta_t Reducer::delta(Sequence& seq, int64_t max_delta) {
   delta_t result;
   result.delta = 0;
   result.offset = Number::ZERO;
@@ -86,10 +86,10 @@ delta_t Reducer::delta(Sequence &seq, int64_t max_delta) {
   return result;
 }
 
-int64_t Reducer::digit(Sequence &seq, int64_t num_digits) {
+int64_t Reducer::digit(Sequence& seq, int64_t num_digits) {
   std::vector<size_t> count;
   count.resize(num_digits, 0);
-  for (auto &n : seq) {
+  for (auto& n : seq) {
     count[((Semantics::mod(n, num_digits)).asInt() + num_digits) %
           num_digits]++;
   }
