@@ -194,15 +194,36 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
 #ifdef _WIN64
   // hidden helper command for updates on windows
   else if (cmd == "update-windows-executable") {
-    // first replace the old binary by the new one
-    std::string cmd = "copy /Y \"" + args.at(1) + "\" \"" + args.at(2) + "\"" +
-                      getNullRedirect();
+    // args[1] = extract_dir (new files), args[2] = bin_dir (destination)
+    const std::string src_dir = args.at(1);
+    const std::string dst_dir = args.at(2);
+    // Files to update from the extracted archive
+    const std::vector<std::string> files = {"loda.exe", "libcurl.dll",
+                                            "zlib1.dll"};
     std::cout << std::endl << std::endl;
-    if (system(cmd.c_str()) != 0) {
-      std::cout << "Error updating executable. Failed command:" << std::endl
-                << cmd << std::endl;
-      return 1;
+    for (const auto& file : files) {
+      const std::string src = src_dir + FILE_SEP + file;
+      const std::string dst = dst_dir + FILE_SEP + file;
+      if (!isFile(src)) {
+        continue;  // skip optional files (e.g., DLLs may not always be present)
+      }
+      const std::string copy_cmd =
+          "copy /Y \"" + src + "\" \"" + dst + "\"" + getNullRedirect();
+      // Retry in case the old process has not yet released its file locks
+      bool ok = false;
+      for (int attempt = 0; attempt < 10 && !ok; attempt++) {
+        if (attempt > 0) {
+          std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        }
+        ok = (system(copy_cmd.c_str()) == 0);
+      }
+      if (!ok) {
+        std::cout << "Error updating " << file << ". Failed command:"
+                  << std::endl << copy_cmd << std::endl;
+        return 1;
+      }
     }
+    rmDirRecursive(src_dir);
     std::cout << "Update installed. Please run \"loda setup\" again"
               << std::endl
               << "to check and complete its configuration." << std::endl;

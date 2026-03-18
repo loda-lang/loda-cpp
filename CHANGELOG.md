@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Bugfixes
+
+* Fix Windows `upgrade` command: extract to temp directory to avoid overwriting locked files
+
 ## v26.3.14
 
 ### Bugfixes
