@@ -78,6 +78,8 @@ jobs:
           VCPKG_ROOT: C:\vcpkg
       - name: Test
         run: ./loda.exe test
+        env:
+          PATH: C:\vcpkg\installed\x64-windows\bin;${{ env.PATH }}
   build-windows-arm64:
     runs-on: windows-2022
     steps:
