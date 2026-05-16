@@ -301,7 +301,7 @@ bool IncrementalEvaluator::checkLoopBody(ErrorCode* error_code) {
     return true;
   }
 
-  if (stateful_cells.size() <= 1 && is_commutative) {
+  if (is_commutative) {
     return true;
   }
 

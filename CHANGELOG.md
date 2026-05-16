@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Enhancements
+
+* Support multiple stateful cells in incremental evaluator when all updates are commutative and independent
+
 ### Bugfixes
 
 * Fix Windows `upgrade` command: extract to temp directory to avoid overwriting locked files
