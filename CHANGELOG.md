@@ -6,6 +6,7 @@
 
 ### Bugfixes
 
+* Fix Windows CI: add missing `zlib` to vcpkg install step in main and release workflows
 * Fix Windows `upgrade` command: extract to temp directory to avoid overwriting locked files
 
 ## v26.3.14

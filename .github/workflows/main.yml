@@ -71,13 +71,15 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
       - name: Install dependencies
         run: |
-          vcpkg install curl:x64-windows
+          vcpkg install curl:x64-windows zlib:x64-windows
       - name: Build
         run: cd src && nmake.exe /F Makefile.windows.mk
         env:
           VCPKG_ROOT: C:\vcpkg
       - name: Test
         run: ./loda.exe test
+        env:
+          PATH: C:\vcpkg\installed\x64-windows\bin;${{ env.PATH }}
   build-windows-arm64:
     runs-on: windows-2022
     steps:
@@ -87,7 +89,7 @@ jobs:
           arch: amd64_arm64
       - name: Install dependencies
         run: |
-          vcpkg install curl:arm64-windows
+          vcpkg install curl:arm64-windows zlib:arm64-windows
       - name: Build
         run: cd src && nmake.exe /F Makefile.windows.mk
         env:
