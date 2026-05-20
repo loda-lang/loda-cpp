@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Enhancements
+
+* Support multiple stateful cells in incremental evaluator when all updates are commutative and independent
+
 ### Bugfixes
 
 * Fix Windows CI: add missing `zlib` to vcpkg install step in main and release workflows
