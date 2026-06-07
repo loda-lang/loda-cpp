@@ -17,7 +17,6 @@
 #include "sys/csv.hpp"
 #include "sys/file.hpp"
 #include "sys/log.hpp"
-#include "sys/setup.hpp"
 
 const std::string Stats::CALL_GRAPH_HEADER("caller,callee");
 const std::string Stats::PROGRAMS_HEADER(
@@ -524,7 +523,7 @@ void Stats::finalize() {
   }
   if (latest_program_ids.empty()) {
     latest_program_ids = SequenceProgram::collectLatestProgramIds(
-        Setup::NUM_COMMITS_FOR_PROGRAMS, 200, 200);  // magic number
+        20, 200, 200);  // magic number
   }
 }
 
