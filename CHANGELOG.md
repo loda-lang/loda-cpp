@@ -1,13 +1,16 @@
 ## [Unreleased]
 
-### Enhancements
-
-* Support multiple stateful cells in incremental evaluator when all updates are commutative and independent
+## v26.6.7
 
 ### Bugfixes
 
 * Fix Windows CI: add missing `zlib` to vcpkg install step in main and release workflows
 * Fix Windows `upgrade` command: extract to temp directory to avoid overwriting locked files
+* Fix `update` command: use full clone and pull for programs repository instead of shallow history
+
+### Enhancements
+
+* Support multiple stateful cells in incremental evaluator when all updates are commutative and independent
 
 ## v26.3.14
 

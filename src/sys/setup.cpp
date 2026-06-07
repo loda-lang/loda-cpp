@@ -178,14 +178,11 @@ bool Setup::existsProgramsHome() {
 
 void Setup::cloneProgramsHome(const std::string& git_url) {
   // We cannot use getProgramsHome() here because it checks for existence
-  Git::clone(git_url, getLodaHome() + "programs",
-             Setup::NUM_COMMITS_FOR_PROGRAMS);
+  Git::clone(git_url, getLodaHome() + "programs");
 }
 
 bool Setup::pullProgramsHome(bool fail_on_error) {
-  std::string args = "pull origin main -q --depth=" +
-                     std::to_string(Setup::NUM_COMMITS_FOR_PROGRAMS);
-  return Git::git(getProgramsHome(), args, fail_on_error);
+  return Git::git(getProgramsHome(), "pull origin main -q", fail_on_error);
 }
 
 void Setup::checkDir(const std::string& home) {
