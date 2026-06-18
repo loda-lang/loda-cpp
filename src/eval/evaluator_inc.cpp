@@ -175,12 +175,15 @@ bool IncrementalEvaluator::checkPreLoop(bool skip_input_transform,
           }
           return false;
         }
-        bool target_input_dependent = false;
+        // Clearing memory cells will make these cells are not input dependent
+        // now. Filling memory cells will make input dependent state of these
+        // cells to input dependent state of target cell.
+        bool input_dependent = false;
         if (op.type == Operation::Type::FIL) {
-          target_input_dependent = isInputDependent(op.target);
+          input_dependent = isInputDependent(op.target);
         }
         for (int64_t i = left; i < right; i++) {
-          if (target_input_dependent) {
+          if (input_dependent) {
             if (input_dependent_cells.find(i) == input_dependent_cells.end()) {
               input_dependent_cells.insert(i);
             }
