@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Enhancements
+* Add `clr` and `fil` support in incremental evaluator before main loop
+
 ## v26.6.7
 
 ### Bugfixes
