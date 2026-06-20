@@ -992,7 +992,7 @@ bool Optimizer::pullUpMov(Program& p) const {
       continue;
     }
     // check operand values
-    if (a.target.value != b.source.value || b.target.value != c.target.value) {
+    if (a.target.value != b.source.value || (c.target.value != b.target.value && c.target.value != a.target.value)) {
       continue;
     }
     // okay, we are ready to optimize!
