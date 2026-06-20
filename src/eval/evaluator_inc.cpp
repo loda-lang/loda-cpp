@@ -151,6 +151,45 @@ bool IncrementalEvaluator::checkPreLoop(bool skip_input_transform,
         is_transform = true;
         break;
 
+      // clearing or filling memory cells
+      case Operation::Type::CLR:
+      case Operation::Type::FIL: {
+        if (op.source.type != Operand::Type::CONSTANT) {
+          if (error_code) {
+            *error_code = ErrorCode::MEMORY_OP_SOURCE_INVALID;
+          }
+          return false;
+        }
+        auto bounds = ProgramUtil::getTargetMemoryRange(op);
+        if (bounds.first == Number::INF || bounds.second == Number::INF) {
+          if (error_code) {
+            *error_code = ErrorCode::MEMORY_OP_SOURCE_INVALID;
+          }
+          return false;
+        }
+        int64_t left = bounds.first.asInt();
+        int64_t right = bounds.second.asInt();
+        if (right - left >= interpreter.settings.max_memory) {
+          if (error_code) {
+            *error_code = ErrorCode::MEMORY_OP_SOURCE_INVALID;
+          }
+          return false;
+        }
+        // CLR: cells become constant zero → not input-dependent.
+        // FIL: cells take the value of op.target → inherit its input-dependency.
+        bool input_dependent = false;
+        if (op.type == Operation::Type::FIL) {
+          input_dependent = isInputDependent(op.target);
+        }
+        for (int64_t i = left; i < right; i++) {
+          if (input_dependent) {
+            input_dependent_cells.insert(i);
+          } else {
+            input_dependent_cells.erase(i);
+          }
+        }
+      } break;
+
       default:
         // everything else is currently not allowed
         if (error_code) {
