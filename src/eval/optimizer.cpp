@@ -68,6 +68,9 @@ bool Optimizer::optimize(Program& p) const {
     if (pullUpMov(p)) {
       changed = true;
     }
+    if (pushDownMov(p)) {
+      changed = true;
+    }
     if (removeCommutativeDetour(p)) {
       changed = true;
     }
@@ -969,7 +972,7 @@ bool canMerge(Operation::Type a, Operation::Type b) {
 }
 
 bool Optimizer::pullUpMov(Program& p) const {
-  // see tests E014 and E015
+  // see tests E014, E015, E086 and E087
   bool changed = false;
   for (size_t i = 0; i + 2 < p.ops.size(); i++) {
     auto& a = p.ops[i];
@@ -1000,6 +1003,40 @@ bool Optimizer::pullUpMov(Program& p) const {
     d.target.value = b.target.value;
     std::swap(a, b);
     p.ops.insert(p.ops.begin() + i + 1, d);
+    changed = true;
+  }
+  return changed;
+}
+
+bool Optimizer::pushDownMov(Program& p) const {
+  // see tests E088, E089 and E090
+  bool changed = false;
+  for (size_t i = 0; i + 2 < p.ops.size(); i++) {
+    auto& a = p.ops[i];
+    auto& b = p.ops[i + 1];
+    const auto& c = p.ops[i + 2];
+    // check operation types
+    if (a.type != Operation::Type::MOV || c.type != Operation::Type::MOV || (!ProgramUtil::isArithmetic(b.type) && b.type != Operation::Type::SEQ) ) {
+      continue;
+    }
+    // check operand types
+    if (a.target.type != Operand::Type::DIRECT ||
+        a.source.type != Operand::Type::DIRECT ||
+        b.target.type != Operand::Type::DIRECT ||
+        b.source.type == Operand::Type::INDIRECT ||
+        c.target.type != Operand::Type::DIRECT ||
+        c.source.type != Operand::Type::DIRECT) {
+      continue;
+    }
+    // check operand values
+    if (a.target.value != b.target.value || a.target.value != c.source.value || a.source.value != c.target.value) {
+      continue;
+    }
+    // okay, we are ready to optimize!
+    b.target.value = a.source.value;
+    if (b.source.type == Operand::Type::DIRECT && b.source.value == a.target.value)b.source.value = a.source.value;
+    std::swap(a, b);
+    p.ops.erase(p.ops.begin() + i + 2);
     changed = true;
   }
   return changed;
