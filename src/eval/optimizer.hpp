@@ -39,6 +39,8 @@ class Optimizer {
 
   bool pullUpMov(Program &p) const;
 
+  bool pushDownMov(Program &p) const;
+
   bool collapseMovChains(Program &p) const;
 
   bool removeCommutativeDetour(Program &p) const;
