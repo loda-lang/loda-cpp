@@ -1034,7 +1034,9 @@ bool Optimizer::pushDownMov(Program& p) const {
     }
     // okay, we are ready to optimize!
     b.target.value = a.source.value;
-    if (b.source.type == Operand::Type::DIRECT && b.source.value == a.target.value)b.source.value = a.source.value;
+    if (b.source.type == Operand::Type::DIRECT && b.source.value == a.target.value) {
+      b.source.value = a.source.value;
+    }
     std::swap(a, b);
     p.ops.erase(p.ops.begin() + i + 2);
     changed = true;
