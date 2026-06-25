@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Bugfixes
+
+* Fix an overflow bug
+
 ### Enhancements
 * Add `clr` and `fil` support in incremental evaluator before main loop
 
