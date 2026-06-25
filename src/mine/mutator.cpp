@@ -1,5 +1,7 @@
 #include "mine/mutator.hpp"
 
+#include "math/semantics.hpp"
+
 #include "lang/program_util.hpp"
 
 #define CONSTANTS_START -100
@@ -151,6 +153,10 @@ void Mutator::mutateCopiesConstants(const Program &program, size_t num_results,
   int64_t var = std::max<int64_t>(1, num_results / indices.size());
   for (size_t i : indices) {
     if (program.ops[i].source.value.getNumUsedWords() > 1) {
+      continue;
+    }
+    if (Semantics::abs(program.ops[i].source.value) >
+        Number(1000000000000000)) { // magic number
       continue;
     }
     int64_t b = program.ops[i].source.value.asInt();
