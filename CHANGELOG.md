@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Bugfixes
+
+* Fix an overflow bug
+
 ### Enhancements
 
 * Add `pushDownMov` optimization
