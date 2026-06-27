@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+## v26.6.27
+
 ### Bugfixes
 
 * Fix an overflow bug
