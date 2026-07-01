@@ -73,6 +73,16 @@ bool isSimpler(const Program& existing, const Program& optimized) {
   } else if (!hasIndirectOperand(existing) && hasIndirectOperand(optimized)) {
     return false;
   }
+  // Prefer programs with no memory ops if program is too short
+  if (optimized.ops.size() <= 6 && existing.ops.size() <= 6) { // magic number
+  	bool optimized_has_memory_op = ProgramUtil::hasRegionOperation(optimized);
+  	bool existing_has_memory_op = ProgramUtil::hasRegionOperation(existing);
+  	if (!optimized_has_memory_op && existing_has_memory_op && !optimized_has_seq) {
+      return true;
+    } else if (!existing_has_memory_op && optimized_has_memory_op && !existing_has_seq) {
+      return false;
+    }
+  }
   return false;
 }
 
