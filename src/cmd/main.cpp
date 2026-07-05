@@ -153,7 +153,14 @@ int dispatch(Settings settings, const std::vector<std::string>& args) {
   } else if (cmd == "fold") {
     commands.fold(args.at(1), args.at(2));
   } else if (cmd == "unfold") {
-    commands.unfold(args.at(1));
+    if (args.size() == 2) {
+      commands.unfold(args.at(1), "");
+    } else if (args.size() == 3) {
+      commands.unfold(args.at(1), args.at(2));
+    } else {
+      std::cout << "invalid number of arguments" << std::endl;
+      return 1;
+    }
   } else if (cmd == "mine") {
     if (settings.parallel_mining) {
       mineParallel(settings, args);

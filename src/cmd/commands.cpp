@@ -81,9 +81,11 @@ void Commands::help() {
   std::cout << "  fold <program> <id>  Fold a subprogram given by ID into a "
                "seq-operation"
             << std::endl;
-  std::cout << "  unfold    <program>  Unfold the first seq-operation of a "
-               "program"
-            << std::endl;
+  std::cout
+      << "  unfold    <program> [program]  Unfold the first seq-operation of a "
+         "program, if second parameter is given, the seq-operation will be "
+         "unfolded to second parameter instead"
+      << std::endl;
   std::cout << "  mutate    <program>  Mutate a program to mine for integer "
                "sequences"
             << std::endl;
@@ -333,10 +335,14 @@ void Commands::fold(const std::string& main_path, const std::string& sub_id) {
   ProgramUtil::print(main, std::cout);
 }
 
-void Commands::unfold(const std::string& path) {
+void Commands::unfold(const std::string &path, const std::string &sub_id) {
   initLog(true);
   auto p = SequenceProgram::getProgramAndSeqId(path).first;
-  if (!Fold::unfold(p)) {
+  Program sub;
+  if (sub_id != "") {
+    sub = SequenceProgram::getProgramAndSeqId(sub_id).first;
+  }
+  if (!Fold::unfold(p, -1, sub)) {
     throw std::runtime_error("cannot unfold program");
   }
   ProgramUtil::print(p, std::cout);
