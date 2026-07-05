@@ -33,7 +33,7 @@ class Commands {
 
   void fold(const std::string& main_path, const std::string& sub_id);
 
-  void unfold(const std::string& path);
+  void unfold(const std::string &path, const std::string &sub_id);
 
   void mine();
 
