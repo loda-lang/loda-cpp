@@ -30,7 +30,7 @@ Commands:
   minimize  <program>  Minimize a program and print the result (see -t)
   profile   <program>  Measure program evaluation time (see -t)
   fold <program> <id>  Fold a subprogram given by ID into a seq-operation
-  unfold    <program>  Unfold the first seq-operation of a program
+  unfold    <program> [program]  Unfold the first seq-operation of a program, if second parameter is given, the seq-operation will be unfolded to second parameter instead
   mutate    <program>  Mutate a program to mine for integer sequences
   setup                Run interactive setup to configure LODA
   update               Update integer sequence and program data
