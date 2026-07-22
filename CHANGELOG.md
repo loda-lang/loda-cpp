@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Enhancements
+
+* Improve error message of submit command 
+
 ## v26.6.27
 
 ### Bugfixes

@@ -440,6 +440,13 @@ void Miner::submit(const std::string& path, std::string id_str) {
   Evaluator evaluator(settings, EVAL_ALL, true);
   auto terms = seq.getTerms(SequenceUtil::FULL_SEQ_LENGTH);
   auto num_required = SequenceProgram::getNumRequiredTerms(program);
+  if (terms.size() < Settings::DEFAULT_NUM_TERMS) {
+    Log::get().error("Sequence " + id_str +
+                         " is ignored because it has too few terms: " +
+                         std::to_string(terms.size()) + " (<" +
+                         std::to_string(Settings::DEFAULT_NUM_TERMS) + ")",
+                     true);
+  }
   Log::get().info(
       "Validating program against " + std::to_string(terms.size()) + " (>=" +
       std::to_string(std::min(num_required, terms.size())) + ") terms");
@@ -481,13 +488,12 @@ void Miner::submit(const std::string& path, std::string id_str) {
         program = r.program;
         Comments::addComment(program,
                              Comments::PREFIX_MINER_PROFILE + " manual");
-              Comments::addComment(program, Comments::PREFIX_CHANGE_TYPE + " " +
-                                                r.change_type);
-              if (!r.is_new) {
-                Comments::addComment(
-                    program, Comments::PREFIX_PREVIOUS_HASH + " " +
-                                 std::to_string(r.previous_hash));
-              }
+        Comments::addComment(
+            program, Comments::PREFIX_CHANGE_TYPE + " " + r.change_type);
+        if (!r.is_new) {
+          Comments::addComment(program, Comments::PREFIX_PREVIOUS_HASH + " " +
+                                            std::to_string(r.previous_hash));
+        }
         api_client->postProgram(program);
       } else {
         Log::get().info(skip_msg + ": not in client mode");
