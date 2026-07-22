@@ -73,11 +73,15 @@ bool Fold::unfold(Program &main, int64_t pos, Program sub) {
        return false;
   }
   if (pos < 0) {
-    // find first operation that can be unfolded
+    // find the (-pos)-th operation that can be unfolded (-1 is first position)
     for (size_t i = 0; i < main.ops.size(); i++) {
       if (canUnfold(main.ops[i].type)) {
-        pos = i;
-        break;
+        if (pos == -1){
+          pos = i;
+          break;
+        } else {
+          pos++;
+        }
       }
     }
   }
