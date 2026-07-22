@@ -8,7 +8,7 @@ class Fold {
  public:
   static bool canUnfold(Operation::Type type);
 
-  static bool unfold(Program &main, int64_t pos = -1);
+  static bool unfold(Program &main, int64_t pos = -1, Program sub = Program());
 
   static bool autoUnfold(Program &main);
 

@@ -69,6 +69,7 @@ void Test::fast() {
   blocks();
   fold();
   unfold();
+  customUnfold();
   virtualSeq();
   incEval();
   linearMatcher();
@@ -872,6 +873,28 @@ void Test::unfold() {
     evaluator.eval(t.second, got, 20);
     if (expected != got) {
       Log::get().error("Unexpected sequence", true);
+    }
+    i++;
+  }
+}
+
+void Test::customUnfold() {
+  auto tests = loadInOutTests(std::string("tests") + FILE_SEP + "unfold" +
+                              FILE_SEP + "C");
+  size_t i = 1;
+  Evaluator evaluator(settings, EVAL_ALL, false);
+  Parser parser;
+  Program sub = parser.parse(std::string("tests") + FILE_SEP + "programs" +
+                              FILE_SEP + "oeis" + FILE_SEP + "000"+ FILE_SEP + "A000142.asm");
+  for (const auto& t : tests) {
+    Log::get().info("Testing custom unfold " + std::to_string(i));
+    auto p = t.first;
+    if (!Fold::unfold(p,-1,sub)) {
+      Log::get().error("Unfolding not supported", true);
+    }
+    if (p != t.second) {
+      ProgramUtil::print(p, std::cout);
+      Log::get().error("Unexpected program", true);
     }
     i++;
   }

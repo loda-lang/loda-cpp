@@ -40,6 +40,8 @@ class Test {
 
   void unfold();
 
+  void customUnfold();
+
   void incEval();
 
   void virtualEval();

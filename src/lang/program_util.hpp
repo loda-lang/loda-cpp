@@ -45,6 +45,8 @@ class ProgramUtil {
 
   static bool hasRegionOperation(const Program& p);
 
+  static bool hasRegionOperationExceptPrg(const Program& p);
+
   static bool hasIndirectOperand(const Operation& op);
 
   static bool hasIndirectOperand(const Program& p);

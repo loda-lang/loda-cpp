@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Enhancements
+
+* Add custom unfold
+
 ## v26.6.27
 
 ### Bugfixes

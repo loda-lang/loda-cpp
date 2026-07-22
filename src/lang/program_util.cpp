@@ -187,6 +187,12 @@ bool ProgramUtil::hasRegionOperation(const Program& p) {
   });
 }
 
+bool ProgramUtil::hasRegionOperationExceptPrg(const Program& p) {
+  return std::any_of(p.ops.begin(), p.ops.end(), [](const Operation& op) {
+    return isWritingRegion(op.type) && op.type != Operation::Type::PRG;
+  });
+}
+
 bool ProgramUtil::hasIndirectOperand(const Operation& op) {
   const auto num_ops = Operation::Metadata::get(op.type).num_operands;
   return (num_ops > 0 && op.target.type == Operand::Type::INDIRECT) ||

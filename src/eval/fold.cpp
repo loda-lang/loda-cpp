@@ -22,8 +22,13 @@ bool prepareEmbedding(UID id, Program &sub, Operation::Type embeddingType) {
   // load and check program to be embedded
   const auto path = ProgramUtil::getProgramPath(id);
   Parser parser;
-  sub = parser.parse(path);
+  if (sub.ops.empty()) {
+    sub = parser.parse(path);
+  }
   if (ProgramUtil::hasIndirectOperand(sub)) {
+    return false;
+  }
+  if (ProgramUtil::hasRegionOperationExceptPrg(sub)) {
     return false;
   }
   // prepare program for embedding: remove nops and comments
@@ -60,16 +65,23 @@ bool Fold::canUnfold(Operation::Type type) {
   return type == Operation::Type::SEQ || type == Operation::Type::PRG;
 }
 
-bool Fold::unfold(Program &main, int64_t pos) {
+bool Fold::unfold(Program &main, int64_t pos, Program sub) {
   if (ProgramUtil::hasIndirectOperand(main)) {
     return false;
   }
+  if (ProgramUtil::hasRegionOperationExceptPrg(main)) {
+       return false;
+  }
   if (pos < 0) {
-    // find first operation that can be unfolded
+    // find the (-pos)-th operation that can be unfolded (-1 is first position)
     for (size_t i = 0; i < main.ops.size(); i++) {
       if (canUnfold(main.ops[i].type)) {
-        pos = i;
-        break;
+        if (pos == -1){
+          pos = i;
+          break;
+        } else {
+          pos++;
+        }
       }
     }
   }
@@ -80,7 +92,6 @@ bool Fold::unfold(Program &main, int64_t pos) {
   const auto &emb_op = main.ops[pos];
   auto sub_id = emb_op.source.value.asInt();
   auto sub_uid = UID::castFromInt(sub_id);
-  Program sub;
   if (!prepareEmbedding(sub_uid, sub, emb_op.type)) {
     return false;
   }
@@ -164,6 +175,11 @@ bool Fold::fold(Program &main, Program sub, size_t subId,
   // no indirect operands  allowed
   if (ProgramUtil::hasIndirectOperand(main) ||
       ProgramUtil::hasIndirectOperand(sub)) {
+    return false;
+  }
+  // no region operations allowed
+  if (ProgramUtil::hasRegionOperationExceptPrg(main) ||
+      ProgramUtil::hasRegionOperationExceptPrg(sub)) {
     return false;
   }
   // prepare and check subprogram
