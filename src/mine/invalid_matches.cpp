@@ -44,7 +44,7 @@ void InvalidMatches::insert(UID id) {
   if (scheduler.isTargetReached()) {
     scheduler.reset();
     Log::get().info("Saving invalid matches stats for " +
-                    std::to_string(invalid_matches.size()) + " sequences");
+                    std::to_string(invalid_matches.size()) + " sequence" + (invalid_matches.size() == 1 ? "" : "s"));
     SequenceList::mergeMap(Setup::getCacheHome(), FILENAME, invalid_matches);
   }
 }
