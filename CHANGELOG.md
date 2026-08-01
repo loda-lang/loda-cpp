@@ -3,6 +3,8 @@
 ### Enhancements
 
 * Improve error message of submit command 
+* Increase lock timeout on Windows
+* Minor log message enhancements
 
 ## v26.6.27
 

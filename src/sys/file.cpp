@@ -33,8 +33,8 @@
 #include <mach/mach.h>
 #endif
 
-void replaceAll(std::string &str, const std::string &from,
-                const std::string &to) {
+void replaceAll(std::string& str, const std::string& from,
+                const std::string& to) {
   if (from.empty()) {
     return;
   }
@@ -45,12 +45,12 @@ void replaceAll(std::string &str, const std::string &from,
   }
 }
 
-bool isFile(const std::string &path) {
+bool isFile(const std::string& path) {
   std::ifstream f(path.c_str());
   return f.good();
 }
 
-bool isDir(const std::string &path) {
+bool isDir(const std::string& path) {
   struct stat st;
   return (stat(path.c_str(), &st) == 0 && (st.st_mode & S_IFDIR));
 }
@@ -60,7 +60,7 @@ bool isDir(const std::string &path) {
 #include <windows.h>
 #endif
 
-void ensureDir(const std::string &path) {
+void ensureDir(const std::string& path) {
   auto index = path.find_last_of(FILE_SEP);
   if (index != std::string::npos) {
     auto dir = path.substr(0, index);
@@ -79,7 +79,7 @@ void ensureDir(const std::string &path) {
   }
 }
 
-void rmDirRecursive(const std::string &path) {
+void rmDirRecursive(const std::string& path) {
 #ifdef _WIN64
   auto cmd = "rmdir /s /q \"" + path + "\"";
 #else
@@ -88,7 +88,7 @@ void rmDirRecursive(const std::string &path) {
   execCmd(cmd);
 }
 
-bool execCmd(const std::string &cmd, bool fail_on_error) {
+bool execCmd(const std::string& cmd, bool fail_on_error) {
   auto exit_code = system(cmd.c_str());
   if (exit_code != 0) {
     Log::get().error("Error executing command (exit code " +
@@ -99,7 +99,7 @@ bool execCmd(const std::string &cmd, bool fail_on_error) {
   return true;
 }
 
-void moveFile(const std::string &from, const std::string &to) {
+void moveFile(const std::string& from, const std::string& to) {
 #ifdef _WIN64
   std::string cmd = "move";
 #else
@@ -108,8 +108,8 @@ void moveFile(const std::string &from, const std::string &to) {
   execCmd(cmd + " \"" + from + "\" \"" + to + "\"");
 }
 
-void moveDirToParent(const std::string &path, const std::string &dir,
-                     const std::string &new_parent) {
+void moveDirToParent(const std::string& path, const std::string& dir,
+                     const std::string& new_parent) {
   if (isDir(path + dir) && !isDir(path + new_parent + FILE_SEP + dir)) {
     Log::get().info("Moving folder \"" + dir + "\" to \"" + new_parent + "\"");
     ensureDir(path + new_parent + FILE_SEP);
@@ -117,13 +117,13 @@ void moveDirToParent(const std::string &path, const std::string &dir,
   }
 }
 
-void makeExecutable(const std::string &path) {
+void makeExecutable(const std::string& path) {
 #ifndef _WIN64
   execCmd("chmod u+x \"" + path + "\"");
 #endif
 }
 
-void ensureTrailingFileSep(std::string &dir) {
+void ensureTrailingFileSep(std::string& dir) {
   if (dir.back() != FILE_SEP) {
     dir += FILE_SEP;
   }
@@ -169,7 +169,7 @@ std::string getTmpDir() {
   return LODA_TMP_DIR;
 }
 
-void setTmpDir(const std::string &tmp) { LODA_TMP_DIR = tmp; }
+void setTmpDir(const std::string& tmp) { LODA_TMP_DIR = tmp; }
 
 std::string getBashRc() {
 #ifndef _WIN64
@@ -205,7 +205,7 @@ std::string getNullRedirect() {
 #endif
 }
 
-std::string getFileAsString(const std::string &filename, bool fail_on_error) {
+std::string getFileAsString(const std::string& filename, bool fail_on_error) {
   std::ifstream in(filename);
   std::string str;
   if (in.good()) {
@@ -221,7 +221,7 @@ std::string getFileAsString(const std::string &filename, bool fail_on_error) {
   return str;
 }
 
-int64_t getFileAgeInDays(const std::string &path) {
+int64_t getFileAgeInDays(const std::string& path) {
   struct stat st;
   if (stat(path.c_str(), &st) == 0) {
     time_t now = time(0);
@@ -275,7 +275,7 @@ size_t getTotalSystemMem() {
 #endif
 }
 
-std::map<std::string, std::string> readXML(const std::string &path) {
+std::map<std::string, std::string> readXML(const std::string& path) {
   std::map<std::string, std::string> result;
   std::ifstream in(path);
   std::string line, key, value;
@@ -302,21 +302,21 @@ std::map<std::string, std::string> readXML(const std::string &path) {
   return result;
 }
 
-int64_t getJInt(jute::jValue &v, const std::string &key, int64_t def) {
+int64_t getJInt(jute::jValue& v, const std::string& key, int64_t def) {
   if (v[key].get_type() == jute::jType::JNUMBER) {
     return v[key].as_int();
   }
   return def;
 }
 
-double getJDouble(jute::jValue &v, const std::string &key, double def) {
+double getJDouble(jute::jValue& v, const std::string& key, double def) {
   if (v[key].get_type() == jute::jType::JNUMBER) {
     return v[key].as_double();
   }
   return def;
 }
 
-bool getJBool(jute::jValue &v, const std::string &key, bool def) {
+bool getJBool(jute::jValue& v, const std::string& key, bool def) {
   if (v[key].get_type() == jute::jType::JBOOLEAN) {
     return v[key].as_bool();
   }
@@ -331,7 +331,7 @@ FolderLock::FolderLock(std::string folder) {
   fd = 0;
   Log::get().debug("Acquiring lock " + lockfile);
 #ifdef _WIN64
-  for (size_t i = 0; i < 1800; i++) {  // 30 min; magic number
+  for (size_t i = 0; i < 3600; i++) {  // 1h; magic number
     fd = CreateFile(lockfile.c_str(), GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
     if (fd != INVALID_HANDLE_VALUE) {
       break;
