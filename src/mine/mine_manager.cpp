@@ -347,7 +347,7 @@ void MineManager::generateStats(int64_t age_in_days) {
     if (notify.isTargetReached()) {
       notify.reset();
       Log::get().info("Processed " + std::to_string(num_processed) +
-                      " programs");
+                  " program" + (num_processed == 1 ? "" : "s"));
     }
   }
 
