@@ -148,6 +148,21 @@ bool Optimizer::mergeOps(Program& p) const {
           do_merge = true;
         }
 
+        // both bitand operation?
+        else if (o1.type == o2.type && (o1.type == Operation::Type::BAN)) {
+          o1.source.value = Semantics::ban(o1.source.value, o2.source.value);
+          do_merge = true;
+        }
+        // both bitor operation?
+        else if (o1.type == o2.type && (o1.type == Operation::Type::BOR)) {
+          o1.source.value = Semantics::bor(o1.source.value, o2.source.value);
+          do_merge = true;
+        }
+        // both bitxor operation?
+        else if (o1.type == o2.type && (o1.type == Operation::Type::BXO)) {
+          o1.source.value = Semantics::bxo(o1.source.value, o2.source.value);
+          do_merge = true;
+        }
         // one add, the other sub?
         else if ((o1.type == Operation::Type::ADD &&
                   o2.type == Operation::Type::SUB) ||
@@ -594,8 +609,9 @@ bool Optimizer::simplifyOperations(Program& p) const {
             op.source = Operand(Operand::Type::CONSTANT, 2);
             simplified = true;
           }
-          // sub $n,$n => mov $n,0
-          else if (op.type == Operation::Type::SUB) {
+          // sub $n,$n / trn $n,$n => mov $n,0
+          else if (op.type == Operation::Type::SUB ||
+                   op.type == Operation::Type::TRN) {
             op.type = Operation::Type::MOV;
             op.source = Operand(Operand::Type::CONSTANT, 0);
             simplified = true;
@@ -606,11 +622,14 @@ bool Optimizer::simplifyOperations(Program& p) const {
             op.source = Operand(Operand::Type::CONSTANT, 2);
             simplified = true;
           }
-          // equ $n,$n / leq $n,$n / geq $n,$n / bin $n,$n => mov $n,1
+          // equ $n,$n / leq $n,$n / geq $n,$n / bin $n,$n / dgs $n,$n / dgr
+          // $n,$n => mov $n,1
           else if (op.type == Operation::Type::EQU ||
                    op.type == Operation::Type::LEQ ||
                    op.type == Operation::Type::GEQ ||
-                   op.type == Operation::Type::BIN) {
+                   op.type == Operation::Type::BIN ||
+                   op.type == Operation::Type::DGS ||
+                   op.type == Operation::Type::DGR) {
             op.type = Operation::Type::MOV;
             op.source = Operand(Operand::Type::CONSTANT, 1);
             simplified = true;
@@ -959,10 +978,16 @@ bool Optimizer::collapseArithmeticLoops(Program& p) const {
  */
 bool canMerge(Operation::Type a, Operation::Type b) {
   if ((a == Operation::Type::ADD || a == Operation::Type::SUB) &&
-      (b == Operation::Type::ADD || b == Operation::Type::SUB)) {
+      (b == Operation::Type::ADD || b == Operation::Type::SUB ||
+       b == Operation::Type::TRN || b == Operation::Type::EQU ||
+       b == Operation::Type::NEQ || b == Operation::Type::LEQ ||
+       b == Operation::Type::GEQ)) {
     return true;
   }
-  if (a == b && (a == Operation::Type::MUL || a == Operation::Type::DIV)) {
+  if (a == b && (a == Operation::Type::MUL || a == Operation::Type::DIV ||
+                 a == Operation::Type::POW || a == Operation::Type::NRT ||
+                 a == Operation::Type::BAN || a == Operation::Type::BOR ||
+                 a == Operation::Type::BXO)) {
     return true;
   }
   if (a == Operation::Type::MUL && b == Operation::Type::DIV) {
