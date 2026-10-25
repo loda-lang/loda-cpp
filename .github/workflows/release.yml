@@ -5,7 +5,7 @@ on:
 
 jobs:
   create-release:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Generate Version
         id: generate-version
@@ -41,15 +41,15 @@ jobs:
       upload_url: ${{ steps.create-release.outputs.upload_url }}
   build-linux-x86:
     needs: create-release
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     container:
-      image: debian:11 # Debian Bullseye with GLIBC 2.31 for maximum compatibility
+      image: debian:12
     steps:
       - uses: actions/checkout@v2
       - name: Install dependencies
         run: |
           apt-get update
-          DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential libcurl4-openssl-dev zlib1g-dev
+          DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential libcurl4-openssl-dev libboost-dev zlib1g-dev
       - name: Build
         run: cd src && make -f Makefile.linux-x86.mk loda LODA_PLATFORM=linux-x86 LODA_VERSION=${{ needs.create-release.outputs.version }}
       - name: Upload
@@ -63,15 +63,15 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
   build-linux-arm64:
     needs: create-release
-    runs-on: ubuntu-22.04-arm
+    runs-on: ubuntu-24.04-arm
     container:
-      image: debian:11 # Debian Bullseye with GLIBC 2.31 for maximum compatibility
+      image: debian:12
     steps:
       - uses: actions/checkout@v2
       - name: Install dependencies
         run: |
           apt-get update
-          DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential libcurl4-openssl-dev zlib1g-dev
+          DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential libcurl4-openssl-dev libboost-dev zlib1g-dev
       - name: Build
         run: cd src && make -f Makefile.linux-arm64.mk loda LODA_PLATFORM=linux-arm64 LODA_VERSION=${{ needs.create-release.outputs.version }}
       - name: Upload
@@ -88,6 +88,8 @@ jobs:
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v2
+      - name: Install dependencies
+        run: brew install boost@1.92
       - name: Build
         run: cd src && make -f Makefile.macos-x86.mk loda LODA_PLATFORM=macos-x86 LODA_VERSION=${{ needs.create-release.outputs.version }}
       - name: Upload
@@ -104,6 +106,8 @@ jobs:
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v2
+      - name: Install dependencies
+        run: brew install boost@1.92
       - name: Build
         run: cd src && make -f Makefile.macos-arm64.mk loda LODA_PLATFORM=macos-arm64 LODA_VERSION=${{ needs.create-release.outputs.version }}
       - name: Upload
@@ -123,7 +127,7 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
       - name: Install dependencies
         run: |
-          vcpkg install curl:x64-windows zlib:x64-windows
+          vcpkg install curl:x64-windows zlib:x64-windows boost-multiprecision:x64-windows
       - name: Build
         run: cd src && nmake.exe /F Makefile.windows.mk loda LODA_PLATFORM=windows-x86 LODA_VERSION=${{ needs.create-release.outputs.version }}
         env:
@@ -155,7 +159,7 @@ jobs:
           arch: amd64_arm64
       - name: Install dependencies
         run: |
-          vcpkg install curl:arm64-windows zlib:arm64-windows
+          vcpkg install curl:arm64-windows zlib:arm64-windows boost-multiprecision:arm64-windows
       - name: Build
         run: cd src && nmake.exe /F Makefile.windows.mk loda LODA_PLATFORM=windows-arm64 LODA_VERSION=${{ needs.create-release.outputs.version }}
         env:

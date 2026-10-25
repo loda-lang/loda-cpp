@@ -9,15 +9,15 @@ on:
 
 jobs:
   build-linux-x86:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     container:
-      image: debian:11 # Debian Bullseye with GLIBC 2.31 for maximum compatibility
+      image: debian:12
     steps:
       - uses: actions/checkout@v2
       - name: Install dependencies
         run: |
           apt-get update
-          DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential libcurl4-openssl-dev zlib1g-dev curl git
+          DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential libcurl4-openssl-dev libboost-dev zlib1g-dev curl git
       - name: Build
         run: cd src && make -f Makefile.linux-x86.mk
       - name: Install external tools
@@ -35,15 +35,15 @@ jobs:
         env:
           LODA_TEST_WITH_EXTERNAL_TOOLS: 1
   build-linux-arm64:
-    runs-on: ubuntu-22.04-arm
+    runs-on: ubuntu-24.04-arm
     container:
-      image: debian:11 # Debian Bullseye with GLIBC 2.31 for maximum compatibility
+      image: debian:12
     steps:
       - uses: actions/checkout@v2
       - name: Install dependencies
         run: |
           apt-get update
-          DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential libcurl4-openssl-dev zlib1g-dev
+          DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential libcurl4-openssl-dev libboost-dev zlib1g-dev
       - name: Build
         run: cd src && make -f Makefile.linux-arm64.mk
       - name: Test
@@ -52,6 +52,8 @@ jobs:
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v2
+      - name: Install dependencies
+        run: brew install boost@1.92
       - name: Build
         run: cd src && make -f Makefile.macos-x86.mk
       - name: Test
@@ -60,6 +62,8 @@ jobs:
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v2
+      - name: Install dependencies
+        run: brew install boost@1.92
       - name: Build
         run: cd src && make -f Makefile.macos-arm64.mk
       - name: Test
@@ -71,7 +75,7 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
       - name: Install dependencies
         run: |
-          vcpkg install curl:x64-windows zlib:x64-windows
+          vcpkg install curl:x64-windows zlib:x64-windows boost-multiprecision:x64-windows
       - name: Build
         run: cd src && nmake.exe /F Makefile.windows.mk
         env:
@@ -89,18 +93,18 @@ jobs:
           arch: amd64_arm64
       - name: Install dependencies
         run: |
-          vcpkg install curl:arm64-windows zlib:arm64-windows
+          vcpkg install curl:arm64-windows zlib:arm64-windows boost-multiprecision:arm64-windows
       - name: Build
         run: cd src && nmake.exe /F Makefile.windows.mk
         env:
           VCPKG_ROOT: C:\vcpkg
           VCPKG_ARCH: arm64-windows
   code-coverage:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v2
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y lcov libcurl4-openssl-dev
+        run: sudo apt-get update && sudo apt-get install -y lcov libcurl4-openssl-dev libboost-dev
       - name: Generate
         run: cd src && make -f Makefile.linux-x86.mk coverage
       - name: Upload

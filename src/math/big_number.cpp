@@ -1,30 +1,35 @@
 #include "math/big_number.hpp"
 
 #include <algorithm>
+#include <iostream>
 #include <limits>
-#include <string>
-#include <vector>
-
-BigNumber::BigNumber() : is_negative(false), is_infinite(false) {
-  words.fill(0);
-}
-
-BigNumber::BigNumber(int64_t value) {
-  if (value >= 0) {
-    is_negative = false;
-    is_infinite = false;
-    words.fill(0);
-    words[0] = value;
-  } else {
-    load(std::to_string(value));
-  }
-}
-
-BigNumber::BigNumber(const std::string& s) { load(s); }
+#include <stdexcept>
 
 void throwNumberParseError(const std::string& s) {
   throw std::invalid_argument("error reading number: '" + s + "'");
 }
+
+// Maximum magnitude: 2^(NUM_WORDS * 64) - 1. Larger results become infinite.
+// Function-local static to be independent of static initialization order.
+// Built word by word: the intermediate 2^(NUM_WORDS * 64) itself does not fit
+// into the fixed precision backend.
+static const BigNumber::BigInt& maxMagnitude() {
+  static const BigNumber::BigInt m = [] {
+    BigNumber::BigInt mag = 0;
+    for (size_t i = 0; i < BigNumber::NUM_WORDS; i++) {
+      mag <<= 64;                    // magic number: 64 bits per word
+      mag += 0xFFFFFFFFFFFFFFFFull;  // magic number: all bits set
+    }
+    return mag;
+  }();
+  return m;
+}
+
+BigNumber::BigNumber() : value(0), is_infinite(false) {}
+
+BigNumber::BigNumber(int64_t value) : value(value), is_infinite(false) {}
+
+BigNumber::BigNumber(const std::string& s) { load(s); }
 
 void BigNumber::load(const std::string& s) {
   if (s == "inf") {
@@ -40,13 +45,11 @@ void BigNumber::load(const std::string& s) {
   if (start == size) {
     throwNumberParseError(s);
   }
-  if (s[start] == '-') {
-    is_negative = true;
+  const bool is_negative = (s[start] == '-');
+  if (is_negative) {
     if (++start == size) {
       throwNumberParseError(s);
     }
-  } else {
-    is_negative = false;
   }
   size -= start;
   while (size > 0 && s[start + size - 1] == ' ') {
@@ -55,85 +58,78 @@ void BigNumber::load(const std::string& s) {
   if (size == 0) {
     throwNumberParseError(s);
   }
-  words.fill(0);
   for (int64_t i = 0; i < size; i++) {
-    if (is_infinite) {
-      break;
-    }
     char ch = s[start + i];
     if (ch < '0' || ch > '9') {
       throwNumberParseError(s);
     }
-    mulShort(10);
-    add(BigNumber(ch - '0'));  // TODO: use addShort
+  }
+  // Strip leading zeros: boost would otherwise interpret them as an octal
+  // radix (or reject digits >= 8 in octal mode).
+  int64_t skip = 0;
+  while (skip + 1 < size && s[start + skip] == '0') {
+    skip++;
+  }
+  try {
+    value = BigInt(s.substr(start + skip, size - skip));
+    if (is_negative) {
+      value = -value;
+    }
+  } catch (const std::overflow_error&) {
+    makeInfinite();  // number too large for the available range
   }
 }
 
-bool BigNumber::isZero() const {
-  return !is_infinite && std::all_of(words.begin(), words.end(),
-                                     [](uint64_t w) { return w == 0; });
-}
+bool BigNumber::isZero() const { return !is_infinite && (value == 0); }
 
 void BigNumber::makeInfinite() {
-  is_negative = false;
   is_infinite = true;
-  words.fill(0);
+  value = 0;
 }
 
 int64_t BigNumber::asInt() const {
   if (is_infinite) {
     throw std::runtime_error("Infinity error");
   }
-  if (words[0] > static_cast<uint64_t>(std::numeric_limits<int64_t>::max())) {
+  if (!fitsInInt64()) {
     throw std::runtime_error("Integer overflow");
   }
-  for (size_t i = 1; i < NUM_WORDS; i++) {
-    if (words[i] != 0) {
-      throw std::runtime_error("Integer overflow");
-    }
-  }
-  return is_negative ? -words[0] : words[0];
+  return value.convert_to<int64_t>();
 }
 
 bool BigNumber::fitsInInt64() const {
   if (is_infinite) {
     return false;
   }
-  if (words[0] > static_cast<uint64_t>(std::numeric_limits<int64_t>::max())) {
-    return false;
-  }
-  for (size_t i = 1; i < NUM_WORDS; i++) {
-    if (words[i] != 0) {
-      return false;
-    }
-  }
-  return true;
+  static const BigInt MAX_INT(
+      (std::numeric_limits<int64_t>::max)());  // magic number
+  static const BigInt MIN_INT(
+      (std::numeric_limits<int64_t>::min)());  // magic number
+  return (value <= MAX_INT) && (value >= MIN_INT);
 }
 
 int64_t BigNumber::getNumUsedWords() const {
-  if (is_infinite) {
+  if (is_infinite || isZero()) {
     return 1;
   }
-  for (int64_t i = NUM_WORDS - 1; i >= 0; i--) {
-    if (words[i] != 0) {
-      return i + 1;
-    }
-  }
-  return 1;
+  const int64_t bits = boost::multiprecision::msb(abs(value)) + 1;
+  return (bits + 63) / 64;  // magic number: 64 bits per word
 }
 
 bool BigNumber::odd() const {
   if (is_infinite) {
     return false;  // by convention
   }
-  return (words[0] & 1);
+  return bit_test(value, 0);
 }
 
 BigNumber BigNumber::minMax(bool is_max) {
   BigNumber m;
   m.is_infinite = false;
-  m.is_negative = !is_max;
-  m.words.fill(std::numeric_limits<uint64_t>::max());
+  m.value = maxMagnitude();
+  if (!is_max) {
+    m.value = -m.value;
+  }
   return m;
 }
 
@@ -141,30 +137,25 @@ bool BigNumber::operator==(const BigNumber& n) const {
   if (is_infinite != n.is_infinite) {
     return false;
   }
-  if (words != n.words) {
-    return false;
+  if (is_infinite) {
+    return true;
   }
-  return ((is_negative == n.is_negative) || isZero());
+  return (value == n.value);
 }
 
 bool BigNumber::operator!=(const BigNumber& n) const { return !(*this == n); }
 
 bool BigNumber::operator<(const BigNumber& n) const {
-  bool is_zero = true;
-  for (int64_t i = NUM_WORDS - 1; i >= 0; i--) {
-    if (words[i] < n.words[i]) {
-      return !n.is_negative;
-    } else if (words[i] > n.words[i]) {
-      return is_negative;
-    }
-    is_zero = is_zero && (words[i] == 0);
+  if (is_infinite || n.is_infinite) {
+    return false;
   }
-  return !is_zero && is_negative && !n.is_negative;
+  return (value < n.value);
 }
 
 BigNumber& BigNumber::negate() {
-  // note that this can lead to -0 (therefore we don't expose is_negative)
-  is_negative = !is_negative;
+  if (!is_infinite) {
+    value = -value;
+  }
   return *this;
 }
 
@@ -173,61 +164,12 @@ BigNumber& BigNumber::operator+=(const BigNumber& n) {
     makeInfinite();
     return *this;
   }
-  // check if one of the operands is negative
-  if (!is_negative && n.is_negative) {
-    BigNumber m(n);
-    m.is_negative = false;
-    if (*this < m) {
-      m.sub(*this);
-      (*this) = m;
-      is_negative = true;
-    } else {
-      sub(m);
-    }
-  } else if (is_negative && !n.is_negative) {
-    BigNumber m(n);
-    is_negative = false;
-    if (*this < m) {
-      m.sub(*this);
-      (*this) = m;
-    } else {
-      sub(m);
-      is_negative = true;
-    }
-  } else {
-    add(n);
-  }
-  return *this;
-}
-
-void BigNumber::add(const BigNumber& n) {
-  uint64_t carry = 0;
-  for (size_t i = 0; i < NUM_WORDS; i++) {
-    uint64_t low, high;
-    low = (words[i] & LOW_BIT_MASK) + (n.words[i] & LOW_BIT_MASK) + carry;
-    carry = low >> 32;
-    high = (words[i] >> 32) + (n.words[i] >> 32) + carry;
-    carry = high >> 32;
-    words[i] = ((high & LOW_BIT_MASK) << 32) | (low & LOW_BIT_MASK);
-  }
-  if (carry) {
+  try {
+    value += n.value;
+  } catch (const std::overflow_error&) {
     makeInfinite();
   }
-}
-
-void BigNumber::sub(const BigNumber& n) {
-  uint64_t carry = 0;
-  for (size_t i = 0; i < NUM_WORDS; i++) {
-    uint64_t low, high;
-    low = (words[i] & LOW_BIT_MASK) - (n.words[i] & LOW_BIT_MASK) - carry;
-    carry = (low >> 32) != 0;
-    high = (words[i] >> 32) - (n.words[i] >> 32) - carry;
-    carry = (high >> 32) != 0;
-    words[i] = ((high & LOW_BIT_MASK) << 32) | (low & LOW_BIT_MASK);
-  }
-  if (carry) {
-    is_negative = true;
-  }
+  return *this;
 }
 
 BigNumber& BigNumber::operator*=(const BigNumber& n) {
@@ -235,61 +177,12 @@ BigNumber& BigNumber::operator*=(const BigNumber& n) {
     makeInfinite();
     return *this;
   }
-  BigNumber result(0);
-  int64_t shift = 0;
-  const int64_t s = n.getNumUsedWords();  // <= NUM_WORDS
-  for (int64_t i = 0; i < s; i++) {
-    auto copy = *this;
-    copy.mulShort(n.words[i] & LOW_BIT_MASK);  // low bits
-    copy.shift(shift);
-    shift += 1;
-    result += copy;
-    copy = *this;
-    copy.mulShort(n.words[i] >> 32);  // high bits
-    copy.shift(shift);
-    shift += 1;
-    result += copy;
-    if (result.is_infinite) {
-      break;
-    }
-  }
-  if (!result.is_infinite) {
-    result.is_negative = (is_negative != n.is_negative);
-  }
-  (*this) = result;
-  return (*this);
-}
-
-void BigNumber::mulShort(uint64_t n) {
-  uint64_t carry = 0;
-  const int64_t s = std::min<int64_t>(getNumUsedWords() + 1, NUM_WORDS);
-  for (int64_t i = 0; i < s; i++) {
-    uint64_t low, high;
-    auto& w = words[i];
-    high = (w >> 32) * n;
-    low = (w & LOW_BIT_MASK) * n;
-    w = low + ((high & LOW_BIT_MASK) << 32) + carry;
-    carry = ((high + ((low + carry) >> 32)) >> 32);
-  }
-  if (carry) {
+  try {
+    value *= n.value;
+  } catch (const std::overflow_error&) {
     makeInfinite();
   }
-}
-
-void BigNumber::shift(int64_t n) {
-  for (; n > 0; n--) {
-    uint64_t next = 0;
-    for (size_t i = 0; i < NUM_WORDS; i++) {
-      uint64_t h = words[i] >> 32;
-      uint64_t l = words[i] & LOW_BIT_MASK;
-      words[i] = (l << 32) + next;
-      next = h;
-    }
-    if (next) {
-      makeInfinite();
-      break;
-    }
-  }
+  return *this;
 }
 
 BigNumber& BigNumber::operator/=(const BigNumber& n) {
@@ -297,64 +190,8 @@ BigNumber& BigNumber::operator/=(const BigNumber& n) {
     makeInfinite();
     return *this;
   }
-  auto m = n;  // TODO: avoid this copy is possible
-  bool new_is_negative = (m.is_negative != is_negative);
-  m.is_negative = false;
-  is_negative = false;
-  div(m);
-  is_negative = new_is_negative;
+  value /= n.value;  // truncates towards zero
   return *this;
-}
-
-void BigNumber::div(const BigNumber& n) {
-  if (n.getNumUsedWords() == 1 && !(n.words[0] >> 32)) {
-    divShort(n.words[0]);
-  } else {
-    divBig(n);
-  }
-}
-
-void BigNumber::divShort(const uint64_t n) {
-  uint64_t carry = 0;
-  for (int64_t i = NUM_WORDS - 1; i >= 0; i--) {
-    uint64_t h, l, t, h2, u, l2;
-    auto& w = words[i];
-    h = w >> 32;
-    l = w & LOW_BIT_MASK;
-    t = (carry << 32) + h;
-    h2 = t / n;
-    carry = t % n;
-    u = (carry << 32) + l;
-    l2 = u / n;
-    carry = u % n;
-    w = (h2 << 32) + l2;
-  }
-}
-
-void BigNumber::divBig(const BigNumber& n) {
-  std::vector<std::pair<BigNumber, BigNumber>> d;
-  BigNumber f(n);
-  BigNumber g(1);
-  while (f < *this || f == *this) {
-    d.emplace_back(f, g);
-    f += f;
-    g += g;
-    if (f.is_infinite || g.is_infinite) {
-      makeInfinite();
-      return;
-    }
-  }
-  BigNumber r(0);
-  for (auto it = d.rbegin(); it != d.rend(); it++) {
-    while (it->first < *this || it->first == *this) {
-      sub(it->first);
-      r.add(it->second);
-      if (r.is_infinite) {
-        break;
-      }
-    }
-  }
-  *this = r;
 }
 
 BigNumber& BigNumber::operator%=(const BigNumber& n) {
@@ -362,58 +199,35 @@ BigNumber& BigNumber::operator%=(const BigNumber& n) {
     makeInfinite();
     return *this;
   }
-  auto m = n;
-  const bool new_is_negative = is_negative;
-  m.is_negative = false;
-  is_negative = false;
-  auto q = *this;
-  q.div(m);
-  if (q.is_infinite) {
-    makeInfinite();
-    return *this;
-  }
-  q *= m;
-  if (q.is_infinite) {
-    makeInfinite();
-    return *this;
-  }
-  sub(q);
-  is_negative = new_is_negative;
+  value %= n.value;  // sign of the result follows the first operand
   return *this;
 }
 
-BigNumber toTwosComplement(const BigNumber& n) {
-  BigNumber result = n;
-  if (n.is_negative && !n.isZero()) {
-    // Invert all bits and add 1
-    for (size_t i = 0; i < BigNumber::NUM_WORDS; i++) {
-      result.words[i] = ~result.words[i];
-    }
-    // Add 1
-    uint64_t carry = 1;
-    for (size_t i = 0; i < BigNumber::NUM_WORDS; i++) {
-      uint64_t sum = result.words[i] + carry;
-      carry = (sum < result.words[i]);
-      result.words[i] = sum;
-    }
+// The checked backend rejects bitwise operations on negative values, so we
+// perform them via the two's complement representation over the full
+// NUM_WORDS * 64 bits (the checked backend rejects bitwise operations on
+// negative values directly).
+static const boost::multiprecision::cpp_int& twoPowerMaxBits() {
+  static const boost::multiprecision::cpp_int p =
+      boost::multiprecision::cpp_int(1) << (BigNumber::NUM_WORDS * 64);
+  return p;
+}
+
+static boost::multiprecision::cpp_int toTwosComplement(
+    const BigNumber::BigInt& v) {
+  boost::multiprecision::cpp_int result(v);
+  if (v < 0) {
+    result += twoPowerMaxBits();
   }
   return result;
 }
 
-void fromTwosComplement(BigNumber& n, bool negative) {
-  if (negative && !n.isZero()) {
-    // Subtract 1 and invert all bits
-    uint64_t borrow = 1;
-    for (size_t i = 0; i < BigNumber::NUM_WORDS; i++) {
-      uint64_t tmp = n.words[i];
-      n.words[i] = tmp - borrow;
-      borrow = (tmp < borrow);
-    }
-    for (size_t i = 0; i < BigNumber::NUM_WORDS; i++) {
-      n.words[i] = ~n.words[i];
-    }
+static BigNumber::BigInt fromTwosComplement(
+    const boost::multiprecision::cpp_int& v) {
+  if (v < (twoPowerMaxBits() >> 1)) {
+    return BigNumber::BigInt(v);
   }
-  n.is_negative = negative;
+  return BigNumber::BigInt(v - twoPowerMaxBits());  // negative value
 }
 
 BigNumber& BigNumber::operator^=(const BigNumber& n) {
@@ -421,14 +235,9 @@ BigNumber& BigNumber::operator^=(const BigNumber& n) {
     makeInfinite();
     return *this;
   }
-  BigNumber a = toTwosComplement(*this);
-  BigNumber b = toTwosComplement(n);
-  for (size_t i = 0; i < NUM_WORDS; i++) {
-    a.words[i] ^= b.words[i];
-  }
-  bool negative = is_negative != n.is_negative;
-  fromTwosComplement(a, negative);
-  *this = a;
+  auto a = toTwosComplement(value);
+  a ^= toTwosComplement(n.value);
+  value = fromTwosComplement(a);
   return *this;
 }
 
@@ -437,14 +246,9 @@ BigNumber& BigNumber::operator&=(const BigNumber& n) {
     makeInfinite();
     return *this;
   }
-  BigNumber a = toTwosComplement(*this);
-  BigNumber b = toTwosComplement(n);
-  for (size_t i = 0; i < NUM_WORDS; i++) {
-    a.words[i] &= b.words[i];
-  }
-  bool negative = is_negative && n.is_negative;
-  fromTwosComplement(a, negative);
-  *this = a;
+  auto a = toTwosComplement(value);
+  a &= toTwosComplement(n.value);
+  value = fromTwosComplement(a);
   return *this;
 }
 
@@ -453,14 +257,9 @@ BigNumber& BigNumber::operator|=(const BigNumber& n) {
     makeInfinite();
     return *this;
   }
-  BigNumber a = toTwosComplement(*this);
-  BigNumber b = toTwosComplement(n);
-  for (size_t i = 0; i < NUM_WORDS; i++) {
-    a.words[i] |= b.words[i];
-  }
-  bool negative = is_negative || n.is_negative;
-  fromTwosComplement(a, negative);
-  *this = a;
+  auto a = toTwosComplement(value);
+  a |= toTwosComplement(n.value);
+  value = fromTwosComplement(a);
   return *this;
 }
 
@@ -469,13 +268,18 @@ std::size_t BigNumber::hash() const {
     return std::numeric_limits<std::size_t>::max();
   }
   std::size_t seed = 0;
-  bool is_zero = true;
-  for (const auto& w : words) {
-    seed ^= w + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-    is_zero = is_zero && (w != 0);
-  }
-  if (!is_zero && is_negative) {
-    seed ^= 0x9e3779b9 + (seed << 6) + (seed >> 2);
+  const bool is_zero = isZero();
+  if (!is_zero) {
+    static const BigInt MASK((static_cast<uint64_t>(-1)));  // magic number
+    BigInt tmp = abs(value);
+    while (tmp != 0) {
+      const uint64_t chunk = static_cast<uint64_t>(tmp & MASK);
+      seed ^= chunk + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+      tmp >>= 64;
+    }
+    if (value < 0) {
+      seed ^= 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    }
   }
   return seed;
 }
@@ -484,23 +288,7 @@ std::string BigNumber::toString() const {
   if (is_infinite) {
     return "inf";
   }
-  if (isZero()) {
-    return "0";
-  }
-  std::string result;
-  BigNumber m = *this;
-  BigNumber n;
-  while (!m.isZero()) {
-    n = m;
-    n %= BigNumber(10);  // avoid this expensive mod operation
-    result += ('0' + n.words[0]);
-    m.divShort(10);
-  }
-  if (is_negative) {
-    result += '-';
-  }
-  std::reverse(result.begin(), result.end());
-  return result;
+  return value.str();
 }
 
 std::ostream& operator<<(std::ostream& out, const BigNumber& n) {

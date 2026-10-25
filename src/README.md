@@ -24,6 +24,7 @@ LODA supports Linux, macOS, and Windows. You need a standard C++ compiler and `m
 - **C++ compiler**: g++, clang++, or MSVC (C++17 support required)
 - **libcurl**: Development headers and library (e.g., `libcurl4-openssl-dev` on Debian/Ubuntu)
 - **zlib**: Development headers and library (e.g., `zlib1g-dev` on Debian/Ubuntu)
+- **boost-multiprecision**: Development headers and library (e.g., `libboost-dev` on Debian/Ubuntu)
 
 To build from source, switch to the `src/` folder and run the appropriate command for your platform:
 
